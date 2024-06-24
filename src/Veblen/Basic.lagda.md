@@ -57,7 +57,7 @@ open Eq.≡-Reasoning
 $$
 \frac{}{~\text{zero} : ℕ~}
 \qquad
-\frac{\alpha:ℕ}{~\text{suc}\;\alpha:ℕ~}
+\frac{\alpha:ℕ}{~\text{suc}~\alpha:ℕ~}
 $$
 
 我们的序数类型 $\text{Ord}$ 则在此基础上增加了第三条规则 $\text{lim}$, 即如果 $f$ 是 $ℕ$ 到序数的函数, 那么 $\text{lim}~f$ 也是序数.
@@ -65,9 +65,9 @@ $$
 $$
 \frac{}{~\text{zero} : \text{Ord}~}
 \qquad
-\frac{\alpha:\text{Ord}}{~\text{suc}\;\alpha:\text{Ord}~}
+\frac{\alpha:\text{Ord}}{~\text{suc}~\alpha:\text{Ord}~}
 \qquad
-\frac{~f : ℕ\rightarrow\text{Ord}~}{\text{lim}\;f:\text{Ord}}
+\frac{~f : ℕ\rightarrow\text{Ord}~}{\text{lim}~f:\text{Ord}}
 $$
 
 ```agda
@@ -77,7 +77,7 @@ data Ord : Set where
   lim  : (ℕ → Ord) → Ord
 ```
 
-这样的 $f : ℕ\rightarrow\text{Ord}$ 又叫做 $\text{lim}\;f$ 的基本序列 (fundamental sequence), 而 $\text{lim}\;f$ 则叫做基本序列 $f$ 的极限. 这样的定义允许我们很方便地讨论零, 后继序数和极限序数三种情况. 为了方便阅读, 我们会把 $\text{zero}$ 写作 $0$, 把 $\text{suc}\;x$ 写作 $x^+$.
+这样的 $f : ℕ\rightarrow\text{Ord}$ 又叫做 $\text{lim}~f$ 的基本序列 (fundamental sequence), 而 $\text{lim}~f$ 则叫做基本序列 $f$ 的极限. 这样的定义允许我们很方便地讨论零, 后继序数和极限序数三种情况. 为了方便阅读, 我们会把 $\text{zero}$ 写作 $0$, 把 $\text{suc}~x$ 写作 $x^+$.
 
 **注意** 我们的序数类型, 学名叫布劳威尔树序数 (Brouwer tree ordinals), 比真正的序数宽泛很多, 体现在以下两点:
 - 树序数不要求基本序列是严格递增的.
@@ -101,8 +101,8 @@ variable
 
 $$
 \begin{aligned}
-&\text{finord}\;0 &=\;& 0 \\
-&\text{finord}\;n^+ &=\;& (\text{finord}\;n)^+
+\text{finord}~0 &= 0 \\
+\text{finord}~n^+ &= (\text{finord}~n)^+
 \end{aligned}
 $$
 
@@ -115,7 +115,7 @@ finord (suc n) = suc (finord n)
 $\text{finord}$ 构成了基本序列 $(0, 1, 2, \ldots)$, 其极限定义为 $ω$.
 
 $$
-ω := \text{lim}\;\text{finord}
+ω := \text{lim}~\text{finord}
 $$
 
 ```agda
