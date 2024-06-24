@@ -6,13 +6,13 @@ zhihu-tags: Agda, 序数, 大数数学
 # 形式化大数数学(1) - 基础
 
 > 交流Q群: 893531731  
-> 本文源码: [Basic.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Fixpoint/Basic.lagda.md)  
-> 高亮渲染: [Basic.html](https://choukh.github.io/agda-googology/Fixpoint.Basic.html)  
+> 本文源码: [Basic.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Veblen/Basic.lagda.md)  
+> 高亮渲染: [Basic.html](https://choukh.github.io/agda-googology/Veblen.Basic.html)  
 
 ## 前言
 
 ```agda
-module Fixpoint.Basic where
+module Veblen.Basic where
 
 open import Data.Nat public using (ℕ; zero; suc; 2+)
 open import Data.Unit public using (⊤)
