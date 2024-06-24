@@ -13,7 +13,7 @@
 #
 # ============================================================================
 
-DOCS = ../choukh.github.io/agda-veblen
+DOCS = ../choukh.github.io/agda-googology
 SOURCES := $(shell find src -type f -name '*.lagda.md')
 TARGETS := $(addprefix $(DOCS)/,$(subst /,.,$(patsubst src/%.lagda.md,%.html,$(SOURCES))))
 
