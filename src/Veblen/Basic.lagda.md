@@ -301,7 +301,7 @@ ind z s l (lim f) = l f λ n → ind z s l (f n)
 $$
 \begin{aligned}
 \text{rec}~z~s~l~0 &= z \\
-\text{rec}~z~s~l~(α^+) &= s~(\text{rec}~z~s~l~α) \\
+\text{rec}~z~s~l~α^+ &= s~(\text{rec}~z~s~l~α) \\
 \text{rec}~z~s~l~(\text{lim}~f) &= l~(λ~n,\text{rec}~z~s~l~(f~n))
 \end{aligned}
 $$
