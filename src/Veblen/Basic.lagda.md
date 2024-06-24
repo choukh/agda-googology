@@ -77,7 +77,7 @@ data Ord : Set where
   lim  : (ℕ → Ord) → Ord
 ```
 
-这样的 $f : ℕ\rightarrow\text{Ord}$ 又叫做 $\text{lim}~f$ 的基本序列 (fundamental sequence), 而 $\text{lim}~f$ 则叫做基本序列 $f$ 的极限. 这样的定义允许我们很方便地讨论零, 后继序数和极限序数三种情况.
+这样的 $f : ℕ\rightarrow\text{Ord}$ 又叫做 $\text{lim}~f$ 的基本序列 (fundamental sequence), 而 $\text{lim}~f$ 则叫做基本序列 $f$ 的极限. 这样的定义允许我们很方便地讨论零, 后继序数和极限序数三种情况. 为了方便阅读, 我们会把 $\text{zero}$ 写作 $0$, 把 $\text{suc}~x$ 写作 $x^+$.
 
 **注意** 我们的序数类型, 学名叫布劳威尔树序数 (Brouwer tree ordinals), 比真正的序数宽泛很多, 体现在以下两点:
 - 树序数不要求基本序列是严格递增的.
@@ -87,7 +87,9 @@ data Ord : Set where
 - 树序数是外延的 (extensional), 即真正的序数与树上的节点并不是唯一对应的.
   - 这意味着我们可以用不同的基本序列构造出相同的序数.
     - 但同一性证明依赖于函数外延性 (function extensionality), 或某种商 (quotient) 机制, 如 setoid 或 cubical.
-  - 但这并不会影响大数的计算, 因为只要给出基本序列就能算, 不需要关心不同的基本序列是否计算出同一个大数.
+  - 但这并不会影响大数的计算, 因为只要给出基本序列就能算, 况且大数的表示确实是依赖于特定的基本序列的.
+
+我们约定用 $α~β~γ~δ$ 表示序数, 用 $m~n$ 表示自然数.
 
 ```agda
 variable
@@ -95,15 +97,32 @@ variable
   m n : ℕ
 ```
 
+我们可以定义自然数到序数的嵌入函数 $\text{finord} : ℕ → \text{Ord}$ 如下 (注意: 遵循类型论的习惯, 我们今后都会在无歧义的情况下省略函数应用的括号).
+
+$$
+\begin{aligned}
+&\text{finord}~0 &=~& 0 \\
+&\text{finord}~n^+ &=~& (\text{finord}~n)^+
+\end{aligned}
+$$
+
 ```agda
 finord : ℕ → Ord
 finord zero = zero
 finord (suc n) = suc (finord n)
 ```
 
+$\text{finord}$ 构成了基本序列 $(0, 1, 2, \ldots)$, 其极限定义为 $ω$.
+
+$$
+ω := \text{lim}~\text{finord}
+$$
+
 ```agda
 ω = lim finord
 ```
+
+以下代码调用了[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能, 允许数字字面量依据上下文自动具有自然数或序数类型.
 
 ```agda
 open import Agda.Builtin.FromNat
@@ -112,6 +131,8 @@ instance
   _ = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → finord n }
   _ = Number ℕ   ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
 ```
+
+以下为测试用例.
 
 ```agda
 _ = Ord ∋ 233
