@@ -18,14 +18,26 @@ zhihu-tags: Agda, 序数, 大数数学
 - 文学编程是指本文既是程序代码, 也是程序文档, 代码和文档交织在一起, 以增强可读性.
   - Agda 程序会自动抽取本文所有代码块中的代码, 并执行类型检查, 而忽略代码块以外的内容.
   - 冷知识: 文学编程的发明者[高德纳 (Donald Knuth)](https://zh.wikipedia.org/wiki/%E9%AB%98%E5%BE%B7%E7%BA%B3), 也是大数数学入门级内容[高德纳箭号](https://zh.wikipedia.org/wiki/%E9%AB%98%E5%BE%B7%E7%B4%8D%E7%AE%AD%E8%99%9F%E8%A1%A8%E7%A4%BA%E6%B3%95)的发明者, 也是排版软件[TeX](https://zh.wikipedia.org/wiki/TeX)的发明者.
-- 如果真的想运行:
+- 也就是说, 提供足够的时间, 能量和内存, 本文介绍的大数计算程序可以真正算出一个大数. 如果真的想运行:
   - 关于 Agda 的安装请参考 [Installation](https://agda.readthedocs.io/en/latest/getting-started/installation.html).
   - 本文所在Github仓库: [agda-googology](https://github.com/choukh/agda-googology).
 
 ### 目标人群
 
-- 大数数学已入门 (如, 看完[大数数学入门](https://www.zhihu.com/column/c_1307845959598960640)), 对严格性有进一步要求的读者
-- 
+- 大数数学已入门 (如, 看完[大数数学入门](https://www.zhihu.com/column/c_1307845959598960640)), 对严格性有进一步要求的读者.
+- Agda 已入门 (如, 看完[PLFA](https://agda-zh.github.io/PLFA-zh/)), 对大数计算程序的编程实现感兴趣的读者.
+
+只对前者感兴趣的读者, 可以忽略代码部分, 而只阅读文学部分, 它们可以看作是基于朴素类型论的数学描述, 并使用了 $\LaTeX$ 公式, 以对齐通常的数学习惯.
+
+### 补充材料
+
+- [core.exe - 大数数学入门](https://www.zhihu.com/column/c_1307845959598960640)
+- [core.exe - 大数数学入门 - 重置版](https://www.zhihu.com/column/c_1697290814588301312)
+- [oCaU - Agda大序数](https://zhuanlan.zhihu.com/p/572691308)
+  - 详细讨论了上至二元Veblen层级的序性质.
+  - 本文不会讨论这些性质.
+
+### 标准库依赖
 
 ```agda
 module Veblen.Basic where
