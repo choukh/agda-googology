@@ -89,7 +89,7 @@ data Ord : Set where
     - 但同一性证明依赖于函数外延性 (function extensionality), 或某种商 (quotient) 机制, 如 setoid 或 cubical.
   - 但这并不会影响大数的计算, 因为只要给出基本序列就能算, 况且大数的表示确实是依赖于特定的基本序列的.
 
-我们约定用 $α~β~γ~δ$ 表示序数, 用 $m~n$ 表示自然数.
+我们约定用 $α,β,γ,δ$ 表示序数, 用 $m,n$ 表示自然数.
 
 ```agda
 variable
