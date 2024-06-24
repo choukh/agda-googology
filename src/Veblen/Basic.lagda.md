@@ -287,7 +287,7 @@ ind : {P : Ord → Set}
 **(证明)** 要证对于任意序数 $α$, $P~α$ 成立. 归纳 $α$ 的三种情况.
 
 - 当 $α=0$ 时, 由条件1, $P~0$ 成立.
-- 当 $α=α^+$ 时, 要证 $P~α^+$ 成立. 由归纳假设, $P~α$ 成立. 由条件2, $P~α^+$ 成立.
+- 当 $α=α^+$ 时, 要证 $P\,α^+$ 成立. 由归纳假设, $P\,α$ 成立. 由条件2, $P~α^+$ 成立.
 - 当 $α=\text{lim}~f$ 时, 要证 $P~(\text{lim}~f)$ 成立. 由归纳假设, 对于任意自然数 $n$, $P~(f~n)$ 成立. 由条件3, $P~(\text{lim}~f)$ 成立. ∎
 
 ```agda
@@ -297,9 +297,13 @@ ind z s l (lim f) = l f λ n → ind z s l (f n)
 ```
 
 **定理 序数的递归原理 (transfinite recursion)** 对于任意类型 $A$, 函数 $z : A$, $s : A → A$, $l : (ℕ → A) → A$, 和任意序数 $α$, 存在唯一的 $\text{rec}~z~s~l~α : A$, 满足
-1. $\text{rec}~z~s~l~0 = z$,
-2. $\text{rec}~z~s~l~(α^+) = s~(\text{rec}~z~s~l~α)$,
-3. $\text{rec}~z~s~l~(\text{lim}~f) = l~(λ~n,\text{rec}~z~s~l~(f~n))$.
+$$
+\begin{aligned}
+\text{rec}~z~s~l~0 &= z \\
+\text{rec}~z~s~l~(α^+) &= s~(\text{rec}~z~s~l~α) \\
+\text{rec}~z~s~l~(\text{lim}~f) &= l~(λ~n,\text{rec}~z~s~l~(f~n))
+\end{aligned}
+$$
 
 **(证明)** 令 $P = λ~\_,A$ 并应用序数归纳法即可. ∎
 
