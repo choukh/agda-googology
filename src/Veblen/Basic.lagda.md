@@ -101,8 +101,8 @@ variable
 
 $$
 \begin{aligned}
-&\text{finord}~0 &=~& 0 \\
-&\text{finord}~n^+ &=~& (\text{finord}~n)^+
+&\text{finord}~~0 &=~~& 0 \\
+&\text{finord}~~n^+ &=~~& (\text{finord}~n)^+
 \end{aligned}
 $$
 
