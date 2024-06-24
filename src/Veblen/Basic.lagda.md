@@ -60,7 +60,7 @@ $$
 \frac{\alpha:ℕ}{~\text{suc}~\alpha:ℕ~}
 $$
 
-我们的序数类型 $\text{Ord}$ 则在此基础上增加了第三条规则 $\text{lim}$, 即如果 $f$ 是 $ℕ$ 到序数的函数, 那么 $\text{lim}~f$ 也是序数.
+**定义** 我们的序数类型 $\text{Ord}$ 则在 $ℕ$ 的基础上增加了第三条规则 $\text{lim}$, 即如果 $f$ 是 $ℕ$ 到序数的函数, 那么 $\text{lim}~f$ 也是序数.
 
 $$
 \frac{}{~\text{zero} : \text{Ord}~}
@@ -89,7 +89,7 @@ data Ord : Set where
     - 但同一性证明依赖于函数外延性 (function extensionality), 或某种商 (quotient) 机制, 如 setoid 或 cubical.
   - 但这并不会影响大数的计算, 因为只要给出基本序列就能算, 况且大数的表示确实是依赖于特定的基本序列的.
 
-我们约定用 $α,β,γ,δ$ 表示序数, 用 $m,n$ 表示自然数.
+**约定** 我们用 $α,β,γ,δ$ 表示序数, 用 $m,n$ 表示自然数.
 
 ```agda
 variable
@@ -97,7 +97,9 @@ variable
   m n : ℕ
 ```
 
-我们可以定义自然数到序数的嵌入函数 $\text{finord} : ℕ → \text{Ord}$ 如下 (注意: 遵循类型论的习惯, 我们今后都会在无歧义的情况下省略函数应用的括号).
+**约定** 我们遵循类型论的习惯, 今后都会在无歧义的情况下省略函数应用的括号.
+
+**定义** 自然数到序数的嵌入函数 $\text{finord} : ℕ → \text{Ord}$
 
 $$
 \begin{aligned}
@@ -112,7 +114,7 @@ finord zero = zero
 finord (suc n) = suc (finord n)
 ```
 
-$\text{finord}$ 构成了基本序列 $(0, 1, 2, \ldots)$, 其极限定义为 $ω$.
+**定义** $\text{finord}$ 构成了基本序列 $(0, 1, 2, \ldots)$, 其极限定义为 $ω$
 
 $$
 ω := \text{lim}~\text{finord}
@@ -122,7 +124,7 @@ $$
 ω = lim finord
 ```
 
-以下代码调用了[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能, 允许数字字面量依据上下文自动具有自然数或序数类型.
+**非文学** 以下代码调用了[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能, 允许数字字面量依据上下文自动具有自然数或序数类型.
 
 ```agda
 open import Agda.Builtin.FromNat
@@ -141,15 +143,38 @@ _ = ℕ   ∋ 233
 
 ## 快速增长层级
 
+**约定** 我们用 $A$ 表示类型.
+
 ```agda
 variable A : Set
 ```
 
+**定义** 函数 $F : A → A$ 的 $n$ 次复合 $F^n$
+
+$$
+\begin{aligned}
+F^0 &= \text{id} \\
+F^{n^+} &= F \circ F^n
+\end{aligned}
+$$
+
+其中 $\text{id}$ 是恒等函数.
+
 ```agda
 _∘ⁿ_ : (A → A) → ℕ → (A → A)
-(F ∘ⁿ zero)  a = a
-(F ∘ⁿ suc n) a = (F ∘ (F ∘ⁿ n)) a
+(F ∘ⁿ zero)  = id
+(F ∘ⁿ suc n) = (F ∘ (F ∘ⁿ n))
 ```
+
+**定义** 快速增长层级 (Fast Growing Hierarchy, FGH) 是一个函数族 $f : \text{Ord} → ℕ → ℕ$, 对于每个序数 $α$, $f_α$ 是一个从自然数到自然数的函数, 定义如下.
+
+$$
+\begin{aligned}
+f_0~n &= n^+ \\
+f_{α^+}~n &= {f_α}^n~n \\
+f_{\text{lim}~g}~n &= f_{g~n}~n
+\end{aligned}
+$$
 
 ```agda
 module FGH where
@@ -159,59 +184,84 @@ module FGH where
   f (lim g) n = f (g n) n
 ```
 
+**例** 我们有
+
 $$
-f_0(n) = n + 1
+\begin{aligned}
+f_0~n &= n^+ \\
+f_1~n &= 2n \\
+f_2~n &= 2^n~n
+\end{aligned}
 $$
+
+这些等式的证明只需对 $n$ 进行归纳, 是显然的. 代码方面我们只写一些实例作为测试.
 
 ```agda
   f-0-2 : f 0 2 ≡ 3
   f-0-2 = refl
-```
 
-$$
-f_1(n) = 2n
-$$
-
-```agda
   f-1-2 : f 1 2 ≡ 4
   f-1-2 = refl
-```
 
-$$
-f_2(n) = 2^n~n
-$$
-
-```agda
   f-2-2 : f 2 2 ≡ 8
   f-2-2 = refl
 ```
+
+$f_3$ 以上的表达式越来越复杂, 但不难计算实例如 $f_{3}~2=2048$.
 
 ```agda
   f-3-2 : f 3 2 ≡ 2048
   f-3-2 = refl
 ```
 
+**引理** 我们有
+
+$$
+\begin{aligned}
+f_{\alpha^+}~n &= {f_\alpha}^n~n \\
+f_{ω}~n &= f_{n}~n
+\end{aligned}
+$$
+
 ```agda
   f-suc : f (suc α) n ≡ (f α ∘ⁿ n) n
   f-suc = refl
-```
 
-```agda
   f-ω : f ω n ≡ f (finord n) n
   f-ω = refl
 ```
+
+**注意** 本文出现的所有命题的证明都是「依定义即得」的, 体现为代码中的 `refl`. 也就是说, 证明都是直接展开定义, 不需要额外的推理. 但这并不意味着所有证明是显然的, 有时候递归定义的展开会非常复杂, 这时候我们会分布展开, 逐步化简, 但每一步都是 `refl` 可证.
+
+**定理** 由以上两式不难看出
+
+$$
+f_{ω^+}~n = {f_ω}^n~n
+$$
 
 ```agda
   f-ω⁺ : f (suc ω) n ≡ (f ω ∘ⁿ n) n
   f-ω⁺ = refl
 ```
 
+**推论** 特别地, 有
+
+$$
+f_{ω^+}~2 = f_ω~(f_ω~2)
+$$
+
+但此式无法在 Agda 中直接证明, 因为 Agda 想先把两边都算出, 而这是不现实的. 如果有读者知道如何证明, 请打在评论区. 作为替代, 我们可以证明如下式子.
+
+$$
+f_{\alpha^+}~2 = f_\alpha~(f_\alpha~2)
+$$
+
 ```agda
   f-suc-2 : f (suc α) 2 ≡ f α (f α 2)
   f-suc-2 = refl
 ```
 
-`f (suc ω) 64` 大于葛立恒数.
+**事实** $f_{ω^+} 64$ 已经大于葛立恒数.
 
 ## 无穷迭代
 
