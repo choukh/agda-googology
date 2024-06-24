@@ -13,14 +13,15 @@ zhihu-tags: Agda, 序数, 大数数学
 
 本系列文章是可运行且保证停机的[大数](https://zh.wikipedia.org/wiki/%E5%A4%A7%E6%95%B0_(%E6%95%B0%E5%AD%A6))计算程序的[文学编程 (literate programming)](https://zh.wikipedia.org/wiki/%E6%96%87%E5%AD%A6%E7%BC%96%E7%A8%8B) 实现.
 
-- 可运行是相对于自然语言的数学描述而言, 本文贴出的代码可以在电脑上运行.
-- 保证停机是相对于[图灵完备 (Turing-complete)](https://zh.wikipedia.org/wiki/%E5%9C%96%E9%9D%88%E5%AE%8C%E5%82%99%E6%80%A7) 语言 (如C语言) 而言, 本文使用的 [Agda](https://en.wikipedia.org/wiki/Agda_(programming_language)) 语言并非图灵完备, 其自带[停机检查 (termination checking)](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/termination-checking.html), 写出的程序保证停机.
-- 文学编程是指本文既是程序代码, 也是程序文档, 代码和文档交织在一起, 以增强可读性.
+- **可运行**是相对于自然语言的数学描述而言, 本文贴出的代码可以在电脑上运行.
+- **保证停机**是相对于[图灵完备 (Turing-complete)](https://zh.wikipedia.org/wiki/%E5%9C%96%E9%9D%88%E5%AE%8C%E5%82%99%E6%80%A7) 语言 (如C语言) 而言, 本文使用的 [Agda](https://en.wikipedia.org/wiki/Agda_(programming_language)) 语言并非图灵完备, 其自带[停机检查 (termination checking)](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/termination-checking.html), 写出的程序保证停机.
+- **文学编程**是指本文既是程序代码, 也是程序文档, 代码和文档交织在一起, 以增强可读性.
   - Agda 程序会自动抽取本文所有代码块中的代码, 并执行类型检查, 而忽略代码块以外的内容.
-  - 冷知识: 文学编程的发明者[高德纳 (Donald Knuth)](https://zh.wikipedia.org/wiki/%E9%AB%98%E5%BE%B7%E7%BA%B3), 也是大数数学入门级内容[高德纳箭号](https://zh.wikipedia.org/wiki/%E9%AB%98%E5%BE%B7%E7%B4%8D%E7%AE%AD%E8%99%9F%E8%A1%A8%E7%A4%BA%E6%B3%95)的发明者, 也是排版软件 [TeX](https://zh.wikipedia.org/wiki/TeX) 的发明者.
-- 也就是说, 提供足够的时间, 能量和内存, 本文介绍的大数计算程序可以真正算出一个大数. 如果真的想运行:
-  - 关于 Agda 的安装请参考 [Installation](https://agda.readthedocs.io/en/latest/getting-started/installation.html).
-  - 本文所在Github仓库: [agda-googology](https://github.com/choukh/agda-googology).
+  - ※ 冷知识: 文学编程的发明者[高德纳 (Donald Knuth)](https://zh.wikipedia.org/wiki/%E9%AB%98%E5%BE%B7%E7%BA%B3), 也是大数数学入门级内容[高德纳箭号](https://zh.wikipedia.org/wiki/%E9%AB%98%E5%BE%B7%E7%B4%8D%E7%AE%AD%E8%99%9F%E8%A1%A8%E7%A4%BA%E6%B3%95)的发明者, 也是排版软件 [TeX](https://zh.wikipedia.org/wiki/TeX) 的发明者.
+
+也就是说, 提供足够的时间, 能量和内存, 本文介绍的大数计算程序可以真正算出一个大数. 如果真的想运行:
+- 关于 Agda 的安装请参考 [Installation](https://agda.readthedocs.io/en/latest/getting-started/installation.html).
+- 本文所在Github仓库: [agda-googology](https://github.com/choukh/agda-googology).
 
 ### 目标人群
 
@@ -35,7 +36,7 @@ zhihu-tags: Agda, 序数, 大数数学
 - [core.exe - 大数数学入门 - 重置版](https://www.zhihu.com/column/c_1697290814588301312)
 - [oCaU - Agda大序数](https://zhuanlan.zhihu.com/p/572691308)
   - 详细讨论了上至二元Veblen层级的序性质.
-  - 本文不会讨论这些性质.
+  - ※ 本文不会讨论这些性质.
 
 ### 标准库依赖
 
@@ -51,12 +52,42 @@ open Eq.≡-Reasoning
 
 ## 序数的定义
 
+我们知道自然数类型 $ℕ$ 由如下两条规则定义.
+
+$$
+\frac{}{~\text{zero} : ℕ~}
+\qquad
+\frac{\alpha:ℕ}{~\text{suc}~\alpha:ℕ~}
+$$
+
+我们的序数类型 $\text{Ord}$ 则在此基础上增加了第三条规则 $\text{lim}$, 即如果 $f$ 是 $ℕ$ 到序数的函数, 那么 $\text{lim}~f$ 也是序数.
+
+$$
+\frac{}{~\text{zero} : \text{Ord}~}
+\qquad
+\frac{\alpha:\text{Ord}}{~\text{suc}~\alpha:\text{Ord}~}
+\qquad
+\frac{~f : ℕ\rightarrow\text{Ord}~}{\text{lim}~f:\text{Ord}}
+$$
+
 ```agda
 data Ord : Set where
   zero : Ord
   suc  : Ord → Ord
   lim  : (ℕ → Ord) → Ord
 ```
+
+这样的 $f : ℕ\rightarrow\text{Ord}$ 又叫做 $\text{lim}~f$ 的基本序列 (fundamental sequence), 而 $\text{lim}~f$ 则叫做基本序列 $f$ 的极限. 这样的定义允许我们很方便地讨论零, 后继序数和极限序数三种情况.
+
+**注意** 我们的序数类型, 学名叫布劳威尔树序数 (Brouwer tree ordinals), 比真正的序数宽泛很多, 体现在以下两点:
+- 树序数不要求基本序列是严格递增的.
+  - 严格递增的约束对于大数的计算本身而言无关紧要.
+  - 我们构造的序数的基本序列都是严格递增的, 如果想要, 可以额外补上证明.
+  - [Agda大序数](https://zhuanlan.zhihu.com/p/572691308)一文中证明了其中构造的上至 $\Gamma_0$ 的所有树序数的基本序列都是严格递增的.
+- 树序数是外延的 (extensional), 即真正的序数与树上的节点并不是唯一对应的.
+  - 这意味着我们可以用不同的基本序列构造出相同的序数.
+    - 但同一性证明依赖于函数外延性 (function extensionality), 或某种商 (quotient) 机制, 如 setoid 或 cubical.
+  - 但这并不会影响大数的计算, 因为只要给出基本序列就能算, 不需要关心不同的基本序列是否计算出同一个大数.
 
 ```agda
 variable
