@@ -66,7 +66,7 @@ module BinaryVeblen where
 
 由上面的讨论, 二元版本的 $Φ$ 需要迭代 $\text{fixpt}$, 这也是由强大的 $\text{rec}$ 函数完成的. 注意 $\text{rec}$ 可以处理任意类型 $A$, 一个序数函数类型不管再高阶, 它也是一个类型, 所以适用 $\text{rec}$. 这是类型论语言的方便之处.
 
-**定义** 二元版本的 $Φ$ 为, 对给定的序数函数 $F : \text{Ord} → \text{Ord}$, 使用 $\text{rec}$, 按以下参数递归.
+**定义** 二元版本的 $Φ$ 为, 对给定的序数函数 $F : \text{Ord} → \text{Ord}$, 使用 $\text{rec}$, 其三个参数分别如下.
 - 起始步骤: $F$
 - 递归步骤: 迭代 $\text{fixpt}$
 - 极限步骤: 对步骤的基本列取极限, 再做一次跳出操作
@@ -262,16 +262,24 @@ module TrinaryVeblen where
   private module Bin = BinaryVeblen
 ```
 
-**定义** 三元版本的 $Φ$ 为, 对给定的序数函数 $F : \text{Ord} → \text{Ord} → \text{Ord}$, 使用 $\text{rec}$, 按以下参数递归.
+**定义** 三元版本的 $Φ$ 为, 对给定的序数函数 $F : \text{Ord} → \text{Ord} → \text{Ord}$, 使用 $\text{rec}$, 其三个参数分别如下.
 
 - 起始步骤: $F$
-- 递归步骤: 迭代 $\text{fixpt}$
-- 极限步骤: 对步骤的基本列取极限, 再做一次跳出操作
+- 递归步骤: 迭代 $λφ_α,\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_α\kern{0.17em}β\kern{0.17em}0)$
+  - 一些解释
+    - 此处迭代的是二元函数 $\text{Ord} → \text{Ord} → \text{Ord}$, 以得到一个三元函数.
+    - 参数 $φ_α$ 是上一步的结果, 它是一个二元函数, 看作是对三元函数 $φ$ 输入了上一步的编号 $α$ 所得到的结果.
+    - 这一步我们先对 $λβ,φ_α\kern{0.17em}β\kern{0.17em}0$ 取不动点枚举, 再交给二元 $Φ$ 处理
+  - 注意: 对任意元 $φ$, 我们都是取第二个参数的不动点枚举, 而对右边剩下的参数全部填零. 二元 $Φ$ 的时候这个规律还看不出来, 现在才显现出来.
+- 极限步骤: 对步骤的基本列取极限, 再做一次跳出操作, 再交给二元 $Φ$ 处理
+  - 注意: 与递归步骤类似地, 这里是对第二个参数跳出, 右边其余参数全部填零.
 
 即
 
 $$
-Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}\text{fixpt}\kern{0.17em}(λφ,\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]\kern{0.17em}β\kern{0.17em}0)
+\begin{aligned}
+Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_α\kern{0.17em}β\kern{0.17em}0)) \\&(λφ,\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]\kern{0.17em}β\kern{0.17em}0))
+\end{aligned}
 $$
 
 ```agda
@@ -280,6 +288,10 @@ $$
     (λ φ-α  → Bin.Φ $ fixpt λ β → φ-α β 0)
     (λ φ[_] → Bin.Φ $ jump λ β → lim λ n → φ[ n ] β 0)
 ```
+
+**定义** 三元Veblen函数
+
+$$\varphi := Φ\kern{0.17em}\text{Bin}.\varphi$$
 
 ```agda
   φ : Ord → Ord → Ord → Ord
