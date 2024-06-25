@@ -496,7 +496,7 @@ $$
 $$
 \begin{aligned}
 \varphi_{α,β,γ^+} &= \text{fixpt}\kern{0.17em}φ_{α,β,γ} \\
-\varphi_{α,β,\text{lim}\kern{0.17em}h} &= \text{jump}\kern{0.17em}λδ,\text{lim}\kern{0.17em}λn,φ_{α,β,h\kern{0.17em}n,δ}
+\varphi_{α,β,\text{lim}\kern{0.17em}h} &= \text{jump}\kern{0.17em}λδ,\text{lim}\kern{0.17em}λn,φ_{α,β,h\kern{0.17em}n}δ
 \end{aligned}
 $$
 
