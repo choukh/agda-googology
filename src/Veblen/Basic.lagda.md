@@ -446,7 +446,7 @@ $$
 $$
 \begin{aligned}
 \text{jump}\kern{0.17em}F\kern{0.17em}(α^+) &= (F\kern{0.17em}\circ\kern{0.17em}\text{suc})\kern{0.17em}^{α^+}\kern{0.17em}(F\kern{0.17em}0) \\
-&= F\kern{0.17em}((F\kern{0.17em}\circ\kern{0.17em}\text{suc})\kern{0.17em}^α\kern{0.17em}(F\kern{0.17em}0)) \\
+&= (F\kern{0.17em}\circ\kern{0.17em}\text{suc})((F\kern{0.17em}\circ\kern{0.17em}\text{suc})\kern{0.17em}^α\kern{0.17em}(F\kern{0.17em}0)) \\
 &= F\kern{0.17em}(\text{jump}\kern{0.17em}F\kern{0.17em}α)^+
 \end{aligned}
 $$
