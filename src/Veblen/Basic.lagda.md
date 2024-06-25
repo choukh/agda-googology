@@ -448,6 +448,7 @@ $$
 &= F\kern{0.17em}(\text{jump}\kern{0.17em}F\kern{0.17em}α)^+
 \end{aligned}
 $$
+
 ∎
 
 ```agda
