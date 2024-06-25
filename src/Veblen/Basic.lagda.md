@@ -23,7 +23,7 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 也就是说, 提供足够的时间, 能量和内存, 本文介绍的大数计算程序可以真正算出一个大数. 如果真的想运行:
 1. 参考 [Installation](https://agda.readthedocs.io/en/latest/getting-started/installation.html) 安装 Agda.
 2. 进本文所在Github仓库 ([agda-googology](https://github.com/choukh/agda-googology)) 下载本文 markdown 源码.
-3. 用编辑器打开源码, 确认进入了 [agda-mode](https://agda.readthedocs.io/en/latest/tools/emacs-mode.html), 键入 `C-c C-n` 对 `oom` 执行正规化 (normalization).
+3. 用编辑器打开源码, 确认进入了 [agda-mode](https://agda.readthedocs.io/en/latest/tools/emacs-mode.html), 键入 `C-c C-n` 对本文定义的任意大数 (如文末的 `oom`) 执行正规化 (normalization).
 
 ### 目标人群
 
@@ -80,18 +80,18 @@ data Ord : Set where
   lim  : (ℕ → Ord) → Ord
 ```
 
-这样的 $f : ℕ\rightarrow\text{Ord}$ 又叫做 $\text{lim}\kern{0.17em}f$ 的基本序列 (fundamental sequence), 而 $\text{lim}\kern{0.17em}f$ 则叫做基本序列 $f$ 的极限. 这样的定义允许我们很方便地讨论零, 后继序数和极限序数三种情况. 为了方便阅读, 我们会把 $\text{zero}$ 写作 $0$, 把 $\text{suc}\kern{0.17em}x$ 写作 $x^+$.
+这样的 $f : ℕ\rightarrow\text{Ord}$ 又叫做 $\text{lim}\kern{0.17em}f$ 的基本列 (fundamental sequence), 而 $\text{lim}\kern{0.17em}f$ 则叫做基本列 $f$ 的极限. 这样的定义允许我们很方便地讨论零, 后继序数和极限序数三种情况. 为了方便阅读, 我们会把 $\text{zero}$ 写作 $0$, 把 $\text{suc}\kern{0.17em}x$ 写作 $x^+$.
 
-**注意** 我们的序数类型, 学名叫布劳威尔树序数 (Brouwer tree ordinals), 比真正的序数宽泛很多, 体现在以下两点:
-- 树序数不要求基本序列是严格递增的.
+**注意** 我们的序数类型, 学名叫布劳威尔树序数 (Brouwer tree ordinals), 比真正的递归序数宽泛很多, 体现在以下两点:
+- 树序数不要求基本列是严格递增的.
   - 严格递增的约束对于计算本身而言无关紧要.
-  - 当然, 如果要保证算出的大数足够大, 那么基本序列的递增性是必要的.
-  - 我们构造的序数的基本序列都是严格递增的, 如果想要, 可以额外补上证明.
-  - [Agda大序数](https://zhuanlan.zhihu.com/p/572691308)一文中证明了其中构造的上至 $\Gamma_0$ 的所有树序数的基本序列都是严格递增的.
+  - 当然, 如果要保证算出的大数足够大, 那么基本列的递增性是必要的.
+  - 我们构造的序数的基本列都是严格递增的, 如果想要, 可以额外补上证明.
+  - [Agda大序数](https://zhuanlan.zhihu.com/p/572691308)一文中证明了其中构造的上至 $\Gamma_0$ 的所有树序数的基本列都是严格递增的.
 - 树序数是极其外延的 (extensional), 即真正的序数与树上的节点并不是唯一对应的.
-  - 这意味着我们可以用大量不同的基本序列构造出相同的序数.
+  - 这意味着我们可以用大量不同的基本列构造出相同的序数.
     - 但同一性证明依赖于函数外延性 (function extensionality), 或某种商 (quotient) 机制, 如 setoid 或 cubical.
-  - 但这并不会影响大数的计算, 因为只要给出基本序列就能算, 况且 FGH 大数的表示确实是依赖于特定基本序列的.
+  - 但这并不会影响大数的计算, 因为只要给出基本列就能算, 况且 FGH 大数的表示确实是依赖于特定基本列的.
 
 **约定** 我们用 $α,β,γ,δ$ 表示序数, 用 $m,n$ 表示自然数.
 
@@ -118,7 +118,7 @@ finord zero = zero
 finord (suc n) = suc (finord n)
 ```
 
-**定义** $\text{finord}$ 构成了基本序列 $(0, 1, 2, \ldots)$, 其极限定义为 $ω$
+**定义** $\text{finord}$ 构成了基本列 $(0, 1, 2, \ldots)$, 其极限定义为 $ω$
 
 $$
 ω := \text{lim}\kern{0.17em}\text{finord}
@@ -276,7 +276,7 @@ $$
 **定理 序数归纳法 (transfinite induction)** 对于任意性质 $P : \text{Ord} → \text{Set}$, 如果
 1. $P\kern{0.17em}0$ 成立,
 2. 对于任意序数 $α$, 如果 $P\kern{0.17em}α$ 成立, 则 $P\kern{0.17em}α^+$ 成立,
-3. 对于任意基本序列 $f$, 如果对于任意自然数 $n$, $P\kern{0.17em}(f\kern{0.17em}n)$ 成立, 则 $P\kern{0.17em}(\text{lim}\kern{0.17em}f)$ 成立,
+3. 对于任意基本列 $f$, 如果对于任意自然数 $n$, $P\kern{0.17em}(f\kern{0.17em}n)$ 成立, 则 $P\kern{0.17em}(\text{lim}\kern{0.17em}f)$ 成立,
 
 则对于任意序数 $α$, $P\kern{0.17em}α$ 成立.
 
@@ -325,7 +325,7 @@ rec z s l = ind z (λ _ → s) (λ _ → l)
 
 ## 超限复合
 
-**约定** 我们用 $F$ 表示序数函数 $\text{Ord} → \text{Ord}$, 用 $f,g,h$ 表示基本序列 $ℕ → \text{Ord}$.
+**约定** 我们用 $F$ 表示序数函数 $\text{Ord} → \text{Ord}$, 用 $f,g,h$ 表示基本列 $ℕ → \text{Ord}$.
 
 ```agda
 variable
@@ -349,7 +349,7 @@ _∘^_ : (Ord → Ord) → Ord → Ord → Ord
 对于 $\text{rec}$ 的四个参数, 直观上
 - 第一个参数是初始值, 这里是 $F^\alpha$ 的输入 $\beta$,
 - 第二个参数是后继步骤, 需要指定递归迭代的函数, 这里递归迭代的就是 $F$,
-- 第三个参数是极限步骤, 需要指定将极限步对应的步骤基本序列 $λ\kern{0.17em}n\kern{0.17em},\kern{0.17em}F^{f\kern{0.17em}n}\kern{0.17em}\beta$ 映射的序数的函数, 这里就是单纯地取其极限, 所以指定为 $\text{lim}$,
+- 第三个参数是极限步骤, 需要指定将极限步对应的步骤基本列 $λ\kern{0.17em}n\kern{0.17em},\kern{0.17em}F^{f\kern{0.17em}n}\kern{0.17em}\beta$ 映射到序数的函数, 这里就是单纯地取其极限, 所以指定为 $\text{lim}$,
 - 第四个参数是递归的次数, 这里是 $\alpha$.
 
 **定理** 依定义有
@@ -508,7 +508,11 @@ fixpt-lim = refl
 
 我们定义三个序数函数 $\varepsilon, \zeta, \eta$ 如下.
 
-**定义** $\varepsilon$ 是函数 $λα,ω^α$ 的不动点枚举.
+**定义** $\varepsilon$ 是函数 $λα,ω^α$ 的不动点枚举
+
+$$
+ε := \text{fixpt}\kern{0.17em}λα,ω\kern{0.17em}^α
+$$
 
 ```agda
 ε : Ord → Ord
@@ -540,7 +544,11 @@ $$
 ε-lim = refl
 ```
 
-**定义** $\zeta$ 是 $ε$ 的不动点枚举.
+**定义** $\zeta$ 是 $ε$ 的不动点枚举
+
+$$
+ζ := \text{fixpt}\kern{0.17em}ε
+$$
 
 ```agda
 ζ : Ord → Ord
@@ -561,17 +569,21 @@ $$
 \end{aligned}
 $$
 
-**定义** $\eta$ 是 $\zeta$ 的不动点枚举.
+**定义** $\eta$ 是 $\zeta$ 的不动点枚举
+
+$$
+η := \text{fixpt}\kern{0.17em}ζ
+$$
 
 ```agda
 η : Ord → Ord
 η = fixpt ζ
 ```
 
-一个很大的大数:
+**例** 一个很大的大数:
 
 $$
-f_{η_0} 99 = f_{
+\text{oom} := f_{η_0} 99 = f_{
   ζ_{ζ_{⋱_{ζ_0}}}
 }99
 $$
