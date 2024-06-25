@@ -67,7 +67,7 @@ module BinaryVeblen where
 - 极限步骤: 对步骤的基本列取极限, 再做一次跳出操作
 
 $$
-Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}\text{fixpt}\kern{0.17em}F\kern{0.17em}(λφ,\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]\kern{0.17em}β)
+Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}\text{fixpt}\kern{0.17em}(λφ,\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]\kern{0.17em}β)
 $$
 
 ```agda
@@ -88,10 +88,10 @@ $$
 
 $$
 \begin{aligned}
-\varphi\kern{0.17em}0 &≡ λα,ω\kern{0.17em}^α \\
-\varphi\kern{0.17em}1 &≡ ε \\
-\varphi\kern{0.17em}2 &≡ ζ \\
-\varphi\kern{0.17em}3 &≡ η
+\varphi\kern{0.17em}0 &= λα,ω\kern{0.17em}^α \\
+\varphi\kern{0.17em}1 &= ε \\
+\varphi\kern{0.17em}2 &= ζ \\
+\varphi\kern{0.17em}3 &= η
 \end{aligned}
 $$
 
