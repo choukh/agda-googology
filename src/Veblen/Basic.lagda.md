@@ -20,8 +20,9 @@ zhihu-tags: Agda, 序数, 大数数学
   - ※ 冷知识: 文学编程的发明者[高德纳 (Donald Knuth)](https://zh.wikipedia.org/wiki/%E9%AB%98%E5%BE%B7%E7%BA%B3), 也是大数数学入门级内容[高德纳箭号](https://zh.wikipedia.org/wiki/%E9%AB%98%E5%BE%B7%E7%B4%8D%E7%AE%AD%E8%99%9F%E8%A1%A8%E7%A4%BA%E6%B3%95)的发明者, 也是排版软件 [TeX](https://zh.wikipedia.org/wiki/TeX) 的发明者.
 
 也就是说, 提供足够的时间, 能量和内存, 本文介绍的大数计算程序可以真正算出一个大数. 如果真的想运行:
-- 关于 Agda 的安装请参考 [Installation](https://agda.readthedocs.io/en/latest/getting-started/installation.html).
-- 本文所在Github仓库: [agda-googology](https://github.com/choukh/agda-googology).
+1. 参考 [Installation](https://agda.readthedocs.io/en/latest/getting-started/installation.html) 安装 Agda.
+2. 进本文所在Github仓库 ([agda-googology](https://github.com/choukh/agda-googology)) 下载本文 markdown 源码.
+3. 用编辑器打开源码, 确认进入了 [agda-mode](https://agda.readthedocs.io/en/latest/tools/emacs-mode.html), `C-c C-n` 对 `oom` 执行正规化.
 
 ### 目标人群
 
@@ -427,73 +428,143 @@ jump : (Ord → Ord) → Ord → Ord
 jump F α = ((F ∘ suc) ∘^ α) (F 0)
 ```
 
+**定理** 依定义有
+
+$$
+\begin{aligned}
+\text{jump}\kern{0.17em}F\kern{0.17em}0 &= F\kern{0.17em}0 \\
+\text{jump}\kern{0.17em}F\kern{0.17em}(α^+) &= F\kern{0.17em}(\text{jump}\kern{0.17em}F\kern{0.17em}α)^+ \\
+\text{jump}\kern{0.17em}F\kern{0.17em}(\text{lim}\kern{0.17em}f) &= \text{lim}\kern{0.17em}λ\kern{0.17em}n\kern{0.17em},\kern{0.17em}\text{jump}\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)
+\end{aligned}
+$$
+
+**(证明)** 零和极限的情况是显然的. 对于后继的情况, 有
+
+$$
+\begin{aligned}
+\text{jump}\kern{0.17em}F\kern{0.17em}(α^+) &= (F\kern{0.17em}\circ\kern{0.17em}\text{suc})\kern{0.17em}^{α^+}\kern{0.17em}(F\kern{0.17em}0) \\
+&= F\kern{0.17em}((F\kern{0.17em}\circ\kern{0.17em}\text{suc})\kern{0.17em}^α\kern{0.17em}(F\kern{0.17em}0)) \\
+&= F\kern{0.17em}(\text{jump}\kern{0.17em}F\kern{0.17em}α)^+
+\end{aligned}
+$$
+∎
+
 ```agda
 jump-0 : jump F 0 ≡ F 0
 jump-0 = refl
-```
 
-```agda
 jump-suc : jump F (suc α) ≡ F (suc (jump F α))
 jump-suc {F} {α} = begin
   jump F (suc α)                        ≡⟨⟩
   ((F ∘ suc) ∘^ (suc α)) (F zero)       ≡⟨⟩
   (F ∘ suc) (((F ∘ suc) ∘^ α) (F zero)) ≡⟨⟩
   F (suc (jump F α))                    ∎
-```
 
-```agda
 jump-lim : jump F (lim f) ≡ lim λ n → jump F (f n)
 jump-lim = refl
 ```
 
 ### 不动点的枚举
 
+**定义** 给定序数函数 $F$, 我们定义 $F$ 的第 $α$ 个不动点 $\text{fixpt}\kern{0.17em}F\kern{0.17em}α$ 为 $F^\omega$ 的第 $α$ 个跳出 $\text{jump}\kern{0.17em}(F^\omega)\kern{0.17em}α$.
+
+$$
+\text{fixpt}\kern{0.17em}F := \text{jump}\kern{0.17em}(F^\omega)
+$$
+
 ```agda
 fixpt : (Ord → Ord) → Ord → Ord
 fixpt F = jump (iterω F)
 ```
 
+**定理** 依定义有
+
+$$
+\begin{aligned}
+\text{fixpt}\kern{0.17em}F\kern{0.17em}0 &= F^\omega\kern{0.17em}0 \\
+\text{fixpt}\kern{0.17em}F\kern{0.17em}(α^+) &= F^\omega\kern{0.17em}(\text{fixpt}\kern{0.17em}F\kern{0.17em}α)^+ \\
+\text{fixpt}\kern{0.17em}F\kern{0.17em}(\text{lim}\kern{0.17em}f) &= \text{lim}\kern{0.17em}λ\kern{0.17em}n\kern{0.17em},\kern{0.17em}\text{fixpt}\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)
+\end{aligned}
+$$
+
 ```agda
 fixpt-0 : fixpt F 0 ≡ iterω F 0
 fixpt-0 = refl
-```
 
-```agda
 fixpt-suc : fixpt F (suc α) ≡ iterω F (suc (fixpt F α))
 fixpt-suc {F} {α} = refl
-```
 
-```agda
 fixpt-lim : fixpt F (lim f) ≡ lim λ n → fixpt F (f n)
 fixpt-lim = refl
 ```
 
+**注意** 跳出运算不一定跟无穷迭代配合使用, 后面会出现多种情况需要跳出, 以提高增长率.
+
 ## ε， ζ， η 层级
+
+我们定义三个序数函数 $\varepsilon, \zeta, \eta$ 如下.
+
+**定义** $\varepsilon$ 是函数 $λα,ω^α$ 的不动点枚举.
 
 ```agda
 ε : Ord → Ord
 ε = fixpt (ω ^_)
 ```
 
+**定理** 依定义有
+
+$$
+\begin{aligned}
+\varepsilon_0 &= (λα,ω^α)^ω\kern{0.17em}0 = 
+\begin{rcases}
+ω^{ω^{⋰^{ω^0}}}
+\end{rcases}ω
+\\
+\varepsilon_{α^+} &= (λα,ω^α)^ω\kern{0.17em}({ε_α}^+) = 
+\begin{rcases}
+ω^{ω^{⋰^{ω^{({ε_α}^+)}}}}
+\end{rcases}ω
+\\
+\varepsilon_{\text{lim}\kern{0.17em}f} &= \text{lim}\kern{0.17em}λ\kern{0.17em}n\kern{0.17em},\kern{0.17em}\varepsilon_{f\kern{0.17em}n} = \text{lim}(ε_{f\kern{0.17em}0},ε_{f\kern{0.17em}1},...)
+\end{aligned}
+$$
+
 ```agda
 ε-0 : ε 0 ≡ iterω (ω ^_) 0
 ε-0 = refl
-```
 
-```agda
 ε-suc : ε (suc α) ≡ iterω (ω ^_) (suc (ε α))
 ε-suc = refl
-```
 
-```agda
 ε-lim : ε (lim f) ≡ lim λ n → ε (f n)
 ε-lim = refl
 ```
+
+**定义** $\zeta$ 是 $ε$ 的不动点枚举.
 
 ```agda
 ζ : Ord → Ord
 ζ = fixpt ε
 ```
+
+**定理** 依定义有
+
+$$
+\begin{aligned}
+\zeta_0 &= ε^ω\kern{0.17em}0 =
+\begin{rcases}
+ε_{ε_{⋱_{ε_0}}}
+\end{rcases}ω \\
+\zeta_{α^+} &= ε^ω\kern{0.17em}({\zeta_α}^+) =
+\begin{rcases}
+ε_{ε_{⋱_{({\zeta_α}^+)}}}
+\end{rcases}ω
+\\
+\zeta_{\text{lim}\kern{0.17em}f} &= \text{lim}\kern{0.17em}λ\kern{0.17em}n\kern{0.17em},\kern{0.17em}\zeta_{f\kern{0.17em}n} = \text{lim}(ζ_{f\kern{0.17em}0},ζ_{f\kern{0.17em}1},...)
+\end{aligned}
+$$
+
+**定义** $\eta$ 是 $\zeta$ 的不动点枚举.
 
 ```agda
 η : Ord → Ord
@@ -511,5 +582,5 @@ f_{η_0} 99 = f_{
 $$
 
 ```agda
-_ = FGH.f (η 0) 99
+oom = FGH.f (η 0) 99
 ```
