@@ -9,6 +9,11 @@ zhihu-tags: Agda, 序数, 大数数学
 > 本文源码: [Multinary.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Veblen/Multinary.lagda.md)  
 > 高亮渲染: [Multinary.html](https://choukh.github.io/agda-googology/Veblen.Multinary.html)  
 
+```agda
+module Veblen.Multinary where
+open import Veblen.Basic public
+```
+
 ## 综述
 
 前篇讲了Veblen层级的构造需要的三个高阶函数
@@ -77,21 +82,25 @@ $$
 
 **注意** 极限步的跳出操作是反直觉的一步. 从通常的定义式反推不难发现这里需要跳出. 仔细分析二元Veblen函数的序性质才能更好的理解这里跳出的动机, 具体可以参看[Agda大序数(9) 二元Veblen函数](https://zhuanlan.zhihu.com/p/585882648). 这里只需简单的理解为是为了更好的性质和更高的增长率就行了.
 
-**定义** 二元Veblen函数 $\varphi$ 为 $Φ\kern{0.17em}(λα,ω\kern{0.17em}^α)$.
+**定义** 二元Veblen函数
+
+$$\varphi := Φ\kern{0.17em}λα,ω\kern{0.17em}^α$$
 
 ```agda
   φ : Ord → Ord → Ord
   φ = Φ (ω ^_)
 ```
 
+我们习惯将第一个参数写作下标.
+
 **例** 由定义, 以下等式成立.
 
 $$
 \begin{aligned}
-\varphi\kern{0.17em}0 &= λα,ω\kern{0.17em}^α \\
-\varphi\kern{0.17em}1 &= ε \\
-\varphi\kern{0.17em}2 &= ζ \\
-\varphi\kern{0.17em}3 &= η
+\varphi_0 &= λα,ω\kern{0.17em}^α \\
+\varphi_1 &= ε \\
+\varphi_2 &= ζ \\
+\varphi_3 &= η
 \end{aligned}
 $$
 
@@ -109,69 +118,92 @@ $$
   φ-3 = refl
 ```
 
+**定理** 由定义, 对于第一个参数为后继和极限的情况, 有以下等式成立.
+
+$$
+\begin{aligned}
+\varphi_{α^+} &= \text{fixpt}\kern{0.17em}φ_α \\
+\varphi_{\text{lim}\kern{0.17em}f} &= \text{jump}\kern{0.17em}λα,\text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n}\kern{0.17em}α
+\end{aligned}
+$$
+
 ```agda
   φ-suc : φ (suc α) ≡ fixpt (φ α)
   φ-suc = refl
-```
 
-```agda
   φ-lim : φ (lim f) ≡ jump λ α → lim λ n → φ (f n) α
   φ-lim = refl
 ```
 
+为了对 $\text{jump}$ 的行为有更加直观的感受, 对第一个参数为极限的情况, 我们对第二个参数再次分零, 后继和极限的情况进行讨论, 有如下等式成立.
+
+$$
+\begin{aligned}
+\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}0 &= \text{lim}\kern{0.17em}λn,φ\kern{0.17em}_{f\kern{0.17em}n}\kern{0.17em}0 \\
+\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}(β^+) &= \text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n}\kern{0.17em}(\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}β)^+ \\
+\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}(\text{lim}\kern{0.17em}g) &= \text{lim}\kern{0.17em}λn,φ_{\text{lim}\kern{0.17em}f}\kern{0.17em}(g\kern{0.17em}n)
+\end{aligned}
+$$
+
 ```agda
   φ-lim-0 : φ (lim f) 0 ≡ lim λ n → φ (f n) 0
   φ-lim-0 = refl
-```
 
-```agda
-  φ-lim-suc : φ (lim f) (suc α) ≡ lim λ n → φ (f n) (suc (φ (lim f) α))
+  φ-lim-suc : φ (lim f) (suc β) ≡ lim λ n → φ (f n) (suc (φ (lim f) β))
   φ-lim-suc = refl
-```
 
-```agda
   φ-lim-lim : φ (lim f) (lim g) ≡ lim λ n → φ (lim f) (g n)
   φ-lim-lim = refl
 ```
+
+很快, 我们来到了二元Veblen函数的能力极限.
+
+**定义** 对函数 $λα,φ\kern{0.17em}α\kern{0.17em}0$ 取不动点枚举, 得到的函数称为 $\Gamma$.
 
 ```agda
   Γ : Ord → Ord
   Γ = fixpt λ α → φ α 0
 ```
 
+最小的 $\Gamma$ 数是
+
+$$Γ_0 = φ_{φ_{φ_{φ_{...}0}\kern{0.17em}0}\kern{0.17em}0}\kern{0.17em}0$$
+
 ```agda
   Γ-0 : Γ 0 ≡ iterω (λ α → φ α 0) 0
   Γ-0 = refl
 ```
 
+没有什么能阻止我们继续取不动点枚举. 将 $\Gamma$ 看作新的 $λα,ω\kern{0.17em}^α$, 我们可以得到所谓二代 $\varepsilon, \zeta, \eta$ 函数, 分别记作 $\dot{\varepsilon}, \dot{\zeta}, \dot{\eta}$.
+
 ```agda
-  ε₁ ζ₁ η₁ : Ord → Ord
-  ε₁ = fixpt Γ
-  ζ₁ = fixpt ε₁
-  η₁ = fixpt ζ₁
+  ε̇ ζ̇ η̇ : Ord → Ord
+  ε̇ = fixpt Γ
+  ζ̇ = fixpt ε̇
+  η̇ = fixpt ζ̇
 ```
 
 ```agda
-  φ₁ : Ord → Ord → Ord
-  φ₁ = Φ Γ
+  φ̇ : Ord → Ord → Ord
+  φ̇ = Φ Γ
 
-  Γ₁ : Ord → Ord
-  Γ₁ = fixpt λ α → φ₁ α 0
+  Γ̇ : Ord → Ord
+  Γ̇ = fixpt λ α → φ̇ α 0
 ```
 
 ```agda
-  ε₂ ζ₂ η₂ : Ord → Ord
-  ε₂ = fixpt Γ₁
-  ζ₂ = fixpt ε₂
-  η₂ = fixpt ζ₂
+  ε̈ ζ̈ η̈ : Ord → Ord
+  ε̈ = fixpt Γ̇
+  ζ̈ = fixpt ε̈
+  η̈ = fixpt ζ̈
 ```
 
 ```agda
-  φ₂ : Ord → Ord → Ord
-  φ₂ = Φ Γ₁
+  φ̈ : Ord → Ord → Ord
+  φ̈ = Φ Γ̇
 
-  Γ₂ : Ord → Ord
-  Γ₂ = fixpt λ α → φ₂ α 0
+  Γ̈ : Ord → Ord
+  Γ̈ = fixpt λ α → φ̈ α 0
 ```
 
 ## 三元Veblen函数
@@ -232,52 +264,52 @@ module TrinaryVeblen where
 ```
 
 ```agda
-  φ-1-1 : φ 1 1 ≡ Bin.ε₁
+  φ-1-1 : φ 1 1 ≡ Bin.ε̇
   φ-1-1 = refl
 ```
 
 ```agda
-  φ-1-2 : φ 1 2 ≡ Bin.ζ₁
+  φ-1-2 : φ 1 2 ≡ Bin.ζ̇
   φ-1-2 = refl
 ```
 
 ```agda
-  φ-1-3 : φ 1 3 ≡ Bin.η₁
+  φ-1-3 : φ 1 3 ≡ Bin.η̇
   φ-1-3 = refl
 ```
 
 ```agda
-  φ-1 : φ 1 ≡ Bin.φ₁
+  φ-1 : φ 1 ≡ Bin.φ̇
   φ-1 = refl
 ```
 
 ```agda
-  φ-2-0 : φ 2 0 ≡ Bin.Γ₁
+  φ-2-0 : φ 2 0 ≡ Bin.Γ̇
   φ-2-0 = refl
 ```
 
 ```agda
-  φ-2-1 : φ 2 1 ≡ Bin.ε₂
+  φ-2-1 : φ 2 1 ≡ Bin.ε̈
   φ-2-1 = refl
 ```
 
 ```agda
-  φ-2-2 : φ 2 2 ≡ Bin.ζ₂
+  φ-2-2 : φ 2 2 ≡ Bin.ζ̈
   φ-2-2 = refl
 ```
 
 ```agda
-  φ-2-3 : φ 2 3 ≡ Bin.η₂
+  φ-2-3 : φ 2 3 ≡ Bin.η̈
   φ-2-3 = refl
 ```
 
 ```agda
-  φ-2 : φ 2 ≡ Bin.φ₂
+  φ-2 : φ 2 ≡ Bin.φ̈
   φ-2 = refl
 ```
 
 ```agda
-  φ-3-0 : φ 3 0 ≡ Bin.Γ₂
+  φ-3-0 : φ 3 0 ≡ Bin.Γ̈
   φ-3-0 = refl
 ```
 
