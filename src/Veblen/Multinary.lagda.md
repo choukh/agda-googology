@@ -1,6 +1,7 @@
 ---
 title: 形式化大数数学 (1.2 - Veblen函数)
 zhihu-tags: Agda, 序数, 大数数学
+zhihu-url: https://zhuanlan.zhihu.com/p/705436498
 ---
 
 # 形式化大数数学 (1.2 - Veblen函数)
