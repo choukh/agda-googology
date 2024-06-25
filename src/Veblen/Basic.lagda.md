@@ -55,19 +55,19 @@ open Eq.≡-Reasoning
 我们知道自然数类型 $ℕ$ 由如下两条规则定义.
 
 $$
-\frac{}{~\text{zero} : ℕ~}
+\frac{}{\kern{0.17em}\text{zero} : ℕ\kern{0.17em}}
 \qquad
-\frac{\alpha:ℕ}{~\text{suc}~\alpha:ℕ~}
+\frac{\alpha:ℕ}{\kern{0.17em}\text{suc}\kern{0.17em}\alpha:ℕ\kern{0.17em}}
 $$
 
-**定义** 我们的序数类型 $\text{Ord}$ 则在 $ℕ$ 的基础上增加了第三条规则 $\text{lim}$, 即如果 $f$ 是 $ℕ$ 到序数的函数, 那么 $\text{lim}~f$ 也是序数.
+**定义** 我们的序数类型 $\text{Ord}$ 则在 $ℕ$ 的基础上增加了第三条规则 $\text{lim}$, 即如果 $f$ 是 $ℕ$ 到序数的函数, 那么 $\text{lim}\kern{0.17em}f$ 也是序数.
 
 $$
-\frac{}{~\text{zero} : \text{Ord}~}
+\frac{}{\kern{0.17em}\text{zero} : \text{Ord}\kern{0.17em}}
 \qquad
-\frac{\alpha:\text{Ord}}{~\text{suc}~\alpha:\text{Ord}~}
+\frac{\alpha:\text{Ord}}{\kern{0.17em}\text{suc}\kern{0.17em}\alpha:\text{Ord}\kern{0.17em}}
 \qquad
-\frac{~f : ℕ\rightarrow\text{Ord}~}{\text{lim}~f:\text{Ord}}
+\frac{\kern{0.17em}f : ℕ\rightarrow\text{Ord}\kern{0.17em}}{\text{lim}\kern{0.17em}f:\text{Ord}}
 $$
 
 ```agda
@@ -77,7 +77,7 @@ data Ord : Set where
   lim  : (ℕ → Ord) → Ord
 ```
 
-这样的 $f : ℕ\rightarrow\text{Ord}$ 又叫做 $\text{lim}~f$ 的基本序列 (fundamental sequence), 而 $\text{lim}~f$ 则叫做基本序列 $f$ 的极限. 这样的定义允许我们很方便地讨论零, 后继序数和极限序数三种情况. 为了方便阅读, 我们会把 $\text{zero}$ 写作 $0$, 把 $\text{suc}~x$ 写作 $x^+$.
+这样的 $f : ℕ\rightarrow\text{Ord}$ 又叫做 $\text{lim}\kern{0.17em}f$ 的基本序列 (fundamental sequence), 而 $\text{lim}\kern{0.17em}f$ 则叫做基本序列 $f$ 的极限. 这样的定义允许我们很方便地讨论零, 后继序数和极限序数三种情况. 为了方便阅读, 我们会把 $\text{zero}$ 写作 $0$, 把 $\text{suc}\kern{0.17em}x$ 写作 $x^+$.
 
 **注意** 我们的序数类型, 学名叫布劳威尔树序数 (Brouwer tree ordinals), 比真正的序数宽泛很多, 体现在以下两点:
 - 树序数不要求基本序列是严格递增的.
@@ -103,8 +103,8 @@ variable
 
 $$
 \begin{aligned}
-\text{finord}~0 &= 0 \\
-\text{finord}~n^+ &= (\text{finord}~n)^+
+\text{finord}\kern{0.17em}0 &= 0 \\
+\text{finord}\kern{0.17em}n^+ &= (\text{finord}\kern{0.17em}n)^+
 \end{aligned}
 $$
 
@@ -117,7 +117,7 @@ finord (suc n) = suc (finord n)
 **定义** $\text{finord}$ 构成了基本序列 $(0, 1, 2, \ldots)$, 其极限定义为 $ω$
 
 $$
-ω := \text{lim}~\text{finord}
+ω := \text{lim}\kern{0.17em}\text{finord}
 $$
 
 ```agda
@@ -170,9 +170,9 @@ _∘ⁿ_ : (A → A) → ℕ → (A → A)
 
 $$
 \begin{aligned}
-f_0~n &= n^+ \\
-f_{α^+}~n &= f_α^n~n \\
-f_{\text{lim}~g}~n &= f_{g~n}~n
+f_0\kern{0.17em}n &= n^+ \\
+f_{α^+}\kern{0.17em}n &= f_α^n\kern{0.17em}n \\
+f_{\text{lim}\kern{0.17em}g}\kern{0.17em}n &= f_{g\kern{0.17em}n}\kern{0.17em}n
 \end{aligned}
 $$
 
@@ -188,9 +188,9 @@ module FGH where
 
 $$
 \begin{aligned}
-f_0~n &= n^+ \\
-f_1~n &= 2n \\
-f_2~n &= 2^n~n
+f_0\kern{0.17em}n &= n^+ \\
+f_1\kern{0.17em}n &= 2n \\
+f_2\kern{0.17em}n &= 2^n\kern{0.17em}n
 \end{aligned}
 $$
 
@@ -207,7 +207,7 @@ $$
   f-2-2 = refl
 ```
 
-$f_3$ 以上的表达式越来越复杂, 但不难计算实例如 $f_{3}~2=2048$.
+$f_3$ 以上的表达式越来越复杂, 但不难计算实例如 $f_{3}\kern{0.17em}2=2048$.
 
 ```agda
   f-3-2 : f 3 2 ≡ 2048
@@ -218,8 +218,8 @@ $f_3$ 以上的表达式越来越复杂, 但不难计算实例如 $f_{3}~2=2048$
 
 $$
 \begin{aligned}
-f_{\alpha^+}~n &= f_\alpha^n~n \\
-f_{ω}~n &= f_{n}~n
+f_{\alpha^+}\kern{0.17em}n &= f_\alpha^n\kern{0.17em}n \\
+f_{ω}\kern{0.17em}n &= f_{n}\kern{0.17em}n
 \end{aligned}
 $$
 
@@ -236,7 +236,7 @@ $$
 **定理** 由以上两式不难看出
 
 $$
-f_{ω^+}~n = f_ω^n~n
+f_{ω^+}\kern{0.17em}n = f_ω^n\kern{0.17em}n
 $$
 
 ```agda
@@ -247,13 +247,13 @@ $$
 **推论** 特别地, 有
 
 $$
-f_{ω^+}~2 = f_ω~(f_ω~2)
+f_{ω^+}\kern{0.17em}2 = f_ω\kern{0.17em}(f_ω\kern{0.17em}2)
 $$
 
 但此式无法在 Agda 中直接证明, 因为 Agda 想先把两边都算出, 而这是不现实的. 如果有读者知道如何证明, 请打在评论区. 作为替代, 我们可以证明如下式子.
 
 $$
-f_{\alpha^+}~2 = f_\alpha~(f_\alpha~2)
+f_{\alpha^+}\kern{0.17em}2 = f_\alpha\kern{0.17em}(f_\alpha\kern{0.17em}2)
 $$
 
 ```agda
@@ -270,11 +270,11 @@ $$
 为了系统性的构造大序数, 我们先证明序数归纳法, 并由此得到序数的递归原理.
 
 **定理 序数归纳法 (transfinite induction)** 对于任意性质 $P : \text{Ord} → \text{Set}$, 如果
-1. $P~0$ 成立,
-2. 对于任意序数 $α$, 如果 $P~α$ 成立, 则 $P~α^+$ 成立,
-3. 对于任意基本序列 $f$, 如果对于任意自然数 $n$, $P~(f~n)$ 成立, 则 $P~(\text{lim}~f)$ 成立,
+1. $P\kern{0.17em}0$ 成立,
+2. 对于任意序数 $α$, 如果 $P\kern{0.17em}α$ 成立, 则 $P\kern{0.17em}α^+$ 成立,
+3. 对于任意基本序列 $f$, 如果对于任意自然数 $n$, $P\kern{0.17em}(f\kern{0.17em}n)$ 成立, 则 $P\kern{0.17em}(\text{lim}\kern{0.17em}f)$ 成立,
 
-则对于任意序数 $α$, $P~α$ 成立.
+则对于任意序数 $α$, $P\kern{0.17em}α$ 成立.
 
 ```agda
 ind : {P : Ord → Set}
@@ -284,11 +284,11 @@ ind : {P : Ord → Set}
   → ∀ α → P α
 ```
 
-**(证明)** 要证对于任意序数 $α$, $P~α$ 成立. 归纳 $α$ 的三种情况.
+**(证明)** 要证对于任意序数 $α$, $P\kern{0.17em}α$ 成立. 归纳 $α$ 的三种情况.
 
-- 当 $α=0$ 时, 由条件1, $P~0$ 成立.
-- 当 $α=α^+$ 时, 要证 $P\,α^+$ 成立. 由归纳假设, $P~α$ 成立. 由条件2, $P~α^+$ 成立.
-- 当 $α=\text{lim}~f$ 时, 要证 $P~(\text{lim}~f)$ 成立. 由归纳假设, 对于任意自然数 $n$, $P~(f~n)$ 成立. 由条件3, $P~(\text{lim}~f)$ 成立. ∎
+- 当 $α=0$ 时, 由条件1, $P\kern{0.17em}0$ 成立.
+- 当 $α=α^+$ 时, 要证 $P\,α^+$ 成立. 由归纳假设, $P\kern{0.17em}α$ 成立. 由条件2, $P\kern{0.17em}α^+$ 成立.
+- 当 $α=\text{lim}\kern{0.17em}f$ 时, 要证 $P\kern{0.17em}(\text{lim}\kern{0.17em}f)$ 成立. 由归纳假设, 对于任意自然数 $n$, $P\kern{0.17em}(f\kern{0.17em}n)$ 成立. 由条件3, $P\kern{0.17em}(\text{lim}\kern{0.17em}f)$ 成立. ∎
 
 ```agda
 ind z s l zero = z
@@ -296,17 +296,17 @@ ind z s l (suc α) = s α (ind z s l α)
 ind z s l (lim f) = l f λ n → ind z s l (f n)
 ```
 
-**定理 序数的递归原理 (transfinite recursion)** 对于任意类型 $A$, 函数 $z : A$, $s : A → A$, $l : (ℕ → A) → A$, 和任意序数 $α$, 存在唯一的 $\text{rec}~z~s~l~α : A$, 满足
+**定理 序数的递归原理 (transfinite recursion)** 对于任意类型 $A$, 函数 $z : A$, $s : A → A$, $l : (ℕ → A) → A$, 和任意序数 $α$, 存在唯一的 $\text{rec}\kern{0.17em}z\kern{0.17em}s\kern{0.17em}l\kern{0.17em}α : A$, 满足
 
 $$
 \begin{aligned}
-\text{rec}~z~s~l~0 &= z \\
-\text{rec}~z~s~l~α^+ &= s~(\text{rec}~z~s~l~α) \\
-\text{rec}~z~s~l~(\text{lim}~f) &= l~(λ~n,\text{rec}~z~s~l~(f~n))
+\text{rec}\kern{0.17em}z\kern{0.17em}s\kern{0.17em}l\kern{0.17em}0 &= z \\
+\text{rec}\kern{0.17em}z\kern{0.17em}s\kern{0.17em}l\kern{0.17em}α^+ &= s\kern{0.17em}(\text{rec}\kern{0.17em}z\kern{0.17em}s\kern{0.17em}l\kern{0.17em}α) \\
+\text{rec}\kern{0.17em}z\kern{0.17em}s\kern{0.17em}l\kern{0.17em}(\text{lim}\kern{0.17em}f) &= l\kern{0.17em}(λ\kern{0.17em}n,\text{rec}\kern{0.17em}z\kern{0.17em}s\kern{0.17em}l\kern{0.17em}(f\kern{0.17em}n))
 \end{aligned}
 $$
 
-**(证明)** 令 $P = λ~\_,A$ 并应用序数归纳法即可. ∎
+**(证明)** 令 $P = λ\kern{0.17em}\_,A$ 并应用序数归纳法即可. ∎
 
 ```agda
 rec : A → (A → A) → ((ℕ → A) → A) → Ord → A
