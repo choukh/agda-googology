@@ -266,11 +266,11 @@ module TrinaryVeblen where
 **定义** 三元版本的 $Φ$ 为, 对给定的序数函数 $F : \text{Ord} → \text{Ord} → \text{Ord}$, 使用 $\text{rec}$, 其三个参数分别如下.
 
 - 起始步骤: $F$
-- 递归步骤: 迭代 $λφ_α,\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_α\kern{0.17em}β\kern{0.17em}0)$
+- 递归步骤: 迭代 $λφ_α,\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{α,β}\kern{0.17em}0)$
   - 一些解释
     - 此处迭代的是二元函数 $\text{Ord} → \text{Ord} → \text{Ord}$, 以得到一个三元函数.
     - 参数 $φ_α$ 是上一步的结果, 它是一个二元函数, 看作是对三元函数 $φ$ 输入了上一步的编号 $α$ 所得到的结果.
-    - 这一步我们先对 $λβ,φ_α\kern{0.17em}β\kern{0.17em}0$ 取不动点枚举, 再交给二元 $Φ$ 处理
+    - 这一步我们先对 $λβ,φ_{α,β}\kern{0.17em}0$ 取不动点枚举, 再交给二元 $Φ$ 处理
       - 回想上一小节我们是怎么从一代 $φ$ 得到二代 $φ$ 的, 这里的处理方式就是对该操作的反映.
   - 注意: 对任意元 $φ$, 我们都是取第二个参数的不动点枚举, 而对右边剩下的参数全部填零. 二元 $Φ$ 的时候这个规律还看不出来, 现在才显现出来.
 - 极限步骤: 对步骤的基本列取极限, 再做一次跳出操作, 再交给二元 $Φ$ 处理
@@ -280,8 +280,8 @@ module TrinaryVeblen where
 
 $$
 \begin{aligned}
-Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_α\kern{0.17em}β\kern{0.17em}0)) \\
-&(λφ,\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]\kern{0.17em}β\kern{0.17em}0))
+Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{α,β}\kern{0.17em}0)) \\
+&(λφ,\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]_β\kern{0.17em}0))
 \end{aligned}
 $$
 
@@ -348,7 +348,7 @@ $$
   φ-2-2 : φ 2 2 ≡ ζ̈
   φ-2-2 = refl
 
-  φ-2-3 : φ 2 3 ≡ Bin.η̈
+  φ-2-3 : φ 2 3 ≡ η̈
   φ-2-3 = refl
 
   φ-2 : φ 2 ≡ φ̈
@@ -359,6 +359,14 @@ $$
 ```
 
 **定理** 对于第一个参数为后继的情况, 我们对第二个参数分情况讨论, 由定义, 有以下等式成立.
+
+$$
+\begin{aligned}
+\varphi_{α^+,0} &= \text{fixpt}λβ,φ_{α,β}\kern{0.17em}0 \\
+\varphi_{α^+,β^+} &= \text{fixpt}\kern{0.17em}φ_{α^+,β} \\
+\varphi_{α^+,\text{lim}\kern{0.17em}g} &= \text{jump}\kern{0.17em}λγ,\text{lim}\kern{0.17em}λn,φ_{α^+,g\kern{0.17em}n}\kern{0.17em}γ
+\end{aligned}
+$$
 
 ```agda
   φ-suc-0 : φ (suc α) 0 ≡ fixpt λ β → φ α β 0
@@ -372,6 +380,14 @@ $$
 ```
 
 **定理** 对于第一个参数为极限的情况, 我们对第二个参数分情况讨论, 由定义, 有以下等式成立.
+
+$$
+\begin{aligned}
+\varphi_{\text{lim}\kern{0.17em}f,0} &= \text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n,β}\kern{0.17em}0 \\
+\varphi_{\text{lim}\kern{0.17em}f,β^+} &= \text{fixpt}\kern{0.17em}φ_{\text{lim}\kern{0.17em}f,β}\kern{0.17em} \\
+\varphi_{\text{lim}\kern{0.17em}f,\text{lim}\kern{0.17em}g} &= \text{jump}\kern{0.17em}λγ,\text{lim}\kern{0.17em}λn,φ_{\text{lim}\kern{0.17em}f,g\kern{0.17em}n}\kern{0.17em}γ
+\end{aligned}
+$$
 
 ```agda
   φ-lim-0 : φ (lim f) 0 ≡ jump λ β → lim λ n → φ (f n) β 0
@@ -390,51 +406,98 @@ $$
 module QuaternaryVeblen where
   private module Bin = BinaryVeblen
   private module Tri = TrinaryVeblen
+```
 
+摸清二元到三元的规律之后, 三元到四元就是按部就班的操作了.
+
+**定义** 四元版本的 $Φ$ 为, 对给定的序数函数 $F : \text{Ord} → \text{Ord} → \text{Ord} → \text{Ord}$, 使用 $\text{rec}$
+
+$$
+\begin{aligned}
+Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,\text{Tri}.Φ\kern{0.17em}(\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{α,β,0}\kern{0.17em}0))) \\
+&(λφ,\text{Tri}.Φ\kern{0.17em}(\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]_{β,0}\kern{0.17em}0)))
+\end{aligned}
+$$
+
+```agda
   Φ : (Ord → Ord → Ord → Ord) → (Ord → Ord → Ord → Ord → Ord)
   Φ F = rec F
     (λ φ-α  → Tri.Φ $ Bin.Φ $ fixpt λ β → φ-α β 0 0)
     (λ φ[_] → Tri.Φ $ Bin.Φ $ jump λ β → lim λ n → φ[ n ] β 0 0)
 ```
 
+**定义** 四元Veblen函数
+
+$$\varphi := Φ\kern{0.17em}\text{Tri}.\varphi$$
+
 ```agda
   φ : Ord → Ord → Ord → Ord → Ord
   φ = Φ Tri.φ
 ```
 
+**例** 第一个参数从无效到刚开始生效, 由定义, 有以下等式成立.
+
+$$
+\begin{aligned}
+\varphi_0 &= \text{Tri}.\varphi \\
+\varphi_{1,0,0} &= \text{fixpt}\kern{0.17em}λα,\text{Tri}.\varphi_{α,0}\kern{0.17em}0 \\
+\end{aligned}
+$$
+
 ```agda
   φ-0 : φ 0 ≡ Tri.φ
   φ-0 = refl
-```
 
-```agda
   φ-1-0-0 : φ 1 0 0 ≡ fixpt (λ α → Tri.φ α 0 0)
   φ-1-0-0 = refl
 ```
 
+**定理** 中间两个参数为零, 讨论第一个参数为后继和极限的情况, 由定义, 有以下等式成立.
+
+$$
+\begin{aligned}
+\varphi_{α^+,0,0} &= \text{fixpt}\kern{0.17em}λβ,φ_{α,β,0}\kern{0.17em}0 \\
+\varphi_{\text{lim}\kern{0.17em}f,0,0} &= \text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n,β,0}\kern{0.17em}0
+\end{aligned}
+$$
+
 ```agda
   φ-suc-0-0 : φ (suc α) 0 0 ≡ fixpt λ β → φ α β 0 0
   φ-suc-0-0 = refl
-```
 
-```agda
   φ-lim-0-0 : φ (lim f) 0 0 ≡ jump λ β → lim λ n → φ (f n) β 0 0
   φ-lim-0-0 = refl
 ```
+
+**定理** 将 $φ_α$ 看作一个固定的函数, 类似地, 有以下等式成立.
+
+$$
+\begin{aligned}
+\varphi_{α,β^+,0} &= \text{fixpt}\kern{0.17em}λγ,φ_{α,β,γ}\kern{0.17em}0 \\
+\varphi_{α,\text{lim}\kern{0.17em}g,0} &= \text{jump}\kern{0.17em}λγ,\text{lim}\kern{0.17em}λn,φ_{α,g\kern{0.17em}n,γ}\kern{0.17em}0
+\end{aligned}
+$$
 
 ```agda
   φ-α-suc-0 : φ α (suc β) 0 ≡ fixpt λ γ → φ α β γ 0
   φ-α-suc-0 {α = zero}  = refl
   φ-α-suc-0 {α = suc _} = refl
   φ-α-suc-0 {α = lim f} = refl
-```
 
-```agda
   φ-α-lim-0 : φ α (lim g) 0 ≡ jump λ γ → lim λ n → φ α (g n) γ 0
   φ-α-lim-0 {α = zero}  = refl
   φ-α-lim-0 {α = suc _} = refl
   φ-α-lim-0 {α = lim f} = refl
 ```
+
+**定理** 将 $φ_{α,β}$ 看作一个固定的函数, 类似地, 有以下等式成立.
+
+$$
+\begin{aligned}
+\varphi_{α,β,γ^+} &= \text{fixpt}\kern{0.17em}φ_{α,β,γ} \\
+\varphi_{α,β,\text{lim}\kern{0.17em}h} &= \text{jump}\kern{0.17em}λδ,\text{lim}\kern{0.17em}λn,φ_{α,β,h\kern{0.17em}n,δ}
+\end{aligned}
+$$
 
 ```agda
   φ-α-β-suc : φ α β (suc γ) ≡ fixpt (φ α β γ)
@@ -447,10 +510,8 @@ module QuaternaryVeblen where
   φ-α-β-suc {α = lim _} {β = zero}  = refl
   φ-α-β-suc {α = lim _} {β = suc _} = refl
   φ-α-β-suc {α = lim _} {β = lim _} = refl
-```
 
-```agda
-  φ-α-β-lim : φ α β (lim g) ≡ jump λ γ → lim λ n → φ α β (g n) γ
+  φ-α-β-lim : φ α β (lim h) ≡ jump λ δ → lim λ n → φ α β (h n) δ
   φ-α-β-lim {α = zero}  {β = zero}  = refl
   φ-α-β-lim {α = zero}  {β = suc _} = refl
   φ-α-β-lim {α = zero}  {β = lim _} = refl
