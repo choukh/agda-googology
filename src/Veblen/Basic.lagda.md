@@ -35,8 +35,9 @@ zhihu-tags: Agda, 序数, 大数数学
 - [core.exe - 大数数学入门](https://www.zhihu.com/column/c_1307845959598960640)
 - [core.exe - 大数数学入门 - 重置版](https://www.zhihu.com/column/c_1697290814588301312)
 - [oCaU - Agda大序数](https://zhuanlan.zhihu.com/p/572691308)
-  - 详细讨论了上至二元Veblen层级的序性质.
-  - ※ 本文不会讨论这些性质.
+  - 该文详细讨论了上至二元Veblen层级的序性质, 而本文不会讨论这些性质.
+- [oCaU - LVO 的 Coq 实现](https://github.com/choukh/Googology)
+  - 纯代码, 无文学
 
 ### 标准库依赖
 
@@ -60,7 +61,7 @@ $$
 \frac{\alpha:ℕ}{\kern{0.17em}\text{suc}\kern{0.17em}\alpha:ℕ\kern{0.17em}}
 $$
 
-**定义** 我们的序数类型 $\text{Ord}$ 则在 $ℕ$ 的基础上增加了第三条规则 $\text{lim}$, 即如果 $f$ 是 $ℕ$ 到序数的函数, 那么 $\text{lim}\kern{0.17em}f$ 也是序数.
+**定义** 我们的序数类型 $\text{Ord}$ 在 $ℕ$ 的基础上增加了第三条规则 $\text{lim}$, 即如果 $f$ 是 $ℕ$ 到序数的函数, 那么 $\text{lim}\kern{0.17em}f$ 也是序数.
 
 $$
 \frac{}{\kern{0.17em}\text{zero} : \text{Ord}\kern{0.17em}}
@@ -81,13 +82,14 @@ data Ord : Set where
 
 **注意** 我们的序数类型, 学名叫布劳威尔树序数 (Brouwer tree ordinals), 比真正的序数宽泛很多, 体现在以下两点:
 - 树序数不要求基本序列是严格递增的.
-  - 严格递增的约束对于大数的计算本身而言无关紧要.
+  - 严格递增的约束对于计算本身而言无关紧要.
+  - 当然, 如果要保证算出的大数足够大, 那么基本序列的递增性是必要的.
   - 我们构造的序数的基本序列都是严格递增的, 如果想要, 可以额外补上证明.
   - [Agda大序数](https://zhuanlan.zhihu.com/p/572691308)一文中证明了其中构造的上至 $\Gamma_0$ 的所有树序数的基本序列都是严格递增的.
-- 树序数是外延的 (extensional), 即真正的序数与树上的节点并不是唯一对应的.
-  - 这意味着我们可以用不同的基本序列构造出相同的序数.
+- 树序数是极其外延的 (extensional), 即真正的序数与树上的节点并不是唯一对应的.
+  - 这意味着我们可以用大量不同的基本序列构造出相同的序数.
     - 但同一性证明依赖于函数外延性 (function extensionality), 或某种商 (quotient) 机制, 如 setoid 或 cubical.
-  - 但这并不会影响大数的计算, 因为只要给出基本序列就能算, 况且大数的表示确实是依赖于特定的基本序列的.
+  - 但这并不会影响大数的计算, 因为只要给出基本序列就能算, 况且 FGH 大数的表示确实是依赖于特定基本序列的.
 
 **约定** 我们用 $α,β,γ,δ$ 表示序数, 用 $m,n$ 表示自然数.
 
@@ -99,7 +101,7 @@ variable
 
 **约定** 我们遵循类型论的习惯, 今后都会在无歧义的情况下省略函数应用的括号.
 
-**定义** 自然数到序数的嵌入函数 $\text{finord} : ℕ → \text{Ord}$
+**定义** 自然数到序数的嵌入函数 $\text{finord} : ℕ → \text{Ord}$ 如下
 
 $$
 \begin{aligned}
@@ -315,14 +317,11 @@ rec z s l = ind z (λ _ → s) (λ _ → l)
 
 **注意** 序数的递归原理是序数归纳法的特例, 也就是说, 序数的递归原理是序数归纳法的一个直接应用.
 
-**注意** 序数的递归原理相当强大, 因为 $A$ 可以是任意类型, 包括函数类型 $\text{Ord}\rightarrow\text{Ord}$ 与 $(\text{Ord}\rightarrow\text{Ord})\rightarrow(\text{Ord}\rightarrow\text{Ord})$ 等, 也就是说它允许定义高阶函数的递归. 本文出现的所有大序数都由它定义.
+**注意** 序数的递归原理相当强大, 因为 $A$ 可以是任意类型, 包括函数类型 $\text{Ord}\rightarrow\text{Ord}$ 与 $(\text{Ord}\rightarrow\text{Ord})\rightarrow(\text{Ord}\rightarrow\text{Ord})$ 等, 也就是说它允许定义高阶函数的递归. 本文出现的所有大序数都由 $\text{rec}$ 定义.
 
-## 无穷迭代
+## 超限复合
 
-```agda
-_∘^_ : (Ord → Ord) → Ord → Ord → Ord
-(F ∘^ α) β = rec β F lim α
-```
+**约定** 我们用 $F$ 表示序数函数 $\text{Ord} → \text{Ord}$, 用 $f,g,h$ 表示基本序列 $ℕ → \text{Ord}$.
 
 ```agda
 variable
@@ -330,27 +329,49 @@ variable
   f g h : ℕ → Ord
 ```
 
+**定义** 仿照函数 $F : A → A$ 的 $n$ 次复合 $F^n$, 我们定义序数函数 $F : \text{Ord} → \text{Ord}$ 的 $α$ 次复合 $F^α$, 但使用序数的递归原理 $\text{rec}$ 来定义.
+
+$$
+F^\alpha\kern{0.17em}\beta=\text{rec}\kern{0.17em}\beta\kern{0.17em}F\kern{0.17em}\text{lim}\kern{0.17em}\alpha
+$$
+
+```agda
+_∘^_ : (Ord → Ord) → Ord → Ord → Ord
+(F ∘^ α) β = rec β F lim α
+```
+
+**注意** 该定义不是 $F^\alpha\kern{0.17em}\beta=\text{rec}\kern{0.17em}\beta\kern{0.17em}F\kern{0.17em}(\text{lim}\kern{0.17em}\alpha)$, 此式有类型错误.
+
+对于 $\text{rec}$ 的四个参数, 直观上
+- 第一个参数是初始值, 这里是 $F^\alpha$ 的输入 $\beta$,
+- 第二个参数是后继步骤, 需要指定递归迭代的函数, 这里递归迭代的就是 $F$,
+- 第三个参数是极限步骤, 需要指定将极限步对应的步骤基本序列 $λ\kern{0.17em}n\kern{0.17em},\kern{0.17em}F^{f\kern{0.17em}n}\kern{0.17em}\beta$ 映射的序数的函数, 这里就是单纯地取其极限, 所以指定为 $\text{lim}$,
+- 第四个参数是递归的次数, 这里是 $\alpha$.
+
+**定理** 依定义有
+
+$$
+\begin{aligned}
+F^0 &= \text{id} \\
+F^{α^+} &= F \circ F^α \\
+F^{\text{lim}\kern{0.17em}f} &= λ\kern{0.17em}\beta,\text{lim}\kern{0.17em}λ\kern{0.17em}n\kern{0.17em},\kern{0.17em}F^{f\kern{0.17em}n}\kern{0.17em}\beta
+\end{aligned}
+$$
+
 ```agda
 ∘^-zero : F ∘^ zero ≡ id
 ∘^-zero = refl
-```
 
-```agda
 ∘^-suc : F ∘^ suc α ≡ F ∘ (F ∘^ α)
 ∘^-suc = refl
-```
 
-```agda
 ∘^-lim : F ∘^ lim f ≡ λ β → lim λ n → (F ∘^ (f n)) β
 ∘^-lim = refl
 ```
 
-```agda
-iterω : (Ord → Ord) → Ord → Ord
-iterω F α = (F ∘^ ω) α
-```
-
 ## 序数算术
+
+**定义** 从 $α$ 开始做 $β$ 次后继叫做序数加法, 记作 $α+β$.
 
 ```agda
 infixl 6 _+_
@@ -358,11 +379,15 @@ _+_ : Ord → Ord → Ord
 α + β = (suc ∘^ β) α
 ```
 
+**定义** 从 $0$ 开始做 $β$ 次 $+ α$ 叫做序数乘法, 记作 $α*β$.
+
 ```agda
 infixl 7 _*_
 _*_ : Ord → Ord → Ord
 α * β = ((_+ α) ∘^ β) 0
 ```
+
+**定义** 从 $1$ 开始做 $β$ 次 $* α$ 叫做序数幂, 记作 $α^β$.
 
 ```agda
 infix 8 _^_
@@ -370,20 +395,36 @@ _^_ : Ord → Ord → Ord
 α ^ β = ((_* α) ∘^ β) 1
 ```
 
+## 三大高阶函数
+
+Veblen层级的构造需要三个重要的高阶函数
+
+1. 无穷迭代 $λF,F^\omega$
+2. 跳出运算 $\text{jump}$
+3. 不动点的枚举 $\text{fixpt}$
+
+它们都具有类型 $(\text{Ord}→\text{Ord})→(\text{Ord}→\text{Ord})$.
+
+### 无穷迭代
+
+**定义** 我们称 $F$ 的 $\omega$ 次复合 $F^\omega$ 为 $F$ 的无穷迭代.
+
 ```agda
-_+ω^_ : Ord → Ord → Ord
-α +ω^ zero = suc α
-α +ω^ suc β = iterω (_+ω^ β) α
-α +ω^ lim f = lim λ n → α +ω^ f n
+iterω : (Ord → Ord) → Ord → Ord
+iterω F = F ∘^ ω
 ```
 
-## 跳出运算
+### 跳出运算
 
-复合了后继的迭代.
+**定义** 给定序数函数 $F$ 和迭代次数 $α$, 从 $F\kern{0.17em}0$ 开始, 每次迭代时先做一次后继再迭代 $F$, 总共迭代 $α$ 次的运算叫做 $F$ 的 $α$ 次跳出, 记作 $\text{jump}\kern{0.17em}F\kern{0.17em}α$.
+
+$$
+\text{jump}\kern{0.17em}F\kern{0.17em}α := (F\kern{0.17em}\circ\kern{0.17em}\text{suc})\kern{0.17em}^α\kern{0.17em}(F\kern{0.17em}0)
+$$
 
 ```agda
 jump : (Ord → Ord) → Ord → Ord
-jump F α = ((F ∘ suc) ∘^ α) (F zero)
+jump F α = ((F ∘ suc) ∘^ α) (F 0)
 ```
 
 ```agda
@@ -405,7 +446,7 @@ jump-lim : jump F (lim f) ≡ lim λ n → jump F (f n)
 jump-lim = refl
 ```
 
-## 不动点的枚举
+### 不动点的枚举
 
 ```agda
 fixpt : (Ord → Ord) → Ord → Ord
@@ -457,4 +498,18 @@ fixpt-lim = refl
 ```agda
 η : Ord → Ord
 η = fixpt ζ
+```
+
+一个很大的大数:
+
+$$
+f_{η_0} 99 = f_{
+  \begin{rcases}
+  ζ_{ζ_{⋱_{ζ_0}}}
+  \end{rcases}99
+}99
+$$
+
+```agda
+_ = FGH.f (η 0) 99
 ```
