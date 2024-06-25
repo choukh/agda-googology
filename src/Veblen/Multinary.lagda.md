@@ -523,3 +523,13 @@ $$
   φ-α-β-lim {α = lim _} {β = suc _} = refl
   φ-α-β-lim {α = lim _} {β = lim _} = refl
 ```
+
+**例** 一个很大的大数:
+
+$$
+\text{oom}_2 := f_{φ_{Γ_0,0,0}\kern{0.17em}(0)}(99)
+$$
+
+```agda
+oom₂ = FGH.f (QuaternaryVeblen.φ (BinaryVeblen.Γ 0) 0 0 0) 99
+```
