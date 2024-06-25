@@ -23,7 +23,7 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 也就是说, 提供足够的时间, 能量和内存, 本文介绍的大数计算程序可以真正算出一个大数. 如果真的想运行:
 1. 参考 [Installation](https://agda.readthedocs.io/en/latest/getting-started/installation.html) 安装 Agda.
 2. 进本文所在Github仓库 ([agda-googology](https://github.com/choukh/agda-googology)) 下载本文 markdown 源码.
-3. 用编辑器打开源码, 确认进入了 [agda-mode](https://agda.readthedocs.io/en/latest/tools/emacs-mode.html), `C-c C-n` 对 `oom` 执行正规化.
+3. 用编辑器打开源码, 确认进入了 [agda-mode](https://agda.readthedocs.io/en/latest/tools/emacs-mode.html), 键入 `C-c C-n` 对 `oom` 执行正规化 (normalization).
 
 ### 目标人群
 
