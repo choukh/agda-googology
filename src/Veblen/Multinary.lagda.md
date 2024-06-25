@@ -56,7 +56,7 @@ $\varphi_1, \varphi_2, ...$ 分别具有定义
 
 剩下的只需要处理 $Φ_2, Φ_3, ...$ 的细节.
 
-下标位是稀缺资源. 后文中, 在没有歧义的情况下, 我们会省去表示元数的下标. 如有歧义, 我们用 $\text{Bin}.Φ, \text{Tri}.Φ, \text{Qua}.Φ,...$ 以及 $\text{Bin}.\varphi, \text{Tri}.\varphi, \text{Qua}.\varphi,...$ 来区分元数. 下文中出现的 $\varphi_1, \varphi_2,...$ 将指代别的东西.
+下标位是稀缺资源. 后文中, 在没有歧义的情况下, 我们会省去表示元数的下标. 如有歧义, 我们用 $\text{Bin}.Φ, \text{Tri}.Φ, \text{Qua}.Φ,...$ 以及 $\text{Bin}.\varphi, \text{Tri}.\varphi, \text{Qua}.\varphi,...$ 来区分元数. 下文中的下标将另作他用, 注意区分.
 
 ## 二元Veblen函数
 
@@ -70,6 +70,8 @@ module BinaryVeblen where
 - 起始步骤: $F$
 - 递归步骤: 迭代 $\text{fixpt}$
 - 极限步骤: 对步骤的基本列取极限, 再做一次跳出操作
+
+即
 
 $$
 Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}\text{fixpt}\kern{0.17em}(λφ,\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]\kern{0.17em}β)
@@ -135,7 +137,7 @@ $$
   φ-lim = refl
 ```
 
-为了对 $\text{jump}$ 的行为有更加直观的感受, 对第一个参数为极限的情况, 我们对第二个参数再次分零, 后继和极限的情况进行讨论, 有如下等式成立.
+为了对 $\text{jump}$ 的行为有更加直观的感受, 对第一个参数为极限的情况, 我们对第二个参数再次分成零, 后继和极限的情况进行讨论, 有如下等式成立.
 
 $$
 \begin{aligned}
@@ -158,7 +160,11 @@ $$
 
 很快, 我们来到了二元Veblen函数的能力极限.
 
-**定义** 对函数 $λα,φ\kern{0.17em}α\kern{0.17em}0$ 取不动点枚举, 得到的函数称为 $\Gamma$.
+**定义** 对函数 $λα,φ_α\kern{0.17em}0$ 取不动点枚举, 得到的函数称为 $\Gamma$.
+
+$$
+\Gamma := \text{fixpt}\kern{0.17em}λα,φ_α\kern{0.17em}0
+$$
 
 ```agda
   Γ : Ord → Ord
@@ -174,7 +180,15 @@ $$Γ_0 = φ_{φ_{φ_{φ_{...}0}\kern{0.17em}0}\kern{0.17em}0}\kern{0.17em}0$$
   Γ-0 = refl
 ```
 
-没有什么能阻止我们继续取不动点枚举. 将 $\Gamma$ 看作新的 $λα,ω\kern{0.17em}^α$, 我们可以得到所谓二代 $\varepsilon, \zeta, \eta$ 函数, 分别记作 $\dot{\varepsilon}, \dot{\zeta}, \dot{\eta}$.
+没有什么能阻止我们继续取不动点枚举. 将 $\Gamma$ 看作新的 $λα,ω\kern{0.17em}^α$, 我们可以得到所谓第二代 $\varepsilon, \zeta, \eta$ 函数, 分别记作 $\dot{\varepsilon}, \dot{\zeta}, \dot{\eta}$.
+
+$$
+\begin{aligned}
+\dot{\varepsilon} &:= \text{fixpt}\kern{0.17em}Γ \\
+\dot{\zeta} &:= \text{fixpt}\kern{0.17em}\dot{\varepsilon} \\
+\dot{\eta} &:= \text{fixpt}\kern{0.17em}\dot{\zeta}
+\end{aligned}
+$$
 
 ```agda
   ε̇ ζ̇ η̇ : Ord → Ord
@@ -182,6 +196,15 @@ $$Γ_0 = φ_{φ_{φ_{φ_{...}0}\kern{0.17em}0}\kern{0.17em}0}\kern{0.17em}0$$
   ζ̇ = fixpt ε̇
   η̇ = fixpt ζ̇
 ```
+
+然后有第二代 $\varphi$ 和第二代 $\Gamma$ 函数.
+
+$$
+\begin{aligned}
+\dot{\varphi} &:= Φ\kern{0.17em}Γ \\
+\dot{\Gamma} &:= \text{fixpt}\kern{0.17em}λα,\dot{\varphi}_α\kern{0.17em}0
+\end{aligned}
+$$
 
 ```agda
   φ̇ : Ord → Ord → Ord
@@ -191,12 +214,31 @@ $$Γ_0 = φ_{φ_{φ_{φ_{...}0}\kern{0.17em}0}\kern{0.17em}0}\kern{0.17em}0$$
   Γ̇ = fixpt λ α → φ̇ α 0
 ```
 
+乃至第三代 $\varepsilon, \zeta, \eta$ 函数
+
+$$
+\begin{aligned}
+\ddot{\varepsilon} &:= \text{fixpt}\kern{0.17em}\dot{\Gamma} \\
+\ddot{\zeta} &:= \text{fixpt}\kern{0.17em}\ddot{\varepsilon} \\
+\ddot{\eta} &:= \text{fixpt}\kern{0.17em}\ddot{\zeta}
+\end{aligned}
+$$
+
 ```agda
   ε̈ ζ̈ η̈ : Ord → Ord
   ε̈ = fixpt Γ̇
   ζ̈ = fixpt ε̈
   η̈ = fixpt ζ̈
 ```
+
+和第三代 $\varphi$ 和第三代 $\Gamma$ 函数.
+
+$$
+\begin{aligned}
+\ddot{\varphi} &:= Φ\kern{0.17em}\dot{\Gamma} \\
+\ddot{\Gamma} &:= \text{fixpt}\kern{0.17em}λα,\ddot{\varphi}_α\kern{0.17em}0
+\end{aligned}
+$$
 
 ```agda
   φ̈ : Ord → Ord → Ord
@@ -206,12 +248,33 @@ $$Γ_0 = φ_{φ_{φ_{φ_{...}0}\kern{0.17em}0}\kern{0.17em}0}\kern{0.17em}0$$
   Γ̈ = fixpt λ α → φ̈ α 0
 ```
 
+以此类推, 直至超限代. 三元Veblen函数将把这些后代函数囊括其中.
+
 ## 三元Veblen函数
 
 ```agda
 module TrinaryVeblen where
-  private module Bin = BinaryVeblen
+```
 
+本小节我们将上一小节的谈论过任意事物 $x$ 记作 $\text{Bin}.x$, 以让出命名空间.
+
+```agda
+  private module Bin = BinaryVeblen
+```
+
+**定义** 三元版本的 $Φ$ 为, 对给定的序数函数 $F : \text{Ord} → \text{Ord} → \text{Ord}$, 使用 $\text{rec}$, 按以下参数递归.
+
+- 起始步骤: $F$
+- 递归步骤: 迭代 $\text{fixpt}$
+- 极限步骤: 对步骤的基本列取极限, 再做一次跳出操作
+
+即
+
+$$
+Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}\text{fixpt}\kern{0.17em}(λφ,\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]\kern{0.17em}β\kern{0.17em}0)
+$$
+
+```agda
   Φ : (Ord → Ord → Ord) → Ord → Ord → Ord → Ord
   Φ F = rec F
     (λ φ-α  → Bin.Φ $ fixpt λ β → φ-α β 0)
