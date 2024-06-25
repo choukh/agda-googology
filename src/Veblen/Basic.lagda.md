@@ -1,6 +1,7 @@
 ---
 title: 形式化大数数学 (1.1 - 序数, FGH, 不动点)
 zhihu-tags: Agda, 序数, 大数数学
+zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 ---
 
 # 形式化大数数学 (1.1 - 序数, FGH, 不动点)
@@ -516,14 +517,14 @@ fixpt-lim = refl
 $$
 \begin{aligned}
 \varepsilon_0 &= (λα,ω^α)^ω\kern{0.17em}0 = 
-\begin{rcases}
+\left.
 ω^{ω^{⋰^{ω^0}}}
-\end{rcases}ω
+\right\}ω
 \\
 \varepsilon_{α^+} &= (λα,ω^α)^ω\kern{0.17em}({ε_α}^+) = 
-\begin{rcases}
+\left.
 ω^{ω^{⋰^{ω^{({ε_α}^+)}}}}
-\end{rcases}ω
+\right\}ω
 \\
 \varepsilon_{\text{lim}\kern{0.17em}f} &= \text{lim}\kern{0.17em}λ\kern{0.17em}n\kern{0.17em},\kern{0.17em}\varepsilon_{f\kern{0.17em}n} = \text{lim}(ε_{f\kern{0.17em}0},ε_{f\kern{0.17em}1},...)
 \end{aligned}
@@ -552,13 +553,13 @@ $$
 $$
 \begin{aligned}
 \zeta_0 &= ε^ω\kern{0.17em}0 =
-\begin{rcases}
+\left.
 ε_{ε_{⋱_{ε_0}}}
-\end{rcases}ω \\
+\right\}ω \\
 \zeta_{α^+} &= ε^ω\kern{0.17em}({\zeta_α}^+) =
-\begin{rcases}
+\left.
 ε_{ε_{⋱_{({\zeta_α}^+)}}}
-\end{rcases}ω
+\right\}ω
 \\
 \zeta_{\text{lim}\kern{0.17em}f} &= \text{lim}\kern{0.17em}λ\kern{0.17em}n\kern{0.17em},\kern{0.17em}\zeta_{f\kern{0.17em}n} = \text{lim}(ζ_{f\kern{0.17em}0},ζ_{f\kern{0.17em}1},...)
 \end{aligned}
@@ -575,9 +576,9 @@ $$
 
 $$
 f_{η_0} 99 = f_{
-  \begin{rcases}
+  \left.
   ζ_{ζ_{⋱_{ζ_0}}}
-  \end{rcases}99
+  \right\}99
 }99
 $$
 
