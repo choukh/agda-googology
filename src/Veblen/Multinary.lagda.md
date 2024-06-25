@@ -120,7 +120,7 @@ $$
   φ-3 = refl
 ```
 
-**定理** 由定义, 对于第一个参数为后继和极限的情况, 有以下等式成立.
+**定理** 对于第一个参数为后继和极限的情况, 由定义, 有以下等式成立.
 
 $$
 \begin{aligned}
@@ -256,10 +256,11 @@ $$
 module TrinaryVeblen where
 ```
 
-本小节我们将上一小节的谈论过任意事物 $x$ 记作 $\text{Bin}.x$, 以让出命名空间.
+本小节我们将上一小节的谈论过事物 $x$ 记作 $\text{Bin}.x$, 以让出命名空间, 但没有歧义时会省略.
 
 ```agda
   private module Bin = BinaryVeblen
+  open Bin using (Γ; ε̇; ζ̇; η̇; φ̇; Γ̇; ε̈; ζ̈; η̈; φ̈; Γ̈)
 ```
 
 **定义** 三元版本的 $Φ$ 为, 对给定的序数函数 $F : \text{Ord} → \text{Ord} → \text{Ord}$, 使用 $\text{rec}$, 其三个参数分别如下.
@@ -270,7 +271,7 @@ module TrinaryVeblen where
     - 此处迭代的是二元函数 $\text{Ord} → \text{Ord} → \text{Ord}$, 以得到一个三元函数.
     - 参数 $φ_α$ 是上一步的结果, 它是一个二元函数, 看作是对三元函数 $φ$ 输入了上一步的编号 $α$ 所得到的结果.
     - 这一步我们先对 $λβ,φ_α\kern{0.17em}β\kern{0.17em}0$ 取不动点枚举, 再交给二元 $Φ$ 处理
-      - 回想上一小节我们是怎么从一代 $φ$ 得到二代 $φ$ 的, 这里是类似的操作.
+      - 回想上一小节我们是怎么从一代 $φ$ 得到二代 $φ$ 的, 这里的处理方式就是对该操作的反映.
   - 注意: 对任意元 $φ$, 我们都是取第二个参数的不动点枚举, 而对右边剩下的参数全部填零. 二元 $Φ$ 的时候这个规律还看不出来, 现在才显现出来.
 - 极限步骤: 对步骤的基本列取极限, 再做一次跳出操作, 再交给二元 $Φ$ 处理
   - 注意: 与递归步骤类似地, 这里是对第二个参数跳出, 右边其余参数全部填零.
@@ -300,94 +301,87 @@ $$\varphi := Φ\kern{0.17em}\text{Bin}.\varphi$$
   φ = Φ Bin.φ
 ```
 
+**例** 由定义, 以下等式成立.
+
+$$
+\begin{aligned}
+\varphi_0 &= \text{Bin}.\varphi \\
+\varphi_{1,0} &= \Gamma \\
+\varphi_{1,1} &= \dot{\varepsilon} \\
+\varphi_{1,2} &= \dot{\zeta} \\
+\varphi_{1,3} &= \dot{\eta} \\
+\varphi_{1} &= \dot{\varphi} \\
+\varphi_{2,0} &= \dot{\Gamma} \\
+\varphi_{2,1} &= \ddot{\varepsilon} \\
+\varphi_{2,2} &= \ddot{\zeta} \\
+\varphi_{2,3} &= \ddot{\eta} \\
+\varphi_{2} &= \ddot{\varphi} \\
+\varphi_{3,0} &= \ddot{\Gamma} \\
+\end{aligned}
+$$
+
 ```agda
   φ-0 : φ 0 ≡ Bin.φ
   φ-0 = refl
+
+  φ-1-0 : φ 1 0 ≡ Γ
+  φ-1-0 = refl
+
+  φ-1-1 : φ 1 1 ≡ ε̇
+  φ-1-1 = refl
+
+  φ-1-2 : φ 1 2 ≡ ζ̇
+  φ-1-2 = refl
+
+  φ-1-3 : φ 1 3 ≡ η̇
+  φ-1-3 = refl
+
+  φ-1 : φ 1 ≡ φ̇
+  φ-1 = refl
+
+  φ-2-0 : φ 2 0 ≡ Γ̇
+  φ-2-0 = refl
+
+  φ-2-1 : φ 2 1 ≡ ε̈
+  φ-2-1 = refl
+
+  φ-2-2 : φ 2 2 ≡ ζ̈
+  φ-2-2 = refl
+
+  φ-2-3 : φ 2 3 ≡ Bin.η̈
+  φ-2-3 = refl
+
+  φ-2 : φ 2 ≡ φ̈
+  φ-2 = refl
+
+  φ-3-0 : φ 3 0 ≡ Γ̈
+  φ-3-0 = refl
 ```
+
+**定理** 对于第一个参数为后继的情况, 我们对第二个参数分情况讨论, 由定义, 有以下等式成立.
 
 ```agda
   φ-suc-0 : φ (suc α) 0 ≡ fixpt λ β → φ α β 0
   φ-suc-0 = refl
-```
 
-```agda
   φ-suc-suc : φ (suc α) (suc β) ≡ fixpt (φ (suc α) β)
   φ-suc-suc = refl
-```
 
-```agda
   φ-suc-lim : φ (suc α) (lim g) ≡ jump λ γ → lim λ n → φ (suc α) (g n) γ
   φ-suc-lim = refl
 ```
 
+**定理** 对于第一个参数为极限的情况, 我们对第二个参数分情况讨论, 由定义, 有以下等式成立.
+
 ```agda
   φ-lim-0 : φ (lim f) 0 ≡ jump λ β → lim λ n → φ (f n) β 0
   φ-lim-0 = refl
-```
 
-```agda
   φ-lim-suc : φ (lim f) (suc β) ≡ fixpt (φ (lim f) β)
   φ-lim-suc = refl
-```
 
-```agda
   φ-lim-lim : φ (lim f) (lim g) ≡ jump λ γ → lim λ n → φ (lim f) (g n) γ
   φ-lim-lim = refl
-```
-
-```agda
-  φ-1-0 : φ 1 0 ≡ Bin.Γ
-  φ-1-0 = refl
-```
-
-```agda
-  φ-1-1 : φ 1 1 ≡ Bin.ε̇
-  φ-1-1 = refl
-```
-
-```agda
-  φ-1-2 : φ 1 2 ≡ Bin.ζ̇
-  φ-1-2 = refl
-```
-
-```agda
-  φ-1-3 : φ 1 3 ≡ Bin.η̇
-  φ-1-3 = refl
-```
-
-```agda
-  φ-1 : φ 1 ≡ Bin.φ̇
-  φ-1 = refl
-```
-
-```agda
-  φ-2-0 : φ 2 0 ≡ Bin.Γ̇
-  φ-2-0 = refl
-```
-
-```agda
-  φ-2-1 : φ 2 1 ≡ Bin.ε̈
-  φ-2-1 = refl
-```
-
-```agda
-  φ-2-2 : φ 2 2 ≡ Bin.ζ̈
-  φ-2-2 = refl
-```
-
-```agda
-  φ-2-3 : φ 2 3 ≡ Bin.η̈
-  φ-2-3 = refl
-```
-
-```agda
-  φ-2 : φ 2 ≡ Bin.φ̈
-  φ-2 = refl
-```
-
-```agda
-  φ-3-0 : φ 3 0 ≡ Bin.Γ̈
-  φ-3-0 = refl
 ```
 
 ## 四元Veblen函数
