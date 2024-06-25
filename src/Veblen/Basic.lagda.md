@@ -47,7 +47,7 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 module Veblen.Basic where
 
 open import Data.Nat public using (ℕ; zero; suc; 2+)
-open import Data.Unit public using (⊤)
+open import Data.Unit public using (⊤; tt)
 open import Function public using (id; _∘_; _$_; _∋_)
 open import Relation.Binary.PropositionalEquality as Eq public using (_≡_; refl; cong)
 open Eq.≡-Reasoning
@@ -131,11 +131,10 @@ $$
 **非文学** 以下代码调用了[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能, 允许数字字面量依据上下文自动具有自然数或序数类型.
 
 ```agda
-open import Agda.Builtin.FromNat
-
+open import Agda.Builtin.FromNat public
 instance
-  _ = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → finord n }
-  _ = Number ℕ   ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
+  nOrd = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → finord n }
+  nNat = Number ℕ   ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
 ```
 
 以下为测试用例.
