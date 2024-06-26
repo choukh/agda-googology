@@ -49,8 +49,9 @@ module Veblen.Basic where
 open import Data.Nat public using (ℕ; zero; suc; 2+)
 open import Data.Unit public using (⊤; tt)
 open import Function public using (id; _∘_; _$_; _∋_)
-open import Relation.Binary.PropositionalEquality as Eq public using (_≡_; refl; cong)
-open Eq.≡-Reasoning
+open import Relation.Binary.PropositionalEquality as Eq public
+  using (_≡_; refl; sym; cong; cong-app)
+open Eq.≡-Reasoning public
 ```
 
 ## 序数的定义
@@ -83,15 +84,16 @@ data Ord : Set where
 这样的 $f : ℕ\rightarrow\text{Ord}$ 又叫做 $\text{lim}\kern{0.17em}f$ 的基本列 (fundamental sequence), 而 $\text{lim}\kern{0.17em}f$ 则叫做基本列 $f$ 的极限. 这样的定义允许我们很方便地讨论零, 后继序数和极限序数三种情况. 为了方便阅读, 我们会把 $\text{zero}$ 写作 $0$, 把 $\text{suc}\kern{0.17em}x$ 写作 $x^+$.
 
 **注意** 我们的序数类型, 学名叫布劳威尔树序数 (Brouwer tree ordinals), 比真正的递归序数宽泛很多, 体现在以下两点:
+
 - 树序数不要求基本列是严格递增的.
   - 严格递增的约束对于计算本身而言无关紧要.
   - 当然, 如果要保证算出的大数足够大, 那么基本列的递增性是必要的.
   - 我们构造的序数的基本列都是严格递增的, 如果想要, 可以额外补上证明.
   - [Agda大序数](https://zhuanlan.zhihu.com/p/572691308)一文中证明了其中构造的上至 $\Gamma_0$ 的所有树序数的基本列都是严格递增的.
-- 树序数是极其外延的 (extensional), 即真正的序数与树上的节点并不是唯一对应的.
-  - 这意味着我们可以用大量不同的基本列构造出相同的序数.
+- 树序数是极其外延的 (extensional), 即一个真正的递归序数可能对应数上大量的节点.
+  - 也就是说我们可以用大量不同的基本列构造出相同的序数.
     - 但同一性证明依赖于函数外延性 (function extensionality), 或某种商 (quotient) 机制, 如 setoid 或 cubical.
-  - 但这并不会影响大数的计算, 因为只要给出基本列就能算, 况且 FGH 大数的表示确实是依赖于特定基本列的.
+  - 但这并不影响大数的计算, 因为只要给出基本列就能算, 况且 FGH 大数的具体数值确实可能是依赖于特定基本列的.
 
 **约定** 我们用 $α,β,γ,δ$ 表示序数, 用 $m,n$ 表示自然数.
 
@@ -234,7 +236,7 @@ $$
   f-ω = refl
 ```
 
-**注意** 本文出现的大部分命题的证明都是「依定义即得」的, 体现为代码中的 `refl`. 也就是说, 证明都是直接展开定义, 不需要额外的推理. 但这并不意味着所有证明是显然的, 有时候递归定义的展开会非常复杂, 这时候我们会分布展开, 逐步化简, 但每一步都是 `refl` 可证.
+**注意** 本文出现的大部分命题的证明都是「依定义即得」的, 体现为代码中的 `refl`. 也就是说, 证明都是直接展开定义, 不需要额外的推理. 但这并不意味着所有证明是显然的, 有时候递归定义的展开会非常复杂, 这时候我们会分步展开, 逐步化简, 但每一步都 `refl` 可证.
 
 **定理** 由以上两式不难看出
 
@@ -273,6 +275,7 @@ $$
 为了系统性的构造大序数, 我们先证明序数归纳法, 并由此得到序数的递归原理.
 
 **定理 序数归纳法 (transfinite induction)** 对于任意性质 $P : \text{Ord} → \text{Set}$, 如果
+
 1. $P\kern{0.17em}0$ 成立,
 2. 对于任意序数 $α$, 如果 $P\kern{0.17em}α$ 成立, 则 $P\kern{0.17em}α^+$ 成立,
 3. 对于任意基本列 $f$, 如果对于任意自然数 $n$, $P\kern{0.17em}(f\kern{0.17em}n)$ 成立, 则 $P\kern{0.17em}(\text{lim}\kern{0.17em}f)$ 成立,
@@ -346,6 +349,7 @@ _∘^_ : (Ord → Ord) → Ord → Ord → Ord
 **注意** 该定义不是 $F^\alpha\kern{0.17em}\beta=\text{rec}\kern{0.17em}\beta\kern{0.17em}F\kern{0.17em}(\text{lim}\kern{0.17em}\alpha)$, 此式有类型错误.
 
 对于 $\text{rec}$ 的四个参数, 直观上
+
 - 第一个参数是初始值, 这里是 $F^\alpha$ 的输入 $\beta$,
 - 第二个参数是后继步骤, 需要指定递归迭代的函数, 这里递归迭代的就是 $F$,
 - 第三个参数是极限步骤, 需要指定将极限步对应的步骤基本列 $λ\kern{0.17em}n\kern{0.17em},\kern{0.17em}F^{f\kern{0.17em}n}\kern{0.17em}\beta$ 映射到序数的函数, 这里就是单纯地取其极限, 所以指定为 $\text{lim}$,
