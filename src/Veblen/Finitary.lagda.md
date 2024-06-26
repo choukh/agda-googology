@@ -48,11 +48,6 @@ _0⋯_,_ {n = suc n} F = F 0 0⋯_,_
 ```
 
 ```agda
-Φ : Ord →ⁿ suc n → Ord →ⁿ 2+ n
-Ψ : (Ord → Ord) → Ord →ⁿ suc n
-```
-
-```agda
 left-zero : {F : A →ⁿ (suc n)} → F 0⋯0 ≡ F 0 0⋯0
 left-zero = refl
 
@@ -62,6 +57,11 @@ right-zero {n = suc _} {F} = right-zero {F = F 0}
 ```
 
 ## 有限元Veblen函数
+
+```agda
+Φ : Ord →ⁿ suc n → Ord →ⁿ 2+ n
+Ψ : (Ord → Ord) → Ord →ⁿ suc n
+```
 
 ```agda
 Φ F = rec F
@@ -166,18 +166,17 @@ $$
   let j = jump λ β → lim λ m → φ (f m) β 0⋯0 in   begin
   φ {suc n} (lim f) 0⋯ (suc α)                    ≡⟨ cong-app φ-l-z⋯x (suc α) ⟩
   j (suc α)                                       ≡⟨⟩
-  lim (λ m → φ (f m) (suc (j α)) 0⋯0)             ≡⟨
-    cong (λ x → lim (λ m → φ (f m) (suc x) 0⋯0)) (cong-app (sym φ-l-z⋯x) α) ⟩
+  lim (λ m → φ (f m) (suc (j α)) 0⋯0)             ≡˘⟨
+    cong (λ x → lim (λ m → φ {suc n} (f m) (suc (x α)) 0⋯0)) φ-l-z⋯x ⟩
   lim (λ m → φ (f m) (suc (φ (lim f) 0⋯ α)) 0⋯0)  ∎
 ```
 
 ```agda
-```
 φ-l-z⋯l : φ {suc n} (lim f) 0⋯ (lim g) ≡ lim λ m → φ (lim f) 0⋯ (g m)
 φ-l-z⋯l {n} {f} {g} =
   let j = jump λ β → lim λ m → φ (f m) β 0⋯0 in begin
   φ {suc n} (lim f) 0⋯ (lim g)                  ≡⟨ cong-app φ-l-z⋯x (lim g) ⟩
   j (lim g)                                     ≡⟨⟩
-  lim (λ m → j (g m))                           ≡⟨
-    {! cong (λ x → )  !} ⟩
+  lim (λ m → j (g m))                           ≡˘⟨ cong (λ x → lim (λ m → x (g m))) φ-l-z⋯x ⟩
   lim (λ m → φ (lim f) 0⋯ (g m))                ∎
+```
