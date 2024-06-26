@@ -50,7 +50,7 @@ open import Data.Nat public using (ℕ; zero; suc; 2+)
 open import Data.Unit public using (⊤; tt)
 open import Function public using (id; _∘_; _$_; _∋_)
 open import Relation.Binary.PropositionalEquality as Eq public
-  using (_≡_; refl; sym; cong; cong-app)
+  using (_≡_; refl; cong; cong-app)
 open Eq.≡-Reasoning public
 ```
 
