@@ -29,8 +29,8 @@ module Qua = QuaternaryVeblen
 
 $$
 \begin{aligned}
-A^{→0} &= A \\
-A^{→n^+} &= \text{Ord} → A^{→n}
+A^{→0} &:= A \\
+A^{→n^+} &:= \text{Ord} → A^{→n}
 \end{aligned}
 $$
 
@@ -57,8 +57,8 @@ $$
 
 $$
 \begin{aligned}
-(F : A^{→0})\kern{0.17em}\overset{.}{0} &= F:A \\
-(F : A^{→n^+})\kern{0.17em}\overset{.}{0} &= (F\kern{0.17em}0 : A^{→n})\kern{0.17em}\overset{.}{0}
+(F : A^{→0})\kern{0.17em}\overset{.}{0} &:= F:A \\
+(F : A^{→n^+})\kern{0.17em}\overset{.}{0} &:= (F\kern{0.17em}0 : A^{→n})\kern{0.17em}\overset{.}{0}
 \end{aligned}
 $$
 
@@ -74,8 +74,8 @@ _0̇ {n = suc n} F = F 0 0̇
 
 $$
 \begin{aligned}
-(F : A^{→1})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} &= F:\text{Ord}→A \\
-(F : A^{→n^{++}})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} &= (F\kern{0.17em}0 : A^{→n^+})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}
+(F : A^{→1})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} &:= F:\text{Ord}→A \\
+(F : A^{→n^{++}})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} &:= (F\kern{0.17em}0 : A^{→n^+})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}
 \end{aligned}
 $$
 
@@ -89,8 +89,8 @@ _0̇,_ {n = suc n} F = F 0 0̇,_
 
 $$
 \begin{aligned}
-(F : A^{→2})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}\kern{0.17em}\underline{\kern{0.5em}} &= F:\text{Ord}→\text{Ord}→A \\
-(F : A^{→n^{+++}})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}\kern{0.17em}\underline{\kern{0.5em}} &= (F\kern{0.17em}0 : A^{→n^{++}})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}\kern{0.17em}\underline{\kern{0.5em}}
+(F : A^{→2})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}\kern{0.17em}\underline{\kern{0.5em}} &:= F:\text{Ord}→\text{Ord}→A \\
+(F : A^{→n^{+++}})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}\kern{0.17em}\underline{\kern{0.5em}} &:= (F\kern{0.17em}0 : A^{→n^{++}})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}\kern{0.17em}\underline{\kern{0.5em}}
 \end{aligned}
 $$
 
@@ -133,10 +133,14 @@ $$
 Φ_n : \text{Ord}^{→n^+} → \text{Ord}^{→n^{++}}
 $$
 
-回顾不动点的起点 (梦的开始) $λα,ω\kern{0.17em}^α : \text{Ord}^{→1}$, 我们需要从它开始, 迭代 $Φ_n$. 直观上该迭代具有
+```agda
+Φₙ : Ord →ⁿ suc n → Ord →ⁿ 2+ n
+```
+
+回顾不动点的起点 (梦的开始) $λα,ω\kern{0.17em}^α : \text{Ord}^{→1}$, 我们需要从它开始, 迭代 $Φ_{<n}$, 以得到 $Φ_n$. 直观上该迭代具有
 
 $$
-Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0 (λα,ω\kern{0.17em}^α))))...) : \text{Ord}^{→n^+}
+Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0 (λα,ω\kern{0.17em}^α))))...) : \text{Ord}^{→n^+}\quad (*)
 $$
 
 的形式. 我们把这整个迭代过程记作 $Φ^n$, 它具有类型
@@ -145,23 +149,44 @@ $$
 Φ^n : \text{Ord}^{→1} → \text{Ord}^{→n^+}
 $$
 
-**定义**
-
 ```agda
-Φₙ : Ord →ⁿ suc n → Ord →ⁿ 2+ n
 Φⁿ : Ord →ⁿ 1 → Ord →ⁿ suc n
 ```
+
+注意 $Φ_n$ 的定义里就要用到 $(*)$ 式, 即 $Φ^n$. 而 $Φ^n$ 的定义里又要用到每个 $Φ_{<n}$. 我们把它们写成互递归的形式, 也就是说同时定义 $Φ_n$ 和 $Φ^n$.
+
+**定义** $Φ_n$ 和 $Φ^n$ 互递归定义如下.
+
+$$
+\begin{aligned}
+Φ_n\kern{0.17em}F &:= \text{rec}\kern{0.17em}F \\
+&\quad (λφ_α,Φ^n(\text{fixpt}\kern{0.17em}λβ,φ_α\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
+&\quad (λφ, Φ^n(\text{jump}\kern{0.17em}λβ,\limλn,φ[n]\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
+\\
+Φ^0 &:= \text{id} \\
+Φ^{n^+}\kern{0.17em}F &:= Φ_n(Φ^n\kern{0.17em}F)
+\end{aligned}
+$$
 
 ```agda
 Φₙ F = rec F
   (λ φ-α  → Φⁿ $ fixpt λ β → φ-α β 0̇)
   (λ φ[_] → Φⁿ $ jump λ β → lim λ n → φ[ n ] β 0̇)
-```
 
-```agda
 Φⁿ {n = zero} = id
 Φⁿ {n = suc n} F = Φₙ (Φⁿ F)
 ```
+
+**注意** 也可以不用互递归, 非形式地采用如下定义.
+
+$$
+\begin{aligned}
+Φ_n\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0(\text{fixpt}\kern{0.17em}λβ,φ_α\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...)) \\
+&(λφ, Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0(\text{jump}\kern{0.17em}λβ,\limλn,φ[n]\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...))
+\end{aligned}
+$$
+
+形式地, 可以把省略号换成自然数版本的 $\text{ind}$.
 
 **定义**
 
@@ -173,8 +198,8 @@ $$
 **事实**
 
 ```agda
-Φₙ-φ : φ {suc n} ≡ Φₙ (φ {n})
-Φₙ-φ = refl
+Φ-φ : φ {suc n} ≡ Φₙ (φ {n})
+Φ-φ = refl
 ```
 
 **事实**
@@ -209,9 +234,9 @@ $$
 **引理**
 
 ```agda
-Φⁿ-ż-x : Φⁿ {n} F 0̇,_ ≡ F
-Φⁿ-ż-x {n = zero} = refl
-Φⁿ-ż-x {n = suc n} = Φⁿ-ż-x {n}
+Φ-ż-x : Φⁿ {n} F 0̇,_ ≡ F
+Φ-ż-x {n = zero} = refl
+Φ-ż-x {n = suc n} = Φ-ż-x {n}
 ```
 
 **定理**
@@ -221,7 +246,7 @@ $$
 φ-s-ż-x {n} {α} = begin
   φ {suc n} (suc α) 0̇,_         ≡⟨⟩
   Φₙ (φ {n}) (suc α) 0̇,_        ≡⟨⟩
-  Φⁿ (fixpt λ β → φ α β 0̇) 0̇,_  ≡⟨ Φⁿ-ż-x ⟩
+  Φⁿ (fixpt λ β → φ α β 0̇) 0̇,_  ≡⟨ Φ-ż-x ⟩
   fixpt (λ β → φ α β 0̇)         ∎
 ```
 
@@ -232,7 +257,7 @@ $$
 φ-l-ż-x {n} {f} = begin
   φ {suc n} (lim f) 0̇,_                     ≡⟨⟩
   Φₙ (φ {n}) (lim f) 0̇,_                    ≡⟨⟩
-  Φⁿ (jump λ β → lim λ m → φ (f m) β 0̇) 0̇,_ ≡⟨ Φⁿ-ż-x ⟩
+  Φⁿ (jump λ β → lim λ m → φ (f m) β 0̇) 0̇,_ ≡⟨ Φ-ż-x ⟩
   jump (λ β → lim λ m → φ (f m) β 0̇)        ∎
 ```
 
@@ -286,39 +311,39 @@ $$
 φ-x-s-ż-y {n = zero} {α = zero} = refl
 φ-x-s-ż-y {n = zero} {α = suc _} = refl
 φ-x-s-ż-y {n = zero} {α = lim _} = refl
-φ-x-s-ż-y {n = suc n} {α = zero} = Φⁿ-ż-x
-φ-x-s-ż-y {n = suc n} {α = suc _} = Φⁿ-ż-x
-φ-x-s-ż-y {n = suc n} {α = lim _} = Φⁿ-ż-x
+φ-x-s-ż-y {n = suc n} {α = zero} = Φ-ż-x
+φ-x-s-ż-y {n = suc n} {α = suc _} = Φ-ż-x
+φ-x-s-ż-y {n = suc n} {α = lim _} = Φ-ż-x
 
 φ-x-l-ż-y : φ {2+ n} α (lim f) 0̇,_ ≡ jump λ δ → lim λ m → φ {2+ n} α (f m) δ 0̇
 φ-x-l-ż-y {n = zero} {α = zero} = refl
 φ-x-l-ż-y {n = zero} {α = suc _} = refl
 φ-x-l-ż-y {n = zero} {α = lim _} = refl
-φ-x-l-ż-y {n = suc n} {α = zero} = Φⁿ-ż-x
-φ-x-l-ż-y {n = suc n} {α = suc _} = Φⁿ-ż-x
-φ-x-l-ż-y {n = suc n} {α = lim _} = Φⁿ-ż-x
+φ-x-l-ż-y {n = suc n} {α = zero} = Φ-ż-x
+φ-x-l-ż-y {n = suc n} {α = suc _} = Φ-ż-x
+φ-x-l-ż-y {n = suc n} {α = lim _} = Φ-ż-x
 ```
 
 **引理**
 
 ```agda
-Φₙ-ż-s-x : Φₙ {n} (Φⁿ F) 0̇, (suc α) ,_ ≡ fixpt (Φₙ {n} (Φⁿ F) 0̇, α ,_)
-Φₙ-ż-s-x {n = zero} = refl
-Φₙ-ż-s-x {n = suc n} = Φₙ-ż-s-x {n}
+Φ-ż-s-x : Φⁿ {suc n} F 0̇, (suc α) ,_ ≡ fixpt (Φⁿ {suc n} F 0̇, α ,_)
+Φ-ż-s-x {n = zero} = refl
+Φ-ż-s-x {n = suc n} = Φ-ż-s-x {n}
 
-Φₙ-ż-l-x : Φₙ {n} (Φⁿ F) 0̇, (lim f) ,_ ≡ jump λ β → lim λ m → Φₙ {n} (Φⁿ F) 0̇, (f m) , β
-Φₙ-ż-l-x {n = zero} = refl
-Φₙ-ż-l-x {n = suc n} = Φₙ-ż-l-x {n}
+Φ-ż-l-x : Φⁿ {suc n} F 0̇, (lim f) ,_ ≡ jump λ β → lim λ m → Φⁿ {suc n} F 0̇, (f m) , β
+Φ-ż-l-x {n = zero} = refl
+Φ-ż-l-x {n = suc n} = Φ-ż-l-x {n}
 ```
 
 **定理**
 
 ```agda
 φ-ż-s-x : φ {suc n} 0̇, (suc α) ,_ ≡ fixpt (φ {suc n} 0̇, α ,_)
-φ-ż-s-x = Φₙ-ż-s-x
+φ-ż-s-x = Φ-ż-s-x
 
 φ-ż-l-x : φ {suc n} 0̇, (lim f) ,_ ≡ jump λ β → lim λ m → φ {suc n} 0̇, (f m) , β
-φ-ż-l-x = Φₙ-ż-l-x
+φ-ż-l-x = Φ-ż-l-x
 ```
 
 **定理**
@@ -328,17 +353,17 @@ $$
 φ-x-ż-s-y {n = zero} {α = zero} = refl
 φ-x-ż-s-y {n = zero} {α = suc _} = refl
 φ-x-ż-s-y {n = zero} {α = lim _} = refl
-φ-x-ż-s-y {n = suc n} {α = zero} = Φₙ-ż-s-x
-φ-x-ż-s-y {n = suc n} {α = suc _} = Φₙ-ż-s-x
-φ-x-ż-s-y {n = suc n} {α = lim _} = Φₙ-ż-s-x
+φ-x-ż-s-y {n = suc n} {α = zero} = Φ-ż-s-x
+φ-x-ż-s-y {n = suc n} {α = suc _} = Φ-ż-s-x
+φ-x-ż-s-y {n = suc n} {α = lim _} = Φ-ż-s-x
 
 φ-x-ż-l-y : φ {2+ n} α 0̇, (lim f) ,_ ≡ jump λ δ → lim λ m → φ {2+ n} α 0̇, (f m) , δ
 φ-x-ż-l-y {n = zero} {α = zero} = refl
 φ-x-ż-l-y {n = zero} {α = suc _} = refl
 φ-x-ż-l-y {n = zero} {α = lim _} = refl
-φ-x-ż-l-y {n = suc n} {α = zero} = Φₙ-ż-l-x
-φ-x-ż-l-y {n = suc n} {α = suc _} = Φₙ-ż-l-x
-φ-x-ż-l-y {n = suc n} {α = lim _} = Φₙ-ż-l-x
+φ-x-ż-l-y {n = suc n} {α = zero} = Φ-ż-l-x
+φ-x-ż-l-y {n = suc n} {α = suc _} = Φ-ż-l-x
+φ-x-ż-l-y {n = suc n} {α = lim _} = Φ-ż-l-x
 ```
 
 ## SVO
