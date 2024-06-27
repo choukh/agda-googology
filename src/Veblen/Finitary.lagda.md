@@ -23,6 +23,8 @@ module Qua = QuaternaryVeblen
 
 ## 有限元函数类型
 
+**定义**
+
 ```agda
 _→ⁿ_ : Set → ℕ → Set
 A →ⁿ zero = A
@@ -47,6 +49,8 @@ _0⋯_,_ {n = zero} = id
 _0⋯_,_ {n = suc n} F = F 0 0⋯_,_
 ```
 
+**引理**
+
 ```agda
 left-zero : {F : A →ⁿ (suc n)} → F 0⋯0 ≡ F 0 0⋯0
 left-zero = refl
@@ -57,6 +61,8 @@ right-zero {n = suc _} {F} = right-zero {F = F 0}
 ```
 
 ## 有限元Veblen函数
+
+**定义**
 
 ```agda
 Φ : Ord →ⁿ suc n → Ord →ⁿ 2+ n
@@ -74,15 +80,14 @@ right-zero {n = suc _} {F} = right-zero {F = F 0}
 Ψ {n = suc n} F = Φ (Ψ F)
 ```
 
+**定义**
+
 ```agda
 φ : Ord →ⁿ suc n
 φ = Ψ (ω ^_)
 ```
 
-```agda
-Φ-φ : φ {suc n} ≡ Φ (φ {n})
-Φ-φ = refl
-```
+**例**
 
 ```agda
 φ₀ : φ {0} ≡ ω ^_
@@ -104,6 +109,8 @@ right-zero {n = suc _} {F} = right-zero {F = F 0}
 φ₃ = refl
 ```
 
+**定义**
+
 SVO (~~Subject–Verb–Object~~ Small Veblen Ordinal)
 
 ```agda
@@ -111,16 +118,29 @@ SVO : Ord
 SVO = lim λ n → φ {n} 1 0⋯0
 ```
 
+**事实**
+
+```agda
+Φ-φ : φ {suc n} ≡ Φ (φ {n})
+Φ-φ = refl
+```
+
+**事实**
+
+```agda
+φ-0 : φ {suc n} 0 ≡ φ {n}
+φ-0 = refl
+```
+
+**引理**
+
 ```agda
 Ψ-0⋯x : Ψ {n} F 0⋯_ ≡ F
 Ψ-0⋯x {n = zero} = refl
 Ψ-0⋯x {n = suc n} = Ψ-0⋯x {n}
 ```
 
-```agda
-φ-0 : φ {suc n} 0 ≡ φ {n}
-φ-0 = refl
-```
+**定理**
 
 ```agda
 φ-s-z⋯x : φ {suc n} (suc α) 0⋯_ ≡ fixpt λ β → φ α β 0⋯0
@@ -130,6 +150,8 @@ SVO = lim λ n → φ {n} 1 0⋯0
   Ψ (fixpt λ β → φ α β 0⋯0) 0⋯_ ≡⟨ Ψ-0⋯x ⟩
   fixpt (λ β → φ α β 0⋯0)       ∎
 ```
+
+**定理**
 
 ```agda
 φ-l-z⋯x : φ {suc n} (lim f) 0⋯_ ≡ jump λ β → lim λ m → φ (f m) β 0⋯0
@@ -149,6 +171,8 @@ $$
 \varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}(\text{lim}\kern{0.17em}g) &= \text{lim}\kern{0.17em}λn,φ_{\text{lim}\kern{0.17em}f}\kern{0.17em}(g\kern{0.17em}n)
 \end{aligned}
 $$
+
+**推论**
 
 ```agda
 φ-l-z⋯z : φ {n} (lim f) 0⋯0 ≡ lim λ m → φ {n} (f m) 0⋯0
@@ -179,4 +203,28 @@ $$
   j (lim g)                                     ≡⟨⟩
   lim (λ m → j (g m))                           ≡˘⟨ cong (λ x → lim (λ m → x (g m))) φ-l-z⋯x ⟩
   lim (λ m → φ (lim f) 0⋯ (g m))                ∎
+```
+
+**引理**
+
+```agda
+Ψ-x-s-0⋯y : Ψ {2+ n} F α (suc β) 0⋯_ ≡ fixpt λ γ → Ψ {2+ n} F α β γ 0⋯0
+Ψ-x-s-0⋯y {n = zero} {α = zero} = refl
+Ψ-x-s-0⋯y {n = zero} {α = suc _} = refl
+Ψ-x-s-0⋯y {n = zero} {α = lim _} = refl
+Ψ-x-s-0⋯y {n = suc n} {α = zero} = Ψ-0⋯x
+Ψ-x-s-0⋯y {n = suc n} {α = suc _} = Ψ-0⋯x
+Ψ-x-s-0⋯y {n = suc n} {α = lim _} = Ψ-0⋯x
+```
+
+**引理**
+
+```agda
+Ψ-x-l-0⋯y : Ψ {2+ n} F α (lim f) 0⋯_ ≡ jump λ δ → lim λ m → Ψ {2+ n} F α (f m) δ 0⋯0
+Ψ-x-l-0⋯y {n = zero} {α = zero} = refl
+Ψ-x-l-0⋯y {n = zero} {α = suc _} = refl
+Ψ-x-l-0⋯y {n = zero} {α = lim _} = refl
+Ψ-x-l-0⋯y {n = suc n} {α = zero} = Ψ-0⋯x
+Ψ-x-l-0⋯y {n = suc n} {α = suc _} = Ψ-0⋯x
+Ψ-x-l-0⋯y {n = suc n} {α = lim _} = Ψ-0⋯x
 ```
