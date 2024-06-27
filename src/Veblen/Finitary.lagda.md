@@ -19,11 +19,20 @@ module Tri = TrinaryVeblen
 module Qua = QuaternaryVeblen
 ```
 
-有限元Veblen函数 (Finitary Veblen Function) 也叫扩展Veblen函数 (Extended Veblen Function).
+前篇我们讲了二元, 三元和四元Veblen函数 $\text{Bin}.φ,\text{Tri}.φ,\text{Qua}.φ$. 我们希望把元数作为一个参数, 也就是说, 定义一个函数族 $φ$, 使得 $φ_n$ 正好是 $n$ 元Veblen函数. 这样的 $φ$ 叫做 (任意) 有限元Veblen函数 (Finitary Veblen Function), 也叫扩展Veblen函数 (Extended Veblen Function).
 
 ## 有限元函数类型
 
-**定义**
+首先我们要把 $φ$ 的类型写出来, 它是一个依赖类型 $\Pi_{n:ℕ}\text{Ord}^{→n}$, 其中 $\text{Ord}^{→n}$ 表示 $\text{Ord}$ 上的 $n$ 元函数类型 $\overbrace{\text{Ord}→...→\text{Ord}}^n →\text{Ord}$. 当然我们也可以采用 $\text{Ord}^n →\text{Ord}$, 即 ($\overbrace{\text{Ord}\times...\times\text{Ord}}^n)→\text{Ord}$. 我们选择前者是因为它有方便的[柯里化 (Currying)](https://en.wikipedia.org/wiki/Currying) 性质, 处理起来更简单.
+
+**定义** 陪域为 $A$ 的有限元序数函数 $\overbrace{\text{Ord}→...→\text{Ord}}^n →A$, 记作 $A^{→n}$, 递归定义为
+
+$$
+\begin{aligned}
+A^{→0} &= A \\
+A^{→n^+} &= \text{Ord} → A^{→n}
+\end{aligned}
+$$
 
 ```agda
 _→ⁿ_ : Set → ℕ → Set
@@ -31,11 +40,44 @@ A →ⁿ zero = A
 A →ⁿ suc n = Ord → A →ⁿ n
 ```
 
+这样, $\text{Ord}^{→n}$ 就等于 $\overbrace{\text{Ord}→...→\text{Ord}}^n →\text{Ord}$.
+
+现在, 回想四元Veblen函数的定义
+
+$$
+\begin{aligned}
+Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,\text{Tri}.Φ\kern{0.17em}(\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{α,β,0}\kern{0.17em}0))) \\
+&(λφ,\text{Tri}.Φ\kern{0.17em}(\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]_{β,0}\kern{0.17em}0)))
+\end{aligned}
+$$
+
+注意其中 $φ_{α,β,0}\kern{0.17em}0$ 的形式, 也就是说我们需要从某一位参数开始, 后面全部填零的操作. 对于 $n$ 元函数来说这种填零操作是递归完成的. 于是有如下定义.
+
+**定义** 对函数 $F : A^{→n}$ 的参数全部填零所得到的 $A$ 的元素, 记作 $F\kern{0.17em}0⋯0 : A$, 递归定义为
+
+$$
+\begin{aligned}
+(F : A^{→0})\kern{0.17em}0⋯0 &= F:A \\
+(F : A^{→n^+})\kern{0.17em}0⋯0 &= (F\kern{0.17em}0 : A^{→n})\kern{0.17em}0⋯0
+\end{aligned}
+$$
+
 ```agda
 _0⋯0 : A →ⁿ n → A
 _0⋯0 {n = zero} = id
 _0⋯0 {n = suc n} F = F 0 0⋯0
 ```
+
+有时候我们想要留最后一位不填或最后两位不填.
+
+**定义** 对函数 $F : A^{→n^+}$ 的参数留最后一位不填, 其余全部填零, 所得到的函数 $\text{Ord}→A$, 记作 $F\kern{0.17em}0⋯\_$, 递归定义为
+
+$$
+\begin{aligned}
+(F : A^{→1})\kern{0.17em}0⋯\_ &= F:\text{Ord}→A \\
+(F : A^{→n^{++}})\kern{0.17em}0⋯\_ &= (F\kern{0.17em}0 : A^{→n^+})\kern{0.17em}0⋯\_
+\end{aligned}
+$$
 
 ```agda
 _0⋯_ : A →ⁿ (suc n) → A →ⁿ 1
@@ -43,13 +85,29 @@ _0⋯_ {n = zero} = id
 _0⋯_ {n = suc n} F = F 0 0⋯_
 ```
 
+**定义** 对函数 $F : A^{→n^{++}}$ 的参数留最后两位不填, 其余全部填零, 所得到的函数 $\text{Ord}→\text{Ord}→A$, 记作 $F\kern{0.17em}0⋯\_,\_$, 递归定义为
+
+$$
+\begin{aligned}
+(F : A^{→2})\kern{0.17em}0⋯\_,\_ &= F:\text{Ord}→\text{Ord}→A \\
+(F : A^{→n^{+++}})\kern{0.17em}0⋯\_,\_ &= (F\kern{0.17em}0 : A^{→n^{++}})\kern{0.17em}0⋯\_,\_
+\end{aligned}
+$$
+
 ```agda
 _0⋯_,_ : A →ⁿ (2+ n) → A →ⁿ 2
 _0⋯_,_ {n = zero} = id
 _0⋯_,_ {n = suc n} F = F 0 0⋯_,_
 ```
 
-**引理**
+**引理** 对 $n$ 元函数 $F : A^{→n^+}$, 第一位先填零, 剩余再全部填零, 或者除最后一位外全部填零, 然后最后一位再填零, 这两种做法都等于一开始就全部填零.
+
+$$
+\begin{aligned}
+F\kern{0.17em}0⋯0 &= F\kern{0.17em}0\kern{0.17em}0⋯0 \\
+F\kern{0.17em}0⋯0 &= F\kern{0.17em}0⋯\underbar{0}
+\end{aligned}
+$$
 
 ```agda
 0-0⋯ : {F : A →ⁿ (suc n)} → F 0⋯0 ≡ F 0 0⋯0
@@ -61,6 +119,8 @@ _0⋯_,_ {n = suc n} F = F 0 0⋯_,_
 ```
 
 ## 有限元Veblen函数
+
+有了以上准备, 终于可以定义有限元Veblen函数了.
 
 **定义**
 
