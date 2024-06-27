@@ -154,7 +154,7 @@ SVO = lim λ n → φ {n} 1 0⋯0
 **定理**
 
 ```agda
-φ-l-z⋯x : φ {suc n} (lim f) 0⋯_ ≡ jump λ β → lim λ m → φ (f m) β 0⋯0
+φ-l-z⋯x : φ {suc n} (lim f) 0⋯_ ≡ jump λ β → lim λ m → φ {suc n} (f m) β 0⋯0
 φ-l-z⋯x {n} {f} = begin
   φ {suc n} (lim f) 0⋯_                       ≡⟨⟩
   Φ (φ {n}) (lim f) 0⋯_                       ≡⟨⟩
@@ -227,4 +227,45 @@ $$
 Ψ-x-l-0⋯y {n = suc n} {α = zero} = Ψ-0⋯x
 Ψ-x-l-0⋯y {n = suc n} {α = suc _} = Ψ-0⋯x
 Ψ-x-l-0⋯y {n = suc n} {α = lim _} = Ψ-0⋯x
+```
+
+**引理**
+
+```agda
+Φ-0⋯s-x : Φ {n} (Ψ F) 0⋯ (suc α) ,_ ≡ fixpt (Φ {n} (Ψ F) 0⋯ α ,_)
+Φ-0⋯s-x {n = zero} = refl
+Φ-0⋯s-x {n = suc n} = Φ-0⋯s-x {n}
+
+Φ-0⋯l-x : Φ {n} (Ψ F) 0⋯ (lim f) ,_ ≡ jump λ β → lim λ m → Φ {n} (Ψ F) 0⋯ (f m) , β
+Φ-0⋯l-x {n = zero} = refl
+Φ-0⋯l-x {n = suc n} = Φ-0⋯l-x {n}
+```
+
+**定理**
+
+```agda
+φ-0⋯s-x : φ {suc n} 0⋯ (suc α) ,_ ≡ fixpt (φ {suc n} 0⋯ α ,_)
+φ-0⋯s-x = Φ-0⋯s-x
+
+φ-0⋯l-x : φ {suc n} 0⋯ (lim f) ,_ ≡ jump λ β → lim λ m → φ {suc n} 0⋯ (f m) , β
+φ-0⋯l-x = Φ-0⋯l-x
+```
+
+**引理**
+
+```agda
+Ψ-x-0⋯s-y : Ψ {2+ n} F α 0⋯ (suc β) ,_ ≡ fixpt (Ψ {2+ n} F α 0⋯ β ,_)
+Ψ-x-0⋯s-y {n = zero} {α = zero} = refl
+Ψ-x-0⋯s-y {n = zero} {α = suc _} = refl
+Ψ-x-0⋯s-y {n = zero} {α = lim _} = refl
+Ψ-x-0⋯s-y {n = suc n} {α = zero} = Φ-0⋯s-x
+Ψ-x-0⋯s-y {n = suc n} {α = suc _} = Φ-0⋯s-x
+Ψ-x-0⋯s-y {n = suc n} {α = lim _} = Φ-0⋯s-x
+```
+
+**定理**
+
+```agda
+φ-x-0⋯s-y : φ {2+ n} α 0⋯ (suc β) ,_ ≡ fixpt (φ {2+ n} α 0⋯ β ,_)
+φ-x-0⋯s-y = Ψ-x-0⋯s-y
 ```
