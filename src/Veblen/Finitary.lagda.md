@@ -70,12 +70,12 @@ _0̇ {n = suc n} F = F 0 0̇
 
 有时候我们想要留最后一位不填或最后两位不填.
 
-**定义** 对函数 $F : A^{→n^+}$ 的参数留最后一位不填, 其余全部填零, 所得到的函数 $\text{Ord}→A$, 记作 $F\kern{0.17em}\overset{.}{0}\kern{0.17em}\_$, 递归定义为
+**定义** 对函数 $F : A^{→n^+}$ 的参数留最后一位不填, 其余全部填零, 所得到的函数 $\text{Ord}→A$, 记作 $F\kern{0.17em}\overset{.}{0}\kern{0.17em}–$, 递归定义为
 
 $$
 \begin{aligned}
-(F : A^{→1})\kern{0.17em}\overset{.}{0}\kern{0.17em}\_ &= F:\text{Ord}→A \\
-(F : A^{→n^{++}})\kern{0.17em}\overset{.}{0}\kern{0.17em}\_ &= (F\kern{0.17em}0 : A^{→n^+})\kern{0.17em}\overset{.}{0}\kern{0.17em}\_
+(F : A^{→1})\kern{0.17em}\overset{.}{0}\kern{0.17em}– &= F:\text{Ord}→A \\
+(F : A^{→n^{++}})\kern{0.17em}\overset{.}{0}\kern{0.17em}– &= (F\kern{0.17em}0 : A^{→n^+})\kern{0.17em}\overset{.}{0}\kern{0.17em}–
 \end{aligned}
 $$
 
@@ -85,12 +85,12 @@ _0̇,_ {n = zero} = id
 _0̇,_ {n = suc n} F = F 0 0̇,_
 ```
 
-**定义** 对函数 $F : A^{→n^{++}}$ 的参数留最后两位不填, 其余全部填零, 所得到的函数 $\text{Ord}→\text{Ord}→A$, 记作 $F\kern{0.17em}\overset{.}{0}\kern{0.17em}\_\kern{0.17em}\_$, 递归定义为
+**定义** 对函数 $F : A^{→n^{++}}$ 的参数留最后两位不填, 其余全部填零, 所得到的函数 $\text{Ord}→\text{Ord}→A$, 记作 $F\kern{0.17em}\overset{.}{0}\kern{0.17em}–\kern{0.17em}–$, 递归定义为
 
 $$
 \begin{aligned}
-(F : A^{→2})\kern{0.17em}\overset{.}{0}\kern{0.17em}\_\kern{0.17em}\_ &= F:\text{Ord}→\text{Ord}→A \\
-(F : A^{→n^{+++}})\kern{0.17em}\overset{.}{0}\kern{0.17em}\_\kern{0.17em}\_ &= (F\kern{0.17em}0 : A^{→n^{++}})\kern{0.17em}\overset{.}{0}\kern{0.17em}\_\kern{0.17em}\_
+(F : A^{→2})\kern{0.17em}\overset{.}{0}\kern{0.17em}–\kern{0.17em}– &= F:\text{Ord}→\text{Ord}→A \\
+(F : A^{→n^{+++}})\kern{0.17em}\overset{.}{0}\kern{0.17em}–\kern{0.17em}– &= (F\kern{0.17em}0 : A^{→n^{++}})\kern{0.17em}\overset{.}{0}\kern{0.17em}–\kern{0.17em}–
 \end{aligned}
 $$
 
