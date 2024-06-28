@@ -120,7 +120,7 @@ $$
 
 ## 有限元Veblen函数
 
-有了以上准备, 终于可以定义有限元Veblen函数了. 回想前篇的辅助函数 $\Phi$, 我们讲了它的二元, 三元和四元版本, 我们用下标表示对应元数的版本, 再次列出它们的类型如下.
+有了以上准备, 终于可以定义有限元Veblen函数了. 回想前篇的辅助函数 $\Phi$, 我们讲了它的二元, 三元和四元版本. 今后我们用下标表示元数, 再次列出它们的类型如下.
 
 - $Φ_2:(\text{Ord} → \text{Ord}) → \text{Ord} → \text{Ord} → \text{Ord}$
 - $Φ_3:(\text{Ord} → \text{Ord} → \text{Ord}) → \text{Ord} → \text{Ord} → \text{Ord} → \text{Ord}$
@@ -153,7 +153,7 @@ $$
 Φⁿ : Ord →ⁿ 1 → Ord →ⁿ suc n
 ```
 
-注意 $Φ_n$ 的定义里就要用到 $(*)$ 式, 即 $Φ^n$. 而 $Φ^n$ 的定义里又要用到每个 $Φ_{\lt n}$. 我们把它们写成互递归的形式, 也就是说同时定义 $Φ_n$ 和 $Φ^n$.
+注意到 $Φ_n$ 的定义里就要用到 $(*)$ 式, 即 $Φ^n$. 而 $Φ^n$ 的定义里又要用到每个 $Φ_{\lt n}$. 我们把它们写成互递归的形式, 也就是说同时定义 $Φ_n$ 和 $Φ^n$.
 
 **定义** $Φ_n$ 和 $Φ^n$ 互递归定义如下.
 
@@ -188,28 +188,44 @@ $$
 
 形式地, 可以把省略号换成自然数版本的 $\text{ind}$.
 
-**定义**
+**定义** 有限元Veblen函数
+
+$$
+φ := Φ^n(λα,ω\kern{0.17em}^α)
+$$
 
 ```agda
 φ : Ord →ⁿ suc n
 φ = Φⁿ (ω ^_)
 ```
 
-**事实**
+**事实** $n^{++}$ 元Veblen函数 $φ_{n^+}$ 等于对 $n^+$ 元Veblen函数 $φ_n$ 做一次 $Φ_n$, 并且首位输入零的话就等于 $φ_n$.
+
+$$
+\begin{aligned}
+φ_{n^+} &= Φ_n\kern{0.17em}φ_n \\
+φ_{n^+} 0 &= φ_n
+\end{aligned}
+$$
 
 ```agda
 Φ-φ : φ {suc n} ≡ Φₙ (φ {n})
 Φ-φ = refl
-```
 
-**事实**
-
-```agda
 φ-0 : φ {suc n} 0 ≡ φ {n}
 φ-0 = refl
 ```
 
 **例**
+
+$$
+\begin{aligned}
+φ_0 &= ω \\
+φ_1 &= \text{Bin}.φ \\
+φ_2 &= \text{Tri}.φ \\
+φ_3 &= \text{Qua}.φ
+\end{aligned}
+$$
 
 ```agda
 φ₀ : φ {0} ≡ ω ^_
@@ -231,7 +247,34 @@ $$
 φ₃ = refl
 ```
 
-**引理**
+如果说三元或四元的时候我们还可以穷举各个参数分别为零, 后继, 极限的情况, $n$ 元的时候就不可能了, 但我们可以通过如下方法来把握.
+
+我们设
+
+- $\mathcal{Z}$ 表示不特定多个零
+- $\mathcal{X}$ 表示不特定多个非零
+- $\mathcal{xZy}$ 表示零和非零的混合, 但首尾非零
+- $\mathcal{z,s,l,x}$ 分别表示单个零, 后继, 极限, 非零参数
+
+那么所有参数模式都可匹配到 $(\mathcal{Z,xZy,Z,X})$. 最前面的 $\mathcal{Z}$ 不起任何作用, 可以直接忽略, 于是我们只需讨论 $(\mathcal{xZy,Z,X})$ 的模式, 而这种模式很方便写成定理. 具体地, 我们考察以下模式.
+
+- $(\mathcal{s,Z,x})$
+- $(\mathcal{l,Z,x})$
+  - $(\mathcal{l,Z,z})$
+  - $(\mathcal{l,Z,s})$
+  - $(\mathcal{l,Z,l})$
+- $(\mathcal{x,s,Z,y})$
+- $(\mathcal{x,l,Z,y})$
+- $(\mathcal{x,Z,s,y})$
+- $(\mathcal{x,Z,l,y})$
+
+**引理** $(\mathcal{Z,x})$
+
+$$
+Φ^n\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} = F
+$$
+
+**(证明)** 归纳 $n$ 即得. ∎
 
 ```agda
 Φ-ż-x : Φⁿ {n} F 0̇,_ ≡ F
@@ -239,7 +282,29 @@ $$
 Φ-ż-x {n = suc n} = Φ-ż-x {n}
 ```
 
-**定理**
+**定理** $(\mathcal{s,Z,x})$
+
+$$
+φ_{n^+}\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}
+=
+\text{fixpt}\kern{0.17em}λβ,φ_n\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0}
+$$
+
+**(证明)** 依定义
+
+$$
+\begin{aligned}
+φ_{n^+}\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}
+&=
+Φ_n\kern{0.17em}φ_n\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
+&=
+Φ^n\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_n\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})\kern{0.17em}\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
+&=
+\text{fixpt}\kern{0.17em}λβ,φ_n\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0}
+\end{aligned}
+$$
+
+其中第三个等号用了引理 $(\mathcal{Z,x})$. ∎
 
 ```agda
 φ-s-ż-x : φ {suc n} (suc α) 0̇,_ ≡ fixpt λ β → φ α β 0̇
@@ -368,9 +433,14 @@ $$
 
 ## SVO
 
-**定义**
+**定义** 有限元Veblen序数的能力极限叫做 SVO (~~Subject–Verb–Object~~ Small Veblen Ordinal).
 
-SVO (~~Subject–Verb–Object~~ Small Veblen Ordinal)
+$$
+\begin{aligned}
+\text{SVO} := &\lim λ n,φ_n\kern{0.17em}1\kern{0.17em}\overset{.}{0} \\
+= &\lim\kern{0.17em}(φ(1),φ(1,0),φ(1,0,0),...)
+\end{aligned}
+$$
 
 ```agda
 SVO : Ord
@@ -378,6 +448,10 @@ SVO = lim λ n → φ {n} 1 0̇
 ```
 
 一个很大的大数:
+
+$$
+\text{svo}_{99}:= f_\text{SVO}(99)
+$$
 
 ```agda
 svo₉₉ = FGH.f SVO 99
