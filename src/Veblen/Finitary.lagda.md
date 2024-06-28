@@ -187,7 +187,7 @@ $$
 \end{aligned}
 $$
 
-形式地, 可以把省略号换成自然数版本的 $\text{ind}$.
+形式地, 可以把省略号换成自然数版本的 $\text{ind}$, 这里不展开讲解.
 
 **定义** 有限元Veblen函数
 
@@ -306,7 +306,7 @@ $$
 
 $$
 \begin{aligned}
-φ_{n^+}\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}
+&\kern{1.35em}φ_{n^+}\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
 &=
 Φ_n\kern{0.17em}φ_n\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
 &=
@@ -338,7 +338,7 @@ $$
 
 $$
 \begin{aligned}
-φ_{n^+}\kern{0.17em}(\lim f)\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}
+&\kern{1.35em}φ_{n^+}\kern{0.17em}(\lim f)\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
 &=
 Φ_n\kern{0.17em}φ_n\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
 &=
@@ -382,7 +382,7 @@ $$
 
 $$
 \begin{aligned}
-φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}
+&\kern{1.35em}φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0} \\
 &=
 φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}0 \\
 &=
@@ -420,7 +420,7 @@ $$
 
 $$
 \begin{aligned}
-φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+
+&\kern{1.35em}φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+ \\
 &=
 j\kern{0.17em}α^+ \\
 &=
@@ -460,7 +460,7 @@ $$
 
 $$
 \begin{aligned}
-φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g)
+&\kern{1.35em}φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g) \\
 &=
 j\kern{0.17em}(\lim g) \\
 &=
@@ -619,7 +619,7 @@ $$
 
 ## SVO
 
-**定义** 有限元Veblen序数的能力极限叫做 SVO (~~Subject–Verb–Object~~ Small Veblen Ordinal).
+**定义** 有限元Veblen序数的能力极限叫做 SVO (~~Subject–Verb–Object~~(不是) Small Veblen Ordinal).
 
 $$
 \begin{aligned}
