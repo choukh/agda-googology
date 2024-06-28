@@ -285,8 +285,7 @@ $$
 **定理** $(\mathcal{s,Z,x})$
 
 $$
-φ_{n^+}\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}
-=
+φ_{n^+}\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}=
 \text{fixpt}\kern{0.17em}λβ,φ_n\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0}
 $$
 
