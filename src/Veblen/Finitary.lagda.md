@@ -12,15 +12,17 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705994456
 
 ```agda
 {-# OPTIONS --lossy-unification #-}
-
 module Veblen.Finitary where
 open import Veblen.Multinary public
+```
+
+前篇我们讲了二元, 三元和四元Veblen函数 $\text{Bin}.φ,\text{Tri}.φ,\text{Qua}.φ$. 我们希望把元数作为一个参数, 也就是说, 定义一个函数族 $φ$, 使得 $φ_n$ 正好是 $n$ 元Veblen函数. 这样的 $φ$ 叫做 (任意) 有限元Veblen函数 (Finitary Veblen Function), 也叫扩展Veblen函数 (Extended Veblen Function).
+
+```agda
 module Bin = BinaryVeblen
 module Tri = TrinaryVeblen
 module Qua = QuaternaryVeblen
 ```
-
-前篇我们讲了二元, 三元和四元Veblen函数 $\text{Bin}.φ,\text{Tri}.φ,\text{Qua}.φ$. 我们希望把元数作为一个参数, 也就是说, 定义一个函数族 $φ$, 使得 $φ_n$ 正好是 $n$ 元Veblen函数. 这样的 $φ$ 叫做 (任意) 有限元Veblen函数 (Finitary Veblen Function), 也叫扩展Veblen函数 (Extended Veblen Function).
 
 ## 有限元函数类型
 
@@ -172,7 +174,7 @@ $$
 ```agda
 Φₙ F = rec F
   (λ φ-α  → Φⁿ $ fixpt λ β → φ-α β 0̇)
-  (λ φ[_] → Φⁿ $ jump λ β → lim λ n → φ[ n ] β 0̇)
+  (λ φ[_] → Φⁿ $ jump λ β → lim λ m → φ[ m ] β 0̇)
 
 Φⁿ {n = zero} = id
 Φⁿ {n = suc n} F = Φₙ (Φⁿ F)
