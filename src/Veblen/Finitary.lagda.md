@@ -247,6 +247,8 @@ $$
 φ₃ = refl
 ```
 
+## 计算模式
+
 如果说三元或四元的时候我们还可以穷举各个参数分别为零, 后继, 极限的情况, $n$ 元的时候就不可能了, 但我们可以通过如下方法来把握.
 
 我们设
@@ -256,17 +258,20 @@ $$
 - $\mathcal{xZy}$ 表示零和非零的混合, 但首尾非零
 - $\mathcal{z,s,l,x}$ 分别表示单个零, 后继, 极限, 非零参数
 
-那么所有参数模式都可匹配到 $(\mathcal{Z,xZy,Z,X})$. 最前面的 $\mathcal{Z}$ 不起任何作用, 可以直接忽略, 于是我们只需讨论 $(\mathcal{xZy,Z,X})$ 的模式, 而这种模式很方便写成定理. 具体地, 我们考察以下模式.
+那么所有参数模式都可匹配到 $(\mathcal{Z,xZy,Z,X})$. 最前面的 $\mathcal{Z}$ 不起任何作用, 可以直接忽略, 于是我们只需讨论 $(\mathcal{xZy,Z,X})$ 的模式, 而这种模式很方便写成定理. 具体地, 我们考察以下模式, 缩进表示它们的依赖关系.
 
-- $(\mathcal{s,Z,x})$
-- $(\mathcal{l,Z,x})$
-  - $(\mathcal{l,Z,z})$
-  - $(\mathcal{l,Z,s})$
-  - $(\mathcal{l,Z,l})$
-- $(\mathcal{x,s,Z,y})$
-- $(\mathcal{x,l,Z,y})$
-- $(\mathcal{x,Z,s,y})$
-- $(\mathcal{x,Z,l,y})$
+- $(\mathcal{Z,x})$
+  - $(\mathcal{s,Z,x})$
+  - $(\mathcal{l,Z,x})$
+    - $(\mathcal{l,Z,z})$
+    - $(\mathcal{l,Z,s})$
+    - $(\mathcal{l,Z,l})$
+  - $(\mathcal{x,s,Z,y})$
+  - $(\mathcal{x,l,Z,y})$
+- $(\mathcal{Z,s,y})$
+  - $(\mathcal{x,Z,s,y})$
+- $(\mathcal{Z,l,y})$
+  - $(\mathcal{x,Z,l,y})$
 
 **引理** $(\mathcal{Z,x})$
 
@@ -280,6 +285,19 @@ $$
 Φ-ż-x : Φⁿ {n} F 0̇,_ ≡ F
 Φ-ż-x {n = zero} = refl
 Φ-ż-x {n = suc n} = Φ-ż-x {n}
+```
+
+**定理** $(\mathcal{Z,x})$
+
+$$
+φ_n\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} = φ_0
+$$
+
+**(证明)** 由引理 $(\mathcal{Z,x})$ 即得. ∎
+
+```agda
+φ-ż-x : φ {n} 0̇,_ ≡ φ {0}
+φ-ż-x {n} = Φ-ż-x
 ```
 
 **定理** $(\mathcal{s,Z,x})$
@@ -395,7 +413,7 @@ $$
   lim (λ m → φ (lim f) 0̇, (g m))              ∎
 ```
 
-**定理**
+**定理** $(\mathcal{x,s,Z,y})$
 
 ```agda
 φ-x-s-ż-y : φ {2+ n} α (suc β) 0̇,_ ≡ fixpt λ γ → φ {2+ n} α β γ 0̇
@@ -405,7 +423,11 @@ $$
 φ-x-s-ż-y {n = suc n} {α = zero} = Φ-ż-x
 φ-x-s-ż-y {n = suc n} {α = suc _} = Φ-ż-x
 φ-x-s-ż-y {n = suc n} {α = lim _} = Φ-ż-x
+```
 
+**定理** $(\mathcal{x,l,Z,y})$
+
+```agda
 φ-x-l-ż-y : φ {2+ n} α (lim f) 0̇,_ ≡ jump λ δ → lim λ m → φ {2+ n} α (f m) δ 0̇
 φ-x-l-ż-y {n = zero} {α = zero} = refl
 φ-x-l-ż-y {n = zero} {α = suc _} = refl
@@ -415,29 +437,22 @@ $$
 φ-x-l-ż-y {n = suc n} {α = lim _} = Φ-ż-x
 ```
 
-**引理**
+**引理** $(\mathcal{Z,s,y})$
 
 ```agda
 Φ-ż-s-x : Φⁿ {suc n} F 0̇, (suc α) ,_ ≡ fixpt (Φⁿ {suc n} F 0̇, α ,_)
 Φ-ż-s-x {n = zero} = refl
 Φ-ż-s-x {n = suc n} = Φ-ż-s-x {n}
-
-Φ-ż-l-x : Φⁿ {suc n} F 0̇, (lim f) ,_ ≡ jump λ β → lim λ m → Φⁿ {suc n} F 0̇, (f m) , β
-Φ-ż-l-x {n = zero} = refl
-Φ-ż-l-x {n = suc n} = Φ-ż-l-x {n}
 ```
 
-**定理**
+**定理** $(\mathcal{Z,s,y})$
 
 ```agda
 φ-ż-s-x : φ {suc n} 0̇, (suc α) ,_ ≡ fixpt (φ {suc n} 0̇, α ,_)
 φ-ż-s-x = Φ-ż-s-x
-
-φ-ż-l-x : φ {suc n} 0̇, (lim f) ,_ ≡ jump λ β → lim λ m → φ {suc n} 0̇, (f m) , β
-φ-ż-l-x = Φ-ż-l-x
 ```
 
-**定理**
+**定理** $(\mathcal{x,Z,s,y})$
 
 ```agda
 φ-x-ż-s-y : φ {2+ n} α 0̇, (suc β) ,_ ≡ fixpt (φ {2+ n} α 0̇, β ,_)
@@ -447,7 +462,26 @@ $$
 φ-x-ż-s-y {n = suc n} {α = zero} = Φ-ż-s-x
 φ-x-ż-s-y {n = suc n} {α = suc _} = Φ-ż-s-x
 φ-x-ż-s-y {n = suc n} {α = lim _} = Φ-ż-s-x
+```
 
+**引理** $(\mathcal{Z,l,y})$
+
+```agda
+Φ-ż-l-x : Φⁿ {suc n} F 0̇, (lim f) ,_ ≡ jump λ β → lim λ m → Φⁿ {suc n} F 0̇, (f m) , β
+Φ-ż-l-x {n = zero} = refl
+Φ-ż-l-x {n = suc n} = Φ-ż-l-x {n}
+```
+
+**定理** $(\mathcal{Z,l,y})$
+
+```agda
+φ-ż-l-x : φ {suc n} 0̇, (lim f) ,_ ≡ jump λ β → lim λ m → φ {suc n} 0̇, (f m) , β
+φ-ż-l-x = Φ-ż-l-x
+```
+
+**定理** $(\mathcal{x,Z,l,y})$
+
+```agda
 φ-x-ż-l-y : φ {2+ n} α 0̇, (lim f) ,_ ≡ jump λ δ → lim λ m → φ {2+ n} α 0̇, (f m) , δ
 φ-x-ż-l-y {n = zero} {α = zero} = refl
 φ-x-ż-l-y {n = zero} {α = suc _} = refl
