@@ -159,12 +159,12 @@ $$
 
 $$
 \begin{aligned}
-Φ_n\kern{0.17em}F &:= \text{rec}\kern{0.17em}F \\
-&\quad (λφ_α,Φ^n(\text{fixpt}\kern{0.17em}λβ,φ_α\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
-&\quad (λφ, Φ^n(\text{jump}\kern{0.17em}λβ,\limλn,φ[n]\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
+Φ_n\kern{0.17em}F :\text{Ord}^{→n^{++}} &:= \text{rec}\kern{0.17em}F \\
+&\qquad (λ(φ_{n^+,α}:\text{Ord}^{→n^+}),Φ^n(\text{fixpt}\kern{0.17em}λβ,φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
+&\qquad (λ(φ_{n^+,f\kern{0.17em}m}:ℕ→\text{Ord}^{→n^+}), Φ^n(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}[m]\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
 \\
-Φ^0 &:= \text{id} \\
-Φ^{n^+}\kern{0.17em}F &:= Φ_n(Φ^n\kern{0.17em}F)
+Φ^0 : \text{Ord}^{→1}→\text{Ord}^{→1} &:= \text{id} \\
+Φ^{n^+}\kern{0.17em}F : \text{Ord}^{→n^{++}} &:= Φ_n(Φ^n\kern{0.17em}F)
 \end{aligned}
 $$
 
@@ -181,8 +181,8 @@ $$
 
 $$
 \begin{aligned}
-Φ_n\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0(\text{fixpt}\kern{0.17em}λβ,φ_α\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...)) \\
-&(λφ, Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0(\text{jump}\kern{0.17em}λβ,\limλn,φ[n]\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...))
+Φ_n\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_{n^+,α},Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0(\text{fixpt}\kern{0.17em}λβ,φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...)) \\
+&(λφ_{n^+,f\kern{0.17em}m}, Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}[m]\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...))
 \end{aligned}
 $$
 
@@ -191,7 +191,7 @@ $$
 **定义** 有限元Veblen函数
 
 $$
-φ := Φ^n(λα,ω\kern{0.17em}^α)
+φ_n : \text{Ord}^{→n^{+}} := Φ^n(λα,ω\kern{0.17em}^α)
 $$
 
 ```agda
@@ -220,7 +220,7 @@ $$
 
 $$
 \begin{aligned}
-φ_0 &= ω \\
+φ_0 &= λα,ω^α \\
 φ_1 &= \text{Bin}.φ \\
 φ_2 &= \text{Tri}.φ \\
 φ_3 &= \text{Qua}.φ
@@ -286,7 +286,7 @@ $$
 
 $$
 φ_{n^+}\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}=
-\text{fixpt}\kern{0.17em}λβ,φ_n\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0}
+\text{fixpt}\kern{0.17em}λβ,φ_{n^+}\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0}
 $$
 
 **(证明)** 依定义
@@ -297,9 +297,9 @@ $$
 &=
 Φ_n\kern{0.17em}φ_n\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
 &=
-Φ^n\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_n\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})\kern{0.17em}\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
+Φ^n\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{n^+}\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})\kern{0.17em}\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
 &=
-\text{fixpt}\kern{0.17em}λβ,φ_n\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0}
+\text{fixpt}\kern{0.17em}λβ,φ_{n^+}\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0}
 \end{aligned}
 $$
 
@@ -314,7 +314,28 @@ $$
   fixpt (λ β → φ α β 0̇)         ∎
 ```
 
-**定理**
+**定理** $(\mathcal{l,Z,x})$
+
+$$
+φ_{n^+}\kern{0.17em}(\lim f)\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}=
+\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}β\kern{0.17em}\overset{.}{0}
+$$
+
+**(证明)** 依定义
+
+$$
+\begin{aligned}
+φ_{n^+}\kern{0.17em}(\lim f)\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}
+&=
+Φ_n\kern{0.17em}φ_n\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
+&=
+Φ^n\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}β\kern{0.17em}\overset{.}{0})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
+&=
+\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}β\kern{0.17em}\overset{.}{0}
+\end{aligned}
+$$
+
+其中第三个等号用了引理 $(\mathcal{Z,x})$. ∎
 
 ```agda
 φ-l-ż-x : φ {suc n} (lim f) 0̇,_ ≡ jump λ β → lim λ m → φ {suc n} (f m) β 0̇
@@ -335,7 +356,9 @@ $$
 \end{aligned}
 $$
 
-**推论**
+对有限元Veblen函数我们有类似的以下三个推论.
+
+**推论** $(\mathcal{l,Z,z})$
 
 ```agda
 φ-l-ż-z : φ {n} (lim f) 0̇ ≡ lim λ m → φ {n} (f m) 0̇
@@ -347,6 +370,8 @@ $$
   lim (λ m → φ (f m) 0̇)                         ∎
 ```
 
+**推论** $(\mathcal{l,Z,s})$
+
 ```agda
 φ-l-ż-s : φ {suc n} (lim f) 0̇, (suc α) ≡ lim λ m → φ (f m) (suc (φ {suc n} (lim f) 0̇, α)) 0̇
 φ-l-ż-s {n} {f} {α} =
@@ -357,6 +382,8 @@ $$
     cong (λ x → lim (λ m → φ {suc n} (f m) (suc (x α)) 0̇)) φ-l-ż-x ⟩
   lim (λ m → φ (f m) (suc (φ (lim f) 0̇, α)) 0̇)  ∎
 ```
+
+**推论** $(\mathcal{l,Z,l})$
 
 ```agda
 φ-l-ż-l : φ {suc n} (lim f) 0̇, (lim g) ≡ lim λ m → φ (lim f) 0̇, (g m)
@@ -449,7 +476,7 @@ SVO = lim λ n → φ {n} 1 0̇
 一个很大的大数:
 
 $$
-\text{svo}\\_{99}:=f_\text{SVO}(99)
+\text{svo}_{99}:=f_\text{SVO}(99)
 $$
 
 ```agda
