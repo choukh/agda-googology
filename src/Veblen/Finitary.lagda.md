@@ -449,7 +449,7 @@ SVO = lim λ n → φ {n} 1 0̇
 一个很大的大数:
 
 $$
-\text{svo}_{99}:=f_\text{SVO}99
+\text{svo} _{99}:=f_\text{SVO}(99)
 $$
 
 ```agda
