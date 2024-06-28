@@ -330,7 +330,7 @@ $$
 **定理** $(\mathcal{l,Z,x})$
 
 $$
-φ_{n^+}\kern{0.17em}(\lim f)\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}=
+φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}=
 \text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}β\kern{0.17em}\overset{.}{0}
 $$
 
@@ -338,7 +338,7 @@ $$
 
 $$
 \begin{aligned}
-&\kern{1.35em}φ_{n^+}\kern{0.17em}(\lim f)\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
+&\kern{1.35em}φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
 &=
 Φ_n\kern{0.17em}φ_n\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
 &=
