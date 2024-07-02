@@ -122,19 +122,68 @@ $$
   φ-3 = refl
 ```
 
-**定理** 对于第一个参数为后继和极限的情况, 由定义, 有以下等式成立.
+一般地, 有
+
+**定理** 对于第一个参数为后继的情况, 由定义, 有以下等式成立
 
 $$
-\begin{aligned}
-\varphi_{α^+} &= \text{fixpt}\kern{0.17em}φ_α \\
-\varphi_{\text{lim}\kern{0.17em}f} &= \text{jump}\kern{0.17em}λα,\text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n}\kern{0.17em}α
-\end{aligned}
+\varphi_{α^+} = \text{fixpt}\kern{0.17em}φ_α
 $$
 
 ```agda
   φ-suc : φ (suc α) ≡ fixpt (φ α)
   φ-suc = refl
+```
 
+为了对 $\text{jump}$ 的行为有更加直观的感受, 对第一个参数为后继的情况, 我们对第二个参数再次分成零, 后继和极限的情况进行讨论, 有如下等式成立.
+
+$$
+\begin{aligned}
+\varphi_{α^+}0 &= (\varphi_α)^ω\kern{0.17em}0 \\
+\varphi_{α^+}β^+ &= (\varphi_α)^ω(\varphi_{α^+}β)^+ \\
+\varphi_{α^+}\lim f &= \lim λn,\varphi_{α^+}(f\kern{0.17em}n)
+\end{aligned}
+$$
+
+```agda
+  φ-suc-0 : φ (suc α) 0 ≡ iterω (φ α) 0
+  φ-suc-0 = refl
+
+  φ-suc-suc : φ (suc α) (suc β) ≡ iterω (φ α) (suc (φ (suc α) β))
+  φ-suc-suc = refl
+
+  φ-suc-lim : φ (suc α) (lim f) ≡ lim λ n → φ (suc α) (f n)
+  φ-suc-lim = refl
+```
+
+**例**
+
+$$
+\begin{aligned}
+\varphi_2\kern{0.17em}0 &= \varphi_1^ω\kern{0.17em}0 &=& \varphi_1(\varphi_1(...(0)...)) \\
+\varphi_2\kern{0.17em}1 &= \varphi_1^ω\kern{0.17em}(\varphi_2\kern{0.17em}0)^+ &=& \varphi_1(\varphi_1(...((\varphi_2\kern{0.17em}0)^+)...)) \\
+\varphi_2\kern{0.17em}ω &= \lim λn,\varphi_2\kern{0.17em}n &=& \lim(\varphi_2\kern{0.17em}0,\varphi_2\kern{0.17em}1,...)
+\end{aligned}
+$$
+
+```agda
+  φ-2-0 : φ 2 0 ≡ iterω (φ 1) 0
+  φ-2-0 = refl
+
+  φ-2-1 : φ 2 1 ≡ iterω (φ 1) (suc (φ 2 0))
+  φ-2-1 = refl
+
+  φ-2-ω : φ 2 ω ≡ lim λ n → φ 2 (finord n)
+  φ-2-ω = refl
+```
+
+**定理** 对于第一个参数为极限的情况, 由定义, 有以下等式成立
+
+$$
+\varphi_{\text{lim}\kern{0.17em}f} = \text{jump}\kern{0.17em}λα,\text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n}\kern{0.17em}α
+$$
+
+```agda
   φ-lim : φ (lim f) ≡ jump λ α → lim λ n → φ (f n) α
   φ-lim = refl
 ```
@@ -159,6 +208,67 @@ $$
   φ-lim-lim : φ (lim f) (lim g) ≡ lim λ n → φ (lim f) (g n)
   φ-lim-lim = refl
 ```
+
+**例**
+
+$$
+\begin{aligned}
+\varphi_{ω}\kern{0.17em}0 &= \text{lim}\kern{0.17em}λn,φ_{n}\kern{0.17em}0 &=& \lim(φ_{0}\kern{0.17em}0,φ_{1}\kern{0.17em}0,...) \\
+\varphi_{ω}\kern{0.17em}1 &= \text{lim}\kern{0.17em}λn,φ_{n}\kern{0.17em}(\varphi_{ω}\kern{0.17em}0)^+ &= &\lim(φ_{0}\kern{0.17em}(\varphi_{ω}\kern{0.17em}0)^+,φ_{1}\kern{0.17em}(\varphi_{ω}\kern{0.17em}0)^+,...) \\
+\varphi_{ω}\kern{0.17em}ω &= \text{lim}\kern{0.17em}λn,φ_{ω}\kern{0.17em}n &=& \lim(φ_{ω}\kern{0.17em}0,φ_{ω}\kern{0.17em}1,...)
+\end{aligned}
+$$
+
+```agda
+  φ-ω-0 : φ ω 0 ≡ lim λ n → φ (finord n) 0
+  φ-ω-0 = refl
+
+  φ-ω-1 : φ ω 1 ≡ lim λ n → φ (finord n) (suc (φ ω 0))
+  φ-ω-1 = refl
+
+  φ-ω-ω : φ ω ω ≡ lim λ n → φ ω (finord n)
+  φ-ω-ω = refl
+```
+
+### 计算模式
+
+如此多的计算实例, 看似复杂, 其实可以总结成以下五种模式. 并且, 我们将这五种模式一般化到 $Φ$ 的任意输入 $F$ 上, 其作用将在之后体现.
+
+**定理** 计算模式
+
+$$
+\begin{aligned}
+Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0 &= (Φ\kern{0.17em}F\kern{0.17em}α)^ω\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}β^+ &= (Φ\kern{0.17em}F\kern{0.17em}α)^ω(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}β)^+ \\
+Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0 &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}β^+ &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}β)^+ \\
+Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}(\lim g) &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}(g\kern{0.17em}n)
+\end{aligned}
+$$
+
+其中第五条要求前提 $F\kern{0.17em}(\lim g) = \lim λn,F\kern{0.17em}(g\kern{0.17em}n)$. 不难验证 $F = λα,ω^α$ 满足此前提.
+
+```agda
+  Φ-s-0 : Φ F (suc α) 0 ≡ iterω (Φ F α) 0
+  Φ-s-0 = refl
+
+  Φ-s-s : Φ F (suc α) (suc β) ≡ iterω (Φ F α) (suc (Φ F (suc α) β))
+  Φ-s-s = refl
+
+  Φ-l-0 : Φ F (lim f) 0 ≡ lim λ n → Φ F (f n) 0
+  Φ-l-0 = refl
+
+  Φ-l-s : Φ F (lim f) (suc β) ≡ lim λ n → Φ F (f n) (suc (Φ F (lim f) β))
+  Φ-l-s = refl
+
+  Φ-α-l : F (lim g) ≡ lim (λ n → F (g n))
+    → Φ F α (lim g) ≡ lim λ n → Φ F α (g n)
+  Φ-α-l {α = zero} H = H
+  Φ-α-l {α = suc _} _ = refl
+  Φ-α-l {α = lim _} _ = refl
+```
+
+### Γ层级及其上
 
 很快, 我们来到了二元Veblen函数的能力极限.
 
@@ -254,6 +364,8 @@ $$
 
 ## 三元Veblen函数
 
+三元Veblen函数是承前启后的层级, 它的定义将帮助我们很快推广到任意元. 因此我们会举很多例子, 以帮助理解更高层级的规律.
+
 ```agda
 module TrinaryVeblen where
 ```
@@ -274,16 +386,16 @@ module TrinaryVeblen where
     - 参数 $φ_α$ 是上一步的结果, 它是一个二元函数, 看作是对三元函数 $φ$ 输入了上一步的编号 $α$ 所得到的结果.
     - 这一步我们先对 $λβ,φ_{α,β}\kern{0.17em}0$ 取不动点枚举, 再交给二元 $Φ$ 处理
       - 回想上一小节我们是怎么从一代 $φ$ 得到二代 $φ$ 的, 这里的处理方式就是对该操作的反映.
-  - 注意: 对任意元 $φ$, 我们都是取第二个参数的不动点枚举, 而对右边剩下的参数全部填零. 二元 $Φ$ 的时候这个规律还看不出来, 现在才显现出来.
+  - 注意: 对任意元 $φ$, 我们都是取第二个参数的不动点枚举, 而对右边其余参数全部填零. 二元 $Φ$ 的时候这个规律还看不出来, 现在才显现出来.
 - 极限步骤: 对步骤的基本列取极限, 再做一次跳出操作, 再交给二元 $Φ$ 处理
-  - 注意: 与后继步骤类似地, 这里是对第二个参数跳出, 右边其余参数全部填零.
+  - 注意: 对任意元 $φ$, 我们都是取最后一个参数的跳出, 而对左边其余参数全部填零. 二元 $Φ$ 的时候这个规律还看不出来, 现在才显现出来.
 
 即
 
 $$
 \begin{aligned}
 Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{α,β}\kern{0.17em}0)) \\
-&(λφ,\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]_β\kern{0.17em}0))
+&(λφ,\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]_0\kern{0.17em}β))
 \end{aligned}
 $$
 
@@ -291,7 +403,7 @@ $$
   Φ : (Ord → Ord → Ord) → Ord → Ord → Ord → Ord
   Φ F = rec F
     (λ φ-α  → Bin.Φ $ fixpt λ β → φ-α β 0)
-    (λ φ[_] → Bin.Φ $ jump λ β → lim λ n → φ[ n ] β 0)
+    (λ φ[_] → Bin.Φ $ jump λ β → lim λ n → φ[ n ] 0 β)
 ```
 
 **定义** 三元Veblen函数
@@ -381,6 +493,69 @@ $$
   φ-suc-lim = refl
 ```
 
+**例** 我们看第三个参数为零的情况, 从而可以忽略 $\text{jump}$ 机制, 有
+
+$$
+\begin{aligned}
+\varphi_{2,0}\kern{0.17em}0 &= (λβ,φ_{1,β,0})^ω\kern{0.17em}0 &=& φ_{1,φ_{1,φ_{1,...,0},0},0}(0) \\
+\varphi_{2,1}\kern{0.17em}0 &= (φ_{2,0})^ω\kern{0.17em}0 &=& φ_{2,0}(φ_{2,0}(...(0)...)) \\
+\varphi_{2,ω}\kern{0.17em}0 &= \text{lim}\kern{0.17em}λn,φ_{2,n}\kern{0.17em}0 &=& \text{lim}(φ_{2,0}\kern{0.17em}0,φ_{2,1}\kern{0.17em}0,...)
+\end{aligned}
+$$
+
+```agda
+  φ-2-0-0 : φ 2 0 0 ≡ iterω (λ β → φ 1 β 0) 0
+  φ-2-0-0 = refl
+
+  φ-2-1-0 : φ 2 1 0 ≡ iterω (φ 2 0) 0
+  φ-2-1-0 = refl
+
+  φ-2-ω-0 : φ 2 ω 0 ≡ lim λ n → φ 2 (finord n) 0
+  φ-2-ω-0 = refl
+```
+
+再看跳出机制生效的情况, 有
+
+$$
+\begin{aligned}
+\varphi_{2,0}\kern{0.17em}1 &= (λβ,φ_{1,β,0})^ω\kern{0.17em}(\varphi_{2,0}\kern{0.17em}0)^+ &=& φ_{1,φ_{1,φ_{1,...,0},0},0}(\varphi_{2,0}\kern{0.17em}0)^+ \\
+\varphi_{2,1}\kern{0.17em}1 &= (\varphi_{2,0})^ω\kern{0.17em}(\varphi_{2,1}\kern{0.17em}0)^+ &=& \varphi_{2,0}(\varphi_{2,0}(...((\varphi_{2,1}\kern{0.17em}0)^+)...)) \\
+\varphi_{2,ω}\kern{0.17em}1 &= \text{lim}\kern{0.17em}λn,φ_{2,n}\kern{0.17em}(\varphi_{2,ω}\kern{0.17em}0)^+ &=& \text{lim}(φ_{2,0}\kern{0.17em}(\varphi_{2,ω}\kern{0.17em}0)^+,φ_{2,1}\kern{0.17em}(\varphi_{2,ω}\kern{0.17em}0)^+,...)
+\end{aligned}
+$$
+
+```agda
+  φ-2-0-1 : φ 2 0 1 ≡ iterω (λ β → φ 1 β 0) (suc (φ 2 0 0))
+  φ-2-0-1 = refl
+
+  φ-2-1-1 : φ 2 1 1 ≡ iterω (φ 2 0) (suc (φ 2 1 0))
+  φ-2-1-1 = refl
+
+  φ-2-ω-1 : φ 2 ω 1 ≡ lim λ n → φ 2 (finord n) (suc (φ 2 ω 0))
+  φ-2-ω-1 = refl
+```
+
+最后, 对极限次跳出, 有
+
+$$
+\begin{aligned}
+\varphi_{2,0}\kern{0.17em}ω &= \text{lim}\kern{0.17em}λn,φ_{2,0}\kern{0.17em}n &=& \lim(φ_{2,0}\kern{0.17em}0,φ_{2,0}\kern{0.17em}1,...) \\
+\varphi_{2,1}\kern{0.17em}ω &= \text{lim}\kern{0.17em}λn,φ_{2,1}\kern{0.17em}n &=& \lim(φ_{2,1}\kern{0.17em}0,φ_{2,1}\kern{0.17em}1,...) \\
+\varphi_{2,ω}\kern{0.17em}ω &= \text{lim}\kern{0.17em}λn,φ_{2,ω}\kern{0.17em}n &=& \lim(φ_{2,ω}\kern{0.17em}0,φ_{2,ω}\kern{0.17em}1,...)
+\end{aligned}
+$$
+
+```agda
+  φ-2-0-ω : φ 2 0 ω ≡ lim λ n → φ 2 0 (finord n)
+  φ-2-0-ω = refl
+
+  φ-2-1-ω : φ 2 1 ω ≡ lim λ n → φ 2 1 (finord n)
+  φ-2-1-ω = refl
+
+  φ-2-ω-ω : φ 2 ω ω ≡ lim λ n → φ 2 ω (finord n)
+  φ-2-ω-ω = refl
+```
+
 **定理** 对于第一个参数为极限的情况, 我们对第二个参数分情况讨论, 由定义, 有以下等式成立.
 
 $$
@@ -392,7 +567,7 @@ $$
 $$
 
 ```agda
-  φ-lim-0 : φ (lim f) 0 ≡ jump λ β → lim λ n → φ (f n) β 0
+  φ-lim-0 : φ (lim f) 0 ≡ jump λ β → lim λ n → φ (f n) 0 β
   φ-lim-0 = refl
 
   φ-lim-suc : φ (lim f) (suc β) ≡ fixpt (φ (lim f) β)
@@ -402,135 +577,105 @@ $$
   φ-lim-lim = refl
 ```
 
-## 四元Veblen函数
-
-```agda
-module QuaternaryVeblen where
-  private module Bin = BinaryVeblen
-  private module Tri = TrinaryVeblen
-```
-
-摸清二元到三元的规律之后, 三元到四元就是按部就班的操作了.
-
-**定义** 四元版本的 $Φ$ 为, 对给定的序数函数 $F : \text{Ord} → \text{Ord} → \text{Ord} → \text{Ord}$, 使用 $\text{rec}$
+**例** 我们看第三个参数为零的情况, 从而可以忽略 $\text{jump}$ 机制, 有
 
 $$
 \begin{aligned}
-Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,\text{Tri}.Φ\kern{0.17em}(\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{α,β,0}\kern{0.17em}0))) \\
-&(λφ,\text{Tri}.Φ\kern{0.17em}(\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]_{β,0}\kern{0.17em}0)))
+\varphi_{ω,0}\kern{0.17em}0 &= \text{lim}\kern{0.17em}λn,φ_{n,0}\kern{0.17em}0 &=& \text{lim}(φ_{0,0}\kern{0.17em}0,φ_{1,0}\kern{0.17em}0,...) \\
+\varphi_{ω,1}\kern{0.17em}0 &= (\varphi_{ω,0})^ω\kern{0.17em}0 &=& \varphi_{ω,0}(\varphi_{ω,0}(...(0)...)) \\
+\varphi_{ω,ω}\kern{0.17em}0 &= \text{lim}\kern{0.17em}λn,φ_{ω,n}\kern{0.17em}0 &=& \text{lim}(φ_{ω,0}\kern{0.17em}0,φ_{ω,1}\kern{0.17em}0,...)
 \end{aligned}
 $$
 
 ```agda
-  Φ : (Ord → Ord → Ord → Ord) → (Ord → Ord → Ord → Ord → Ord)
-  Φ F = rec F
-    (λ φ-α  → Tri.Φ $ Bin.Φ $ fixpt λ β → φ-α β 0 0)
-    (λ φ[_] → Tri.Φ $ Bin.Φ $ jump λ β → lim λ n → φ[ n ] β 0 0)
+  φ-ω-0-0 : φ ω 0 0 ≡ lim λ n → φ (finord n) 0 0
+  φ-ω-0-0 = refl
+
+  φ-ω-1-0 : φ ω 1 0 ≡ iterω (φ ω 0) 0
+  φ-ω-1-0 = refl
+
+  φ-ω-ω-0 : φ ω ω 0 ≡ lim λ n → φ ω (finord n) 0
+  φ-ω-ω-0 = refl
 ```
 
-**定义** 四元Veblen函数
-
-$$\varphi := Φ\kern{0.17em}\text{Tri}.\varphi$$
-
-```agda
-  φ : Ord → Ord → Ord → Ord → Ord
-  φ = Φ Tri.φ
-```
-
-**例** 第一个参数从无效到刚开始生效, 由定义, 有以下等式成立.
+再看跳出机制生效的情况, 有
 
 $$
 \begin{aligned}
-\varphi_0 &= \text{Tri}.\varphi \\
-\varphi_{1,0,0} &= \text{fixpt}\kern{0.17em}λα,\text{Tri}.\varphi_{α,0}\kern{0.17em}0 \\
+\varphi_{ω,0}\kern{0.17em}1 &= \text{lim}\kern{0.17em}λn,φ_{n,0}\kern{0.17em}(\varphi_{ω,0}\kern{0.17em}0)^+ &=& \text{lim}(φ_{0,0}\kern{0.17em}(\varphi_{ω,0}\kern{0.17em}0)^+,φ_{1,0}\kern{0.17em}(\varphi_{ω,0}\kern{0.17em}0)^+,...) \\
+\varphi_{ω,1}\kern{0.17em}1 &= (\varphi_{ω,0})^ω\kern{0.17em}(\varphi_{ω,1}\kern{0.17em}0)^+ &=& \varphi_{ω,0}(\varphi_{ω,0}(...((\varphi_{ω,1}\kern{0.17em}0)^+)...)) \\
+\varphi_{ω,ω}\kern{0.17em}1 &= \text{lim}\kern{0.17em}λn,φ_{ω,n}\kern{0.17em}(\varphi_{ω,ω}\kern{0.17em}0)^+ &=& \text{lim}(φ_{ω,0}\kern{0.17em}(\varphi_{ω,ω}\kern{0.17em}0)^+,φ_{ω,1}\kern{0.17em}(\varphi_{ω,ω}\kern{0.17em}0)^+,...)
 \end{aligned}
 $$
 
 ```agda
-  φ-0 : φ 0 ≡ Tri.φ
-  φ-0 = refl
+  φ-ω-0-1 : φ ω 0 1 ≡ lim λ n → φ (finord n) 0 (suc (φ ω 0 0))
+  φ-ω-0-1 = refl
 
-  φ-1-0-0 : φ 1 0 0 ≡ fixpt (λ α → Tri.φ α 0 0)
-  φ-1-0-0 = refl
+  φ-ω-1-1 : φ ω 1 1 ≡ iterω (φ ω 0) (suc (φ ω 1 0))
+  φ-ω-1-1 = refl
+
+  φ-ω-ω-1 : φ ω ω 1 ≡ lim λ n → φ ω (finord n) (suc (φ ω ω 0))
+  φ-ω-ω-1 = refl
 ```
 
-**定理** 中间两个参数为零, 讨论第一个参数为后继和极限的情况, 由定义, 有以下等式成立.
+最后, 对极限次跳出, 有
 
 $$
 \begin{aligned}
-\varphi_{α^+,0,0} &= \text{fixpt}\kern{0.17em}λβ,φ_{α,β,0}\kern{0.17em}0 \\
-\varphi_{\text{lim}\kern{0.17em}f,0,0} &= \text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n,β,0}\kern{0.17em}0
+\varphi_{ω,0}\kern{0.17em}ω &= \text{lim}\kern{0.17em}λn,φ_{ω,0}\kern{0.17em}n &=& \lim(φ_{ω,0}\kern{0.17em}0,φ_{ω,0}\kern{0.17em}1,...) \\
+\varphi_{ω,1}\kern{0.17em}ω &= \text{lim}\kern{0.17em}λn,φ_{ω,1}\kern{0.17em}n &=& \lim(φ_{ω,1}\kern{0.17em}0,φ_{ω,1}\kern{0.17em}1,...) \\
+\varphi_{ω,ω}\kern{0.17em}ω &= \text{lim}\kern{0.17em}λn,φ_{ω,ω}\kern{0.17em}n &=& \lim(φ_{ω,ω}\kern{0.17em}0,φ_{ω,ω}\kern{0.17em}1,...)
 \end{aligned}
 $$
 
 ```agda
-  φ-suc-0-0 : φ (suc α) 0 0 ≡ fixpt λ β → φ α β 0 0
-  φ-suc-0-0 = refl
+  φ-ω-0-ω : φ ω 0 ω ≡ lim λ n → φ ω 0 (finord n)
+  φ-ω-0-ω = refl
 
-  φ-lim-0-0 : φ (lim f) 0 0 ≡ jump λ β → lim λ n → φ (f n) β 0 0
-  φ-lim-0-0 = refl
+  φ-ω-1-ω : φ ω 1 ω ≡ lim λ n → φ ω 1 (finord n)
+  φ-ω-1-ω = refl
+
+  φ-ω-ω-ω : φ ω ω ω ≡ lim λ n → φ ω ω (finord n)
+  φ-ω-ω-ω = refl
 ```
 
-**定理** 将 $φ_α$ 看作一个固定的函数, 类似地, 有以下等式成立.
+## 计算模式
+
+如此多的计算实例, 看似复杂, 其实可以总结成以下五种模式. 并且, 我们将这五种模式一般化到 $Φ$ 的任意输入 $F$ 上.
+
+对于这五种以外的模式, 可以归结到二元 $Φ$ 的这五种模式之一. 例如 $φ_{α,β^+}\kern{0.17em}0$ 可以归结到二元的 $Φ\kern{0.17em}F\kern{0.17em}β^+\kern{0.17em}0$, 其中 $F = φ_α$. 同样地, 四元Veblen函数将有这五种模式, 以及可以归结到三元和二元的模式. 这就是我们要一般化输入 $F$ 的原因.
+
+**定理** 计算模式
 
 $$
 \begin{aligned}
-\varphi_{α,β^+,0} &= \text{fixpt}\kern{0.17em}λγ,φ_{α,β,γ}\kern{0.17em}0 \\
-\varphi_{α,\text{lim}\kern{0.17em}g,0} &= \text{jump}\kern{0.17em}λγ,\text{lim}\kern{0.17em}λn,φ_{α,g\kern{0.17em}n,γ}\kern{0.17em}0
+Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0 &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0)^ω\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}β^+ &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0)^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}β)^+ \\
+Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0 &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}β^+ &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}β)^+ \\
+Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}(\lim g) &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)
 \end{aligned}
 $$
 
-```agda
-  φ-α-suc-0 : φ α (suc β) 0 ≡ fixpt λ γ → φ α β γ 0
-  φ-α-suc-0 {α = zero}  = refl
-  φ-α-suc-0 {α = suc _} = refl
-  φ-α-suc-0 {α = lim f} = refl
-
-  φ-α-lim-0 : φ α (lim g) 0 ≡ jump λ γ → lim λ n → φ α (g n) γ 0
-  φ-α-lim-0 {α = zero}  = refl
-  φ-α-lim-0 {α = suc _} = refl
-  φ-α-lim-0 {α = lim f} = refl
-```
-
-**定理** 将 $φ_{α,β}$ 看作一个固定的函数, 类似地, 有以下等式成立.
-
-$$
-\begin{aligned}
-\varphi_{α,β,γ^+} &= \text{fixpt}\kern{0.17em}φ_{α,β,γ} \\
-\varphi_{α,β,\text{lim}\kern{0.17em}h} &= \text{jump}\kern{0.17em}λδ,\text{lim}\kern{0.17em}λn,φ_{α,β,h\kern{0.17em}n}\kern{0.17em}δ
-\end{aligned}
-$$
+其中第五条要求前提 $F\kern{0.17em}0\kern{0.17em}(\lim g) = \lim λn,F\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)$. 不难验证 $F = \text{Bin}.\varphi$ 满足此前提.
 
 ```agda
-  φ-α-β-suc : φ α β (suc γ) ≡ fixpt (φ α β γ)
-  φ-α-β-suc {α = zero}  {β = zero}  = refl
-  φ-α-β-suc {α = zero}  {β = suc _} = refl
-  φ-α-β-suc {α = zero}  {β = lim _} = refl
-  φ-α-β-suc {α = suc _} {β = zero}  = refl
-  φ-α-β-suc {α = suc _} {β = suc _} = refl
-  φ-α-β-suc {α = suc _} {β = lim _} = refl
-  φ-α-β-suc {α = lim _} {β = zero}  = refl
-  φ-α-β-suc {α = lim _} {β = suc _} = refl
-  φ-α-β-suc {α = lim _} {β = lim _} = refl
+  Φ-s-0-0 : ∀ F → Φ F (suc α) 0 0 ≡ iterω (λ β → Φ F α β 0) 0
+  Φ-s-0-0 F = refl
 
-  φ-α-β-lim : φ α β (lim h) ≡ jump λ δ → lim λ n → φ α β (h n) δ
-  φ-α-β-lim {α = zero}  {β = zero}  = refl
-  φ-α-β-lim {α = zero}  {β = suc _} = refl
-  φ-α-β-lim {α = zero}  {β = lim _} = refl
-  φ-α-β-lim {α = suc _} {β = zero}  = refl
-  φ-α-β-lim {α = suc _} {β = suc _} = refl
-  φ-α-β-lim {α = suc _} {β = lim _} = refl
-  φ-α-β-lim {α = lim _} {β = zero}  = refl
-  φ-α-β-lim {α = lim _} {β = suc _} = refl
-  φ-α-β-lim {α = lim _} {β = lim _} = refl
-```
+  Φ-s-0-s : ∀ F → Φ F (suc α) 0 (suc β) ≡ iterω (λ β → Φ F α β 0) (suc (Φ F (suc α) 0 β))
+  Φ-s-0-s F = refl
 
-**例** 一个很大的大数:
+  Φ-l-0-0 : ∀ F → Φ F (lim f) 0 0 ≡ lim λ n → Φ F (f n) 0 0
+  Φ-l-0-0 F = refl
 
-$$
-\text{oom}_{2} := f_{φ_{Γ_0,0,0}\kern{0.17em}(0)}(99)
-$$
+  Φ-l-0-s : ∀ F → Φ F (lim f) 0 (suc β) ≡ lim λ n → Φ F (f n) 0 (suc (Φ F (lim f) 0 β))
+  Φ-l-0-s F = refl
 
-```agda
-oom₂ = FGH.f (QuaternaryVeblen.φ (BinaryVeblen.Γ 0) 0 0 0) 99
+  Φ-α-0-l : ∀ F → F zero (lim g) ≡ lim (λ n → F zero (g n))
+    → Φ F α 0 (lim g) ≡ lim λ n → Φ F α 0 (g n)
+  Φ-α-0-l {α = zero} F H = H
+  Φ-α-0-l {α = suc α} F _ = refl
+  Φ-α-0-l {α = lim x} F _ = refl
 ```
