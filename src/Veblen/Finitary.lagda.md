@@ -11,9 +11,12 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705994456
 > 高亮渲染: [Finitary.html](https://choukh.github.io/agda-googology/Veblen.Finitary.html)  
 
 ```agda
-{-# OPTIONS --lossy-unification #-}
+{-# OPTIONS --lossy-unification --rewriting --local-confluence-check #-}
 module Veblen.Finitary where
 open import Veblen.Multinary public
+
+open import Agda.Builtin.Equality
+open import Agda.Builtin.Equality.Rewrite
 ```
 
 前篇我们讲了二元, 三元和四元Veblen函数 $\text{Bin}.φ,\text{Tri}.φ,\text{Qua}.φ$. 我们希望把元数作为一个参数, 也就是说, 定义一个函数族 $φ$, 使得 $φ_n$ 正好是 $n$ 元Veblen函数. 这样的 $φ$ 叫做 (任意) 有限元Veblen函数 (Finitary Veblen Function), 也叫扩展Veblen函数 (Extended Veblen Function).
@@ -113,10 +116,10 @@ $$
 $$
 
 ```agda
-0,0̇ : {F : A →ⁿ (suc n)} → F 0̇ ≡ F 0 0̇
+0,0̇ : {F : A →ⁿ (suc n)} → F 0 0̇ ≡ F 0̇
 0,0̇ = refl
 
-0̇,0 : {F : A →ⁿ (suc n)} → F 0̇ ≡ F 0̇, 0
+0̇,0 : {F : A →ⁿ (suc n)} → F 0̇, 0 ≡ F 0̇
 0̇,0 {n = zero} = refl
 0̇,0 {n = suc _} {F} = 0̇,0 {F = F 0}
 ```
@@ -246,31 +249,36 @@ $$
 
 ## 计算模式
 
-如果说三元或四元的时候我们还可以穷举各个参数分别为零, 后继, 极限的情况, $n$ 元的时候就不可能了, 但我们可以通过如下方法来把握.
+回想四元Veblen函数的计算模式.
 
-我们设
+$$
+\begin{aligned}
+Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0\kern{0.17em}0)^ω\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β^+ &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0\kern{0.17em}0)^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β)^+ \\
+Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β^+ &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β)^+\kern{0.17em}0\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}0\kern{0.17em}(\lim g) &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)
+\end{aligned}
+$$
 
-- $\mathcal{Z}$ 表示不特定多个零
-- $\mathcal{X}$ 表示不特定多个非零
-- $\mathcal{xZy}$ 表示零和非零的混合, 但首尾非零
-- $\mathcal{z,s,l,x}$ 分别表示单个零, 后继, 极限, 非零参数
+自然推广下去, 对于 $n$ 元, 系统地, 可以通过如下方法考察计算模式. 设
 
-那么所有参数模式都可匹配到 $(\mathcal{Z,xZy,Z,X})$. 最前面的 $\mathcal{Z}$ 不起任何作用, 可以直接忽略, 于是我们只需讨论 $(\mathcal{xZy,Z,X})$ 的模式, 而这种模式很方便写成定理. 具体地, 我们考察以下模式, 缩进表示它们的证明依赖关系.
+- $\mathcal{S}$ 表示任意参数序列
+- $\mathcal{Z}$ 表示不特定多个零 (可能一个零都没有)
+- $\mathcal{z,s,l}$ 分别表示单个零, 后继, 极限
+- $\mathcal{α,β}$ 表示任意单个参数
 
-- $(\mathcal{Z,x})$
-  - $(\mathcal{s,Z,x})$
-  - $(\mathcal{l,Z,x})$
-    - $(\mathcal{l,Z,z})$
-    - $(\mathcal{l,Z,s})$
-    - $(\mathcal{l,Z,l})$
-  - $(\mathcal{x,s,Z,y})$
-  - $(\mathcal{x,l,Z,y})$
-- $(\mathcal{Z,s,x})$
-  - $(\mathcal{x,Z,s,y})$
-- $(\mathcal{Z,l,x})$
-  - $(\mathcal{x,Z,l,y})$
+那么所有参数模式都可匹配到 $(\mathcal{S,α,Z,β})$ 的模式, 且五大模式表示为
 
-**引理** $(\mathcal{Z,x})$
+- $(\mathcal{S,s,Z,z})$
+- $(\mathcal{S,s,Z,s})$
+- $(\mathcal{S,l,Z,z})$
+- $(\mathcal{S,l,Z,s})$
+- $(\mathcal{S,α,Z,l})$
+
+但 Agda 无法直接像四元那样直接证出这些模式, 因为卡在了下述引理, 它的证明需要归纳元数 $n$.
+
+**引理** $(\mathcal{S,Z,α})$
 
 $$
 Φ^n\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} = F
@@ -279,344 +287,146 @@ $$
 **(证明)** 归纳 $n$ 即得. ∎
 
 ```agda
-Φ-ż-x : Φⁿ {n} F 0̇,_ ≡ F
-Φ-ż-x {n = zero} = refl
-Φ-ż-x {n = suc n} = Φ-ż-x {n}
+Φ-ż-α : Φⁿ {n} F 0̇,_ ≡ F
+Φ-ż-α {n = zero} = refl
+Φ-ż-α {n = suc n} = Φ-ż-α {n}
+{-# REWRITE Φ-ż-α #-}
 ```
 
-**定理** $(\mathcal{Z,x})$
+将该引理声明为新的重写规则, 可以立即证明:
 
-$$
-φ_n\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} = φ_0
-$$
-
-**(证明)** 由引理 $(\mathcal{Z,x})$ 即得. ∎
-
-```agda
-φ-ż-x : φ {n} 0̇,_ ≡ φ {0}
-φ-ż-x {n} = Φ-ż-x
-```
-
-**定理** $(\mathcal{s,Z,x})$
-
-$$
-φ_{n^+}\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}=
-\text{fixpt}\kern{0.17em}λβ,φ_{n^+}\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0}
-$$
-
-**(证明)** 依定义
+**定理** 计算模式
 
 $$
 \begin{aligned}
-&\kern{1.35em}φ_{n^+}\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
-&=
-Φ_n\kern{0.17em}φ_n\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
-&=
-Φ^n\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{n^+}\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})\kern{0.17em}\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
-&=
-\text{fixpt}\kern{0.17em}λβ,φ_{n^+}\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0}
+Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0} &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+ &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+ \\
+Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0} &= \lim λm,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}\overset{.}{0} \\
+Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+ &= \lim λm,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+\kern{0.17em}\overset{.}{0} \\
+Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g) &= \lim λm,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}m)
 \end{aligned}
 $$
 
-其中第三个等号用了引理 $(\mathcal{Z,x})$. ∎
+其中第五条要求前提 $F\kern{0.17em}(\lim g) = \lim λm,F\kern{0.17em}(g\kern{0.17em}m)$.
 
 ```agda
-φ-s-ż-x : φ {suc n} (suc α) 0̇,_ ≡ fixpt λ β → φ α β 0̇
-φ-s-ż-x {n} {α} = begin
-  φ {suc n} (suc α) 0̇,_         ≡⟨⟩
-  Φₙ (φ {n}) (suc α) 0̇,_        ≡⟨⟩
-  Φⁿ (fixpt λ β → φ α β 0̇) 0̇,_  ≡⟨ Φ-ż-x ⟩
-  fixpt (λ β → φ α β 0̇)         ∎
+Φ-s-ż-z : Φⁿ {suc n} F (suc α) 0̇, 0 ≡ iterω (λ β → Φⁿ F α β 0̇) 0
+Φ-s-ż-z = refl
+
+Φ-s-ż-s : Φⁿ {suc n} F (suc α) 0̇, (suc β) ≡ iterω (λ β → Φⁿ F α β 0̇) (suc (Φⁿ F (suc α) 0̇, β))
+Φ-s-ż-s = refl
+
+Φ-l-ż-z : Φⁿ {suc n} F (lim f) 0̇, 0 ≡ lim λ m → Φⁿ {suc n} F (f m) 0̇
+Φ-l-ż-z = refl
+
+Φ-l-ż-s : Φⁿ {suc n} F (lim f) 0̇, (suc β) ≡ lim λ m → Φⁿ F (f m) (suc (Φⁿ F (lim f) 0̇, β)) 0̇
+Φ-l-ż-s = refl
+
+Φ-α-ż-l : F (lim g) ≡ lim (λ m → F (g m)) → Φⁿ {suc n} F α 0̇, (lim g) ≡ lim λ m → Φⁿ {suc n} F α 0̇, (g m)
+Φ-α-ż-l {α = zero} = id
+Φ-α-ż-l {α = suc _} _ = refl
+Φ-α-ż-l {α = lim _} _ = refl
 ```
 
-**定理** $(\mathcal{l,Z,x})$
-
-$$
-φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}=
-\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}β\kern{0.17em}\overset{.}{0}
-$$
-
-**(证明)** 依定义
-
-$$
-\begin{aligned}
-&\kern{1.35em}φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
-&=
-Φ_n\kern{0.17em}φ_n\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
-&=
-Φ^n\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}β\kern{0.17em}\overset{.}{0})\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} \\
-&=
-\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}β\kern{0.17em}\overset{.}{0}
-\end{aligned}
-$$
-
-其中第三个等号用了引理 $(\mathcal{Z,x})$. ∎
-
-```agda
-φ-l-ż-x : φ {suc n} (lim f) 0̇,_ ≡ jump λ β → lim λ m → φ {suc n} (f m) β 0̇
-φ-l-ż-x {n} {f} = begin
-  φ {suc n} (lim f) 0̇,_                     ≡⟨⟩
-  Φₙ (φ {n}) (lim f) 0̇,_                    ≡⟨⟩
-  Φⁿ (jump λ β → lim λ m → φ (f m) β 0̇) 0̇,_ ≡⟨ Φ-ż-x ⟩
-  jump (λ β → lim λ m → φ (f m) β 0̇)        ∎
-```
-
-回想二元Veblen函数的计算式
-
-$$
-\begin{aligned}
-\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}0 &= \text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n}\kern{0.17em}0 \\
-\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}(β^+) &= \text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n}\kern{0.17em}(\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}β)^+ \\
-\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}(\text{lim}\kern{0.17em}g) &= \text{lim}\kern{0.17em}λn,φ_{\text{lim}\kern{0.17em}f}\kern{0.17em}(g\kern{0.17em}n)
-\end{aligned}
-$$
-
-对有限元Veblen函数我们有类似的以下三个推论.
-
-**推论** $(\mathcal{l,Z,z})$
-
-$$
-φ_{n}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}=
-\text{lim}\kern{0.17em}λm,φ_{n}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}\overset{.}{0}\kern{0.17em}
-$$
-
-**(证明)** $n=0$ 时显然成立. 我们证 $n=n^+$ 的情况. 依定义有
-
-$$
-\begin{aligned}
-&\kern{1.35em}φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0} \\
-&=
-φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}0 \\
-&=
-\text{jump}\kern{0.17em}(λβ,\limλm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}β\kern{0.17em}\overset{.}{0})\kern{0.17em}0 \\
-&=
-\text{lim}\kern{0.17em}λm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}\overset{.}{0}
-\end{aligned}
-$$
-
-其中第二个等号用了定理 $(\mathcal{l,Z,x})$. ∎
-
-```agda
-φ-l-ż-z : φ {n} (lim f) 0̇ ≡ lim λ m → φ {n} (f m) 0̇
-φ-l-ż-z {n = zero} = refl
-φ-l-ż-z {n = suc n} {f} = begin
-  φ {suc n} (lim f) 0̇                   ≡⟨ 0̇,0 ⟩
-  φ {suc n} (lim f) 0̇, 0                ≡⟨ cong-app φ-l-ż-x 0 ⟩
-  jump (λ β → lim λ m → φ (f m) β 0̇) 0  ≡⟨⟩
-  lim (λ m → φ (f m) 0̇)                 ∎
-```
-
-**推论** $(\mathcal{l,Z,s})$
-
-$$
-φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+ = \text{lim}\kern{0.17em}λm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}(φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}α)^+\kern{0.17em}\overset{.}{0}
-$$
-
-**(证明)** 令
-
-$$
-j := \text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}β\kern{0.17em}\overset{.}{0}
-$$
-
-我们有
-
-$$
-\begin{aligned}
-&\kern{1.35em}φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+ \\
-&=
-j\kern{0.17em}α^+ \\
-&=
-\text{lim}\kern{0.17em}λm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}{(j\kern{0.17em}α)}^+\kern{0.17em}\overset{.}{0} \\
-&=
-\text{lim}\kern{0.17em}λm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}(φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}α)^+\kern{0.17em}\overset{.}{0}
-\end{aligned}
-$$
-
-其中第一个和第三个等号都用了定理 $(\mathcal{l,Z,x})$. ∎
-
-```agda
-φ-l-ż-s : φ {suc n} (lim f) 0̇, (suc α) ≡ lim λ m → φ (f m) (suc (φ {suc n} (lim f) 0̇, α)) 0̇
-φ-l-ż-s {n} {f} {α} =
-  let j = jump λ β → lim λ m → φ (f m) β 0̇ in   begin
-  φ {suc n} (lim f) 0̇, (suc α)                  ≡⟨ cong-app φ-l-ż-x (suc α) ⟩
-  j (suc α)                                     ≡⟨⟩
-  lim (λ m → φ (f m) (suc (j α)) 0̇)             ≡˘⟨
-    cong (λ x → lim (λ m → φ {suc n} (f m) (suc (x α)) 0̇)) φ-l-ż-x ⟩
-  lim (λ m → φ (f m) (suc (φ (lim f) 0̇, α)) 0̇)  ∎
-```
-
-**推论** $(\mathcal{l,Z,l})$
-
-$$
-φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g)=
-\lim λm,φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}m)
-$$
-
-**(证明)** 令
-
-$$
-j := \text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}β\kern{0.17em}\overset{.}{0}
-$$
-
-我们有
-
-$$
-\begin{aligned}
-&\kern{1.35em}φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g) \\
-&=
-j\kern{0.17em}(\lim g) \\
-&=
-\text{lim}\kern{0.17em}λm,j\kern{0.17em}(g\kern{0.17em}m)
-\\
-&=
-\text{lim}\kern{0.17em}λm,φ_{n^+}\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}m)
-\end{aligned}
-$$
-
-其中第一个和第三个等号都用了定理 $(\mathcal{l,Z,x})$. ∎
-
-```agda
-φ-l-ż-l : φ {suc n} (lim f) 0̇, (lim g) ≡ lim λ m → φ (lim f) 0̇, (g m)
-φ-l-ż-l {n} {f} {g} =
-  let j = jump λ β → lim λ m → φ (f m) β 0̇ in begin
-  φ {suc n} (lim f) 0̇, (lim g)                ≡⟨ cong-app φ-l-ż-x (lim g) ⟩
-  j (lim g)                                   ≡⟨⟩
-  lim (λ m → j (g m))                         ≡˘⟨ cong (λ x → lim (λ m → x (g m))) φ-l-ż-x ⟩
-  lim (λ m → φ (lim f) 0̇, (g m))              ∎
-```
-
-**定理** $(\mathcal{x,s,Z,y})$
+**推论** $(\mathcal{α,s,Z,β})$
 
 $$
 φ_{n^{++}}\kern{0.17em}α\kern{0.17em}β^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}=
 \text{fixpt}\kern{0.17em}λγ,φ_{n^{++}}\kern{0.17em}α\kern{0.17em}β\kern{0.17em}γ\kern{0.17em}\overset{.}{0}
 $$
 
-**(证明)** 讨论 $α$, 由引理 $(\mathcal{Z,x})$ 即得. ∎
+**(证明)** 讨论 $α$, 由定理 $(\mathcal{S,Z,α})$ 即得. ∎
 
 ```agda
-φ-x-s-ż-y : φ {2+ n} α (suc β) 0̇,_ ≡ fixpt λ γ → φ {2+ n} α β γ 0̇
-φ-x-s-ż-y {n = zero} {α = zero} = refl
-φ-x-s-ż-y {n = zero} {α = suc _} = refl
-φ-x-s-ż-y {n = zero} {α = lim _} = refl
-φ-x-s-ż-y {n = suc n} {α = zero} = Φ-ż-x
-φ-x-s-ż-y {n = suc n} {α = suc _} = Φ-ż-x
-φ-x-s-ż-y {n = suc n} {α = lim _} = Φ-ż-x
+φ-α-s-ż-β : φ {2+ n} α (suc β) 0̇,_ ≡ fixpt λ γ → φ {2+ n} α β γ 0̇
+φ-α-s-ż-β {n = zero} {α = zero} = refl
+φ-α-s-ż-β {n = zero} {α = suc _} = refl
+φ-α-s-ż-β {n = zero} {α = lim _} = refl
+φ-α-s-ż-β {n = suc n} {α = zero} = Φ-ż-α
+φ-α-s-ż-β {n = suc n} {α = suc _} = Φ-ż-α
+φ-α-s-ż-β {n = suc n} {α = lim _} = Φ-ż-α
 ```
 
-**定理** $(\mathcal{x,l,Z,y})$
+**推论** $(\mathcal{α,l,Z,β})$
 
 $$
 φ_{n^{++}}\kern{0.17em}α\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}=
 \text{jump}\kern{0.17em}λδ,\limλm,φ_{n^{++}}\kern{0.17em}α\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}δ\kern{0.17em}\overset{.}{0}
 $$
 
-**(证明)** 讨论 $α$, 由引理 $(\mathcal{Z,x})$ 即得. ∎
+**(证明)** 讨论 $α$, 由定理 $(\mathcal{S,Z,α})$ 即得. ∎
 
 ```agda
-φ-x-l-ż-y : φ {2+ n} α (lim f) 0̇,_ ≡ jump λ δ → lim λ m → φ {2+ n} α (f m) δ 0̇
-φ-x-l-ż-y {n = zero} {α = zero} = refl
-φ-x-l-ż-y {n = zero} {α = suc _} = refl
-φ-x-l-ż-y {n = zero} {α = lim _} = refl
-φ-x-l-ż-y {n = suc n} {α = zero} = Φ-ż-x
-φ-x-l-ż-y {n = suc n} {α = suc _} = Φ-ż-x
-φ-x-l-ż-y {n = suc n} {α = lim _} = Φ-ż-x
+φ-α-l-ż-β : φ {2+ n} α (lim f) 0̇,_ ≡ jump λ δ → lim λ m → φ {2+ n} α (f m) δ 0̇
+φ-α-l-ż-β {n = zero} {α = zero} = refl
+φ-α-l-ż-β {n = zero} {α = suc _} = refl
+φ-α-l-ż-β {n = zero} {α = lim _} = refl
+φ-α-l-ż-β {n = suc n} {α = zero} = Φ-ż-α
+φ-α-l-ż-β {n = suc n} {α = suc _} = Φ-ż-α
+φ-α-l-ż-β {n = suc n} {α = lim _} = Φ-ż-α
 ```
 
-**引理** $(\mathcal{Z,s,x})$
+**推论** $(\mathcal{α,Z,l})$
 
 $$
-Φ^n\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+\kern{0.17em}\underline{\kern{0.5em}}=
-\text{fixpt}\kern{0.17em}(Φ^n\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}\underline{\kern{0.5em}})
+φ_{n^{++}}\kern{0.17em}α\kern{0.17em}0\kern{0.17em}(\lim g)=\limλm,φ_{n^{++}}\kern{0.17em}α\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}m)
+$$
+
+**(证明)** 由定理 $(\mathcal{S,α,Z,l})$ 即得. ∎
+
+```agda
+φ-α-ż-l : φ {2+ n} α 0̇, (lim g) ≡ lim λ m → φ {2+ n} α 0̇, (g m)
+φ-α-ż-l = Φ-α-ż-l refl
+```
+
+类似 $(\mathcal{S,Z,α})$, 我们还可以有
+
+**引理** $(\mathcal{S,Z,α,β})$
+
+$$
+Φ^n\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}\kern{0.17em}\underline{\kern{0.5em}} = Φ^n\kern{0.17em}F
 $$
 
 **(证明)** 归纳 $n$ 即得. ∎
 
 ```agda
-Φ-ż-s-x : Φⁿ {suc n} F 0̇, (suc α) ,_ ≡ fixpt (Φⁿ {suc n} F 0̇, α ,_)
-Φ-ż-s-x {n = zero} = refl
-Φ-ż-s-x {n = suc n} = Φ-ż-s-x {n}
+Φ-ż-α-β : Φⁿ {suc n} F 0̇,_,_ ≡ Φⁿ F
+Φ-ż-α-β {n = zero} = refl
+Φ-ż-α-β {n = suc n} = Φ-ż-α-β {n}
+{-# REWRITE Φ-ż-α-β #-}
 ```
 
-**定理** $(\mathcal{Z,s,x})$
+**定理** 计算模式
 
 $$
-φ_{n^+}\kern{0.17em}\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+\kern{0.17em}\underline{\kern{0.5em}}=
-\text{fixpt}\kern{0.17em}(φ_{n^+}\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}\underline{\kern{0.5em}})
+\begin{aligned}
+Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+\kern{0.17em}\overset{.}{0} &= (Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}\underline{\kern{0.5em}})^ω\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+\kern{0.17em}β^+ &= (Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}\underline{\kern{0.5em}})^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+\kern{0.17em}β)^+ \\
+Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim f)\kern{0.17em}0 &= \lim λm,Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim f)\kern{0.17em}β^+ &= \lim λm,Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim f)\kern{0.17em}β)^+ \\
+Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}(\lim g) &= \lim λm,Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}(g\kern{0.17em}m)
+\end{aligned}
 $$
 
-**(证明)** 由引理 $(\mathcal{Z,s,x})$ 即得. ∎
+其中第五条要求前提 $F\kern{0.17em}(\lim g) = \lim λm,F\kern{0.17em}(g\kern{0.17em}m)$.
 
 ```agda
-φ-ż-s-x : φ {suc n} 0̇, (suc α) ,_ ≡ fixpt (φ {suc n} 0̇, α ,_)
-φ-ż-s-x = Φ-ż-s-x
-```
+Φ-ż-s-0 : Φⁿ {suc n} F 0̇, (suc α) , 0 ≡ iterω (Φⁿ {suc n} F 0̇, α ,_) 0
+Φ-ż-s-0 = refl
 
-**定理** $(\mathcal{x,Z,s,y})$
+Φ-ż-s-s : Φⁿ {suc n} F 0̇, (suc α) , (suc β) ≡ iterω (Φⁿ {suc n} F 0̇, α ,_) (suc (Φⁿ {suc n} F 0̇, (suc α) , β))
+Φ-ż-s-s = refl
 
-$$
-φ_{n^{++}}\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+\kern{0.17em}\underline{\kern{0.5em}}=
-\text{fixpt}\kern{0.17em}(φ_{n^{++}}\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}β\kern{0.17em}\underline{\kern{0.5em}})
-$$
+Φ-ż-l-0 : Φⁿ {suc n} F 0̇, (lim f) , 0 ≡ lim λ m → Φⁿ {suc n} F 0̇, (f m) , 0
+Φ-ż-l-0 = refl
 
-**(证明)** 讨论 $α$, 由引理 $(\mathcal{Z,s,x})$ 即得. ∎
+Φ-ż-l-s : Φⁿ {suc n} F 0̇, (lim f) , (suc β) ≡ lim λ m → Φⁿ {suc n} F 0̇, (f m) , (suc (Φⁿ {suc n} F 0̇, (lim f) , β))
+Φ-ż-l-s = refl
 
-```agda
-φ-x-ż-s-y : φ {2+ n} α 0̇, (suc β) ,_ ≡ fixpt (φ {2+ n} α 0̇, β ,_)
-φ-x-ż-s-y {n = zero} {α = zero} = refl
-φ-x-ż-s-y {n = zero} {α = suc _} = refl
-φ-x-ż-s-y {n = zero} {α = lim _} = refl
-φ-x-ż-s-y {n = suc n} {α = zero} = Φ-ż-s-x
-φ-x-ż-s-y {n = suc n} {α = suc _} = Φ-ż-s-x
-φ-x-ż-s-y {n = suc n} {α = lim _} = Φ-ż-s-x
-```
-
-**引理** $(\mathcal{Z,l,x})$
-
-$$
-Φ^n\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim f)\kern{0.17em}\underline{\kern{0.5em}}=
-\text{jump}\kern{0.17em}λβ,\limλm,Φ^n\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}β
-$$
-
-**(证明)** 归纳 $n$ 即得. ∎
-
-```agda
-Φ-ż-l-x : Φⁿ {suc n} F 0̇, (lim f) ,_ ≡ jump λ β → lim λ m → Φⁿ {suc n} F 0̇, (f m) , β
-Φ-ż-l-x {n = zero} = refl
-Φ-ż-l-x {n = suc n} = Φ-ż-l-x {n}
-```
-
-**定理** $(\mathcal{Z,l,x})$
-
-$$
-φ_{n^+}\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim f)\kern{0.17em}\underline{\kern{0.5em}}=
-\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+}\kern{0.17em}\overset{.}{0}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}β
-$$
-
-**(证明)** 由引理 $(\mathcal{Z,l,x})$ 即得. ∎
-
-```agda
-φ-ż-l-x : φ {suc n} 0̇, (lim f) ,_ ≡ jump λ β → lim λ m → φ {suc n} 0̇, (f m) , β
-φ-ż-l-x = Φ-ż-l-x
-```
-
-**定理** $(\mathcal{x,Z,l,y})$
-
-$$
-φ_{n^{++}}\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim f)\kern{0.17em}\underline{\kern{0.5em}}=
-\text{jump}\kern{0.17em}λδ,\limλm,φ_{n^{++}}\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}δ
-$$
-
-**(证明)** 讨论 $α$, 由引理 $(\mathcal{Z,l,x})$ 即得. ∎
-
-```agda
-φ-x-ż-l-y : φ {2+ n} α 0̇, (lim f) ,_ ≡ jump λ δ → lim λ m → φ {2+ n} α 0̇, (f m) , δ
-φ-x-ż-l-y {n = zero} {α = zero} = refl
-φ-x-ż-l-y {n = zero} {α = suc _} = refl
-φ-x-ż-l-y {n = zero} {α = lim _} = refl
-φ-x-ż-l-y {n = suc n} {α = zero} = Φ-ż-l-x
-φ-x-ż-l-y {n = suc n} {α = suc _} = Φ-ż-l-x
-φ-x-ż-l-y {n = suc n} {α = lim _} = Φ-ż-l-x
+Φ-ż-α-l : F (lim g) ≡ lim (λ m → F (g m)) → Φⁿ {suc n} F 0̇, α , (lim g) ≡ lim λ m → Φⁿ {suc n} F 0̇, α , (g m)
+Φ-ż-α-l {α = zero} = id
+Φ-ż-α-l {α = suc _} _ = refl
+Φ-ż-α-l {α = lim _} _ = refl
 ```
 
 ## SVO

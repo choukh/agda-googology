@@ -10,6 +10,7 @@ zhihu-tags: Agda, 序数, 大数数学
 > 高亮渲染: [Infinitary.html](https://choukh.github.io/agda-googology/Veblen.Infinitary.html)  
 
 ```agda
+{-# OPTIONS --rewriting #-}
 module Veblen.Infinitary where
 open import Veblen.Basic public
 ```
@@ -128,10 +129,8 @@ $$
 这就是后继步骤的定义. 而极限步骤将会是
 
 $$
-Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,f\kern{0.17em}m}[m]\kern{0.17em}\beta^+)
+Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,f\kern{0.17em}m}[m]\kern{0.17em}\beta^+\kern{0.17em}\overset{.}{0})
 $$
-
-其中 $φ_{ω,f\kern{0.17em}m}[m]\kern{0.17em}\beta^+$ 可以看作是 $(φ_{ω,f\kern{0.17em}m}[m])_n\kern{0.17em}\overset{.}{0}\kern{0.17em}\beta^+$ 简写.
 
 完整写出:
 
@@ -139,14 +138,16 @@ $$
 
 $$
 \begin{aligned}
-Φ_{ω}\kern{0.17em}F = \text{rec}\kern{0.17em}F
+Φ_{ω}\kern{0.17em}F &= \text{rec}\kern{0.17em}F \\
+&\quad(λφ_{ω,α},Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,α,n}\kern{0.17em}\beta^+\kern{0.17em}\overset{.}{0})) \\
+&\quad(λφ_{ω,f\kern{0.17em}m},Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,f\kern{0.17em}m}[m]\kern{0.17em}\beta^+\kern{0.17em}\overset{.}{0}))
 \end{aligned}
 $$
 
 ```agda
   Φ F = rec F
     (λ φ-α  → Fin.Φⁿ $ jump λ β → lim λ n → φ-α {n} (suc β) 0̇)
-    (λ φ[_] → Fin.Φⁿ $ jump λ β → lim λ n → φ[ n ] (suc β))
+    (λ φ[_] → Fin.Φⁿ $ jump λ β → lim λ n → φ[ n ] {n} (suc β) 0̇)
 ```
 
 ```agda
@@ -174,11 +175,6 @@ $$
 
 ```agda
 module OmegaBinaryVeblen where
-
-  Φ : Ord→^ω⁺ → Ord → Ord→^ω⁺
-  Φ F = rec F
-    {!   !}
-    {!   !}
 ```
 
 ## 2ω元Veblen函数
@@ -186,4 +182,3 @@ module OmegaBinaryVeblen where
 ## (2ω)⁺元Veblen函数
 
 ## 3ω元Veblen函数
- 
