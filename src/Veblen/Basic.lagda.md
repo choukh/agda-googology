@@ -44,6 +44,7 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 ### 标准库依赖
 
 ```agda
+{-# OPTIONS --safe #-}
 module Veblen.Basic where
 
 open import Data.Nat public using (ℕ; zero; suc; 2+)

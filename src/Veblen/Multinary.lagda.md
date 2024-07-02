@@ -11,6 +11,7 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705436498
 > 高亮渲染: [Multinary.html](https://choukh.github.io/agda-googology/Veblen.Multinary.html)  
 
 ```agda
+{-# OPTIONS --safe #-}
 module Veblen.Multinary where
 open import Veblen.Basic public
 ```
@@ -263,7 +264,7 @@ $$
 
   Φ-α-l : F (lim g) ≡ lim (λ n → F (g n))
     → Φ F α (lim g) ≡ lim λ n → Φ F α (g n)
-  Φ-α-l {α = zero} H = H
+  Φ-α-l {α = zero} = id
   Φ-α-l {α = suc _} _ = refl
   Φ-α-l {α = lim _} _ = refl
 ```
@@ -640,7 +641,7 @@ $$
   φ-ω-ω-ω = refl
 ```
 
-## 计算模式
+### 计算模式
 
 如此多的计算实例, 看似复杂, 其实可以总结成以下五种模式. 并且, 我们将这五种模式一般化到 $Φ$ 的任意输入 $F$ 上.
 
@@ -662,22 +663,22 @@ $$
 
 ```agda
   Φ-s-0-0 : ∀ F → Φ F (suc α) 0 0 ≡ iterω (λ β → Φ F α β 0) 0
-  Φ-s-0-0 F = refl
+  Φ-s-0-0 _ = refl
 
   Φ-s-0-s : ∀ F → Φ F (suc α) 0 (suc β) ≡ iterω (λ β → Φ F α β 0) (suc (Φ F (suc α) 0 β))
-  Φ-s-0-s F = refl
+  Φ-s-0-s _ = refl
 
   Φ-l-0-0 : ∀ F → Φ F (lim f) 0 0 ≡ lim λ n → Φ F (f n) 0 0
-  Φ-l-0-0 F = refl
+  Φ-l-0-0 _ = refl
 
   Φ-l-0-s : ∀ F → Φ F (lim f) 0 (suc β) ≡ lim λ n → Φ F (f n) (suc (Φ F (lim f) 0 β)) 0
-  Φ-l-0-s F = refl
+  Φ-l-0-s _ = refl
 
   Φ-α-0-l : ∀ F → F zero (lim g) ≡ lim (λ n → F zero (g n))
     → Φ F α 0 (lim g) ≡ lim λ n → Φ F α 0 (g n)
-  Φ-α-0-l {α = zero} F H = H
-  Φ-α-0-l {α = suc _} F _ = refl
-  Φ-α-0-l {α = lim _} F _ = refl
+  Φ-α-0-l {α = zero} _ = id
+  Φ-α-0-l {α = suc _} _ _ = refl
+  Φ-α-0-l {α = lim _} _ _ = refl
 ```
 
 ## 四元Veblen函数
@@ -748,22 +749,22 @@ $$
 
 ```agda
   Φ-s-0-0-0 : ∀ F → Φ F (suc α) 0 0 0 ≡ iterω (λ β → Φ F α β 0 0) 0
-  Φ-s-0-0-0 F = refl
+  Φ-s-0-0-0 _ = refl
 
   Φ-s-0-0-s : ∀ F → Φ F (suc α) 0 0 (suc β) ≡ iterω (λ β → Φ F α β 0 0) (suc (Φ F (suc α) 0 0 β))
-  Φ-s-0-0-s F = refl
+  Φ-s-0-0-s _ = refl
 
   Φ-l-0-0-0 : ∀ F → Φ F (lim f) 0 0 0 ≡ lim λ n → Φ F (f n) 0 0 0
-  Φ-l-0-0-0 F = refl
+  Φ-l-0-0-0 _ = refl
 
   Φ-l-0-0-s : ∀ F → Φ F (lim f) 0 0 (suc β) ≡ lim λ n → Φ F (f n) (suc (Φ F (lim f) 0 0 β)) 0 0
-  Φ-l-0-0-s F = refl
+  Φ-l-0-0-s _ = refl
 
   Φ-α-0-0-l : ∀ F → F 0 0 (lim g) ≡ lim (λ n → F 0 0 (g n))
     → Φ F α 0 0 (lim g) ≡ lim λ n → Φ F α 0 0 (g n)
-  Φ-α-0-0-l {α = zero} F H = H
-  Φ-α-0-0-l {α = suc _} F _ = refl
-  Φ-α-0-0-l {α = lim _} F _ = refl
+  Φ-α-0-0-l {α = zero} _ = id
+  Φ-α-0-0-l {α = suc _} _ _ = refl
+  Φ-α-0-0-l {α = lim _} _ _ = refl
 ```
 
 **例** 一个很大的大数:
