@@ -1,4 +1,4 @@
 name: agda-googology
 depend: standard-library-2.0
 include: src
-flags: --safe --cubical-compatible --hidden-argument-puns
+flags: --cubical-compatible --hidden-argument-puns
