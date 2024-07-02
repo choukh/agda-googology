@@ -246,7 +246,7 @@ $$
 \end{aligned}
 $$
 
-其中第五条要求前提 $F\kern{0.17em}(\lim g) = \lim λn,F\kern{0.17em}(g\kern{0.17em}n)$. 不难验证 $F = λα,ω^α$ 满足此前提.
+其中第五条要求前提 $F\kern{0.17em}(\lim g) = \lim λn,F\kern{0.17em}(g\kern{0.17em}n)$. 显然 $F = λα,ω^α$ 满足此前提.
 
 ```agda
   Φ-s-0 : Φ F (suc α) 0 ≡ iterω (Φ F α) 0
@@ -388,14 +388,14 @@ module TrinaryVeblen where
       - 回想上一小节我们是怎么从一代 $φ$ 得到二代 $φ$ 的, 这里的处理方式就是对该操作的反映.
   - 注意: 对任意元 $φ$, 我们都是取第二个参数的不动点枚举, 而对右边其余参数全部填零. 二元 $Φ$ 的时候这个规律还看不出来, 现在才显现出来.
 - 极限步骤: 对步骤的基本列取极限, 再做一次跳出操作, 再交给二元 $Φ$ 处理
-  - 注意: 对任意元 $φ$, 我们都是取最后一个参数的跳出, 而对左边其余参数全部填零. 二元 $Φ$ 的时候这个规律还看不出来, 现在才显现出来.
+  - 注意: 与后继步骤类似地, 这里是对第二个参数跳出, 而对右边剩下的参数全部填零. 
 
 即
 
 $$
 \begin{aligned}
 Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{α,β}\kern{0.17em}0)) \\
-&(λφ,\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]_0\kern{0.17em}β))
+&(λφ,\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]_β\kern{0.17em}0))
 \end{aligned}
 $$
 
@@ -403,7 +403,7 @@ $$
   Φ : (Ord → Ord → Ord) → Ord → Ord → Ord → Ord
   Φ F = rec F
     (λ φ-α  → Bin.Φ $ fixpt λ β → φ-α β 0)
-    (λ φ[_] → Bin.Φ $ jump λ β → lim λ n → φ[ n ] 0 β)
+    (λ φ[_] → Bin.Φ $ jump λ β → lim λ n → φ[ n ] β 0)
 ```
 
 **定义** 三元Veblen函数
@@ -567,7 +567,7 @@ $$
 $$
 
 ```agda
-  φ-lim-0 : φ (lim f) 0 ≡ jump λ β → lim λ n → φ (f n) 0 β
+  φ-lim-0 : φ (lim f) 0 ≡ jump λ β → lim λ n → φ (f n) β 0
   φ-lim-0 = refl
 
   φ-lim-suc : φ (lim f) (suc β) ≡ fixpt (φ (lim f) β)
@@ -602,14 +602,14 @@ $$
 
 $$
 \begin{aligned}
-\varphi_{ω,0}\kern{0.17em}1 &= \text{lim}\kern{0.17em}λn,φ_{n,0}\kern{0.17em}(\varphi_{ω,0}\kern{0.17em}0)^+ &=& \text{lim}(φ_{0,0}\kern{0.17em}(\varphi_{ω,0}\kern{0.17em}0)^+,φ_{1,0}\kern{0.17em}(\varphi_{ω,0}\kern{0.17em}0)^+,...) \\
+\varphi_{ω,0}\kern{0.17em}1 &= \text{lim}\kern{0.17em}λn,φ_{n,(\varphi_{ω,0}\kern{0.17em}0)^+}\kern{0.17em}0 &=& \text{lim}(φ_{0,(\varphi_{ω,0}\kern{0.17em}0)^+}\kern{0.17em}0,φ_{1,(\varphi_{ω,0}\kern{0.17em}0)^+}\kern{0.17em}0,...) \\
 \varphi_{ω,1}\kern{0.17em}1 &= (\varphi_{ω,0})^ω\kern{0.17em}(\varphi_{ω,1}\kern{0.17em}0)^+ &=& \varphi_{ω,0}(\varphi_{ω,0}(...((\varphi_{ω,1}\kern{0.17em}0)^+)...)) \\
 \varphi_{ω,ω}\kern{0.17em}1 &= \text{lim}\kern{0.17em}λn,φ_{ω,n}\kern{0.17em}(\varphi_{ω,ω}\kern{0.17em}0)^+ &=& \text{lim}(φ_{ω,0}\kern{0.17em}(\varphi_{ω,ω}\kern{0.17em}0)^+,φ_{ω,1}\kern{0.17em}(\varphi_{ω,ω}\kern{0.17em}0)^+,...)
 \end{aligned}
 $$
 
 ```agda
-  φ-ω-0-1 : φ ω 0 1 ≡ lim λ n → φ (finord n) 0 (suc (φ ω 0 0))
+  φ-ω-0-1 : φ ω 0 1 ≡ lim λ n → φ (finord n) (suc (φ ω 0 0)) 0
   φ-ω-0-1 = refl
 
   φ-ω-1-1 : φ ω 1 1 ≡ iterω (φ ω 0) (suc (φ ω 1 0))
@@ -653,12 +653,12 @@ $$
 Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0 &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0)^ω\kern{0.17em}0 \\
 Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}β^+ &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0)^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}β)^+ \\
 Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0 &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}0 \\
-Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}β^+ &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}β)^+ \\
+Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}β^+ &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}β)^+\kern{0.17em}0 \\
 Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}(\lim g) &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)
 \end{aligned}
 $$
 
-其中第五条要求前提 $F\kern{0.17em}0\kern{0.17em}(\lim g) = \lim λn,F\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)$. 不难验证 $F = \text{Bin}.\varphi$ 满足此前提.
+其中第五条要求前提 $F\kern{0.17em}0\kern{0.17em}(\lim g) = \lim λn,F\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)$. 显然 $F = \text{Bin}.\varphi$ 满足此前提.
 
 ```agda
   Φ-s-0-0 : ∀ F → Φ F (suc α) 0 0 ≡ iterω (λ β → Φ F α β 0) 0
@@ -670,12 +670,108 @@ $$
   Φ-l-0-0 : ∀ F → Φ F (lim f) 0 0 ≡ lim λ n → Φ F (f n) 0 0
   Φ-l-0-0 F = refl
 
-  Φ-l-0-s : ∀ F → Φ F (lim f) 0 (suc β) ≡ lim λ n → Φ F (f n) 0 (suc (Φ F (lim f) 0 β))
+  Φ-l-0-s : ∀ F → Φ F (lim f) 0 (suc β) ≡ lim λ n → Φ F (f n) (suc (Φ F (lim f) 0 β)) 0
   Φ-l-0-s F = refl
 
   Φ-α-0-l : ∀ F → F zero (lim g) ≡ lim (λ n → F zero (g n))
     → Φ F α 0 (lim g) ≡ lim λ n → Φ F α 0 (g n)
   Φ-α-0-l {α = zero} F H = H
-  Φ-α-0-l {α = suc α} F _ = refl
-  Φ-α-0-l {α = lim x} F _ = refl
+  Φ-α-0-l {α = suc _} F _ = refl
+  Φ-α-0-l {α = lim _} F _ = refl
+```
+
+## 四元Veblen函数
+
+```agda
+module QuaternaryVeblen where
+  private module Bin = BinaryVeblen
+  private module Tri = TrinaryVeblen
+```
+
+摸清二元到三元的规律之后, 三元到四元就是按部就班的操作了.
+
+**定义** 四元版本的 $Φ$
+
+$$
+\begin{aligned}
+Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,\text{Tri}.Φ\kern{0.17em}(\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{α,β,0}\kern{0.17em}0))) \\
+&(λφ,\text{Tri}.Φ\kern{0.17em}(\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]_{β,0}\kern{0.17em}0)))
+\end{aligned}
+$$
+
+```agda
+  Φ : (Ord → Ord → Ord → Ord) → (Ord → Ord → Ord → Ord → Ord)
+  Φ F = rec F
+    (λ φ-α  → Tri.Φ $ Bin.Φ $ fixpt λ β → φ-α β 0 0)
+    (λ φ[_] → Tri.Φ $ Bin.Φ $ jump λ β → lim λ n → φ[ n ] β 0 0)
+```
+
+**定义** 四元Veblen函数
+
+$$\varphi := Φ\kern{0.17em}\text{Tri}.\varphi$$
+
+```agda
+  φ : Ord → Ord → Ord → Ord → Ord
+  φ = Φ Tri.φ
+```
+
+**例** 第一个参数从无效到刚开始生效, 由定义, 有以下等式成立.
+
+$$
+\begin{aligned}
+\varphi_0 &= \text{Tri}.\varphi \\
+\varphi_{1,0,0} &= \text{fixpt}\kern{0.17em}λα,\text{Tri}.\varphi_{α,0}\kern{0.17em}0 \\
+\end{aligned}
+$$
+
+```agda
+  φ-0 : φ 0 ≡ Tri.φ
+  φ-0 = refl
+
+  φ-1-0-0 : φ 1 0 0 ≡ fixpt (λ α → Tri.φ α 0 0)
+  φ-1-0-0 = refl
+```
+
+**定理** 计算模式
+
+$$
+\begin{aligned}
+Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0\kern{0.17em}0)^ω\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β^+ &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0\kern{0.17em}0)^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β)^+ \\
+Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β^+ &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β)^+\kern{0.17em}0\kern{0.17em}0 \\
+Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}0\kern{0.17em}(\lim g) &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)
+\end{aligned}
+$$
+
+其中第五条要求前提 $F\kern{0.17em}0\kern{0.17em}0\kern{0.17em}(\lim g) = \lim λn,F\kern{0.17em}0\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)$. 显然 $F = \text{Tri}.\varphi$ 满足此前提.
+
+```agda
+  Φ-s-0-0-0 : ∀ F → Φ F (suc α) 0 0 0 ≡ iterω (λ β → Φ F α β 0 0) 0
+  Φ-s-0-0-0 F = refl
+
+  Φ-s-0-0-s : ∀ F → Φ F (suc α) 0 0 (suc β) ≡ iterω (λ β → Φ F α β 0 0) (suc (Φ F (suc α) 0 0 β))
+  Φ-s-0-0-s F = refl
+
+  Φ-l-0-0-0 : ∀ F → Φ F (lim f) 0 0 0 ≡ lim λ n → Φ F (f n) 0 0 0
+  Φ-l-0-0-0 F = refl
+
+  Φ-l-0-0-s : ∀ F → Φ F (lim f) 0 0 (suc β) ≡ lim λ n → Φ F (f n) (suc (Φ F (lim f) 0 0 β)) 0 0
+  Φ-l-0-0-s F = refl
+
+  Φ-α-0-0-l : ∀ F → F 0 0 (lim g) ≡ lim (λ n → F 0 0 (g n))
+    → Φ F α 0 0 (lim g) ≡ lim λ n → Φ F α 0 0 (g n)
+  Φ-α-0-0-l {α = zero} F H = H
+  Φ-α-0-0-l {α = suc _} F _ = refl
+  Φ-α-0-0-l {α = lim _} F _ = refl
+```
+
+**例** 一个很大的大数:
+
+$$
+\text{oom}_{2} := f_{φ_{Γ_0,0,0}\kern{0.17em}(0)}(99)
+$$
+
+```agda
+oom₂ = FGH.f (QuaternaryVeblen.φ (BinaryVeblen.Γ 0) 0 0 0) 99
 ```
