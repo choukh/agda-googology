@@ -66,7 +66,7 @@ module OmegaryVeblen where
 - $φ_{1}$ 是二元函数
 - ...
 
-也就是说下标是元数的前驱, 但 $ω$ 没有前驱, 所以 $ω$ 元函数的下标不是一个具体的数. 但 $ω⁺$ 元函数的下标将是 $ω$.
+也就是说下标是元数的直接前驱, 但 $ω$ 没有直接前驱, 所以 $ω$ 元函数的下标不是一个具体的数. 但 $ω⁺$ 元函数的下标将是 $ω$.
 
 - $φ_{\lt ω}$ 是 $ω$ 元函数
 - $φ_{ω}$ 是 $ω⁺$ 元函数
@@ -75,24 +75,81 @@ module OmegaryVeblen where
 
 ## ω⁺元Veblen函数
 
-$ω^+$ 元Veblen函数具有跟一元函数 $λα,ω^α:\text{Ord}→\text{Ord}$ 同等的地位, 它是新的梦的开始. 也因此, 它的构造是特殊的, 在它之前没有任何参考物.
+```agda
+module OmegaUnaryVeblen where
+```
 
-但是 $\text{SVO}$ 的构造可以帮助反推其定义. 如果我们希望
+$ω^+$ 元Veblen函数具有跟一元函数 $λα,ω^α:\text{Ord}→\text{Ord}$ 同等的地位, 它是新的「梦的开始」. 也因此, 它的构造是特殊的, 在它之前没有直接参考物. 但我们可以如下考虑:
+
+首先, 参考 $Φ_n$ 的类型
+
+$$
+Φ_n : \text{Ord}^{→n^+} → \text{Ord}^{→n^{++}}
+$$
+
+对 $Φ_ω$ 应该有
+
+$$
+Φ_ω : \text{Ord}^{→ω} → (\text{Ord} → \text{Ord}^{→ω})
+$$
+
+```agda
+  Φ : Ord→^ω → Ord → Ord→^ω
+```
+
+其输入将会是 $φ_{\lt ω} : \text{Ord}^{→ω}$.
+
+其次, 如果我们希望
 
 $$
 φ_{ω}\kern{0.17em}1\kern{0.17em}\overset{.}{0} = \text{SVO} = \lim λn,φ_{n}\kern{0.17em}1\kern{0.17em}\overset{.}{0}
 $$
 
-那么 $φ_{ω}$ 的递归定义的后继步骤也必须具有 $\lim$ 的形式, 这一点与任意 $φ_{n}$ 都不同.
+那么 $Φ_{ω}$ 的递归定义的后继步骤应该包含
+
+$$
+λβ,\lim λn,φ_{ω,α,n}\kern{0.17em}\beta^+\kern{0.17em}\overset{.}{0}
+$$
+
+的形式, 其中 $φ_{ω,α} : \text{Ord}^{→ω}$ 是递归的上一步的结果.
+
+此外, 我们知道 $\lim$ 必然搭配跳出, 于是有
+
+$$
+\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,α,n}\kern{0.17em}\beta^+\kern{0.17em}\overset{.}{0}
+$$
+
+最后, 我们知道 $Φ_n$ 迭代的是 $Φ_{\lt n}$, 于是 $Φ_ω$ 应该迭代 $Φ_{\lt ω}$, 所以有
+
+$$
+Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,α,n}\kern{0.17em}\beta^+\kern{0.17em}\overset{.}{0})
+$$
+
+这就是后继步骤的定义. 而极限步骤将会是
+
+$$
+Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,f\kern{0.17em}m}[m]\kern{0.17em}\beta^+)
+$$
+
+其中 $φ_{ω,f\kern{0.17em}m}[m]\kern{0.17em}\beta^+$ 可以看作是 $(φ_{ω,f\kern{0.17em}m}[m])_n\kern{0.17em}\overset{.}{0}\kern{0.17em}\beta^+$ 简写.
+
+完整写出:
+
+**定义** $Φ_{ω}$
+
+$$
+\begin{aligned}
+Φ_{ω}\kern{0.17em}F = \text{rec}\kern{0.17em}F
+\end{aligned}
+$$
 
 ```agda
-module OmegaUnaryVeblen where
-
-  Φ : Ord→^ω → Ord → Ord→^ω
   Φ F = rec F
-    (λ φ-μ  → Fin.Φⁿ $ jump λ α → lim λ n → φ-μ {n} (suc α) 0̇)
-    (λ φ[_] → Fin.Φⁿ $ jump λ α → lim λ n → φ[ n ] (suc α))
+    (λ φ-α  → Fin.Φⁿ $ jump λ β → lim λ n → φ-α {n} (suc β) 0̇)
+    (λ φ[_] → Fin.Φⁿ $ jump λ β → lim λ n → φ[ n ] (suc β))
+```
 
+```agda
   φ : Ord → Ord→^ω
   φ = Φ Fin.φ
 ```
@@ -129,3 +186,4 @@ module OmegaBinaryVeblen where
 ## (2ω)⁺元Veblen函数
 
 ## 3ω元Veblen函数
+ 
