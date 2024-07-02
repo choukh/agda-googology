@@ -81,7 +81,7 @@ data Ord : Set where
   lim  : (ℕ → Ord) → Ord
 ```
 
-这样的 $f : ℕ\rightarrow\text{Ord}$ 又叫做 $\text{lim}\kern{0.17em}f$ 的基本列 (fundamental sequence), 而 $\text{lim}\kern{0.17em}f$ 则叫做基本列 $f$ 的极限. 这样的定义允许我们很方便地讨论零, 后继序数和极限序数三种情况. 为了方便阅读, 我们会把 $\text{zero}$ 写作 $0$, 把 $\text{suc}\kern{0.17em}x$ 写作 $x^+$.
+这样的 $f : ℕ\rightarrow\text{Ord}$ 又叫做 $\text{lim}\kern{0.17em}f$ 的基本列 (fundamental sequence), 而 $\text{lim}\kern{0.17em}f$ 则叫做基本列 $f$ 的极限. 仅就我们将要做的事情而言, $\lim$ 可视为等同于集合论的 $\sup$. 这样的定义允许我们很方便地讨论零, 后继序数和极限序数三种情况. 为了方便阅读, 我们会把 $\text{zero}$ 写作 $0$, 把 $\text{suc}\kern{0.17em}x$ 写作 $x^+$.
 
 **注意** 我们的序数类型, 学名叫布劳威尔树序数 (Brouwer tree ordinals), 比真正的递归序数宽泛很多, 体现在以下两点:
 
