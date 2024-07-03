@@ -428,15 +428,22 @@ iterω F = F ∘^ ω
 
 ### 跳出运算
 
-**定义** 给定序数函数 $F$ 和迭代次数 $α$, 从 $F\kern{0.17em}0$ 开始, 每次迭代时先做一次后继再迭代 $F$, 总共迭代 $α$ 次的运算叫做 $F$ 的 $α$ 次跳出, 记作 $\text{jump}\kern{0.17em}F\kern{0.17em}α$.
+**定义** 给定序数函数 $F$, 起始值 $ι$ 和迭代次数 $α$, 从 $F\kern{0.17em}ι$ 开始, 每次迭代时先做一次后继再迭代 $F$, 总共迭代 $α$ 次的运算叫做 $F$ 的从 $ι$ 开始的 $α$ 次跳出, 记作 $\text{jump}_ι\kern{0.17em}F\kern{0.17em}α$.
 
 $$
-\text{jump}\kern{0.17em}F\kern{0.17em}α := (F\kern{0.17em}\circ\kern{0.17em}\text{suc})\kern{0.17em}^α\kern{0.17em}(F\kern{0.17em}0)
+\text{jump}_ι\kern{0.17em}F\kern{0.17em}α := (F\kern{0.17em}\circ\kern{0.17em}\text{suc})\kern{0.17em}^α\kern{0.17em}(F\kern{0.17em}ι)
 $$
 
 ```agda
+jump⟨_⟩ : Ord → (Ord → Ord) → Ord → Ord
+jump⟨ ι ⟩ F α = ((F ∘ suc) ∘^ α) (F ι)
+```
+
+我们通常只会使用 $ι = 0$ 的版本 $\text{jump}_0\kern{0.17em}F\kern{0.17em}α$, 简记作 $\text{jump}\kern{0.17em}F\kern{0.17em}α$.
+
+```agda
 jump : (Ord → Ord) → Ord → Ord
-jump F α = ((F ∘ suc) ∘^ α) (F 0)
+jump F = jump⟨ 0 ⟩ F
 ```
 
 **定理** 依定义有

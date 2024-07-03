@@ -313,16 +313,16 @@ $$
 Φ-s-ż-z : Φⁿ {suc n} F (suc α) 0̇, 0 ≡ iterω (λ β → Φⁿ F α β 0̇) 0
 Φ-s-ż-z = refl
 
-Φ-s-ż-s : Φⁿ {suc n} F (suc α) 0̇, (suc β) ≡ iterω (λ β → Φⁿ F α β 0̇) (suc (Φⁿ F (suc α) 0̇, β))
+Φ-s-ż-s : Φⁿ {suc n} F (suc α) 0̇, suc β ≡ iterω (λ β → Φⁿ F α β 0̇) (suc (Φⁿ F (suc α) 0̇, β))
 Φ-s-ż-s = refl
 
 Φ-l-ż-z : Φⁿ {suc n} F (lim f) 0̇, 0 ≡ lim λ m → Φⁿ {suc n} F (f m) 0̇
 Φ-l-ż-z = refl
 
-Φ-l-ż-s : Φⁿ {suc n} F (lim f) 0̇, (suc β) ≡ lim λ m → Φⁿ F (f m) (suc (Φⁿ F (lim f) 0̇, β)) 0̇
+Φ-l-ż-s : Φⁿ {suc n} F (lim f) 0̇, suc β ≡ lim λ m → Φⁿ F (f m) (suc (Φⁿ F (lim f) 0̇, β)) 0̇
 Φ-l-ż-s = refl
 
-Φ-α-ż-l : F (lim g) ≡ lim (λ m → F (g m)) → Φⁿ {suc n} F α 0̇, (lim g) ≡ lim λ m → Φⁿ {suc n} F α 0̇, (g m)
+Φ-α-ż-l : F (lim g) ≡ lim (λ m → F (g m)) → Φⁿ {suc n} F α 0̇, lim g ≡ lim λ m → Φⁿ {suc n} F α 0̇, g m
 Φ-α-ż-l {α = zero} = id
 Φ-α-ż-l {α = suc _} _ = refl
 Φ-α-ż-l {α = lim _} _ = refl
@@ -375,7 +375,7 @@ $$
 **(证明)** 由定理 $(\mathcal{S,α,Z,l})$ 即得. ∎
 
 ```agda
-φ-α-ż-l : φ {2+ n} α 0̇, (lim g) ≡ lim λ m → φ {2+ n} α 0̇, (g m)
+φ-α-ż-l : φ {2+ n} α 0̇, lim g ≡ lim λ m → φ {2+ n} α 0̇, g m
 φ-α-ż-l = Φ-α-ż-l refl
 ```
 
@@ -411,19 +411,19 @@ $$
 其中第五条要求前提 $F\kern{0.17em}(\lim g) = \lim λm,F\kern{0.17em}(g\kern{0.17em}m)$.
 
 ```agda
-Φ-ż-s-0 : Φⁿ {suc n} F 0̇, (suc α) , 0 ≡ iterω (Φⁿ {suc n} F 0̇, α ,_) 0
+Φ-ż-s-0 : Φⁿ {suc n} F 0̇, suc α , 0 ≡ iterω (Φⁿ {suc n} F 0̇, α ,_) 0
 Φ-ż-s-0 = refl
 
-Φ-ż-s-s : Φⁿ {suc n} F 0̇, (suc α) , (suc β) ≡ iterω (Φⁿ {suc n} F 0̇, α ,_) (suc (Φⁿ {suc n} F 0̇, (suc α) , β))
+Φ-ż-s-s : Φⁿ {suc n} F 0̇, suc α , suc β ≡ iterω (Φⁿ {suc n} F 0̇, α ,_) (suc (Φⁿ {suc n} F 0̇, (suc α) , β))
 Φ-ż-s-s = refl
 
-Φ-ż-l-0 : Φⁿ {suc n} F 0̇, (lim f) , 0 ≡ lim λ m → Φⁿ {suc n} F 0̇, (f m) , 0
+Φ-ż-l-0 : Φⁿ {suc n} F 0̇, lim f , 0 ≡ lim λ m → Φⁿ {suc n} F 0̇, f m , 0
 Φ-ż-l-0 = refl
 
-Φ-ż-l-s : Φⁿ {suc n} F 0̇, (lim f) , (suc β) ≡ lim λ m → Φⁿ {suc n} F 0̇, (f m) , (suc (Φⁿ {suc n} F 0̇, (lim f) , β))
+Φ-ż-l-s : Φⁿ {suc n} F 0̇, lim f , suc β ≡ lim λ m → Φⁿ {suc n} F 0̇, f m , suc (Φⁿ {suc n} F 0̇, (lim f) , β)
 Φ-ż-l-s = refl
 
-Φ-ż-α-l : F (lim g) ≡ lim (λ m → F (g m)) → Φⁿ {suc n} F 0̇, α , (lim g) ≡ lim λ m → Φⁿ {suc n} F 0̇, α , (g m)
+Φ-ż-α-l : F (lim g) ≡ lim (λ m → F (g m)) → Φⁿ {suc n} F 0̇, α , lim g ≡ lim λ m → Φⁿ {suc n} F 0̇, α , g m
 Φ-ż-α-l {α = zero} = id
 Φ-ż-α-l {α = suc _} _ = refl
 Φ-ż-α-l {α = lim _} _ = refl

@@ -10,9 +10,9 @@ zhihu-tags: Agda, 序数, 大数数学
 > 高亮渲染: [Infinitary.html](https://choukh.github.io/agda-googology/Veblen.Infinitary.html)  
 
 ```agda
-{-# OPTIONS --rewriting #-}
+{-# OPTIONS --lossy-unification --rewriting #-}
 module Veblen.Infinitary where
-open import Veblen.Basic public
+open import Veblen.Basic public hiding (F)
 ```
 
 本篇要讲的无限元Veblen函数, 并不是超限元或者说序元 (以序数作为元数) Veblen函数. 我们将踏入这个层次, 但还没有完全覆盖. 从有限到超限的过程中, 有一个里程碑式的层级—— $ω+n$ 元Veblen函数, 我们称为无限元Veblen函数.
@@ -23,7 +23,7 @@ open import Veblen.Basic public
 
 ```agda
 import Veblen.Finitary as Fin
-open Fin using (_→ⁿ_; _0̇)
+open Fin using (_→ⁿ_; _0̇; _0̇,_)
 ```
 
 也就是说, 我们只有有限个非零参数, 而有无限个零参数. 这就是无限元的真相. 确实, 也只有这样, 才能保证可计算性.
@@ -106,30 +106,24 @@ $$
 φ_{ω}\kern{0.17em}1\kern{0.17em}\overset{.}{0} = \text{SVO} = \lim λn,φ_{n}\kern{0.17em}1\kern{0.17em}\overset{.}{0}
 $$
 
-那么 $Φ_{ω}$ 的递归定义的后继步骤应该包含
+那么 $Φ_{ω}$ 的递归定义的后继步骤应该包含 $\lim$ 的形式, 且我们知道 $\lim$ 必然搭配跳出, 于是有
 
 $$
-λβ,\lim λn,φ_{ω,α,n}\kern{0.17em}\beta^+\kern{0.17em}\overset{.}{0}
+\text{jump}_1\kern{0.17em}λβ,\lim λn,φ_{ω,α,n}\kern{0.17em}\beta\kern{0.17em}\overset{.}{0}
 $$
 
-的形式, 其中 $φ_{ω,α} : \text{Ord}^{→ω}$ 是递归的上一步的结果.
-
-此外, 我们知道 $\lim$ 必然搭配跳出, 于是有
-
-$$
-\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,α,n}\kern{0.17em}\beta^+\kern{0.17em}\overset{.}{0}
-$$
+其中 $φ_{ω,α} : \text{Ord}^{→ω}$ 是递归的上一步的结果. 注意此处的跳出很特殊, 要从 $1$ 开始, 而不是通常的 $0$ 开始, 以吻合 $\text{SVO}$.
 
 最后, 我们知道 $Φ_n$ 迭代的是 $Φ_{\lt n}$, 于是 $Φ_ω$ 应该迭代 $Φ_{\lt ω}$, 所以有
 
 $$
-Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,α,n}\kern{0.17em}\beta^+\kern{0.17em}\overset{.}{0})
+Φ_{\lt ω}(\text{jump}_1\kern{0.17em}λβ,\lim λn,φ_{ω,α,n}\kern{0.17em}\beta\kern{0.17em}\overset{.}{0})
 $$
 
-这就是后继步骤的定义. 而极限步骤将会是
+这就是后继步骤的定义. 而极限步骤从通常的定义直接推广即可
 
 $$
-Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,f\kern{0.17em}m}[m]\kern{0.17em}\beta^+\kern{0.17em}\overset{.}{0})
+Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,f\kern{0.17em}m}[m]\kern{0.17em}\beta\kern{0.17em}\overset{.}{0})
 $$
 
 完整写出:
@@ -139,15 +133,15 @@ $$
 $$
 \begin{aligned}
 Φ_{ω}\kern{0.17em}F &= \text{rec}\kern{0.17em}F \\
-&\quad(λφ_{ω,α},Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,α,n}\kern{0.17em}\beta^+\kern{0.17em}\overset{.}{0})) \\
-&\quad(λφ_{ω,f\kern{0.17em}m},Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,f\kern{0.17em}m}[m]\kern{0.17em}\beta^+\kern{0.17em}\overset{.}{0}))
+&\quad(λφ_{ω,α},Φ_{\lt ω}(\text{jump}_1\kern{0.17em}λβ,\lim λn,φ_{ω,α,n}\kern{0.17em}\beta\kern{0.17em}\overset{.}{0})) \\
+&\quad(λφ_{ω,f\kern{0.17em}m},Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω,f\kern{0.17em}m}[m]\kern{0.17em}\beta\kern{0.17em}\overset{.}{0}))
 \end{aligned}
 $$
 
 ```agda
   Φ F = rec F
-    (λ φ-α  → Fin.Φⁿ $ jump λ β → lim λ n → φ-α {n} (suc β) 0̇)
-    (λ φ[_] → Fin.Φⁿ $ jump λ β → lim λ n → φ[ n ] {n} (suc β) 0̇)
+    (λ φ-α  → Fin.Φⁿ $ jump⟨ 1 ⟩ λ β → lim λ n → φ-α {n} β 0̇)
+    (λ φ[_] → Fin.Φⁿ $ jump λ β → lim λ n → φ[ n ] {n} β 0̇)
 ```
 
 ```agda
@@ -158,17 +152,44 @@ $$
 ```agda
   φ-0 : φ 0 {n} ≡ Fin.φ
   φ-0 = refl
+
+  φ-1⋯0 : φ 1 0 ≡ Fin.SVO
+  φ-1⋯0 = refl
 ```
 
 ```agda
-  φ-1⋯0 : φ 1 0 ≡ Fin.SVO
-  φ-1⋯0 = refl
-
   φ-1⋯0-0 : φ 1 0 0 ≡ Fin.SVO
   φ-1⋯0-0 = refl
 
   φ-1⋯0-0-0 : φ 1 0 0 0 ≡ Fin.SVO
   φ-1⋯0-0-0 = refl
+```
+
+```agda
+  φ-1⋯ż-z : φ 1 {n} 0̇, 0 ≡ Fin.SVO
+  φ-1⋯ż-z = refl
+```
+
+```agda
+  private variable F : Ord→^ω
+
+  Φ-s⋯ż-z : Φ F (suc α) {n} 0̇, 0 ≡ lim λ n → Φ F α 1 0̇
+  Φ-s⋯ż-z = refl
+
+  Φ-s⋯ż-s : Φ F (suc α) {n} 0̇, suc β ≡ lim λ n → Φ F α (suc (Φ F (suc α) {n} 0̇, β)) 0̇
+  Φ-s⋯ż-s = refl
+
+  Φ-l⋯ż-z : Φ F (lim f) {n} 0̇, 0 ≡ lim λ n → Φ F (f n) 0̇
+  Φ-l⋯ż-z = refl
+
+  Φ-l⋯ż-s : Φ F (lim f) {n} 0̇, suc β ≡ lim λ n → Φ F (f n) (suc (Φ F (lim f) {n} 0̇, β)) 0̇
+  Φ-l⋯ż-s = refl
+
+  Φ-α⋯ż-l : (Φ F 0 {n} 0̇, lim g) ≡ lim (λ m → Φ F 0 {n} 0̇, g m)
+    → Φ F α {n} 0̇, lim g ≡ lim λ m → Φ F α {n} 0̇, g m
+  Φ-α⋯ż-l {α = zero} = id
+  Φ-α⋯ż-l {α = suc α} _ = refl
+  Φ-α⋯ż-l {α = lim x} _ = refl
 ```
 
 ## ω⁺⁺元Veblen函数
