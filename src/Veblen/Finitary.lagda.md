@@ -14,9 +14,8 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705994456
 {-# OPTIONS --lossy-unification --rewriting --local-confluence-check #-}
 module Veblen.Finitary where
 open import Veblen.Multinary public
-
-open import Agda.Builtin.Equality
-open import Agda.Builtin.Equality.Rewrite
+open import Agda.Builtin.Equality public
+open import Agda.Builtin.Equality.Rewrite public
 ```
 
 前篇我们讲了二元, 三元和四元Veblen函数 $\text{Bin}.φ,\text{Tri}.φ,\text{Qua}.φ$. 我们希望把元数作为一个参数, 也就是说, 定义一个函数族 $φ$, 使得 $φ_n$ 正好是 $n$ 元Veblen函数. 这样的 $φ$ 叫做 (任意) 有限元Veblen函数 (Finitary Veblen Function), 也叫扩展Veblen函数 (Extended Veblen Function).
@@ -167,7 +166,7 @@ $$
 \begin{aligned}
 Φ_n\kern{0.17em}F :\text{Ord}^{→n^{++}} &:= \text{rec}\kern{0.17em}F \\
 &\qquad (λ(φ_{n^+,α}:\text{Ord}^{→n^+}),Φ^n(\text{fixpt}\kern{0.17em}λβ,φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
-&\qquad (λ(φ_{n^+,f\kern{0.17em}m}:ℕ→\text{Ord}^{→n^+}), Φ^n(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}[m]\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
+&\qquad (λ(φ_{n^+,f\kern{0.17em}m}:ℕ→\text{Ord}^{→n^+}), Φ^n(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
 \\
 Φ^0 : \text{Ord}^{→1}→\text{Ord}^{→1} &:= \text{id} \\
 Φ^{n^+}\kern{0.17em}F : \text{Ord}^{→n^{++}} &:= Φ_n(Φ^n\kern{0.17em}F)
@@ -188,7 +187,7 @@ $$
 $$
 \begin{aligned}
 Φ_n\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_{n^+,α},Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0(\text{fixpt}\kern{0.17em}λβ,φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...)) \\
-&(λφ_{n^+,f\kern{0.17em}m}, Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}[m]\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...))
+&(λφ_{n^+,f\kern{0.17em}m}, Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...))
 \end{aligned}
 $$
 
