@@ -297,8 +297,27 @@ module DoubleOmegaryVeblen where
 ```
 
 ```agda
-  Φ-s-ż⋯ż-z : (Φⁿ {suc n} F (suc α) 0̇, 0) _ 0 ≡ iterω (λ β → (Φⁿ {suc n} F α β 0̇) _ 0) 0
+  Φ-s-ż⋯ż-z : (Φⁿ {suc n} F (suc α) 0̇, 0) _ 0
+    ≡ iterω (λ β → (Φⁿ {suc n} F α β 0̇) _ 0) 0
   Φ-s-ż⋯ż-z = refl
+
+  Φ-s-ż⋯ż-s : (Φⁿ {suc n} F (suc α) 0̇, 0) (m) 0̇, suc β
+    ≡ iterω (λ β → (Φⁿ {suc n} F α β 0̇) _ 0) (suc ((Φⁿ F (suc α) 0̇, 0) (m) 0̇, β))
+  Φ-s-ż⋯ż-s = refl
+
+  Φ-l-ż⋯ż-z : (Φⁿ {suc n} F (lim f) 0̇, 0) _ 0
+    ≡ lim λ m → (Φⁿ {suc n} F (f m) 0 0̇) _ 0
+  Φ-l-ż⋯ż-z = refl
+
+  Φ-l-ż⋯ż-s : (Φⁿ {suc n} F (lim f) 0̇, 0) (m) 0̇, suc β
+    ≡ lim λ m → (Φⁿ {suc n} F (f m) (suc ((Φⁿ {suc n} F (lim f) 0̇, 0) (m) 0̇, β)) 0̇) _ 0
+  Φ-l-ż⋯ż-s = refl
+
+  Φ-α-ż⋯ż-l : F 0 (m) 0̇, lim g ≡ lim (λ k → F 0 (m) 0̇, g k)
+    → (Φⁿ {suc n} F α 0̇, 0) (m) 0̇, lim g ≡ lim λ k → (Φⁿ {suc n} F α 0̇, 0) (m) 0̇, g k
+  Φ-α-ż⋯ż-l {α = zero} = id
+  Φ-α-ż⋯ż-l {α = suc _} _ = refl
+  Φ-α-ż⋯ż-l {α = lim _} _ = refl
 ```
 
 ## (2ω)⁺元Veblen函数
