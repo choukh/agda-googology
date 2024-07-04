@@ -148,38 +148,38 @@ $$
 Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0 (λα,ω\kern{0.17em}^α))))...) : \text{Ord}^{→n^+}\quad (*)
 $$
 
-的形式. 我们把这整个迭代过程记作 $Φ^n$, 它具有类型
+的形式. 我们把这整个迭代过程记作 $Φ$, 它具有类型
 
 $$
-Φ^n : \text{Ord}^{→1} → \text{Ord}^{→n^+}
+Φ : \text{Ord}^{→1} → \prod_{n:ℕ}\text{Ord}^{→n^+}
 $$
 
 ```agda
-Φⁿ : Ord →ⁿ 1 → Ord →ⁿ suc n
+Φ : Ord →ⁿ 1 → (∀ n → Ord →ⁿ suc n)
 ```
 
-注意到 $Φ_n$ 的定义里就要用到 $(*)$ 式, 即 $Φ^n$. 而 $Φ^n$ 的定义里又要用到每个 $Φ_{\lt n}$. 我们把它们写成互递归的形式, 也就是说同时定义 $Φ_n$ 和 $Φ^n$.
+注意到 $Φ_n$ 的定义里就要用到 $(*)$ 式, 即 $Φ$. 而 $Φ$ 的定义里又要用到每个 $Φ_{\lt n}$. 我们把它们写成互递归的形式, 也就是说同时定义 $Φ_n$ 和 $Φ$.
 
-**定义** $Φ_n$ 和 $Φ^n$ 互递归定义如下.
+**定义** $Φ_n$ 和 $Φ$ 互递归定义如下.
 
 $$
 \begin{aligned}
 Φ_n\kern{0.17em}F :\text{Ord}^{→n^{++}} &:= \text{rec}\kern{0.17em}F \\
-&\qquad (λ(φ_{n^+,α}:\text{Ord}^{→n^+}),Φ^n(\text{fixpt}\kern{0.17em}λβ,φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
-&\qquad (λ(φ_{n^+,f\kern{0.17em}m}:ℕ→\text{Ord}^{→n^+}), Φ^n(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
+&\qquad (λ(φ_{n^+,α}:\text{Ord}^{→n^+}),Φ(\text{fixpt}\kern{0.17em}λβ,φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
+&\qquad (λ(φ_{n^+,f\kern{0.17em}m}:ℕ→\text{Ord}^{→n^+}), Φ(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
 \\
-Φ^0 : \text{Ord}^{→1}→\text{Ord}^{→1} &:= \text{id} \\
-Φ^{n^+}\kern{0.17em}F : \text{Ord}^{→n^{++}} &:= Φ_n(Φ^n\kern{0.17em}F)
+Φ\kern{0.17em}F\kern{0.17em}0 : \text{Ord}^{→1} &:= F \\
+Φ\kern{0.17em}F\kern{0.17em}n^+ : \text{Ord}^{→n^{++}} &:= Φ_n(Φ\kern{0.17em}F\kern{0.17em}n)
 \end{aligned}
 $$
 
 ```agda
 Φₙ F = rec F
-  (λ φ-α  → Φⁿ $ fixpt λ β → φ-α β 0̇)
-  (λ φ[_] → Φⁿ $ jump λ β → lim λ m → φ[ m ] β 0̇)
+  (λ φ-α  → Φ (fixpt λ β → φ-α β 0̇) _)
+  (λ φ[_] → Φ (jump λ β → lim λ m → φ[ m ] β 0̇) _)
 
-Φⁿ {n = zero} = id
-Φⁿ {n = suc n} F = Φₙ (Φⁿ F)
+Φ F zero = F
+Φ F (suc n) = Φₙ (Φ F n)
 ```
 
 **注意** 也可以不用互递归, 非形式地采用如下定义.
@@ -196,12 +196,12 @@ $$
 **定义** 有限元Veblen函数
 
 $$
-φ_n : \text{Ord}^{→n^{+}} := Φ^n(λα,ω\kern{0.17em}^α)
+φ_n : \text{Ord}^{→n^{+}} := Φ(λα,ω\kern{0.17em}^α)
 $$
 
 ```agda
-φ : Ord →ⁿ suc n
-φ = Φⁿ (ω ^_)
+φ : ∀ n → Ord →ⁿ suc n
+φ = Φ (ω ^_)
 ```
 
 **事实** $n^{++}$ 元Veblen函数 $φ_{n^+}$ 等于对 $n^+$ 元Veblen函数 $φ_n$ 做一次 $Φ_n$, 并且首位输入零的话就等于 $φ_n$.
@@ -214,10 +214,10 @@ $$
 $$
 
 ```agda
-Φ-φ : φ {suc n} ≡ Φₙ (φ {n})
+Φ-φ : φ (suc n) ≡ Φₙ (φ n)
 Φ-φ = refl
 
-φ-0 : φ {suc n} 0 ≡ φ {n}
+φ-0 : φ (suc n) 0 ≡ φ n
 φ-0 = refl
 ```
 
@@ -233,16 +233,16 @@ $$
 $$
 
 ```agda
-φ₀ : φ {0} ≡ ω ^_
+φ₀ : φ 0 ≡ ω ^_
 φ₀ = refl
 
-φ₁ : φ {1} ≡ Bin.φ
+φ₁ : φ 1 ≡ Bin.φ
 φ₁ = refl
 
-φ₂ : φ {2} ≡ Tri.φ
+φ₂ : φ 2 ≡ Tri.φ
 φ₂ = refl
 
-φ₃ : φ {3} ≡ Qua.φ
+φ₃ : φ 3 ≡ Qua.φ
 φ₃ = refl
 ```
 
@@ -280,15 +280,15 @@ $$
 **引理** $(\mathcal{S,Z,α})$
 
 $$
-Φ^n\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} = F
+Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} = F
 $$
 
 **(证明)** 归纳 $n$ 即得. ∎
 
 ```agda
-Φ-ż-α : Φⁿ {n} F 0̇,_ ≡ F
+Φ-ż-α : Φ F n 0̇,_ ≡ F
 Φ-ż-α {n = zero} = refl
-Φ-ż-α {n = suc n} = Φ-ż-α {n}
+Φ-ż-α {n = suc n} = Φ-ż-α {n = n}
 {-# REWRITE Φ-ż-α #-}
 ```
 
@@ -309,19 +309,20 @@ $$
 其中第五条要求前提 $F\kern{0.17em}(\lim g) = \lim λm,F\kern{0.17em}(g\kern{0.17em}m)$.
 
 ```agda
-Φ-s-ż-z : Φⁿ {suc n} F (suc α) 0̇, 0 ≡ iterω (λ β → Φⁿ F α β 0̇) 0
+Φ-s-ż-z : Φ F (suc n) (suc α) 0̇, 0 ≡ iterω (λ β → Φ F _ α β 0̇) 0
 Φ-s-ż-z = refl
 
-Φ-s-ż-s : Φⁿ {suc n} F (suc α) 0̇, suc β ≡ iterω (λ β → Φⁿ F α β 0̇) (suc (Φⁿ F (suc α) 0̇, β))
+Φ-s-ż-s : Φ F (suc n) (suc α) 0̇, suc β ≡ iterω (λ β → Φ F _ α β 0̇) (suc (Φ F _ (suc α) 0̇, β))
 Φ-s-ż-s = refl
 
-Φ-l-ż-z : Φⁿ {suc n} F (lim f) 0̇, 0 ≡ lim λ m → Φⁿ {suc n} F (f m) 0̇
+Φ-l-ż-z : Φ F (suc n) (lim f) 0̇, 0 ≡ lim λ m → Φ F (suc n) (f m) 0̇
 Φ-l-ż-z = refl
 
-Φ-l-ż-s : Φⁿ {suc n} F (lim f) 0̇, suc β ≡ lim λ m → Φⁿ F (f m) (suc (Φⁿ F (lim f) 0̇, β)) 0̇
+Φ-l-ż-s : Φ F (suc n) (lim f) 0̇, suc β ≡ lim λ m → Φ F _ (f m) (suc (Φ F _ (lim f) 0̇, β)) 0̇
 Φ-l-ż-s = refl
 
-Φ-α-ż-l : F (lim g) ≡ lim (λ m → F (g m)) → Φⁿ {suc n} F α 0̇, lim g ≡ lim λ m → Φⁿ {suc n} F α 0̇, g m
+Φ-α-ż-l : F (lim g) ≡ lim (λ m → F (g m))
+  → Φ F (suc n) α 0̇, lim g ≡ lim λ m → Φ F (suc n) α 0̇, g m
 Φ-α-ż-l {α = zero} = id
 Φ-α-ż-l {α = suc _} _ = refl
 Φ-α-ż-l {α = lim _} _ = refl
@@ -337,7 +338,7 @@ $$
 **(证明)** 讨论 $α$, 由定理 $(\mathcal{S,Z,α})$ 即得. ∎
 
 ```agda
-φ-α-s-ż-β : φ {2+ n} α (suc β) 0̇,_ ≡ fixpt λ γ → φ {2+ n} α β γ 0̇
+φ-α-s-ż-β : φ (2+ n) α (suc β) 0̇,_ ≡ fixpt λ γ → φ (2+ n) α β γ 0̇
 φ-α-s-ż-β {n = zero} {α = zero} = refl
 φ-α-s-ż-β {n = zero} {α = suc _} = refl
 φ-α-s-ż-β {n = zero} {α = lim _} = refl
@@ -356,7 +357,7 @@ $$
 **(证明)** 讨论 $α$, 由定理 $(\mathcal{S,Z,α})$ 即得. ∎
 
 ```agda
-φ-α-l-ż-β : φ {2+ n} α (lim f) 0̇,_ ≡ jump λ δ → lim λ m → φ {2+ n} α (f m) δ 0̇
+φ-α-l-ż-β : φ (2+ n) α (lim f) 0̇,_ ≡ jump λ δ → lim λ m → φ (2+ n) α (f m) δ 0̇
 φ-α-l-ż-β {n = zero} {α = zero} = refl
 φ-α-l-ż-β {n = zero} {α = suc _} = refl
 φ-α-l-ż-β {n = zero} {α = lim _} = refl
@@ -374,7 +375,7 @@ $$
 **(证明)** 由定理 $(\mathcal{S,α,Z,l})$ 即得. ∎
 
 ```agda
-φ-α-ż-l : φ {2+ n} α 0̇, lim g ≡ lim λ m → φ {2+ n} α 0̇, g m
+φ-α-ż-l : φ (2+ n) α 0̇, lim g ≡ lim λ m → φ (2+ n) α 0̇, g m
 φ-α-ż-l = Φ-α-ż-l refl
 ```
 
@@ -383,15 +384,15 @@ $$
 **引理** $(\mathcal{S,Z,α,β})$
 
 $$
-Φ^n\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}\kern{0.17em}\underline{\kern{0.5em}} = Φ^n\kern{0.17em}F
+Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}\kern{0.17em}\underline{\kern{0.5em}} = Φ\kern{0.17em}F
 $$
 
 **(证明)** 归纳 $n$ 即得. ∎
 
 ```agda
-Φ-ż-α-β : Φⁿ {suc n} F 0̇,_,_ ≡ Φⁿ F
+Φ-ż-α-β : Φ F (suc n) 0̇,_,_ ≡ Φ F 1
 Φ-ż-α-β {n = zero} = refl
-Φ-ż-α-β {n = suc n} = Φ-ż-α-β {n}
+Φ-ż-α-β {n = suc n} = Φ-ż-α-β {n = n}
 {-# REWRITE Φ-ż-α-β #-}
 ```
 
@@ -410,19 +411,19 @@ $$
 其中第五条要求前提 $F\kern{0.17em}(\lim g) = \lim λm,F\kern{0.17em}(g\kern{0.17em}m)$.
 
 ```agda
-Φ-ż-s-0 : Φⁿ {suc n} F 0̇, suc α , 0 ≡ iterω (Φⁿ {suc n} F 0̇, α ,_) 0
+Φ-ż-s-0 : Φ F (suc n) 0̇, suc α , 0 ≡ iterω (Φ F (suc n) 0̇, α ,_) 0
 Φ-ż-s-0 = refl
 
-Φ-ż-s-s : Φⁿ {suc n} F 0̇, suc α , suc β ≡ iterω (Φⁿ {suc n} F 0̇, α ,_) (suc (Φⁿ {suc n} F 0̇, (suc α) , β))
+Φ-ż-s-s : Φ F (suc n) 0̇, suc α , suc β ≡ iterω (Φ F (suc n) 0̇, α ,_) (suc (Φ F (suc n) 0̇, (suc α) , β))
 Φ-ż-s-s = refl
 
-Φ-ż-l-0 : Φⁿ {suc n} F 0̇, lim f , 0 ≡ lim λ m → Φⁿ {suc n} F 0̇, f m , 0
+Φ-ż-l-0 : Φ F (suc n) 0̇, lim f , 0 ≡ lim λ m → Φ F (suc n) 0̇, f m , 0
 Φ-ż-l-0 = refl
 
-Φ-ż-l-s : Φⁿ {suc n} F 0̇, lim f , suc β ≡ lim λ m → Φⁿ {suc n} F 0̇, f m , suc (Φⁿ {suc n} F 0̇, (lim f) , β)
+Φ-ż-l-s : Φ F (suc n) 0̇, lim f , suc β ≡ lim λ m → Φ F (suc n) 0̇, f m , suc (Φ F (suc n) 0̇, (lim f) , β)
 Φ-ż-l-s = refl
 
-Φ-ż-α-l : F (lim g) ≡ lim (λ m → F (g m)) → Φⁿ {suc n} F 0̇, α , lim g ≡ lim λ m → Φⁿ {suc n} F 0̇, α , g m
+Φ-ż-α-l : F (lim g) ≡ lim (λ m → F (g m)) → Φ F (suc n) 0̇, α , lim g ≡ lim λ m → Φ F (suc n) 0̇, α , g m
 Φ-ż-α-l {α = zero} = id
 Φ-ż-α-l {α = suc _} _ = refl
 Φ-ż-α-l {α = lim _} _ = refl
@@ -441,7 +442,7 @@ $$
 
 ```agda
 SVO : Ord
-SVO = lim λ n → φ {n} 1 0̇
+SVO = lim λ n → φ n 1 0̇
 ```
 
 一个很大的大数:
