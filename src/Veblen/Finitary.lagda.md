@@ -158,7 +158,9 @@ $$
 Φ : Ord →ⁿ 1 → (∀ n → Ord →ⁿ suc n)
 ```
 
-注意到 $Φ_n$ 的定义里就要用到 $(*)$ 式, 即 $Φ$. 而 $Φ$ 的定义里又要用到每个 $Φ_{\lt n}$. 我们把它们写成互递归的形式, 也就是说同时定义 $Φ_n$ 和 $Φ$.
+非形式地, 简洁起见, 我们将把 $Φ\kern{0.17em}F\kern{0.17em}n$ 写作 $Φ^n\kern{0.17em}F$.
+
+注意到 $Φ_n$ 的定义里就要用到 $(*)$ 式, 即 $Φ$ 的定义. 而 $Φ$ 的定义里又要用到每个 $Φ_{\lt n}$. 我们把它们写成互递归的形式, 也就是说同时定义 $Φ_n$ 和 $Φ$.
 
 **定义** $Φ_n$ 和 $Φ$ 互递归定义如下.
 
@@ -168,12 +170,10 @@ $$
 &\qquad (λ(φ_{n^+,α}:\text{Ord}^{→n^+}),Φ(\text{fixpt}\kern{0.17em}λβ,φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
 &\qquad (λ(φ_{n^+,f\kern{0.17em}m}:ℕ→\text{Ord}^{→n^+}), Φ(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
 \\
-Φ\kern{0.17em}F\kern{0.17em}0 : \text{Ord}^{→1} &:= F \\
-Φ\kern{0.17em}F\kern{0.17em}n^+ : \text{Ord}^{→n^{++}} &:= Φ_n(Φ\kern{0.17em}F\kern{0.17em}n)
+Φ^0\kern{0.17em}F : \text{Ord}^{→1} &:= F \\
+Φ^{n^+}\kern{0.17em}F : \text{Ord}^{→n^{++}} &:= Φ_n(Φ^n\kern{0.17em}F)
 \end{aligned}
 $$
-
-非形式地, 简洁起见, 我们将把 $Φ\kern{0.17em}F\kern{0.17em}n$ 写作 $Φ^n\kern{0.17em}F$.
 
 ```agda
 Φₙ F = rec F
@@ -198,7 +198,7 @@ $$
 **定义** 有限元Veblen函数
 
 $$
-φ_n : \prod_{n:ℕ}\text{Ord}^{→n^{+}} := Φ(λα,ω\kern{0.17em}^α)
+φ_n : \prod_{n:ℕ}\text{Ord}^{→n^{+}} := Φ\kern{0.17em}(λα,ω\kern{0.17em}^α)
 $$
 
 ```agda
