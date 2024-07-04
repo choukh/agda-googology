@@ -140,9 +140,9 @@ $$
 
 $$
 \begin{aligned}
-\varphi_{α^+}0 &= (\varphi_α)^ω\kern{0.17em}0 \\
-\varphi_{α^+}β^+ &= (\varphi_α)^ω(\varphi_{α^+}β)^+ \\
-\varphi_{α^+}\lim f &= \lim λn,\varphi_{α^+}(f\kern{0.17em}n)
+&\varphi_{α^+}0 &=& (\varphi_α)^ω\kern{0.17em}0 \\
+&\varphi_{α^+}β^+ &=& (\varphi_α)^ω(\varphi_{α^+}β)^+ \\
+&\varphi_{α^+}\lim f &=& \lim λn,\varphi_{α^+}(f\kern{0.17em}n)
 \end{aligned}
 $$
 
@@ -193,9 +193,9 @@ $$
 
 $$
 \begin{aligned}
-\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}0 &= \text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n}\kern{0.17em}0 \\
-\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}(β^+) &= \text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n}\kern{0.17em}(\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}β)^+ \\
-\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}(\text{lim}\kern{0.17em}g) &= \text{lim}\kern{0.17em}λn,φ_{\text{lim}\kern{0.17em}f}\kern{0.17em}(g\kern{0.17em}n)
+&\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}0 &=& \text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n}\kern{0.17em}0 \\
+&\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}(β^+) &=& \text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n}\kern{0.17em}(\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}β)^+ \\
+&\varphi_{\text{lim}\kern{0.17em}f}\kern{0.17em}(\text{lim}\kern{0.17em}g) &=& \text{lim}\kern{0.17em}λn,φ_{\text{lim}\kern{0.17em}f}\kern{0.17em}(g\kern{0.17em}n)
 \end{aligned}
 $$
 
@@ -239,11 +239,11 @@ $$
 
 $$
 \begin{aligned}
-Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0 &= (Φ\kern{0.17em}F\kern{0.17em}α)^ω\kern{0.17em}0 \\
-Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}β^+ &= (Φ\kern{0.17em}F\kern{0.17em}α)^ω(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}β)^+ \\
-Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0 &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0 \\
-Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}β^+ &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}β)^+ \\
-Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}(\lim g) &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}(g\kern{0.17em}n)
+&Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0 &=& (Φ\kern{0.17em}F\kern{0.17em}α)^ω\kern{0.17em}0 \\
+&Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}β^+ &=& (Φ\kern{0.17em}F\kern{0.17em}α)^ω(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}β)^+ \\
+&Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0 &=& \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0 \\
+&Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}β^+ &=& \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}β)^+ \\
+&Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}(\lim g) &=& \lim λn,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}(g\kern{0.17em}n)
 \end{aligned}
 $$
 
@@ -477,9 +477,9 @@ $$
 
 $$
 \begin{aligned}
-\varphi_{α^+,0} &= \text{fixpt}λβ,φ_{α,β}\kern{0.17em}0 \\
-\varphi_{α^+,β^+} &= \text{fixpt}\kern{0.17em}φ_{α^+,β} \\
-\varphi_{α^+,\text{lim}\kern{0.17em}g} &= \text{jump}\kern{0.17em}λγ,\text{lim}\kern{0.17em}λn,φ_{α^+,g\kern{0.17em}n}\kern{0.17em}γ
+&\varphi_{α^+,0} &=& \text{fixpt}λβ,φ_{α,β}\kern{0.17em}0 \\
+&\varphi_{α^+,β^+} &=& \text{fixpt}\kern{0.17em}φ_{α^+,β} \\
+&\varphi_{α^+,\text{lim}\kern{0.17em}g} &=& \text{jump}\kern{0.17em}λγ,\text{lim}\kern{0.17em}λn,φ_{α^+,g\kern{0.17em}n}\kern{0.17em}γ
 \end{aligned}
 $$
 
@@ -540,9 +540,9 @@ $$
 
 $$
 \begin{aligned}
-\varphi_{2,0}\kern{0.17em}ω &= \text{lim}\kern{0.17em}λn,φ_{2,0}\kern{0.17em}n &=& \lim(φ_{2,0}\kern{0.17em}0,φ_{2,0}\kern{0.17em}1,...) \\
-\varphi_{2,1}\kern{0.17em}ω &= \text{lim}\kern{0.17em}λn,φ_{2,1}\kern{0.17em}n &=& \lim(φ_{2,1}\kern{0.17em}0,φ_{2,1}\kern{0.17em}1,...) \\
-\varphi_{2,ω}\kern{0.17em}ω &= \text{lim}\kern{0.17em}λn,φ_{2,ω}\kern{0.17em}n &=& \lim(φ_{2,ω}\kern{0.17em}0,φ_{2,ω}\kern{0.17em}1,...)
+&\varphi_{2,0}\kern{0.17em}ω &=& \text{lim}\kern{0.17em}λn,φ_{2,0}\kern{0.17em}n &=& \lim(φ_{2,0}\kern{0.17em}0,φ_{2,0}\kern{0.17em}1,...) \\
+&\varphi_{2,1}\kern{0.17em}ω &=& \text{lim}\kern{0.17em}λn,φ_{2,1}\kern{0.17em}n &=& \lim(φ_{2,1}\kern{0.17em}0,φ_{2,1}\kern{0.17em}1,...) \\
+&\varphi_{2,ω}\kern{0.17em}ω &=& \text{lim}\kern{0.17em}λn,φ_{2,ω}\kern{0.17em}n &=& \lim(φ_{2,ω}\kern{0.17em}0,φ_{2,ω}\kern{0.17em}1,...)
 \end{aligned}
 $$
 
@@ -561,9 +561,10 @@ $$
 
 $$
 \begin{aligned}
-\varphi_{\text{lim}\kern{0.17em}f,0} &= \text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n,β}\kern{0.17em}0 \\
-\varphi_{\text{lim}\kern{0.17em}f,β^+} &= \text{fixpt}\kern{0.17em}φ_{\text{lim}\kern{0.17em}f,β}\kern{0.17em} \\
-\varphi_{\text{lim}\kern{0.17em}f,\text{lim}\kern{0.17em}g} &= \text{jump}\kern{0.17em}λγ,\text{lim}\kern{0.17em}λn,φ_{\text{lim}\kern{0.17em}f,g\kern{0.17em}n}\kern{0.17em}γ
+&\varphi_{\text{lim}\kern{0.17em}f,0} &=& \text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ_{f\kern{0.17em}n,β}\kern{0.17em}0 \\
+&\varphi_{\text{lim}\kern{0.17em}f,β^+} &=& \text{fixpt}\kern{0.17em}φ_{\text{lim}\kern{0.17em}f,β}\kern{0.17em} \\
+&\varphi_{\text{lim}\kern{0.17em}f,\text{lim}\kern{0.17em}g} &=&
+\text{jump}\kern{0.17em}λγ,\text{lim}\kern{0.17em}λn,φ_{\text{lim}\kern{0.17em}f,g\kern{0.17em}n}\kern{0.17em}γ
 \end{aligned}
 $$
 
@@ -651,11 +652,11 @@ $$
 
 $$
 \begin{aligned}
-Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0 &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0)^ω\kern{0.17em}0 \\
-Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}β^+ &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0)^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}β)^+ \\
-Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0 &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}0 \\
-Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}β^+ &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}β)^+\kern{0.17em}0 \\
-Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}(\lim g) &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)
+&Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0 &=& (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0)^ω\kern{0.17em}0 \\
+&Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}β^+ &=& (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0)^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}β)^+ \\
+&Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0 &=& \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}0 \\
+&Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}β^+ &=& \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}β)^+\kern{0.17em}0 \\
+&Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}(\lim g) &=& \lim λn,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)
 \end{aligned}
 $$
 
@@ -737,11 +738,11 @@ $$
 
 $$
 \begin{aligned}
-Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0\kern{0.17em}0)^ω\kern{0.17em}0 \\
-Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β^+ &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0\kern{0.17em}0)^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β)^+ \\
-Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 \\
-Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β^+ &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β)^+\kern{0.17em}0\kern{0.17em}0 \\
-Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}0\kern{0.17em}(\lim g) &= \lim λn,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)
+&Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 &=& (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0\kern{0.17em}0)^ω\kern{0.17em}0 \\
+&Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β^+ &=& (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0\kern{0.17em}0)^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β)^+ \\
+&Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 &=& \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 \\
+&Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β^+ &=& \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β)^+\kern{0.17em}0\kern{0.17em}0 \\
+&Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}0\kern{0.17em}(\lim g) &=& \lim λn,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)
 \end{aligned}
 $$
 
