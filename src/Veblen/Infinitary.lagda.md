@@ -63,10 +63,10 @@ $$
 ```agda
 module OmegaryVeblen where
   Φ : Ord →ⁿ 1 → Ord→^ω
-  Φ F n = Fin.Φⁿ {n} F
+  Φ = Fin.Φ
 
   φ : Ord→^ω
-  φ n = Fin.φ {n}
+  φ = Fin.φ
 ```
 
 注意我们的下标是一贯的, 它是参数的 (从零开始的) 最大编号, 例如
@@ -291,23 +291,23 @@ module DoubleOmegaryVeblen where
 ```
 
 ```agda
-  φ : Ord→^ω →ⁿ suc n
-  φ = Φ Eqω.φ _
+  φ : ∀ n → Ord→^ω →ⁿ suc n
+  φ = Φ Eqω.φ
 ```
 
 ```agda
-  Φ-φ : φ {suc n} ≡ Φₙ (φ {n})
+  Φ-φ : φ (suc n) ≡ Φₙ (φ n)
   Φ-φ = refl
 
-  φ-0 : φ {suc n} 0 ≡ φ {n}
+  φ-0 : φ (suc n) 0 ≡ φ n
   φ-0 = refl
 ```
 
 ```agda
-  φ₀ : φ {0} ≡ Eqω.φ
+  φ₀ : φ 0 ≡ Eqω.φ
   φ₀ = refl
 
-  φ₁ : φ {1} ≡ Bin.φ
+  φ₁ : φ 1 ≡ Bin.φ
   φ₁ = refl
 ```
 
