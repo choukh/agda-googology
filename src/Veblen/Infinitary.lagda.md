@@ -55,8 +55,8 @@ Ord→^ω⁺⁺ = Ord → Ord→^ω⁺
 
 $$
 \begin{aligned}
-Φ_{\lt ω} &:= Φ^n : \text{Ord}^{→1} → \text{Ord}^{→ω} \\
-φ_{\lt ω} &:= φ_n : \text{Ord}^{→ω}
+Φ_{\lt ω} &:= Φ : \text{Ord}^{→1} → \text{Ord}^{→ω} \\
+φ_{\lt ω} &:= φ : \text{Ord}^{→ω}
 \end{aligned}
 $$
 
@@ -162,20 +162,21 @@ $$
   φ-0 : φ 0 ≡ Ltω.φ
   φ-0 = refl
 
-  φ-1⋯0 : φ 1 _ 0 ≡ Fin.SVO
+  -- 我们会给元数参数加一层括弧以方便辨认.
+  φ-1⋯0 : φ 1 (0) 0 ≡ Fin.SVO
   φ-1⋯0 = refl
 ```
 
 ```agda
   SVO : Ord
-  SVO = φ 1 _ 0
+  SVO = φ 1 (0) 0
 ```
 
 ```agda
-  φ-1⋯0-0 : φ 1 _ 0 0 ≡ SVO
+  φ-1⋯0-0 : φ 1 (1) 0 0 ≡ SVO
   φ-1⋯0-0 = refl
 
-  φ-1⋯0-0-0 : φ 1 _ 0 0 0 ≡ SVO
+  φ-1⋯0-0-0 : φ 1 (2) 0 0 0 ≡ SVO
   φ-1⋯0-0-0 = refl
 ```
 
@@ -187,13 +188,13 @@ $$
 ```agda
   private variable F : Ord→^ω
 
-  Φ-s⋯ż-z : Φ F (suc α) _ 0 ≡ lim λ n → Φ F α (n) 1 0̇
+  Φ-s⋯ż-z : Φ F (suc α) (0) 0 ≡ lim λ n → Φ F α (n) 1 0̇
   Φ-s⋯ż-z = refl
 
   Φ-s⋯ż-s : Φ F (suc α) (n) 0̇, suc β ≡ lim λ n → Φ F α (n) (suc (Φ F (suc α) (n) 0̇, β)) 0̇
   Φ-s⋯ż-s = refl
 
-  Φ-l⋯ż-z : Φ F (lim f) _ 0 ≡ lim λ n → Φ F (f n) (n) 0̇
+  Φ-l⋯ż-z : Φ F (lim f) (0) 0 ≡ lim λ n → Φ F (f n) (n) 0̇
   Φ-l⋯ż-z = refl
 
   Φ-l⋯ż-s : Φ F (lim f) (n) 0̇, suc β ≡ lim λ n → Φ F (f n) (n) (suc (Φ F (lim f) (n) 0̇, β)) 0̇
@@ -217,8 +218,8 @@ module OmegaBinaryVeblen where
 ```agda
   Φ : Ord→^ω⁺ → Ord→^ω⁺⁺
   Φ F = rec F
-    (λ φ-α → Eqω.Φ $ Ltω.Φ $ fixpt λ β → φ-α β _ 0)
-    (λ φ[_] → Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ m → φ[ m ] β _ 0)
+    (λ φ-α → Eqω.Φ $ Ltω.Φ $ fixpt λ β → φ-α β (0) 0)
+    (λ φ[_] → Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ m → φ[ m ] β (0) 0)
 
   φ : Ord→^ω⁺⁺
   φ = Φ Eqω.φ
@@ -227,16 +228,16 @@ module OmegaBinaryVeblen where
 ```agda
   private variable F : Ord→^ω⁺
 
-  Φ-s-z⋯ż-z : Φ F (suc α) 0 _ 0 ≡ iterω (λ β → Φ F α β _ 0) 0
+  Φ-s-z⋯ż-z : Φ F (suc α) 0 (0) 0 ≡ iterω (λ β → Φ F α β (0) 0) 0
   Φ-s-z⋯ż-z = refl
 
-  Φ-s-z⋯ż-s : Φ F (suc α) 0 (n) 0̇, suc β ≡ iterω (λ β → Φ F α β _ 0) (suc (Φ F (suc α) 0 (n) 0̇, β))
+  Φ-s-z⋯ż-s : Φ F (suc α) 0 (n) 0̇, suc β ≡ iterω (λ β → Φ F α β (0) 0) (suc (Φ F (suc α) 0 (n) 0̇, β))
   Φ-s-z⋯ż-s = refl
 
-  Φ-l-z⋯ż-z : Φ F (lim f) 0 _ 0 ≡ lim λ m → Φ F (f m) 0 _ 0
+  Φ-l-z⋯ż-z : Φ F (lim f) 0 (0) 0 ≡ lim λ m → Φ F (f m) 0 (0) 0
   Φ-l-z⋯ż-z = refl
 
-  Φ-l-z⋯ż-s : Φ F (lim f) 0 (n) 0̇, suc β ≡ lim λ m → Φ F (f m) (suc (Φ F (lim f) 0 (n) 0̇, β)) _ 0
+  Φ-l-z⋯ż-s : Φ F (lim f) 0 (n) 0̇, suc β ≡ lim λ m → Φ F (f m) (suc (Φ F (lim f) 0 (n) 0̇, β)) (0) 0
   Φ-l-z⋯ż-s = refl
 
   Φ-α-z⋯ż-l : Φ F 0 0 (n) 0̇, lim g ≡ lim (λ m → Φ F 0 0 (n) 0̇, g m)
@@ -280,14 +281,14 @@ module DoubleOmegaryVeblen where
 ```
 
 ```agda
-  Φₙ F = rec F
-    (λ φ-α → Φ (Eqω.Φ $ Ltω.Φ $ fixpt λ β → (φ-α β 0̇) _ 0) _)
-    (λ φ[_] → Φ (Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ m → (φ[ m ] β 0̇) _ 0) _)
+  Φₙ {n} F = rec F
+    (λ φ-α → Φ (Eqω.Φ $ Ltω.Φ $ fixpt λ β → (φ-α β 0̇) (0) 0) (n))
+    (λ φ[_] → Φ (Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ m → (φ[ m ] β 0̇) (0) 0) (n))
 ```
 
 ```agda
-  Φ F zero = F
-  Φ F (suc n) = Φₙ (Φ F n)
+  Φ F (zero) = F
+  Φ F ((suc n)) = Φₙ (Φ F (n))
 ```
 
 ```agda
@@ -296,49 +297,49 @@ module DoubleOmegaryVeblen where
 ```
 
 ```agda
-  Φ-φ : φ (suc n) ≡ Φₙ (φ n)
+  Φ-φ : φ ((suc n)) ≡ Φₙ (φ (n))
   Φ-φ = refl
 
-  φ-0 : φ (suc n) 0 ≡ φ n
+  φ-0 : φ ((suc n)) 0 ≡ φ (n)
   φ-0 = refl
 ```
 
 ```agda
-  φ₀ : φ 0 ≡ Eqω.φ
+  φ₀ : φ (0) ≡ Eqω.φ
   φ₀ = refl
 
-  φ₁ : φ 1 ≡ Bin.φ
+  φ₁ : φ (1) ≡ Bin.φ
   φ₁ = refl
 ```
 
 ```agda
   private variable F : Ord→^ω →ⁿ 1
 
-  Φ-ż-α : Φ F n 0̇,_ ≡ F
+  Φ-ż-α : Φ F (n) 0̇,_ ≡ F
   Φ-ż-α {n = zero} = refl
-  Φ-ż-α {F} {n = suc n} = Φ-ż-α {F} {n}
+  Φ-ż-α {n = suc n} = Φ-ż-α {n = n}
   {-# REWRITE Φ-ż-α #-}
 ```
 
 ```agda
-  Φ-s-ż⋯ż-z : (Φ F (suc n) (suc α) 0̇, 0) _ 0
-    ≡ iterω (λ β → (Φ F (suc n) α β 0̇) _ 0) 0
+  Φ-s-ż⋯ż-z : (Φ F ((suc n)) (suc α) 0̇, 0) (0) 0
+    ≡ iterω (λ β → (Φ F ((suc n)) α β 0̇) (0) 0) 0
   Φ-s-ż⋯ż-z = refl
 
-  Φ-s-ż⋯ż-s : (Φ F (suc n) (suc α) 0̇, 0) (m) 0̇, suc β
-    ≡ iterω (λ β → (Φ F (suc n) α β 0̇) _ 0) (suc ((Φ F _ (suc α) 0̇, 0) (m) 0̇, β))
+  Φ-s-ż⋯ż-s : (Φ F ((suc n)) (suc α) 0̇, 0) (m) 0̇, suc β
+    ≡ iterω (λ β → (Φ F ((suc n)) α β 0̇) (0) 0) (suc ((Φ F (_) (suc α) 0̇, 0) (m) 0̇, β))
   Φ-s-ż⋯ż-s = refl
 
-  Φ-l-ż⋯ż-z : (Φ F (suc n) (lim f) 0̇, 0) _ 0
-    ≡ lim λ m → (Φ F (suc n) (f m) 0 0̇) _ 0
+  Φ-l-ż⋯ż-z : (Φ F ((suc n)) (lim f) 0̇, 0) (0) 0
+    ≡ lim λ m → (Φ F ((suc n)) (f m) 0 0̇) (0) 0
   Φ-l-ż⋯ż-z = refl
 
-  Φ-l-ż⋯ż-s : (Φ F (suc n) (lim f) 0̇, 0) (m) 0̇, suc β
-    ≡ lim λ m → (Φ F (suc n) (f m) (suc ((Φ F (suc n) (lim f) 0̇, 0) (m) 0̇, β)) 0̇) _ 0
+  Φ-l-ż⋯ż-s : (Φ F ((suc n)) (lim f) 0̇, 0) (m) 0̇, suc β
+    ≡ lim λ m → (Φ F ((suc n)) (f m) (suc ((Φ F ((suc n)) (lim f) 0̇, 0) (m) 0̇, β)) 0̇) (0) 0
   Φ-l-ż⋯ż-s = refl
 
   Φ-α-ż⋯ż-l : F 0 (m) 0̇, lim g ≡ lim (λ k → F 0 (m) 0̇, g k)
-    → (Φ F (suc n) α 0̇, 0) (m) 0̇, lim g ≡ lim λ k → (Φ F (suc n) α 0̇, 0) (m) 0̇, g k
+    → (Φ F ((suc n)) α 0̇, 0) (m) 0̇, lim g ≡ lim λ k → (Φ F ((suc n)) α 0̇, 0) (m) 0̇, g k
   Φ-α-ż⋯ż-l {α = zero} = id
   Φ-α-ż⋯ż-l {α = suc _} _ = refl
   Φ-α-ż⋯ż-l {α = lim _} _ = refl
