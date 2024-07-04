@@ -173,6 +173,8 @@ $$
 \end{aligned}
 $$
 
+非形式地, 简洁起见, 我们将把 $Φ\kern{0.17em}F\kern{0.17em}n$ 写作 $Φ^n\kern{0.17em}F$.
+
 ```agda
 Φₙ F = rec F
   (λ φ-α  → Φ (fixpt λ β → φ-α β 0̇) _)
@@ -196,7 +198,7 @@ $$
 **定义** 有限元Veblen函数
 
 $$
-φ_n : \text{Ord}^{→n^{+}} := Φ(λα,ω\kern{0.17em}^α)
+φ_n : \prod_{n:ℕ}\text{Ord}^{→n^{+}} := Φ(λα,ω\kern{0.17em}^α)
 $$
 
 ```agda
@@ -280,7 +282,7 @@ $$
 **引理** $(\mathcal{S,Z,α})$
 
 $$
-Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} = F
+Φ^n\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} = F
 $$
 
 **(证明)** 归纳 $n$ 即得. ∎
@@ -298,11 +300,11 @@ $$
 
 $$
 \begin{aligned}
-Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0} &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}0 \\
-Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+ &= (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+ \\
-Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0} &= \lim λm,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}\overset{.}{0} \\
-Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+ &= \lim λm,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+\kern{0.17em}\overset{.}{0} \\
-Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g) &= \lim λm,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}m)
+Φ^{n^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0} &= (λβ,Φ^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}0 \\
+Φ^{n^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+ &= (λβ,Φ^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}(Φ^{n^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+ \\
+Φ^{n^+}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0} &= \lim λm,Φ^{n^+}\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}\overset{.}{0} \\
+Φ^{n^+}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+ &= \lim λm,Φ^{n^+}\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}(Φ^{n^+}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+\kern{0.17em}\overset{.}{0} \\
+Φ^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g) &= \lim λm,Φ^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}m)
 \end{aligned}
 $$
 
@@ -384,7 +386,7 @@ $$
 **引理** $(\mathcal{S,Z,α,β})$
 
 $$
-Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}\kern{0.17em}\underline{\kern{0.5em}} = Φ\kern{0.17em}F
+Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}\kern{0.17em}\underline{\kern{0.5em}} = Φ^{1}\kern{0.17em}F
 $$
 
 **(证明)** 归纳 $n$ 即得. ∎
@@ -400,11 +402,11 @@ $$
 
 $$
 \begin{aligned}
-Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+\kern{0.17em}\overset{.}{0} &= (Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}\underline{\kern{0.5em}})^ω\kern{0.17em}0 \\
-Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+\kern{0.17em}β^+ &= (Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}\underline{\kern{0.5em}})^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+\kern{0.17em}β)^+ \\
-Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim f)\kern{0.17em}0 &= \lim λm,Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}0 \\
-Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim f)\kern{0.17em}β^+ &= \lim λm,Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim f)\kern{0.17em}β)^+ \\
-Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}(\lim g) &= \lim λm,Φ\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}(g\kern{0.17em}m)
+Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+\kern{0.17em}\overset{.}{0} &= (Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}\underline{\kern{0.5em}})^ω\kern{0.17em}0 \\
+Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+\kern{0.17em}β^+ &= (Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}\underline{\kern{0.5em}})^ω\kern{0.17em}(Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α^+\kern{0.17em}β)^+ \\
+Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim f)\kern{0.17em}0 &= \lim λm,Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}0 \\
+Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim f)\kern{0.17em}β^+ &= \lim λm,Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}(Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim f)\kern{0.17em}β)^+ \\
+Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}(\lim g) &= \lim λm,Φ^{n^+}\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}α\kern{0.17em}(g\kern{0.17em}m)
 \end{aligned}
 $$
 
@@ -423,7 +425,8 @@ $$
 Φ-ż-l-s : Φ F (suc n) 0̇, lim f , suc β ≡ lim λ m → Φ F (suc n) 0̇, f m , suc (Φ F (suc n) 0̇, (lim f) , β)
 Φ-ż-l-s = refl
 
-Φ-ż-α-l : F (lim g) ≡ lim (λ m → F (g m)) → Φ F (suc n) 0̇, α , lim g ≡ lim λ m → Φ F (suc n) 0̇, α , g m
+Φ-ż-α-l : F (lim g) ≡ lim (λ m → F (g m))
+  → Φ F (suc n) 0̇, α , lim g ≡ lim λ m → Φ F (suc n) 0̇, α , g m
 Φ-ż-α-l {α = zero} = id
 Φ-ż-α-l {α = suc _} _ = refl
 Φ-ż-α-l {α = lim _} _ = refl
