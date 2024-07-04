@@ -176,12 +176,13 @@ $$
 $$
 
 ```agda
+-- 我们会给元数参数加一层括弧以方便辨认, 相当于 Φ 的上标.
 Φₙ F = rec F
-  (λ φ-α  → Φ (fixpt λ β → φ-α β 0̇) _)
-  (λ φ[_] → Φ (jump λ β → lim λ m → φ[ m ] β 0̇) _)
+  (λ φ-α  → Φ (fixpt λ β → φ-α β 0̇) (_))
+  (λ φ[_] → Φ (jump λ β → lim λ m → φ[ m ] β 0̇) (_))
 
-Φ F zero = F
-Φ F (suc n) = Φₙ (Φ F n)
+Φ F (zero) = F
+Φ F ((suc n)) = Φₙ (Φ F (n))
 ```
 
 **注意** 也可以不用互递归, 非形式地采用如下定义.
@@ -216,10 +217,10 @@ $$
 $$
 
 ```agda
-Φ-φ : φ (suc n) ≡ Φₙ (φ n)
+Φ-φ : φ ((suc n)) ≡ Φₙ (φ (n))
 Φ-φ = refl
 
-φ-0 : φ (suc n) 0 ≡ φ n
+φ-0 : φ ((suc n)) 0 ≡ φ (n)
 φ-0 = refl
 ```
 
@@ -235,16 +236,16 @@ $$
 $$
 
 ```agda
-φ₀ : φ 0 ≡ ω ^_
+φ₀ : φ (0) ≡ ω ^_
 φ₀ = refl
 
-φ₁ : φ 1 ≡ Bin.φ
+φ₁ : φ (1) ≡ Bin.φ
 φ₁ = refl
 
-φ₂ : φ 2 ≡ Tri.φ
+φ₂ : φ (2) ≡ Tri.φ
 φ₂ = refl
 
-φ₃ : φ 3 ≡ Qua.φ
+φ₃ : φ (3) ≡ Qua.φ
 φ₃ = refl
 ```
 
@@ -288,7 +289,7 @@ $$
 **(证明)** 归纳 $n$ 即得. ∎
 
 ```agda
-Φ-ż-α : Φ F n 0̇,_ ≡ F
+Φ-ż-α : Φ F (n) 0̇,_ ≡ F
 Φ-ż-α {n = zero} = refl
 Φ-ż-α {n = suc n} = Φ-ż-α {n = n}
 {-# REWRITE Φ-ż-α #-}
@@ -311,20 +312,20 @@ $$
 其中第五条要求前提 $F\kern{0.17em}(\lim g) = \lim λm,F\kern{0.17em}(g\kern{0.17em}m)$.
 
 ```agda
-Φ-s-ż-z : Φ F (suc n) (suc α) 0̇, 0 ≡ iterω (λ β → Φ F _ α β 0̇) 0
+Φ-s-ż-z : Φ F ((suc n)) (suc α) 0̇, 0 ≡ iterω (λ β → Φ F (_) α β 0̇) 0
 Φ-s-ż-z = refl
 
-Φ-s-ż-s : Φ F (suc n) (suc α) 0̇, suc β ≡ iterω (λ β → Φ F _ α β 0̇) (suc (Φ F _ (suc α) 0̇, β))
+Φ-s-ż-s : Φ F ((suc n)) (suc α) 0̇, suc β ≡ iterω (λ β → Φ F (_) α β 0̇) (suc (Φ F (_) (suc α) 0̇, β))
 Φ-s-ż-s = refl
 
-Φ-l-ż-z : Φ F (suc n) (lim f) 0̇, 0 ≡ lim λ m → Φ F (suc n) (f m) 0̇
+Φ-l-ż-z : Φ F ((suc n)) (lim f) 0̇, 0 ≡ lim λ m → Φ F ((suc n)) (f m) 0̇
 Φ-l-ż-z = refl
 
-Φ-l-ż-s : Φ F (suc n) (lim f) 0̇, suc β ≡ lim λ m → Φ F _ (f m) (suc (Φ F _ (lim f) 0̇, β)) 0̇
+Φ-l-ż-s : Φ F ((suc n)) (lim f) 0̇, suc β ≡ lim λ m → Φ F (_) (f m) (suc (Φ F (_) (lim f) 0̇, β)) 0̇
 Φ-l-ż-s = refl
 
 Φ-α-ż-l : F (lim g) ≡ lim (λ m → F (g m))
-  → Φ F (suc n) α 0̇, lim g ≡ lim λ m → Φ F (suc n) α 0̇, g m
+  → Φ F ((suc n)) α 0̇, lim g ≡ lim λ m → Φ F ((suc n)) α 0̇, g m
 Φ-α-ż-l {α = zero} = id
 Φ-α-ż-l {α = suc _} _ = refl
 Φ-α-ż-l {α = lim _} _ = refl
@@ -340,7 +341,7 @@ $$
 **(证明)** 讨论 $α$, 由定理 $(\mathcal{S,Z,α})$ 即得. ∎
 
 ```agda
-φ-α-s-ż-β : φ (2+ n) α (suc β) 0̇,_ ≡ fixpt λ γ → φ (2+ n) α β γ 0̇
+φ-α-s-ż-β : φ ((2+ n)) α (suc β) 0̇,_ ≡ fixpt λ γ → φ ((2+ n)) α β γ 0̇
 φ-α-s-ż-β {n = zero} {α = zero} = refl
 φ-α-s-ż-β {n = zero} {α = suc _} = refl
 φ-α-s-ż-β {n = zero} {α = lim _} = refl
@@ -359,7 +360,7 @@ $$
 **(证明)** 讨论 $α$, 由定理 $(\mathcal{S,Z,α})$ 即得. ∎
 
 ```agda
-φ-α-l-ż-β : φ (2+ n) α (lim f) 0̇,_ ≡ jump λ δ → lim λ m → φ (2+ n) α (f m) δ 0̇
+φ-α-l-ż-β : φ ((2+ n)) α (lim f) 0̇,_ ≡ jump λ δ → lim λ m → φ ((2+ n)) α (f m) δ 0̇
 φ-α-l-ż-β {n = zero} {α = zero} = refl
 φ-α-l-ż-β {n = zero} {α = suc _} = refl
 φ-α-l-ż-β {n = zero} {α = lim _} = refl
@@ -377,7 +378,7 @@ $$
 **(证明)** 由定理 $(\mathcal{S,α,Z,l})$ 即得. ∎
 
 ```agda
-φ-α-ż-l : φ (2+ n) α 0̇, lim g ≡ lim λ m → φ (2+ n) α 0̇, g m
+φ-α-ż-l : φ ((2+ n)) α 0̇, lim g ≡ lim λ m → φ ((2+ n)) α 0̇, g m
 φ-α-ż-l = Φ-α-ż-l refl
 ```
 
@@ -392,7 +393,7 @@ $$
 **(证明)** 归纳 $n$ 即得. ∎
 
 ```agda
-Φ-ż-α-β : Φ F (suc n) 0̇,_,_ ≡ Φ F 1
+Φ-ż-α-β : Φ F ((suc n)) 0̇,_,_ ≡ Φ F (1)
 Φ-ż-α-β {n = zero} = refl
 Φ-ż-α-β {n = suc n} = Φ-ż-α-β {n = n}
 {-# REWRITE Φ-ż-α-β #-}
@@ -413,20 +414,20 @@ $$
 其中第五条要求前提 $F\kern{0.17em}(\lim g) = \lim λm,F\kern{0.17em}(g\kern{0.17em}m)$.
 
 ```agda
-Φ-ż-s-0 : Φ F (suc n) 0̇, suc α , 0 ≡ iterω (Φ F (suc n) 0̇, α ,_) 0
+Φ-ż-s-0 : Φ F ((suc n)) 0̇, suc α , 0 ≡ iterω (Φ F ((suc n)) 0̇, α ,_) 0
 Φ-ż-s-0 = refl
 
-Φ-ż-s-s : Φ F (suc n) 0̇, suc α , suc β ≡ iterω (Φ F (suc n) 0̇, α ,_) (suc (Φ F (suc n) 0̇, (suc α) , β))
+Φ-ż-s-s : Φ F ((suc n)) 0̇, suc α , suc β ≡ iterω (Φ F ((suc n)) 0̇, α ,_) (suc (Φ F ((suc n)) 0̇, (suc α) , β))
 Φ-ż-s-s = refl
 
-Φ-ż-l-0 : Φ F (suc n) 0̇, lim f , 0 ≡ lim λ m → Φ F (suc n) 0̇, f m , 0
+Φ-ż-l-0 : Φ F ((suc n)) 0̇, lim f , 0 ≡ lim λ m → Φ F ((suc n)) 0̇, f m , 0
 Φ-ż-l-0 = refl
 
-Φ-ż-l-s : Φ F (suc n) 0̇, lim f , suc β ≡ lim λ m → Φ F (suc n) 0̇, f m , suc (Φ F (suc n) 0̇, (lim f) , β)
+Φ-ż-l-s : Φ F ((suc n)) 0̇, lim f , suc β ≡ lim λ m → Φ F ((suc n)) 0̇, f m , suc (Φ F ((suc n)) 0̇, (lim f) , β)
 Φ-ż-l-s = refl
 
 Φ-ż-α-l : F (lim g) ≡ lim (λ m → F (g m))
-  → Φ F (suc n) 0̇, α , lim g ≡ lim λ m → Φ F (suc n) 0̇, α , g m
+  → Φ F ((suc n)) 0̇, α , lim g ≡ lim λ m → Φ F ((suc n)) 0̇, α , g m
 Φ-ż-α-l {α = zero} = id
 Φ-ż-α-l {α = suc _} _ = refl
 Φ-ż-α-l {α = lim _} _ = refl
@@ -445,7 +446,7 @@ $$
 
 ```agda
 SVO : Ord
-SVO = lim λ n → φ n 1 0̇
+SVO = lim λ n → φ (n) 1 0̇
 ```
 
 一个很大的大数:
