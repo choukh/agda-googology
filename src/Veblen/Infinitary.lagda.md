@@ -46,7 +46,7 @@ $$
 
 ```agda
 Ord→^ω Ord→^ω⁺ Ord→^ω⁺⁺ : Set
-Ord→^ω = (n : ℕ) → Ord →ⁿ suc n
+Ord→^ω = ∀ n → Ord →ⁿ suc n
 Ord→^ω⁺ = Ord → Ord→^ω
 Ord→^ω⁺⁺ = Ord → Ord→^ω⁺
 ```
@@ -167,15 +167,20 @@ $$
 ```
 
 ```agda
-  φ-1⋯0-0 : φ 1 _ 0 0 ≡ Fin.SVO
+  SVO : Ord
+  SVO = φ 1 _ 0
+```
+
+```agda
+  φ-1⋯0-0 : φ 1 _ 0 0 ≡ SVO
   φ-1⋯0-0 = refl
 
-  φ-1⋯0-0-0 : φ 1 _ 0 0 0 ≡ Fin.SVO
+  φ-1⋯0-0-0 : φ 1 _ 0 0 0 ≡ SVO
   φ-1⋯0-0-0 = refl
 ```
 
 ```agda
-  φ-1⋯ż-z : φ 1 (n) 0̇, 0 ≡ Fin.SVO
+  φ-1⋯ż-z : φ 1 (n) 0̇, 0 ≡ SVO
   φ-1⋯ż-z = refl
 ```
 
@@ -241,6 +246,25 @@ module OmegaBinaryVeblen where
   Φ-α-z⋯ż-l {α = lim _} _ = refl
 ```
 
+## ω倍数元函数类型
+
+```agda
+Ord→^ω* : ℕ → Set
+Ord→^ω* zero = Ord
+Ord→^ω* (suc n) = ∀ m → Ord→^ω* n →ⁿ suc m
+```
+
+```agda
+_ : Ord→^ω* 0 ≡ Ord
+_ = refl
+
+_ : Ord→^ω* 1 ≡ Ord→^ω
+_ = refl
+
+_ : Ord→^ω* 2 ≡ ∀ n → Ord→^ω* 1 →ⁿ suc n
+_ = refl
+```
+
 ## 2ω元Veblen函数
 
 ```agda
@@ -252,23 +276,23 @@ module DoubleOmegaryVeblen where
 
 ```agda
   Φₙ : Ord→^ω →ⁿ suc n → Ord→^ω →ⁿ 2+ n
-  Φⁿ : Ord→^ω →ⁿ 1 → Ord→^ω →ⁿ suc n
+  Φ : Ord→^ω →ⁿ 1 → Ord→^ω* 2
 ```
 
 ```agda
   Φₙ F = rec F
-    (λ φ-α → Φⁿ $ Eqω.Φ $ Ltω.Φ $ fixpt λ β → (φ-α β 0̇) _ 0)
-    (λ φ[_] → Φⁿ $ Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ m → (φ[ m ] β 0̇) _ 0)
+    (λ φ-α → Φ (Eqω.Φ $ Ltω.Φ $ fixpt λ β → (φ-α β 0̇) _ 0) _)
+    (λ φ[_] → Φ (Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ m → (φ[ m ] β 0̇) _ 0) _)
 ```
 
 ```agda
-  Φⁿ {n = zero} = id
-  Φⁿ {n = suc n} F = Φₙ (Φⁿ F)
+  Φ F zero = F
+  Φ F (suc n) = Φₙ (Φ F n)
 ```
 
 ```agda
   φ : Ord→^ω →ⁿ suc n
-  φ = Φⁿ Eqω.φ
+  φ = Φ Eqω.φ _
 ```
 
 ```agda
@@ -290,36 +314,49 @@ module DoubleOmegaryVeblen where
 ```agda
   private variable F : Ord→^ω →ⁿ 1
 
-  Φ-ż-α : Φⁿ {n} F 0̇,_ ≡ F
+  Φ-ż-α : Φ F n 0̇,_ ≡ F
   Φ-ż-α {n = zero} = refl
-  Φ-ż-α {n = suc n} = Φ-ż-α {n}
+  Φ-ż-α {F} {n = suc n} = Φ-ż-α {F} {n}
   {-# REWRITE Φ-ż-α #-}
 ```
 
 ```agda
-  Φ-s-ż⋯ż-z : (Φⁿ {suc n} F (suc α) 0̇, 0) _ 0
-    ≡ iterω (λ β → (Φⁿ {suc n} F α β 0̇) _ 0) 0
+  Φ-s-ż⋯ż-z : (Φ F (suc n) (suc α) 0̇, 0) _ 0
+    ≡ iterω (λ β → (Φ F (suc n) α β 0̇) _ 0) 0
   Φ-s-ż⋯ż-z = refl
 
-  Φ-s-ż⋯ż-s : (Φⁿ {suc n} F (suc α) 0̇, 0) (m) 0̇, suc β
-    ≡ iterω (λ β → (Φⁿ {suc n} F α β 0̇) _ 0) (suc ((Φⁿ F (suc α) 0̇, 0) (m) 0̇, β))
+  Φ-s-ż⋯ż-s : (Φ F (suc n) (suc α) 0̇, 0) (m) 0̇, suc β
+    ≡ iterω (λ β → (Φ F (suc n) α β 0̇) _ 0) (suc ((Φ F _ (suc α) 0̇, 0) (m) 0̇, β))
   Φ-s-ż⋯ż-s = refl
 
-  Φ-l-ż⋯ż-z : (Φⁿ {suc n} F (lim f) 0̇, 0) _ 0
-    ≡ lim λ m → (Φⁿ {suc n} F (f m) 0 0̇) _ 0
+  Φ-l-ż⋯ż-z : (Φ F (suc n) (lim f) 0̇, 0) _ 0
+    ≡ lim λ m → (Φ F (suc n) (f m) 0 0̇) _ 0
   Φ-l-ż⋯ż-z = refl
 
-  Φ-l-ż⋯ż-s : (Φⁿ {suc n} F (lim f) 0̇, 0) (m) 0̇, suc β
-    ≡ lim λ m → (Φⁿ {suc n} F (f m) (suc ((Φⁿ {suc n} F (lim f) 0̇, 0) (m) 0̇, β)) 0̇) _ 0
+  Φ-l-ż⋯ż-s : (Φ F (suc n) (lim f) 0̇, 0) (m) 0̇, suc β
+    ≡ lim λ m → (Φ F (suc n) (f m) (suc ((Φ F (suc n) (lim f) 0̇, 0) (m) 0̇, β)) 0̇) _ 0
   Φ-l-ż⋯ż-s = refl
 
   Φ-α-ż⋯ż-l : F 0 (m) 0̇, lim g ≡ lim (λ k → F 0 (m) 0̇, g k)
-    → (Φⁿ {suc n} F α 0̇, 0) (m) 0̇, lim g ≡ lim λ k → (Φⁿ {suc n} F α 0̇, 0) (m) 0̇, g k
+    → (Φ F (suc n) α 0̇, 0) (m) 0̇, lim g ≡ lim λ k → (Φ F (suc n) α 0̇, 0) (m) 0̇, g k
   Φ-α-ż⋯ż-l {α = zero} = id
   Φ-α-ż⋯ż-l {α = suc _} _ = refl
   Φ-α-ż⋯ż-l {α = lim _} _ = refl
 ```
 
 ## (2ω)⁺元Veblen函数
+
+```agda
+module DoubleOmegaUnaryVeblen where
+  module Lt2ω = DoubleOmegaryVeblen
+```
+
+```agda
+```
+  Φ : Ord→^ω → Ord→^ω⁺
+  Φ F = rec F
+    (λ φ-α  → Lt2ω.Φ $ jump⟨ 1 ⟩ λ β → lim λ n → φ-α n β 0̇)
+    (λ φ[_] → Lt2ω.Φ $ jump λ β → lim λ n → φ[ n ] n β 0̇)
+
 
 ## 3ω元Veblen函数
