@@ -224,7 +224,32 @@ $$
 
 $$
 \begin{aligned}
+&(Φ_ω\kern{0.17em}F\kern{0.17em}α^+)_0\kern{0.17em}0 
+&=&
+\lim λn,(Φ_ω\kern{0.17em}F\kern{0.17em}α)_n\kern{0.17em}1\kern{0.17em}\overset{.}{0}
+\\
+&(Φ_ω\kern{0.17em}F\kern{0.17em}α^+)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+
+&=&
+\lim λn,(Φ_ω\kern{0.17em}F\kern{0.17em}α)_n\kern{0.17em}((Φ_ω\kern{0.17em}F\kern{0.17em}α^+)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+\kern{0.17em}\overset{.}{0}
+\\
+&(Φ_ω\kern{0.17em}F\kern{0.17em}(\lim f))_0\kern{0.17em}0 
+&=&
+\lim λn,(Φ_ω\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n))_n\kern{0.17em}\overset{.}{0}
+\\
+&(Φ_ω\kern{0.17em}F\kern{0.17em}(\lim f))_n\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+
+&=&
+\lim λn,(Φ_ω\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n))_n\kern{0.17em}((Φ_ω\kern{0.17em}F\kern{0.17em}(\lim f))_n\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+\kern{0.17em}\overset{.}{0}
+\\
+&(Φ_ω\kern{0.17em}F\kern{0.17em}α)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g)
+&=&
+\lim λm,(Φ_ω\kern{0.17em}F\kern{0.17em}α)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}m)
 \end{aligned}
+$$
+
+其中第五条要求前提
+
+$$
+(Φ_ω\kern{0.17em}F\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g) = \lim λm,(Φ_ω\kern{0.17em}F\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}m)
 $$
 
 ```agda
@@ -257,15 +282,60 @@ module OmegaBinaryVeblen where
   module Eqω = OmegaUnaryVeblen
 ```
 
+$ω^{++}$ 元相当于二元的地位, 参考二元Veblen函数定义即可.
+
+**定义** $ω^{++}$ 元 $Φ_{ω^+} : (\text{Ord}^{→ω})^{→1} → (\text{Ord}^{→ω})^{→2}$ 以及 $φ_{ω^+} : (\text{Ord}^{→ω})^{→2}$
+
+$$
+\begin{aligned}
+Φ_{ω^+}\kern{0.17em}F &:= \text{rec}\kern{0.17em}F \\
+&\quad(λφ_{ω^+,α},Φ_{ω}(Φ_{\lt ω}(\text{fixpt}\kern{0.17em}λβ,(φ_{ω^+,α}\kern{0.17em}\beta)_0\kern{0.17em}0))) \\
+&\quad(λφ_{ω,f\kern{0.17em}n},Φ_{ω}(Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,(φ_{ω,f\kern{0.17em}n}\kern{0.17em}\beta)_0\kern{0.17em}0))) \\
+φ_{ω^+} &:= Φ_{ω^+}\kern{0.17em}φ_{ω}
+\end{aligned}
+$$
+
 ```agda
   Φ : Ord→^ω →ⁿ 1 → Ord→^ω →ⁿ 2
   Φ F = rec F
     (λ φ-α → Eqω.Φ $ Ltω.Φ $ fixpt λ β → φ-α β (0) 0)
-    (λ φ[_] → Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ m → φ[ m ] β (0) 0)
+    (λ φ[_] → Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ n → φ[ n ] β (0) 0)
 
   φ : Ord→^ω →ⁿ 2
   φ = Φ Eqω.φ
 ```
+
+**定理** 计算模式
+
+$$
+\begin{aligned}
+&(Φ_{ω^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0)_0\kern{0.17em}0
+&=&
+(λβ,(Φ_{ω^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β)_0\kern{0.17em}0)^ω\kern{0.17em}0
+\\
+&(Φ_{ω^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+
+&=&
+(λβ,(Φ_{ω^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β)_0\kern{0.17em}0)^ω\kern{0.17em}((Φ_{ω^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+
+\\
+&(Φ_{ω^+}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0)_0\kern{0.17em}0
+&=&
+\lim λm,(Φ_{ω^+}\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}0)_0\kern{0.17em}0
+\\
+&(Φ_{ω^+}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+
+&=&
+\lim λm,(Φ_{ω^+}\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}((Φ_{ω^+}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+)_0\kern{0.17em}0
+\\
+&(Φ_{ω^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g)
+&=&
+\lim λm,(Φ_{ω^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em})_n\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}m)
+\end{aligned}
+$$
+
+其中第五条要求前提
+
+$$
+(Φ_{ω^+}\kern{0.17em}F\kern{0.17em}0\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g) = \lim λm,(Φ_{ω^+}\kern{0.17em}F\kern{0.17em}0\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}m)
+$$
 
 ```agda
   private variable F : Ord→^ω →ⁿ 1
