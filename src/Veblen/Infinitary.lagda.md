@@ -34,21 +34,15 @@ open Fin using (_→ⁿ_; _0̇; _0̇,_)
 
 或者, 我们也可以认为, $ω$ 元Veblen函数其实已经定义完了. 它就是上一篇讲的有限元Veblen函数 $φ_{n}$. 这里违和感的根源在于非形式说法的模糊性. 如果把 $φ_n$ 的 $n$ 看作是任意给定的 (arbitrary), 那么 $φ_{n} : \text{Ord}^{n^+}$ 就是一个真有限元函数. 但如果把 $n$ 看作一个变量, 那么我们认为 $φ_{n} : \Pi_{n:ℕ}\text{Ord}^{n^+}$ 是一个无限元函数. 这种意义上的 $φ_{n}$ 我们特别记作 $φ_{\lt ω}$, 以明确区别.
 
-**定义** $ω$ 元, $ω^+$ 元和 $ω^{++}$ 元序数函数类型
+**定义** $ω$ 元序数函数类型
 
 $$
-\begin{aligned}
-\text{Ord}^{→ω} &:= \Pi_{n:ℕ}\text{Ord}^{n^+} \\
-\text{Ord}^{→ω^+} &:= \text{Ord} → \text{Ord}^{→ω} \\
-\text{Ord}^{→ω^{++}} &:= \text{Ord} → \text{Ord}^{→ω^+}
-\end{aligned}
+\text{Ord}^{→ω} &:= \Pi_{n:ℕ}\text{Ord}^{n^+}
 $$
 
 ```agda
-Ord→^ω Ord→^ω⁺ Ord→^ω⁺⁺ : Set
+Ord→^ω : Set
 Ord→^ω = ∀ n → Ord →ⁿ suc n
-Ord→^ω⁺ = Ord → Ord→^ω
-Ord→^ω⁺⁺ = Ord → Ord→^ω⁺
 ```
 
 **定义** $ω$ 元Veblen函数
@@ -104,7 +98,7 @@ $$
 $$
 
 ```agda
-  Φ : Ord→^ω → Ord→^ω⁺
+  Φ : Ord→^ω → Ord→^ω →ⁿ 1
 ```
 
 其输入将会是 $φ_{\lt ω} : \text{Ord}^{→ω}$.
@@ -216,17 +210,17 @@ module OmegaBinaryVeblen where
 ```
 
 ```agda
-  Φ : Ord→^ω⁺ → Ord→^ω⁺⁺
+  Φ : Ord→^ω →ⁿ 1 → Ord→^ω →ⁿ 2
   Φ F = rec F
     (λ φ-α → Eqω.Φ $ Ltω.Φ $ fixpt λ β → φ-α β (0) 0)
     (λ φ[_] → Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ m → φ[ m ] β (0) 0)
 
-  φ : Ord→^ω⁺⁺
+  φ : Ord→^ω →ⁿ 2
   φ = Φ Eqω.φ
 ```
 
 ```agda
-  private variable F : Ord→^ω⁺
+  private variable F : Ord→^ω →ⁿ 1
 
   Φ-s-z⋯ż-z : Φ F (suc α) 0 (0) 0 ≡ iterω (λ β → Φ F α β (0) 0) 0
   Φ-s-z⋯ż-z = refl
@@ -252,7 +246,7 @@ module OmegaBinaryVeblen where
 ```agda
 Ord→^ω* : ℕ → Set
 Ord→^ω* zero = Ord
-Ord→^ω* (suc n) = ∀ m → Ord→^ω* n →ⁿ suc m
+Ord→^ω* (suc m) = ∀ n → Ord→^ω* m →ⁿ suc n
 ```
 
 ```agda
@@ -345,19 +339,56 @@ module DoubleOmegaryVeblen where
   Φ-α-ż⋯ż-l {α = lim _} _ = refl
 ```
 
+```agda
+  SVO₂ : Ord
+  SVO₂ = lim λ n → (φ (n) 1 0̇) (0) 0
+```
+
 ## (2ω)⁺元Veblen函数
 
 ```agda
 module DoubleOmegaUnaryVeblen where
+  module Ltω = OmegaryVeblen
+  module Eqω = OmegaUnaryVeblen
   module Lt2ω = DoubleOmegaryVeblen
 ```
 
 ```agda
-```
-  Φ : Ord→^ω → Ord→^ω⁺
+  Φ : Ord→^ω* 2 → Ord→^ω* 2 →ⁿ 1
   Φ F = rec F
-    (λ φ-α  → Lt2ω.Φ $ jump⟨ 1 ⟩ λ β → lim λ n → φ-α n β 0̇)
-    (λ φ[_] → Lt2ω.Φ $ jump λ β → lim λ n → φ[ n ] n β 0̇)
+    (λ φ-α  → Lt2ω.Φ $ Eqω.Φ $ Ltω.Φ $ jump⟨ 1 ⟩ λ β → lim λ n → (φ-α n β 0̇) (0) 0)
+    (λ φ[_] → Lt2ω.Φ $ Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ n → (φ[ n ] n β 0̇) (0) 0)
 
+  φ : Ord→^ω* 2 →ⁿ 1
+  φ = Φ Lt2ω.φ
+```
 
-## 3ω元Veblen函数
+```agda
+  φ-0 : φ 0 ≡ Lt2ω.φ
+  φ-0 = refl
+
+  φ-1⋯0⋯0 : φ 1 (0) 0 (0) 0 ≡ Lt2ω.SVO₂
+  φ-1⋯0⋯0 = refl
+```
+
+```agda
+  private variable F : Ord→^ω* 2
+
+  Φ-s⋯ż⋯ż-z : Φ F (suc α) (0) 0 (0) 0 ≡ lim λ n → (Φ F α (n) 1 0̇) (0) 0
+  Φ-s⋯ż⋯ż-z = refl
+
+  Φ-s⋯ż⋯ż-s : Φ F (suc α) (0) 0 (n) 0̇, suc β ≡ lim λ n → (Φ F α (n) (suc (Φ F (suc α) (0) 0 (n) 0̇, β)) 0̇) (0) 0
+  Φ-s⋯ż⋯ż-s = refl
+
+  Φ-l⋯ż⋯ż-z : Φ F (lim f) (0) 0 (0) 0 ≡ lim λ n → (Φ F (f n) (n) 0 0̇) (0) 0
+  Φ-l⋯ż⋯ż-z = refl
+
+  Φ-l⋯ż⋯ż-s : Φ F (lim f) (0) 0 (n) 0̇, suc β ≡ lim λ n → (Φ F (f n) (n) (suc (Φ F (lim f) (0) 0 (n) 0̇, β)) 0̇) (0) 0
+  Φ-l⋯ż⋯ż-s = refl
+
+  Φ-α⋯ż⋯ż-l : (Φ F 0 (0) 0 (n) 0̇, lim g) ≡ lim (λ m → (Φ F 0 (0) 0 (n) 0̇, g m))
+    → Φ F α (0) 0 (n) 0̇, lim g ≡ lim λ m → (Φ F α (0) 0 (n) 0̇, g m)
+  Φ-α⋯ż⋯ż-l {α = zero} = id
+  Φ-α⋯ż⋯ż-l {α = suc α} _ = refl
+  Φ-α⋯ż⋯ż-l {α = lim x} _ = refl
+```
