@@ -28,7 +28,7 @@ module Qua = QuaternaryVeblen
 
 ## 有限元函数类型
 
-首先我们要把 $φ$ 的类型写出来, 它是一个依赖类型 $\Pi_{n:ℕ}\text{Ord}^{→n}$, 其中 $\text{Ord}^{→n}$ 表示 $\text{Ord}$ 上的 $n$ 元函数类型 $\overbrace{\text{Ord}→...→\text{Ord}}^n →\text{Ord}$. 当然我们也可以采用 $\text{Ord}^n →\text{Ord}$, 即 ($\overbrace{\text{Ord}\times...\times\text{Ord}}^n)→\text{Ord}$. 我们选择前者是因为它有方便的[柯里化 (Currying)](https://en.wikipedia.org/wiki/Currying) 性质, 处理起来更简单.
+首先我们要把 $φ$ 的类型写出来, 它是一个依赖类型 $\prod_{n:ℕ}\text{Ord}^{→n}$, 其中 $\text{Ord}^{→n}$ 表示 $\text{Ord}$ 上的 $n$ 元函数类型 $\overbrace{\text{Ord}→...→\text{Ord}}^n →\text{Ord}$. 当然我们也可以采用 $\text{Ord}^n →\text{Ord}$, 即 ($\overbrace{\text{Ord}\times...\times\text{Ord}}^n)→\text{Ord}$. 我们选择前者是因为它有方便的[柯里化 (Currying)](https://en.wikipedia.org/wiki/Currying) 性质, 处理起来更简单.
 
 **定义** 陪域为 $A$ 的有限元序数函数 $\overbrace{\text{Ord}→...→\text{Ord}}^n →A$, 记作 $A^{→n}$, 递归定义为
 
