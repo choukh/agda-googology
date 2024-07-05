@@ -170,7 +170,7 @@ $$
 \end{aligned}
 $$
 
-其中 $φ_ω\kern{0.17em}1$ 是一个 $ω$ 元, 即任意 $n^+$ 元函数 $\prod_{n:ℕ}\text{Ord}^{n^+}$, 于是 $(φ_ω\kern{0.17em}1)_0$ 是一个一元函数, 其唯一参数为零.
+其中 $φ_ω\kern{0.17em}1$ 是一个 $ω$ 元, 即任意 $n^+$ 元函数 $\prod_{n:ℕ}\text{Ord}^{n^+}$, 于是 $(φ_ω\kern{0.17em}1)_0$ 是一个一元函数, 其唯一参数我们填零.
 
 ```agda
   φ-0 : φ 0 ≡ Ltω.φ
@@ -284,7 +284,7 @@ module OmegaBinaryVeblen where
 
 $ω^{++}$ 元相当于二元的地位, 参考二元Veblen函数定义即可.
 
-**定义** $ω^{++}$ 元 $Φ_{ω^+} : (\text{Ord}^{→ω})^{→1} → (\text{Ord}^{→ω})^{→2}$ 以及 $φ_{ω^+} : (\text{Ord}^{→ω})^{→2}$
+**定义** $Φ_{ω^+} : (\text{Ord}^{→ω})^{→1} → (\text{Ord}^{→ω})^{→2}$ 以及 $φ_{ω^+} : (\text{Ord}^{→ω})^{→2}$
 
 $$
 \begin{aligned}
@@ -429,7 +429,7 @@ _0̇⋯ {m = zero} F = F 0̇
 _0̇⋯ {m = suc _} F = (F 0̇) (0) 0 0̇⋯
 ```
 
-## 2ω元Veblen函数
+## ω2 元Veblen函数
 
 ```agda
 module DoubleOmegaryVeblen where
@@ -438,27 +438,60 @@ module DoubleOmegaryVeblen where
   module Bin = OmegaBinaryVeblen
 ```
 
+$ω\cdot 2$ 元相当于二元的地位, 参考二元Veblen函数定义即可.
+
+**定义** 互递归定义
+
+$$
+\begin{aligned}
+Φ_{\lt ω2,n} &: (\text{Ord}^{→ω})^{→n^+} → (\text{Ord}^{→ω})^{→n^{++}} \\
+Φ_{\lt ω2} &: (\text{Ord}^{→ω})^{→1} → \text{Ord}^{→ω\cdot 2}
+\end{aligned}
+$$
+
+为
+
+$$
+\begin{aligned}
+Φ_{\lt ω2,n}\kern{0.17em}F &:= \text{rec}\kern{0.17em}F \\
+&\quad(λφ_{\lt ω2,n^+,α},Φ_{\lt ω2}^n(Φ_{ω}(Φ_{\lt ω}(\text{fixpt}\kern{0.17em}λβ,φ_{\lt ω2,n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0}...))))\\
+&\quad(λφ_{\lt ω2,n^+,f\kern{0.17em}m},Φ_{\lt ω2}^n(Φ_{ω}(Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λm,φ_{\lt ω2,n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0}...)))) \\
+Φ_{\lt ω2}^0\kern{0.17em}F &:= F \\
+Φ_{\lt ω2}^{n^+}\kern{0.17em}F &:= Φ_{\lt ω2,n}(Φ_{\lt ω2}^n\kern{0.17em}F)
+\end{aligned}
+$$
+
 ```agda
   Φₙ : Ord→^ω →ⁿ suc n → Ord→^ω →ⁿ 2+ n
   Φ : Ord→^ω →ⁿ 1 → Ord→^ω* 2
-```
 
-```agda
   Φₙ {n} F = rec F
     (λ φ-α → Φ (Eqω.Φ $ Ltω.Φ $ fixpt λ β → φ-α β 0̇⋯) (n))
     (λ φ[_] → Φ (Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ m → φ[ m ] β 0̇⋯) (n))
-```
 
-```agda
   Φ F (zero) = F
   Φ F ((suc n)) = Φₙ (Φ F (n))
 ```
+
+**定义** $φ_{\lt ω2} : \prod_{n:ℕ}(\text{Ord}^{→ω})^{→n^+}$
+
+$$
+φ_{\lt ω2} := Φ_{\lt ω2}\kern{0.17em}φ_{ω}
+$$
 
 ```agda
   φ : ∀ n → Ord→^ω →ⁿ suc n
   φ = Φ Eqω.φ
 ```
 
+**事实** $ω + n^{++}$ 元Veblen函数 $φ_{ω,n^+}$ 等于对 $ω + n^+$ 元Veblen函数 $φ_{ω,n}$ 做一次 $Φ_{\lt ω2,n}$, 并且首位输入零的话就等于 $φ_{ω,n}$.
+
+$$
+\begin{aligned}
+φ_{ω,n^+} &= Φ_{\lt ω2,n}\kern{0.17em}φ_{ω,n} \\
+φ_{ω,n^+} 0 &= φ_{ω,n}
+\end{aligned}
+$$
 ```agda
   Φ-φ : φ ((suc n)) ≡ Φₙ (φ (n))
   Φ-φ = refl
@@ -466,6 +499,15 @@ module DoubleOmegaryVeblen where
   φ-0 : φ ((suc n)) 0 ≡ φ (n)
   φ-0 = refl
 ```
+
+**例**
+
+$$
+\begin{aligned}
+φ_{\lt ω2,0} &= φ_{ω} \\
+φ_{\lt ω2,1} &= φ_{ω^+} \\
+\end{aligned}
+$$
 
 ```agda
   φ₀ : φ (0) ≡ Eqω.φ
@@ -475,6 +517,12 @@ module DoubleOmegaryVeblen where
   φ₁ = refl
 ```
 
+**引理** 对任意 $F : (\text{Ord}^{→ω})^{→1}$, 有
+
+$$
+(Φ_{\lt ω2}\kern{0.17em}F)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} = F
+$$
+
 ```agda
   private variable F : Ord→^ω →ⁿ 1
 
@@ -483,6 +531,40 @@ module DoubleOmegaryVeblen where
   Φ-ż-α {n = suc n} = Φ-ż-α {n = n}
   {-# REWRITE Φ-ż-α #-}
 ```
+
+将该引理声明为新的重写规则, 可以立即证明:
+
+**定理** 计算模式
+
+$$
+\begin{aligned}
+&(Φ_{\lt ω2}^{n^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}0)\kern{0.17em}\overset{.}{0}...
+&=&
+(λβ,Φ_{\lt ω2}^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0}...)^ω\kern{0.17em}0
+\\
+&(Φ_{\lt ω2}^{n^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}0)_m\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+
+&=&
+(λβ,Φ_{\lt ω2}^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0}...)^ω\kern{0.17em}((Φ_{\lt ω2}^{n^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}0)_m\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+
+\\
+&(Φ_{\lt ω2}^{n^+}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}0)\kern{0.17em}\overset{.}{0}...
+&=&
+\lim λm,Φ_{\lt ω2}^{n^+}\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}0\kern{0.17em}\overset{.}{0}...
+\\
+&(Φ_{\lt ω2}^{n^+}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}0)_m\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+
+&=&
+\lim λm,(Φ_{\lt ω2}^{n^+}\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}((Φ_{\lt ω2}^{n^+}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}0)_m\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+)\kern{0.17em}\overset{.}{0}...
+\\
+&(Φ_{\lt ω2}^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}0)_m\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g)
+&=&
+\lim λk,(Φ_{\lt ω2}^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}0)_m\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}k)
+\end{aligned}
+$$
+
+其中第五条要求前提
+
+$$
+(F\kern{0.17em}0)_m\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g) = \lim λk,(F\kern{0.17em}0)_m\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}k)
+$$
 
 ```agda
   Φ-s-ż⋯ż-z : (Φ F ((suc n)) (suc α) 0̇, 0) 0⋯
@@ -508,35 +590,41 @@ module DoubleOmegaryVeblen where
   Φ-α-ż⋯ż-l {α = lim _} _ = refl
 ```
 
+**定义** 第二代 $\text{SVO}$
+
+$$
+\text{SVO} := \lim λn,φ_{\lt ω2,n}\kern{0.17em}1\kern{0.17em}\overset{.}{0}...
+$$
+
 ```agda
   SVO₂ : Ord
   SVO₂ = lim λ n → φ (n) 1 0̇⋯
 ```
 
-## (2ω)⁺元Veblen函数
+## (ω2)⁺元Veblen函数
 
 ```agda
 module DoubleOmegaUnaryVeblen where
   module Ltω = OmegaryVeblen
   module Eqω = OmegaUnaryVeblen
-  module Lt2ω = DoubleOmegaryVeblen
+  module Ltω2 = DoubleOmegaryVeblen
 ```
 
 ```agda
   Φ : Ord→^ω* 2 → Ord→^ω* 2 →ⁿ 1
   Φ F = rec F
-    (λ φ-α  → Lt2ω.Φ $ Eqω.Φ $ Ltω.Φ $ jump⟨ 1 ⟩ λ β → lim λ n → φ-α n β 0̇⋯)
-    (λ φ[_] → Lt2ω.Φ $ Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ n → φ[ n ] n β 0̇⋯)
+    (λ φ-α  → Ltω2.Φ $ Eqω.Φ $ Ltω.Φ $ jump⟨ 1 ⟩ λ β → lim λ n → φ-α n β 0̇⋯)
+    (λ φ[_] → Ltω2.Φ $ Eqω.Φ $ Ltω.Φ $ jump λ β → lim λ n → φ[ n ] n β 0̇⋯)
 
   φ : Ord→^ω* 2 →ⁿ 1
-  φ = Φ Lt2ω.φ
+  φ = Φ Ltω2.φ
 ```
 
 ```agda
-  φ-0 : φ 0 ≡ Lt2ω.φ
+  φ-0 : φ 0 ≡ Ltω2.φ
   φ-0 = refl
 
-  φ-1⋯0⋯0 : φ 1 0⋯ ≡ Lt2ω.SVO₂
+  φ-1⋯0⋯0 : φ 1 0⋯ ≡ Ltω2.SVO₂
   φ-1⋯0⋯0 = refl
 ```
 
