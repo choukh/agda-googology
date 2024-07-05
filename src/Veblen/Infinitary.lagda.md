@@ -1,6 +1,7 @@
 ---
 title: 形式化大数数学 (1.4 - 无限元Veblen函数)
 zhihu-tags: Agda, 序数, 大数数学
+zhihu-url: https://zhuanlan.zhihu.com/p/707292191
 ---
 
 # 形式化大数数学 (1.4 - 无限元Veblen函数)
@@ -282,7 +283,7 @@ module OmegaBinaryVeblen where
   module Eqω = OmegaUnaryVeblen
 ```
 
-$ω^{++}$ 元相当于二元的地位, 参考二元Veblen函数定义即可.
+$ω^{++}$ 元相当于二元的地位, 参考二元Veblen函数的定义即可.
 
 **定义** $Φ_{ω^+} : (\text{Ord}^{→ω})^{→1} → (\text{Ord}^{→ω})^{→2}$ 以及 $φ_{ω^+} : (\text{Ord}^{→ω})^{→2}$
 
@@ -438,7 +439,7 @@ module DoubleOmegaryVeblen where
   module Bin = OmegaBinaryVeblen
 ```
 
-$ω\cdot 2$ 元相当于二元的地位, 参考二元Veblen函数定义即可.
+$ω\cdot 2$ 元相当于二元的地位, 参考二元Veblen函数的定义即可.
 
 **定义** 互递归定义
 
@@ -610,6 +611,19 @@ module DoubleOmegaUnaryVeblen where
   module Ltω2 = DoubleOmegaryVeblen
 ```
 
+$(ω\cdot 2)^+$ 元相当于 $ω^+$ 元的地位, 参考 $ω^+$ 元Veblen函数的定义即可.
+
+**定义** $Φ_{ω2} : (\text{Ord}^{→ω\cdot 2})^{→2} → (\text{Ord}^{→ω\cdot 2})^{→1}$ 以及 $φ_{ω2} : (\text{Ord}^{→ω\cdot 2})^{→1}$
+
+$$
+\begin{aligned}
+Φ_{ω2}\kern{0.17em}F &:= \text{rec}\kern{0.17em}F \\
+&\quad(λφ_{ω2,α},Φ_{\lt ω2}(Φ_{ω}(Φ_{\lt ω}(\text{jump}_1\kern{0.17em}λβ,\lim λn,φ_{ω2,α,n}\kern{0.17em}β\kern{0.17em}\overset{.}{0}...)))) \\
+&\quad(λφ_{ω2,f\kern{0.17em}n},Φ_{\lt ω2}(Φ_{ω}(Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λn,φ_{ω2,f\kern{0.17em}n,n}\kern{0.17em}β\kern{0.17em}\overset{.}{0}...)))) \\
+φ_{ω2} &:= Φ_{ω2}\kern{0.17em}φ_{\lt ω2}
+\end{aligned}
+$$
+
 ```agda
   Φ : Ord→^ω* 2 → Ord→^ω* 2 →ⁿ 1
   Φ F = rec F
@@ -620,6 +634,15 @@ module DoubleOmegaUnaryVeblen where
   φ = Φ Ltω2.φ
 ```
 
+**事实** 第一个参数从无效到刚开始生效, 有
+
+$$
+\begin{aligned}
+φ_{ω2}\kern{0.17em}0 &= φ_{\lt ω2} \\
+φ_{ω2}\kern{0.17em}1\kern{0.17em}\overset{.}{0}... &= \text{SVO}_2
+\end{aligned}
+$$
+
 ```agda
   φ-0 : φ 0 ≡ Ltω2.φ
   φ-0 = refl
@@ -627,6 +650,38 @@ module DoubleOmegaUnaryVeblen where
   φ-1⋯0⋯0 : φ 1 0⋯ ≡ Ltω2.SVO₂
   φ-1⋯0⋯0 = refl
 ```
+
+**定理** 计算模式
+
+$$
+\begin{aligned}
+&Φ_{ω2}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}...
+&=&
+\lim λn,(Φ_{ω2}\kern{0.17em}F\kern{0.17em}α\kern{0.17em})_n\kern{0.17em}1\kern{0.17em}\overset{.}{0}...
+\\
+&((Φ_{ω2}\kern{0.17em}F\kern{0.17em}α^+)_0\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+
+&=&
+\lim λn,(Φ_{ω2}\kern{0.17em}F\kern{0.17em}α\kern{0.17em})_n\kern{0.17em}(((Φ_{ω2}\kern{0.17em}F\kern{0.17em}α^+)_0\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+
+\\
+&Φ_{ω2}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}...
+&=&
+\lim λn,(Φ_{ω2}\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n))_n\kern{0.17em}0\kern{0.17em}\overset{.}{0}...
+\\
+&((Φ_{ω2}\kern{0.17em}F\kern{0.17em}(\lim f))_0\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+
+&=&
+\lim λn,(Φ_{ω2}\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n))_n\kern{0.17em}(((Φ_{ω2}\kern{0.17em}F\kern{0.17em}(\lim f))_0\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+\kern{0.17em}\overset{.}{0}...
+\\
+&((Φ_{ω2}\kern{0.17em}F\kern{0.17em}α)_0\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g)
+&=&
+\lim λm,((Φ_{ω2}\kern{0.17em}F\kern{0.17em}α)_0\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}m)
+\end{aligned}
+$$
+
+其中第五条要求前提
+
+$$
+((F\kern{0.17em}0)_0\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g) = \lim λm,((F\kern{0.17em}0)_0\kern{0.17em}0)_n\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}m)
+$$
 
 ```agda
   private variable F : Ord→^ω* 2
@@ -649,3 +704,22 @@ module DoubleOmegaUnaryVeblen where
   Φ-α⋯ż⋯ż-l {α = suc α} _ = refl
   Φ-α⋯ż⋯ż-l {α = lim x} _ = refl
 ```
+
+## 总结
+
+现在我们可以总结后继元与极限元的规律了. 设 $μ$ 为任意极限序数, $ν$ 是下一个极限序数.
+
+- 极限阶段: $μ^+$ 元由 $Φ_{μ}$ 给出, 它是我们一直说的「梦的开始」, 其定义的特征是 $\text{jump}_1$ (一元除外)
+  - 一元时是 $λα,ω^α$
+  - $ω^+$ 元由 $Φ_{ω}$ 给出
+  - $(ω2)^+$ 元由 $Φ_{ω2}$ 给出
+  - ...
+- 后继阶段: $μ^{++}$ 元到 $\lt ν$ 由 $Φ_{\lt ν}$ 给出, 其定义的特征是互递归
+  - $ω$ 元由 $Φ_{\lt ω}$ 给出
+  - $ω2$ 元由 $Φ_{\lt ω2}$ 给出
+  - ...
+- 极限阶段: $ν^{+}$ 元由 $Φ_{ν}$ 给出
+- ...
+
+下一篇将正式推广到任意序数元.
+
