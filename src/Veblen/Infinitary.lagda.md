@@ -361,11 +361,32 @@ $$
 
 ## ω倍数元函数类型
 
+我们继续进发. 仿照 $ω$ 元函数类型的定义, 我们可以定义 $ω$ 倍数元函数类型.
+
+**定义** $ω\cdot n$ 元函数类型 $\text{Ord}^{→ω\cdot n}$
+
+$$
+\begin{aligned}
+\text{Ord}^{→ω\cdot 0} &:= \text{Ord} \\
+\text{Ord}^{→ω\cdot m^+} &:= \prod_{n:ℕ}(\text{Ord}^{→ω\cdot m})^{→n^+}
+\end{aligned}
+$$
+
 ```agda
 Ord→^ω* : ℕ → Set
 Ord→^ω* zero = Ord
 Ord→^ω* (suc m) = ∀ n → Ord→^ω* m →ⁿ suc n
 ```
+
+**例**
+
+$$
+\begin{aligned}
+\text{Ord}^{→ω\cdot 0} &= \text{Ord} \\
+\text{Ord}^{→ω\cdot 1} &= \text{Ord}^{→ω} \\
+\text{Ord}^{→ω\cdot 2} &= \prod_{n:ℕ}(\text{Ord}^{→ω\cdot 1})^{→n^+}
+\end{aligned}
+$$
 
 ```agda
 _ : Ord→^ω* 0 ≡ Ord
@@ -378,11 +399,29 @@ _ : Ord→^ω* 2 ≡ ∀ n → Ord→^ω* 1 →ⁿ suc n
 _ = refl
 ```
 
+**定义** 跨极限填零 $(λF,F\kern{0.17em}0...) : \text{Ord}^{→ω\cdot m}→\text{Ord}$
+
+$$
+\begin{aligned}
+(F:\text{Ord}^{→ω\cdot 0})\kern{0.17em}0... &:= F \\
+(F:\text{Ord}^{→ω\cdot m^+})\kern{0.17em}0... &:= F_0\kern{0.17em}0\kern{0.17em}0...
+\end{aligned}
+$$
+
 ```agda
 _0⋯ : Ord→^ω* n → Ord
 _0⋯ {n = zero} = id
 _0⋯ {n = suc _} F = F (0) 0 0⋯
 ```
+
+**定义** 极限内填零接跨极限填零 $(λF,F\kern{0.17em}\overset{.}{0}...) : (\text{Ord}^{→ω\cdot m})^{→n}→\text{Ord}$
+
+$$
+\begin{aligned}
+(F:\text{Ord}^{→ω\cdot 0})\kern{0.17em}\overset{.}{0}... &:= F \\
+(F:\text{Ord}^{→ω\cdot m^+})\kern{0.17em}\overset{.}{0}... &:= (F\kern{0.17em}\overset{.}{0})_0\kern{0.17em}0\kern{0.17em}\overset{.}{0}...
+\end{aligned}
+$$
 
 ```agda
 _0̇⋯ : Ord→^ω* m →ⁿ n → Ord
