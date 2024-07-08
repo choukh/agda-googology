@@ -1,14 +1,14 @@
 ---
-title: 形式化大数数学 (1.1 - 序数, FGH, 不动点)
+title: 形式化大数数学 (1.1 - 序数, 增长层级, 不动点)
 zhihu-tags: Agda, 序数, 大数数学
 zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 ---
 
-# 形式化大数数学 (1.1 - 序数, FGH, 不动点)
+# 形式化大数数学 (1.1 - 序数, 增长层级, 不动点)
 
 > 交流Q群: 893531731  
-> 本文源码: [Basic.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Veblen/Basic.lagda.md)  
-> 高亮渲染: [Basic.html](https://choukh.github.io/agda-googology/Veblen.Basic.html)  
+> 本文源码: [Base.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Base.lagda.md)  
+> 高亮渲染: [Base.html](https://choukh.github.io/agda-googology/Base.html)  
 
 ## 前言
 
@@ -45,7 +45,7 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 
 ```agda
 {-# OPTIONS --safe #-}
-module Veblen.Basic where
+module Base where
 
 open import Data.Nat public using (ℕ; zero; suc; 2+)
 open import Data.Unit public using (⊤; tt)
