@@ -1,10 +1,10 @@
 ---
-title: 形式化大数数学 (1.3 - 有限元Veblen函数)
+title: 形式化大数数学 (1.2 - 有限元Veblen函数)
 zhihu-tags: Agda, 序数, 大数数学
 zhihu-url: https://zhuanlan.zhihu.com/p/705994456
 ---
 
-# 形式化大数数学 (1.3 - 有限元Veblen函数)
+# 形式化大数数学 (1.2 - 有限元Veblen函数)
 
 > 交流Q群: 893531731  
 > 本文源码: [Finitary.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Veblen/Finitary.lagda.md)  
