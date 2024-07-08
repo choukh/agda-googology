@@ -225,19 +225,19 @@ $$
 \end{pmatrix}
 =
 \begin{pmatrix}
-...&λ\\
-...&α^+
+...&β&λ\\
+...&α^+&α
 \end{pmatrix}^ω\kern{0.17em}0
 =
 \begin{pmatrix}
-...&\begin{pmatrix}
-...&_⋰\begin{pmatrix}
-...&0\\
-...&α^+
+...&β&\begin{pmatrix}
+...&β&_⋰\begin{pmatrix}
+...&β&0\\
+...&α^+&α
 \end{pmatrix}\\
-...&α^+
+...&α^+&α
 \end{pmatrix}\\
-...&α^+
+...&α^+&α
 \end{pmatrix}
 $$
 
