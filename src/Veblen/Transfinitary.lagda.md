@@ -10,7 +10,7 @@ zhihu-url: https://zhuanlan.zhihu.com/p/707713300
 > 本文源码: [Transfinitary.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Veblen/Transfinitary.lagda.md)  
 > 高亮渲染: [Transfinitary.html](https://choukh.github.io/agda-googology/Veblen.Transfinitary.html)  
 
-本篇我们来定义超限元Veblen函数, 也叫序元Veblen函数. 它在形式上只依赖我们的第一篇: [形式化大数数学 (1.1 - 序数, FGH, 不动点)](https://zhuanlan.zhihu.com/p/705306447). 在认知上是前几篇的自然推广, 而没有什么非常新的东西. 所以我们会讲得很简洁, 如有疑问请参考前几篇.
+本篇我们来定义超限元Veblen函数, 也叫序元Veblen函数. 它在形式上只依赖我们的第一篇: [形式化大数数学 (1.0 - 序数, 增长层级, 不动点)](https://zhuanlan.zhihu.com/p/705306447). 在认知上是前几篇的自然推广, 而没有什么非常新的东西. 所以我们会讲得很简洁, 如有疑问请参考前几篇.
 
 Agda 编程上, 我们开启了一些高级特性 (有损合一化, 自定义重写), 它们只是为了让代码更简洁 (比非形式写法还简洁), 而不影响目标函数的性质以及证明的可靠性.
 
