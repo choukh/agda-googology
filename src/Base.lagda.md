@@ -1,10 +1,10 @@
 ---
-title: 形式化大数数学 (1.1 - 序数, 增长层级, 不动点)
+title: 形式化大数数学 (1.0 - 序数, 增长层级, 不动点)
 zhihu-tags: Agda, 序数, 大数数学
 zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 ---
 
-# 形式化大数数学 (1.1 - 序数, 增长层级, 不动点)
+# 形式化大数数学 (1.0 - 序数, 增长层级, 不动点)
 
 > 交流Q群: 893531731  
 > 本文源码: [Base.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Base.lagda.md)  
