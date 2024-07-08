@@ -93,7 +93,7 @@ data Ord : Set where
   - [Agda大序数](https://zhuanlan.zhihu.com/p/572691308)一文中证明了其中构造的上至 $\Gamma_0$ 的所有树序数的基本列都是严格递增的.
 - 树序数是高度外延的 (extensional), 即一个真正的递归序数可能对应树上大量的节点.
   - 也就是说我们可以用大量不同的基本列构造出相同的序数.
-    - 但同一性证明依赖于函数外延性 (function extensionality), 或某种商 (quotient) 机制, 如 setoid 或 cubical.
+    - 但同一性证明依赖于函数外延性 (functional extensionality), 或某种商 (quotient) 机制, 如 setoid 或 cubical.
   - 但这并不影响大数的计算, 因为只要给出基本列就能算, 况且 FGH 大数的具体数值确实可能是依赖于特定基本列的——同一序数的不同定义方式会使基本列在起始处稍有不同.
 
 **约定** 我们用 $α,β,γ,δ$ 表示序数, 用 $m,n$ 表示自然数.
