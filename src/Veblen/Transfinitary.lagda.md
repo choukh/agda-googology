@@ -13,8 +13,8 @@ zhihu-tags: Agda, 序数, 大数数学
 {-# OPTIONS --lossy-unification --rewriting --local-confluence-check #-}
 module Veblen.Transfinitary where
 open import Veblen.Basic public
-open import Agda.Builtin.Equality public
-open import Agda.Builtin.Equality.Rewrite public
+import Veblen.Finitary as Fin
+import Veblen.Infinitary as Inf
 ```
 
 ## 超限元函数类型
@@ -72,6 +72,17 @@ _0̇,_ {α = lim _} F = F 0 {0} 0̇,_
 ```
 
 ```agda
+φ₀ : φ {0} ≡ Fin.φ 0
+φ₀ = refl
+
+φ₁ : φ {1} ≡ Fin.φ 1
+φ₁ = refl
+
+φ₂ : φ {2} ≡ Fin.φ 2
+φ₂ = refl
+```
+
+```agda
 SVO : Ord
 SVO = φ {ω} 1 {0} 0
 ```
@@ -90,6 +101,48 @@ LVO = fixpt (λ α → φ {α} 1 0̇) 0
 ```
 
 ```agda
-Φ-s-ż-z : (Φ F {suc α} (suc β) 0̇, 0) ≡ iterω (λ γ → Φ F {suc α} β γ 0̇) 0
-Φ-s-ż-z = refl
+Φₛ-s-ż-z : (Φ F {suc α} (suc β) 0̇, 0) ≡ iterω (λ γ → Φ F {suc α} β γ 0̇) 0
+Φₛ-s-ż-z = refl
+
+Φₛ-s-ż-s : (Φ F {suc α} (suc β) 0̇, suc γ) ≡ iterω (λ γ → Φ F {suc α} β γ 0̇) (suc (Φ F {suc α} (suc β) 0̇, γ))
+Φₛ-s-ż-s = refl
+
+Φₛ-l-ż-z : (Φ F {suc α} (lim g) 0̇, 0) ≡ lim λ n → Φ F {suc α} (g n) 0 0̇
+Φₛ-l-ż-z = refl
+
+Φₛ-l-ż-s : (Φ F {suc α} (lim g) 0̇, suc γ) ≡ lim λ n → Φ F {suc α} (g n) (suc (Φ F {suc α} (lim g) 0̇, γ)) 0̇
+Φₛ-l-ż-s = refl
+
+Φₛ-β-ż-l : F (lim g) ≡ lim (λ n → F (g n))
+  → (Φ F {suc α} β 0̇, lim g) ≡ lim λ n → Φ F {suc α} β 0̇, g n
+Φₛ-β-ż-l {β = zero} = id
+Φₛ-β-ż-l {β = suc _} _ = refl
+Φₛ-β-ż-l {β = lim _} _ = refl
+```
+
+```agda
+Φₗ-s-ż-z : Φ F {lim f} (suc β) {n} 0̇, 0 ≡ lim λ n → Φ F {lim f} β {n} 1 0̇
+Φₗ-s-ż-z = refl
+
+Φₗ-s-ż-s : Φ F {lim f} (suc β) {n} 0̇, suc γ ≡ lim λ n → Φ F {lim f} β {n} (suc (Φ F {lim f} (suc β) {n} 0̇, γ)) 0̇
+Φₗ-s-ż-s = refl
+
+Φₗ-l-ż-z : Φ F {lim f} (lim g) {n} 0̇, 0 ≡ lim λ n → Φ F {lim f} (g n) {n} 0 0̇
+Φₗ-l-ż-z = refl
+
+Φₗ-l-ż-s : Φ F {lim f} (lim g) {n} 0̇, suc γ ≡ lim λ n → Φ F {lim f} (g n) {n} (suc (Φ F {lim f} (lim g) {n} 0̇, γ)) 0̇
+Φₗ-l-ż-s = refl
+
+Φₗ-β-ż-l : F (lim g) ≡ lim (λ n → F (g n))
+  → (Φ F {lim f} β {n} 0̇, lim g) ≡ lim λ n → Φ F {lim f} β {n} 0̇, g n
+Φₗ-β-ż-l {β = zero} = id
+Φₗ-β-ż-l {β = suc _} _ = refl
+Φₗ-β-ż-l {β = lim _} _ = refl
+```
+
+**例** 一个很大的大数:
+
+```agda
+lvo₉₉ : ℕ
+lvo₉₉ = FGH.f LVO 99
 ```
