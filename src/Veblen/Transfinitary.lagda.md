@@ -1,6 +1,7 @@
 ---
 title: 形式化大数数学 (1.5 - 超限元Veblen函数)
 zhihu-tags: Agda, 序数, 大数数学
+zhihu-url: https://zhuanlan.zhihu.com/p/707713300
 ---
 
 # 形式化大数数学 (1.5 - 超限元Veblen函数)
@@ -11,7 +12,7 @@ zhihu-tags: Agda, 序数, 大数数学
 
 本篇我们来定义超限元Veblen函数, 也叫序元Veblen函数. 它在形式上只依赖我们的第一篇: [形式化大数数学 (1.1 - 序数, FGH, 不动点)](https://zhuanlan.zhihu.com/p/705306447). 在认知上是前几篇的自然推广, 而没有什么非常新的东西. 所以我们会讲得很简洁, 如有疑问请参考前几篇.
 
-Agda 编程上, 我们开启了一些高级选项, 它们只是为了编程方便, 不影响目标函数的可计算性, 终止性和证明的可靠性.
+Agda 编程上, 我们开启了一些高级特性 (有损合一化, 自定义重写), 它们只是为了让代码更简洁 (比非形式写法还简洁), 而不影响目标函数的性质以及证明的可靠性.
 
 ```agda
 {-# OPTIONS --lossy-unification --rewriting --local-confluence-check #-}
@@ -120,8 +121,8 @@ $$
 $$
 \begin{aligned}
 Φ_{\lim f}\kern{0.17em}F &:= \text{rec}\kern{0.17em}F \\
-&\quad (λ φ_{\lim f,β} λn , Φ^{f\kern{0.17em}n}\kern{0.17em}(\text{jump}_1\kern{0.17em}(λγ,\lim λ n,φ_{\lim f,β,n}\kern{0.17em}γ\kern{0.17em}\overset{.}{0}))) \\
-&\quad (λ φ_{\lim f,g\kern{0.17em}n} λn , Φ^{f\kern{0.17em}n}\kern{0.17em}(\text{jump}\kern{0.17em}(λγ,\lim λ n,φ_{\lim f,g\kern{0.17em}n,n}\kern{0.17em}γ\kern{0.17em}\overset{.}{0}))) \\
+&\quad (λ φ_{\lim f,β} λn , Φ^{f\kern{0.17em}n}\kern{0.17em}(\text{jump}_1\kern{0.17em}(λγ,\lim λ m,φ_{\lim f,β,m}\kern{0.17em}γ\kern{0.17em}\overset{.}{0}))) \\
+&\quad (λ φ_{\lim f,g\kern{0.17em}n} λn , Φ^{f\kern{0.17em}n}\kern{0.17em}(\text{jump}\kern{0.17em}(λγ,\lim λ m,φ_{\lim f,g\kern{0.17em}m,m}\kern{0.17em}γ\kern{0.17em}\overset{.}{0}))) \\
 \end{aligned}
 $$
 
@@ -156,6 +157,16 @@ $$
 φ = Φ (ω ^_)
 ```
 
+**例** 容易验证
+
+$$
+\begin{aligned}
+φ_{0} &= \text{Fin.}φ\kern{0.17em}0 \\
+φ_{1} &= \text{Fin.}φ\kern{0.17em}1 \\
+φ_{2} &= \text{Fin.}φ\kern{0.17em}2 \\
+\end{aligned}
+$$
+
 ```agda
 import Veblen.Finitary as Fin
 
@@ -169,15 +180,27 @@ import Veblen.Finitary as Fin
 φ₂ = refl
 ```
 
-```agda
-SVO : Ord
-SVO = φ {ω} 1 {0} 0
-```
+后文我们补上一种容易阅读的非形式记法——双行有限列矩阵: 第一行是所有非零参数, 第二行是参数的序号. 如 $φ_{2}\kern{0.17em}2\kern{0.17em}1\kern{0.17em}0$ 写作 $\begin{pmatrix}2&1\\2&1\end{pmatrix}$.
 
-```agda
-LVO : Ord
-LVO = fixpt (λ α → φ {α} 1 0̇) 0
-```
+**引理** 非零参数可以省去:
+
+$$
+Φ^α\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} = F
+$$
+
+即
+
+$$
+\begin{pmatrix}
+...&0\\
+...&α
+\end{pmatrix}
+=
+\begin{pmatrix}
+...\\
+...
+\end{pmatrix}
+$$
 
 ```agda
 Φ-ż-α : Φ F {α} 0̇,_ ≡ F
@@ -187,19 +210,240 @@ LVO = fixpt (λ α → φ {α} 1 0̇) 0
 {-# REWRITE Φ-ż-α #-}
 ```
 
+Agda 编程上, 我们将以上引理声明为新的重写规则, 以方便证明以下定理.
+
+**定理** 计算模式 (后继元五条加极限元五条, 共十条)
+
+$$
+Φ^{α^+}\kern{0.17em}F\kern{0.17em}β^+\kern{0.17em}\overset{.}{0}\kern{0.17em}0 = (λγ,Φ^{α^+}\kern{0.17em}F\kern{0.17em}β\kern{0.17em}γ\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}0
+$$
+
+$$
+\begin{pmatrix}
+...&β^+\\
+...&α^+
+\end{pmatrix}
+=
+\begin{pmatrix}
+...&λ\\
+...&α^+
+\end{pmatrix}^ω\kern{0.17em}0
+=
+\begin{pmatrix}
+...&\begin{pmatrix}
+...&_⋰\begin{pmatrix}
+...&0\\
+...&α^+
+\end{pmatrix}\\
+...&α^+
+\end{pmatrix}\\
+...&α^+
+\end{pmatrix}
+$$
+
 ```agda
 Φₛ-s-ż-z : (Φ F {suc α} (suc β) 0̇, 0) ≡ iterω (λ γ → Φ F {suc α} β γ 0̇) 0
 Φₛ-s-ż-z = refl
+```
 
+$$
+Φ^{α^+}\kern{0.17em}F\kern{0.17em}β^+\kern{0.17em}\overset{.}{0}\kern{0.17em}γ^+ = (λγ,Φ^{α^+}\kern{0.17em}F\kern{0.17em}β\kern{0.17em}γ\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}(Φ^{α^+}\kern{0.17em}F\kern{0.17em}β^+\kern{0.17em}\overset{.}{0}\kern{0.17em}γ)^+
+$$
+
+$$
+\begin{pmatrix}
+...&β^+&γ^+\\
+...&α^+&0
+\end{pmatrix}
+=
+\begin{pmatrix}
+...&β&λ\\
+...&α^+&α
+\end{pmatrix}^ω\kern{0.17em}
+\begin{pmatrix}
+...&β^+&γ\\
+...&α^+&0
+\end{pmatrix}^+
+$$
+
+```agda
 Φₛ-s-ż-s : (Φ F {suc α} (suc β) 0̇, suc γ) ≡ iterω (λ γ → Φ F {suc α} β γ 0̇) (suc (Φ F {suc α} (suc β) 0̇, γ))
 Φₛ-s-ż-s = refl
+```
 
+$$
+Φ^{α^+}\kern{0.17em}F\kern{0.17em}(\lim g)\kern{0.17em}\overset{.}{0}\kern{0.17em}0 = \lim λ n,Φ^{α^+}\kern{0.17em}F\kern{0.17em}(g\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}\overset{.}{0}
+$$
+
+$$
+\begin{pmatrix}
+...&\lim g\\
+...&α^+
+\end{pmatrix}
+=
+\lim λn,\begin{pmatrix}
+...&g\kern{0.17em}n\\
+...&α^+
+\end{pmatrix}
+$$
+
+```agda
 Φₛ-l-ż-z : (Φ F {suc α} (lim g) 0̇, 0) ≡ lim λ n → Φ F {suc α} (g n) 0 0̇
 Φₛ-l-ż-z = refl
+```
 
+$$
+Φ^{α^+}\kern{0.17em}F\kern{0.17em}(\lim g)\kern{0.17em}\overset{.}{0}\kern{0.17em}γ^+ = \lim λ n,Φ^{α^+}\kern{0.17em}F\kern{0.17em}(g\kern{0.17em}n)\kern{0.17em}(Φ^{α^+}\kern{0.17em}F\kern{0.17em}(\lim g)\kern{0.17em}\overset{.}{0}\kern{0.17em}γ)^+\kern{0.17em}\overset{.}{0}
+$$
+
+$$
+\begin{pmatrix}
+...&\lim g&γ^+\\
+...&α^+&0
+\end{pmatrix}
+=
+\lim λn,\begin{pmatrix}
+...&g\kern{0.17em}n&
+  \begin{pmatrix}
+  ...&\lim g&γ\\
+  ...&α^+&0
+  \end{pmatrix}^+\\
+...&α^+&α
+\end{pmatrix}
+$$
+
+```agda
 Φₛ-l-ż-s : (Φ F {suc α} (lim g) 0̇, suc γ) ≡ lim λ n → Φ F {suc α} (g n) (suc (Φ F {suc α} (lim g) 0̇, γ)) 0̇
 Φₛ-l-ż-s = refl
+```
 
+$$
+Φ^{\lim f}\kern{0.17em}F\kern{0.17em}β^+\kern{0.17em}\overset{.}{0}\kern{0.17em}0
+=
+\lim λ n,(Φ^{\lim f}\kern{0.17em}F\kern{0.17em}β)_n\kern{0.17em}1\kern{0.17em}\overset{.}{0}
+$$
+
+$$
+\begin{pmatrix}
+...&β^+\\
+...&\lim f
+\end{pmatrix}
+=
+\lim λ n,\begin{pmatrix}
+...&β&1\\
+...&\lim f&f\kern{0.17em}n
+\end{pmatrix}
+$$
+
+```agda
+Φₗ-s-ż-z : Φ F {lim f} (suc β) {n} 0̇, 0 ≡ lim λ n → Φ F {lim f} β {n} 1 0̇
+Φₗ-s-ż-z = refl
+```
+
+$$
+Φ^{\lim f}\kern{0.17em}F\kern{0.17em}β^+\kern{0.17em}\overset{.}{0}\kern{0.17em}γ^+
+=
+\lim λ n,(Φ^{\lim f}\kern{0.17em}F\kern{0.17em}β)_n\kern{0.17em}(Φ^{\lim f}\kern{0.17em}F\kern{0.17em}β^+\kern{0.17em}\overset{.}{0}\kern{0.17em}γ)^+\kern{0.17em}\overset{.}{0}
+$$
+
+$$
+\begin{pmatrix}
+...&β^+&γ^+\\
+...&\lim f&0
+\end{pmatrix}
+=
+\lim λ n,\begin{pmatrix}
+...&β&
+  \begin{pmatrix}
+  ...&β^+&γ\\
+  ...&\lim f&0
+  \end{pmatrix}^+
+\\
+...&\lim f&f\kern{0.17em}n
+\end{pmatrix}
+$$
+
+```agda
+Φₗ-s-ż-s : Φ F {lim f} (suc β) {n} 0̇, suc γ ≡ lim λ n → Φ F {lim f} β {n} (suc (Φ F {lim f} (suc β) {n} 0̇, γ)) 0̇
+Φₗ-s-ż-s = refl
+```
+
+$$
+Φ^{\lim f}\kern{0.17em}F\kern{0.17em}(\lim g)\kern{0.17em}\overset{.}{0}\kern{0.17em}0
+=
+\lim λ n,Φ^{\lim f}\kern{0.17em}F\kern{0.17em}(g\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}\overset{.}{0}
+$$
+
+$$
+\begin{pmatrix}
+...&\lim g\\
+...&\lim f
+\end{pmatrix}
+=
+\lim λ n,\begin{pmatrix}
+...&g\kern{0.17em}n\\
+...&\lim f
+\end{pmatrix}
+$$
+
+```agda
+Φₗ-l-ż-z : Φ F {lim f} (lim g) {n} 0̇, 0 ≡ lim λ n → Φ F {lim f} (g n) {n} 0 0̇
+Φₗ-l-ż-z = refl
+```
+
+$$
+Φ^{\lim f}\kern{0.17em}F\kern{0.17em}(\lim g)\kern{0.17em}\overset{.}{0}\kern{0.17em}γ^+
+=
+\lim λ n,Φ^{\lim f}\kern{0.17em}F\kern{0.17em}(g\kern{0.17em}n)\kern{0.17em}(Φ^{\lim f}\kern{0.17em}F\kern{0.17em}(\lim g)\kern{0.17em}\overset{.}{0}\kern{0.17em}γ)^+\kern{0.17em}\overset{.}{0}
+$$
+
+$$
+\begin{pmatrix}
+...&\lim g&γ^+\\
+...&\lim f&0
+\end{pmatrix}
+=
+\lim λ n,\begin{pmatrix}
+...&g\kern{0.17em}n&
+  \begin{pmatrix}
+  ...&\lim g&γ\\
+  ...&\lim f&0
+  \end{pmatrix}^+
+\\
+...&\lim f&f\kern{0.17em}n
+\end{pmatrix}
+$$
+
+```agda
+Φₗ-l-ż-s : Φ F {lim f} (lim g) {n} 0̇, suc γ ≡ lim λ n → Φ F {lim f} (g n) {n} (suc (Φ F {lim f} (lim g) {n} 0̇, γ)) 0̇
+Φₗ-l-ż-s = refl
+```
+
+$$
+Φ^{α^+}\kern{0.17em}F\kern{0.17em}β\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g)
+=
+\lim λn,Φ^{α^+}\kern{0.17em}F\kern{0.17em}β\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}n)
+$$
+
+$$
+\begin{pmatrix}
+...&β&\lim g\\
+...&α^+&0
+\end{pmatrix}
+=
+\lim λn,\begin{pmatrix}
+...&β&g\kern{0.17em}n\\
+...&α^+&0
+\end{pmatrix}
+$$
+
+只要
+
+$$
+F\kern{0.17em}(\lim g) = \lim λ n,F\kern{0.17em}(g\kern{0.17em}n)
+$$
+
+```agda
 Φₛ-β-ż-l : F (lim g) ≡ lim (λ n → F (g n))
   → (Φ F {suc α} β 0̇, lim g) ≡ lim λ n → Φ F {suc α} β 0̇, g n
 Φₛ-β-ż-l {β = zero} = id
@@ -207,19 +451,31 @@ LVO = fixpt (λ α → φ {α} 1 0̇) 0
 Φₛ-β-ż-l {β = lim _} _ = refl
 ```
 
+$$
+Φ^{\lim f}\kern{0.17em}F\kern{0.17em}β\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g)
+=
+\lim λn,Φ^{\lim f}\kern{0.17em}F\kern{0.17em}β\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}n)
+$$
+
+$$
+\begin{pmatrix}
+...&β&\lim g\\
+...&\lim f&0
+\end{pmatrix}
+=
+\lim λn,\begin{pmatrix}
+...&β&g\kern{0.17em}n\\
+...&\lim f&0
+\end{pmatrix}
+$$
+
+只要
+
+$$
+F\kern{0.17em}(\lim g) = \lim λ n,F\kern{0.17em}(g\kern{0.17em}n)
+$$
+
 ```agda
-Φₗ-s-ż-z : Φ F {lim f} (suc β) {n} 0̇, 0 ≡ lim λ n → Φ F {lim f} β {n} 1 0̇
-Φₗ-s-ż-z = refl
-
-Φₗ-s-ż-s : Φ F {lim f} (suc β) {n} 0̇, suc γ ≡ lim λ n → Φ F {lim f} β {n} (suc (Φ F {lim f} (suc β) {n} 0̇, γ)) 0̇
-Φₗ-s-ż-s = refl
-
-Φₗ-l-ż-z : Φ F {lim f} (lim g) {n} 0̇, 0 ≡ lim λ n → Φ F {lim f} (g n) {n} 0 0̇
-Φₗ-l-ż-z = refl
-
-Φₗ-l-ż-s : Φ F {lim f} (lim g) {n} 0̇, suc γ ≡ lim λ n → Φ F {lim f} (g n) {n} (suc (Φ F {lim f} (lim g) {n} 0̇, γ)) 0̇
-Φₗ-l-ż-s = refl
-
 Φₗ-β-ż-l : F (lim g) ≡ lim (λ n → F (g n))
   → (Φ F {lim f} β {n} 0̇, lim g) ≡ lim λ n → Φ F {lim f} β {n} 0̇, g n
 Φₗ-β-ż-l {β = zero} = id
@@ -227,10 +483,76 @@ LVO = fixpt (λ α → φ {α} 1 0̇) 0
 Φₗ-β-ż-l {β = lim _} _ = refl
 ```
 
-**例** 一个很大的大数:
+## LVO
+
+**定义** Small Veblen Ordinal
+
+$$
+\text{SVO} := (φ_ω\kern{0.17em}1)_0\kern{0.17em}0 =
+\begin{pmatrix}
+1 \\
+ω \\
+\end{pmatrix}
+$$
+
+```agda
+SVO : Ord
+SVO = φ {ω} 1 {0} 0
+```
+
+**定义** Large Veblen Ordinal
+
+$$
+\text{LVO} := (λα,φ_α\kern{0.17em}1\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}0 =
+\begin{pmatrix}
+1 \\
+\begin{pmatrix}
+1 \\
+\begin{pmatrix}
+1 \\
+... \\
+\end{pmatrix} \\
+\end{pmatrix} \\
+\end{pmatrix}
+$$
+
+```agda
+LVO : Ord
+LVO = fixpt (λ α → φ {α} 1 0̇) 0
+```
+
+这是超限元Veblen函数的能力极限.
+
+**例** 一个很大的大数
+
+$$
+\text{lvo}_{99} := f_{\text{LVO}}(99)
+$$
 
 ```agda
 lvo₉₉ : ℕ
 lvo₉₉ = FGH.f LVO 99
 ```
- 
+
+如果仅仅是为了写出该数的定义, 省去一切讨论, 不超过100行代码就可以实现. 读者可以试着摘抄出一段最简代码.
+
+没有什么阻止我们继续向上, 例如轻易地就可以有
+
+**定义** 第二代超限元Veblen函数以及第二代LVO
+
+$$
+\begin{aligned}
+\overset{.}{φ} &:= Φ\kern{0.17em}(\text{fixpt}λα,φ_α\kern{0.17em}1\kern{0.17em}\overset{.}{0}) \\
+\text{LVO}_2 &:= (λα,\overset{.}{φ}_α\kern{0.17em}1\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}0
+\end{aligned}
+$$
+
+```agda
+φ̇ : ∀ {α} → Ord →^ suc α
+φ̇ = Φ (fixpt (λ α → φ {α} 1 0̇))
+
+LVO₂ : Ord
+LVO₂ = fixpt (λ α → φ̇ {α} 1 0̇) 0
+```
+
+但这个模式是重复的, 一般我们就此打住, 转而使用全新的更高级方法, 如序数崩塌函数 (Ordinal Collapsing Function, OCF). 这将开启我们的形式化大数数学 (2.x) 篇.
