@@ -17,7 +17,7 @@ Agda 编程上, 我们开启了一些高级特性 (有损合一化, 自定义重
 ```agda
 {-# OPTIONS --lossy-unification --rewriting --local-confluence-check #-}
 module Veblen.Transfinitary where
-open import Veblen.Basic public
+open import Base public
 ```
 
 ## 超限元函数类型
@@ -149,7 +149,7 @@ $$
 **定义** 超限元Veblen函数
 
 $$
-φ := Φ\kern{0.17em}(λα,ω^α)
+φ_α := Φ^α\kern{0.17em}(λα,ω^α)
 $$
 
 ```agda
