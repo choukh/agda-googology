@@ -13,7 +13,7 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705436498
 ```agda
 {-# OPTIONS --safe #-}
 module Veblen.Multinary where
-open import Veblen.Basic public
+open import Base public
 ```
 
 ## 综述
