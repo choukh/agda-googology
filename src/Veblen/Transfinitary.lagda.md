@@ -12,7 +12,9 @@ zhihu-tags: Agda, 序数, 大数数学
 ```agda
 {-# OPTIONS --lossy-unification --rewriting --local-confluence-check #-}
 module Veblen.Transfinitary where
-open import Veblen.Basic public hiding (F)
+open import Veblen.Basic public
+open import Agda.Builtin.Equality public
+open import Agda.Builtin.Equality.Rewrite public
 ```
 
 ## 超限元函数类型
@@ -80,15 +82,14 @@ LVO = fixpt (λ α → φ {α} 1 0̇) 0
 ```
 
 ```agda
-private variable F : Ord →^ suc (lim f)
-
-Φ-ż-α : {! Φ F  !} ≡ F
-Φ-ż-α = {!   !}
+Φ-ż-α : Φ F {α} 0̇,_ ≡ F
+Φ-ż-α {α = zero} = refl
+Φ-ż-α {α = suc α} = Φ-ż-α {α = α}
+Φ-ż-α {α = lim f} = Φ-ż-α {α = f 0}
+{-# REWRITE Φ-ż-α #-}
 ```
 
-  private variable F : Ord→^ω →ⁿ 1
-
-  Φ-ż-α : Φ F (n) 0̇,_ ≡ F
-  Φ-ż-α {n = zero} = refl
-  Φ-ż-α {n = suc n} = Φ-ż-α {n = n}
-  {-# REWRITE Φ-ż-α #-}
+```agda
+Φ-s-ż-z : (Φ F {suc α} (suc β) 0̇, 0) ≡ iterω (λ γ → Φ F {suc α} β γ 0̇) 0
+Φ-s-ż-z = refl
+```
