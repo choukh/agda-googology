@@ -132,20 +132,20 @@ $$
 - $Φ_4:(\text{Ord} → \text{Ord} → \text{Ord} → \text{Ord}) → \text{Ord} → \text{Ord} → \text{Ord} → \text{Ord} → \text{Ord}$
 - ...
 
-自然地推广下去, 用上一节刚定义的符号, 并且让下标从零开始, 我们现在需要定义一个
+自然地推广下去, 用上一节刚定义的符号, 并且让下标从一开始, 我们现在需要定义一个
 
 $$
-Φ_n : \text{Ord}^{→n^+} → \text{Ord}^{→n^{++}}
+Φ_{n^+} : \text{Ord}^{→n^+} → \text{Ord}^{→n^{++}}
 $$
 
 ```agda
 Φₙ : Ord →ⁿ suc n → Ord →ⁿ 2+ n
 ```
 
-回顾不动点的起点 (梦的开始) $λα,ω\kern{0.17em}^α : \text{Ord}^{→1}$, 我们需要从它开始, 迭代 $Φ_{\lt n}$, 以得到 $Φ_n$. 直观上该迭代具有
+回顾不动点的起点 (梦的开始) $λα,ω\kern{0.17em}^α : \text{Ord}^{→1}$, 我们需要从它开始, 迭代 $Φ_{\le n}$, 以得到 $Φ_{n^+}$. 直观上该迭代具有
 
 $$
-Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0 (λα,ω\kern{0.17em}^α))))...) : \text{Ord}^{→n^+}\quad (*)
+Φ_{n} (... (Φ_2 (Φ_1 (Φ_1 (λα,ω\kern{0.17em}^α))))...) : \text{Ord}^{→n^+}\quad (*)
 $$
 
 的形式. 我们把这整个迭代过程记作 $Φ$, 它具有类型
@@ -160,18 +160,18 @@ $$
 
 非形式地, 简洁起见, 我们将把 $Φ\kern{0.17em}F\kern{0.17em}n$ 写作 $Φ^n\kern{0.17em}F$.
 
-注意到 $Φ_n$ 的定义里就要用到 $(*)$ 式, 即 $Φ$ 的定义. 而 $Φ$ 的定义里又要用到每个 $Φ_{\lt n}$. 我们把它们写成互递归的形式, 也就是说同时定义 $Φ_n$ 和 $Φ$.
+注意到 $Φ_{n^+}$ 的定义里就要用到 $(*)$ 式, 即 $Φ$ 的定义. 而 $Φ$ 的定义里又要用到每个 $Φ_{\le n}$. 我们把它们写成互递归的形式, 也就是说同时定义 $Φ_n$ 和 $Φ$.
 
-**定义** $Φ_n$ 和 $Φ$ 互递归定义如下.
+**定义** $Φ_{n^+}$ 和 $Φ$ 互递归定义如下.
 
 $$
 \begin{aligned}
-&Φ_n\kern{0.17em}F :\text{Ord}^{→n^{++}} &:=& \text{rec}\kern{0.17em}F \\
+&Φ_{n^+}\kern{0.17em}F :\text{Ord}^{→n^{++}} &:=& \text{rec}\kern{0.17em}F \\
 &&&\quad (λ(φ_{n^+,α}:\text{Ord}^{→n^+}),Φ^n\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
 &&&\quad (λ(φ_{n^+,f\kern{0.17em}m}:ℕ→\text{Ord}^{→n^+}), Φ^n\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
 \\
 &Φ^0\kern{0.17em}F : \text{Ord}^{→1} &:=& F \\
-&Φ^{n^+}\kern{0.17em}F : \text{Ord}^{→n^{++}} &:=& Φ_n\kern{0.17em}(Φ^n\kern{0.17em}F)
+&Φ^{n^+}\kern{0.17em}F : \text{Ord}^{→n^{++}} &:=& Φ_{n^+}\kern{0.17em}(Φ^n\kern{0.17em}F)
 \end{aligned}
 $$
 
@@ -189,8 +189,8 @@ $$
 
 $$
 \begin{aligned}
-Φ_n\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_{n^+,α},Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0(\text{fixpt}\kern{0.17em}λβ,φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...)) \\
-&(λφ_{n^+,f\kern{0.17em}m}, Φ_{n-1} (... (Φ_2 (Φ_1 (Φ_0(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...))
+Φ_{n^+}\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_{n^+,α},Φ_{n} (... (Φ_2 (Φ_1(\text{fixpt}\kern{0.17em}λβ,φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...) \\
+&(λφ_{n^+,f\kern{0.17em}m}, Φ_{n} (... (Φ_2 (Φ_1(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...)
 \end{aligned}
 $$
 
@@ -211,7 +211,7 @@ $$
 
 $$
 \begin{aligned}
-φ_{n^+} &= Φ_n\kern{0.17em}φ_n \\
+φ_{n^+} &= Φ_{n^+}\kern{0.17em}φ_n \\
 φ_{n^+} 0 &= φ_n
 \end{aligned}
 $$

@@ -27,7 +27,7 @@ $$
 A^{→α} := \begin{cases}
 A & \text{if } α = 0 \\
 \text{Ord} → A^{→β} & \text{if } α = β^+ \\
-\prod_n (\text{Ord} → A^{→ f\kern{0.17em}n}) & \text{if } α = \lim f
+\prod_n A^{→ (f\kern{0.17em}n)^+} & \text{if } α = \lim f
 \end{cases}
 $$
 
@@ -94,6 +94,7 @@ _0̇,_ {α = lim _} F = F 0 {0} 0̇,_
 
 - 后继元辅助函数 $Φ_{α^+} : \text{Ord}^{→α^+} → \text{Ord}^{→α^{++}}$
 - 极限元辅助函数 $Φ_{\lim f} : \text{Ord}^{→\lim f} → \text{Ord}^{→(f\kern{0.17em}n)^+}$
+  - 即 $(\prod_n \text{Ord}^{→(f\kern{0.17em}n)^+}) → \text{Ord}^{→(f\kern{0.17em}n)^+}$
 - $α$ 元辅助函数 $Φ^{α} : \text{Ord}^{→1} → \prod_α \text{Ord}^{→α^+}$
 
 ```agda
@@ -105,8 +106,8 @@ _0̇,_ {α = lim _} F = F 0 {0} 0̇,_
 $$
 \begin{aligned}
 Φ_{α^+}\kern{0.17em}F &:= \text{rec}\kern{0.17em}F \\
-&\quad (λ φ_{α^+,β}, Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}(λγ,φ_{α^+,β}\kern{0.17em}γ\kern{0.17em}\overset{.}{0}))) \\
-&\quad (λ φ_{α^+,g\kern{0.17em}n}, Φ\kern{0.17em}(\text{jump}\kern{0.17em}(λγ,\lim λ n,φ_{α^+,g\kern{0.17em}n}\kern{0.17em}γ\kern{0.17em}\overset{.}{0}))) \\
+&\quad (λ φ_{α^+,β}, Φ^{α}\kern{0.17em}(\text{fixpt}\kern{0.17em}(λγ,φ_{α^+,β}\kern{0.17em}γ\kern{0.17em}\overset{.}{0}))) \\
+&\quad (λ φ_{α^+,g\kern{0.17em}n}, Φ^{α}\kern{0.17em}(\text{jump}\kern{0.17em}(λγ,\lim λ n,φ_{α^+,g\kern{0.17em}n}\kern{0.17em}γ\kern{0.17em}\overset{.}{0}))) \\
 \end{aligned}
 $$
 
@@ -119,8 +120,8 @@ $$
 $$
 \begin{aligned}
 Φ_{\lim f}\kern{0.17em}F &:= \text{rec}\kern{0.17em}F \\
-&\quad (λ φ_{\lim f,β} , Φ\kern{0.17em}(\text{jump}_1\kern{0.17em}(λγ,\lim λ n,φ_{\lim f,β,n}\kern{0.17em}γ\kern{0.17em}\overset{.}{0}))) \\
-&\quad (λ φ_{\lim f,g\kern{0.17em}n} , Φ\kern{0.17em}(\text{jump}\kern{0.17em}(λγ,\lim λ n,φ_{\lim f,g\kern{0.17em}n,n}\kern{0.17em}γ\kern{0.17em}\overset{.}{0}))) \\
+&\quad (λ φ_{\lim f,β} λn , Φ^{f\kern{0.17em}n}\kern{0.17em}(\text{jump}_1\kern{0.17em}(λγ,\lim λ n,φ_{\lim f,β,n}\kern{0.17em}γ\kern{0.17em}\overset{.}{0}))) \\
+&\quad (λ φ_{\lim f,g\kern{0.17em}n} λn , Φ^{f\kern{0.17em}n}\kern{0.17em}(\text{jump}\kern{0.17em}(λγ,\lim λ n,φ_{\lim f,g\kern{0.17em}n,n}\kern{0.17em}γ\kern{0.17em}\overset{.}{0}))) \\
 \end{aligned}
 $$
 
@@ -130,11 +131,25 @@ $$
   (λ φ → Φ $ jump (λ γ → lim λ n → φ n {n} γ 0̇))
 ```
 
+$$
+Φ^{α}\kern{0.17em}F := \begin{cases}
+F & \text{if } α = 0 \\
+Φ_{β^+}\kern{0.17em}(Φ^{β}\kern{0.17em}F) & \text{if } α = β^+ \\
+Φ_{\lim f}\kern{0.17em}(λn,Φ^{f\kern{0.17em}n}\kern{0.17em}F) & \text{if } α = \lim f
+\end{cases}
+$$
+
 ```agda
 Φ F {α = zero}  = F
 Φ F {α = suc α} = Φₛ (Φ F)
 Φ F {α = lim f} = Φₗ (Φ F)
 ```
+
+**定义** 超限元Veblen函数
+
+$$
+φ := Φ\kern{0.17em}(λα,ω^α)
+$$
 
 ```agda
 φ : ∀ {α} → Ord →^ suc α

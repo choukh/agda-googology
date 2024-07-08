@@ -445,7 +445,7 @@ $ω\cdot 2$ 元相当于二元的地位, 参考二元Veblen函数的定义即可
 
 $$
 \begin{aligned}
-Φ_{\lt ω2,n} &: (\text{Ord}^{→ω})^{→n^+} → (\text{Ord}^{→ω})^{→n^{++}} \\
+Φ_{\lt ω2,n^+} &: (\text{Ord}^{→ω})^{→n^+} → (\text{Ord}^{→ω})^{→n^{++}} \\
 Φ_{\lt ω2} &: (\text{Ord}^{→ω})^{→1} → \text{Ord}^{→ω\cdot 2}
 \end{aligned}
 $$
@@ -454,11 +454,11 @@ $$
 
 $$
 \begin{aligned}
-Φ_{\lt ω2,n}\kern{0.17em}F &:= \text{rec}\kern{0.17em}F \\
+Φ_{\lt ω2,n^+}\kern{0.17em}F &:= \text{rec}\kern{0.17em}F \\
 &\quad(λφ_{\lt ω2,n^+,α},Φ_{\lt ω2}^n(Φ_{ω}(Φ_{\lt ω}(\text{fixpt}\kern{0.17em}λβ,φ_{\lt ω2,n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0}...))))\\
 &\quad(λφ_{\lt ω2,n^+,f\kern{0.17em}m},Φ_{\lt ω2}^n(Φ_{ω}(Φ_{\lt ω}(\text{jump}\kern{0.17em}λβ,\lim λm,φ_{\lt ω2,n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0}...)))) \\
 Φ_{\lt ω2}^0\kern{0.17em}F &:= F \\
-Φ_{\lt ω2}^{n^+}\kern{0.17em}F &:= Φ_{\lt ω2,n}(Φ_{\lt ω2}^n\kern{0.17em}F)
+Φ_{\lt ω2}^{n^+}\kern{0.17em}F &:= Φ_{\lt ω2,n^+}(Φ_{\lt ω2}^n\kern{0.17em}F)
 \end{aligned}
 $$
 
@@ -489,7 +489,7 @@ $$
 
 $$
 \begin{aligned}
-φ_{ω,n^+} &= Φ_{\lt ω2,n}\kern{0.17em}φ_{ω,n} \\
+φ_{ω,n^+} &= Φ_{\lt ω2,n^+}\kern{0.17em}φ_{ω,n} \\
 φ_{ω,n^+} 0 &= φ_{ω,n}
 \end{aligned}
 $$
