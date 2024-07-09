@@ -42,8 +42,8 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705306447
   - 包含上一条的 Coq 版本以及 LVO 的 Coq 实现
   - 纯代码, 无文学
 - [ccz181078 - googology](https://github.com/ccz181078/googology)
-  - 各种大数函数的Coq形式化
-  - 有少量注释, 适合上级者速通形式定义
+  - 各种大数函数的 Coq 形式化
+  - 有少量注释, 适合上级者速通形式化定义
 
 ### 标准库依赖
 
