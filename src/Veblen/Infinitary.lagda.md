@@ -425,6 +425,7 @@ $$
 $$
 
 ```agda
+private variable m : ℕ
 _0̇⋯ : Ord→^ω* m →ⁿ n → Ord
 _0̇⋯ {m = zero} F = F 0̇
 _0̇⋯ {m = suc _} F = (F 0̇) (0) 0 0̇⋯
