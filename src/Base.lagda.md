@@ -96,12 +96,12 @@ data Ord : Set where
     - 但同一性证明依赖于函数外延性 (functional extensionality), 或某种商 (quotient) 机制, 如 setoid 或 cubical.
   - 但这并不影响大数的计算, 因为只要给出基本列就能算, 况且 FGH 大数的具体数值确实可能是依赖于特定基本列的——同一序数的不同定义方式会使基本列在起始处稍有不同.
 
-**约定** 我们用 $α,β,γ,δ$ 表示序数, 用 $m,n$ 表示自然数.
+**约定** 我们用 $α,β,γ$ 表示序数, 用 $n$ 表示自然数.
 
 ```agda
 variable
-  α β γ δ : Ord
-  m n : ℕ
+  α β γ : Ord
+  n : ℕ
 ```
 
 **约定** 我们遵循类型论的习惯, 今后都会在无歧义的情况下省略函数应用的括号.
@@ -153,7 +153,7 @@ _ = ℕ   ∋ 233
 pattern 2+ α = suc (suc α)
 ```
 
-## 快速增长层级
+## 增长层级
 
 **约定** 我们用 $A$ 表示类型.
 
@@ -178,22 +178,26 @@ F ∘ⁿ zero  = id
 F ∘ⁿ suc n = (F ∘ (F ∘ⁿ n))
 ```
 
+### 快速
+
 **定义** 快速增长层级 (Fast Growing Hierarchy, FGH) 是一个函数族 $f : \text{Ord} → ℕ → ℕ$, 对于每个序数 $α$, $f_α$ 是一个从自然数到自然数的函数, 定义如下.
 
 $$
 \begin{aligned}
-f_0\kern{0.17em}n &= n^+ \\
+f_0 &= \text{suc} \\
 f_{α^+}\kern{0.17em}n &= f_α^n\kern{0.17em}n \\
-f_{\text{lim}\kern{0.17em}g}\kern{0.17em}n &= f_{g\kern{0.17em}n}\kern{0.17em}n
+f_{\text{lim}\kern{0.17em}α}\kern{0.17em}n &= f_{α[n]}\kern{0.17em}n
 \end{aligned}
 $$
+
+其中在极限序数情况下的这种处理方式叫做对角化 (diagonalization).
 
 ```agda
 module FGH where
   f : Ord → ℕ → ℕ
-  f zero n = suc n
+  f zero = suc
   f (suc α) n = (f α ∘ⁿ n) n
-  f (lim g) n = f (g n) n
+  f (lim α) n = f (α n) n
 ```
 
 **例** 我们有
@@ -276,6 +280,64 @@ $$
 **事实** $f_{ω^+} 64$ 已经大于葛立恒数.
 
 > 从这里开始, 研究大数的数学就转变成了研究快速增长函数的数学, 进而转变成研究大的序数的数学.
+
+### ※快速以下
+
+FGH 是最常用的增长层级, 除此之外, 其他常见的还有 SGH, MGH, HH. 它们的共同特征是遇到极限序数都要做对角化.
+
+**定义** 慢速增长层级 SGH
+
+$$
+\begin{aligned}
+g_0\kern{0.17em}n &= 0 \\
+g_{α^+}\kern{0.17em}n &= (g_α\kern{0.17em}n)^+ \\
+g_{\text{lim}\kern{0.17em}α}\kern{0.17em}n &= g_{α[n]}\kern{0.17em}n
+\end{aligned}
+$$
+
+```agda
+module SGH where
+  g : Ord → ℕ → ℕ
+  g zero _ = 0
+  g (suc α) n = suc (g α n)
+  g (lim α) n = g (α n) n
+```
+
+**定义** 中速增长层级 MGH
+
+$$
+\begin{aligned}
+m_0 &= \text{suc} \\
+m_{α^+} &= m_α^2 \\
+m_{\text{lim}\kern{0.17em}α}\kern{0.17em}n &= m_{α[n]}\kern{0.17em}n
+\end{aligned}
+$$
+
+```agda
+module MGH where
+  m : Ord → ℕ → ℕ
+  m zero = suc
+  m (suc α) = m α ∘ⁿ 2
+  m (lim α) n = m (α n) n
+```
+
+**定义** Hardy层级 HH, 介于中速和慢速之间
+
+$$
+\begin{aligned}
+h_0 &= \text{id} \\
+h_{α^+}\kern{0.17em}n &= h_α\kern{0.17em}(n^+) \\
+h_{\text{lim}\kern{0.17em}α}\kern{0.17em}n &= h_{α[n]}\kern{0.17em}n
+\end{aligned}
+$$
+
+```agda
+module HH where
+  h : Ord → ℕ → ℕ
+  h zero = id
+  h (suc α) n = h α (suc n)
+  h (lim α) n = h (α n) n
+```
 
 ## 序数的递归原理
 
