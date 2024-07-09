@@ -37,9 +37,13 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 - [core.exe - 大数数学入门](https://www.zhihu.com/column/c_1307845959598960640)
 - [core.exe - 大数数学入门 - 重置版](https://www.zhihu.com/column/c_1697290814588301312)
 - [oCaU - Agda大序数](https://zhuanlan.zhihu.com/p/572691308)
-  - 该文详细讨论了上至二元Veblen层级的序性质, 而本文不会讨论这些性质.
-- [oCaU - LVO 的 Coq 实现](https://github.com/choukh/Googology)
+  - 详细讨论了上至二元Veblen层级的序性质, 而本文不会讨论这些性质
+- [oCaU - Googology](https://github.com/choukh/Googology)
+  - 包含上一条的 Coq 版本以及 LVO 的 Coq 实现
   - 纯代码, 无文学
+- [ccz181078 - googology](https://github.com/ccz181078/googology)
+  - 各种大数函数的Coq形式化
+  - 有少量注释, 适合上级者速通形式定义
 
 ### 标准库依赖
 
