@@ -1,4 +1,7 @@
 name: agda-googology
 depend: standard-library-2.0
 include: src
-flags: --cubical-compatible --hidden-argument-puns
+flags:
+  --cubical-compatible
+  --hidden-argument-puns
+  -W noUnsupportedIndexedMatch
