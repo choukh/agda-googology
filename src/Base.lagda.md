@@ -19,6 +19,12 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 - **文学编程**是指本文既是程序代码, 也是程序文档, 代码和文档交织在一起, 以增强可读性.
   - Agda 程序会自动抽取本文所有代码块中的代码, 并执行类型检查, 而忽略代码块以外的内容.
   - ※ 冷知识: 文学编程的发明者[高德纳 (Donald Knuth)](https://zh.wikipedia.org/wiki/%E9%AB%98%E5%BE%B7%E7%BA%B3), 也是大数数学入门级内容[高德纳箭号](https://zh.wikipedia.org/wiki/%E9%AB%98%E5%BE%B7%E7%B4%8D%E7%AE%AD%E8%99%9F%E8%A1%A8%E7%A4%BA%E6%B3%95)的发明者, 也是排版软件 [TeX](https://zh.wikipedia.org/wiki/TeX) 的发明者.
+  - Agda代码将放在如下代码块中
+
+```agda
+{-# OPTIONS --safe #-}
+module Base where
+```
 
 也就是说, 提供足够的时间, 能量和内存, 本文介绍的大数计算程序可以真正算出一个大数. 如果真的想运行:
 1. 参考 [Installation](https://agda.readthedocs.io/en/latest/getting-started/installation.html) 安装 Agda.
@@ -48,14 +54,10 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 ### 标准库依赖
 
 ```agda
-{-# OPTIONS --safe #-}
-module Base where
-
-open import Data.Nat public using (ℕ; zero; suc; 2+)
+open import Data.Nat public using (ℕ; zero; suc)
 open import Data.Unit public using (⊤; tt)
 open import Function public using (id; _∘_; _$_; _∋_)
-open import Relation.Binary.PropositionalEquality as Eq public
-  using (_≡_; refl; cong; cong-app)
+open import Relation.Binary.PropositionalEquality as Eq public using (_≡_; refl)
 open Eq.≡-Reasoning public
 ```
 
@@ -159,13 +161,11 @@ pattern 2+ α = suc (suc α)
 
 ## 增长层级
 
-**约定** 我们用 $A$ 表示类型.
+我们知道函数的有限次迭代.
 
-```agda
-variable A : Set
-```
+**约定** 我们用 $A$ 表示任意类型.
 
-**定义** 函数 $F : A → A$ 的 $n$ 次复合 $F^n$
+**定义** 函数 $F : A → A$ 的 $n$ 次复合叫做 $F$ 的 $n$ 次迭代, 记作 $F^n$
 
 $$
 \begin{aligned}
@@ -177,9 +177,7 @@ $$
 其中 $\text{id}$ 是恒等函数.
 
 ```agda
-_∘ⁿ_ : (A → A) → ℕ → (A → A)
-F ∘ⁿ zero  = id
-F ∘ⁿ suc n = (F ∘ (F ∘ⁿ n))
+open import Lower public using (A; _∘ⁿ_)
 ```
 
 ### 快速
@@ -453,7 +451,11 @@ $$
 
 ## 序数算术
 
-**定义** 从 $α$ 开始做 $β$ 次后继叫做序数加法, 记作 $α+β$.
+**定义** 从 $α$ 开始做 $β$ 次后继叫做序数加法, 记作 $α+β$
+
+$$
+α + β := \text{suc}^β\kern{0.17em}α
+$$
 
 ```agda
 infixl 6 _+_
@@ -461,7 +463,11 @@ _+_ : Ord → Ord → Ord
 α + β = (suc ∘^ β) α
 ```
 
-**定义** 从 $0$ 开始做 $β$ 次 $+ α$ 叫做序数乘法, 记作 $α*β$.
+**定义** 从 $0$ 开始做 $β$ 次 $+ α$ 叫做序数乘法, 记作 $α×β$
+
+$$
+α × β := (λξ,ξ+α)^β\kern{0.17em}0
+$$
 
 ```agda
 infixl 7 _*_
@@ -469,7 +475,11 @@ _*_ : Ord → Ord → Ord
 α * β = ((_+ α) ∘^ β) 0
 ```
 
-**定义** 从 $1$ 开始做 $β$ 次 $* α$ 叫做序数幂, 记作 $α^β$.
+**定义** 从 $1$ 开始做 $β$ 次 $× α$ 叫做序数幂运算, 记作 $α^β$
+
+$$
+α^β := (λξ,ξ×α)^β\kern{0.17em}1
+$$
 
 ```agda
 infix 8 _^_
