@@ -226,6 +226,12 @@ module Graham where
 
 ## 康威链箭
 
+**约定** 我们用 $n a_1 a_2 a_3 a_4 b c$ 表示任意自然数.
+
+```agda
+private variable n a₁ a₂ a₃ a₄ b c : ℕ
+```
+
 ```agda
 pattern 2+ n = suc (suc n)
 pattern 3+ n = suc (suc (suc n))
@@ -271,15 +277,11 @@ A →ⁿ zero = A
 A →ⁿ suc n = ℕ → A →ⁿ n
 ```
 
-**约定** 我们用 $n$ 表示任意自然数.
-
 ```agda
-variable n : ℕ
+open import Data.Vec using (Vec; _∷_; [])
 ```
 
 ```agda
-open import Data.Vec using (Vec; _∷_; [])
-
 curry3 : (Vec ℕ n → ℕ → ℕ → ℕ → ℕ) → ℕ →ⁿ 3+ n
 curry3 {n = zero} F = F []
 curry3 {n = suc n} F a = curry3 λ a⃗ → F (a ∷ a⃗)
@@ -296,9 +298,18 @@ C₂₊ₙ {n = suc n} = curry3 λ a⃗ → C₊ (uncurry2 C₂₊ₙ a⃗)
 ```
 
 ```agda
-_ : C₂₊ₙ {2} 2 2 2 2 ≡ 4
+_ : C₂₊ₙ {0} b c ≡ b ^ c
 _ = refl
 
-_ : C₂₊ₙ {2} 3 3 1 2 ≡ 27
+_ : C₂₊ₙ {1} 2 2 1 ≡ C₂₊ₙ {0} 2 2
+_ = refl
+
+_ : C₂₊ₙ {2} 2 2 1 9 ≡ C₂₊ₙ {0} 2 2
+_ = refl
+
+_ : C₂₊ₙ {3} 2 2 2 1 9 ≡ C₂₊ₙ {1} 2 2 2
+_ = refl
+
+_ : C₂₊ₙ {4} a₁ a₂ a₃ a₄ (2+ b) (2+ c) ≡ C₂₊ₙ {4} a₁ a₂ a₃ a₄ (C₂₊ₙ {4} a₁ a₂ a₃ a₄ (suc b) (2+ c)) (suc c)
 _ = refl
 ```
