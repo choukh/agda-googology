@@ -15,7 +15,7 @@ module Lower where
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 ```
 
-本篇是[形式化大数数学 (1.0 - 序数, 增长层级, 不动点)](https://zhuanlan.zhihu.com/p/705306447)的前传, 我们快速介绍一些比较弱的著名大数记号, 这部分是入门的入门. 首先要理解的是各种大数定义的核心思想——迭代.
+本篇是[形式化大数数学 (1.0 - 序数, 增长层级, 不动点)](https://zhuanlan.zhihu.com/p/705306447)的前传, 我们快速介绍一些比较弱的著名大数记号, 这部分是入门的入门. 首先要理解的是各种大数记号的核心思想——迭代.
 
 ## 迭代
 
@@ -226,4 +226,24 @@ module Graham where
 
 ## 康威链箭
 
+```agda
+pattern 2+ n = suc (suc n)
+pattern 3+ n = suc (suc (suc n))
+```
 
+```agda
+C₂ : ℕ → ℕ → ℕ
+C₂ = _^_
+
+C₃ : ℕ → ℕ → ℕ → ℕ
+C₃ a (2+ b) (2+ c) = C₃ a (C₃ a (suc b) (2+ c)) (suc c)
+C₃ a b _ = C₂ a b
+
+C₄ : ℕ → ℕ → ℕ → ℕ → ℕ
+C₄ a₁ a₂ (2+ b) (2+ c) = C₄ a₁ a₂ (C₄ a₁ a₂ (suc b) (2+ c)) (suc c)
+C₄ a₁ a₂ b _ = C₃ a₁ a₂ b
+
+C₅ : ℕ → ℕ → ℕ → ℕ → ℕ → ℕ
+C₅ a₁ a₂ a₃ (2+ b) (2+ c) = C₅ a₁ a₂ a₃ (C₅ a₁ a₂ a₃ (suc b) (2+ c)) (suc c)
+C₅ a₁ a₂ a₃ b _ = C₄ a₁ a₂ a₃ b
+```
