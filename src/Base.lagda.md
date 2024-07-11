@@ -102,29 +102,43 @@ data Ord : Set where
     - 但同一性证明依赖于函数外延性 (functional extensionality), 或某种商 (quotient) 机制, 如 setoid 或 cubical.
   - 但这并不影响大数的计算, 因为只要给出基本列就能算, 况且 FGH 大数的具体数值确实可能是依赖于特定基本列的——同一序数的不同定义方式会使基本列在起始处稍有不同.
 
-**约定** 我们用 $α,β,γ$ 表示序数, 用 $n$ 表示自然数.
+**约定** 我们用 $α,β,γ$ 表示序数, 用 $n$ 表示自然数, 用 $A$ 表示任意给定的类型.
 
 ```agda
 variable
   α β γ : Ord
   n : ℕ
+  A : Set
 ```
 
 **约定** 我们遵循类型论的习惯, 今后都会在无歧义的情况下省略函数应用的括号.
 
-**定义** 自然数到序数的嵌入函数 $\text{finord} : ℕ → \text{Ord}$ 如下
+回忆任意类型 $A$ 上的函数的有限次迭代.
+
+**定义** 函数 $F : A → A$ 的 $n$ 次复合叫做 $F$ 的 $n$ 次迭代, 记作 $F^n$
 
 $$
 \begin{aligned}
-\text{finord}\kern{0.17em}0 &= 0 \\
-\text{finord}\kern{0.17em}n^+ &= (\text{finord}\kern{0.17em}n)^+
+F^0 &= \text{id} \\
+F^{n^+} &= F \circ F^n
 \end{aligned}
+$$
+
+其中 $\text{id}$ 是恒等函数.
+
+```agda
+open import Lower public using (_∘ⁿ_)
+```
+
+**定义** 自然数到序数的嵌入函数 $\text{finord} : ℕ → \text{Ord}$ 定义为对输入的自然数 $n$, 输出从序数零开始迭代序数后继 $n$ 次所得到的序数.
+
+$$
+\text{finord}\kern{0.17em}n := \text{suc}^n\kern{0.17em}0
 $$
 
 ```agda
 finord : ℕ → Ord
-finord zero = zero
-finord (suc n) = suc (finord n)
+finord n = (suc ∘ⁿ n) zero
 ```
 
 **定义** $\text{finord}$ 构成了基本列 $(0, 1, 2, \ldots)$, 其极限定义为 $ω$
@@ -161,28 +175,11 @@ pattern 2+ α = suc (suc α)
 
 ## 增长层级
 
-我们知道函数的有限次迭代.
-
-**约定** 我们用 $A$ 表示任意给定的类型.
-
-**定义** 函数 $F : A → A$ 的 $n$ 次复合叫做 $F$ 的 $n$ 次迭代, 记作 $F^n$
-
-$$
-\begin{aligned}
-F^0 &= \text{id} \\
-F^{n^+} &= F \circ F^n
-\end{aligned}
-$$
-
-其中 $\text{id}$ 是恒等函数.
-
-```agda
-open import Lower public using (A; _∘ⁿ_)
-```
+增长层级是一种函数族 $f : \text{Ord} → ℕ → ℕ$, 对于每个序数 $α$, $f_α$ 是一个从自然数到自然数的函数. 最常用的是快速增长层级.
 
 ### 快速
 
-**定义** 快速增长层级 (Fast Growing Hierarchy, FGH) 是一个函数族 $f : \text{Ord} → ℕ → ℕ$, 对于每个序数 $α$, $f_α$ 是一个从自然数到自然数的函数, 定义如下.
+**定义** 快速增长层级 (Fast Growing Hierarchy, FGH)
 
 $$
 \begin{aligned}
@@ -458,8 +455,7 @@ $$
 $$
 
 ```agda
-infixl 6 _+_
-_+_ : Ord → Ord → Ord
+_+_ : Ord → Ord → Ord; infixl 6 _+_
 α + β = (suc ∘^ β) α
 ```
 
@@ -470,8 +466,7 @@ $$
 $$
 
 ```agda
-infixl 7 _*_
-_*_ : Ord → Ord → Ord
+_*_ : Ord → Ord → Ord; infixl 7 _*_
 α * β = ((_+ α) ∘^ β) 0
 ```
 
@@ -482,8 +477,7 @@ $$
 $$
 
 ```agda
-infix 8 _^_
-_^_ : Ord → Ord → Ord
+_^_ : Ord → Ord → Ord; infix 8 _^_
 α ^ β = ((_* α) ∘^ β) 1
 ```
 
