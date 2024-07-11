@@ -247,3 +247,58 @@ C₅ : ℕ → ℕ → ℕ → ℕ → ℕ → ℕ
 C₅ a₁ a₂ a₃ (2+ b) (2+ c) = C₅ a₁ a₂ a₃ (C₅ a₁ a₂ a₃ (suc b) (2+ c)) (suc c)
 C₅ a₁ a₂ a₃ b _ = C₄ a₁ a₂ a₃ b
 ```
+
+```agda
+C₊ : (ℕ → ℕ → ℕ) → ℕ → ℕ → ℕ → ℕ
+C₊ C a (2+ b) (2+ c) = C₊ C a (C₊ C a (suc b) (2+ c)) (suc c)
+C₊ C a b _ = C a b
+```
+
+```agda
+C₃′ : ℕ → ℕ → ℕ → ℕ
+C₃′ = C₊ C₂
+
+C₄′ : ℕ → ℕ → ℕ → ℕ → ℕ
+C₄′ a = C₊ (C₃′ a)
+
+C₅′ : ℕ → ℕ → ℕ → ℕ → ℕ → ℕ
+C₅′ a₁ a₂ = C₊ (C₄′ a₁ a₂)
+```
+
+```agda
+_→ⁿ_ : Set → ℕ → Set
+A →ⁿ zero = A
+A →ⁿ suc n = ℕ → A →ⁿ n
+```
+
+**约定** 我们用 $n$ 表示任意自然数.
+
+```agda
+variable n : ℕ
+```
+
+```agda
+open import Data.Vec using (Vec; _∷_; [])
+
+curry3 : (Vec ℕ n → ℕ → ℕ → ℕ → ℕ) → ℕ →ⁿ 3+ n
+curry3 {n = zero} F = F []
+curry3 {n = suc n} F a = curry3 λ a⃗ → F (a ∷ a⃗)
+
+uncurry2 : ℕ →ⁿ 2+ n → (Vec ℕ n → ℕ → ℕ → ℕ)
+uncurry2 {n = zero} F [] = F
+uncurry2 {n = suc n} F (a ∷ a⃗) = uncurry2 (F a) a⃗
+```
+
+```agda
+C₂₊ₙ : ℕ →ⁿ 2+ n
+C₂₊ₙ {n = 0} = _^_
+C₂₊ₙ {n = suc n} = curry3 λ a⃗ → C₊ (uncurry2 C₂₊ₙ a⃗)
+```
+
+```agda
+_ : C₂₊ₙ {2} 2 2 2 2 ≡ 4
+_ = refl
+
+_ : C₂₊ₙ {2} 3 3 1 2 ≡ 27
+_ = refl
+```
