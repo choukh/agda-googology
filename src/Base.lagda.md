@@ -572,6 +572,17 @@ fixpt : (Ord → Ord) → Ord → Ord
 fixpt F = jump (iterω F)
 ```
 
+特别地, $F$ 的最小的不动点记作 $\text{lfp}\kern{0.17em}F$
+
+$$
+\text{lfp}\kern{0.17em}F := \text{fixpt}\kern{0.17em}F\kern{0.17em}0
+$$
+
+```agda
+lfp : (Ord → Ord) → Ord
+lfp F = fixpt F 0
+```
+
 **定理** 依定义有
 
 $$
