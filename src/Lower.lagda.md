@@ -262,7 +262,7 @@ $$
 
 $$
 \begin{aligned}
-C_2\kern{0.17em}m\kern{0.17em}n &:= m^n \\
+C_2\kern{0.17em}b\kern{0.17em}c &:= b^c \\
 \end{aligned}
 $$
 
