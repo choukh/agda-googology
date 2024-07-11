@@ -349,7 +349,7 @@ C₅′ : ℕ → ℕ → ℕ → ℕ → ℕ → ℕ
 C₅′ a₁ a₂ = C₊ (C₄′ a₁ a₂)
 ```
 
-但现在我们还写不出 $C_n$, 因为首先要写出它的类型.
+但现在我们还写不出任意 $C_n$, 因为首先要写出它的类型.
 
 **定义** 陪域为 $A$ 的有限元自然数函数 $\overbrace{ℕ→...→ℕ}^n →A$, 记作 $A^{→n}$, 递归定义为
 
@@ -366,7 +366,7 @@ A →ⁿ zero = A
 A →ⁿ suc n = ℕ → A →ⁿ n
 ```
 
-观察 $C_+$ 的类型, 为了适用它, 还需要柯里化和反柯里化前 $n$ 个参数. 我们使用自然数的 $n$ 维向量 $\vec{a}^n : \text{Vec}\kern{0.17em}ℕ\kern{0.17em}n$ 来容纳反柯里化出来的 $n$ 个参数.
+观察 $C_+$ 的类型, 为了适用它, 还需要柯里化和反柯里化前 $n$ 个参数. 我们使用自然数的 $n$ 维向量 $\vec{a}^n : \text{Vec}\kern{0.17em}ℕ\kern{0.17em}n$ 来容纳反柯里化出来的 $n$ 个参数. 我们用 $[\kern{0.17em}]$ 表示空向量, 用 $a :: \vec{a}^n$ 表示向量的头尾.
 
 ```agda
 open import Data.Vec using (Vec; _∷_; [])
@@ -377,7 +377,7 @@ open import Data.Vec using (Vec; _∷_; [])
 $$
 \begin{aligned}
 \text{uncurry}_2\kern{0.17em}F\kern{0.17em}[\kern{0.17em}] &:= F \\
-\text{uncurry}_2\kern{0.17em}F\kern{0.17em}(a ∷ \vec{a}^n) &:= \text{uncurry}_2\kern{0.17em}(F\kern{0.17em}a)\kern{0.17em}\vec{a}^n
+\text{uncurry}_2\kern{0.17em}F\kern{0.17em}(a :: \vec{a}^n) &:= \text{uncurry}_2\kern{0.17em}(F\kern{0.17em}a)\kern{0.17em}\vec{a}^n
 \end{aligned}
 $$
 
@@ -392,7 +392,7 @@ uncurry₂ {n = suc n} F (a ∷ a⃗) = uncurry₂ (F a) a⃗
 $$
 \begin{aligned}
 \text{curry}_3\kern{0.17em}F &:= F\kern{0.17em}[\kern{0.17em}] \\
-\text{curry}_3\kern{0.17em}F\kern{0.17em}a &:= \text{curry}_3\kern{0.17em}λ \vec{a}^n , F\kern{0.17em}(a ∷ \vec{a}^n)
+\text{curry}_3\kern{0.17em}F\kern{0.17em}a &:= \text{curry}_3\kern{0.17em}λ \vec{a}^n , F\kern{0.17em}(a :: \vec{a}^n)
 \end{aligned}
 $$
 
