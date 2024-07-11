@@ -35,7 +35,7 @@ open import Data.Nat using (ℕ; zero; suc)
 **约定** 我们用 $A$ 表示任意类型.
 
 ```agda
-variable A : Set
+private variable A : Set
 ```
 
 **定义** 函数 $F : A → A$ 的 $n$ 次复合叫做 $F$ 的 $n$ 次迭代, 记作 $F^n$
@@ -68,8 +68,7 @@ m + n := \text{suc}^n\kern{0.17em}m
 $$
 
 ```agda
-infixl 6 _+_
-_+_ : ℕ → ℕ → ℕ
+_+_ : ℕ → ℕ → ℕ; infixl 6 _+_
 m + n = (suc ∘ⁿ n) m
 ```
 
@@ -80,8 +79,7 @@ m × n := (+m)^n\kern{0.17em}0
 $$
 
 ```agda
-infixl 7 _*_
-_*_ : ℕ → ℕ → ℕ
+_*_ : ℕ → ℕ → ℕ; infixl 7 _*_
 m * n = ((_+ m) ∘ⁿ n) 0
 ```
 
@@ -92,8 +90,7 @@ m^n := (×m)^n\kern{0.17em}1
 $$
 
 ```agda
-infixr 8 _^_
-_^_ : ℕ → ℕ → ℕ
+_^_ : ℕ → ℕ → ℕ; infixr 8 _^_
 m ^ n = ((_* m) ∘ⁿ n) 1
 ```
 
@@ -166,8 +163,7 @@ m ↑^{k^+} n^+ &:= (m ↑^k)^n\kern{0.17em}m
 $$
 
 ```agda
-infixr 9 _↑⟨_⟩_
-_↑⟨_⟩_ : ℕ → ℕ → ℕ → ℕ
+_↑⟨_⟩_ : ℕ → ℕ → ℕ → ℕ; infixr 9 _↑⟨_⟩_
 m ↑⟨ zero ⟩ n = m * n
 m ↑⟨ suc k ⟩ 0 = 1
 m ↑⟨ suc k ⟩ suc n = ((m ↑⟨ k ⟩_) ∘ⁿ n) m
