@@ -40,21 +40,21 @@ lim f ↑₁ = lim λ n → f n ↑₁
 ```agda
 _∘^₁_ : (Ord₁ → Ord₁) → Ord₁ → Ord₁ → Ord₁
 F ∘^₁ zero = id
-F ∘^₁ suc a = F ∘ (F ∘^₁ a)
-F ∘^₁ lim α[_] = λ b → lim λ n → (F ∘^₁ α[ n ]) b
-F ∘^₁ Lim a[_] = λ b → Lim λ α → (F ∘^₁ a[ α ]) b
+F ∘^₁ suc x = F ∘ (F ∘^₁ x)
+F ∘^₁ lim α[_] = λ y → lim λ n → (F ∘^₁ α[ n ]) y
+F ∘^₁ Lim x[_] = λ y → Lim λ α → (F ∘^₁ x[ α ]) y
 ```
 
 ```agda
-_+₁_ = λ a b → (suc ∘^₁ b) a      ; infixl 6 _+₁_
-_*₁_ = λ a b → ((_+₁ a) ∘^₁ b) 0  ; infixl 7 _*₁_
-_^₁_ = λ a b → ((_* a) ∘^ b) 1    ; infixr 8 _^₁_
+_+₁_ = λ x y → (suc ∘^₁ y) x      ; infixl 6 _+₁_
+_*₁_ = λ x y → ((_+₁ x) ∘^₁ y) 0  ; infixl 7 _*₁_
+_^₁_ = λ x y → ((_* x) ∘^ y) 1    ; infixr 8 _^₁_
 ```
 
 ```agda
 ψ : Ord₁ → Ord
 ψ zero = lfp (ω ^_)
-ψ (suc a) = lfp (ψ a ^_)
-ψ (lim a[_]) = lim λ n → ψ a[ n ]
-ψ (Lim a[_]) = lfp λ α → ψ a[ α ]
+ψ (suc x) = lfp (ψ x ^_)
+ψ (lim x[_]) = lim λ n → ψ x[ n ]
+ψ (Lim x[_]) = lfp λ α → ψ x[ α ]
 ```
