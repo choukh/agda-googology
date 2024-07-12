@@ -207,3 +207,47 @@ s≰ {α = lim _} (s≤ (l≤ p)) = s≰ (s≤ p)
 ≤-<-trans : α ≤ β → β < γ → α ≤ γ
 ≤-<-trans p q = ≤-trans p (<→≤ q)
 ```
+
+## 良构
+
+```agda
+mono : (ℕ → Ord) → Set
+mono f = ∀ {n} → f n < f (suc n)
+```
+
+```agda
+data wf : Ord → Set where
+  zero : wf zero
+  suc : wf α → wf (suc α)
+  lim : (∀ n → wf (f n)) → mono f → wf (lim f)
+```
+
+```agda
+wf-finord : ∀ n → wf (finord n)
+wf-finord zero = zero
+wf-finord (suc n) = suc (wf-finord n)
+```
+
+```agda
+wf-ω : wf ω
+wf-ω = lim wf-finord <s
+```
+
+```agda
+Level : Set
+Level = Σ Ord wf
+
+pattern wfo α = α , _
+private variable a b c : Level
+```
+
+```agda
+_≺_ _≈_ : Level → Level → Set; infix 4 _≺_ _≈_
+wfo α ≺ wfo β = α < β
+wfo α ≈ wfo β = α ≃ β
+```
+
+```agda
+trichotomy : a ≺ c → b ≺ c → a ≺ b ⊎ a ≈ b ⊎ b ≺ a
+trichotomy p q = {!   !}
+```
