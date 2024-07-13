@@ -1,8 +1,22 @@
+---
+title: 形式化大数数学 (2.0 - 良构树序数)
+zhihu-tags: Agda, 大数数学, 序数
+---
+
+# 形式化大数数学 (2.0 - 良构树序数)
+
+> 交流Q群: 893531731  
+> 本文源码: [Base.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Madore/Base.lagda.md)  
+> 高亮渲染: [Base.html](https://choukh.github.io/agda-googology/Madore.Base.html)  
+
+## 前言
 
 ```agda
-{-# OPTIONS --safe --lossy-unification #-}
+{-# OPTIONS --safe #-}
 module Madore.Base where
 ```
+
+### 标准库依赖
 
 ```agda
 open import Data.Unit using (⊤; tt)
@@ -13,6 +27,8 @@ open import Function using (_∋_)
 open import Relation.Nullary using (¬_)
 open import Relation.Binary.PropositionalEquality using (_≡_; _≢_; refl)
 ```
+
+## 良构树序数
 
 ```agda
 data Ord : Set
@@ -29,6 +45,8 @@ _≮_ _≤_ _≰_ _≃_ _≄_ _≦_ : Ord → Ord → Set; infix 4 _≮_ _≤_ _
 α ≄ β = ¬ α ≃ β
 α ≦ β = α < β ⊎ α ≡ β
 ```
+
+### 单调列
 
 ```agda
 isMonoSeq : (ℕ → Ord) → Set
@@ -49,21 +67,25 @@ variable
   n : ℕ
   α β γ : Ord
   f : MonoSeq
+```
 
+### 互归纳定义
+
+```agda
 data Ord where
   zero : Ord
   suc  : Ord → Ord
   lim  : MonoSeq → Ord
 pre-suc = suc
-```
 
-```agda
 data _<_ where
   ≤-refl : α ≤ α
   <→≤ : α < β → α ≤ β
   f<l : f [ n ] < lim f
   <l : α < f [ n ] → α < lim f
 ```
+
+### 字面量重载
 
 ```agda
 open import Lower public using (_∘ⁿ_)
@@ -75,6 +97,8 @@ instance
   nNat = Number ℕ   ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
   nOrd = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → finord n }
 ```
+
+## 偏序
 
 ```agda
 <-trans : α < β → β < γ → α < γ
@@ -103,17 +127,6 @@ instance
 ```
 
 ```agda
-≃-refl : α ≃ α
-≃-refl = ≤-refl , ≤-refl
-
-≃-sym : α ≃ β → β ≃ α
-≃-sym (p , q) = q , p
-
-≃-trans : α ≃ β → β ≃ γ → α ≃ γ
-≃-trans (p , q) (u , v) = ≤-trans p u , ≤-trans v q
-```
-
-```agda
 f≢l : f [ n ] ≢ lim f
 f≢l {f} {n} p with f [ n ] in eq
 f≢l refl | lim g = f≢l eq
@@ -134,4 +147,17 @@ f≢l refl | lim g = f≢l eq
 
 <-asym : α < β → β ≮ α
 <-asym p q = <-irrefl (<-trans p q)
+```
+
+## 外延相等
+
+```agda
+≃-refl : α ≃ α
+≃-refl = ≤-refl , ≤-refl
+
+≃-sym : α ≃ β → β ≃ α
+≃-sym (p , q) = q , p
+
+≃-trans : α ≃ β → β ≃ γ → α ≃ γ
+≃-trans (p , q) (u , v) = ≤-trans p u , ≤-trans v q
 ```
