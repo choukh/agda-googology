@@ -1,7 +1,7 @@
 
 ```agda
 module Madore.OneΩ where
-open import Base public
+open import Base
 ```
 
 ```agda
