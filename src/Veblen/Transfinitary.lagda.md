@@ -17,7 +17,7 @@ Agda 编程上, 我们开启了一些高级特性 (有损合一化, 自定义重
 ```agda
 {-# OPTIONS --lossy-unification --rewriting --local-confluence-check #-}
 module Veblen.Transfinitary where
-open import Base public
+open import Veblen.Base public
 ```
 
 ## 超限元函数类型

@@ -13,7 +13,7 @@ zhihu-url: https://zhuanlan.zhihu.com/p/707292191
 ```agda
 {-# OPTIONS --lossy-unification --rewriting --local-confluence-check #-}
 module Veblen.Infinitary where
-open import Base public hiding (F)
+open import Veblen.Base public hiding (F)
 ```
 
 本篇要讲的无限元Veblen函数, 并不是超限元或者说序元 (以序数作为元数) Veblen函数. 我们将踏入这个层次, 但还没有完全覆盖. 从有限到超限的过程中, 有一个里程碑式的层级—— $ω+n$ 元Veblen函数, 我们称为无限元Veblen函数.
