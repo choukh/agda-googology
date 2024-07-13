@@ -1,12 +1,12 @@
 
 ```agda
 {-# OPTIONS --safe --lossy-unification #-}
-module WellFormed where
+module Madore.Base where
 ```
 
 ```agda
-open import Data.Nat using (ℕ; zero; suc)
 open import Data.Unit using (⊤; tt)
+open import Data.Nat using (ℕ; zero; suc)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Data.Product using (Σ; ∃-syntax; _×_; _,_)
 open import Function using (_∋_)

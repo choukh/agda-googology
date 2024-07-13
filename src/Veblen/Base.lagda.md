@@ -7,8 +7,8 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 # 形式化大数数学 (1.0 - 序数, 增长层级, 不动点)
 
 > 交流Q群: 893531731  
-> 本文源码: [Base.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Base.lagda.md)  
-> 高亮渲染: [Base.html](https://choukh.github.io/agda-googology/Base.html)  
+> 本文源码: [Base.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Veblen/Base.lagda.md)  
+> 高亮渲染: [Base.html](https://choukh.github.io/agda-googology/Veblen.Base.html)  
 
 ## 前言
 
@@ -23,7 +23,7 @@ zhihu-url: https://zhuanlan.zhihu.com/p/705306447
 
 ```agda
 {-# OPTIONS --safe #-}
-module Base where
+module Veblen.Base where
 ```
 
 也就是说, 提供足够的时间, 能量和内存, 本文介绍的大数计算程序可以真正算出一个大数. 如果真的想运行:
