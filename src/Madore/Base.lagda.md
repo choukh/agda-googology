@@ -23,10 +23,10 @@ open import Data.Empty using (⊥; ⊥-elim)
 open import Data.Unit using (⊤; tt)
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Product using (Σ; ∃-syntax; _×_; _,_)
-open import Function using (id; _∘_; _∋_; it)
+open import Data.Product using (Σ; ∃-syntax; _×_; _,_; proj₁; proj₂)
+open import Function using (_∘_; _∋_; it)
 open import Relation.Nullary using (¬_)
-open import Relation.Binary.PropositionalEquality
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
 ```
 
 ## 互归纳定义
@@ -45,18 +45,21 @@ _≮_ _≤_ _≰_ : Ord → Ord → Set; infix 4 _≮_ _≤_ _≰_
 α ≰ β = ¬ α ≤ β
 ```
 
-**定义** 单调列
+**定义** 递增序列
 
 ```agda
-mono : (ℕ → Ord) → Set
-mono f = ∀ {n} → f n < f (suc n)
+Seq : Set
+Seq = ℕ → Ord
+
+wf : Seq → Set
+wf f = ∀ {n} → f n < f (suc n)
 ```
 
 ```agda
 variable
   n : ℕ
-  α β γ : Ord
-  f g h : ℕ → Ord
+  α β γ ι : Ord
+  f g h : Seq
 ```
 
 **定义** 良构树序数
@@ -65,7 +68,7 @@ variable
 data Ord where
   zero : Ord
   suc  : Ord → Ord
-  lim  : (f : ℕ → Ord) → ⦃ mono f ⦄ → Ord
+  lim  : (f : Seq) → ⦃ wf f ⦄ → Ord
 ```
 
 **定义** 子树关系
@@ -74,15 +77,15 @@ data Ord where
 data _<_ where
   suc  : α < suc α
   suc₂ : α < β → α < suc β
-  lim  : ⦃ _ : mono f ⦄ → f n < lim f
-  lim₂ : ⦃ _ : mono f ⦄ → α < f n → α < lim f
+  lim  : ⦃ _ : wf f ⦄ → f n < lim f
+  lim₂ : ⦃ _ : wf f ⦄ → α < f n → α < lim f
 ```
 
 字面量重载
 
 ```agda
 open import Lower public using (_∘ⁿ_)
-finord : ℕ → Ord
+finord : Seq
 finord n = (suc ∘ⁿ n) zero
 
 open import Agda.Builtin.FromNat public
@@ -104,7 +107,7 @@ instance
 ```
 
 ```agda
-<l-inv : ⦃ _ : mono f ⦄ → α < lim f → ∃[ n ] α < f n
+<l-inv : ⦃ _ : wf f ⦄ → α < lim f → ∃[ n ] α < f n
 <l-inv (lim {n}) = suc n , it
 <l-inv (lim₂ {n} p) = n , p
 ```
@@ -161,13 +164,36 @@ pattern inj³ x = inj₂ (inj₂ x)
 
 ```agda
 _≘_ : Ord → Ord → Set
-α ≘ β = ∃[ γ ] (α ≤ γ × β ≤ γ ⊎ γ ≤ α × γ ≤ β)
+α ≘ β = ∃[ γ ] α ≤ γ × β ≤ γ
 ```
 
 ```agda
 <-trich : α ≘ β → α < β ⊎ α ≡ β ⊎ β < α
-<-trich (γ , inj₁ p) = {!   !}
-<-trich (γ , inj₂ q) = {!   !}
+<-trich (γ , inj₁ p , inj₁ q) = <-dec p q
+<-trich (γ , inj₁ p , inj₂ refl) = inj₁ p
+<-trich (γ , inj₂ refl , inj₁ q) = inj³ q
+<-trich (γ , inj₂ refl , inj₂ q) = inj² (sym q)
+
+≤-total : α ≘ β → α ≤ β ⊎ β ≤ α
+≤-total p with <-trich p
+... | inj₁ p = inj₁ (inj₁ p)
+... | inj² p = inj₁ (inj₂ p)
+... | inj³ p = inj₂ (inj₁ p)
+```
+
+```agda
+≘-refl : α ≘ α
+≘-refl = _ , ≤-refl , ≤-refl
+```
+
+```agda
+≘-sym : α ≘ β → β ≘ α
+≘-sym (γ , p , q) = γ , q , p
+```
+
+```agda
+≘-trans : α ≘ β → β ≘ γ → α ≘ γ
+≘-trans p q = {!   !}
 ```
 
 ## 跨树关系
@@ -207,7 +233,7 @@ _≺_ _⋠_ _⊀_ : Ord → Ord → Set
 data _≼_ where
   z≼ : zero ≼ β
   s≼ : α ≼ β ∸ d → α ≺ β
-  l≼ : ⦃ _ : mono f ⦄ → (∀ {n} → f n ≼ β) → lim f ≼ β
+  l≼ : ⦃ _ : wf f ⦄ → (∀ {n} → f n ≼ β) → lim f ≼ β
 ```
 
 ```agda
@@ -218,7 +244,7 @@ data _≼_ where
 ```
 
 ```agda
-module _ ⦃ _ : mono f ⦄ where
+module _ ⦃ _ : wf f ⦄ where
 ```
 
 ```agda
@@ -254,7 +280,7 @@ s≺s-inj = s≼s-inj
 ```
 
 ```agda
-l≼l : ⦃ _ : mono f ⦄ ⦃ _ : mono g ⦄
+l≼l : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄
   → (∀ {n} → f n ≼ g n) → lim f ≼ lim g
 l≼l f≼g = l≼ (≼l f≼g)
 ```
@@ -269,3 +295,71 @@ l≼l f≼g = l≼ (≼l f≼g)
 ### 外延相等
 
 ### 严格偏序
+
+## 序数函数
+
+```agda
+Func : Set
+Func = Ord → Ord
+
+_∘̇_ : Func → Seq → Seq
+F ∘̇ f = λ n → F (f n)
+```
+
+```agda
+monotonic : Func → Set
+monotonic F = ∀ {α β} → α < β → F α < F β
+
+inflationary : Func → Set
+inflationary F = ∀ {α} → α < F α
+
+normal : ∀ F → monotonic F → Set
+normal F mono = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ mono it ⦄
+```
+
+```agda
+record MonoFunc : Set where
+  constructor mkMonoFunc
+  field
+    _[_] : Func
+    mono : monotonic _[_]
+
+record MonoInflFunc : Set where
+  constructor mkMonoInflFunc
+  field
+    _[_] : Func
+    mono : monotonic _[_]
+    infl : inflationary _[_]
+
+record NormalFunc : Set where
+  constructor mkNormalFunc
+  field
+    _[_] : Func
+    mono : monotonic _[_]
+    norm : normal _[_] mono
+```
+
+```agda
+open MonoFunc public
+open MonoInflFunc public
+open NormalFunc public
+```
+
+```agda
+_^⟨_⟩_ : MonoInflFunc → Ord → Func
+^⟨⟩-wf : ∀ {F} → monotonic (λ α → F ^⟨ α ⟩ ι)
+
+F ^⟨ zero ⟩ ι = ι
+F ^⟨ suc α ⟩ ι = (F [_] ∘ F ^⟨ α ⟩_) ι
+F ^⟨ lim f ⟩ ι = lim (λ n → F ^⟨ f n ⟩ ι) ⦃ ^⟨⟩-wf it ⦄
+
+^⟨⟩-wf {F} suc       = infl F
+^⟨⟩-wf {F} (suc₂ p)  = <-trans (infl F) (mono F (^⟨⟩-wf p))
+^⟨⟩-wf {F} lim       = lim₂ ⦃ ^⟨⟩-wf it ⦄ (^⟨⟩-wf it)
+^⟨⟩-wf {F} (lim₂ p)  = <-trans (^⟨⟩-wf p) (lim₂ ⦃ ^⟨⟩-wf it ⦄ (^⟨⟩-wf it))
+```
+
+## 序数算术
+
+```agda
+```
