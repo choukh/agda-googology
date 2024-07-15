@@ -96,13 +96,13 @@ lim-inj refl = refl
 ```agda
 suc-inv : α < suc β → α ≤ β
 suc-inv suc = inj₂ refl
-suc-inv (suc₂ p) = inj₁ p
+suc-inv (suc₂ α<β) = inj₁ α<β
 ```
 
 ```agda
 lim-inv : ⦃ _ : wf f ⦄ → α < lim f → ∃[ n ] α < f n
 lim-inv (lim {n}) = suc n , it
-lim-inv (lim₂ {n} p) = n , p
+lim-inv (lim₂ {n} α<f) = n , α<f
 ```
 
 字面量重载
@@ -128,8 +128,8 @@ open import Relation.Binary.Structures {A = Ord} _≡_ as ≡
 
 ```agda
 <-trans : Transitive _<_
-<-trans p suc = suc₂ p
-<-trans p lim = lim₂ p
+<-trans α<β suc = suc₂ α<β
+<-trans α<f lim = lim₂ α<f
 <-trans p (suc₂ q) = suc₂ (<-trans p q)
 <-trans p (lim₂ q) = lim₂ (<-trans p q)
 ```
@@ -202,7 +202,7 @@ module SubTreeReasoning where
     public
 ```
 
-### 线序性
+### 受限的三歧性
 
 ```agda
 pattern inj² x = inj₂ (inj₁ x)
@@ -302,10 +302,10 @@ data _≼_ where
 ```
 
 ```agda
-≺→≼ : α ≺ β → α ≼ β
-≺→≼ (s≼ z≼) = z≼
-≺→≼ (s≼ (s≼ p)) = s≼ (≺→≼ (s≼ p))
-≺→≼ (s≼ (l≼ p)) = l≼ (≺→≼ (s≼ p))
+≺⇒≼ : _≺_ ⇒ _≼_
+≺⇒≼ (s≼ z≼) = z≼
+≺⇒≼ (s≼ (s≼ p)) = s≼ (≺⇒≼ (s≼ p))
+≺⇒≼ (s≼ (l≼ p)) = l≼ (≺⇒≼ (s≼ p))
 ```
 
 ```agda
@@ -333,7 +333,7 @@ z≺s = s≼s z≼
 ```agda
 s≼s-inj : suc α ≼ suc β → α ≼ β
 s≼s-inj (s≼ {d = inj₁ tt} p) = p
-s≼s-inj (s≼ {d = inj₂ d } p) = ≺→≼ (s≼ p)
+s≼s-inj (s≼ {d = inj₂ d } p) = ≺⇒≼ (s≼ p)
 ```
 
 ```agda
@@ -379,13 +379,18 @@ F ∘̇ f = λ n → F (f n)
 <-monotonic : Func → Set
 <-monotonic F = ∀ {α β} → α < β → F α < F β
 
+<-inflationary : Func → Set
+<-inflationary F = ∀ {α} → α < F α
+
+≤-inflationary : Func → Set
+≤-inflationary F = ∀ {α} → α ≤ F α
+
+normal : <-monotonic F → Set
+normal {F} mono = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ mono it ⦄
+```
+
+```agda
 <-mono→≤-mono : <-monotonic F → ≤-monotonic F
 <-mono→≤-mono <-mono (inj₁ p) = <⇒≤ (<-mono p)
 <-mono→≤-mono <-mono (inj₂ refl) = inj₂ refl
-
-inflationary : Func → Set
-inflationary F = ∀ {α} → α < F α
-
-normal : ∀ F → <-monotonic F → Set
-normal F mono = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ mono it ⦄
 ```
