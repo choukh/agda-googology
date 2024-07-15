@@ -19,14 +19,18 @@ module Madore.Base where
 ### 标准库依赖
 
 ```agda
-open import Data.Empty using (⊥; ⊥-elim)
-open import Data.Unit using (⊤; tt)
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Data.Product using (Σ; ∃-syntax; _×_; _,_; proj₁; proj₂)
-open import Function using (_∘_; _∋_; it)
-open import Relation.Nullary using (¬_)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
+open import Data.Empty public using (⊥)
+open import Data.Unit public using (⊤; tt)
+open import Data.Nat public using (ℕ; zero; suc)
+open import Data.Sum public using (_⊎_; inj₁; inj₂)
+open import Data.Product public using (Σ; ∃-syntax; _×_; _,_; proj₁; proj₂)
+open import Function public using (id; _∘_; _∋_; it)
+open import Relation.Nullary public using (¬_)
+open import Relation.Binary.PropositionalEquality public using (_≡_; _≢_; refl; sym)
+
+open import Relation.Binary
+open import Relation.Binary.Consequences using (trans∧irr⇒asym)
+open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
 ```
 
 ## 互归纳定义
@@ -39,10 +43,8 @@ data _<_ : Ord → Ord → Set; infix 4 _<_
 ```
 
 ```agda
-_≮_ _≤_ _≰_ : Ord → Ord → Set; infix 4 _≮_ _≤_ _≰_
-α ≮ β = ¬ α < β
-α ≤ β = α < β ⊎ α ≡ β
-α ≰ β = ¬ α ≤ β
+open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
+  as SubTreeLe public using (_≤_; <⇒≤)
 ```
 
 **定义** 递增序列
@@ -81,25 +83,51 @@ data _<_ where
   lim₂ : ⦃ _ : wf f ⦄ → α < f n → α < lim f
 ```
 
+构造子性质
+
+```agda
+suc-inj : suc α ≡ suc β → α ≡ β
+suc-inj refl = refl
+
+lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≡ lim g → f ≡ g
+lim-inj refl = refl
+```
+
+```agda
+suc-inv : α < suc β → α ≤ β
+suc-inv suc = inj₂ refl
+suc-inv (suc₂ p) = inj₁ p
+```
+
+```agda
+lim-inv : ⦃ _ : wf f ⦄ → α < lim f → ∃[ n ] α < f n
+lim-inv (lim {n}) = suc n , it
+lim-inv (lim₂ {n} p) = n , p
+```
+
 字面量重载
 
 ```agda
 open import Lower public using (_∘ⁿ_)
-finord : Seq
-finord n = (suc ∘ⁿ n) zero
+fin : Seq
+fin n = (suc ∘ⁿ n) zero
 
 open import Agda.Builtin.FromNat public
 instance
   nNat = Number ℕ   ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
-  nOrd = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → finord n }
+  nOrd = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → fin n }
 ```
 
 ## 子树关系
 
+```agda
+open import Relation.Binary.Structures {A = Ord} _≡_ as ≡
+```
+
 ### 严格偏序
 
 ```agda
-<-trans : α < β → β < γ → α < γ
+<-trans : Transitive _<_
 <-trans p suc = suc₂ p
 <-trans p lim = lim₂ p
 <-trans p (suc₂ q) = suc₂ (<-trans p q)
@@ -107,38 +135,71 @@ instance
 ```
 
 ```agda
-<l-inv : ⦃ _ : wf f ⦄ → α < lim f → ∃[ n ] α < f n
-<l-inv (lim {n}) = suc n , it
-<l-inv (lim₂ {n} p) = n , p
+<-irrefl : Irreflexive _≡_ _<_
+<-irrefl {suc α} refl q with suc-inv q
+... | inj₁ q = <-irrefl refl (<-trans suc q)
+<-irrefl {lim f} refl q with lim-inv q
+... | n , q = <-irrefl refl (<-trans lim q)
 ```
 
 ```agda
-<-irrefl : α ≮ α
-<-irrefl {α = suc α} (suc₂ p) = <-irrefl {α = α} (<-trans suc p)
-<-irrefl {α = lim f} p with <l-inv p
-... | n , p = <-irrefl {α = f n} (<-trans lim p)
+<-asym : Asymmetric _<_
+<-asym = trans∧irr⇒asym {_≈_ = _≡_} refl <-trans <-irrefl
 ```
 
 ```agda
-<-asym : α < β → β ≮ α
-<-asym p q = <-irrefl (<-trans p q)
+<-resp-≡ : _<_ Respects₂ _≡_
+<-resp-≡ = (λ { refl → id }) , (λ { refl → id })
+```
+
+```agda
+<-isStrictPartialOrder : ≡.IsStrictPartialOrder _<_
+<-isStrictPartialOrder = record
+  { isEquivalence = isEquivalence
+  ; irrefl = <-irrefl
+  ; trans = <-trans
+  ; <-resp-≈ = <-resp-≡ }
 ```
 
 ### 非严格偏序
 
 ```agda
-≤-refl : α ≤ α
-≤-refl = inj₂ refl
+≤-refl : Reflexive _≤_
+≤-refl = SubTreeLe.reflexive refl
 
-≤-antisym : α ≤ β → β ≤ α → α ≡ β
-≤-antisym _ (inj₂ refl) = refl
-≤-antisym (inj₂ refl) _ = refl
-≤-antisym (inj₁ p) (inj₁ q) = ⊥-elim (<-asym p q)
+≤-antisym : Antisymmetric _≡_ _≤_
+≤-antisym = SubTreeLe.antisym isEquivalence <-trans <-irrefl
 
-≤-trans : α ≤ β → β ≤ γ → α ≤ γ
-≤-trans (inj₁ p) (inj₁ q) = inj₁ (<-trans p q)
-≤-trans p (inj₂ refl) = p
-≤-trans (inj₂ refl) q = q
+≤-trans : Transitive _≤_
+≤-trans = SubTreeLe.trans isEquivalence <-resp-≡ <-trans
+```
+
+```agda
+<-≤-trans : Trans _<_ _≤_ _<_
+<-≤-trans = SubTreeLe.<-≤-trans <-trans (proj₁ <-resp-≡)
+
+≤-<-trans : Trans _≤_ _<_ _<_
+≤-<-trans = SubTreeLe.≤-<-trans sym <-trans (proj₂ <-resp-≡)
+```
+
+```agda
+≤-isPreorder : ≡.IsPreorder _≤_
+≤-isPreorder = record
+  { isEquivalence = isEquivalence
+  ; reflexive = inj₂
+  ; trans = ≤-trans
+  }
+
+≤-isPartialOrder : ≡.IsPartialOrder _≤_
+≤-isPartialOrder = record { isPreorder = ≤-isPreorder ; antisym = ≤-antisym }
+```
+
+```agda
+module SubTreeReasoning where
+  open import Relation.Binary.Reasoning.Base.Triple
+    {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<_}
+    ≤-isPreorder <-asym <-trans <-resp-≡ <⇒≤ <-≤-trans
+    public
 ```
 
 ### 线序性
@@ -149,15 +210,15 @@ pattern inj³ x = inj₂ (inj₂ x)
 ```
 
 ```agda
-<-dec : α < γ → β < γ → α < β ⊎ α ≡ β ⊎ β < α
-<-dec suc       suc       = inj² refl
-<-dec suc       (suc₂ q)  = {!   !}
-<-dec (suc₂ p)  suc       = {!   !}
-<-dec (suc₂ p)  (suc₂ q)  = {!   !}
-<-dec lim       lim       = {!   !}
-<-dec lim       (lim₂ q)  = {!   !}
-<-dec (lim₂ p)  lim       = {!   !}
-<-dec (lim₂ p)  (lim₂ q)  = {!   !}
+<-trich : α < γ → β < γ → α < β ⊎ α ≡ β ⊎ β < α
+<-trich suc       suc       = inj² refl
+<-trich suc       (suc₂ q)  = inj³ q
+<-trich (suc₂ p)  suc       = inj₁ p
+<-trich (suc₂ p)  (suc₂ q)  = <-trich p q
+<-trich lim       lim       = {!   !}
+<-trich lim       (lim₂ q)  = {!   !}
+<-trich (lim₂ p)  lim       = {!   !}
+<-trich (lim₂ p)  (lim₂ q)  = {!   !}
 ```
 
 **定义** 同株
@@ -168,14 +229,14 @@ _≘_ : Ord → Ord → Set
 ```
 
 ```agda
-<-trich : α ≘ β → α < β ⊎ α ≡ β ⊎ β < α
-<-trich (γ , inj₁ p , inj₁ q) = <-dec p q
-<-trich (γ , inj₁ p , inj₂ refl) = inj₁ p
-<-trich (γ , inj₂ refl , inj₁ q) = inj³ q
-<-trich (γ , inj₂ refl , inj₂ q) = inj² (sym q)
+<-trich-≘ : α ≘ β → α < β ⊎ α ≡ β ⊎ β < α
+<-trich-≘ (γ , inj₁ p , inj₁ q) = <-trich p q
+<-trich-≘ (γ , inj₁ p , inj₂ refl) = inj₁ p
+<-trich-≘ (γ , inj₂ refl , inj₁ q) = inj³ q
+<-trich-≘ (γ , inj₂ refl , inj₂ q) = inj² (sym q)
 
-≤-total : α ≘ β → α ≤ β ⊎ β ≤ α
-≤-total p with <-trich p
+≤-total-≘ : α ≘ β → α ≤ β ⊎ β ≤ α
+≤-total-≘ p with <-trich-≘ p
 ... | inj₁ p = inj₁ (inj₁ p)
 ... | inj² p = inj₁ (inj₂ p)
 ... | inj³ p = inj₂ (inj₁ p)
@@ -220,16 +281,20 @@ suc α ∸ inj₂ d  = α ∸ d
 lim f ∸ (n , d) = f n ∸ d
 ```
 
+```agda
+infix 4 _≼_ _⋠_ _≺_ _⊀_ _≃_ _≄_
+data _≼_ : Ord → Ord → Set
+_⋠_ _≺_ _⊀_ _≃_ _≄_ : Ord → Ord → Set
+α ⋠ β = ¬ α ≼ β
+α ≺ β = suc α ≼ β
+α ⊀ β = ¬ α ≺ β
+α ≃ β = α ≼ β × β ≼ α
+α ≄ β = ¬ α ≃ β
+```
+
 ### 非严格偏序
 
 ```agda
-infix 4 _≼_ _≺_ _⋠_ _⊀_
-data _≼_ : Ord → Ord → Set
-_≺_ _⋠_ _⊀_ : Ord → Ord → Set
-α ≺ β = suc α ≼ β
-α ⋠ β = ¬ α ≼ β
-α ⊀ β = ¬ α ≺ β
-
 data _≼_ where
   z≼ : zero ≼ β
   s≼ : α ≼ β ∸ d → α ≺ β
@@ -301,65 +366,26 @@ l≼l f≼g = l≼ (≼l f≼g)
 ```agda
 Func : Set
 Func = Ord → Ord
+variable F : Func
 
 _∘̇_ : Func → Seq → Seq
 F ∘̇ f = λ n → F (f n)
 ```
 
 ```agda
-monotonic : Func → Set
-monotonic F = ∀ {α β} → α < β → F α < F β
+≤-monotonic : Func → Set
+≤-monotonic F = ∀ {α β} → α ≤ β → F α ≤ F β
+
+<-monotonic : Func → Set
+<-monotonic F = ∀ {α β} → α < β → F α < F β
+
+<-mono→≤-mono : <-monotonic F → ≤-monotonic F
+<-mono→≤-mono <-mono (inj₁ p) = <⇒≤ (<-mono p)
+<-mono→≤-mono <-mono (inj₂ refl) = inj₂ refl
 
 inflationary : Func → Set
 inflationary F = ∀ {α} → α < F α
 
-normal : ∀ F → monotonic F → Set
+normal : ∀ F → <-monotonic F → Set
 normal F mono = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ mono it ⦄
-```
-
-```agda
-record MonoFunc : Set where
-  constructor mkMonoFunc
-  field
-    _[_] : Func
-    mono : monotonic _[_]
-
-record MonoInflFunc : Set where
-  constructor mkMonoInflFunc
-  field
-    _[_] : Func
-    mono : monotonic _[_]
-    infl : inflationary _[_]
-
-record NormalFunc : Set where
-  constructor mkNormalFunc
-  field
-    _[_] : Func
-    mono : monotonic _[_]
-    norm : normal _[_] mono
-```
-
-```agda
-open MonoFunc public
-open MonoInflFunc public
-open NormalFunc public
-```
-
-```agda
-_^⟨_⟩_ : MonoInflFunc → Ord → Func
-^⟨⟩-wf : ∀ {F} → monotonic (λ α → F ^⟨ α ⟩ ι)
-
-F ^⟨ zero ⟩ ι = ι
-F ^⟨ suc α ⟩ ι = (F [_] ∘ F ^⟨ α ⟩_) ι
-F ^⟨ lim f ⟩ ι = lim (λ n → F ^⟨ f n ⟩ ι) ⦃ ^⟨⟩-wf it ⦄
-
-^⟨⟩-wf {F} suc       = infl F
-^⟨⟩-wf {F} (suc₂ p)  = <-trans (infl F) (mono F (^⟨⟩-wf p))
-^⟨⟩-wf {F} lim       = lim₂ ⦃ ^⟨⟩-wf it ⦄ (^⟨⟩-wf it)
-^⟨⟩-wf {F} (lim₂ p)  = <-trans (^⟨⟩-wf p) (lim₂ ⦃ ^⟨⟩-wf it ⦄ (^⟨⟩-wf it))
-```
-
-## 序数算术
-
-```agda
 ```
