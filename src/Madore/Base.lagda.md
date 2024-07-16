@@ -25,7 +25,7 @@ open import Data.Nat as ℕ public using (ℕ; zero; suc)
 open import Data.Nat.Properties as ℕ public using ()
 open import Data.Sum public using (_⊎_; inj₁; inj₂)
 open import Data.Product public using (Σ; ∃-syntax; _×_; _,_; proj₁; proj₂)
-open import Function public using (id; _∘_; _$_; _∋_)
+open import Function public using (id; _∘_; _$_; _∋_; it)
 open import Relation.Nullary public using (¬_)
 open import Relation.Binary.PropositionalEquality public hiding ([_])
 
@@ -71,7 +71,7 @@ variable
 data Ord where
   zero : Ord
   suc  : Ord → Ord
-  lim  : (f : Seq) (f↑ : wf f) → Ord
+  lim  : (f : Seq) → ⦃ wf f ⦄ → Ord
 ```
 
 **定义** 子树关系
@@ -80,8 +80,8 @@ data Ord where
 data _<_ where
   suc  : a < suc a
   suc₂ : a < b → a < suc b
-  lim  : {f↑ : wf f} → f n < lim f f↑
-  lim₂ : {f↑ : wf f} → a < f n → a < lim f f↑
+  lim  : ⦃ _ : wf f ⦄ → f n < lim f
+  lim₂ : ⦃ _ : wf f ⦄ → a < f n → a < lim f
 ```
 
 字面量重载
@@ -109,12 +109,12 @@ pattern 2+ a = suc (suc a)
 suc-inj : suc a ≡ suc b → a ≡ b
 suc-inj refl = refl
 
-lim-inj : {f↑ : wf f} {g↑ : wf g} → lim f f↑ ≡ lim g g↑ → f ≡ g
+lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≡ lim g → f ≡ g
 lim-inj refl = refl
 ```
 
 ```agda
-lim≤ : {f↑ : wf f} → a ≤ f n → a < lim f f↑
+lim≤ : ⦃ _ : wf f ⦄ → a ≤ f n → a < lim f
 lim≤ (inj₁ a<f) = lim₂ a<f
 lim≤ (inj₂ refl) = lim
 ```
@@ -125,26 +125,26 @@ lim≤ (inj₂ refl) = lim
 z<s : 0 < suc a
 z<b : a < b → 0 < b
 
-z<s {a = zero}      = suc
-z<s {a = suc a}     = suc₂ z<s
-z<s {a = lim f f↑}  = suc₂ (lim₂ {n = 1} (z<b f↑))
+z<s {a = zero}  = suc
+z<s {a = suc _} = suc₂ z<s
+z<s {a = lim _} = suc₂ (lim₂ {n = 1} (z<b it))
 
 z<b suc = z<s
-z<b (suc₂ p)        = z<s
-z<b (lim {n} {f↑})  = lim₂ {n = suc n} (z<b f↑)
-z<b (lim₂ {f↑} _)   = lim₂ {n = 1} (z<b f↑)
+z<b (suc₂ _)  = z<s
+z<b (lim {n}) = lim₂ {n = suc n} (z<b it)
+z<b (lim₂ _)  = lim₂ {n = 1} (z<b it)
 ```
 
 ```agda
-z<l : {f↑ : wf f} → 0 < lim f f↑
-z<l {f↑} = lim₂ {n = 1} (z<b f↑)
+z<l : ⦃ _ : wf f ⦄ → 0 < lim f
+z<l = lim₂ {n = 1} (z<b it)
 ```
 
 ```agda
 z≤ : 0 ≤ a
-z≤ {a = zero}     = inj₂ refl
-z≤ {a = suc _}    = inj₁ z<s
-z≤ {a = lim _ _}  = inj₁ z<l
+z≤ {a = zero}   = inj₂ refl
+z≤ {a = suc _}  = inj₁ z<s
+z≤ {a = lim _}  = inj₁ z<l
 ```
 
 ## 子树关系
@@ -170,8 +170,8 @@ suc-inv (suc₂ a<b) = inj₁ a<b
 ```
 
 ```agda
-lim-inv : {f↑ : wf f} → a < lim f f↑ → ∃[ n ] a < f n
-lim-inv {f↑} lim   = _ , f↑
+lim-inv : ⦃ _ : wf f ⦄ → a < lim f → ∃[ n ] a < f n
+lim-inv lim   = _ , it
 lim-inv (lim₂ a<f) = _ , a<f
 ```
 
@@ -179,7 +179,7 @@ lim-inv (lim₂ a<f) = _ , a<f
 <-irrefl : Irreflexive _≡_ _<_
 <-irrefl {suc a} refl s<s with suc-inv s<s
 ... | inj₁ s<a = <-irrefl refl (<-trans suc s<a)
-<-irrefl {lim f _} refl l<l with lim-inv l<l
+<-irrefl {lim _} refl l<l with lim-inv l<l
 ... | n , l<f = <-irrefl refl (<-trans lim l<f)
 ```
 
@@ -246,23 +246,42 @@ module SubTreeReasoning where
 ### 不完全的三歧性
 
 ```
-wf→mono : wf f → m ℕ.< n → f m < f n
-wf→mono f↑ (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
-... | inj₁ m<n  = <-trans (wf→mono f↑ m<n) f↑
-... | inj₂ refl = f↑
+mono : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
+mono (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inj₁ m<n  = <-trans (mono m<n) it
+... | inj₂ refl = it
 ```
 
 ```agda
-wf→inj : wf f → f m ≡ f n → m ≡ n
-wf→inj {m} {n} f↑ eq with ℕ.<-cmp m n
-... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (wf→mono f↑ m<n))
+inj : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
+inj {m} {n} eq with ℕ.<-cmp m n
+... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (mono m<n))
 ... | tri≈ _ refl _ = refl
-... | tri> _ _ n<m  = ⊥-elim (<-irrefl (sym eq) (wf→mono f↑ n<m))
+... | tri> _ _ n<m  = ⊥-elim (<-irrefl (sym eq) (mono n<m))
 ```
 
 ```agda
 <-cmp⊎ : a < c → b < c → a < b ⊎ a ≡ b ⊎ b < a
-<-cmp⊎ p q = {!   !}
+<-cmp⊎ suc        suc         = inj₂ $ inj₁ refl
+<-cmp⊎ suc        (suc₂ b<a)  = inj₂ $ inj₂ b<a
+<-cmp⊎ (suc₂ a<b) suc         = inj₁ a<b
+<-cmp⊎ (suc₂ a<c) (suc₂ b<c)  = <-cmp⊎ a<c b<c
+<-cmp⊎ (lim {n = m}) (lim {n}) with ℕ.<-cmp m n
+... | tri< m<n _ _  = inj₁ $ mono m<n
+... | tri≈ _ refl _ = inj₂ $ inj₁ refl
+... | tri> _ _ n<m  = inj₂ $ inj₂ $ mono n<m
+<-cmp⊎ (lim {n = m}) (lim₂ {n} b<f) with ℕ.<-cmp m n
+... | tri< m<n _ _  = <-cmp⊎ (mono m<n) b<f
+... | tri≈ _ refl _ = inj₂ $ inj₂ b<f
+... | tri> _ _ n<m  = inj₂ $ inj₂ $ <-trans b<f $ mono n<m
+<-cmp⊎ (lim₂ {n = m} a<f) (lim {n}) with ℕ.<-cmp m n
+... | tri< m<n _ _  = inj₁ $ <-trans a<f $ mono m<n
+... | tri≈ _ refl _ = inj₁ a<f
+... | tri> _ _ n<m  = <-cmp⊎ a<f (mono n<m)
+<-cmp⊎ (lim₂ {n = m} a<f) (lim₂ {n} b<f) with ℕ.<-cmp m n
+... | tri< m<n _ _  = <-cmp⊎ (<-trans a<f (mono m<n)) b<f
+... | tri≈ _ refl _ = <-cmp⊎ a<f b<f
+... | tri> _ _ n<m  = <-cmp⊎ a<f (<-trans b<f (mono n<m))
 ```
 
 ```agda
@@ -314,7 +333,7 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 Depth : Ord → Set
 Depth zero    = ⊥
 Depth (suc a) = ⊤ ⊎ Depth a
-Depth (lim f _) = Σ ℕ λ n → Depth (f n)
+Depth (lim f) = Σ ℕ λ n → Depth (f n)
 
 private variable δ : Depth a
 ```
@@ -323,9 +342,9 @@ private variable δ : Depth a
 
 ```agda
 _∸_ : ∀ a → Depth a → Ord; infixl 6 _∸_
-suc a   ∸ inj₁ tt = a
-suc a   ∸ inj₂ δ  = a ∸ δ
-lim f _ ∸ (n , δ) = f n ∸ δ
+suc a ∸ inj₁ tt = a
+suc a ∸ inj₂ δ  = a ∸ δ
+lim f ∸ (n , δ) = f n ∸ δ
 ```
 
 ```agda
@@ -345,7 +364,7 @@ a ≄ b = ¬ a ≃ b
 data _≼_ where
   z≼ : zero ≼ b
   s≼ : a ≼ b ∸ δ → a ≺ b
-  l≼ : {f↑ : wf f} → (∀ {n} → f n ≼ b) → lim f f↑ ≼ b
+  l≼ : ⦃ _ : wf f ⦄ → (∀ {n} → f n ≼ b) → lim f ≼ b
 ```
 
 ```agda
@@ -356,13 +375,14 @@ data _≼_ where
 ```
 
 ```agda
-≼l : {f↑ : wf f} → a ≼ f n → a ≼ lim f f↑
-≼l z≼ = z≼
-≼l (s≼ p) = s≼ p
-≼l (l≼ p) = l≼ (≼l p)
+module _ ⦃ _ : wf f ⦄ where
+  ≼l : a ≼ f n → a ≼ lim f
+  ≼l z≼ = z≼
+  ≼l (s≼ p) = s≼ p
+  ≼l (l≼ p) = l≼ (≼l p)
 
-≺l : {f↑ : wf f} → a ≺ f n → a ≺ lim f f↑
-≺l p = ≼l p
+  ≺l : a ≺ f n → a ≺ lim f
+  ≺l p = ≼l p
 ```
 
 ```agda
@@ -388,16 +408,15 @@ s≺s-inj = s≼s-inj
 ```
 
 ```agda
-l≼l : {f↑ : wf f} {g↑ : wf g}
-  → (∀ {n} → f n ≼ g n) → lim f f↑ ≼ lim g g↑
+l≼l : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ {n} → f n ≼ g n) → lim f ≼ lim g
 l≼l f≼g = l≼ (≼l f≼g)
 ```
 
 ```agda
 ≼-refl : a ≼ a
-≼-refl {a = zero}     = z≼
-≼-refl {a = suc _}    = s≼s ≼-refl
-≼-refl {a = lim _ _}  = l≼l ≼-refl
+≼-refl {a = zero}   = z≼
+≼-refl {a = suc _}  = s≼s ≼-refl
+≼-refl {a = lim _}  = l≼l ≼-refl
 ```
 
 ### 外延相等
@@ -429,7 +448,7 @@ F ∘̇ f = λ n → F (f n)
 ≤-inflationary F = ∀ {x} → x ≤ F x
 
 normal : <-monotonic F → Set
-normal {F} mono = ∀ {f} {f↑ : wf f} → F (lim f f↑) ≡ lim (F ∘̇ f) (mono f↑)
+normal {F} mono = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ mono it ⦄
 ```
 
 ```agda
@@ -444,14 +463,14 @@ normal {F} mono = ∀ {f} {f↑ : wf f} → F (lim f f↑) ≡ lim (F ∘̇ f) (
 s<s : <-monotonic suc
 suc-trans : a < b → b < c → suc a < c
 
-s<s suc             = suc
-s<s (suc₂ x<y)      = suc₂ (s<s x<y)
-s<s (lim {f↑})      = suc₂ (lim₂ (suc-trans f↑ f↑))
-s<s (lim₂ {f↑} x<f) = suc₂ (lim₂ (suc-trans x<f f↑))
+s<s suc         = suc
+s<s (suc₂ x<y)  = suc₂ (s<s x<y)
+s<s lim         = suc₂ (lim₂ (suc-trans it it))
+s<s (lim₂ x<f)  = suc₂ (lim₂ (suc-trans x<f it))
 
 suc-trans a<b suc         = s<s a<b
 suc-trans a<b (suc₂ c<b)  = suc₂ (suc-trans a<b c<b)
-suc-trans a<f (lim {f↑})  = lim₂ (suc-trans a<f f↑)
+suc-trans a<f lim         = lim₂ (suc-trans a<f it)
 suc-trans a<b (lim₂ b<f)  = lim₂ (suc-trans a<b b<f)
 ```
 
@@ -465,10 +484,10 @@ s≤s (inj₂ refl) = inj₂ refl
 
 ```agda
 s<s-inj : suc a < suc b → a < b
-s<s-inj suc = suc
-s<s-inj (suc₂ s<b) = <-trans suc s<b
+s<s-inj suc         = suc
+s<s-inj (suc₂ s<b)  = <-trans suc s<b
 
 s≤s-inj : suc a ≤ suc b → a ≤ b
-s≤s-inj (inj₁ s<s) = inj₁ (s<s-inj s<s)
+s≤s-inj (inj₁ s<s)  = inj₁ (s<s-inj s<s)
 s≤s-inj (inj₂ refl) = inj₂ refl
 ```
