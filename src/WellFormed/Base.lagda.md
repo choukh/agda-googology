@@ -308,7 +308,12 @@ open import Relation.Binary.Reasoning.Base.Triple
 ### 不完全的三歧性
 
 ```agda
-<-cmp⊎ : a < c → b < c → a < b ⊎ a ≡ b ⊎ b < a
+BoundedRel : (Ord → Ord → Set) → Set
+BoundedRel _~_ = ∀ {a b c} → a < c → b < c → a ~ b
+```
+
+```agda
+<-cmp⊎ : BoundedRel λ a b → a < b ⊎ a ≡ b ⊎ b < a
 <-cmp⊎ suc        suc         = inj₂ $ inj₁ refl
 <-cmp⊎ suc        (suc₂ b<a)  = inj₂ $ inj₂ b<a
 <-cmp⊎ (suc₂ a<b) suc         = inj₁ a<b
@@ -332,7 +337,7 @@ open import Relation.Binary.Reasoning.Base.Triple
 ```
 
 ```agda
-<-cmp : a < c → b < c → Tri (a < b) (a ≡ b) (b < a)
+<-cmp : BoundedRel λ a b → Tri (a < b) (a ≡ b) (b < a)
 <-cmp p q with <-cmp⊎ p q
 ... | inj₁ a<b = tri< a<b (λ { refl → <-irrefl refl a<b }) (<-asym a<b)
 ... | inj₂ (inj₁ refl) = tri≈ (<-irrefl refl) refl (<-irrefl refl)
@@ -347,20 +352,6 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 ```
 
 ```agda
-<-trich : a ≘ b → Tri (a < b) (a ≡ b) (b < a)
-<-trich (c , inj₁ p , inj₁ q)       = <-cmp p q
-<-trich (c , inj₁ p , inj₂ refl)    = tri< p (λ { refl → <-irrefl refl p }) (<-asym p)
-<-trich (c , inj₂ refl , inj₁ p)    = tri> (<-asym p) (λ { refl → <-irrefl refl p }) p
-<-trich (c , inj₂ refl , inj₂ refl) = tri≈ (<-irrefl refl) refl (<-irrefl refl)
-
-≤-total : a ≘ b → a ≤ b ⊎ b ≤ a
-≤-total p with <-trich p
-... | tri< p _ _ = inj₁ (inj₁ p)
-... | tri≈ _ p _ = inj₁ (inj₂ p)
-... | tri> _ _ p = inj₂ (inj₁ p)
-```
-
-```agda
 ≘-refl : a ≘ a
 ≘-refl = _ , ≤-refl , ≤-refl
 
@@ -369,6 +360,25 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 ```
 
 注意同株不是传递关系.
+
+```agda
+≘-intro : {A : Set} → (∀ {x} → a < x → b < x → A) → (a ≘ b → A)
+≘-intro H (c , inj₁ p     , inj₁ q)     = H {c} p q
+≘-intro H (c , inj₁ p     , inj₂ refl)  = H {suc c} (<-trans p suc) suc
+≘-intro H (c , inj₂ refl  , inj₁ q)     = H {suc c} suc (<-trans q suc)
+≘-intro H (c , inj₂ refl  , inj₂ refl)  = H {suc c} suc suc
+```
+
+```agda
+<-trich : a ≘ b → Tri (a < b) (a ≡ b) (b < a)
+<-trich = ≘-intro <-cmp
+
+≤-total : a ≘ b → a ≤ b ⊎ b ≤ a
+≤-total p with <-trich p
+... | tri< p _ _ = inj₁ (inj₁ p)
+... | tri≈ _ p _ = inj₁ (inj₂ p)
+... | tri> _ _ p = inj₂ (inj₁ p)
+```
 
 ## 跨树关系
 
@@ -674,7 +684,11 @@ n<l {n = suc n} with lim-inv (n<l {n = n})
 ```
 
 ```agda
+ω≤l-bounded : ⦃ _ : wf f ⦄ → ω < a → lim f < c → ω ≤ lim f
+ω≤l-bounded p q = {!   !}
 
+ω≤l : ⦃ _ : wf f ⦄ → ω ≘ lim f → ω ≤ lim f
+ω≤l = ≘-intro ω≤l-bounded
 ```
 ω≤l : ⦃ _ : wf f ⦄ → ω ≘ lim f → ω ≤ lim f
 ω≤l (suc _  , inj₁ p        , inj₁ suc)       = <s→≤ p
