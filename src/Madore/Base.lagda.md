@@ -34,7 +34,7 @@ open import Relation.Binary.Consequences using (trans∧irr⇒asym)
 open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
 ```
 
-## 互归纳定义
+## 良构树序数
 
 互归纳定义良构树序数与子树关系.
 
@@ -429,7 +429,9 @@ l≼l f≼g = l≼ (≼l f≼g)
 Func : Set
 Func = Ord → Ord
 variable F : Func
+```
 
+```agda
 _∘̇_ : Func → Seq → Seq
 F ∘̇ f = λ n → F (f n)
 ```
@@ -490,4 +492,33 @@ s<s-inj (suc₂ s<b)  = <-trans suc s<b
 s≤s-inj : suc a ≤ suc b → a ≤ b
 s≤s-inj (inj₁ s<s)  = inj₁ (s<s-inj s<s)
 s≤s-inj (inj₂ refl) = inj₂ refl
+```
+
+### 可迭代函数
+
+```agda
+record Iterable : Set where
+  constructor mkIterable
+  field
+    _[_] : Func
+    <infl : <-inflationary _[_]
+```
+
+```agda
+variable ℱⁱ : Iterable
+open Iterable public
+```
+
+```agda
+_^⟨_⟩_ : Iterable → Ord → Func
+^⟨◌⟩-<mono : <-monotonic (λ x → ℱⁱ ^⟨ x ⟩ i)
+
+ℱⁱ ^⟨ zero ⟩ i = i
+ℱⁱ ^⟨ suc a ⟩ i = (ℱⁱ [_] ∘ ℱⁱ ^⟨ a ⟩_) i
+ℱⁱ ^⟨ lim f ⟩ i = lim (λ n → ℱⁱ ^⟨ f n ⟩ i) ⦃ ^⟨◌⟩-<mono it ⦄
+
+^⟨◌⟩-<mono {ℱⁱ} suc = <infl ℱⁱ
+^⟨◌⟩-<mono {ℱⁱ} (suc₂ p) = <-trans (^⟨◌⟩-<mono p) (<infl ℱⁱ)
+^⟨◌⟩-<mono lim = lim ⦃ ^⟨◌⟩-<mono it ⦄
+^⟨◌⟩-<mono (lim₂ p) = <-trans (^⟨◌⟩-<mono p) (lim₂ ⦃ ^⟨◌⟩-<mono it ⦄ (^⟨◌⟩-<mono it))
 ```
