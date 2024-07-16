@@ -12,7 +12,7 @@ zhihu-tags: Agda, 大数数学, 序数
 ## 前言
 
 ```agda
-{-# OPTIONS --safe #-}
+{-# OPTIONS --safe --lossy-unification #-}
 module Madore.Base where
 ```
 
@@ -236,11 +236,10 @@ lim-inv (lim₂ a<f) = _ , a<f
 ```
 
 ```agda
-module SubTreeReasoning where
-  open import Relation.Binary.Reasoning.Base.Triple
-    {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<_}
-    ≤-isPreorder <-asym <-trans <-resp-≡ <⇒≤ <-≤-trans
-    public
+open import Relation.Binary.Reasoning.Base.Triple
+  {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<_}
+  ≤-isPreorder <-asym <-trans <-resp-≡ <⇒≤ <-≤-trans ≤-<-trans
+  public
 ```
 
 ### 不完全的三歧性
@@ -378,7 +377,7 @@ data _≼_ where
 module _ ⦃ _ : wf f ⦄ where
   ≼l : a ≼ f n → a ≼ lim f
   ≼l z≼ = z≼
-  ≼l (s≼ p) = s≼ p
+  ≼l (s≼ p) = {!   !} --s≼ p
   ≼l (l≼ p) = l≼ (≼l p)
 
   ≺l : a ≺ f n → a ≺ lim f
@@ -396,7 +395,7 @@ z≺s = s≼s z≼
 ```agda
 s≼s-inj : suc a ≼ suc b → a ≼ b
 s≼s-inj (s≼ {δ = inj₁ tt} p) = p
-s≼s-inj (s≼ {δ = inj₂ δ } p) = ≺⇒≼ (s≼ p)
+s≼s-inj (s≼ {δ = inj₂ δ } p) = {!   !} --≺⇒≼ (s≼ p)
 ```
 
 ```agda
@@ -455,7 +454,7 @@ normal {F} mono = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃
 
 ```agda
 <mono→≤mono : <-monotonic F → ≤-monotonic F
-<mono→≤mono <mono (inj₁ p) = <⇒≤ (<mono p)
+<mono→≤mono <mono (inj₁ p)    = <⇒≤ (<mono p)
 <mono→≤mono <mono (inj₂ refl) = inj₂ refl
 ```
 
@@ -480,7 +479,7 @@ suc-trans a<b (lim₂ b<f)  = lim₂ (suc-trans a<b b<f)
 
 ```agda
 s≤s : ≤-monotonic suc
-s≤s (inj₁ a<b) = inj₁ (s<s a<b)
+s≤s (inj₁ a<b)  = inj₁ (s<s a<b)
 s≤s (inj₂ refl) = inj₂ refl
 ```
 
@@ -494,6 +493,14 @@ s≤s-inj (inj₁ s<s)  = inj₁ (s<s-inj s<s)
 s≤s-inj (inj₂ refl) = inj₂ refl
 ```
 
+```agda
+<→s≤ : a < b → suc a ≤ b
+<→s≤ suc = inj₂ refl
+<→s≤ (suc₂ p) = inj₁ (s<s p)
+<→s≤ lim = inj₁ (lim₂ {!   !})
+<→s≤ (lim₂ p) = {!   !}
+```
+
 ### 可迭代函数
 
 ```agda
@@ -505,20 +512,40 @@ record Iterable : Set where
 ```
 
 ```agda
-variable ℱⁱ : Iterable
+variable ℱ : Iterable
 open Iterable public
 ```
 
 ```agda
 _^⟨_⟩_ : Iterable → Ord → Func
-^⟨◌⟩-<mono : <-monotonic (λ x → ℱⁱ ^⟨ x ⟩ i)
+^⟨◌⟩-<mono : <-monotonic (ℱ ^⟨_⟩ i)
 
-ℱⁱ ^⟨ zero ⟩ i = i
-ℱⁱ ^⟨ suc a ⟩ i = (ℱⁱ [_] ∘ ℱⁱ ^⟨ a ⟩_) i
-ℱⁱ ^⟨ lim f ⟩ i = lim (λ n → ℱⁱ ^⟨ f n ⟩ i) ⦃ ^⟨◌⟩-<mono it ⦄
+ℱ ^⟨ zero ⟩ i = i
+ℱ ^⟨ suc a ⟩ i = (ℱ [_] ∘ ℱ ^⟨ a ⟩_) i
+ℱ ^⟨ lim f ⟩ i = lim (λ n → ℱ ^⟨ f n ⟩ i) ⦃ ^⟨◌⟩-<mono it ⦄
 
-^⟨◌⟩-<mono {ℱⁱ} suc = <infl ℱⁱ
-^⟨◌⟩-<mono {ℱⁱ} (suc₂ p) = <-trans (^⟨◌⟩-<mono p) (<infl ℱⁱ)
-^⟨◌⟩-<mono lim = lim ⦃ ^⟨◌⟩-<mono it ⦄
-^⟨◌⟩-<mono (lim₂ p) = <-trans (^⟨◌⟩-<mono p) (lim₂ ⦃ ^⟨◌⟩-<mono it ⦄ (^⟨◌⟩-<mono it))
+^⟨◌⟩-<mono {ℱ} {i} {x} suc =                  begin-strict
+  ℱ ^⟨ x ⟩ i                                  <⟨ <infl ℱ ⟩
+  ℱ [ ℱ ^⟨ x ⟩ i ]  ∎
+^⟨◌⟩-<mono {ℱ} {i} {x} (suc₂ {b} p) =         begin-strict
+  ℱ ^⟨ x ⟩ i                                  <⟨ ^⟨◌⟩-<mono p ⟩
+  ℱ ^⟨ b ⟩ i                                  <⟨ <infl ℱ ⟩
+  ℱ [ ℱ ^⟨ b ⟩ i ]                            ∎
+^⟨◌⟩-<mono {ℱ} {i} (lim {f} {n}) =            begin-strict
+  ℱ ^⟨ f n ⟩ i                                <⟨ lim ⦃ ^⟨◌⟩-<mono it ⦄ ⟩
+  lim (λ m → ℱ ^⟨ f m ⟩ i) ⦃ ^⟨◌⟩-<mono it ⦄  ∎
+^⟨◌⟩-<mono {ℱ} {i} {x} (lim₂ {f} {n} p) =     begin-strict
+  ℱ ^⟨ x ⟩ i                                  <⟨ ^⟨◌⟩-<mono p ⟩
+  ℱ ^⟨ f n ⟩ i                                <⟨ lim₂ ⦃ ^⟨◌⟩-<mono it ⦄ (^⟨◌⟩-<mono it) ⟩
+  lim (λ m → ℱ ^⟨ f m ⟩ i) ⦃ ^⟨◌⟩-<mono it ⦄  ∎
+```
+
+```agda
+^⟨◌⟩-≤infl : ≤-inflationary (ℱ ^⟨_⟩ i)
+^⟨◌⟩-≤infl {x = zero} = z≤
+^⟨◌⟩-≤infl {ℱ} {i} {suc x} =  begin
+  suc x                       ≤⟨ s≤s (^⟨◌⟩-≤infl) ⟩
+  suc (ℱ ^⟨ x ⟩ i)            ≤⟨ <→s≤ (^⟨◌⟩-<mono suc) ⟩
+  ℱ ^⟨ suc x ⟩ i              ∎
+^⟨◌⟩-≤infl {x = lim f} = {!   !}
 ```
