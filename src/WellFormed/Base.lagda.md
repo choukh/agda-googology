@@ -6,14 +6,14 @@ zhihu-tags: Agda, 大数数学, 序数
 # 形式化大数数学 (2.0 - 良构树序数)
 
 > 交流Q群: 893531731  
-> 本文源码: [Base.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Madore/Base.lagda.md)  
-> 高亮渲染: [Base.html](https://choukh.github.io/agda-googology/Madore.Base.html)  
+> 本文源码: [Base.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/WellFormed/Base.lagda.md)  
+> 高亮渲染: [Base.html](https://choukh.github.io/agda-googology/WellFormed.Base.html)  
 
 ## 前言
 
 ```agda
 {-# OPTIONS --safe --lossy-unification #-}
-module Madore.Base where
+module WellFormed.Base where
 ```
 
 ### 标准库依赖
@@ -71,7 +71,7 @@ variable
 data Ord where
   zero : Ord
   suc  : Ord → Ord
-  lim  : (f : Seq) → ⦃ wf f ⦄ → Ord
+  lim  : (f : Seq) → ⦃ f↑ : wf f ⦄ → Ord
 ```
 
 **定义** 子树关系
@@ -84,21 +84,58 @@ data _<_ where
   lim₂ : ⦃ _ : wf f ⦄ → a < f n → a < lim f
 ```
 
-字面量重载
+**定义** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
+
+$$
+\text{fin}~n := \text{suc}^n~0
+$$
+
+其中后继函数的上标 $n$ 表示迭代 $n$ 次.
 
 ```agda
 open import Lower public using (_∘ⁿ_)
 fin : Seq
 fin n = (suc ∘ⁿ n) zero
+```
 
+**约定** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
+
+```agda
 open import Agda.Builtin.FromNat public
 instance
   nNat = Number ℕ   ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
   nOrd = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → fin n }
 ```
 
+**约定** 我们将 $\text{suc}~(\text{suc}~a)$ 记作 $a^{++}$.
+
 ```agda
 pattern 2+ a = suc (suc a)
+```
+
+**约定** 非零序数指不等于零的序数, 非平凡序数指不等于零或一的序数.
+
+```agda
+not0 : Ord → Set
+not0 zero = ⊥
+not0 _ = ⊤
+
+not01 : Ord → Set
+not01 zero       = ⊥
+not01 (suc zero) = ⊥
+not01 _          = ⊤
+
+record NonZero (a : Ord) : Set where
+  field nonZero : not0 a
+
+record NonTrivial (a : Ord) : Set where
+  field nonTrivial : not01 a
+```
+
+```agda
+n>0→nonZero : 0 < a → NonZero a
+n>0→nonZero {suc a} _ = record { nonZero = tt }
+n>0→nonZero {lim f} _ = record { nonZero = tt }
 ```
 
 ## 基本性质
@@ -113,10 +150,16 @@ lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≡ lim g → f ≡ g
 lim-inj refl = refl
 ```
 
+严格序与非严格序的相互转化
+
 ```agda
-lim≤ : ⦃ _ : wf f ⦄ → a ≤ f n → a < lim f
-lim≤ (inj₁ a<f) = lim₂ a<f
-lim≤ (inj₂ refl) = lim
+≤→<s : a ≤ b → a < suc b
+≤→<s (inj₁ p) = suc₂ p
+≤→<s (inj₂ refl) = suc
+
+<s→≤ : a < suc b → a ≤ b
+<s→≤ suc = inj₂ refl
+<s→≤ (suc₂ p) = inj₁ p
 ```
 
 互归纳证明
@@ -145,6 +188,11 @@ z≤ : 0 ≤ a
 z≤ {a = zero}   = inj₂ refl
 z≤ {a = suc _}  = inj₁ z<s
 z≤ {a = lim _}  = inj₁ z<l
+```
+
+```agda
+_[suc_]-nonZero : ∀ f n → ⦃ _ : wf f ⦄ → NonZero (f (suc n))
+f [suc n ]-nonZero = n>0→nonZero (z<b it)
 ```
 
 ## 子树关系
@@ -377,7 +425,7 @@ data _≼_ where
 module _ ⦃ _ : wf f ⦄ where
   ≼l : a ≼ f n → a ≼ lim f
   ≼l z≼ = z≼
-  ≼l (s≼ p) = {!   !} --s≼ p
+  ≼l {n} (s≼ {δ} p) = s≼ {δ = n , δ} p
   ≼l (l≼ p) = l≼ (≼l p)
 
   ≺l : a ≺ f n → a ≺ lim f
@@ -395,7 +443,7 @@ z≺s = s≼s z≼
 ```agda
 s≼s-inj : suc a ≼ suc b → a ≼ b
 s≼s-inj (s≼ {δ = inj₁ tt} p) = p
-s≼s-inj (s≼ {δ = inj₂ δ } p) = {!   !} --≺⇒≼ (s≼ p)
+s≼s-inj (s≼ {δ = inj₂ δ } p) = ≺⇒≼ (s≼ {δ = δ} p)
 ```
 
 ```agda
@@ -436,32 +484,36 @@ F ∘̇ f = λ n → F (f n)
 ```
 
 ```agda
+monotonic : Func → Set
+monotonic F = ∀ {x y} → x < y → F x < F y
+
 ≤-monotonic : Func → Set
 ≤-monotonic F = ∀ {x y} → x ≤ y → F x ≤ F y
+```
 
-<-monotonic : Func → Set
-<-monotonic F = ∀ {x y} → x < y → F x < F y
+```agda
+mono→≤mono : monotonic F → ≤-monotonic F
+mono→≤mono mono (inj₁ p)    = <⇒≤ (mono p)
+mono→≤mono mono (inj₂ refl) = inj₂ refl
+```
 
+```agda
+normal : monotonic F → Set
+normal {F} mono = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ mono it ⦄
+```
+
+```agda
 <-inflationary : Func → Set
 <-inflationary F = ∀ {x} → x < F x
 
 ≤-inflationary : Func → Set
 ≤-inflationary F = ∀ {x} → x ≤ F x
-
-normal : <-monotonic F → Set
-normal {F} mono = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ mono it ⦄
-```
-
-```agda
-<mono→≤mono : <-monotonic F → ≤-monotonic F
-<mono→≤mono <mono (inj₁ p)    = <⇒≤ (<mono p)
-<mono→≤mono <mono (inj₂ refl) = inj₂ refl
 ```
 
 后继运算严格单调.
 
 ```agda
-s<s : <-monotonic suc
+s<s : monotonic suc
 suc-trans : a < b → b < c → suc a < c
 
 s<s suc         = suc
@@ -479,8 +531,7 @@ suc-trans a<b (lim₂ b<f)  = lim₂ (suc-trans a<b b<f)
 
 ```agda
 s≤s : ≤-monotonic suc
-s≤s (inj₁ a<b)  = inj₁ (s<s a<b)
-s≤s (inj₂ refl) = inj₂ refl
+s≤s = mono→≤mono s<s
 ```
 
 ```agda
@@ -497,8 +548,16 @@ s≤s-inj (inj₂ refl) = inj₂ refl
 <→s≤ : a < b → suc a ≤ b
 <→s≤ suc = inj₂ refl
 <→s≤ (suc₂ p) = inj₁ (s<s p)
-<→s≤ lim = inj₁ (lim₂ {!   !})
-<→s≤ (lim₂ p) = {!   !}
+<→s≤ lim = inj₁ (lim₂ (<-≤-trans (s<s it) (<→s≤ it)))
+<→s≤ (lim₂ p) = inj₁ (lim₂ (<-≤-trans (s<s p) (<→s≤ it)))
+```
+
+```agda
+s≤→< : suc a ≤ b → a < b
+s≤→< {b = suc _} (inj₁ p) = suc₂ (s<s-inj p)
+s≤→< {b = lim _} (inj₁ p) with lim-inv p
+... | _ , p = lim₂ (<-trans suc p)
+s≤→< (inj₂ refl) = suc
 ```
 
 ### 可迭代函数
@@ -518,34 +577,48 @@ open Iterable public
 
 ```agda
 _^⟨_⟩_ : Iterable → Ord → Func
-^⟨◌⟩-<mono : <-monotonic (ℱ ^⟨_⟩ i)
+^⟨◌⟩-mono : monotonic (ℱ ^⟨_⟩ i)
 
 ℱ ^⟨ zero ⟩ i = i
 ℱ ^⟨ suc a ⟩ i = (ℱ [_] ∘ ℱ ^⟨ a ⟩_) i
-ℱ ^⟨ lim f ⟩ i = lim (λ n → ℱ ^⟨ f n ⟩ i) ⦃ ^⟨◌⟩-<mono it ⦄
+ℱ ^⟨ lim f ⟩ i = lim (λ n → ℱ ^⟨ f n ⟩ i) ⦃ ^⟨◌⟩-mono it ⦄
 
-^⟨◌⟩-<mono {ℱ} {i} {x} suc =                  begin-strict
-  ℱ ^⟨ x ⟩ i                                  <⟨ <infl ℱ ⟩
+^⟨◌⟩-mono {ℱ} {i} {x} suc =               begin-strict
+  ℱ ^⟨ x ⟩ i                              <⟨ <infl ℱ ⟩
   ℱ [ ℱ ^⟨ x ⟩ i ]  ∎
-^⟨◌⟩-<mono {ℱ} {i} {x} (suc₂ {b} p) =         begin-strict
-  ℱ ^⟨ x ⟩ i                                  <⟨ ^⟨◌⟩-<mono p ⟩
-  ℱ ^⟨ b ⟩ i                                  <⟨ <infl ℱ ⟩
-  ℱ [ ℱ ^⟨ b ⟩ i ]                            ∎
-^⟨◌⟩-<mono {ℱ} {i} (lim {f} {n}) =            begin-strict
-  ℱ ^⟨ f n ⟩ i                                <⟨ lim ⦃ ^⟨◌⟩-<mono it ⦄ ⟩
-  lim (λ m → ℱ ^⟨ f m ⟩ i) ⦃ ^⟨◌⟩-<mono it ⦄  ∎
-^⟨◌⟩-<mono {ℱ} {i} {x} (lim₂ {f} {n} p) =     begin-strict
-  ℱ ^⟨ x ⟩ i                                  <⟨ ^⟨◌⟩-<mono p ⟩
-  ℱ ^⟨ f n ⟩ i                                <⟨ lim₂ ⦃ ^⟨◌⟩-<mono it ⦄ (^⟨◌⟩-<mono it) ⟩
-  lim (λ m → ℱ ^⟨ f m ⟩ i) ⦃ ^⟨◌⟩-<mono it ⦄  ∎
+^⟨◌⟩-mono {ℱ} {i} {x} (suc₂ {b} p) =      begin-strict
+  ℱ ^⟨ x ⟩ i                              <⟨ ^⟨◌⟩-mono p ⟩
+  ℱ ^⟨ b ⟩ i                              <⟨ <infl ℱ ⟩
+  ℱ [ ℱ ^⟨ b ⟩ i ]                        ∎
+^⟨◌⟩-mono {ℱ} {i} (lim {f} {n}) =         begin-strict
+  ℱ ^⟨ f n ⟩ i                            <⟨ lim ⦃ ^⟨◌⟩-mono it ⦄ ⟩
+  ℱ ^⟨ lim f ⟩ i                          ∎
+^⟨◌⟩-mono {ℱ} {i} {x} (lim₂ {f} {n} p) =  begin-strict
+  ℱ ^⟨ x ⟩ i                              <⟨ ^⟨◌⟩-mono p ⟩
+  ℱ ^⟨ f n ⟩ i                            <⟨ lim₂ ⦃ ^⟨◌⟩-mono it ⦄ (^⟨◌⟩-mono it) ⟩
+  ℱ ^⟨ lim f ⟩ i                          ∎
 ```
 
 ```agda
-^⟨◌⟩-≤infl : ≤-inflationary (ℱ ^⟨_⟩ i)
-^⟨◌⟩-≤infl {x = zero} = z≤
-^⟨◌⟩-≤infl {ℱ} {i} {suc x} =  begin
-  suc x                       ≤⟨ s≤s (^⟨◌⟩-≤infl) ⟩
-  suc (ℱ ^⟨ x ⟩ i)            ≤⟨ <→s≤ (^⟨◌⟩-<mono suc) ⟩
-  ℱ ^⟨ suc x ⟩ i              ∎
-^⟨◌⟩-≤infl {x = lim f} = {!   !}
+^⟨⟩◌-≤infl : ≤-inflationary (ℱ [_]) → ≤-inflationary (ℱ ^⟨ a ⟩_)
+^⟨⟩◌-≤infl {a = zero} _ = inj₂ refl
+^⟨⟩◌-≤infl {ℱ} {suc a} p {x} =  begin
+  x                             ≤⟨ ^⟨⟩◌-≤infl p ⟩
+  ℱ ^⟨ a ⟩ x                    ≤⟨ p ⟩
+  ℱ [ ℱ ^⟨ a ⟩ x ]              ∎
+^⟨⟩◌-≤infl {ℱ} {lim f} p {x} =  begin
+  x                             ≤⟨ ^⟨⟩◌-≤infl p ⟩
+  ℱ ^⟨ f 0 ⟩ x                  <⟨ lim₂ ⦃ ^⟨◌⟩-mono it ⦄ (^⟨◌⟩-mono it) ⟩
+  ℱ ^⟨ lim f ⟩ x                ∎
+```
+
+```agda
+^⟨⟩◌-<infl : ⦃ NonZero a ⦄ → ≤-inflationary (ℱ [_]) → <-inflationary (ℱ ^⟨ a ⟩_)
+^⟨⟩◌-<infl {suc a} {ℱ} p {x} =  begin-strict
+  x                             ≤⟨ ^⟨⟩◌-≤infl p ⟩
+  ℱ ^⟨ a ⟩ x                    <⟨ ^⟨◌⟩-mono suc ⟩
+  (ℱ [ ℱ ^⟨ a ⟩ x ])            ∎
+^⟨⟩◌-<infl {lim f} {ℱ} p {x} =  begin-strict
+  x                             <⟨ lim₂ ⦃ ^⟨◌⟩-mono it ⦄ (^⟨⟩◌-<infl ⦃ f [suc 0 ]-nonZero ⦄ p) ⟩
+  ℱ ^⟨ lim f ⟩ x                ∎
 ```
