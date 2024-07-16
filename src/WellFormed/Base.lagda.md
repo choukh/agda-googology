@@ -250,6 +250,21 @@ lim-inv (lim₂ a<f) = _ , a<f
   ; <-resp-≈ = <-resp-≡ }
 ```
 
+```
+monoseq : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
+monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inj₁ m<n  = <-trans (monoseq m<n) it
+... | inj₂ refl = it
+```
+
+```agda
+injseq : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
+injseq {m} {n} eq with ℕ.<-cmp m n
+... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (monoseq m<n))
+... | tri≈ _ refl _ = refl
+... | tri> _ _ n<m  = ⊥-elim (<-irrefl (sym eq) (monoseq n<m))
+```
+
 ### 非严格偏序
 
 ```agda
@@ -292,21 +307,6 @@ open import Relation.Binary.Reasoning.Base.Triple
 
 ### 不完全的三歧性
 
-```
-mono : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
-mono (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
-... | inj₁ m<n  = <-trans (mono m<n) it
-... | inj₂ refl = it
-```
-
-```agda
-inj : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
-inj {m} {n} eq with ℕ.<-cmp m n
-... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (mono m<n))
-... | tri≈ _ refl _ = refl
-... | tri> _ _ n<m  = ⊥-elim (<-irrefl (sym eq) (mono n<m))
-```
-
 ```agda
 <-cmp⊎ : a < c → b < c → a < b ⊎ a ≡ b ⊎ b < a
 <-cmp⊎ suc        suc         = inj₂ $ inj₁ refl
@@ -314,21 +314,21 @@ inj {m} {n} eq with ℕ.<-cmp m n
 <-cmp⊎ (suc₂ a<b) suc         = inj₁ a<b
 <-cmp⊎ (suc₂ a<c) (suc₂ b<c)  = <-cmp⊎ a<c b<c
 <-cmp⊎ (lim {n = m}) (lim {n}) with ℕ.<-cmp m n
-... | tri< m<n _ _  = inj₁ $ mono m<n
+... | tri< m<n _ _  = inj₁ $ monoseq m<n
 ... | tri≈ _ refl _ = inj₂ $ inj₁ refl
-... | tri> _ _ n<m  = inj₂ $ inj₂ $ mono n<m
+... | tri> _ _ n<m  = inj₂ $ inj₂ $ monoseq n<m
 <-cmp⊎ (lim {n = m}) (lim₂ {n} b<f) with ℕ.<-cmp m n
-... | tri< m<n _ _  = <-cmp⊎ (mono m<n) b<f
+... | tri< m<n _ _  = <-cmp⊎ (monoseq m<n) b<f
 ... | tri≈ _ refl _ = inj₂ $ inj₂ b<f
-... | tri> _ _ n<m  = inj₂ $ inj₂ $ <-trans b<f $ mono n<m
+... | tri> _ _ n<m  = inj₂ $ inj₂ $ <-trans b<f $ monoseq n<m
 <-cmp⊎ (lim₂ {n = m} a<f) (lim {n}) with ℕ.<-cmp m n
-... | tri< m<n _ _  = inj₁ $ <-trans a<f $ mono m<n
+... | tri< m<n _ _  = inj₁ $ <-trans a<f $ monoseq m<n
 ... | tri≈ _ refl _ = inj₁ a<f
-... | tri> _ _ n<m  = <-cmp⊎ a<f (mono n<m)
+... | tri> _ _ n<m  = <-cmp⊎ a<f (monoseq n<m)
 <-cmp⊎ (lim₂ {n = m} a<f) (lim₂ {n} b<f) with ℕ.<-cmp m n
-... | tri< m<n _ _  = <-cmp⊎ (<-trans a<f (mono m<n)) b<f
+... | tri< m<n _ _  = <-cmp⊎ (<-trans a<f (monoseq m<n)) b<f
 ... | tri≈ _ refl _ = <-cmp⊎ a<f b<f
-... | tri> _ _ n<m  = <-cmp⊎ a<f (<-trans b<f (mono n<m))
+... | tri> _ _ n<m  = <-cmp⊎ a<f (<-trans b<f (monoseq n<m))
 ```
 
 ```agda
@@ -568,11 +568,19 @@ record Iterable : Set where
   field
     _[_] : Func
     <infl : <-inflationary _[_]
+variable ℱ : Iterable
+
+record Normal : Set where
+  constructor mkNormal
+  field
+    _[_] : Func
+    mono : monotonic _[_]
+    nml  : normal mono
 ```
 
 ```agda
-variable ℱ : Iterable
 open Iterable public
+open Normal public
 ```
 
 ```agda
@@ -622,3 +630,61 @@ _^⟨_⟩_ : Iterable → Ord → Func
   x                             <⟨ lim₂ ⦃ ^⟨◌⟩-mono it ⦄ (^⟨⟩◌-<infl ⦃ f [suc 0 ]-nonZero ⦄ p) ⟩
   ℱ ^⟨ lim f ⟩ x                ∎
 ```
+
+```agda
+_⟨_⟩^ : Iterable → Ord → Normal
+ℱ ⟨ i ⟩^ = mkNormal (ℱ ^⟨_⟩ i) ^⟨◌⟩-mono refl
+```
+
+## ω
+
+```agda
+instance
+  _ : wf fin
+  _ = suc
+```
+
+```agda
+ω : Ord
+ω = lim fin
+```
+
+```agda
+z<ω : 0 < ω
+z<ω = z<l
+```
+
+```agda
+s<ω : a < ω → suc a < ω
+s<ω lim = lim₂ (suc-trans it it)
+s<ω (lim₂ p) = suc-trans p lim
+```
+
+```agda
+n<ω : fin n < ω
+n<ω {n = zero}  = z<ω
+n<ω {n = suc n} = s<ω n<ω
+```
+
+```agda
+n<l : ⦃ _ : wf f ⦄ → fin n < lim f
+n<l {n = zero} = z<l
+n<l {n = suc n} with lim-inv (n<l {n = n})
+... | m , p = suc-trans p (lim {n = m})
+```
+
+```agda
+
+```
+ω≤l : ⦃ _ : wf f ⦄ → ω ≘ lim f → ω ≤ lim f
+ω≤l (suc _  , inj₁ p        , inj₁ suc)       = <s→≤ p
+ω≤l (suc _  , inj₁ suc      , inj₁ (suc₂ q))  = {!   !}
+ω≤l (suc a  , inj₁ (suc₂ p) , inj₁ (suc₂ q))  = ω≤l (a , inj₁ p , inj₁ q)
+ω≤l (lim f  , inj₁ p        , inj₁ q)         with lim-inv p | lim-inv q
+... | m , p | n , q with ℕ.<-cmp m n
+... | tri< m<n _ _  = ω≤l (f m , inj₁ p , inj₁ {!   !})
+... | tri≈ _ refl _ = {!   !}
+... | tri> _ _ n<m  = {!   !}
+ω≤l (a      , inj₂ refl     , inj₁ p)         = {!   !}
+ω≤l (a      , inj₁ p        , inj₂ refl)      = inj₁ p
+ω≤l (a      , inj₂ refl     , inj₂ refl)      = inj₂ refl
