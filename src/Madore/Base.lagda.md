@@ -70,7 +70,7 @@ variable
 data Ord where
   zero : Ord
   suc  : Ord → Ord
-  lim  : (f : Seq) → wf f → Ord
+  lim  : (f : Seq) (f↑ : wf f) → Ord
 ```
 
 **定义** 子树关系
@@ -153,16 +153,16 @@ F ∘̇ f = λ n → F (f n)
 
 ```agda
 ≤-monotonic : Func → Set
-≤-monotonic F = ∀ {a b} → a ≤ b → F a ≤ F b
+≤-monotonic F = ∀ {x y} → x ≤ y → F x ≤ F y
 
 <-monotonic : Func → Set
-<-monotonic F = ∀ {a b} → a < b → F a < F b
+<-monotonic F = ∀ {x y} → x < y → F x < F y
 
 <-inflationary : Func → Set
-<-inflationary F = ∀ {a} → a < F a
+<-inflationary F = ∀ {x} → x < F x
 
 ≤-inflationary : Func → Set
-≤-inflationary F = ∀ {a} → a ≤ F a
+≤-inflationary F = ∀ {x} → x ≤ F x
 
 normal : <-monotonic F → Set
 normal {F} mono = ∀ {f} {f↑ : wf f} → F (lim f f↑) ≡ lim (F ∘̇ f) (mono f↑)
@@ -179,7 +179,7 @@ normal {F} mono = ∀ {f} {f↑ : wf f} → F (lim f f↑) ≡ lim (F ∘̇ f) (
 ```agda
 module Pre where
   _+_ : Ord → Ord → Ord; infixl 6 _+_
-  +-<monoʳ : ∀ c → <-monotonic (c +_)
+  +-<monoʳ : ∀ a → <-monotonic (a +_)
 
   zero + b = b
   a + zero      = a
@@ -187,38 +187,43 @@ module Pre where
   a + lim f f↑ = lim (λ n → a + f n) (+-<monoʳ a f↑)
 
   +-<monoʳ zero = id
-  +-<monoʳ (suc c)    suc         = suc
-  +-<monoʳ (suc c)    (suc₂ a<b)  = suc₂ (+-<monoʳ (suc c) a<b)
-  +-<monoʳ (suc c)    lim         = lim
-  +-<monoʳ (suc c)    (lim₂ a<f)  = lim₂ (+-<monoʳ (suc c) a<f)
+  +-<monoʳ (suc a)    suc         = suc
+  +-<monoʳ (suc a)    (suc₂ x<y)  = suc₂ (+-<monoʳ (suc a) x<y)
+  +-<monoʳ (suc a)    lim         = lim
+  +-<monoʳ (suc a)    (lim₂ x<f)  = lim₂ (+-<monoʳ (suc a) x<f)
   +-<monoʳ (lim f f↑) suc         = suc
-  +-<monoʳ (lim f f↑) (suc₂ a<b)  = suc₂ (+-<monoʳ (lim f f↑) a<b)
+  +-<monoʳ (lim f f↑) (suc₂ x<y)  = suc₂ (+-<monoʳ (lim f f↑) x<y)
   +-<monoʳ (lim f f↑) lim         = lim
-  +-<monoʳ (lim f f↑) (lim₂ a<f)  = lim₂ (+-<monoʳ (lim f f↑) a<f)
+  +-<monoʳ (lim f f↑) (lim₂ x<f)  = lim₂ (+-<monoʳ (lim f f↑) x<f)
 ```
 
 ```agda
   +-≤inflʳ : ∀ a → ≤-inflationary (a +_)
-  +-≤inflʳ = {!   !}
+  +-≤inflʳ zero       {x}       = inj₂ refl
+  +-≤inflʳ _          x@{zero}  = z≤
+  +-≤inflʳ (suc a)    {suc x}   = {!   !}
+  +-≤inflʳ (suc a)    {lim f _} = {!   !}
+  +-≤inflʳ (lim f _) {suc x}    = {!   !}
+  +-≤inflʳ (lim f _) {lim g _}  = {!   !}
 ```
 
 ```agda
-  +-≤inflˡ : ∀ b → ≤-inflationary (_+ b)
-  +-≤inflˡ b            {(zero)}      = z≤
-  +-≤inflˡ zero         {suc _}       = inj₂ refl
-  +-≤inflˡ (suc b)      a@{suc _}     = inj₁ $ case (+-≤inflˡ b {a}) of λ
-    { (inj₁ a<a+b) → suc₂ a<a+b
-    ; (inj₂ a≡a+b) → subst (_< suc (a + b)) (sym a≡a+b) suc }
-  +-≤inflˡ b@(lim g _)  a@{suc _}     = inj₁ $ case (+-≤inflˡ (g 0) {a}) of λ
-    { (inj₁ a<a+g) → lim₂ a<a+g
-    ; (inj₂ a≡a+g) → subst (_< a + b) (sym a≡a+g) lim }
-  +-≤inflˡ zero         a@{lim _ _}   = inj₂ refl
-  +-≤inflˡ (suc b)      a@{lim f _}   = inj₁ $ case (+-≤inflˡ b {a}) of λ
-    { (inj₁ l<l+b) → suc₂ l<l+b
-    ; (inj₂ l≡l+b) → subst (_< suc (a + b)) (sym l≡l+b) suc }
-  +-≤inflˡ b@(lim g _)  a@{lim f _}   = inj₁ $ case +-≤inflˡ (g 0) {a} of λ
+  +-≤inflˡ : ∀ a → ≤-inflationary (_+ a)
+  +-≤inflˡ a            x@{zero}      = z≤
+  +-≤inflˡ zero         x@{suc _}     = inj₂ refl
+  +-≤inflˡ (suc a)      x@{suc _}     = inj₁ $ case (+-≤inflˡ a {x}) of λ
+    { (inj₁ x<x+a) → suc₂ x<x+a
+    ; (inj₂ x≡x+a) → subst (_< suc (x + a)) (sym x≡x+a) suc }
+  +-≤inflˡ a@(lim f _)  x@{suc _}     = inj₁ $ case (+-≤inflˡ (f 0) {x}) of λ
+    { (inj₁ x<x+f) → lim₂ x<x+f
+    ; (inj₂ x≡x+f) → subst (_< x + a) (sym x≡x+f) lim }
+  +-≤inflˡ zero         x@{lim _ _}   = inj₂ refl
+  +-≤inflˡ (suc a)      x@{lim _ _}   = inj₁ $ case (+-≤inflˡ a {x}) of λ
+    { (inj₁ l<l+a) → suc₂ l<l+a
+    ; (inj₂ l≡l+a) → subst (_< suc (x + a)) (sym l≡l+a) suc }
+  +-≤inflˡ a@(lim g _)  x@{lim f _}   = inj₁ $ case +-≤inflˡ (g 0) {x} of λ
     { (inj₁ l<l+g) → lim₂ l<l+g
-    ; (inj₂ l≡l+g) → subst (_< (a + b)) (sym l≡l+g) lim }
+    ; (inj₂ l≡l+g) → subst (_< (x + a)) (sym l≡l+g) lim }
 ```
 
 ## 子树关系
@@ -368,37 +373,4 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 ... | inj₁ p = inj₁ (inj₁ p)
 ... | inj² p = inj₁ (inj₂ p)
 ... | inj³ p = inj₂ (inj₁ p)
-```
-
-### 单射性
-
-```agda
-s<s : <-monotonic suc
-suc-trans : a < b → b < c → suc a < c
-
-s<s suc = suc
-s<s (suc₂ p) = suc₂ (s<s p)
-s<s (lim {f↑}) = suc₂ (lim₂ (suc-trans f↑ f↑))
-s<s (lim₂ {f↑} p) = suc₂ (lim₂ (suc-trans p f↑))
-
-suc-trans p suc = s<s p
-suc-trans p (suc₂ q) = suc₂ (suc-trans p q)
-suc-trans p (lim {f↑}) = lim₂ (suc-trans p f↑)
-suc-trans p (lim₂ q) = lim₂ (suc-trans p q)
-```
-
-```agda
-s<s-inj : suc a < suc b → a < b
-s<s-inj suc = suc
-s<s-inj (suc₂ p) = <-trans suc p
-```
-
-```agda
-s≤s : ≤-monotonic suc
-s≤s (inj₁ a<b) = inj₁ (s<s a<b)
-s≤s (inj₂ refl) = inj₂ refl
-
-s≤s-inj : suc a ≤ suc b → a ≤ b
-s≤s-inj (inj₁ s<s) = inj₁ (s<s-inj s<s)
-s≤s-inj (inj₂ refl) = inj₂ refl
 ```
