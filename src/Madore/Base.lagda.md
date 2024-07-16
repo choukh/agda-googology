@@ -19,12 +19,13 @@ module Madore.Base where
 ### 标准库依赖
 
 ```agda
-open import Data.Empty public using (⊥)
+open import Data.Empty public using (⊥; ⊥-elim)
 open import Data.Unit public using (⊤; tt)
 open import Data.Nat as ℕ public using (ℕ; zero; suc)
+open import Data.Nat.Properties as ℕ public using ()
 open import Data.Sum public using (_⊎_; inj₁; inj₂)
 open import Data.Product public using (Σ; ∃-syntax; _×_; _,_; proj₁; proj₂)
-open import Function public using (id; _∘_; _$_; _∋_; case_of_)
+open import Function public using (id; _∘_; _$_; _∋_)
 open import Relation.Nullary public using (¬_)
 open import Relation.Binary.PropositionalEquality public hiding ([_])
 
@@ -47,7 +48,7 @@ open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
   as SubTreeLe public using (_≤_; <⇒≤)
 ```
 
-**定义** 递增序列
+**定义** 良构序列
 
 ```agda
 Seq : Set
@@ -59,7 +60,7 @@ wf f = ∀ {n} → f n < f (suc n)
 
 ```agda
 variable
-  n : ℕ
+  m n : ℕ
   a b c d i : Ord
   f g h : Seq
 ```
@@ -112,12 +113,10 @@ lim-inj : {f↑ : wf f} {g↑ : wf g} → lim f f↑ ≡ lim g g↑ → f ≡ g
 lim-inj refl = refl
 ```
 
-构造子强化
-
 ```agda
-lim₂′ : {f↑ : wf f} → a ≤ f n → a < lim f f↑
-lim₂′ (inj₁ a<f) = lim₂ a<f
-lim₂′ (inj₂ refl) = lim
+lim≤ : {f↑ : wf f} → a ≤ f n → a < lim f f↑
+lim≤ (inj₁ a<f) = lim₂ a<f
+lim≤ (inj₂ refl) = lim
 ```
 
 互归纳证明
@@ -246,21 +245,32 @@ module SubTreeReasoning where
 
 ### 不完全的三歧性
 
-```agda
-pattern inj² x = inj₂ (inj₁ x)
-pattern inj³ x = inj₂ (inj₂ x)
+```
+wf→mono : wf f → m ℕ.< n → f m < f n
+wf→mono f↑ (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inj₁ m<n  = <-trans (wf→mono f↑ m<n) f↑
+... | inj₂ refl = f↑
 ```
 
 ```agda
-<-trich : a < c → b < c → a < b ⊎ a ≡ b ⊎ b < a
-<-trich suc         suc         = inj² refl
-<-trich suc         (suc₂ b<a)  = inj³ b<a
-<-trich (suc₂ a<b)  suc         = inj₁ a<b
-<-trich (suc₂ a<c)  (suc₂ b<c)  = <-trich a<c b<c
-<-trich lim         lim         = {!   !}
-<-trich lim         (lim₂ b<f)  = {!   !}
-<-trich (lim₂ a<f)  lim         = {!   !}
-<-trich (lim₂ a<f)  (lim₂ b<f)  = {!   !}
+wf→inj : wf f → f m ≡ f n → m ≡ n
+wf→inj {m} {n} f↑ eq with ℕ.<-cmp m n
+... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (wf→mono f↑ m<n))
+... | tri≈ _ refl _ = refl
+... | tri> _ _ n<m  = ⊥-elim (<-irrefl (sym eq) (wf→mono f↑ n<m))
+```
+
+```agda
+<-cmp⊎ : a < c → b < c → a < b ⊎ a ≡ b ⊎ b < a
+<-cmp⊎ p q = {!   !}
+```
+
+```agda
+<-cmp : a < c → b < c → Tri (a < b) (a ≡ b) (b < a)
+<-cmp p q with <-cmp⊎ p q
+... | inj₁ a<b = tri< a<b (λ { refl → <-irrefl refl a<b }) (<-asym a<b)
+... | inj₂ (inj₁ refl) = tri≈ (<-irrefl refl) refl (<-irrefl refl)
+... | inj₂ (inj₂ b<a) = tri> (<-asym b<a) (λ { refl → <-irrefl refl b<a }) b<a
 ```
 
 **定义** 同株
@@ -271,6 +281,20 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 ```
 
 ```agda
+<-trich : a ≘ b → Tri (a < b) (a ≡ b) (b < a)
+<-trich (c , inj₁ p , inj₁ q)       = <-cmp p q
+<-trich (c , inj₁ p , inj₂ refl)    = tri< p (λ { refl → <-irrefl refl p }) (<-asym p)
+<-trich (c , inj₂ refl , inj₁ p)    = tri> (<-asym p) (λ { refl → <-irrefl refl p }) p
+<-trich (c , inj₂ refl , inj₂ refl) = tri≈ (<-irrefl refl) refl (<-irrefl refl)
+
+≤-total : a ≘ b → a ≤ b ⊎ b ≤ a
+≤-total p with <-trich p
+... | tri< p _ _ = inj₁ (inj₁ p)
+... | tri≈ _ p _ = inj₁ (inj₂ p)
+... | tri> _ _ p = inj₂ (inj₁ p)
+```
+
+```agda
 ≘-refl : a ≘ a
 ≘-refl = _ , ≤-refl , ≤-refl
 
@@ -278,21 +302,7 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 ≘-sym (c , a≤c , b≤c) = c , b≤c , a≤c
 ```
 
-同株不是传递关系.
-
-```agda
-<-trich-≘ : a ≘ b → a < b ⊎ a ≡ b ⊎ b < a
-<-trich-≘ (c , inj₁ p , inj₁ q) = <-trich p q
-<-trich-≘ (c , inj₁ p , inj₂ refl) = inj₁ p
-<-trich-≘ (c , inj₂ refl , inj₁ q) = inj³ q
-<-trich-≘ (c , inj₂ refl , inj₂ q) = inj² (sym q)
-
-≤-total-≘ : a ≘ b → a ≤ b ⊎ b ≤ a
-≤-total-≘ p with <-trich-≘ p
-... | inj₁ p = inj₁ (inj₁ p)
-... | inj² p = inj₁ (inj₂ p)
-... | inj³ p = inj₂ (inj₁ p)
-```
+注意同株不是传递关系.
 
 ## 跨树关系
 
