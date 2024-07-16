@@ -24,9 +24,9 @@ open import Data.Unit public using (⊤; tt)
 open import Data.Nat as ℕ public using (ℕ; zero; suc)
 open import Data.Sum public using (_⊎_; inj₁; inj₂)
 open import Data.Product public using (Σ; ∃-syntax; _×_; _,_; proj₁; proj₂)
-open import Function public using (id; _∘_; _∋_; it)
+open import Function public using (id; _∘_; _$_; _∋_; case_of_)
 open import Relation.Nullary public using (¬_)
-open import Relation.Binary.PropositionalEquality public using (_≡_; _≢_; refl; sym)
+open import Relation.Binary.PropositionalEquality public hiding ([_])
 
 open import Relation.Binary
 open import Relation.Binary.Consequences using (trans∧irr⇒asym)
@@ -60,7 +60,7 @@ wf f = ∀ {n} → f n < f (suc n)
 ```agda
 variable
   n : ℕ
-  a b c i : Ord
+  a b c d i : Ord
   f g h : Seq
 ```
 
@@ -70,7 +70,7 @@ variable
 data Ord where
   zero : Ord
   suc  : Ord → Ord
-  lim  : (f : Seq) → ⦃ wf f ⦄ → Ord
+  lim  : (f : Seq) → wf f → Ord
 ```
 
 **定义** 子树关系
@@ -79,8 +79,8 @@ data Ord where
 data _<_ where
   suc  : a < suc a
   suc₂ : a < b → a < suc b
-  lim  : ⦃ _ : wf f ⦄ → f n < lim f
-  lim₂ : ⦃ _ : wf f ⦄ → a < f n → a < lim f
+  lim  : {f↑ : wf f} → f n < lim f f↑
+  lim₂ : {f↑ : wf f} → a < f n → a < lim f f↑
 ```
 
 字面量重载
@@ -108,39 +108,36 @@ pattern 2+ a = suc (suc a)
 suc-inj : suc a ≡ suc b → a ≡ b
 suc-inj refl = refl
 
-lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≡ lim g → f ≡ g
+lim-inj : {f↑ : wf f} {g↑ : wf g} → lim f f↑ ≡ lim g g↑ → f ≡ g
 lim-inj refl = refl
-```
-
-$<$ 的传递性
-
-```agda
-<-trans : Transitive _<_
-<-trans a<b suc = suc₂ a<b
-<-trans a<f lim = lim₂ a<f
-<-trans a<b (suc₂ b<c) = suc₂ (<-trans a<b b<c)
-<-trans a<b (lim₂ b<f) = lim₂ (<-trans a<b b<f)
 ```
 
 互归纳证明
 
 ```agda
-z<s : zero < suc a
-z<b : a < b → zero < b
+z<s : 0 < suc a
+z<b : a < b → 0 < b
 
-z<s {a = zero}  = suc
-z<s {a = suc a} = suc₂ z<s
-z<s {a = lim f} = suc₂ (lim₂ {n = 1} (z<b it))
+z<s {a = zero}      = suc
+z<s {a = suc a}     = suc₂ z<s
+z<s {a = lim f f↑}  = suc₂ (lim₂ {n = 1} (z<b f↑))
 
 z<b suc = z<s
-z<b (suc₂ p) = z<s
-z<b (lim {n}) = lim₂ {n = suc n} (z<b it)
-z<b (lim₂ p) = lim₂ {n = 1} (z<b it)
+z<b (suc₂ p)        = z<s
+z<b (lim {n} {f↑})  = lim₂ {n = suc n} (z<b f↑)
+z<b (lim₂ {f↑} _)   = lim₂ {n = 1} (z<b f↑)
 ```
 
 ```agda
-z<l : ⦃ _ : wf f ⦄ → zero < lim f
-z<l = lim₂ {n = 1} (z<b it)
+z<l : {f↑ : wf f} → 0 < lim f f↑
+z<l {f↑} = lim₂ {n = 1} (z<b f↑)
+```
+
+```agda
+z≤ : 0 ≤ a
+z≤ {a = zero}     = inj₂ refl
+z≤ {a = suc _}    = inj₁ z<s
+z≤ {a = lim _ _}  = inj₁ z<l
 ```
 
 ## 序数函数
@@ -168,7 +165,7 @@ F ∘̇ f = λ n → F (f n)
 ≤-inflationary F = ∀ {a} → a ≤ F a
 
 normal : <-monotonic F → Set
-normal {F} mono = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ mono it ⦄
+normal {F} mono = ∀ {f} {f↑ : wf f} → F (lim f f↑) ≡ lim (F ∘̇ f) (mono f↑)
 ```
 
 ```agda
@@ -177,68 +174,51 @@ normal {F} mono = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃
 <mono→≤mono <mono (inj₂ refl) = inj₂ refl
 ```
 
-```agda
-s<s : <-monotonic suc
-suc-trans : a < b → b < c → suc a < c
-
-s<s suc = suc
-s<s (suc₂ p) = suc₂ (s<s p)
-s<s lim = suc₂ (lim₂ (suc-trans it it))
-s<s (lim₂ p) = suc₂ (lim₂ (suc-trans p it))
-
-suc-trans p suc = s<s p
-suc-trans p (suc₂ q) = suc₂ (suc-trans p q)
-suc-trans p lim = lim₂ (suc-trans p it)
-suc-trans p (lim₂ q) = lim₂ (suc-trans p q)
-```
-
-```agda
-s<s-inj : suc a < suc b → a < b
-s<s-inj suc = suc
-s<s-inj (suc₂ p) = <-trans suc p
-```
-
-```agda
-s≤s : ≤-monotonic suc
-s≤s (inj₁ a<b) = inj₁ (s<s a<b)
-s≤s (inj₂ refl) = inj₂ refl
-
-s≤s-inj : suc a ≤ suc b → a ≤ b
-s≤s-inj (inj₁ s<s) = inj₁ (s<s-inj s<s)
-s≤s-inj (inj₂ refl) = inj₂ refl
-```
-
 序数函数必须互递归定义.
 
 ```agda
-sup : Ord → Ord → Ord
-sup≥₂ : a ≤ sup b a
-sup-< : <-monotonic (λ a → sup a c)
+module Pre where
+  _+_ : Ord → Ord → Ord; infixl 6 _+_
+  +-<monoʳ : ∀ c → <-monotonic (c +_)
 
-sup zero    a@_     = a
-sup a@_     zero    = a
-sup (suc a) (suc b) = suc (sup a b)
-sup a@_     (lim f) = lim (λ n → sup (f n) a) ⦃ sup-< it ⦄
-sup (lim f) a@_     = lim (λ n → sup (f n) a) ⦃ sup-< it ⦄
+  zero + b = b
+  a + zero      = a
+  a + suc b     = suc (a + b)
+  a + lim f f↑ = lim (λ n → a + f n) (+-<monoʳ a f↑)
 
-sup≥₂ {a = zero}  {b = zero}  = inj₂ refl
-sup≥₂ {a = suc a} {b = zero}  = inj₂ refl
-sup≥₂ {a = lim f} {b = zero}  = inj₂ refl
-sup≥₂ {a = zero}  {b = suc b} = inj₁ z<s
-sup≥₂ {a = suc a} {b = suc b} = s≤s (sup≥₂ {a} {b})
-sup≥₂ {a = zero}  {b = lim g} = inj₁ z<l
-sup≥₂ {a = suc a} {b = lim g} = {!   !}
-sup≥₂ {a = lim f} {b = suc b} = {!   !}
-sup≥₂ {a = lim f} {b = lim g} = {!   !}
+  +-<monoʳ zero = id
+  +-<monoʳ (suc c)    suc         = suc
+  +-<monoʳ (suc c)    (suc₂ a<b)  = suc₂ (+-<monoʳ (suc c) a<b)
+  +-<monoʳ (suc c)    lim         = lim
+  +-<monoʳ (suc c)    (lim₂ a<f)  = lim₂ (+-<monoʳ (suc c) a<f)
+  +-<monoʳ (lim f f↑) suc         = suc
+  +-<monoʳ (lim f f↑) (suc₂ a<b)  = suc₂ (+-<monoʳ (lim f f↑) a<b)
+  +-<monoʳ (lim f f↑) lim         = lim
+  +-<monoʳ (lim f f↑) (lim₂ a<f)  = lim₂ (+-<monoʳ (lim f f↑) a<f)
+```
 
-sup-< {c = zero}  {a = zero}  {b = suc b} p = z<s
-sup-< {c = zero}  {a = suc a} {b = suc b} p = p
-sup-< {c = zero}  {a = lim f} {b = suc b} p = p
-sup-< {c = suc c} {a = zero}  {b = suc b} p = {!   !}
-sup-< {c = suc c} {a = suc a} {b = suc b} p = s<s (sup-< (s<s-inj p))
-sup-< {c = suc c} {a = lim f} {b = suc b} p = {!   !}
-sup-< {c = lim h} {a = a}     {b = suc b} p = {!   !}
-sup-< {c = c}     {a = a}     {b = lim g} p = {!   !}
+```agda
+  +-≤inflʳ : ∀ a → ≤-inflationary (a +_)
+  +-≤inflʳ = {!   !}
+```
+
+```agda
+  +-≤inflˡ : ∀ b → ≤-inflationary (_+ b)
+  +-≤inflˡ b            {(zero)}      = z≤
+  +-≤inflˡ zero         {suc _}       = inj₂ refl
+  +-≤inflˡ (suc b)      a@{suc _}     = inj₁ $ case (+-≤inflˡ b {a}) of λ
+    { (inj₁ a<a+b) → suc₂ a<a+b
+    ; (inj₂ a≡a+b) → subst (_< suc (a + b)) (sym a≡a+b) suc }
+  +-≤inflˡ b@(lim g _)  a@{suc _}     = inj₁ $ case (+-≤inflˡ (g 0) {a}) of λ
+    { (inj₁ a<a+g) → lim₂ a<a+g
+    ; (inj₂ a≡a+g) → subst (_< a + b) (sym a≡a+g) lim }
+  +-≤inflˡ zero         a@{lim _ _}   = inj₂ refl
+  +-≤inflˡ (suc b)      a@{lim f _}   = inj₁ $ case (+-≤inflˡ b {a}) of λ
+    { (inj₁ l<l+b) → suc₂ l<l+b
+    ; (inj₂ l≡l+b) → subst (_< suc (a + b)) (sym l≡l+b) suc }
+  +-≤inflˡ b@(lim g _)  a@{lim f _}   = inj₁ $ case +-≤inflˡ (g 0) {a} of λ
+    { (inj₁ l<l+g) → lim₂ l<l+g
+    ; (inj₂ l≡l+g) → subst (_< (a + b)) (sym l≡l+g) lim }
 ```
 
 ## 子树关系
@@ -250,22 +230,30 @@ open import Relation.Binary.Structures {A = Ord} _≡_ as ≡
 ### 严格偏序
 
 ```agda
+<-trans : Transitive _<_
+<-trans a<b suc = suc₂ a<b
+<-trans a<f lim = lim₂ a<f
+<-trans a<b (suc₂ b<c) = suc₂ (<-trans a<b b<c)
+<-trans a<b (lim₂ b<f) = lim₂ (<-trans a<b b<f)
+```
+
+```agda
 suc-inv : a < suc b → a ≤ b
 suc-inv suc = inj₂ refl
 suc-inv (suc₂ a<b) = inj₁ a<b
 ```
 
 ```agda
-lim-inv : ⦃ _ : wf f ⦄ → a < lim f → ∃[ n ] a < f n
-lim-inv (lim {n}) = suc n , it
-lim-inv (lim₂ {n} a<f) = n , a<f
+lim-inv : {f↑ : wf f} → a < lim f f↑ → ∃[ n ] a < f n
+lim-inv {f↑} lim   = _ , f↑
+lim-inv (lim₂ a<f) = _ , a<f
 ```
 
 ```agda
 <-irrefl : Irreflexive _≡_ _<_
 <-irrefl {suc a} refl s<s with suc-inv s<s
 ... | inj₁ s<a = <-irrefl refl (<-trans suc s<a)
-<-irrefl {lim f} refl l<l with lim-inv l<l
+<-irrefl {lim f _} refl l<l with lim-inv l<l
 ... | n , l<f = <-irrefl refl (<-trans lim l<f)
 ```
 
@@ -363,7 +351,9 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 ≘-sym (c , a≤c , b≤c) = c , b≤c , a≤c
 
 ≘-trans : a ≘ b → b ≘ c → a ≘ c
-≘-trans p q = {!   !}
+≘-trans {a} {b} (d , a≤d , _) (e , _ , c≤e) = d Pre.+ e ,
+  ≤-trans a≤d (Pre.+-≤inflˡ e) ,
+  ≤-trans c≤e (Pre.+-≤inflʳ d)
 ```
 
 ```agda
@@ -380,107 +370,35 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 ... | inj³ p = inj₂ (inj₁ p)
 ```
 
-## 跨树关系
-
-### 前驱
-
-**定义** 前驱深度
+### 单射性
 
 ```agda
-Depth : Ord → Set
-Depth zero    = ⊥
-Depth (suc a) = ⊤ ⊎ Depth a
-Depth (lim f) = Σ ℕ λ n → Depth (f n)
+s<s : <-monotonic suc
+suc-trans : a < b → b < c → suc a < c
 
-private variable d : Depth a
-```
+s<s suc = suc
+s<s (suc₂ p) = suc₂ (s<s p)
+s<s (lim {f↑}) = suc₂ (lim₂ (suc-trans f↑ f↑))
+s<s (lim₂ {f↑} p) = suc₂ (lim₂ (suc-trans p f↑))
 
-**定义** 前驱运算
-
-```agda
-_∸_ : ∀ a → Depth a → Ord; infixl 6 _∸_
-suc a ∸ inj₁ tt = a
-suc a ∸ inj₂ d  = a ∸ d
-lim f ∸ (n , d) = f n ∸ d
+suc-trans p suc = s<s p
+suc-trans p (suc₂ q) = suc₂ (suc-trans p q)
+suc-trans p (lim {f↑}) = lim₂ (suc-trans p f↑)
+suc-trans p (lim₂ q) = lim₂ (suc-trans p q)
 ```
 
 ```agda
-infix 4 _≼_ _⋠_ _≺_ _⊀_ _≃_ _≄_
-data _≼_ : Ord → Ord → Set
-_⋠_ _≺_ _⊀_ _≃_ _≄_ : Ord → Ord → Set
-a ⋠ b = ¬ a ≼ b
-a ≺ b = suc a ≼ b
-a ⊀ b = ¬ a ≺ b
-a ≃ b = a ≼ b × b ≼ a
-a ≄ b = ¬ a ≃ b
-```
-
-### 非严格偏序
-
-```agda
-data _≼_ where
-  z≼ : zero ≼ b
-  s≼ : a ≼ b ∸ d → a ≺ b
-  l≼ : ⦃ _ : wf f ⦄ → (∀ {n} → f n ≼ b) → lim f ≼ b
+s<s-inj : suc a < suc b → a < b
+s<s-inj suc = suc
+s<s-inj (suc₂ p) = <-trans suc p
 ```
 
 ```agda
-≺⇒≼ : _≺_ ⇒ _≼_
-≺⇒≼ (s≼ z≼) = z≼
-≺⇒≼ (s≼ (s≼ p)) = s≼ (≺⇒≼ (s≼ p))
-≺⇒≼ (s≼ (l≼ p)) = l≼ (≺⇒≼ (s≼ p))
+s≤s : ≤-monotonic suc
+s≤s (inj₁ a<b) = inj₁ (s<s a<b)
+s≤s (inj₂ refl) = inj₂ refl
+
+s≤s-inj : suc a ≤ suc b → a ≤ b
+s≤s-inj (inj₁ s<s) = inj₁ (s<s-inj s<s)
+s≤s-inj (inj₂ refl) = inj₂ refl
 ```
-
-```agda
-module _ ⦃ _ : wf f ⦄ where
-```
-
-```agda
-  ≼l : a ≼ f n → a ≼ lim f
-  ≼l z≼ = z≼
-  ≼l (s≼ p) = s≼ p
-  ≼l (l≼ p) = l≼ (≼l p)
-
-  ≺l : a ≺ f n → a ≺ lim f
-  ≺l p = ≼l p
-```
-
-```agda
-s≼s : a ≼ b → suc a ≼ suc b
-s≼s = s≼ {d = inj₁ tt}
-
-z≺s : zero ≺ suc a
-z≺s = s≼s z≼
-```
-
-```agda
-s≼s-inj : suc a ≼ suc b → a ≼ b
-s≼s-inj (s≼ {d = inj₁ tt} p) = p
-s≼s-inj (s≼ {d = inj₂ d } p) = ≺⇒≼ (s≼ p)
-```
-
-```agda
-s≺s : a ≺ b → suc a ≺ suc b
-s≺s = s≼s
-
-s≺s-inj : suc a ≺ suc b → a ≺ b
-s≺s-inj = s≼s-inj
-```
-
-```agda
-l≼l : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄
-  → (∀ {n} → f n ≼ g n) → lim f ≼ lim g
-l≼l f≼g = l≼ (≼l f≼g)
-```
-
-```agda
-≼-refl : a ≼ a
-≼-refl {a = zero} = z≼
-≼-refl {a = suc _} = s≼s ≼-refl
-≼-refl {a = lim _} = l≼l ≼-refl
-```
-
-### 外延相等
- 
-### 严格偏序
- 
