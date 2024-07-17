@@ -72,7 +72,7 @@ variable
 data Ord where
   zero : Ord
   suc  : Ord → Ord
-  lim  : (f : Seq) → ⦃ f⇡ : f ⇡ ⦄ → Ord
+  lim  : (f : Seq) → ⦃ f ⇡ ⦄ → Ord
 ```
 
 **定义** 子树关系
@@ -313,10 +313,11 @@ injseq {m} {n} eq with ℕ.<-cmp m n
 ```
 
 ```agda
-open import Relation.Binary.Reasoning.Base.Triple
-  {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<_}
-  ≤-isPreorder <-asym <-trans <-resp-≡ <⇒≤ <-≤-trans ≤-<-trans
-  public
+module ≤-Reasoning where
+  open import Relation.Binary.Reasoning.Base.Triple
+    {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<_}
+    ≤-isPreorder <-asym <-trans <-resp-≡ <⇒≤ <-≤-trans ≤-<-trans
+    public
 ```
 
 ### 不完全的三歧性
@@ -398,10 +399,10 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 
 ```agda
 <-acc : a < b → Acc _<_ a
-<-acc suc = acc λ x<a → <-acc x<a
-<-acc (suc₂ a<b) = acc λ x<a → <-acc (<-trans x<a a<b)
-<-acc lim = acc λ x<f → <-acc x<f
-<-acc (lim₂ a<f) = acc λ x<a → <-acc (<-trans x<a a<f)
+<-acc suc         = acc λ x<a → <-acc x<a
+<-acc (suc₂ a<b)  = acc λ x<a → <-acc (<-trans x<a a<b)
+<-acc lim         = acc λ x<f → <-acc x<f
+<-acc (lim₂ a<f)  = acc λ x<a → <-acc (<-trans x<a a<f)
 ```
 
 ```agda
@@ -421,15 +422,15 @@ lim-inj : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → lim f ≡ lim g → f ≡ g
 lim-inj refl = refl
 ```
 
-互归纳证明
+互递归证明
 
 ```agda
 z<s : 0 < suc a
 z<b : a < b → 0 < b
 
-z<s {a = zero}  = suc
-z<s {a = suc _} = suc₂ z<s
-z<s {a = lim _} = suc₂ (lim₂ {n = 1} (z<b it))
+z<s {(zero)}  = suc
+z<s {suc _} = suc₂ z<s
+z<s {lim _} = suc₂ (lim₂ {n = 1} (z<b it))
 
 z<b suc = z<s
 z<b (suc₂ _)  = z<s
@@ -449,9 +450,9 @@ z<l = lim₂ {n = 1} (z<b it)
 
 ```agda
 z≤ : 0 ≤ a
-z≤ {a = zero}   = inj₂ refl
-z≤ {a = suc _}  = inj₁ z<s
-z≤ {a = lim _}  = inj₁ z<l
+z≤ {(zero)}   = inj₂ refl
+z≤ {suc _}  = inj₁ z<s
+z≤ {lim _}  = inj₁ z<l
 ```
 
 后继运算的保序性
@@ -465,22 +466,22 @@ suc-<pres (suc₂ x<y)    = suc₂ (suc-<pres x<y)
 suc-<pres (lim {f} {n}) = suc₂ $ begin-strict
   suc (f n)       <⟨ suc-<pres it ⟩
   suc (f (suc n)) ≤⟨ <→s≤ lim ⟩
-  lim f           ∎
+  lim f           ∎ where open ≤-Reasoning
 suc-<pres {x} (lim₂ {f} {n} x<f) = suc₂ $ begin-strict
   suc x           <⟨ suc-<pres x<f ⟩
   suc (f n)       ≤⟨ <→s≤ lim ⟩
-  lim f           ∎
+  lim f           ∎ where open ≤-Reasoning
 
 <→s≤ suc = inj₂ refl
 <→s≤ (suc₂ p) = inj₁ (suc-<pres p)
 <→s≤ (lim {f} {n}) = inj₁ $ lim₂ $ begin-strict
   suc (f n)       <⟨ suc-<pres it ⟩
   suc (f (suc n)) ≤⟨ <→s≤ it ⟩
-  f (2+ n)        ∎
+  f (2+ n)        ∎ where open ≤-Reasoning
 <→s≤ {a} (lim₂ {f} {n} a<f) = inj₁ $ lim₂ $ begin-strict
   suc a           <⟨ suc-<pres a<f ⟩
   suc (f n)       ≤⟨ <→s≤ it ⟩
-  f (suc n)       ∎
+  f (suc n)       ∎ where open ≤-Reasoning
 ```
 
 ```agda
@@ -512,11 +513,11 @@ s<l : ⦃ _ : f ⇡ ⦄ → a < lim f → suc a < lim f
 s<l {f} (lim {n}) = begin-strict
   suc (f n) ≤⟨ <→s≤ it ⟩
   f (suc n) <⟨ lim ⟩
-  lim f     ∎
+  lim f     ∎ where open ≤-Reasoning
 s<l {f} {a} (lim₂ {n} p) = begin-strict
   suc a     <⟨ suc-<pres p ⟩
   suc (f n) ≤⟨ <→s≤ lim ⟩
-  lim f ∎
+  lim f     ∎ where open ≤-Reasoning
 ```
 
 ```agda
@@ -525,7 +526,7 @@ l≤p (inj₁ suc) = inj₂ refl
 l≤p (inj₁ (suc₂ p)) = inj₁ p
 ```
 
-## ω
+## 最小的极限序数
 
 ```agda
 instance
@@ -550,7 +551,7 @@ n≤fn {n = zero} f   = z≤
 n≤fn {n = suc n} f  = begin
   fin (suc n)       ≤⟨ suc-≤pres (n≤fn f) ⟩
   suc (f n)         ≤⟨ <→s≤ it ⟩
-  f (suc n)         ∎
+  f (suc n)         ∎ where open ≤-Reasoning
 ```
 
 ```agda
@@ -563,7 +564,7 @@ n≤fn {n = suc n} f  = begin
   fin n ≤⟨ n≤fn f ⟩
   f n   <⟨ lim ⟩
   lim f <⟨ l<n ⟩
-  fin n ∎
+  fin n ∎ where open ≤-Reasoning
 ```
 
 ```agda
@@ -574,13 +575,13 @@ fin-inj {suc m}  {suc n}  eq = cong suc $ fin-inj $ suc-inj eq
 
 ```agda
 fin-suj : a < ω → ∃[ n ] fin n ≡ a
-fin-suj {a = zero} _ = 0 , refl
-fin-suj {a = suc a} s<ω with fin-suj (<-trans suc s<ω)
+fin-suj {(zero)} _ = 0 , refl
+fin-suj {suc a} s<ω with fin-suj (<-trans suc s<ω)
 ... | n , refl = suc n , refl
-fin-suj {a = lim f} l<ω = ⊥-elim $ <-irrefl refl $ begin-strict
+fin-suj {lim f} l<ω = ⊥-elim $ <-irrefl refl $ begin-strict
   ω     ≤⟨ ω≤l (ω , inj₂ refl , inj₁ l<ω) ⟩
   lim f <⟨ l<ω ⟩
-  ω     ∎
+  ω     ∎ where open ≤-Reasoning
 ```
 
 ```agda
@@ -592,6 +593,215 @@ fin-suj {a = lim f} l<ω = ⊥-elim $ <-irrefl refl $ begin-strict
   ; from-cong = λ { refl → refl }
   ; inverseʳ  = λ { refl → fin-inj $ proj₂ $ fin-suj n<ω }
   }
+```
+
+## 跨树关系
+
+```agda
+infix 4 _≼_ _≺_ _≃_
+data _≼_ : Ord → Ord → Set
+_≺_ _≃_ : Ord → Ord → Set
+a ≺ b = suc a ≼ b
+a ≃ b = a ≼ b × b ≼ a
+```
+
+### 前驱
+
+**定义** 前驱深度
+
+```agda
+Depth : Ord → Set
+Depth zero    = ⊥
+Depth (suc a) = ⊤ ⊎ Depth a
+Depth (lim f) = Σ ℕ λ n → Depth (f n)
+
+private variable δ : Depth a
+```
+
+**定义** 前驱运算
+
+```agda
+_∸_ : ∀ a → Depth a → Ord; infixl 6 _∸_
+suc a ∸ inj₁ tt = a
+suc a ∸ inj₂ δ  = a ∸ δ
+lim f ∸ (n , δ) = f n ∸ δ
+```
+
+### 非严格偏序
+
+```agda
+data _≼_ where
+  z≼ : zero ≼ b
+  s≼ : a ≼ b ∸ δ → a ≺ b
+  l≼ : ⦃ _ : f ⇡ ⦄ → (∀ {n} → f n ≼ b) → lim f ≼ b
+```
+
+```agda
+≺⇒≼ : _≺_ ⇒ _≼_
+≺⇒≼ (s≼ z≼) = z≼
+≺⇒≼ (s≼ (s≼ p)) = s≼ (≺⇒≼ (s≼ p))
+≺⇒≼ (s≼ (l≼ p)) = l≼ (≺⇒≼ (s≼ p))
+```
+
+```agda
+
+```
+
+```agda
+s≼s : a ≼ b → suc a ≼ suc b
+s≼s = s≼ {δ = inj₁ tt}
+```
+
+```agda
+s≼s-inj : suc a ≼ suc b → a ≼ b
+s≼s-inj (s≼ {δ = inj₁ tt} p) = p
+s≼s-inj (s≼ {δ = inj₂ δ } p) = ≺⇒≼ (s≼ {δ = δ} p)
+```
+
+```agda
+≼l : ⦃ _ : f ⇡ ⦄ → a ≼ f n → a ≼ lim f
+≼l z≼ = z≼
+≼l {n} (s≼ {δ} p) = s≼ {δ = n , δ} p
+≼l (l≼ p) = l≼ (≼l p)
+```
+
+```agda
+l≼l : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → (∀ {n} → f n ≼ g n) → lim f ≼ lim g
+l≼l f≼g = l≼ (≼l f≼g)
+```
+
+```agda
+≼-refl : Reflexive _≼_
+≼-refl {x = zero}   = z≼
+≼-refl {x = suc _}  = s≼s ≼-refl
+≼-refl {x = lim _}  = l≼l ≼-refl
+```
+
+```agda
+≼-trans : Transitive _≼_
+≼-trans z≼ _ = z≼
+≼-trans p@(s≼ _) (s≼ q) = s≼ (≼-trans (s≼s-inj p) q)
+≼-trans (s≼ {δ = n , δ} p) (l≼ q) = ≼-trans (s≼ {δ = δ} p) q
+≼-trans (l≼ p) q = l≼ (≼-trans p q)
+```
+
+```agda
+≼-antisym : Antisymmetric _≃_ _≼_
+≼-antisym = _,_
+```
+
+### 外延相等
+
+```agda
+≃-refl : Reflexive _≃_
+≃-refl = ≼-refl , ≼-refl
+
+≃-sym : Symmetric _≃_
+≃-sym (p , q) = q , p
+
+≃-trans : Transitive _≃_
+≃-trans (p , q) (u , v) = ≼-trans p u , ≼-trans v q
+```
+
+```agda
+s≃s : a ≃ b → suc a ≃ suc b
+s≃s (p , q) = s≼s p , s≼s q
+
+s≃s-inj : suc a ≃ suc b → a ≃ b
+s≃s-inj (p , q) = s≼s-inj p , s≼s-inj q
+```
+
+```agda
+l≃l : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → (∀ {n} → f n ≃ g n) → lim f ≃ lim g
+l≃l f≃g = (l≼l (proj₁ f≃g)) , (l≼l (proj₂ f≃g))
+```
+
+### 严格序
+
+```agda
+s⋠z : suc a ≼ zero → ⊥
+s⋠z (s≼ {δ = ⊥} ≼) = ⊥
+
+s⋠ : suc a ≼ a → ⊥
+s⋠ {(zero)} = s⋠z
+s⋠ {suc _} p = s⋠ (s≼s-inj p)
+s⋠ {lim _} (s≼ {δ = n , δ} (l≼ p)) = s⋠ (s≼ {δ = δ} p)
+```
+
+```agda
+≺-irrefl : Irreflexive _≃_ _≺_
+≺-irrefl (p , q) r = s⋠ (≼-trans r q)
+
+≺-trans : Transitive _≺_
+≺-trans p q = ≼-trans p (≺⇒≼ q)
+
+≺-asym : Asymmetric _≺_
+≺-asym p q = ≺-irrefl ≃-refl (≺-trans p q)
+```
+
+```agda
+≺-≼-trans : Trans _≺_ _≼_ _≺_
+≺-≼-trans p q = ≼-trans p q
+
+≼-≺-trans : Trans _≼_ _≺_ _≺_
+≼-≺-trans p q = ≼-trans (s≼s p) q
+```
+
+```agda
+≺-resp-≃ : _≺_ Respects₂ _≃_
+≺-resp-≃ = (λ (p , _) q → ≺-≼-trans q p) , (λ (_ , p) q → ≼-≺-trans p q)
+```
+
+```agda
+open import Relation.Binary.Structures _≃_ as ≃
+
+≃-isEquivalence : ≃.IsEquivalence
+≃-isEquivalence = record
+  { refl  = ≃-refl
+  ; sym   = ≃-sym
+  ; trans = ≃-trans
+  }
+
+≼-isPreorder : ≃.IsPreorder _≼_
+≼-isPreorder = record
+  { isEquivalence = ≃-isEquivalence
+  ; reflexive = proj₁
+  ; trans = ≼-trans
+  }
+
+≼-isPartialOrder : ≃.IsPartialOrder _≼_
+≼-isPartialOrder = record
+  { isPreorder = ≼-isPreorder
+  ; antisym = ≼-antisym
+  }
+
+≺-isStrictPartialOrder : ≃.IsStrictPartialOrder _≺_
+≺-isStrictPartialOrder = record
+  { isEquivalence = ≃-isEquivalence
+  ; irrefl = ≺-irrefl
+  ; trans = ≺-trans
+  ; <-resp-≈ = ≺-resp-≃
+  }
+```
+
+```agda
+module ≼-Reasoning where
+  open import Relation.Binary.Reasoning.Base.Triple
+    {_≈_ = _≃_} {_≤_ = _≼_} {_<_ = _≺_}
+    ≼-isPreorder ≺-asym ≺-trans ≺-resp-≃ ≺⇒≼ ≺-≼-trans ≼-≺-trans
+    public
+```
+
+## 子树转跨树
+
+```agda
+ω′ : Ord
+ω′ = lim (fin ∘ suc)
+```
+
+```agda
+_ : ω ≃ ω′
+_ = l≼ (≼l {!   !}) , l≼ (≼l {!   !})
 ```
 
 ## 可迭代函数
@@ -617,6 +827,7 @@ record Normal : Set where
 ```agda
 open Iterable public
 open Normal public
+open ≤-Reasoning
 ```
 
 ```agda
@@ -672,4 +883,3 @@ _^⟨_⟩_ : Iterable → Ord → Func
 _⟨_⟩^ : Iterable → Ord → Normal
 ℱ ⟨ i ⟩^ = mkNormal (ℱ ^⟨_⟩ i) ^⟨◌⟩-<pres refl
 ```
- 
