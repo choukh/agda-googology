@@ -25,13 +25,14 @@ open import Data.Nat as ℕ public using (ℕ; zero; suc)
 open import Data.Nat.Properties as ℕ public using ()
 open import Data.Sum public using (_⊎_; inj₁; inj₂)
 open import Data.Product public using (Σ; ∃-syntax; _×_; _,_; proj₁; proj₂)
-open import Function public using (id; _∘_; _$_; _∋_; it; _↪_)
+open import Function public using (id; _∘_; _$_; _∋_; it; case_of_; _↪_)
 open import Relation.Nullary public using (¬_)
 open import Relation.Binary.PropositionalEquality public hiding ([_])
 
 open import Relation.Binary
 open import Relation.Binary.Consequences using (trans∧irr⇒asym)
 open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
+open import Induction.WellFounded using (Acc; acc; WellFounded)
 ```
 
 ## 良构树序数
@@ -393,6 +394,21 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 ... | tri> _ _ p = inj₂ (inj₁ p)
 ```
 
+### 良基性
+
+```agda
+<-acc : a < b → Acc _<_ a
+<-acc suc = acc λ x<a → <-acc x<a
+<-acc (suc₂ a<b) = acc λ x<a → <-acc (<-trans x<a a<b)
+<-acc lim = acc λ x<f → <-acc x<f
+<-acc (lim₂ a<f) = acc λ x<a → <-acc (<-trans x<a a<f)
+```
+
+```agda
+<-wellFounded : WellFounded _<_
+<-wellFounded a = <-acc suc
+```
+
 ### 更多性质
 
 构造子的单射性
@@ -656,3 +672,4 @@ _^⟨_⟩_ : Iterable → Ord → Func
 _⟨_⟩^ : Iterable → Ord → Normal
 ℱ ⟨ i ⟩^ = mkNormal (ℱ ^⟨_⟩ i) ^⟨◌⟩-<pres refl
 ```
+ 
