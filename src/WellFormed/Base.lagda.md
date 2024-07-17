@@ -644,10 +644,6 @@ data _≼_ where
 ```
 
 ```agda
-
-```
-
-```agda
 s≼s : a ≼ b → suc a ≼ suc b
 s≼s = s≼ {δ = inj₁ tt}
 ```
@@ -716,7 +712,7 @@ l≃l : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → (∀ {n} → f n ≃ g n) → li
 l≃l f≃g = (l≼l (proj₁ f≃g)) , (l≼l (proj₂ f≃g))
 ```
 
-### 严格序
+### 严格偏序
 
 ```agda
 s⋠z : suc a ≼ zero → ⊥
@@ -792,7 +788,43 @@ module ≼-Reasoning where
     public
 ```
 
-## 子树转跨树
+### 诉诸子树
+
+```agda
+≺s : a ≺ suc a
+≺s = s≼s ≼-refl
+
+≼s : a ≼ suc a
+≼s = ≺⇒≼ ≺s
+```
+
+```agda
+f≼l : ⦃ _ : f ⇡ ⦄ → f n ≼ lim f
+f≼l = ≼l ≼-refl
+
+≺l : ⦃ _ : f ⇡ ⦄ → a ≺ f n → a ≺ lim f
+≺l = ≼l
+```
+
+```agda
+<⇒≺ : _<_ ⇒ _≺_
+f≺l : ⦃ _ : f ⇡ ⦄ → f n ≺ lim f
+f≺l = ≺-≼-trans (<⇒≺ it) f≼l
+
+<⇒≺ suc = ≺s
+<⇒≺ (suc₂ p) = ≺-trans (<⇒≺ p) ≺s
+<⇒≺ lim = f≺l
+<⇒≺ (lim₂ p) = ≺l (<⇒≺ p)
+
+≤⇒≼ : _≤_ ⇒ _≼_
+≤⇒≼ (inj₁ suc) = ≼s
+≤⇒≼ (inj₁ (suc₂ p)) = ≼-trans (≺⇒≼ (<⇒≺ p)) ≼s
+≤⇒≼ (inj₁ lim) = f≼l
+≤⇒≼ (inj₁ (lim₂ p)) = ≼l (≺⇒≼ (<⇒≺ p))
+≤⇒≼ (inj₂ refl) = ≼-refl
+```
+
+### 外延相等的实例
 
 ```agda
 ω′ : Ord
@@ -801,7 +833,8 @@ module ≼-Reasoning where
 
 ```agda
 _ : ω ≃ ω′
-_ = l≼ (≼l {!   !}) , l≼ (≼l {!   !})
+_ = (l≼ $ ≼l $ ≤⇒≼ $ inj₁ it)
+  , (l≼ $ ≼l $ ≤⇒≼ $ inj₁ it)
 ```
 
 ## 可迭代函数
