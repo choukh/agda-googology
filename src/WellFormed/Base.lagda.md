@@ -25,7 +25,7 @@ open import Data.Nat as ℕ public using (ℕ; zero; suc)
 open import Data.Nat.Properties as ℕ public using ()
 open import Data.Sum public using (_⊎_; inj₁; inj₂)
 open import Data.Product public using (Σ; ∃-syntax; _×_; _,_; proj₁; proj₂)
-open import Function public using (id; _∘_; _$_; _∋_; it)
+open import Function public using (id; _∘_; _$_; _∋_; it; _↪_)
 open import Relation.Nullary public using (¬_)
 open import Relation.Binary.PropositionalEquality public hiding ([_])
 
@@ -241,6 +241,12 @@ lim-inv (lim₂ a<f) = _ , a<f
 ```agda
 <-asym : Asymmetric _<_
 <-asym = trans∧irr⇒asym {_≈_ = _≡_} refl <-trans <-irrefl
+```
+
+```agda
+<-notDense : a < b → b < suc a → ⊥
+<-notDense p suc = <-irrefl refl p
+<-notDense p (suc₂ q) = <-asym p q
 ```
 
 ```agda
@@ -559,6 +565,17 @@ fin-suj {a = lim f} l<ω = ⊥-elim $ <-irrefl refl $ begin-strict
   ω     ≤⟨ ω≤l (ω , inj₂ refl , inj₁ l<ω) ⟩
   lim f <⟨ l<ω ⟩
   ω     ∎
+```
+
+```agda
+ℕ↪ω : ℕ ↪ Σ _ (_< ω)
+ℕ↪ω = record
+  { to        = λ n → fin n , n<ω
+  ; from      = λ (a , a<ω) → proj₁ (fin-suj a<ω)
+  ; to-cong   = λ { refl → refl }
+  ; from-cong = λ { refl → refl }
+  ; inverseʳ  = λ { refl → fin-inj $ proj₂ $ fin-suj n<ω }
+  }
 ```
 
 ## 可迭代函数
