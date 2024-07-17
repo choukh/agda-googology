@@ -29,6 +29,7 @@ open import Function public using (id; _∘_; _$_; _∋_; it; case_of_; _↪_)
 open import Relation.Nullary public using (¬_)
 open import Relation.Binary.PropositionalEquality public hiding ([_])
 
+open import Function.Definitions using (Injective)
 open import Relation.Binary hiding (Rel)
 open import Relation.Binary.Consequences using (trans∧irr⇒asym)
 open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
@@ -155,44 +156,32 @@ variable F : Func
 ```
 
 ```agda
-injective : Func → Set
-injective F = ∀ {x y} → F x ≡ F y → x ≡ y
-```
+_inflates_ : Func → Rel → Set
+F inflates _~_ = ∀ {x} → x ~ F x
 
-```agda
-inflationary : Rel → Func → Set
-inflationary _~_ F = ∀ {x} → x ~ F x
-```
-
-```agda
-infl<→infl≤ : inflationary _<_ F → inflationary _≤_ F
+infl<→infl≤ : F inflates _<_ → F inflates _≤_
 infl<→infl≤ p = <⇒≤ p
 ```
 
 ```agda
-preserving : Rel → Func → Set
-preserving _~_ F = ∀ {x y} → x ~ y → F x ~ F y
+_preserves_ : Func → Rel → Set
+F preserves _~_ = ∀ {x y} → x ~ y → F x ~ F y
 ```
 
 ```agda
-pres<→pres≤ : preserving _<_ F → preserving _≤_ F
+pres<→pres≤ : F preserves _<_ → F preserves _≤_
 pres<→pres≤ pres (inj₁ p)    = <⇒≤ (pres p)
 pres<→pres≤ pres (inj₂ refl) = inj₂ refl
 ```
 
 ```agda
-reflecting : Rel → Func → Set
-reflecting _~_ F = ∀ {x y} → F x ~ F y → x ~ y
+inj<→inj≤ : Injective _≡_ _≡_ F → Injective _<_ _<_ F → Injective _≤_ _≤_ F
+inj<→inj≤ inj inj< (inj₁ p) = inj₁ (inj< p)
+inj<→inj≤ inj inj< (inj₂ p) = inj₂ (inj p)
 ```
 
 ```agda
-rflc<→rflc≤ : injective F → reflecting _<_ F → reflecting _≤_ F
-rflc<→rflc≤ inj rflc (inj₁ p) = inj₁ (rflc p)
-rflc<→rflc≤ inj rflc (inj₂ p) = inj₂ (inj p)
-```
-
-```agda
-continuous : preserving _<_ F → Set
+continuous : F preserves _<_ → Set
 continuous {F} pres = ∀ {f} ⦃ _ : f ⇡ ⦄ → F (lim f) ≡ lim (F ∘ f) ⦃ pres it ⦄
 ```
 
@@ -226,7 +215,7 @@ lim-inv (lim₂ a<f) = _ , a<f
 
 ```agda
 <-irrefl : Irreflexive _≡_ _<_
-<-irrefl {suc a} refl suc-pres< with suc-inv suc-pres<
+<-irrefl {suc a} refl s<s with suc-inv s<s
 ... | inj₁ s<a = <-irrefl refl (<-trans suc s<a)
 <-irrefl {lim _} refl l<l with lim-inv l<l
 ... | n , l<f = <-irrefl refl (<-trans lim l<f)
@@ -265,8 +254,8 @@ monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 ```
 
 ```agda
-injseq : ⦃ _ : f ⇡ ⦄ → f m ≡ f n → m ≡ n
-injseq {m} {n} eq with ℕ.<-cmp m n
+injseq : ⦃ _ : f ⇡ ⦄ → Injective _≡_ _≡_ f
+injseq {x} {y} eq with ℕ.<-cmp x y
 ... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (monoseq m<n))
 ... | tri≈ _ refl _ = refl
 ... | tri> _ _ n<m  = ⊥-elim (<-irrefl (sym eq) (monoseq n<m))
@@ -451,41 +440,41 @@ z≤ {lim _}  = inj₁ z<l
 后继运算的保序性
 
 ```agda
-suc-pres< : preserving _<_ suc
+s<s : suc preserves _<_
 <→s≤ : a < b → suc a ≤ b
 
-suc-pres< suc           = suc
-suc-pres< (suc₂ x<y)    = suc₂ (suc-pres< x<y)
-suc-pres< (lim {f} {n}) = suc₂ $ begin-strict
-  suc (f n)       <⟨ suc-pres< it ⟩
+s<s suc           = suc
+s<s (suc₂ x<y)    = suc₂ (s<s x<y)
+s<s (lim {f} {n}) = suc₂ $ begin-strict
+  suc (f n)       <⟨ s<s it ⟩
   suc (f (suc n)) ≤⟨ <→s≤ lim ⟩
   lim f           ∎ where open ≤-Reasoning
-suc-pres< {x} (lim₂ {f} {n} x<f) = suc₂ $ begin-strict
-  suc x           <⟨ suc-pres< x<f ⟩
+s<s {x} (lim₂ {f} {n} x<f) = suc₂ $ begin-strict
+  suc x           <⟨ s<s x<f ⟩
   suc (f n)       ≤⟨ <→s≤ lim ⟩
   lim f           ∎ where open ≤-Reasoning
 
 <→s≤ suc = inj₂ refl
-<→s≤ (suc₂ p) = inj₁ (suc-pres< p)
+<→s≤ (suc₂ p) = inj₁ (s<s p)
 <→s≤ (lim {f} {n}) = inj₁ $ lim₂ $ begin-strict
-  suc (f n)       <⟨ suc-pres< it ⟩
+  suc (f n)       <⟨ s<s it ⟩
   suc (f (suc n)) ≤⟨ <→s≤ it ⟩
   f (2+ n)        ∎ where open ≤-Reasoning
 <→s≤ {a} (lim₂ {f} {n} a<f) = inj₁ $ lim₂ $ begin-strict
-  suc a           <⟨ suc-pres< a<f ⟩
+  suc a           <⟨ s<s a<f ⟩
   suc (f n)       ≤⟨ <→s≤ it ⟩
   f (suc n)       ∎ where open ≤-Reasoning
 ```
 
 ```agda
-suc-rflc< : reflecting _<_ suc
-suc-rflc< suc         = suc
-suc-rflc< (suc₂ s<b)  = <-trans suc s<b
+s<s-inj : Injective _<_ _<_ suc
+s<s-inj suc         = suc
+s<s-inj (suc₂ s<b)  = <-trans suc s<b
 ```
 
 ```agda
 s≤→< : suc a ≤ b → a < b
-s≤→< {b = suc _} (inj₁ p) = suc₂ (suc-rflc< p)
+s≤→< {b = suc _} (inj₁ p) = suc₂ (s<s-inj p)
 s≤→< {b = lim _} (inj₁ p) with lim-inv p
 ... | _ , p = lim₂ (<-trans suc p)
 s≤→< (inj₂ refl) = suc
@@ -494,11 +483,11 @@ s≤→< (inj₂ refl) = suc
 推论
 
 ```agda
-suc-pres≤ : preserving _≤_ suc
-suc-pres≤ = pres<→pres≤ suc-pres<
+s≤s : suc preserves _≤_
+s≤s = pres<→pres≤ s<s
 
-suc-rflc≤ : reflecting _≤_ suc
-suc-rflc≤ = rflc<→rflc≤ suc-inj suc-rflc<
+s≤s-inj : Injective _≤_ _≤_ suc
+s≤s-inj = inj<→inj≤ suc-inj s<s-inj
 ```
 
 ```agda
@@ -508,7 +497,7 @@ s<l {f} (lim {n}) = begin-strict
   f (suc n) <⟨ lim ⟩
   lim f     ∎ where open ≤-Reasoning
 s<l {f} {a} (lim₂ {n} p) = begin-strict
-  suc a     <⟨ suc-pres< p ⟩
+  suc a     <⟨ s<s p ⟩
   suc (f n) ≤⟨ <→s≤ lim ⟩
   lim f     ∎ where open ≤-Reasoning
 ```
@@ -542,7 +531,7 @@ n<ω {n = suc n} = s<l n<ω
 n≤fn : ∀ f → ⦃ _ : f ⇡ ⦄ → fin n ≤ f n
 n≤fn {n = zero} f   = z≤
 n≤fn {n = suc n} f  = begin
-  fin (suc n)       ≤⟨ suc-pres≤ (n≤fn f) ⟩
+  fin (suc n)       ≤⟨ s≤s (n≤fn f) ⟩
   suc (f n)         ≤⟨ <→s≤ it ⟩
   f (suc n)         ∎ where open ≤-Reasoning
 ```
@@ -842,7 +831,7 @@ record Iterable : Set where
   constructor iterable
   field
     _[_] : Func
-    infl< : inflationary _<_ _[_]
+    infl< : _[_] inflates _<_
 variable ℱ : Iterable
 ```
 
@@ -851,11 +840,11 @@ record Normal : Set where
   constructor normal
   field
     _[_] : Func
-    pres< : preserving _<_ _[_]
+    pres< : _[_] preserves _<_
     conti : continuous pres<
 
   private G = _[_]
-  nml→infl≼ : inflationary _≼_ G
+  nml→infl≼ : G inflates _≼_
   nml→infl≼ {(zero)} = z≼
   nml→infl≼ {suc a} =         begin
     suc a                     ≤⟨ s≼s nml→infl≼ ⟩
@@ -875,7 +864,7 @@ open ≤-Reasoning
 
 ```agda
 _^⟨_⟩_ : Iterable → Ord → Func
-^⟨◌⟩-pres< : preserving _<_ (ℱ ^⟨_⟩ i)
+^⟨◌⟩-pres< : (ℱ ^⟨_⟩ i) preserves _<_
 
 ℱ ^⟨ zero ⟩ i = i
 ℱ ^⟨ suc a ⟩ i = (ℱ [_] ∘ ℱ ^⟨ a ⟩_) i
@@ -898,7 +887,12 @@ _^⟨_⟩_ : Iterable → Ord → Func
 ```
 
 ```agda
-^⟨⟩◌-infl≤ : inflationary _≤_ (ℱ [_]) → inflationary _≤_ (ℱ ^⟨ a ⟩_)
+_⟨_⟩^ : Iterable → Ord → Normal
+ℱ ⟨ i ⟩^ = normal (ℱ ^⟨_⟩ i) ^⟨◌⟩-pres< refl
+```
+
+```agda
+^⟨⟩◌-infl≤ : (ℱ [_]) inflates _≤_ → (ℱ ^⟨ a ⟩_) inflates _≤_
 ^⟨⟩◌-infl≤ {a = zero} _ = inj₂ refl
 ^⟨⟩◌-infl≤ {ℱ} {suc a} p {x} =  begin
   x                             ≤⟨ ^⟨⟩◌-infl≤ p ⟩
@@ -911,7 +905,7 @@ _^⟨_⟩_ : Iterable → Ord → Func
 ```
 
 ```agda
-^⟨⟩◌-infl< : ⦃ NonZero a ⦄ → inflationary _≤_ (ℱ [_]) → inflationary _<_ (ℱ ^⟨ a ⟩_)
+^⟨⟩◌-infl< : ⦃ NonZero a ⦄ → (ℱ [_]) inflates _≤_ → (ℱ ^⟨ a ⟩_) inflates _<_
 ^⟨⟩◌-infl< {suc a} {ℱ} p {x} =  begin-strict
   x                             ≤⟨ ^⟨⟩◌-infl≤ p ⟩
   ℱ ^⟨ a ⟩ x                    <⟨ ^⟨◌⟩-pres< suc ⟩
@@ -923,6 +917,8 @@ _^⟨_⟩_ : Iterable → Ord → Func
 ```
 
 ```agda
-_⟨_⟩^ : Iterable → Ord → Normal
-ℱ ⟨ i ⟩^ = normal (ℱ ^⟨_⟩ i) ^⟨◌⟩-pres< refl
+^⟨⟩◌-pres≼ : ∀ a → (ℱ [_]) preserves _≼_ → (ℱ ^⟨ a ⟩_) preserves _≼_
+^⟨⟩◌-pres≼ zero _ = id
+^⟨⟩◌-pres≼ (suc a) pres≼ p = pres≼ (^⟨⟩◌-pres≼ a pres≼ p)
+^⟨⟩◌-pres≼ (lim f) pres≼ p = l≼l ⦃ ^⟨◌⟩-pres< it ⦄ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨⟩◌-pres≼ (f _) pres≼ p)
 ```
