@@ -84,16 +84,6 @@ data _<_ where
   lim₂ : ⦃ _ : f ⇡ ⦄ → a < f n → a < lim f
 ```
 
-构造子的单射性
-
-```agda
-suc-inj : suc a ≡ suc b → a ≡ b
-suc-inj refl = refl
-
-lim-inj : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → lim f ≡ lim g → f ≡ g
-lim-inj refl = refl
-```
-
 **定义** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
 
 $$
@@ -162,6 +152,11 @@ F ∘̇ f = λ n → F (f n)
 ```
 
 ```agda
+injective : Func → Set
+injective F = ∀ {x y} → F x ≡ F y → x ≡ y
+```
+
+```agda
 <-inflationary : Func → Set
 <-inflationary F = ∀ {x} → x < F x
 
@@ -186,6 +181,20 @@ F ∘̇ f = λ n → F (f n)
 <pres→≤pres : <-preserving F → ≤-preserving F
 <pres→≤pres pres (inj₁ p)    = <⇒≤ (pres p)
 <pres→≤pres pres (inj₂ refl) = inj₂ refl
+```
+
+```agda
+<-reflecting : Func → Set
+<-reflecting F = ∀ {x y} → F x < F y → x < y
+
+≤-reflecting : Func → Set
+≤-reflecting F = ∀ {x y} → F x ≤ F y → x ≤ y
+```
+
+```agda
+<rflc→≤rflc : injective F → <-reflecting F → ≤-reflecting F
+<rflc→≤rflc inj rflc (inj₁ p) = inj₁ (rflc p)
+<rflc→≤rflc inj rflc (inj₂ p) = inj₂ (inj p)
 ```
 
 ```agda
@@ -223,7 +232,7 @@ lim-inv (lim₂ a<f) = _ , a<f
 
 ```agda
 <-irrefl : Irreflexive _≡_ _<_
-<-irrefl {suc a} refl s<s with suc-inv s<s
+<-irrefl {suc a} refl suc-<pres with suc-inv suc-<pres
 ... | inj₁ s<a = <-irrefl refl (<-trans suc s<a)
 <-irrefl {lim _} refl l<l with lim-inv l<l
 ... | n , l<f = <-irrefl refl (<-trans lim l<f)
@@ -249,18 +258,18 @@ lim-inv (lim₂ a<f) = _ , a<f
 ```
 
 ```
-mono : ⦃ _ : f ⇡ ⦄ → m ℕ.< n → f m < f n
-mono (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
-... | inj₁ m<n  = <-trans (mono m<n) it
+monoseq : ⦃ _ : f ⇡ ⦄ → m ℕ.< n → f m < f n
+monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inj₁ m<n  = <-trans (monoseq m<n) it
 ... | inj₂ refl = it
 ```
 
 ```agda
-inj : ⦃ _ : f ⇡ ⦄ → f m ≡ f n → m ≡ n
-inj {m} {n} eq with ℕ.<-cmp m n
-... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (mono m<n))
+injseq : ⦃ _ : f ⇡ ⦄ → f m ≡ f n → m ≡ n
+injseq {m} {n} eq with ℕ.<-cmp m n
+... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (monoseq m<n))
 ... | tri≈ _ refl _ = refl
-... | tri> _ _ n<m  = ⊥-elim (<-irrefl (sym eq) (mono n<m))
+... | tri> _ _ n<m  = ⊥-elim (<-irrefl (sym eq) (monoseq n<m))
 ```
 
 ### 非严格偏序
@@ -317,21 +326,21 @@ BoundedRel _~_ = ∀ {a b c} → a < c → b < c → a ~ b
 <-cmp⊎ (suc₂ a<b) suc         = inj₁ a<b
 <-cmp⊎ (suc₂ a<c) (suc₂ b<c)  = <-cmp⊎ a<c b<c
 <-cmp⊎ (lim {n = m}) (lim {n}) with ℕ.<-cmp m n
-... | tri< m<n _ _  = inj₁ $ mono m<n
+... | tri< m<n _ _  = inj₁ $ monoseq m<n
 ... | tri≈ _ refl _ = inj₂ $ inj₁ refl
-... | tri> _ _ n<m  = inj₂ $ inj₂ $ mono n<m
+... | tri> _ _ n<m  = inj₂ $ inj₂ $ monoseq n<m
 <-cmp⊎ (lim {n = m}) (lim₂ {n} b<f) with ℕ.<-cmp m n
-... | tri< m<n _ _  = <-cmp⊎ (mono m<n) b<f
+... | tri< m<n _ _  = <-cmp⊎ (monoseq m<n) b<f
 ... | tri≈ _ refl _ = inj₂ $ inj₂ b<f
-... | tri> _ _ n<m  = inj₂ $ inj₂ $ <-trans b<f $ mono n<m
+... | tri> _ _ n<m  = inj₂ $ inj₂ $ <-trans b<f $ monoseq n<m
 <-cmp⊎ (lim₂ {n = m} a<f) (lim {n}) with ℕ.<-cmp m n
-... | tri< m<n _ _  = inj₁ $ <-trans a<f $ mono m<n
+... | tri< m<n _ _  = inj₁ $ <-trans a<f $ monoseq m<n
 ... | tri≈ _ refl _ = inj₁ a<f
-... | tri> _ _ n<m  = <-cmp⊎ a<f (mono n<m)
+... | tri> _ _ n<m  = <-cmp⊎ a<f (monoseq n<m)
 <-cmp⊎ (lim₂ {n = m} a<f) (lim₂ {n} b<f) with ℕ.<-cmp m n
-... | tri< m<n _ _  = <-cmp⊎ (<-trans a<f (mono m<n)) b<f
+... | tri< m<n _ _  = <-cmp⊎ (<-trans a<f (monoseq m<n)) b<f
 ... | tri≈ _ refl _ = <-cmp⊎ a<f b<f
-... | tri> _ _ n<m  = <-cmp⊎ a<f (<-trans b<f (mono n<m))
+... | tri> _ _ n<m  = <-cmp⊎ a<f (<-trans b<f (monoseq n<m))
 ```
 
 ```agda
@@ -380,6 +389,16 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 
 ### 更多性质
 
+构造子的单射性
+
+```agda
+suc-inj : suc a ≡ suc b → a ≡ b
+suc-inj refl = refl
+
+lim-inj : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → lim f ≡ lim g → f ≡ g
+lim-inj refl = refl
+```
+
 互归纳证明
 
 ```agda
@@ -413,44 +432,44 @@ z≤ {a = suc _}  = inj₁ z<s
 z≤ {a = lim _}  = inj₁ z<l
 ```
 
-后继运算严格单调
+后继运算的保序性
 
 ```agda
-s<s : <-preserving suc
+suc-<pres : <-preserving suc
 <→s≤ : a < b → suc a ≤ b
 
-s<s suc           = suc
-s<s (suc₂ x<y)    = suc₂ (s<s x<y)
-s<s (lim {f} {n}) = suc₂ $ begin-strict
-  suc (f n)       <⟨ s<s it ⟩
+suc-<pres suc           = suc
+suc-<pres (suc₂ x<y)    = suc₂ (suc-<pres x<y)
+suc-<pres (lim {f} {n}) = suc₂ $ begin-strict
+  suc (f n)       <⟨ suc-<pres it ⟩
   suc (f (suc n)) ≤⟨ <→s≤ lim ⟩
   lim f           ∎
-s<s {x} (lim₂ {f} {n} x<f) = suc₂ $ begin-strict
-  suc x           <⟨ s<s x<f ⟩
+suc-<pres {x} (lim₂ {f} {n} x<f) = suc₂ $ begin-strict
+  suc x           <⟨ suc-<pres x<f ⟩
   suc (f n)       ≤⟨ <→s≤ lim ⟩
   lim f           ∎
 
 <→s≤ suc = inj₂ refl
-<→s≤ (suc₂ p) = inj₁ (s<s p)
+<→s≤ (suc₂ p) = inj₁ (suc-<pres p)
 <→s≤ (lim {f} {n}) = inj₁ $ lim₂ $ begin-strict
-  suc (f n)       <⟨ s<s it ⟩
+  suc (f n)       <⟨ suc-<pres it ⟩
   suc (f (suc n)) ≤⟨ <→s≤ it ⟩
   f (2+ n)        ∎
 <→s≤ {a} (lim₂ {f} {n} a<f) = inj₁ $ lim₂ $ begin-strict
-  suc a           <⟨ s<s a<f ⟩
+  suc a           <⟨ suc-<pres a<f ⟩
   suc (f n)       ≤⟨ <→s≤ it ⟩
   f (suc n)       ∎
 ```
 
 ```agda
-s<s-inj : suc a < suc b → a < b
-s<s-inj suc         = suc
-s<s-inj (suc₂ s<b)  = <-trans suc s<b
+suc-<rflc : <-reflecting suc
+suc-<rflc suc         = suc
+suc-<rflc (suc₂ s<b)  = <-trans suc s<b
 ```
 
 ```agda
 s≤→< : suc a ≤ b → a < b
-s≤→< {b = suc _} (inj₁ p) = suc₂ (s<s-inj p)
+s≤→< {b = suc _} (inj₁ p) = suc₂ (suc-<rflc p)
 s≤→< {b = lim _} (inj₁ p) with lim-inv p
 ... | _ , p = lim₂ (<-trans suc p)
 s≤→< (inj₂ refl) = suc
@@ -459,12 +478,11 @@ s≤→< (inj₂ refl) = suc
 推论
 
 ```agda
-s≤s : ≤-preserving suc
-s≤s = <pres→≤pres s<s
+suc-≤pres : ≤-preserving suc
+suc-≤pres = <pres→≤pres suc-<pres
 
-s≤s-inj : suc a ≤ suc b → a ≤ b
-s≤s-inj (inj₁ s<s)  = inj₁ (s<s-inj s<s)
-s≤s-inj (inj₂ refl) = inj₂ refl
+suc-≤rflc : ≤-reflecting suc
+suc-≤rflc = <rflc→≤rflc suc-inj suc-<rflc
 ```
 
 ```agda
@@ -474,7 +492,7 @@ s<l {f} (lim {n}) = begin-strict
   f (suc n) <⟨ lim ⟩
   lim f     ∎
 s<l {f} {a} (lim₂ {n} p) = begin-strict
-  suc a     <⟨ s<s p ⟩
+  suc a     <⟨ suc-<pres p ⟩
   suc (f n) ≤⟨ <→s≤ lim ⟩
   lim f ∎
 ```
@@ -508,7 +526,7 @@ n<ω {n = suc n} = s<l n<ω
 n≤fn : ∀ f → ⦃ _ : f ⇡ ⦄ → fin n ≤ f n
 n≤fn {n = zero} f   = z≤
 n≤fn {n = suc n} f  = begin
-  fin (suc n)       ≤⟨ s≤s (n≤fn f) ⟩
+  fin (suc n)       ≤⟨ suc-≤pres (n≤fn f) ⟩
   suc (f n)         ≤⟨ <→s≤ it ⟩
   f (suc n)         ∎
 ```
