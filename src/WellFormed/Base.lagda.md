@@ -133,9 +133,9 @@ record NonTrivial (a : Ord) : Set where
 ```
 
 ```agda
-n>0→nonZero : 0 < a → NonZero a
-n>0→nonZero {suc a} _ = record { nonZero = tt }
-n>0→nonZero {lim f} _ = record { nonZero = tt }
+nonZero-intro : 0 < a → NonZero a
+nonZero-intro {suc a} _ = record { nonZero = tt }
+nonZero-intro {lim f} _ = record { nonZero = tt }
 ```
 
 ## 基本性质
@@ -191,8 +191,8 @@ z≤ {a = lim _}  = inj₁ z<l
 ```
 
 ```agda
-_[suc_]-nonZero : ∀ f n → ⦃ _ : wf f ⦄ → NonZero (f (suc n))
-f [suc n ]-nonZero = n>0→nonZero (z<b it)
+fs-nonZero : ∀ f → ⦃ _ : wf f ⦄ → NonZero (f (suc n))
+fs-nonZero _ = nonZero-intro (z<b it)
 ```
 
 ## 子树关系
@@ -579,7 +579,9 @@ record Iterable : Set where
     _[_] : Func
     <infl : <-inflationary _[_]
 variable ℱ : Iterable
+```
 
+```agda
 record Normal : Set where
   constructor mkNormal
   field
@@ -637,7 +639,8 @@ _^⟨_⟩_ : Iterable → Ord → Func
   ℱ ^⟨ a ⟩ x                    <⟨ ^⟨◌⟩-mono suc ⟩
   (ℱ [ ℱ ^⟨ a ⟩ x ])            ∎
 ^⟨⟩◌-<infl {lim f} {ℱ} p {x} =  begin-strict
-  x                             <⟨ lim₂ ⦃ ^⟨◌⟩-mono it ⦄ (^⟨⟩◌-<infl ⦃ f [suc 0 ]-nonZero ⦄ p) ⟩
+  x                             <⟨ ^⟨⟩◌-<infl ⦃ fs-nonZero f ⦄ p ⟩
+  ℱ ^⟨ f 1 ⟩ x                  <⟨ ^⟨◌⟩-mono lim ⟩
   ℱ ^⟨ lim f ⟩ x                ∎
 ```
 
@@ -679,26 +682,24 @@ n<ω {n = suc n} = s<ω n<ω
 ```agda
 n<l : ⦃ _ : wf f ⦄ → fin n < lim f
 n<l {n = zero} = z<l
-n<l {n = suc n} with lim-inv (n<l {n = n})
+n<l {n = suc n} with lim-inv n<l
 ... | m , p = suc-trans p (lim {n = m})
 ```
 
 ```agda
-ω≤l-bounded : ⦃ _ : wf f ⦄ → ω < a → lim f < c → ω ≤ lim f
-ω≤l-bounded p q = {!   !}
-
-ω≤l : ⦃ _ : wf f ⦄ → ω ≘ lim f → ω ≤ lim f
-ω≤l = ≘-intro ω≤l-bounded
+n≤fn : ∀ f → ⦃ f↑ : wf f ⦄ → fin n ≤ f n
+n≤fn {n = zero} f   = z≤
+n≤fn {n = suc n} f  = begin
+  fin (suc n)       ≤⟨ s≤s (n≤fn f) ⟩
+  suc (f n)         ≤⟨ <→s≤ it ⟩
+  f (suc n)         ∎
 ```
+
+```agda
 ω≤l : ⦃ _ : wf f ⦄ → ω ≘ lim f → ω ≤ lim f
-ω≤l (suc _  , inj₁ p        , inj₁ suc)       = <s→≤ p
-ω≤l (suc _  , inj₁ suc      , inj₁ (suc₂ q))  = {!   !}
-ω≤l (suc a  , inj₁ (suc₂ p) , inj₁ (suc₂ q))  = ω≤l (a , inj₁ p , inj₁ q)
-ω≤l (lim f  , inj₁ p        , inj₁ q)         with lim-inv p | lim-inv q
-... | m , p | n , q with ℕ.<-cmp m n
-... | tri< m<n _ _  = ω≤l (f m , inj₁ p , inj₁ {!   !})
-... | tri≈ _ refl _ = {!   !}
-... | tri> _ _ n<m  = {!   !}
-ω≤l (a      , inj₂ refl     , inj₁ p)         = {!   !}
-ω≤l (a      , inj₁ p        , inj₂ refl)      = inj₁ p
-ω≤l (a      , inj₂ refl     , inj₂ refl)      = inj₂ refl
+ω≤l {f} homo with <-trich homo
+... | tri< < _ _ = inj₁ <
+... | tri≈ _ ≡ _ = inj₂ ≡
+... | tri> _ _ > with lim-inv >
+... | n , l<n = ⊥-elim (<-asym (≤-<-trans (n≤fn f) lim) l<n)
+```
