@@ -887,8 +887,8 @@ _^⟨_⟩_ : Iterable → Ord → Func
 ```
 
 ```agda
-_⟨_⟩^ : Iterable → Ord → Normal
-ℱ ⟨ i ⟩^ = normal (ℱ ^⟨_⟩ i) ^⟨◌⟩-pres< refl
+^⟨◌⟩-pres≤ : (ℱ ^⟨_⟩ i) preserves _≤_
+^⟨◌⟩-pres≤ = pres<→pres≤ ^⟨◌⟩-pres<
 ```
 
 ```agda
@@ -917,8 +917,34 @@ _⟨_⟩^ : Iterable → Ord → Normal
 ```
 
 ```agda
+_⟨_⟩^ : Iterable → Ord → Normal
+ℱ ⟨ i ⟩^ = normal (ℱ ^⟨_⟩ i) ^⟨◌⟩-pres< refl
+```
+
+```agda
+^⟨◌⟩-pres≺ : (ℱ ^⟨_⟩ i) preserves _≺_
+^⟨◌⟩-pres≺ = {!   !}
+```
+
+```agda
 ^⟨⟩◌-pres≼ : ∀ a → (ℱ [_]) preserves _≼_ → (ℱ ^⟨ a ⟩_) preserves _≼_
 ^⟨⟩◌-pres≼ zero _ = id
 ^⟨⟩◌-pres≼ (suc a) pres≼ p = pres≼ (^⟨⟩◌-pres≼ a pres≼ p)
 ^⟨⟩◌-pres≼ (lim f) pres≼ p = l≼l ⦃ ^⟨◌⟩-pres< it ⦄ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨⟩◌-pres≼ (f _) pres≼ p)
 ```
+
+```agda
+--^⟨◌⟩-incr≼
+```
+
+|        | 迭代次数               | 初值 |
+| ----   | ----                  | ---- |
+| pres < |   ✓ (infl ≺)          |  ✗   |
+| pres ≤ |   ✓ (infl ≺)          |  ✗   |
+| infl < |   ✗                   |  ✓ (infl ≤ + NonZero) |
+| infl ≤ |   ✗                   |  ✓ (infl ≤) |
+| normal |   ✓                   |  ✗   |
+| pres ≺ |   ✓ (pres ≼ + infl ≺) |  ✗   |
+| pres ≼ |   ✓ (pres ≼ + infl ≼) |  ✓ (pres ≼) |
+| infl ≺ |   ✗                   |  ✓ (infl ≼ + NonZero)  |
+| infl ≼ |   ✓ (pres ≼ + infl ≺) |  ✓ (infl ≼)  |
