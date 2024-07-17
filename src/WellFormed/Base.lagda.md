@@ -135,8 +135,14 @@ record NonTrivial (a : Ord) : Set where
 
 ```agda
 nonZero-intro : 0 < a → NonZero a
-nonZero-intro {suc a} _ = record { nonZero = tt }
-nonZero-intro {lim f} _ = record { nonZero = tt }
+nonZero-intro {suc _} _ = record { nonZero = tt }
+nonZero-intro {lim _} _ = record { nonZero = tt }
+
+nonTrivial-intro : 1 < a → NonTrivial a
+nonTrivial-intro {suc zero} (suc₂ ())
+nonTrivial-intro {2+ a}         _ = record { nonTrivial = tt }
+nonTrivial-intro {suc (lim _)}  _ = record { nonTrivial = tt }
+nonTrivial-intro {lim _}        _ = record { nonTrivial = tt }
 ```
 
 ## 序数函数
@@ -145,11 +151,6 @@ nonZero-intro {lim f} _ = record { nonZero = tt }
 Func : Set
 Func = Ord → Ord
 variable F : Func
-```
-
-```agda
-_∘̇_ : Func → Seq → Seq
-F ∘̇ f = λ n → F (f n)
 ```
 
 ```agda
@@ -200,7 +201,7 @@ injective F = ∀ {x y} → F x ≡ F y → x ≡ y
 
 ```agda
 normal : <-preserving F → Set
-normal {F} pres = ∀ {f} ⦃ _ : f ⇡ ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ pres it ⦄
+normal {F} pres = ∀ {f} ⦃ _ : f ⇡ ⦄ → F (lim f) ≡ lim (F ∘ f) ⦃ pres it ⦄
 ```
 
 ## 子树关系
@@ -916,3 +917,4 @@ _^⟨_⟩_ : Iterable → Ord → Func
 _⟨_⟩^ : Iterable → Ord → Normal
 ℱ ⟨ i ⟩^ = mkNormal (ℱ ^⟨_⟩ i) ^⟨◌⟩-<pres refl
 ```
+ 
