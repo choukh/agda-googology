@@ -84,6 +84,16 @@ data _<_ where
   lim₂ : ⦃ _ : f ⇡ ⦄ → a < f n → a < lim f
 ```
 
+构造子的单射性
+
+```agda
+suc-inj : suc a ≡ suc b → a ≡ b
+suc-inj refl = refl
+
+lim-inj : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → lim f ≡ lim g → f ≡ g
+lim-inj refl = refl
+```
+
 **定义** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
 
 $$
@@ -138,61 +148,49 @@ nonZero-intro {suc a} _ = record { nonZero = tt }
 nonZero-intro {lim f} _ = record { nonZero = tt }
 ```
 
-## 基本性质
-
-构造子的单射性
+## 序数函数
 
 ```agda
-suc-inj : suc a ≡ suc b → a ≡ b
-suc-inj refl = refl
-
-lim-inj : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → lim f ≡ lim g → f ≡ g
-lim-inj refl = refl
-```
-
-严格序与非严格序的相互转化
-
-```agda
-≤→<s : a ≤ b → a < suc b
-≤→<s (inj₁ p) = suc₂ p
-≤→<s (inj₂ refl) = suc
-
-<s→≤ : a < suc b → a ≤ b
-<s→≤ suc = inj₂ refl
-<s→≤ (suc₂ p) = inj₁ p
-```
-
-互归纳证明
-
-```agda
-z<s : 0 < suc a
-z<b : a < b → 0 < b
-
-z<s {a = zero}  = suc
-z<s {a = suc _} = suc₂ z<s
-z<s {a = lim _} = suc₂ (lim₂ {n = 1} (z<b it))
-
-z<b suc = z<s
-z<b (suc₂ _)  = z<s
-z<b (lim {n}) = lim₂ {n = suc n} (z<b it)
-z<b (lim₂ _)  = lim₂ {n = 1} (z<b it)
+Func : Set
+Func = Ord → Ord
+variable F : Func
 ```
 
 ```agda
-z<l : ⦃ _ : f ⇡ ⦄ → 0 < lim f
-z<l = lim₂ {n = 1} (z<b it)
+_∘̇_ : Func → Seq → Seq
+F ∘̇ f = λ n → F (f n)
 ```
 
 ```agda
-z≤ : 0 ≤ a
-z≤ {a = zero}   = inj₂ refl
-z≤ {a = suc _}  = inj₁ z<s
-z≤ {a = lim _}  = inj₁ z<l
+<-inflationary : Func → Set
+<-inflationary F = ∀ {x} → x < F x
+
+≤-inflationary : Func → Set
+≤-inflationary F = ∀ {x} → x ≤ F x
 ```
 
 ```agda
-fs-nonZero : ∀ f → ⦃ _ : f ⇡ ⦄ → NonZero (f (suc n))
-fs-nonZero _ = nonZero-intro (z<b it)
+<infl→≤infl : <-inflationary F → ≤-inflationary F
+<infl→≤infl p = <⇒≤ p
+```
+
+```agda
+<-preserving : Func → Set
+<-preserving F = ∀ {x y} → x < y → F x < F y
+
+≤-preserving : Func → Set
+≤-preserving F = ∀ {x y} → x ≤ y → F x ≤ F y
+```
+
+```agda
+<pres→≤pres : <-preserving F → ≤-preserving F
+<pres→≤pres pres (inj₁ p)    = <⇒≤ (pres p)
+<pres→≤pres pres (inj₂ refl) = inj₂ refl
+```
+
+```agda
+normal : <-preserving F → Set
+normal {F} pres = ∀ {f} ⦃ _ : f ⇡ ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ pres it ⦄
 ```
 
 ## 子树关系
@@ -251,18 +249,18 @@ lim-inv (lim₂ a<f) = _ , a<f
 ```
 
 ```
-monoseq : ⦃ _ : f ⇡ ⦄ → m ℕ.< n → f m < f n
-monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
-... | inj₁ m<n  = <-trans (monoseq m<n) it
+mono : ⦃ _ : f ⇡ ⦄ → m ℕ.< n → f m < f n
+mono (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inj₁ m<n  = <-trans (mono m<n) it
 ... | inj₂ refl = it
 ```
 
 ```agda
-injseq : ⦃ _ : f ⇡ ⦄ → f m ≡ f n → m ≡ n
-injseq {m} {n} eq with ℕ.<-cmp m n
-... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (monoseq m<n))
+inj : ⦃ _ : f ⇡ ⦄ → f m ≡ f n → m ≡ n
+inj {m} {n} eq with ℕ.<-cmp m n
+... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (mono m<n))
 ... | tri≈ _ refl _ = refl
-... | tri> _ _ n<m  = ⊥-elim (<-irrefl (sym eq) (monoseq n<m))
+... | tri> _ _ n<m  = ⊥-elim (<-irrefl (sym eq) (mono n<m))
 ```
 
 ### 非严格偏序
@@ -319,21 +317,21 @@ BoundedRel _~_ = ∀ {a b c} → a < c → b < c → a ~ b
 <-cmp⊎ (suc₂ a<b) suc         = inj₁ a<b
 <-cmp⊎ (suc₂ a<c) (suc₂ b<c)  = <-cmp⊎ a<c b<c
 <-cmp⊎ (lim {n = m}) (lim {n}) with ℕ.<-cmp m n
-... | tri< m<n _ _  = inj₁ $ monoseq m<n
+... | tri< m<n _ _  = inj₁ $ mono m<n
 ... | tri≈ _ refl _ = inj₂ $ inj₁ refl
-... | tri> _ _ n<m  = inj₂ $ inj₂ $ monoseq n<m
+... | tri> _ _ n<m  = inj₂ $ inj₂ $ mono n<m
 <-cmp⊎ (lim {n = m}) (lim₂ {n} b<f) with ℕ.<-cmp m n
-... | tri< m<n _ _  = <-cmp⊎ (monoseq m<n) b<f
+... | tri< m<n _ _  = <-cmp⊎ (mono m<n) b<f
 ... | tri≈ _ refl _ = inj₂ $ inj₂ b<f
-... | tri> _ _ n<m  = inj₂ $ inj₂ $ <-trans b<f $ monoseq n<m
+... | tri> _ _ n<m  = inj₂ $ inj₂ $ <-trans b<f $ mono n<m
 <-cmp⊎ (lim₂ {n = m} a<f) (lim {n}) with ℕ.<-cmp m n
-... | tri< m<n _ _  = inj₁ $ <-trans a<f $ monoseq m<n
+... | tri< m<n _ _  = inj₁ $ <-trans a<f $ mono m<n
 ... | tri≈ _ refl _ = inj₁ a<f
-... | tri> _ _ n<m  = <-cmp⊎ a<f (monoseq n<m)
+... | tri> _ _ n<m  = <-cmp⊎ a<f (mono n<m)
 <-cmp⊎ (lim₂ {n = m} a<f) (lim₂ {n} b<f) with ℕ.<-cmp m n
-... | tri< m<n _ _  = <-cmp⊎ (<-trans a<f (monoseq m<n)) b<f
+... | tri< m<n _ _  = <-cmp⊎ (<-trans a<f (mono m<n)) b<f
 ... | tri≈ _ refl _ = <-cmp⊎ a<f b<f
-... | tri> _ _ n<m  = <-cmp⊎ a<f (<-trans b<f (monoseq n<m))
+... | tri> _ _ n<m  = <-cmp⊎ a<f (<-trans b<f (mono n<m))
 ```
 
 ```agda
@@ -380,186 +378,74 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 ... | tri> _ _ p = inj₂ (inj₁ p)
 ```
 
-## 跨树关系
+### 更多性质
 
-### 前驱
-
-**定义** 前驱深度
+互归纳证明
 
 ```agda
-Depth : Ord → Set
-Depth zero    = ⊥
-Depth (suc a) = ⊤ ⊎ Depth a
-Depth (lim f) = Σ ℕ λ n → Depth (f n)
+z<s : 0 < suc a
+z<b : a < b → 0 < b
 
-private variable δ : Depth a
-```
+z<s {a = zero}  = suc
+z<s {a = suc _} = suc₂ z<s
+z<s {a = lim _} = suc₂ (lim₂ {n = 1} (z<b it))
 
-**定义** 前驱运算
-
-```agda
-_∸_ : ∀ a → Depth a → Ord; infixl 6 _∸_
-suc a ∸ inj₁ tt = a
-suc a ∸ inj₂ δ  = a ∸ δ
-lim f ∸ (n , δ) = f n ∸ δ
+z<b suc = z<s
+z<b (suc₂ _)  = z<s
+z<b (lim {n}) = lim₂ {n = suc n} (z<b it)
+z<b (lim₂ _)  = lim₂ {n = 1} (z<b it)
 ```
 
 ```agda
-infix 4 _≼_ _⋠_ _≺_ _⊀_ _≃_ _≄_
-data _≼_ : Ord → Ord → Set
-_⋠_ _≺_ _⊀_ _≃_ _≄_ : Ord → Ord → Set
-a ⋠ b = ¬ a ≼ b
-a ≺ b = suc a ≼ b
-a ⊀ b = ¬ a ≺ b
-a ≃ b = a ≼ b × b ≼ a
-a ≄ b = ¬ a ≃ b
-```
-
-### 非严格偏序
-
-```agda
-data _≼_ where
-  z≼ : zero ≼ b
-  s≼ : a ≼ b ∸ δ → a ≺ b
-  l≼ : ⦃ _ : f ⇡ ⦄ → (∀ {n} → f n ≼ b) → lim f ≼ b
+fs-nonZero : ∀ f → ⦃ _ : f ⇡ ⦄ → NonZero (f (suc n))
+fs-nonZero _ = nonZero-intro (z<b it)
 ```
 
 ```agda
-≺⇒≼ : _≺_ ⇒ _≼_
-≺⇒≼ (s≼ z≼) = z≼
-≺⇒≼ (s≼ (s≼ p)) = s≼ (≺⇒≼ (s≼ p))
-≺⇒≼ (s≼ (l≼ p)) = l≼ (≺⇒≼ (s≼ p))
+z<l : ⦃ _ : f ⇡ ⦄ → 0 < lim f
+z<l = lim₂ {n = 1} (z<b it)
 ```
 
 ```agda
-module _ ⦃ _ : f ⇡ ⦄ where
-  ≼l : a ≼ f n → a ≼ lim f
-  ≼l z≼ = z≼
-  ≼l {n} (s≼ {δ} p) = s≼ {δ = n , δ} p
-  ≼l (l≼ p) = l≼ (≼l p)
-
-  ≺l : a ≺ f n → a ≺ lim f
-  ≺l p = ≼l p
+z≤ : 0 ≤ a
+z≤ {a = zero}   = inj₂ refl
+z≤ {a = suc _}  = inj₁ z<s
+z≤ {a = lim _}  = inj₁ z<l
 ```
 
-```agda
-s≼s : a ≼ b → suc a ≼ suc b
-s≼s = s≼ {δ = inj₁ tt}
-
-z≺s : zero ≺ suc a
-z≺s = s≼s z≼
-```
+后继运算严格单调
 
 ```agda
-s≼s-inj : suc a ≼ suc b → a ≼ b
-s≼s-inj (s≼ {δ = inj₁ tt} p) = p
-s≼s-inj (s≼ {δ = inj₂ δ } p) = ≺⇒≼ (s≼ {δ = δ} p)
-```
+s<s : <-preserving suc
+<→s≤ : a < b → suc a ≤ b
 
-```agda
-s≺s : a ≺ b → suc a ≺ suc b
-s≺s = s≼s
+s<s suc           = suc
+s<s (suc₂ x<y)    = suc₂ (s<s x<y)
+s<s (lim {f} {n}) = suc₂ $ begin-strict
+  suc (f n)       <⟨ s<s it ⟩
+  suc (f (suc n)) ≤⟨ <→s≤ lim ⟩
+  lim f           ∎
+s<s {x} (lim₂ {f} {n} x<f) = suc₂ $ begin-strict
+  suc x           <⟨ s<s x<f ⟩
+  suc (f n)       ≤⟨ <→s≤ lim ⟩
+  lim f           ∎
 
-s≺s-inj : suc a ≺ suc b → a ≺ b
-s≺s-inj = s≼s-inj
-```
-
-```agda
-l≼l : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → (∀ {n} → f n ≼ g n) → lim f ≼ lim g
-l≼l f≼g = l≼ (≼l f≼g)
-```
-
-```agda
-≼-refl : a ≼ a
-≼-refl {a = zero}   = z≼
-≼-refl {a = suc _}  = s≼s ≼-refl
-≼-refl {a = lim _}  = l≼l ≼-refl
-```
-
-### 外延相等
-
-### 严格偏序
-
-## 序数函数
-
-```agda
-Func : Set
-Func = Ord → Ord
-variable F : Func
-```
-
-```agda
-_∘̇_ : Func → Seq → Seq
-F ∘̇ f = λ n → F (f n)
-```
-
-```agda
-monotonic : Func → Set
-monotonic F = ∀ {x y} → x < y → F x < F y
-
-≤-monotonic : Func → Set
-≤-monotonic F = ∀ {x y} → x ≤ y → F x ≤ F y
-```
-
-```agda
-mono→≤mono : monotonic F → ≤-monotonic F
-mono→≤mono mono (inj₁ p)    = <⇒≤ (mono p)
-mono→≤mono mono (inj₂ refl) = inj₂ refl
-```
-
-```agda
-normal : monotonic F → Set
-normal {F} mono = ∀ {f} ⦃ _ : f ⇡ ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ mono it ⦄
-```
-
-```agda
-<-inflationary : Func → Set
-<-inflationary F = ∀ {x} → x < F x
-
-≤-inflationary : Func → Set
-≤-inflationary F = ∀ {x} → x ≤ F x
-```
-
-后继运算严格单调.
-
-```agda
-s<s : monotonic suc
-suc-trans : a < b → b < c → suc a < c
-
-s<s suc         = suc
-s<s (suc₂ x<y)  = suc₂ (s<s x<y)
-s<s lim         = suc₂ (lim₂ (suc-trans it it))
-s<s (lim₂ x<f)  = suc₂ (lim₂ (suc-trans x<f it))
-
-suc-trans a<b suc         = s<s a<b
-suc-trans a<b (suc₂ c<b)  = suc₂ (suc-trans a<b c<b)
-suc-trans a<f lim         = lim₂ (suc-trans a<f it)
-suc-trans a<b (lim₂ b<f)  = lim₂ (suc-trans a<b b<f)
-```
-
-推论
-
-```agda
-s≤s : ≤-monotonic suc
-s≤s = mono→≤mono s<s
+<→s≤ suc = inj₂ refl
+<→s≤ (suc₂ p) = inj₁ (s<s p)
+<→s≤ (lim {f} {n}) = inj₁ $ lim₂ $ begin-strict
+  suc (f n)       <⟨ s<s it ⟩
+  suc (f (suc n)) ≤⟨ <→s≤ it ⟩
+  f (2+ n)        ∎
+<→s≤ {a} (lim₂ {f} {n} a<f) = inj₁ $ lim₂ $ begin-strict
+  suc a           <⟨ s<s a<f ⟩
+  suc (f n)       ≤⟨ <→s≤ it ⟩
+  f (suc n)       ∎
 ```
 
 ```agda
 s<s-inj : suc a < suc b → a < b
 s<s-inj suc         = suc
 s<s-inj (suc₂ s<b)  = <-trans suc s<b
-
-s≤s-inj : suc a ≤ suc b → a ≤ b
-s≤s-inj (inj₁ s<s)  = inj₁ (s<s-inj s<s)
-s≤s-inj (inj₂ refl) = inj₂ refl
-```
-
-```agda
-<→s≤ : a < b → suc a ≤ b
-<→s≤ suc = inj₂ refl
-<→s≤ (suc₂ p) = inj₁ (s<s p)
-<→s≤ lim = inj₁ (lim₂ (<-≤-trans (s<s it) (<→s≤ it)))
-<→s≤ (lim₂ p) = inj₁ (lim₂ (<-≤-trans (s<s p) (<→s≤ it)))
 ```
 
 ```agda
@@ -570,83 +456,33 @@ s≤→< {b = lim _} (inj₁ p) with lim-inv p
 s≤→< (inj₂ refl) = suc
 ```
 
-### 可迭代函数
+推论
 
 ```agda
-record Iterable : Set where
-  constructor mkIterable
-  field
-    _[_] : Func
-    <infl : <-inflationary _[_]
-variable ℱ : Iterable
+s≤s : ≤-preserving suc
+s≤s = <pres→≤pres s<s
+
+s≤s-inj : suc a ≤ suc b → a ≤ b
+s≤s-inj (inj₁ s<s)  = inj₁ (s<s-inj s<s)
+s≤s-inj (inj₂ refl) = inj₂ refl
 ```
 
 ```agda
-record Normal : Set where
-  constructor mkNormal
-  field
-    _[_] : Func
-    mono : monotonic _[_]
-    nml  : normal mono
+s<l : ⦃ _ : f ⇡ ⦄ → a < lim f → suc a < lim f
+s<l {f} (lim {n}) = begin-strict
+  suc (f n) ≤⟨ <→s≤ it ⟩
+  f (suc n) <⟨ lim ⟩
+  lim f     ∎
+s<l {f} {a} (lim₂ {n} p) = begin-strict
+  suc a     <⟨ s<s p ⟩
+  suc (f n) ≤⟨ <→s≤ lim ⟩
+  lim f ∎
 ```
 
 ```agda
-open Iterable public
-open Normal public
-```
-
-```agda
-_^⟨_⟩_ : Iterable → Ord → Func
-^⟨◌⟩-mono : monotonic (ℱ ^⟨_⟩ i)
-
-ℱ ^⟨ zero ⟩ i = i
-ℱ ^⟨ suc a ⟩ i = (ℱ [_] ∘ ℱ ^⟨ a ⟩_) i
-ℱ ^⟨ lim f ⟩ i = lim (λ n → ℱ ^⟨ f n ⟩ i) ⦃ ^⟨◌⟩-mono it ⦄
-
-^⟨◌⟩-mono {ℱ} {i} {x} suc =               begin-strict
-  ℱ ^⟨ x ⟩ i                              <⟨ <infl ℱ ⟩
-  ℱ [ ℱ ^⟨ x ⟩ i ]  ∎
-^⟨◌⟩-mono {ℱ} {i} {x} (suc₂ {b} p) =      begin-strict
-  ℱ ^⟨ x ⟩ i                              <⟨ ^⟨◌⟩-mono p ⟩
-  ℱ ^⟨ b ⟩ i                              <⟨ <infl ℱ ⟩
-  ℱ [ ℱ ^⟨ b ⟩ i ]                        ∎
-^⟨◌⟩-mono {ℱ} {i} (lim {f} {n}) =         begin-strict
-  ℱ ^⟨ f n ⟩ i                            <⟨ lim ⦃ ^⟨◌⟩-mono it ⦄ ⟩
-  ℱ ^⟨ lim f ⟩ i                          ∎
-^⟨◌⟩-mono {ℱ} {i} {x} (lim₂ {f} {n} p) =  begin-strict
-  ℱ ^⟨ x ⟩ i                              <⟨ ^⟨◌⟩-mono p ⟩
-  ℱ ^⟨ f n ⟩ i                            <⟨ lim₂ ⦃ ^⟨◌⟩-mono it ⦄ (^⟨◌⟩-mono it) ⟩
-  ℱ ^⟨ lim f ⟩ i                          ∎
-```
-
-```agda
-^⟨⟩◌-≤infl : ≤-inflationary (ℱ [_]) → ≤-inflationary (ℱ ^⟨ a ⟩_)
-^⟨⟩◌-≤infl {a = zero} _ = inj₂ refl
-^⟨⟩◌-≤infl {ℱ} {suc a} p {x} =  begin
-  x                             ≤⟨ ^⟨⟩◌-≤infl p ⟩
-  ℱ ^⟨ a ⟩ x                    ≤⟨ p ⟩
-  ℱ [ ℱ ^⟨ a ⟩ x ]              ∎
-^⟨⟩◌-≤infl {ℱ} {lim f} p {x} =  begin
-  x                             ≤⟨ ^⟨⟩◌-≤infl p ⟩
-  ℱ ^⟨ f 0 ⟩ x                  <⟨ lim₂ ⦃ ^⟨◌⟩-mono it ⦄ (^⟨◌⟩-mono it) ⟩
-  ℱ ^⟨ lim f ⟩ x                ∎
-```
-
-```agda
-^⟨⟩◌-<infl : ⦃ NonZero a ⦄ → ≤-inflationary (ℱ [_]) → <-inflationary (ℱ ^⟨ a ⟩_)
-^⟨⟩◌-<infl {suc a} {ℱ} p {x} =  begin-strict
-  x                             ≤⟨ ^⟨⟩◌-≤infl p ⟩
-  ℱ ^⟨ a ⟩ x                    <⟨ ^⟨◌⟩-mono suc ⟩
-  (ℱ [ ℱ ^⟨ a ⟩ x ])            ∎
-^⟨⟩◌-<infl {lim f} {ℱ} p {x} =  begin-strict
-  x                             <⟨ ^⟨⟩◌-<infl ⦃ fs-nonZero f ⦄ p ⟩
-  ℱ ^⟨ f 1 ⟩ x                  <⟨ ^⟨◌⟩-mono lim ⟩
-  ℱ ^⟨ lim f ⟩ x                ∎
-```
-
-```agda
-_⟨_⟩^ : Iterable → Ord → Normal
-ℱ ⟨ i ⟩^ = mkNormal (ℱ ^⟨_⟩ i) ^⟨◌⟩-mono refl
+l≤p : ⦃ _ : f ⇡ ⦄ → lim f ≤ suc a → lim f ≤ a
+l≤p (inj₁ suc) = inj₂ refl
+l≤p (inj₁ (suc₂ p)) = inj₁ p
 ```
 
 ## ω
@@ -663,31 +499,13 @@ instance
 ```
 
 ```agda
-z<ω : 0 < ω
-z<ω = z<l
-```
-
-```agda
-s<ω : a < ω → suc a < ω
-s<ω lim = lim₂ (suc-trans it it)
-s<ω (lim₂ p) = suc-trans p lim
-```
-
-```agda
 n<ω : fin n < ω
-n<ω {n = zero}  = z<ω
-n<ω {n = suc n} = s<ω n<ω
+n<ω {n = zero}  = z<l
+n<ω {n = suc n} = s<l n<ω
 ```
 
 ```agda
-n<l : ⦃ _ : f ⇡ ⦄ → fin n < lim f
-n<l {n = zero} = z<l
-n<l {n = suc n} with lim-inv n<l
-... | m , p = suc-trans p (lim {n = m})
-```
-
-```agda
-n≤fn : ∀ f → ⦃ f↑ : f ⇡ ⦄ → fin n ≤ f n
+n≤fn : ∀ f → ⦃ _ : f ⇡ ⦄ → fin n ≤ f n
 n≤fn {n = zero} f   = z≤
 n≤fn {n = suc n} f  = begin
   fin (suc n)       ≤⟨ s≤s (n≤fn f) ⟩
@@ -725,20 +543,81 @@ fin-suj {a = lim f} l<ω = ⊥-elim $ <-irrefl refl $ begin-strict
   ω     ∎
 ```
 
+## 可迭代函数
+
 ```agda
-s<l : ⦃ _ : f ⇡ ⦄ → a < lim f → suc a < lim f
-s<l {f} (lim {n}) = begin-strict
-  suc (f n) ≤⟨ <→s≤ it ⟩
-  f (suc n) <⟨ lim ⟩
-  lim f     ∎
-s<l {f} {a} (lim₂ {n} p) = lim₂ $ begin-strict
-  suc a     <⟨ s<s p ⟩
-  suc (f n) ≤⟨ <→s≤ it ⟩
-  f (suc n) ∎
+record Iterable : Set where
+  constructor mkIterable
+  field
+    _[_] : Func
+    <infl : <-inflationary _[_]
+variable ℱ : Iterable
 ```
 
 ```agda
-l≤p : ⦃ _ : f ⇡ ⦄ → lim f ≤ suc a → lim f ≤ a
-l≤p (inj₁ suc) = inj₂ refl
-l≤p (inj₁ (suc₂ p)) = inj₁ p
+record Normal : Set where
+  constructor mkNormal
+  field
+    _[_] : Func
+    <pres : <-preserving _[_]
+    nml : normal <pres
+```
+
+```agda
+open Iterable public
+open Normal public
+```
+
+```agda
+_^⟨_⟩_ : Iterable → Ord → Func
+^⟨◌⟩-<pres : <-preserving (ℱ ^⟨_⟩ i)
+
+ℱ ^⟨ zero ⟩ i = i
+ℱ ^⟨ suc a ⟩ i = (ℱ [_] ∘ ℱ ^⟨ a ⟩_) i
+ℱ ^⟨ lim f ⟩ i = lim (λ n → ℱ ^⟨ f n ⟩ i) ⦃ ^⟨◌⟩-<pres it ⦄
+
+^⟨◌⟩-<pres {ℱ} {i} {x} suc =              begin-strict
+  ℱ ^⟨ x ⟩ i                              <⟨ <infl ℱ ⟩
+  ℱ [ ℱ ^⟨ x ⟩ i ]  ∎
+^⟨◌⟩-<pres {ℱ} {i} {x} (suc₂ {b} p) =     begin-strict
+  ℱ ^⟨ x ⟩ i                              <⟨ ^⟨◌⟩-<pres p ⟩
+  ℱ ^⟨ b ⟩ i                              <⟨ <infl ℱ ⟩
+  ℱ [ ℱ ^⟨ b ⟩ i ]                        ∎
+^⟨◌⟩-<pres {ℱ} {i} (lim {f} {n}) =        begin-strict
+  ℱ ^⟨ f n ⟩ i                            <⟨ lim ⦃ ^⟨◌⟩-<pres it ⦄ ⟩
+  ℱ ^⟨ lim f ⟩ i                          ∎
+^⟨◌⟩-<pres {ℱ} {i} {x} (lim₂ {f} {n} p) = begin-strict
+  ℱ ^⟨ x ⟩ i                              <⟨ ^⟨◌⟩-<pres p ⟩
+  ℱ ^⟨ f n ⟩ i                            <⟨ lim₂ ⦃ ^⟨◌⟩-<pres it ⦄ (^⟨◌⟩-<pres it) ⟩
+  ℱ ^⟨ lim f ⟩ i                          ∎
+```
+
+```agda
+^⟨⟩◌-≤infl : ≤-inflationary (ℱ [_]) → ≤-inflationary (ℱ ^⟨ a ⟩_)
+^⟨⟩◌-≤infl {a = zero} _ = inj₂ refl
+^⟨⟩◌-≤infl {ℱ} {suc a} p {x} =  begin
+  x                             ≤⟨ ^⟨⟩◌-≤infl p ⟩
+  ℱ ^⟨ a ⟩ x                    ≤⟨ p ⟩
+  ℱ [ ℱ ^⟨ a ⟩ x ]              ∎
+^⟨⟩◌-≤infl {ℱ} {lim f} p {x} =  begin
+  x                             ≤⟨ ^⟨⟩◌-≤infl p ⟩
+  ℱ ^⟨ f 0 ⟩ x                  <⟨ lim₂ ⦃ ^⟨◌⟩-<pres it ⦄ (^⟨◌⟩-<pres it) ⟩
+  ℱ ^⟨ lim f ⟩ x                ∎
+```
+
+```agda
+^⟨⟩◌-<infl : ⦃ NonZero a ⦄ → ≤-inflationary (ℱ [_]) → <-inflationary (ℱ ^⟨ a ⟩_)
+^⟨⟩◌-<infl {suc a} {ℱ} p {x} =  begin-strict
+  x                             ≤⟨ ^⟨⟩◌-≤infl p ⟩
+  ℱ ^⟨ a ⟩ x                    <⟨ ^⟨◌⟩-<pres suc ⟩
+  (ℱ [ ℱ ^⟨ a ⟩ x ])            ∎
+^⟨⟩◌-<infl {lim f} {ℱ} p {x} =  begin-strict
+  x                             <⟨ ^⟨⟩◌-<infl ⦃ fs-nonZero f ⦄ p ⟩
+  ℱ ^⟨ f 1 ⟩ x                  <⟨ ^⟨◌⟩-<pres lim ⟩
+  ℱ ^⟨ lim f ⟩ x                ∎
+```
+
+```agda
+_⟨_⟩^ : Iterable → Ord → Normal
+ℱ ⟨ i ⟩^ = mkNormal (ℱ ^⟨_⟩ i) ^⟨◌⟩-<pres refl
 ```
