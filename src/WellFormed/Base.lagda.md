@@ -48,14 +48,14 @@ open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
   as SubTreeLe public using (_≤_; <⇒≤)
 ```
 
-**定义** 良构序列
+**定义** 严格单调增序列
 
 ```agda
 Seq : Set
 Seq = ℕ → Ord
 
-wf : Seq → Set
-wf f = ∀ {n} → f n < f (suc n)
+_⇡ : Seq → Set
+f ⇡ = ∀ {n} → f n < f (suc n)
 ```
 
 ```agda
@@ -71,7 +71,7 @@ variable
 data Ord where
   zero : Ord
   suc  : Ord → Ord
-  lim  : (f : Seq) → ⦃ f↑ : wf f ⦄ → Ord
+  lim  : (f : Seq) → ⦃ f⇡ : f ⇡ ⦄ → Ord
 ```
 
 **定义** 子树关系
@@ -80,8 +80,8 @@ data Ord where
 data _<_ where
   suc  : a < suc a
   suc₂ : a < b → a < suc b
-  lim  : ⦃ _ : wf f ⦄ → f n < lim f
-  lim₂ : ⦃ _ : wf f ⦄ → a < f n → a < lim f
+  lim  : ⦃ _ : f ⇡ ⦄ → f n < lim f
+  lim₂ : ⦃ _ : f ⇡ ⦄ → a < f n → a < lim f
 ```
 
 **定义** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
@@ -140,13 +140,13 @@ nonZero-intro {lim f} _ = record { nonZero = tt }
 
 ## 基本性质
 
-构造子性质
+构造子的单射性
 
 ```agda
 suc-inj : suc a ≡ suc b → a ≡ b
 suc-inj refl = refl
 
-lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≡ lim g → f ≡ g
+lim-inj : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → lim f ≡ lim g → f ≡ g
 lim-inj refl = refl
 ```
 
@@ -179,7 +179,7 @@ z<b (lim₂ _)  = lim₂ {n = 1} (z<b it)
 ```
 
 ```agda
-z<l : ⦃ _ : wf f ⦄ → 0 < lim f
+z<l : ⦃ _ : f ⇡ ⦄ → 0 < lim f
 z<l = lim₂ {n = 1} (z<b it)
 ```
 
@@ -191,7 +191,7 @@ z≤ {a = lim _}  = inj₁ z<l
 ```
 
 ```agda
-fs-nonZero : ∀ f → ⦃ _ : wf f ⦄ → NonZero (f (suc n))
+fs-nonZero : ∀ f → ⦃ _ : f ⇡ ⦄ → NonZero (f (suc n))
 fs-nonZero _ = nonZero-intro (z<b it)
 ```
 
@@ -218,7 +218,7 @@ suc-inv (suc₂ a<b) = inj₁ a<b
 ```
 
 ```agda
-lim-inv : ⦃ _ : wf f ⦄ → a < lim f → ∃[ n ] a < f n
+lim-inv : ⦃ _ : f ⇡ ⦄ → a < lim f → ∃[ n ] a < f n
 lim-inv lim   = _ , it
 lim-inv (lim₂ a<f) = _ , a<f
 ```
@@ -251,14 +251,14 @@ lim-inv (lim₂ a<f) = _ , a<f
 ```
 
 ```
-monoseq : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
+monoseq : ⦃ _ : f ⇡ ⦄ → m ℕ.< n → f m < f n
 monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 ... | inj₁ m<n  = <-trans (monoseq m<n) it
 ... | inj₂ refl = it
 ```
 
 ```agda
-injseq : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
+injseq : ⦃ _ : f ⇡ ⦄ → f m ≡ f n → m ≡ n
 injseq {m} {n} eq with ℕ.<-cmp m n
 ... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (monoseq m<n))
 ... | tri≈ _ refl _ = refl
@@ -421,7 +421,7 @@ a ≄ b = ¬ a ≃ b
 data _≼_ where
   z≼ : zero ≼ b
   s≼ : a ≼ b ∸ δ → a ≺ b
-  l≼ : ⦃ _ : wf f ⦄ → (∀ {n} → f n ≼ b) → lim f ≼ b
+  l≼ : ⦃ _ : f ⇡ ⦄ → (∀ {n} → f n ≼ b) → lim f ≼ b
 ```
 
 ```agda
@@ -432,7 +432,7 @@ data _≼_ where
 ```
 
 ```agda
-module _ ⦃ _ : wf f ⦄ where
+module _ ⦃ _ : f ⇡ ⦄ where
   ≼l : a ≼ f n → a ≼ lim f
   ≼l z≼ = z≼
   ≼l {n} (s≼ {δ} p) = s≼ {δ = n , δ} p
@@ -465,7 +465,7 @@ s≺s-inj = s≼s-inj
 ```
 
 ```agda
-l≼l : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ {n} → f n ≼ g n) → lim f ≼ lim g
+l≼l : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → (∀ {n} → f n ≼ g n) → lim f ≼ lim g
 l≼l f≼g = l≼ (≼l f≼g)
 ```
 
@@ -509,7 +509,7 @@ mono→≤mono mono (inj₂ refl) = inj₂ refl
 
 ```agda
 normal : monotonic F → Set
-normal {F} mono = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ mono it ⦄
+normal {F} mono = ∀ {f} ⦃ _ : f ⇡ ⦄ → F (lim f) ≡ lim (F ∘̇ f) ⦃ mono it ⦄
 ```
 
 ```agda
@@ -653,8 +653,8 @@ _⟨_⟩^ : Iterable → Ord → Normal
 
 ```agda
 instance
-  _ : wf fin
-  _ = suc
+  fin⇡ : fin ⇡
+  fin⇡ = suc
 ```
 
 ```agda
@@ -680,14 +680,14 @@ n<ω {n = suc n} = s<ω n<ω
 ```
 
 ```agda
-n<l : ⦃ _ : wf f ⦄ → fin n < lim f
+n<l : ⦃ _ : f ⇡ ⦄ → fin n < lim f
 n<l {n = zero} = z<l
 n<l {n = suc n} with lim-inv n<l
 ... | m , p = suc-trans p (lim {n = m})
 ```
 
 ```agda
-n≤fn : ∀ f → ⦃ f↑ : wf f ⦄ → fin n ≤ f n
+n≤fn : ∀ f → ⦃ f↑ : f ⇡ ⦄ → fin n ≤ f n
 n≤fn {n = zero} f   = z≤
 n≤fn {n = suc n} f  = begin
   fin (suc n)       ≤⟨ s≤s (n≤fn f) ⟩
@@ -696,10 +696,49 @@ n≤fn {n = suc n} f  = begin
 ```
 
 ```agda
-ω≤l : ⦃ _ : wf f ⦄ → ω ≘ lim f → ω ≤ lim f
+ω≤l : ⦃ _ : f ⇡ ⦄ → ω ≘ lim f → ω ≤ lim f
 ω≤l {f} homo with <-trich homo
 ... | tri< < _ _ = inj₁ <
 ... | tri≈ _ ≡ _ = inj₂ ≡
 ... | tri> _ _ > with lim-inv >
-... | n , l<n = ⊥-elim (<-asym (≤-<-trans (n≤fn f) lim) l<n)
+... | n , l<n = ⊥-elim $ <-irrefl refl $ begin-strict
+  fin n ≤⟨ n≤fn f ⟩
+  f n   <⟨ lim ⟩
+  lim f <⟨ l<n ⟩
+  fin n ∎
+```
+
+```agda
+fin-inj : fin m ≡ fin n → m ≡ n
+fin-inj {(zero)} {(zero)} eq = refl
+fin-inj {suc m}  {suc n}  eq = cong suc $ fin-inj $ suc-inj eq
+```
+
+```agda
+fin-suj : a < ω → ∃[ n ] fin n ≡ a
+fin-suj {a = zero} _ = 0 , refl
+fin-suj {a = suc a} s<ω with fin-suj (<-trans suc s<ω)
+... | n , refl = suc n , refl
+fin-suj {a = lim f} l<ω = ⊥-elim $ <-irrefl refl $ begin-strict
+  ω     ≤⟨ ω≤l (ω , inj₂ refl , inj₁ l<ω) ⟩
+  lim f <⟨ l<ω ⟩
+  ω     ∎
+```
+
+```agda
+s<l : ⦃ _ : f ⇡ ⦄ → a < lim f → suc a < lim f
+s<l {f} (lim {n}) = begin-strict
+  suc (f n) ≤⟨ <→s≤ it ⟩
+  f (suc n) <⟨ lim ⟩
+  lim f     ∎
+s<l {f} {a} (lim₂ {n} p) = lim₂ $ begin-strict
+  suc a     <⟨ s<s p ⟩
+  suc (f n) ≤⟨ <→s≤ it ⟩
+  f (suc n) ∎
+```
+
+```agda
+l≤p : ⦃ _ : f ⇡ ⦄ → lim f ≤ suc a → lim f ≤ a
+l≤p (inj₁ suc) = inj₂ refl
+l≤p (inj₁ (suc₂ p)) = inj₁ p
 ```
