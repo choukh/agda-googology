@@ -36,6 +36,11 @@ a * b = RightAdd a ^⟨ b ⟩ 0
 ```
 
 ```agda
+RightMult : (a : Ord) → ⦃ NonZero a ⦄ → Iterable
+RightMult a = iterable {!  1 * a !} {!   !}
+```
+
+```agda
 _^_ : (a : Ord) → Ord → ⦃ NonTrivial a ⦄ → Ord; infix 8 _^_
 ^-nonZero : ⦃ _ : NonTrivial a ⦄ → NonZero (a ^ b)
 
