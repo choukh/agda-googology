@@ -29,7 +29,6 @@ open import Function public using (id; _∘_; _$_; _∋_; it; case_of_; _↪_)
 open import Relation.Nullary public using (¬_)
 open import Relation.Binary.PropositionalEquality public hiding ([_])
 
-open import Function.Definitions using (Injective)
 open import Relation.Binary hiding (Rel)
 open import Relation.Binary.Consequences using (trans∧irr⇒asym)
 open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
@@ -182,7 +181,12 @@ pres<→pres≤ pres (inj₂ refl) = inj₂ refl
 ```
 
 ```agda
-inj<→inj≤ : Injective _≡_ _≡_ F → Injective _<_ _<_ F → Injective _≤_ _≤_ F
+_injects_ : Func → Rel → Set
+F injects _~_ = ∀ {x y} → F x ~ F y → x ~ y
+```
+
+```agda
+inj<→inj≤ : F injects _≡_ → F injects _<_ → F injects _≤_
 inj<→inj≤ inj inj< (inj₁ p) = inj₁ (inj< p)
 inj<→inj≤ inj inj< (inj₂ p) = inj₂ (inj p)
 ```
@@ -261,8 +265,8 @@ monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 ```
 
 ```agda
-injseq : ⦃ _ : f ⇡ ⦄ → Injective _≡_ _≡_ f
-injseq {x} {y} eq with ℕ.<-cmp x y
+injseq : ⦃ _ : f ⇡ ⦄ → f m ≡ f n → m ≡ n
+injseq {m} {n} eq with ℕ.<-cmp m n
 ... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (monoseq m<n))
 ... | tri≈ _ refl _ = refl
 ... | tri> _ _ n<m  = ⊥-elim (<-irrefl (sym eq) (monoseq n<m))
@@ -474,7 +478,7 @@ s<s {x} (lim₂ {f} {n} x<f) = suc₂ $ begin-strict
 ```
 
 ```agda
-s<s-inj : Injective _<_ _<_ suc
+s<s-inj : suc injects _<_
 s<s-inj suc         = suc
 s<s-inj (suc₂ s<b)  = <-trans suc s<b
 ```
@@ -493,7 +497,7 @@ s≤→< (inj₂ refl) = suc
 s≤s : suc preserves _≤_
 s≤s = pres<→pres≤ s<s
 
-s≤s-inj : Injective _≤_ _≤_ suc
+s≤s-inj : suc injects _≤_
 s≤s-inj = inj<→inj≤ suc-inj s<s-inj
 ```
 
