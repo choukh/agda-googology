@@ -892,28 +892,28 @@ _^⟨_⟩_ : Iterable → Ord → Func
 ```
 
 ```agda
-^⟨⟩◌-infl≤ : (ℱ [_]) inflates _≤_ → (ℱ ^⟨ a ⟩_) inflates _≤_
-^⟨⟩◌-infl≤ {a = zero} _ = inj₂ refl
-^⟨⟩◌-infl≤ {ℱ} {suc a} p {x} =  begin
-  x                             ≤⟨ ^⟨⟩◌-infl≤ p ⟩
-  ℱ ^⟨ a ⟩ x                    ≤⟨ p ⟩
-  ℱ [ ℱ ^⟨ a ⟩ x ]              ∎
-^⟨⟩◌-infl≤ {ℱ} {lim f} p {x} =  begin
-  x                             ≤⟨ ^⟨⟩◌-infl≤ p ⟩
-  ℱ ^⟨ f 0 ⟩ x                  <⟨ lim₂ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨◌⟩-pres< it) ⟩
-  ℱ ^⟨ lim f ⟩ x                ∎
+^⟨⟩◌-infl≤ : (ℱ ^⟨ a ⟩_) inflates _≤_
+^⟨⟩◌-infl≤ {a = zero} = inj₂ refl
+^⟨⟩◌-infl≤ {ℱ} {suc a} {x} =  begin
+  x                           ≤⟨ ^⟨⟩◌-infl≤ ⟩
+  ℱ ^⟨ a ⟩ x                  ≤⟨ <⇒≤ (infl< ℱ) ⟩
+  ℱ [ ℱ ^⟨ a ⟩ x ]            ∎
+^⟨⟩◌-infl≤ {ℱ} {lim f} {x} =  begin
+  x                           ≤⟨ ^⟨⟩◌-infl≤ ⟩
+  ℱ ^⟨ f 0 ⟩ x                <⟨ lim₂ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨◌⟩-pres< it) ⟩
+  ℱ ^⟨ lim f ⟩ x              ∎
 ```
 
 ```agda
-^⟨⟩◌-infl< : ⦃ NonZero a ⦄ → (ℱ [_]) inflates _≤_ → (ℱ ^⟨ a ⟩_) inflates _<_
-^⟨⟩◌-infl< {suc a} {ℱ} p {x} =  begin-strict
-  x                             ≤⟨ ^⟨⟩◌-infl≤ p ⟩
-  ℱ ^⟨ a ⟩ x                    <⟨ ^⟨◌⟩-pres< suc ⟩
-  (ℱ [ ℱ ^⟨ a ⟩ x ])            ∎
-^⟨⟩◌-infl< {lim f} {ℱ} p {x} =  begin-strict
-  x                             <⟨ ^⟨⟩◌-infl< ⦃ fs-nonZero f ⦄ p ⟩
-  ℱ ^⟨ f 1 ⟩ x                  <⟨ ^⟨◌⟩-pres< lim ⟩
-  ℱ ^⟨ lim f ⟩ x                ∎
+^⟨⟩◌-infl< : ⦃ NonZero a ⦄ → (ℱ ^⟨ a ⟩_) inflates _<_
+^⟨⟩◌-infl< {suc a} {ℱ} {x} =  begin-strict
+  x                           ≤⟨ ^⟨⟩◌-infl≤ ⟩
+  ℱ ^⟨ a ⟩ x                  <⟨ ^⟨◌⟩-pres< suc ⟩
+  (ℱ [ ℱ ^⟨ a ⟩ x ])          ∎
+^⟨⟩◌-infl< {lim f} {ℱ} {x} =  begin-strict
+  x                           <⟨ ^⟨⟩◌-infl< ⦃ fs-nonZero f ⦄ ⟩
+  ℱ ^⟨ f 1 ⟩ x                <⟨ ^⟨◌⟩-pres< lim ⟩
+  ℱ ^⟨ lim f ⟩ x              ∎
 ```
 
 ```agda
@@ -927,24 +927,26 @@ _⟨_⟩^ : Iterable → Ord → Normal
 ```
 
 ```agda
-^⟨⟩◌-pres≼ : ∀ a → (ℱ [_]) preserves _≼_ → (ℱ ^⟨ a ⟩_) preserves _≼_
-^⟨⟩◌-pres≼ zero _ = id
-^⟨⟩◌-pres≼ (suc a) pres≼ p = pres≼ (^⟨⟩◌-pres≼ a pres≼ p)
-^⟨⟩◌-pres≼ (lim f) pres≼ p = l≼l ⦃ ^⟨◌⟩-pres< it ⦄ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨⟩◌-pres≼ (f _) pres≼ p)
+^⟨⟩◌-pres≼ : (ℱ [_]) preserves _≼_ → (ℱ ^⟨ a ⟩_) preserves _≼_
+^⟨⟩◌-pres≼ {a = zero} _ = id
+^⟨⟩◌-pres≼ {a = suc a} pres≼ p = pres≼ (^⟨⟩◌-pres≼ pres≼ p)
+^⟨⟩◌-pres≼ {a = lim f} pres≼ p = l≼l ⦃ ^⟨◌⟩-pres< it ⦄ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨⟩◌-pres≼ pres≼ p)
 ```
 
 ```agda
 --^⟨◌⟩-incr≼
 ```
 
+可迭代函数迭代后的性质汇总
+
 |        | 迭代次数               | 初值 |
 | ----   | ----                  | ---- |
-| pres < |   ✓ (infl ≺)          |  ✗   |
-| pres ≤ |   ✓ (infl ≺)          |  ✗   |
-| infl < |   ✗                   |  ✓ (infl ≤ + NonZero) |
-| infl ≤ |   ✗                   |  ✓ (infl ≤) |
+| pres < |   ✓                   |  ✗   |
+| pres ≤ |   ✓                   |  ✗   |
+| infl < |   ✗                   |  ✓ (NonZero) |
+| infl ≤ |   ✗                   |  ✓   |
 | normal |   ✓                   |  ✗   |
-| pres ≺ |   ✓ (pres ≼ + infl ≺) |  ✗   |
-| pres ≼ |   ✓ (pres ≼ + infl ≼) |  ✓ (pres ≼) |
-| infl ≺ |   ✗                   |  ✓ (infl ≼ + NonZero)  |
-| infl ≼ |   ✓ (pres ≼ + infl ≺) |  ✓ (infl ≼)  |
+| pres ≺ |   ✓ (pres ≼)          |  ✗   |
+| pres ≼ |   ✓ (pres ≼)          |  ✓ (pres ≼) |
+| infl ≺ |   ✗                   |  ✓ (NonZero) |
+| infl ≼ |   ✓ (pres ≼)          |  ✓   |
