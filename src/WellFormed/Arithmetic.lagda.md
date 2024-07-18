@@ -27,7 +27,7 @@ a + b = Suc ^⟨ b ⟩ a
 
 ```agda
 RightAdd : (a : Ord) → ⦃ NonZero a ⦄ → Iterable
-RightAdd a = iterable (_+ a) (^⟨⟩◌-infl< (inj₁ suc))
+RightAdd a = iterable (_+ a) ^⟨⟩◌-infl<
 ```
 
 ```agda
