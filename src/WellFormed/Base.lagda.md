@@ -146,11 +146,61 @@ nonTrivial-intro {suc (lim _)}  _ = _
 nonTrivial-intro {lim _}        _ = _
 ```
 
+## 基本性质
+
+构造子的单射性
+
 ```agda
-NonTrivial→NonZero : ⦃ NonTrivial a ⦄ → NonZero a
-NonTrivial→NonZero {2+ a}         = _
-NonTrivial→NonZero {suc (lim f)}  = _
-NonTrivial→NonZero {lim f}        = _
+suc-inj : suc a ≡ suc b → a ≡ b
+suc-inj refl = refl
+
+lim-inj : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → lim f ≡ lim g → f ≡ g
+lim-inj refl = refl
+```
+
+严格序与非严格序的相互转化
+
+```agda
+≤→<s : a ≤ b → a < suc b
+≤→<s (inj₁ p) = suc₂ p
+≤→<s (inj₂ refl) = suc
+
+<s→≤ : a < suc b → a ≤ b
+<s→≤ suc = inj₂ refl
+<s→≤ (suc₂ p) = inj₁ p
+```
+
+互递归证明
+
+```agda
+z<s : 0 < suc a
+z<b : a < b → 0 < b
+
+z<s {(zero)}  = suc
+z<s {suc _} = suc₂ z<s
+z<s {lim _} = suc₂ (lim₂ {n = 1} (z<b it))
+
+z<b suc = z<s
+z<b (suc₂ _)  = z<s
+z<b (lim {n}) = lim₂ {n = suc n} (z<b it)
+z<b (lim₂ _)  = lim₂ {n = 1} (z<b it)
+```
+
+```agda
+fs-nonZero : ∀ f → ⦃ _ : f ⇡ ⦄ → NonZero (f (suc n))
+fs-nonZero _ = nonZero-intro (z<b it)
+```
+
+```agda
+z<l : ⦃ _ : f ⇡ ⦄ → 0 < lim f
+z<l = lim₂ {n = 1} (z<b it)
+```
+
+```agda
+z≤ : 0 ≤ a
+z≤ {(zero)}   = inj₂ refl
+z≤ {suc _}  = inj₁ z<s
+z≤ {lim _}  = inj₁ z<l
 ```
 
 ## 序数函数
@@ -404,49 +454,6 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 ```
 
 ### 更多性质
-
-构造子的单射性
-
-```agda
-suc-inj : suc a ≡ suc b → a ≡ b
-suc-inj refl = refl
-
-lim-inj : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → lim f ≡ lim g → f ≡ g
-lim-inj refl = refl
-```
-
-互递归证明
-
-```agda
-z<s : 0 < suc a
-z<b : a < b → 0 < b
-
-z<s {(zero)}  = suc
-z<s {suc _} = suc₂ z<s
-z<s {lim _} = suc₂ (lim₂ {n = 1} (z<b it))
-
-z<b suc = z<s
-z<b (suc₂ _)  = z<s
-z<b (lim {n}) = lim₂ {n = suc n} (z<b it)
-z<b (lim₂ _)  = lim₂ {n = 1} (z<b it)
-```
-
-```agda
-fs-nonZero : ∀ f → ⦃ _ : f ⇡ ⦄ → NonZero (f (suc n))
-fs-nonZero _ = nonZero-intro (z<b it)
-```
-
-```agda
-z<l : ⦃ _ : f ⇡ ⦄ → 0 < lim f
-z<l = lim₂ {n = 1} (z<b it)
-```
-
-```agda
-z≤ : 0 ≤ a
-z≤ {(zero)}   = inj₂ refl
-z≤ {suc _}  = inj₁ z<s
-z≤ {lim _}  = inj₁ z<l
-```
 
 后继运算的保序性
 
@@ -822,7 +829,7 @@ f≺l = ≺-≼-trans (<⇒≺ it) f≼l
 ≡⇒≃ refl = ≃-refl
 ```
 
-### 外延相等的实例
+外延相等的实例
 
 ```agda
 ω′ : Ord
@@ -860,7 +867,7 @@ record Normal : Set where
 
 ```agda
 Func↾ : Ord → Set
-Func↾ i = (x : Ord) → ⦃ i ≤ x ⦄ → Ord
+Func↾ i = (x : Ord) → ⦃ i≤ : i ≤ x ⦄ → Ord
 ```
 
 ```agda
