@@ -913,7 +913,7 @@ init≤ {ℱ} {i} {a} =                       begin
 ^⟨⟩◌-infl≤ {a = zero} = inj₂ refl
 ^⟨⟩◌-infl≤ {a = suc a} {ℱ} {x} =          begin
   x                                       ≤⟨ ^⟨⟩◌-infl≤ ⟩
-  ℱ ^⟨ a ⟩ x                              ≤⟨ <⇒≤ (infl< ℱ ⦃ init≤ ⦄) ⟩
+  ℱ ^⟨ a ⟩ x                              ≤⟨ <⇒≤ $ infl< ℱ ⦃ init≤ ⦄ ⟩
   ℱ ^⟨ suc a ⟩ x                          ∎ where open SubTreeReasoning
 ^⟨⟩◌-infl≤ {a = lim f} {ℱ} {x} =          begin
   x                                       ≤⟨ ^⟨⟩◌-infl≤ ⟩
@@ -966,6 +966,25 @@ _⟨_⟩^ : (ℱ : Iterable) (i : Ord ) → ⦃ init ℱ ≤ i ⦄ → Normal
 ```
 
 ```agda
+^⟨◌⟩-incr≼ : ⦃ _ : init ℱ ≤ i ⦄ → (ℱ ^⟨_⟩ i) inflates _≼_
+^⟨◌⟩-incr≼ {x = zero} = z≼
+^⟨◌⟩-incr≼ {ℱ} {i} {suc x} =              begin
+  suc x                                   ≤⟨ s≼s ^⟨◌⟩-incr≼ ⟩
+  suc (ℱ ^⟨ x ⟩ i)                        ≤⟨ <⇒≺ $ infl< ℱ ⦃ init≤ ⦄ ⟩
+  ℱ ^⟨ suc x ⟩ i                          ∎ where open CrossTreeReasoning
+^⟨◌⟩-incr≼ {ℱ} {i} {lim f} = l≼ $         begin
+  f _                                     ≤⟨ ≼l ⦃ ^⟨◌⟩-pres< it ⦄ ^⟨◌⟩-incr≼ ⟩
+  ℱ ^⟨ lim f ⟩ i                          ∎ where open CrossTreeReasoning
+```
+
+```agda
+^⟨⟩◌-pres≼ : (ℱ [_]) preserves _≼_ from (init ℱ) → (_^⟨_⟩_ ℱ a) preserves _≼_ from (init ℱ)
+^⟨⟩◌-pres≼ {a = zero} _ = id
+^⟨⟩◌-pres≼ {a = suc a} pres≼ p = pres≼ ⦃ init≤ ⦄ ⦃ init≤ ⦄ (^⟨⟩◌-pres≼ pres≼ p)
+^⟨⟩◌-pres≼ {a = lim f} pres≼ p = l≼l ⦃ ^⟨◌⟩-pres< it ⦄ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨⟩◌-pres≼ pres≼ p)
+```
+
+```agda
 ^⟨◌⟩-pres∸≼ : ⦃ _ : init ℱ ≤ i ⦄ → ℱ ^⟨ suc (a ∸ δ) ⟩ i ≼ ℱ ^⟨ a ⟩ i
 ^⟨◌⟩-pres∸≼ {ℱ} {i} {suc a} {inj₁ tt} = ≼-refl
 ^⟨◌⟩-pres∸≼ {ℱ} {i} {suc a} {inj₂ δ } =   begin
@@ -989,3 +1008,32 @@ _⟨_⟩^ : (ℱ : Iterable) (i : Ord ) → ⦃ init ℱ ≤ i ⦄ → Normal
   ℱ ^⟨ f _ ⟩ i                            ≤⟨ ^⟨◌⟩-pres≼ pres≼ p ⟩
   ℱ ^⟨ y ⟩ i                              ∎ where open CrossTreeReasoning
 ```
+
+```agda
+^⟨◌⟩-pres≺ : ⦃ _ : init ℱ ≤ i ⦄ → (ℱ [_]) preserves _≼_ from (init ℱ) → (ℱ ^⟨_⟩ i) preserves _≺_
+^⟨◌⟩-pres≺ {ℱ} {i} pres≼ {x} {(zero)} (s≼ {δ = ()} _)
+^⟨◌⟩-pres≺ {ℱ} {i} pres≼ {x} {suc y} p =  begin-strict
+  ℱ ^⟨ x ⟩ i                              ≤⟨ ^⟨◌⟩-pres≼ pres≼ (s≼s-inj p) ⟩
+  ℱ ^⟨ y ⟩ i                              <⟨ <⇒≺ $ infl< ℱ ⦃ init≤ ⦄ ⟩
+  ℱ ^⟨ suc y ⟩ i                          ∎ where open CrossTreeReasoning
+^⟨◌⟩-pres≺ {(ℱ)} {(i)} pres≼ {(x)} {lim f} (s≼ p) = begin-strict
+  ℱ ^⟨ x ⟩ i                              ≤⟨ ^⟨◌⟩-pres≼ pres≼ p ⟩
+  ℱ ^⟨ f _ ∸ _ ⟩ i                        <⟨ <⇒≺ $ infl< ℱ ⦃ init≤ ⦄ ⟩
+  ℱ ^⟨ suc (f _ ∸ _) ⟩ i                  ≤⟨ ^⟨◌⟩-pres∸≼ ⟩
+  ℱ ^⟨ f _ ⟩ i                            ≤⟨ f≼l ⦃ ^⟨◌⟩-pres< it ⦄ ⟩
+  ℱ ^⟨ lim f ⟩ i                          ∎ where open CrossTreeReasoning
+```
+
+可迭代函数迭代后的性质汇总
+
+|        | 迭代次数               | 初值 |
+| ----   | ----                  | ---- |
+| pres < |   ✓                   |  ✗   |
+| pres ≤ |   ✓                   |  ✗   |
+| infl < |   ✗                   |  ✓ (NonZero) |
+| infl ≤ |   ✗                   |  ✓   |
+| normal |   ✓                   |  ✗   |
+| pres ≺ |   ✓ (pres ≼)          |  ✗   |
+| pres ≼ |   ✓ (pres ≼)          |  ✓ (pres ≼) |
+| infl ≺ |   ✗                   |  ✓ (NonZero) |
+| infl ≼ |   ✓ (pres ≼)          |  ✓   |
