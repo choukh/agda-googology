@@ -295,7 +295,7 @@ injseq {x} {y} eq with ℕ.<-cmp x y
 ```
 
 ```agda
-module ≤-Reasoning where
+module SubTreeReasoning where
   open import Relation.Binary.Reasoning.Base.Triple
     {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<_}
     ≤-isPreorder <-asym <-trans <-resp-≡ <⇒≤ <-≤-trans ≤-<-trans
@@ -448,22 +448,22 @@ s<s (suc₂ x<y)    = suc₂ (s<s x<y)
 s<s (lim {f} {n}) = suc₂ $ begin-strict
   suc (f n)       <⟨ s<s it ⟩
   suc (f (suc n)) ≤⟨ <→s≤ lim ⟩
-  lim f           ∎ where open ≤-Reasoning
+  lim f           ∎ where open SubTreeReasoning
 s<s {x} (lim₂ {f} {n} x<f) = suc₂ $ begin-strict
   suc x           <⟨ s<s x<f ⟩
   suc (f n)       ≤⟨ <→s≤ lim ⟩
-  lim f           ∎ where open ≤-Reasoning
+  lim f           ∎ where open SubTreeReasoning
 
 <→s≤ suc = inj₂ refl
 <→s≤ (suc₂ p) = inj₁ (s<s p)
 <→s≤ (lim {f} {n}) = inj₁ $ lim₂ $ begin-strict
   suc (f n)       <⟨ s<s it ⟩
   suc (f (suc n)) ≤⟨ <→s≤ it ⟩
-  f (2+ n)        ∎ where open ≤-Reasoning
+  f (2+ n)        ∎ where open SubTreeReasoning
 <→s≤ {a} (lim₂ {f} {n} a<f) = inj₁ $ lim₂ $ begin-strict
   suc a           <⟨ s<s a<f ⟩
   suc (f n)       ≤⟨ <→s≤ it ⟩
-  f (suc n)       ∎ where open ≤-Reasoning
+  f (suc n)       ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -495,11 +495,11 @@ s<l : ⦃ _ : f ⇡ ⦄ → a < lim f → suc a < lim f
 s<l {f} (lim {n}) = begin-strict
   suc (f n) ≤⟨ <→s≤ it ⟩
   f (suc n) <⟨ lim ⟩
-  lim f     ∎ where open ≤-Reasoning
+  lim f     ∎ where open SubTreeReasoning
 s<l {f} {a} (lim₂ {n} p) = begin-strict
   suc a     <⟨ s<s p ⟩
   suc (f n) ≤⟨ <→s≤ lim ⟩
-  lim f     ∎ where open ≤-Reasoning
+  lim f     ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -533,7 +533,7 @@ n≤fn {n = zero} f   = z≤
 n≤fn {n = suc n} f  = begin
   fin (suc n)       ≤⟨ s≤s (n≤fn f) ⟩
   suc (f n)         ≤⟨ <→s≤ it ⟩
-  f (suc n)         ∎ where open ≤-Reasoning
+  f (suc n)         ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -546,7 +546,7 @@ n≤fn {n = suc n} f  = begin
   fin n ≤⟨ n≤fn f ⟩
   f n   <⟨ lim ⟩
   lim f <⟨ l<n ⟩
-  fin n ∎ where open ≤-Reasoning
+  fin n ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -563,7 +563,7 @@ fin-suj {suc a} s<ω with fin-suj (<-trans suc s<ω)
 fin-suj {lim f} l<ω = ⊥-elim $ <-irrefl refl $ begin-strict
   ω     ≤⟨ ω≤l (ω , inj₂ refl , inj₁ l<ω) ⟩
   lim f <⟨ l<ω ⟩
-  ω     ∎ where open ≤-Reasoning
+  ω     ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -697,7 +697,7 @@ l≃l f≃g = (l≼l (proj₁ f≃g)) , (l≼l (proj₂ f≃g))
 ### 严格偏序
 
 ```agda
-s⋠z : suc a ≼ zero → ⊥
+s⋠z : suc a ≼ 0 → ⊥
 s⋠z (s≼ {δ = ⊥} ≼) = ⊥
 
 s⋠ : suc a ≼ a → ⊥
@@ -763,7 +763,7 @@ open import Relation.Binary.Structures _≃_ as ≃
 ```
 
 ```agda
-module ≼-Reasoning where
+module CrossTreeReasoning where
   open import Relation.Binary.Reasoning.Base.Triple
     {_≈_ = _≃_} {_≤_ = _≼_} {_<_ = _≺_}
     ≼-isPreorder ≺-asym ≺-trans ≺-resp-≃ ≺⇒≼ ≺-≼-trans ≼-≺-trans
@@ -849,17 +849,16 @@ record Normal : Set where
   nml→infl≼ {suc a} =         begin
     suc a                     ≤⟨ s≼s nml→infl≼ ⟩
     suc (G a)                 ≤⟨ <⇒≺ (pres< suc) ⟩
-    G (suc a)                 ∎ where open ≼-Reasoning
-  nml→infl≼ {lim f} =         l≼ λ {n} → begin
-    f n                       ≤⟨ ≼l ⦃ pres< it ⦄ nml→infl≼ ⟩
+    G (suc a)                 ∎ where open CrossTreeReasoning
+  nml→infl≼ {lim f} =         l≼ $ begin
+    f _                       ≤⟨ ≼l ⦃ pres< it ⦄ nml→infl≼ ⟩
     lim (G ∘ f) ⦃ pres< it ⦄  ≈˘⟨ ≡⇒≃ conti ⟩
-    G (lim f)                 ∎ where open ≼-Reasoning
+    G (lim f)                 ∎ where open CrossTreeReasoning
 ```
 
 ```agda
 open Iterable public
 open Normal public
-open ≤-Reasoning
 ```
 
 ```agda
@@ -872,18 +871,18 @@ _^⟨_⟩_ : Iterable → Ord → Func
 
 ^⟨◌⟩-pres< {ℱ} {i} {x} suc =              begin-strict
   ℱ ^⟨ x ⟩ i                              <⟨ infl< ℱ ⟩
-  ℱ [ ℱ ^⟨ x ⟩ i ]  ∎
+  ℱ [ ℱ ^⟨ x ⟩ i ]                        ∎ where open SubTreeReasoning
 ^⟨◌⟩-pres< {ℱ} {i} {x} (suc₂ {b} p) =     begin-strict
   ℱ ^⟨ x ⟩ i                              <⟨ ^⟨◌⟩-pres< p ⟩
   ℱ ^⟨ b ⟩ i                              <⟨ infl< ℱ ⟩
-  ℱ [ ℱ ^⟨ b ⟩ i ]                        ∎
+  ℱ [ ℱ ^⟨ b ⟩ i ]                        ∎ where open SubTreeReasoning
 ^⟨◌⟩-pres< {ℱ} {i} (lim {f} {n}) =        begin-strict
   ℱ ^⟨ f n ⟩ i                            <⟨ lim ⦃ ^⟨◌⟩-pres< it ⦄ ⟩
-  ℱ ^⟨ lim f ⟩ i                          ∎
+  ℱ ^⟨ lim f ⟩ i                          ∎ where open SubTreeReasoning
 ^⟨◌⟩-pres< {ℱ} {i} {x} (lim₂ {f} {n} p) = begin-strict
   ℱ ^⟨ x ⟩ i                              <⟨ ^⟨◌⟩-pres< p ⟩
   ℱ ^⟨ f n ⟩ i                            <⟨ lim₂ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨◌⟩-pres< it) ⟩
-  ℱ ^⟨ lim f ⟩ i                          ∎
+  ℱ ^⟨ lim f ⟩ i                          ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -897,11 +896,11 @@ _^⟨_⟩_ : Iterable → Ord → Func
 ^⟨⟩◌-infl≤ {ℱ} {suc a} {x} =  begin
   x                           ≤⟨ ^⟨⟩◌-infl≤ ⟩
   ℱ ^⟨ a ⟩ x                  ≤⟨ <⇒≤ (infl< ℱ) ⟩
-  ℱ [ ℱ ^⟨ a ⟩ x ]            ∎
+  ℱ [ ℱ ^⟨ a ⟩ x ]            ∎ where open SubTreeReasoning
 ^⟨⟩◌-infl≤ {ℱ} {lim f} {x} =  begin
   x                           ≤⟨ ^⟨⟩◌-infl≤ ⟩
   ℱ ^⟨ f 0 ⟩ x                <⟨ lim₂ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨◌⟩-pres< it) ⟩
-  ℱ ^⟨ lim f ⟩ x              ∎
+  ℱ ^⟨ lim f ⟩ x              ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -909,11 +908,11 @@ _^⟨_⟩_ : Iterable → Ord → Func
 ^⟨⟩◌-infl< {suc a} {ℱ} {x} =  begin-strict
   x                           ≤⟨ ^⟨⟩◌-infl≤ ⟩
   ℱ ^⟨ a ⟩ x                  <⟨ ^⟨◌⟩-pres< suc ⟩
-  (ℱ [ ℱ ^⟨ a ⟩ x ])          ∎
+  (ℱ [ ℱ ^⟨ a ⟩ x ])          ∎ where open SubTreeReasoning
 ^⟨⟩◌-infl< {lim f} {ℱ} {x} =  begin-strict
   x                           <⟨ ^⟨⟩◌-infl< ⦃ fs-nonZero f ⦄ ⟩
   ℱ ^⟨ f 1 ⟩ x                <⟨ ^⟨◌⟩-pres< lim ⟩
-  ℱ ^⟨ lim f ⟩ x              ∎
+  ℱ ^⟨ lim f ⟩ x              ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -922,8 +921,43 @@ _⟨_⟩^ : Iterable → Ord → Normal
 ```
 
 ```agda
-^⟨◌⟩-pres≺ : (ℱ ^⟨_⟩ i) preserves _≺_
-^⟨◌⟩-pres≺ = {!   !}
+^⟨◌⟩-pres∸≼ : ℱ ^⟨ suc (a ∸ δ) ⟩ i ≼ ℱ ^⟨ a ⟩ i
+^⟨◌⟩-pres∸≼ {ℱ} {suc a} {inj₁ tt} {i} = ≼-refl
+^⟨◌⟩-pres∸≼ {ℱ} {suc a} {inj₂ δ } {i} =   begin
+  ℱ ^⟨ suc (a ∸ δ) ⟩ i                    ≤⟨ ^⟨◌⟩-pres∸≼ ⟩
+  ℱ ^⟨ a ⟩ i                              ≤⟨ ≤⇒≼ (<⇒≤ (infl< ℱ)) ⟩
+  ℱ ^⟨ suc a ⟩ i                          ∎ where open CrossTreeReasoning
+^⟨◌⟩-pres∸≼ {ℱ} {lim f} {n , δ}   {i} =   begin
+  ℱ ^⟨ suc (f n ∸ δ) ⟩ i                  ≤⟨ ^⟨◌⟩-pres∸≼ ⟩
+  ℱ ^⟨ f n ⟩ i                            ≤⟨ ≼l ⦃ ^⟨◌⟩-pres< it ⦄ ≼-refl ⟩
+  ℱ ^⟨ lim f ⟩ i                          ∎ where open CrossTreeReasoning
+```
+
+```agda
+^⟨◌⟩-pres≼ : (ℱ [_]) preserves _≼_ → (ℱ ^⟨_⟩ i) preserves _≼_
+^⟨◌⟩-pres≼ {ℱ} {i} pres≼ {x} {y} z≼ = ≤⇒≼ ^⟨⟩◌-infl≤
+^⟨◌⟩-pres≼ {ℱ} {i} pres≼ {x} {y} (s≼ p) = begin
+  ℱ ^⟨ x ⟩ i                              ≤⟨ pres≼ (^⟨◌⟩-pres≼ pres≼ p) ⟩
+  ℱ ^⟨ suc (y ∸ _) ⟩ i                    ≤⟨ ^⟨◌⟩-pres∸≼ ⟩
+  ℱ ^⟨ y ⟩ i                              ∎ where open CrossTreeReasoning
+^⟨◌⟩-pres≼ {ℱ} {i} pres≼ {lim f} {y} (l≼ p) = l≼ ⦃ ^⟨◌⟩-pres< it ⦄ $ begin
+  ℱ ^⟨ f _ ⟩ i                            ≤⟨ ^⟨◌⟩-pres≼ pres≼ p ⟩
+  ℱ ^⟨ y ⟩ i                              ∎ where open CrossTreeReasoning
+```
+
+```agda
+^⟨◌⟩-pres≺ : (ℱ [_]) preserves _≼_ → (ℱ ^⟨_⟩ i) preserves _≺_
+^⟨◌⟩-pres≺ {ℱ} {i} pres≼ {x} {(zero)} (s≼ {δ = ()} _)
+^⟨◌⟩-pres≺ {ℱ} {i} pres≼ {x} {suc y} p =  begin-strict
+  ℱ ^⟨ x ⟩ i                              ≤⟨ ^⟨◌⟩-pres≼ pres≼ (s≼s-inj p) ⟩
+  ℱ ^⟨ y ⟩ i                              <⟨ <⇒≺ (infl< ℱ) ⟩
+  ℱ ^⟨ suc y ⟩ i                          ∎ where open CrossTreeReasoning
+^⟨◌⟩-pres≺ {(ℱ)} {(i)} pres≼ {(x)} {lim f} (s≼ p) = begin-strict
+  ℱ ^⟨ x ⟩ i                              ≤⟨ ^⟨◌⟩-pres≼ pres≼ p ⟩
+  ℱ ^⟨ f _ ∸ _ ⟩ i                        <⟨ <⇒≺ (infl< ℱ) ⟩
+  ℱ ^⟨ suc (f _ ∸ _) ⟩ i                  ≤⟨ ^⟨◌⟩-pres∸≼ ⟩
+  ℱ ^⟨ f _ ⟩ i                            ≤⟨ f≼l ⦃ ^⟨◌⟩-pres< it ⦄ ⟩
+  ℱ ^⟨ lim f ⟩ i                          ∎ where open CrossTreeReasoning
 ```
 
 ```agda
@@ -934,7 +968,15 @@ _⟨_⟩^ : Iterable → Ord → Normal
 ```
 
 ```agda
---^⟨◌⟩-incr≼
+^⟨◌⟩-incr≼ : (ℱ ^⟨_⟩ i) inflates _≼_
+^⟨◌⟩-incr≼ {x = zero} = z≼
+^⟨◌⟩-incr≼ {ℱ} {i} {suc x} =              begin
+  suc x                                   ≤⟨ s≼s ^⟨◌⟩-incr≼ ⟩
+  suc (ℱ ^⟨ x ⟩ i)                        ≤⟨ <⇒≺ (infl< ℱ) ⟩
+  ℱ ^⟨ suc x ⟩ i                          ∎ where open CrossTreeReasoning
+^⟨◌⟩-incr≼ {ℱ} {i} {lim f} = l≼ $         begin
+  f _                                     ≤⟨ ≼l ⦃ ^⟨◌⟩-pres< it ⦄ ^⟨◌⟩-incr≼ ⟩
+  ℱ ^⟨ lim f ⟩ i                          ∎ where open CrossTreeReasoning
 ```
 
 可迭代函数迭代后的性质汇总
