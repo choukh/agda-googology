@@ -137,14 +137,21 @@ record NonTrivial (a : Ord) : Set where
 
 ```agda
 nonZero-intro : 0 < a → NonZero a
-nonZero-intro {suc _} _ = record { nonZero = tt }
-nonZero-intro {lim _} _ = record { nonZero = tt }
+nonZero-intro {suc _} _ = _
+nonZero-intro {lim _} _ = _
 
 nonTrivial-intro : 1 < a → NonTrivial a
 nonTrivial-intro {suc zero} (suc₂ ())
-nonTrivial-intro {2+ a}         _ = record { nonTrivial = tt }
-nonTrivial-intro {suc (lim _)}  _ = record { nonTrivial = tt }
-nonTrivial-intro {lim _}        _ = record { nonTrivial = tt }
+nonTrivial-intro {2+ a}         _ = _
+nonTrivial-intro {suc (lim _)}  _ = _
+nonTrivial-intro {lim _}        _ = _
+```
+
+```agda
+NonTrivial→NonZero : ⦃ NonTrivial a ⦄ → NonZero a
+NonTrivial→NonZero {2+ a}         = _
+NonTrivial→NonZero {suc (lim f)}  = _
+NonTrivial→NonZero {lim f}        = _
 ```
 
 ## 序数函数
