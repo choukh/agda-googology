@@ -10,7 +10,7 @@ zhihu-tags: Agda, 大数数学, 序数
 > 高亮渲染: [Arithmetic.html](https://choukh.github.io/agda-googology/WellFormed.Arithmetic.html)  
 
 ```agda
-{-# OPTIONS --safe #-}
+{-# OPTIONS --safe --lossy-unification #-}
 module WellFormed.Arithmetic where
 open import WellFormed.Base
 ```
@@ -31,11 +31,27 @@ RightAdd a = iterable (_+ a) ^⟨⟩◌-infl<
 ```
 
 ```agda
-_*_ : (a : Ord) → ⦃ NonZero a ⦄ → Ord → Ord; infixl 7 _*_
+_*_ : (a : Ord) → Ord → ⦃ NonZero a ⦄ → Ord; infixl 7 _*_
 a * b = RightAdd a ^⟨ b ⟩ 0
+```
+
+```agda
+_^_ : (a : Ord) → Ord → ⦃ NonTrivial a ⦄ → Ord; infix 8 _^_
+^-nonZero : ⦃ _ : NonTrivial a ⦄ → NonZero (a ^ b)
+
+a ^ zero = 1
+a ^ suc b = (a ^ b * a) ⦃ ^-nonZero ⦄
+a ^ lim f = lim (λ n → a ^ f n) ⦃ {!   !} ⦄
+
+^-nonZero {a} {b = zero} = _
+^-nonZero {a} {b = suc b} = {!   !}
+^-nonZero {a} {b = lim f} = _
 ```
 
 ```agda
 LeftAdd : (a : Ord) → Normal
 LeftAdd a = normal (a +_) ^⟨◌⟩-pres< refl
+
+LeftMult : (a : Ord) → ⦃ NonZero a ⦄ → Normal
+LeftMult a = normal (a *_) ^⟨◌⟩-pres< refl
 ```
