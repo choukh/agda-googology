@@ -43,7 +43,12 @@ a * b = RightAdd a ^⟨ b ⟩ 0
 
 ```agda
 RightMult : (b : Ord) → ⦃ NonTrivial b ⦄ → Iterable
-RightMult b = iterable 1 (λ x ⦃ p ⦄ → {! x * b  !}) {!   !}
+RightMult b = iterable 1 *b infl
+  where
+  *b : Func↾ 1
+  *b x ⦃ i≤ ⦄ = (x * b) ⦃ nonZero-intro (s≤→< i≤) ⦄
+  infl : *b inflates _<_ from 1
+  infl = {!   !}
 ```
 
 ```agda
