@@ -16,8 +16,14 @@ open import WellFormed.Base
 ```
 
 ```agda
+private instance
+  _ = z≤
+  _ = ≤-refl
+```
+
+```agda
 Suc : Iterable
-Suc = iterable suc suc
+Suc = iterable 0 (λ x → suc x) suc
 ```
 
 ```agda
@@ -26,8 +32,8 @@ a + b = Suc ^⟨ b ⟩ a
 ```
 
 ```agda
-RightAdd : (a : Ord) → ⦃ NonZero a ⦄ → Iterable
-RightAdd a = iterable (_+ a) ^⟨⟩◌-infl<
+RightAdd : (b : Ord) → ⦃ NonZero b ⦄ → Iterable
+RightAdd b = Suc ^⟨ b ⟩
 ```
 
 ```agda
@@ -36,21 +42,13 @@ a * b = RightAdd a ^⟨ b ⟩ 0
 ```
 
 ```agda
-RightMult : (a : Ord) → ⦃ NonZero a ⦄ → Iterable
-RightMult a = iterable {!  1 * a !} {!   !}
+RightMult : (b : Ord) → ⦃ NonTrivial b ⦄ → Iterable
+RightMult b = iterable 1 (λ x ⦃ p ⦄ → {! x * b  !}) {!   !}
 ```
 
 ```agda
 _^_ : (a : Ord) → Ord → ⦃ NonTrivial a ⦄ → Ord; infix 8 _^_
-^-nonZero : ⦃ _ : NonTrivial a ⦄ → NonZero (a ^ b)
-
-a ^ zero = 1
-a ^ suc b = (a ^ b * a) ⦃ ^-nonZero ⦄
-a ^ lim f = lim (λ n → a ^ f n) ⦃ {!   !} ⦄
-
-^-nonZero {a} {b = zero} = _
-^-nonZero {a} {b = suc b} = {!   !}
-^-nonZero {a} {b = lim f} = _
+a ^ b = RightMult a ^⟨ b ⟩ 1
 ```
 
 ```agda
@@ -59,4 +57,7 @@ LeftAdd a = normal (a +_) ^⟨◌⟩-pres< refl
 
 LeftMult : (a : Ord) → ⦃ NonZero a ⦄ → Normal
 LeftMult a = normal (a *_) ^⟨◌⟩-pres< refl
+
+LeftPow : (a : Ord) → ⦃ NonTrivial a ⦄ → Normal
+LeftPow a = normal (a ^_) ^⟨◌⟩-pres< refl
 ```
