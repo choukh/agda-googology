@@ -16,10 +16,18 @@ open import WellFormed.Base
 ```
 
 ```agda
-private instance
-  _ = z≤
-  _ = ≤-refl
+private
+  instance
+    _ = z≤
+    _ = ≤-refl
+  pres = ^⟨◌⟩-pres<
 ```
+
+```agda
+open import Algebra.Definitions {A = Ord} _≃_
+```
+
+## 加法
 
 ```agda
 Suc : Iterable
@@ -32,6 +40,15 @@ a + b = Suc ^⟨ b ⟩ a
 ```
 
 ```agda
++-assoc : Associative _+_
++-assoc _ _ zero = ≃-refl
++-assoc a b (suc c) = s≃s (+-assoc a b c)
++-assoc a b (lim f) = l≃l ⦃ pres it ⦄ ⦃ pres $ pres it ⦄ (+-assoc a b (f _))
+```
+
+## 乘法
+
+```agda
 RightAdd : (b : Ord) → ⦃ NonZero b ⦄ → Iterable
 RightAdd b = Suc ^⟨ b ⟩
 ```
@@ -42,13 +59,16 @@ a * b = RightAdd a ^⟨ b ⟩ 0
 ```
 
 ```agda
-RightMult : (b : Ord) → ⦃ NonTrivial b ⦄ → Iterable
-RightMult b = iterable 1 *b infl
+RightMult : (b : Ord) → ⦃ ntb : NonTrivial b ⦄ → Iterable
+RightMult b ⦃ ntb ⦄ = iterable 1 _*b infl
   where
-  *b : Func↾ 1
-  *b x ⦃ i≤ ⦄ = (x * b) ⦃ nonZero-intro (s≤→< i≤) ⦄
-  infl : *b inflates _<_ from 1
-  infl = {!   !}
+  _*b : Func↾ 1
+  (x *b) ⦃ i≤ ⦄ = (x * b) ⦃ nonZero-intro (s≤→< i≤) ⦄
+  infl : _*b inflates _<_ from 1
+  infl {x} ⦃ i≤ ⦄ =                     begin-strict
+    x                                   ≈⟨ {! pres  !} ⟩
+    (x * 1) ⦃ nonZero-intro (s≤→< i≤) ⦄ <⟨ pres {!   !} ⟩
+    x *b                                ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -58,11 +78,11 @@ a ^ b = RightMult a ^⟨ b ⟩ 1
 
 ```agda
 LeftAdd : (a : Ord) → Normal
-LeftAdd a = normal (a +_) ^⟨◌⟩-pres< refl
+LeftAdd a = normal (a +_) pres refl
 
 LeftMult : (a : Ord) → ⦃ NonZero a ⦄ → Normal
-LeftMult a = normal (a *_) ^⟨◌⟩-pres< refl
+LeftMult a = normal (a *_) pres refl
 
 LeftPow : (a : Ord) → ⦃ NonTrivial a ⦄ → Normal
-LeftPow a = normal (a ^_) ^⟨◌⟩-pres< refl
+LeftPow a = normal (a ^_) pres refl
 ```
