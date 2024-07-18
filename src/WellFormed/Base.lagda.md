@@ -872,10 +872,10 @@ Func↾ i = (x : Ord) → ⦃ i≤ : i ≤ x ⦄ → Ord
 
 ```agda
 inflates-from-syntax : (i : Ord) → Func↾ i → Rel → Set
-inflates-from-syntax i F _~_ = ∀ {x} ⦃ _ : i ≤ x ⦄ → x ~ F x
+inflates-from-syntax i F _~_ = ∀ {x} ⦃ i≤ : i ≤ x ⦄ → x ~ F x
 
 preserves-from-syntax : (i : Ord) → Func↾ i → Rel → Set
-preserves-from-syntax i F _~_ = ∀ {x y} ⦃ _ : i ≤ x ⦄ ⦃ _ : i ≤ y ⦄ → x ~ y → F x ~ F y
+preserves-from-syntax i F _~_ = ∀ {x y} ⦃ i≤₁ : i ≤ x ⦄ ⦃ i≤₂ : i ≤ y ⦄ → x ~ y → F x ~ F y
 
 syntax inflates-from-syntax i F _~_ = F inflates _~_ from i
 syntax preserves-from-syntax i F _~_ = F preserves _~_ from i
