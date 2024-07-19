@@ -55,59 +55,55 @@ nt-elim {lim f}       = lim₂ (n<fs f 1)
 ## 加法
 
 ```agda
-Suc : Iterable
-Suc = iterable 0 (λ x → suc x) suc
-```
-
-```agda
 _+_ : Ord → Ord → Ord; infixl 6 _+_
-a + b = Suc ^⟨ b ⟩ a
++◌-pres< : (a +_) preserves _<_
+
+zero + b = b
+a + zero = a
+a + suc b = suc (a + b)
+a + lim f = lim (λ n → a + f n) ⦃ +◌-pres< it ⦄
+
++◌-pres< {a = zero}             = id
++◌-pres< {a = suc a} suc        = suc
++◌-pres< {a = suc a} (suc₂ p)   = suc₂ (+◌-pres< p)
++◌-pres< {a = suc a} lim        = lim ⦃ +◌-pres< it ⦄
++◌-pres< {a = suc a} (lim₂ p)   = lim₂ ⦃ +◌-pres< it ⦄ (+◌-pres< p)
++◌-pres< {a = lim f} suc        = suc
++◌-pres< {a = lim f} (suc₂ p)   = suc₂ (+◌-pres< p)
++◌-pres< {a = lim f} lim        = lim ⦃ +◌-pres< it ⦄
++◌-pres< {a = lim f} (lim₂ p)   = lim₂ ⦃ +◌-pres< it ⦄ (+◌-pres< p)
 ```
+
+左右幺元
 
 ```agda
-_+◌ : (a : Ord) → Normal
-a +◌ = normal (a +_) pres refl
++-idˡ : zero + a ≡ a
++-idˡ = refl
+
++-idʳ : ∀ a → a + zero ≡ a
++-idʳ zero = refl
++-idʳ (suc a) = refl
++-idʳ (lim f) = refl
 ```
 
-## 乘法
+结合律
+
+```agda
++-assoc : a + (b + c) ≡ (a + b) + c
++-assoc {a = zero} = refl
++-assoc {a} {b = zero} rewrite +-idʳ a = refl
++-assoc {a} {b} {c = zero} rewrite +-idʳ b | +-idʳ (a + b) = refl
++-assoc {a = suc a} {b = suc b} {c = suc c} = cong suc (+-assoc {suc a} {suc b} {c})
++-assoc {a = lim a} {b = suc b} {c = suc c} = cong suc (+-assoc {lim a} {suc b} {c})
++-assoc {a = suc a} {b = lim b} {c = suc c} = cong suc (+-assoc {suc a} {lim b} {c})
++-assoc {a = lim a} {b = lim b} {c = suc c} = cong suc (+-assoc {lim a} {lim b} {c})
++-assoc {a = suc a} {b = suc b} {c = lim c} = {!   !}
++-assoc {a = lim a} {b = suc b} {c = lim c} = {!   !}
++-assoc {a = suc a} {b = lim b} {c = lim c} = {!   !}
++-assoc {a = lim a} {b = lim b} {c = lim c} = {!   !}
+```
 
 ```agda
 ◌+_ : (b : Ord) → ⦃ NonZero b ⦄ → Iterable
-◌+ b = Suc ^⟨ b ⟩
+◌+ b = iterable 0 (_+ b) {!   !}
 ```
-
-```agda
-_*_ : (a : Ord) → Ord → ⦃ NonZero a ⦄ → Ord; infixl 7 _*_
-a * b = (◌+ a) ^⟨ b ⟩ 0
-```
-
-```agda
-_*◌ : (a : Ord) → ⦃ NonZero a ⦄ → Normal
-a *◌ = normal (a *_) pres refl
-```
-
-## 幂
-
-```agda
-◌*_ : (b : Ord) → ⦃ NonTrivial b ⦄ → Iterable
-◌*_ b = iterable 1 _*b infl
-  where
-  _*b : Func↾ 1
-  (x *b) ⦃ i≤ ⦄ = (x * b) ⦃ nz-intro (s≤→< i≤) ⦄
-  infl : _*b inflates _<_ from 1
-  infl {x} ⦃ i≤ ⦄ =                     begin-strict
-    x                                   ≈⟨ {!   !} ⟩
-    (x * 1) ⦃ nz-intro (s≤→< i≤) ⦄      <⟨ pres nt-elim ⟩
-    x *b                                ∎ where open SubTreeReasoning
-```
-
-```agda
-_^_ : (a : Ord) → Ord → ⦃ NonTrivial a ⦄ → Ord; infix 8 _^_
-a ^ b = (◌* a) ^⟨ b ⟩ 1
-```
-
-```agda
-_^◌ : (a : Ord) → ⦃ NonTrivial a ⦄ → Normal
-a ^◌ = normal (a ^_) pres refl
-```
- 

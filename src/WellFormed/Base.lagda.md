@@ -1058,4 +1058,3 @@ _⟨_⟩^ : (ℱ : Iterable) (i : Ord ) → ⦃ init ℱ ≤ i ⦄ → Normal
 | pres ≼ |   ✓ (pres ≼)          |  ✓ (pres ≼) |
 | infl ≺ |   ✗                   |  ✓ (NonZero) |
 | infl ≼ |   ✓ (pres ≼)          |  ✓   |
- 
