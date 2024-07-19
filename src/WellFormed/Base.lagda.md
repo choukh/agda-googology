@@ -46,6 +46,11 @@ data _<_ : Rel; infix 4 _<_
 ```
 
 ```agda
+_≮_ : Rel; infix 4 _≮_
+a ≮ b = ¬ a < b
+```
+
+```agda
 open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
   as SubTreeLe public using (_≤_; <⇒≤)
 ```
@@ -122,28 +127,14 @@ not0 : Ord → Set
 not0 zero = ⊥
 not0 _ = ⊤
 
-not01 : Ord → Set
-not01 zero       = ⊥
-not01 (suc zero) = ⊥
-not01 _          = ⊤
-
 record NonZero (a : Ord) : Set where
   field nonZero : not0 a
-
-record NonTrivial (a : Ord) : Set where
-  field nonTrivial : not01 a
 ```
 
 ```agda
-nonZero-intro : 0 < a → NonZero a
-nonZero-intro {suc _} _ = _
-nonZero-intro {lim _} _ = _
-
-nonTrivial-intro : 1 < a → NonTrivial a
-nonTrivial-intro {suc zero} (suc₂ ())
-nonTrivial-intro {2+ a}         _ = _
-nonTrivial-intro {suc (lim _)}  _ = _
-nonTrivial-intro {lim _}        _ = _
+nz-intro : 0 < a → NonZero a
+nz-intro {suc _} _ = _
+nz-intro {lim _} _ = _
 ```
 
 ## 基本性质
@@ -176,7 +167,7 @@ lim-inj refl = refl
 z<s : 0 < suc a
 z<b : a < b → 0 < b
 
-z<s {(zero)}  = suc
+z<s {(zero)} = suc
 z<s {suc _} = suc₂ z<s
 z<s {lim _} = suc₂ (lim₂ {n = 1} (z<b it))
 
@@ -187,20 +178,26 @@ z<b (lim₂ _)  = lim₂ {n = 1} (z<b it)
 ```
 
 ```agda
-fs-nonZero : ∀ f → ⦃ _ : f ⇡ ⦄ → NonZero (f (suc n))
-fs-nonZero _ = nonZero-intro (z<b it)
-```
-
-```agda
 z<l : ⦃ _ : f ⇡ ⦄ → 0 < lim f
 z<l = lim₂ {n = 1} (z<b it)
 ```
 
 ```agda
 z≤ : 0 ≤ a
-z≤ {(zero)}   = inj₂ refl
+z≤ {(zero)} = inj₂ refl
 z≤ {suc _}  = inj₁ z<s
 z≤ {lim _}  = inj₁ z<l
+```
+
+```agda
+fs-nz : ∀ f → ⦃ _ : f ⇡ ⦄ → NonZero (f (suc n))
+fs-nz _ = nz-intro (z<b it)
+```
+
+```agda
+nz-elim : ⦃ NonZero a ⦄ → 0 < a
+nz-elim {suc a} = z<s
+nz-elim {lim f} = z<l
 ```
 
 ## 序数函数
@@ -288,7 +285,7 @@ lim-inv (lim₂ a<f) = _ , a<f
 ```
 
 ```agda
-<-notDense : a < b → b < suc a → ⊥
+<-notDense : a < b → b ≮ suc a
 <-notDense p suc = <-irrefl refl p
 <-notDense p (suc₂ q) = <-asym p q
 ```
@@ -420,16 +417,16 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 注意同株不是传递关系.
 
 ```agda
-≘-intro : {A : Set} → (∀ {x} → a < x → b < x → A) → (a ≘ b → A)
-≘-intro H (c , inj₁ p     , inj₁ q)     = H {c} p q
-≘-intro H (c , inj₁ p     , inj₂ refl)  = H {suc c} (<-trans p suc) suc
-≘-intro H (c , inj₂ refl  , inj₁ q)     = H {suc c} suc (<-trans q suc)
-≘-intro H (c , inj₂ refl  , inj₂ refl)  = H {suc c} suc suc
+≘-weaken : {A : Set} → (∀ {x} → a < x → b < x → A) → (a ≘ b → A)
+≘-weaken H (c , inj₁ p     , inj₁ q)     = H {c} p q
+≘-weaken H (c , inj₁ p     , inj₂ refl)  = H {suc c} (<-trans p suc) suc
+≘-weaken H (c , inj₂ refl  , inj₁ q)     = H {suc c} suc (<-trans q suc)
+≘-weaken H (c , inj₂ refl  , inj₂ refl)  = H {suc c} suc suc
 ```
 
 ```agda
 <-trich : a ≘ b → Tri (a < b) (a ≡ b) (b < a)
-<-trich = ≘-intro <-cmp
+<-trich = ≘-weaken <-cmp
 
 ≤-total : a ≘ b → a ≤ b ⊎ b ≤ a
 ≤-total p with <-trich p
@@ -555,6 +552,11 @@ n≤fn {n = suc n} f  = begin
 ```
 
 ```agda
+n<fs : ∀ f n → ⦃ _ : f ⇡ ⦄ → fin n < f (suc n)
+n<fs f _ = ≤-<-trans (n≤fn f) it
+```
+
+```agda
 ω≤l : ⦃ _ : f ⇡ ⦄ → ω ≘ lim f → ω ≤ lim f
 ω≤l {f} homo with <-trich homo
 ... | tri< < _ _ = inj₁ <
@@ -598,9 +600,10 @@ fin-suj {lim f} l<ω = ⊥-elim $ <-irrefl refl $ begin-strict
 ## 跨树关系
 
 ```agda
-infix 4 _≼_ _≺_ _≃_
+infix 4 _≼_ _⋠_ _≺_ _≃_
 data _≼_ : Rel
-_≺_ _≃_ : Rel
+_⋠_ _≺_ _≃_ : Rel
+a ⋠ b = ¬ a ≼ b
 a ≺ b = suc a ≼ b
 a ≃ b = a ≼ b × b ≼ a
 ```
@@ -715,10 +718,10 @@ l≃l f≃g = (l≼l (proj₁ f≃g)) , (l≼l (proj₂ f≃g))
 ### 严格偏序
 
 ```agda
-s⋠z : suc a ≼ 0 → ⊥
+s⋠z : suc a ⋠ 0
 s⋠z (s≼ {δ = ⊥} ≼) = ⊥
 
-s⋠ : suc a ≼ a → ⊥
+s⋠ : suc a ⋠ a
 s⋠ {(zero)} = s⋠z
 s⋠ {suc _} p = s⋠ (s≼s-inj p)
 s⋠ {lim _} (s≼ {δ = n , δ} (l≼ p)) = s⋠ (s≼ {δ = δ} p)
@@ -827,6 +830,17 @@ f≺l = ≺-≼-trans (<⇒≺ it) f≼l
 ```agda
 ≡⇒≃ : _≡_ ⇒ _≃_
 ≡⇒≃ refl = ≃-refl
+```
+
+```agda
+l≼l-suc : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → (∀ {n} → f (suc n) ≼ g (suc n)) → lim f ≼ lim g
+l≼l-suc {f} {g} f≼g = l≼ $ λ {n} → ≼l $ begin
+  f n                                   ≤⟨ ≤⇒≼ $ <⇒≤ it ⟩
+  f (suc n)                             ≤⟨ f≼g ⟩
+  g (suc n)                             ∎ where open CrossTreeReasoning
+
+l≃l-suc : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → (∀ {n} → f (suc n) ≃ g (suc n)) → lim f ≃ lim g
+l≃l-suc f≃g = (l≼l-suc (proj₁ f≃g)) , (l≼l-suc (proj₂ f≃g))
 ```
 
 外延相等的实例
@@ -957,7 +971,7 @@ init≤ {ℱ} {i} {a} =                       begin
   ℱ ^⟨ a ⟩ x                              <⟨ ^⟨◌⟩-pres< suc ⟩
   ℱ ^⟨ suc a ⟩ x                          ∎ where open SubTreeReasoning
 ^⟨⟩◌-infl< {lim f} {ℱ} {x} =              begin-strict
-  x                                       <⟨ ^⟨⟩◌-infl< ⦃ fs-nonZero f ⦄ ⟩
+  x                                       <⟨ ^⟨⟩◌-infl< ⦃ fs-nz f ⦄ ⟩
   ℱ ^⟨ f 1 ⟩ x                            <⟨ ^⟨◌⟩-pres< lim ⟩
   ℱ ^⟨ lim f ⟩ x                          ∎ where open SubTreeReasoning
 ```
@@ -1044,3 +1058,4 @@ _⟨_⟩^ : (ℱ : Iterable) (i : Ord ) → ⦃ init ℱ ≤ i ⦄ → Normal
 | pres ≼ |   ✓ (pres ≼)          |  ✓ (pres ≼) |
 | infl ≺ |   ✗                   |  ✓ (NonZero) |
 | infl ≼ |   ✓ (pres ≼)          |  ✓   |
+ 

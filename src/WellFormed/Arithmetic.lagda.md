@@ -17,22 +17,39 @@ open import WellFormed.Base
 
 ```agda
 private
+  pres = ^⟨◌⟩-pres<
   instance
     _ = z≤
     _ = ≤-refl
-  pres = ^⟨◌⟩-pres<
+    _ : NonZero (suc a)
+    _ = _
+    _ : ⦃ _ : f ⇡ ⦄ → NonZero (lim f)
+    _ = _
+```
+
+**约定** 非平凡序数指不等于零或一的序数.
+
+```agda
+not01 : Ord → Set
+not01 zero       = ⊥
+not01 (suc zero) = ⊥
+not01 _          = ⊤
+
+record NonTrivial (a : Ord) : Set where
+  field nonTrivial : not01 a
 ```
 
 ```agda
-open import Level using (0ℓ)
-open import Axiom.Extensionality.Propositional using (Extensionality)
---postulate
---  ext : Extensionality 0ℓ 0ℓ
-```
+nt-intro : 1 < a → NonTrivial a
+nt-intro {suc zero} (suc₂ ())
+nt-intro {2+ a}         _ = _
+nt-intro {suc (lim _)}  _ = _
+nt-intro {lim _}        _ = _
 
-```agda
-ex : (f g : Seq) ⦃ f⇡ : f ⇡ ⦄ ⦃ g⇡ : g ⇡ ⦄ → f ≡ g → lim f ≡ lim g
-ex f g refl = {! refl  !}
+nt-elim : ⦃ NonTrivial a ⦄ → 1 < a
+nt-elim {2+ _}        = s<s z<s
+nt-elim {suc (lim _)} = s<s z<l
+nt-elim {lim f}       = lim₂ (n<fs f 1)
 ```
 
 ## 加法
@@ -52,20 +69,6 @@ _+◌ : (a : Ord) → Normal
 a +◌ = normal (a +_) pres refl
 ```
 
-```agda
-+-assoc : ∀ a b c → a + b + c ≡ a + (b + c)
-+-assoc _ _ zero = refl --≃-refl
-+-assoc a b (suc c) = cong suc (+-assoc a b c) --s≃s (+-assoc a b c)
-+-assoc a b (lim f) = {!  cong lim !} --l≃l ⦃ pres it ⦄ ⦃ pres $ pres it ⦄ (+-assoc a b (f _))
-```
-
-```agda
-+-idˡ : ∀ a → 0 + a ≡ a
-+-idˡ zero    = refl
-+-idˡ (suc a) = cong suc (+-idˡ a)
-+-idˡ (lim f) = {!  cong lim !} --l≃l ⦃ pres it ⦄ ⦃ it ⦄ (+-idˡ (f _))
-```
-
 ## 乘法
 
 ```agda
@@ -83,24 +86,18 @@ _*◌ : (a : Ord) → ⦃ NonZero a ⦄ → Normal
 a *◌ = normal (a *_) pres refl
 ```
 
-```agda
-*-idʳ : (a : Ord) → ⦃ _ : NonZero a ⦄ → a * 1 ≡ a
-*-idʳ (suc a) = cong suc {!   !}
-*-idʳ (lim f) = {!   !}
-```
-
 ## 幂
 
 ```agda
-◌*_ : (b : Ord) → ⦃ ntb : NonTrivial b ⦄ → Iterable
-◌*_ b ⦃ ntb ⦄ = iterable 1 _*b infl
+◌*_ : (b : Ord) → ⦃ NonTrivial b ⦄ → Iterable
+◌*_ b = iterable 1 _*b infl
   where
   _*b : Func↾ 1
-  (x *b) ⦃ i≤ ⦄ = (x * b) ⦃ nonZero-intro (s≤→< i≤) ⦄
+  (x *b) ⦃ i≤ ⦄ = (x * b) ⦃ nz-intro (s≤→< i≤) ⦄
   infl : _*b inflates _<_ from 1
   infl {x} ⦃ i≤ ⦄ =                     begin-strict
-    x                                   ≈˘⟨ *-idʳ x ⦃ {!   !} ⦄ ⟩
-    (x * 1) ⦃ nonZero-intro (s≤→< i≤) ⦄ <⟨ pres {!   !} ⟩
+    x                                   ≈⟨ {!   !} ⟩
+    (x * 1) ⦃ nz-intro (s≤→< i≤) ⦄      <⟨ pres nt-elim ⟩
     x *b                                ∎ where open SubTreeReasoning
 ```
 
@@ -113,3 +110,4 @@ a ^ b = (◌* a) ^⟨ b ⟩ 1
 _^◌ : (a : Ord) → ⦃ NonTrivial a ⦄ → Normal
 a ^◌ = normal (a ^_) pres refl
 ```
+ 
