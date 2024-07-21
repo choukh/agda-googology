@@ -27,9 +27,9 @@ open import Data.Sum public using (_⊎_; inj₁; inj₂)
 open import Data.Product public using (Σ; ∃-syntax; _×_; _,_; proj₁; proj₂)
 open import Function public using (id; _∘_; _$_; _∋_; it; case_of_; _↪_)
 open import Relation.Nullary public using (¬_)
+open import Relation.Binary public hiding (Rel)
 open import Relation.Binary.PropositionalEquality public hiding ([_])
 
-open import Relation.Binary hiding (Rel)
 open import Relation.Binary.Consequences using (trans∧irr⇒asym)
 open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
 open import Induction.WellFounded using (Acc; acc; WellFounded)
@@ -55,14 +55,14 @@ open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
   as SubTreeLe public using (_≤_; <⇒≤)
 ```
 
-**定义** 严格单调增序列
+**定义** 严格单调递增序列
 
 ```agda
 Seq : Set
 Seq = ℕ → Ord
 
-_⇡ : Seq → Set
-f ⇡ = ∀ {n} → f n < f (suc n)
+wf : Seq → Set
+wf f = ∀ {n} → f n < f (suc n)
 ```
 
 ```agda
@@ -78,17 +78,17 @@ variable
 data Ord where
   zero : Ord
   suc  : Ord → Ord
-  lim  : (f : Seq) → ⦃ f ⇡ ⦄ → Ord
+  lim  : (f : Seq) → ⦃ wf f ⦄ → Ord
 ```
 
 **定义** 子树关系
 
 ```agda
 data _<_ where
-  suc  : a < suc a
-  suc₂ : a < b → a < suc b
-  lim  : ⦃ _ : f ⇡ ⦄ → f n < lim f
-  lim₂ : ⦃ _ : f ⇡ ⦄ → a < f n → a < lim f
+  <suc  : a < suc a
+  <suc₂ : a < b → a < suc b
+  <lim  : ⦃ _ : wf f ⦄ → f n < lim f
+  <lim₂ : ⦃ _ : wf f ⦄ → a < f n → a < lim f
 ```
 
 **定义** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
@@ -145,7 +145,7 @@ nz-intro {lim _} _ = _
 suc-inj : suc a ≡ suc b → a ≡ b
 suc-inj refl = refl
 
-lim-inj : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → lim f ≡ lim g → f ≡ g
+lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≡ lim g → f ≡ g
 lim-inj refl = refl
 ```
 
@@ -153,12 +153,12 @@ lim-inj refl = refl
 
 ```agda
 ≤→<s : a ≤ b → a < suc b
-≤→<s (inj₁ p) = suc₂ p
-≤→<s (inj₂ refl) = suc
+≤→<s (inj₁ p) = <suc₂ p
+≤→<s (inj₂ refl) = <suc
 
 <s→≤ : a < suc b → a ≤ b
-<s→≤ suc = inj₂ refl
-<s→≤ (suc₂ p) = inj₁ p
+<s→≤ <suc = inj₂ refl
+<s→≤ (<suc₂ p) = inj₁ p
 ```
 
 互递归证明
@@ -167,19 +167,19 @@ lim-inj refl = refl
 z<s : 0 < suc a
 z<b : a < b → 0 < b
 
-z<s {(zero)} = suc
-z<s {suc _} = suc₂ z<s
-z<s {lim _} = suc₂ (lim₂ {n = 1} (z<b it))
+z<s {(zero)} = <suc
+z<s {suc _} = <suc₂ z<s
+z<s {lim _} = <suc₂ (<lim₂ {n = 1} (z<b it))
 
-z<b suc = z<s
-z<b (suc₂ _)  = z<s
-z<b (lim {n}) = lim₂ {n = suc n} (z<b it)
-z<b (lim₂ _)  = lim₂ {n = 1} (z<b it)
+z<b <suc = z<s
+z<b (<suc₂ _)  = z<s
+z<b (<lim {n}) = <lim₂ {n = suc n} (z<b it)
+z<b (<lim₂ _)  = <lim₂ {n = 1} (z<b it)
 ```
 
 ```agda
-z<l : ⦃ _ : f ⇡ ⦄ → 0 < lim f
-z<l = lim₂ {n = 1} (z<b it)
+z<l : ⦃ _ : wf f ⦄ → 0 < lim f
+z<l = <lim₂ {n = 1} (z<b it)
 ```
 
 ```agda
@@ -190,7 +190,7 @@ z≤ {lim _}  = inj₁ z<l
 ```
 
 ```agda
-fs-nz : ∀ f → ⦃ _ : f ⇡ ⦄ → NonZero (f (suc n))
+fs-nz : ∀ f → ⦃ _ : wf f ⦄ → NonZero (f (suc n))
 fs-nz _ = nz-intro (z<b it)
 ```
 
@@ -240,7 +240,7 @@ inj<→inj≤ inj inj< (inj₂ p) = inj₂ (inj p)
 
 ```agda
 continuous : F preserves _<_ → Set
-continuous {F} pres = ∀ {f} ⦃ _ : f ⇡ ⦄ → F (lim f) ≡ lim (F ∘ f) ⦃ pres it ⦄
+continuous {F} pres = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘ f) ⦃ pres it ⦄
 ```
 
 ## 子树关系
@@ -253,30 +253,30 @@ open import Relation.Binary.Structures {A = Ord} _≡_ as ≡
 
 ```agda
 <-trans : Transitive _<_
-<-trans a<b suc = suc₂ a<b
-<-trans a<f lim = lim₂ a<f
-<-trans a<b (suc₂ b<c) = suc₂ (<-trans a<b b<c)
-<-trans a<b (lim₂ b<f) = lim₂ (<-trans a<b b<f)
+<-trans a<b <suc = <suc₂ a<b
+<-trans a<f <lim = <lim₂ a<f
+<-trans a<b (<suc₂ b<c) = <suc₂ (<-trans a<b b<c)
+<-trans a<b (<lim₂ b<f) = <lim₂ (<-trans a<b b<f)
 ```
 
 ```agda
 suc-inv : a < suc b → a ≤ b
-suc-inv suc = inj₂ refl
-suc-inv (suc₂ a<b) = inj₁ a<b
+suc-inv <suc = inj₂ refl
+suc-inv (<suc₂ a<b) = inj₁ a<b
 ```
 
 ```agda
-lim-inv : ⦃ _ : f ⇡ ⦄ → a < lim f → ∃[ n ] a < f n
-lim-inv lim   = _ , it
-lim-inv (lim₂ a<f) = _ , a<f
+lim-inv : ⦃ _ : wf f ⦄ → a < lim f → ∃[ n ] a < f n
+lim-inv <lim   = _ , it
+lim-inv (<lim₂ a<f) = _ , a<f
 ```
 
 ```agda
 <-irrefl : Irreflexive _≡_ _<_
 <-irrefl {suc a} refl s<s with suc-inv s<s
-... | inj₁ s<a = <-irrefl refl (<-trans suc s<a)
+... | inj₁ s<a = <-irrefl refl (<-trans <suc s<a)
 <-irrefl {lim _} refl l<l with lim-inv l<l
-... | n , l<f = <-irrefl refl (<-trans lim l<f)
+... | n , l<f = <-irrefl refl (<-trans <lim l<f)
 ```
 
 ```agda
@@ -286,8 +286,8 @@ lim-inv (lim₂ a<f) = _ , a<f
 
 ```agda
 <-notDense : a < b → b ≮ suc a
-<-notDense p suc = <-irrefl refl p
-<-notDense p (suc₂ q) = <-asym p q
+<-notDense p <suc = <-irrefl refl p
+<-notDense p (<suc₂ q) = <-asym p q
 ```
 
 ```agda
@@ -305,14 +305,14 @@ lim-inv (lim₂ a<f) = _ , a<f
 ```
 
 ```
-monoseq : ⦃ _ : f ⇡ ⦄ → m ℕ.< n → f m < f n
+monoseq : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
 monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 ... | inj₁ m<n  = <-trans (monoseq m<n) it
 ... | inj₂ refl = it
 ```
 
 ```agda
-injseq : ⦃ _ : f ⇡ ⦄ → f m ≡ f n → m ≡ n
+injseq : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
 injseq {m} {n} eq with ℕ.<-cmp m n
 ... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (monoseq m<n))
 ... | tri≈ _ refl _ = refl
@@ -369,23 +369,23 @@ BoundedRel _~_ = ∀ {a b c} → a < c → b < c → a ~ b
 
 ```agda
 <-cmp⊎ : BoundedRel λ a b → a < b ⊎ a ≡ b ⊎ b < a
-<-cmp⊎ suc        suc         = inj₂ $ inj₁ refl
-<-cmp⊎ suc        (suc₂ b<a)  = inj₂ $ inj₂ b<a
-<-cmp⊎ (suc₂ a<b) suc         = inj₁ a<b
-<-cmp⊎ (suc₂ a<c) (suc₂ b<c)  = <-cmp⊎ a<c b<c
-<-cmp⊎ (lim {n = m}) (lim {n}) with ℕ.<-cmp m n
+<-cmp⊎ <suc        <suc         = inj₂ $ inj₁ refl
+<-cmp⊎ <suc        (<suc₂ b<a)  = inj₂ $ inj₂ b<a
+<-cmp⊎ (<suc₂ a<b) <suc         = inj₁ a<b
+<-cmp⊎ (<suc₂ a<c) (<suc₂ b<c)  = <-cmp⊎ a<c b<c
+<-cmp⊎ (<lim {n = m}) (<lim {n}) with ℕ.<-cmp m n
 ... | tri< m<n _ _  = inj₁ $ monoseq m<n
 ... | tri≈ _ refl _ = inj₂ $ inj₁ refl
 ... | tri> _ _ n<m  = inj₂ $ inj₂ $ monoseq n<m
-<-cmp⊎ (lim {n = m}) (lim₂ {n} b<f) with ℕ.<-cmp m n
+<-cmp⊎ (<lim {n = m}) (<lim₂ {n} b<f) with ℕ.<-cmp m n
 ... | tri< m<n _ _  = <-cmp⊎ (monoseq m<n) b<f
 ... | tri≈ _ refl _ = inj₂ $ inj₂ b<f
 ... | tri> _ _ n<m  = inj₂ $ inj₂ $ <-trans b<f $ monoseq n<m
-<-cmp⊎ (lim₂ {n = m} a<f) (lim {n}) with ℕ.<-cmp m n
+<-cmp⊎ (<lim₂ {n = m} a<f) (<lim {n}) with ℕ.<-cmp m n
 ... | tri< m<n _ _  = inj₁ $ <-trans a<f $ monoseq m<n
 ... | tri≈ _ refl _ = inj₁ a<f
 ... | tri> _ _ n<m  = <-cmp⊎ a<f (monoseq n<m)
-<-cmp⊎ (lim₂ {n = m} a<f) (lim₂ {n} b<f) with ℕ.<-cmp m n
+<-cmp⊎ (<lim₂ {n = m} a<f) (<lim₂ {n} b<f) with ℕ.<-cmp m n
 ... | tri< m<n _ _  = <-cmp⊎ (<-trans a<f (monoseq m<n)) b<f
 ... | tri≈ _ refl _ = <-cmp⊎ a<f b<f
 ... | tri> _ _ n<m  = <-cmp⊎ a<f (<-trans b<f (monoseq n<m))
@@ -419,9 +419,9 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 ```agda
 ≘-weaken : {A : Set} → (∀ {x} → a < x → b < x → A) → (a ≘ b → A)
 ≘-weaken H (c , inj₁ p     , inj₁ q)     = H {c} p q
-≘-weaken H (c , inj₁ p     , inj₂ refl)  = H {suc c} (<-trans p suc) suc
-≘-weaken H (c , inj₂ refl  , inj₁ q)     = H {suc c} suc (<-trans q suc)
-≘-weaken H (c , inj₂ refl  , inj₂ refl)  = H {suc c} suc suc
+≘-weaken H (c , inj₁ p     , inj₂ refl)  = H {suc c} (<-trans p <suc) <suc
+≘-weaken H (c , inj₂ refl  , inj₁ q)     = H {suc c} <suc (<-trans q <suc)
+≘-weaken H (c , inj₂ refl  , inj₂ refl)  = H {suc c} <suc <suc
 ```
 
 ```agda
@@ -439,15 +439,15 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 
 ```agda
 <-acc : a < b → Acc _<_ a
-<-acc suc         = acc λ x<a → <-acc x<a
-<-acc (suc₂ a<b)  = acc λ x<a → <-acc (<-trans x<a a<b)
-<-acc lim         = acc λ x<f → <-acc x<f
-<-acc (lim₂ a<f)  = acc λ x<a → <-acc (<-trans x<a a<f)
+<-acc <suc         = acc λ x<a → <-acc x<a
+<-acc (<suc₂ a<b)  = acc λ x<a → <-acc (<-trans x<a a<b)
+<-acc <lim         = acc λ x<f → <-acc x<f
+<-acc (<lim₂ a<f)  = acc λ x<a → <-acc (<-trans x<a a<f)
 ```
 
 ```agda
 <-wellFounded : WellFounded _<_
-<-wellFounded a = <-acc suc
+<-wellFounded a = <-acc <suc
 ```
 
 ### 更多性质
@@ -458,24 +458,24 @@ a ≘ b = ∃[ c ] a ≤ c × b ≤ c
 s<s : suc preserves _<_
 <→s≤ : a < b → suc a ≤ b
 
-s<s suc           = suc
-s<s (suc₂ x<y)    = suc₂ (s<s x<y)
-s<s (lim {f} {n}) = suc₂ $ begin-strict
+s<s <suc           = <suc
+s<s (<suc₂ x<y)    = <suc₂ (s<s x<y)
+s<s (<lim {f} {n}) = <suc₂ $ begin-strict
   suc (f n)       <⟨ s<s it ⟩
-  suc (f (suc n)) ≤⟨ <→s≤ lim ⟩
+  suc (f (suc n)) ≤⟨ <→s≤ <lim ⟩
   lim f           ∎ where open SubTreeReasoning
-s<s {x} (lim₂ {f} {n} x<f) = suc₂ $ begin-strict
+s<s {x} (<lim₂ {f} {n} x<f) = <suc₂ $ begin-strict
   suc x           <⟨ s<s x<f ⟩
-  suc (f n)       ≤⟨ <→s≤ lim ⟩
+  suc (f n)       ≤⟨ <→s≤ <lim ⟩
   lim f           ∎ where open SubTreeReasoning
 
-<→s≤ suc = inj₂ refl
-<→s≤ (suc₂ p) = inj₁ (s<s p)
-<→s≤ (lim {f} {n}) = inj₁ $ lim₂ $ begin-strict
+<→s≤ <suc = inj₂ refl
+<→s≤ (<suc₂ p) = inj₁ (s<s p)
+<→s≤ (<lim {f} {n}) = inj₁ $ <lim₂ $ begin-strict
   suc (f n)       <⟨ s<s it ⟩
   suc (f (suc n)) ≤⟨ <→s≤ it ⟩
   f (2+ n)        ∎ where open SubTreeReasoning
-<→s≤ {a} (lim₂ {f} {n} a<f) = inj₁ $ lim₂ $ begin-strict
+<→s≤ {a} (<lim₂ {f} {n} a<f) = inj₁ $ <lim₂ $ begin-strict
   suc a           <⟨ s<s a<f ⟩
   suc (f n)       ≤⟨ <→s≤ it ⟩
   f (suc n)       ∎ where open SubTreeReasoning
@@ -483,16 +483,16 @@ s<s {x} (lim₂ {f} {n} x<f) = suc₂ $ begin-strict
 
 ```agda
 s<s-inj : suc injects _<_
-s<s-inj suc         = suc
-s<s-inj (suc₂ s<b)  = <-trans suc s<b
+s<s-inj <suc        = <suc
+s<s-inj (<suc₂ s<b) = <-trans <suc s<b
 ```
 
 ```agda
 s≤→< : suc a ≤ b → a < b
-s≤→< {b = suc _} (inj₁ p) = suc₂ (s<s-inj p)
+s≤→< {b = suc _} (inj₁ p) = <suc₂ (s<s-inj p)
 s≤→< {b = lim _} (inj₁ p) with lim-inv p
-... | _ , p = lim₂ (<-trans suc p)
-s≤→< (inj₂ refl) = suc
+... | _ , p = <lim₂ (<-trans <suc p)
+s≤→< (inj₂ refl) = <suc
 ```
 
 推论
@@ -506,29 +506,29 @@ s≤s-inj = inj<→inj≤ suc-inj s<s-inj
 ```
 
 ```agda
-s<l : ⦃ _ : f ⇡ ⦄ → a < lim f → suc a < lim f
-s<l {f} (lim {n}) = begin-strict
+s<l : ⦃ _ : wf f ⦄ → a < lim f → suc a < lim f
+s<l {f} (<lim {n}) = begin-strict
   suc (f n) ≤⟨ <→s≤ it ⟩
-  f (suc n) <⟨ lim ⟩
+  f (suc n) <⟨ <lim ⟩
   lim f     ∎ where open SubTreeReasoning
-s<l {f} {a} (lim₂ {n} p) = begin-strict
+s<l {f} {a} (<lim₂ {n} p) = begin-strict
   suc a     <⟨ s<s p ⟩
-  suc (f n) ≤⟨ <→s≤ lim ⟩
+  suc (f n) ≤⟨ <→s≤ <lim ⟩
   lim f     ∎ where open SubTreeReasoning
 ```
 
 ```agda
-l≤p : ⦃ _ : f ⇡ ⦄ → lim f ≤ suc a → lim f ≤ a
-l≤p (inj₁ suc) = inj₂ refl
-l≤p (inj₁ (suc₂ p)) = inj₁ p
+l≤p : ⦃ _ : wf f ⦄ → lim f ≤ suc a → lim f ≤ a
+l≤p (inj₁ <suc) = inj₂ refl
+l≤p (inj₁ (<suc₂ p)) = inj₁ p
 ```
 
 ## 最小的极限序数
 
 ```agda
 private instance
-  fin⇡ : fin ⇡
-  fin⇡ = suc
+  wf-fin : wf fin
+  wf-fin = <suc
 ```
 
 ```agda
@@ -543,7 +543,7 @@ n<ω {n = suc n} = s<l n<ω
 ```
 
 ```agda
-n≤fn : ∀ f → ⦃ _ : f ⇡ ⦄ → fin n ≤ f n
+n≤fn : ∀ f → ⦃ _ : wf f ⦄ → fin n ≤ f n
 n≤fn {n = zero} f   = z≤
 n≤fn {n = suc n} f  = begin
   fin (suc n)       ≤⟨ s≤s (n≤fn f) ⟩
@@ -552,19 +552,19 @@ n≤fn {n = suc n} f  = begin
 ```
 
 ```agda
-n<fs : ∀ f n → ⦃ _ : f ⇡ ⦄ → fin n < f (suc n)
+n<fs : ∀ f n → ⦃ _ : wf f ⦄ → fin n < f (suc n)
 n<fs f _ = ≤-<-trans (n≤fn f) it
 ```
 
 ```agda
-ω≤l : ⦃ _ : f ⇡ ⦄ → ω ≘ lim f → ω ≤ lim f
+ω≤l : ⦃ _ : wf f ⦄ → ω ≘ lim f → ω ≤ lim f
 ω≤l {f} homo with <-trich homo
 ... | tri< < _ _ = inj₁ <
 ... | tri≈ _ ≡ _ = inj₂ ≡
 ... | tri> _ _ > with lim-inv >
 ... | n , l<n = ⊥-elim $ <-irrefl refl $ begin-strict
   fin n ≤⟨ n≤fn f ⟩
-  f n   <⟨ lim ⟩
+  f n   <⟨ <lim ⟩
   lim f <⟨ l<n ⟩
   fin n ∎ where open SubTreeReasoning
 ```
@@ -578,7 +578,7 @@ fin-inj {suc m}  {suc n}  eq = cong suc $ fin-inj $ suc-inj eq
 ```agda
 fin-suj : a < ω → ∃[ n ] fin n ≡ a
 fin-suj {(zero)} _ = 0 , refl
-fin-suj {suc a} s<ω with fin-suj (<-trans suc s<ω)
+fin-suj {suc a} s<ω with fin-suj (<-trans <suc s<ω)
 ... | n , refl = suc n , refl
 fin-suj {lim f} l<ω = ⊥-elim $ <-irrefl refl $ begin-strict
   ω     ≤⟨ ω≤l (ω , inj₂ refl , inj₁ l<ω) ⟩
@@ -636,7 +636,7 @@ lim f ∸ (n , δ) = f n ∸ δ
 data _≼_ where
   z≼ : zero ≼ b
   s≼ : a ≼ b ∸ δ → a ≺ b
-  l≼ : ⦃ _ : f ⇡ ⦄ → (∀ {n} → f n ≼ b) → lim f ≼ b
+  l≼ : ⦃ _ : wf f ⦄ → (∀ {n} → f n ≼ b) → lim f ≼ b
 ```
 
 ```agda
@@ -658,14 +658,14 @@ s≼s-inj (s≼ {δ = inj₂ δ } p) = ≺⇒≼ (s≼ {δ = δ} p)
 ```
 
 ```agda
-≼l : ⦃ _ : f ⇡ ⦄ → a ≼ f n → a ≼ lim f
+≼l : ⦃ _ : wf f ⦄ → a ≼ f n → a ≼ lim f
 ≼l z≼ = z≼
 ≼l {n} (s≼ {δ} p) = s≼ {δ = n , δ} p
 ≼l (l≼ p) = l≼ (≼l p)
 ```
 
 ```agda
-l≼l : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → (∀ {n} → f n ≼ g n) → lim f ≼ lim g
+l≼l : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ {n} → f n ≼ g n) → lim f ≼ lim g
 l≼l f≼g = l≼ (≼l f≼g)
 ```
 
@@ -711,7 +711,7 @@ s≃s-inj (p , q) = s≼s-inj p , s≼s-inj q
 ```
 
 ```agda
-l≃l : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → (∀ {n} → f n ≃ g n) → lim f ≃ lim g
+l≃l : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ {n} → f n ≃ g n) → lim f ≃ lim g
 l≃l f≃g = (l≼l (proj₁ f≃g)) , (l≼l (proj₂ f≃g))
 ```
 
@@ -802,28 +802,28 @@ module CrossTreeReasoning where
 ```
 
 ```agda
-f≼l : ⦃ _ : f ⇡ ⦄ → f n ≼ lim f
+f≼l : ⦃ _ : wf f ⦄ → f n ≼ lim f
 f≼l = ≼l ≼-refl
 
-≺l : ⦃ _ : f ⇡ ⦄ → a ≺ f n → a ≺ lim f
+≺l : ⦃ _ : wf f ⦄ → a ≺ f n → a ≺ lim f
 ≺l = ≼l
 ```
 
 ```agda
 <⇒≺ : _<_ ⇒ _≺_
-f≺l : ⦃ _ : f ⇡ ⦄ → f n ≺ lim f
+f≺l : ⦃ _ : wf f ⦄ → f n ≺ lim f
 f≺l = ≺-≼-trans (<⇒≺ it) f≼l
 
-<⇒≺ suc = ≺s
-<⇒≺ (suc₂ p) = ≺-trans (<⇒≺ p) ≺s
-<⇒≺ lim = f≺l
-<⇒≺ (lim₂ p) = ≺l (<⇒≺ p)
+<⇒≺ <suc = ≺s
+<⇒≺ (<suc₂ p) = ≺-trans (<⇒≺ p) ≺s
+<⇒≺ <lim = f≺l
+<⇒≺ (<lim₂ p) = ≺l (<⇒≺ p)
 
 ≤⇒≼ : _≤_ ⇒ _≼_
-≤⇒≼ (inj₁ suc) = ≼s
-≤⇒≼ (inj₁ (suc₂ p)) = ≼-trans (≺⇒≼ (<⇒≺ p)) ≼s
-≤⇒≼ (inj₁ lim) = f≼l
-≤⇒≼ (inj₁ (lim₂ p)) = ≼l (≺⇒≼ (<⇒≺ p))
+≤⇒≼ (inj₁ <suc) = ≼s
+≤⇒≼ (inj₁ (<suc₂ p)) = ≼-trans (≺⇒≼ (<⇒≺ p)) ≼s
+≤⇒≼ (inj₁ <lim) = f≼l
+≤⇒≼ (inj₁ (<lim₂ p)) = ≼l (≺⇒≼ (<⇒≺ p))
 ≤⇒≼ (inj₂ refl) = ≼-refl
 ```
 
@@ -833,13 +833,13 @@ f≺l = ≺-≼-trans (<⇒≺ it) f≼l
 ```
 
 ```agda
-l≼l-suc : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → (∀ {n} → f (suc n) ≼ g (suc n)) → lim f ≼ lim g
+l≼l-suc : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ {n} → f (suc n) ≼ g (suc n)) → lim f ≼ lim g
 l≼l-suc {f} {g} f≼g = l≼ $ λ {n} → ≼l $ begin
   f n                                   ≤⟨ ≤⇒≼ $ <⇒≤ it ⟩
   f (suc n)                             ≤⟨ f≼g ⟩
   g (suc n)                             ∎ where open CrossTreeReasoning
 
-l≃l-suc : ⦃ _ : f ⇡ ⦄ ⦃ _ : g ⇡ ⦄ → (∀ {n} → f (suc n) ≃ g (suc n)) → lim f ≃ lim g
+l≃l-suc : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ {n} → f (suc n) ≃ g (suc n)) → lim f ≃ lim g
 l≃l-suc f≃g = (l≼l-suc (proj₁ f≃g)) , (l≼l-suc (proj₂ f≃g))
 ```
 
@@ -871,7 +871,7 @@ record Normal : Set where
   nml→infl≼ {(zero)} = z≼
   nml→infl≼ {suc a} =         begin
     suc a                     ≤⟨ s≼s nml→infl≼ ⟩
-    suc (G a)                 ≤⟨ <⇒≺ (pres< suc) ⟩
+    suc (G a)                 ≤⟨ <⇒≺ (pres< <suc) ⟩
     G (suc a)                 ∎ where open CrossTreeReasoning
   nml→infl≼ {lim f} =         l≼ $ begin
     f _                       ≤⟨ ≼l ⦃ pres< it ⦄ nml→infl≼ ⟩
@@ -938,24 +938,24 @@ init≤ {ℱ} {i} {a} =                       begin
   ℱ ^⟨ suc a ⟩ x                          ∎ where open SubTreeReasoning
 ^⟨⟩◌-infl≤ {a = lim f} {ℱ} {x} =          begin
   x                                       ≤⟨ ^⟨⟩◌-infl≤ ⟩
-  ℱ ^⟨ f 0 ⟩ x                            <⟨ lim₂ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨◌⟩-pres< it) ⟩
+  ℱ ^⟨ f 0 ⟩ x                            <⟨ <lim₂ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨◌⟩-pres< it) ⟩
   ℱ ^⟨ lim f ⟩ x                          ∎ where open SubTreeReasoning
 ```
 
 ```agda
-^⟨◌⟩-pres< {ℱ} {i} {x} suc =              begin-strict
+^⟨◌⟩-pres< {ℱ} {i} {x} <suc =              begin-strict
   ℱ ^⟨ x ⟩ i                              <⟨ infl< ℱ ⦃ init≤ ⦄ ⟩
   ℱ ^⟨ suc x ⟩ i                          ∎ where open SubTreeReasoning
-^⟨◌⟩-pres< {ℱ} {i} {x} (suc₂ {b} p) =     begin-strict
+^⟨◌⟩-pres< {ℱ} {i} {x} (<suc₂ {b} p) =     begin-strict
   ℱ ^⟨ x ⟩ i                              <⟨ ^⟨◌⟩-pres< p ⟩
   ℱ ^⟨ b ⟩ i                              <⟨ infl< ℱ ⦃ init≤ ⦄ ⟩
   ℱ ^⟨ suc b ⟩ i                          ∎ where open SubTreeReasoning
-^⟨◌⟩-pres< {ℱ} {i} (lim {f} {n}) =        begin-strict
-  ℱ ^⟨ f n ⟩ i                            <⟨ lim ⦃ ^⟨◌⟩-pres< it ⦄ ⟩
+^⟨◌⟩-pres< {ℱ} {i} (<lim {f} {n}) =        begin-strict
+  ℱ ^⟨ f n ⟩ i                            <⟨ <lim ⦃ ^⟨◌⟩-pres< it ⦄ ⟩
   ℱ ^⟨ lim f ⟩ i                          ∎ where open SubTreeReasoning
-^⟨◌⟩-pres< {ℱ} {i} {x} (lim₂ {f} {n} p) = begin-strict
+^⟨◌⟩-pres< {ℱ} {i} {x} (<lim₂ {f} {n} p) = begin-strict
   ℱ ^⟨ x ⟩ i                              <⟨ ^⟨◌⟩-pres< p ⟩
-  ℱ ^⟨ f n ⟩ i                            <⟨ lim₂ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨◌⟩-pres< it) ⟩
+  ℱ ^⟨ f n ⟩ i                            <⟨ <lim₂ ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨◌⟩-pres< it) ⟩
   ℱ ^⟨ lim f ⟩ i                          ∎ where open SubTreeReasoning
 ```
 
@@ -968,11 +968,11 @@ init≤ {ℱ} {i} {a} =                       begin
 ^⟨⟩◌-infl< : ⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflates _<_ from (init ℱ)
 ^⟨⟩◌-infl< {suc a} {ℱ} {x} =              begin-strict
   x                                       ≤⟨ ^⟨⟩◌-infl≤ ⟩
-  ℱ ^⟨ a ⟩ x                              <⟨ ^⟨◌⟩-pres< suc ⟩
+  ℱ ^⟨ a ⟩ x                              <⟨ ^⟨◌⟩-pres< <suc ⟩
   ℱ ^⟨ suc a ⟩ x                          ∎ where open SubTreeReasoning
 ^⟨⟩◌-infl< {lim f} {ℱ} {x} =              begin-strict
   x                                       <⟨ ^⟨⟩◌-infl< ⦃ fs-nz f ⦄ ⟩
-  ℱ ^⟨ f 1 ⟩ x                            <⟨ ^⟨◌⟩-pres< lim ⟩
+  ℱ ^⟨ f 1 ⟩ x                            <⟨ ^⟨◌⟩-pres< <lim ⟩
   ℱ ^⟨ lim f ⟩ x                          ∎ where open SubTreeReasoning
 ```
 
