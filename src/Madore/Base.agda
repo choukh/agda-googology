@@ -44,17 +44,22 @@ variable
 wf : (ℕ → U a E) → Set
 wf f = ∀ {n} → f n < f (suc n)
 
+Wf : {⊏a : b ⊏ a} → (E b ⊏a → U a E) → Set
+Wf F = ∀ {μ ν} → {!   !} → F μ < F ν
+
 data U a E where
   zero : U a E
   suc  : U a E → U a E
   lim  : (f : ℕ → U a E) → ⦃ wff : wf f ⦄ → U a E
   Limᵖ : (⊏a : b ⊏ a) → (E b ⊏a → U a E) → U a E
 
-data _<_ where
+data _<_ {a} {E} where
   <suc : α < suc α
   <suc₂ : α < β → α < suc β
   <lim  : ∀ {f n} {wff : wf f} → f n < lim f ⦃ wff ⦄
   <lim₂ : ∀ {f n} {wff : wf f} → α < f n → α < lim f ⦃ wff ⦄
+  <Lim  : {⊏a : b ⊏ a} {F : E b ⊏a → U a E} {ν : E b ⊏a} → F ν < Limᵖ ⊏a F
+  <Lim₂ : {⊏a : b ⊏ a} {F : E b ⊏a → U a E} {ν : E b ⊏a} → α < F ν → α < Limᵖ ⊏a F
 
 El : ∀ {a} b → b ⊏ a → Set
 El b ⊏suc           = U b El
@@ -76,6 +81,9 @@ ord {⊏b} α = subst id (El≡Ord ⊏b) α
 
 el : (⊏b : a ⊏ b) → Ord a → El a ⊏b
 el ⊏b α = subst id (sym (El≡Ord ⊏b)) α
+
+el-ord : {⊏b : a ⊏ b} {x : El a ⊏b} → el ⊏b (ord x) ≡ x
+el-ord {⊏b} = subst-sym-subst (El≡Ord ⊏b)
 
 Lim : (⊏b : a ⊏ b) → (Ord a → Ord b) → Ord b
 Lim ⊏b F = Limᵖ ⊏b (λ α → F (ord α))
@@ -113,12 +121,14 @@ Lift-pres : {p : a ⊏ b} → α < β → Lift p α < Lift p β
 Lift ab zero = zero
 Lift ab (suc α) = suc (Lift ab α)
 Lift ab (lim f) = lim (Lift ab ∘ f) ⦃ Lift-pres it ⦄
-Lift ab (Limᵖ x⊏a F) = Lim (⊏-trans x⊏a ab) λ β → Lift ab (F (el x⊏a β))
+Lift ab (Limᵖ ca F) = Lim (⊏-trans ca ab) λ β → Lift ab (F (el ca β))
 
 Lift-pres <suc = <suc
 Lift-pres (<suc₂ p) = <suc₂ (Lift-pres p)
 Lift-pres <lim = <lim
 Lift-pres (<lim₂ p) = <lim₂ (Lift-pres p)
+Lift-pres <Lim = <Lim₂ (Lift-pres {!   !})
+Lift-pres (<Lim₂ p) = <Lim₂ (Lift-pres {!   !})
 
 ω : Ord 0
 ω = lim fin ⦃ <suc ⦄
@@ -130,7 +140,7 @@ Lift-pres (<lim₂ p) = <lim₂ (Lift-pres p)
 Ω (suc a) = Lim ⊏suc (Lift ⊏suc)
 Ω (lim f) = lim (λ n → Lift ⊏lim (Ω (f n))) ⦃ Ω-pres ⊏lim ⊏lim it ⦄
 
-Ω-pres ac bc ⊏suc = {!   !}
+Ω-pres ac bc ⊏suc = <Lim₂ {!   !} -- Lift ac (Ω a) < Lift ac (suc (Ω a)) < Lift bc (Lift ⊏suc (suc (Ω a)))
 Ω-pres ac bc (⊏suc₂ p) = {!   !}
 Ω-pres ac bc (⊏lim {wff}) = <lim₂ {!   !}
 Ω-pres ac bc (⊏lim₂ p) = {!   !}
