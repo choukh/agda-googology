@@ -30,7 +30,7 @@ open import Cubical.Foundations.HLevels
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Data.Equality using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
-  using (Σ; Σ-syntax; ∃-syntax; _×_; fst; snd; _,_)
+  using (Σ; Σ-syntax; ∃-syntax; _×_; fst; snd; _,_; ΣPathP)
 open import Cubical.HITs.PropositionalTruncation public
   using (∥_∥₁; ∣_∣₁; squash₁; rec; map)
 ```
@@ -671,17 +671,19 @@ fin-inj {suc m}  {suc n}  eq = cong suc $ fin-inj $ suc-inj eq
 ```
 
 ```agda
-fin-suj : a < ω → ∃[ n ∈ ℕ ] fin n ≡ a
-fin-suj {(zero)} _ = ∣ 0 , refl ∣₁
-fin-suj {suc a} s<ω = map (λ { (n , refl) → suc n , refl }) (fin-suj (<-trans <suc s<ω))
+fin-suj : a < ω → Σ[ n ∈ ℕ ] fin n ≡ a
+fin-suj {(zero)} _ = 0 , refl
+fin-suj {suc a} s<ω with fin-suj (<-trans <suc s<ω)
+... | (n , refl) = suc n , refl
 fin-suj {lim f} l<ω = ⊥-elim $ <-irrefl refl $ begin-strict
-  ω         ≤⟨ ω≤l (ω , inr refl , inl l<ω) ⟩
-  lim f     <⟨ l<ω ⟩
-  ω         ∎ where open SubTreeReasoning
+  ω           ≤⟨ ω≤l (ω , inr refl , inl l<ω) ⟩
+  lim f       <⟨ l<ω ⟩
+  ω           ∎ where open SubTreeReasoning
 ```
 
 ```agda
 ℕ≅ω : Iso ℕ (Σ _ (_< ω))
-ℕ≅ω = iso (λ n → fin n , n<ω) (λ (a , a<ω) → {! (fin-suj a<ω)  !}) {!   !} {!   !}
+ℕ≅ω = iso (λ n → fin n , n<ω) (λ (a , a<ω) → fst (fin-suj a<ω))
+  (λ a → ΣPathP $ eqToPath (snd $ fin-suj _) , toPathP (isProp< _ _))
+  (λ n → eqToPath $ fin-inj $ snd $ fin-suj _)
 ```
-fst (fin-suj a<ω)
