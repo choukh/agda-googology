@@ -9,10 +9,10 @@ zhihu-tags: Agda, 大数数学, 序数
 > 本文源码: [Base.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/WellFormed/Base.lagda.md)  
 > 高亮渲染: [Base.html](https://choukh.github.io/agda-googology/WellFormed.Base.html)  
 
-## 前言
+## 基础的选取
 
 ```agda
-{-# OPTIONS --safe --cubical --lossy-unification #-}
+{-# OPTIONS --safe --cubical #-}
 module WellFormed.Base where
 ```
 
@@ -22,7 +22,6 @@ module WellFormed.Base where
 open import Data.Empty public using (⊥; ⊥-elim)
 open import Data.Unit public using (⊤; tt)
 open import Data.Nat as ℕ public using (ℕ; zero; suc)
-open import Data.Nat.Properties as ℕ public using ()
 open import Data.Sum public using (_⊎_; inj₁; inj₂)
 open import Data.Product public using (Σ; ∃-syntax; _×_; _,_; proj₁; proj₂)
 open import Function public using (id; _∘_; _$_; _∋_; it; case_of_; _↪_)
@@ -31,6 +30,7 @@ open import Relation.Binary public hiding (Rel)
 open import Relation.Binary.PropositionalEquality public
   using (_≡_; refl)
 
+open import Data.Nat.Properties as ℕ using ()
 open import Relation.Binary.Consequences using (trans∧irr⇒asym)
 open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
 open import Induction.WellFounded using (Acc; acc; WellFounded)
@@ -39,25 +39,11 @@ open import Induction.WellFounded using (Acc; acc; WellFounded)
 立方类型论
 
 ```agda
-open import Cubical.Foundations.Prelude as 🧊 public
-  renaming (_≡_ to Path)
-  using (Type; isProp; isProp→PathP)
-open import Cubical.Foundations.HLevels public
-  using (isPropImplicitΠ)
-open import Cubical.Data.Equality public
-  using (pathToEq; eqToPath)
-```
-
-函数外延性
-
-```agda
-funExt : ∀ {ℓ₁ ℓ₂} {A : Type ℓ₁} {B : A → Type ℓ₂} {f g : (x : A) → B x}
-  → ((x : A) → f x ≡ g x) → f ≡ g
-funExt p = pathToEq (λ i x → eqToPath (p x) i)
-
-implicitFunExt : ∀ {ℓ₁ ℓ₂} {A : Type ℓ₁} {B : A → Type ℓ₂} {f g : {x : A} → B x}
-  → ((x : A) → f {x} ≡ g {x}) → (λ {x} → f {x}) ≡ (λ {x} → g {x})
-implicitFunExt p = pathToEq (λ i {x} → eqToPath (p x) i)
+open import Cubical.Foundations.Prelude as 🧊
+  using (Type; isProp; isSet; toPathP; isProp→isSet) renaming (_≡_ to Path)
+open import Cubical.Foundations.HLevels
+  using (isPropΠ; isPropImplicitΠ; isOfHLevelRetract; isSet→SquareP)
+open import Cubical.Foundations.Isomorphism using (isoToPath; iso)
 ```
 
 ## 良构树序数
@@ -103,7 +89,7 @@ variable
 data Ord where
   zero : Ord
   suc  : Ord → Ord
-  lim  : (f : Seq) → ⦃ wf f ⦄ → Ord
+  lim  : (f : Seq) → ⦃ wff : wf f ⦄ → Ord
 ```
 
 **定义** 子树关系
@@ -116,6 +102,78 @@ data _<_ where
   <lim₂ : ⦃ _ : wf f ⦄ → a < f n → a < lim f
   <prop : isProp (a < b)
 ```
+
+良构条件是命题
+
+```agda
+wf-prop : isProp (wf f)
+wf-prop = isPropImplicitΠ (λ _ → <prop)
+```
+
+极限的外延性
+
+```agda
+limExt : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → f n 🧊.≡ g n) → lim f 🧊.≡ lim g
+limExt {f} p = 🧊.cong₂ (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄)
+  (λ i n → p n i) (toPathP (wf-prop _ _))
+```
+
+## 树序数是集合
+
+使用 [encode-decode 方法](https://ncatlab.org/nlab/show/encode-decode+method) 可以证明 $\text{Ord}$ 是同伦层级意义下的集合.
+
+```agda
+Cover : Ord → Ord → Type
+Cover zero    zero    = ⊤
+Cover (suc a) (suc b) = Cover a b
+Cover (lim f) (lim g) = ∀ n → Cover (f n) (g n)
+Cover _       _       = ⊥
+
+reflCode : (a : Ord) → Cover a a
+reflCode zero = tt
+reflCode (suc a) = reflCode a
+reflCode (lim f) n = reflCode (f n)
+```
+
+```agda
+encode : ∀ a b → Path a b → Cover a b
+encode a b = 🧊.J (λ b _ → Cover a b) (reflCode a)
+
+encodeRefl : ∀ a → Path (encode a a 🧊.refl) (reflCode a)
+encodeRefl a = 🧊.JRefl (λ b _ → Cover a b) (reflCode a)
+```
+
+```agda
+decode : ∀ a b → Cover a b → Path a b
+decode zero zero _ = 🧊.refl
+decode (suc a) (suc b) p = 🧊.cong suc (decode a b p)
+decode (lim f) (lim g) p = limExt λ n → decode (f n) (g n) (p n)
+
+decodeRefl : ∀ a → Path (decode a a (reflCode a)) 🧊.refl
+decodeRefl zero = 🧊.refl
+decodeRefl (suc a) i = 🧊.cong suc (decodeRefl a i)
+decodeRefl (lim f) i = 🧊.cong₂
+  (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄)
+  (λ j n → decodeRefl (f n) i j)
+  (isSet→SquareP {A = λ i j → wf (λ n → decodeRefl (f n) i j)}
+    (λ _ _ → isProp→isSet wf-prop) (toPathP (wf-prop _ _)) 🧊.refl 🧊.refl 🧊.refl i)
+```
+
+```agda
+decodeEncode : ∀ a b p → Path (decode a b (encode a b p)) p
+decodeEncode a _ = 🧊.J (λ b p → Path (decode a b (encode a b p)) p)
+  ((🧊.cong (decode a a) (encodeRefl a)) 🧊.∙ decodeRefl a)
+
+isPropCover : ∀ a b → isProp (Cover a b)
+isPropCover zero zero tt tt = 🧊.refl
+isPropCover (suc a) (suc b) = isPropCover a b
+isPropCover (lim f) (lim g) = isPropΠ (λ n → isPropCover (f n) (g n))
+
+isSetOrd : isSet Ord
+isSetOrd a b = isOfHLevelRetract 1 (encode a b) (decode a b) (decodeEncode a b) (isPropCover a b)
+```
+
+## 一些约定
 
 **定义** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
 
@@ -146,48 +204,4 @@ instance
 pattern 2+ a = suc (suc a)
 ```
 
-## 集合性
-
-encode-decode
-
-```agda
-Cover : Ord → Ord → Type
-Cover zero    zero    = ⊤
-Cover zero    (suc b) = ⊥
-Cover zero    (lim f) = ⊥
-Cover (suc a) zero    = ⊥
-Cover (suc a) (suc b) = Path a b
-Cover (suc a) (lim f) = ⊥
-Cover (lim f) zero    = ⊥
-Cover (lim f) (suc b) = ⊥
-Cover (lim f) (lim g) = Path f g
-```
-
-```agda
-reflCode : (a : Ord) → Cover a a
-reflCode zero = tt
-reflCode (suc a) = 🧊.refl
-reflCode (lim f) = 🧊.refl
-```
-
-```agda
-encode : ∀ a b → Path a b → Cover a b
-encode a b = 🧊.J (λ b _ → Cover a b) (reflCode a)
-
-encodeRefl : ∀ a → Path (encode a a 🧊.refl) (reflCode a)
-encodeRefl a = 🧊.JRefl (λ b _ → Cover a b) (reflCode a)
-```
-
-```agda
-decode : ∀ a b → Cover a b → Path a b
-decode zero zero p = 🧊.refl
-decode (suc a) (suc b) p = 🧊.cong suc p
-decode (lim f) (lim g) p = 🧊.cong₂ (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄) p
-  (isProp→PathP (λ _ → isPropImplicitΠ (λ _ → <prop)) it it)
-
-decodeRefl : ∀ a → Path (decode a a (reflCode a)) 🧊.refl
-decodeRefl zero = 🧊.refl
-decodeRefl (suc a) = 🧊.refl
-decodeRefl (lim f) i = 🧊.cong (λ (wff : wf f) → lim f ⦃ wff ⦄)
-  {!   !}
-```
+## 基本性质
