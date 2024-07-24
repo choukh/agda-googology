@@ -28,10 +28,7 @@ open import Cubical.Foundations.Prelude as 🧊 public
   renaming (_≡_ to Path; refl to reflPath)
 open import Cubical.Foundations.HLevels public
 open import Cubical.Data.Equality public using (pathToEq; eqToPath; PathPathEq)
-open import Cubical.Data.Empty public using (⊥; isProp⊥) renaming (elim to ⊥-elim)
 open import Cubical.Data.Sigma public using (∃-syntax; _,_)
-open import Cubical.Data.Sum public
-  renaming (_⊎_ to infix 3 _⊎_) using (inl; inr; isProp⊎)
 open import Cubical.HITs.PropositionalTruncation public
   using (∥_∥₁; ∣_∣₁; squash₁) renaming (rec to rec₁)
 ```
@@ -41,10 +38,16 @@ open import Cubical.HITs.PropositionalTruncation public
 ```agda
 open import Data.Unit public using (⊤; tt)
 open import Data.Nat as ℕ public using (ℕ; zero; suc)
-open import Data.Nat.Properties as ℕ public using ()
-open import Function public using (id; _∘_; _$_; _∋_; it; case_of_)
+open import Function public using (id; flip; _∘_; _$_; _∋_; it; case_of_)
 open import Relation.Binary.PropositionalEquality public
-  using (_≡_; refl)
+  using (_≡_; refl; sym; trans; cong; subst)
+```
+
+融合库
+
+```agda
+open import Bridged.Data.Empty public using (⊥; ⊥-elim; isProp⊥)
+open import Bridged.Data.Sum public using (_⊎_; inj₁; inj₂; isProp⊎)
 ```
 
 ## 良构树序数
@@ -218,7 +221,25 @@ pattern 2+ a = suc (suc a)
 ## 子树关系
 
 ```agda
-<-trans : a < b → b < c → a < c
+open import Relation.Binary
+open import Induction.WellFounded
+open import Relation.Binary.Structures {A = Ord} _≡_ as ≡
+open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
+```
+
+### 严格序
+
+尊重相等
+
+```agda
+<-resp-≡ : _<_ Respects₂ _≡_
+<-resp-≡ = (λ { refl → id }) , (λ { refl → id })
+```
+
+传递性
+
+```agda
+<-trans : Transitive _<_
 <-trans a<b <suc = <suc₂ a<b
 <-trans a<f <lim = <lim₂ a<f
 <-trans a<b (<suc₂ b<c) = <suc₂ (<-trans a<b b<c)
@@ -226,29 +247,71 @@ pattern 2+ a = suc (suc a)
 <-trans a<b (isProp< p q i) = isProp< (<-trans a<b p) (<-trans a<b q) i
 ```
 
-```agda
-lim-inv : ⦃ _ : wf f ⦄ → a < lim f → ∃[ n ∈ ℕ ] a < f n
-lim-inv <lim   = ∣ _ , it ∣₁
-lim-inv (<lim₂ a<f) = ∣ _ , a<f ∣₁
-lim-inv (isProp< p q i) = squash₁ (lim-inv p) (lim-inv q) i
-```
+良基性
 
 ```agda
-<-irrefl : a < b → a ≡ b → ⊥
-<-irrefl {a = zero} (isProp< p q i) refl = isProp⊥ (<-irrefl p refl) (<-irrefl q refl) i
-<-irrefl {a = suc a} (<suc₂ p) refl = <-irrefl (<-trans <suc p) refl
-<-irrefl {a = suc a} (isProp< p q i) refl = isProp⊥ (<-irrefl p refl) (<-irrefl q refl) i
-<-irrefl {a = lim f} p refl = rec₁ isProp⊥ (λ { (n , p) → <-irrefl (<-trans <lim p) refl }) (lim-inv p)
+isPropAcc : isProp (Acc _<_ a)
+isPropAcc (acc p) (acc q) i = acc (λ x<a → isPropAcc (p x<a) (q x<a) i)
+
+<-acc : a < b → Acc _<_ a
+<-acc <suc         = acc λ x<a → <-acc x<a
+<-acc (<suc₂ a<b)  = acc λ x<a → <-acc (<-trans x<a a<b)
+<-acc <lim         = acc λ x<f → <-acc x<f
+<-acc (<lim₂ a<f)  = acc λ x<a → <-acc (<-trans x<a a<f)
+<-acc (isProp< p q i) = isPropAcc (<-acc p) (<-acc q) i
+
+<-wellFounded : WellFounded _<_
+<-wellFounded a = <-acc <suc
 ```
+
+良基关系是非对称且反自反的
+
+```agda
+<-asym : Asymmetric _<_
+<-asym = wf⇒asym <-wellFounded
+
+<-irrefl : Irreflexive _≡_ _<_
+<-irrefl = wf⇒irrefl <-resp-≡ sym <-wellFounded
+```
+
+序数与它的后继之间没有其他序数
+
+```agda
+<-notDense : a < b → b < suc a → ⊥
+<-notDense p <suc            = <-irrefl refl p
+<-notDense p (<suc₂ q)       = <-asym p q
+<-notDense p (isProp< q r i) = isProp⊥ (<-notDense p q) (<-notDense p r) i
+```
+
+$\lt$ 构成严格偏序
+
+```agda
+<-isStrictPartialOrder : ≡.IsStrictPartialOrder _<_
+<-isStrictPartialOrder = record
+  { isEquivalence = isEquivalence
+  ; irrefl = <-irrefl
+  ; trans = <-trans
+  ; <-resp-≈ = <-resp-≡ }
+```
+
+### 非严格序
+
+命题性
 
 ```agda
 isProp≤ : isProp (a ≤ b)
-isProp≤ = isProp⊎ isProp< isProp≡ <-irrefl
+isProp≤ = isProp⊎ isProp< isProp≡ (flip <-irrefl)
 ```
+
+严格序与非严格序的相互转化
 
 ```agda
 <s→≤ : a < suc b → a ≤ b
-<s→≤ <suc = inr refl
-<s→≤ (<suc₂ a<b) = inl a<b
+<s→≤ <suc = inj₂ refl
+<s→≤ (<suc₂ a<b) = inj₁ a<b
 <s→≤ (isProp< p q i) = isProp≤ (<s→≤ p) (<s→≤ q) i
+
+≤→<s : a ≤ b → a < suc b
+≤→<s (inj₁ p) = <suc₂ p
+≤→<s (inj₂ refl) = <suc
 ```
