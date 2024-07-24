@@ -5,7 +5,7 @@ open import Cubical.Foundations.Prelude
 open import Cubical.Foundations.Isomorphism
 open import Function using (_$_; _∘₂_)
 
-open import Data.Sum public using (_⊎_; inj₁; inj₂)
+open import Data.Sum public using (_⊎_) renaming (inj₁ to inl; inj₂ to inr)
 open import Cubical.Data.Sum as 🧊 using (inl; inr)
 open import Bridged.Data.Empty
 
@@ -14,20 +14,20 @@ private variable
   A B : Type ℓ
 
 ⊎→🧊 : A ⊎ B → A 🧊.⊎ B
-⊎→🧊 (inj₁ x) = inl x
-⊎→🧊 (inj₂ y) = inr y
+⊎→🧊 (inl x) = inl x
+⊎→🧊 (inr y) = inr y
 
 ⊎←🧊 : A 🧊.⊎ B → A ⊎ B
-⊎←🧊 (inl x) = inj₁ x
-⊎←🧊 (inr y) = inj₂ y
+⊎←🧊 (inl x) = inl x
+⊎←🧊 (inr y) = inr y
 
 ⊎→←🧊 : (x : A 🧊.⊎ B) → ⊎→🧊 (⊎←🧊 x) ≡ x
 ⊎→←🧊 (inl x) = refl
 ⊎→←🧊 (inr x) = refl
 
 ⊎←→🧊 : (x : A ⊎ B) → ⊎←🧊 (⊎→🧊 x) ≡ x
-⊎←→🧊 (inj₁ x) = refl
-⊎←→🧊 (inj₂ y) = refl
+⊎←→🧊 (inl x) = refl
+⊎←→🧊 (inr y) = refl
 
 ⊎≡🧊 : (A ⊎ B) ≡ (A 🧊.⊎ B)
 ⊎≡🧊 = isoToPath (iso ⊎→🧊 ⊎←🧊 ⊎→←🧊 ⊎←→🧊)

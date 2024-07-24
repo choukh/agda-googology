@@ -28,7 +28,7 @@ open import Cubical.Foundations.Prelude as 🧊 public
   renaming (_≡_ to Path; refl to reflPath)
 open import Cubical.Foundations.HLevels public
 open import Cubical.Data.Equality public using (pathToEq; eqToPath; PathPathEq)
-open import Cubical.Data.Sigma public using (∃-syntax; _,_)
+open import Cubical.Data.Sigma public using (∃-syntax; fst; snd; _,_)
 open import Cubical.HITs.PropositionalTruncation public
   using (∥_∥₁; ∣_∣₁; squash₁) renaming (rec to rec₁)
 ```
@@ -47,7 +47,7 @@ open import Relation.Binary.PropositionalEquality public
 
 ```agda
 open import Bridged.Data.Empty public using (⊥; ⊥-elim; isProp⊥)
-open import Bridged.Data.Sum public using (_⊎_; inj₁; inj₂; isProp⊎)
+open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```
 
 ## 良构树序数
@@ -61,8 +61,8 @@ data _<_ : Rel; infix 4 _<_
 ```
 
 ```agda
-_≤_ : Rel; infix 4 _≤_
-a ≤ b = a < b ⊎ a ≡ b
+open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
+  as SubTreeLe public using (_≤_) renaming (<⇒≤ to <→≤)
 ```
 
 **定义** 严格单调递增序列
@@ -221,8 +221,9 @@ pattern 2+ a = suc (suc a)
 ## 子树关系
 
 ```agda
-open import Relation.Binary
+import Data.Nat.Properties as ℕ
 open import Induction.WellFounded
+open import Relation.Binary hiding (Rel)
 open import Relation.Binary.Structures {A = Ord} _≡_ as ≡
 open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
 ```
@@ -274,15 +275,6 @@ isPropAcc (acc p) (acc q) i = acc (λ x<a → isPropAcc (p x<a) (q x<a) i)
 <-irrefl = wf⇒irrefl <-resp-≡ sym <-wellFounded
 ```
 
-序数与它的后继之间没有其他序数
-
-```agda
-<-notDense : a < b → b < suc a → ⊥
-<-notDense p <suc            = <-irrefl refl p
-<-notDense p (<suc₂ q)       = <-asym p q
-<-notDense p (isProp< q r i) = isProp⊥ (<-notDense p q) (<-notDense p r) i
-```
-
 $\lt$ 构成严格偏序
 
 ```agda
@@ -307,11 +299,107 @@ isProp≤ = isProp⊎ isProp< isProp≡ (flip <-irrefl)
 
 ```agda
 <s→≤ : a < suc b → a ≤ b
-<s→≤ <suc = inj₂ refl
-<s→≤ (<suc₂ a<b) = inj₁ a<b
+<s→≤ <suc = inr refl
+<s→≤ (<suc₂ a<b) = inl a<b
 <s→≤ (isProp< p q i) = isProp≤ (<s→≤ p) (<s→≤ q) i
 
 ≤→<s : a ≤ b → a < suc b
-≤→<s (inj₁ p) = <suc₂ p
-≤→<s (inj₂ refl) = <suc
+≤→<s (inl p) = <suc₂ p
+≤→<s (inr refl) = <suc
+```
+
+自反性, 反对称性, 传递性
+
+```agda
+≤-refl : Reflexive _≤_
+≤-refl = SubTreeLe.reflexive refl
+
+≤-antisym : Antisymmetric _≡_ _≤_
+≤-antisym = SubTreeLe.antisym isEquivalence <-trans <-irrefl
+
+≤-trans : Transitive _≤_
+≤-trans = SubTreeLe.trans isEquivalence <-resp-≡ <-trans
+```
+
+```agda
+<-≤-trans : Trans _<_ _≤_ _<_
+<-≤-trans = SubTreeLe.<-≤-trans <-trans (fst <-resp-≡)
+
+≤-<-trans : Trans _≤_ _<_ _<_
+≤-<-trans = SubTreeLe.≤-<-trans sym <-trans (snd <-resp-≡)
+```
+
+$\leq$ 构成非严格偏序
+
+```agda
+≤-isPreorder : ≡.IsPreorder _≤_
+≤-isPreorder = record
+  { isEquivalence = isEquivalence
+  ; reflexive = inr
+  ; trans = ≤-trans
+  }
+
+≤-isPartialOrder : ≡.IsPartialOrder _≤_
+≤-isPartialOrder = record { isPreorder = ≤-isPreorder ; antisym = ≤-antisym }
+```
+
+```agda
+module SubTreeReasoning where
+  open import Relation.Binary.Reasoning.Base.Triple
+    {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<_}
+    ≤-isPreorder <-asym <-trans <-resp-≡ <→≤ <-≤-trans ≤-<-trans
+    public
+```
+
+### 不完全的三歧性
+
+```agda
+monoseq : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
+monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inl m<n  = <-trans (monoseq m<n) it
+... | inr refl = it
+```
+
+```agda
+<-≥-⊥ : a < b → b ≤ a → ⊥
+<-≥-⊥ p q = <-irrefl refl (<-≤-trans p q)
+```
+
+```agda
+BoundedRel : Rel → Set
+BoundedRel _~_ = ∀ {a b c} → a < c → b < c → a ~ b
+```
+
+```agda
+<-cmp⊎ : BoundedRel λ a b → a < b ⊎ b ≤ a
+<-cmp⊎ <suc        <suc         = inr $ inr refl
+<-cmp⊎ <suc        (<suc₂ b<a)  = inr $ inl b<a
+<-cmp⊎ (<suc₂ a<b) <suc         = inl a<b
+<-cmp⊎ (<suc₂ a<c) (<suc₂ b<c)  = <-cmp⊎ a<c b<c
+<-cmp⊎ (<lim {n = m}) (<lim {n}) with ℕ.<-cmp m n
+... | tri< m<n _ _  = inl $ monoseq m<n
+... | tri≈ _ refl _ = inr $ inr refl
+... | tri> _ _ n<m  = inr $ inl $ monoseq n<m
+<-cmp⊎ (<lim {n = m}) (<lim₂ {n} b<f) with ℕ.<-cmp m n
+... | tri< m<n _ _  = <-cmp⊎ (monoseq m<n) b<f
+... | tri≈ _ refl _ = inr $ inl b<f
+... | tri> _ _ n<m  = inr $ inl $ <-trans b<f $ monoseq n<m
+<-cmp⊎ (<lim₂ {n = m} a<f) (<lim {n}) with ℕ.<-cmp m n
+... | tri< m<n _ _  = inl $ <-trans a<f $ monoseq m<n
+... | tri≈ _ refl _ = inl a<f
+... | tri> _ _ n<m  = <-cmp⊎ a<f (monoseq n<m)
+<-cmp⊎ (<lim₂ {n = m} a<f) (<lim₂ {n} b<f) with ℕ.<-cmp m n
+... | tri< m<n _ _  = <-cmp⊎ (<-trans a<f (monoseq m<n)) b<f
+... | tri≈ _ refl _ = <-cmp⊎ a<f b<f
+... | tri> _ _ n<m  = <-cmp⊎ a<f (<-trans b<f (monoseq n<m))
+<-cmp⊎ (isProp< p q i) r = isProp⊎ isProp< isProp≤ <-≥-⊥ (<-cmp⊎ p r) (<-cmp⊎ q r) i
+<-cmp⊎ r (isProp< p q i) = isProp⊎ isProp< isProp≤ <-≥-⊥ (<-cmp⊎ r p) (<-cmp⊎ r q) i
+```
+
+```agda
+<-cmp : BoundedRel λ a b → Tri (a < b) (a ≡ b) (b < a)
+<-cmp p q with <-cmp⊎ p q
+... | inl a<b = tri< a<b (λ { refl → <-irrefl refl a<b }) (<-asym a<b)
+... | inr (inl b<a) = tri> (<-asym b<a) (λ { refl → <-irrefl refl b<a }) b<a
+... | inr (inr refl) = tri≈ (<-irrefl refl) refl (<-irrefl refl)
 ```
