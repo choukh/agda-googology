@@ -14,7 +14,7 @@ zhihu-tags: Agda, 大数数学, 序数
 立方类型论
 
 ```agda
-{-# OPTIONS --safe --cubical #-}
+{-# OPTIONS --safe --cubical --lossy-unification #-}
 module WellFormed.Base where
 ```
 
@@ -26,11 +26,13 @@ cubical库
 open import Cubical.Foundations.Prelude as 🧊 public
   using (Type; toPathP; isProp; isSet; isProp→isSet)
   renaming (_≡_ to Path; refl to reflPath)
-open import Cubical.Foundations.HLevels public
-open import Cubical.Data.Equality public using (pathToEq; eqToPath; PathPathEq)
-open import Cubical.Data.Sigma public using (∃-syntax; fst; snd; _,_)
+open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Data.Equality using (pathToEq; eqToPath; PathPathEq)
+open import Cubical.Data.Sigma public
+  using (Σ; Σ-syntax; ∃-syntax; _×_; fst; snd; _,_)
 open import Cubical.HITs.PropositionalTruncation public
-  using (∥_∥₁; ∣_∣₁; squash₁) renaming (rec to rec₁)
+  using (∥_∥₁; ∣_∣₁; squash₁; rec; map)
 ```
 
 标准库
@@ -57,12 +59,12 @@ open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```agda
 data Ord : Type
 Rel = Ord → Ord → Type
-data _<_ : Rel; infix 4 _<_
+data _<_ : Rel; infix 6 _<_
 ```
 
 ```agda
 open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
-  as SubTreeLe public using (_≤_) renaming (<⇒≤ to <→≤)
+  as SubTreeLe public using () renaming (_≤_ to infix 6 _≤_; <⇒≤ to <→≤)
 ```
 
 **定义** 严格单调递增序列
@@ -424,6 +426,42 @@ BoundedRel _~_ = ∀ {a b c} → a < c → b < c → a ~ b
 ... | inr (inr refl) = tri≈ (<-irrefl refl) refl (<-irrefl refl)
 ```
 
+**定义** 同株
+
+```agda
+Homo : Rel
+Homo a b = Σ[ c ∈ Ord ] (a ≤ c × b ≤ c)
+```
+
+```agda
+≘-refl : Homo a a
+≘-refl = _ , ≤-refl , ≤-refl
+
+≘-sym : Homo a b → Homo b a
+≘-sym (c , a≤c , b≤c) = c , b≤c , a≤c
+```
+
+注意同株不是传递关系.
+
+```agda
+≘-weaken : {A : Set} → (∀ {x} → a < x → b < x → A) → (Homo a b → A)
+≘-weaken H (c , inl p     , inl q)     = H {c} p q
+≘-weaken H (c , inl p     , inr refl)  = H {suc c} (<-trans p <suc) <suc
+≘-weaken H (c , inr refl  , inl q)     = H {suc c} <suc (<-trans q <suc)
+≘-weaken H (c , inr refl  , inr refl)  = H {suc c} <suc <suc
+```
+
+```agda
+<-trich : Homo a b → Tri (a < b) (a ≡ b) (b < a)
+<-trich = ≘-weaken <-cmp
+
+≤-total : Homo a b → a ≤ b ⊎ b ≤ a
+≤-total p with <-trich p
+... | tri< p _ _ = inl (inl p)
+... | tri≈ _ p _ = inl (inr p)
+... | tri> _ _ p = inr (inl p)
+```
+
 ## 序数函数
 
 ```agda
@@ -527,3 +565,123 @@ s≤s = pres<→pres≤ s<s
 s≤s-inj : suc injects _≤_
 s≤s-inj = inj<→inj≤ suc-inj s<s-inj
 ```
+
+```agda
+s<l : ⦃ _ : wf f ⦄ → a < lim f → suc a < lim f
+s<l {f} (<lim {n}) = begin-strict
+  suc (f n) ≤⟨ <→s≤ it ⟩
+  f (suc n) <⟨ <lim ⟩
+  lim f     ∎ where open SubTreeReasoning
+s<l {f} {a} (<lim₂ {n} p) = begin-strict
+  suc a     <⟨ s<s p ⟩
+  suc (f n) ≤⟨ <→s≤ <lim ⟩
+  lim f     ∎ where open SubTreeReasoning
+s<l (isProp< p q i) = isProp< (s<l p) (s<l q) i
+```
+
+```agda
+l≤p : ⦃ _ : wf f ⦄ → lim f ≤ suc a → lim f ≤ a
+l≤p (inl <suc) = inr refl
+l≤p (inl (<suc₂ p)) = inl p
+l≤p (inl (isProp< p q i)) = isProp≤ (l≤p (inl p)) (l≤p (inl q)) i
+```
+
+## 最小的极限序数
+
+引理
+
+```agda
+z<s : 0 < suc a
+z<b : a < b → 0 < b
+
+z<s {(zero)} = <suc
+z<s {suc _} = <suc₂ z<s
+z<s {lim _} = <suc₂ (<lim₂ {n = 1} (z<b it))
+
+z<b <suc = z<s
+z<b (<suc₂ _)  = z<s
+z<b (<lim {n}) = <lim₂ {n = suc n} (z<b it)
+z<b (<lim₂ _)  = <lim₂ {n = 1} (z<b it)
+z<b (isProp< p q i) = isProp< (z<b p) (z<b q) i
+```
+
+```agda
+z<l : ⦃ _ : wf f ⦄ → 0 < lim f
+z<l = <lim₂ {n = 1} (z<b it)
+```
+
+```agda
+z≤ : 0 ≤ a
+z≤ {(zero)} = inr refl
+z≤ {suc _}  = inl z<s
+z≤ {lim _}  = inl z<l
+```
+
+```agda
+private instance
+  wf-fin : wf fin
+  wf-fin = <suc
+```
+
+```agda
+ω : Ord
+ω = lim fin
+```
+
+```agda
+n<ω : fin n < ω
+n<ω {n = zero}  = z<l
+n<ω {n = suc n} = s<l n<ω
+```
+
+```agda
+n≤fn : ∀ f → ⦃ _ : wf f ⦄ → fin n ≤ f n
+n≤fn {n = zero} f   = z≤
+n≤fn {n = suc n} f  = begin
+  fin (suc n)       ≤⟨ s≤s (n≤fn f) ⟩
+  suc (f n)         ≤⟨ <→s≤ it ⟩
+  f (suc n)         ∎ where open SubTreeReasoning
+```
+
+```agda
+lim-inv : ⦃ _ : wf f ⦄ → a < lim f → ∃[ n ∈ ℕ ] a < f n
+lim-inv <lim      = ∣ _ , it ∣₁
+lim-inv (<lim₂ p) = ∣ _ , p ∣₁
+lim-inv (isProp< p q i) = squash₁ (lim-inv p) (lim-inv q) i
+```
+
+```agda
+ω≤l : ⦃ _ : wf f ⦄ → Homo ω (lim f) → ω ≤ lim f
+ω≤l {f} homo with <-trich homo
+... | tri< < _ _ = inl <
+... | tri≈ _ ≡ _ = inr ≡
+... | tri> _ _ > = rec isProp≤ aux (lim-inv >) where
+  aux : Σ[ n ∈ ℕ ] lim f < fin n → ω ≤ lim f
+  aux (n , p) = ⊥-elim $ <-irrefl refl $ begin-strict
+    fin n     ≤⟨ n≤fn f ⟩
+    f n       <⟨ <lim ⟩
+    lim f     <⟨ p ⟩
+    fin n     ∎ where open SubTreeReasoning
+```
+
+```agda
+fin-inj : fin m ≡ fin n → m ≡ n
+fin-inj {(zero)} {(zero)} eq = refl
+fin-inj {suc m}  {suc n}  eq = cong suc $ fin-inj $ suc-inj eq
+```
+
+```agda
+fin-suj : a < ω → ∃[ n ∈ ℕ ] fin n ≡ a
+fin-suj {(zero)} _ = ∣ 0 , refl ∣₁
+fin-suj {suc a} s<ω = map (λ { (n , refl) → suc n , refl }) (fin-suj (<-trans <suc s<ω))
+fin-suj {lim f} l<ω = ⊥-elim $ <-irrefl refl $ begin-strict
+  ω         ≤⟨ ω≤l (ω , inr refl , inl l<ω) ⟩
+  lim f     <⟨ l<ω ⟩
+  ω         ∎ where open SubTreeReasoning
+```
+
+```agda
+ℕ≅ω : Iso ℕ (Σ _ (_< ω))
+ℕ≅ω = iso (λ n → fin n , n<ω) (λ (a , a<ω) → {! (fin-suj a<ω)  !}) {!   !} {!   !}
+```
+fst (fin-suj a<ω)
