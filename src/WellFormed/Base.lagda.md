@@ -109,12 +109,12 @@ isPropWf = isPropImplicitΠ (λ _ → isProp<)
 极限的外延性
 
 ```agda
-limExt🧊 : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → Path (f n) (g n)) → Path (lim f) (lim g)
-limExt🧊 {f} p = 🧊.cong₂ (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄)
+limExtPath : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → Path (f n) (g n)) → Path (lim f) (lim g)
+limExtPath {f} p = 🧊.cong₂ (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄)
   (λ i n → p n i) (toPathP (isPropWf _ _))
 
 limExt : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → f n ≡ g n) → lim f ≡ lim g
-limExt p = pathToEq $ limExt🧊 $ eqToPath ∘ p
+limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
 ```
 
 ## 树序数是集合
@@ -141,7 +141,7 @@ isPropCover (suc a) (suc b) = isPropCover a b
 isPropCover (lim f) (lim g) = isPropΠ (λ n → isPropCover (f n) (g n))
 ```
 
-2. 将 `a b : Ord` 的道路空间 `a ≡ b` 编码为覆叠空间.
+2. 将 `a b : Ord` 的道路空间 `Path a b` 编码为覆叠空间.
 
 ```agda
 encode : ∀ a b → Path a b → Cover a b
@@ -157,7 +157,7 @@ encodeRefl a = 🧊.JRefl (λ b _ → Cover a b) (reflCode a)
 decode : ∀ a b → Cover a b → Path a b
 decode zero zero _ = reflPath
 decode (suc a) (suc b) p = 🧊.cong suc (decode a b p)
-decode (lim f) (lim g) p = limExt🧊 λ n → decode (f n) (g n) (p n)
+decode (lim f) (lim g) p = limExtPath λ n → decode (f n) (g n) (p n)
 
 decodeRefl : ∀ a → Path (decode a a (reflCode a)) reflPath
 decodeRefl zero = reflPath
