@@ -39,9 +39,9 @@ open import Induction.WellFounded using (Acc; acc; WellFounded)
 立方类型论
 
 ```agda
-open import Cubical.Foundations.Prelude as 🧊
+open import Cubical.Foundations.Prelude as 🧊 public
   using (Type; isProp; isSet; toPathP; isProp→isSet) renaming (_≡_ to Path)
-open import Cubical.Foundations.HLevels
+open import Cubical.Foundations.HLevels public
   using (isPropΠ; isPropImplicitΠ; isOfHLevelRetract; isSet→SquareP)
 open import Cubical.Foundations.Isomorphism using (isoToPath; iso)
 ```
@@ -120,7 +120,9 @@ limExt {f} p = 🧊.cong₂ (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄)
 
 ## 树序数是集合
 
-使用 [encode-decode 方法](https://ncatlab.org/nlab/show/encode-decode+method) 可以证明 $\text{Ord}$ 是同伦层级意义下的集合.
+我们使用 [encode-decode 方法](https://ncatlab.org/nlab/show/encode-decode+method) 证明 $\text{Ord}$ 是同伦层级意义下的集合. 具体细节这里不展开, 大致分为以下四步:
+
+1. 定义 `a b : Ord` 的覆叠空间 `Cover a b`, 容易证明它是一个命题.
 
 ```agda
 Cover : Ord → Ord → Type
@@ -133,7 +135,14 @@ reflCode : (a : Ord) → Cover a a
 reflCode zero = tt
 reflCode (suc a) = reflCode a
 reflCode (lim f) n = reflCode (f n)
+
+isPropCover : ∀ a b → isProp (Cover a b)
+isPropCover zero zero tt tt = 🧊.refl
+isPropCover (suc a) (suc b) = isPropCover a b
+isPropCover (lim f) (lim g) = isPropΠ (λ n → isPropCover (f n) (g n))
 ```
+
+2. 将 `a b : Ord` 的道路空间 `Path a b` 编码为覆叠空间.
 
 ```agda
 encode : ∀ a b → Path a b → Cover a b
@@ -142,6 +151,8 @@ encode a b = 🧊.J (λ b _ → Cover a b) (reflCode a)
 encodeRefl : ∀ a → Path (encode a a 🧊.refl) (reflCode a)
 encodeRefl a = 🧊.JRefl (λ b _ → Cover a b) (reflCode a)
 ```
+
+3. 将 $\text{Ord}$ 的覆叠空间解码为道路空间.
 
 ```agda
 decode : ∀ a b → Cover a b → Path a b
@@ -159,15 +170,12 @@ decodeRefl (lim f) i = 🧊.cong₂
     (λ _ _ → isProp→isSet wf-prop) (toPathP (wf-prop _ _)) 🧊.refl 🧊.refl 🧊.refl i)
 ```
 
+4. 证明编码与解码互逆, 结合 `Cover a b` 是命题, 说明 `Path a b` 是命题, 也即 `Ord` 是集合.
+
 ```agda
 decodeEncode : ∀ a b p → Path (decode a b (encode a b p)) p
 decodeEncode a _ = 🧊.J (λ b p → Path (decode a b (encode a b p)) p)
   ((🧊.cong (decode a a) (encodeRefl a)) 🧊.∙ decodeRefl a)
-
-isPropCover : ∀ a b → isProp (Cover a b)
-isPropCover zero zero tt tt = 🧊.refl
-isPropCover (suc a) (suc b) = isPropCover a b
-isPropCover (lim f) (lim g) = isPropΠ (λ n → isPropCover (f n) (g n))
 
 isSetOrd : isSet Ord
 isSetOrd a b = isOfHLevelRetract 1 (encode a b) (decode a b) (decodeEncode a b) (isPropCover a b)
