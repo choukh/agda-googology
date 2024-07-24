@@ -11,24 +11,16 @@ zhihu-tags: Agda, 大数数学, 序数
 
 ## 基础的选取
 
+立方类型论
+
 ```agda
 {-# OPTIONS --safe --cubical #-}
 module WellFormed.Base where
 ```
 
-### 标准库依赖
+### 库依赖
 
-```agda
-open import Data.Unit public using (⊤; tt)
-open import Data.Nat as ℕ public using (ℕ; zero; suc)
-open import Data.Nat.Properties as ℕ public using ()
-open import Function public using (id; _∘_; _$_; _∋_; it; case_of_)
-open import Relation.Binary public hiding (Rel)
-open import Relation.Binary.PropositionalEquality public
-  using () renaming (_≡_ to Eq; refl to reflEq)
-```
-
-立方类型论
+cubical库
 
 ```agda
 open import Cubical.Foundations.Prelude public
@@ -40,6 +32,17 @@ open import Cubical.Data.Sum public
   renaming (_⊎_ to infix 3 _⊎_) using (inl; inr; isProp⊎)
 open import Cubical.HITs.PropositionalTruncation public
   using (∥_∥₁; ∣_∣₁; squash₁) renaming (rec to rec₁)
+```
+
+标准库
+
+```agda
+open import Data.Unit public using (⊤; tt)
+open import Data.Nat as ℕ public using (ℕ; zero; suc)
+open import Data.Nat.Properties as ℕ public using ()
+open import Function public using (id; _∘_; _$_; _∋_; it; case_of_)
+open import Relation.Binary.PropositionalEquality public
+  using () renaming (_≡_ to Eq; refl to reflEq)
 ```
 
 ## 良构树序数
