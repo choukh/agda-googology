@@ -19,31 +19,27 @@ module WellFormed.Base where
 ### 标准库依赖
 
 ```agda
-open import Data.Empty public using (⊥; ⊥-elim)
 open import Data.Unit public using (⊤; tt)
 open import Data.Nat as ℕ public using (ℕ; zero; suc)
-open import Data.Sum public using (_⊎_; inj₁; inj₂)
-open import Data.Product public using (Σ; ∃-syntax; _×_; _,_; proj₁; proj₂)
-open import Function public using (id; _∘_; _$_; _∋_; it; case_of_; _↪_)
-open import Relation.Nullary public using (¬_)
+open import Data.Nat.Properties as ℕ public using ()
+open import Function public using (id; _∘_; _$_; _∋_; it; case_of_)
 open import Relation.Binary public hiding (Rel)
 open import Relation.Binary.PropositionalEquality public
-  using (_≡_; refl)
-
-open import Data.Nat.Properties as ℕ using ()
-open import Relation.Binary.Consequences using (trans∧irr⇒asym)
-open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
-open import Induction.WellFounded using (Acc; acc; WellFounded)
+  using () renaming (_≡_ to Eq; refl to reflEq)
 ```
 
 立方类型论
 
 ```agda
-open import Cubical.Foundations.Prelude as 🧊 public
-  using (Type; isProp; isSet; toPathP; isProp→isSet) renaming (_≡_ to Path)
+open import Cubical.Foundations.Prelude public
 open import Cubical.Foundations.HLevels public
-  using (isPropΠ; isPropImplicitΠ; isOfHLevelRetract; isSet→SquareP)
-open import Cubical.Foundations.Isomorphism using (isoToPath; iso)
+open import Cubical.Data.Equality public using (pathToEq)
+open import Cubical.Data.Empty public using (⊥; isProp⊥) renaming (elim to ⊥-elim)
+open import Cubical.Data.Sigma public using (∃-syntax; _,_)
+open import Cubical.Data.Sum public
+  renaming (_⊎_ to infix 3 _⊎_) using (inl; inr; isProp⊎)
+open import Cubical.HITs.PropositionalTruncation public
+  using (∥_∥₁; ∣_∣₁; squash₁) renaming (rec to rec₁)
 ```
 
 ## 良构树序数
@@ -57,13 +53,8 @@ data _<_ : Rel; infix 4 _<_
 ```
 
 ```agda
-_≮_ : Rel; infix 4 _≮_
-a ≮ b = ¬ a < b
-```
-
-```agda
-open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
-  as SubTreeLe public using (_≤_) renaming (<⇒≤ to <→≤)
+_≤_ : Rel; infix 4 _≤_
+a ≤ b = a < b ⊎ a ≡ b
 ```
 
 **定义** 严格单调递增序列
@@ -100,22 +91,22 @@ data _<_ where
   <suc₂ : a < b → a < suc b
   <lim  : ⦃ _ : wf f ⦄ → f n < lim f
   <lim₂ : ⦃ _ : wf f ⦄ → a < f n → a < lim f
-  <prop : isProp (a < b)
+  isProp< : isProp (a < b)
 ```
 
 良构条件是命题
 
 ```agda
-wf-prop : isProp (wf f)
-wf-prop = isPropImplicitΠ (λ _ → <prop)
+isPropWf : isProp (wf f)
+isPropWf = isPropImplicitΠ (λ _ → isProp<)
 ```
 
 极限的外延性
 
 ```agda
-limExt : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → f n 🧊.≡ g n) → lim f 🧊.≡ lim g
-limExt {f} p = 🧊.cong₂ (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄)
-  (λ i n → p n i) (toPathP (wf-prop _ _))
+limExt : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → f n ≡ g n) → lim f ≡ lim g
+limExt {f} p = cong₂ (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄)
+  (λ i n → p n i) (toPathP (isPropWf _ _))
 ```
 
 ## 树序数是集合
@@ -137,45 +128,46 @@ reflCode (suc a) = reflCode a
 reflCode (lim f) n = reflCode (f n)
 
 isPropCover : ∀ a b → isProp (Cover a b)
-isPropCover zero zero tt tt = 🧊.refl
+isPropCover zero zero tt tt = refl
 isPropCover (suc a) (suc b) = isPropCover a b
 isPropCover (lim f) (lim g) = isPropΠ (λ n → isPropCover (f n) (g n))
 ```
 
-2. 将 `a b : Ord` 的道路空间 `Path a b` 编码为覆叠空间.
+2. 将 `a b : Ord` 的道路空间 `a ≡ b` 编码为覆叠空间.
 
 ```agda
-encode : ∀ a b → Path a b → Cover a b
-encode a b = 🧊.J (λ b _ → Cover a b) (reflCode a)
+encode : ∀ a b → a ≡ b → Cover a b
+encode a b = J (λ b _ → Cover a b) (reflCode a)
 
-encodeRefl : ∀ a → Path (encode a a 🧊.refl) (reflCode a)
-encodeRefl a = 🧊.JRefl (λ b _ → Cover a b) (reflCode a)
+encodeRefl : ∀ a → encode a a refl ≡ reflCode a
+encodeRefl a = JRefl (λ b _ → Cover a b) (reflCode a)
 ```
 
-3. 将 $\text{Ord}$ 的覆叠空间解码为道路空间.
+3. 将覆叠空间解码为道路空间.
 
 ```agda
-decode : ∀ a b → Cover a b → Path a b
-decode zero zero _ = 🧊.refl
-decode (suc a) (suc b) p = 🧊.cong suc (decode a b p)
+decode : ∀ a b → Cover a b → a ≡ b
+decode zero zero _ = refl
+decode (suc a) (suc b) p = cong suc (decode a b p)
 decode (lim f) (lim g) p = limExt λ n → decode (f n) (g n) (p n)
 
-decodeRefl : ∀ a → Path (decode a a (reflCode a)) 🧊.refl
-decodeRefl zero = 🧊.refl
-decodeRefl (suc a) i = 🧊.cong suc (decodeRefl a i)
-decodeRefl (lim f) i = 🧊.cong₂
+decodeRefl : ∀ a → decode a a (reflCode a) ≡ refl
+decodeRefl zero = refl
+decodeRefl (suc a) i = cong suc (decodeRefl a i)
+decodeRefl (lim f) i = cong₂
   (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄)
   (λ j n → decodeRefl (f n) i j)
   (isSet→SquareP {A = λ i j → wf (λ n → decodeRefl (f n) i j)}
-    (λ _ _ → isProp→isSet wf-prop) (toPathP (wf-prop _ _)) 🧊.refl 🧊.refl 🧊.refl i)
+    (λ _ _ → isProp→isSet isPropWf) (toPathP (isPropWf _ _)) refl refl refl i)
 ```
 
 4. 证明编码与解码互逆, 结合 `Cover a b` 是命题, 说明 `Path a b` 是命题, 也即 `Ord` 是集合.
 
 ```agda
-decodeEncode : ∀ a b p → Path (decode a b (encode a b p)) p
-decodeEncode a _ = 🧊.J (λ b p → Path (decode a b (encode a b p)) p)
-  ((🧊.cong (decode a a) (encodeRefl a)) 🧊.∙ decodeRefl a)
+decodeEncode : ∀ a b p → decode a b (encode a b p) ≡ p
+decodeEncode a _ = J (λ b p → decode a b (encode a b p) ≡ p)
+  ((cong (decode a a) (encodeRefl a)) ∙ decodeRefl a)
+  where open import Cubical.Foundations.Isomorphism
 
 isSetOrd : isSet Ord
 isSetOrd a b = isOfHLevelRetract 1 (encode a b) (decode a b) (decodeEncode a b) (isPropCover a b)
@@ -212,4 +204,42 @@ instance
 pattern 2+ a = suc (suc a)
 ```
 
-## 基本性质
+## 子树关系
+
+```agda
+<-trans : a < b → b < c → a < c
+<-trans a<b <suc = <suc₂ a<b
+<-trans a<f <lim = <lim₂ a<f
+<-trans a<b (<suc₂ b<c) = <suc₂ (<-trans a<b b<c)
+<-trans a<b (<lim₂ b<f) = <lim₂ (<-trans a<b b<f)
+<-trans a<b (isProp< p q i) = isProp< (<-trans a<b p) (<-trans a<b q) i
+```
+
+```agda
+lim-inv : ⦃ _ : wf f ⦄ → a < lim f → ∃[ n ∈ ℕ ] a < f n
+lim-inv <lim   = ∣ _ , it ∣₁
+lim-inv (<lim₂ a<f) = ∣ _ , a<f ∣₁
+lim-inv (isProp< p q i) = squash₁ (lim-inv p) (lim-inv q) i
+```
+
+```agda
+<-irrefl : a < b → a ≡ b → ⊥
+<-irrefl p q = aux p (pathToEq q) where
+  aux : a < b → Eq a b → ⊥
+  aux {a = zero} (isProp< p q i) reflEq = isProp⊥ (aux p reflEq) (aux q reflEq) i
+  aux {a = suc a} (<suc₂ p) reflEq = aux (<-trans <suc p) reflEq
+  aux {a = suc a} (isProp< p q i) reflEq = isProp⊥ (aux p reflEq) (aux q reflEq) i
+  aux {a = lim f} l<l reflEq = rec₁ isProp⊥ (λ { (n , p) → <-irrefl (<-trans <lim p) refl }) (lim-inv l<l)
+```
+
+```agda
+isProp≤ : isProp (a ≤ b)
+isProp≤ = isProp⊎ isProp< (isSetOrd _ _) <-irrefl
+```
+
+```agda
+<s→≤ : a < suc b → a ≤ b
+<s→≤ <suc = inr refl
+<s→≤ (<suc₂ a<b) = inl a<b
+<s→≤ (isProp< p q i) = isProp≤ (<s→≤ p) (<s→≤ q) i
+```
