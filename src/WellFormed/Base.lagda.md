@@ -102,6 +102,18 @@ data _<_ where
   isProp< : isProp (a < b)
 ```
 
+### 基本性质
+
+构造子的单射性
+
+```agda
+suc-inj : suc a ≡ suc b → a ≡ b
+suc-inj refl = refl
+
+lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≡ lim g → f ≡ g
+lim-inj refl = refl
+```
+
 良构条件是命题
 
 ```agda
@@ -118,6 +130,37 @@ limExtPath {f} p = 🧊.cong₂ (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄
 
 limExt : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → f n ≡ g n) → lim f ≡ lim g
 limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
+```
+
+### 一些约定
+
+**定义** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
+
+$$
+\text{fin}~n := \text{suc}^n~0
+$$
+
+其中后继函数的上标 $n$ 表示迭代 $n$ 次.
+
+```agda
+open import Lower public using (_∘ⁿ_)
+fin : Seq
+fin n = (suc ∘ⁿ n) zero
+```
+
+**约定** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
+
+```agda
+open import Agda.Builtin.FromNat public
+instance
+  nNat = Number ℕ   ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
+  nOrd = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → fin n }
+```
+
+**约定** 我们将 $\text{suc}~(\text{suc}~a)$ 记作 $a^{++}$.
+
+```agda
+pattern 2+ a = suc (suc a)
 ```
 
 ## 树序数是集合
@@ -185,37 +228,6 @@ isSetOrd a b = isOfHLevelRetract 1 (encode a b) (decode a b) (decodeEncode a b) 
 
 isProp≡ : isProp (a ≡ b)
 isProp≡ = 🧊.subst isProp PathPathEq (isSetOrd _ _)
-```
-
-## 一些约定
-
-**定义** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
-
-$$
-\text{fin}~n := \text{suc}^n~0
-$$
-
-其中后继函数的上标 $n$ 表示迭代 $n$ 次.
-
-```agda
-open import Lower public using (_∘ⁿ_)
-fin : Seq
-fin n = (suc ∘ⁿ n) zero
-```
-
-**约定** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
-
-```agda
-open import Agda.Builtin.FromNat public
-instance
-  nNat = Number ℕ   ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
-  nOrd = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → fin n }
-```
-
-**约定** 我们将 $\text{suc}~(\text{suc}~a)$ 记作 $a^{++}$.
-
-```agda
-pattern 2+ a = suc (suc a)
 ```
 
 ## 子树关系
@@ -361,6 +373,14 @@ monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 ```
 
 ```agda
+injseq : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
+injseq {m} {n} eq with ℕ.<-cmp m n
+... | tri< m<n _ _  = ⊥-elim (<-irrefl eq (monoseq m<n))
+... | tri≈ _ refl _ = refl
+... | tri> _ _ n<m  = ⊥-elim (<-irrefl (sym eq) (monoseq n<m))
+```
+
+```agda
 <-≥-⊥ : a < b → b ≤ a → ⊥
 <-≥-⊥ p q = <-irrefl refl (<-≤-trans p q)
 ```
@@ -402,4 +422,108 @@ BoundedRel _~_ = ∀ {a b c} → a < c → b < c → a ~ b
 ... | inl a<b = tri< a<b (λ { refl → <-irrefl refl a<b }) (<-asym a<b)
 ... | inr (inl b<a) = tri> (<-asym b<a) (λ { refl → <-irrefl refl b<a }) b<a
 ... | inr (inr refl) = tri≈ (<-irrefl refl) refl (<-irrefl refl)
+```
+
+## 序数函数
+
+```agda
+Func : Set
+Func = Ord → Ord
+variable F : Func
+```
+
+```agda
+_inflates_ : Func → Rel → Set
+F inflates _~_ = ∀ {x} → x ~ F x
+
+infl<→infl≤ : F inflates _<_ → F inflates _≤_
+infl<→infl≤ p = <→≤ p
+```
+
+```agda
+_preserves_ : Func → Rel → Set
+F preserves _~_ = ∀ {x y} → x ~ y → F x ~ F y
+```
+
+```agda
+pres<→pres≤ : F preserves _<_ → F preserves _≤_
+pres<→pres≤ pres (inl p)    = <→≤ (pres p)
+pres<→pres≤ pres (inr refl) = inr refl
+```
+
+```agda
+_injects_ : Func → Rel → Set
+F injects _~_ = ∀ {x y} → F x ~ F y → x ~ y
+```
+
+```agda
+inj<→inj≤ : F injects _≡_ → F injects _<_ → F injects _≤_
+inj<→inj≤ inj inj< (inl p) = inl (inj< p)
+inj<→inj≤ inj inj< (inr p) = inr (inj p)
+```
+
+```agda
+continuous : F preserves _<_ → Set
+continuous {F} pres = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘ f) ⦃ pres it ⦄
+```
+
+### 后继运算的性质
+
+```agda
+s<s : suc preserves _<_
+<→s≤ : a < b → suc a ≤ b
+
+s<s <suc            = <suc
+s<s (<suc₂ x<y)     = <suc₂ (s<s x<y)
+s<s (<lim {f} {n})  = <suc₂ $ begin-strict
+  suc (f n)         <⟨ s<s it ⟩
+  suc (f (suc n))   ≤⟨ <→s≤ <lim ⟩
+  lim f             ∎ where open SubTreeReasoning
+s<s {x} (<lim₂ {f} {n} x<f) = <suc₂ $ begin-strict
+  suc x             <⟨ s<s x<f ⟩
+  suc (f n)         ≤⟨ <→s≤ <lim ⟩
+  lim f             ∎ where open SubTreeReasoning
+s<s (isProp< p q i) = isProp< (s<s p) (s<s q) i
+
+<→s≤ <suc = inr refl
+<→s≤ (<suc₂ p) = inl (s<s p)
+<→s≤ (<lim {f} {n}) = inl $ <lim₂ $ begin-strict
+  suc (f n)         <⟨ s<s it ⟩
+  suc (f (suc n))   ≤⟨ <→s≤ it ⟩
+  f (2+ n)          ∎ where open SubTreeReasoning
+<→s≤ {a} (<lim₂ {f} {n} a<f) = inl $ <lim₂ $ begin-strict
+  suc a             <⟨ s<s a<f ⟩
+  suc (f n)         ≤⟨ <→s≤ it ⟩
+  f (suc n)         ∎ where open SubTreeReasoning
+<→s≤ (isProp< p q i) = isProp≤ (<→s≤ p) (<→s≤ q) i
+```
+
+```agda
+s<s-inj : suc injects _<_
+s<s-inj <suc        = <suc
+s<s-inj (<suc₂ s<b) = <-trans <suc s<b
+s<s-inj (isProp< p q i) = isProp< (s<s-inj p) (s<s-inj q) i
+```
+
+```agda
+≮z : a < 0 → ⊥
+≮z (isProp< p q i) = isProp⊥ (≮z p) (≮z q) i
+```
+
+```agda
+s≤→< : suc a ≤ b → a < b
+s≤→< {b = zero}  (inl p) = ⊥-elim (≮z p)
+s≤→< {b = suc _} (inl p) = <suc₂ (s<s-inj p)
+s≤→< {b = lim _} (inl p) = <-trans <suc p
+s≤→< (inr refl) = <suc
+```
+
+推论
+
+```agda
+s≤s : suc preserves _≤_
+s≤s = pres<→pres≤ s<s
+
+s≤s-inj : suc injects _≤_
+s≤s-inj = inj<→inj≤ suc-inj s<s-inj
 ```
