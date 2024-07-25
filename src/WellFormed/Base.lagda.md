@@ -426,7 +426,7 @@ BoundedRel _~_ = ∀ {a b c} → a < c → b < c → a ~ b
 ... | inr (inr refl) = tri≈ (<-irrefl refl) refl (<-irrefl refl)
 ```
 
-**定义** 同株
+**定义** 给定 $a$ 和 $b$, 同时满足 $a \lt c$ 和 $b \lt c$ 的 $c$ 称为 $a$ 和 $b$ 的同株集. 如果它非空, 则称 $a$ 和 $b$ 同株.
 
 ```agda
 Homo : Rel
@@ -434,26 +434,26 @@ Homo a b = Σ[ c ∈ Ord ] (a ≤ c × b ≤ c)
 ```
 
 ```agda
-≘-refl : Homo a a
-≘-refl = _ , ≤-refl , ≤-refl
+homo-refl : Homo a a
+homo-refl = _ , ≤-refl , ≤-refl
 
-≘-sym : Homo a b → Homo b a
-≘-sym (c , a≤c , b≤c) = c , b≤c , a≤c
+homo-sym : Homo a b → Homo b a
+homo-sym (c , a≤c , b≤c) = c , b≤c , a≤c
 ```
 
 注意同株不是传递关系.
 
 ```agda
-≘-weaken : {A : Set} → (∀ {x} → a < x → b < x → A) → (Homo a b → A)
-≘-weaken H (c , inl p     , inl q)     = H {c} p q
-≘-weaken H (c , inl p     , inr refl)  = H {suc c} (<-trans p <suc) <suc
-≘-weaken H (c , inr refl  , inl q)     = H {suc c} <suc (<-trans q <suc)
-≘-weaken H (c , inr refl  , inr refl)  = H {suc c} <suc <suc
+homo-weaken : {A : Set} → (∀ {x} → a < x → b < x → A) → (Homo a b → A)
+homo-weaken H (c , inl p     , inl q)     = H {c} p q
+homo-weaken H (c , inl p     , inr refl)  = H {suc c} (<-trans p <suc) <suc
+homo-weaken H (c , inr refl  , inl q)     = H {suc c} <suc (<-trans q <suc)
+homo-weaken H (c , inr refl  , inr refl)  = H {suc c} <suc <suc
 ```
 
 ```agda
 <-trich : Homo a b → Tri (a < b) (a ≡ b) (b < a)
-<-trich = ≘-weaken <-cmp
+<-trich = homo-weaken <-cmp
 
 ≤-total : Homo a b → a ≤ b ⊎ b ≤ a
 ≤-total p with <-trich p
@@ -672,18 +672,21 @@ fin-inj {suc m}  {suc n}  eq = cong suc $ fin-inj $ suc-inj eq
 
 ```agda
 fin-suj : a < ω → Σ[ n ∈ ℕ ] fin n ≡ a
-fin-suj {(zero)} _ = 0 , refl
+fin-suj {(zero)} _  = 0 , refl
 fin-suj {suc a} s<ω with fin-suj (<-trans <suc s<ω)
-... | (n , refl) = suc n , refl
+... | (n , refl)    = suc n , refl
 fin-suj {lim f} l<ω = ⊥-elim $ <-irrefl refl $ begin-strict
-  ω           ≤⟨ ω≤l (ω , inr refl , inl l<ω) ⟩
-  lim f       <⟨ l<ω ⟩
-  ω           ∎ where open SubTreeReasoning
+  ω                 ≤⟨ ω≤l $ ω , inr refl , inl l<ω ⟩
+  lim f             <⟨ l<ω ⟩
+  ω                 ∎ where open SubTreeReasoning
 ```
 
 ```agda
-ℕ≅ω : Iso ℕ (Σ _ (_< ω))
-ℕ≅ω = iso (λ n → fin n , n<ω) (λ (a , a<ω) → fst (fin-suj a<ω))
+ℕ≡ω : ℕ ≡ Σ Ord (_< ω)
+ℕ≡ω = pathToEq $ isoToPath $ iso
+  (λ n → fin n , n<ω) (λ (a , a<ω) → fst (fin-suj a<ω))
   (λ a → ΣPathP $ eqToPath (snd $ fin-suj _) , toPathP (isProp< _ _))
   (λ n → eqToPath $ fin-inj $ snd $ fin-suj _)
 ```
+
+## 可迭代函数
