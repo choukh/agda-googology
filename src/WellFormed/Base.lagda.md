@@ -26,9 +26,8 @@ cubical库
 open import Cubical.Foundations.Prelude as 🧊 public
   using (Type; toPathP; isProp; isSet; isProp→isSet)
   renaming (_≡_ to Path; refl to reflPath)
-open import Cubical.Foundations.HLevels
-open import Cubical.Foundations.Isomorphism
-open import Cubical.Data.Equality using (pathToEq; eqToPath; PathPathEq)
+open import Cubical.Foundations.HLevels public
+open import Cubical.Data.Equality public using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
   using (Σ; Σ-syntax; ∃-syntax; _×_; fst; snd; _,_; ΣPathP)
 open import Cubical.HITs.PropositionalTruncation public
@@ -171,72 +170,96 @@ pattern 2+ a = suc (suc a)
 
 ## 树序数是集合
 
+```agda
+module OrdSet where
+  open import Cubical.Foundations.Isomorphism
+```
+
 我们使用 [encode-decode 方法](https://ncatlab.org/nlab/show/encode-decode+method) 证明 $\text{Ord}$ 是同伦层级意义下的集合. 具体细节这里不展开, 大致分为以下四步:
 
 1. 定义 `a b : Ord` 的覆叠空间 `Cover a b`, 容易证明它是一个命题.
 
 ```agda
-Cover : Ord → Ord → Type
-Cover zero    zero    = ⊤
-Cover (suc a) (suc b) = Cover a b
-Cover (lim f) (lim g) = ∀ n → Cover (f n) (g n)
-Cover _       _       = ⊥
+  Cover : Ord → Ord → Type
+  Cover zero    zero    = ⊤
+  Cover (suc a) (suc b) = Cover a b
+  Cover (lim f) (lim g) = ∀ n → Cover (f n) (g n)
+  Cover _       _       = ⊥
 
-reflCode : (a : Ord) → Cover a a
-reflCode zero = tt
-reflCode (suc a) = reflCode a
-reflCode (lim f) n = reflCode (f n)
+  reflCode : (a : Ord) → Cover a a
+  reflCode zero = tt
+  reflCode (suc a) = reflCode a
+  reflCode (lim f) n = reflCode (f n)
 
-isPropCover : ∀ a b → isProp (Cover a b)
-isPropCover zero zero tt tt = reflPath
-isPropCover (suc a) (suc b) = isPropCover a b
-isPropCover (lim f) (lim g) = isPropΠ (λ n → isPropCover (f n) (g n))
+  isPropCover : ∀ a b → isProp (Cover a b)
+  isPropCover zero zero tt tt = reflPath
+  isPropCover (suc a) (suc b) = isPropCover a b
+  isPropCover (lim f) (lim g) = isPropΠ (λ n → isPropCover (f n) (g n))
 ```
 
 2. 将 `a b : Ord` 的道路空间 `Path a b` 编码为覆叠空间.
 
 ```agda
-encode : ∀ a b → Path a b → Cover a b
-encode a b = 🧊.J (λ b _ → Cover a b) (reflCode a)
+  encode : ∀ a b → Path a b → Cover a b
+  encode a b = 🧊.J (λ b _ → Cover a b) (reflCode a)
 
-encodeRefl : ∀ a → Path (encode a a reflPath) (reflCode a)
-encodeRefl a = 🧊.JRefl (λ b _ → Cover a b) (reflCode a)
+  encodeRefl : ∀ a → Path (encode a a reflPath) (reflCode a)
+  encodeRefl a = 🧊.JRefl (λ b _ → Cover a b) (reflCode a)
 ```
 
 3. 将覆叠空间解码为道路空间.
 
 ```agda
-decode : ∀ a b → Cover a b → Path a b
-decode zero zero _ = reflPath
-decode (suc a) (suc b) p = 🧊.cong suc (decode a b p)
-decode (lim f) (lim g) p = limExtPath λ n → decode (f n) (g n) (p n)
+  decode : ∀ a b → Cover a b → Path a b
+  decode zero zero _ = reflPath
+  decode (suc a) (suc b) p = 🧊.cong suc (decode a b p)
+  decode (lim f) (lim g) p = limExtPath λ n → decode (f n) (g n) (p n)
 
-decodeRefl : ∀ a → Path (decode a a (reflCode a)) reflPath
-decodeRefl zero = reflPath
-decodeRefl (suc a) i = 🧊.cong suc (decodeRefl a i)
-decodeRefl (lim f) i = 🧊.cong₂
-  (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄)
-  (λ j n → decodeRefl (f n) i j)
-  (isSet→SquareP {A = λ i j → wf (λ n → decodeRefl (f n) i j)}
-    (λ _ _ → isProp→isSet isPropWf) (toPathP (isPropWf _ _)) reflPath reflPath reflPath i)
+  decodeRefl : ∀ a → Path (decode a a (reflCode a)) reflPath
+  decodeRefl zero = reflPath
+  decodeRefl (suc a) i = 🧊.cong suc (decodeRefl a i)
+  decodeRefl (lim f) i = 🧊.cong₂
+    (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄)
+    (λ j n → decodeRefl (f n) i j)
+    (isSet→SquareP {A = λ i j → wf (λ n → decodeRefl (f n) i j)}
+      (λ _ _ → isProp→isSet isPropWf) (toPathP (isPropWf _ _)) reflPath reflPath reflPath i)
 ```
 
 4. 证明编码与解码互逆, 结合 `Cover a b` 是命题, 说明 `Path a b` 是命题, 也即 `Ord` 是集合.
 
 ```agda
-decodeEncode : ∀ a b p → Path (decode a b (encode a b p)) p
-decodeEncode a _ = 🧊.J (λ b p → Path (decode a b (encode a b p)) p)
-  (🧊.cong (decode a a) (encodeRefl a) 🧊.∙ decodeRefl a)
-  where open import Cubical.Foundations.Isomorphism
+  decodeEncode : ∀ a b p → Path (decode a b (encode a b p)) p
+  decodeEncode a _ = 🧊.J (λ b p → Path (decode a b (encode a b p)) p)
+    (🧊.cong (decode a a) (encodeRefl a) 🧊.∙ decodeRefl a)
+    where open import Cubical.Foundations.Isomorphism
 
 isSetOrd : isSet Ord
-isSetOrd a b = isOfHLevelRetract 1 (encode a b) (decode a b) (decodeEncode a b) (isPropCover a b)
+isSetOrd a b = isOfHLevelRetract 1 (encode a b) (decode a b)
+  (decodeEncode a b) (isPropCover a b) where open OrdSet
 
 isProp≡ : isProp (a ≡ b)
 isProp≡ = 🧊.subst isProp PathPathEq (isSetOrd _ _)
 ```
 
 ## 路径集是集合
+
+```agda
+module RouteSet where
+  open import Cubical.Relation.Nullary
+```
+
+```agda
+  suc-inv : (p : Route a (suc a)) → Path p suc
+  suc-inv {a} p = {! p !}
+```
+
+```agda
+  discreteRoute : Discrete (Route a b)
+  discreteRoute p suc = yes (suc-inv p)
+  discreteRoute p (suc₂ q) = {!   !}
+  discreteRoute p lim = {!   !}
+  discreteRoute p (lim₂ q) = {!   !}
+```
 
 ## 子树关系
 
