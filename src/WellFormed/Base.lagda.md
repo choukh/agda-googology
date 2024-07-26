@@ -24,10 +24,10 @@ cubical库
 
 ```agda
 open import Cubical.Foundations.Prelude as 🧊 public
-  using (Type; toPathP; isProp; isSet; isProp→isSet)
-  renaming (_≡_ to Path; refl to reflPath)
+  hiding (_≡_; refl; sym; cong; cong₂; subst)
 open import Cubical.Foundations.HLevels public
-open import Cubical.Data.Equality public using (pathToEq; eqToPath; PathPathEq)
+open import Cubical.Data.Equality public
+  using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
   using (Σ; Σ-syntax; ∃-syntax; _×_; fst; snd; _,_; ΣPathP)
 open import Cubical.HITs.PropositionalTruncation public
@@ -58,20 +58,17 @@ open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```agda
 data Ord : Type
 Rel = Ord → Ord → Type
-data Route : Rel
+data Road : Rel
 ```
 
-路径集的截断叫做子树关系.
+**定义** 我们说 $a$ 是 $b$ 的子树, 记作 $a \lt b$, 当且仅当存在一条路径从 $a$ 到 $b$.
 
 ```agda
 _<_ : Rel; infix 6 _<_
-a < b = ∥ Route a b ∥₁
-
-open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
-  as SubTreeLe public using () renaming (_≤_ to infix 6 _≤_; <⇒≤ to <→≤)
+a < b = ∥ Road a b ∥₁
 ```
 
-**定义** 严格单调递增序列
+**定义** 我们说一个 $f:ℕ→\text{Ord}$ 是严格单调递增序列, 记作 $\text{wf}(f)$, 当且仅当对任意 $n$ 都有 $f(n) < f(n^+)$.
 
 ```agda
 Seq : Type
@@ -100,24 +97,13 @@ data Ord where
 **定义** 路径集
 
 ```agda
-data Route where
-  suc  : Route a (suc a)
-  suc₂ : Route a b → Route a (suc b)
-  lim  : ⦃ _ : wf f ⦄ → Route (f n) (lim f)
-  lim₂ : ⦃ _ : wf f ⦄ → Route a (f n) → Route a (lim f)
+data Road where
+  zero : Road a (suc a)
+  suc  : Road a b → Road a (suc b)
+  lim  : ⦃ _ : wf f ⦄ → Road a (f n) → Road a (lim f)
 ```
 
 ### 基本性质
-
-构造子的单射性
-
-```agda
-suc-inj : suc a ≡ suc b → a ≡ b
-suc-inj refl = refl
-
-lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≡ lim g → f ≡ g
-lim-inj refl = refl
-```
 
 良构条件是命题
 
@@ -126,11 +112,21 @@ isPropWf : isProp (wf f)
 isPropWf = isPropImplicitΠ λ _ → squash₁
 ```
 
+构造子的单射性
+
+```agda
+suc-inj : suc a ≡ suc b → a ≡ b
+suc-inj refl = refl
+
+lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → Ord.lim f ≡ lim g → f ≡ g
+lim-inj refl = refl
+```
+
 极限的外延性
 
 ```agda
-limExtPath : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → Path (f n) (g n)) → Path (lim f) (lim g)
-limExtPath {f} p = 🧊.cong₂ (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄)
+limExtPath : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → Path _ (f n) (g n)) → Path Ord (lim f) (lim g)
+limExtPath {f} p = 🧊.cong₂ (λ (f : Seq) (wff : wf f) → Ord.lim f ⦃ wff ⦄)
   (λ i n → p n i) (toPathP (isPropWf _ _))
 
 limExt : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → f n ≡ g n) → lim f ≡ lim g
@@ -168,7 +164,7 @@ instance
 pattern 2+ a = suc (suc a)
 ```
 
-## 树序数是集合
+## 序数集合
 
 ```agda
 module OrdSet where
@@ -192,7 +188,7 @@ module OrdSet where
   reflCode (lim f) n = reflCode (f n)
 
   isPropCover : ∀ a b → isProp (Cover a b)
-  isPropCover zero zero tt tt = reflPath
+  isPropCover zero zero tt tt = 🧊.refl
   isPropCover (suc a) (suc b) = isPropCover a b
   isPropCover (lim f) (lim g) = isPropΠ (λ n → isPropCover (f n) (g n))
 ```
@@ -200,37 +196,37 @@ module OrdSet where
 2. 将 `a b : Ord` 的道路空间 `Path a b` 编码为覆叠空间.
 
 ```agda
-  encode : ∀ a b → Path a b → Cover a b
-  encode a b = 🧊.J (λ b _ → Cover a b) (reflCode a)
+  encode : ∀ a b → Path _ a b → Cover a b
+  encode a b = J (λ b _ → Cover a b) (reflCode a)
 
-  encodeRefl : ∀ a → Path (encode a a reflPath) (reflCode a)
-  encodeRefl a = 🧊.JRefl (λ b _ → Cover a b) (reflCode a)
+  encodeRefl : ∀ a → Path _ (encode a a 🧊.refl) (reflCode a)
+  encodeRefl a = JRefl (λ b _ → Cover a b) (reflCode a)
 ```
 
 3. 将覆叠空间解码为道路空间.
 
 ```agda
-  decode : ∀ a b → Cover a b → Path a b
-  decode zero zero _ = reflPath
+  decode : ∀ a b → Cover a b → Path _ a b
+  decode zero zero _ = 🧊.refl
   decode (suc a) (suc b) p = 🧊.cong suc (decode a b p)
   decode (lim f) (lim g) p = limExtPath λ n → decode (f n) (g n) (p n)
 
-  decodeRefl : ∀ a → Path (decode a a (reflCode a)) reflPath
-  decodeRefl zero = reflPath
+  decodeRefl : ∀ a → Path _ (decode a a (reflCode a)) 🧊.refl
+  decodeRefl zero = 🧊.refl
   decodeRefl (suc a) i = 🧊.cong suc (decodeRefl a i)
   decodeRefl (lim f) i = 🧊.cong₂
-    (λ (f : Seq) (wff : wf f) → lim f ⦃ wff ⦄)
+    (λ (f : Seq) (wff : wf f) → Ord.lim f ⦃ wff ⦄)
     (λ j n → decodeRefl (f n) i j)
     (isSet→SquareP {A = λ i j → wf (λ n → decodeRefl (f n) i j)}
-      (λ _ _ → isProp→isSet isPropWf) (toPathP (isPropWf _ _)) reflPath reflPath reflPath i)
+      (λ _ _ → isProp→isSet isPropWf) (toPathP (isPropWf _ _)) 🧊.refl 🧊.refl 🧊.refl i)
 ```
 
 4. 证明编码与解码互逆, 结合 `Cover a b` 是命题, 说明 `Path a b` 是命题, 也即 `Ord` 是集合.
 
 ```agda
-  decodeEncode : ∀ a b p → Path (decode a b (encode a b p)) p
-  decodeEncode a _ = 🧊.J (λ b p → Path (decode a b (encode a b p)) p)
-    (🧊.cong (decode a a) (encodeRefl a) 🧊.∙ decodeRefl a)
+  decodeEncode : ∀ a b p → Path _ (decode a b (encode a b p)) p
+  decodeEncode a _ = J (λ b p → Path _ (decode a b (encode a b p)) p)
+    (🧊.cong (decode a a) (encodeRefl a) ∙ decodeRefl a)
     where open import Cubical.Foundations.Isomorphism
 
 isSetOrd : isSet Ord
@@ -241,27 +237,7 @@ isProp≡ : isProp (a ≡ b)
 isProp≡ = 🧊.subst isProp PathPathEq (isSetOrd _ _)
 ```
 
-## 路径集是集合
-
-```agda
-module RouteSet where
-  open import Cubical.Relation.Nullary
-```
-
-```agda
-  suc-inv : (p : Route a (suc a)) → Path p suc
-  suc-inv {a} p = {! p !}
-```
-
-```agda
-  discreteRoute : Discrete (Route a b)
-  discreteRoute p suc = yes (suc-inv p)
-  discreteRoute p (suc₂ q) = {!   !}
-  discreteRoute p lim = {!   !}
-  discreteRoute p (lim₂ q) = {!   !}
-```
-
-## 子树关系
+## 路径与子树关系
 
 ```agda
 import Data.Nat.Properties as ℕ
@@ -271,11 +247,20 @@ open import Relation.Binary.Structures {A = Ord} _≡_ as ≡
 open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
 ```
 
+```agda
+pattern zero₁  = ∣ zero ∣₁
+pattern suc₁ r = ∣ suc r ∣₁
+pattern lim₁ r = ∣ lim r ∣₁
+```
+
 ### 严格序
 
 尊重相等
 
 ```agda
+Rd-resp-≡ : Road Respects₂ _≡_
+Rd-resp-≡ = (λ { refl → id }) , (λ { refl → id })
+
 <-resp-≡ : _<_ Respects₂ _≡_
 <-resp-≡ = (λ { refl → id }) , (λ { refl → id })
 ```
@@ -283,12 +268,119 @@ open import Relation.Binary.PropositionalEquality.Properties using (isEquivalenc
 传递性
 
 ```agda
-Rt-trans : Transitive Route
-Rt-trans p suc      = suc₂ p
-Rt-trans p lim      = lim₂ p
-Rt-trans p (suc₂ q) = suc₂ (Rt-trans p q)
-Rt-trans p (lim₂ q) = lim₂ (Rt-trans p q)
+Rd-trans : Transitive Road
+Rd-trans r zero    = suc r
+Rd-trans r (suc s) = suc (Rd-trans r s)
+Rd-trans r (lim s) = lim (Rd-trans r s)
 
 <-trans : Transitive _<_
-<-trans = map2 Rt-trans
+<-trans = map2 Rd-trans
+```
+
+良基性
+
+```agda
+Rd-acc : Road a b → Acc Road a
+Rd-acc zero    = acc λ r → Rd-acc r
+Rd-acc (suc r) = acc λ s → Rd-acc (Rd-trans s r)
+Rd-acc (lim r) = acc λ s → Rd-acc (Rd-trans s r)
+
+Rd-wellFounded : WellFounded Road
+Rd-wellFounded _ = Rd-acc zero
+```
+
+```agda
+isPropAcc : isProp (Acc _<_ a)
+isPropAcc (acc p) (acc q) i = acc (λ x<a → isPropAcc (p x<a) (q x<a) i)
+
+<-acc : a < b → Acc _<_ a
+<-acc zero₁    = acc λ r → <-acc r
+<-acc (suc₁ r) = acc λ s → <-acc (<-trans s ∣ r ∣₁)
+<-acc (lim₁ r) = acc λ s → <-acc (<-trans s ∣ r ∣₁)
+<-acc (squash₁ p q i) = isPropAcc (<-acc p) (<-acc q) i
+
+<-wellFounded : WellFounded _<_
+<-wellFounded _ = <-acc zero₁
+```
+
+良基关系是非对称且反自反的
+
+```agda
+Rd-asym : Asymmetric Road
+Rd-asym = wf⇒asym Rd-wellFounded
+
+Rd-irrefl : Irreflexive _≡_ Road
+Rd-irrefl = wf⇒irrefl Rd-resp-≡ sym Rd-wellFounded
+```
+
+```agda
+<-asym : Asymmetric _<_
+<-asym = wf⇒asym <-wellFounded
+
+<-irrefl : Irreflexive _≡_ _<_
+<-irrefl = wf⇒irrefl <-resp-≡ sym <-wellFounded
+```
+
+路径关系与子树关系分别构成严格偏序
+
+```agda
+Rd-isStrictPartialOrder : ≡.IsStrictPartialOrder Road
+Rd-isStrictPartialOrder = record
+  { isEquivalence = isEquivalence
+  ; irrefl = Rd-irrefl
+  ; trans = Rd-trans
+  ; <-resp-≈ = Rd-resp-≡ }
+
+<-isStrictPartialOrder : ≡.IsStrictPartialOrder _<_
+<-isStrictPartialOrder = record
+  { isEquivalence = isEquivalence
+  ; irrefl = <-irrefl
+  ; trans = <-trans
+  ; <-resp-≈ = <-resp-≡ }
+```
+
+### 非严格序
+
+**定义** 非严格序
+
+```agda
+open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
+  as NonStrictRoad public using () renaming (_≤_ to infix 6 NSRoad; <⇒≤ to Road→NSRoad)
+
+open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
+  as NonStrictSubTree public using () renaming (_≤_ to infix 6 _≤_; <⇒≤ to <→≤)
+```
+
+## 路径集合
+
+```agda
+module RoadSet where
+  open import Cubical.Data.Nat using (discreteℕ)
+  open import Cubical.Relation.Nullary
+  open import Cubical.Axiom.UniquenessOfIdentity
+```
+
+```agda
+  zero-unique : (r : Road a (suc a)) → Path _ r zero
+  zero-unique r = aux r 🧊.refl where
+    aux : (r : Road a (suc b)) (p : Path _ b a)
+      → PathP (λ i → Road a (suc (p i))) r zero
+    aux zero = UIP→AxiomK (isSet→UIP isSetOrd) _ _ _ 🧊.refl
+    aux (suc r) p = ⊥-elim $ Rd-irrefl (sym $ pathToEq p) r
+```
+
+```agda
+  Rd-suc-inj : {r s : Road a b} → suc r ≡ suc r → r ≡ s
+  Rd-suc-inj p = {! p  !}
+```
+
+```agda
+  discreteRoad : Discrete (Road a b)
+  discreteRoad r zero              = yes (zero-unique r)
+  discreteRoad zero (suc r)       = ⊥-elim (Rd-irrefl refl r)
+  discreteRoad (suc r) (suc s)  = mapDec (🧊.cong suc) {!   !} (discreteRoad r s)
+  discreteRoad (lim {n = n₁} r) (lim {n = n₂} s) with discreteℕ n₁ n₂
+  ... | yes p = case pathToEq p of λ { refl →
+    mapDec {!   !} {!   !} (discreteRoad r s) }
+  ... | no p = no {!   !}
 ```
