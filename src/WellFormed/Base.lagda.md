@@ -47,7 +47,7 @@ open import Relation.Binary.PropositionalEquality public
 融合库
 
 ```agda
-open import Bridged.Data.Empty public using (⊥; ⊥-elim; isProp⊥)
+open import Bridged.Data.Empty public using (⊥; ⊥-elim; ⊥→🧊; isProp⊥)
 open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```
 
@@ -214,7 +214,7 @@ module OrdSet where
   decodeRefl zero = 🧊.refl
   decodeRefl (suc a) i = 🧊.cong suc (decodeRefl a i)
   decodeRefl (lim f) i = 🧊.cong₂
-    (λ (f : Seq) (wff : wf f) → Ord.lim f ⦃ wff ⦄)
+    (λ f (wff : wf f) → Ord.lim f ⦃ wff ⦄)
     (λ j n → decodeRefl (f n) i j)
     (isSet→SquareP {A = λ i j → wf (λ n → decodeRefl (f n) i j)}
       (λ _ _ → isProp→isSet isPropWf) (toPathP (isPropWf _ _)) 🧊.refl 🧊.refl 🧊.refl i)
@@ -244,6 +244,7 @@ open import Induction.WellFounded
 open import Relation.Binary hiding (Rel)
 open import Relation.Binary.Structures {A = Ord} _≡_ as ≡
 open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
+open import Cubical.Relation.Nullary
 ```
 
 ```agda
@@ -460,12 +461,60 @@ module SubTreeReasoning where
     public
 ```
 
+### 可判定性与三歧性
+
+```agda
+rd-dec : Road a c → Road b c → Dec (Road a b)
+rd-dec zero zero = no λ r → ⊥→🧊 $ rd-irrefl refl r
+rd-dec zero (suc r) = no λ s → ⊥→🧊 $ (rd-asym r s)
+rd-dec (suc r) zero = yes r
+rd-dec (suc r) (suc s) = rd-dec r s
+rd-dec (lim {f} {n} r) (lim {n = m} s) with ℕ.<-cmp n m
+... | tri< n<m _ _  = {!   !}
+... | tri≈ _ refl _ = rd-dec r s
+... | tri> _ _ m<n  = {!   !}
+```
+
+```agda
+monoseq : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
+monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inl m<n  = <-trans (monoseq m<n) it
+... | inr refl = it
+```
+
+```agda
+injseq : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
+injseq {m} {n} eq with ℕ.<-cmp m n
+... | tri< m<n _ _  = ⊥-elim $ <-irrefl eq (monoseq m<n)
+... | tri≈ _ refl _ = refl
+... | tri> _ _ n<m  = ⊥-elim $ <-irrefl (sym eq) (monoseq n<m)
+```
+
+```agda
+rd-sn-⊥ : Road a b → NSRoad b a → ⊥
+rd-sn-⊥ p q = rd-irrefl refl (rd-ns-trans p q)
+
+<-≥-⊥ : a < b → b ≤ a → ⊥
+<-≥-⊥ p q = <-irrefl refl (<-≤-trans p q)
+```
+
+```agda
+rd-cmp⊎ : Road a c → Road b c → Road a b ⊎ NSRoad b a
+rd-cmp⊎ zero    zero    = inr $ inr refl
+rd-cmp⊎ zero    (suc r) = inr $ inl r
+rd-cmp⊎ (suc r) zero    = inl r
+rd-cmp⊎ (suc r) (suc s) = rd-cmp⊎ r s
+rd-cmp⊎ (lim {f} {n} r) (lim {n = m} s) with ℕ.<-cmp n m
+... | tri< n<m _ _  = rd-cmp⊎ (rd-trans r {!   !}) s
+... | tri≈ _ refl _ = rd-cmp⊎ r s
+... | tri> _ _ m<n  = rd-cmp⊎ r (rd-trans s {!   !})
+```
+
 ## 路径集合
 
 ```agda
 module RoadSet where
   open import Cubical.Data.Nat using (discreteℕ)
-  open import Cubical.Relation.Nullary
   open import Cubical.Axiom.UniquenessOfIdentity
 ```
 
@@ -497,14 +546,23 @@ module RoadSet where
 ## 典范路径
 
 ```agda
-minimize : (f : Seq) → Road a (f n) → Σ ℕ λ m → Road a (f m)
-minimize {n = zero} f r = zero , r
-minimize {n = suc n} f r = {!   !}
+minimize : ⦃ wff : wf f ⦄ → Road a (f n) → Σ ℕ λ m → Road a (f m)
+minimize {n = zero} r = zero , r
+minimize {n = suc n} ⦃ wff ⦄ r = {! a < f n  !}
 ```
 
 ```agda
 cano : Road a b → Road a b
 cano zero = zero
 cano (suc r) = rd-trans (cano r) zero
-cano (lim {f} r) = lim $ snd $ minimize f r
+cano (lim {f} r) = let (m , s) = minimize {f = f} r in lim {n = m} (cano s)
 ```
+
+```agda
+cano-unique : (r s : Road a b) → cano r ≡ cano s
+cano-unique zero s = {!   !}
+cano-unique (suc r) zero = {!   !}
+cano-unique (suc r) (suc s) = cong suc (cano-unique r s)
+cano-unique {a} (lim {f} {n} r) (lim {n = m} s) = {!   !}
+```
+cong₂ (λ (n : ℕ) (r : Road a (f n)) → Road.lim {n = n} r)
