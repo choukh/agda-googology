@@ -14,7 +14,7 @@ zhihu-tags: Agda, 大数数学, 序数
 立方类型论
 
 ```agda
-{-# OPTIONS --safe --cubical --lossy-unification #-}
+{-# OPTIONS --safe --cubical #-}
 module WellFormed.Base where
 ```
 
@@ -126,8 +126,7 @@ lim-inj refl = refl
 
 ```agda
 limExtPath : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → Path _ (f n) (g n)) → Path Ord (lim f) (lim g)
-limExtPath {f} p = 🧊.cong₂ (λ (f : Seq) (wff : wf f) → Ord.lim f ⦃ wff ⦄)
-  (λ i n → p n i) (toPathP (isPropWf _ _))
+limExtPath p = 🧊.cong₂ (λ f (wff : wf f) → Ord.lim f ⦃ wff ⦄) (funExt p) (toPathP $ isPropWf _ _)
 
 limExt : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → f n ≡ g n) → lim f ≡ lim g
 limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
@@ -258,8 +257,8 @@ pattern lim₁ r = ∣ lim r ∣₁
 尊重相等
 
 ```agda
-Rd-resp-≡ : Road Respects₂ _≡_
-Rd-resp-≡ = (λ { refl → id }) , (λ { refl → id })
+rd-resp-≡ : Road Respects₂ _≡_
+rd-resp-≡ = (λ { refl → id }) , (λ { refl → id })
 
 <-resp-≡ : _<_ Respects₂ _≡_
 <-resp-≡ = (λ { refl → id }) , (λ { refl → id })
@@ -268,25 +267,25 @@ Rd-resp-≡ = (λ { refl → id }) , (λ { refl → id })
 传递性
 
 ```agda
-Rd-trans : Transitive Road
-Rd-trans r zero    = suc r
-Rd-trans r (suc s) = suc (Rd-trans r s)
-Rd-trans r (lim s) = lim (Rd-trans r s)
+rd-trans : Transitive Road
+rd-trans r zero    = suc r
+rd-trans r (suc s) = suc (rd-trans r s)
+rd-trans r (lim s) = lim (rd-trans r s)
 
 <-trans : Transitive _<_
-<-trans = map2 Rd-trans
+<-trans = map2 rd-trans
 ```
 
 良基性
 
 ```agda
-Rd-acc : Road a b → Acc Road a
-Rd-acc zero    = acc λ r → Rd-acc r
-Rd-acc (suc r) = acc λ s → Rd-acc (Rd-trans s r)
-Rd-acc (lim r) = acc λ s → Rd-acc (Rd-trans s r)
+rd-acc : Road a b → Acc Road a
+rd-acc zero    = acc λ r → rd-acc r
+rd-acc (suc r) = acc λ s → rd-acc (rd-trans s r)
+rd-acc (lim r) = acc λ s → rd-acc (rd-trans s r)
 
-Rd-wellFounded : WellFounded Road
-Rd-wellFounded _ = Rd-acc zero
+rd-wellFounded : WellFounded Road
+rd-wellFounded _ = rd-acc zero
 ```
 
 ```agda
@@ -306,11 +305,11 @@ isPropAcc (acc p) (acc q) i = acc (λ x<a → isPropAcc (p x<a) (q x<a) i)
 良基关系是非对称且反自反的
 
 ```agda
-Rd-asym : Asymmetric Road
-Rd-asym = wf⇒asym Rd-wellFounded
+rd-asym : Asymmetric Road
+rd-asym = wf⇒asym rd-wellFounded
 
-Rd-irrefl : Irreflexive _≡_ Road
-Rd-irrefl = wf⇒irrefl Rd-resp-≡ sym Rd-wellFounded
+rd-irrefl : Irreflexive _≡_ Road
+rd-irrefl = wf⇒irrefl rd-resp-≡ sym rd-wellFounded
 ```
 
 ```agda
@@ -324,12 +323,12 @@ Rd-irrefl = wf⇒irrefl Rd-resp-≡ sym Rd-wellFounded
 路径关系与子树关系分别构成严格偏序
 
 ```agda
-Rd-isStrictPartialOrder : ≡.IsStrictPartialOrder Road
-Rd-isStrictPartialOrder = record
+rd-isStrictPartialOrder : ≡.IsStrictPartialOrder Road
+rd-isStrictPartialOrder = record
   { isEquivalence = isEquivalence
-  ; irrefl = Rd-irrefl
-  ; trans = Rd-trans
-  ; <-resp-≈ = Rd-resp-≡ }
+  ; irrefl = rd-irrefl
+  ; trans = rd-trans
+  ; <-resp-≈ = rd-resp-≡ }
 
 <-isStrictPartialOrder : ≡.IsStrictPartialOrder _<_
 <-isStrictPartialOrder = record
@@ -344,11 +343,121 @@ Rd-isStrictPartialOrder = record
 **定义** 非严格序
 
 ```agda
-open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
-  as NonStrictRoad public using () renaming (_≤_ to infix 6 NSRoad; <⇒≤ to Road→NSRoad)
+open import Relation.Binary.Construct.StrictToNonStrict _≡_ Road
+  as NonStrictRoad public using () renaming (_≤_ to infix 6 NSRoad; <⇒≤ to rd→ns)
 
 open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
   as NonStrictSubTree public using () renaming (_≤_ to infix 6 _≤_; <⇒≤ to <→≤)
+```
+
+```agda
+ns→≤ : NSRoad a b → a ≤ b
+ns→≤ (inl r) = inl ∣ r ∣₁
+ns→≤ (inr p) = inr p
+```
+
+命题性
+
+```agda
+isProp≤ : isProp (a ≤ b)
+isProp≤ = isProp⊎ squash₁ isProp≡ (flip <-irrefl)
+```
+
+严格序与非严格序的相互转化
+
+```agda
+rds→ns : Road a (suc b) → NSRoad a b
+rds→ns zero    = inr refl
+rds→ns (suc p) = inl p
+
+<s→≤ : a < suc b → a ≤ b
+<s→≤ = rec isProp≤ (ns→≤ ∘ rds→ns)
+```
+
+```agda
+ns→rds : NSRoad a b → Road a (suc b)
+ns→rds (inl r)    = suc r
+ns→rds (inr refl) = zero
+
+≤→<s : a ≤ b → a < suc b
+≤→<s (inl r)    = map suc r
+≤→<s (inr refl) = zero₁
+```
+
+自反性, 反对称性, 传递性
+
+```agda
+ns-refl : Reflexive NSRoad
+ns-refl = NonStrictRoad.reflexive refl
+
+ns-antisym : Antisymmetric _≡_ NSRoad
+ns-antisym = NonStrictRoad.antisym isEquivalence rd-trans rd-irrefl
+
+ns-trans : Transitive NSRoad
+ns-trans = NonStrictRoad.trans isEquivalence rd-resp-≡ rd-trans
+
+rd-ns-trans : Trans Road NSRoad Road
+rd-ns-trans = NonStrictRoad.<-≤-trans rd-trans (fst rd-resp-≡)
+
+ns-rd-trans : Trans NSRoad Road Road
+ns-rd-trans = NonStrictRoad.≤-<-trans sym rd-trans (snd rd-resp-≡)
+```
+
+```agda
+≤-refl : Reflexive _≤_
+≤-refl = NonStrictSubTree.reflexive refl
+
+≤-antisym : Antisymmetric _≡_ _≤_
+≤-antisym = NonStrictSubTree.antisym isEquivalence <-trans <-irrefl
+
+≤-trans : Transitive _≤_
+≤-trans = NonStrictSubTree.trans isEquivalence <-resp-≡ <-trans
+
+<-≤-trans : Trans _<_ _≤_ _<_
+<-≤-trans = NonStrictSubTree.<-≤-trans <-trans (fst <-resp-≡)
+
+≤-<-trans : Trans _≤_ _<_ _<_
+≤-<-trans = NonStrictSubTree.≤-<-trans sym <-trans (snd <-resp-≡)
+```
+
+非严格路径关系与非严格子树关系分别构成非严格偏序
+
+```agda
+ns-isPreorder : ≡.IsPreorder NSRoad
+ns-isPreorder = record
+  { isEquivalence = isEquivalence
+  ; reflexive = inr
+  ; trans = ns-trans
+  }
+
+ns-isPartialOrder : ≡.IsPartialOrder NSRoad
+ns-isPartialOrder = record { isPreorder = ns-isPreorder ; antisym = ns-antisym }
+```
+
+```agda
+≤-isPreorder : ≡.IsPreorder _≤_
+≤-isPreorder = record
+  { isEquivalence = isEquivalence
+  ; reflexive = inr
+  ; trans = ≤-trans
+  }
+
+≤-isPartialOrder : ≡.IsPartialOrder _≤_
+≤-isPartialOrder = record { isPreorder = ≤-isPreorder ; antisym = ≤-antisym }
+```
+
+```agda
+module RoadReasoning where
+  open import Relation.Binary.Reasoning.Base.Triple
+    {_≈_ = _≡_} {_≤_ = NSRoad} {_<_ = Road}
+    ns-isPreorder rd-asym rd-trans rd-resp-≡ rd→ns rd-ns-trans ns-rd-trans
+    public
+
+module SubTreeReasoning where
+  open import Relation.Binary.Reasoning.Base.Triple
+    {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<_}
+    ≤-isPreorder <-asym <-trans <-resp-≡ <→≤ <-≤-trans ≤-<-trans
+    public
 ```
 
 ## 路径集合
@@ -366,21 +475,36 @@ module RoadSet where
     aux : (r : Road a (suc b)) (p : Path _ b a)
       → PathP (λ i → Road a (suc (p i))) r zero
     aux zero = UIP→AxiomK (isSet→UIP isSetOrd) _ _ _ 🧊.refl
-    aux (suc r) p = ⊥-elim $ Rd-irrefl (sym $ pathToEq p) r
+    aux (suc r) p = ⊥-elim $ rd-irrefl (sym $ pathToEq p) r
 ```
 
 ```agda
-  Rd-suc-inj : {r s : Road a b} → suc r ≡ suc r → r ≡ s
-  Rd-suc-inj p = {! p  !}
+  rd-suc-inj : {r s : Road a b} → suc r ≡ suc r → r ≡ s
+  rd-suc-inj p = {!   !}
 ```
 
 ```agda
   discreteRoad : Discrete (Road a b)
-  discreteRoad r zero              = yes (zero-unique r)
-  discreteRoad zero (suc r)       = ⊥-elim (Rd-irrefl refl r)
+  discreteRoad r zero           = yes (zero-unique r)
+  discreteRoad zero (suc r)     = ⊥-elim (rd-irrefl refl r)
   discreteRoad (suc r) (suc s)  = mapDec (🧊.cong suc) {!   !} (discreteRoad r s)
   discreteRoad (lim {n = n₁} r) (lim {n = n₂} s) with discreteℕ n₁ n₂
   ... | yes p = case pathToEq p of λ { refl →
     mapDec {!   !} {!   !} (discreteRoad r s) }
   ... | no p = no {!   !}
+```
+
+## 典范路径
+
+```agda
+minimize : (f : Seq) → Road a (f n) → Σ ℕ λ m → Road a (f m)
+minimize {n = zero} f r = zero , r
+minimize {n = suc n} f r = {!   !}
+```
+
+```agda
+cano : Road a b → Road a b
+cano zero = zero
+cano (suc r) = rd-trans (cano r) zero
+cano (lim {f} r) = lim $ snd $ minimize f r
 ```
