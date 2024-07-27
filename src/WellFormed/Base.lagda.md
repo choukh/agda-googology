@@ -47,7 +47,7 @@ open import Relation.Binary.PropositionalEquality public
 融合库
 
 ```agda
-open import Bridged.Data.Empty public using (⊥; ⊥-elim; ⊥→🧊; isProp⊥)
+open import Bridged.Data.Empty public using (⊥; ⊥-elim; 🧊⊥-elim; isProp⊥)
 open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```
 
@@ -494,7 +494,7 @@ module RoadSet where
   ... | no p = no {!   !}
 ```
 
-## 可判定性
+## 子树的可判定性
 
 ```agda
 monoseq : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
@@ -515,8 +515,8 @@ injseq {m} {n} eq with ℕ.<-cmp m n
 <-dec : a < c → b < c → Dec (a < b)
 <-dec = rec2 (isPropDec squash₁) aux where
   aux : Road a c → Road b c → Dec (a < b)
-  aux zero zero = no λ r → ⊥→🧊 $ <-irrefl refl r
-  aux zero (suc s) = no λ r → ⊥→🧊 $ <-asym ∣ s ∣₁ r
+  aux zero zero = no λ r → ⊥-elim $ <-irrefl refl r
+  aux zero (suc s) = no λ r → ⊥-elim $ <-asym ∣ s ∣₁ r
   aux (suc r) zero = yes ∣ r ∣₁
   aux (suc r) (suc s) = aux r s
   aux (lim {f} {n} r) (lim {n = m} s) with ℕ.<-cmp n m
@@ -542,7 +542,11 @@ minimize {n = suc n} f r with <-dec r it
 ```agda
 minimized : (f : Seq) ⦃ wff : wf f ⦄ (r s : a < f n) → Path _ (minimize f r) (minimize f s)
 minimized {n = zero} f r s = ΣPathP $ 🧊.refl , squash₁ _ _
-minimized {n = suc n} f r s = {!   !}
+minimized {n = suc n} f r s with <-dec r it | <-dec s it
+... | yes r | yes s = minimized f r s
+... | yes r | no ¬s = 🧊⊥-elim (¬s r)
+... | no ¬r | yes s = 🧊⊥-elim (¬r s)
+... | no ¬r | no ¬s = ΣPathP $ 🧊.refl , squash₁ _ _
 ```
 
 ```agda
@@ -571,7 +575,9 @@ cano-2const r s = eqToPath (cano-unique r s)
 <→rd = rec→Set {!   !} cano cano-2const
 ```
 
-## 三歧性
+## 路径的三歧性
+
+一旦建立子树关系到路径关系的消去, 我们可以将子树的可判定性强化为路径的可判定性, 乃至三歧性.
 
 ```agda
 <-≥-⊥ : a < b → b ≤ a → ⊥
