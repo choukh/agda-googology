@@ -29,7 +29,7 @@ open import Cubical.Foundations.HLevels public
 open import Cubical.Data.Equality public
   using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
-  using (Σ-syntax; ∃-syntax; _×_; fst; snd; _,_; ΣPathP)
+  using (Σ-syntax; ∃-syntax; _×_; fst; snd; _,_; ΣPathP; PathPΣ)
 open import Cubical.HITs.PropositionalTruncation public
   using (∥_∥₁; ∣_∣₁; squash₁; rec; rec2; map; map2; rec→Set)
 ```
@@ -57,14 +57,13 @@ open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 
 ```agda
 data Ord : Type
-Rel = Ord → Ord → Type
-data Road : Rel
+data Road : Ord → Ord → Type
 ```
 
 **定义** 我们说 $a$ 是 $b$ 的子树, 记作 $a \lt b$, 当且仅当存在一条路径从 $a$ 到 $b$.
 
 ```agda
-_<_ : Rel; infix 6 _<_
+_<_ : Ord → Ord → Type; infix 6 _<_
 a < b = ∥ Road a b ∥₁
 ```
 
@@ -157,17 +156,10 @@ instance
   nOrd = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → fin n }
 ```
 
-**约定** 我们将 $\text{suc}~(\text{suc}~a)$ 记作 $a^{++}$.
-
-```agda
-pattern 2+ a = suc (suc a)
-```
-
 ## 序数集合
 
 ```agda
 module OrdSet where
-  open import Cubical.Foundations.Isomorphism
 ```
 
 我们使用 [encode-decode 方法](https://ncatlab.org/nlab/show/encode-decode+method) 证明 $\text{Ord}$ 是同伦层级意义下的集合. 具体细节这里不展开, 大致分为以下四步:
@@ -241,7 +233,7 @@ isProp≡ = 🧊.subst isProp PathPathEq (isSetOrd _ _)
 ```agda
 import Data.Nat.Properties as ℕ
 open import Induction.WellFounded
-open import Relation.Binary hiding (Rel)
+open import Relation.Binary
 open import Relation.Binary.Structures {A = Ord} _≡_ as ≡
 open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
 open import Cubical.Relation.Nullary
@@ -461,6 +453,49 @@ module SubTreeReasoning where
     public
 ```
 
+## 良构序列的性质
+
+```agda
+<monoseq : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
+<monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inl m<n  = <-trans (<monoseq m<n) it
+... | inr refl = it
+```
+
+```agda
+≤monoseq : ⦃ _ : wf f ⦄ → m ℕ.≤ n → f m ≤ f n
+≤monoseq m≤n with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inl m<n = inl (<monoseq m<n)
+... | inr refl = inr refl
+
+fz≤ : ∀ f → ⦃ _ : wf f ⦄ → f 0 ≤ f n
+fz≤ f = ≤monoseq {f = f} ℕ.z≤n
+```
+
+```agda
+injseq : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
+injseq {m} {n} eq with ℕ.<-cmp m n
+... | tri< m<n _ _  = ⊥-elim $ <-irrefl eq (<monoseq m<n)
+... | tri≈ _ refl _ = refl
+... | tri> _ _ n<m  = ⊥-elim $ <-irrefl (sym eq) (<monoseq n<m)
+```
+
+## 子树的可判定性
+
+```agda
+<-dec : a < c → b < c → Dec (a < b)
+<-dec = rec2 (isPropDec squash₁) aux where
+  aux : Road a c → Road b c → Dec (a < b)
+  aux zero zero = no λ r → ⊥-elim $ <-irrefl refl r
+  aux zero (suc s) = no λ r → ⊥-elim $ <-asym ∣ s ∣₁ r
+  aux (suc r) zero = yes ∣ r ∣₁
+  aux (suc r) (suc s) = aux r s
+  aux (lim {f} {n} r) (lim {n = m} s) with ℕ.<-cmp n m
+  ... | tri< n<m _ _  = rec (isPropDec squash₁) (λ t → aux (rd-trans r t) s) (<monoseq n<m)
+  ... | tri≈ _ refl _ = aux r s
+  ... | tri> _ _ m<n  = rec (isPropDec squash₁) (λ t → aux r (rd-trans s t)) (<monoseq m<n)
+```
+
 ## 路径集合
 
 ```agda
@@ -488,91 +523,82 @@ module RoadSet where
   discreteRoad r zero           = yes (zero-unique r)
   discreteRoad zero (suc r)     = ⊥-elim (rd-irrefl refl r)
   discreteRoad (suc r) (suc s)  = mapDec (🧊.cong suc) {!   !} (discreteRoad r s)
-  discreteRoad (lim {n = n₁} r) (lim {n = n₂} s) with discreteℕ n₁ n₂
+  discreteRoad (lim {n = n₁} r) (lim {n = n₂} s) with Cubical.Data.Nat.discreteℕ n₁ n₂
   ... | yes p = case pathToEq p of λ { refl →
     mapDec {!   !} {!   !} (discreteRoad r s) }
   ... | no p = no {!   !}
 ```
 
-## 子树的可判定性
-
-```agda
-monoseq : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
-monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
-... | inl m<n  = <-trans (monoseq m<n) it
-... | inr refl = it
-```
-
-```agda
-injseq : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
-injseq {m} {n} eq with ℕ.<-cmp m n
-... | tri< m<n _ _  = ⊥-elim $ <-irrefl eq (monoseq m<n)
-... | tri≈ _ refl _ = refl
-... | tri> _ _ n<m  = ⊥-elim $ <-irrefl (sym eq) (monoseq n<m)
-```
-
-```agda
-<-dec : a < c → b < c → Dec (a < b)
-<-dec = rec2 (isPropDec squash₁) aux where
-  aux : Road a c → Road b c → Dec (a < b)
-  aux zero zero = no λ r → ⊥-elim $ <-irrefl refl r
-  aux zero (suc s) = no λ r → ⊥-elim $ <-asym ∣ s ∣₁ r
-  aux (suc r) zero = yes ∣ r ∣₁
-  aux (suc r) (suc s) = aux r s
-  aux (lim {f} {n} r) (lim {n = m} s) with ℕ.<-cmp n m
-  ... | tri< n<m _ _  = rec (isPropDec squash₁) (λ t → aux (rd-trans r t) s) (monoseq n<m)
-  ... | tri≈ _ refl _ = aux r s
-  ... | tri> _ _ m<n  = rec (isPropDec squash₁) (λ t → aux r (rd-trans s t)) (monoseq m<n)
-```
-
 ## 典范路径
 
 ```agda
-open import Cubical.Foundations.Function using (2-Constant)
+module CanonicalRoad where
+  open import Cubical.Foundations.Function using (2-Constant)
 ```
 
 ```agda
-minimize : (f : Seq) ⦃ wff : wf f ⦄ → a < f n → Σ[ m ∈ ℕ ] a < f m
-minimize {n = zero} f r = 0 , r
-minimize {n = suc n} f r with <-dec r it
-... | yes s = minimize f s
-... | no _ = suc n , r
+  min : (f : Seq) ⦃ wff : wf f ⦄ → a < f n → Σ[ m ∈ ℕ ] a < f m
+  min {n = zero} f r = 0 , r
+  min {n = suc n} f r with <-dec r it
+  ... | yes s = min f s
+  ... | no _ = suc n , r
 ```
 
 ```agda
-minimized : (f : Seq) ⦃ wff : wf f ⦄ (r s : a < f n) → Path _ (minimize f r) (minimize f s)
-minimized {n = zero} f r s = ΣPathP $ 🧊.refl , squash₁ _ _
-minimized {n = suc n} f r s with <-dec r it | <-dec s it
-... | yes r | yes s = minimized f r s
-... | yes r | no ¬s = 🧊⊥-elim (¬s r)
-... | no ¬r | yes s = 🧊⊥-elim (¬r s)
-... | no ¬r | no ¬s = ΣPathP $ 🧊.refl , squash₁ _ _
+  min-unique-pre : (f : Seq) ⦃ wff : wf f ⦄ (r : a < f n) (s : a < f (suc m))
+    → (a < f m → ⊥) → Path _ (min f r) (suc m , s)
+  min-unique-pre {n = zero} f r s t = ⊥-elim $ t $ <-≤-trans r (fz≤ f)
+  min-unique-pre {n = suc n} {m} f r s t with <-dec r it
+  ... | yes r = min-unique-pre f r s t
+  ... | no ¬r with ℕ.<-cmp n m
+  ... | tri< n<m _ _  = {! fn<fm<a<fsn<fsm  !}
+  ... | tri≈ _ refl _ = ΣPathP $ 🧊.refl , squash₁ _ _
+  ... | tri> _ _ m<n  = {!   !}
+```
+--n<m<sn
+
+```agda
+  min-unique : (f : Seq) ⦃ wff : wf f ⦄ (r : a < f n) (s : a < f m) → Path _ (min f r) (min f s)
+  min-unique {n = zero}  {m = zero}  f r s = ΣPathP $ 🧊.refl , squash₁ _ _
+  min-unique {n = zero}  {m = suc m} f r s with <-dec s it
+  ... | yes s = min-unique f r s
+  ... | no ¬s = 🧊⊥-elim $ ¬s $ <-≤-trans r (fz≤ f)
+  min-unique {n = suc n} {m = zero}  f r s with <-dec r it
+  ... | yes r = min-unique f r s
+  ... | no ¬r = 🧊⊥-elim $ ¬r $ <-≤-trans s (fz≤ f)
+  min-unique {n = suc n} {m = suc m} f r s with <-dec r it | <-dec s it
+  ... | yes r | yes s = min-unique f r s
+  ... | yes r | no ¬s = min-unique-pre f r s {! ¬s  !}
+  ... | no ¬r | yes s = {!   !}
+  ... | no ¬r | no ¬s = {!   !}
 ```
 
 ```agda
-cano : Road a b → Road a b
-<→rd : a < b → Road a b
+  cano : Road a b → Road a b
+  <→rd : a < b → Road a b
 
-cano zero = zero
-cano (suc r) = rd-trans (cano r) zero
-cano (lim {f} r) = let (m , s) = minimize f ∣ r ∣₁ in lim {n = m} (cano (<→rd s))
+  cano zero = zero
+  cano (suc r) = rd-trans (cano r) zero
+  cano (lim {f} r) = let (m , s) = min f ∣ r ∣₁ in lim {n = m} (cano (<→rd s))
 ```
 
 ```agda
-cano-unique : (r s : Road a b) → cano r ≡ cano s
-cano-unique zero s = {!   !}
-cano-unique (suc r) zero = {!   !}
-cano-unique (suc r) (suc s) = cong suc (cano-unique r s)
-cano-unique {a} (lim {f} {n} r) (lim {n = m} s) = {!   !}
+  cano-2const : 2-Constant {A = Road a b} cano
+  cano-2const zero    r       = case pathToEq (RoadSet.zero-unique r) of λ { refl → 🧊.refl }
+  cano-2const (suc r) zero    = ⊥-elim (<-irrefl refl ∣ r ∣₁)
+  cano-2const (suc r) (suc s) = 🧊.cong suc (cano-2const r s)
+  cano-2const {a} (lim {f} {n} r) (lim {n = m} s) = 🧊.cong₂
+    (λ k (t : a < f k) → Road.lim {f = f} {n = k} (cano (<→rd t)))
+    (🧊.cong fst (min-unique f ∣ r ∣₁ ∣ s ∣₁))
+    (🧊.cong snd (min-unique f ∣ r ∣₁ ∣ s ∣₁))
 ```
 
 ```agda
-cano-2const : 2-Constant {A = Road a b} cano
-cano-2const r s = eqToPath (cano-unique r s)
+  <→rd = rec→Set {!   !} cano cano-2const
 ```
 
 ```agda
-<→rd = rec→Set {!   !} cano cano-2const
+open CanonicalRoad public using (<→rd)
 ```
 
 ## 路径的三歧性
