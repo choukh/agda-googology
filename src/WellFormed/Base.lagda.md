@@ -29,9 +29,9 @@ open import Cubical.Foundations.HLevels public
 open import Cubical.Data.Equality public
   using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
-  using (Σ; Σ-syntax; ∃-syntax; _×_; fst; snd; _,_; ΣPathP)
+  using (Σ-syntax; ∃-syntax; _×_; fst; snd; _,_; ΣPathP)
 open import Cubical.HITs.PropositionalTruncation public
-  using (∥_∥₁; ∣_∣₁; squash₁; rec; map; map2)
+  using (∥_∥₁; ∣_∣₁; squash₁; rec; rec2; map; map2; rec→Set)
 ```
 
 标准库
@@ -461,55 +461,6 @@ module SubTreeReasoning where
     public
 ```
 
-### 可判定性与三歧性
-
-```agda
-rd-dec : Road a c → Road b c → Dec (Road a b)
-rd-dec zero zero = no λ r → ⊥→🧊 $ rd-irrefl refl r
-rd-dec zero (suc r) = no λ s → ⊥→🧊 $ (rd-asym r s)
-rd-dec (suc r) zero = yes r
-rd-dec (suc r) (suc s) = rd-dec r s
-rd-dec (lim {f} {n} r) (lim {n = m} s) with ℕ.<-cmp n m
-... | tri< n<m _ _  = {!   !}
-... | tri≈ _ refl _ = rd-dec r s
-... | tri> _ _ m<n  = {!   !}
-```
-
-```agda
-monoseq : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
-monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
-... | inl m<n  = <-trans (monoseq m<n) it
-... | inr refl = it
-```
-
-```agda
-injseq : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
-injseq {m} {n} eq with ℕ.<-cmp m n
-... | tri< m<n _ _  = ⊥-elim $ <-irrefl eq (monoseq m<n)
-... | tri≈ _ refl _ = refl
-... | tri> _ _ n<m  = ⊥-elim $ <-irrefl (sym eq) (monoseq n<m)
-```
-
-```agda
-rd-sn-⊥ : Road a b → NSRoad b a → ⊥
-rd-sn-⊥ p q = rd-irrefl refl (rd-ns-trans p q)
-
-<-≥-⊥ : a < b → b ≤ a → ⊥
-<-≥-⊥ p q = <-irrefl refl (<-≤-trans p q)
-```
-
-```agda
-rd-cmp⊎ : Road a c → Road b c → Road a b ⊎ NSRoad b a
-rd-cmp⊎ zero    zero    = inr $ inr refl
-rd-cmp⊎ zero    (suc r) = inr $ inl r
-rd-cmp⊎ (suc r) zero    = inl r
-rd-cmp⊎ (suc r) (suc s) = rd-cmp⊎ r s
-rd-cmp⊎ (lim {f} {n} r) (lim {n = m} s) with ℕ.<-cmp n m
-... | tri< n<m _ _  = rd-cmp⊎ (rd-trans r {!   !}) s
-... | tri≈ _ refl _ = rd-cmp⊎ r s
-... | tri> _ _ m<n  = rd-cmp⊎ r (rd-trans s {!   !})
-```
-
 ## 路径集合
 
 ```agda
@@ -543,19 +494,64 @@ module RoadSet where
   ... | no p = no {!   !}
 ```
 
+## 可判定性
+
+```agda
+monoseq : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
+monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inl m<n  = <-trans (monoseq m<n) it
+... | inr refl = it
+```
+
+```agda
+injseq : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
+injseq {m} {n} eq with ℕ.<-cmp m n
+... | tri< m<n _ _  = ⊥-elim $ <-irrefl eq (monoseq m<n)
+... | tri≈ _ refl _ = refl
+... | tri> _ _ n<m  = ⊥-elim $ <-irrefl (sym eq) (monoseq n<m)
+```
+
+```agda
+<-dec : a < c → b < c → Dec (a < b)
+<-dec = rec2 (isPropDec squash₁) aux where
+  aux : Road a c → Road b c → Dec (a < b)
+  aux zero zero = no λ r → ⊥→🧊 $ <-irrefl refl r
+  aux zero (suc s) = no λ r → ⊥→🧊 $ <-asym ∣ s ∣₁ r
+  aux (suc r) zero = yes ∣ r ∣₁
+  aux (suc r) (suc s) = aux r s
+  aux (lim {f} {n} r) (lim {n = m} s) with ℕ.<-cmp n m
+  ... | tri< n<m _ _  = rec (isPropDec squash₁) (λ t → aux (rd-trans r t) s) (monoseq n<m)
+  ... | tri≈ _ refl _ = aux r s
+  ... | tri> _ _ m<n  = rec (isPropDec squash₁) (λ t → aux r (rd-trans s t)) (monoseq m<n)
+```
+
 ## 典范路径
 
 ```agda
-minimize : ⦃ wff : wf f ⦄ → Road a (f n) → Σ ℕ λ m → Road a (f m)
-minimize {n = zero} r = zero , r
-minimize {n = suc n} ⦃ wff ⦄ r = {! a < f n  !}
+open import Cubical.Foundations.Function using (2-Constant)
+```
+
+```agda
+minimize : (f : Seq) ⦃ wff : wf f ⦄ → a < f n → Σ[ m ∈ ℕ ] a < f m
+minimize {n = zero} f r = 0 , r
+minimize {n = suc n} f r with <-dec r it
+... | yes s = minimize f s
+... | no _ = suc n , r
+```
+
+```agda
+minimized : (f : Seq) ⦃ wff : wf f ⦄ (r s : a < f n) → Path _ (minimize f r) (minimize f s)
+minimized {n = zero} f r s = ΣPathP $ 🧊.refl , squash₁ _ _
+minimized {n = suc n} f r s = {!   !}
 ```
 
 ```agda
 cano : Road a b → Road a b
+<→rd : a < b → Road a b
+
 cano zero = zero
 cano (suc r) = rd-trans (cano r) zero
-cano (lim {f} r) = let (m , s) = minimize {f = f} r in lim {n = m} (cano s)
+cano (lim {f} r) = let (m , s) = minimize f ∣ r ∣₁ in lim {n = m} (cano (<→rd s))
 ```
 
 ```agda
@@ -565,4 +561,30 @@ cano-unique (suc r) zero = {!   !}
 cano-unique (suc r) (suc s) = cong suc (cano-unique r s)
 cano-unique {a} (lim {f} {n} r) (lim {n = m} s) = {!   !}
 ```
-cong₂ (λ (n : ℕ) (r : Road a (f n)) → Road.lim {n = n} r)
+
+```agda
+cano-2const : 2-Constant {A = Road a b} cano
+cano-2const r s = eqToPath (cano-unique r s)
+```
+
+```agda
+<→rd = rec→Set {!   !} cano cano-2const
+```
+
+## 三歧性
+
+```agda
+<-≥-⊥ : a < b → b ≤ a → ⊥
+<-≥-⊥ p q = <-irrefl refl (<-≤-trans p q)
+```
+
+```agda
+<-cmp⊎ : a < c → b < c → a < b ⊎ b ≤ a
+<-cmp⊎ = rec2 (isProp⊎ squash₁ isProp≤ <-≥-⊥) aux where
+  aux : Road a c → Road b c → a < b ⊎ b ≤ a
+  aux zero zero = inr $ inr refl
+  aux zero (suc s) = inr $ inl ∣ s ∣₁
+  aux (suc r) zero = inl ∣ r ∣₁
+  aux (suc r) (suc s) = aux r s
+  aux (lim r) (lim s) = {!   !}
+```
