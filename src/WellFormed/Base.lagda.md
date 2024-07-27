@@ -456,44 +456,55 @@ module SubTreeReasoning where
 ## 良构序列的性质
 
 ```agda
-<monoseq : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
-<monoseq (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
-... | inl m<n  = <-trans (<monoseq m<n) it
+seq-pres< : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
+seq-pres< (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inl m<n  = <-trans (seq-pres< m<n) it
 ... | inr refl = it
 ```
 
 ```agda
-≤monoseq : ⦃ _ : wf f ⦄ → m ℕ.≤ n → f m ≤ f n
-≤monoseq m≤n with ℕ.m≤n⇒m<n∨m≡n m≤n
-... | inl m<n = inl (<monoseq m<n)
+seq-pres≤ : ⦃ _ : wf f ⦄ → m ℕ.≤ n → f m ≤ f n
+seq-pres≤ m≤n with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inl m<n = inl (seq-pres< m<n)
 ... | inr refl = inr refl
 
 fz≤ : ∀ f → ⦃ _ : wf f ⦄ → f 0 ≤ f n
-fz≤ f = ≤monoseq {f = f} ℕ.z≤n
+fz≤ f = seq-pres≤ {f = f} ℕ.z≤n
 ```
 
 ```agda
-injseq : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
-injseq {m} {n} eq with ℕ.<-cmp m n
-... | tri< m<n _ _  = ⊥-elim $ <-irrefl eq (<monoseq m<n)
+seq-inj≡ : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
+seq-inj≡ {m} {n} eq with ℕ.<-cmp m n
+... | tri< m<n _ _  = ⊥-elim $ <-irrefl eq (seq-pres< m<n)
 ... | tri≈ _ refl _ = refl
-... | tri> _ _ n<m  = ⊥-elim $ <-irrefl (sym eq) (<monoseq n<m)
+... | tri> _ _ n<m  = ⊥-elim $ <-irrefl (sym eq) (seq-pres< n<m)
+```
+
+```agda
+seq-<inj : ⦃ _ : wf f ⦄ → f m < f n → m ℕ.< n
+seq-<inj {m} {n} r with ℕ.<-cmp m n
+... | tri< m<n _ _  = m<n
+... | tri≈ _ refl _ = ⊥-elim $ <-irrefl refl r
+... | tri> _ _ n<m  = ⊥-elim $ <-asym r (seq-pres< n<m)
 ```
 
 ## 子树的可判定性
 
 ```agda
+<-dec-rd : Road a c → Road b c → Dec (a < b)
+<-dec-rd zero zero = no λ r → ⊥-elim $ <-irrefl refl r
+<-dec-rd zero (suc s) = no λ r → ⊥-elim $ <-asym ∣ s ∣₁ r
+<-dec-rd (suc r) zero = yes ∣ r ∣₁
+<-dec-rd (suc r) (suc s) = <-dec-rd r s
+<-dec-rd (lim {f} {n} r) (lim {n = m} s) with ℕ.<-cmp n m
+... | tri< n<m _ _  = rec (isPropDec squash₁) (λ t → <-dec-rd (rd-trans r t) s) (seq-pres< n<m)
+... | tri≈ _ refl _ = <-dec-rd r s
+... | tri> _ _ m<n  = rec (isPropDec squash₁) (λ t → <-dec-rd r (rd-trans s t)) (seq-pres< m<n)
+```
+
+```agda
 <-dec : a < c → b < c → Dec (a < b)
-<-dec = rec2 (isPropDec squash₁) aux where
-  aux : Road a c → Road b c → Dec (a < b)
-  aux zero zero = no λ r → ⊥-elim $ <-irrefl refl r
-  aux zero (suc s) = no λ r → ⊥-elim $ <-asym ∣ s ∣₁ r
-  aux (suc r) zero = yes ∣ r ∣₁
-  aux (suc r) (suc s) = aux r s
-  aux (lim {f} {n} r) (lim {n = m} s) with ℕ.<-cmp n m
-  ... | tri< n<m _ _  = rec (isPropDec squash₁) (λ t → aux (rd-trans r t) s) (<monoseq n<m)
-  ... | tri≈ _ refl _ = aux r s
-  ... | tri> _ _ m<n  = rec (isPropDec squash₁) (λ t → aux r (rd-trans s t)) (<monoseq m<n)
+<-dec = rec2 (isPropDec squash₁) <-dec-rd
 ```
 
 ## 路径集合
@@ -555,7 +566,6 @@ module CanonicalRoad where
   ... | tri≈ _ refl _ = ΣPathP $ 🧊.refl , squash₁ _ _
   ... | tri> _ _ m<n  = {!   !}
 ```
---n<m<sn
 
 ```agda
   min-unique : (f : Seq) ⦃ wff : wf f ⦄ (r : a < f n) (s : a < f m) → Path _ (min f r) (min f s)
@@ -568,9 +578,12 @@ module CanonicalRoad where
   ... | no ¬r = 🧊⊥-elim $ ¬r $ <-≤-trans s (fz≤ f)
   min-unique {n = suc n} {m = suc m} f r s with <-dec r it | <-dec s it
   ... | yes r | yes s = min-unique f r s
-  ... | yes r | no ¬s = min-unique-pre f r s {! ¬s  !}
-  ... | no ¬r | yes s = {!   !}
-  ... | no ¬r | no ¬s = {!   !}
+  ... | yes r | no ¬s = min-unique-pre f r s (🧊⊥-elim ∘ ¬s)
+  ... | no ¬r | yes s = 🧊.sym $ min-unique-pre f s r (🧊⊥-elim ∘ ¬r)
+  ... | no ¬r | no ¬s with ℕ.<-cmp n m
+  ... | tri< n<m _ _  = {!   !}
+  ... | tri≈ _ refl _ = ΣPathP $ 🧊.refl , squash₁ _ _
+  ... | tri> _ _ m<n  = {!   !}
 ```
 
 ```agda
@@ -606,17 +619,22 @@ open CanonicalRoad public using (<→rd)
 一旦建立子树关系到路径关系的消去, 我们可以将子树的可判定性强化为路径的可判定性, 乃至三歧性.
 
 ```agda
-<-≥-⊥ : a < b → b ≤ a → ⊥
-<-≥-⊥ p q = <-irrefl refl (<-≤-trans p q)
+rd-dec : Road a c → Road b c → Dec (Road a b)
+rd-dec r s = mapDec <→rd (λ ¬r r → ¬r ∣ r ∣₁) (<-dec-rd r s)
+```
+
+```agda
+rd-cmp⊎ : Road a c → Road b c → Road a b ⊎ NSRoad b a
+rd-cmp⊎ zero    zero    = inr $ inr refl
+rd-cmp⊎ zero    (suc s) = inr $ inl s
+rd-cmp⊎ (suc r) zero    = inl r
+rd-cmp⊎ (suc r) (suc s) = rd-cmp⊎ r s
+rd-cmp⊎ (lim r) (lim s) = {!   !}
 ```
 
 ```agda
 <-cmp⊎ : a < c → b < c → a < b ⊎ b ≤ a
-<-cmp⊎ = rec2 (isProp⊎ squash₁ isProp≤ <-≥-⊥) aux where
-  aux : Road a c → Road b c → a < b ⊎ b ≤ a
-  aux zero zero = inr $ inr refl
-  aux zero (suc s) = inr $ inl ∣ s ∣₁
-  aux (suc r) zero = inl ∣ r ∣₁
-  aux (suc r) (suc s) = aux r s
-  aux (lim r) (lim s) = {!   !}
+<-cmp⊎ r s with rd-cmp⊎ (<→rd r) (<→rd s)
+... | p = {!   !}
 ```
+ 
