@@ -33,4 +33,4 @@ private variable
 ⊎≡🧊 = isoToPath (iso ⊎→🧊 ⊎←🧊 ⊎→←🧊 ⊎←→🧊)
 
 isProp⊎ : isProp A → isProp B → (A → B → ⊥) → isProp (A ⊎ B)
-isProp⊎ pA pB disj = subst isProp (sym ⊎≡🧊) (🧊.isProp⊎ pA pB (⊥→🧊 ∘₂ disj))
+isProp⊎ pA pB disj = subst isProp (sym ⊎≡🧊) (🧊.isProp⊎ pA pB (⊥-elim ∘₂ disj))
