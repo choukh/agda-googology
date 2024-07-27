@@ -491,20 +491,25 @@ seq-<inj {m} {n} r with ℕ.<-cmp m n
 ## 子树的三歧性
 
 ```agda
-<-dec-rd : Road a c → Road b c → Dec (a < b)
-<-dec-rd zero zero = no λ r → ⊥-elim $ <-irrefl refl r
-<-dec-rd zero (suc s) = no λ r → ⊥-elim $ <-asym ∣ s ∣₁ r
-<-dec-rd (suc r) zero = yes ∣ r ∣₁
-<-dec-rd (suc r) (suc s) = <-dec-rd r s
-<-dec-rd (lim {f} {n} r) (lim {n = m} s) with ℕ.<-cmp n m
-... | tri< n<m _ _  = rec (isPropDec squash₁) (λ t → <-dec-rd (rd-trans r t) s) (seq-pres< n<m)
-... | tri≈ _ refl _ = <-dec-rd r s
-... | tri> _ _ m<n  = rec (isPropDec squash₁) (λ t → <-dec-rd r (rd-trans s t)) (seq-pres< m<n)
+isPropTrich : isProp (a < b ⊎ b ≤ a)
+isPropTrich = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-trans r s)
 ```
 
 ```agda
-<-dec : a < c → b < c → Dec (a < b)
-<-dec = rec2 (isPropDec squash₁) <-dec-rd
+<-trich-rd : Road a c → Road b c → a < b ⊎ b ≤ a
+<-trich-rd zero    zero    = inr $ inr refl
+<-trich-rd zero    (suc s) = inr $ inl ∣ s ∣₁
+<-trich-rd (suc r) zero    = inl ∣ r ∣₁
+<-trich-rd (suc r) (suc s) = <-trich-rd r s
+<-trich-rd (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
+... | tri< n<m _ _  = rec isPropTrich (λ t → <-trich-rd (rd-trans r t) s) (seq-pres< n<m)
+... | tri≈ _ refl _ = <-trich-rd r s
+... | tri> _ _ m<n  = rec isPropTrich (λ t → <-trich-rd r (rd-trans s t)) (seq-pres< m<n)
+```
+
+```agda
+<-trich : a < c → b < c → a < b ⊎ b ≤ a
+<-trich = rec2 isPropTrich <-trich-rd
 ```
 
 ## 路径集合
@@ -550,98 +555,17 @@ module CanonicalRoad where
 ```agda
   min : (f : Seq) ⦃ wff : wf f ⦄ → a < f n → Σ[ m ∈ ℕ ] a < f m
   min {n = zero} f r = 0 , r
-  min {n = suc n} f r with <-dec r it
-  ... | yes s = min f s
-  ... | no _ = suc n , r
+  min {n = suc n} f r with <-trich r it
+  ... | inl r = min f r
+  ... | inr _ = suc n , r
 ```
 
 ```agda
   min-unique-pre : (f : Seq) ⦃ wff : wf f ⦄ (r : a < f n) (s : a < f (suc m))
     → (a < f m → ⊥) → Path _ (min f r) (suc m , s)
   min-unique-pre {n = zero} f r s t = ⊥-elim $ t $ <-≤-trans r (fz≤ f)
-  min-unique-pre {n = suc n} {m} f r s t with <-dec r it
-  ... | yes r = min-unique-pre f r s t
-  ... | no ¬r with ℕ.<-cmp n m
-  ... | tri< n<m _ _  = ⊥-elim $ ℕ.<⇒≱ n<m {!   !}
-  ... | tri≈ _ refl _ = ΣPathP $ 🧊.refl , squash₁ _ _
-  ... | tri> _ _ m<n  = {!   !}
-```
-fn<fm<a<fsn<fsm
-a≮fm
-a<fsm
-a<fsn
-a≮fn
-fm≤a<fsn
-m≤n
-⊥-elim $ ℕ.<⇒≱ n<m
-
-```agda
-  min-unique : (f : Seq) ⦃ wff : wf f ⦄ (r : a < f n) (s : a < f m) → Path _ (min f r) (min f s)
-  min-unique {n = zero}  {m = zero}  f r s = ΣPathP $ 🧊.refl , squash₁ _ _
-  min-unique {n = zero}  {m = suc m} f r s with <-dec s it
-  ... | yes s = min-unique f r s
-  ... | no ¬s = 🧊⊥-elim $ ¬s $ <-≤-trans r (fz≤ f)
-  min-unique {n = suc n} {m = zero}  f r s with <-dec r it
-  ... | yes r = min-unique f r s
-  ... | no ¬r = 🧊⊥-elim $ ¬r $ <-≤-trans s (fz≤ f)
-  min-unique {n = suc n} {m = suc m} f r s with <-dec r it | <-dec s it
-  ... | yes r | yes s = min-unique f r s
-  ... | yes r | no ¬s = min-unique-pre f r s (🧊⊥-elim ∘ ¬s)
-  ... | no ¬r | yes s = 🧊.sym $ min-unique-pre f s r (🧊⊥-elim ∘ ¬r)
-  ... | no ¬r | no ¬s with ℕ.<-cmp n m
-  ... | tri< n<m _ _  = {!   !}
-  ... | tri≈ _ refl _ = ΣPathP $ 🧊.refl , squash₁ _ _
-  ... | tri> _ _ m<n  = {!   !}
-```
-
-```agda
-  cano : Road a b → Road a b
-  <→rd : a < b → Road a b
-
-  cano zero = zero
-  cano (suc r) = rd-trans (cano r) zero
-  cano (lim {f} r) = let (m , s) = min f ∣ r ∣₁ in lim {n = m} (cano (<→rd s))
-```
-
-```agda
-  cano-2const : 2-Constant {A = Road a b} cano
-  cano-2const zero    r       = case pathToEq (RoadSet.zero-unique r) of λ { refl → 🧊.refl }
-  cano-2const (suc r) zero    = ⊥-elim (<-irrefl refl ∣ r ∣₁)
-  cano-2const (suc r) (suc s) = 🧊.cong suc (cano-2const r s)
-  cano-2const {a} (lim {f} {n} r) (lim {n = m} s) = 🧊.cong₂
-    (λ k (t : a < f k) → Road.lim {f = f} {n = k} (cano (<→rd t)))
-    (🧊.cong fst (min-unique f ∣ r ∣₁ ∣ s ∣₁))
-    (🧊.cong snd (min-unique f ∣ r ∣₁ ∣ s ∣₁))
-```
-
-```agda
-  <→rd = rec→Set {!   !} cano cano-2const
-```
-
-```agda
-open CanonicalRoad public using (<→rd)
-```
-
-## 路径的三歧性
-
-一旦建立子树关系到路径关系的消去, 我们可以将子树的可判定性强化为路径的可判定性, 乃至三歧性.
-
-```agda
-rd-dec : Road a c → Road b c → Dec (Road a b)
-rd-dec r s = mapDec <→rd (λ ¬r r → ¬r ∣ r ∣₁) (<-dec-rd r s)
-```
-
-```agda
-rd-cmp⊎ : Road a c → Road b c → Road a b ⊎ NSRoad b a
-rd-cmp⊎ zero    zero    = inr $ inr refl
-rd-cmp⊎ zero    (suc s) = inr $ inl s
-rd-cmp⊎ (suc r) zero    = inl r
-rd-cmp⊎ (suc r) (suc s) = rd-cmp⊎ r s
-rd-cmp⊎ (lim r) (lim s) = {!   !}
-```
-
-```agda
-<-cmp⊎ : a < c → b < c → a < b ⊎ b ≤ a
-<-cmp⊎ r s with rd-cmp⊎ (<→rd r) (<→rd s)
-... | p = {!   !}
+  min-unique-pre {n = suc n} {m} f r s t with <-trich r it
+  ... | inl r = min-unique-pre f r s t
+  ... | inr (inl r) = {!   !}
+  ... | inr (inr r) = {!   !}
 ```
