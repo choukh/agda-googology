@@ -488,7 +488,7 @@ seq-<inj {m} {n} r with ℕ.<-cmp m n
 ... | tri> _ _ n<m  = ⊥-elim $ <-asym r (seq-pres< n<m)
 ```
 
-## 子树的可判定性
+## 子树的三歧性
 
 ```agda
 <-dec-rd : Road a c → Road b c → Dec (a < b)
@@ -562,10 +562,18 @@ module CanonicalRoad where
   min-unique-pre {n = suc n} {m} f r s t with <-dec r it
   ... | yes r = min-unique-pre f r s t
   ... | no ¬r with ℕ.<-cmp n m
-  ... | tri< n<m _ _  = {! fn<fm<a<fsn<fsm  !}
+  ... | tri< n<m _ _  = ⊥-elim $ ℕ.<⇒≱ n<m {!   !}
   ... | tri≈ _ refl _ = ΣPathP $ 🧊.refl , squash₁ _ _
   ... | tri> _ _ m<n  = {!   !}
 ```
+fn<fm<a<fsn<fsm
+a≮fm
+a<fsm
+a<fsn
+a≮fn
+fm≤a<fsn
+m≤n
+⊥-elim $ ℕ.<⇒≱ n<m
 
 ```agda
   min-unique : (f : Seq) ⦃ wff : wf f ⦄ (r : a < f n) (s : a < f m) → Path _ (min f r) (min f s)
@@ -637,4 +645,3 @@ rd-cmp⊎ (lim r) (lim s) = {!   !}
 <-cmp⊎ r s with rd-cmp⊎ (<→rd r) (<→rd s)
 ... | p = {!   !}
 ```
- 
