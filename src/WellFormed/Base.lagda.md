@@ -467,49 +467,51 @@ seq-pres≤ : ⦃ _ : wf f ⦄ → m ℕ.≤ n → f m ≤ f n
 seq-pres≤ m≤n with ℕ.m≤n⇒m<n∨m≡n m≤n
 ... | inl m<n = inl (seq-pres< m<n)
 ... | inr refl = inr refl
-
-fz≤ : ∀ f → ⦃ _ : wf f ⦄ → f 0 ≤ f n
-fz≤ f = seq-pres≤ {f = f} ℕ.z≤n
 ```
 
 ```agda
-seq-inj≡ : ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
-seq-inj≡ {m} {n} eq with ℕ.<-cmp m n
+seq-inj≡ : ∀ f → ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
+seq-inj≡ {m} {n} _ eq with ℕ.<-cmp m n
 ... | tri< m<n _ _  = ⊥-elim $ <-irrefl eq (seq-pres< m<n)
 ... | tri≈ _ refl _ = refl
 ... | tri> _ _ n<m  = ⊥-elim $ <-irrefl (sym eq) (seq-pres< n<m)
 ```
 
 ```agda
-seq-<inj : ⦃ _ : wf f ⦄ → f m < f n → m ℕ.< n
-seq-<inj {m} {n} r with ℕ.<-cmp m n
+seq-inj< : ∀ f → ⦃ _ : wf f ⦄ → f m < f n → m ℕ.< n
+seq-inj< {m} {n} _ r with ℕ.<-cmp m n
 ... | tri< m<n _ _  = m<n
 ... | tri≈ _ refl _ = ⊥-elim $ <-irrefl refl r
 ... | tri> _ _ n<m  = ⊥-elim $ <-asym r (seq-pres< n<m)
 ```
 
-## 子树的三歧性
+```agda
+seq-notDense : ∀ f → ⦃ _ : wf f ⦄ → f n < f m → f m < f (suc n) → ⊥
+seq-notDense _ r s = {!   !}
+```
+
+## 子树的连通性
 
 ```agda
-isPropTrich : isProp (a < b ⊎ b ≤ a)
-isPropTrich = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-trans r s)
+isPropConnex : isProp (a < b ⊎ b ≤ a)
+isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-trans r s)
 ```
 
 ```agda
-<-trich-rd : Road a c → Road b c → a < b ⊎ b ≤ a
-<-trich-rd zero    zero    = inr $ inr refl
-<-trich-rd zero    (suc s) = inr $ inl ∣ s ∣₁
-<-trich-rd (suc r) zero    = inl ∣ r ∣₁
-<-trich-rd (suc r) (suc s) = <-trich-rd r s
-<-trich-rd (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
-... | tri< n<m _ _  = rec isPropTrich (λ t → <-trich-rd (rd-trans r t) s) (seq-pres< n<m)
-... | tri≈ _ refl _ = <-trich-rd r s
-... | tri> _ _ m<n  = rec isPropTrich (λ t → <-trich-rd r (rd-trans s t)) (seq-pres< m<n)
+<-connex-rd : Road a c → Road b c → a < b ⊎ b ≤ a
+<-connex-rd zero    zero    = inr $ inr refl
+<-connex-rd zero    (suc s) = inr $ inl ∣ s ∣₁
+<-connex-rd (suc r) zero    = inl ∣ r ∣₁
+<-connex-rd (suc r) (suc s) = <-connex-rd r s
+<-connex-rd (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
+... | tri< n<m _ _  = rec isPropConnex (λ t → <-connex-rd (rd-trans r t) s) (seq-pres< n<m)
+... | tri≈ _ refl _ = <-connex-rd r s
+... | tri> _ _ m<n  = rec isPropConnex (λ t → <-connex-rd r (rd-trans s t)) (seq-pres< m<n)
 ```
 
 ```agda
-<-trich : a < c → b < c → a < b ⊎ b ≤ a
-<-trich = rec2 isPropTrich <-trich-rd
+<-connex : a < c → b < c → a < b ⊎ b ≤ a
+<-connex = rec2 isPropConnex <-connex-rd
 ```
 
 ## 路径集合
@@ -555,17 +557,82 @@ module CanonicalRoad where
 ```agda
   min : (f : Seq) ⦃ wff : wf f ⦄ → a < f n → Σ[ m ∈ ℕ ] a < f m
   min {n = zero} f r = 0 , r
-  min {n = suc n} f r with <-trich r it
+  min {n = suc n} f r with <-connex r it
   ... | inl r = min f r
   ... | inr _ = suc n , r
 ```
 
 ```agda
   min-unique-pre : (f : Seq) ⦃ wff : wf f ⦄ (r : a < f n) (s : a < f (suc m))
-    → (a < f m → ⊥) → Path _ (min f r) (suc m , s)
-  min-unique-pre {n = zero} f r s t = ⊥-elim $ t $ <-≤-trans r (fz≤ f)
-  min-unique-pre {n = suc n} {m} f r s t with <-trich r it
-  ... | inl r = min-unique-pre f r s t
-  ... | inr (inl r) = {!   !}
-  ... | inr (inr r) = {!   !}
+    → (f m ≤ a) → Path _ (min f r) (suc m , s)
+  min-unique-pre {n = zero}  f r s t = ⊥-elim $ ℕ.n≮0 $ seq-inj< f $ ≤-<-trans t r
+  min-unique-pre {n = suc n} f r s t with <-connex r it
+  min-unique-pre {n = suc n} f _ s t            | inl r           = min-unique-pre f r s t
+  min-unique-pre {n = suc n} f r _ (inr refl)   | inr (inl fn<fm) = ⊥-elim $ seq-notDense f fn<fm r
+  min-unique-pre {n = suc n} f _ s (inl fm<fn)  | inr (inr refl)  = ⊥-elim $ seq-notDense f fm<fn s
+  min-unique-pre {n = suc n} f r s (inl u)      | inr (inl t)     =
+    case n≡m of λ { refl → ΣPathP $ 🧊.refl , squash₁ _ _ } where
+    n≡m = ℕ.≤-antisym
+      (ℕ.m<1+n⇒m≤n $ seq-inj< f $ <-trans t s)
+      (ℕ.m<1+n⇒m≤n $ seq-inj< f $ <-trans u r)
+  min-unique-pre {n = suc n} f r s (inr fm≡fn)  | inr (inr refl)  with seq-inj≡ f fm≡fn
+  ... | refl = ΣPathP $ 🧊.refl , squash₁ _ _
 ```
+
+```agda
+  min-unique : (f : Seq) ⦃ wff : wf f ⦄ (r : a < f n) (s : a < f m) → Path _ (min f r) (min f s)
+  min-unique {n = zero}  {m = zero}  f r s = ΣPathP $ 🧊.refl , squash₁ _ _
+  min-unique {n = zero}  {m = suc m} f r s with <-connex s it
+  ... | inl s = min-unique f r s
+  ... | inr s = ⊥-elim $ ℕ.n≮0 $ seq-inj< f $ ≤-<-trans s r
+  min-unique {n = suc n} {m = zero}  f r s with <-connex r it
+  ... | inl r = min-unique f r s
+  ... | inr r = ⊥-elim $ ℕ.n≮0 $ seq-inj< f $ ≤-<-trans r s
+  min-unique {n = suc n} {m = suc m} f r s with <-connex r it | <-connex s it
+  ... | inl r           | inl s           = min-unique f r s
+  ... | inl r           | inr t           = min-unique-pre f r s t
+  ... | inr t           | inl s           = 🧊.sym (min-unique-pre f s r t)
+  ... | inr (inl fm<fn) | inr (inr refl)  = ⊥-elim $ seq-notDense f fm<fn r
+  ... | inr (inr refl)  | inr (inl fm<fn) = ⊥-elim $ seq-notDense f fm<fn s
+  ... | inr (inl t)     | inr (inl u)     =
+    case n≡m of λ { refl → ΣPathP $ 🧊.refl , squash₁ _ _ } where
+    n≡m = ℕ.≤-antisym
+      (ℕ.m<1+n⇒m≤n $ seq-inj< f $ <-trans t s) 
+      (ℕ.m<1+n⇒m≤n $ seq-inj< f $ <-trans u r)
+  ... | inr (inr refl)  | inr (inr fm≡fn) with seq-inj≡ f fm≡fn
+  ... | refl = ΣPathP $ 🧊.refl , squash₁ _ _
+```
+
+```agda
+  cano : Road a b → Road a b
+  <→rd : a < b → Road a b
+
+  cano zero = zero
+  cano (suc r) = rd-trans (cano r) zero
+  cano (lim {f} r) = let (m , s) = min f ∣ r ∣₁ in lim {n = m} (cano (<→rd s))
+```
+
+```agda
+  cano-2const : 2-Constant {A = Road a b} cano
+  cano-2const zero    r       = case pathToEq (RoadSet.zero-unique r) of λ { refl → 🧊.refl }
+  cano-2const (suc r) zero    = ⊥-elim (<-irrefl refl ∣ r ∣₁)
+  cano-2const (suc r) (suc s) = 🧊.cong suc (cano-2const r s)
+  cano-2const {a} (lim {f} {n} r) (lim {n = m} s) = 🧊.cong₂
+    (λ k (t : a < f k) → Road.lim {f = f} {n = k} (cano (<→rd t)))
+    (🧊.cong fst (min-unique f ∣ r ∣₁ ∣ s ∣₁))
+    (🧊.cong snd (min-unique f ∣ r ∣₁ ∣ s ∣₁))
+```
+
+```agda
+  <→rd = rec→Set {!   !} cano cano-2const
+```
+
+```agda
+open CanonicalRoad public using (<→rd)
+```
+
+## 路径的三歧性
+
+一旦建立子树关系到路径关系的消去, 我们可以将子树的连通性强化为路径的连通性, 乃至三歧性.
+
+
