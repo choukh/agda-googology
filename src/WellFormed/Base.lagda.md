@@ -487,7 +487,7 @@ seq-inj< {m} {n} _ r with ℕ.<-cmp m n
 
 ```agda
 seq-notDense : ∀ f → ⦃ _ : wf f ⦄ → f n < f m → f m < f (suc n) → ⊥
-seq-notDense _ r s = {!   !}
+seq-notDense f r s = ℕ.<⇒≱ (seq-inj< f r) (ℕ.m<1+n⇒m≤n (seq-inj< f s))
 ```
 
 ## 子树的连通性
@@ -545,6 +545,11 @@ module RoadSet where
   ... | yes p = case pathToEq p of λ { refl →
     mapDec {!   !} {!   !} (discreteRoad r s) }
   ... | no p = no {!   !}
+```
+
+```agda
+isSetRoad : isSet (Road a b)
+isSetRoad = Discrete→isSet RoadSet.discreteRoad
 ```
 
 ## 典范路径
@@ -605,11 +610,12 @@ module CanonicalRoad where
 
 ```agda
   cano : Road a b → Road a b
-  <→rd : a < b → Road a b
+  <-largeElim : a < b → Road a b
 
   cano zero = zero
   cano (suc r) = rd-trans (cano r) zero
-  cano (lim {f} r) = let (m , s) = min f ∣ r ∣₁ in lim {n = m} (cano (<→rd s))
+  cano (lim {f} r) = let (m , s) = min f ∣ r ∣₁ in
+    lim {n = m} (cano (<-largeElim s))
 ```
 
 ```agda
@@ -618,17 +624,17 @@ module CanonicalRoad where
   cano-2const (suc r) zero    = ⊥-elim (<-irrefl refl ∣ r ∣₁)
   cano-2const (suc r) (suc s) = 🧊.cong suc (cano-2const r s)
   cano-2const {a} (lim {f} {n} r) (lim {n = m} s) = 🧊.cong₂
-    (λ k (t : a < f k) → Road.lim {f = f} {n = k} (cano (<→rd t)))
+    (λ k (t : a < f k) → Road.lim {f = f} {n = k} (cano (<-largeElim t)))
     (🧊.cong fst (min-unique f ∣ r ∣₁ ∣ s ∣₁))
     (🧊.cong snd (min-unique f ∣ r ∣₁ ∣ s ∣₁))
 ```
 
 ```agda
-  <→rd = rec→Set {!   !} cano cano-2const
+  <-largeElim = rec→Set isSetRoad cano cano-2const
 ```
 
 ```agda
-open CanonicalRoad public using (<→rd)
+open CanonicalRoad public using (<-largeElim)
 ```
 
 ## 路径的三歧性
