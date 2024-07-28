@@ -654,9 +654,19 @@ module CanonicalRoad where
 open CanonicalRoad public using (<-largeElim)
 ```
 
-## 路径的三歧性
+一旦建立子树关系到路径关系的消去, 我们可以构造之前无法构造的路径.
 
-一旦建立子树关系到路径关系的消去, 我们可以将子树的三歧性强化为路径的三歧性.
+```agda
+f<l : ⦃ _ : wf f ⦄ → f n < lim f
+f<l = map lim it
+```
+
+```agda
+rd-f-l : ⦃ _ : wf f ⦄ → Road (f n) (lim f)
+rd-f-l = <-largeElim f<l
+```
+
+子树的三歧性可以强化为路径的三歧性.
 
 ```agda
 rd-trich : Road a c → Road b c → Tri (Road a b) (a ≡ b) (Road b a)
