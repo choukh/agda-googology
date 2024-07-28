@@ -490,7 +490,7 @@ seq-notDense : ∀ f → ⦃ _ : wf f ⦄ → f n < f m → f m < f (suc n) → 
 seq-notDense f r s = ℕ.<⇒≱ (seq-inj< f r) (ℕ.m<1+n⇒m≤n (seq-inj< f s))
 ```
 
-## 子树的连通性
+## 子树的三歧性
 
 ```agda
 isPropConnex : isProp (a < b ⊎ b ≤ a)
@@ -514,17 +514,25 @@ isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-tra
 <-connex = rec2 isPropConnex <-connex-rd
 ```
 
+```agda
+<-trich : a < c → b < c → Tri (a < b) (a ≡ b) (b < a)
+<-trich r s with <-connex r s
+... | inl t       = tri< t (λ p → <-irrefl p t) (<-asym t)
+... | inr (inl t) = tri> (<-asym t) (λ p → <-irrefl (sym p) t) t
+... | inr (inr p) = tri≈ (λ t → <-irrefl (sym p) t) (sym p) (λ t → <-irrefl p t)
+```
+
 ## 路径集合
 
 ```agda
 module RoadSet where
-  open import Cubical.Data.Nat using (discreteℕ)
+  open import Cubical.Data.Nat using (discreteℕ; isSetℕ)
   open import Cubical.Axiom.UniquenessOfIdentity
 ```
 
 ```agda
-  zero-unique : (r : Road a (suc a)) → Path _ r zero
-  zero-unique r = aux r 🧊.refl where
+  rd-zero-unique : (r : Road a (suc a)) → Path _ r zero
+  rd-zero-unique r = aux r 🧊.refl where
     aux : (r : Road a (suc b)) (p : Path _ b a)
       → PathP (λ i → Road a (suc (p i))) r zero
     aux zero = UIP→AxiomK (isSet→UIP isSetOrd) _ _ _ 🧊.refl
@@ -532,19 +540,30 @@ module RoadSet where
 ```
 
 ```agda
-  rd-suc-inj : {r s : Road a b} → suc r ≡ suc r → r ≡ s
-  rd-suc-inj p = {!   !}
+  rd-suc-inj : {r s : Road a b} → suc r ≡ suc s → r ≡ s
+  rd-suc-inj refl = refl
+
+  rd-suc-injPath : {r s : Road a b} → Path _ (suc r) (suc s) → Path _ r s
+  rd-suc-injPath = eqToPath ∘ rd-suc-inj ∘ pathToEq
+```
+
+```agda
+  rd-lim-injPath : ⦃ _ : wf f ⦄ {r s : Road a (f n)} → Path (Road a (lim f)) (lim r) (lim s) → Path _ r s
+  rd-lim-injPath p = aux (pathToEq p) 🧊.refl where
+    aux : ⦃ _ : wf f ⦄ {r : Road a (f n)} {s : Road a (f m)} → Road.lim {f = f} r ≡ lim s
+      → (p : Path _ n m) → PathP (λ i → Road a (f (p i))) r s
+    aux {f} {a} {r} {s} refl = UIP→AxiomK (isSet→UIP isSetℕ) _ _
+      (λ p → PathP (λ i → Road a (f (p i))) r s) 🧊.refl
 ```
 
 ```agda
   discreteRoad : Discrete (Road a b)
-  discreteRoad r zero           = yes (zero-unique r)
+  discreteRoad r zero           = yes (rd-zero-unique r)
   discreteRoad zero (suc r)     = ⊥-elim (rd-irrefl refl r)
-  discreteRoad (suc r) (suc s)  = mapDec (🧊.cong suc) {!   !} (discreteRoad r s)
-  discreteRoad (lim {n = n₁} r) (lim {n = n₂} s) with Cubical.Data.Nat.discreteℕ n₁ n₂
-  ... | yes p = case pathToEq p of λ { refl →
-    mapDec {!   !} {!   !} (discreteRoad r s) }
-  ... | no p = no {!   !}
+  discreteRoad (suc r) (suc s)  = mapDec (🧊.cong suc) (λ p q → p (rd-suc-injPath q)) (discreteRoad r s)
+  discreteRoad (lim {n = n₁} r) (lim {n = n₂} s) with discreteℕ n₁ n₂
+  ... | yes p = case pathToEq p of λ { refl → mapDec (🧊.cong lim) (λ p q → p (rd-lim-injPath q)) (discreteRoad r s) }
+  ... | no p = no λ q → case pathToEq q of λ { refl → p 🧊.refl }
 ```
 
 ```agda
@@ -620,7 +639,7 @@ module CanonicalRoad where
 
 ```agda
   cano-2const : 2-Constant {A = Road a b} cano
-  cano-2const zero    r       = case pathToEq (RoadSet.zero-unique r) of λ { refl → 🧊.refl }
+  cano-2const zero    r       = case pathToEq (RoadSet.rd-zero-unique r) of λ { refl → 🧊.refl }
   cano-2const (suc r) zero    = ⊥-elim (<-irrefl refl ∣ r ∣₁)
   cano-2const (suc r) (suc s) = 🧊.cong suc (cano-2const r s)
   cano-2const {a} (lim {f} {n} r) (lim {n = m} s) = 🧊.cong₂
@@ -639,6 +658,12 @@ open CanonicalRoad public using (<-largeElim)
 
 ## 路径的三歧性
 
-一旦建立子树关系到路径关系的消去, 我们可以将子树的连通性强化为路径的连通性, 乃至三歧性.
+一旦建立子树关系到路径关系的消去, 我们可以将子树的三歧性强化为路径的三歧性.
 
-
+```agda
+rd-trich : Road a c → Road b c → Tri (Road a b) (a ≡ b) (Road b a)
+rd-trich r s with <-trich ∣ r ∣₁ ∣ s ∣₁
+... | tri< t ¬u ¬v = tri< (<-largeElim t) ¬u  (¬v ∘ ∣_∣₁)
+... | tri≈ ¬t u ¬v = tri≈ (¬t ∘ ∣_∣₁)     u   (¬v ∘ ∣_∣₁)
+... | tri> ¬t ¬u v = tri> (¬t ∘ ∣_∣₁)     ¬u  (<-largeElim v)
+```
