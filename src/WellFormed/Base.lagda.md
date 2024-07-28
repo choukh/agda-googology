@@ -111,16 +111,6 @@ isPropWf : isProp (wf f)
 isPropWf = isPropImplicitΠ λ _ → squash₁
 ```
 
-构造子的单射性
-
-```agda
-suc-inj : suc a ≡ suc b → a ≡ b
-suc-inj refl = refl
-
-lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → Ord.lim f ≡ lim g → f ≡ g
-lim-inj refl = refl
-```
-
 极限的外延性
 
 ```agda
@@ -220,12 +210,16 @@ module OrdSet where
     (🧊.cong (decode a a) (encodeRefl a) ∙ decodeRefl a)
     where open import Cubical.Foundations.Isomorphism
 
-isSetOrd : isSet Ord
-isSetOrd a b = isOfHLevelRetract 1 (encode a b) (decode a b)
-  (decodeEncode a b) (isPropCover a b) where open OrdSet
+  isSetOrd : isSet Ord
+  isSetOrd a b = isOfHLevelRetract 1 (encode a b) (decode a b)
+    (decodeEncode a b) (isPropCover a b)
 
-isProp≡ : isProp (a ≡ b)
-isProp≡ = 🧊.subst isProp PathPathEq (isSetOrd _ _)
+  isProp≡ : isProp (a ≡ b)
+  isProp≡ = 🧊.subst isProp PathPathEq (isSetOrd _ _)
+```
+
+```agda
+open OrdSet public using (isSetOrd; isProp≡)
 ```
 
 ## 路径与子树关系
@@ -531,8 +525,8 @@ module RoadSet where
 ```
 
 ```agda
-  rd-zero-unique : (r : Road a (suc a)) → Path _ r zero
-  rd-zero-unique r = aux r 🧊.refl where
+  zero-unique : (r : Road a (suc a)) → Path _ r zero
+  zero-unique r = aux r 🧊.refl where
     aux : (r : Road a (suc b)) (p : Path _ b a)
       → PathP (λ i → Road a (suc (p i))) r zero
     aux zero = UIP→AxiomK (isSet→UIP isSetOrd) _ _ _ 🧊.refl
@@ -540,16 +534,16 @@ module RoadSet where
 ```
 
 ```agda
-  rd-suc-inj : {r s : Road a b} → suc r ≡ suc s → r ≡ s
-  rd-suc-inj refl = refl
+  suc-inj : {r s : Road a b} → suc r ≡ suc s → r ≡ s
+  suc-inj refl = refl
 
-  rd-suc-injPath : {r s : Road a b} → Path _ (suc r) (suc s) → Path _ r s
-  rd-suc-injPath = eqToPath ∘ rd-suc-inj ∘ pathToEq
+  suc-injPath : {r s : Road a b} → Path _ (suc r) (suc s) → Path _ r s
+  suc-injPath = eqToPath ∘ suc-inj ∘ pathToEq
 ```
 
 ```agda
-  rd-lim-injPath : ⦃ _ : wf f ⦄ {r s : Road a (f n)} → Path (Road a (lim f)) (lim r) (lim s) → Path _ r s
-  rd-lim-injPath p = aux (pathToEq p) 🧊.refl where
+  lim-injPath : ⦃ _ : wf f ⦄ {r s : Road a (f n)} → Path (Road a (lim f)) (lim r) (lim s) → Path _ r s
+  lim-injPath p = aux (pathToEq p) 🧊.refl where
     aux : ⦃ _ : wf f ⦄ {r : Road a (f n)} {s : Road a (f m)} → Road.lim {f = f} r ≡ lim s
       → (p : Path _ n m) → PathP (λ i → Road a (f (p i))) r s
     aux {f} {a} {r} {s} refl = UIP→AxiomK (isSet→UIP isSetℕ) _ _
@@ -558,17 +552,21 @@ module RoadSet where
 
 ```agda
   discreteRoad : Discrete (Road a b)
-  discreteRoad r zero           = yes (rd-zero-unique r)
+  discreteRoad r zero           = yes (zero-unique r)
   discreteRoad zero (suc r)     = ⊥-elim (rd-irrefl refl r)
-  discreteRoad (suc r) (suc s)  = mapDec (🧊.cong suc) (λ p q → p (rd-suc-injPath q)) (discreteRoad r s)
+  discreteRoad (suc r) (suc s)  = mapDec (🧊.cong suc) (λ p q → p (suc-injPath q)) (discreteRoad r s)
   discreteRoad (lim {n = n₁} r) (lim {n = n₂} s) with discreteℕ n₁ n₂
-  ... | yes p = case pathToEq p of λ { refl → mapDec (🧊.cong lim) (λ p q → p (rd-lim-injPath q)) (discreteRoad r s) }
+  ... | yes p = case pathToEq p of λ { refl → mapDec (🧊.cong lim) (λ p q → p (lim-injPath q)) (discreteRoad r s) }
   ... | no p = no λ q → case pathToEq q of λ { refl → p 🧊.refl }
 ```
 
 ```agda
-isSetRoad : isSet (Road a b)
-isSetRoad = Discrete→isSet RoadSet.discreteRoad
+  isSetRoad : isSet (Road a b)
+  isSetRoad = Discrete→isSet discreteRoad
+```
+
+```agda
+open RoadSet public using (discreteRoad; isSetRoad)
 ```
 
 ## 典范路径
@@ -639,7 +637,7 @@ module CanonicalRoad where
 
 ```agda
   cano-2const : 2-Constant {A = Road a b} cano
-  cano-2const zero    r       = case pathToEq (RoadSet.rd-zero-unique r) of λ { refl → 🧊.refl }
+  cano-2const zero    r       = case pathToEq (RoadSet.zero-unique r) of λ { refl → 🧊.refl }
   cano-2const (suc r) zero    = ⊥-elim (<-irrefl refl ∣ r ∣₁)
   cano-2const (suc r) (suc s) = 🧊.cong suc (cano-2const r s)
   cano-2const {a} (lim {f} {n} r) (lim {n = m} s) = 🧊.cong₂
