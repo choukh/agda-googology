@@ -735,10 +735,18 @@ open RoadSet public using (discreteRoad; isSetRoad)
 
 ## 典范路径
 
+最后, 我们来定义路径的典范映射. 典范映射具有以下性质.
+
+**定义 2-0-41** 我们说函数 $f$ 是2-恒等的, 如果对任意 $x,y$ 都有 $f(x)=f(y)$.
+
 ```agda
 module CanonicalRoad where
   open import Cubical.Foundations.Function using (2-Constant)
 ```
+
+我们首先处理极限的情况. 给定任意 $r:a\lt f(n)$, 只要找到最小的 $m$ 满足 $s:a\lt f(m)$, $\lim(s)$ 就可以作为 $a\lt \lim(f)$ 的典范证明.
+
+**定义 2-0-42**
 
 ```agda
   min : (f : Seq) ⦃ wff : wf f ⦄ → a < f n → Σ[ m ∈ ℕ ] a < f m
