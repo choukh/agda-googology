@@ -9,12 +9,12 @@ zhihu-tags: Agda, 大数数学, 序数
 > 本文源码: [Base.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/WellFormed/Base.lagda.md)  
 > 高亮渲染: [Base.html](https://choukh.github.io/agda-googology/WellFormed.Base.html)  
 
-本系列文章致力于可运行且保证停机的大数计算程序的文学编程. 我们在[第一章](https://zhuanlan.zhihu.com/p/707713300)定义出了 [LVO](https://googology.fandom.com/wiki/Large_Veblen_ordinal), 接下来的计划是介绍[序数崩塌函数 (OCF)](https://googology.fandom.com/wiki/Ordinal_collapsing_function).
+本系列文章致力于可运行且保证停机的大数计算程序的文学编程. 我们在[第一章](https://zhuanlan.zhihu.com/p/707713300)定义出了 [LVO](https://googology.fandom.com/wiki/Large_Veblen_ordinal), 接下来计划介绍[序数崩塌函数 (OCF)](https://googology.fandom.com/wiki/Ordinal_collapsing_function).
 如果希望用这套方法走得比较远的话 (比如达到 [EBO](https://googology.fandom.com/wiki/Extended_Buchholz's_function)), 那么对基础理论有较高的要求. 我们需要从底层定义开始, 把严谨性再提高一个档次, 因此会先花费相当大的篇幅构建良构树序数相关的理论.
 
 ## 基础的选取
 
-我们发现对于 EBO 的定义, [函数外延性](https://ncatlab.org/nlab/show/function+extensionality), [证明无关性](https://ncatlab.org/nlab/show/proof+relevance)以及特定命题到集合的[大消去](https://cstheory.stackexchange.com/questions/40339/what-exactly-is-large-elimination)都是不可或缺的. 同伦类型论 (HoTT) 可以优雅地满足这三个需求, 因此我们采用它的一个Agda版本——立方类型论 (Cubical Agda) 作为数学基础.
+我们发现对于 EBO 的定义, [函数外延性](https://ncatlab.org/nlab/show/function+extensionality), [证明无关性](https://ncatlab.org/nlab/show/proof+relevance)以及特定命题到集合的[大消去](https://cstheory.stackexchange.com/questions/40339/what-exactly-is-large-elimination)都是不可或缺的. 同伦类型论 (HoTT) 可以优雅地满足这三个需求, 因此我们采用它的一个Agda版本——立方类型论 (Cubical Agda) 作为数学基础. 采用 HoTT 作为基础的另一个好处是, [泛等原理](https://ncatlab.org/nlab/show/univalent+foundations+for+mathematics)将帮助我们省去一部分重复代码, 这在后篇可以看到.
 
 ```agda
 {-# OPTIONS --safe --cubical #-}
