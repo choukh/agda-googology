@@ -1,6 +1,7 @@
 ---
 title: 形式化大数数学 (2.0 - 良构树序数)
 zhihu-tags: Agda, 大数数学, 序数
+zhihu-url: https://zhuanlan.zhihu.com/p/711649863
 ---
 
 # 形式化大数数学 (2.0 - 良构树序数)
@@ -748,10 +749,10 @@ module CanonicalRoad where
 
 **定义 2-0-42** 我们说路径 $r:\text{Rd}(a,f(n))$ 的最小化, 记作 $\min(r)$, 是一个 $m:ℕ$ 满足 $s:a\lt f(m)$, 递归定义为
 
-- 若 $n=0$, 取 $(m,s)=(0,r)$.
+- 若 $n=0$, 取 $(m,s):=(0,r)$.
 - 若 $n=n'^+$, 此时有 $a\lt f(n'^+)$, 且由 $f$ 的良构性有 $f(n')\lt f(n'^+)$, 因此 $a$ 与 $f(n')$ 同株, 判定它们的大小关系.
-  - 若有 $r' : a\lt f(n')$, 取 $(m,s)=\min(r')$.
-  - 若不然, 说明以及递归到最小了, 取 $(m,s)=(n,r)$. ∎
+  - 若有 $r' : a\lt f(n')$, 取 $(m,s):=\min(r')$.
+  - 若不然, 说明以及递归到最小了, 取 $(m,s):=(n,r)$. ∎
 
 ```agda
   min : (f : Seq) ⦃ wff : wf f ⦄ → a < f n → Σ[ m ∈ ℕ ] a < f m
@@ -762,7 +763,7 @@ module CanonicalRoad where
 ```
 
 **引理 2-0-43** 对任意 $r:\text{Rd}(a,f(n))$ 以及 $s:\text{Rd}(a,f(m))$ 有 $\min(r)=\min(s)$.  
-**证明** 该引理直观上不难接受, 但完整写出将会是本文最冗长乏味的证明. 我们只说, 不断分情况讨论, 并运用上文证的各种引理可证. ∎
+**证明** 该引理直观上不难接受, 但完整写出将会是本文最冗长乏味的证明. 我们只说, 不断分情况讨论, 并反复运用上文的各种引理可证. ∎
 
 ```agda
   min-unique-pre : (f : Seq) ⦃ wff : wf f ⦄ (r : a < f n) (s : a < f (suc m))
@@ -803,21 +804,51 @@ module CanonicalRoad where
   ... | refl = ΣPathP $ 🧊.refl , squash₁ _ _
 ```
 
-**定义 2-0-44**
+有了最小化函数, 我们可以定义典范映射. 有了典范映射, 就可以将集合的命题截断还原为集合, 此还原我们称为大消去. 一般来说是先定义完典范映射, 然后得到大消去. 但神奇的是, 此处我们必须互递归得到典范映射和大消去, 即互递归定义以下两者.
+
+- 路径的典范映射 $\text{cano}:\text{Rd}(a,b)→\text{Rd}(a,b)$
+- 子树到路径的大消去 $\text{lE}:a\lt b→\text{Rd}(a,b)$
 
 ```agda
   cano : Road a b → Road a b
   <-largeElim : a < b → Road a b
+```
 
+首先给出 $\text{cano}$ 的具体定义.
+
+**定义 2-0-44** 讨论 $\text{cano}$ 的输入 $r:\text{Rd}(a,b)$.
+
+- 若 $r=0$, 取 $\text{cano}(r):=0$, 也就是说我们规定 $0$ 是 $\text{Rd}(a,a^+)$ 的典范路径. 这不难理解, 因为 $0$ 是唯一的.
+- 若 $r=r'^+$, 取 $\text{cano}(r):=\text{cano}(r')^+$. 也就是说对于 $\text{Rd}(a,b^+)$ 的典范路径, 我们希望没有大跨度, 而是一步一步上去.
+- 若 $r=\lim(f,n,w,r')$, 令 $(m,s)=\min(r')$, 取 $\text{cano}(r):=\lim(f,m,w,\text{cano}(\text{lE}(s)))$. 也就是说我们先通过 $|r'|:a\lt f(n)$ 找到最小的 $m$ 满足 $s:a\lt f(m)$, 将 $s$ 还原为集合, 再递归典范映射, 最后输入 $\lim$ 得到 $\text{Rd}(a,\lim(f))$ 的典范路径. ∎
+
+```agda
   cano zero = zero
-  cano (suc r) = rd-trans (cano r) zero
+  cano (suc r) = suc (cano r)
   cano (lim {f} r) = let (m , s) = min f ∣ r ∣₁ in
     lim {n = m} (cano (<-largeElim s))
 ```
 
+**定理 2-0-45** 典范映射 $\text{cano}$ 是2-恒等的.  
+**证明** 要证对任意 $r,s:\text{Rd}(a,b)$ 有 $\text{cano}(r)=\text{cano}(s)$. 对 $r,s$ 归纳.
+
+- 若 $r=0$, 此时 $s:\text{Rd}(a,a^+)$, 由引理 2-0-36 可知 $s=0$, 因此 $\text{cano}(r)=\text{cano}(s)$.
+- 若 $r=0$ 且 $s=s'^+$, 必然有 $a=b$ 且 $s:\text{Rd}(a,a)$, 违反路径的反自反性.
+- 若 $r=r'^+$ 且 $s=s'^+$, 由归纳假设 $\text{cano}(r')=\text{cano}(s')$, 因此
+  - $\text{cano}(r)=\text{cano}(r')^+=\text{cano}(s')^+=\text{cano}(s)$.
+- 若 $r=\lim(f,n,w,r')$ 且 $s=\lim(f,m,w,s')$, 由引理 2-0-43 可知 $\min(r')=\min(s')$, 因此
+
+$$
+\begin{aligned}
+\text{cano}(r)&=\lim(f,π_1(\min(r')),w,\text{cano}(\text{lE}(π_2(\min(r')))))\\
+&=\lim(f,π_1(\min(s')),w,\text{cano}(\text{lE}(π_2(\min(s')))))\\
+&=\text{cano}(s)\quad ∎
+\end{aligned}
+$$
+
 ```agda
   cano-2const : 2-Constant {A = Road a b} cano
-  cano-2const zero    r       = case pathToEq (RoadSet.zero-unique r) of λ { refl → 🧊.refl }
+  cano-2const zero    s       = case pathToEq (RoadSet.zero-unique s) of λ { refl → 🧊.refl }
   cano-2const (suc r) zero    = ⊥-elim (<-irrefl refl ∣ r ∣₁)
   cano-2const (suc r) (suc s) = 🧊.cong suc (cano-2const r s)
   cano-2const {a} (lim {f} {n} r) (lim {n = m} s) = 🧊.cong₂
@@ -826,27 +857,29 @@ module CanonicalRoad where
     (🧊.cong snd (min-unique f ∣ r ∣₁ ∣ s ∣₁))
 ```
 
-```agda
-  <-largeElim = rec→Set isSetRoad cano cano-2const
-```
+**定义 2-0-46** 子树关系到路径关系的大消去 $\text{lE}$: 由于我们已经证明了路径类型是集合, 且找到了路径的典范映射, 由 HoTT 的相关引理即得. 该引理可展开为[一篇论文](https://arxiv.org/pdf/1411.2682.pdf), 这里不展开. ∎
 
 ```agda
+  <-largeElim = rec→Set isSetRoad cano cano-2const
+
 open CanonicalRoad public using (<-largeElim)
 ```
 
 一旦建立子树关系到路径关系的消去, 我们可以构造之前无法构造的路径.
 
+**定理 2-0-47** 对任意良构序列 $f$ 有路径 $\text{Rd}(f(n), \lim(f))$.  
+**证明** 先通过良构性证明 $f(n)\lt \lim(f)$, 然后还原为路径. ∎
+
 ```agda
 f<l : ⦃ _ : wf f ⦄ → f n < lim f
 f<l = map lim it
-```
 
-```agda
 rd-f-l : ⦃ _ : wf f ⦄ → Road (f n) (lim f)
 rd-f-l = <-largeElim f<l
 ```
 
-子树的三歧性可以强化为路径的三歧性.
+**定理 2-0-48** 子树的三歧性可以强化为路径的三歧性.  
+**证明** 从引理 2-0-35 还原为路径. ∎
 
 ```agda
 rd-trich : Road a c → Road b c → Tri (Road a b) (a ≡ b) (Road b a)
