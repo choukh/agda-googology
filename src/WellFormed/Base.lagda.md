@@ -281,7 +281,13 @@ open import Induction.WellFounded
 
 ### 严格序
 
-尊重相等
+**事实** 路径关系与子树关系尊重命题相等, 即
+
+- 如果 $\text{Rd}(a,b)$ 且 $a=c$ 那么 $\text{Rd}(c,b)$
+- 如果 $\text{Rd}(a,b)$ 且 $b=c$ 那么 $\text{Rd}(a,c)$
+- 如果 $a \lt b$ 且 $a=c$ 那么 $c \lt b$
+- 如果 $a \lt b$ 且 $b=c$ 那么 $a \lt c$
+
 
 ```agda
 rd-resp-≡ : Road Respects₂ _≡_
@@ -291,14 +297,22 @@ rd-resp-≡ = (λ { refl → id }) , (λ { refl → id })
 <-resp-≡ = (λ { refl → id }) , (λ { refl → id })
 ```
 
-传递性
+**定义** 任给 $r:\text{Rd}(a, b)$ 以及 $s:\text{Rd}(b, c)$, 递归定义**路径的结合** $r⋅s : \text{Rd}(a, c)$ 如下
+
+- 若 $s=0$, 必然有 $c=b^+$, 于是 $r⋅s := r^+:\text{Rd}(a,b^+)$
+- 若存在 $s'$ 使得 $s=s'^+$, 必然存在 $c'$ 使得 $c=c'^+$ 且 $s':\text{Rd}(b,c')$, 于是 $r⋅s := (r⋅s')^+:\text{Rd}(a,c'^+)$
+- 若存在 $s'$ 使得 $s=\lim(s')$, 必然存在 $f$ 使得 $c=\lim(f)$ 且 $s':\text{Rd}(a,f(n))$, 于是 $r⋅s := \lim(r⋅s'):\text{Rd}(a,\lim(f))$
 
 ```agda
 rd-trans : Transitive Road
 rd-trans r zero    = suc r
 rd-trans r (suc s) = suc (rd-trans r s)
 rd-trans r (lim s) = lim (rd-trans r s)
+```
 
+**事实** 由路径的结合立即可得子树关系的传递性.
+
+```agda
 <-trans : Transitive _<_
 <-trans = map2 rd-trans
 ```
