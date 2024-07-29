@@ -547,7 +547,7 @@ seq-pres< {f} {m} (ℕ.s≤s {n} m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 ... | inr refl = it
 ```
 
-注意上面的代码用到了我们之前提到的高可读记法, 我们称为序关系推理链.
+注意上面的代码用到了我们刚才提到的高可读记法, 我们称为序关系推理链.
 
 **引理 2-0-26** 良构序列对自然数的相等单射, 即如果序列的两个项相等, 那么它们的序号相等.  
 **证明** 由良构序列的严格递增性显然成立. ∎
@@ -626,7 +626,7 @@ isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-tra
 ```agda
 <-connex-rd : Road a c → Road b c → a < b ⊎ b ≤ a
 <-connex-rd zero    zero    = inr $ inr refl
-<-connex-rd zero    (suc s) = inr $ inl ∣ {!   !} ∣₁
+<-connex-rd zero    (suc s) = inr $ inl ∣ s ∣₁
 <-connex-rd (suc r) zero    = inl ∣ r ∣₁
 <-connex-rd (suc r) (suc s) = <-connex-rd r s
 <-connex-rd (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
