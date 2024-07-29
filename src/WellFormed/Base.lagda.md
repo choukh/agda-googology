@@ -33,7 +33,7 @@ open import Cubical.Foundations.Prelude as 🧊 public
 open import Cubical.Data.Equality public
   using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
-  using (Σ-syntax; _,_; fst; snd; ΣPathP)
+  using (Σ-syntax; _×_; _,_; fst; snd; ΣPathP)
 open import Cubical.HITs.PropositionalTruncation public
   using (∥_∥₁; ∣_∣₁; squash₁; rec; rec2; map; map2; rec→Set)
 ```
@@ -579,9 +579,31 @@ seq-notDense : ∀ f → ⦃ _ : wf f ⦄ → f n < f m → f m < f (suc n) → 
 seq-notDense f r s = ℕ.<⇒≱ (seq-inj< f r) (ℕ.m<1+n⇒m≤n (seq-inj< f s))
 ```
 
+## 同株关系
+
+**定义 2-0-29** 序数 $a$ 与 $b$ 同株集, 记作 $\text{Homo}(a,b)$, 定义为从 $a$ 与 $b$ 通过路径关系共同延伸出去的那些序数. 如果该同株集非空, 我们就说 $a$ 与 $b$ 同株.
+
+```agda
+Homo : Ord → Ord → Type
+Homo a b = Σ[ c ∈ Ord ] Road a c × Road b c
+```
+
+**事实 2-0-30** 同株关系是自反且对称的.  
+**证明** 由定义显然. ∎
+
+```agda
+Homo-refl : Reflexive Homo
+Homo-refl {x} = suc x , zero , zero
+
+Homo-sym : Symmetric Homo
+Homo-sym (c , a<c , b<c) = c , b<c , a<c
+```
+
+**注意 2-0-31** 同株关系不是传递关系.
+
 ## 子树的三歧性
 
-**引理 2-0-29** 子树关系的连通性是命题.  
+**引理 2-0-32** 子树关系的连通性 $(a \lt b) + (b ≤ a)$ 是命题.  
 **证明** 由推论 2-0-15 ($\lt$ 的反自反性), $a\lt b$ 与 $b≤a$ 互斥. ∎
 
 ```agda
@@ -589,7 +611,7 @@ isPropConnex : isProp (a < b ⊎ b ≤ a)
 isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-trans r s)
 ```
 
-**引理 2-0-30**
+**引理 2-0-33** 忽略非同株序数 (up to homo), $\lt$ 与 $≤$ 连通.
 
 ```agda
 <-connex-rd : Road a c → Road b c → a < b ⊎ b ≤ a
