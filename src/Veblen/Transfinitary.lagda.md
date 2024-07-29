@@ -182,7 +182,7 @@ import Veblen.Finitary as Fin
 
 后文我们补上一种容易阅读的非形式记法——双行有限列矩阵: 第一行是所有非零参数, 第二行是参数的序号. 如 $φ_{2}\kern{0.17em}2\kern{0.17em}1\kern{0.17em}0$ 写作 $\begin{pmatrix}2&1\\2&1\end{pmatrix}$.
 
-**引理** 非零参数可以省去:
+**引理** 右侧的零参数可以省去:
 
 $$
 Φ^α\kern{0.17em}F\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}} = F
