@@ -10,7 +10,7 @@ zhihu-tags: Agda, 大数数学, 序数
 > 高亮渲染: [Base.html](https://choukh.github.io/agda-googology/WellFormed.Base.html)  
 
 本系列文章致力于可运行且保证停机的大数计算程序的文学编程. 我们在[第一章](https://zhuanlan.zhihu.com/p/707713300)定义出了 [LVO](https://googology.fandom.com/wiki/Large_Veblen_ordinal), 接下来计划介绍[序数崩塌函数 (OCF)](https://googology.fandom.com/wiki/Ordinal_collapsing_function).
-如果希望用这套方法走得比较远的话 (比如达到 [EBO](https://googology.fandom.com/wiki/Extended_Buchholz's_function)), 那么对基础理论有较高的要求. 我们需要从底层定义开始, 把严谨性再提高一个档次, 因此会先花费相当大的篇幅构建良构树序数相关的理论.
+如果希望用这套方法走得比较远的话 (比如达到 [EBO](https://googology.fandom.com/wiki/Extended_Buchholz's_function)), 那么对基础理论有较高的要求. 我们需要从底层定义开始, 把严格性再提高一个档次, 因此会先花费相当大的篇幅构建良构树序数相关的理论.
 
 ## 基础的选取
 
@@ -23,7 +23,9 @@ module WellFormed.Base where
 
 ### 库依赖
 
-cubical库
+我们采用[命题相等](https://ncatlab.org/nlab/show/propositional+equality)作为主要使用的[同一性概念](https://ncatlab.org/nlab/show/equality), 而[道路类型 (path type)](https://ncatlab.org/nlab/show/path+type) 只作为一个辅助. 在 HoTT 中这两者是等价的, 但分情况使用可以简化证明.
+
+**Cubical库**
 
 ```agda
 open import Cubical.Foundations.Prelude as 🧊 public
@@ -36,7 +38,7 @@ open import Cubical.HITs.PropositionalTruncation public
   using (∥_∥₁; ∣_∣₁; squash₁; rec; rec2; map; map2; rec→Set)
 ```
 
-标准库
+**标准库**
 
 ```agda
 open import Data.Unit public using (⊤; tt)
@@ -46,7 +48,9 @@ open import Relation.Binary.PropositionalEquality public
   using (_≡_; refl; sym; trans; cong; subst)
 ```
 
-融合库
+**桥接库**
+
+用于处理Cubical库与标准库混用时的一些问题.
 
 ```agda
 open import Bridged.Data.Empty public using (⊥; ⊥-elim; isProp⊥)
