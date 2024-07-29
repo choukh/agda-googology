@@ -137,7 +137,7 @@ $$
 \frac{r:\text{Rd}(a,b)}
 {\quad\text{suc}(r):\text{Rd}(a,b^+)\quad}
 \qquad
-\frac{\quad f:\text{Seq}\quad w:\text{wf}(f)\quad r:\text{Rd}(a,f(n))\quad}
+\frac{\quad f:\text{Seq}\quad n:ℕ\quad w:\text{wf}(f)\quad r:\text{Rd}(a,f(n))\quad}
 {\lim(f,n,w,r):\text{Rd}(a,\lim(f))}
 $$
 
@@ -656,7 +656,7 @@ isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-tra
 
 ## 路径集合
 
-我们通过证明路径的离散性来说明路径的集合性. 这里说的离散是指任意 $r,s:\text{Rd}(a,b)$ 的同一性可判定. 我们导入相关引理如自然数的K公理 (说是公理但在 HoTT 中其实是一个局域性质) 以及自然数的离散性等.
+我们通过证明路径的离散性来说明路径的集合性. 这里说的离散是指任意 $r,s:\text{Rd}(a,b)$ 的同一性可判定. 我们导入相关引理如自然数的K公理 (说是公理但在 HoTT 中其实是一个局域性质——集合满足K公理) 以及自然数的离散性等.
 
 ```agda
 module RoadSet where
@@ -694,7 +694,7 @@ $$\text{PathP}⟨λi,\text{Rd}(a,p(i)^+)⟩(r,0)$$
 ```
 
 **引理 2-0-38** 路径构造子 $\lim:\text{Rd}(a,f(n))→\text{Rd}(a,\lim(f))$ 具有单射性, 即对任意 $r,s:\text{Rd}(a,f(n))$, 如果 $\lim(r)=\lim(s)$, 那么 $r=s$.  
-**证明** 与引理 2-0-36类似可证. ∎
+**证明** 与引理 2-0-36类似可证, 但需要用到自然数的K公理. ∎
 
 ```agda
   lim-injPath : ⦃ _ : wf f ⦄ {r s : Road a (f n)} → Path (Road a (lim f)) (lim r) (lim s) → Path _ r s
@@ -709,15 +709,18 @@ $$\text{PathP}⟨λi,\text{Rd}(a,p(i)^+)⟩(r,0)$$
 **证明** 给定 $r,s:\text{Rd}(a,b)$, 需要判定它们是否相等. 对 $r,s$ 归纳.
 
 - 若 $s=0$, 不管 $r$ 是什么, 由引理 2-0-36 即可判定它们相等.
+- 若 $r=0$ 且 $s=s'^+$, 必然有 $a=b$ 且 $s:\text{Rd}(a,a)$, 违反路径的反自反性.
+- 若 $r=r'^+$ 且 $s=s'^+$, 递归判定 $r'$ 与 $s'$ 是否相等即可.
+- 若 $r=\lim(f,n,w,r')$ 且 $s=\lim(f,m,w,s')$, 判定 $n$ 与 $m$ 是否相等, 若相等则递归判定 $r'$ 与 $s'$ 是否相等, 否则不等. ∎
 
 ```agda
   discreteRoad : Discrete (Road a b)
   discreteRoad r zero           = yes (zero-unique r)
   discreteRoad zero (suc s)     = ⊥-elim (rd-irrefl refl s)
   discreteRoad (suc r) (suc s)  = mapDec (🧊.cong suc) (λ p q → p (suc-injPath q)) (discreteRoad r s)
-  discreteRoad (lim {n = n₁} r) (lim {n = n₂} s) with discreteℕ n₁ n₂
+  discreteRoad (lim {n} r) (lim {n = m} s) with discreteℕ n m
   ... | yes p = case pathToEq p of λ { refl → mapDec (🧊.cong lim) (λ p q → p (lim-injPath q)) (discreteRoad r s) }
-  ... | no p = no λ q → case pathToEq q of λ { refl → p 🧊.refl }
+  ... | no  p = no λ q → case pathToEq q of λ { refl → p 🧊.refl }
 ```
 
 **推论 2-0-40** 路径类型 $\text{Rd}(a,b)$ 是集合.  
