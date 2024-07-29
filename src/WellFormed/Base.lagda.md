@@ -299,9 +299,9 @@ rd-resp-≡ = (λ { refl → id }) , (λ { refl → id })
 
 **定义** 任给 $r:\text{Rd}(a, b)$ 以及 $s:\text{Rd}(b, c)$, 递归定义**路径的结合** $r⋅s : \text{Rd}(a, c)$ 如下
 
-- 若 $s=0$, 必然有 $c=b^+$, 于是 $r⋅s := r^+:\text{Rd}(a,b^+)$
-- 若存在 $s'$ 使得 $s=s'^+$, 必然存在 $c'$ 使得 $c=c'^+$ 且 $s':\text{Rd}(b,c')$, 于是 $r⋅s := (r⋅s')^+:\text{Rd}(a,c'^+)$
-- 若存在 $s'$ 使得 $s=\lim(s')$, 必然存在 $f$ 使得 $c=\lim(f)$ 且 $s':\text{Rd}(a,f(n))$, 于是 $r⋅s := \lim(r⋅s'):\text{Rd}(a,\lim(f))$
+- 若 $s=0$, 必然有 $c=b^+$, 于是 $r⋅s := r^+:\text{Rd}(a,b^+)$.
+- 若存在 $s'$ 使得 $s=s'^+$, 必然存在 $c'$ 使得 $c=c'^+$ 且 $s':\text{Rd}(b,c')$, 于是 $r⋅s := (r⋅s')^+:\text{Rd}(a,c'^+)$.
+- 若存在 $s'$ 使得 $s=\lim(s')$, 必然存在 $f$ 使得 $c=\lim(f)$ 且 $s':\text{Rd}(a,f(n))$, 于是 $r⋅s := \lim(r⋅s'):\text{Rd}(a,\lim(f))$. ∎
 
 ```agda
 rd-trans : Transitive Road
@@ -317,17 +317,25 @@ rd-trans r (lim s) = lim (rd-trans r s)
 <-trans = map2 rd-trans
 ```
 
-良基性
+**定理** 路径关系是良基关系, 即任意序数 $a$ 在路径关系下可及.  
+**证明** 在我们这套定义下, 该定理有一个技巧性的简短证明. 我们先假设存在 $a$ 到某 $b$ 的路径 $r:\text{Rd}(a,b)$, 以此证明 $a$ 可及之后, 提供 $0:\text{Rd}(a,a^+)$ 消掉此前提. 现在, 假设有这样的 $r$, 对 $r$ 归纳.
+
+- 若 $r=0$, 要证 $a$ 在路径关系下可及, 即证任意满足 $s:\text{Rd}(c,a)$ 的 $c$ 可及, 此即归纳假设.
+- 若存在 $r'$ 使得 $r=r'^+$, 必然存在 $b'$ 使得 $b=b'^+$ 且 $r':\text{Rd}(a,b')$. 现在要证 $a$, 即证任意满足 $s:\text{Rd}(c,a)$ 的 $c$ 可及. 由归纳假设, 只需找到某 $x$ 满足 $\text{Rd}(c,x)$. 令 $x=b'$, 我们有 $s⋅r':\text{Rd}(c,b')$.
+- 同理可证 $r=\lim(r')$ 的情况. ∎
 
 ```agda
 rd-acc : Road a b → Acc Road a
-rd-acc zero    = acc λ r → rd-acc r
+rd-acc zero    = acc λ s → rd-acc s
 rd-acc (suc r) = acc λ s → rd-acc (rd-trans s r)
 rd-acc (lim r) = acc λ s → rd-acc (rd-trans s r)
 
 rd-wellFounded : WellFounded Road
 rd-wellFounded _ = rd-acc zero
 ```
+
+**定理** 子树关系是良基关系.  
+**证明** 与路径关系的证明类似, 但需要先证明命题关系的可及性是命题, 暴露出立方类型论的区间原语 `i` 后归纳即得. ∎
 
 ```agda
 isPropAcc : isProp (Acc _<_ a)
@@ -343,7 +351,8 @@ isPropAcc (acc p) (acc q) i = acc (λ x<a → isPropAcc (p x<a) (q x<a) i)
 <-wellFounded _ = <-acc zero₁
 ```
 
-良基关系是非对称且反自反的
+**推论** 路径关系和子树关系都是非对称且反自反的.  
+**证明** 良基关系都是非对称且反自反的. ∎
 
 ```agda
 rd-asym : Asymmetric Road
@@ -361,7 +370,7 @@ rd-irrefl = wf⇒irrefl rd-resp-≡ sym rd-wellFounded
 <-irrefl = wf⇒irrefl <-resp-≡ sym <-wellFounded
 ```
 
-路径关系与子树关系分别构成严格偏序
+**事实** 由以上, 路径关系与子树关系分别构成严格偏序.
 
 ```agda
 rd-isStrictPartialOrder : IsStrictPartialOrder Road
