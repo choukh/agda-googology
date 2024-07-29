@@ -138,13 +138,13 @@ $$
 {\quad\text{suc}(r):\text{Rd}(a,b^+)\quad}
 \qquad
 \frac{\quad f:\text{Seq}\quad w:\text{wf}(f)\quad r:\text{Rd}(a,f(n))\quad}
-{\lim(f,w,r):\text{Rd}(a,\lim(f))}
+{\lim(f,n,w,r):\text{Rd}(a,\lim(f))}
 $$
 
 后文在没有歧义的情况下采用如下简写:
 - $\text{zero}$ 记作 $0$
 - $\text{suc}(r)$ 记作 $r^+$
-- $\lim(f,w,r)$ 记作 $\lim(r)$
+- $\lim(f,n,w,r)$ 记作 $\lim(r)$
 
 ```agda
 data Road where
@@ -611,16 +611,22 @@ isPropConnex : isProp (a < b ⊎ b ≤ a)
 isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-trans r s)
 ```
 
-**引理 2-0-33** 忽略非同株序数 (up to homo), $\lt$ 与 $≤$ 连通.  
+**定理 2-0-33** 忽略非同株序数 (up to homo), $\lt$ 与 $≤$ 连通.  
 **证明** 即证在给定 $r:\text{Rd}(a,c)$ 与 $s:\text{Rd}(b,c)$ 的情况下, 有 $(a \lt b) + (b ≤ a)$ 成立. 对 $r$ 和 $s$ 归纳.
 
 - 若 $r=0$ 且 $s=0$, 显然 $a=b$.
-- 
+- 若 $r=0$ 且 $s=s'^+$, 必然有 $s':\text{Rd}(b,a)$, 于是 $|s'|:b \lt a$.
+- 若 $r=r'^+$ 且 $s=0$, 必然有 $r':\text{Rd}(a,b)$, 于是 $|r'|:a \lt b$.
+- 若 $r=r'^+$ 且 $s=s'^+$, 必然有 $r':\text{Rd}(a,c')$ 且 $s':\text{Rd}(b,c')$, 其中 $c'^+=c$. 对 $r',s'$ 使用归纳假设即可.
+- 若 $r=\lim(f,n,w,r')$ 且 $s=\lim(f,m,w,s')$, 必然有 $r':\text{Rd}(a,f(n))$ 以及 $s':\text{Rd}(a,f(m))$. 讨论 $n,m$ 的大小关系.
+  - 若 $n\lt m$, 有引理 2-0-25 (序列的保序性) 有 $t:f(n)\lt f(m)$. 由于当前的证明目标是命题, 由命题截断的基本性质, 在此局部可以把 $t$ 还原为未截断的 $t':\text{Rd}(f(n),f(m))$. 于是有 $r'⋅t':\text{Rd}(a,f(m))$. 再次对 $r'⋅t',s'$ 使用归纳假设即可.
+  - 若 $n=m$, 直接对 $r',s'$ 使用归纳假设即可.
+  - 若 $m\lt n$, 与 $n\lt m$ 的情况同理可证. ∎
 
 ```agda
 <-connex-rd : Road a c → Road b c → a < b ⊎ b ≤ a
 <-connex-rd zero    zero    = inr $ inr refl
-<-connex-rd zero    (suc s) = inr $ inl ∣ s ∣₁
+<-connex-rd zero    (suc s) = inr $ inl ∣ {!   !} ∣₁
 <-connex-rd (suc r) zero    = inl ∣ r ∣₁
 <-connex-rd (suc r) (suc s) = <-connex-rd r s
 <-connex-rd (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
@@ -629,10 +635,16 @@ isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-tra
 ... | tri> _ _ m<n  = rec isPropConnex (λ t → <-connex-rd r (rd-trans s t)) (seq-pres< m<n)
 ```
 
+**推论 2-0-34** 将同株关系弱化为命题, 一样有连通性成立.  
+**证明** 由定理 2-0-33 和命题截断的基本性质即得. ∎
+
 ```agda
 <-connex : a < c → b < c → a < b ⊎ b ≤ a
 <-connex = rec2 isPropConnex <-connex-rd
 ```
+
+**推论 2-0-35** 忽略非同株序数 (up to homo), $\lt$ 满足三歧性.  
+**证明** 由推论 2-0-34 和推论 2-0-15 ($\lt$ 的反自反和非对称性) 即得. ∎
 
 ```agda
 <-trich : a < c → b < c → Tri (a < b) (a ≡ b) (b < a)
