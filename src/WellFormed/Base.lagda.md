@@ -199,7 +199,7 @@ module OrdSet where
 
 我们使用 [encode-decode 方法](https://ncatlab.org/nlab/show/encode-decode+method) 证明 $\text{Ord}$ 是同伦层级意义下的集合. 具体细节这里不展开, 大致分为以下四步:
 
-1. 定义 `a b : Ord` 的覆叠空间 `Cover a b`, 容易证明它是一个命题.
+**2-0-9-1** 定义 `a b : Ord` 的覆叠空间 `Cover a b`, 容易证明它是一个命题.
 
 ```agda
   Cover : Ord → Ord → Type
@@ -219,7 +219,7 @@ module OrdSet where
   isPropCover (lim f) (lim g) = isPropΠ (λ n → isPropCover (f n) (g n))
 ```
 
-2. 将 `a b : Ord` 的道路空间 `Path a b` 编码为覆叠空间.
+**2-0-9-2** 将 `a b : Ord` 的道路空间 `Path a b` 编码为覆叠空间.
 
 ```agda
   encode : ∀ a b → Path _ a b → Cover a b
@@ -229,7 +229,7 @@ module OrdSet where
   encodeRefl a = JRefl (λ b _ → Cover a b) (reflCode a)
 ```
 
-3. 将覆叠空间解码为道路空间.
+**2-0-9-3** 将覆叠空间解码为道路空间.
 
 ```agda
   decode : ∀ a b → Cover a b → Path _ a b
@@ -247,7 +247,7 @@ module OrdSet where
       (λ _ _ → isProp→isSet isPropWf) (toPathP (isPropWf _ _)) 🧊.refl 🧊.refl 🧊.refl i)
 ```
 
-4. 证明编码与解码互逆, 结合 `Cover a b` 是命题, 说明 `Path a b` 是命题, 也即 `Ord` 是集合.
+**2-0-9-4** 证明编码与解码互逆, 结合 `Cover a b` 是命题, 说明 `Path a b` 是命题, 也即 `Ord` 是集合.
 
 ```agda
   decodeEncode : ∀ a b p → Path _ (decode a b (encode a b p)) p
@@ -807,11 +807,11 @@ module CanonicalRoad where
 有了最小化函数, 我们可以定义典范映射. 有了典范映射, 就可以将集合的命题截断还原为集合, 此还原我们称为大消去. 一般来说是先定义完典范映射, 然后得到大消去. 但神奇的是, 此处我们必须互递归得到典范映射和大消去, 即互递归定义以下两者.
 
 - 路径的典范映射 $\text{cano}:\text{Rd}(a,b)→\text{Rd}(a,b)$
-- 子树到路径的大消去 $\text{lE}:a\lt b→\text{Rd}(a,b)$
+- 子树到路径的大消去 $\text{set}:a\lt b→\text{Rd}(a,b)$
 
 ```agda
   cano : Road a b → Road a b
-  <-largeElim : a < b → Road a b
+  set : a < b → Road a b
 ```
 
 首先给出 $\text{cano}$ 的具体定义.
@@ -820,13 +820,13 @@ module CanonicalRoad where
 
 - 若 $r=0$, 取 $\text{cano}(r):=0$, 也就是说我们规定 $0$ 是 $\text{Rd}(a,a^+)$ 的典范路径. 这不难理解, 因为 $0$ 是唯一的.
 - 若 $r=r'^+$, 取 $\text{cano}(r):=\text{cano}(r')^+$. 也就是说对于 $\text{Rd}(a,b^+)$ 的典范路径, 我们希望没有大跨度, 而是一步一步上去.
-- 若 $r=\lim(f,n,w,r')$, 令 $(m,s)=\min(r')$, 取 $\text{cano}(r):=\lim(f,m,w,\text{cano}(\text{lE}(s)))$. 也就是说我们先通过 $|r'|:a\lt f(n)$ 找到最小的 $m$ 满足 $s:a\lt f(m)$, 将 $s$ 还原为集合, 再递归典范映射, 最后输入 $\lim$ 得到 $\text{Rd}(a,\lim(f))$ 的典范路径. ∎
+- 若 $r=\lim(f,n,w,r')$, 令 $(m,s)=\min(r')$, 取 $\text{cano}(r):=\lim(f,m,w,\text{cano}(\text{set}(s)))$. 也就是说我们先通过 $|r'|:a\lt f(n)$ 找到最小的 $m$ 满足 $s:a\lt f(m)$, 将 $s$ 还原为集合, 再递归典范映射, 最后输入 $\lim$ 得到 $\text{Rd}(a,\lim(f))$ 的典范路径. ∎
 
 ```agda
   cano zero = zero
   cano (suc r) = suc (cano r)
   cano (lim {f} r) = let (m , s) = min f ∣ r ∣₁ in
-    lim {n = m} (cano (<-largeElim s))
+    lim {n = m} (cano (set s))
 ```
 
 **定理 2-0-45** 典范映射 $\text{cano}$ 是2-恒等的.  
@@ -840,8 +840,8 @@ module CanonicalRoad where
 
 $$
 \begin{aligned}
-\text{cano}(r)&=\lim(f,π_1(\min(r')),w,\text{cano}(\text{lE}(π_2(\min(r')))))\\
-&=\lim(f,π_1(\min(s')),w,\text{cano}(\text{lE}(π_2(\min(s')))))\\
+\text{cano}(r)&=\lim(f,π_1(\min(r')),w,\text{cano}(\text{set}(π_2(\min(r')))))\\
+&=\lim(f,π_1(\min(s')),w,\text{cano}(\text{set}(π_2(\min(s')))))\\
 &=\text{cano}(s)\quad ∎
 \end{aligned}
 $$
@@ -852,17 +852,17 @@ $$
   cano-2const (suc r) zero    = ⊥-elim (<-irrefl refl ∣ r ∣₁)
   cano-2const (suc r) (suc s) = 🧊.cong suc (cano-2const r s)
   cano-2const {a} (lim {f} {n} r) (lim {n = m} s) = 🧊.cong₂
-    (λ k (t : a < f k) → Road.lim {f = f} {n = k} (cano (<-largeElim t)))
+    (λ k (t : a < f k) → Road.lim {f = f} {n = k} (cano (set t)))
     (🧊.cong fst (min-unique f ∣ r ∣₁ ∣ s ∣₁))
     (🧊.cong snd (min-unique f ∣ r ∣₁ ∣ s ∣₁))
 ```
 
-**定义 2-0-46** 子树关系到路径关系的大消去 $\text{lE}$: 由于我们已经证明了路径类型是集合, 且找到了路径的典范映射, 由 HoTT 的相关引理即得. 该引理可展开为[一篇论文](https://arxiv.org/pdf/1411.2682.pdf), 这里不展开. ∎
+**定义 2-0-46** 子树关系到路径关系的大消去 $\text{set}$: 由于我们已经证明了路径类型是集合, 且找到了路径的典范映射, 由 HoTT 的相关引理即得. 该引理可展开为[一篇论文](https://arxiv.org/pdf/1411.2682.pdf), 这里不展开. ∎
 
 ```agda
-  <-largeElim = rec→Set isSetRoad cano cano-2const
+  set = rec→Set isSetRoad cano cano-2const
 
-open CanonicalRoad public using (<-largeElim)
+open CanonicalRoad public using (set)
 ```
 
 一旦建立子树关系到路径关系的消去, 我们可以构造之前无法构造的路径.
@@ -875,7 +875,7 @@ f<l : ⦃ _ : wf f ⦄ → f n < lim f
 f<l = map lim it
 
 rd-f-l : ⦃ _ : wf f ⦄ → Road (f n) (lim f)
-rd-f-l = <-largeElim f<l
+rd-f-l = set f<l
 ```
 
 **定理 2-0-48** 子树的三歧性可以强化为路径的三歧性.  
@@ -884,7 +884,7 @@ rd-f-l = <-largeElim f<l
 ```agda
 rd-trich : Road a c → Road b c → Tri (Road a b) (a ≡ b) (Road b a)
 rd-trich r s with <-trich ∣ r ∣₁ ∣ s ∣₁
-... | tri< t ¬u ¬v = tri< (<-largeElim t) ¬u  (¬v ∘ ∣_∣₁)
+... | tri< t ¬u ¬v = tri< (set t) ¬u  (¬v ∘ ∣_∣₁)
 ... | tri≈ ¬t u ¬v = tri≈ (¬t ∘ ∣_∣₁)     u   (¬v ∘ ∣_∣₁)
-... | tri> ¬t ¬u v = tri> (¬t ∘ ∣_∣₁)     ¬u  (<-largeElim v)
+... | tri> ¬t ¬u v = tri> (¬t ∘ ∣_∣₁)     ¬u  (set v)
 ```
