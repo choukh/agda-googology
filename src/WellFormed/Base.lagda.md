@@ -9,6 +9,9 @@ zhihu-tags: Agda, 大数数学, 序数
 > 本文源码: [Base.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/WellFormed/Base.lagda.md)  
 > 高亮渲染: [Base.html](https://choukh.github.io/agda-googology/WellFormed.Base.html)  
 
+本系列文章致力于可运行且保证停机的大数计算程序的文学编程. 我们在第一章定义出了 [LVO](https://googology.fandom.com/wiki/Large_Veblen_ordinal), 接下来的计划是介绍[序数崩塌函数 (OCF)](https://googology.fandom.com/wiki/Ordinal_collapsing_function).
+如果希望用这套方法走得比较远的话 (比如达到 [EBO](https://googology.fandom.com/wiki/Extended_Buchholz's_function)), 那么对基础理论有较高的要求. 我们需要从底层定义开始, 把严谨性再提高一个档次. 因此我们会先花费相当大的篇幅构建良构树序数的理论.
+
 ## 基础的选取
 
 立方类型论
