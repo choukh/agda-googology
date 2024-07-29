@@ -29,7 +29,7 @@ module WellFormed.Base where
 
 ```agda
 open import Cubical.Foundations.Prelude as 🧊 public
-  hiding (_≡_; refl; sym; cong; cong₂; subst)
+  hiding (_≡_; refl; sym; cong; cong₂; subst; _∎)
 open import Cubical.Data.Equality public
   using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
@@ -80,14 +80,14 @@ a < b = ∥ Road a b ∥₁
 - 任给一条路径 $r:\text{Rd}(a,b)$, 都可以证明 $|r|:a\lt b$
 - 任意两个证明 $p,q:a\lt b$ 都有 $p = q$
 
-**定义** 我们将自然数到序数的函数称为**基本列**, 其类型 $ℕ→\text{Ord}$ 简记为 $\text{Seq}$.
+**定义** 我们将自然数到序数的函数简称**序列**, 其类型 $ℕ→\text{Ord}$ 简记为 $\text{Seq}$.
 
 ```agda
 Seq : Type
 Seq = ℕ → Ord
 ```
 
-**定义** 我们说一个基本列 $f:\text{Seq}$ 是**良构**的 (well-formed), 记作 $\text{wf}(f)$, 当且仅当它严格单调递增, 即对任意 $n$ 都有 $f(n) < f(n^+)$.
+**定义** 我们说一个序列 $f:\text{Seq}$ 是**良构**的 (well-formed), 记作 $\text{wf}(f)$, 当且仅当它严格单调递增, 即对任意 $n$ 都有 $f(n) < f(n^+)$. 良构序列又叫序数的基本列.
 
 ```agda
 wf : Seq → Type
@@ -512,7 +512,7 @@ ns-isPartialOrder = record { isPreorder = ns-isPreorder ; antisym = ns-antisym }
 ≤-isPartialOrder = record { isPreorder = ≤-isPreorder ; antisym = ≤-antisym }
 ```
 
-证明以上性质后, 我们可以实例化以下记法模块以提高序关系证明代码的可读性, 会在后篇用到.
+证明以上性质后, 我们可以实例化以下记法模块以提高序关系证明代码的可读性, 会在后文中看到.
 
 ```agda
 module RoadReasoning where
@@ -530,10 +530,21 @@ module SubTreeReasoning where
 
 ## 良构序列的性质
 
+**引理** 良构序列保持自然数的序, 即对任意 $m < n$ 都有 $f(m) < f(n)$.  
+**证明** 对 $n$ 归纳.
+
+- 若 $n=0$, 虚空真.
+- 若 $n=n'^+$, 有 $m<n'^+$, 即 $m≤n'$
+  - 若 $m<n'$, 由归纳假设有 $f(m)<f(n')$, 由 $f$ 的良构性质有 $f(n')<f(n'^+)$, 由 $\lt$ 的传递性有 $f(m)<f(n'^+)=f(n)$.
+  - 若 $m=n'$, 由 $f$ 的良构性质有 $f(m)=f(n')<f(n'^+)=f(n)$. ∎
+
 ```agda
 seq-pres< : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
-seq-pres< (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
-... | inl m<n  = <-trans (seq-pres< m<n) it
+seq-pres< {f} {m} (ℕ.s≤s {n} m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
+... | inl m<n = begin-strict
+  (f m)         <⟨ seq-pres< m<n ⟩
+  (f n)         <⟨ it ⟩
+  f (suc n)     ∎ where open SubTreeReasoning
 ... | inr refl = it
 ```
 
