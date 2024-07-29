@@ -761,7 +761,8 @@ module CanonicalRoad where
   ... | inr _ = suc n , r
 ```
 
-**引理 2-0-43**
+**引理 2-0-43** 对任意 $r:\text{Rd}(a,f(n))$ 以及 $s:\text{Rd}(a,f(m))$ 有 $\min(r)=\min(s)$.  
+**证明** 该引理直观上不难接受, 但完整写出将会是本文最冗长乏味的证明. 我们只说, 不断分情况讨论, 并运用上文证的各种引理可证. ∎
 
 ```agda
   min-unique-pre : (f : Seq) ⦃ wff : wf f ⦄ (r : a < f n) (s : a < f (suc m))
@@ -778,9 +779,7 @@ module CanonicalRoad where
       (ℕ.m<1+n⇒m≤n $ seq-inj< f $ <-trans u r)
   min-unique-pre {n = suc n} f r s (inr fm≡fn)  | inr (inr refl)  with seq-inj≡ f fm≡fn
   ... | refl = ΣPathP $ 🧊.refl , squash₁ _ _
-```
 
-```agda
   min-unique : (f : Seq) ⦃ wff : wf f ⦄ (r : a < f n) (s : a < f m) → Path _ (min f r) (min f s)
   min-unique {n = zero}  {m = zero}  f r s = ΣPathP $ 🧊.refl , squash₁ _ _
   min-unique {n = zero}  {m = suc m} f r s with <-connex s it
@@ -803,6 +802,8 @@ module CanonicalRoad where
   ... | inr (inr refl)  | inr (inr fm≡fn) with seq-inj≡ f fm≡fn
   ... | refl = ΣPathP $ 🧊.refl , squash₁ _ _
 ```
+
+**定义 2-0-44**
 
 ```agda
   cano : Road a b → Road a b
