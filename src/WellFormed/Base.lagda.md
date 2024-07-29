@@ -179,7 +179,7 @@ isPropWf = isPropImplicitΠ λ _ → squash₁
 ```
 
 **事实 2-0-8** 两个良构序列的极限相等, 只要它们逐项相等.  
-**证明** 事实 2-0-7, 良构性证明对极限序数的同一性没有影响. 结合 HoTT 承诺的函数外延性即得. ∎
+**证明** 事实 2-0-7 说明良构性证明对极限序数的同一性没有影响. 结合 HoTT 承诺的函数外延性即证. ∎
 
 ```agda
 limExtPath : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → Path _ (f n) (g n)) → Path Ord (lim f) (lim g)
@@ -746,7 +746,12 @@ module CanonicalRoad where
 
 我们首先处理极限的情况. 给定任意 $r:a\lt f(n)$, 只要找到最小的 $m$ 满足 $s:a\lt f(m)$, $\lim(s)$ 就可以作为 $a\lt \lim(f)$ 的典范证明.
 
-**定义 2-0-42**
+**定义 2-0-42** 我们说路径 $r:\text{Rd}(a,f(n))$ 的最小化, 记作 $\min(r)$, 是一个 $m:ℕ$ 满足 $s:a\lt f(m)$, 递归定义为
+
+- 若 $n=0$, 取 $(m,s)=(0,r)$.
+- 若 $n=n'^+$, 此时有 $a\lt f(n'^+)$, 且由 $f$ 的良构性有 $f(n')\lt f(n'^+)$, 因此 $a$ 与 $f(n')$ 同株, 判定它们的大小关系.
+  - 若有 $r' : a\lt f(n')$, 取 $(m,s)=\min(r')$.
+  - 若不然, 说明以及递归到最小了, 取 $(m,s)=(n,r)$. ∎
 
 ```agda
   min : (f : Seq) ⦃ wff : wf f ⦄ → a < f n → Σ[ m ∈ ℕ ] a < f m
@@ -755,6 +760,8 @@ module CanonicalRoad where
   ... | inl r = min f r
   ... | inr _ = suc n , r
 ```
+
+**引理 2-0-43**
 
 ```agda
   min-unique-pre : (f : Seq) ⦃ wff : wf f ⦄ (r : a < f n) (s : a < f (suc m))
