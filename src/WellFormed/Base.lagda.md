@@ -169,7 +169,8 @@ pattern lim₁ r = ∣ lim r ∣₁
 
 ### 基本性质
 
-**事实 2-0-7** 良构条件是命题. 这意味着它们对极限序数的同一性没有影响.
+**事实 2-0-7** 良构条件是命题.  
+**证明** 由定义2-0-2 即得. ∎
 
 ```agda
 isPropWf : isProp (wf f)
@@ -177,9 +178,8 @@ isPropWf = isPropImplicitΠ λ _ → squash₁
   where open import Cubical.Foundations.HLevels
 ```
 
-由该事实, 结合 HoTT 承诺的函数外延性可得
-
-**事实 2-0-8** 两个良构序列的极限相等, 只要它们逐项相等.
+**事实 2-0-8** 两个良构序列的极限相等, 只要它们逐项相等.  
+**证明** 事实 2-0-7, 良构性证明对极限序数的同一性没有影响. 结合 HoTT 承诺的函数外延性即得. ∎
 
 ```agda
 limExtPath : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → Path _ (f n) (g n)) → Path Ord (lim f) (lim g)
@@ -412,7 +412,7 @@ ns→≤ (inr p) = inr p
 ```
 
 **引理 2-0-19** 非严格子树关系也是命题.  
-**引理** 如果和类型两边的命题互斥, 那么和类型也是一个命题. 由 $\lt$ 的反自反性, 显然 $a \lt b$ 与 $a = b$ 互斥. ∎
+**引理** 如果和类型两边的命题互斥, 那么和类型也是一个命题. 由定义 2-0-0, $\lt$ 是命题. 由事实 2-0-9, 序数的相等也是命题. 由推论 2-0-15 ($\lt$ 的反自反性), 显然 $a \lt b$ 与 $a = b$ 互斥. ∎
 
 ```agda
 isProp≤ : isProp (a ≤ b)
@@ -452,7 +452,7 @@ ns→rds (inr refl) = zero
 ```
 
 **定理 2-0-23** 非严格路径关系和非严格子树关系分别满足自反性, 反对称性和传递性.  
-**证明** 由定义显然. ∎
+**证明** 由定义 2-0-17 以及推论 2-0-15 ($\lt$ 的反自反性和非对称性) 显然成立. ∎
 
 ```agda
 ns-refl : Reflexive NSRoad
@@ -589,7 +589,7 @@ Homo a b = Σ[ c ∈ Ord ] Road a c × Road b c
 ```
 
 **事实 2-0-30** 同株关系是自反且对称的.  
-**证明** 由定义显然. ∎
+**证明** 由定义 2-0-29 显然成立. ∎
 
 ```agda
 Homo-refl : Reflexive Homo
@@ -644,7 +644,7 @@ isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-tra
 ```
 
 **推论 2-0-35** 忽略非同株序数 (up to homo), $\lt$ 满足三歧性.  
-**证明** 由推论 2-0-34 和推论 2-0-15 ($\lt$ 的反自反和非对称性) 即得. ∎
+**证明** 由推论 2-0-34 和推论 2-0-15 ($\lt$ 的反自反性和非对称性) 即得. ∎
 
 ```agda
 <-trich : a < c → b < c → Tri (a < b) (a ≡ b) (b < a)
@@ -656,12 +656,22 @@ isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-tra
 
 ## 路径集合
 
+我们通过证明路径的离散性来说明路径的集合性. 这里说的离散是指任意 $r,s:\text{Rd}(a,b)$ 的同一性可判定. 我们导入相关引理如自然数的K公理 (说是公理但在 HoTT 中其实是一个局域性质) 以及自然数的离散性等.
+
 ```agda
 module RoadSet where
   open import Cubical.Axiom.UniquenessOfIdentity
   open import Cubical.Data.Nat using (discreteℕ; isSetℕ)
   open import Cubical.Relation.Nullary
 ```
+
+**引理 2-0-36** 路径 $r:\text{Rd}(a,a^+)$ 唯一, 即对任意这样的 $r$ 都有 $r = 0$.  
+**证明** 使用道路归纳法 (path induction), 转而证明对任意 $r:\text{Rd}(a,b^+)$ 和 $p:\text{Path}⟨\text{Ord}⟩(b,a)$ 有
+
+$$\text{PathP}⟨λi,\text{Rd}(a,p(i)^+)⟩(r,0)$$
+
+- 若 $r = 0$, 由序数的K公理即证.
+- 若 $r = r'^+$, 有 $r':\text{Rd}(a,b)$, 结合 $p$, 违反路径的反自反性. ∎
 
 ```agda
   zero-unique : (r : Road a (suc a)) → Path _ r zero
@@ -672,6 +682,9 @@ module RoadSet where
     aux (suc r) p = ⊥-elim $ rd-irrefl (sym $ pathToEq p) r
 ```
 
+**引理 2-0-37** 路径构造子 $\text{suc}:\text{Rd}(a,b)→\text{Rd}(a,b^+)$ 具有单射性, 即对任意 $r,s:\text{Rd}(a,b)$, 如果 $r^+=s^+$, 那么 $r=s$.  
+**证明** 直接使用命题相等的构造子 $\text{refl}$ 反演即得. ∎
+
 ```agda
   suc-inj : suc r ≡ suc s → r ≡ s
   suc-inj refl = refl
@@ -679,6 +692,9 @@ module RoadSet where
   suc-injPath : Path _ (suc r) (suc s) → Path _ r s
   suc-injPath = eqToPath ∘ suc-inj ∘ pathToEq
 ```
+
+**引理 2-0-38** 路径构造子 $\lim:\text{Rd}(a,f(n))→\text{Rd}(a,\lim(f))$ 具有单射性, 即对任意 $r,s:\text{Rd}(a,f(n))$, 如果 $\lim(r)=\lim(s)$, 那么 $r=s$.  
+**证明** 与引理 2-0-36类似可证. ∎
 
 ```agda
   lim-injPath : ⦃ _ : wf f ⦄ {r s : Road a (f n)} → Path (Road a (lim f)) (lim r) (lim s) → Path _ r s
@@ -689,22 +705,28 @@ module RoadSet where
       (λ p → PathP (λ i → Road a (f (p i))) r s) 🧊.refl
 ```
 
+**定理 2-0-39** 路径类型 $\text{Rd}(a,b)$ 离散.  
+**证明** 给定 $r,s:\text{Rd}(a,b)$, 需要判定它们是否相等. 对 $r,s$ 归纳.
+
+- 若 $s=0$, 不管 $r$ 是什么, 由引理 2-0-36 即可判定它们相等.
+
 ```agda
   discreteRoad : Discrete (Road a b)
   discreteRoad r zero           = yes (zero-unique r)
-  discreteRoad zero (suc r)     = ⊥-elim (rd-irrefl refl r)
+  discreteRoad zero (suc s)     = ⊥-elim (rd-irrefl refl s)
   discreteRoad (suc r) (suc s)  = mapDec (🧊.cong suc) (λ p q → p (suc-injPath q)) (discreteRoad r s)
   discreteRoad (lim {n = n₁} r) (lim {n = n₂} s) with discreteℕ n₁ n₂
   ... | yes p = case pathToEq p of λ { refl → mapDec (🧊.cong lim) (λ p q → p (lim-injPath q)) (discreteRoad r s) }
   ... | no p = no λ q → case pathToEq q of λ { refl → p 🧊.refl }
 ```
 
+**推论 2-0-40** 路径类型 $\text{Rd}(a,b)$ 是集合.  
+**证明** 离散类型都是集合. ∎
+
 ```agda
   isSetRoad : isSet (Road a b)
   isSetRoad = Discrete→isSet discreteRoad
-```
 
-```agda
 open RoadSet public using (discreteRoad; isSetRoad)
 ```
 
