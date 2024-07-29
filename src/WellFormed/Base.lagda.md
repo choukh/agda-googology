@@ -23,7 +23,7 @@ module WellFormed.Base where
 
 ### 库依赖
 
-我们采用[命题相等](https://ncatlab.org/nlab/show/propositional+equality)作为主要使用的[同一性概念](https://ncatlab.org/nlab/show/equality), 而[道路类型 (path type)](https://ncatlab.org/nlab/show/path+type) 只作为一个辅助. 在 HoTT 中这两者是等价的, 但分情况使用可以简化证明.
+我们采用[命题相等](https://ncatlab.org/nlab/show/propositional+equality)作为主要使用的[同一性概念](https://ncatlab.org/nlab/show/equality), 而[道路类型 (path type)](https://ncatlab.org/nlab/show/path+type) 只作为一个辅助. 在 HoTT 中这两者是等价的, 但分情况使用可以简化证明. 命题相等的相关引理的道路版本会带上命名空间 `🧊` ([冰立方](https://emojipedia.org/zh/%E5%86%B0%E5%9D%97)) 以示区别. 它来源于立方类型论不像 HoTT 那么热 (hot), 而是冷的, 所以是冰立方. 知乎正文无法显示颜文字, 所以只会留下一个空格, 不过没关系, 只需视作函数重载.
 
 **Cubical库**
 
@@ -611,23 +611,27 @@ isPropConnex : isProp (a < b ⊎ b ≤ a)
 isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-trans r s)
 ```
 
-**引理 2-0-33** 忽略非同株序数 (up to homo), $\lt$ 与 $≤$ 连通.
+**引理 2-0-33** 忽略非同株序数 (up to homo), $\lt$ 与 $≤$ 连通.  
+**证明** 即证在给定 $r:\text{Rd}(a,c)$ 与 $s:\text{Rd}(b,c)$ 的情况下, 有 $(a \lt b) + (b ≤ a)$ 成立. 对 $r$ 和 $s$ 归纳.
+
+- 若 $r=0$ 且 $s=0$, 显然 $a=b$.
+- 
 
 ```agda
-<-connex-homo : Road a c → Road b c → a < b ⊎ b ≤ a
-<-connex-homo zero    zero    = inr $ inr refl
-<-connex-homo zero    (suc s) = inr $ inl ∣ s ∣₁
-<-connex-homo (suc r) zero    = inl ∣ r ∣₁
-<-connex-homo (suc r) (suc s) = <-connex-homo r s
-<-connex-homo (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
-... | tri< n<m _ _  = rec isPropConnex (λ t → <-connex-homo (rd-trans r t) s) (seq-pres< n<m)
-... | tri≈ _ refl _ = <-connex-homo r s
-... | tri> _ _ m<n  = rec isPropConnex (λ t → <-connex-homo r (rd-trans s t)) (seq-pres< m<n)
+<-connex-rd : Road a c → Road b c → a < b ⊎ b ≤ a
+<-connex-rd zero    zero    = inr $ inr refl
+<-connex-rd zero    (suc s) = inr $ inl ∣ s ∣₁
+<-connex-rd (suc r) zero    = inl ∣ r ∣₁
+<-connex-rd (suc r) (suc s) = <-connex-rd r s
+<-connex-rd (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
+... | tri< n<m _ _  = rec isPropConnex (λ t → <-connex-rd (rd-trans r t) s) (seq-pres< n<m)
+... | tri≈ _ refl _ = <-connex-rd r s
+... | tri> _ _ m<n  = rec isPropConnex (λ t → <-connex-rd r (rd-trans s t)) (seq-pres< m<n)
 ```
 
 ```agda
 <-connex : a < c → b < c → a < b ⊎ b ≤ a
-<-connex = rec2 isPropConnex <-connex-homo
+<-connex = rec2 isPropConnex <-connex-rd
 ```
 
 ```agda
