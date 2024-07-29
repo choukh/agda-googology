@@ -129,10 +129,10 @@ $$
 {\quad\text{suc}(r):\text{Rd}(a,b^+)\quad}
 \qquad
 \frac{\quad f:\text{Seq}\quad w:\text{wf}(f)\quad r:\text{Rd}(a,f(n))\quad}
-{\lim(w,r):\text{Rd}(a,\lim(f))}
+{\lim(f,w,r):\text{Rd}(a,\lim(f))}
 $$
 
-简记起见后文将 $\text{suc}(r)$ 记作 $r^+$, 在没有歧义的情况下将 $\lim(w,r)$ 简记作 $\lim(r)$.
+简记起见后文将 $\text{suc}(r)$ 记作 $r^+$, 在没有歧义的情况下将 $\lim(f,w,r)$ 简记作 $\lim(r)$.
 
 ```agda
 data Road where
@@ -141,9 +141,11 @@ data Road where
   lim  : ⦃ _ : wf f ⦄ → Road a (f n) → Road a (lim f)
 ```
 
+注意此处构造子的名称是重载的 (overloaded), 从上下文可以推断它们指的是序数还是路径.
+
 ### 基本性质
 
-良构条件是命题
+**事实** 良构条件是命题. 这意味着它们对极限序数的同一性没有影响.
 
 ```agda
 isPropWf : isProp (wf f)
@@ -151,7 +153,9 @@ isPropWf = isPropImplicitΠ λ _ → squash₁
   where open import Cubical.Foundations.HLevels
 ```
 
-极限的外延性
+由以上事实, 结合 HoTT 承诺的函数外延性可得
+
+**事实** 两个良构序列的极限相等, 只要它们逐项相等.
 
 ```agda
 limExtPath : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → Path _ (f n) (g n)) → Path Ord (lim f) (lim g)
