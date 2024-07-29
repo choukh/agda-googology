@@ -570,7 +570,8 @@ seq-inj< {m} {n} _ r with ℕ.<-cmp m n
 ... | tri> _ _ n<m  = ⊥-elim $ <-asym r (seq-pres< n<m)
 ```
 
-**事实 2-0-28** 对良构序列 $f$, 不存在 $m$ 使得 $f(m)$ 正好位于 $f(n)$ 与 $f(n^+)$ 之间.
+**事实 2-0-28** 对良构序列 $f$, 不存在 $m$ 使得 $f(m)$ 正好位于 $f(n)$ 与 $f(n^+)$ 之间.  
+**证明** 由引理 2-0-25 以及自然数的相关性质可得. ∎
 
 ```agda
 seq-notDense : ∀ f → ⦃ _ : wf f ⦄ → f n < f m → f m < f (suc n) → ⊥
@@ -579,10 +580,15 @@ seq-notDense f r s = ℕ.<⇒≱ (seq-inj< f r) (ℕ.m<1+n⇒m≤n (seq-inj< f s
 
 ## 子树的三歧性
 
+**引理 2-0-29** 子树关系的连通性是命题.  
+**证明** 由推论 2-0-15 ($\lt$ 的反自反性), $a\lt b$ 与 $b≤a$ 互斥. ∎
+
 ```agda
 isPropConnex : isProp (a < b ⊎ b ≤ a)
 isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-trans r s)
 ```
+
+**引理 2-0-30**
 
 ```agda
 <-connex-rd : Road a c → Road b c → a < b ⊎ b ≤ a
