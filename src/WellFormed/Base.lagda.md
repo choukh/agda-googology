@@ -68,7 +68,7 @@ data Road : Ord → Ord → Type
 
 以上只是声明我们将要定义的东西, 它们的具体定义将在后面给出. 但在给出之前, 我们要假装它们已经完成了, 来表达定义中要用的一些辅助概念.
 
-**定义** 我们说 $a$ 是 $b$ 的子树, 记作 $a \lt b$, 当且仅当存在一条从 $a$ 到 $b$ 的路径.
+**定义 2-0-0** 我们说 $a$ 是 $b$ 的子树, 记作 $a \lt b$, 当且仅当存在一条从 $a$ 到 $b$ 的路径.
 
 ```agda
 _<_ : Ord → Ord → Type; infix 6 _<_
@@ -80,21 +80,21 @@ a < b = ∥ Road a b ∥₁
 - 任给一条路径 $r:\text{Rd}(a,b)$, 都可以证明 $|r|:a\lt b$
 - 任意两个证明 $p,q:a\lt b$ 都有 $p = q$
 
-**定义** 我们将自然数到序数的函数简称**序列**, 其类型 $ℕ→\text{Ord}$ 简记为 $\text{Seq}$.
+**定义 2-0-1** 我们将自然数到序数的函数简称**序列**, 其类型 $ℕ→\text{Ord}$ 简记为 $\text{Seq}$.
 
 ```agda
 Seq : Type
 Seq = ℕ → Ord
 ```
 
-**定义** 我们说一个序列 $f:\text{Seq}$ 是**良构**的 (well-formed), 记作 $\text{wf}(f)$, 当且仅当它严格单调递增, 即对任意 $n$ 都有 $f(n) < f(n^+)$. 良构序列又叫序数的基本列.
+**定义 2-0-2** 我们说一个序列 $f:\text{Seq}$ 是**良构**的 (well-formed), 记作 $\text{wf}(f)$, 当且仅当它严格单调递增, 即对任意 $n$ 都有 $f(n) < f(n^+)$. 良构序列又叫序数的基本列.
 
 ```agda
 wf : Seq → Type
 wf f = ∀ {n} → f n < f (suc n)
 ```
 
-**约定** 我们使用 $m,n$ 表示自然数, $a,b,c$ 表示序数, $f,g,h$ 表示基本列.
+**约定 2-0-3** 我们使用 $m,n$ 表示自然数, $a,b,c$ 表示序数, $f,g,h$ 表示基本列.
 
 ```agda
 variable
@@ -105,7 +105,7 @@ variable
 
 现在给出良构树序数和路径关系的具体定义.
 
-**定义** 良构树序数
+**定义 2-0-4** 良构树序数
 
 $$
 \frac{}{\quad\text{zero} : \text{Ord}\quad}
@@ -127,7 +127,7 @@ data Ord where
   lim  : (f : Seq) → ⦃ wf f ⦄ → Ord
 ```
 
-**定义** 路径关系
+**定义 2-0-5** 路径关系
 
 $$
 \frac{}
@@ -154,7 +154,7 @@ data Road where
 
 注意此处序数与路径的记法是重载的 (overloaded), 从上下文可以推断它们指的是序数的概念还是路径的概念.
 
-对于路径关系的截断——子树关系, 我们还将采用如下简写:
+**约定 2-0-6** 对于路径关系的截断——子树关系, 我们还将采用如下简写:
 
 - $|0|$ 记作 $0_1$
 - $|r^+|$ 记作 $r^{+_1}$
@@ -168,7 +168,7 @@ pattern lim₁ r = ∣ lim r ∣₁
 
 ### 基本性质
 
-**事实** 良构条件是命题. 这意味着它们对极限序数的同一性没有影响.
+**事实 2-0-7** 良构条件是命题. 这意味着它们对极限序数的同一性没有影响.
 
 ```agda
 isPropWf : isProp (wf f)
@@ -178,7 +178,7 @@ isPropWf = isPropImplicitΠ λ _ → squash₁
 
 由该事实, 结合 HoTT 承诺的函数外延性可得
 
-**事实** 两个良构序列的极限相等, 只要它们逐项相等.
+**事实 2-0-8** 两个良构序列的极限相等, 只要它们逐项相等.
 
 ```agda
 limExtPath : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → Path _ (f n) (g n)) → Path Ord (lim f) (lim g)
@@ -261,7 +261,7 @@ module OrdSet where
   isProp≡ = 🧊.subst isProp PathPathEq (isSetOrd _ _)
 ```
 
-后文中将用到「序数类型是集合」, 也即「序数的同一性是命题」这一结论.
+**事实 2-0-9** 序数类型是集合, 也即序数的同一性是命题.
 
 ```agda
 open OrdSet public using (isSetOrd; isProp≡)
@@ -281,7 +281,7 @@ open import Induction.WellFounded
 
 ### 严格序
 
-**事实** 路径关系与子树关系尊重命题相等, 即
+**事实 2-0-10** 路径关系与子树关系尊重命题相等, 即
 
 - 如果 $\text{Rd}(a,b)$ 且 $a=c$ 那么 $\text{Rd}(c,b)$
 - 如果 $\text{Rd}(a,b)$ 且 $b=c$ 那么 $\text{Rd}(a,c)$
@@ -297,7 +297,7 @@ rd-resp-≡ = (λ { refl → id }) , (λ { refl → id })
 <-resp-≡ = (λ { refl → id }) , (λ { refl → id })
 ```
 
-**定义** 任给 $r:\text{Rd}(a, b)$ 以及 $s:\text{Rd}(b, c)$, 递归定义**路径的结合** $r⋅s : \text{Rd}(a, c)$ 如下
+**定义 2-0-11** 任给 $r:\text{Rd}(a, b)$ 以及 $s:\text{Rd}(b, c)$, 递归定义**路径的结合** $r⋅s : \text{Rd}(a, c)$ 如下
 
 - 若 $s=0$, 必然有 $c=b^+$, 于是 $r⋅s := r^+:\text{Rd}(a,b^+)$.
 - 若存在 $s'$ 使得 $s=s'^+$, 必然存在 $c'$ 使得 $c=c'^+$ 且 $s':\text{Rd}(b,c')$, 于是 $r⋅s := (r⋅s')^+:\text{Rd}(a,c'^+)$.
@@ -310,14 +310,14 @@ rd-trans r (suc s) = suc (rd-trans r s)
 rd-trans r (lim s) = lim (rd-trans r s)
 ```
 
-**事实** 由路径的结合立即可得子树关系的传递性.
+**事实 2-0-12** 由路径的结合立即可得子树关系的传递性.
 
 ```agda
 <-trans : Transitive _<_
 <-trans = map2 rd-trans
 ```
 
-**定理** 路径关系是良基关系, 即任意序数 $a$ 在路径关系下可及.  
+**定理 2-0-13** 路径关系是良基关系, 即任意序数 $a$ 在路径关系下可及.  
 **证明** 在我们这套定义下, 该定理有一个技巧性的简短证明. 我们先假设存在 $a$ 到某 $b$ 的路径 $r:\text{Rd}(a,b)$, 以此证明 $a$ 可及之后, 提供 $0:\text{Rd}(a,a^+)$ 消掉此前提. 现在, 假设有这样的 $r$, 对 $r$ 归纳.
 
 - 若 $r=0$, 要证 $a$ 在路径关系下可及, 即证任意满足 $s:\text{Rd}(c,a)$ 的 $c$ 可及, 此即归纳假设.
@@ -334,7 +334,7 @@ rd-wellFounded : WellFounded Road
 rd-wellFounded _ = rd-acc zero
 ```
 
-**定理** 子树关系是良基关系.  
+**定理 2-0-14** 子树关系是良基关系.  
 **证明** 与路径关系的证明类似, 但需要先证明命题关系的可及性是命题, 暴露出立方类型论的区间原语 `i` 后归纳即得. ∎
 
 ```agda
@@ -351,7 +351,7 @@ isPropAcc (acc p) (acc q) i = acc (λ x<a → isPropAcc (p x<a) (q x<a) i)
 <-wellFounded _ = <-acc zero₁
 ```
 
-**推论** 路径关系和子树关系都是非对称且反自反的.  
+**推论 2-0-15** 路径关系和子树关系都是非对称且反自反的.  
 **证明** 良基关系都是非对称且反自反的. ∎
 
 ```agda
@@ -360,9 +360,7 @@ rd-asym = wf⇒asym rd-wellFounded
 
 rd-irrefl : Irreflexive _≡_ Road
 rd-irrefl = wf⇒irrefl rd-resp-≡ sym rd-wellFounded
-```
 
-```agda
 <-asym : Asymmetric _<_
 <-asym = wf⇒asym <-wellFounded
 
@@ -370,7 +368,7 @@ rd-irrefl = wf⇒irrefl rd-resp-≡ sym rd-wellFounded
 <-irrefl = wf⇒irrefl <-resp-≡ sym <-wellFounded
 ```
 
-**定理** 路径关系与子树关系分别构成严格偏序.  
+**定理 2-0-16** 路径关系与子树关系分别构成严格偏序.  
 **证明** 由以上讨论可知. ∎
 
 ```agda
@@ -391,7 +389,7 @@ rd-isStrictPartialOrder = record
 
 ### 非严格序
 
-**定义** 非严格序
+**定义 2-0-17** 非严格序
 
 - 序数 $a$ 到 $b$ 的非严格路径, 记作 $\widetilde{\text{Rd}}(a,b)$, 定义为和类型 $\text{Rd}(a,b)+(a=b)$.
 - 非严格子树关系, 记作 $a \le b$, 定义为和类型 $(a < b) + (a = b)$.
@@ -404,7 +402,7 @@ open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
   as NonStrictSubTree public using () renaming (_≤_ to infix 6 _≤_; <⇒≤ to <→≤)
 ```
 
-显然, 给定非严格路径, 可以证明非严格子树关系.
+**事实 2-0-18** 给定非严格路径, 可以证明非严格子树关系.
 
 ```agda
 ns→≤ : NSRoad a b → a ≤ b
@@ -412,7 +410,7 @@ ns→≤ (inl r) = inl ∣ r ∣₁
 ns→≤ (inr p) = inr p
 ```
 
-**引理** 非严格子树关系也是命题.  
+**引理 2-0-19** 非严格子树关系也是命题.  
 **引理** 如果和类型两边的命题互斥, 那么和类型也是一个命题. 由 $\lt$ 的反自反性, 显然 $a \lt b$ 与 $a = b$ 互斥. ∎
 
 ```agda
@@ -420,7 +418,7 @@ isProp≤ : isProp (a ≤ b)
 isProp≤ = isProp⊎ squash₁ isProp≡ (flip <-irrefl)
 ```
 
-**定理** $a$ 到 $b^+$ 的严格路径可以转换为 $a$ 到 $b$ 的非严格路径.  
+**定理 2-0-20** $a$ 到 $b^+$ 的严格路径可以转换为 $a$ 到 $b$ 的非严格路径.  
 **证明** 讨论 $r:\text{Rd}(a,b^+)$.
 - 若 $r=0$, 则必然有 $a=b$.
 - 若存在 $r'$ 使得 $r=r'^+$, 则必然有 $r':\text{Rd}(a,b)$. ∎
@@ -431,15 +429,15 @@ rds→ns zero    = inr refl
 rds→ns (suc r) = inl r
 ```
 
-**推论** 如果 $a \lt b^+$, 那么 $a \le b$.  
-**证明** 由上述定理及 $\le$ 的命题性即得. ∎
+**推论 2-0-21** 如果 $a \lt b^+$, 那么 $a \le b$.  
+**证明** 由上述定理及引理 2-0-19 ($\le$ 的命题性) 即得. ∎
 
 ```agda
 <s→≤ : a < suc b → a ≤ b
 <s→≤ = rec isProp≤ (ns→≤ ∘ rds→ns)
 ```
 
-**事实** 上述命题的逆命题也成立.  
+**事实 2-0-22** 定理 2-0-20 以及推论 2-0-21 的逆命题也成立.  
 **证明** 讨论和类型的两边即可. ∎
 
 ```agda
@@ -452,8 +450,8 @@ ns→rds (inr refl) = zero
 ≤→<s (inr refl) = zero₁
 ```
 
-**定理** 非严格路径关系和非严格子树关系分别满足自反性, 反对称性和传递性.  
-**证明** 显然. ∎
+**定理 2-0-23** 非严格路径关系和非严格子树关系分别满足自反性, 反对称性和传递性.  
+**证明** 由定义显然. ∎
 
 ```agda
 ns-refl : Reflexive NSRoad
@@ -487,7 +485,7 @@ ns-rd-trans = NonStrictRoad.≤-<-trans sym rd-trans (snd rd-resp-≡)
 ≤-<-trans = NonStrictSubTree.≤-<-trans sym <-trans (snd <-resp-≡)
 ```
 
-**定理** 非严格路径关系与非严格子树关系分别构成非严格偏序.  
+**定理 2-0-24** 非严格路径关系与非严格子树关系分别构成非严格偏序.  
 **证明** 由以上讨论可知. ∎
 
 ```agda
@@ -530,7 +528,7 @@ module SubTreeReasoning where
 
 ## 良构序列的性质
 
-**引理** 良构序列保持自然数的序, 即对任意 $m < n$ 都有 $f(m) < f(n)$.  
+**引理 2-0-25** 良构序列 $f$ 保持自然数的序, 即对任意 $m < n$ 都有 $f(m) < f(n)$.  
 **证明** 对 $n$ 归纳.
 
 - 若 $n=0$, 虚空真.
@@ -548,6 +546,11 @@ seq-pres< {f} {m} (ℕ.s≤s {n} m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 ... | inr refl = it
 ```
 
+注意上面的代码用到了我们之前提到的高可读记法, 我们称为序关系推理链.
+
+**引理 2-0-26** 良构序列对自然数的相等单射, 即如果序列的两个项相等, 那么它们的序号相等.  
+**证明** 由良构序列的严格递增性显然成立. ∎
+
 ```agda
 seq-inj≡ : ∀ f → ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
 seq-inj≡ {m} {n} _ eq with ℕ.<-cmp m n
@@ -556,6 +559,9 @@ seq-inj≡ {m} {n} _ eq with ℕ.<-cmp m n
 ... | tri> _ _ n<m  = ⊥-elim $ <-irrefl (sym eq) (seq-pres< n<m)
 ```
 
+**引理 2-0-27** 良构序列反映自然数的序, 即序列的两个项的大小关系反映序号的大小关系.  
+**证明** 由良构序列的严格递增性显然成立. ∎
+
 ```agda
 seq-inj< : ∀ f → ⦃ _ : wf f ⦄ → f m < f n → m ℕ.< n
 seq-inj< {m} {n} _ r with ℕ.<-cmp m n
@@ -563,6 +569,8 @@ seq-inj< {m} {n} _ r with ℕ.<-cmp m n
 ... | tri≈ _ refl _ = ⊥-elim $ <-irrefl refl r
 ... | tri> _ _ n<m  = ⊥-elim $ <-asym r (seq-pres< n<m)
 ```
+
+**事实 2-0-28** 对良构序列 $f$, 不存在 $m$ 使得 $f(m)$ 正好位于 $f(n)$ 与 $f(n^+)$ 之间.
 
 ```agda
 seq-notDense : ∀ f → ⦃ _ : wf f ⦄ → f n < f m → f m < f (suc n) → ⊥
