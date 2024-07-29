@@ -370,7 +370,8 @@ rd-irrefl = wf⇒irrefl rd-resp-≡ sym rd-wellFounded
 <-irrefl = wf⇒irrefl <-resp-≡ sym <-wellFounded
 ```
 
-**事实** 由以上, 路径关系与子树关系分别构成严格偏序.
+**定理** 路径关系与子树关系分别构成严格偏序.  
+**证明** 由以上讨论可知. ∎
 
 ```agda
 rd-isStrictPartialOrder : IsStrictPartialOrder Road
@@ -392,6 +393,9 @@ rd-isStrictPartialOrder = record
 
 **定义** 非严格序
 
+- 序数 $a$ 到 $b$ 的非严格路径, 记作 $\widetilde{\text{Rd}}(a,b)$, 定义为和类型 $\text{Rd}(a,b)+(a=b)$.
+- 非严格子树关系, 记作 $a \le b$, 定义为和类型 $(a < b) + (a = b)$.
+
 ```agda
 open import Relation.Binary.Construct.StrictToNonStrict _≡_ Road
   as NonStrictRoad public using () renaming (_≤_ to infix 6 NSRoad; <⇒≤ to rd→ns)
@@ -400,29 +404,43 @@ open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
   as NonStrictSubTree public using () renaming (_≤_ to infix 6 _≤_; <⇒≤ to <→≤)
 ```
 
+显然, 给定非严格路径, 可以证明非严格子树关系.
+
 ```agda
 ns→≤ : NSRoad a b → a ≤ b
 ns→≤ (inl r) = inl ∣ r ∣₁
 ns→≤ (inr p) = inr p
 ```
 
-命题性
+**引理** 非严格子树关系也是命题.  
+**引理** 如果和类型两边的命题互斥, 那么和类型也是一个命题. 由 $\lt$ 的反自反性, 显然 $a \lt b$ 与 $a = b$ 互斥. ∎
 
 ```agda
 isProp≤ : isProp (a ≤ b)
 isProp≤ = isProp⊎ squash₁ isProp≡ (flip <-irrefl)
 ```
 
-严格序与非严格序的相互转化
+**定理** $a$ 到 $b^+$ 的严格路径可以转换为 $a$ 到 $b$ 的非严格路径.  
+**证明** 讨论 $r:\text{Rd}(a,b^+)$.
+- 若 $r=0$, 则必然有 $a=b$.
+- 若存在 $r'$ 使得 $r=r'^+$, 则必然有 $r':\text{Rd}(a,b)$. ∎
 
 ```agda
 rds→ns : Road a (suc b) → NSRoad a b
 rds→ns zero    = inr refl
-rds→ns (suc p) = inl p
+rds→ns (suc r) = inl r
+```
 
+**推论** 如果 $a \lt b^+$, 那么 $a \le b$.  
+**证明** 由上述定理及 $\le$ 的命题性即得. ∎
+
+```agda
 <s→≤ : a < suc b → a ≤ b
 <s→≤ = rec isProp≤ (ns→≤ ∘ rds→ns)
 ```
+
+**事实** 上述命题的逆命题也成立.  
+**证明** 讨论和类型的两边即可. ∎
 
 ```agda
 ns→rds : NSRoad a b → Road a (suc b)
@@ -434,7 +452,8 @@ ns→rds (inr refl) = zero
 ≤→<s (inr refl) = zero₁
 ```
 
-自反性, 反对称性, 传递性
+**定理** 非严格路径关系和非严格子树关系分别满足自反性, 反对称性和传递性.  
+**证明** 显然. ∎
 
 ```agda
 ns-refl : Reflexive NSRoad
@@ -451,9 +470,7 @@ rd-ns-trans = NonStrictRoad.<-≤-trans rd-trans (fst rd-resp-≡)
 
 ns-rd-trans : Trans NSRoad Road Road
 ns-rd-trans = NonStrictRoad.≤-<-trans sym rd-trans (snd rd-resp-≡)
-```
 
-```agda
 ≤-refl : Reflexive _≤_
 ≤-refl = NonStrictSubTree.reflexive refl
 
@@ -470,7 +487,8 @@ ns-rd-trans = NonStrictRoad.≤-<-trans sym rd-trans (snd rd-resp-≡)
 ≤-<-trans = NonStrictSubTree.≤-<-trans sym <-trans (snd <-resp-≡)
 ```
 
-非严格路径关系与非严格子树关系分别构成非严格偏序
+**定理** 非严格路径关系与非严格子树关系分别构成非严格偏序.  
+**证明** 由以上讨论可知. ∎
 
 ```agda
 ns-isPreorder : IsPreorder NSRoad
@@ -482,9 +500,7 @@ ns-isPreorder = record
 
 ns-isPartialOrder : IsPartialOrder NSRoad
 ns-isPartialOrder = record { isPreorder = ns-isPreorder ; antisym = ns-antisym }
-```
 
-```agda
 ≤-isPreorder : IsPreorder _≤_
 ≤-isPreorder = record
   { isEquivalence = isEquivalence
@@ -495,6 +511,8 @@ ns-isPartialOrder = record { isPreorder = ns-isPreorder ; antisym = ns-antisym }
 ≤-isPartialOrder : IsPartialOrder _≤_
 ≤-isPartialOrder = record { isPreorder = ≤-isPreorder ; antisym = ≤-antisym }
 ```
+
+证明以上性质后, 我们可以实例化以下记法模块以提高序关系证明代码的可读性, 会在后篇用到.
 
 ```agda
 module RoadReasoning where
