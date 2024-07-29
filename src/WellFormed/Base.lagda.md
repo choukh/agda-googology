@@ -14,7 +14,7 @@ zhihu-tags: Agda, 大数数学, 序数
 
 ## 基础的选取
 
-我们发现对于 EBO 的定义, [函数外延性](https://ncatlab.org/nlab/show/function+extensionality), [证明无关性](https://ncatlab.org/nlab/show/proof+relevance)以及特定命题到集合的[大消去](https://cstheory.stackexchange.com/questions/40339/what-exactly-is-large-elimination)都是不可或缺的. 同伦类型论 (HoTT) 可以优雅地满足这三个需求, 因此我们采用它的一个Agda版本——立方类型论 (Cubical Agda) 作为数学基础. 采用 HoTT 作为基础的另一个好处是, [泛等原理](https://ncatlab.org/nlab/show/univalent+foundations+for+mathematics)将帮助我们省去一部分重复代码, 这在后篇可以看到.
+我们发现对于 EBO 的定义, [函数外延性](https://ncatlab.org/nlab/show/function+extensionality), [证明无关性](https://ncatlab.org/nlab/show/proof+relevance)以及特定命题到集合的[大消去](https://cstheory.stackexchange.com/questions/40339/what-exactly-is-large-elimination)似乎是不可或缺的. 同伦类型论 (HoTT) 可以优雅地满足这三个需求, 因此我们采用它的一个Agda版本——立方类型论 (Cubical Agda) 作为数学基础. 采用 HoTT 作为基础的另一个好处是, [泛等原理](https://ncatlab.org/nlab/show/univalent+foundations+for+mathematics)将帮助我们省去一部分重复代码, 这在后篇可以看到.
 
 ```agda
 {-# OPTIONS --safe --cubical #-}
@@ -59,36 +59,46 @@ open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 
 ## 良构树序数
 
-互归纳定义良构树序数与路径集.
+我们互归纳定义序数及其上的序关系, 因为我们的序数定义中就要用到由该序关系表达的一个条件作为约束. 这种约束后的序数我们称为良构树序数 $\text{Ord}$, 约束所用的序关系称为路径关系 $\text{Rd}(a, b)$, 其中 $a~b : \text{Ord}$. 这里所说的路径其实就是树 (tree) 中的路径 (path), 为了避免与 HoTT 中的道路 (path) 混淆, 我们称之为路径 (road). 后面会证明, $\text{Rd}(a, b)$ 是同伦层级意义下的集合, 也就是说 $\text{Rd}(a, b)$ 表示从序数 $a$ 到序数 $b$ 的所有路径所组成的集合.
 
 ```agda
 data Ord : Type
 data Road : Ord → Ord → Type
 ```
 
-**定义** 我们说 $a$ 是 $b$ 的子树, 记作 $a \lt b$, 当且仅当存在一条路径从 $a$ 到 $b$.
+以上只是声明我们将要定义的东西, 它们的具体定义将在后面给出. 但在给出之前, 我们要假装它们已经完成了, 来表达定义中要用的一些辅助概念.
+
+**定义** 我们说 $a$ 是 $b$ 的子树, 记作 $a \lt b$, 当且仅当存在一条从 $a$ 到 $b$ 的路径.
 
 ```agda
 _<_ : Ord → Ord → Type; infix 6 _<_
 a < b = ∥ Road a b ∥₁
 ```
 
-**定义** 我们说一个 $f:ℕ→\text{Ord}$ 是严格单调递增序列, 记作 $\text{wf}(f)$, 当且仅当对任意 $n$ 都有 $f(n) < f(n^+)$.
+**定义** 我们将自然数到序数的函数称为**基本列**, 其类型 $ℕ→\text{Ord}$ 简记为 $\text{Seq}$.
 
 ```agda
 Seq : Type
 Seq = ℕ → Ord
+```
 
+**定义** 我们说一个基本列 $f:\text{Seq}$ 是**良构**的 (well-formed), 记作 $\text{wf}(f)$, 当且仅当它严格单调递增, 即对任意 $n$ 都有 $f(n) < f(n^+)$.
+
+```agda
 wf : Seq → Type
 wf f = ∀ {n} → f n < f (suc n)
 ```
 
+**约定** 我们使用 $m~n$ 表示自然数, $a~b~c$ 表示序数, $f~g~h$ 表示基本列.
+
 ```agda
 variable
   m n : ℕ
-  a b c d i : Ord
+  a b c : Ord
   f g h : Seq
 ```
+
+现在给出良构树序数和路径关系的具体定义.
 
 **定义** 良构树序数
 
@@ -99,7 +109,7 @@ data Ord where
   lim  : (f : Seq) → ⦃ wf f ⦄ → Ord
 ```
 
-**定义** 路径集
+**定义** 路径关系
 
 ```agda
 data Road where
