@@ -599,7 +599,7 @@ Homo-sym : Symmetric Homo
 Homo-sym (c , a<c , b<c) = c , b<c , a<c
 ```
 
-**注意 2-0-31** 同株关系不是传递关系.
+**注意 2-0-31** 同株关系不是传递关系. 比如 $0$ 与 $\lim(0,1,...)$ 同株, 也与 $\lim(1,2,...)$ 同株, 但后两者不同株.
 
 ## 子树的三歧性
 
@@ -614,20 +614,20 @@ isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-tra
 **引理 2-0-33** 忽略非同株序数 (up to homo), $\lt$ 与 $≤$ 连通.
 
 ```agda
-<-connex-rd : Road a c → Road b c → a < b ⊎ b ≤ a
-<-connex-rd zero    zero    = inr $ inr refl
-<-connex-rd zero    (suc s) = inr $ inl ∣ s ∣₁
-<-connex-rd (suc r) zero    = inl ∣ r ∣₁
-<-connex-rd (suc r) (suc s) = <-connex-rd r s
-<-connex-rd (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
-... | tri< n<m _ _  = rec isPropConnex (λ t → <-connex-rd (rd-trans r t) s) (seq-pres< n<m)
-... | tri≈ _ refl _ = <-connex-rd r s
-... | tri> _ _ m<n  = rec isPropConnex (λ t → <-connex-rd r (rd-trans s t)) (seq-pres< m<n)
+<-connex-homo : Road a c → Road b c → a < b ⊎ b ≤ a
+<-connex-homo zero    zero    = inr $ inr refl
+<-connex-homo zero    (suc s) = inr $ inl ∣ s ∣₁
+<-connex-homo (suc r) zero    = inl ∣ r ∣₁
+<-connex-homo (suc r) (suc s) = <-connex-homo r s
+<-connex-homo (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
+... | tri< n<m _ _  = rec isPropConnex (λ t → <-connex-homo (rd-trans r t) s) (seq-pres< n<m)
+... | tri≈ _ refl _ = <-connex-homo r s
+... | tri> _ _ m<n  = rec isPropConnex (λ t → <-connex-homo r (rd-trans s t)) (seq-pres< m<n)
 ```
 
 ```agda
 <-connex : a < c → b < c → a < b ⊎ b ≤ a
-<-connex = rec2 isPropConnex <-connex-rd
+<-connex = rec2 isPropConnex <-connex-homo
 ```
 
 ```agda
