@@ -534,9 +534,9 @@ module SubTreeReasoning where
 **证明** 对 $n$ 归纳.
 
 - 若 $n=0$, 虚空真.
-- 若 $n=n'^+$, 有 $m<n'^+$, 即 $m≤n'$
-  - 若 $m<n'$, 由归纳假设有 $f(m)<f(n')$, 由 $f$ 的良构性质有 $f(n')<f(n'^+)$, 由 $\lt$ 的传递性有 $f(m)<f(n'^+)=f(n)$.
-  - 若 $m=n'$, 由 $f$ 的良构性质有 $f(m)=f(n')<f(n'^+)=f(n)$. ∎
+- 若 $n=n'^+$, 有 $m\lt n'^+$, 即 $m≤n'$
+  - 若 $m\lt n'$, 由归纳假设有 $f(m)\lt f(n')$, 由 $f$ 的良构性质有 $f(n')\lt f(n'^+)$, 由 $\lt$ 的传递性有 $f(m)\lt f(n'^+)=f(n)$.
+  - 若 $m=n'$, 由 $f$ 的良构性质有 $f(m)=f(n')\lt f(n'^+)=f(n)$. ∎
 
 ```agda
 seq-pres< : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
