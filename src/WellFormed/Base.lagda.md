@@ -25,11 +25,10 @@ cubical库
 ```agda
 open import Cubical.Foundations.Prelude as 🧊 public
   hiding (_≡_; refl; sym; cong; cong₂; subst)
-open import Cubical.Foundations.HLevels public
 open import Cubical.Data.Equality public
   using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
-  using (Σ-syntax; ∃-syntax; _×_; fst; snd; _,_; ΣPathP; PathPΣ)
+  using (Σ-syntax; ∃-syntax; _×_; _,_; fst; snd; ΣPathP)
 open import Cubical.HITs.PropositionalTruncation public
   using (∥_∥₁; ∣_∣₁; squash₁; rec; rec2; map; map2; rec→Set)
 ```
@@ -47,7 +46,7 @@ open import Relation.Binary.PropositionalEquality public
 融合库
 
 ```agda
-open import Bridged.Data.Empty public using (⊥; ⊥-elim; 🧊⊥-elim; isProp⊥)
+open import Bridged.Data.Empty public using (⊥; ⊥-elim; isProp⊥)
 open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```
 
@@ -109,6 +108,7 @@ data Road where
 ```agda
 isPropWf : isProp (wf f)
 isPropWf = isPropImplicitΠ λ _ → squash₁
+  where open import Cubical.Foundations.HLevels
 ```
 
 极限的外延性
@@ -121,35 +121,11 @@ limExt : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → f n ≡ g n) → lim f
 limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
 ```
 
-### 一些约定
-
-**定义** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
-
-$$
-\text{fin}~n := \text{suc}^n~0
-$$
-
-其中后继函数的上标 $n$ 表示迭代 $n$ 次.
-
-```agda
-open import Lower public using (_∘ⁿ_)
-fin : Seq
-fin n = (suc ∘ⁿ n) zero
-```
-
-**约定** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
-
-```agda
-open import Agda.Builtin.FromNat public
-instance
-  nNat = Number ℕ   ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
-  nOrd = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → fin n }
-```
-
 ## 序数集合
 
 ```agda
 module OrdSet where
+  open import Cubical.Foundations.HLevels
 ```
 
 我们使用 [encode-decode 方法](https://ncatlab.org/nlab/show/encode-decode+method) 证明 $\text{Ord}$ 是同伦层级意义下的集合. 具体细节这里不展开, 大致分为以下四步:
@@ -226,11 +202,10 @@ open OrdSet public using (isSetOrd; isProp≡)
 
 ```agda
 import Data.Nat.Properties as ℕ
-open import Induction.WellFounded
-open import Relation.Binary
-open import Relation.Binary.Structures {A = Ord} _≡_ as ≡
+open import Relation.Binary.Definitions
+open import Relation.Binary.Structures {A = Ord} _≡_
 open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
-open import Cubical.Relation.Nullary
+open import Induction.WellFounded
 ```
 
 ```agda
@@ -310,14 +285,14 @@ rd-irrefl = wf⇒irrefl rd-resp-≡ sym rd-wellFounded
 路径关系与子树关系分别构成严格偏序
 
 ```agda
-rd-isStrictPartialOrder : ≡.IsStrictPartialOrder Road
+rd-isStrictPartialOrder : IsStrictPartialOrder Road
 rd-isStrictPartialOrder = record
   { isEquivalence = isEquivalence
   ; irrefl = rd-irrefl
   ; trans = rd-trans
   ; <-resp-≈ = rd-resp-≡ }
 
-<-isStrictPartialOrder : ≡.IsStrictPartialOrder _<_
+<-isStrictPartialOrder : IsStrictPartialOrder _<_
 <-isStrictPartialOrder = record
   { isEquivalence = isEquivalence
   ; irrefl = <-irrefl
@@ -410,26 +385,26 @@ ns-rd-trans = NonStrictRoad.≤-<-trans sym rd-trans (snd rd-resp-≡)
 非严格路径关系与非严格子树关系分别构成非严格偏序
 
 ```agda
-ns-isPreorder : ≡.IsPreorder NSRoad
+ns-isPreorder : IsPreorder NSRoad
 ns-isPreorder = record
   { isEquivalence = isEquivalence
   ; reflexive = inr
   ; trans = ns-trans
   }
 
-ns-isPartialOrder : ≡.IsPartialOrder NSRoad
+ns-isPartialOrder : IsPartialOrder NSRoad
 ns-isPartialOrder = record { isPreorder = ns-isPreorder ; antisym = ns-antisym }
 ```
 
 ```agda
-≤-isPreorder : ≡.IsPreorder _≤_
+≤-isPreorder : IsPreorder _≤_
 ≤-isPreorder = record
   { isEquivalence = isEquivalence
   ; reflexive = inr
   ; trans = ≤-trans
   }
 
-≤-isPartialOrder : ≡.IsPartialOrder _≤_
+≤-isPartialOrder : IsPartialOrder _≤_
 ≤-isPartialOrder = record { isPreorder = ≤-isPreorder ; antisym = ≤-antisym }
 ```
 
@@ -520,8 +495,9 @@ isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-tra
 
 ```agda
 module RoadSet where
-  open import Cubical.Data.Nat using (discreteℕ; isSetℕ)
   open import Cubical.Axiom.UniquenessOfIdentity
+  open import Cubical.Data.Nat using (discreteℕ; isSetℕ)
+  open import Cubical.Relation.Nullary
 ```
 
 ```agda
