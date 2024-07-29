@@ -94,13 +94,14 @@ wf : Seq → Type
 wf f = ∀ {n} → f n < f (suc n)
 ```
 
-**约定 2-0-3** 我们使用 $m,n$ 表示自然数, $a,b,c$ 表示序数, $f,g,h$ 表示基本列.
+**约定 2-0-3** 我们使用 $m,n$ 表示自然数, $a,b,c$ 表示序数, $f,g,h$ 表示基本列, $r,s,t$ 表示路径.
 
 ```agda
 variable
   m n : ℕ
   a b c : Ord
   f g h : Seq
+  r s t : Road a b
 ```
 
 现在给出良构树序数和路径关系的具体定义.
@@ -634,10 +635,10 @@ module RoadSet where
 ```
 
 ```agda
-  suc-inj : {r s : Road a b} → suc r ≡ suc s → r ≡ s
+  suc-inj : suc r ≡ suc s → r ≡ s
   suc-inj refl = refl
 
-  suc-injPath : {r s : Road a b} → Path _ (suc r) (suc s) → Path _ r s
+  suc-injPath : Path _ (suc r) (suc s) → Path _ r s
   suc-injPath = eqToPath ∘ suc-inj ∘ pathToEq
 ```
 
