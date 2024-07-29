@@ -28,7 +28,7 @@ open import Cubical.Foundations.Prelude as 🧊 public
 open import Cubical.Data.Equality public
   using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
-  using (Σ-syntax; ∃-syntax; _×_; _,_; fst; snd; ΣPathP)
+  using (Σ-syntax; _,_; fst; snd; ΣPathP)
 open import Cubical.HITs.PropositionalTruncation public
   using (∥_∥₁; ∣_∣₁; squash₁; rec; rec2; map; map2; rec→Set)
 ```
@@ -429,13 +429,6 @@ seq-pres< : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
 seq-pres< (ℕ.s≤s m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 ... | inl m<n  = <-trans (seq-pres< m<n) it
 ... | inr refl = it
-```
-
-```agda
-seq-pres≤ : ⦃ _ : wf f ⦄ → m ℕ.≤ n → f m ≤ f n
-seq-pres≤ m≤n with ℕ.m≤n⇒m<n∨m≡n m≤n
-... | inl m<n = inl (seq-pres< m<n)
-... | inr refl = inr refl
 ```
 
 ```agda
