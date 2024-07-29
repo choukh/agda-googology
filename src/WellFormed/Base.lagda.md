@@ -59,7 +59,7 @@ open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 
 ## 良构树序数
 
-我们互归纳定义序数及其上的序关系, 因为我们的序数定义中就要用到由该序关系表达的一个条件作为约束. 这种约束后的序数我们称为良构树序数 $\text{Ord}$, 约束所用的序关系称为路径关系 $\text{Rd}(a, b)$, 其中 $a~b : \text{Ord}$. 这里所说的路径其实就是树 (tree) 中的路径 (path), 为了避免与 HoTT 中的道路 (path) 混淆, 我们称之为路径 (road). 后面会证明, $\text{Rd}(a, b)$ 是同伦层级意义下的集合, 也就是说 $\text{Rd}(a, b)$ 表示从序数 $a$ 到序数 $b$ 的所有路径所组成的集合.
+我们互归纳定义序数及其上的序关系, 因为我们的序数定义中就要用到由该序关系表达的一个条件作为约束. 这种约束后的序数我们称为良构树序数 $\text{Ord}$, 约束所用的序关系称为路径关系 $\text{Rd}(a, b)$, 其中 $a\;b : \text{Ord}$. 这里所说的路径其实就是树 (tree) 中的路径 (path), 为了避免与 HoTT 中的道路 (path) 混淆, 我们称之为路径 (road). 后面会证明, $\text{Rd}(a, b)$ 是同伦层级意义下的集合, 也就是说 $\text{Rd}(a, b)$ 表示从序数 $a$ 到序数 $b$ 的所有路径所组成的集合.
 
 ```agda
 data Ord : Type
@@ -89,7 +89,7 @@ wf : Seq → Type
 wf f = ∀ {n} → f n < f (suc n)
 ```
 
-**约定** 我们使用 $m~n$ 表示自然数, $a~b~c$ 表示序数, $f~g~h$ 表示基本列.
+**约定** 我们使用 $m\;n$ 表示自然数, $a\;b\;c$ 表示序数, $f\;g\;h$ 表示基本列.
 
 ```agda
 variable
@@ -102,6 +102,16 @@ variable
 
 **定义** 良构树序数
 
+$$
+\frac{}{\quad\text{zero} : \text{Ord}\quad}
+\qquad
+\frac{a:\text{Ord}}{\quad\text{suc}(a):\text{Ord}\quad}
+\qquad
+\frac{f:\text{Seq}\quad w : \text{wf}(f)}{\quad\lim(f,w):\text{Ord}\quad}
+$$
+
+简记起见后文将 $\text{suc}(a)$ 记作 $a^+$, 在没有歧义的情况下将 $\lim(f,w)$ 简记作 $\lim(f)$.
+
 ```agda
 data Ord where
   zero : Ord
@@ -110,6 +120,19 @@ data Ord where
 ```
 
 **定义** 路径关系
+
+$$
+\frac{}
+{\quad\text{zero} : \text{Rd}(a, a^+)\quad}
+\qquad
+\frac{r:\text{Rd}(a,b)}
+{\quad\text{suc}(r):\text{Rd}(a,b^+)\quad}
+\qquad
+\frac{\quad f:\text{Seq}\quad w:\text{wf}(f)\quad r:\text{Rd}(a,f(n))\quad}
+{\lim(w,r):\text{Rd}(a,\lim(f))}
+$$
+
+简记起见后文将 $\text{suc}(r)$ 记作 $r^+$, 在没有歧义的情况下将 $\lim(w,r)$ 简记作 $\lim(r)$.
 
 ```agda
 data Road where
