@@ -884,7 +884,7 @@ rd-f-l = set f<l
 ```agda
 rd-trich : Road a c → Road b c → Tri (Road a b) (a ≡ b) (Road b a)
 rd-trich r s with <-trich ∣ r ∣₁ ∣ s ∣₁
-... | tri< t ¬u ¬v = tri< (set t) ¬u  (¬v ∘ ∣_∣₁)
-... | tri≈ ¬t u ¬v = tri≈ (¬t ∘ ∣_∣₁)     u   (¬v ∘ ∣_∣₁)
-... | tri> ¬t ¬u v = tri> (¬t ∘ ∣_∣₁)     ¬u  (set v)
+... | tri< t ¬u ¬v = tri< (set t)     ¬u  (¬v ∘ ∣_∣₁)
+... | tri≈ ¬t u ¬v = tri≈ (¬t ∘ ∣_∣₁) u   (¬v ∘ ∣_∣₁)
+... | tri> ¬t ¬u v = tri> (¬t ∘ ∣_∣₁) ¬u  (set v)
 ```
