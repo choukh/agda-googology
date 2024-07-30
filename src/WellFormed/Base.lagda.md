@@ -865,7 +865,7 @@ $$
 open CanonicalRoad public using (set)
 ```
 
-**事实 2-0-47** 子树的蕴含可以还原为路径的运算.
+**推论 2-0-47** 子树的蕴含可以还原为路径的运算.
 
 ```agda
 setmap : (a < b → c < d) → (Road a b → Road c d)
