@@ -428,3 +428,106 @@ fin-suj {lim f}  r  = ⊥-elim $ <-irrefl refl $ begin-strict
 ```
 
 ## 可迭代函数
+
+```agda
+variable i : Ord
+Func↾ : Ord → Type
+Func↾ i = (x : Ord) → ⦃ i≤ : i ≤ x ⦄ → Ord
+```
+
+```agda
+inflates-from-syntax : (i : Ord) → Func↾ i → Rel → Type
+inflates-from-syntax i F _~_ = ∀ {x} ⦃ i≤ : i ≤ x ⦄ → x ~ F x
+syntax inflates-from-syntax i F _~_ = F inflates _~_ from i
+
+preserves-from-syntax : (i : Ord) → Func↾ i → Rel → Type
+preserves-from-syntax i F _~_ = ∀ {x y} ⦃ i≤₁ : i ≤ x ⦄ ⦃ i≤₂ : i ≤ y ⦄ → x ~ y → F x ~ F y
+syntax preserves-from-syntax i F _~_ = F preserves _~_ from i
+```
+
+```agda
+record Iterable : Set where
+  constructor iterable
+  field
+    init : Ord
+    _[_] : Func↾ init
+    infl< : _[_] inflates _<_ from init
+
+  infl-rd : _[_] inflates Road from init
+  infl-rd = set infl<
+
+variable ℱ : Iterable
+open Iterable public
+open Normal public
+```
+
+```agda
+_^⟨_⟩_ : (ℱ : Iterable) → Ord → Func↾ (init ℱ)
+^⟨⟩◌-infl≤ : (_^⟨_⟩_ ℱ a) inflates _≤_ from (init ℱ)
+^⟨◌⟩-pres-rd : ⦃ _ : init ℱ ≤ i ⦄ → (ℱ ^⟨_⟩ i) preserves Road
+
+^⟨◌⟩-pres< : ⦃ _ : init ℱ ≤ i ⦄ → (ℱ ^⟨_⟩ i) preserves _<_
+^⟨◌⟩-pres< = map ^⟨◌⟩-pres-rd
+```
+
+```agda
+init≤ : ⦃ _ : init ℱ ≤ i ⦄ → init ℱ ≤ ℱ ^⟨ a ⟩ i
+init≤ {ℱ} {i} {a} =                       begin
+  init ℱ                                  ≤⟨ it ⟩
+  i                                       ≤⟨ ^⟨⟩◌-infl≤ ⟩
+  ℱ ^⟨ a ⟩ i                              ∎ where open SubTreeReasoning
+```
+
+```agda
+ℱ ^⟨ zero ⟩ i = i
+ℱ ^⟨ suc a ⟩ i = (ℱ [ ℱ ^⟨ a ⟩ i ]) ⦃ init≤ ⦄
+ℱ ^⟨ lim f ⟩ i = lim (λ n → ℱ ^⟨ f n ⟩ i) ⦃ ^⟨◌⟩-pres< it ⦄
+```
+
+```agda
+^⟨⟩◌-infl≤ {a = zero} = inr refl
+^⟨⟩◌-infl≤ {a = suc a} {ℱ} {x} =          begin
+  x                                       ≤⟨ ^⟨⟩◌-infl≤ ⟩
+  ℱ ^⟨ a ⟩ x                              ≤⟨ <→≤ $ infl< ℱ ⦃ init≤ ⦄ ⟩
+  ℱ ^⟨ suc a ⟩ x                          ∎ where open SubTreeReasoning
+^⟨⟩◌-infl≤ {a = lim f} {ℱ} {x} =          begin
+  x                                       ≤⟨ ^⟨⟩◌-infl≤ ⟩
+  ℱ ^⟨ f 0 ⟩ x                            <⟨ map (lim ⦃ ^⟨◌⟩-pres< it ⦄) (^⟨◌⟩-pres< it) ⟩
+  ℱ ^⟨ lim f ⟩ x                          ∎ where open SubTreeReasoning
+```
+
+```agda
+^⟨◌⟩-pres-rd {ℱ} {i} {x} zero =           begin-strict
+  ℱ ^⟨ x ⟩ i                              <⟨ infl-rd ℱ ⦃ init≤ ⦄ ⟩
+  ℱ ^⟨ suc x ⟩ i                          ∎ where open RoadReasoning
+^⟨◌⟩-pres-rd {ℱ} {i} {x} (suc {b} r) =    begin-strict
+  ℱ ^⟨ x ⟩ i                              <⟨ ^⟨◌⟩-pres-rd r ⟩
+  ℱ ^⟨ b ⟩ i                              <⟨ infl-rd ℱ ⦃ init≤ ⦄ ⟩
+  ℱ ^⟨ suc b ⟩ i                          ∎ where open RoadReasoning
+^⟨◌⟩-pres-rd {ℱ} {i} {x} (lim {f} {n} r) = begin-strict
+  ℱ ^⟨ x ⟩ i                              <⟨ ^⟨◌⟩-pres-rd r ⟩
+  ℱ ^⟨ f n ⟩ i                            <⟨ lim ⦃ ^⟨◌⟩-pres< it ⦄ (^⟨◌⟩-pres-rd (set it)) ⟩
+  ℱ ^⟨ lim f ⟩ i                          ∎ where open RoadReasoning
+```
+
+```agda
+^⟨◌⟩-pres≤ : ⦃ _ : init ℱ ≤ i ⦄ → (ℱ ^⟨_⟩ i) preserves _≤_
+^⟨◌⟩-pres≤ = pres<→pres≤ ^⟨◌⟩-pres<
+```
+
+```agda
+^⟨⟩◌-infl< : ⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflates _<_ from (init ℱ)
+^⟨⟩◌-infl< {suc a} {ℱ} {x} =              begin-strict
+  x                                       ≤⟨ ^⟨⟩◌-infl≤ ⟩
+  ℱ ^⟨ a ⟩ x                              <⟨ ^⟨◌⟩-pres< zero₁ ⟩
+  ℱ ^⟨ suc a ⟩ x                          ∎ where open SubTreeReasoning
+^⟨⟩◌-infl< {lim f} {ℱ} {x} =              begin-strict
+  x                                       <⟨ ^⟨⟩◌-infl< ⦃ nz-intro (z<fs f) ⦄ ⟩
+  ℱ ^⟨ f 1 ⟩ x                            <⟨ ^⟨◌⟩-pres< f<l ⟩
+  ℱ ^⟨ lim f ⟩ x                          ∎ where open SubTreeReasoning
+```
+
+```agda
+_^⟨_⟩ : (ℱ : Iterable) (a : Ord) → ⦃ NonZero a ⦄ → Iterable
+_^⟨_⟩ ℱ a = iterable (init ℱ) (_^⟨_⟩_ ℱ a) ^⟨⟩◌-infl<
+```
