@@ -273,7 +273,8 @@ s<s-rd {x} (lim {f} {n} r) = suc $ begin-strict
 
 ```agda
 s<s-inj-rd : suc injects Road
-s<s-inj-rd = {!   !}
+s<s-inj-rd zero = zero
+s<s-inj-rd (suc r) = rd-trans zero r
 
 s<s-inj : suc injects _<_
 s<s-inj = map s<s-inj-rd
@@ -290,6 +291,50 @@ s≤→<-rd {b = lim f} (inl (lim r)) = lim (rd-trans zero r)
 s≤→< : suc a ≤ b → a < b
 s≤→< (inl r)    = map (s≤→<-rd ∘ inl) r
 s≤→< (inr refl) = zero₁
+```
+
+**引理 2-1-21** 构造子的单射性
+
+```agda
+suc-inj : suc a ≡ suc b → a ≡ b
+suc-inj refl = refl
+
+lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → Ord.lim f ≡ lim g → f ≡ g
+lim-inj refl = refl
+```
+
+**推论 2-1-22**
+
+```agda
+s≤s : suc preserves _≤_
+s≤s = pres<→pres≤ s<s
+
+s≤s-inj : suc injects _≤_
+s≤s-inj = inj<→inj≤ suc-inj s<s-inj
+```
+
+**定理 2-1-23**
+
+```agda
+s<l-rd : ⦃ _ : wf f ⦄ → Road a (lim f) → Road (suc a) (lim f)
+s<l-rd {a} (lim {f} {n} r) = begin-strict
+  suc a           <⟨ s<s-rd r ⟩
+  suc (f n)       ≤⟨ <→s≤-rd f<l-rd ⟩
+  lim f           ∎ where open RoadReasoning
+
+s<l : ⦃ _ : wf f ⦄ → a < lim f → suc a < lim f
+s<l = map s<l-rd
+```
+
+**定理 2-1-24**
+
+```agda
+l≤p-rd : ⦃ _ : wf f ⦄ → NSRoad (lim f) (suc a) → NSRoad (lim f) a
+l≤p-rd (inl zero)    = inr refl
+l≤p-rd (inl (suc r)) = inl r
+
+l≤p : ⦃ _ : wf f ⦄ → lim f ≤ suc a → lim f ≤ a
+l≤p (inl r) = ns→≤ (l≤p-rd (inl (set r)))
 ```
 
 ## ω的性质
