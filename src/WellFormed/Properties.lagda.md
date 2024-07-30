@@ -145,7 +145,7 @@ nz-intro : 0 < a → NonZero a
 nz-intro = nz-intro-rd ∘ set
 ```
 
-**约定 2-1-14** 非平凡序数指不等于零或一的序数.
+**约定 2-1-14** 非平凡序数指不等于零和一的序数.
 
 ```agda
 not01 : Ord → Type
@@ -168,7 +168,28 @@ nt-intro = nt-intro-rd ∘ set
 
 ## 一些引理
 
-**定理 2-1-15**
+**事实 2-1-15** 构造子的单射性
+
+```agda
+suc-inj : suc a ≡ suc b → a ≡ b
+suc-inj refl = refl
+
+lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → Ord.lim f ≡ lim g → f ≡ g
+lim-inj refl = refl
+```
+
+**事实 2-1-16** 极限路径的反演
+
+```agda
+lim-inv-rd : ⦃ _ : wf f ⦄ → Road a (lim f) → Σ[ n ∈ ℕ ] Road a (f n)
+lim-inv-rd (lim r) = _ , r
+
+lim-inv : ⦃ _ : wf f ⦄ → a < lim f → Σ[ n ∈ ℕ ] a < f n
+lim-inv r with lim-inv-rd (set r)
+... | n , r = n , ∣ r ∣₁
+```
+
+**定理 2-1-17**
 
 ```agda
 z<b-rd : Road a b → Road 0 b
@@ -181,7 +202,7 @@ z<s : 0 < suc a
 z<s = ∣ z<s-rd ∣₁
 ```
 
-**引理 2-1-15-1**
+**引理 2-1-17-1**
 
 ```agda
 z<l-rd : ⦃ _ : wf f ⦄ → Road 0 (lim f)
@@ -191,7 +212,7 @@ z<l : ⦃ _ : wf f ⦄ → 0 < lim f
 z<l = ∣ z<l-rd ∣₁
 ```
 
-**引理 2-1-15-2**
+**引理 2-1-17-2**
 
 ```agda
 z<fs-rd : ∀ f → ⦃ _ : wf f ⦄ → Road 0 (f (suc n))
@@ -201,7 +222,7 @@ z<fs : ∀ f → ⦃ _ : wf f ⦄ → 0 < f (suc n)
 z<fs f = ∣ z<fs-rd f ∣₁
 ```
 
-**引理 2-1-15-3**
+**引理 2-1-17-3**
 
 ```agda
 z<b-rd zero = z<s-rd
@@ -209,7 +230,7 @@ z<b-rd (suc r) = z<s-rd
 z<b-rd (lim r) = z<l-rd
 ```
 
-**引理 2-1-15-4**
+**引理 2-1-17-4**
 
 ```agda
 z<s-rd {(zero)} = zero
@@ -217,7 +238,7 @@ z<s-rd {suc a} = suc z<s-rd
 z<s-rd {lim f} = suc (lim {n = 1} (z<fs-rd f))
 ```
 
-**推论 2-1-16**
+**推论 2-1-18**
 
 ```agda
 z≤ : 0 ≤ a
@@ -226,7 +247,7 @@ z≤ {suc _}  = inl z<s
 z≤ {lim _}  = inl z<l
 ```
 
-**事实 2-1-17**
+**事实 2-1-19**
 
 ```agda
 nz-elim : ⦃ NonZero a ⦄ → 0 < a
@@ -234,7 +255,7 @@ nz-elim {suc a} = z<s
 nz-elim {lim f} = z<l
 ```
 
-**定理 2-1-18** 后继运算的保序性
+**定理 2-1-20** 后继运算的保序性
 
 ```agda
 <→s≤-rd : Road a b → NSRoad (suc a) b
@@ -247,7 +268,7 @@ s<s : suc preserves _<_
 s<s = map s<s-rd
 ```
 
-**引理 2-1-18-1**
+**引理 2-1-20-1**
 
 ```agda
 <→s≤-rd zero = inr refl
@@ -258,7 +279,7 @@ s<s = map s<s-rd
   f (suc n)       ∎ where open RoadReasoning
 ```
 
-**引理 2-1-18-2**
+**引理 2-1-20-2**
 
 ```agda
 s<s-rd zero = zero
@@ -269,7 +290,7 @@ s<s-rd {x} (lim {f} {n} r) = suc $ begin-strict
   lim f           ∎ where open RoadReasoning
 ```
 
-**推论 2-1-19**
+**推论 2-1-21**
 
 ```agda
 s<s-inj-rd : suc injects Road
@@ -280,7 +301,7 @@ s<s-inj : suc injects _<_
 s<s-inj = map s<s-inj-rd
 ```
 
-**定理 2-1-20**
+**定理 2-1-22**
 
 ```agda
 s≤→<-rd : NSRoad (suc a) b → Road a b
@@ -293,17 +314,7 @@ s≤→< (inl r)    = map (s≤→<-rd ∘ inl) r
 s≤→< (inr refl) = zero₁
 ```
 
-**引理 2-1-21** 构造子的单射性
-
-```agda
-suc-inj : suc a ≡ suc b → a ≡ b
-suc-inj refl = refl
-
-lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → Ord.lim f ≡ lim g → f ≡ g
-lim-inj refl = refl
-```
-
-**推论 2-1-22**
+**推论 2-1-23**
 
 ```agda
 s≤s : suc preserves _≤_
@@ -313,7 +324,7 @@ s≤s-inj : suc injects _≤_
 s≤s-inj = inj<→inj≤ suc-inj s<s-inj
 ```
 
-**定理 2-1-23**
+**定理 2-1-24**
 
 ```agda
 s<l-rd : ⦃ _ : wf f ⦄ → Road a (lim f) → Road (suc a) (lim f)
@@ -326,7 +337,7 @@ s<l : ⦃ _ : wf f ⦄ → a < lim f → suc a < lim f
 s<l = map s<l-rd
 ```
 
-**定理 2-1-24**
+**定理 2-1-25**
 
 ```agda
 l≤p-rd : ⦃ _ : wf f ⦄ → NSRoad (lim f) (suc a) → NSRoad (lim f) a
@@ -338,5 +349,82 @@ l≤p (inl r) = ns→≤ (l≤p-rd (inl (set r)))
 ```
 
 ## ω的性质
+
+**定义 2-1-26**
+
+```agda
+private instance
+  wf-fin : wf fin
+  wf-fin = zero₁
+
+ω : Ord
+ω = lim fin
+```
+
+**引理 2-1-27**
+
+```agda
+n<ω : fin n < ω
+n<ω {n = zero}  = z<l
+n<ω {n = suc n} = s<l n<ω
+```
+
+**引理 2-1-28**
+
+```agda
+n≤fn : ∀ f → ⦃ _ : wf f ⦄ → fin n ≤ f n
+n≤fn {n = zero} f   = z≤
+n≤fn {n = suc n} f  = begin
+  fin (suc n)         ≤⟨ s≤s (n≤fn f) ⟩
+  suc (f n)           ≤⟨ <→s≤ it ⟩
+  f (suc n)           ∎ where open SubTreeReasoning
+```
+
+**引理 2-1-29**
+
+```agda
+ω≤l : ⦃ _ : wf f ⦄ → ω < a → lim f < a → ω ≤ lim f
+ω≤l {f} r s with <-connex r s
+... | inl r           = inl r
+... | inr (inr refl)  = inr refl
+... | inr (inl r)     = let n , r = lim-inv r in ⊥-elim $ <-irrefl refl $ begin-strict
+    fin n             ≤⟨ n≤fn f ⟩
+    f n               <⟨ f<l ⟩
+    lim f             <⟨ r ⟩
+    fin n             ∎ where open SubTreeReasoning
+```
+
+**引理 2-1-30**
+
+```agda
+fin-inj : fin m ≡ fin n → m ≡ n
+fin-inj {(zero)} {(zero)} eq = refl
+fin-inj {suc m}  {suc n}  eq = cong suc $ fin-inj $ suc-inj eq
+```
+
+**引理 2-1-31**
+
+```agda
+fin-suj : a < ω → Σ[ n ∈ ℕ ] fin n ≡ a
+fin-suj {(zero)} r  = 0 , refl
+fin-suj {suc _}  r  with fin-suj (<-trans zero₁ r)
+... | n , refl      = suc n , refl
+fin-suj {lim f}  r  = ⊥-elim $ <-irrefl refl $ begin-strict
+  ω                 ≤⟨ ω≤l zero₁ (<-trans r zero₁) ⟩
+  lim f             <⟨ r ⟩
+  ω                 ∎ where open SubTreeReasoning
+```
+
+**定理 2-1-32**
+
+```agda
+ℕ≡ω : ℕ ≡ Σ Ord (_< ω)
+ℕ≡ω = pathToEq $ isoToPath $ iso
+  (λ n → fin n , n<ω)
+  (λ (a , a<ω) → fst (fin-suj a<ω))
+  (λ a → ΣPathP $ eqToPath (snd $ fin-suj _) , toPathP (squash₁ _ _))
+  (λ n → eqToPath $ fin-inj $ snd $ fin-suj _)
+  where open import Cubical.Foundations.Isomorphism
+```
 
 ## 可迭代函数

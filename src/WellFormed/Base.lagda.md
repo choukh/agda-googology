@@ -825,7 +825,7 @@ module CanonicalRoad where
 ```agda
   cano zero = zero
   cano (suc r) = suc (cano r)
-  cano (lim {f} r) = let (m , s) = min f ∣ r ∣₁ in
+  cano (lim {f} r) = let m , s = min f ∣ r ∣₁ in
     lim {n = m} (cano (set s))
 ```
 
