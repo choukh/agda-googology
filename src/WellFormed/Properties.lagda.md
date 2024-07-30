@@ -10,7 +10,7 @@ zhihu-tags: Agda, 大数数学, 序数
 > 高亮渲染: [Properties.html](https://choukh.github.io/agda-googology/WellFormed.Properties.html)  
 
 ```agda
-{-# OPTIONS --safe --cubical #-}
+{-# OPTIONS --safe --cubical --lossy-unification #-}
 module WellFormed.Properties where
 open import WellFormed.Base
 ```
@@ -98,10 +98,10 @@ record Normal : Type where
 
 ## 一些约定
 
-**定义** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
+**定义 2-1-10** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
 
 $$
-\text{fin}~n := \text{suc}^n~0
+\text{fin}(n) := \text{suc}^n(0)
 $$
 
 其中后继函数的上标 $n$ 表示迭代 $n$ 次.
@@ -112,7 +112,7 @@ fin : Seq
 fin n = (suc ∘ⁿ n) zero
 ```
 
-**约定** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
+**约定 2-1-11** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
 
 ```agda
 open import Agda.Builtin.FromNat public
@@ -121,13 +121,13 @@ instance
   nOrd = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → fin n }
 ```
 
-**约定** 我们将 $\text{suc}(\text{suc}(a))$ 记作 $a^{++}$.
+**约定 2-1-12** 我们将 $\text{suc}(\text{suc}(a))$ 记作 $a^{++}$.
 
 ```agda
 pattern 2+ a = suc (suc a)
 ```
 
-**约定** 非零序数指不等于零的序数.
+**约定 2-1-13** 非零序数指不等于零的序数.
 
 ```agda
 not0 : Ord → Type
@@ -145,7 +145,7 @@ nz-intro : 0 < a → NonZero a
 nz-intro = nz-intro-rd ∘ set
 ```
 
-**约定** 非平凡序数指不等于零或一的序数.
+**约定 2-1-14** 非平凡序数指不等于零或一的序数.
 
 ```agda
 not01 : Ord → Type
@@ -165,3 +165,133 @@ nt-intro-rd {lim _}        _ = _
 nt-intro : 1 < a → NonTrivial a
 nt-intro = nt-intro-rd ∘ set
 ```
+
+## 一些引理
+
+**定理 2-1-15**
+
+```agda
+z<b-rd : Road a b → Road 0 b
+z<s-rd : Road 0 (suc a)
+
+z<b : a < b → 0 < b
+z<b = map z<b-rd
+
+z<s : 0 < suc a
+z<s = ∣ z<s-rd ∣₁
+```
+
+**引理 2-1-15-1**
+
+```agda
+z<l-rd : ⦃ _ : wf f ⦄ → Road 0 (lim f)
+z<l-rd = lim {n = 1} (z<b-rd (set it))
+
+z<l : ⦃ _ : wf f ⦄ → 0 < lim f
+z<l = ∣ z<l-rd ∣₁
+```
+
+**引理 2-1-15-2**
+
+```agda
+z<fs-rd : ∀ f → ⦃ _ : wf f ⦄ → Road 0 (f (suc n))
+z<fs-rd _ = z<b-rd (set it)
+
+z<fs : ∀ f → ⦃ _ : wf f ⦄ → 0 < f (suc n)
+z<fs f = ∣ z<fs-rd f ∣₁
+```
+
+**引理 2-1-15-3**
+
+```agda
+z<b-rd zero = z<s-rd
+z<b-rd (suc r) = z<s-rd
+z<b-rd (lim r) = z<l-rd
+```
+
+**引理 2-1-15-4**
+
+```agda
+z<s-rd {(zero)} = zero
+z<s-rd {suc a} = suc z<s-rd
+z<s-rd {lim f} = suc (lim {n = 1} (z<fs-rd f))
+```
+
+**推论 2-1-16**
+
+```agda
+z≤ : 0 ≤ a
+z≤ {(zero)} = inr refl
+z≤ {suc _}  = inl z<s
+z≤ {lim _}  = inl z<l
+```
+
+**事实 2-1-17**
+
+```agda
+nz-elim : ⦃ NonZero a ⦄ → 0 < a
+nz-elim {suc a} = z<s
+nz-elim {lim f} = z<l
+```
+
+**定理 2-1-18** 后继运算的保序性
+
+```agda
+<→s≤-rd : Road a b → NSRoad (suc a) b
+s<s-rd : suc preserves Road
+
+<→s≤ : a < b → suc a ≤ b
+<→s≤ = rec isProp≤ (ns→≤ ∘ <→s≤-rd)
+
+s<s : suc preserves _<_
+s<s = map s<s-rd
+```
+
+**引理 2-1-18-1**
+
+```agda
+<→s≤-rd zero = inr refl
+<→s≤-rd (suc r) = inl (s<s-rd r)
+<→s≤-rd {a} (lim {f} {n} r) = inl $ lim $ begin-strict
+  suc a           <⟨ s<s-rd r ⟩
+  suc (f n)       ≤⟨ <→s≤-rd (set it) ⟩
+  f (suc n)       ∎ where open RoadReasoning
+```
+
+**引理 2-1-18-2**
+
+```agda
+s<s-rd zero = zero
+s<s-rd (suc r) = suc (s<s-rd r)
+s<s-rd {x} (lim {f} {n} r) = suc $ begin-strict
+  suc x           <⟨ s<s-rd r ⟩
+  suc (f n)       ≤⟨ <→s≤-rd f<l-rd ⟩
+  lim f           ∎ where open RoadReasoning
+```
+
+**推论 2-1-19**
+
+```agda
+s<s-inj-rd : suc injects Road
+s<s-inj-rd = {!   !}
+
+s<s-inj : suc injects _<_
+s<s-inj = map s<s-inj-rd
+```
+
+**定理 2-1-20**
+
+```agda
+s≤→<-rd : NSRoad (suc a) b → Road a b
+s≤→<-rd {b = suc b} (inl r)       = suc (s<s-inj-rd r)
+s≤→<-rd {b = suc b} (inr refl)    = zero
+s≤→<-rd {b = lim f} (inl (lim r)) = lim (rd-trans zero r)
+
+s≤→< : suc a ≤ b → a < b
+s≤→< (inl r)    = map (s≤→<-rd ∘ inl) r
+s≤→< (inr refl) = zero₁
+```
+
+## ω的性质
+
+## 可迭代函数

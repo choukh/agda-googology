@@ -95,12 +95,12 @@ wf : Seq → Type
 wf f = ∀ {n} → f n < f (suc n)
 ```
 
-**约定 2-0-3** 我们使用 $m,n$ 表示自然数, $a,b,c$ 表示序数, $f,g,h$ 表示基本列, $r,s,t$ 表示路径.
+**约定 2-0-3** 我们使用 $m,n$ 表示自然数, $a,b,c,d$ 表示序数, $f,g,h$ 表示基本列, $r,s,t$ 表示路径.
 
 ```agda
 variable
   m n : ℕ
-  a b c : Ord
+  a b c d : Ord
   f g h : Seq
   r s t : Road a b
 ```
@@ -625,15 +625,15 @@ isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-tra
   - 若 $m\lt n$, 与 $n\lt m$ 的情况同理可证. ∎
 
 ```agda
-<-connex-rd : Road a c → Road b c → a < b ⊎ b ≤ a
-<-connex-rd zero    zero    = inr $ inr refl
-<-connex-rd zero    (suc s) = inr $ inl ∣ s ∣₁
-<-connex-rd (suc r) zero    = inl ∣ r ∣₁
-<-connex-rd (suc r) (suc s) = <-connex-rd r s
-<-connex-rd (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
-... | tri< n<m _ _  = rec isPropConnex (λ t → <-connex-rd (rd-trans r t) s) (seq-pres< n<m)
-... | tri≈ _ refl _ = <-connex-rd r s
-... | tri> _ _ m<n  = rec isPropConnex (λ t → <-connex-rd r (rd-trans s t)) (seq-pres< m<n)
+<-connex-pre : Road a c → Road b c → a < b ⊎ b ≤ a
+<-connex-pre zero    zero    = inr $ inr refl
+<-connex-pre zero    (suc s) = inr $ inl ∣ s ∣₁
+<-connex-pre (suc r) zero    = inl ∣ r ∣₁
+<-connex-pre (suc r) (suc s) = <-connex-pre r s
+<-connex-pre (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
+... | tri< n<m _ _  = rec isPropConnex (λ t → <-connex-pre (rd-trans r t) s) (seq-pres< n<m)
+... | tri≈ _ refl _ = <-connex-pre r s
+... | tri> _ _ m<n  = rec isPropConnex (λ t → <-connex-pre r (rd-trans s t)) (seq-pres< m<n)
 ```
 
 **推论 2-0-34** 将同株关系弱化为命题, 一样有连通性成立.  
@@ -641,7 +641,7 @@ isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-tra
 
 ```agda
 <-connex : a < c → b < c → a < b ⊎ b ≤ a
-<-connex = rec2 isPropConnex <-connex-rd
+<-connex = rec2 isPropConnex <-connex-pre
 ```
 
 **推论 2-0-35** 忽略非同株序数 (up to homo), $\lt$ 满足三歧性.  
@@ -865,20 +865,27 @@ $$
 open CanonicalRoad public using (set)
 ```
 
+**事实 2-0-47** 子树的蕴含可以还原为路径的运算.
+
+```agda
+setmap : (a < b → c < d) → (Road a b → Road c d)
+setmap p r = set (p ∣ r ∣₁)
+```
+
 一旦建立子树关系到路径关系的消去, 我们可以构造之前无法构造的路径.
 
-**定理 2-0-47** 对任意良构序列 $f$ 有路径 $\text{Rd}(f(n), \lim(f))$.  
+**定理 2-0-48** 对任意良构序列 $f$ 有路径 $\text{Rd}(f(n), \lim(f))$.  
 **证明** 先通过良构性证明 $f(n)\lt \lim(f)$, 然后还原为路径. ∎
 
 ```agda
 f<l : ⦃ _ : wf f ⦄ → f n < lim f
 f<l = map lim it
 
-rd-f-l : ⦃ _ : wf f ⦄ → Road (f n) (lim f)
-rd-f-l = set f<l
+f<l-rd : ⦃ _ : wf f ⦄ → Road (f n) (lim f)
+f<l-rd = set f<l
 ```
 
-**定理 2-0-48** 子树的三歧性可以强化为路径的三歧性.  
+**定理 2-0-49** 子树的三歧性可以强化为路径的三歧性.  
 **证明** 从引理 2-0-35 还原为路径. ∎
 
 ```agda
@@ -889,4 +896,4 @@ rd-trich r s with <-trich ∣ r ∣₁ ∣ s ∣₁
 ... | tri> ¬t ¬u v = tri> (¬t ∘ ∣_∣₁) ¬u  (set v)
 ```
 
-**结论 2-0-49** 忽略非同株序数 (up to homo), 路径关系 $\text{Rd}$ (作为集合) 和子树关系 $\lt$ (作为命题) 分别构成了序数集 $\text{Ord}$ 上的良序.
+**结论 2-0-50** 忽略非同株序数 (up to homo), 路径关系 $\text{Rd}$ (作为集合) 和子树关系 $\lt$ (作为命题) 分别构成了序数集 $\text{Ord}$ 上的良序.
