@@ -76,29 +76,9 @@ inj<→inj≤ inj inj< (inl p) = inl (inj< p)
 inj<→inj≤ inj inj< (inr p) = inr (inj p)
 ```
 
-**定义 2-1-7** 我们说一个保持 $\lt$ 的序数函数 $F$ 是**连续**的, 当且仅当对任意良构序列 $f$ 都有 $F(\lim f) = \lim (F \circ f)$.
-
-```agda
-continuous : F preserves _<_ → Type
-continuous {F} pres = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘ f) ⦃ pres it ⦄
-```
-
-**注意 2-1-8** 在传统定义中「保持 $\lt$」与「连续」分开的, 但在我们这套定义中只有保持 $\lt$ 的函数才可以谈论是否连续, 因为受良构条件约束.
-
-**定义 2-1-9** 我们说一个序数函数 $F$ 是**正规**的, 当且仅当它保持 $\lt$ 且连续.
-
-```agda
-record Normal : Type where
-  constructor normal
-  field
-    _[_] : Func
-    pres< : _[_] preserves _<_
-    conti : continuous pres<
-```
-
 ## 一些约定
 
-**定义 2-1-10** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
+**定义 2-1-7** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
 
 $$
 \text{fin}(n) := \text{suc}^n(0)
@@ -112,7 +92,7 @@ fin : Seq
 fin n = (suc ∘ⁿ n) zero
 ```
 
-**约定 2-1-11** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
+**约定 2-1-8** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
 
 ```agda
 open import Agda.Builtin.FromNat public
@@ -121,13 +101,13 @@ instance
   nOrd = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → fin n }
 ```
 
-**约定 2-1-12** 我们将 $\text{suc}(\text{suc}(a))$ 记作 $a^{++}$.
+**约定 2-1-9** 我们将 $\text{suc}(\text{suc}(a))$ 记作 $a^{++}$.
 
 ```agda
 pattern 2+ a = suc (suc a)
 ```
 
-**约定 2-1-13-1** 非零序数指不等于零的序数.
+**约定 2-1-10** 非零序数指不等于零的序数.
 
 ```agda
 not0 : Ord → Type
@@ -145,7 +125,7 @@ nz-intro : 0 < a → NonZero a
 nz-intro = nz-intro-rd ∘ set
 ```
 
-**约定 2-1-13-2** 非平凡序数指不等于零和一的序数.
+**约定 2-1-11** 非平凡序数指不等于零和一的序数.
 
 ```agda
 not01 : Ord → Type
@@ -166,7 +146,7 @@ nt-intro : 1 < a → NonTrivial a
 nt-intro = nt-intro-rd ∘ set
 ```
 
-**约定 2-1-14** 非极限序数指零或后继序数.
+**约定 2-1-12** 非极限序数指零或后继序数.
 
 ```agda
 NonLim : Ord → Type
@@ -177,7 +157,7 @@ NonLim _ = ⊥
 
 ## 一些引理
 
-**事实 2-1-15** 构造子的单射性
+**事实 2-1-13** 构造子的单射性
 
 ```agda
 suc-inj : suc a ≡ suc b → a ≡ b
@@ -187,7 +167,7 @@ lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → Ord.lim f ≡ lim g → f ≡ g
 lim-inj refl = refl
 ```
 
-**事实 2-1-16** 极限路径的反演
+**事实 2-1-14** 极限路径的反演
 
 ```agda
 lim-inv-rd : ⦃ _ : wf f ⦄ → Road a (lim f) → Σ[ n ∈ ℕ ] Road a (f n)
@@ -198,7 +178,7 @@ lim-inv r with lim-inv-rd (set r)
 ... | n , r = n , ∣ r ∣₁
 ```
 
-**定理 2-1-17**
+**定理 2-1-15**
 
 ```agda
 z<b-rd : Road a b → Road 0 b
@@ -211,7 +191,7 @@ z<s : 0 < suc a
 z<s = ∣ z<s-rd ∣₁
 ```
 
-**引理 2-1-17-1**
+**引理 2-1-15-1**
 
 ```agda
 z<l-rd : ⦃ _ : wf f ⦄ → Road 0 (lim f)
@@ -221,7 +201,7 @@ z<l : ⦃ _ : wf f ⦄ → 0 < lim f
 z<l = ∣ z<l-rd ∣₁
 ```
 
-**引理 2-1-17-2**
+**引理 2-1-15-2**
 
 ```agda
 z<fs-rd : ∀ f → ⦃ _ : wf f ⦄ → Road 0 (f (suc n))
@@ -231,7 +211,7 @@ z<fs : ∀ f → ⦃ _ : wf f ⦄ → 0 < f (suc n)
 z<fs f = ∣ z<fs-rd f ∣₁
 ```
 
-**引理 2-1-17-3**
+**引理 2-1-15-3**
 
 ```agda
 z<b-rd zero = z<s-rd
@@ -239,7 +219,7 @@ z<b-rd (suc r) = z<s-rd
 z<b-rd (lim r) = z<l-rd
 ```
 
-**引理 2-1-17-4**
+**引理 2-1-15-4**
 
 ```agda
 z<s-rd {(zero)} = zero
@@ -247,7 +227,7 @@ z<s-rd {suc a} = suc z<s-rd
 z<s-rd {lim f} = suc (lim {n = 1} (z<fs-rd f))
 ```
 
-**推论 2-1-18**
+**推论 2-1-16**
 
 ```agda
 z≤ : 0 ≤ a
@@ -256,7 +236,7 @@ z≤ {suc _}  = inl z<s
 z≤ {lim _}  = inl z<l
 ```
 
-**事实 2-1-19**
+**事实 2-1-17**
 
 ```agda
 nz-elim : ⦃ NonZero a ⦄ → 0 < a
@@ -264,7 +244,7 @@ nz-elim {suc a} = z<s
 nz-elim {lim f} = z<l
 ```
 
-**定理 2-1-20** 后继运算的保序性
+**定理 2-1-18** 后继运算的保序性
 
 ```agda
 <→s≤-rd : Road a b → NSRoad (suc a) b
@@ -277,7 +257,7 @@ s<s : suc preserves _<_
 s<s = map s<s-rd
 ```
 
-**引理 2-1-20-1**
+**引理 2-1-18-1**
 
 ```agda
 <→s≤-rd zero = inr refl
@@ -288,7 +268,7 @@ s<s = map s<s-rd
   f (suc n)       ∎ where open RoadReasoning
 ```
 
-**引理 2-1-20-2**
+**引理 2-1-18-2**
 
 ```agda
 s<s-rd zero = zero
@@ -299,7 +279,7 @@ s<s-rd {x} (lim {f} {n} r) = suc $ begin-strict
   lim f           ∎ where open RoadReasoning
 ```
 
-**推论 2-1-21**
+**推论 2-1-19**
 
 ```agda
 s<s-inj-rd : suc injects Road
@@ -310,7 +290,7 @@ s<s-inj : suc injects _<_
 s<s-inj = map s<s-inj-rd
 ```
 
-**定理 2-1-22**
+**定理 2-1-20**
 
 ```agda
 s≤→<-rd : NSRoad (suc a) b → Road a b
@@ -323,7 +303,7 @@ s≤→< (inl r)    = map (s≤→<-rd ∘ inl) r
 s≤→< (inr refl) = zero₁
 ```
 
-**推论 2-1-23**
+**推论 2-1-21**
 
 ```agda
 s≤s : suc preserves _≤_
@@ -333,7 +313,7 @@ s≤s-inj : suc injects _≤_
 s≤s-inj = inj<→inj≤ suc-inj s<s-inj
 ```
 
-**定理 2-1-24**
+**定理 2-1-22**
 
 ```agda
 s<l-rd : ⦃ _ : wf f ⦄ → Road a (lim f) → Road (suc a) (lim f)
@@ -346,7 +326,7 @@ s<l : ⦃ _ : wf f ⦄ → a < lim f → suc a < lim f
 s<l = map s<l-rd
 ```
 
-**定理 2-1-25**
+**定理 2-1-23**
 
 ```agda
 l≤p-rd : ⦃ _ : wf f ⦄ → NSRoad (lim f) (suc a) → NSRoad (lim f) a
@@ -359,7 +339,7 @@ l≤p (inl r) = ns→≤ (l≤p-rd (inl (set r)))
 
 ## ω的性质
 
-**定义 2-1-26**
+**定义 2-1-24**
 
 ```agda
 instance
@@ -370,7 +350,7 @@ instance
 ω = lim fin
 ```
 
-**引理 2-1-27**
+**引理 2-1-25**
 
 ```agda
 n<ω : fin n < ω
@@ -378,7 +358,7 @@ n<ω {n = zero}  = z<l
 n<ω {n = suc n} = s<l n<ω
 ```
 
-**引理 2-1-28**
+**引理 2-1-26**
 
 ```agda
 n≤fn : ∀ f → ⦃ _ : wf f ⦄ → fin n ≤ f n
@@ -389,7 +369,7 @@ n≤fn {n = suc n} f  = begin
   f (suc n)           ∎ where open SubTreeReasoning
 ```
 
-**推论 2-1-29**
+**推论 2-1-27**
 
 ```agda
 n<fs : ∀ f n → ⦃ _ : wf f ⦄ → fin n < f (suc n)
@@ -401,7 +381,7 @@ nt-elim {suc (lim _)} = s<s z<l
 nt-elim {lim f}       = map lim (n<fs f 1)
 ```
 
-**引理 2-1-30**
+**引理 2-1-28**
 
 ```agda
 ω≤l : ⦃ _ : wf f ⦄ → ω < a → lim f < a → ω ≤ lim f
@@ -415,7 +395,7 @@ nt-elim {lim f}       = map lim (n<fs f 1)
     fin n             ∎ where open SubTreeReasoning
 ```
 
-**引理 2-1-31**
+**引理 2-1-29**
 
 ```agda
 fin-inj : fin m ≡ fin n → m ≡ n
@@ -423,7 +403,7 @@ fin-inj {(zero)} {(zero)} eq = refl
 fin-inj {suc m}  {suc n}  eq = cong suc $ fin-inj $ suc-inj eq
 ```
 
-**引理 2-1-32**
+**引理 2-1-30**
 
 ```agda
 fin-suj : a < ω → Σ[ n ∈ ℕ ] fin n ≡ a
@@ -436,7 +416,7 @@ fin-suj {lim f}  r  = ⊥-elim $ <-irrefl refl $ begin-strict
   ω                 ∎ where open SubTreeReasoning
 ```
 
-**定理 2-1-33**
+**定理 2-1-31**
 
 ```agda
 ℕ≡ω : ℕ ≡ Σ Ord (_< ω)

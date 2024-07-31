@@ -16,52 +16,80 @@ open import WellFormed.Base
 open import WellFormed.Properties
 ```
 
-## 可迭代函数
-
 ```agda
-Func↾ : Ord → Type
-Func↾ i = (x : Ord) ⦃ i≤ : i ≤ x ⦄ → Ord
+Func↾ : (Ord → Type) → Type
+Func↾ P = (x : Ord) ⦃ p : P x ⦄ → Ord
 ```
 
 ```agda
-inflates-from-syntax : (i : Ord) → Func↾ i → Rel → Type
-inflates-from-syntax i F _~_ = ∀ {x} ⦃ i≤ : i ≤ x ⦄ → x ~ F x
-syntax inflates-from-syntax i F _~_ = F inflates _~_ from i
-
-preserves-from-syntax : (i : Ord) → Func↾ i → Rel → Type
-preserves-from-syntax i F _~_ = ∀ {x y} ⦃ i≤₁ : i ≤ x ⦄ ⦃ i≤₂ : i ≤ y ⦄ → x ~ y → F x ~ F y
-syntax preserves-from-syntax i F _~_ = F preserves _~_ from i
+_↾_ : Func → (P : Ord → Type) → Func↾ P
+F ↾ P = λ a → F a
 ```
 
 ```agda
-record EverInfl (init : Ord) : Type where
-  constructor everInfl
+restr-infl-syntax : (P : Ord → Type) → Func↾ P → Rel → Type
+restr-infl-syntax P F _~_ = ∀ {x} ⦃ p : P x ⦄ → x ~ F x
+syntax restr-infl-syntax P F _~_ = F inflates _~_ within P
+```
+
+```agda
+restr-pres-syntax : (P : Ord → Type) → Func↾ P → Rel → Type
+restr-pres-syntax P F _~_ = ∀ {x y} ⦃ p₁ : P x ⦄ ⦃ p₂ : P y ⦄ → x ~ y → F x ~ F y
+syntax restr-pres-syntax P F _~_ = F preserves _~_ within P
+```
+
+```agda
+record Infl↾ (P : Ord → Type) : Type where
+  constructor mkInfl↾
   field
-    _[_] : Func↾ init
-    infl< : _[_] inflates _<_ from init
+    _[_] : Func↾ P
+    infl< : _[_] inflates _<_ within P
 
-  infl-rd : _[_] inflates Road from init
+  infl-rd : _[_] inflates Road within P
   infl-rd = set infl<
+open Infl↾ public
+```
 
-variable
-  i j : Ord
-  ℱ : EverInfl i
+**定义 2-2-x** 我们说一个保持 $\lt$ 的序数函数 $F$ 是**连续**的, 当且仅当对任意良构序列 $f$ 都有 $F(\lim f) = \lim (F \circ f)$.
 
-open EverInfl public
+```agda
+continuous : F preserves _<_ → Type
+continuous {F} pres = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘ f) ⦃ pres it ⦄
+```
+
+**注意 2-2-x** 在传统定义中「保持 $\lt$」与「连续」分开的, 但在我们这套定义中只有保持 $\lt$ 的函数才可以谈论是否连续, 因为受良构条件约束.
+
+**定义 2-1-x** 我们说一个序数函数 $F$ 是**正规**的, 当且仅当它保持 $\lt$ 且连续.
+
+```agda
+record Normal : Type where
+  constructor mkNormal
+  field
+    _[_] : Func
+    pres< : _[_] preserves _<_
+    conti : continuous pres<
 open Normal public
 ```
 
 ```agda
-_^⟨_⟩_ : (ℱ : EverInfl i) → Ord → Func↾ i
-^⟨⟩*-infl≤ : (_^⟨_⟩_ ℱ a) inflates _≤_ from i
-^⟨*⟩-pres-rd : {ℱ : EverInfl i} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves Road
+private variable
+  i j : Ord
+  ℱ : Infl↾ (i ≤_)
+```
 
-^⟨*⟩-pres< : {ℱ : EverInfl i} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves _<_
+```agda
+_^⟨_⟩_ : (ℱ : Infl↾ (i ≤_)) → Ord → Func↾ (i ≤_)
+^⟨⟩*-infl≤ : (_^⟨_⟩_ ℱ a) inflates _≤_ within (i ≤_)
+^⟨*⟩-pres-rd : {ℱ : Infl↾ (i ≤_)} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves Road
+```
+
+```agda
+^⟨*⟩-pres< : {ℱ : Infl↾ (i ≤_)} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves _<_
 ^⟨*⟩-pres< = map ^⟨*⟩-pres-rd
 ```
 
 ```agda
-init≤ : {ℱ : EverInfl i} ⦃ _ : i ≤ j ⦄ → i ≤ ℱ ^⟨ a ⟩ j
+init≤ : {ℱ : Infl↾ (i ≤_)} ⦃ _ : i ≤ j ⦄ → i ≤ ℱ ^⟨ a ⟩ j
 init≤ {i} {j} {a} {ℱ} =                   begin
   i                                       ≤⟨ it ⟩
   j                                       ≤⟨ ^⟨⟩*-infl≤ ⟩
@@ -101,12 +129,12 @@ init≤ {i} {j} {a} {ℱ} =                   begin
 ```
 
 ```agda
-^⟨*⟩-pres≤ : {ℱ : EverInfl i} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves _≤_
+^⟨*⟩-pres≤ : {ℱ : Infl↾ (i ≤_)} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves _≤_
 ^⟨*⟩-pres≤ = pres<→pres≤ ^⟨*⟩-pres<
 ```
 
 ```agda
-^⟨⟩*-infl< : ⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflates _<_ from i
+^⟨⟩*-infl< :  ⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflates _<_ within (i ≤_)
 ^⟨⟩*-infl< {suc a} {ℱ} {x} =              begin-strict
   x                                       ≤⟨ ^⟨⟩*-infl≤ ⟩
   ℱ ^⟨ a ⟩ x                              <⟨ ^⟨*⟩-pres< zero₁ ⟩
@@ -118,13 +146,13 @@ init≤ {i} {j} {a} {ℱ} =                   begin
 ```
 
 ```agda
-_^⟨_⟩ : (ℱ : EverInfl i) (a : Ord) → ⦃ NonZero a ⦄ → EverInfl i
-_^⟨_⟩ ℱ a = everInfl (_^⟨_⟩_ ℱ a) ^⟨⟩*-infl<
+_^⟨_⟩ : (ℱ : Infl↾ (i ≤_)) (a : Ord) → ⦃ NonZero a ⦄ → Infl↾ (i ≤_)
+_^⟨_⟩ ℱ a = mkInfl↾ (_^⟨_⟩_ ℱ a) ^⟨⟩*-infl<
 ```
 
 ```agda
-_⟨_⟩^ : (ℱ : EverInfl i) (j : Ord ) → ⦃ i ≤ j ⦄ → Normal
-ℱ ⟨ j ⟩^ = normal (ℱ ^⟨_⟩ j) ^⟨*⟩-pres< refl
+_⟨_⟩^ : (ℱ : Infl↾ (i ≤_)) (j : Ord ) → ⦃ i ≤ j ⦄ → Normal
+ℱ ⟨ j ⟩^ = mkNormal (ℱ ^⟨_⟩ j) ^⟨*⟩-pres< refl
 ```
 
 ```agda
@@ -142,8 +170,8 @@ private
 ## 加法
 
 ```agda
-Suc : EverInfl 0
-Suc = everInfl (λ x → suc x) zero₁
+Suc : Infl↾ (0 ≤_)
+Suc = mkInfl↾ (λ x → suc x) zero₁
 ```
 
 ```agda
@@ -153,7 +181,7 @@ a + b = Suc ^⟨ b ⟩ a
 
 ```agda
 LeftAdd : (a : Ord) → Normal
-LeftAdd a = normal (a +_) pres refl
+LeftAdd a = mkNormal (a +_) pres refl
 ```
 
 ```agda
@@ -178,7 +206,7 @@ LeftAdd a = normal (a +_) pres refl
 ## 乘法
 
 ```agda
-RightAdd : (b : Ord) → ⦃ NonZero b ⦄ → EverInfl 0
+RightAdd : (b : Ord) → ⦃ NonZero b ⦄ → Infl↾ (0 ≤_)
 RightAdd b = Suc ^⟨ b ⟩
 ```
 
@@ -189,7 +217,7 @@ a ⋅ b = (RightAdd a) ^⟨ b ⟩ 0
 
 ```agda
 LeftMul : (a : Ord) → ⦃ NonZero a ⦄ → Normal
-LeftMul a = normal (a ⋅_) pres refl
+LeftMul a = mkNormal (a ⋅_) pres refl
 ```
 
 ```agda
@@ -204,13 +232,13 @@ LeftMul a = normal (a ⋅_) pres refl
 ## 幂
 
 ```agda
-RightMul : (b : Ord) → ⦃ NonTrivial b ⦄ → EverInfl 1
-RightMul b = everInfl _⋅b infl where
+RightMul : (b : Ord) → ⦃ NonTrivial b ⦄ → Infl↾ (1 ≤_)
+RightMul b = mkInfl↾ _⋅b infl where
   instance _ : ⦃ 1 ≤ a ⦄ → NonZero a
   _ = nz-intro (s≤→< it)
-  _⋅b : Func↾ 1
+  _⋅b : Func↾ (1 ≤_)
   (x ⋅b) = (x ⋅ b)
-  infl : _⋅b inflates _<_ from 1
+  infl : _⋅b inflates _<_ within (1 ≤_)
   infl {x} =  begin-strict
     x         ≈˘⟨ ⋅-idʳ x ⟩
     (x ⋅ 1)   <⟨ pres nt-elim ⟩
@@ -224,5 +252,5 @@ a ^ b = (RightMul a) ^⟨ b ⟩ 1
 
 ```agda
 LeftExp : (a : Ord) → ⦃ NonTrivial a ⦄ → Normal
-LeftExp a = normal (a ^_) pres refl
+LeftExp a = mkNormal (a ^_) pres refl
 ```
