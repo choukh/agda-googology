@@ -353,7 +353,7 @@ l≤p (inl r) = ns→≤ (l≤p-rd (inl (set r)))
 **定义 2-1-26**
 
 ```agda
-private instance
+instance
   wf-fin : wf fin
   wf-fin = zero₁
 
@@ -442,7 +442,6 @@ fin-suj {lim f}  r  = ⊥-elim $ <-irrefl refl $ begin-strict
 ## 可迭代函数
 
 ```agda
-variable i : Ord
 Func↾ : Ord → Type
 Func↾ i = (x : Ord) → ⦃ i≤ : i ≤ x ⦄ → Ord
 ```
@@ -458,77 +457,79 @@ syntax preserves-from-syntax i F _~_ = F preserves _~_ from i
 ```
 
 ```agda
-record Iterable : Set where
-  constructor iterable
+record EverInfl (init : Ord) : Type where
+  constructor everInfl
   field
-    init : Ord
     _[_] : Func↾ init
     infl< : _[_] inflates _<_ from init
 
   infl-rd : _[_] inflates Road from init
   infl-rd = set infl<
 
-variable ℱ : Iterable
-open Iterable public
+variable
+  i j : Ord
+  ℱ : EverInfl i
+
+open EverInfl public
 open Normal public
 ```
 
 ```agda
-_^⟨_⟩_ : (ℱ : Iterable) → Ord → Func↾ (init ℱ)
-^⟨⟩*-infl≤ : (_^⟨_⟩_ ℱ a) inflates _≤_ from (init ℱ)
-^⟨*⟩-pres-rd : ⦃ _ : init ℱ ≤ i ⦄ → (ℱ ^⟨_⟩ i) preserves Road
+_^⟨_⟩_ : (ℱ : EverInfl i) → Ord → Func↾ i
+^⟨⟩*-infl≤ : (_^⟨_⟩_ ℱ a) inflates _≤_ from i
+^⟨*⟩-pres-rd : {ℱ : EverInfl i} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves Road
 
-^⟨*⟩-pres< : ⦃ _ : init ℱ ≤ i ⦄ → (ℱ ^⟨_⟩ i) preserves _<_
+^⟨*⟩-pres< : {ℱ : EverInfl i} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves _<_
 ^⟨*⟩-pres< = map ^⟨*⟩-pres-rd
 ```
 
 ```agda
-init≤ : ⦃ _ : init ℱ ≤ i ⦄ → init ℱ ≤ ℱ ^⟨ a ⟩ i
-init≤ {ℱ} {i} {a} =                       begin
-  init ℱ                                  ≤⟨ it ⟩
-  i                                       ≤⟨ ^⟨⟩*-infl≤ ⟩
-  ℱ ^⟨ a ⟩ i                              ∎ where open SubTreeReasoning
+init≤ : {ℱ : EverInfl i} ⦃ _ : i ≤ j ⦄ → i ≤ ℱ ^⟨ a ⟩ j
+init≤ {i} {j} {a} {ℱ} =                   begin
+  i                                       ≤⟨ it ⟩
+  j                                       ≤⟨ ^⟨⟩*-infl≤ ⟩
+  ℱ ^⟨ a ⟩ j                              ∎ where open SubTreeReasoning
 ```
 
 ```agda
-ℱ ^⟨ zero ⟩ i = i
-ℱ ^⟨ suc a ⟩ i = (ℱ [ ℱ ^⟨ a ⟩ i ]) ⦃ init≤ ⦄
-ℱ ^⟨ lim f ⟩ i = lim (λ n → ℱ ^⟨ f n ⟩ i) ⦃ ^⟨*⟩-pres< it ⦄
+ℱ ^⟨ zero ⟩ j = j
+ℱ ^⟨ suc a ⟩ j = (ℱ [ ℱ ^⟨ a ⟩ j ]) ⦃ init≤ ⦄
+ℱ ^⟨ lim f ⟩ j = lim (λ n → ℱ ^⟨ f n ⟩ j) ⦃ ^⟨*⟩-pres< it ⦄
 ```
 
 ```agda
-^⟨⟩*-infl≤ {a = zero} = inr refl
-^⟨⟩*-infl≤ {a = suc a} {ℱ} {x} =          begin
+^⟨⟩*-infl≤ {ℱ} {a = zero} = inr refl
+^⟨⟩*-infl≤ {ℱ} {a = suc a} {x} =          begin
   x                                       ≤⟨ ^⟨⟩*-infl≤ ⟩
   ℱ ^⟨ a ⟩ x                              ≤⟨ <→≤ $ infl< ℱ ⦃ init≤ ⦄ ⟩
   ℱ ^⟨ suc a ⟩ x                          ∎ where open SubTreeReasoning
-^⟨⟩*-infl≤ {a = lim f} {ℱ} {x} =          begin
+^⟨⟩*-infl≤ {ℱ} {a = lim f} {x} =          begin
   x                                       ≤⟨ ^⟨⟩*-infl≤ ⟩
   ℱ ^⟨ f 0 ⟩ x                            <⟨ map (lim ⦃ ^⟨*⟩-pres< it ⦄) (^⟨*⟩-pres< it) ⟩
   ℱ ^⟨ lim f ⟩ x                          ∎ where open SubTreeReasoning
 ```
 
 ```agda
-^⟨*⟩-pres-rd {ℱ} {i} {x} zero =           begin-strict
-  ℱ ^⟨ x ⟩ i                              <⟨ infl-rd ℱ ⦃ init≤ ⦄ ⟩
-  ℱ ^⟨ suc x ⟩ i                          ∎ where open RoadReasoning
-^⟨*⟩-pres-rd {ℱ} {i} {x} (suc {b} r) =    begin-strict
-  ℱ ^⟨ x ⟩ i                              <⟨ ^⟨*⟩-pres-rd r ⟩
-  ℱ ^⟨ b ⟩ i                              <⟨ infl-rd ℱ ⦃ init≤ ⦄ ⟩
-  ℱ ^⟨ suc b ⟩ i                          ∎ where open RoadReasoning
-^⟨*⟩-pres-rd {ℱ} {i} {x} (lim {f} {n} r) = begin-strict
-  ℱ ^⟨ x ⟩ i                              <⟨ ^⟨*⟩-pres-rd r ⟩
-  ℱ ^⟨ f n ⟩ i                            <⟨ lim ⦃ ^⟨*⟩-pres< it ⦄ (^⟨*⟩-pres-rd (set it)) ⟩
-  ℱ ^⟨ lim f ⟩ i                          ∎ where open RoadReasoning
+^⟨*⟩-pres-rd {j} {ℱ} {x} zero =           begin-strict
+  ℱ ^⟨ x ⟩ j                              <⟨ infl-rd ℱ ⦃ init≤ ⦄ ⟩
+  ℱ ^⟨ suc x ⟩ j                          ∎ where open RoadReasoning
+^⟨*⟩-pres-rd {j} {ℱ} {x} (suc {b} r) =    begin-strict
+  ℱ ^⟨ x ⟩ j                              <⟨ ^⟨*⟩-pres-rd r ⟩
+  ℱ ^⟨ b ⟩ j                              <⟨ infl-rd ℱ ⦃ init≤ ⦄ ⟩
+  ℱ ^⟨ suc b ⟩ j                          ∎ where open RoadReasoning
+^⟨*⟩-pres-rd {j} {ℱ} {x} (lim {f} {n} r) = begin-strict
+  ℱ ^⟨ x ⟩ j                              <⟨ ^⟨*⟩-pres-rd r ⟩
+  ℱ ^⟨ f n ⟩ j                            <⟨ lim ⦃ ^⟨*⟩-pres< it ⦄ (^⟨*⟩-pres-rd (set it)) ⟩
+  ℱ ^⟨ lim f ⟩ j                          ∎ where open RoadReasoning
 ```
 
 ```agda
-^⟨*⟩-pres≤ : ⦃ _ : init ℱ ≤ i ⦄ → (ℱ ^⟨_⟩ i) preserves _≤_
+^⟨*⟩-pres≤ : {ℱ : EverInfl i} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves _≤_
 ^⟨*⟩-pres≤ = pres<→pres≤ ^⟨*⟩-pres<
 ```
 
 ```agda
-^⟨⟩*-infl< : ⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflates _<_ from (init ℱ)
+^⟨⟩*-infl< : ⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflates _<_ from i
 ^⟨⟩*-infl< {suc a} {ℱ} {x} =              begin-strict
   x                                       ≤⟨ ^⟨⟩*-infl≤ ⟩
   ℱ ^⟨ a ⟩ x                              <⟨ ^⟨*⟩-pres< zero₁ ⟩
@@ -540,11 +541,11 @@ init≤ {ℱ} {i} {a} =                       begin
 ```
 
 ```agda
-_^⟨_⟩ : (ℱ : Iterable) (a : Ord) → ⦃ NonZero a ⦄ → Iterable
-_^⟨_⟩ ℱ a = iterable (init ℱ) (_^⟨_⟩_ ℱ a) ^⟨⟩*-infl<
+_^⟨_⟩ : (ℱ : EverInfl i) (a : Ord) → ⦃ NonZero a ⦄ → EverInfl i
+_^⟨_⟩ ℱ a = everInfl (_^⟨_⟩_ ℱ a) ^⟨⟩*-infl<
 ```
 
 ```agda
-_⟨_⟩^ : (ℱ : Iterable) (i : Ord ) → ⦃ init ℱ ≤ i ⦄ → Normal
-ℱ ⟨ i ⟩^ = normal (ℱ ^⟨_⟩ i) ^⟨*⟩-pres< refl
+_⟨_⟩^ : (ℱ : EverInfl i) (j : Ord ) → ⦃ i ≤ j ⦄ → Normal
+ℱ ⟨ j ⟩^ = normal (ℱ ^⟨_⟩ j) ^⟨*⟩-pres< refl
 ```

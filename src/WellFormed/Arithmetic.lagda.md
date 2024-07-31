@@ -31,8 +31,8 @@ private
 ## 加法
 
 ```agda
-Suc : Iterable
-Suc = iterable 0 (λ x → suc x) zero₁
+Suc : EverInfl 0
+Suc = everInfl (λ x → suc x) zero₁
 ```
 
 ```agda
@@ -46,16 +46,28 @@ LeftAdd a = normal (a +_) pres refl
 ```
 
 ```agda
++-assoc : ∀ a b c → a + (b + c) ≡ (a + b) + c
++-assoc a b zero = refl
++-assoc a b (suc c) = cong suc (+-assoc a b c)
++-assoc a b (lim f) = limExt ⦃ pres (pres it) ⦄ ⦃ pres it ⦄ λ n → +-assoc a b (f n)
+```
+
+```agda
++-idʳ : a + 0 ≡ a
++-idʳ = refl
+```
+
+```agda
 +-idˡ : ∀ a → 0 + a ≡ a
 +-idˡ zero = refl
 +-idˡ (suc a) = cong suc (+-idˡ a)
-+-idˡ (lim f) = limExt ⦃ pres it ⦄ (+-idˡ ∘ f)
++-idˡ (lim f) = limExt ⦃ pres it ⦄ λ n → +-idˡ (f n)
 ```
 
 ## 乘法
 
 ```agda
-RightAdd : (b : Ord) → ⦃ NonZero b ⦄ → Iterable
+RightAdd : (b : Ord) → ⦃ NonZero b ⦄ → EverInfl 0
 RightAdd b = Suc ^⟨ b ⟩
 ```
 
@@ -81,8 +93,8 @@ LeftMul a = normal (a ⋅_) pres refl
 ## 幂
 
 ```agda
-RightMul : (b : Ord) → ⦃ NonTrivial b ⦄ → Iterable
-RightMul b = iterable 1 _⋅b infl where
+RightMul : (b : Ord) → ⦃ NonTrivial b ⦄ → EverInfl 1
+RightMul b = everInfl _⋅b infl where
   instance _ : ⦃ 1 ≤ a ⦄ → NonZero a
   _ = nz-intro (s≤→< it)
   _⋅b : Func↾ 1
