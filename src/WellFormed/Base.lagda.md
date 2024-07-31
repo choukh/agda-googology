@@ -820,7 +820,7 @@ module CanonicalRoad where
 
 - 若 $r=0$, 取 $\text{cano}(r):=0$, 也就是说我们规定 $0$ 是 $\text{Rd}(a,a^+)$ 的典范路径. 这不难理解, 因为 $0$ 是唯一的.
 - 若 $r=r'^+$, 取 $\text{cano}(r):=\text{cano}(r')^+$. 也就是说对于 $\text{Rd}(a,b^+)$ 的典范路径, 我们希望没有大跨度, 而是一步一步上去.
-- 若 $r=\lim(f,n,w,r')$, 令 $(m,s)=\min(|r'|)$, 取 $\text{cano}(r):=\lim(f,m,w,\text{cano}(\text{set}(s)))$. 也就是说我们先通过 $|r'|:a\lt f(n)$ 找到最小的 $m$ 满足 $s:a\lt f(m)$, 将 $s$ 还原为集合, 再递归典范映射, 最后输入 $\lim$ 得到 $\text{Rd}(a,\lim(f))$ 的典范路径. ∎
+- 若 $r=\lim(f,n,w,r')$, 令 $(m,s)=\min(|r'|)$, 取 $\text{cano}(r):=\lim(f,m,w,\text{cano}(\text{set}(s)))$. 也就是说我们先通过 $|r'|:a\lt f(n)$ 找到最小的 $m$ 满足 $s:a\lt f(m)$, 将 $s$ 还原为集合, 再递归调用 $\text{cano}$, 最后输入到 $\lim$ 得到 $\text{Rd}(a,\lim(f))$ 的典范路径. ∎
 
 ```agda
   cano zero = zero
