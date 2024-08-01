@@ -83,8 +83,8 @@ fixpt ℱ = normal→fixable (jump (iterω↾ ℱ)) infl where
   infl : ((jump (iterω↾ ℱ) [_]) ↾ NonLim) inflates _<_ within NonLim
   infl {(zero)} = iterω-infl< ℱ
   infl {suc x} =                              begin-strict
-    suc x                                     <⟨ iterω-infl< ℱ ⟩
-    iterω↾ ℱ [ suc x ]                        ≤⟨ {!   !} ⟩
+    suc x                                     ≤⟨ s≤s {!   infl {x}  !} ⟩
+    suc (jump (iterω↾ ℱ) [ x ])               <⟨ infl< (iterω↾ ℱ) ⟩
     iterω↾ ℱ [ suc (jump (iterω↾ ℱ) [ x ]) ]  ≈⟨ refl ⟩
     jump (iterω↾ ℱ) [ suc x ]                 ∎ where open SubTreeReasoning
 ```
