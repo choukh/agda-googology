@@ -2,7 +2,6 @@
 {-# OPTIONS --safe --cubical --lossy-unification #-}
 module WellFormed.Fixpoints where
 
-open import Lower using (_∘ⁿ_)
 open import WellFormed.Base
 open import WellFormed.Properties
 open import WellFormed.Arithmetic
@@ -20,27 +19,64 @@ private
 ```
 
 ```agda
-record NormalInflNL : Type where
-  constructor normalInflNL
+record Fixable : Type where
+  constructor mkFixable
   field
     _[_] : Func
     pres< : _[_] preserves _<_
     conti : continuous pres<
     infl< : (_[_] ↾ NonLim) inflates _<_ within NonLim
-open NormalInflNL public
+open Fixable public
 ```
 
 ```agda
-iterω : NormalInflNL → Infl↾ NonLim
-iterω ℱ = mkInfl↾ iter infl where
-  fᵢ : (i : Ord) ⦃ nl : NonLim i ⦄ → Seq
-  fᵢ i n = ((ℱ [_]) ∘ⁿ n) i
-  instance w : ⦃ _ : NonLim i ⦄ → wf (fᵢ i)
-  w {n = zero} = infl< ℱ
-  w {n = suc n} = pres< ℱ w
-  iter : Func↾ NonLim
-  iter i = lim (fᵢ i)
-  infl : iter inflates _<_ within NonLim
-  infl {(zero)} = z<l
-  infl {suc x} = map (lim {n = 1}) (infl< ℱ)
+normal→fixable : (ℱ : Normal) → ((ℱ [_]) ↾ NonLim) inflates _<_ within NonLim → Fixable
+normal→fixable ℱ infl< = mkFixable (ℱ [_]) (pres< ℱ) (conti ℱ) infl<
+```
+
+```agda
+open import Lower using (_∘ⁿ_)
+_⟨_⟩∘ⁿ : Func → (i : Ord) → Seq
+(F ⟨ i ⟩∘ⁿ) n = (F ∘ⁿ n) i
+```
+
+```agda
+module _ (ℱ : Fixable) where
+  instance
+    wf-iterω : ⦃ _ : NonLim i ⦄ → wf (ℱ [_] ⟨ i ⟩∘ⁿ)
+    wf-iterω {n = zero} = infl< ℱ
+    wf-iterω {n = suc n} = pres< ℱ (wf-iterω {n = n})
+
+  iterω : Infl↾ NonLim
+  iterω = mkInfl↾ iter infl where
+    iter : Func↾ NonLim
+    iter i = lim (ℱ [_] ⟨ i ⟩∘ⁿ)
+    infl : iter inflates _<_ within NonLim
+    infl {(zero)} = z<l
+    infl {suc x} = map (lim {n = 1}) (infl< ℱ)
+```
+
+```agda
+_∘Suc : Infl↾ NonLim → Infl↾ (0 ≤_)
+ℱ ∘Suc = mkInfl↾ (λ x → ℱ [ suc x ]) (<-trans zero₁ (infl< ℱ))
+```
+
+```agda
+jump⟨_⟩ : (i : Ord) (ℱ : Infl↾ NonLim) ⦃ nl : NonLim i ⦄ → Normal
+jump⟨ i ⟩ ℱ = ((ℱ ∘Suc) ⟨ ℱ [ i ] ⟩^)
+```
+
+```agda
+jump : (ℱ : Infl↾ NonLim) → Normal
+jump ℱ = jump⟨ 0 ⟩ ℱ
+```
+
+```agda
+fixpt : Fixable → Fixable
+fixpt ℱ = normal→fixable (jump (iterω ℱ)) infl where
+  infl : ((jump (iterω ℱ) [_]) ↾ NonLim) inflates _<_ within NonLim
+  infl {(zero)} = z<l ⦃ wf-iterω ℱ ⦄
+  infl {suc x} = begin-strict
+    suc x <⟨ {!   !} ⟩
+    ((jump (iterω ℱ) [_]) ↾ NonLim) (suc x) ∎ where open SubTreeReasoning
 ```
