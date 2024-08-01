@@ -129,12 +129,12 @@ init≤ {i} {j} {a} {ℱ} =                   begin
 ```
 
 ```agda
-^⟨*⟩-pres≤ : {ℱ : Infl↾ (i ≤_)} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves _≤_
-^⟨*⟩-pres≤ = pres<→pres≤ ^⟨*⟩-pres<
+_⟨_⟩^ : (ℱ : Infl↾ (i ≤_)) (j : Ord ) → ⦃ i ≤ j ⦄ → Normal
+ℱ ⟨ j ⟩^ = mkNormal (ℱ ^⟨_⟩ j) ^⟨*⟩-pres< refl
 ```
 
 ```agda
-^⟨⟩*-infl< :  ⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflates _<_ within (i ≤_)
+^⟨⟩*-infl< : ⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflates _<_ within (i ≤_)
 ^⟨⟩*-infl< {suc a} {ℱ} {x} =              begin-strict
   x                                       ≤⟨ ^⟨⟩*-infl≤ ⟩
   ℱ ^⟨ a ⟩ x                              <⟨ ^⟨*⟩-pres< zero₁ ⟩
@@ -148,11 +148,6 @@ init≤ {i} {j} {a} {ℱ} =                   begin
 ```agda
 _^⟨_⟩ : (ℱ : Infl↾ (i ≤_)) (a : Ord) → ⦃ NonZero a ⦄ → Infl↾ (i ≤_)
 _^⟨_⟩ ℱ a = mkInfl↾ (_^⟨_⟩_ ℱ a) ^⟨⟩*-infl<
-```
-
-```agda
-_⟨_⟩^ : (ℱ : Infl↾ (i ≤_)) (j : Ord ) → ⦃ i ≤ j ⦄ → Normal
-ℱ ⟨ j ⟩^ = mkNormal (ℱ ^⟨_⟩ j) ^⟨*⟩-pres< refl
 ```
 
 ```agda
