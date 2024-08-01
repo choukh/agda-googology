@@ -41,46 +41,45 @@ _⟨_⟩∘ⁿ : Func → (i : Ord) → Seq
 ```
 
 ```agda
-module InfiniteIteration (ℱ : Fixable) where
-  instance
-    wf-iterω : ⦃ _ : NonLim i ⦄ → wf (ℱ [_] ⟨ i ⟩∘ⁿ)
-    wf-iterω {n = zero} = infl< ℱ
-    wf-iterω {n = suc n} = pres< ℱ (wf-iterω {n = n})
-
-  iterₙ : Func↾ NonLim
-  iterₙ i = lim (ℱ [_] ⟨ i ⟩∘ⁿ)
-  infl-iterₙ : iterₙ inflates _<_ within NonLim
-  infl-iterₙ {(zero)} = z<l
-  infl-iterₙ {suc x} = map (lim {n = 1}) (infl< ℱ)
-
-  iterω : Infl↾ NonLim
-  iterω = mkInfl↾ iterₙ infl-iterₙ
+iterω : Fixable → Infl↾ NonLim
+iterω ℱ = mkInfl↾ iter infl where
+  instance w : ⦃ _ : NonLim i ⦄ → wf (ℱ [_] ⟨ i ⟩∘ⁿ)
+  w {n = zero} = infl< ℱ
+  w {n = suc n} = pres< ℱ w
+  iter : Func↾ NonLim
+  iter i = lim (ℱ [_] ⟨ i ⟩∘ⁿ)
+  infl : iter inflates _<_ within NonLim
+  infl {(zero)} = z<l
+  infl {suc x} = map (lim {n = 1}) (infl< ℱ)
 ```
 
 ```agda
 _∘Suc : Infl↾ NonLim → Infl↾ (0 ≤_)
-ℱ ∘Suc = mkInfl↾ (λ x → ℱ [ suc x ]) (<-trans zero₁ (infl< ℱ))
+ℱ ∘Suc = mkInfl↾ (λ x → ℱ [ suc x ]) $ λ {x} →  begin-strict
+    x                                           <⟨ zero₁ ⟩
+    suc x                                       <⟨ infl< ℱ ⟩
+    ℱ [ suc x ]                                 ∎ where open SubTreeReasoning
 ```
 
 ```agda
-jump⟨_⟩ : (i : Ord) (ℱ : Infl↾ NonLim) ⦃ nl : NonLim i ⦄ → Normal
-jump⟨ i ⟩ ℱ = ((ℱ ∘Suc) ⟨ ℱ [ i ] ⟩^)
+jump⟨_⟩ : (i : Ord) (ℱ : Infl↾ NonLim) ⦃ nl : NonLim i ⦄ → Fixable
+jump⟨ i ⟩ ℱ = normal→fixable ((ℱ ∘Suc) ⟨ ℱ [ i ] ⟩^) infl where
+  infl : ((ℱ ∘Suc ⟨ ℱ [ i ] ⟩^ [_]) ↾ NonLim) inflates _<_ within NonLim
+  infl {(zero)} =                               begin-strict
+    0                                           ≤⟨ it ⟩
+    i                                           <⟨ infl< ℱ ⟩
+    ℱ [ i ]                                     ∎ where open SubTreeReasoning
+  infl {suc x} = begin-strict
+    suc x                                       <⟨ {!   !} ⟩
+    ((ℱ ∘Suc ⟨ ℱ [ i ] ⟩^ [_]) ↾ NonLim) (suc x) ∎ where open SubTreeReasoning
 ```
 
 ```agda
-jump : (ℱ : Infl↾ NonLim) → Normal
+jump : (ℱ : Infl↾ NonLim) → Fixable
 jump ℱ = jump⟨ 0 ⟩ ℱ
 ```
 
 ```agda
 fixpt : Fixable → Fixable
-fixpt ℱ = normal→fixable (jump (iterω ℱ)) infl where
-  open InfiniteIteration
-  instance _ = wf-iterω ℱ
-  infl : ((jump (iterω ℱ) [_]) ↾ NonLim) inflates _<_ within NonLim
-  infl {(zero)} = infl-iterₙ ℱ
-  infl {suc x} =                            begin-strict
-    suc x                                   <⟨ infl-iterₙ ℱ ⟩
-    lim (ℱ [_] ⟨ suc x ⟩∘ⁿ)                 ≤⟨ {!   !} ⟩
-    ((jump (iterω ℱ) [_]) ↾ NonLim) (suc x) ∎ where open SubTreeReasoning
+fixpt ℱ = jump (iterω ℱ)
 ```
