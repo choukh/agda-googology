@@ -41,19 +41,20 @@ _⟨_⟩∘ⁿ : Func → (i : Ord) → Seq
 ```
 
 ```agda
-module _ (ℱ : Fixable) where
+module InfiniteIteration (ℱ : Fixable) where
   instance
     wf-iterω : ⦃ _ : NonLim i ⦄ → wf (ℱ [_] ⟨ i ⟩∘ⁿ)
     wf-iterω {n = zero} = infl< ℱ
     wf-iterω {n = suc n} = pres< ℱ (wf-iterω {n = n})
 
+  iterₙ : Func↾ NonLim
+  iterₙ i = lim (ℱ [_] ⟨ i ⟩∘ⁿ)
+  infl-iterₙ : iterₙ inflates _<_ within NonLim
+  infl-iterₙ {(zero)} = z<l
+  infl-iterₙ {suc x} = map (lim {n = 1}) (infl< ℱ)
+
   iterω : Infl↾ NonLim
-  iterω = mkInfl↾ iter infl where
-    iter : Func↾ NonLim
-    iter i = lim (ℱ [_] ⟨ i ⟩∘ⁿ)
-    infl : iter inflates _<_ within NonLim
-    infl {(zero)} = z<l
-    infl {suc x} = map (lim {n = 1}) (infl< ℱ)
+  iterω = mkInfl↾ iterₙ infl-iterₙ
 ```
 
 ```agda
@@ -74,9 +75,12 @@ jump ℱ = jump⟨ 0 ⟩ ℱ
 ```agda
 fixpt : Fixable → Fixable
 fixpt ℱ = normal→fixable (jump (iterω ℱ)) infl where
+  open InfiniteIteration
+  instance _ = wf-iterω ℱ
   infl : ((jump (iterω ℱ) [_]) ↾ NonLim) inflates _<_ within NonLim
-  infl {(zero)} = z<l ⦃ wf-iterω ℱ ⦄
-  infl {suc x} = begin-strict
-    suc x <⟨ {!   !} ⟩
+  infl {(zero)} = infl-iterₙ ℱ
+  infl {suc x} =                            begin-strict
+    suc x                                   <⟨ infl-iterₙ ℱ ⟩
+    lim (ℱ [_] ⟨ suc x ⟩∘ⁿ)                 ≤⟨ {!   !} ⟩
     ((jump (iterω ℱ) [_]) ↾ NonLim) (suc x) ∎ where open SubTreeReasoning
 ```
