@@ -95,14 +95,14 @@ wf : Seq → Type
 wf f = ∀ {n} → f n < f (suc n)
 ```
 
-**约定 2-0-3** 我们使用 $m,n$ 表示自然数, $a,b,c,d$ 表示序数, $f,g,h$ 表示基本列, $r,s,t$ 表示路径.
+**约定 2-0-3** 我们使用 $m,n$ 表示自然数, $a,b,c,d$ 表示序数, $f,g$ 表示基本列, $r,s$ 表示路径.
 
 ```agda
 variable
   m n : ℕ
   a b c d : Ord
-  f g h : Seq
-  r s t : Road a b
+  f g : Seq
+  r s : Road a b
 ```
 
 现在给出良构树序数和路径关系的具体定义.
