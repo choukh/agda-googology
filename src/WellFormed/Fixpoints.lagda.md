@@ -24,12 +24,14 @@ iterω F i w = lim (F ⟨ i ⟩∘ⁿ) ⦃ w ⦄
 ```
 
 ```agda
-data Domain (F : Func) (i : Ord) : Ord → Type where
-  init  : Domain F i i
-  fix   : Domain F i j → (w : wf (F ⟨ j ⟩∘ⁿ)) → Domain F i (iterω F j w)
-  jump  : Domain F i j → Domain F i (suc j)
-
+data Domain (F : Func) (i : Ord) : Ord → Type
 syntax Domain F i j = j ∈Dom⟨ F , i ⟩
+
+data Domain F i where
+  zero  : i ∈Dom⟨ F , i ⟩
+  fix   : Domain F i j → (w : wf (F ⟨ j ⟩∘ⁿ)) → Domain F i (iterω F j w)
+  suc   : Domain F i j → Domain F i (suc j)
+  lim   : ⦃ _ : wf f ⦄ → (∀ n → Domain F i (f n)) → Domain F i (lim f)
 ```
 
 ```agda
@@ -50,11 +52,21 @@ module _ (ℱ : Fixable i) where
   fixpt : Func
   inDom : ∀ a → fixpt a ∈Dom⟨ func , i ⟩
 
-  fixpt zero = iterω func i (wff init)
-  fixpt (suc a) = iterω func (suc (fixpt a)) (wff (jump (inDom a)))
+  fixpt zero = iterω func i (wff zero)
+  fixpt (suc a) = iterω func (suc (fixpt a)) (wff (suc (inDom a)))
   fixpt (lim f) = lim (λ n → fixpt (f n)) ⦃ {!   !} ⦄
 
-  inDom zero = fix init (wff init)
-  inDom (suc a) = fix (jump (inDom a)) (wff (jump (inDom a)))
-  inDom (lim f) = {!   !}
+  inDom zero = fix zero (wff zero)
+  inDom (suc a) = fix (suc (inDom a)) (wff (suc (inDom a)))
+  inDom (lim f) = lim ⦃ {!   !} ⦄ λ n → inDom (f n)
+```
+
+```agda
+  ff : Fixable i
+  ff = mkFixable fixpt {!   !} infl where
+    infl : (fixpt ↾ Domain fixpt i) inflates _<_ within _
+    infl ⦃ p = zero ⦄     = {!   !}
+    infl ⦃ p = fix p w ⦄  = {!   !}
+    infl ⦃ p = suc p ⦄    = {!   !}
+    infl ⦃ p = lim x ⦄    = {!   !}
 ```
