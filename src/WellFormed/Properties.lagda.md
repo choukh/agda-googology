@@ -115,7 +115,7 @@ not0 zero = ⊥
 not0 _ = ⊤
 
 record NonZero (a : Ord) : Type where
-  field nonZero : not0 a
+  field .nonZero : not0 a
 
 nz-intro-rd : Road 0 a → NonZero a
 nz-intro-rd {suc _} _ = _
@@ -134,7 +134,7 @@ not01 (suc zero) = ⊥
 not01 _          = ⊤
 
 record NonTrivial (a : Ord) : Type where
-  field nonTrivial : not01 a
+  field .nonTrivial : not01 a
 
 nt-intro-rd : Road 1 a → NonTrivial a
 nt-intro-rd {suc zero} (suc ())
@@ -204,11 +204,11 @@ z<l = ∣ z<l-rd ∣₁
 **引理 2-1-15-2**
 
 ```agda
-z<fs-rd : ∀ f → ⦃ _ : wf f ⦄ → Road 0 (f (suc n))
-z<fs-rd _ = z<b-rd (set it)
+z<fs-rd : ∀ f n → ⦃ _ : wf f ⦄ → Road 0 (f (suc n))
+z<fs-rd _ _ = z<b-rd (set it)
 
-z<fs : ∀ f → ⦃ _ : wf f ⦄ → 0 < f (suc n)
-z<fs f = ∣ z<fs-rd f ∣₁
+z<fs : ∀ f n → ⦃ _ : wf f ⦄ → 0 < f (suc n)
+z<fs f n = ∣ z<fs-rd f n ∣₁
 ```
 
 **引理 2-1-15-3**
@@ -224,7 +224,7 @@ z<b-rd (lim r) = z<l-rd
 ```agda
 z<s-rd {(zero)} = zero
 z<s-rd {suc a} = suc z<s-rd
-z<s-rd {lim f} = suc (lim {n = 1} (z<fs-rd f))
+z<s-rd {lim f} = suc (lim (z<fs-rd f 1))
 ```
 
 **推论 2-1-16**
