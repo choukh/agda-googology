@@ -135,7 +135,7 @@ _⟨_⟩^ : (ℱ : Infl↾ (i ≤_)) (j : Ord ) → ⦃ i ≤ j ⦄ → Normal
 ```
 
 ```agda
-^⟨⟩*-infl< : ⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflatesᴿ _<_
+^⟨⟩*-infl< : .⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflatesᴿ _<_
 ^⟨⟩*-infl< {suc a} {ℱ} {x} =              begin-strict
   x                                       ≤⟨ ^⟨⟩*-infl≤ ⟩
   ℱ ^⟨ a ⟩ x                              <⟨ ^⟨*⟩-pres< zero₁ ⟩
@@ -147,7 +147,7 @@ _⟨_⟩^ : (ℱ : Infl↾ (i ≤_)) (j : Ord ) → ⦃ i ≤ j ⦄ → Normal
 ```
 
 ```agda
-_^⟨_⟩ : (ℱ : Infl↾ (i ≤_)) (a : Ord) → ⦃ NonZero a ⦄ → Infl↾ (i ≤_)
+_^⟨_⟩ : (ℱ : Infl↾ (i ≤_)) (a : Ord) → .⦃ NonZero a ⦄ → Infl↾ (i ≤_)
 _^⟨_⟩ ℱ a = mkInfl↾ (_^⟨_⟩_ ℱ a) ^⟨⟩*-infl<
 ```
 
@@ -205,22 +205,22 @@ LeftAdd a = mkNormal (a +_) pres refl
 ## 乘法
 
 ```agda
-RightAdd : (b : Ord) → ⦃ NonZero b ⦄ → Infl↾ (0 ≤_)
+RightAdd : (b : Ord) → .⦃ NonZero b ⦄ → Infl↾ (0 ≤_)
 RightAdd b = Suc ^⟨ b ⟩
 ```
 
 ```agda
-_⋅_ : (a : Ord) → ⦃ NonZero a ⦄ → Ord → Ord; infixl 7 _⋅_
+_⋅_ : (a : Ord) → Ord → .⦃ NonZero a ⦄ → Ord; infixl 7 _⋅_
 a ⋅ b = (RightAdd a) ^⟨ b ⟩ 0
 ```
 
 ```agda
-LeftMul : (a : Ord) → ⦃ NonZero a ⦄ → Normal
+LeftMul : (a : Ord) → .⦃ NonZero a ⦄ → Normal
 LeftMul a = mkNormal (a ⋅_) pres refl
 ```
 
 ```agda
-⋅-idʳ : ∀ a → ⦃ _ : NonZero a ⦄ → a ⋅ 1 ≡ a
+⋅-idʳ : ∀ a → .⦃ _ : NonZero a ⦄ → a ⋅ 1 ≡ a
 ⋅-idʳ a =     begin-equality
   a ⋅ 1       ≈⟨ refl ⟩
   a ⋅ 0 + a   ≈⟨ cong (_+ a) refl ⟩
@@ -268,45 +268,44 @@ Base a = mkNormal (a ^_) pres refl
 
 ```agda
 ^-idʳ : ∀ a → ⦃ _ : NonTrivial a ⦄ → a ^ 1 ≡ a
-^-idʳ a =   begin-equality
-  a ^ 1     ≈⟨ refl ⟩
-  a ^ 0 ⋅ a ≈⟨ refl ⟩
-  1 ⋅ a     ≈⟨ ⋅-idˡ a ⟩
-  a         ∎ where open SubTreeReasoning
+^-idʳ a =     begin-equality
+  a ^ 1       ≈⟨ refl ⟩
+  a ^ 0 ⋅ a   ≈⟨ refl ⟩
+  1 ⋅ a       ≈⟨ ⋅-idˡ a ⟩
+  a           ∎ where open SubTreeReasoning
 ```
 
 ```agda
 ω^a>0 : 0 < ω^ [ a ]
-ω^a>0 {a} = begin-strict
-  0         <⟨ zero₁ ⟩
-  1         ≈⟨ refl ⟩
-  ω ^ 0     ≤⟨ pres≤ z≤ ⟩
-  ω^ [ a ]  ∎ where open SubTreeReasoning
+ω^a>0 {a} =   begin-strict
+  0           <⟨ zero₁ ⟩
+  1           ≈⟨ refl ⟩
+  ω ^ 0       ≤⟨ pres≤ z≤ ⟩
+  ω^ [ a ]    ∎ where open SubTreeReasoning
 ```
 
 ```agda
-ω^-infl-fin : ((ω^ [_]) ↾ (_< ω)) inflatesᴿ _≤_
-ω^-infl-fin {(zero)} = {!   !}
-ω^-infl-fin {suc x} = {!   !}
-ω^-infl-fin {lim f} = {!   !}
+instance
+  ω^a-nz : NonZero (ω^ [ a ])
+  ω^a-nz = nz-intro ω^a>0
 ```
 
 ```agda
-ω^-infl : ((ω^ [_]) ↾ (ω <_)) inflatesᴿ _≤_
-ω^-infl = {!   !}
+ω^-infl< : ((ω^ [_]) ↾ (_< ω)) inflatesᴿ _<_
+ω^-infl< {(zero)} = zero₁
+ω^-infl< {suc x} =      begin-strict
+  suc x                 <⟨ s<s (ω^-infl< ⦃ <-trans zero₁ it ⦄) ⟩
+  suc (ω^ [ x ])        ≈⟨ refl ⟩
+  ω^ [ x ] + 1          ≤⟨ pres≤ (<→s≤ ω^a>0) ⟩
+  ω^ [ x ] + ω^ [ x ]   ≈⟨ {!   !} ⟩
+  ω^ [ x ] ⋅ 2          <⟨ pres (f<l {n = 2}) ⟩
+  ω^ [ x ] ⋅ ω          ≈⟨ {!   !} ⟩
+  (ω^ [ x ] ⋅ ω) ⦃ _ ⦄  ≈⟨ refl ⟩
+  ω^ [ suc x ]          ∎ where open SubTreeReasoning
+ω^-infl< {lim _} ⦃ p ⦄ = ⊥-elim $ l≮ω p
 ```
-ω^-infl : (ω^ [_]) inflates _≤_
-ω^-infl {(zero)} = z≤
-ω^-infl {suc x} =     begin
-  suc x               ≤⟨ s≤s ω^-infl ⟩
-  suc (ω^ [ x ])      ≈⟨ refl ⟩
-  ω^ [ x ] + 1        ≤⟨ pres≤ (<→s≤ ω^a>0) ⟩
-  ω^ [ x ] + ω^ [ x ] ≈⟨ {!   !} ⟩
-  ω^ [ x ] ⋅ 2        ≤⟨ {!   !} ⟩
-  ω^ [ x ] ⋅ ω        ≈⟨ refl ⟩
-  ω^ [ suc x ]        ∎ where
-    open SubTreeReasoning
-    instance
-      _ : NonZero (ω^ [ x ])
-      _ = {!   !}
-ω^-infl {lim f} = {!   !}
+
+```agda
+ω^-infl≤ : ((ω^ [_]) ↾ (ω <_)) inflatesᴿ _≤_
+ω^-infl≤ = {!   !}
+```

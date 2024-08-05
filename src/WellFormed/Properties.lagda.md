@@ -384,18 +384,25 @@ nt-elim {lim f}       = map lim (n<fs f 1)
 **引理 2-1-28**
 
 ```agda
+l≮ω : ⦃ _ : wf f ⦄ → lim f < ω → ⊥
+l≮ω {f} r = let n , r = lim-inv r in <-irrefl refl $ begin-strict
+  fin n               ≤⟨ n≤fn f ⟩
+  f n                 <⟨ f<l ⟩
+  lim f               <⟨ r ⟩
+  fin n               ∎ where open SubTreeReasoning
+```
+
+**引理 2-1-29**
+
+```agda
 ω≤l : ⦃ _ : wf f ⦄ → ω < a → lim f < a → ω ≤ lim f
 ω≤l {f} r s with <-connex r s
 ... | inl r           = inl r
 ... | inr (inr refl)  = inr refl
-... | inr (inl r)     = let n , r = lim-inv r in ⊥-elim $ <-irrefl refl $ begin-strict
-    fin n             ≤⟨ n≤fn f ⟩
-    f n               <⟨ f<l ⟩
-    lim f             <⟨ r ⟩
-    fin n             ∎ where open SubTreeReasoning
+... | inr (inl r)     = ⊥-elim $ l≮ω r
 ```
 
-**引理 2-1-29**
+**引理 2-1-30**
 
 ```agda
 fin-inj : fin m ≡ fin n → m ≡ n
@@ -403,7 +410,7 @@ fin-inj {(zero)} {(zero)} eq = refl
 fin-inj {suc m}  {suc n}  eq = cong suc $ fin-inj $ suc-inj eq
 ```
 
-**引理 2-1-30**
+**引理 2-1-31**
 
 ```agda
 fin-suj : a < ω → Σ[ n ∈ ℕ ] fin n ≡ a
@@ -416,7 +423,7 @@ fin-suj {lim f}  r  = ⊥-elim $ <-irrefl refl $ begin-strict
   ω                 ∎ where open SubTreeReasoning
 ```
 
-**定理 2-1-31**
+**定理 2-1-32**
 
 ```agda
 ℕ≡ω : ℕ ≡ Σ Ord (_< ω)
