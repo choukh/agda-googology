@@ -9,7 +9,7 @@ open import WellFormed.Arithmetic
 
 ```agda
 private variable
-  i j : Ord
+  i : Ord
 ```
 
 ```agda
@@ -24,49 +24,30 @@ iterω F i w = lim (F ⟨ i ⟩∘ⁿ) ⦃ w ⦄
 ```
 
 ```agda
-data Domain (F : Func) (i : Ord) : Ord → Type
-syntax Domain F i j = j ∈Dom⟨ F , i ⟩
-
-data Domain F i where
-  zero  : i ∈Dom⟨ F , i ⟩
-  fix   : Domain F i j → (w : wf (F ⟨ j ⟩∘ⁿ)) → Domain F i (iterω F j w)
-  suc   : Domain F i j → Domain F i (suc j)
-  lim   : ⦃ _ : wf f ⦄ → (∀ n → Domain F i (f n)) → Domain F i (lim f)
+isFix : Func → Ord → Type
+isFix F a = a ≡ F a
 ```
 
 ```agda
-record Fixable (i : Ord) : Type where
-  constructor mkFixable
-  field
-    func  : Func
-    wff   : Domain func i j → wf (F ⟨ j ⟩∘ⁿ)
-    infl< : (func ↾ Domain func i) inflates _<_ within _
+isFix-iterω : (F : Func) (i : Ord) (w : wf (F ⟨ i ⟩∘ⁿ)) → isFix F (iterω F i w)
+isFix-iterω F i w = {!   !}
 ```
 
 ```agda
-module _ (ℱ : Fixable i) where
-  open Fixable ℱ
+ε₀ : Ord
+ε₀ = iterω (ω^ [_]) 0 w where
+  w : wf (ω^ [_] ⟨ 0 ⟩∘ⁿ)
+  w {(zero)} = zero₁
+  w {suc n} = pres< ω^ w
 ```
 
 ```agda
-  fixpt : Func
-  inDom : ∀ a → fixpt a ∈Dom⟨ func , i ⟩
-
-  fixpt zero = iterω func i (wff zero)
-  fixpt (suc a) = iterω func (suc (fixpt a)) (wff (suc (inDom a)))
-  fixpt (lim f) = lim (λ n → fixpt (f n)) ⦃ {!   !} ⦄
-
-  inDom zero = fix zero (wff zero)
-  inDom (suc a) = fix (suc (inDom a)) (wff (suc (inDom a)))
-  inDom (lim f) = lim ⦃ {!   !} ⦄ λ n → inDom (f n)
-```
-
-```agda
-  ff : Fixable i
-  ff = mkFixable fixpt {!   !} infl where
-    infl : (fixpt ↾ Domain fixpt i) inflates _<_ within _
-    infl ⦃ p = zero ⦄     = {!   !}
-    infl ⦃ p = fix p w ⦄  = {!   !}
-    infl ⦃ p = suc p ⦄    = {!   !}
-    infl ⦃ p = lim x ⦄    = {!   !}
+ε₁ : Ord
+ε₁ = iterω (ω^ [_]) (suc ε₀) w where
+  w : wf ((ω^ [_]) ⟨ suc ε₀ ⟩∘ⁿ)
+  w {(zero)} = begin-strict
+    suc ε₀          ≈⟨ cong suc {!   !} ⟩
+    suc (ω^ [ ε₀ ]) <⟨ {!   !} ⟩
+    ω^ [ suc ε₀ ]   ∎ where open SubTreeReasoning
+  w {suc n} = pres< ω^ w
 ```
