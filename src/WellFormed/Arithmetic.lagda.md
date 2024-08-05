@@ -135,19 +135,19 @@ _⟨_⟩^ : (ℱ : Infl↾ (i ≤_)) (j : Ord ) → ⦃ i ≤ j ⦄ → Normal
 ```
 
 ```agda
-^⟨⟩*-infl< : .⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflatesᴿ _<_
+^⟨⟩*-infl< : ⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflatesᴿ _<_
 ^⟨⟩*-infl< {suc a} {ℱ} {x} =              begin-strict
   x                                       ≤⟨ ^⟨⟩*-infl≤ ⟩
   ℱ ^⟨ a ⟩ x                              <⟨ ^⟨*⟩-pres< zero₁ ⟩
   ℱ ^⟨ suc a ⟩ x                          ∎ where open SubTreeReasoning
 ^⟨⟩*-infl< {lim f} {ℱ} {x} =              begin-strict
-  x                                       <⟨ ^⟨⟩*-infl< ⦃ nz-intro (z<fs f) ⦄ ⟩
+  x                                       <⟨ ^⟨⟩*-infl< ⦃ nz-intro (z<fs f 0) ⦄ ⟩
   ℱ ^⟨ f 1 ⟩ x                            <⟨ ^⟨*⟩-pres< f<l ⟩
   ℱ ^⟨ lim f ⟩ x                          ∎ where open SubTreeReasoning
 ```
 
 ```agda
-_^⟨_⟩ : (ℱ : Infl↾ (i ≤_)) (a : Ord) → .⦃ NonZero a ⦄ → Infl↾ (i ≤_)
+_^⟨_⟩ : (ℱ : Infl↾ (i ≤_)) (a : Ord) → ⦃ NonZero a ⦄ → Infl↾ (i ≤_)
 _^⟨_⟩ ℱ a = mkInfl↾ (_^⟨_⟩_ ℱ a) ^⟨⟩*-infl<
 ```
 
@@ -205,22 +205,22 @@ LeftAdd a = mkNormal (a +_) pres refl
 ## 乘法
 
 ```agda
-RightAdd : (b : Ord) → .⦃ NonZero b ⦄ → Infl↾ (0 ≤_)
+RightAdd : (b : Ord) → ⦃ NonZero b ⦄ → Infl↾ (0 ≤_)
 RightAdd b = Suc ^⟨ b ⟩
 ```
 
 ```agda
-_⋅_ : (a : Ord) → Ord → .⦃ NonZero a ⦄ → Ord; infixl 7 _⋅_
+_⋅_ : (a : Ord) → Ord → ⦃ NonZero a ⦄ → Ord; infixl 7 _⋅_
 a ⋅ b = (RightAdd a) ^⟨ b ⟩ 0
 ```
 
 ```agda
-LeftMul : (a : Ord) → .⦃ NonZero a ⦄ → Normal
+LeftMul : (a : Ord) → ⦃ NonZero a ⦄ → Normal
 LeftMul a = mkNormal (a ⋅_) pres refl
 ```
 
 ```agda
-⋅-idʳ : ∀ a → .⦃ _ : NonZero a ⦄ → a ⋅ 1 ≡ a
+⋅-idʳ : ∀ a → ⦃ _ : NonZero a ⦄ → a ⋅ 1 ≡ a
 ⋅-idʳ a =     begin-equality
   a ⋅ 1       ≈⟨ refl ⟩
   a ⋅ 0 + a   ≈⟨ cong (_+ a) refl ⟩
@@ -243,7 +243,7 @@ RightMul b = mkInfl↾ _⋅b infl where
   instance _ : ⦃ 1 ≤ a ⦄ → NonZero a
   _ = nz-intro (s≤→< it)
   _⋅b : Func↾ (1 ≤_)
-  (x ⋅b) = (x ⋅ b)
+  (x ⋅b) = x ⋅ b
   infl : _⋅b inflatesᴿ _<_
   infl {x} =  begin-strict
     x         ≈˘⟨ ⋅-idʳ x ⟩
@@ -299,8 +299,7 @@ instance
   ω^ [ x ] + 1          ≤⟨ pres≤ (<→s≤ ω^a>0) ⟩
   ω^ [ x ] + ω^ [ x ]   ≈⟨ {!   !} ⟩
   ω^ [ x ] ⋅ 2          <⟨ pres (f<l {n = 2}) ⟩
-  ω^ [ x ] ⋅ ω          ≈⟨ {!   !} ⟩
-  (ω^ [ x ] ⋅ ω) ⦃ _ ⦄  ≈⟨ refl ⟩
+  ω^ [ x ] ⋅ ω          ≈⟨ refl ⟩
   ω^ [ suc x ]          ∎ where open SubTreeReasoning
 ω^-infl< {lim _} ⦃ p ⦄ = ⊥-elim $ l≮ω p
 ```
