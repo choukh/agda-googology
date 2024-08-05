@@ -235,6 +235,14 @@ LeftMul a = mkNormal (a ⋅_) pres refl
 ⋅-idˡ (lim f) = limExt ⦃ pres it ⦄ (⋅-idˡ ∘ f)
 ```
 
+```agda
+⋅-2 : ∀ a → ⦃ _ : NonZero a ⦄ → a ⋅ 2 ≡ a + a
+⋅-2 a =       begin-equality
+  a ⋅ 2       ≈⟨ {!   !} ⟩
+  a ⋅ 1 + a   ≈⟨ cong (_+ a) (⋅-idʳ a) ⟩
+  a + a       ∎ where open SubTreeReasoning
+```
+
 ## 幂
 
 ```agda
@@ -297,7 +305,7 @@ instance
   suc x                 <⟨ s<s (ω^-infl< ⦃ <-trans zero₁ it ⦄) ⟩
   suc (ω^ [ x ])        ≈⟨ refl ⟩
   ω^ [ x ] + 1          ≤⟨ pres≤ (<→s≤ ω^a>0) ⟩
-  ω^ [ x ] + ω^ [ x ]   ≈⟨ {!   !} ⟩
+  ω^ [ x ] + ω^ [ x ]   ≈˘⟨ ⋅-2 _ ⟩
   ω^ [ x ] ⋅ 2          <⟨ pres (f<l {n = 2}) ⟩
   ω^ [ x ] ⋅ ω          ≈⟨ refl ⟩
   ω^ [ suc x ]          ∎ where open SubTreeReasoning
