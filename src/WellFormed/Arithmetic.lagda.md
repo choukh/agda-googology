@@ -19,23 +19,21 @@ open import WellFormed.Properties
 ```agda
 Func↾ : (Ord → Type) → Type
 Func↾ P = (x : Ord) ⦃ p : P x ⦄ → Ord
-```
 
-```agda
 _↾_ : Func → (P : Ord → Type) → Func↾ P
 F ↾ P = λ a → F a
 ```
 
 ```agda
-restr-infl-syntax : (P : Ord → Type) → Func↾ P → Rel → Type
-restr-infl-syntax P F _~_ = ∀ {x} ⦃ p : P x ⦄ → x ~ F x
-syntax restr-infl-syntax P F _~_ = F inflates _~_ within P
+restricted-infl-syntax : {P : Ord → Type} → Func↾ P → Rel → Type
+restricted-infl-syntax {P} F _~_ = ∀ {x} ⦃ p : P x ⦄ → x ~ F x
+syntax restricted-infl-syntax F _~_ = F inflatesᴿ _~_
 ```
 
 ```agda
-restr-pres-syntax : (P : Ord → Type) → Func↾ P → Rel → Type
-restr-pres-syntax P F _~_ = ∀ {x y} ⦃ p₁ : P x ⦄ ⦃ p₂ : P y ⦄ → x ~ y → F x ~ F y
-syntax restr-pres-syntax P F _~_ = F preserves _~_ within P
+restricted-pres-syntax : {P : Ord → Type} → Func↾ P → Rel → Type
+restricted-pres-syntax {P} F _~_ = ∀ {x y} ⦃ p₁ : P x ⦄ ⦃ p₂ : P y ⦄ → x ~ y → F x ~ F y
+syntax restricted-pres-syntax F _~_ = F preservesᴿ _~_
 ```
 
 ```agda
@@ -43,9 +41,9 @@ record Infl↾ (P : Ord → Type) : Type where
   constructor mkInfl↾
   field
     _[_] : Func↾ P
-    infl< : _[_] inflates _<_ within P
+    infl< : _[_] inflatesᴿ _<_
 
-  infl-rd : _[_] inflates Road within P
+  infl-rd : _[_] inflatesᴿ Road
   infl-rd = set infl<
 open Infl↾ public
 ```
@@ -79,13 +77,16 @@ private variable
 
 ```agda
 _^⟨_⟩_ : (ℱ : Infl↾ (i ≤_)) → Ord → Func↾ (i ≤_)
-^⟨⟩*-infl≤ : (_^⟨_⟩_ ℱ a) inflates _≤_ within (i ≤_)
+^⟨⟩*-infl≤ : (_^⟨_⟩_ ℱ a) inflatesᴿ _≤_
 ^⟨*⟩-pres-rd : {ℱ : Infl↾ (i ≤_)} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves Road
 ```
 
 ```agda
 ^⟨*⟩-pres< : {ℱ : Infl↾ (i ≤_)} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves _<_
 ^⟨*⟩-pres< = map ^⟨*⟩-pres-rd
+
+^⟨*⟩-pres≤ : {ℱ : Infl↾ (i ≤_)} ⦃ _ : i ≤ j ⦄ → (ℱ ^⟨_⟩ j) preserves _≤_
+^⟨*⟩-pres≤ = pres<→pres≤ ^⟨*⟩-pres<
 ```
 
 ```agda
@@ -134,7 +135,7 @@ _⟨_⟩^ : (ℱ : Infl↾ (i ≤_)) (j : Ord ) → ⦃ i ≤ j ⦄ → Normal
 ```
 
 ```agda
-^⟨⟩*-infl< : ⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflates _<_ within (i ≤_)
+^⟨⟩*-infl< : ⦃ NonZero a ⦄ → (_^⟨_⟩_ ℱ a) inflatesᴿ _<_
 ^⟨⟩*-infl< {suc a} {ℱ} {x} =              begin-strict
   x                                       ≤⟨ ^⟨⟩*-infl≤ ⟩
   ℱ ^⟨ a ⟩ x                              <⟨ ^⟨*⟩-pres< zero₁ ⟩
@@ -153,12 +154,15 @@ _^⟨_⟩ ℱ a = mkInfl↾ (_^⟨_⟩_ ℱ a) ^⟨⟩*-infl<
 ```agda
 private
   pres = ^⟨*⟩-pres<
+  pres≤ = ^⟨*⟩-pres≤
   instance
     _ = z≤
     _ = ≤-refl
     _ : NonZero (suc a)
     _ = _
     _ : ⦃ _ : wf f ⦄ → NonZero (lim f)
+    _ = _
+    _ : NonTrivial ω
     _ = _
 ```
 
@@ -195,7 +199,7 @@ LeftAdd a = mkNormal (a +_) pres refl
 +-idˡ : ∀ a → 0 + a ≡ a
 +-idˡ zero = refl
 +-idˡ (suc a) = cong suc (+-idˡ a)
-+-idˡ (lim f) = limExt ⦃ pres it ⦄ λ n → +-idˡ (f n)
++-idˡ (lim f) = limExt ⦃ pres it ⦄ (+-idˡ ∘ f)
 ```
 
 ## 乘法
@@ -224,6 +228,13 @@ LeftMul a = mkNormal (a ⋅_) pres refl
   a           ∎ where open SubTreeReasoning
 ```
 
+```agda
+⋅-idˡ : ∀ a → 1 ⋅ a ≡ a
+⋅-idˡ zero = refl
+⋅-idˡ (suc a) = cong suc (⋅-idˡ a)
+⋅-idˡ (lim f) = limExt ⦃ pres it ⦄ (⋅-idˡ ∘ f)
+```
+
 ## 幂
 
 ```agda
@@ -233,7 +244,7 @@ RightMul b = mkInfl↾ _⋅b infl where
   _ = nz-intro (s≤→< it)
   _⋅b : Func↾ (1 ≤_)
   (x ⋅b) = (x ⋅ b)
-  infl : _⋅b inflates _<_ within (1 ≤_)
+  infl : _⋅b inflatesᴿ _<_
   infl {x} =  begin-strict
     x         ≈˘⟨ ⋅-idʳ x ⟩
     (x ⋅ 1)   <⟨ pres nt-elim ⟩
@@ -246,6 +257,56 @@ a ^ b = (RightMul a) ^⟨ b ⟩ 1
 ```
 
 ```agda
-LeftExp : (a : Ord) → ⦃ NonTrivial a ⦄ → Normal
-LeftExp a = mkNormal (a ^_) pres refl
+Base : (a : Ord) → ⦃ NonTrivial a ⦄ → Normal
+Base a = mkNormal (a ^_) pres refl
 ```
+
+```agda
+ω^ : Normal
+ω^ = Base ω
+```
+
+```agda
+^-idʳ : ∀ a → ⦃ _ : NonTrivial a ⦄ → a ^ 1 ≡ a
+^-idʳ a =   begin-equality
+  a ^ 1     ≈⟨ refl ⟩
+  a ^ 0 ⋅ a ≈⟨ refl ⟩
+  1 ⋅ a     ≈⟨ ⋅-idˡ a ⟩
+  a         ∎ where open SubTreeReasoning
+```
+
+```agda
+ω^a>0 : 0 < ω^ [ a ]
+ω^a>0 {a} = begin-strict
+  0         <⟨ zero₁ ⟩
+  1         ≈⟨ refl ⟩
+  ω ^ 0     ≤⟨ pres≤ z≤ ⟩
+  ω^ [ a ]  ∎ where open SubTreeReasoning
+```
+
+```agda
+ω^-infl-fin : ((ω^ [_]) ↾ (_< ω)) inflatesᴿ _≤_
+ω^-infl-fin {(zero)} = {!   !}
+ω^-infl-fin {suc x} = {!   !}
+ω^-infl-fin {lim f} = {!   !}
+```
+
+```agda
+ω^-infl : ((ω^ [_]) ↾ (ω <_)) inflatesᴿ _≤_
+ω^-infl = {!   !}
+```
+ω^-infl : (ω^ [_]) inflates _≤_
+ω^-infl {(zero)} = z≤
+ω^-infl {suc x} =     begin
+  suc x               ≤⟨ s≤s ω^-infl ⟩
+  suc (ω^ [ x ])      ≈⟨ refl ⟩
+  ω^ [ x ] + 1        ≤⟨ pres≤ (<→s≤ ω^a>0) ⟩
+  ω^ [ x ] + ω^ [ x ] ≈⟨ {!   !} ⟩
+  ω^ [ x ] ⋅ 2        ≤⟨ {!   !} ⟩
+  ω^ [ x ] ⋅ ω        ≈⟨ refl ⟩
+  ω^ [ suc x ]        ∎ where
+    open SubTreeReasoning
+    instance
+      _ : NonZero (ω^ [ x ])
+      _ = {!   !}
+ω^-infl {lim f} = {!   !}

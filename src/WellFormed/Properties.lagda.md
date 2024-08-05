@@ -427,4 +427,3 @@ fin-suj {lim f}  r  = ⊥-elim $ <-irrefl refl $ begin-strict
   (λ n → eqToPath $ fin-inj $ snd $ fin-suj _)
   where open import Cubical.Foundations.Isomorphism
 ```
- 
