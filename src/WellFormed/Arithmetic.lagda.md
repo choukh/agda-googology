@@ -267,6 +267,15 @@ a ^ b = (RightMul a) ^⟨ b ⟩ 1
 ```
 
 ```agda
+^-idʳ : ∀ a → ⦃ _ : NonTrivial a ⦄ → a ^ 1 ≡ a
+^-idʳ a =     begin-equality
+  a ^ 1       ≈⟨ refl ⟩
+  a ^ 0 ⋅ a   ≈⟨ refl ⟩
+  1 ⋅ a       ≈⟨ ⋅-idˡ a ⟩
+  a           ∎ where open SubTreeReasoning
+```
+
+```agda
 Base : (a : Ord) → ⦃ NonTrivial a ⦄ → Normal
 Base a = mkNormal (a ^_) pres refl
 ```
@@ -274,15 +283,6 @@ Base a = mkNormal (a ^_) pres refl
 ```agda
 ω^ : Normal
 ω^ = Base ω
-```
-
-```agda
-^-idʳ : ∀ a → ⦃ _ : NonTrivial a ⦄ → a ^ 1 ≡ a
-^-idʳ a =     begin-equality
-  a ^ 1       ≈⟨ refl ⟩
-  a ^ 0 ⋅ a   ≈⟨ refl ⟩
-  1 ⋅ a       ≈⟨ ⋅-idˡ a ⟩
-  a           ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -312,19 +312,4 @@ instance
   ω^ [ x ] ⋅ ω          ≈⟨ refl ⟩
   ω^ [ suc x ]          ∎ where open SubTreeReasoning
 ω^↾<ω-infl< {lim _} ⦃ p ⦄ = ⊥-elim $ l≮ω p
-```
-
-```agda
-ω^↾≥ω-infl≤ : ((ω^ [_]) ↾ (ω ≤_)) inflatesᴿ _≤_
-ω^↾≥ω-infl≤ {(zero)} = z≤
-ω^↾≥ω-infl≤ {suc x} = begin
-  suc x                 ≤⟨ s≤s (ω^↾≥ω-infl≤ ⦃ l≤p it ⦄) ⟩
-  suc (ω^ [ x ])        ≈⟨ refl ⟩
-  ω^ [ x ] + 1          ≤⟨ pres≤ (<→s≤ ω^a>0) ⟩
-  ω^ [ x ] + ω^ [ x ]   ≈˘⟨ ⋅-2 _ ⟩
-  ω^ [ x ] ⋅ 2          <⟨ pres (f<l {n = 2}) ⟩
-  ω^ [ x ] ⋅ ω          ≈⟨ refl ⟩
-  ω^ [ suc x ]          ∎ where open SubTreeReasoning
-ω^↾≥ω-infl≤ {lim _} ⦃ inl x ⦄ = {!   !}
-ω^↾≥ω-infl≤ {lim _} ⦃ inr refl ⦄ = {!   !}
 ```
