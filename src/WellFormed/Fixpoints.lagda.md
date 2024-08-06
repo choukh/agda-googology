@@ -8,8 +8,13 @@ open import WellFormed.Arithmetic
 ```
 
 ```agda
-private variable
-  i : Ord
+private
+  pres = ^⟨*⟩-pres<
+  pres≤ = ^⟨*⟩-pres≤
+  instance
+    _ = z≤
+  variable
+    i : Ord
 ```
 
 ```agda
@@ -39,6 +44,33 @@ isFix-iterω F i w = {!   !}
   w : wf (ω^ [_] ⟨ 0 ⟩∘ⁿ)
   w {(zero)} = zero₁
   w {suc n} = pres< ω^ w
+```
+
+```agda
+contra : a < c → b < c → a ≮ b → b ≮ a → a ≡ b
+contra = {!   !}
+```
+
+```agda
+eq : ε₀ ≡ ω^ [ ε₀ ]
+eq = {!   !}
+```
+lim (ω^ [_] ⟨ 0 ⟩∘ⁿ) ⦃ w ⦄
+ω^ [ lim (ω^ [_] ⟨ 0 ⟩∘ⁿ) ⦃ w ⦄ ]
+
+```agda
+ω^-infl< : ((ω^ [_]) ↾ (_< ε₀)) inflatesᴿ _<_
+ω^-infl< {(zero)} = zero₁
+ω^-infl< {suc x} =      begin-strict
+  suc x                 <⟨ s<s (ω^-infl< ⦃ <-trans zero₁ it ⦄) ⟩
+  suc (ω^ [ x ])        ≈⟨ refl ⟩
+  ω^ [ x ] + 1          ≤⟨ pres≤ (<→s≤ ω^a>0) ⟩
+  ω^ [ x ] + ω^ [ x ]   ≈˘⟨ ⋅-2 _ ⟩
+  ω^ [ x ] ⋅ 2          <⟨ pres (f<l {n = 2}) ⟩
+  ω^ [ x ] ⋅ ω          ≈⟨ refl ⟩
+  ω^ [ suc x ]          ∎ where open SubTreeReasoning
+ω^-infl< {lim f} ⦃ lim₁ r ⦄ = {!   !}
+ω^-infl< {lim f} ⦃ squash₁ p q i ⦄ = {!   !}
 ```
 
 ```agda
