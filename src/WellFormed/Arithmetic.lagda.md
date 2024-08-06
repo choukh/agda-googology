@@ -301,20 +301,30 @@ instance
 ```
 
 ```agda
-ω^-infl< : ((ω^ [_]) ↾ (_< ω)) inflatesᴿ _<_
-ω^-infl< {(zero)} = zero₁
-ω^-infl< {suc x} =      begin-strict
-  suc x                 <⟨ s<s (ω^-infl< ⦃ <-trans zero₁ it ⦄) ⟩
+ω^↾<ω-infl< : ((ω^ [_]) ↾ (_< ω)) inflatesᴿ _<_
+ω^↾<ω-infl< {(zero)} = zero₁
+ω^↾<ω-infl< {suc x} =   begin-strict
+  suc x                 <⟨ s<s (ω^↾<ω-infl< ⦃ <-trans zero₁ it ⦄) ⟩
   suc (ω^ [ x ])        ≈⟨ refl ⟩
   ω^ [ x ] + 1          ≤⟨ pres≤ (<→s≤ ω^a>0) ⟩
   ω^ [ x ] + ω^ [ x ]   ≈˘⟨ ⋅-2 _ ⟩
   ω^ [ x ] ⋅ 2          <⟨ pres (f<l {n = 2}) ⟩
   ω^ [ x ] ⋅ ω          ≈⟨ refl ⟩
   ω^ [ suc x ]          ∎ where open SubTreeReasoning
-ω^-infl< {lim _} ⦃ p ⦄ = ⊥-elim $ l≮ω p
+ω^↾<ω-infl< {lim _} ⦃ p ⦄ = ⊥-elim $ l≮ω p
 ```
 
 ```agda
-ω^-infl≤ : ((ω^ [_]) ↾ (ω <_)) inflatesᴿ _≤_
-ω^-infl≤ = {!   !}
+ω^↾≥ω-infl≤ : ((ω^ [_]) ↾ (ω ≤_)) inflatesᴿ _≤_
+ω^↾≥ω-infl≤ {(zero)} = z≤
+ω^↾≥ω-infl≤ {suc x} = begin
+  suc x                 ≤⟨ s≤s (ω^↾≥ω-infl≤ ⦃ l≤p it ⦄) ⟩
+  suc (ω^ [ x ])        ≈⟨ refl ⟩
+  ω^ [ x ] + 1          ≤⟨ pres≤ (<→s≤ ω^a>0) ⟩
+  ω^ [ x ] + ω^ [ x ]   ≈˘⟨ ⋅-2 _ ⟩
+  ω^ [ x ] ⋅ 2          <⟨ pres (f<l {n = 2}) ⟩
+  ω^ [ x ] ⋅ ω          ≈⟨ refl ⟩
+  ω^ [ suc x ]          ∎ where open SubTreeReasoning
+ω^↾≥ω-infl≤ {lim _} ⦃ inl x ⦄ = {!   !}
+ω^↾≥ω-infl≤ {lim _} ⦃ inr refl ⦄ = {!   !}
 ```

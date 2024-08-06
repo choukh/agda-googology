@@ -384,7 +384,7 @@ nt-elim {lim f}       = map lim (n<fs f 1)
 **引理 2-1-28**
 
 ```agda
-l≮ω : ⦃ _ : wf f ⦄ → lim f < ω → ⊥
+l≮ω : ⦃ _ : wf f ⦄ → lim f ≮ ω
 l≮ω {f} r = let n , r = lim-inv r in <-irrefl refl $ begin-strict
   fin n               ≤⟨ n≤fn f ⟩
   f n                 <⟨ f<l ⟩

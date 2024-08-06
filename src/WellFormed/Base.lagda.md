@@ -72,8 +72,9 @@ data Road : Ord → Ord → Type
 **定义 2-0-0** 我们说 $a$ 是 $b$ 的子树, 记作 $a \lt b$, 当且仅当存在一条从 $a$ 到 $b$ 的路径.
 
 ```agda
-_<_ : Ord → Ord → Type; infix 6 _<_
+_<_ _≮_ : Ord → Ord → Type; infix 6 _<_ _≮_
 a < b = ∥ Road a b ∥₁
+a ≮ b = a < b → ⊥
 ```
 
 注意此处说的「存在」形式表达为路径关系的命题截断, 满足
@@ -576,7 +577,7 @@ seq-inj< {m} {n} _ r with ℕ.<-cmp m n
 **证明** 由引理 2-0-25 以及自然数的相关性质可得. ∎
 
 ```agda
-seq-notDense : ∀ f → ⦃ _ : wf f ⦄ → f n < f m → f m < f (suc n) → ⊥
+seq-notDense : ∀ f → ⦃ _ : wf f ⦄ → f n < f m → f m ≮ f (suc n)
 seq-notDense f r s = ℕ.<⇒≱ (seq-inj< f r) (ℕ.m<1+n⇒m≤n (seq-inj< f s))
 ```
 
