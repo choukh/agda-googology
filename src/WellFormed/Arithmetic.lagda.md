@@ -237,10 +237,12 @@ LeftMul a = mkNormal (a ⋅_) pres refl
 
 ```agda
 ⋅-2 : ∀ a → ⦃ _ : NonZero a ⦄ → a ⋅ 2 ≡ a + a
-⋅-2 a =       begin-equality
-  a ⋅ 2       ≈⟨ {!   !} ⟩
-  a ⋅ 1 + a   ≈⟨ cong (_+ a) (⋅-idʳ a) ⟩
-  a + a       ∎ where open SubTreeReasoning
+⋅-2 a =                           begin-equality
+  a ⋅ 2                           ≈⟨ refl ⟩
+  (Suc ^⟨ a ⟩ (a ⋅ 1)) ⦃ init≤ ⦄  ≈⟨ cong (λ p → (Suc ^⟨ a ⟩ (a ⋅ 1)) ⦃ p ⦄) (pathToEq (isProp≤ _ _)) ⟩
+  (Suc ^⟨ a ⟩ (a ⋅ 1)) ⦃ z≤ ⦄     ≈⟨ refl ⟩
+  a ⋅ 1 + a                       ≈⟨ cong (_+ a) (⋅-idʳ a) ⟩
+  a + a                           ∎ where open SubTreeReasoning
 ```
 
 ## 幂
