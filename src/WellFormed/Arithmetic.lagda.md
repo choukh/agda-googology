@@ -172,5 +172,14 @@ module _ {a} {b} ⦃ _ : NonZero a ⦄ ⦃ _ : NonZero b ⦄ where
 ## 幂运算
 
 ```agda
+_^_ : (a : Ord) → ⦃ NonTrivial a ⦄ → Ord → Ord; infix 8 _^_
+^-nz : ⦃ _ : NonTrivial a ⦄ → NonZero (a ^ b)
 
+a ^ zero = 1
+a ^ suc b = a ^ b * a where instance _ = ^-nz
+a ^ lim f = lim (λ n → a ^ f n) ⦃ {!   !} ⦄
+
+^-nz {b = zero} = _
+^-nz {b = suc b} = *-nz ⦃ ^-nz ⦄ ⦃ nt-nz ⦄
+^-nz {b = lim f} = _
 ```
