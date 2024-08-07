@@ -16,12 +16,6 @@ open import WellFormed.Base
 open import WellFormed.Properties
 ```
 
-```agda
-private  instance
-  _ : NonZero (suc a)
-  _ = _
-```
-
 ## 加法
 
 ```agda
@@ -55,10 +49,10 @@ a + lim f = lim (λ n → a + f n) ⦃ +-pres< it ⦄
 ```
 
 ```agda
-+-assoc : ∀ a b c → a + (b + c) ≡ (a + b) + c
-+-assoc a b zero = refl
-+-assoc a b (suc c) = cong suc (+-assoc a b c)
-+-assoc a b (lim f) = limExt ⦃ +-pres< (+-pres< it) ⦄ ⦃ +-pres< it ⦄ λ n → +-assoc a b (f n)
++-assoc : a + (b + c) ≡ (a + b) + c
++-assoc {c = zero} = refl
++-assoc {c = suc _} = cong suc +-assoc
++-assoc {c = lim _} = limExt ⦃ +-pres< (+-pres< it) ⦄ ⦃ +-pres< it ⦄ λ _ → +-assoc
 ```
 
 ```agda
@@ -134,4 +128,44 @@ a * lim f = lim (λ n → a * f n) ⦃ *-pres< it ⦄
   a * 2                   ≈⟨ refl ⟩
   a * 1 + a               ≈⟨ cong (_+ a) *-idʳ ⟩
   a + a                   ∎ where open SubTreeReasoning
+```
+
+```agda
+*-distrib : ⦃ _ : NonZero a ⦄ → a * (b + c) ≡ a * b + a * c
+*-distrib {c = zero} = refl
+*-distrib {a} {b} {c = suc c} = begin-equality
+  a * (b + suc c)         ≈⟨ refl ⟩
+  a * (b + c) + a         ≈⟨ cong (_+ a) *-distrib ⟩
+  a * b + a * c + a       ≈˘⟨ +-assoc ⟩
+  a * b + (a * c + a)     ≈⟨ refl ⟩
+  a * b + (a * suc c)     ∎ where open SubTreeReasoning
+*-distrib {c = lim f} = limExt ⦃ *-pres< (+-pres< it) ⦄ ⦃ +-pres< (*-pres< it) ⦄ λ _ → *-distrib
+```
+
+```agda
+*-nz : ⦃ _ : NonZero a ⦄ ⦃ _ : NonZero b ⦄ → NonZero (a * b)
+*-nz {a = suc a} {b = suc b} = _
+*-nz {a = suc a} {b = lim f} = _
+*-nz {a = lim f} {b = suc b} = _
+*-nz {a = lim f} {b = lim f₁} = _
+```
+
+```agda
+module _ {a} {b} ⦃ _ : NonZero a ⦄ ⦃ _ : NonZero b ⦄ where
+  instance _ = *-nz {a} {b}
+  *-assoc : a * (b * c) ≡ (a * b) * c
+  *-assoc {c = zero}  = refl
+  *-assoc {c = suc c} =   begin-equality
+    a * (b * suc c)       ≈⟨ refl ⟩
+    a * (b * c + b)       ≈⟨ *-distrib ⟩
+    a * (b * c) + a * b   ≈⟨ cong (_+ a * b) *-assoc ⟩
+    a * b * c + a * b     ≈⟨ refl ⟩
+    a * b * suc c         ∎ where open SubTreeReasoning
+  *-assoc {c = lim f} = limExt ⦃ *-pres< (*-pres< it) ⦄ ⦃ *-pres< it ⦄ λ _ → *-assoc
+```
+
+## 幂运算
+
+```agda
+
 ```

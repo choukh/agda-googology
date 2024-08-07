@@ -125,6 +125,16 @@ nz-intro : 0 < a → NonZero a
 nz-intro = nz-intro-rd ∘ set
 ```
 
+显然, 后继序数和极限序数都是非零序数.
+
+```agda
+instance
+  suc-nz : NonZero (suc a)
+  suc-nz = _
+  lim-nz : ⦃ _ : wf f ⦄ → NonZero (lim f)
+  lim-nz = _
+```
+
 **约定 2-1-11** 非平凡序数指不等于零和一的序数.
 
 ```agda
@@ -343,8 +353,8 @@ l≤p (inl r) = ns→≤ (l≤p-rd (inl (set r)))
 
 ```agda
 instance
-  wf-fin : wf fin
-  wf-fin = zero₁
+  fin-wf : wf fin
+  fin-wf = zero₁
 
 ω : Ord
 ω = lim fin
@@ -434,3 +444,4 @@ fin-suj {lim f}  r  = ⊥-elim $ <-irrefl refl $ begin-strict
   (λ n → eqToPath $ fin-inj $ snd $ fin-suj _)
   where open import Cubical.Foundations.Isomorphism
 ```
+ 
