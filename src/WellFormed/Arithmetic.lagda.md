@@ -107,6 +107,11 @@ a * lim f = lim (λ n → a * f n) ⦃ *-pres< it ⦄
 ```
 
 ```agda
+*-zʳ : ⦃ _ : NonZero a ⦄ → a * 0 ≡ 0
+*-zʳ = refl
+```
+
+```agda
 *-idʳ : ⦃ _ : NonZero a ⦄ → a * 1 ≡ a
 *-idʳ {a} =               begin-equality
   a * 1                   ≈⟨ refl ⟩
