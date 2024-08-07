@@ -49,3 +49,35 @@ iterω F i w = lim (F ⟨ i ⟩∘ⁿ) ⦃ w ⦄
     ω^ [ suc ε₀ ]         ∎ where open SubTreeReasoning
   w {suc n} = pres< ω^ w
 ```
+
+```
+ω^′ : Func
+ω^′ (lim f) = lim h
+  module Fuck where
+  h : Seq
+  h zero = f 0
+  h (suc n) = ω^ [ f n ]
+  instance
+    w : wf h
+    w {(zero)} = {!   !}
+    w {suc n} = {!   !}
+ω^′ a@_ = ω^ [ a ]
+```
+
+```agda
+eq : ω^′ ε₀ ≡ ε₀
+eq = limExt ⦃ {!   !} ⦄ ⦃ {!   !} ⦄ {!  fuck !} where
+  open Fuck
+  instance
+    w2 : wf (_[_] ω^ ⟨ 0 ⟩∘ⁿ)
+    w2 = {!   !}
+  fuck : (n : ℕ) → h (_[_] ω^ ⟨ 0 ⟩∘ⁿ) n ≡ (_[_] ω^ ⟨ 0 ⟩∘ⁿ) n
+  fuck zero = refl
+  fuck (suc n) = cong (ω^ [_]) refl
+```
+
+i   ω^i     ω^ω^i   ω^ω^ω^i
+i⁺  ω^i⁺    ω^ω^i⁺
+    (ω^i)*ω ω^((ω^i)*ω)
+    i*ω     ω^(i*ω)
+  
