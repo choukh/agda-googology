@@ -125,16 +125,6 @@ nz-intro : 0 < a → NonZero a
 nz-intro = nz-intro-rd ∘ set
 ```
 
-显然, 后继序数和极限序数都是非零序数.
-
-```agda
-instance
-  suc-nz : NonZero (suc a)
-  suc-nz = _
-  lim-nz : ⦃ _ : wf f ⦄ → NonZero (lim f)
-  lim-nz = _
-```
-
 **约定 2-1-11** 非平凡序数指不等于零和一的序数.
 
 ```agda
@@ -156,13 +146,19 @@ nt-intro : 1 < a → NonTrivial a
 nt-intro = nt-intro-rd ∘ set
 ```
 
-**约定 2-1-12** 非极限序数指零或后继序数.
+**事实 2-1-12** 后继序数和极限序数都是非零序数, 非零序数都是非平凡序数.
 
 ```agda
-NonLim : Ord → Type
-NonLim zero = ⊤
-NonLim (suc _) = ⊤
-NonLim _ = ⊥
+instance
+  suc-nz : NonZero (suc a)
+  suc-nz = _
+  lim-nz : ⦃ _ : wf f ⦄ → NonZero (lim f)
+  lim-nz = _
+
+nt-nz : ⦃ NonTrivial a ⦄ → NonZero a
+nt-nz {2+ a} = _
+nt-nz {suc (lim f)} = _
+nt-nz {lim f} = _
 ```
 
 ## 一些引理
