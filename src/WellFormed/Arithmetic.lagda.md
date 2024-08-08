@@ -112,7 +112,7 @@ nt-elim {suc (lim _)} = s<s z<l
 nt-elim {lim f}       = map lim (n<fs f 1)
 ```
 
-**事实 2-2-x** 后继序数和极限序数都是非零序数, 非平凡序数都是非零序数.
+**事实 2-2-x** 后继序数和极限序数都是非零序数; 极限序数都是非平凡序数; 非平凡序数都是非零序数.
 
 ```agda
 instance
@@ -120,6 +120,8 @@ instance
   suc-nz = _
   lim-nz : ⦃ _ : wf f ⦄ → NonZero (lim f)
   lim-nz = _
+  lim-nt : ⦃ _ : wf f ⦄ → NonTrivial (lim f)
+  lim-nt = _
 
 nt-nz : ⦃ NonTrivial a ⦄ → NonZero a
 nt-nz {2+ a} = _
