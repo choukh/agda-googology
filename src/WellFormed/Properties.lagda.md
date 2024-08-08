@@ -32,20 +32,6 @@ Rel : Type₁
 Rel = Ord → Ord → Type
 ```
 
-**定义 2-1-1** 我们说一个序数函数 $F$ **膨胀**一个序数关系 $\sim$, 当且仅当对任意序数 $x$ 都有 $x \sim F(x)$.
-
-```agda
-_inflates_ : Func → Rel → Type
-F inflates _~_ = ∀ {x} → x ~ F x
-```
-
-**事实 2-1-2** 如果 $F$ 膨胀 $\lt$, 那么 $F$ 膨胀 $\leq$.
-
-```agda
-infl<→infl≤ : F inflates _<_ → F inflates _≤_
-infl<→infl≤ p = <→≤ p
-```
-
 **定义 2-1-3** 我们说一个序数函数 $F$ **保持**一个序数关系 $\sim$, 当且仅当对任意序数 $x, y$ 都有 $x \sim y \to F(x) \sim F(y)$.
 
 ```agda
@@ -99,66 +85,6 @@ open import Agda.Builtin.FromNat public
 instance
   nNat = Number ℕ   ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
   nOrd = Number Ord ∋ record { Constraint = λ _ → ⊤ ; fromNat = λ n → fin n }
-```
-
-**约定 2-1-9** 我们将 $\text{suc}(\text{suc}(a))$ 记作 $a^{++}$.
-
-```agda
-pattern 2+ a = suc (suc a)
-```
-
-**约定 2-1-10** 非零序数指不等于零的序数.
-
-```agda
-not0 : Ord → Type
-not0 zero = ⊥
-not0 _ = ⊤
-
-record NonZero (a : Ord) : Type where
-  field .nonZero : not0 a
-
-nz-intro-rd : Road 0 a → NonZero a
-nz-intro-rd {suc _} _ = _
-nz-intro-rd {lim _} _ = _
-
-nz-intro : 0 < a → NonZero a
-nz-intro = nz-intro-rd ∘ set
-```
-
-**约定 2-1-11** 非平凡序数指不等于零和一的序数.
-
-```agda
-not01 : Ord → Type
-not01 zero       = ⊥
-not01 (suc zero) = ⊥
-not01 _          = ⊤
-
-record NonTrivial (a : Ord) : Type where
-  field .nonTrivial : not01 a
-
-nt-intro-rd : Road 1 a → NonTrivial a
-nt-intro-rd {suc zero} (suc ())
-nt-intro-rd {2+ a}         _ = _
-nt-intro-rd {suc (lim _)}  _ = _
-nt-intro-rd {lim _}        _ = _
-
-nt-intro : 1 < a → NonTrivial a
-nt-intro = nt-intro-rd ∘ set
-```
-
-**事实 2-1-12** 后继序数和极限序数都是非零序数, 非平凡序数都是非零序数.
-
-```agda
-instance
-  suc-nz : NonZero (suc a)
-  suc-nz = _
-  lim-nz : ⦃ _ : wf f ⦄ → NonZero (lim f)
-  lim-nz = _
-
-nt-nz : ⦃ NonTrivial a ⦄ → NonZero a
-nt-nz {2+ a} = _
-nt-nz {suc (lim f)} = _
-nt-nz {lim f} = _
 ```
 
 ## 一些引理
@@ -240,14 +166,6 @@ z≤ : 0 ≤ a
 z≤ {(zero)} = inr refl
 z≤ {suc _}  = inl z<s
 z≤ {lim _}  = inl z<l
-```
-
-**事实 2-1-17**
-
-```agda
-nz-elim : ⦃ NonZero a ⦄ → 0 < a
-nz-elim {suc a} = z<s
-nz-elim {lim f} = z<l
 ```
 
 **定理 2-1-18** 后继运算的保序性
@@ -380,11 +298,6 @@ n≤fn {n = suc n} f  = begin
 ```agda
 n<fs : ∀ f n → ⦃ _ : wf f ⦄ → fin n < f (suc n)
 n<fs f _ = ≤-<-trans (n≤fn f) it
-
-nt-elim : ⦃ NonTrivial a ⦄ → 1 < a
-nt-elim {2+ _}        = s<s z<s
-nt-elim {suc (lim _)} = s<s z<l
-nt-elim {lim f}       = map lim (n<fs f 1)
 ```
 
 **引理 2-1-28**
