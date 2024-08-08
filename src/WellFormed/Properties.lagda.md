@@ -146,7 +146,7 @@ nt-intro : 1 < a → NonTrivial a
 nt-intro = nt-intro-rd ∘ set
 ```
 
-**事实 2-1-12** 后继序数和极限序数都是非零序数, 非零序数都是非平凡序数.
+**事实 2-1-12** 后继序数和极限序数都是非零序数, 非平凡序数都是非零序数.
 
 ```agda
 instance
@@ -440,4 +440,3 @@ fin-suj {lim f}  r  = ⊥-elim $ <-irrefl refl $ begin-strict
   (λ n → eqToPath $ fin-inj $ snd $ fin-suj _)
   where open import Cubical.Foundations.Isomorphism
 ```
- 
