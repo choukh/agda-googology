@@ -16,6 +16,24 @@ open import WellFormed.Base
 open import WellFormed.Properties
 ```
 
+## 序数函数
+
+我们先定义序数函数的一些性质.
+
+**定义 2-2-0** 我们说一个序数函数 $F$ **膨胀**一个序数关系 $\sim$, 当且仅当对任意序数 $x$ 都有 $x \sim F(x)$.
+
+```agda
+_inflates_ : Func → Rel → Type
+F inflates _~_ = ∀ {x} → x ~ F x
+```
+
+**事实 2-1-1** 如果 $F$ 膨胀 $\lt$, 那么 $F$ 膨胀 $\leq$.
+
+```agda
+infl<→infl≤ : F inflates _<_ → F inflates _≤_
+infl<→infl≤ p = <→≤ p
+```
+
 ```agda
 Func↾ : (Ord → Type) → Type
 Func↾ P = (x : Ord) ⦃ p : P x ⦄ → Ord
@@ -28,6 +46,85 @@ F ↾ P = λ a → F a
 restricted-infl-syntax : {P : Ord → Type} → Func↾ P → Rel → Type
 restricted-infl-syntax {P} F _~_ = ∀ {x} ⦃ p : P x ⦄ → x ~ F x
 syntax restricted-infl-syntax {P} F _~_ = F inflates _~_ within P
+```
+
+## 一些约定
+
+**约定 2-2-x** 我们将 $\text{suc}(\text{suc}(a))$ 记作 $a^{++}$.
+
+```agda
+pattern 2+ a = suc (suc a)
+```
+
+**约定 2-2-x** 非零序数指不等于零的序数.
+
+```agda
+not0 : Ord → Type
+not0 zero = ⊥
+not0 _ = ⊤
+
+record NonZero (a : Ord) : Type where
+  field .nonZero : not0 a
+```
+
+```agda
+nz-intro-rd : Road 0 a → NonZero a
+nz-intro-rd {suc _} _ = _
+nz-intro-rd {lim _} _ = _
+
+nz-intro : 0 < a → NonZero a
+nz-intro = nz-intro-rd ∘ set
+```
+
+```agda
+nz-elim : ⦃ NonZero a ⦄ → 0 < a
+nz-elim {suc a} = z<s
+nz-elim {lim f} = z<l
+```
+
+**约定 2-2-x** 非平凡序数指不等于零和一的序数.
+
+```agda
+not01 : Ord → Type
+not01 zero       = ⊥
+not01 (suc zero) = ⊥
+not01 _          = ⊤
+
+record NonTrivial (a : Ord) : Type where
+  field .nonTrivial : not01 a
+```
+
+```agda
+nt-intro-rd : Road 1 a → NonTrivial a
+nt-intro-rd {suc zero} (suc ())
+nt-intro-rd {2+ a}         _ = _
+nt-intro-rd {suc (lim _)}  _ = _
+nt-intro-rd {lim _}        _ = _
+
+nt-intro : 1 < a → NonTrivial a
+nt-intro = nt-intro-rd ∘ set
+```
+
+```agda
+nt-elim : ⦃ NonTrivial a ⦄ → 1 < a
+nt-elim {2+ _}        = s<s z<s
+nt-elim {suc (lim _)} = s<s z<l
+nt-elim {lim f}       = map lim (n<fs f 1)
+```
+
+**事实 2-2-x** 后继序数和极限序数都是非零序数, 非平凡序数都是非零序数.
+
+```agda
+instance
+  suc-nz : NonZero (suc a)
+  suc-nz = _
+  lim-nz : ⦃ _ : wf f ⦄ → NonZero (lim f)
+  lim-nz = _
+
+nt-nz : ⦃ NonTrivial a ⦄ → NonZero a
+nt-nz {2+ a} = _
+nt-nz {suc (lim f)} = _
+nt-nz {lim f} = _
 ```
 
 ## 加法
@@ -209,7 +306,7 @@ _^_ : (a : Ord) → Ord → ⦃ NonTrivial a ⦄ → Ord; infix 8 _^_
 
 ```agda
 a ^ zero = 1
-a ^ suc b = a ^ b * a where instance _ = ^-nz
+a ^ suc b = (a ^ b * a) ⦃ ^-nz ⦄
 a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres< it ⦄
 
 ^-nz {b = zero} = _
@@ -304,7 +401,7 @@ _^^_ : (a b : Ord) → ⦃ NonTrivial a ⦄ → Ord
 
 ```agda
 a ^^ zero = a
-a ^^ suc b = (a ^^ b) ^ a where instance _ = ^^-nt {a} {b}
+a ^^ suc b = ((a ^^ b) ^ a) ⦃ ^^-nt ⦄
 a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres< it ⦄
 
 ^^-nt {b = zero} = it
