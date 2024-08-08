@@ -42,7 +42,7 @@ private variable ȧ : Domain a
 ω^-nz {ȧ = suc ȧ}   = _
 ω^-nz {ȧ = lim ḟ r} = _
 
-ω^-pres-rd zero = {!   !}
+ω^-pres-rd {ȧ} {suc ḃ} zero = {!   !}
 ω^-pres-rd (suc r) = {!   !}
 ω^-pres-rd (lim r) = {!   !}
 ```
