@@ -116,7 +116,7 @@ a * lim f = lim (λ n → a * f n) ⦃ *-pres< it ⦄
   a * b + a               ∎ where open RoadReasoning
 *-pres-rd {a} {x} (lim {f} {n} r) = begin-strict
   a * x                   <⟨ *-pres-rd r ⟩
-  a * f n                 <⟨ set (f<l ⦃ *-pres< it ⦄) ⟩
+  a * f n                 <⟨ set $ f<l ⦃ *-pres< it ⦄ ⟩
   a * lim f               ∎ where open RoadReasoning
 ```
 
@@ -223,8 +223,8 @@ a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres< it ⦄
   a ^ b * a               ∎ where open RoadReasoning; instance _ = ^-nz
 ^-pres-rd {a} {x} (lim {f} {n} r) = begin-strict
   a ^ x                   <⟨ ^-pres-rd r ⟩
-  a ^ f n                 <⟨ set (f<l ⦃ ^-pres< it ⦄) ⟩
-  a ^ lim f               ∎ where open RoadReasoning; instance _ = ^-nz
+  a ^ f n                 <⟨ set $ f<l ⦃ ^-pres< it ⦄ ⟩
+  a ^ lim f               ∎ where open RoadReasoning
 ```
 
 ```agda
@@ -251,12 +251,12 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ where
 ```
 
 ```agda
-^-nt : ⦃ nza : NonTrivial a ⦄ ⦃ nzb : NonZero b ⦄ → NonTrivial (a ^ b)
+^-nt : ⦃ nta : NonTrivial a ⦄ ⦃ nzb : NonZero b ⦄ → NonTrivial (a ^ b)
 ^-nt {suc a} {suc b} ⦃ nzb ⦄ =  nt-intro $ begin-strict
   1                             ≈⟨ refl ⟩
-  suc a ^ 0                     ≤⟨ pres<→pres≤ ^-pres< (<s→≤ (nz-elim ⦃ nzb ⦄)) ⟩
+  suc a ^ 0                     ≤⟨ pres<→pres≤ ^-pres< $ <s→≤ (nz-elim ⦃ nzb ⦄) ⟩
   suc a ^ b                     ≈˘⟨ *-idʳ ⟩
-  suc a ^ b * 1                 ≤⟨ pres<→pres≤ *-pres< (<s→≤ nt-elim) ⟩
+  suc a ^ b * 1                 ≤⟨ pres<→pres≤ *-pres< $ <s→≤ nt-elim ⟩
   suc a ^ b * a                 <⟨ +-infl< ⟩
   suc a ^ b * a + suc a ^ b     ∎ where open SubTreeReasoning; instance _ = ^-nz
 ^-nt {lim f} {suc b} = _
@@ -276,4 +276,42 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ ⦃ _ : NonZero b ⦄ where
     a ^ (b * c + b)             ≈⟨ refl ⟩
     a ^ (b * suc c)             ∎ where open SubTreeReasoning
   ^-assoc {c = lim f} = limExt ⦃ ^-pres< it ⦄ ⦃ ^-pres< (*-pres< it) ⦄ λ _ → ^-assoc
+```
+
+```agda
+^-infl< : ⦃ NonTrivial b ⦄ → (_^ b) inflates _<_ within NonTrivial
+^-infl< {b} {x} =               begin-strict
+  x                             ≈˘⟨ ^-idʳ ⟩
+  x ^ 1                         <⟨ ^-pres< nt-elim ⟩
+  x ^ b                         ∎ where open SubTreeReasoning
+```
+
+```agda
+_^^_ : (a b : Ord) → ⦃ NonTrivial a ⦄ → Ord
+^^-nt : ⦃ _ : NonTrivial a ⦄ → NonTrivial (a ^^ b)
+^^-pres-rd : ⦃ _ : NonTrivial a ⦄ → (a ^^_) preserves Road
+
+^^-pres< : ⦃ _ : NonTrivial a ⦄ → (a ^^_) preserves _<_
+^^-pres< = map ^^-pres-rd
+```
+
+```agda
+a ^^ zero = a
+a ^^ suc b = (a ^^ b) ^ a where instance _ = ^^-nt {a} {b}
+a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres< it ⦄
+
+^^-nt {b = zero} = it
+^^-nt {b = suc b} = ^-nt ⦃ ^^-nt ⦄ ⦃ nt-nz ⦄
+^^-nt {b = lim f} = _
+
+^^-pres-rd {a} {x} zero = set ^-infl< where instance _ = ^^-nt {a} {x}
+^^-pres-rd {a} {x} (suc {b} r) = begin-strict
+  a ^^ x                        <⟨ ^^-pres-rd r ⟩
+  a ^^ b                        <⟨ set ^-infl< ⟩
+  (a ^^ b ^ a) ⦃ _ ⦄            ≈⟨ refl ⟩
+  a ^^ suc b                    ∎ where open RoadReasoning; instance _ = ^^-nt {a} {b}
+^^-pres-rd {a} {x} (lim {f} {n} r) = begin-strict
+  a ^^ x                        <⟨ ^^-pres-rd r ⟩
+  a ^^ f n                      <⟨ set $ f<l ⦃ ^^-pres< it ⦄ ⟩
+  a ^^ lim f                    ∎ where open RoadReasoning
 ```
