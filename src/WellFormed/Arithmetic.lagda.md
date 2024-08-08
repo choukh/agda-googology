@@ -228,6 +228,11 @@ a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres< it ⦄
 ```
 
 ```agda
+^-congˡ : ⦃ nta : NonTrivial a ⦄ ⦃ ntb : NonTrivial b ⦄ → a ≡ b → a ^ c ≡ b ^ c
+^-congˡ refl = refl
+```
+
+```agda
 ^-idʳ : ⦃ _ : NonTrivial a ⦄ → a ^ 1 ≡ a
 ^-idʳ {a} =               begin-equality
   a ^ 1                   ≈⟨ refl ⟩
@@ -286,6 +291,8 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ ⦃ _ : NonZero b ⦄ where
   x ^ b                         ∎ where open SubTreeReasoning
 ```
 
+## 伪迭代幂次
+
 ```agda
 _^^_ : (a b : Ord) → ⦃ NonTrivial a ⦄ → Ord
 ^^-nt : ⦃ _ : NonTrivial a ⦄ → NonTrivial (a ^^ b)
@@ -314,4 +321,16 @@ a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres< it ⦄
   a ^^ x                        <⟨ ^^-pres-rd r ⟩
   a ^^ f n                      <⟨ set $ f<l ⦃ ^^-pres< it ⦄ ⟩
   a ^^ lim f                    ∎ where open RoadReasoning
+```
+
+```agda
+^^-fake : ⦃ _ : NonTrivial a ⦄ → a ^^ b ≡ a ^ (a ^ b)
+^^-fake {a} {b = zero}  = sym *-idˡ
+^^-fake {a} {b = suc b} =       begin-equality
+  a ^^ suc b                    ≈⟨ refl ⟩
+  ((a ^^ b) ^ a) ⦃ _ ⦄          ≈⟨ ^-congˡ ⦃ ^^-nt ⦄ ⦃ ^-nt ⦄ ^^-fake ⟩
+  ((a ^ (a ^ b)) ^ a) ⦃ _ ⦄     ≈⟨ ^-assoc ⟩
+  a ^ (a ^ b * a) ⦃ _ ⦄         ≈⟨ refl ⟩
+  a ^ (a ^ suc b)               ∎ where open SubTreeReasoning; instance _ = ^-nz
+^^-fake {a} {b = lim f} = limExt ⦃ ^^-pres< it ⦄ ⦃ ^-pres< (^-pres< it) ⦄ λ _ → ^^-fake
 ```
