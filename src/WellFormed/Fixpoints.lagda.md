@@ -8,43 +8,41 @@ open import WellFormed.Arithmetic
 ```
 
 ```agda
-IsZero : Ord → Type
-IsZero zero = ⊤
-IsZero (suc _) = ⊥
-IsZero (lim _) = ⊥
+data Domain : Ord → Type
+ω^_ : Domain a → Ord
+
+data Domain where
+  zero : Domain zero
+  suc  : Domain a → Domain (suc a)
+  lim  : ⦃ _ : wf f ⦄ (ḟ : ∀ n → Domain (f n)) (r : f 0 < ω^ ḟ 0) → Domain (lim f)
 ```
 
 ```agda
-HeadZero : Ord → Type
-HeadZero zero = ⊤
-HeadZero (suc a) = ⊤
-HeadZero (lim f) = IsZero (f 0)
-```
+private variable ȧ : Domain a
+ω^-nz : NonZero (ω^ ȧ)
+ω^-pres-rd : {ȧ : Domain a} {ḃ : Domain b} → Road a b → Road (ω^ ȧ) (ω^ ḃ)
 
-```agda
-ω^_ : (a : Ord) → ⦃ HeadZero a ⦄ → Ord
-ω^-nz : ⦃ _ : HeadZero a ⦄ → NonZero (ω^ a)
-ω^-pres-rd : ω^_ preserves Road
-
-ω^-pres< : ω^_ preserves _<_
+ω^-pres< : {ȧ : Domain a} {ḃ : Domain b} → a < b → ω^ ȧ < ω^ ḃ
 ω^-pres< = map ω^-pres-rd
 ```
 
 ```agda
 ω^ zero = 1
-ω^ suc a = (ω^ a * ω) ⦃ ω^-nz ⦄
-ω^ lim f = lim (homo f) ⦃ {!   !} ⦄
+ω^ (suc ȧ) = (ω^ ȧ * ω) ⦃ ω^-nz ⦄
+ω^ (lim {f} ḟ r) = lim homo
   module BaseOmega where
-  homo : Seq → Seq
-  homo f zero = f 0
-  homo f (suc n) = ω^ f n
-  homo-wf : wf (homo f)
-  homo-wf {(zero)} = {!   !}
-  homo-wf {suc n} = {!   !}
+  homo : Seq
+  homo zero = f 0
+  homo (suc n) = ω^ ḟ n
+  instance homo-wf : wf homo
+  homo-wf {(zero)} = r
+  homo-wf {suc n} = ω^-pres< it
 
-ω^-nz {(zero)} = _
-ω^-nz {suc a} = _
-ω^-nz {lim f} = _
+ω^-nz {ȧ = zero}    = _
+ω^-nz {ȧ = suc ȧ}   = _
+ω^-nz {ȧ = lim ḟ r} = _
 
-ω^-pres-rd = {!   !}
+ω^-pres-rd zero = {!   !}
+ω^-pres-rd (suc r) = {!   !}
+ω^-pres-rd (lim r) = {!   !}
 ```
