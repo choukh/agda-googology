@@ -42,7 +42,6 @@ open import Cubical.HITs.PropositionalTruncation public
 **标准库**
 
 ```agda
-open import Data.Unit public
 open import Data.Nat as ℕ public using (ℕ; zero; suc)
 open import Function public using (id; flip; _∘_; _$_; _∋_; it; case_of_)
 open import Relation.Binary.PropositionalEquality public
@@ -55,6 +54,7 @@ open import Relation.Binary.PropositionalEquality public
 
 ```agda
 open import Bridged.Data.Empty public using (⊥; ⊥-elim; isProp⊥)
+open import Bridged.Data.Unit public using (⊤; tt; isProp⊤)
 open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```
 
