@@ -63,3 +63,36 @@ private instance _ = ω^-nz
   ω^ (ḟ n)                    <⟨ lim ⦃ h-wf ⦄ (set $ h-wf {suc n}) ⟩
   ω^ ḃ                        ∎ where open RoadReasoning; open BaseOmega f ḟ r
 ```
+
+```agda
+ṅ : ∀ n → fin n ∈D⟨ω^⟩
+ṅ zero = tt
+ṅ (suc n) = ṅ n
+```
+
+```agda
+ω^-id : ω^ (ṅ 1) ≡ ω
+ω^-id = limExt ⦃ _ ⦄ λ _ → *-idˡ
+```
+
+```agda
+infix 5 _∈D⟨ω⋰⟩
+data _∈D⟨ω⋰⟩ : Ord → Type where
+  zero : 0 ∈D⟨ω⋰⟩
+  suc : a ∈D⟨ω⋰⟩ → (ȧ : a ∈D⟨ω^⟩) → ω^ ȧ ∈D⟨ω^⟩ → ω^ ȧ ∈D⟨ω⋰⟩
+```
+
+```agda
+ω⋰ : a ∈D⟨ω⋰⟩ → Ord
+ω⋰ zero = lim h ⦃ {!   !} ⦄
+  module TowerOmega where
+  h : Seq
+  ḣ : ∀ n → h n ∈D⟨ω^⟩
+  h zero = 0
+  h (suc n) = ω^ (ḣ n)
+  ḣ 0 {- 0 -}     = tt
+  ḣ 1 {- ω^0 -}   = tt
+  ḣ 2 {- ω^ω^0 -} = (λ n → subst _∈D⟨ω^⟩ (sym *-idˡ) (ṅ n)) , zero₁
+  ḣ (2+ (suc n)) = {! ḣ (2+ n)  !}
+ω⋰ (suc ȧ ȧ₁ x) = {!   !}
+```
