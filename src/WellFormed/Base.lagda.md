@@ -45,7 +45,7 @@ open import Cubical.HITs.PropositionalTruncation public
 open import Data.Nat as ℕ public using (ℕ; zero; suc)
 open import Function public using (id; flip; _∘_; _$_; _∋_; it; case_of_)
 open import Relation.Binary.PropositionalEquality public
-  using (_≡_; refl; sym; trans; cong; subst; subst₂)
+  using (_≡_; refl; sym; trans; cong; subst)
 ```
 
 **桥接库**
