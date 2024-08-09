@@ -21,7 +21,7 @@ lim f ∈D⟨ω^⟩ = Σ (∀ n → f n ∈D⟨ω^⟩) λ ḟ → f 0 < ω^ (ḟ
 
 ```agda
 isProp∈D : isProp (a ∈D⟨ω^⟩)
-isProp∈D {(zero)} = {! isProp⊤  !}
+isProp∈D {(zero)} = isProp⊤
 isProp∈D {suc a} = isProp∈D {a}
 isProp∈D {lim f} = isPropΣ (isPropΠ λ n → isProp∈D {f n}) λ _ → squash₁
 ```
@@ -54,6 +54,12 @@ private instance _ = ω^-nz
 ω^-nz {a = lim f} = _
 
 ω^-pres-rd {ȧ} {ḃ} zero = J (λ ċ p → Road (ω^ ȧ) (ω^ ċ * ω)) (set *-infl<) (isProp∈D ȧ ḃ)
-ω^-pres-rd {ȧ} {ḃ} (suc r) = {!   !}
-ω^-pres-rd (lim r) = {!   !}
+ω^-pres-rd {ȧ} {ḃ} (suc r) =  begin-strict
+  ω^ ȧ                        <⟨ ω^-pres-rd r ⟩
+  ω^ ḃ                        <⟨ set *-infl< ⟩
+  ω^ ḃ * ω                    ∎ where open RoadReasoning
+ω^-pres-rd {ȧ = ȧ} ḃ@{ḟ , r} (lim {f} {n} s) = begin-strict
+  ω^ ȧ                        <⟨ ω^-pres-rd s ⟩
+  ω^ (ḟ n)                    <⟨ lim ⦃ h-wf ⦄ (set $ h-wf {suc n}) ⟩
+  ω^ ḃ                        ∎ where open RoadReasoning; open BaseOmega f ḟ r
 ```
