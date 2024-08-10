@@ -10,6 +10,8 @@ import Cubical.Foundations.Prelude as 🧊
 open import Cubical.Foundations.HLevels
 ```
 
+## 欧米加底运算
+
 ```agda
 _∈D⟨ω^⟩ : Ord → Type; infix 5 _∈D⟨ω^⟩
 ω^ : a ∈D⟨ω^⟩ → Ord
@@ -75,24 +77,35 @@ ṅ (suc n) = ṅ n
 ω^-id = limExt ⦃ _ ⦄ λ _ → *-idˡ
 ```
 
+## 欧米加塔运算
+
 ```agda
-infix 5 _∈D⟨ω⋰⟩
-data _∈D⟨ω⋰⟩ : Ord → Type where
-  zero : 0 ∈D⟨ω⋰⟩
-  suc : a ∈D⟨ω⋰⟩ → (ȧ : a ∈D⟨ω^⟩) → ω^ ȧ ∈D⟨ω^⟩ → ω^ ȧ ∈D⟨ω⋰⟩
+ω̇ : ω ∈D⟨ω^⟩
+ω̇ = ṅ , zero₁
+
+ω^ω : Ord
+ω^ω = ω^ {ω} ω̇
 ```
 
 ```agda
-ω⋰ : a ∈D⟨ω⋰⟩ → Ord
-ω⋰ zero = lim h ⦃ {!   !} ⦄
-  module TowerOmega where
-  h : Seq
-  ḣ : ∀ n → h n ∈D⟨ω^⟩
-  h zero = 0
-  h (suc n) = ω^ (ḣ n)
-  ḣ 0 {- 0 -}     = tt
-  ḣ 1 {- ω^0 -}   = tt
-  ḣ 2 {- ω^ω^0 -} = (λ n → subst _∈D⟨ω^⟩ (sym *-idˡ) (ṅ n)) , zero₁
-  ḣ (2+ (suc n)) = {! ḣ (2+ n)  !}
-ω⋰ (suc ȧ ȧ₁ x) = {!   !}
+_+̇_ : a ∈D⟨ω^⟩ → b ∈D⟨ω^⟩ → a + b ∈D⟨ω^⟩
+_+̇_ {b = zero} ȧ tt = ȧ
+_+̇_ {b = suc b} ȧ ḃ = ȧ +̇ ḃ
+_+̇_ {b = lim f} ȧ (ḟ , r) = (λ n → ȧ +̇ ḟ n) , {!   !}
+```
+
+```agda
+t : ⦃ nza : NonZero a ⦄ → a ∈D⟨ω^⟩ → (a * fin n) ⦃ nza ⦄ ∈D⟨ω^⟩
+t {n = zero} ȧ = tt
+t {n = suc zero} ȧ = {!   !}
+t {n = 2+ n} ȧ = {!   !}
+```
+
+```agda
+ω^ṅ : ω^ (ṅ n) ∈D⟨ω^⟩
+ω^ṅ {(zero)} = tt
+ω^ṅ {suc n} = {!   !} , zero₁
+
+ω^ω̇ : ω^ω ∈D⟨ω^⟩
+ω^ω̇ = (λ { zero → tt ; (suc n) → ω^ṅ {n} }) , zero₁
 ```
