@@ -48,21 +48,26 @@ a +ω^ lim f = lim (λ n → a +ω^ (f n)) ⦃ +ω^-pres< it ⦄
 ```
 
 ```agda
-opaque
-  ε₀ : Ord
-  ε₀ = itω ω^_ 0 w where
-    w : wf (itn ω^_ 0)
-    w {(zero)} = zero₁
-    w {suc n} = +ω^-pres< (w {n})
+ε₀ : Ord
+ε₀ = itω ω^_ 0 w where
+  w : wf (itn ω^_ 0)
+  w {(zero)} = zero₁
+  w {suc n} = +ω^-pres< (w {n})
 ```
 
 ```agda
 ε₁ : Ord
 ε₁ = itω ω^_ (suc ε₀) w where
+  open SubTreeReasoning
+  v =                 begin-strict
+    ε₀ +ω^ 0          <⟨ +ω^-pres< (z<l ⦃ _ ⦄) ⟩
+    ε₀ +ω^ ε₀         ≈⟨ cong (_+ω^ ε₀) {!   !} ⟩
+    (ω^ ε₀) +ω^ ε₀    ∎
   w : wf (itn ω^_ (suc ε₀))
   w {(zero)} =        begin-strict
-    suc ε₀            <⟨ ∣ lim {n = 2} ⦃ _ ⦄ {!   !} ∣₁ ⟩
+    suc ε₀            ≈⟨ refl ⟩
+    ε₀ +ω^ 0          <⟨ map (lim {n = 2} ⦃ _ ⦄) v ⟩
     itω (_+ω^ ε₀) 0 _ ≈⟨ refl ⟩
-    ω^ (suc ε₀)       ∎ where open SubTreeReasoning
+    ω^ (suc ε₀)       ∎
   w {suc n} = +ω^-pres< (w {n})
 ```
