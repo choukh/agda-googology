@@ -41,3 +41,28 @@ a +ω^ lim f = lim (λ n → a +ω^ (f n)) ⦃ +ω^-pres< it ⦄
 +ω^-pres-rd (suc r)     = lim {n = 1} ⦃ _ ⦄ (+ω^-pres-rd r)
 +ω^-pres-rd (lim {n} r) = lim {n = n} ⦃ _ ⦄ (+ω^-pres-rd r)
 ```
+
+```agda
+ω^_ : Func
+ω^ a = 0 +ω^ a
+```
+
+```agda
+opaque
+  ε₀ : Ord
+  ε₀ = itω ω^_ 0 w where
+    w : wf (itn ω^_ 0)
+    w {(zero)} = zero₁
+    w {suc n} = +ω^-pres< (w {n})
+```
+
+```agda
+ε₁ : Ord
+ε₁ = itω ω^_ (suc ε₀) w where
+  w : wf (itn ω^_ (suc ε₀))
+  w {(zero)} =        begin-strict
+    suc ε₀            <⟨ ∣ lim {n = 2} ⦃ _ ⦄ {!   !} ∣₁ ⟩
+    itω (_+ω^ ε₀) 0 _ ≈⟨ refl ⟩
+    ω^ (suc ε₀)       ∎ where open SubTreeReasoning
+  w {suc n} = +ω^-pres< (w {n})
+```
