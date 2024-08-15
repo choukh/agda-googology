@@ -19,55 +19,68 @@ itω F i w = lim (itn F i) ⦃ w ⦄
 ```
 
 ```agda
+open import Cubical.Data.Maybe using (Maybe; nothing; just)
+private variable i : Ord
+```
+
+```agda
+DoHomo : Ord → Type
+_+ω^⟨_,_⟩ : (i a : Ord) (ha : Maybe (DoHomo a)) → Ord
+```
+
+```agda
 _+ω^_ : Ord → Ord → Ord
-+ω^-infl-rd : (_+ω^ b) inflates Road
-+ω^-pres-rd : (a +ω^_) preserves Road
+i +ω^ a = i +ω^⟨ a , nothing ⟩
 
-+ω^-infl< : (_+ω^ b) inflates _<_
-+ω^-infl< = ∣ +ω^-infl-rd ∣₁
+ω^ : Func
+ω^ = 0 +ω^_
+```
 
-+ω^-pres< : (a +ω^_) preserves _<_
+```agda
+DoHomo zero = ⊥
+DoHomo (suc a) = DoHomo a
+DoHomo (lim f) = f 0 < ω^ (f 0)
+```
+
+```agda
++ω^-infl-rd : (a : Ord) (ha : Maybe (DoHomo a)) → Road i (i +ω^⟨ a , ha ⟩)
++ω^-infl< : (a : Ord) (ha : Maybe (DoHomo a)) → i < i +ω^⟨ a , ha ⟩
++ω^-infl< a ha = ∣ +ω^-infl-rd a ha ∣₁
+```
+
+```agda
++ω^-pres-rd : Road a b → Road (i +ω^ a) (i +ω^ b)
++ω^-pres< : a < b → i +ω^ a < i +ω^ b
 +ω^-pres< = map +ω^-pres-rd
+```
 
-a +ω^ zero = suc a
-a +ω^ suc b = itω (_+ω^ b) a +ω^-infl<
-a +ω^ lim f = lim (λ n → a +ω^ (f n)) ⦃ +ω^-pres< it ⦄
+```agda
+i         +ω^⟨ zero  , nothing ⟩ = suc i
+i         +ω^⟨ suc a , ha      ⟩ = itω _+ω^⟨ a , ha ⟩ i (+ω^-infl< a ha)
+i         +ω^⟨ lim f , nothing ⟩ = lim (λ n → i +ω^ f n) ⦃ +ω^-pres< it ⦄
+i@(suc _) +ω^⟨ lim f , just r  ⟩ = lim (λ n → i +ω^ f n) ⦃ +ω^-pres< it ⦄
+i@(lim _) +ω^⟨ lim f , just r  ⟩ = lim (λ n → i +ω^ f n) ⦃ +ω^-pres< it ⦄
+zero      +ω^⟨ lim f , just r  ⟩ = lim h ⦃ h-wf ⦄
+  module HomoSeq where
+  h : Seq
+  h zero = f 0
+  h (suc n) = ω^ (f n)
+  h-wf : wf h
+  h-wf {(zero)} = r
+  h-wf {suc n} = +ω^-pres< it
+```
 
-+ω^-infl-rd {(zero)} = zero
-+ω^-infl-rd {suc b} = f<l-rd {n = 0} ⦃ _ ⦄
-+ω^-infl-rd {lim f} = lim {n = 0} ⦃ _ ⦄ +ω^-infl-rd
+```agda
++ω^-infl-rd           zero    nothing   = zero
++ω^-infl-rd           (suc a) ha        = f<l-rd {n = 0} ⦃ _ ⦄
++ω^-infl-rd           (lim f) nothing   = lim {n = 0} ⦃ _ ⦄ (+ω^-infl-rd (f 0) nothing)
++ω^-infl-rd {suc _}   (lim f) (just r)  = lim {n = 0} ⦃ _ ⦄ (+ω^-infl-rd (f 0) nothing)
++ω^-infl-rd {lim _}   (lim f) (just r)  = lim {n = 0} ⦃ _ ⦄ (+ω^-infl-rd (f 0) nothing)
++ω^-infl-rd {(zero)}  (lim f) (just r)  = lim {n = 1} ⦃ _ ⦄ (+ω^-infl-rd (f 0) nothing)
+```
 
-+ω^-pres-rd zero        = lim {n = 2} ⦃ _ ⦄ +ω^-infl-rd
-+ω^-pres-rd (suc r)     = lim {n = 1} ⦃ _ ⦄ (+ω^-pres-rd r)
+```agda
++ω^-pres-rd zero = lim {n = 2} ⦃ _ ⦄ (+ω^-infl-rd _ nothing)
++ω^-pres-rd (suc r) = lim {n = 1} ⦃ _ ⦄ (+ω^-pres-rd r)
 +ω^-pres-rd (lim {n} r) = lim {n = n} ⦃ _ ⦄ (+ω^-pres-rd r)
-```
-
-```agda
-ω^_ : Func
-ω^ a = 0 +ω^ a
-```
-
-```agda
-ε₀ : Ord
-ε₀ = itω ω^_ 0 w where
-  w : wf (itn ω^_ 0)
-  w {(zero)} = zero₁
-  w {suc n} = +ω^-pres< (w {n})
-```
-
-```agda
-ε₁ : Ord
-ε₁ = itω ω^_ (suc ε₀) w where
-  open SubTreeReasoning
-  v =                 begin-strict
-    ε₀ +ω^ 0          <⟨ +ω^-pres< (z<l ⦃ _ ⦄) ⟩
-    ε₀ +ω^ ε₀         ≈⟨ cong (_+ω^ ε₀) {!   !} ⟩
-    (ω^ ε₀) +ω^ ε₀    ∎
-  w : wf (itn ω^_ (suc ε₀))
-  w {(zero)} =        begin-strict
-    suc ε₀            ≈⟨ refl ⟩
-    ε₀ +ω^ 0          <⟨ map (lim {n = 2} ⦃ _ ⦄) v ⟩
-    itω (_+ω^ ε₀) 0 _ ≈⟨ refl ⟩
-    ω^ (suc ε₀)       ∎
-  w {suc n} = +ω^-pres< (w {n})
 ```
