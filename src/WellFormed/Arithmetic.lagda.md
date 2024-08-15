@@ -59,12 +59,12 @@ pattern 2+ a = suc (suc a)
 **约定 2-2-x** 非零序数指不等于零的序数.
 
 ```agda
-not0 : Ord → Type
-not0 zero = ⊥
-not0 _ = ⊤
+nonZero : Ord → Type
+nonZero zero = ⊥
+nonZero _ = ⊤
 
 record NonZero (a : Ord) : Type where
-  field .nonZero : not0 a
+  field .wrap : nonZero a
 ```
 
 ```agda
@@ -85,13 +85,13 @@ nz-elim {lim f} = z<l
 **约定 2-2-x** 非平凡序数指不等于零和一的序数.
 
 ```agda
-not01 : Ord → Type
-not01 zero       = ⊥
-not01 (suc zero) = ⊥
-not01 _          = ⊤
+nonTrivial : Ord → Type
+nonTrivial zero       = ⊥
+nonTrivial (suc zero) = ⊥
+nonTrivial _          = ⊤
 
 record NonTrivial (a : Ord) : Type where
-  field .nonTrivial : not01 a
+  field .wrap : nonTrivial a
 ```
 
 ```agda
