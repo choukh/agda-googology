@@ -184,10 +184,10 @@ isPropWf = isPropImplicitΠ λ _ → squash₁
 **证明** 事实 2-0-7 说明良构性证明对极限序数的同一性没有影响. 结合 HoTT 承诺的函数外延性即证. ∎
 
 ```agda
-limExtPath : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → Path _ (f n) (g n)) → Path Ord (lim f) (lim g)
+limExtPath : {wff : wf f} {wfg : wf g} → (∀ n → Path _ (f n) (g n)) → Path Ord (lim f ⦃ wff ⦄) (lim g ⦃ wfg ⦄)
 limExtPath p = 🧊.cong₂ (λ f (wff : wf f) → Ord.lim f ⦃ wff ⦄) (funExt p) (toPathP $ isPropWf _ _)
 
-limExt : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → (∀ n → f n ≡ g n) → lim f ≡ lim g
+limExt : {wff : wf f} {wfg : wf g} → (∀ n → f n ≡ g n) → lim f ⦃ wff ⦄ ≡ lim g ⦃ wfg ⦄
 limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
 ```
 
@@ -879,10 +879,10 @@ setmap p r = set (p ∣ r ∣₁)
 **证明** 先通过良构性证明 $f(n)\lt \lim(f)$, 然后还原为路径. ∎
 
 ```agda
-f<l : ⦃ _ : wf f ⦄ → f n < lim f
-f<l = map lim it
+f<l : {w : wf f} → f n < lim f ⦃ w ⦄
+f<l {w} = map (lim ⦃ _ ⦄) w
 
-f<l-rd : ⦃ _ : wf f ⦄ → Road (f n) (lim f)
+f<l-rd : {w : wf f} → Road (f n) (lim f ⦃ w ⦄)
 f<l-rd = set f<l
 ```
 

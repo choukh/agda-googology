@@ -8,6 +8,11 @@ open import WellFormed.Arithmetic
 ```
 
 ```agda
+lim# : (n : ℕ) {w : wf f} → Road a (f n) → Road a (lim f ⦃ w ⦄)
+lim# n = lim {n = n} ⦃ _ ⦄
+```
+
+```agda
 open import Lower using (_∘ⁿ_)
 itn : Func → Ord → Seq
 itn F i n = (F ∘ⁿ n) i
@@ -61,15 +66,15 @@ zero      +ω^⟨ true  ⟩ lim f = lim f
 
 ```agda
 ω^-infl-rd                            {a = zero}  = zero
-ω^-infl-rd                            {a = suc a} = f<l-rd {n = 0} ⦃ _ ⦄
-ω^-infl-rd              {fix = false} {a = lim f} = lim {n = 0} ⦃ _ ⦄ ω^-infl-rd
-ω^-infl-rd {i = suc _}  {fix = true}  {a = lim f} = lim {n = 0} ⦃ _ ⦄ ω^-infl-rd
-ω^-infl-rd {i = lim _}  {fix = true}  {a = lim f} = lim {n = 0} ⦃ _ ⦄ ω^-infl-rd
+ω^-infl-rd                            {a = suc a} = lim# 1 ω^-infl-rd
+ω^-infl-rd              {fix = false} {a = lim f} = lim# 0 ω^-infl-rd
+ω^-infl-rd {i = suc _}  {fix = true}  {a = lim f} = lim# 0 ω^-infl-rd
+ω^-infl-rd {i = lim _}  {fix = true}  {a = lim f} = lim# 0 ω^-infl-rd
 ω^-infl-rd {i = zero}   {fix = true}  {a = lim f} = z<l-rd
 ```
 
 ```agda
-ω^-pres-rd zero         = lim {n = 2} ⦃ _ ⦄ ω^-infl-rd
-ω^-pres-rd (suc r)      = lim {n = 1} ⦃ _ ⦄ (ω^-pres-rd r)
-ω^-pres-rd (lim {n} r)  = lim {n = n} ⦃ _ ⦄ (ω^-pres-rd r)
+ω^-pres-rd zero         = lim# 2 ω^-infl-rd
+ω^-pres-rd (suc r)      = lim# 1 (ω^-pres-rd r)
+ω^-pres-rd (lim {n} r)  = lim# n (ω^-pres-rd r)
 ```
