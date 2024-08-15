@@ -146,7 +146,7 @@ a + lim f = lim (λ n → a + f n) ⦃ +-pres< it ⦄
 
 +-pres-rd zero = zero
 +-pres-rd (suc r) = suc (+-pres-rd r)
-+-pres-rd (lim r) = lim ⦃ +-pres< it ⦄ (+-pres-rd r)
++-pres-rd (lim r) = lim ⦃ _ ⦄ (+-pres-rd r)
 ```
 
 ```agda
@@ -158,14 +158,14 @@ a + lim f = lim (λ n → a + f n) ⦃ +-pres< it ⦄
 +-idˡ : 0 + a ≡ a
 +-idˡ {(zero)} = refl
 +-idˡ {suc a} = cong suc +-idˡ
-+-idˡ {lim f} = limExt ⦃ +-pres< it ⦄ λ _ → +-idˡ
++-idˡ {lim f} = limExt ⦃ _ ⦄ λ _ → +-idˡ
 ```
 
 ```agda
 +-assoc : a + (b + c) ≡ (a + b) + c
 +-assoc {c = zero} = refl
 +-assoc {c = suc _} = cong suc +-assoc
-+-assoc {c = lim _} = limExt ⦃ +-pres< (+-pres< it) ⦄ ⦃ +-pres< it ⦄ λ _ → +-assoc
++-assoc {c = lim _} = limExt ⦃ _ ⦄ ⦃ _ ⦄ λ _ → +-assoc
 ```
 
 ```agda
@@ -177,7 +177,7 @@ a + lim f = lim (λ n → a + f n) ⦃ +-pres< it ⦄
   x + suc b               ∎ where open SubTreeReasoning
 +-infl≤ {b = lim f} {x} = begin
   x                       ≤⟨ +-infl≤ ⟩
-  x + f 0                 <⟨ f<l ⦃ +-pres< it ⦄ ⟩
+  x + f 0                 <⟨ f<l ⦃ _ ⦄ ⟩
   x + lim f               ∎ where open SubTreeReasoning
 ```
 
@@ -189,7 +189,7 @@ a + lim f = lim (λ n → a + f n) ⦃ +-pres< it ⦄
   x + suc b               ∎ where open SubTreeReasoning
 +-infl< {b = lim f} {x} = begin-strict
   x                       ≤⟨ +-infl≤ ⟩
-  x + f 0                 <⟨ f<l ⦃ +-pres< it ⦄ ⟩
+  x + f 0                 <⟨ f<l ⦃ _ ⦄ ⟩
   x + lim f               ∎ where open SubTreeReasoning
 ```
 
@@ -215,7 +215,7 @@ a * lim f = lim (λ n → a * f n) ⦃ *-pres< it ⦄
   a * b + a               ∎ where open RoadReasoning
 *-pres-rd {a} {x} (lim {f} {n} r) = begin-strict
   a * x                   <⟨ *-pres-rd r ⟩
-  a * f n                 <⟨ set $ f<l ⦃ *-pres< it ⦄ ⟩
+  a * f n                 <⟨ set $ f<l ⦃ _ ⦄ ⟩
   a * lim f               ∎ where open RoadReasoning
 ```
 
@@ -242,7 +242,7 @@ a * lim f = lim (λ n → a * f n) ⦃ *-pres< it ⦄
 *-idˡ : 1 * a ≡ a
 *-idˡ {(zero)} = refl
 *-idˡ {suc a} = cong suc *-idˡ
-*-idˡ {lim f} = limExt ⦃ *-pres< it ⦄ λ _ → *-idˡ
+*-idˡ {lim f} = limExt ⦃ _ ⦄ λ _ → *-idˡ
 ```
 
 ```
@@ -262,7 +262,7 @@ a * lim f = lim (λ n → a * f n) ⦃ *-pres< it ⦄
   a * b + a * c + a       ≈˘⟨ +-assoc ⟩
   a * b + (a * c + a)     ≈⟨ refl ⟩
   a * b + (a * suc c)     ∎ where open SubTreeReasoning
-*-distrib {c = lim _} = limExt ⦃ *-pres< (+-pres< it) ⦄ ⦃ +-pres< (*-pres< it) ⦄ λ _ → *-distrib
+*-distrib {c = lim _} = limExt ⦃ _ ⦄ ⦃ _ ⦄ λ _ → *-distrib
 ```
 
 ```agda
@@ -284,7 +284,7 @@ module _ {a} {b} ⦃ _ : NonZero a ⦄ ⦃ _ : NonZero b ⦄ where
     a * (b * c) + a * b   ≈⟨ cong (_+ a * b) *-assoc ⟩
     a * b * c + a * b     ≈⟨ refl ⟩
     a * b * suc c         ∎ where open SubTreeReasoning
-  *-assoc {c = lim _} = limExt ⦃ *-pres< (*-pres< it) ⦄ ⦃ *-pres< it ⦄ λ _ → *-assoc
+  *-assoc {c = lim _} = limExt ⦃ _ ⦄ ⦃ _ ⦄ λ _ → *-assoc
 ```
 
 ```agda
@@ -312,7 +312,7 @@ a ^ suc b = (a ^ b * a) ⦃ ^-nz ⦄
 a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres< it ⦄
 
 ^-nz {b = zero} = _
-^-nz {b = suc b} = *-nz ⦃ ^-nz ⦄ ⦃ nt-nz ⦄
+^-nz {b = suc b} = *-nz ⦃ _ ⦄ ⦃ nt-nz ⦄
 ^-nz {b = lim f} = _
 
 ^-pres-rd zero = set *-infl< where instance _ = ^-nz
@@ -322,7 +322,7 @@ a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres< it ⦄
   a ^ b * a               ∎ where open RoadReasoning; instance _ = ^-nz
 ^-pres-rd {a} {x} (lim {f} {n} r) = begin-strict
   a ^ x                   <⟨ ^-pres-rd r ⟩
-  a ^ f n                 <⟨ set $ f<l ⦃ ^-pres< it ⦄ ⟩
+  a ^ f n                 <⟨ set $ f<l ⦃ _ ⦄ ⟩
   a ^ lim f               ∎ where open RoadReasoning
 ```
 
@@ -351,14 +351,14 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ where
     (a ^ b * a ^ c * a) ⦃ _ ⦄   ≈˘⟨ *-assoc ⟩
     a ^ b * (a ^ c * a)         ≈⟨ refl ⟩
     a ^ b * (a ^ suc c)         ∎ where open SubTreeReasoning
-  ^-distrib {c = lim _} = limExt ⦃ ^-pres< (+-pres< it) ⦄ ⦃ *-pres< (^-pres< it) ⦄ λ _ → ^-distrib
+  ^-distrib {c = lim _} = limExt ⦃ _ ⦄ ⦃ _ ⦄ λ _ → ^-distrib
 ```
 
 ```agda
 ^-nt : ⦃ nta : NonTrivial a ⦄ ⦃ nzb : NonZero b ⦄ → NonTrivial (a ^ b)
 ^-nt {suc a} {suc b} ⦃ nzb ⦄ =  nt-intro $ begin-strict
   1                             ≈⟨ refl ⟩
-  suc a ^ 0                     ≤⟨ pres<→pres≤ ^-pres< $ <s→≤ (nz-elim ⦃ nzb ⦄) ⟩
+  suc a ^ 0                     ≤⟨ pres<→pres≤ ^-pres< $ <s→≤ (nz-elim ⦃ _ ⦄) ⟩
   suc a ^ b                     ≈˘⟨ *-idʳ ⟩
   suc a ^ b * 1                 ≤⟨ pres<→pres≤ *-pres< $ <s→≤ nt-elim ⟩
   suc a ^ b * a                 <⟨ +-infl< ⟩
@@ -375,11 +375,11 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ ⦃ _ : NonZero b ⦄ where
   ^-assoc {c = zero} = refl
   ^-assoc {c = suc c} =         begin-equality
     (a ^ b) ^ suc c             ≈⟨ refl ⟩
-    ((a ^ b) ^ c * a ^ b) ⦃ _ ⦄ ≈⟨ *-congˡ ⦃ ^-nz ⦄ ⦃ ^-nz ⦄ ^-assoc ⟩
+    ((a ^ b) ^ c * a ^ b) ⦃ _ ⦄ ≈⟨ *-congˡ ⦃ _ ⦄ ⦃ _ ⦄ ^-assoc ⟩
     (a ^ (b * c) * a ^ b) ⦃ _ ⦄ ≈˘⟨ ^-distrib ⟩
     a ^ (b * c + b)             ≈⟨ refl ⟩
     a ^ (b * suc c)             ∎ where open SubTreeReasoning
-  ^-assoc {c = lim f} = limExt ⦃ ^-pres< it ⦄ ⦃ ^-pres< (*-pres< it) ⦄ λ _ → ^-assoc
+  ^-assoc {c = lim f} = limExt ⦃ _ ⦄ ⦃ _ ⦄ λ _ → ^-assoc
 ```
 
 ```agda
@@ -407,7 +407,7 @@ a ^^ suc b = ((a ^^ b) ^ a) ⦃ ^^-nt ⦄
 a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres< it ⦄
 
 ^^-nt {b = zero} = it
-^^-nt {b = suc b} = ^-nt ⦃ ^^-nt ⦄ ⦃ nt-nz ⦄
+^^-nt {b = suc b} = ^-nt ⦃ _ ⦄ ⦃ nt-nz ⦄
 ^^-nt {b = lim f} = _
 
 ^^-pres-rd {a} {x} zero = set ^-infl< where instance _ = ^^-nt {a} {x}
@@ -418,7 +418,7 @@ a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres< it ⦄
   a ^^ suc b                    ∎ where open RoadReasoning; instance _ = ^^-nt {a} {b}
 ^^-pres-rd {a} {x} (lim {f} {n} r) = begin-strict
   a ^^ x                        <⟨ ^^-pres-rd r ⟩
-  a ^^ f n                      <⟨ set $ f<l ⦃ ^^-pres< it ⦄ ⟩
+  a ^^ f n                      <⟨ set $ f<l ⦃ _ ⦄ ⟩
   a ^^ lim f                    ∎ where open RoadReasoning
 ```
 
@@ -427,9 +427,9 @@ a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres< it ⦄
 ^^-fake {a} {b = zero}  = sym *-idˡ
 ^^-fake {a} {b = suc b} =       begin-equality
   a ^^ suc b                    ≈⟨ refl ⟩
-  ((a ^^ b) ^ a) ⦃ _ ⦄          ≈⟨ ^-congˡ ⦃ ^^-nt ⦄ ⦃ ^-nt ⦄ ^^-fake ⟩
+  ((a ^^ b) ^ a) ⦃ _ ⦄          ≈⟨ ^-congˡ ⦃ _ ⦄ ⦃ _ ⦄ ^^-fake ⟩
   ((a ^ (a ^ b)) ^ a) ⦃ _ ⦄     ≈⟨ ^-assoc ⟩
   a ^ (a ^ b * a) ⦃ _ ⦄         ≈⟨ refl ⟩
   a ^ (a ^ suc b)               ∎ where open SubTreeReasoning; instance _ = ^-nz
-^^-fake {a} {b = lim f} = limExt ⦃ ^^-pres< it ⦄ ⦃ ^-pres< (^-pres< it) ⦄ λ _ → ^^-fake
+^^-fake {a} {b = lim f} = limExt ⦃ _ ⦄ ⦃ _ ⦄ λ _ → ^^-fake
 ```
