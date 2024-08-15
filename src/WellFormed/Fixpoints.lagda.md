@@ -29,6 +29,9 @@ _+ω^⟨_,_⟩ : (i a : Ord) (ha : Maybe (DoHomo a)) → Ord
 ```
 
 ```agda
+ω^⟨_,_⟩ : (a : Ord) (ha : Maybe (DoHomo a)) → Ord
+ω^⟨ a , ha ⟩ = 0 +ω^⟨ a , ha ⟩
+
 _+ω^_ : Ord → Ord → Ord
 i +ω^ a = i +ω^⟨ a , nothing ⟩
 
@@ -83,4 +86,17 @@ zero      +ω^⟨ lim f , just r  ⟩ = lim h ⦃ h-wf ⦄
 +ω^-pres-rd zero = lim {n = 2} ⦃ _ ⦄ (+ω^-infl-rd _ nothing)
 +ω^-pres-rd (suc r) = lim {n = 1} ⦃ _ ⦄ (+ω^-pres-rd r)
 +ω^-pres-rd (lim {n} r) = lim {n = n} ⦃ _ ⦄ (+ω^-pres-rd r)
+```
+
+```agda
+ε₀ : Ord
+ε₀ = itω ω^ 0 w where
+  w : wf (itn ω^ 0)
+  w {(zero)} = zero₁
+  w {suc n} = +ω^-pres< (w {n})
+```
+
+```agda
+ε₀-fp : ω^⟨ ε₀ , just zero₁ ⟩ ≡ ε₀
+ε₀-fp = limExt ⦃ _ ⦄ ⦃ _ ⦄ λ { zero → refl ; (suc n) → refl }
 ```
