@@ -46,23 +46,23 @@ DoHomo (lim f) = f 0 < ω^ (f 0)
 ```
 
 ```agda
-+ω^-infl-rd : (a : Ord) (mdh : Maybe (DoHomo a)) → Road i (i +ω^⟨ a , mdh ⟩)
-+ω^-infl< : (a : Ord) (mdh : Maybe (DoHomo a)) → i < i +ω^⟨ a , mdh ⟩
-+ω^-infl< a mdh = ∣ +ω^-infl-rd a mdh ∣₁
+ω^-infl-rd : (a : Ord) (mdh : Maybe (DoHomo a)) → Road i (i +ω^⟨ a , mdh ⟩)
+ω^-infl< : (a : Ord) (mdh : Maybe (DoHomo a)) → i < i +ω^⟨ a , mdh ⟩
+ω^-infl< a mdh = ∣ ω^-infl-rd a mdh ∣₁
 ```
 
 ```agda
-+ω^-pres-rd : Road a b → Road (i +ω^ a) (i +ω^ b)
-+ω^-pres< : a < b → i +ω^ a < i +ω^ b
-+ω^-pres< = map +ω^-pres-rd
+ω^-pres-rd : Road a b → Road (i +ω^ a) (i +ω^ b)
+ω^-pres< : a < b → i +ω^ a < i +ω^ b
+ω^-pres< = map ω^-pres-rd
 ```
 
 ```agda
 i         +ω^⟨ zero  , nothing ⟩ = suc i
-i         +ω^⟨ suc a , mdh     ⟩ = itω _+ω^⟨ a , mdh ⟩ i (+ω^-infl< a mdh)
-i         +ω^⟨ lim f , nothing ⟩ = lim (λ n → i +ω^ f n) ⦃ +ω^-pres< it ⦄
-i@(suc _) +ω^⟨ lim f , just r  ⟩ = lim (λ n → i +ω^ f n) ⦃ +ω^-pres< it ⦄
-i@(lim _) +ω^⟨ lim f , just r  ⟩ = lim (λ n → i +ω^ f n) ⦃ +ω^-pres< it ⦄
+i         +ω^⟨ suc a , mdh     ⟩ = itω _+ω^⟨ a , mdh ⟩ i (ω^-infl< a mdh)
+i         +ω^⟨ lim f , nothing ⟩ = lim (λ n → i +ω^ f n) ⦃ ω^-pres< it ⦄
+i@(suc _) +ω^⟨ lim f , just r  ⟩ = lim (λ n → i +ω^ f n) ⦃ ω^-pres< it ⦄
+i@(lim _) +ω^⟨ lim f , just r  ⟩ = lim (λ n → i +ω^ f n) ⦃ ω^-pres< it ⦄
 zero      +ω^⟨ lim f , just r  ⟩ = lim h ⦃ h-wf ⦄
   module BaseOmega where
   h : Seq
@@ -70,32 +70,32 @@ zero      +ω^⟨ lim f , just r  ⟩ = lim h ⦃ h-wf ⦄
   h (suc n) = ω^ (f n)
   h-wf : wf h
   h-wf {(zero)} = r
-  h-wf {suc n} = +ω^-pres< it
+  h-wf {suc n} = ω^-pres< it
 ```
 
 ```agda
-+ω^-infl-rd           zero    nothing   = zero
-+ω^-infl-rd           (suc a) mdh        = f<l-rd {n = 0} ⦃ _ ⦄
-+ω^-infl-rd           (lim f) nothing   = lim {n = 0} ⦃ _ ⦄ (+ω^-infl-rd (f 0) nothing)
-+ω^-infl-rd {suc _}   (lim f) (just r)  = lim {n = 0} ⦃ _ ⦄ (+ω^-infl-rd (f 0) nothing)
-+ω^-infl-rd {lim _}   (lim f) (just r)  = lim {n = 0} ⦃ _ ⦄ (+ω^-infl-rd (f 0) nothing)
-+ω^-infl-rd {(zero)}  (lim f) (just r)  = lim {n = 1} ⦃ _ ⦄ (+ω^-infl-rd (f 0) nothing)
+ω^-infl-rd           zero    nothing   = zero
+ω^-infl-rd           (suc a) mdh        = f<l-rd {n = 0} ⦃ _ ⦄
+ω^-infl-rd           (lim f) nothing   = lim {n = 0} ⦃ _ ⦄ (ω^-infl-rd (f 0) nothing)
+ω^-infl-rd {suc _}   (lim f) (just r)  = lim {n = 0} ⦃ _ ⦄ (ω^-infl-rd (f 0) nothing)
+ω^-infl-rd {lim _}   (lim f) (just r)  = lim {n = 0} ⦃ _ ⦄ (ω^-infl-rd (f 0) nothing)
+ω^-infl-rd {(zero)}  (lim f) (just r)  = lim {n = 1} ⦃ _ ⦄ (ω^-infl-rd (f 0) nothing)
 ```
 
 ```agda
-+ω^-pres-rd zero = lim {n = 2} ⦃ _ ⦄ (+ω^-infl-rd _ nothing)
-+ω^-pres-rd (suc r) = lim {n = 1} ⦃ _ ⦄ (+ω^-pres-rd r)
-+ω^-pres-rd (lim {n} r) = lim {n = n} ⦃ _ ⦄ (+ω^-pres-rd r)
+ω^-pres-rd zero = lim {n = 2} ⦃ _ ⦄ (ω^-infl-rd _ nothing)
+ω^-pres-rd (suc r) = lim {n = 1} ⦃ _ ⦄ (ω^-pres-rd r)
+ω^-pres-rd (lim {n} r) = lim {n = n} ⦃ _ ⦄ (ω^-pres-rd r)
 ```
 
 ```agda
-+ω^-pres-rd-dh : (dh : DoHomo a) → Road a b → Road (i +ω^⟨ a , just dh ⟩) (i +ω^ b)
-+ω^-pres<-dh : (dh : DoHomo a) → a < b → i +ω^⟨ a , just dh ⟩ < i +ω^ b
-+ω^-pres<-dh dh = map (+ω^-pres-rd-dh dh)
+ω^-dh-pres-rd : {dha : DoHomo a} {dhb : DoHomo b} → Road a b → Road (i +ω^⟨ a , just dha ⟩) (i +ω^⟨ b , just dhb ⟩)
+ω^-dh-pres< : {dha : DoHomo a} {dhb : DoHomo b} → a < b → i +ω^⟨ a , just dha ⟩ < i +ω^⟨ b , just dhb ⟩
+ω^-dh-pres< = map ω^-dh-pres-rd
 
-+ω^-pres-rd-dh dh zero = {!   !}
-+ω^-pres-rd-dh dh (suc r) = {!   !}
-+ω^-pres-rd-dh dh (lim r) = {!   !}
+ω^-dh-pres-rd zero = lim {n = 2} ⦃ _ ⦄ {!   !}
+ω^-dh-pres-rd (suc r) = {!   !}
+ω^-dh-pres-rd (lim r) = {!   !}
 ```
 
 ```agda
@@ -104,30 +104,11 @@ zero      +ω^⟨ lim f , just r  ⟩ = lim h ⦃ h-wf ⦄
 ```
 
 ```agda
-IsLim : Ord → Type
-IsLim zero = ⊥
-IsLim (suc a) = ⊥
-IsLim (lim f) = ⊤
-```
-
-```agda
-ω⋰⁺⟨_,_⟩ : (i : Ord) ⦃ l : IsLim i ⦄ (dh : DoHomo i) → Ord
-ω⋰⁺⟨ i@(lim f) , dh ⟩ = lim h ⦃ h-wf ⦄
-  module Jump where
-  h : Seq
-  h zero = ω^⟨ suc i , just dh ⟩
-  h (suc n) = ω^ (h n)
-  h-wf : wf h
-  h-wf {(zero)} = +ω^-pres<-dh {a = suc i} {b = h 0} dh {!   !}
-  h-wf {suc n} = +ω^-pres< (h-wf {n})
-```
-
-```agda
 ε₀ : Ord
 ε₀ = ω⋰⟨ 0 , w ⟩ where
   w : wf (itn ω^ 0)
   w {(zero)} = zero₁
-  w {suc n} = +ω^-pres< (w {n})
+  w {suc n} = ω^-pres< (w {n})
 ```
 
 ```agda
@@ -137,5 +118,35 @@ IsLim (lim f) = ⊤
 
 ```agda
 ε₁ : Ord
-ε₁ = ω⋰⁺⟨ ε₀ , zero₁ ⟩
+ε₁ = lim h ⦃ h-wf ⦄ where
+  h : Seq
+  hh : DoHomo (h n)
+
+  h zero = suc ε₀
+  h (suc n) = ω^⟨ h n , just hh ⟩
+
+  hh {n} with (h n) in eq
+  ...         | zero = {!   !}
+  hh {(zero)} | suc a = case suc-inj eq of λ { refl → zero₁ }
+  hh {suc n}  | suc a = {!   !}
+  hh {suc n}  | lim f = {!   !}
+
+  open SubTreeReasoning
+
+  h-wf-0-pre =                  begin-strict
+    ε₀ +ω^ 0                    <⟨ ω^-pres< zero₁ ⟩
+    ε₀ +ω^ 1                    ∎
+
+  h-wf-0 =                      begin-strict
+    ε₀ +ω^ 0                    <⟨ map (lim {n = 1} ⦃ _ ⦄) h-wf-0-pre ⟩
+    ε₀ +ω^⟨ ε₀ , _ ⟩            ≈˘⟨ cong (_+ω^⟨ ε₀ , just zero₁ ⟩) ε₀-fp ⟩
+    ω^⟨ ε₀ , _ ⟩ +ω^⟨ ε₀ , _ ⟩  ∎
+
+  h-wf : wf h
+  h-wf {(zero)} =               begin-strict
+    suc ε₀                      ≈⟨ refl ⟩
+    ε₀ +ω^ 0                    <⟨ map (lim {n = 2} ⦃ _ ⦄) h-wf-0 ⟩
+    itω _+ω^⟨ ε₀ , _ ⟩ 0 _      ≈⟨ refl ⟩
+    ω^⟨ suc ε₀ , _ ⟩            ∎
+  h-wf {suc n} = ω^-dh-pres< (h-wf {n})
 ```
