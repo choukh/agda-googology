@@ -65,10 +65,13 @@ instance
   jump-zero = zero
   jump-suc : Jumpable i (suc a)
   jump-suc = suc
+
+JumpableFunc : Ord → Type
+JumpableFunc i = (a : Ord) ⦃ j : Jumpable i a ⦄ → Ord
 ```
 
 ```agda
-module _ (i : Ord) (F : (a : Ord) → ⦃ Jumpable i a ⦄ → Ord) ⦃ nz : ∀ {a} → NonZero (F (suc a)) ⦄ where
+module _ (i : Ord) (F : JumpableFunc i) ⦃ nz : ∀ {a} → NonZero (F (suc a)) ⦄ where
   jump : Func
 
   jump-pres-rd : jump preserves Road
@@ -96,4 +99,39 @@ module _ (i : Ord) (F : (a : Ord) → ⦃ Jumpable i a ⦄ → Ord) ⦃ nz : ∀
     jump x                            <⟨ jump-pres-rd r ⟩
     jump (f n)                        <⟨ f<l-rd {n = n} ⟩
     lim (λ n → jump (f n)) ⦃ _ ⦄      ∎ where open RoadReasoning
+```
+
+```agda
+nonLim : Ord → Type
+nonLim (lim _) = ⊥
+nonLim _ = ⊤
+
+record NonLim (a : Ord) : Type where
+  field .wrap : nonLim a
+
+instance
+  zero-nl : NonLim zero
+  zero-nl = _
+  suc-nl : NonLim (suc a)
+  suc-nl = _
+```
+
+```agda
+fixpt : (F : Func)
+  (infl : (F ↾ _) inflates _<_ within NonLim)
+  (pres : F preserves _<_)
+  → Func
+fixpt F infl pres = jump 0 (λ x ⦃ j ⦄ → itω F x w) ⦃ _ ⦄ where
+  w : ⦃ Jumpable 0 a ⦄ → wf (itn F a)
+  w {a = zero} {n = zero} = infl
+  w {a = suc a} {n = zero} = infl
+  w {a = a} {n = suc n} = pres w
+```
+
+```agda
+ε : Func
+ε = fixpt ω^ w +ω^-pres< where
+  w : (ω^ ↾ _) inflates _<_ within NonLim
+  w {(zero)} = zero₁
+  w {suc a} = {!   !}
 ```
