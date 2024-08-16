@@ -18,6 +18,10 @@ open import WellFormed.Properties
 
 ## 序数函数
 
+```agda
+private variable F : Func
+```
+
 我们先定义序数函数的一些性质.
 
 **定义 2-2-0** 我们说一个序数函数 $F$ **膨胀**一个序数关系 $\sim$, 当且仅当对任意序数 $x$ 都有 $x \sim F(x)$.
