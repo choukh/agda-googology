@@ -31,15 +31,15 @@ _+ω^_ : Ord → Ord → Ord
 ```
 
 ```agda
-+ω^-pres-rd : (a +ω^_) preserves Road
-+ω^-pres< : (a +ω^_) preserves _<_
-+ω^-pres< = map +ω^-pres-rd
+ω^-pres-rd : (a +ω^_) preserves Road
+ω^-pres< : (a +ω^_) preserves _<_
+ω^-pres< = map ω^-pres-rd
 ```
 
 ```agda
 a +ω^ zero = suc a
 a +ω^ suc b = itω (_+ω^ b) a +ω^-infl<
-a +ω^ lim f = lim (λ n → a +ω^ f n) ⦃ +ω^-pres< it ⦄
+a +ω^ lim f = lim (λ n → a +ω^ f n) ⦃ ω^-pres< it ⦄
 ```
 
 ```agda
@@ -49,53 +49,84 @@ a +ω^ lim f = lim (λ n → a +ω^ f n) ⦃ +ω^-pres< it ⦄
 ```
 
 ```agda
-+ω^-pres-rd zero        = rd[ 2 ] +ω^-infl-rd
-+ω^-pres-rd (suc r)     = rd[ 1 ] $ +ω^-pres-rd r
-+ω^-pres-rd (lim {n} r) = rd[ n ] $ +ω^-pres-rd r
+ω^-pres-rd zero        = rd[ 2 ] +ω^-infl-rd
+ω^-pres-rd (suc r)     = rd[ 1 ] $ ω^-pres-rd r
+ω^-pres-rd (lim {n} r) = rd[ n ] $ ω^-pres-rd r
 ```
 
 ```agda
-module _ (F : Func) (pres : F preserves _<_) ⦃ nz : NonZero (F 0) ⦄ where
-  instance _ : NonZero (F (suc a))
-  _ = nz-intro $                      begin-strict
-    0                                 ≤⟨ z≤ ⟩
-    F _                               <⟨ pres zero₁ ⟩
-    F (suc _)                         ∎ where open SubTreeReasoning
+record Fixable : Type where
+  constructor mkFixable
+  field _⟨_⟩ : Func
+  private F = _⟨_⟩
+  field
+    pres : F preserves _<_
+    ⦃ nz ⦄ : NonZero (F 0)
+
+  instance
+    F-suc-nz : NonZero (F (suc a))
+    F-suc-nz = nz-intro $           begin-strict
+      0                             ≤⟨ z≤ ⟩
+      F _                           <⟨ pres zero₁ ⟩
+      F (suc _)                     ∎ where open SubTreeReasoning
 ```
 
 ```agda
-  fixpt : Func
-  fixpt-pres-rd : fixpt preserves Road
-  fixpt-pres< : fixpt preserves _<_
-  fixpt-pres< = map fixpt-pres-rd
+module Fixpt (ℱ : Fixable) where
+  open Fixable ℱ renaming (_⟨_⟩ to F)
+
+  F′ : Func
+  F′-pres-rd : F′ preserves Road
+  F′-pres< : F′ preserves _<_
+  F′-pres< = map F′-pres-rd
 ```
 
 ```agda
-  fixpt zero = itω F 0 w where
+  F′ zero = itω F 0 w where
     w : wf (itn F 0)
     w {(zero)} = nz-elim
     w {suc n} = pres w
-  fixpt (suc a) = let b = suc (fixpt a) in b + F b
-  fixpt (lim f) = lim (λ n → fixpt (f n)) ⦃ fixpt-pres< it ⦄
+  F′ (suc a) = let b = suc (F′ a) in b + F b
+  F′ (lim f) = lim (λ n → F′ (f n)) ⦃ F′-pres< it ⦄
 ```
 
 ```agda
-  fixpt-pres-rd {x} zero =            begin-strict
-    fixpt x                           <⟨ zero ⟩
-    suc (fixpt x)                     <⟨ set +-infl< ⟩
-    suc (fixpt x) + F (suc (fixpt x)) ∎ where open RoadReasoning
-  fixpt-pres-rd {x} (suc {b} r) =     begin-strict
-    fixpt x                           <⟨ fixpt-pres-rd r ⟩
-    fixpt b                           <⟨ zero ⟩
-    suc (fixpt b)                     <⟨ set +-infl< ⟩
-    suc (fixpt b) + F (suc (fixpt b)) ∎ where open RoadReasoning
-  fixpt-pres-rd {x} (lim {f} {n} r) = begin-strict
-    fixpt x                           <⟨ fixpt-pres-rd r ⟩
-    fixpt (f n)                       <⟨ f<l-rd ⟩
-    lim (λ n → fixpt (f n)) ⦃ _ ⦄     ∎ where open RoadReasoning
+  F′-pres-rd {x} zero =             begin-strict
+    F′ x                            <⟨ zero ⟩
+    suc (F′ x)                      <⟨ set +-infl< ⟩
+    suc (F′ x) + F (suc (F′ x))     ∎ where open RoadReasoning
+  F′-pres-rd {x} (suc {b} r) =      begin-strict
+    F′ x                            <⟨ F′-pres-rd r ⟩
+    F′ b                            <⟨ zero ⟩
+    suc (F′ b)                      <⟨ set +-infl< ⟩
+    suc (F′ b) + F (suc (F′ b))     ∎ where open RoadReasoning
+  F′-pres-rd {x} (lim {f} {n} r) =  begin-strict
+    F′ x                            <⟨ F′-pres-rd r ⟩
+    F′ (f n)                        <⟨ f<l-rd ⟩
+    lim (λ n → F′ (f n)) ⦃ _ ⦄      ∎ where open RoadReasoning
 ```
 
 ```agda
-ε : Func
-ε = fixpt ω^ +ω^-pres<
+fixpt : Fixable → Fixable
+fixpt ℱ = mkFixable F′ F′-pres< ⦃ _ ⦄ where open Fixpt ℱ
+```
+
+```agda
+base-ω : Fixable
+base-ω = mkFixable ω^ ω^-pres<
+```
+
+```agda
+ε : Fixable
+ε = fixpt base-ω
+```
+
+```agda
+ζ : Fixable
+ζ = fixpt ε
+```
+
+```agda
+η : Fixable
+η = fixpt ζ
 ```
