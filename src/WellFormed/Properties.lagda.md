@@ -26,7 +26,7 @@ open import WellFormed.Base
 ```agda
 Func : Type
 Func = Ord → Ord
-variable F : Func
+private variable F : Func
 
 Rel : Type₁
 Rel = Ord → Ord → Type
