@@ -61,3 +61,11 @@ itω F i w = lim (itn F i) ⦃ w ⦄
 ε-pres-rd (suc r) = lim#-rd 2 (ε-pres-rd r)
 ε-pres-rd (lim {n} r) = lim#-rd n (ε-pres-rd r)
 ```
+
+```agda
+ζ₀ : Ord
+ζ₀ = itω ε 0 w where
+  w : wf (itn ε 0)
+  w {(zero)} = z<l
+  w {suc n} = {!   !}
+```
