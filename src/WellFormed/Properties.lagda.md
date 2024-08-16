@@ -95,17 +95,17 @@ instance
 suc-inj : suc a ≡ suc b → a ≡ b
 suc-inj refl = refl
 
-lim-inj : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → Ord.lim f ≡ lim g → f ≡ g
+lim-inj : {wff : wf f} {wfg : wf g} → Ord.lim f ⦃ wff ⦄ ≡ lim g ⦃ wfg ⦄ → f ≡ g
 lim-inj refl = refl
 ```
 
 **事实 2-1-8** 极限路径的反演
 
 ```agda
-lim-inv-rd : ⦃ _ : wf f ⦄ → Road a (lim f) → Σ[ n ∈ ℕ ] Road a (f n)
+lim-inv-rd : {w : wf f} → Road a (lim f ⦃ w ⦄) → Σ[ n ∈ ℕ ] Road a (f n)
 lim-inv-rd (lim r) = _ , r
 
-lim-inv : ⦃ _ : wf f ⦄ → a < lim f → Σ[ n ∈ ℕ ] a < f n
+lim-inv : {w : wf f} → a < lim f ⦃ w ⦄ → Σ[ n ∈ ℕ ] a < f n
 lim-inv r with lim-inv-rd (set r)
 ... | n , r = n , ∣ r ∣₁
 ```
@@ -126,10 +126,10 @@ z<s = ∣ z<s-rd ∣₁
 **引理 2-1-9-1**
 
 ```agda
-z<l-rd : ⦃ _ : wf f ⦄ → Road 0 (lim f)
-z<l-rd = lim {n = 1} (z<b-rd (set it))
+z<l-rd : {w : wf f} → Road 0 (lim f ⦃ w ⦄)
+z<l-rd {w} = lim {n = 1} ⦃ w ⦄ (z<b-rd (set w))
 
-z<l : ⦃ _ : wf f ⦄ → 0 < lim f
+z<l : {w : wf f} → 0 < lim f ⦃ w ⦄
 z<l = ∣ z<l-rd ∣₁
 ```
 
@@ -240,24 +240,24 @@ s≤s-inj = inj<→inj≤ suc-inj s<s-inj
 **定理 2-1-15**
 
 ```agda
-s<l-rd : ⦃ _ : wf f ⦄ → Road a (lim f) → Road (suc a) (lim f)
+s<l-rd : {w : wf f} → Road a (lim f ⦃ w ⦄) → Road (suc a) (lim f ⦃ w ⦄)
 s<l-rd {a} (lim {f} {n} r) = begin-strict
   suc a           <⟨ s<s-rd r ⟩
   suc (f n)       ≤⟨ <→s≤-rd f<l-rd ⟩
-  lim f           ∎ where open RoadReasoning
+  lim f ⦃ _ ⦄     ∎ where open RoadReasoning
 
-s<l : ⦃ _ : wf f ⦄ → a < lim f → suc a < lim f
+s<l : {w : wf f} → a < lim f ⦃ w ⦄ → suc a < lim f ⦃ w ⦄
 s<l = map s<l-rd
 ```
 
 **定理 2-1-16**
 
 ```agda
-l≤p-rd : ⦃ _ : wf f ⦄ → NSRoad (lim f) (suc a) → NSRoad (lim f) a
+l≤p-rd : {w : wf f} → NSRoad (lim f ⦃ w ⦄) (suc a) → NSRoad (lim f ⦃ w ⦄) a
 l≤p-rd (inl zero)    = inr refl
 l≤p-rd (inl (suc r)) = inl r
 
-l≤p : ⦃ _ : wf f ⦄ → lim f ≤ suc a → lim f ≤ a
+l≤p : {w : wf f} → lim f ⦃ w ⦄ ≤ suc a → lim f ⦃ w ⦄ ≤ a
 l≤p (inl r) = ns→≤ (l≤p-rd (inl (set r)))
 ```
 
