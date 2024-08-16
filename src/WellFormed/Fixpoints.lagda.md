@@ -117,16 +117,8 @@ base-ω = mkFixable ω^ ω^-pres<
 ```
 
 ```agda
-ε : Fixable
+ε ζ η : Fixable
 ε = fixpt base-ω
-```
-
-```agda
-ζ : Fixable
 ζ = fixpt ε
-```
-
-```agda
-η : Fixable
 η = fixpt ζ
 ```
