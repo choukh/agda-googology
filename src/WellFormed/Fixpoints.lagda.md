@@ -55,83 +55,47 @@ a +ω^ lim f = lim (λ n → a +ω^ f n) ⦃ +ω^-pres< it ⦄
 ```
 
 ```agda
-data Jumpable (i : Ord) : Ord → Type where
-  zero : Jumpable i i
-  suc  : Jumpable i (suc a)
-
-private variable i : Ord
-instance
-  jump-zero : Jumpable i i
-  jump-zero = zero
-  jump-suc : Jumpable i (suc a)
-  jump-suc = suc
-
-JumpableFunc : Ord → Type
-JumpableFunc i = (a : Ord) ⦃ j : Jumpable i a ⦄ → Ord
+module _ (F : Func) (pres : F preserves _<_) ⦃ nz : NonZero (F 0) ⦄ where
+  instance _ : NonZero (F (suc a))
+  _ = nz-intro $                      begin-strict
+    0                                 ≤⟨ z≤ ⟩
+    F _                               <⟨ pres zero₁ ⟩
+    F (suc _)                         ∎ where open SubTreeReasoning
 ```
 
 ```agda
-module _ (i : Ord) (F : JumpableFunc i) ⦃ nz : ∀ {a} → NonZero (F (suc a)) ⦄ where
-  jump : Func
-
-  jump-pres-rd : jump preserves Road
-  jump-pres< : jump preserves _<_
-  jump-pres< = map jump-pres-rd
+  fixpt : Func
+  fixpt-pres-rd : fixpt preserves Road
+  fixpt-pres< : fixpt preserves _<_
+  fixpt-pres< = map fixpt-pres-rd
 ```
 
 ```agda
-  jump zero = F i
-  jump (suc a) = let b = suc (jump a) in b + F b
-  jump (lim f) = lim (λ n → jump (f n)) ⦃ jump-pres< it ⦄
+  fixpt zero = itω F 0 w where
+    w : wf (itn F 0)
+    w {(zero)} = nz-elim
+    w {suc n} = pres w
+  fixpt (suc a) = let b = suc (fixpt a) in b + F b
+  fixpt (lim f) = lim (λ n → fixpt (f n)) ⦃ fixpt-pres< it ⦄
 ```
 
 ```agda
-  jump-pres-rd {x} zero =             begin-strict
-    jump x                            <⟨ zero ⟩
-    suc (jump x)                      <⟨ set $ +-infl< ⟩
-    suc (jump x) + F (suc (jump x))   ∎ where open RoadReasoning
-  jump-pres-rd {x} (suc {b} r) =      begin-strict
-    jump x                            <⟨ jump-pres-rd r ⟩
-    jump b                            <⟨ zero ⟩
-    suc (jump b)                      <⟨ set $ +-infl< ⟩
-    suc (jump b) + F (suc (jump b))   ∎ where open RoadReasoning
-  jump-pres-rd {x} (lim {f} {n} r) =  begin-strict
-    jump x                            <⟨ jump-pres-rd r ⟩
-    jump (f n)                        <⟨ f<l-rd {n = n} ⟩
-    lim (λ n → jump (f n)) ⦃ _ ⦄      ∎ where open RoadReasoning
-```
-
-```agda
-nonLim : Ord → Type
-nonLim (lim _) = ⊥
-nonLim _ = ⊤
-
-record NonLim (a : Ord) : Type where
-  field .wrap : nonLim a
-
-instance
-  zero-nl : NonLim zero
-  zero-nl = _
-  suc-nl : NonLim (suc a)
-  suc-nl = _
-```
-
-```agda
-fixpt : (F : Func)
-  (infl : (F ↾ _) inflates _<_ within NonLim)
-  (pres : F preserves _<_)
-  → Func
-fixpt F infl pres = jump 0 (λ x ⦃ j ⦄ → itω F x w) ⦃ _ ⦄ where
-  w : ⦃ Jumpable 0 a ⦄ → wf (itn F a)
-  w {a = zero} {n = zero} = infl
-  w {a = suc a} {n = zero} = infl
-  w {a = a} {n = suc n} = pres w
+  fixpt-pres-rd {x} zero =            begin-strict
+    fixpt x                           <⟨ zero ⟩
+    suc (fixpt x)                     <⟨ set +-infl< ⟩
+    suc (fixpt x) + F (suc (fixpt x)) ∎ where open RoadReasoning
+  fixpt-pres-rd {x} (suc {b} r) =     begin-strict
+    fixpt x                           <⟨ fixpt-pres-rd r ⟩
+    fixpt b                           <⟨ zero ⟩
+    suc (fixpt b)                     <⟨ set +-infl< ⟩
+    suc (fixpt b) + F (suc (fixpt b)) ∎ where open RoadReasoning
+  fixpt-pres-rd {x} (lim {f} {n} r) = begin-strict
+    fixpt x                           <⟨ fixpt-pres-rd r ⟩
+    fixpt (f n)                       <⟨ f<l-rd ⟩
+    lim (λ n → fixpt (f n)) ⦃ _ ⦄     ∎ where open RoadReasoning
 ```
 
 ```agda
 ε : Func
-ε = fixpt ω^ w +ω^-pres< where
-  w : (ω^ ↾ _) inflates _<_ within NonLim
-  w {(zero)} = zero₁
-  w {suc a} = {!   !}
+ε = fixpt ω^ +ω^-pres<
 ```
