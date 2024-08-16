@@ -1,24 +1,10 @@
 ```agda
-{-# OPTIONS --rewriting --cubical --lossy-unification #-}
+{-# OPTIONS --safe --cubical --lossy-unification #-}
 module WellFormed.Fixpoints where
 
 open import WellFormed.Base
 open import WellFormed.Properties
 open import WellFormed.Arithmetic
-
-open import Agda.Builtin.Equality public
-open import Agda.Builtin.Equality.Rewrite public
-{-# REWRITE *-idˡ #-}
-```
-
-```agda
-lim#-rd : (n : ℕ) {w : wf f} → Road a (f n) → Road a (lim f ⦃ w ⦄)
-lim#-rd n = lim {n = n} ⦃ _ ⦄
-```
-
-```agda
-lim# : (n : ℕ) {w : wf f} → a < f n → a < lim f ⦃ w ⦄
-lim# n = map (lim#-rd n)
 ```
 
 ```agda
@@ -33,39 +19,25 @@ itω F i w = lim (itn F i) ⦃ w ⦄
 ```
 
 ```agda
-ε : Func
-ε-nt : NonTrivial (ε a)
-ε-pres-rd : ε preserves Road
+_+ω^_ : Ord → Ord → Ord
++ω^-infl-rd : (_+ω^ b) inflates Road
++ω^-pres-rd : (a +ω^_) preserves Road
 
-ε-pres< : ε preserves _<_
-ε-pres< = map ε-pres-rd
++ω^-infl< : (_+ω^ b) inflates _<_
++ω^-infl< = ∣ +ω^-infl-rd ∣₁
 
-ε zero = itω (ω ^_) 0 w
-  module EpsilonZero where
-  w : wf (itn (ω ^_) 0)
-  w {(zero)} = zero₁
-  w {suc n} = ^-pres< (w {n})
-ε (suc a) = itω (ε a ^_) 0 w
-  module EpsilonSuc where
-  instance _ = ε-nt
-  w : wf (itn (ε a ^_) 0)
-  w {(zero)} = zero₁
-  w {suc n} = ^-pres< (w {n})
-ε (lim f) = lim (ε ∘ f) ⦃ ε-pres< it ⦄
++ω^-pres< : (a +ω^_) preserves _<_
++ω^-pres< = map +ω^-pres-rd
 
-ε-nt {(zero)} = nt-intro $ lim# 2 $ lim# 2 zero₁
-ε-nt {suc a} = nt-intro $ lim# 2 $ nt-elim ⦃ ε-nt ⦄
-ε-nt {lim f} = nt-intro $ lim# 0 $ nt-elim ⦃ ε-nt ⦄
+a +ω^ zero = suc a
+a +ω^ suc b = itω (_+ω^ b) a +ω^-infl<
+a +ω^ lim f = lim (λ n → a +ω^ f n) ⦃ +ω^-pres< it ⦄
 
-ε-pres-rd zero = lim#-rd 3 $ set (^-infl< ⦃ ε-nt ⦄ ⦃ _ ⦄)
-ε-pres-rd (suc r) = lim#-rd 2 (ε-pres-rd r)
-ε-pres-rd (lim {n} r) = lim#-rd n (ε-pres-rd r)
-```
++ω^-infl-rd {(zero)} = zero
++ω^-infl-rd {suc b} = rd[ 1 ] +ω^-infl-rd
++ω^-infl-rd {lim f} = rd[ 0 ] +ω^-infl-rd
 
-```agda
-ζ₀ : Ord
-ζ₀ = itω ε 0 w where
-  w : wf (itn ε 0)
-  w {(zero)} = z<l
-  w {suc n} = {!   !}
++ω^-pres-rd zero        = rd[ 2 ] +ω^-infl-rd
++ω^-pres-rd (suc r)     = rd[ 1 ] $ +ω^-pres-rd r
++ω^-pres-rd (lim {n} r) = rd[ n ] $ +ω^-pres-rd r
 ```
