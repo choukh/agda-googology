@@ -55,7 +55,20 @@ a +ω^ lim f = lim (λ n → a +ω^ f n) ⦃ +ω^-pres< it ⦄
 ```
 
 ```agda
-module _ (i : Ord) (F : Func) (F-infl< : F inflates _<_) (F-pres< : F preserves _<_) where
+data Jumpable (i : Ord) : Ord → Type where
+  zero : Jumpable i i
+  suc  : Jumpable i (suc a)
+
+private variable i : Ord
+instance
+  jump-zero : Jumpable i i
+  jump-zero = zero
+  jump-suc : Jumpable i (suc a)
+  jump-suc = suc
+```
+
+```agda
+module _ (i : Ord) (F : (a : Ord) → ⦃ Jumpable i a ⦄ → Ord) ⦃ nz : ∀ {a} → NonZero (F (suc a)) ⦄ where
   jump : Func
 
   jump-pres-rd : jump preserves Road
@@ -66,22 +79,21 @@ module _ (i : Ord) (F : Func) (F-infl< : F inflates _<_) (F-pres< : F preserves 
 ```agda
   jump zero = F i
   jump (suc a) = let b = suc (jump a) in b + F b
-  jump (lim f) = lim (λ n → F (jump (f n))) ⦃ F-pres< (jump-pres< it) ⦄
+  jump (lim f) = lim (λ n → jump (f n)) ⦃ jump-pres< it ⦄
 ```
 
 ```agda
   jump-pres-rd {x} zero =             begin-strict
     jump x                            <⟨ zero ⟩
-    suc (jump x)                      <⟨ set $ +-infl< ⦃ {!   !} ⦄ ⟩
+    suc (jump x)                      <⟨ set $ +-infl< ⟩
     suc (jump x) + F (suc (jump x))   ∎ where open RoadReasoning
   jump-pres-rd {x} (suc {b} r) =      begin-strict
     jump x                            <⟨ jump-pres-rd r ⟩
     jump b                            <⟨ zero ⟩
-    suc (jump b)                      <⟨ set $ +-infl< ⦃ {!   !} ⦄ ⟩
+    suc (jump b)                      <⟨ set $ +-infl< ⟩
     suc (jump b) + F (suc (jump b))   ∎ where open RoadReasoning
   jump-pres-rd {x} (lim {f} {n} r) =  begin-strict
     jump x                            <⟨ jump-pres-rd r ⟩
-    jump (f n)                        <⟨ set $ F-infl< ⟩
-    F (jump (f n))                    <⟨ f<l-rd {n = n} ⟩
-    lim (λ n → F (jump (f n))) ⦃ _ ⦄  ∎ where open RoadReasoning
+    jump (f n)                        <⟨ f<l-rd {n = n} ⟩
+    lim (λ n → jump (f n)) ⦃ _ ⦄      ∎ where open RoadReasoning
 ```
