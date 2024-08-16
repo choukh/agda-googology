@@ -433,4 +433,4 @@ a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres< it ⦄
   a ^ (a ^ suc b)               ∎ where open SubTreeReasoning; instance _ = ^-nz
 ^^-fake {a} {b = lim f} = limExt λ _ → ^^-fake
 ```
- 
+  
