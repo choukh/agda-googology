@@ -1,3 +1,14 @@
+---
+title: 形式化大数数学 (2.3 - 跨树关系)
+zhihu-tags: Agda, 大数数学, 序数
+---
+
+# 形式化大数数学 (2.3 - 跨树关系)
+
+> 交流Q群: 893531731  
+> 本文源码: [CrossTree.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/WellFormed/CrossTree.lagda.md)  
+> 高亮渲染: [CrossTree.html](https://choukh.github.io/agda-googology/WellFormed.CrossTree.html)  
+
 ```agda
 {-# OPTIONS --safe --cubical --lossy-unification #-}
 module WellFormed.CrossTree where
@@ -7,14 +18,30 @@ open import WellFormed.Properties
 open import Relation.Binary.Definitions
 ```
 
+## 非严格序
+
 **定义 2-x-x**
 
 ```agda
-data _≼_ : Ord → Ord → Type where
+data _≼_ : Rel where
   z≼  : 0 ≼ a
   s≼s : a ≼ b → suc a ≼ suc b
   ≼l  : {w : wf f} → a ≼ f n → a ≼ lim f ⦃ w ⦄
-  l≼  : {w : wf f} → (∀ n → f n ≼ a) → lim f ⦃ w ⦄ ≼ a
+  l≼  : {w : wf f} → (∀ {n} → f n ≼ a) → lim f ⦃ w ⦄ ≼ a
+```
+
+**事实 2-x-x**
+
+```agda
+s≼s-inj : suc injects _≼_
+s≼s-inj (s≼s p) = p
+```
+
+**事实 2-x-x**
+
+```agda
+l≼l : {wff : wf f} {wfg : wf g} → (∀ {n} → f n ≼ g n) → lim f ⦃ wff ⦄ ≼ lim g ⦃ wfg ⦄
+l≼l p = l≼ (≼l p)
 ```
 
 **定理 2-x-x**
@@ -23,7 +50,7 @@ data _≼_ : Ord → Ord → Type where
 ≼-refl : Reflexive _≼_
 ≼-refl {(zero)} = z≼
 ≼-refl {suc x} = s≼s ≼-refl
-≼-refl {lim f} = l≼ λ n → ≼l ≼-refl
+≼-refl {lim f} = l≼ (≼l ≼-refl)
 ```
 
 **推论 2-x-x**
@@ -40,8 +67,16 @@ f≼l = ≼l ≼-refl
 ≼-trans z≼      q       = z≼
 ≼-trans (s≼s p) (s≼s q) = s≼s (≼-trans p q)
 ≼-trans p       (≼l q)  = ≼l (≼-trans p q)
-≼-trans (l≼ p)  q       = l≼ λ n → ≼-trans (p n) q
-≼-trans (≼l p)  (l≼ q)  = ≼-trans p (q _)
+≼-trans (l≼ p)  q       = l≼ (≼-trans p q)
+≼-trans (≼l p)  (l≼ q)  = ≼-trans p q
+```
+
+**推论 2-x-x**
+
+```agda
+l≼-inv : {w : wf f} → lim f ⦃ w ⦄ ≼ a → f n ≼ a
+l≼-inv (≼l p) = ≼-trans f≼l (≼l p)
+l≼-inv (l≼ p) = p
 ```
 
 **引理 2-x-x**
@@ -51,7 +86,7 @@ f≼l = ≼l ≼-refl
 ≼-suc z≼ = z≼
 ≼-suc (s≼s p) = s≼s (≼-suc p)
 ≼-suc (≼l p) = ≼-trans (≼-suc p) (s≼s f≼l)
-≼-suc (l≼ p) = l≼ λ n → ≼-suc (p n)
+≼-suc (l≼ p) = l≼ (≼-suc p)
 
 ≼-zero : a ≼ suc a
 ≼-zero = ≼-suc ≼-refl
@@ -69,4 +104,59 @@ ns→≼ (inr refl) = ≼-refl
 ≤→≼ : a ≤ b → a ≼ b
 ≤→≼ (inl r) = ns→≼ (inl (set r))
 ≤→≼ (inr refl) = ≼-refl
+```
+
+## 外延相等
+
+**定义 2-x-x**
+
+```agda
+_≈_ : Rel
+a ≈ b = a ≼ b × b ≼ a
+```
+
+**事实 2-x-x**
+
+```agda
+≼-antisym : Antisymmetric _≈_ _≼_
+≼-antisym p q = p , q
+```
+
+**定理 2-x-x**
+
+```agda
+≈-refl : Reflexive _≈_
+≈-refl = ≼-refl , ≼-refl
+
+≈-sym : Symmetric _≈_
+≈-sym (p , q) = q , p
+
+≈-trans : Transitive _≈_
+≈-trans (p , q) (u , v) = ≼-trans p u , ≼-trans v q
+```
+
+**事实 2-x-x**
+
+```agda
+s≈s : a ≈ b → suc a ≈ suc b
+s≈s (p , q) = s≼s p , s≼s q
+
+s≈s-inj : suc injects _≈_
+s≈s-inj (p , q) = s≼s-inj p , s≼s-inj q
+```
+
+**事实 2-x-x**
+
+```agda
+l≈l : {wff : wf f} {wfg : wf g} → (∀ {n} → f n ≈ g n) → lim f ⦃ wff ⦄ ≈ lim g ⦃ wfg ⦄
+l≈l p = l≼l (fst p) , l≼l (snd p)
+```
+
+**事实 2-x-x**
+
+```agda
+l≈ls : {w : wf f} {ws : wf (f ∘ suc)} → f 0 ≼ f 1 → lim f ⦃ w ⦄ ≈ lim (f ∘ ℕ.suc) ⦃ ws ⦄
+l≈ls p = l≼ (λ { {(zero)} → ≼l p
+               ; {suc n}  → ≼l ≼-refl })
+       , l≼ (≼l ≼-refl)
 ```
