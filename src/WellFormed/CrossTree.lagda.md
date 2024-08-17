@@ -172,6 +172,25 @@ a ⊀ b = a ≺ b → ⊥
 ```
 
 ```agda
+≺→≼ : a ≺ b → a ≼ b
+≺→≼ (s≼s p) = ≼-suc p
+≺→≼ (≼l p) = ≼l (≼-trans ≼-zero p)
+```
+
+```agda
+≼→≺s : a ≼ b → a ≺ suc b
+≼→≺s z≼ = s≼s z≼
+≼→≺s (s≼s p) = s≼s (s≼s p)
+≼→≺s (≼l p) = s≼s (≼l p)
+≼→≺s (l≼ p) = s≼s (l≼ p)
+```
+
+```agda
+≺s→≼ : a ≺ suc b → a ≼ b
+≺s→≼ p = s≼s-inj p
+```
+
+```agda
 s⋠ : suc a ⋠ a
 l⋠f : {w : wf f} → lim f ⦃ w ⦄ ⋠ f n
 l⋠f p = s⋠ (≼-trans (≤→≼ (<→s≤ f<l)) p)
@@ -183,4 +202,16 @@ s⋠ {lim f} (≼l p) = l⋠f (≼-trans ≼-zero p)
 ```agda
 ≺-irrefl : Irreflexive _≈_ _≺_
 ≺-irrefl (_ , p) q = s⋠ (≼-trans q p)
+
+≺-trans : Transitive _≺_
+≺-trans p q = ≼-trans p (≺→≼ q)
+
+≺-asym : Asymmetric _≺_
+≺-asym p q = ≺-irrefl ≈-refl (≺-trans p q)
+
+≺-≼-trans : Trans _≺_ _≼_ _≺_
+≺-≼-trans p q = ≼-trans p q
+
+≼-≺-trans : Trans _≼_ _≺_ _≺_
+≼-≺-trans p q = ≼-trans (s≼s p) q
 ```
