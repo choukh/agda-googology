@@ -128,6 +128,6 @@ open Fixable public
 ε-suc : ε ⟨ suc a ⟩ ≡ itω (λ x → suc (ε ⟨ a ⟩) + ω^ x) (suc (ε ⟨ a ⟩)) _
 ε-suc = refl
 
-ε-lim : {w : wf f} → ε ⟨ lim f ⦃ w ⦄ ⟩ ≡ lim (λ n → ε ⟨ f n ⟩) ⦃ _ ⦄
+ε-lim : {w : wf f} → ε ⟨ lim f ⦃ w ⦄ ⟩ ≡ lim- λ n → ε ⟨ f n ⟩
 ε-lim = refl
 ```
