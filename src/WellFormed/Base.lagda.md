@@ -540,10 +540,10 @@ module SubTreeReasoning where
   - 若 $m=n'$, 由 $f$ 的良构性质有 $f(m)=f(n')\lt f(n'^+)=f(n)$. ∎
 
 ```agda
-seq-pres< : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
-seq-pres< {f} {m} (ℕ.s≤s {n} m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
+seq-pres : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
+seq-pres {f} {m} (ℕ.s≤s {n} m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 ... | inl m<n = begin-strict
-  (f m)         <⟨ seq-pres< m<n ⟩
+  (f m)         <⟨ seq-pres m<n ⟩
   (f n)         <⟨ it ⟩
   f (suc n)     ∎ where open SubTreeReasoning
 ... | inr refl = it
@@ -557,9 +557,9 @@ seq-pres< {f} {m} (ℕ.s≤s {n} m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 ```agda
 seq-inj≡ : ∀ f → ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
 seq-inj≡ {m} {n} _ eq with ℕ.<-cmp m n
-... | tri< m<n _ _  = ⊥-elim $ <-irrefl eq (seq-pres< m<n)
+... | tri< m<n _ _  = ⊥-elim $ <-irrefl eq (seq-pres m<n)
 ... | tri≈ _ refl _ = refl
-... | tri> _ _ n<m  = ⊥-elim $ <-irrefl (sym eq) (seq-pres< n<m)
+... | tri> _ _ n<m  = ⊥-elim $ <-irrefl (sym eq) (seq-pres n<m)
 ```
 
 **引理 2-0-27** 良构序列反映自然数的序, 即序列的两个项的大小关系反映序号的大小关系.  
@@ -570,7 +570,7 @@ seq-inj< : ∀ f → ⦃ _ : wf f ⦄ → f m < f n → m ℕ.< n
 seq-inj< {m} {n} _ r with ℕ.<-cmp m n
 ... | tri< m<n _ _  = m<n
 ... | tri≈ _ refl _ = ⊥-elim $ <-irrefl refl r
-... | tri> _ _ n<m  = ⊥-elim $ <-asym r (seq-pres< n<m)
+... | tri> _ _ n<m  = ⊥-elim $ <-asym r (seq-pres n<m)
 ```
 
 **事实 2-0-28** 对良构序列 $f$, 不存在 $m$ 使得 $f(m)$ 正好位于 $f(n)$ 与 $f(n^+)$ 之间.  
@@ -632,9 +632,9 @@ isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-tra
 <-connex-pre (suc r) zero    = inl ∣ r ∣₁
 <-connex-pre (suc r) (suc s) = <-connex-pre r s
 <-connex-pre (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
-... | tri< n<m _ _  = rec isPropConnex (λ t → <-connex-pre (rd-trans r t) s) (seq-pres< n<m)
+... | tri< n<m _ _  = rec isPropConnex (λ t → <-connex-pre (rd-trans r t) s) (seq-pres n<m)
 ... | tri≈ _ refl _ = <-connex-pre r s
-... | tri> _ _ m<n  = rec isPropConnex (λ t → <-connex-pre r (rd-trans s t)) (seq-pres< m<n)
+... | tri> _ _ m<n  = rec isPropConnex (λ t → <-connex-pre r (rd-trans s t)) (seq-pres m<n)
 ```
 
 **推论 2-0-34** 将同株关系弱化为命题, 一样有连通性成立.  

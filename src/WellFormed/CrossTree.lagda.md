@@ -1,9 +1,9 @@
 ---
-title: 形式化大数数学 (2.3 - 跨树关系)
+title: 形式化大数数学 (2.2 - 跨树关系)
 zhihu-tags: Agda, 大数数学, 序数
 ---
 
-# 形式化大数数学 (2.3 - 跨树关系)
+# 形式化大数数学 (2.2 - 跨树关系)
 
 > 交流Q群: 893531731  
 > 本文源码: [CrossTree.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/WellFormed/CrossTree.lagda.md)  
@@ -20,7 +20,7 @@ open import Relation.Binary.Definitions
 
 ## 非严格序
 
-**定义 2-x-x**
+**定义 2-2-x**
 
 ```agda
 data _≼_ : Rel where
@@ -30,21 +30,21 @@ data _≼_ : Rel where
   l≼  : {w : wf f} → (∀ {n} → f n ≼ a) → lim f ⦃ w ⦄ ≼ a
 ```
 
-**事实 2-x-x**
+**事实 2-2-x**
 
 ```agda
 s≼s-inj : suc injects _≼_
 s≼s-inj (s≼s p) = p
 ```
 
-**事实 2-x-x**
+**事实 2-2-x**
 
 ```agda
 l≼l : {wff : wf f} {wfg : wf g} → (∀ {n} → f n ≼ g n) → lim f ⦃ wff ⦄ ≼ lim g ⦃ wfg ⦄
 l≼l p = l≼ (≼l p)
 ```
 
-**定理 2-x-x**
+**定理 2-2-x**
 
 ```agda
 ≼-refl : Reflexive _≼_
@@ -53,14 +53,14 @@ l≼l p = l≼ (≼l p)
 ≼-refl {lim f} = l≼ (≼l ≼-refl)
 ```
 
-**推论 2-x-x**
+**推论 2-2-x**
 
 ```agda
 f≼l : {w : wf f} → f n ≼ lim f ⦃ w ⦄
 f≼l = ≼l ≼-refl
 ```
 
-**定理 2-x-x**
+**定理 2-2-x**
 
 ```agda
 ≼-trans : Transitive _≼_
@@ -71,7 +71,7 @@ f≼l = ≼l ≼-refl
 ≼-trans (≼l p)  (l≼ q)  = ≼-trans p q
 ```
 
-**推论 2-x-x**
+**推论 2-2-x**
 
 ```agda
 l≼-inv : {w : wf f} → lim f ⦃ w ⦄ ≼ a → f n ≼ a
@@ -79,7 +79,7 @@ l≼-inv (≼l p) = ≼-trans f≼l (≼l p)
 l≼-inv (l≼ p) = p
 ```
 
-**引理 2-x-x**
+**引理 2-2-x**
 
 ```agda
 ≼-suc : a ≼ b → a ≼ suc b
@@ -92,7 +92,7 @@ l≼-inv (l≼ p) = p
 ≼-zero = ≼-suc ≼-refl
 ```
 
-**定理 2-x-x**
+**定理 2-2-x**
 
 ```agda
 ns→≼ : NSRoad a b → a ≼ b
@@ -108,21 +108,21 @@ ns→≼ (inr refl) = ≼-refl
 
 ## 外延相等
 
-**定义 2-x-x**
+**定义 2-2-x**
 
 ```agda
 _≈_ : Rel
 a ≈ b = a ≼ b × b ≼ a
 ```
 
-**事实 2-x-x**
+**事实 2-2-x**
 
 ```agda
 ≼-antisym : Antisymmetric _≈_ _≼_
 ≼-antisym p q = p , q
 ```
 
-**定理 2-x-x**
+**定理 2-2-x**
 
 ```agda
 ≈-refl : Reflexive _≈_
@@ -135,7 +135,7 @@ a ≈ b = a ≼ b × b ≼ a
 ≈-trans (p , q) (u , v) = ≼-trans p u , ≼-trans v q
 ```
 
-**事实 2-x-x**
+**事实 2-2-x**
 
 ```agda
 s≈s : a ≈ b → suc a ≈ suc b
@@ -145,14 +145,14 @@ s≈s-inj : suc injects _≈_
 s≈s-inj (p , q) = s≼s-inj p , s≼s-inj q
 ```
 
-**事实 2-x-x**
+**事实 2-2-x**
 
 ```agda
 l≈l : {wff : wf f} {wfg : wf g} → (∀ {n} → f n ≈ g n) → lim f ⦃ wff ⦄ ≈ lim g ⦃ wfg ⦄
 l≈l p = l≼l (fst p) , l≼l (snd p)
 ```
 
-**事实 2-x-x**
+**事实 2-2-x**
 
 ```agda
 l≈ls : {w : wf f} {ws : wf (f ∘ suc)} → f 0 ≼ f 1 → lim f ⦃ w ⦄ ≈ lim (f ∘ ℕ.suc) ⦃ ws ⦄
