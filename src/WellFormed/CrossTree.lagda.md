@@ -290,6 +290,24 @@ import Data.Nat.Properties as ℕ
 ```
 
 ```agda
+ω^>0 : 0 < ω ^ a
+ω^>0 {a} =                    begin-strict
+  0                           <⟨ zero₁ ⟩
+  1                           ≈⟨ refl ⟩
+  ω ^ 0                       ≤⟨ pres≤ ^-pres z≤ ⟩
+  ω ^ a                       ∎ where open SubTreeReasoning
+```
+
+```agda
+instance
+  ω^-nz : NonZero (ω ^ a)
+  ω^-nz = nz-intro ω^>0
+
+  fin-suc-wf : wf (fin ∘ suc)
+  fin-suc-wf = zero₁
+```
+
+```agda
 _ : ω + 1 ≡ suc ω
 _ = refl
 ```
@@ -302,4 +320,16 @@ _ = refl
   lim (λ n → fin (suc n))     ≈˘⟨ l≈ls ≼-zero ⟩
   lim- (λ n → fin n)          ≈⟨ ≈-refl ⟩
   ω                           ∎ where open CrossTreeReasoning
+```
+
+```agda
+ω^-absorb : a ≺ b → ω ^ a + ω ^ b ≈ ω ^ b
+ω^-absorb {a} {b = suc b} a≺b =
+  (l≼ λ {n} →               begin
+    ω ^ a + ω ^ b * fin n   ≤⟨ {!   !} ⟩
+    ω ^ suc b               ∎)
+  ,
+  (l≼ λ {n} → {!   !})
+  where open CrossTreeReasoning
+ω^-absorb {a} {b = lim f} a≺b = {!   !}
 ```
