@@ -1,3 +1,14 @@
+---
+title: 形式化大数数学 (2.4 - 不动点)
+zhihu-tags: Agda, 大数数学, 序数
+---
+
+# 形式化大数数学 (2.4 - 不动点)
+
+> 交流Q群: 893531731  
+> 本文源码: [Fixpoints.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/WellFormed/Fixpoints.lagda.md)  
+> 高亮渲染: [Fixpoints.html](https://choukh.github.io/agda-googology/WellFormed.Fixpoints.html)  
+
 ```agda
 {-# OPTIONS --safe --cubical --lossy-unification #-}
 module WellFormed.Fixpoints where
@@ -16,42 +27,6 @@ itn F i n = (F ∘ⁿ n) i
 ```agda
 itω : (F : Func) (i : Ord) (w : wf (itn F i)) → Ord
 itω F i w = lim (itn F i) ⦃ w ⦄
-```
-
-```agda
-_+ω^_ : Ord → Ord → Ord
-ω^ : Func
-ω^ a = 0 +ω^ a
-```
-
-```agda
-+ω^-infl-rd : (_+ω^ b) inflates Road
-+ω^-infl : (_+ω^ b) inflates _<_
-+ω^-infl = ∣ +ω^-infl-rd ∣₁
-```
-
-```agda
-ω^-pres-rd : (a +ω^_) preserves Road
-ω^-pres : (a +ω^_) preserves _<_
-ω^-pres = map ω^-pres-rd
-```
-
-```agda
-a +ω^ zero = suc a
-a +ω^ suc b = itω (_+ω^ b) a +ω^-infl
-a +ω^ lim f = lim (λ n → a +ω^ f n) ⦃ ω^-pres it ⦄
-```
-
-```agda
-+ω^-infl-rd {(zero)} = zero
-+ω^-infl-rd {suc b} = rd[ 1 ] +ω^-infl-rd
-+ω^-infl-rd {lim f} = rd[ 0 ] +ω^-infl-rd
-```
-
-```agda
-ω^-pres-rd zero        = rd[ 2 ] +ω^-infl-rd
-ω^-pres-rd (suc r)     = rd[ 1 ] $ ω^-pres-rd r
-ω^-pres-rd (lim {n} r) = rd[ n ] $ ω^-pres-rd r
 ```
 
 ```agda
@@ -108,7 +83,7 @@ fixpt ℱ = mkFixable F′ F′-pres ⦃ _ ⦄ where open Fixpt ℱ
 
 ```agda
 base-ω : Fixable
-base-ω = mkFixable ω^ ω^-pres
+base-ω = mkFixable (ω ^_) ^-pres
 ```
 
 ```agda
@@ -121,10 +96,10 @@ base-ω = mkFixable ω^ ω^-pres
 ```agda
 open Fixable public
 
-ε-0 : ε ⟨ 0 ⟩ ≡ itω ω^ 0 _
+ε-0 : ε ⟨ 0 ⟩ ≡ itω (ω ^_) 0 _
 ε-0 = refl
 
-ε-suc : let sεa = suc (ε ⟨ a ⟩) in ε ⟨ suc a ⟩ ≡ itω (λ x → sεa + ω^ x) sεa _
+ε-suc : let sεa = suc (ε ⟨ a ⟩) in ε ⟨ suc a ⟩ ≡ itω (λ x → sεa + ω ^ x) sεa _
 ε-suc = refl
 
 ε-lim : {w : wf f} → ε ⟨ lim f ⦃ w ⦄ ⟩ ≡ lim- λ n → ε ⟨ f n ⟩
