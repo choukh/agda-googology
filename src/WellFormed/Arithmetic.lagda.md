@@ -154,6 +154,23 @@ a + lim f = lim (λ n → a + f n) ⦃ +-pres it ⦄
 ```
 
 ```agda
+import Data.Nat as ℕ
+import Data.Nat.Properties as ℕ
+
++-emb : fin m + fin n ≡ fin (m ℕ.+ n)
++-emb {m} {n = zero} =        begin-equality
+  fin m + 0                   ≈⟨ refl ⟩
+  fin m                       ≈˘⟨ cong fin (ℕ.+-identityʳ m) ⟩
+  fin (m ℕ.+ 0)               ∎ where open SubTreeReasoning
++-emb {m} {n = suc n} =       begin-equality
+  fin m + fin (suc n)         ≈⟨ refl ⟩
+  suc (fin m + fin n)         ≈⟨ cong suc +-emb ⟩
+  suc (fin (m ℕ.+ n))         ≈⟨ refl ⟩
+  fin (suc (m ℕ.+ n))         ≈˘⟨ cong fin (ℕ.+-suc m n) ⟩
+  fin (m ℕ.+ suc n)           ∎ where open SubTreeReasoning
+```
+
+```agda
 +-idʳ : a + 0 ≡ a
 +-idʳ = refl
 ```
@@ -328,6 +345,15 @@ a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres it ⦄
   a ^ x                   <⟨ ^-pres-rd r ⟩
   a ^ f n                 <⟨ f<l-rd ⟩
   a ^ lim f               ∎ where open RoadReasoning
+```
+
+```agda
+ω^>0 : 0 < ω ^ a
+ω^>0 {a} =                    begin-strict
+  0                           <⟨ zero₁ ⟩
+  1                           ≈⟨ refl ⟩
+  ω ^ 0                       ≤⟨ pres≤ ^-pres z≤ ⟩
+  ω ^ a                       ∎ where open SubTreeReasoning
 ```
 
 ```agda
