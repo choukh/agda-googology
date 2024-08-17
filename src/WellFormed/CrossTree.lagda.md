@@ -271,40 +271,12 @@ module CrossTreeReasoning where
 ## 跨树算术定理
 
 ```agda
-import Data.Nat as ℕ
-import Data.Nat.Properties as ℕ
-```
-
-```agda
-+-emb : fin m + fin n ≡ fin (m ℕ.+ n)
-+-emb {m} {n = zero} =        begin-equality
-  fin m + 0                   ≈⟨ refl ⟩
-  fin m                       ≈˘⟨ cong fin (ℕ.+-identityʳ m) ⟩
-  fin (m ℕ.+ 0)               ∎ where open SubTreeReasoning
-+-emb {m} {n = suc n} =       begin-equality
-  fin m + fin (suc n)         ≈⟨ refl ⟩
-  suc (fin m + fin n)         ≈⟨ cong suc +-emb ⟩
-  suc (fin (m ℕ.+ n))         ≈⟨ refl ⟩
-  fin (suc (m ℕ.+ n))         ≈˘⟨ cong fin (ℕ.+-suc m n) ⟩
-  fin (m ℕ.+ suc n)           ∎ where open SubTreeReasoning
-```
-
-```agda
-ω^>0 : 0 < ω ^ a
-ω^>0 {a} =                    begin-strict
-  0                           <⟨ zero₁ ⟩
-  1                           ≈⟨ refl ⟩
-  ω ^ 0                       ≤⟨ pres≤ ^-pres z≤ ⟩
-  ω ^ a                       ∎ where open SubTreeReasoning
-```
-
-```agda
-instance
-  ω^-nz : NonZero (ω ^ a)
-  ω^-nz = nz-intro ω^>0
-
+private instance
   fin-suc-wf : wf (fin ∘ suc)
   fin-suc-wf = zero₁
+
+  ω^-nz : NonZero (ω ^ a)
+  ω^-nz = nz-intro ω^>0
 ```
 
 ```agda
@@ -323,10 +295,29 @@ _ = refl
 ```
 
 ```agda
++a-infl≼ : (_+ a) inflates _≼_
++a-infl≼ = ≤→≼ +-infl≤
+```
+
+```agda
++a-pres≼ : (_+ a) preserves _≼_
++a-pres≼ = {!   !}
+```
+
+```agda
+a+-pres≼ : (a +_) preserves _≼_
+a+-pres≼ z≼ = +a-infl≼
+a+-pres≼ (s≼s p) = {!   !}
+a+-pres≼ (≼l p) = {!   !}
+a+-pres≼ (l≼ x) = {!   !}
+```
+
+```agda
 ω^-absorb : a ≺ b → ω ^ a + ω ^ b ≈ ω ^ b
 ω^-absorb {a} {b = suc b} a≺b =
   (l≼ λ {n} →               begin
-    ω ^ a + ω ^ b * fin n   ≤⟨ {!   !} ⟩
+    ω ^ a + ω ^ b * fin n   ≤⟨ +a-pres≼ {!   !} ⟩
+    ω ^ b + ω ^ b * fin n   ≤⟨ {!   !} ⟩
     ω ^ suc b               ∎)
   ,
   (l≼ λ {n} → {!   !})
