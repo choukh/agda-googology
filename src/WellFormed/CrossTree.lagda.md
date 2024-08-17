@@ -23,6 +23,7 @@ open import Relation.Binary.Definitions
 **定义 2-2-x**
 
 ```agda
+infix 6 _≼_
 data _≼_ : Rel where
   z≼  : 0 ≼ a
   s≼s : a ≼ b → suc a ≼ suc b
@@ -159,4 +160,27 @@ l≈ls : {w : wf f} {ws : wf (f ∘ suc)} → f 0 ≼ f 1 → lim f ⦃ w ⦄ �
 l≈ls p = l≼ (λ { {(zero)} → ≼l p
                ; {suc n}  → ≼l ≼-refl })
        , l≼ (≼l ≼-refl)
+```
+
+## 严格序
+
+```agda
+_≺_ _⋠_ _⊀_ : Rel; infix 6 _≺_ _⋠_ _⊀_
+a ≺ b = suc a ≼ b 
+a ⋠ b = a ≼ b → ⊥
+a ⊀ b = a ≺ b → ⊥
+```
+
+```agda
+s⋠ : suc a ⋠ a
+l⋠f : {w : wf f} → lim f ⦃ w ⦄ ⋠ f n
+l⋠f p = s⋠ (≼-trans (≤→≼ (<→s≤ f<l)) p)
+
+s⋠ {suc a} p = s⋠ (s≼s-inj p)
+s⋠ {lim f} (≼l p) = l⋠f (≼-trans ≼-zero p)
+```
+
+```agda
+≺-irrefl : Irreflexive _≈_ _≺_
+≺-irrefl (_ , p) q = s⋠ (≼-trans q p)
 ```
