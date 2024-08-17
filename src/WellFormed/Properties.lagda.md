@@ -64,7 +64,20 @@ inj<→inj≤ inj inj< (inr p) = inr (inj p)
 
 ## 一些约定
 
-**定义 2-1-5** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
+**记法 2-1-5** 隐参版极限构造子
+
+```agda
+lim- : (f : Seq) {w : wf f} → Ord
+lim- f {w} = lim f ⦃ w ⦄
+
+rd[_] : (n : ℕ) {w : wf f} → Road a (f n) → Road a (lim f ⦃ w ⦄)
+rd[_] n = lim {n = n} ⦃ _ ⦄
+
+<[_] : (n : ℕ) {w : wf f} → a < f n → a < lim f ⦃ w ⦄
+<[_] n = map rd[ n ]
+```
+
+**定义 2-1-6** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
 
 $$
 \text{fin}(n) := \text{suc}^n(0)
@@ -78,7 +91,7 @@ fin : Seq
 fin n = (suc ∘ⁿ n) zero
 ```
 
-**约定 2-1-6** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
+**约定 2-1-7** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
 
 ```agda
 open import Agda.Builtin.FromNat public
@@ -88,18 +101,6 @@ instance
 ```
 
 ## 一些引理
-
-**记法 2-1-7** 极限的收缩
-
-```agda
-rd[_] : (n : ℕ) {w : wf f} → Road a (f n) → Road a (lim f ⦃ w ⦄)
-rd[_] n = lim {n = n} ⦃ _ ⦄
-```
-
-```agda
-<[_] : (n : ℕ) {w : wf f} → a < f n → a < lim f ⦃ w ⦄
-<[_] n = map rd[ n ]
-```
 
 **事实 2-1-8** 构造子的单射性
 
@@ -246,7 +247,7 @@ s<l-rd : {w : wf f} → Road a (lim f ⦃ w ⦄) → Road (suc a) (lim f ⦃ w �
 s<l-rd {a} (lim {f} {n} r) = begin-strict
   suc a           <⟨ s<s-rd r ⟩
   suc (f n)       ≤⟨ <→s≤-rd f<l-rd ⟩
-  lim f ⦃ _ ⦄     ∎ where open RoadReasoning
+  lim- f          ∎ where open RoadReasoning
 
 s<l : {w : wf f} → a < lim f ⦃ w ⦄ → suc a < lim f ⦃ w ⦄
 s<l = map s<l-rd
