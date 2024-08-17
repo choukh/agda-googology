@@ -16,7 +16,9 @@ module WellFormed.CrossTree where
 open import WellFormed.Base
 open import WellFormed.Properties
 open import WellFormed.Arithmetic
+
 open import Relation.Binary.Definitions
+open import Induction.WellFounded
 ```
 
 ## 非严格序
@@ -214,7 +216,9 @@ s⋠ {lim f} (≼l p) = l⋠f (≼-trans ≼-zero p)
 
 ≺-asym : Asymmetric _≺_
 ≺-asym p q = ≺-irrefl ≈-refl (≺-trans p q)
+```
 
+```agda
 ≺-≼-trans : Trans _≺_ _≼_ _≺_
 ≺-≼-trans p q = ≼-trans p q
 
@@ -224,6 +228,18 @@ s⋠ {lim f} (≼l p) = l⋠f (≼-trans ≼-zero p)
 ≺-resp-≈ : _≺_ Respects₂ _≈_
 ≺-resp-≈ = (λ { (p , q) u → ≺-≼-trans u p })
          , (λ { (p , q) u → ≼-≺-trans q u })
+```
+
+```agda
+≺-acc : a ≼ b → Acc _≺_ b → Acc _≺_ a
+≺-acc p (acc r) = acc (λ q → r (≺-≼-trans q p))
+```
+
+```agda
+≺-wellFounded : WellFounded _≺_
+≺-wellFounded zero    = acc λ ()
+≺-wellFounded (suc a) = acc λ { (s≼s p) → ≺-acc p (≺-wellFounded a) }
+≺-wellFounded (lim f) = acc λ { (≼l p) → ≺-acc (≺→≼ p) (≺-wellFounded (f _)) }
 ```
 
 ## 结构实例化
