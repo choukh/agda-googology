@@ -273,6 +273,9 @@ instance
   fin-wf : wf fin
   fin-wf = zero₁
 
+  fin-suc-wf : wf (fin ∘ suc)
+  fin-suc-wf = zero₁
+
 ω : Ord
 ω = lim fin
 ```

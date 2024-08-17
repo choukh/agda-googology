@@ -1,9 +1,9 @@
 ---
-title: 形式化大数数学 (2.2 - 跨树关系)
+title: 形式化大数数学 (2.3 - 跨树关系)
 zhihu-tags: Agda, 大数数学, 序数
 ---
 
-# 形式化大数数学 (2.2 - 跨树关系)
+# 形式化大数数学 (2.3 - 跨树关系)
 
 > 交流Q群: 893531731  
 > 本文源码: [CrossTree.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/WellFormed/CrossTree.lagda.md)  
@@ -15,12 +15,13 @@ module WellFormed.CrossTree where
 
 open import WellFormed.Base
 open import WellFormed.Properties
+open import WellFormed.Arithmetic
 open import Relation.Binary.Definitions
 ```
 
 ## 非严格序
 
-**定义 2-2-x**
+**定义 2-3-x**
 
 ```agda
 infix 6 _≼_
@@ -31,21 +32,21 @@ data _≼_ : Rel where
   l≼  : {w : wf f} → (∀ {n} → f n ≼ a) → lim f ⦃ w ⦄ ≼ a
 ```
 
-**事实 2-2-x**
+**事实 2-3-x**
 
 ```agda
 s≼s-inj : suc injects _≼_
 s≼s-inj (s≼s p) = p
 ```
 
-**事实 2-2-x**
+**事实 2-3-x**
 
 ```agda
 l≼l : {wff : wf f} {wfg : wf g} → (∀ {n} → f n ≼ g n) → lim f ⦃ wff ⦄ ≼ lim g ⦃ wfg ⦄
 l≼l p = l≼ (≼l p)
 ```
 
-**定理 2-2-x**
+**定理 2-3-x**
 
 ```agda
 ≼-refl : Reflexive _≼_
@@ -54,14 +55,14 @@ l≼l p = l≼ (≼l p)
 ≼-refl {lim f} = l≼ (≼l ≼-refl)
 ```
 
-**推论 2-2-x**
+**推论 2-3-x**
 
 ```agda
 f≼l : {w : wf f} → f n ≼ lim f ⦃ w ⦄
 f≼l = ≼l ≼-refl
 ```
 
-**定理 2-2-x**
+**定理 2-3-x**
 
 ```agda
 ≼-trans : Transitive _≼_
@@ -72,7 +73,7 @@ f≼l = ≼l ≼-refl
 ≼-trans (≼l p)  (l≼ q)  = ≼-trans p q
 ```
 
-**推论 2-2-x**
+**推论 2-3-x**
 
 ```agda
 l≼-inv : {w : wf f} → lim f ⦃ w ⦄ ≼ a → f n ≼ a
@@ -80,7 +81,7 @@ l≼-inv (≼l p) = ≼-trans f≼l (≼l p)
 l≼-inv (l≼ p) = p
 ```
 
-**引理 2-2-x**
+**引理 2-3-x**
 
 ```agda
 ≼-suc : a ≼ b → a ≼ suc b
@@ -93,7 +94,7 @@ l≼-inv (l≼ p) = p
 ≼-zero = ≼-suc ≼-refl
 ```
 
-**定理 2-2-x**
+**定理 2-3-x**
 
 ```agda
 ns→≼ : NSRoad a b → a ≼ b
@@ -109,21 +110,21 @@ ns→≼ (inr refl) = ≼-refl
 
 ## 外延相等
 
-**定义 2-2-x**
+**定义 2-3-x**
 
 ```agda
-_≈_ : Rel
+_≈_ : Rel; infix 5 _≈_
 a ≈ b = a ≼ b × b ≼ a
 ```
 
-**事实 2-2-x**
+**事实 2-3-x**
 
 ```agda
 ≼-antisym : Antisymmetric _≈_ _≼_
 ≼-antisym p q = p , q
 ```
 
-**定理 2-2-x**
+**定理 2-3-x**
 
 ```agda
 ≈-refl : Reflexive _≈_
@@ -136,7 +137,12 @@ a ≈ b = a ≼ b × b ≼ a
 ≈-trans (p , q) (u , v) = ≼-trans p u , ≼-trans v q
 ```
 
-**事实 2-2-x**
+```agda
+≡→≈ : a ≡ b → a ≈ b
+≡→≈ refl = ≈-refl
+```
+
+**事实 2-3-x**
 
 ```agda
 s≈s : a ≈ b → suc a ≈ suc b
@@ -146,14 +152,14 @@ s≈s-inj : suc injects _≈_
 s≈s-inj (p , q) = s≼s-inj p , s≼s-inj q
 ```
 
-**事实 2-2-x**
+**事实 2-3-x**
 
 ```agda
 l≈l : {wff : wf f} {wfg : wf g} → (∀ {n} → f n ≈ g n) → lim f ⦃ wff ⦄ ≈ lim g ⦃ wfg ⦄
 l≈l p = l≼l (fst p) , l≼l (snd p)
 ```
 
-**事实 2-2-x**
+**事实 2-3-x**
 
 ```agda
 l≈ls : {w : wf f} {ws : wf (f ∘ suc)} → f 0 ≼ f 1 → lim f ⦃ w ⦄ ≈ lim (f ∘ ℕ.suc) ⦃ ws ⦄
@@ -214,4 +220,86 @@ s⋠ {lim f} (≼l p) = l⋠f (≼-trans ≼-zero p)
 
 ≼-≺-trans : Trans _≼_ _≺_ _≺_
 ≼-≺-trans p q = ≼-trans (s≼s p) q
+
+≺-resp-≈ : _≺_ Respects₂ _≈_
+≺-resp-≈ = (λ { (p , q) u → ≺-≼-trans u p })
+         , (λ { (p , q) u → ≼-≺-trans q u })
+```
+
+## 结构实例化
+
+```agda
+open import Relation.Binary.Structures {A = Ord} _≈_
+```
+
+```agda
+≈-isEquivalence : IsEquivalence
+≈-isEquivalence = record
+  { refl = ≈-refl
+  ; sym = ≈-sym
+  ; trans = ≈-trans }
+```
+
+```agda
+≼-isPreorder : IsPreorder _≼_
+≼-isPreorder = record
+  { isEquivalence = ≈-isEquivalence
+  ; reflexive = fst
+  ; trans = ≼-trans }
+
+≼-isPartialOrder : IsPartialOrder _≼_
+≼-isPartialOrder = record { isPreorder = ≼-isPreorder ; antisym = ≼-antisym }
+```
+
+```agda
+≺-isStrictPartialOrder : IsStrictPartialOrder _≺_
+≺-isStrictPartialOrder = record
+  { isEquivalence = ≈-isEquivalence
+  ; irrefl = ≺-irrefl
+  ; trans = ≺-trans
+  ; <-resp-≈ = ≺-resp-≈ }
+```
+
+```agda
+module CrossTreeReasoning where
+  open import Relation.Binary.Reasoning.Base.Triple
+    {_≈_ = _≈_} {_≤_ = _≼_} {_<_ = _≺_}
+    ≼-isPreorder ≺-asym ≺-trans ≺-resp-≈ ≺→≼ ≺-≼-trans ≼-≺-trans
+    public
+```
+
+## 跨树算术定理
+
+```agda
+import Data.Nat as ℕ
+import Data.Nat.Properties as ℕ
+```
+
+```agda
++-emb : fin m + fin n ≡ fin (m ℕ.+ n)
++-emb {m} {n = zero} =        begin-equality
+  fin m + 0                   ≈⟨ refl ⟩
+  fin m                       ≈˘⟨ cong fin (ℕ.+-identityʳ m) ⟩
+  fin (m ℕ.+ 0)               ∎ where open SubTreeReasoning
++-emb {m} {n = suc n} =       begin-equality
+  fin m + fin (suc n)         ≈⟨ refl ⟩
+  suc (fin m + fin n)         ≈⟨ cong suc +-emb ⟩
+  suc (fin (m ℕ.+ n))         ≈⟨ refl ⟩
+  fin (suc (m ℕ.+ n))         ≈˘⟨ cong fin (ℕ.+-suc m n) ⟩
+  fin (m ℕ.+ suc n)           ∎ where open SubTreeReasoning
+```
+
+```agda
+_ : ω + 1 ≡ suc ω
+_ = refl
+```
+
+```agda
+1+ω≈ω : 1 + ω ≈ ω
+1+ω≈ω =                       begin-equality
+  1 + ω                       ≈⟨ ≈-refl ⟩
+  lim- (λ n → 1 + fin n)      ≈⟨ l≈l (≡→≈ +-emb) ⟩
+  lim (λ n → fin (suc n))     ≈˘⟨ l≈ls ≼-zero ⟩
+  lim- (λ n → fin n)          ≈⟨ ≈-refl ⟩
+  ω                           ∎ where open CrossTreeReasoning
 ```

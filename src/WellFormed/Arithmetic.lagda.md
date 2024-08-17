@@ -1,9 +1,9 @@
 ---
-title: 形式化大数数学 (2.3 - 序数算术)
+title: 形式化大数数学 (2.2 - 序数算术)
 zhihu-tags: Agda, 大数数学, 序数
 ---
 
-# 形式化大数数学 (2.3 - 序数算术)
+# 形式化大数数学 (2.2 - 序数算术)
 
 > 交流Q群: 893531731  
 > 本文源码: [Arithmetic.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/WellFormed/Arithmetic.lagda.md)  
@@ -24,14 +24,14 @@ private variable F : Func
 
 我们先定义序数函数的一些性质.
 
-**定义 2-3-0** 我们说一个序数函数 $F$ **膨胀**一个序数关系 $\sim$, 当且仅当对任意序数 $x$ 都有 $x \sim F(x)$.
+**定义 2-2-0** 我们说一个序数函数 $F$ **膨胀**一个序数关系 $\sim$, 当且仅当对任意序数 $x$ 都有 $x \sim F(x)$.
 
 ```agda
 _inflates_ : Func → Rel → Type
 F inflates _~_ = ∀ {x} → x ~ F x
 ```
 
-**事实 2-3-1** 如果 $F$ 膨胀 $\lt$, 那么 $F$ 膨胀 $\leq$.
+**事实 2-2-1** 如果 $F$ 膨胀 $\lt$, 那么 $F$ 膨胀 $\leq$.
 
 ```agda
 infl<→infl≤ : F inflates _<_ → F inflates _≤_
@@ -54,13 +54,13 @@ syntax restricted-infl-syntax {P} F _~_ = F inflates _~_ within P
 
 ## 一些约定
 
-**约定 2-3-x** 我们将 $\text{suc}(\text{suc}(a))$ 记作 $a^{++}$.
+**约定 2-2-x** 我们将 $\text{suc}(\text{suc}(a))$ 记作 $a^{++}$.
 
 ```agda
 pattern 2+ a = suc (suc a)
 ```
 
-**约定 2-3-x** 非零序数指不等于零的序数.
+**约定 2-2-x** 非零序数指不等于零的序数.
 
 ```agda
 nonZero : Ord → Type
@@ -86,7 +86,7 @@ nz-elim {suc a} = z<s
 nz-elim {lim f} = z<l
 ```
 
-**约定 2-3-x** 非平凡序数指不等于零和一的序数.
+**约定 2-2-x** 非平凡序数指不等于零和一的序数.
 
 ```agda
 nonTrivial : Ord → Type
@@ -116,7 +116,7 @@ nt-elim {suc (lim _)} = s<s z<l
 nt-elim {lim f}       = map lim (n<fs f 1)
 ```
 
-**事实 2-3-x** 后继序数和极限序数都是非零序数; 极限序数都是非平凡序数; 非平凡序数都是非零序数.
+**事实 2-2-x** 后继序数和极限序数都是非零序数; 极限序数都是非平凡序数; 非平凡序数都是非零序数.
 
 ```agda
 instance
