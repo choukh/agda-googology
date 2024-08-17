@@ -427,9 +427,9 @@ isProp≤ = isProp⊎ squash₁ isProp≡ (flip <-irrefl)
 - 若存在 $r'$ 使得 $r=r'^+$, 则必然有 $r':\text{Rd}(a,b)$. ∎
 
 ```agda
-rds→ns : Road a (suc b) → NSRoad a b
-rds→ns zero    = inr refl
-rds→ns (suc r) = inl r
+<s→≤-rd : Road a (suc b) → NSRoad a b
+<s→≤-rd zero    = inr refl
+<s→≤-rd (suc r) = inl r
 ```
 
 **推论 2-0-21** 如果 $a \lt b^+$, 那么 $a \le b$.  
@@ -437,16 +437,16 @@ rds→ns (suc r) = inl r
 
 ```agda
 <s→≤ : a < suc b → a ≤ b
-<s→≤ = rec isProp≤ (ns→≤ ∘ rds→ns)
+<s→≤ = rec isProp≤ (ns→≤ ∘ <s→≤-rd)
 ```
 
 **事实 2-0-22** 定理 2-0-20 以及推论 2-0-21 的逆命题也成立.  
 **证明** 讨论和类型的两边即可. ∎
 
 ```agda
-ns→rds : NSRoad a b → Road a (suc b)
-ns→rds (inl r)    = suc r
-ns→rds (inr refl) = zero
+≤→<s-rd : NSRoad a b → Road a (suc b)
+≤→<s-rd (inl r)    = suc r
+≤→<s-rd (inr refl) = zero
 
 ≤→<s : a ≤ b → a < suc b
 ≤→<s (inl r)    = map suc r
