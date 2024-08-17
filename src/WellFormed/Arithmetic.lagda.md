@@ -34,8 +34,8 @@ F inflates _~_ = ∀ {x} → x ~ F x
 **事实 2-2-1** 如果 $F$ 膨胀 $\lt$, 那么 $F$ 膨胀 $\leq$.
 
 ```agda
-infl<→infl≤ : F inflates _<_ → F inflates _≤_
-infl<→infl≤ p = <→≤ p
+infl≤ : F inflates _<_ → F inflates _≤_
+infl≤ p = <→≤ p
 ```
 
 ```agda
@@ -362,9 +362,9 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ where
 ^-nt : ⦃ nta : NonTrivial a ⦄ ⦃ nzb : NonZero b ⦄ → NonTrivial (a ^ b)
 ^-nt {suc a} {suc b} ⦃ nzb ⦄ =  nt-intro $ begin-strict
   1                             ≈⟨ refl ⟩
-  suc a ^ 0                     ≤⟨ pres<→pres≤ ^-pres $ <s→≤ (nz-elim ⦃ _ ⦄) ⟩
+  suc a ^ 0                     ≤⟨ pres≤ ^-pres $ <s→≤ (nz-elim ⦃ _ ⦄) ⟩
   suc a ^ b                     ≈˘⟨ *-idʳ ⟩
-  suc a ^ b * 1                 ≤⟨ pres<→pres≤ *-pres $ <s→≤ nt-elim ⟩
+  suc a ^ b * 1                 ≤⟨ pres≤ *-pres $ <s→≤ nt-elim ⟩
   suc a ^ b * a                 <⟨ +-infl ⟩
   suc a ^ b * a + suc a ^ b     ∎ where open SubTreeReasoning; instance _ = ^-nz
 ^-nt {lim f} {suc b} = _

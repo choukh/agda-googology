@@ -42,9 +42,9 @@ F preserves _~_ = ∀ {x y} → x ~ y → F x ~ F y
 **事实 2-1-2** 如果 $F$ 保持 $\lt$, 那么 $F$ 保持 $\leq$.
 
 ```agda
-pres<→pres≤ : F preserves _<_ → F preserves _≤_
-pres<→pres≤ pres (inl p)    = <→≤ (pres p)
-pres<→pres≤ pres (inr refl) = inr refl
+pres≤ : F preserves _<_ → F preserves _≤_
+pres≤ pres (inl p)    = <→≤ (pres p)
+pres≤ pres (inr refl) = inr refl
 ```
 
 **定义 2-1-3** 我们说一个序数函数 $F$ **单射**一个序数关系 $\sim$, 当且仅当对任意序数 $x, y$ 都有 $F(x) \sim F(y) \to x \sim y$.
@@ -57,9 +57,9 @@ F injects _~_ = ∀ {x y} → F x ~ F y → x ~ y
 **事实 2-1-4** 如果 $F$ 单射 $\lt$, 那么 $F$ 单射 $\leq$.
 
 ```agda
-inj<→inj≤ : F injects _≡_ → F injects _<_ → F injects _≤_
-inj<→inj≤ inj inj< (inl p) = inl (inj< p)
-inj<→inj≤ inj inj< (inr p) = inr (inj p)
+inj≤ : F injects _≡_ → F injects _<_ → F injects _≤_
+inj≤ inj inj< (inl p) = inl (inj< p)
+inj≤ inj inj< (inr p) = inr (inj p)
 ```
 
 ## 一些约定
@@ -234,10 +234,10 @@ s≤→< (inr refl) = zero₁
 
 ```agda
 s≤s : suc preserves _≤_
-s≤s = pres<→pres≤ s<s
+s≤s = pres≤ s<s
 
 s≤s-inj : suc injects _≤_
-s≤s-inj = inj<→inj≤ suc-inj s<s-inj
+s≤s-inj = inj≤ suc-inj s<s-inj
 ```
 
 **定理 2-1-16**
@@ -272,9 +272,6 @@ l≤p (inl r) = ns→≤ (l≤p-rd (inl (set r)))
 instance
   fin-wf : wf fin
   fin-wf = zero₁
-
-  fin-suc-wf : wf (fin ∘ suc)
-  fin-suc-wf = zero₁
 
 ω : Ord
 ω = lim fin
