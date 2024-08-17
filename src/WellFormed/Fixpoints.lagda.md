@@ -62,13 +62,12 @@ record Fixable : Type where
   field
     fix-pres : F preserves _<_
     ⦃ fix-nz ⦄ : NonZero (F 0)
-
   instance
     fix-suc-nz : NonZero (F (suc a))
-    fix-suc-nz = nz-intro $         begin-strict
-      0                             ≤⟨ z≤ ⟩
-      F _                           <⟨ fix-pres zero₁ ⟩
-      F (suc _)                     ∎ where open SubTreeReasoning
+    fix-suc-nz = nz-intro $ begin-strict
+      0                     ≤⟨ z≤ ⟩
+      F _                   <⟨ fix-pres zero₁ ⟩
+      F (suc _)             ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -125,7 +124,7 @@ open Fixable public
 ε-0 : ε ⟨ 0 ⟩ ≡ itω ω^ 0 _
 ε-0 = refl
 
-ε-suc : ε ⟨ suc a ⟩ ≡ itω (λ x → suc (ε ⟨ a ⟩) + ω^ x) (suc (ε ⟨ a ⟩)) _
+ε-suc : let sεa = suc (ε ⟨ a ⟩) in ε ⟨ suc a ⟩ ≡ itω (λ x → sεa + ω^ x) sεa _
 ε-suc = refl
 
 ε-lim : {w : wf f} → ε ⟨ lim f ⦃ w ⦄ ⟩ ≡ lim- λ n → ε ⟨ f n ⟩
