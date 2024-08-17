@@ -26,20 +26,20 @@ _+ω^_ : Ord → Ord → Ord
 
 ```agda
 +ω^-infl-rd : (_+ω^ b) inflates Road
-+ω^-infl< : (_+ω^ b) inflates _<_
-+ω^-infl< = ∣ +ω^-infl-rd ∣₁
++ω^-infl : (_+ω^ b) inflates _<_
++ω^-infl = ∣ +ω^-infl-rd ∣₁
 ```
 
 ```agda
 ω^-pres-rd : (a +ω^_) preserves Road
-ω^-pres< : (a +ω^_) preserves _<_
-ω^-pres< = map ω^-pres-rd
+ω^-pres : (a +ω^_) preserves _<_
+ω^-pres = map ω^-pres-rd
 ```
 
 ```agda
 a +ω^ zero = suc a
-a +ω^ suc b = itω (_+ω^ b) a +ω^-infl<
-a +ω^ lim f = lim (λ n → a +ω^ f n) ⦃ ω^-pres< it ⦄
+a +ω^ suc b = itω (_+ω^ b) a +ω^-infl
+a +ω^ lim f = lim (λ n → a +ω^ f n) ⦃ ω^-pres it ⦄
 ```
 
 ```agda
@@ -60,14 +60,14 @@ record Fixable : Type where
   field _⟨_⟩ : Func
   private F = _⟨_⟩
   field
-    pres : F preserves _<_
-    ⦃ nz ⦄ : NonZero (F 0)
+    fix-pres : F preserves _<_
+    ⦃ fix-nz ⦄ : NonZero (F 0)
 
   instance
-    F-suc-nz : NonZero (F (suc a))
-    F-suc-nz = nz-intro $           begin-strict
+    fix-suc-nz : NonZero (F (suc a))
+    fix-suc-nz = nz-intro $         begin-strict
       0                             ≤⟨ z≤ ⟩
-      F _                           <⟨ pres zero₁ ⟩
+      F _                           <⟨ fix-pres zero₁ ⟩
       F (suc _)                     ∎ where open SubTreeReasoning
 ```
 
@@ -77,43 +77,39 @@ module Fixpt (ℱ : Fixable) where
 
   F′ : Func
   F′-pres-rd : F′ preserves Road
-  F′-pres< : F′ preserves _<_
-  F′-pres< = map F′-pres-rd
+  F′-pres : F′ preserves _<_
+  F′-pres = map F′-pres-rd
 ```
 
 ```agda
-  F′ zero = itω F 0 w where
+  F′ zero = itω F 0 w
+    module FixptZero where
     w : wf (itn F 0)
     w {(zero)} = nz-elim
-    w {suc n} = pres w
-  F′ (suc a) = let b = suc (F′ a) in b + F b
-  F′ (lim f) = lim (λ n → F′ (f n)) ⦃ F′-pres< it ⦄
+    w {suc n} = fix-pres w
+  F′ (suc a) = itω (λ x → i + F x) i w
+    module FixptSuc where
+    i = suc (F′ a)
+    w : wf (itn (λ x → i + F x) i)
+    w {n = zero} = +-infl
+    w {n = suc n} = +-pres (fix-pres w)
+  F′ (lim f) = lim (λ n → F′ (f n)) ⦃ F′-pres it ⦄
 ```
 
 ```agda
-  F′-pres-rd {x} zero =             begin-strict
-    F′ x                            <⟨ zero ⟩
-    suc (F′ x)                      <⟨ set +-infl< ⟩
-    suc (F′ x) + F (suc (F′ x))     ∎ where open RoadReasoning
-  F′-pres-rd {x} (suc {b} r) =      begin-strict
-    F′ x                            <⟨ F′-pres-rd r ⟩
-    F′ b                            <⟨ zero ⟩
-    suc (F′ b)                      <⟨ set +-infl< ⟩
-    suc (F′ b) + F (suc (F′ b))     ∎ where open RoadReasoning
-  F′-pres-rd {x} (lim {f} {n} r) =  begin-strict
-    F′ x                            <⟨ F′-pres-rd r ⟩
-    F′ (f n)                        <⟨ f<l-rd ⟩
-    lim (λ n → F′ (f n)) ⦃ _ ⦄      ∎ where open RoadReasoning
+  F′-pres-rd {(x)} zero = rd[ 0 ] zero
+  F′-pres-rd {(x)} (suc r) = rd[ 0 ] $ rd-trans (F′-pres-rd r) zero
+  F′-pres-rd {(x)} (lim {n} r) = rd[ n ] $ F′-pres-rd r
 ```
 
 ```agda
 fixpt : Fixable → Fixable
-fixpt ℱ = mkFixable F′ F′-pres< ⦃ _ ⦄ where open Fixpt ℱ
+fixpt ℱ = mkFixable F′ F′-pres ⦃ _ ⦄ where open Fixpt ℱ
 ```
 
 ```agda
 base-ω : Fixable
-base-ω = mkFixable ω^ ω^-pres<
+base-ω = mkFixable ω^ ω^-pres
 ```
 
 ```agda
@@ -121,4 +117,17 @@ base-ω = mkFixable ω^ ω^-pres<
 ε = fixpt base-ω
 ζ = fixpt ε
 η = fixpt ζ
+```
+
+```agda
+open Fixable public
+
+ε-0 : ε ⟨ 0 ⟩ ≡ itω ω^ 0 _
+ε-0 = refl
+
+ε-suc : ε ⟨ suc a ⟩ ≡ itω (λ x → suc (ε ⟨ a ⟩) + ω^ x) (suc (ε ⟨ a ⟩)) _
+ε-suc = refl
+
+ε-lim : {w : wf f} → ε ⟨ lim f ⦃ w ⦄ ⟩ ≡ lim (λ n → ε ⟨ f n ⟩) ⦃ _ ⦄
+ε-lim = refl
 ```
