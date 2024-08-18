@@ -401,12 +401,12 @@ a*-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
 
 ```agda
 *a-pres≼ : (_* a) preserves _≼_ within NonZero
-*a-pres≼ {(zero)} _ = z≼
+*a-pres≼ {(zero)} _ = ≼-refl
+*a-pres≼ {lim f} p = l≼l (*a-pres≼ p)
 *a-pres≼ {suc a} {x} {y} p = begin
   x * a + x                 ≤⟨ a+-pres≼ p ⟩
   x * a + y                 ≤⟨ +a-pres≼ (*a-pres≼ p) ⟩
   y * a + y                 ∎ where open CrossTreeReasoning
-*a-pres≼ {lim f} p = l≼l (*a-pres≼ p)
 ```
 
 ```agda
@@ -420,19 +420,82 @@ a*-infl≼ {a} {x} =          begin
 ## 幂运算
 
 ```agda
-private instance
-  ω^-nz : NonZero (ω ^ a)
-  ω^-nz = nz-intro ω^>0
+a^-pres≼ : ⦃ _ : NonTrivial a ⦄ → (a ^_) preserves _≼_
+a^-pres≼ z≼ = <→≺ nz-elim                 where instance _ = ^-nz
+a^-pres≼ (s≼s p) = *a-pres≼ (a^-pres≼ p)  where instance _ = ^-nz
+a^-pres≼ (≼l p) = ≼l (a^-pres≼ p)
+a^-pres≼ (l≼ p) = l≼ (a^-pres≼ ⦃ _ ⦄ p)
+```
 
+```agda
+^a-infl≼ : ⦃ NonZero a ⦄ → (_^ a) inflates _≼_ within NonTrivial
+^a-infl≼ {a} {x} =          begin
+  x                         ≈˘⟨ ≡→≈ a^-id ⟩
+  x ^ 1                     ≤⟨ a^-pres≼ (<→≺ nz-elim) ⟩
+  x ^ a                     ∎ where open CrossTreeReasoning
+```
+
+```agda
+a^-pres≺ : ⦃ _ : NonTrivial a ⦄ → (a ^_) preserves _≺_
+a^-pres≺ {a} {x} (s≼s {b} p) = begin-strict
+  a ^ x                     <⟨ *a-infl≺ ⟩
+  a ^ x * a                 ≤⟨ *a-pres≼ (a^-pres≼ p) ⟩
+  a ^ b * a                 ∎ where open CrossTreeReasoning; instance _ = ^-nz
+a^-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
+  a ^ x                     <⟨ a^-pres≺ p ⟩
+  a ^ f n                   ≤⟨ f≼l ⟩
+  lim- (λ n → a ^ f n)      ∎ where open CrossTreeReasoning
+```
+
+```agda
+^a-infl≺ : ⦃ NonTrivial a ⦄ → (_^ a) inflates _≺_ within NonTrivial
+^a-infl≺ {a} {x} =          begin-strict
+  x                         ≈˘⟨ ≡→≈ a^-id ⟩
+  x ^ 1                     <⟨ a^-pres≺ (<→≺ nt-elim) ⟩
+  x ^ a                     ∎ where open CrossTreeReasoning
+```
+
+```agda
+^a-pres≼ : (_^ a) preserves _≼_ within NonTrivial
+^a-pres≼ {(zero)} _ = ≼-refl
+^a-pres≼ {lim f} p = l≼l (^a-pres≼ p)
+^a-pres≼ {suc a} {x} {y} p = begin
+  x ^ a * x                 ≤⟨ a*-pres≼ p ⟩
+  x ^ a * y                 ≤⟨ *a-pres≼ (^a-pres≼ p) ⟩
+  y ^ a * y                 ∎ where open CrossTreeReasoning; instance _ = ^-nz
+```
+
+```agda
+a^-infl≼ : ⦃ _ : NonTrivial a ⦄ → (a ^_) inflates _≼_
+a^-infl≼ {a} {x} =          begin
+  x                         ≤⟨ aux ⟩
+  (2 ^ x) ⦃ _ ⦄             ≤⟨ ^a-pres≼ ⦃ _ ⦄ (<→≺ nt-elim) ⟩
+  a ^ x                     ∎ where
+  open CrossTreeReasoning
+  instance _ : NonTrivial 2   ; _ = _
+  instance _ : NonZero (2 ^ b); _ = ^-nz ⦃ _ ⦄
+  aux : b ≼ 2 ^ b
+  aux {(zero)} = z≼
+  aux {lim f} = l≼l aux
+  aux {suc b} =             begin
+    b + 1                   ≤⟨ +a-pres≼ aux ⟩
+    2^b + 1                 ≤⟨ a+-pres≼ (<→≺ nz-elim) ⟩
+    2^b + 2^b               ≈˘⟨ ≡→≈ (cong (_+ 2^b) +a-id) ⟩
+    0 + 2^b + 2^b           ∎ where 2^b = 2 ^ b
+```
+
+```agda
 ω^-absorb : a ≺ b → ω ^ a + ω ^ b ≈ ω ^ b
-ω^-absorb {a} {b = suc b} a≺b =
+ω^-absorb {a} {b = suc b} (s≼s a≼b) =
   (l≼ λ {n} →               begin
-    ω ^ a + ω ^ b * fin n   ≤⟨ +a-pres≼ {!   !} ⟩
+    ω ^ a + ω ^ b * fin n   ≤⟨ +a-pres≼ (a^-pres≼ a≼b) ⟩
     ω ^ b + ω ^ b * fin n   ≤⟨ {!   !} ⟩
-    ω ^ suc b               ∎)
-  ,
-  (l≼ λ {n} → {!   !})
-  where open CrossTreeReasoning
+    ω ^ suc b               ∎) ,
+  (l≼ λ {n} →               begin
+    ω ^ b * fin n           ≤⟨ {!   !} ⟩
+    ω ^ a + ω ^ b * fin n   ≤⟨ {!   !} ⟩
+    ω ^ a + ω ^ b * ω       ≈⟨ ≈-refl ⟩
+    ω ^ a + ω ^ suc b       ∎) where open CrossTreeReasoning; instance _ = ^-nz
 ω^-absorb {a} {b = lim f} a≺b = {!   !}
 ```
- 
+     
