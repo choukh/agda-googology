@@ -164,16 +164,16 @@ import Data.Nat as ℕ
 import Data.Nat.Properties as ℕ
 
 +-emb : fin m + fin n ≡ fin (m ℕ.+ n)
-+-emb {m} {n = zero} =        begin-equality
-  fin m + 0                   ≈⟨ refl ⟩
-  fin m                       ≈˘⟨ cong fin (ℕ.+-identityʳ m) ⟩
-  fin (m ℕ.+ 0)               ∎ where open SubTreeReasoning
-+-emb {m} {n = suc n} =       begin-equality
-  fin m + fin (suc n)         ≈⟨ refl ⟩
-  suc (fin m + fin n)         ≈⟨ cong suc +-emb ⟩
-  suc (fin (m ℕ.+ n))         ≈⟨ refl ⟩
-  fin (suc (m ℕ.+ n))         ≈˘⟨ cong fin (ℕ.+-suc m n) ⟩
-  fin (m ℕ.+ suc n)           ∎ where open SubTreeReasoning
++-emb {m} {n = zero} =    begin-equality
+  fin m + 0               ≈⟨ refl ⟩
+  fin m                   ≈˘⟨ cong fin (ℕ.+-identityʳ m) ⟩
+  fin (m ℕ.+ 0)           ∎ where open SubTreeReasoning
++-emb {m} {n = suc n} =   begin-equality
+  fin m + fin (suc n)     ≈⟨ refl ⟩
+  suc (fin m + fin n)     ≈⟨ cong suc +-emb ⟩
+  suc (fin (m ℕ.+ n))     ≈⟨ refl ⟩
+  fin (suc (m ℕ.+ n))     ≈˘⟨ cong fin (ℕ.+-suc m n) ⟩
+  fin (m ℕ.+ suc n)       ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -314,11 +314,11 @@ module _ {a} {b} ⦃ _ : NonZero a ⦄ ⦃ _ : NonZero b ⦄ where
 ```
 
 ```agda
-*-infl : ⦃ NonTrivial b ⦄ → (_* b) inflates _<_ within NonZero
-*-infl {b} {x} =         begin-strict
+*-infl : ⦃ NonTrivial a ⦄ → (_* a) inflates _<_ within NonZero
+*-infl {a} {x} =         begin-strict
   x                       ≈˘⟨ a*-id ⟩
   x * 1                   <⟨ *-pres nt-elim ⟩
-  x * b                   ∎ where open SubTreeReasoning
+  x * a                   ∎ where open SubTreeReasoning
 ```
 
 ## 幂运算
@@ -350,15 +350,6 @@ a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres it ⦄
   a ^ x                   <⟨ ^-pres-rd r ⟩
   a ^ f n                 <⟨ f<l-rd ⟩
   a ^ lim f               ∎ where open RoadReasoning
-```
-
-```agda
-ω^>0 : 0 < ω ^ a
-ω^>0 {a} =                    begin-strict
-  0                           <⟨ zero₁ ⟩
-  1                           ≈⟨ refl ⟩
-  ω ^ 0                       ≤⟨ map-pres≤ ^-pres z≤ ⟩
-  ω ^ a                       ∎ where open SubTreeReasoning
 ```
 
 ```agda
@@ -418,11 +409,11 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ ⦃ _ : NonZero b ⦄ where
 ```
 
 ```agda
-^-infl : ⦃ NonTrivial b ⦄ → (_^ b) inflates _<_ within NonTrivial
-^-infl {b} {x} =               begin-strict
+^-infl : ⦃ NonTrivial a ⦄ → (_^ a) inflates _<_ within NonTrivial
+^-infl {a} {x} =                begin-strict
   x                             ≈˘⟨ a^-id ⟩
   x ^ 1                         <⟨ ^-pres nt-elim ⟩
-  x ^ b                         ∎ where open SubTreeReasoning
+  x ^ a                         ∎ where open SubTreeReasoning
 ```
 
 ## 伪迭代幂次
