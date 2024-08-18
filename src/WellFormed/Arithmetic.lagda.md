@@ -34,8 +34,8 @@ F inflates _~_ = ∀ {x} → x ~ F x
 **事实 2-2-1** 如果 $F$ 膨胀 $\lt$, 那么 $F$ 膨胀 $\leq$.
 
 ```agda
-infl≤ : F inflates _<_ → F inflates _≤_
-infl≤ p = <→≤ p
+map-infl≤ : F inflates _<_ → F inflates _≤_
+map-infl≤ p = <→≤ p
 ```
 
 ```agda
@@ -254,7 +254,6 @@ a*-z = refl
 a*-id : ⦃ _ : NonZero a ⦄ → a * 1 ≡ a
 a*-id {a} =               begin-equality
   a * 1                   ≈⟨ refl ⟩
-  a * 0 + a               ≈⟨ cong (_+ a) refl ⟩
   0 + a                   ≈⟨ +a-id ⟩
   a                       ∎ where open SubTreeReasoning
 ```
@@ -352,7 +351,7 @@ a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres it ⦄
 ω^>0 {a} =                    begin-strict
   0                           <⟨ zero₁ ⟩
   1                           ≈⟨ refl ⟩
-  ω ^ 0                       ≤⟨ pres≤ ^-pres z≤ ⟩
+  ω ^ 0                       ≤⟨ map-pres≤ ^-pres z≤ ⟩
   ω ^ a                       ∎ where open SubTreeReasoning
 ```
 
@@ -388,9 +387,9 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ where
 ^-nt : ⦃ nta : NonTrivial a ⦄ ⦃ nzb : NonZero b ⦄ → NonTrivial (a ^ b)
 ^-nt {suc a} {suc b} ⦃ nzb ⦄ =  nt-intro $ begin-strict
   1                             ≈⟨ refl ⟩
-  suc a ^ 0                     ≤⟨ pres≤ ^-pres $ <s→≤ (nz-elim ⦃ _ ⦄) ⟩
+  suc a ^ 0                     ≤⟨ map-pres≤ ^-pres $ <s→≤ (nz-elim ⦃ _ ⦄) ⟩
   suc a ^ b                     ≈˘⟨ a*-id ⟩
-  suc a ^ b * 1                 ≤⟨ pres≤ *-pres $ <s→≤ nt-elim ⟩
+  suc a ^ b * 1                 ≤⟨ map-pres≤ *-pres $ <s→≤ nt-elim ⟩
   suc a ^ b * a                 <⟨ +-infl ⟩
   suc a ^ b * a + suc a ^ b     ∎ where open SubTreeReasoning; instance _ = ^-nz
 ^-nt {lim f} {suc b} = _
