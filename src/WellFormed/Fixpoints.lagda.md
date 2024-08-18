@@ -129,18 +129,20 @@ sε a = suc (ε ⟨ a ⟩)
 
 ```agda
 ε-fix : ε ⟨ a ⟩ ≈ ω ^ ε ⟨ a ⟩
+ε-suc-[n] : εs a [ n ] ≈ itn (ω ^_) (sε a) n
+```
+
+```agda
 ε-fix {(zero)} = l≈ls z≼
-ε-fix {suc a} = l≼l p , l≼ q where
-  p : itn (λ x → sε a + ω ^ x) (sε a) n ≼ ω ^ itn (λ x → sε a + ω ^ x) (sε a) n
-  p {(zero)} =                          begin
-    ε ⟨ a ⟩ + 1                         ≈⟨ s≈s ε-fix ⟩
-    ω ^ ε ⟨ a ⟩ + 1                     ≤⟨ a+-pres≼ $ <→≺ nz-elim ⟩
-    ω ^ ε ⟨ a ⟩ + ω ^ ε ⟨ a ⟩           ≈˘⟨ ≡→≈ *-2 ⟩
-    ω ^ ε ⟨ a ⟩ * 2                     <⟨ a*-pres≺ $ <→≺ $ n<ω {2} ⟩
-    ω ^ ε ⟨ a ⟩ * ω                     ∎ where open CrossTreeReasoning; instance _ = ^-nz
-  p {suc n} = a^-infl≼
-  q : ω ^ itn (λ x → sε a + ω ^ x) (sε a) n ≼ ε ⟨ suc a ⟩
-  q {n} = {!   !}
+ε-fix {suc a} = l≼l p , l≼ls (fst q) where
+  p : εs a [ n ] ≼ ω ^ εs a [ n ]
+  p = a^-infl≼
+  q : ω ^ εs a [ n ] ≈ εs a [ suc n ]
+  q {n} =                               begin-equality
+    ω ^ εs a [ n ]                      ≈⟨ a^-cong≈ ε-suc-[n] ⟩
+    ω ^ itn (ω ^_) (sε a) n             ≈⟨ ≈-refl ⟩
+    itn (ω ^_) (sε a) (suc n)           ≈˘⟨ ε-suc-[n] ⟩
+    εs a [ suc n ]                      ∎ where open CrossTreeReasoning
 ε-fix {lim f} = l≈l ε-fix
 ```
 
@@ -166,7 +168,6 @@ sε a = suc (ε ⟨ a ⟩)
 ```
 
 ```agda
-ε-suc-[n] : εs a [ n ] ≈ itn (ω ^_) (sε a) n
 ε-suc-[n] {n = zero} = ≡→≈ ε-suc-[0]
 ε-suc-[n] {a} {n = suc n} =             begin-equality
   εs a [ suc n ]                        ≈⟨ ε-suc-[s] ⟩

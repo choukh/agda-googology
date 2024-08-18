@@ -48,6 +48,13 @@ l≼l : {wff : wf f} {wfg : wf g} → (∀ {n} → f n ≼ g n) → lim f ⦃ wf
 l≼l p = l≼ (≼l p)
 ```
 
+**事实 2-3-x**
+
+```agda
+l≼ls : {wff : wf f} {wfg : wf g} → (∀ {n} → f n ≼ g (suc n)) → lim f ⦃ wff ⦄ ≼ lim g ⦃ wfg ⦄
+l≼ls p = l≼ (λ {n} → (≼l {n = suc n} p))
+```
+
 **定理 2-3-x**
 
 ```agda
@@ -584,3 +591,4 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
   ω ^ a + ω ^ c             ≈⟨ ω^-absorb p ⟩
   ω ^ c                     ∎ where open CrossTreeReasoning
 ```
+  
