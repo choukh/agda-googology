@@ -84,9 +84,9 @@ module Fixpt (ℱ : Fixable) where
 ```
 
 ```agda
-  F′-pres-rd {(x)} zero = rd[ 0 ] zero
-  F′-pres-rd {(x)} (suc r) = rd[ 0 ] $ rd-trans (F′-pres-rd r) zero
-  F′-pres-rd {(x)} (lim {n} r) = rd[ n ] $ F′-pres-rd r
+  F′-pres-rd {(x)} zero         = rd[ 0 ] zero
+  F′-pres-rd {(x)} (suc r)      = rd[ 0 ] $ rd-trans (F′-pres-rd r) zero
+  F′-pres-rd {(x)} (lim {n} r)  = rd[ n ] $ F′-pres-rd r
 ```
 
 ```agda
@@ -130,7 +130,7 @@ sε a = suc (ε ⟨ a ⟩)
 ```agda
 ε-fix : ε ⟨ a ⟩ ≈ ω ^ ε ⟨ a ⟩
 ε-fix {(zero)} = l≈ls z≼
-ε-fix {suc a} = l≼l p , {!   !} where
+ε-fix {suc a} = l≼l p , l≼ q where
   p : itn (λ x → sε a + ω ^ x) (sε a) n ≼ ω ^ itn (λ x → sε a + ω ^ x) (sε a) n
   p {(zero)} =                          begin
     ε ⟨ a ⟩ + 1                         ≈⟨ s≈s ε-fix ⟩
@@ -139,7 +139,9 @@ sε a = suc (ε ⟨ a ⟩)
     ω ^ ε ⟨ a ⟩ * 2                     <⟨ a*-pres≺ $ <→≺ $ n<ω {2} ⟩
     ω ^ ε ⟨ a ⟩ * ω                     ∎ where open CrossTreeReasoning; instance _ = ^-nz
   p {suc n} = a^-infl≼
-ε-fix {lim f} = {!   !}
+  q : ω ^ itn (λ x → sε a + ω ^ x) (sε a) n ≼ ε ⟨ suc a ⟩
+  q {n} = {!   !}
+ε-fix {lim f} = l≈l ε-fix
 ```
 
 ```agda
@@ -152,10 +154,22 @@ sε a = suc (ε ⟨ a ⟩)
 ε-suc-[s] {a} {n} =                     begin-equality
   εs a [ suc n ]                        ≈⟨ ≈-refl ⟩
   ε ⟨ a ⟩ + 1 + ω ^ εs a [ n ]          ≈⟨ +a-cong≈ $ s≈s ε-fix ⟩
-  ω ^ ε ⟨ a ⟩ + ω ^ 0 + ω ^ εs a [ n ]  ≈⟨ ω^-absorb2 (<→≺ p) {!   !} ⟩
+  ω ^ ε ⟨ a ⟩ + ω ^ 0 + ω ^ εs a [ n ]  ≈⟨ ω^-absorb2 (<→≺ p) (<→≺ q) ⟩
   ω ^ εs a [ n ]                        ∎ where
   open CrossTreeReasoning
   p : ε ⟨ a ⟩ < εs a [ m ]
   p {(zero)} = zero₁
   p {suc m} = <-trans p (Fixpt.Suc.w _ _)
+  q : 0 < εs a [ m ]
+  q {(zero)} = z<s
+  q {suc m} = <-trans z<s (+-infl ⦃ ^-nz ⦄)
+```
+
+```agda
+ε-suc-[n] : εs a [ n ] ≈ itn (ω ^_) (sε a) n
+ε-suc-[n] {n = zero} = ≡→≈ ε-suc-[0]
+ε-suc-[n] {a} {n = suc n} =             begin-equality
+  εs a [ suc n ]                        ≈⟨ ε-suc-[s] ⟩
+  ω ^ εs a [ n ]                        ≈⟨ a^-cong≈ ε-suc-[n] ⟩
+  ω ^ itn (ω ^_) (sε a) n               ∎ where open CrossTreeReasoning
 ```
