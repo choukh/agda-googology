@@ -16,6 +16,7 @@ module WellFormed.Fixpoints where
 open import WellFormed.Base
 open import WellFormed.Properties
 open import WellFormed.Arithmetic
+open import WellFormed.CrossTree
 ```
 
 ```agda

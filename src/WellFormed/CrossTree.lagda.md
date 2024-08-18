@@ -184,22 +184,9 @@ a ⊀ b = a ≺ b → ⊥
 ```
 
 ```agda
-z≺s : 0 ≺ suc a
-z≺s = s≼s z≼
-```
-
-```agda
-≺-zero : a ≺ suc a
-≺-zero = s≼s ≼-refl
-
-≺-suc : a ≺ b → a ≺ suc b
-≺-suc p = s≼s (≺→≼ p)
-```
-
-```agda
 <→≺-rd : Road a b → a ≺ b
-<→≺-rd zero = ≺-zero
-<→≺-rd (suc r) = ≺-suc (<→≺-rd r)
+<→≺-rd zero = s≼s ≼-refl
+<→≺-rd (suc r) = s≼s (≺→≼ (<→≺-rd r))
 <→≺-rd (lim r) = ≼l (≤→≼-rd (<→s≤-rd r))
 
 <→≺ : a < b → a ≺ b
@@ -208,7 +195,7 @@ z≺s = s≼s z≼
 
 ```agda
 ≼→≺s : a ≼ b → a ≺ suc b
-≼→≺s z≼ = z≺s
+≼→≺s z≼ = s≼s z≼
 ≼→≺s (s≼s p) = s≼s (s≼s p)
 ≼→≺s (≼l p) = s≼s (≼l p)
 ≼→≺s (l≼ p) = s≼s (l≼ p)
@@ -306,6 +293,35 @@ module CrossTreeReasoning where
 ```
 
 ## 跨树算术定理
+
+### 补充引理
+
+```agda
+import Data.Nat as ℕ
+import Data.Nat.Properties as ℕ
+
++-emb : fin m + fin n ≡ fin (m ℕ.+ n)
++-emb {m} {n = zero} =    begin-equality
+  fin m + 0               ≈⟨ refl ⟩
+  fin m                   ≈˘⟨ cong fin (ℕ.+-identityʳ m) ⟩
+  fin (m ℕ.+ 0)           ∎ where open SubTreeReasoning
++-emb {m} {n = suc n} =   begin-equality
+  fin m + fin (suc n)     ≈⟨ refl ⟩
+  suc (fin m + fin n)     ≈⟨ cong suc +-emb ⟩
+  suc (fin (m ℕ.+ n))     ≈⟨ refl ⟩
+  fin (suc (m ℕ.+ n))     ≈˘⟨ cong fin (ℕ.+-suc m n) ⟩
+  fin (m ℕ.+ suc n)       ∎ where open SubTreeReasoning
+```
+
+```agda
++-assoc-n : ⦃ _ : NonZero a ⦄ → a + a * fin n ≡ a * fin n + a
++-assoc-n {n = zero} = sym +a-id
++-assoc-n {a} {n = suc n} = begin-equality
+  a + a * suc (fin n)     ≈⟨ refl ⟩
+  a + (a * fin n + a)     ≈⟨ +-assoc ⟩
+  a + a * fin n + a       ≈⟨ cong (_+ a) +-assoc-n ⟩
+  a * suc (fin n) + a     ∎ where open SubTreeReasoning
+```
 
 ### 加法
 

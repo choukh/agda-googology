@@ -442,32 +442,3 @@ a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres it ⦄
   a ^ (a ^ suc b)               ∎ where open SubTreeReasoning; instance _ = ^-nz
 ^^-fake {a} {b = lim f} = limExt λ _ → ^^-fake
 ```
-
-## 更多引理
-
-```agda
-import Data.Nat as ℕ
-import Data.Nat.Properties as ℕ
-
-+-emb : fin m + fin n ≡ fin (m ℕ.+ n)
-+-emb {m} {n = zero} =    begin-equality
-  fin m + 0               ≈⟨ refl ⟩
-  fin m                   ≈˘⟨ cong fin (ℕ.+-identityʳ m) ⟩
-  fin (m ℕ.+ 0)           ∎ where open SubTreeReasoning
-+-emb {m} {n = suc n} =   begin-equality
-  fin m + fin (suc n)     ≈⟨ refl ⟩
-  suc (fin m + fin n)     ≈⟨ cong suc +-emb ⟩
-  suc (fin (m ℕ.+ n))     ≈⟨ refl ⟩
-  fin (suc (m ℕ.+ n))     ≈˘⟨ cong fin (ℕ.+-suc m n) ⟩
-  fin (m ℕ.+ suc n)       ∎ where open SubTreeReasoning
-```
-
-```agda
-+-assoc-n : ⦃ _ : NonZero a ⦄ → a + a * fin n ≡ a * fin n + a
-+-assoc-n {n = zero} = sym +a-id
-+-assoc-n {a} {n = suc n} = begin-equality
-  a + a * suc (fin n)     ≈⟨ refl ⟩
-  a + (a * fin n + a)     ≈⟨ +-assoc ⟩
-  a + a * fin n + a       ≈⟨ cong (_+ a) +-assoc-n ⟩
-  a * suc (fin n) + a     ∎ where open SubTreeReasoning
-```
