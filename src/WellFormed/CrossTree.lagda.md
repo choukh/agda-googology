@@ -377,6 +377,14 @@ a+-pres≺ (≼l p)  = ≼l (a+-pres≼ p)
 +a-pres≼ {lim f} p  = l≼l (+a-pres≼ p)
 ```
 
+```agda
+a+-cong≈ : b ≈ c → a + b ≈ a + c
+a+-cong≈ (p , q) = a+-pres≼ p , a+-pres≼ q
+
++a-cong≈ : b ≈ c → b + a ≈ c + a
++a-cong≈ (p , q) = +a-pres≼ p , +a-pres≼ q
+```
+
 ### 乘法
 
 ```agda
@@ -431,6 +439,14 @@ a*-infl≼ {a} {x} =          begin
   x                         ≈˘⟨ ≡→≈ *a-id ⟩
   (1 * x) ⦃ _ ⦄             ≤⟨ *a-pres≼ ⦃ _ ⦄ (<→≺ nz-elim) ⟩
   a * x                     ∎ where open CrossTreeReasoning
+```
+
+```agda
+a*-cong≈ : ⦃ _ : NonZero a ⦄ → b ≈ c → a * b ≈ a * c
+a*-cong≈ (p , q) = a*-pres≼ p , a*-pres≼ q
+
+*a-cong≈ : ⦃ _ : NonZero b ⦄ ⦃ _ : NonZero c ⦄ → b ≈ c → b * a ≈ c * a
+*a-cong≈ (p , q) = *a-pres≼ p , *a-pres≼ q
 ```
 
 ## 幂运算
@@ -498,6 +514,14 @@ a^-infl≼ {a} {x} =          begin
     2^b + 1                 ≤⟨ a+-pres≼ (<→≺ nz-elim) ⟩
     2^b + 2^b               ≈˘⟨ ≡→≈ (cong (_+ 2^b) +a-id) ⟩
     0 + 2^b + 2^b           ∎ where 2^b = 2 ^ b
+```
+
+```agda
+a^-cong≈ : ⦃ _ : NonTrivial a ⦄ → b ≈ c → a ^ b ≈ a ^ c
+a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
+
+^a-cong≈ : ⦃ _ : NonTrivial b ⦄ ⦃ _ : NonTrivial c ⦄ → b ≈ c → b ^ a ≈ c ^ a
+^a-cong≈ (p , q) = ^a-pres≼ p , ^a-pres≼ q
 ```
 
 ```agda
