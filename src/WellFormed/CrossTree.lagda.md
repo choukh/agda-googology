@@ -494,8 +494,31 @@ a^-infl≼ {a} {x} =          begin
     ω ^ b * suc (fin n)     ≤⟨ a*-pres≼ (<→≺ n<ω) ⟩
     ω ^ b * ω               ∎) ,
   (l≼ λ {n} →               begin
-    ω ^ b * fin n           ≤⟨ {!   !} ⟩
-    ω ^ a + ω ^ b * fin n   ≤⟨ {!   !} ⟩
-    ω ^ a + ω ^ b * ω       ∎) where open CrossTreeReasoning; instance _ = ^-nz
-ω^-absorb {a} {b = lim f} a≺b = {!   !}
+    ω ^ b * fin n           ≤⟨ a+-infl≼ ⟩
+    ω ^ a + ω ^ b * fin n   ≤⟨ a+-pres≼ (a*-pres≼ $ ≤→≼ $ inl n<ω) ⟩
+    ω ^ a + ω ^ b * ω       ∎) where
+  open CrossTreeReasoning
+  instance _ = ^-nz
+ω^-absorb {a} {b = lim f} (≼l {n} a≺fn) = l≼ aux , l≼l a+-infl≼ where
+  open CrossTreeReasoning
+  import Data.Nat.Properties as ℕ
+  aux : ω ^ a + ω ^ f m ≼ lim- (λ m → ω ^ f m)
+  aux {m} with ℕ.<-cmp n m
+  ... | tri< n<m _ _  = ≼l $ begin
+    ω ^ a + ω ^ f m         ≤⟨ fst (ω^-absorb a≺fm) ⟩
+    ω ^ f m                 ∎ where
+    a≺fm =                  begin-strict
+      a                     <⟨ a≺fn ⟩
+      f n                   <⟨ <→≺ (seq-pres n<m) ⟩
+      f m                   ∎
+  ... | tri≈ _ refl _ = ≼l $ begin
+    ω ^ a + ω ^ f n         ≤⟨ fst (ω^-absorb a≺fn) ⟩
+    ω ^ f n                 ∎
+  ... | tri> _ _ m<n  = ≼l $ begin
+    ω ^ a + ω ^ f m         ≤⟨ a+-pres≼ (a^-pres≼ fm≼fn) ⟩
+    ω ^ a + ω ^ f n         ≤⟨ fst (ω^-absorb a≺fn) ⟩
+    ω ^ f n                 ∎ where
+    fm≼fn =                 begin
+      f m                   <⟨ <→≺ (seq-pres m<n) ⟩
+      f n                   ∎
 ```
