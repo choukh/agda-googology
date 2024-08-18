@@ -165,9 +165,7 @@ l≈l p = l≼l (fst p) , l≼l (snd p)
 
 ```agda
 l≈ls : {w : wf f} {ws : wf (f ∘ suc)} → f 0 ≼ f 1 → lim f ⦃ w ⦄ ≈ lim (f ∘ ℕ.suc) ⦃ ws ⦄
-l≈ls p = l≼ (λ { {(zero)} → ≼l p
-               ; {suc n}  → ≼l ≼-refl })
-       , l≼ (≼l ≼-refl)
+l≈ls p = l≼ (λ { {(zero)} → ≼l p ; {suc n} → f≼l }) , l≼ f≼l
 ```
 
 ## 严格序
@@ -387,11 +385,18 @@ a*-pres≺ {a} {x} (s≼s {b} p) = begin-strict
   a * x                     <⟨ a+-pres≺ (<→≺ nz-elim) ⟩
   a * x + a                 ≤⟨ +a-pres≼ (a*-pres≼ p) ⟩
   a * b + a                 ∎ where open CrossTreeReasoning
-a*-pres≺ (≼l p) = {!   !}
+a*-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
+  a * x                     <⟨ a*-pres≺ p ⟩
+  a * f n                   ≤⟨ f≼l ⟩
+  lim- (λ n → a * f n)      ∎ where open CrossTreeReasoning
 ```
 
 ```agda
-
+*a-infl≺ : ⦃ NonTrivial a ⦄ → (_* a) inflates _≺_ within NonZero
+*a-infl≺ {a} {x} =          begin-strict
+  x                         ≈˘⟨ ≡→≈ a*-id ⟩
+  x * 1                     <⟨ a*-pres≺ (<→≺ nt-elim) ⟩
+  x * a                     ∎ where open CrossTreeReasoning
 ```
 
 ## 幂运算
