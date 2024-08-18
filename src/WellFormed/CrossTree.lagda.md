@@ -337,7 +337,7 @@ _ = refl
 
 ```agda
 a+-infl≼ : (a +_) inflates _≼_
-a+-infl≼ {x = zero} = z≼
+a+-infl≼ {x = zero}  = z≼
 a+-infl≼ {x = suc x} = s≼s a+-infl≼
 a+-infl≼ {x = lim f} = l≼l a+-infl≼
 ```
@@ -366,10 +366,18 @@ a+-pres≺ (≼l p)  = ≼l (a+-pres≼ p)
 ### 乘法
 
 ```agda
-*a-infl≼ : (_* a) inflates _≼_ within NonZero
+a*-pres≼ : ⦃ _ : NonZero a ⦄ → (a *_) preserves _≼_
+a*-pres≼ z≼       = z≼
+a*-pres≼ (s≼s p)  = +a-pres≼ (a*-pres≼ p)
+a*-pres≼ (≼l p)   = ≼l (a*-pres≼ p)
+a*-pres≼ (l≼ p)   = l≼ (a*-pres≼ p)
+```
+
+```agda
+*a-infl≼ : ⦃ NonZero a ⦄ → (_* a) inflates _≼_ within NonZero
 *a-infl≼ {a} {x} =          begin
-  x                         ≈˘⟨ ≡→≈ +a-id ⟩
-  x * 1                     ≤⟨ {!   !} ⟩
+  x                         ≈˘⟨ ≡→≈ a*-id ⟩
+  x * 1                     ≤⟨ a*-pres≼ (<→≺ nz-elim) ⟩
   x * a                     ∎ where open CrossTreeReasoning
 ```
 
