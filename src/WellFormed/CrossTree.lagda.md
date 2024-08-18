@@ -99,14 +99,14 @@ l≼-inv (l≼ p) = p
 **定理 2-3-x**
 
 ```agda
-ns→≼ : NSRoad a b → a ≼ b
-ns→≼ (inl zero) = ≼-suc ≼-refl
-ns→≼ (inl (suc r)) = ≼-suc (ns→≼ (inl r))
-ns→≼ (inl (lim r)) = ≼l (ns→≼ (inl r))
-ns→≼ (inr refl) = ≼-refl
+≤→≼-rd : NSRoad a b → a ≼ b
+≤→≼-rd (inl zero) = ≼-suc ≼-refl
+≤→≼-rd (inl (suc r)) = ≼-suc (≤→≼-rd (inl r))
+≤→≼-rd (inl (lim r)) = ≼l (≤→≼-rd (inl r))
+≤→≼-rd (inr refl) = ≼-refl
 
 ≤→≼ : a ≤ b → a ≼ b
-≤→≼ (inl r) = ns→≼ (inl (set r))
+≤→≼ (inl r) = ≤→≼-rd (inl (set r))
 ≤→≼ (inr refl) = ≼-refl
 ```
 
@@ -186,8 +186,31 @@ a ⊀ b = a ≺ b → ⊥
 ```
 
 ```agda
+z≺s : 0 ≺ suc a
+z≺s = s≼s z≼
+```
+
+```agda
+≺-zero : a ≺ suc a
+≺-zero = s≼s ≼-refl
+
+≺-suc : a ≺ b → a ≺ suc b
+≺-suc p = s≼s (≺→≼ p)
+```
+
+```agda
+<→≺-rd : Road a b → a ≺ b
+<→≺-rd zero = ≺-zero
+<→≺-rd (suc r) = ≺-suc (<→≺-rd r)
+<→≺-rd (lim r) = ≼l (≤→≼-rd (<→s≤-rd r))
+
+<→≺ : a < b → a ≺ b
+<→≺ r = <→≺-rd (set r)
+```
+
+```agda
 ≼→≺s : a ≼ b → a ≺ suc b
-≼→≺s z≼ = s≼s z≼
+≼→≺s z≼ = z≺s
 ≼→≺s (s≼s p) = s≼s (s≼s p)
 ≼→≺s (≼l p) = s≼s (≼l p)
 ≼→≺s (l≼ p) = s≼s (l≼ p)
@@ -287,15 +310,6 @@ module CrossTreeReasoning where
 ## 跨树算术定理
 
 ```agda
-private instance
-  fin-suc-wf : wf (fin ∘ suc)
-  fin-suc-wf = zero₁
-
-  ω^-nz : NonZero (ω ^ a)
-  ω^-nz = nz-intro ω^>0
-```
-
-```agda
 _ : ω + 1 ≡ suc ω
 _ = refl
 ```
@@ -307,28 +321,48 @@ _ = refl
   lim- (λ n → 1 + fin n)      ≈⟨ l≈l (≡→≈ +-emb) ⟩
   lim (λ n → fin (suc n))     ≈˘⟨ l≈ls ≼-zero ⟩
   lim- (λ n → fin n)          ≈⟨ ≈-refl ⟩
-  ω                           ∎ where open CrossTreeReasoning
+  ω                           ∎
+    where
+    open CrossTreeReasoning
+    instance fin-suc-wf : wf (fin ∘ suc)
+    fin-suc-wf = zero₁
 ```
 
 ```agda
 +a-infl≼ : (_+ a) inflates _≼_
 +a-infl≼ = ≤→≼ +-infl≤
+
++a-infl≺ : ⦃ NonZero a ⦄ → (_+ a) inflates _≺_
++a-infl≺ = <→≺ +-infl
+```
+
+```agda
+a+-infl≼ : (a +_) inflates _≼_
+a+-infl≼ {x = zero} = z≼
+a+-infl≼ {x = suc x} = s≼s a+-infl≼
+a+-infl≼ {x = lim f} = l≼l a+-infl≼
 ```
 
 ```agda
 +a-pres≼ : (_+ a) preserves _≼_
-+a-pres≼ = {!   !}
++a-pres≼ {(zero)} p = p
++a-pres≼ {suc a} p = s≼s (+a-pres≼ p)
++a-pres≼ {lim f} p = l≼l (+a-pres≼ p)
 ```
 
 ```agda
 a+-pres≼ : (a +_) preserves _≼_
-a+-pres≼ z≼ = +a-infl≼
-a+-pres≼ (s≼s p) = {!   !}
-a+-pres≼ (≼l p) = {!   !}
-a+-pres≼ (l≼ x) = {!   !}
+a+-pres≼ z≼       = +a-infl≼
+a+-pres≼ (s≼s p)  = s≼s (a+-pres≼ p)
+a+-pres≼ (≼l p)   = ≼l (a+-pres≼ p)
+a+-pres≼ (l≼ p)   = l≼ (a+-pres≼ p)
 ```
 
 ```agda
+private instance
+  ω^-nz : NonZero (ω ^ a)
+  ω^-nz = nz-intro ω^>0
+
 ω^-absorb : a ≺ b → ω ^ a + ω ^ b ≈ ω ^ b
 ω^-absorb {a} {b = suc b} a≺b =
   (l≼ λ {n} →               begin
