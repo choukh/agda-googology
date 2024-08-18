@@ -399,6 +399,24 @@ a*-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
   x * a                     ∎ where open CrossTreeReasoning
 ```
 
+```agda
+*a-pres≼ : (_* a) preserves _≼_ within NonZero
+*a-pres≼ {(zero)} _ = z≼
+*a-pres≼ {suc a} {x} {y} p = begin
+  x * a + x                 ≤⟨ a+-pres≼ p ⟩
+  x * a + y                 ≤⟨ +a-pres≼ (*a-pres≼ p) ⟩
+  y * a + y                 ∎ where open CrossTreeReasoning
+*a-pres≼ {lim f} p = l≼l (*a-pres≼ p)
+```
+
+```agda
+a*-infl≼ : ⦃ _ : NonZero a ⦄ → (a *_) inflates _≼_
+a*-infl≼ {a} {x} =          begin
+  x                         ≈˘⟨ ≡→≈ *a-id ⟩
+  (1 * x) ⦃ _ ⦄             ≤⟨ *a-pres≼ ⦃ _ ⦄ (<→≺ nz-elim) ⟩
+  a * x                     ∎ where open CrossTreeReasoning
+```
+
 ## 幂运算
 
 ```agda
@@ -417,3 +435,4 @@ private instance
   where open CrossTreeReasoning
 ω^-absorb {a} {b = lim f} a≺b = {!   !}
 ```
+ 
