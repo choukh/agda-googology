@@ -52,6 +52,12 @@ restricted-infl-syntax {P} F _~_ = ∀ {x} ⦃ p : P x ⦄ → x ~ F x
 syntax restricted-infl-syntax {P} F _~_ = F inflates _~_ within P
 ```
 
+```agda
+restricted-pres-syntax : {P : Ord → Type} → Func↾ P → Rel → Type
+restricted-pres-syntax {P} F _~_ = ∀ {x y} ⦃ p : P x ⦄ ⦃ q : P y ⦄ → x ~ y → F x ~ F y
+syntax restricted-pres-syntax {P} F _~_ = F preserves _~_ within P
+```
+
 ## 一些约定
 
 **约定 2-2-x** 我们将 $\text{suc}(\text{suc}(a))$ 记作 $a^{++}$.
