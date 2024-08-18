@@ -142,7 +142,7 @@ nt-nz {lim f} = _
 ## 加法
 
 ```agda
-_+_ : Ord → Ord → Ord; infixl 6 _+_
+_+_ : Ord → Ord → Ord; infixl 7 _+_
 +-pres-rd : (a +_) preserves Road
 
 +-pres : (a +_) preserves _<_
@@ -206,7 +206,7 @@ a+-id = refl
 ## 乘法
 
 ```agda
-_*_ : (a : Ord) → Ord → ⦃ NonZero a ⦄ → Ord; infixl 7 _*_
+_*_ : (a : Ord) → Ord → ⦃ NonZero a ⦄ → Ord; infixl 8 _*_
 *-pres-rd : ⦃ _ : NonZero a ⦄ → (a *_) preserves Road
 
 *-pres : ⦃ _ : NonZero a ⦄ → (a *_) preserves _<_
@@ -307,7 +307,7 @@ module _ {a} {b} ⦃ _ : NonZero a ⦄ ⦃ _ : NonZero b ⦄ where
 ## 幂运算
 
 ```agda
-_^_ : (a : Ord) → Ord → ⦃ NonTrivial a ⦄ → Ord; infix 8 _^_
+_^_ : (a : Ord) → Ord → ⦃ NonTrivial a ⦄ → Ord; infix 9 _^_
 ^-nz : ⦃ _ : NonTrivial a ⦄ → NonZero (a ^ b)
 ^-pres-rd : ⦃ _ : NonTrivial a ⦄ → (a ^_) preserves Road
 
