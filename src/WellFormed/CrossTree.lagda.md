@@ -259,10 +259,10 @@ s⋠ {lim f} (≼l p) = l⋠f (≼-trans ≼-zero p)
 ```
 
 ```agda
-≺-wellFounded : WellFounded _≺_
-≺-wellFounded zero    = acc λ ()
-≺-wellFounded (suc a) = acc λ { (s≼s p) → ≺-acc p (≺-wellFounded a) }
-≺-wellFounded (lim f) = acc λ { (≼l p) → ≺-acc (≺→≼ p) (≺-wellFounded (f _)) }
+≺-wfnd : WellFounded _≺_
+≺-wfnd zero    = acc λ ()
+≺-wfnd (suc a) = acc λ { (s≼s p) → ≺-acc p (≺-wfnd a) }
+≺-wfnd (lim f) = acc λ { (≼l p) → ≺-acc (≺→≼ p) (≺-wfnd (f _)) }
 ```
 
 ## 结构实例化
@@ -379,6 +379,19 @@ a*-pres≼ (l≼ p)   = l≼ (a*-pres≼ p)
   x                         ≈˘⟨ ≡→≈ a*-id ⟩
   x * 1                     ≤⟨ a*-pres≼ (<→≺ nz-elim) ⟩
   x * a                     ∎ where open CrossTreeReasoning
+```
+
+```agda
+a*-pres≺ : ⦃ _ : NonZero a ⦄ → (a *_) preserves _≺_
+a*-pres≺ {a} {x} (s≼s {b} p) = begin-strict
+  a * x                     <⟨ a+-pres≺ (<→≺ nz-elim) ⟩
+  a * x + a                 ≤⟨ +a-pres≼ (a*-pres≼ p) ⟩
+  a * b + a                 ∎ where open CrossTreeReasoning
+a*-pres≺ (≼l p) = {!   !}
+```
+
+```agda
+
 ```
 
 ## 幂运算
