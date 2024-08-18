@@ -9,7 +9,7 @@ open import WellFormed.Fixpoints as Fp using (itn; itω)
 
 open import Agda.Builtin.Equality public
 open import Agda.Builtin.Equality.Rewrite public
-{-# REWRITE *-idˡ #-}
+{-# REWRITE *a-id #-}
 ```
 
 ```agda

@@ -318,12 +318,12 @@ _ = refl
 
 ```agda
 1+ω≈ω : 1 + ω ≈ ω
-1+ω≈ω =                       begin-equality
-  1 + ω                       ≈⟨ ≈-refl ⟩
-  lim- (λ n → 1 + fin n)      ≈⟨ l≈l (≡→≈ +-emb) ⟩
-  lim (λ n → fin (suc n))     ≈˘⟨ l≈ls ≼-zero ⟩
-  lim- (λ n → fin n)          ≈⟨ ≈-refl ⟩
-  ω                           ∎
+1+ω≈ω =                     begin-equality
+  1 + ω                     ≈⟨ ≈-refl ⟩
+  lim- (λ n → 1 + fin n)    ≈⟨ l≈l (≡→≈ +-emb) ⟩
+  lim (λ n → fin (suc n))   ≈˘⟨ l≈ls ≼-zero ⟩
+  lim- (λ n → fin n)        ≈⟨ ≈-refl ⟩
+  ω                         ∎
   where open CrossTreeReasoning; instance _ = wf (fin ∘ suc) ∋ zero₁
 ```
 
@@ -363,25 +363,14 @@ a+-pres≺ (≼l p)  = ≼l (a+-pres≼ p)
 +a-pres≼ {lim f} p  = l≼l (+a-pres≼ p)
 ```
 
-```agda
-open import Algebra.Definitions {A = Ord} _≈_
-
-a+-cong : LeftCongruent _+_
-a+-cong (p , q) = a+-pres≼ p , a+-pres≼ q
-
-+a-cong : RightCongruent _+_
-+a-cong (p , q) = +a-pres≼ p , +a-pres≼ q
-
-+-cong : Congruent₂ _+_
-+-cong {x} {y} {u} {v} p q = begin-equality
-  x + u                     ≈⟨ a+-cong q ⟩
-  x + v                     ≈⟨ +a-cong p ⟩
-  y + v                     ∎ where open CrossTreeReasoning
-```
-
 ### 乘法
 
 ```agda
+*a-infl≼ : (_* a) inflates _≼_ within NonZero
+*a-infl≼ {a} {x} =          begin
+  x                         ≈˘⟨ ≡→≈ +a-id ⟩
+  x * 1                     ≤⟨ {!   !} ⟩
+  x * a                     ∎ where open CrossTreeReasoning
 ```
 
 ## 幂运算
