@@ -70,12 +70,12 @@ module Fixpt (ℱ : Fixable) where
 
 ```agda
   F′ zero = itω F 0 w
-    module FixptZero where
+    module Zero where
     w : wf (itn F 0)
     w {(zero)} = nz-elim
     w {suc n} = fix-pres w
   F′ (suc a) = itω (λ x → i + F x) i w
-    module FixptSuc where
+    module Suc where
     i = suc (F′ a)
     w : wf (itn (λ x → i + F x) i)
     w {n = zero} = +-infl
@@ -132,12 +132,12 @@ sε a = suc (ε ⟨ a ⟩)
 ε-fix {(zero)} = l≈ls z≼
 ε-fix {suc a} = l≼l p , {!   !} where
   p : itn (λ x → sε a + ω ^ x) (sε a) n ≼ ω ^ itn (λ x → sε a + ω ^ x) (sε a) n
-  p {(zero)} =                      begin
-    ε ⟨ a ⟩ + 1                     ≈⟨ s≈s ε-fix ⟩
-    ω ^ ε ⟨ a ⟩ + 1                 ≤⟨ a+-pres≼ $ <→≺ nz-elim ⟩
-    ω ^ ε ⟨ a ⟩ + ω ^ ε ⟨ a ⟩       ≈˘⟨ ≡→≈ *-2 ⟩
-    ω ^ ε ⟨ a ⟩ * 2                 <⟨ a*-pres≺ $ <→≺ $ n<ω {2} ⟩
-    ω ^ ε ⟨ a ⟩ * ω                 ∎ where open CrossTreeReasoning; instance _ = ^-nz
+  p {(zero)} =                          begin
+    ε ⟨ a ⟩ + 1                         ≈⟨ s≈s ε-fix ⟩
+    ω ^ ε ⟨ a ⟩ + 1                     ≤⟨ a+-pres≼ $ <→≺ nz-elim ⟩
+    ω ^ ε ⟨ a ⟩ + ω ^ ε ⟨ a ⟩           ≈˘⟨ ≡→≈ *-2 ⟩
+    ω ^ ε ⟨ a ⟩ * 2                     <⟨ a*-pres≺ $ <→≺ $ n<ω {2} ⟩
+    ω ^ ε ⟨ a ⟩ * ω                     ∎ where open CrossTreeReasoning; instance _ = ^-nz
   p {suc n} = a^-infl≼
 ε-fix {lim f} = {!   !}
 ```
@@ -148,11 +148,14 @@ sε a = suc (ε ⟨ a ⟩)
 ```
 
 ```agda
-ε-suc-[s] : εs a [ suc n ] ≈ itn (ω ^_) (εs a [ n ]) (suc n)
-ε-suc-[s] {a} {n = zero} =          begin-equality
-  εs a [ 1 ]                        ≈⟨ ≈-refl ⟩
-  ε ⟨ a ⟩ + 1 + ω ^ sε a            ≈⟨ +a-cong≈ $ s≈s ε-fix ⟩
-  ω ^ ε ⟨ a ⟩ + ω ^ 0 + ω ^ sε a    ≈⟨ ω^-absorb2 ≺-zero z≺s ⟩
-  ω ^ sε a                          ∎ where open CrossTreeReasoning
-ε-suc-[s] {n = suc n} = {!   !}
+ε-suc-[s] : εs a [ suc n ] ≈ ω ^ εs a [ n ]
+ε-suc-[s] {a} {n} =                     begin-equality
+  εs a [ suc n ]                        ≈⟨ ≈-refl ⟩
+  ε ⟨ a ⟩ + 1 + ω ^ εs a [ n ]          ≈⟨ +a-cong≈ $ s≈s ε-fix ⟩
+  ω ^ ε ⟨ a ⟩ + ω ^ 0 + ω ^ εs a [ n ]  ≈⟨ ω^-absorb2 (<→≺ p) {!   !} ⟩
+  ω ^ εs a [ n ]                        ∎ where
+  open CrossTreeReasoning
+  p : ε ⟨ a ⟩ < εs a [ m ]
+  p {(zero)} = zero₁
+  p {suc m} = <-trans p (Fixpt.Suc.w _ _)
 ```
