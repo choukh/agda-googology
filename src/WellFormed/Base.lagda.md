@@ -540,7 +540,7 @@ module SubTreeReasoning where
   - 若 $m=n'$, 由 $f$ 的良构性质有 $f(m)=f(n')\lt f(n'^+)=f(n)$. ∎
 
 ```agda
-seq-pres : ⦃ _ : wf f ⦄ → m ℕ.< n → f m < f n
+seq-pres : ⦃ wf f ⦄ → m ℕ.< n → f m < f n
 seq-pres {f} {m} (ℕ.s≤s {n} m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 ... | inl m<n = begin-strict
   (f m)         <⟨ seq-pres m<n ⟩
@@ -555,7 +555,7 @@ seq-pres {f} {m} (ℕ.s≤s {n} m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 **证明** 由良构序列的严格递增性显然成立. ∎
 
 ```agda
-seq-inj≡ : ∀ f → ⦃ _ : wf f ⦄ → f m ≡ f n → m ≡ n
+seq-inj≡ : ∀ f → ⦃ wf f ⦄ → f m ≡ f n → m ≡ n
 seq-inj≡ {m} {n} _ eq with ℕ.<-cmp m n
 ... | tri< m<n _ _  = ⊥-elim $ <-irrefl eq (seq-pres m<n)
 ... | tri≈ _ refl _ = refl
@@ -566,7 +566,7 @@ seq-inj≡ {m} {n} _ eq with ℕ.<-cmp m n
 **证明** 由良构序列的严格递增性显然成立. ∎
 
 ```agda
-seq-inj< : ∀ f → ⦃ _ : wf f ⦄ → f m < f n → m ℕ.< n
+seq-inj< : ∀ f → ⦃ wf f ⦄ → f m < f n → m ℕ.< n
 seq-inj< {m} {n} _ r with ℕ.<-cmp m n
 ... | tri< m<n _ _  = m<n
 ... | tri≈ _ refl _ = ⊥-elim $ <-irrefl refl r
@@ -577,7 +577,7 @@ seq-inj< {m} {n} _ r with ℕ.<-cmp m n
 **证明** 由引理 2-0-25 以及自然数的相关性质可得. ∎
 
 ```agda
-seq-notDense : ∀ f → ⦃ _ : wf f ⦄ → f n < f m → f m ≮ f (suc n)
+seq-notDense : ∀ f → ⦃ wf f ⦄ → f n < f m → f m ≮ f (suc n)
 seq-notDense f r s = ℕ.<⇒≱ (seq-inj< f r) (ℕ.m<1+n⇒m≤n (seq-inj< f s))
 ```
 
@@ -898,3 +898,4 @@ rd-trich r s with <-trich ∣ r ∣₁ ∣ s ∣₁
 ```
 
 **结论 2-0-50** 忽略非同株序数 (up to homo), 路径关系 $\text{Rd}$ (作为集合) 和子树关系 $\lt$ (作为命题) 分别构成了序数集 $\text{Ord}$ 上的良序.
+  

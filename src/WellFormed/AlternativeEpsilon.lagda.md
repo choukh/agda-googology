@@ -5,7 +5,7 @@ module WellFormed.AlternativeEpsilon where
 open import WellFormed.Base
 open import WellFormed.Properties
 open import WellFormed.Arithmetic
-open import WellFormed.Fixpoints
+open import WellFormed.Fixpoints as Fp using (itn; itω)
 
 open import Agda.Builtin.Equality public
 open import Agda.Builtin.Equality.Rewrite public
