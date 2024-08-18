@@ -128,36 +128,31 @@ sε a = suc (ε ⟨ a ⟩)
 ```
 
 ```agda
+ε-fix : ε ⟨ a ⟩ ≈ ω ^ ε ⟨ a ⟩
+ε-fix {(zero)} = l≈ls z≼
+ε-fix {suc a} = l≼l p , {!   !} where
+  p : itn (λ x → sε a + ω ^ x) (sε a) n ≼ ω ^ itn (λ x → sε a + ω ^ x) (sε a) n
+  p {(zero)} =                      begin
+    ε ⟨ a ⟩ + 1                     ≈⟨ s≈s ε-fix ⟩
+    ω ^ ε ⟨ a ⟩ + 1                 ≤⟨ a+-pres≼ $ <→≺ nz-elim ⟩
+    ω ^ ε ⟨ a ⟩ + ω ^ ε ⟨ a ⟩       ≈˘⟨ ≡→≈ *-2 ⟩
+    ω ^ ε ⟨ a ⟩ * 2                 <⟨ a*-pres≺ $ <→≺ $ n<ω {2} ⟩
+    ω ^ ε ⟨ a ⟩ * ω                 ∎ where open CrossTreeReasoning; instance _ = ^-nz
+  p {suc n} = a^-infl≼
+ε-fix {lim f} = {!   !}
+```
+
+```agda
 ε-suc-[0] : εs a [ 0 ] ≡ sε a
 ε-suc-[0] = refl
 ```
 
 ```agda
 ε-suc-[s] : εs a [ suc n ] ≈ itn (ω ^_) (εs a [ n ]) (suc n)
-ε-fix : ε ⟨ a ⟩ ≈ ω ^ ε ⟨ a ⟩
-```
-
-```agda
-ε-fix {(zero)} = l≈ls z≼
-ε-fix {suc a} = l≼l p , {!   !} where
-  p : itn (λ x → sε a + ω ^ x) (sε a) n ≼ ω ^ itn (λ x → sε a + ω ^ x) (sε a) n
-  p {(zero)} =                    begin
-    ε ⟨ a ⟩ + 1                   ≈⟨ s≈s ε-fix ⟩
-    ω ^ ε ⟨ a ⟩ + 1               ≤⟨ a+-pres≼ (<→≺ nz-elim) ⟩
-    ω ^ ε ⟨ a ⟩ + ω ^ ε ⟨ a ⟩     ≈˘⟨ ≡→≈ *-2 ⟩
-    ω ^ ε ⟨ a ⟩ * 2               <⟨ a*-pres≺ (<→≺ (n<ω {2})) ⟩
-    ω ^ ε ⟨ a ⟩ * ω               ∎ where open CrossTreeReasoning; instance _ = ^-nz
-  p {suc n} = {!   !}
-ε-fix {lim f} = {!   !}
-```
-
-```agda
-ε-suc-[s] {a} {n = zero} =        begin-equality
-  εs a [ 1 ]                      ≈⟨ ≈-refl ⟩
-  sε a + ω ^ sε a                 ≈⟨ {!   !} ⟩
-  ε ⟨ a ⟩ + 1 + ω ^ sε a          ≈⟨ {!   !} ⟩
-  ω ^ ε ⟨ a ⟩ + ω ^ 0 + ω ^ sε a  ≈⟨ {!   !} ⟩
-  ω ^ sε a                        ≈⟨ ≈-refl ⟩
-  itn (ω ^_) (εs a [ 0 ]) 1       ∎ where open CrossTreeReasoning
+ε-suc-[s] {a} {n = zero} =          begin-equality
+  εs a [ 1 ]                        ≈⟨ ≈-refl ⟩
+  ε ⟨ a ⟩ + 1 + ω ^ sε a            ≈⟨ +a-cong≈ $ s≈s ε-fix ⟩
+  ω ^ ε ⟨ a ⟩ + ω ^ 0 + ω ^ sε a    ≈⟨ ω^-absorb2 ≺-zero z≺s ⟩
+  ω ^ sε a                          ∎ where open CrossTreeReasoning
 ε-suc-[s] {n = suc n} = {!   !}
 ```
