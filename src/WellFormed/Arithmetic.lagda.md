@@ -171,15 +171,15 @@ import Data.Nat.Properties as ℕ
 ```
 
 ```agda
-+-idʳ : a + 0 ≡ a
-+-idʳ = refl
+a+-id : a + 0 ≡ a
+a+-id = refl
 ```
 
 ```agda
-+-idˡ : 0 + a ≡ a
-+-idˡ {(zero)} = refl
-+-idˡ {suc a} = cong suc +-idˡ
-+-idˡ {lim f} = limExt λ _ → +-idˡ
++a-id : 0 + a ≡ a
++a-id {(zero)} = refl
++a-id {suc a} = cong suc +a-id
++a-id {lim f} = limExt λ _ → +a-id
 ```
 
 ```agda
@@ -241,36 +241,36 @@ a * lim f = lim (λ n → a * f n) ⦃ *-pres it ⦄
 ```
 
 ```agda
-*-congˡ : {nza : NonZero a} {nzb : NonZero b} → a ≡ b → (a * c) ⦃ nza ⦄ ≡ (b * c) ⦃ nzb ⦄
-*-congˡ refl = refl
+*a-cong : {nza : NonZero a} {nzb : NonZero b} → a ≡ b → (a * c) ⦃ nza ⦄ ≡ (b * c) ⦃ nzb ⦄
+*a-cong refl = refl
 ```
 
 ```agda
-*-zʳ : ⦃ _ : NonZero a ⦄ → a * 0 ≡ 0
-*-zʳ = refl
+a*-z : ⦃ _ : NonZero a ⦄ → a * 0 ≡ 0
+a*-z = refl
 ```
 
 ```agda
-*-idʳ : ⦃ _ : NonZero a ⦄ → a * 1 ≡ a
-*-idʳ {a} =               begin-equality
+a*-id : ⦃ _ : NonZero a ⦄ → a * 1 ≡ a
+a*-id {a} =               begin-equality
   a * 1                   ≈⟨ refl ⟩
   a * 0 + a               ≈⟨ cong (_+ a) refl ⟩
-  0 + a                   ≈⟨ +-idˡ ⟩
+  0 + a                   ≈⟨ +a-id ⟩
   a                       ∎ where open SubTreeReasoning
 ```
 
 ```agda
-*-idˡ : 1 * a ≡ a
-*-idˡ {(zero)} = refl
-*-idˡ {suc a} = cong suc *-idˡ
-*-idˡ {lim f} = limExt λ _ → *-idˡ
+*a-id : 1 * a ≡ a
+*a-id {(zero)} = refl
+*a-id {suc a} = cong suc *a-id
+*a-id {lim f} = limExt λ _ → *a-id
 ```
 
 ```
 *-2 : ⦃ _ : NonZero a ⦄ → a * 2 ≡ a + a
 *-2 {a} =                 begin-equality
   a * 2                   ≈⟨ refl ⟩
-  a * 1 + a               ≈⟨ cong (_+ a) *-idʳ ⟩
+  a * 1 + a               ≈⟨ cong (_+ a) a*-id ⟩
   a + a                   ∎ where open SubTreeReasoning
 ```
 
@@ -311,7 +311,7 @@ module _ {a} {b} ⦃ _ : NonZero a ⦄ ⦃ _ : NonZero b ⦄ where
 ```agda
 *-infl : ⦃ NonTrivial b ⦄ → (_* b) inflates _<_ within NonZero
 *-infl {b} {x} =         begin-strict
-  x                       ≈˘⟨ *-idʳ ⟩
+  x                       ≈˘⟨ a*-id ⟩
   x * 1                   <⟨ *-pres nt-elim ⟩
   x * b                   ∎ where open SubTreeReasoning
 ```
@@ -357,16 +357,16 @@ a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres it ⦄
 ```
 
 ```agda
-^-congˡ : {nta : NonTrivial a} {ntb : NonTrivial b} → a ≡ b → (a ^ c) ⦃ nta ⦄ ≡ (b ^ c) ⦃ ntb ⦄
-^-congˡ refl = refl
+^a-cong : {nta : NonTrivial a} {ntb : NonTrivial b} → a ≡ b → (a ^ c) ⦃ nta ⦄ ≡ (b ^ c) ⦃ ntb ⦄
+^a-cong refl = refl
 ```
 
 ```agda
-^-idʳ : ⦃ _ : NonTrivial a ⦄ → a ^ 1 ≡ a
-^-idʳ {a} =               begin-equality
+a^-id : ⦃ _ : NonTrivial a ⦄ → a ^ 1 ≡ a
+a^-id {a} =               begin-equality
   a ^ 1                   ≈⟨ refl ⟩
   a ^ 0 * a               ≈⟨ refl ⟩
-  1 * a                   ≈⟨ *-idˡ ⟩
+  1 * a                   ≈⟨ *a-id ⟩
   a                       ∎ where open SubTreeReasoning
 ```
 
@@ -374,10 +374,10 @@ a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres it ⦄
 module _ {a} {b} ⦃ _ : NonTrivial a ⦄ where
   instance _ = ^-nz {a}
   ^-distrib : a ^ (b + c) ≡ a ^ b * a ^ c
-  ^-distrib {c = zero} = sym +-idˡ
+  ^-distrib {c = zero} = sym +a-id
   ^-distrib {c = suc c} =       begin-equality
     a ^ (b + suc c)             ≈⟨ refl ⟩
-    a ^ (b + c) * a             ≈⟨ *-congˡ ^-distrib ⟩
+    a ^ (b + c) * a             ≈⟨ *a-cong ^-distrib ⟩
     (a ^ b * a ^ c * a) ⦃ _ ⦄   ≈˘⟨ *-assoc ⟩
     a ^ b * (a ^ c * a)         ≈⟨ refl ⟩
     a ^ b * (a ^ suc c)         ∎ where open SubTreeReasoning
@@ -389,7 +389,7 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ where
 ^-nt {suc a} {suc b} ⦃ nzb ⦄ =  nt-intro $ begin-strict
   1                             ≈⟨ refl ⟩
   suc a ^ 0                     ≤⟨ pres≤ ^-pres $ <s→≤ (nz-elim ⦃ _ ⦄) ⟩
-  suc a ^ b                     ≈˘⟨ *-idʳ ⟩
+  suc a ^ b                     ≈˘⟨ a*-id ⟩
   suc a ^ b * 1                 ≤⟨ pres≤ *-pres $ <s→≤ nt-elim ⟩
   suc a ^ b * a                 <⟨ +-infl ⟩
   suc a ^ b * a + suc a ^ b     ∎ where open SubTreeReasoning; instance _ = ^-nz
@@ -405,7 +405,7 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ ⦃ _ : NonZero b ⦄ where
   ^-assoc {c = zero} = refl
   ^-assoc {c = suc c} =         begin-equality
     (a ^ b) ^ suc c             ≈⟨ refl ⟩
-    ((a ^ b) ^ c * a ^ b) ⦃ _ ⦄ ≈⟨ *-congˡ ^-assoc ⟩
+    ((a ^ b) ^ c * a ^ b) ⦃ _ ⦄ ≈⟨ *a-cong ^-assoc ⟩
     (a ^ (b * c) * a ^ b) ⦃ _ ⦄ ≈˘⟨ ^-distrib ⟩
     a ^ (b * c + b)             ≈⟨ refl ⟩
     a ^ (b * suc c)             ∎ where open SubTreeReasoning
@@ -415,7 +415,7 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ ⦃ _ : NonZero b ⦄ where
 ```agda
 ^-infl : ⦃ NonTrivial b ⦄ → (_^ b) inflates _<_ within NonTrivial
 ^-infl {b} {x} =               begin-strict
-  x                             ≈˘⟨ ^-idʳ ⟩
+  x                             ≈˘⟨ a^-id ⟩
   x ^ 1                         <⟨ ^-pres nt-elim ⟩
   x ^ b                         ∎ where open SubTreeReasoning
 ```
@@ -454,10 +454,10 @@ a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres it ⦄
 
 ```agda
 ^^-fake : ⦃ _ : NonTrivial a ⦄ → a ^^ b ≡ a ^ (a ^ b)
-^^-fake {a} {b = zero}  = sym *-idˡ
+^^-fake {a} {b = zero}  = sym *a-id
 ^^-fake {a} {b = suc b} =       begin-equality
   a ^^ suc b                    ≈⟨ refl ⟩
-  ((a ^^ b) ^ a) ⦃ _ ⦄          ≈⟨ ^-congˡ ^^-fake ⟩
+  ((a ^^ b) ^ a) ⦃ _ ⦄          ≈⟨ ^a-cong ^^-fake ⟩
   ((a ^ (a ^ b)) ^ a) ⦃ _ ⦄     ≈⟨ ^-assoc ⟩
   a ^ (a ^ b * a) ⦃ _ ⦄         ≈⟨ refl ⟩
   a ^ (a ^ suc b)               ∎ where open SubTreeReasoning; instance _ = ^-nz
