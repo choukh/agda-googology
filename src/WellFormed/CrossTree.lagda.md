@@ -184,9 +184,17 @@ a ⊀ b = a ≺ b → ⊥
 ```
 
 ```agda
+≺-zero : a ≺ suc a
+≺-zero = s≼s ≼-refl
+
+≺-suc : a ≺ b → a ≺ suc b
+≺-suc p = s≼s (≺→≼ p)
+```
+
+```agda
 <→≺-rd : Road a b → a ≺ b
-<→≺-rd zero = s≼s ≼-refl
-<→≺-rd (suc r) = s≼s (≺→≼ (<→≺-rd r))
+<→≺-rd zero = ≺-zero
+<→≺-rd (suc r) = ≺-suc (<→≺-rd r)
 <→≺-rd (lim r) = ≼l (≤→≼-rd (<→s≤-rd r))
 
 <→≺ : a < b → a ≺ b
@@ -194,8 +202,13 @@ a ⊀ b = a ≺ b → ⊥
 ```
 
 ```agda
+z≺s : 0 ≺ suc a
+z≺s = s≼s z≼
+```
+
+```agda
 ≼→≺s : a ≼ b → a ≺ suc b
-≼→≺s z≼ = s≼s z≼
+≼→≺s z≼ = z≺s
 ≼→≺s (s≼s p) = s≼s (s≼s p)
 ≼→≺s (≼l p) = s≼s (≼l p)
 ≼→≺s (l≼ p) = s≼s (l≼ p)
@@ -561,4 +574,13 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
     fm≼fn =                 begin
       f m                   <⟨ <→≺ (seq-pres m<n) ⟩
       f n                   ∎
+```
+
+```agda
+ω^-absorb2 : a ≺ c → b ≺ c → ω ^ a + ω ^ b + ω ^ c ≈ ω ^ c
+ω^-absorb2 {a} {c} {b} p q = begin-equality
+  ω ^ a + ω ^ b + ω ^ c     ≈˘⟨ ≡→≈ +-assoc ⟩
+  ω ^ a + (ω ^ b + ω ^ c)   ≈⟨ a+-cong≈ (ω^-absorb q) ⟩
+  ω ^ a + ω ^ c             ≈⟨ ω^-absorb p ⟩
+  ω ^ c                     ∎ where open CrossTreeReasoning
 ```
