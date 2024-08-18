@@ -309,6 +309,8 @@ module CrossTreeReasoning where
 
 ## 跨树算术定理
 
+### 加法
+
 ```agda
 _ : ω + 1 ≡ suc ω
 _ = refl
@@ -322,10 +324,7 @@ _ = refl
   lim (λ n → fin (suc n))     ≈˘⟨ l≈ls ≼-zero ⟩
   lim- (λ n → fin n)          ≈⟨ ≈-refl ⟩
   ω                           ∎
-    where
-    open CrossTreeReasoning
-    instance fin-suc-wf : wf (fin ∘ suc)
-    fin-suc-wf = zero₁
+  where open CrossTreeReasoning; instance _ = wf (fin ∘ suc) ∋ zero₁
 ```
 
 ```agda
@@ -344,19 +343,48 @@ a+-infl≼ {x = lim f} = l≼l a+-infl≼
 ```
 
 ```agda
-+a-pres≼ : (_+ a) preserves _≼_
-+a-pres≼ {(zero)} p = p
-+a-pres≼ {suc a} p = s≼s (+a-pres≼ p)
-+a-pres≼ {lim f} p = l≼l (+a-pres≼ p)
-```
-
-```agda
 a+-pres≼ : (a +_) preserves _≼_
 a+-pres≼ z≼       = +a-infl≼
 a+-pres≼ (s≼s p)  = s≼s (a+-pres≼ p)
 a+-pres≼ (≼l p)   = ≼l (a+-pres≼ p)
 a+-pres≼ (l≼ p)   = l≼ (a+-pres≼ p)
 ```
+
+```agda
+a+-pres≺ : (a +_) preserves _≺_
+a+-pres≺ (s≼s p) = s≼s (a+-pres≼ p)
+a+-pres≺ (≼l p)  = ≼l (a+-pres≼ p)
+```
+
+```agda
++a-pres≼ : (_+ a) preserves _≼_
++a-pres≼ {(zero)} p = p
++a-pres≼ {suc a} p  = s≼s (+a-pres≼ p)
++a-pres≼ {lim f} p  = l≼l (+a-pres≼ p)
+```
+
+```agda
+open import Algebra.Definitions {A = Ord} _≈_
+
+a+-cong : LeftCongruent _+_
+a+-cong (p , q) = a+-pres≼ p , a+-pres≼ q
+
++a-cong : RightCongruent _+_
++a-cong (p , q) = +a-pres≼ p , +a-pres≼ q
+
++-cong : Congruent₂ _+_
++-cong {x} {y} {u} {v} p q = begin-equality
+  x + u                     ≈⟨ a+-cong q ⟩
+  x + v                     ≈⟨ +a-cong p ⟩
+  y + v                     ∎ where open CrossTreeReasoning
+```
+
+### 乘法
+
+```agda
+```
+
+## 幂运算
 
 ```agda
 private instance
