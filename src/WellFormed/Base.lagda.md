@@ -333,8 +333,8 @@ rd-acc zero    = acc λ s → rd-acc s
 rd-acc (suc r) = acc λ s → rd-acc (rd-trans s r)
 rd-acc (lim r) = acc λ s → rd-acc (rd-trans s r)
 
-rd-wellFounded : WellFounded Road
-rd-wellFounded _ = rd-acc zero
+rd-wfnd : WellFounded Road
+rd-wfnd _ = rd-acc zero
 ```
 
 **定理 2-0-14** 子树关系是良基关系.  
@@ -350,8 +350,8 @@ isPropAcc (acc p) (acc q) i = acc (λ x<a → isPropAcc (p x<a) (q x<a) i)
 <-acc (lim₁ r) = acc λ s → <-acc (<-trans s ∣ r ∣₁)
 <-acc (squash₁ p q i) = isPropAcc (<-acc p) (<-acc q) i
 
-<-wellFounded : WellFounded _<_
-<-wellFounded _ = <-acc zero₁
+<-wfnd : WellFounded _<_
+<-wfnd _ = <-acc zero₁
 ```
 
 **推论 2-0-15** 路径关系和子树关系都是非对称且反自反的.  
@@ -359,16 +359,16 @@ isPropAcc (acc p) (acc q) i = acc (λ x<a → isPropAcc (p x<a) (q x<a) i)
 
 ```agda
 rd-asym : Asymmetric Road
-rd-asym = wf⇒asym rd-wellFounded
+rd-asym = wf⇒asym rd-wfnd
 
 rd-irrefl : Irreflexive _≡_ Road
-rd-irrefl = wf⇒irrefl rd-resp-≡ sym rd-wellFounded
+rd-irrefl = wf⇒irrefl rd-resp-≡ sym rd-wfnd
 
 <-asym : Asymmetric _<_
-<-asym = wf⇒asym <-wellFounded
+<-asym = wf⇒asym <-wfnd
 
 <-irrefl : Irreflexive _≡_ _<_
-<-irrefl = wf⇒irrefl <-resp-≡ sym <-wellFounded
+<-irrefl = wf⇒irrefl <-resp-≡ sym <-wfnd
 ```
 
 **定理 2-0-16** 路径关系与子树关系分别构成严格偏序.  
