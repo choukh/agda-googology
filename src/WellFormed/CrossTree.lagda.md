@@ -489,13 +489,13 @@ a^-infl≼ {a} {x} =          begin
 ω^-absorb {a} {b = suc b} (s≼s a≼b) =
   (l≼ λ {n} →               begin
     ω ^ a + ω ^ b * fin n   ≤⟨ +a-pres≼ (a^-pres≼ a≼b) ⟩
-    ω ^ b + ω ^ b * fin n   ≤⟨ {!   !} ⟩
-    ω ^ suc b               ∎) ,
+    ω ^ b + ω ^ b * fin n   ≈⟨ ≡→≈ +-assoc-n ⟩
+    ω ^ b * fin n + ω ^ b   ≈⟨ ≈-refl ⟩
+    ω ^ b * suc (fin n)     ≤⟨ a*-pres≼ (<→≺ n<ω) ⟩
+    ω ^ b * ω               ∎) ,
   (l≼ λ {n} →               begin
     ω ^ b * fin n           ≤⟨ {!   !} ⟩
     ω ^ a + ω ^ b * fin n   ≤⟨ {!   !} ⟩
-    ω ^ a + ω ^ b * ω       ≈⟨ ≈-refl ⟩
-    ω ^ a + ω ^ suc b       ∎) where open CrossTreeReasoning; instance _ = ^-nz
+    ω ^ a + ω ^ b * ω       ∎) where open CrossTreeReasoning; instance _ = ^-nz
 ω^-absorb {a} {b = lim f} a≺b = {!   !}
 ```
-     
