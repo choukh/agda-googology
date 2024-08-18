@@ -20,6 +20,18 @@ open import WellFormed.CrossTree
 ```
 
 ```agda
+IsLim : Ord → Type
+IsLim zero = ⊥
+IsLim (suc a) = ⊥
+IsLim (lim f) = ⊤
+```
+
+```agda
+_[_] : (a : Ord) → ⦃ IsLim a ⦄ → Seq
+_[_] (lim f) = f
+```
+
+```agda
 open import Lower using (_∘ⁿ_)
 itn : Func → Ord → Seq
 itn F i n = (F ∘ⁿ n) i
@@ -97,12 +109,55 @@ base-ω = mkFixable (ω ^_) ^-pres
 ```agda
 open Fixable public
 
+sε : Func
+sε a = suc (ε ⟨ a ⟩)
+
+εs : Func
+εs a = ε ⟨ suc a ⟩
+```
+
+```agda
 ε-0 : ε ⟨ 0 ⟩ ≡ itω (ω ^_) 0 _
 ε-0 = refl
 
-ε-suc : let sεa = suc (ε ⟨ a ⟩) in ε ⟨ suc a ⟩ ≡ itω (λ x → sεa + ω ^ x) sεa _
+ε-suc : ε ⟨ suc a ⟩ ≡ itω (λ x → sε a + ω ^ x) (sε a) _
 ε-suc = refl
 
 ε-lim : {w : wf f} → ε ⟨ lim f ⦃ w ⦄ ⟩ ≡ lim- λ n → ε ⟨ f n ⟩
 ε-lim = refl
+```
+
+```agda
+ε-suc-[0] : εs a [ 0 ] ≡ sε a
+ε-suc-[0] = refl
+```
+
+```agda
+ε-suc-[s] : εs a [ suc n ] ≈ itn (ω ^_) (εs a [ n ]) (suc n)
+ε-fix : ε ⟨ a ⟩ ≈ ω ^ ε ⟨ a ⟩
+```
+
+```agda
+ε-fix {(zero)} = l≈ls z≼
+ε-fix {suc a} = l≼l p , {!   !} where
+  p : itn (λ x → sε a + ω ^ x) (sε a) n ≼ ω ^ itn (λ x → sε a + ω ^ x) (sε a) n
+  p {(zero)} =                    begin
+    ε ⟨ a ⟩ + 1                   ≈⟨ s≈s ε-fix ⟩
+    ω ^ ε ⟨ a ⟩ + 1               ≤⟨ a+-pres≼ (<→≺ nz-elim) ⟩
+    ω ^ ε ⟨ a ⟩ + ω ^ ε ⟨ a ⟩     ≈˘⟨ ≡→≈ *-2 ⟩
+    ω ^ ε ⟨ a ⟩ * 2               <⟨ a*-pres≺ (<→≺ (n<ω {2})) ⟩
+    ω ^ ε ⟨ a ⟩ * ω               ∎ where open CrossTreeReasoning; instance _ = ^-nz
+  p {suc n} = {!   !}
+ε-fix {lim f} = {!   !}
+```
+
+```agda
+ε-suc-[s] {a} {n = zero} =        begin-equality
+  εs a [ 1 ]                      ≈⟨ ≈-refl ⟩
+  sε a + ω ^ sε a                 ≈⟨ {!   !} ⟩
+  ε ⟨ a ⟩ + 1 + ω ^ sε a          ≈⟨ {!   !} ⟩
+  ω ^ ε ⟨ a ⟩ + ω ^ 0 + ω ^ sε a  ≈⟨ {!   !} ⟩
+  ω ^ sε a                        ≈⟨ ≈-refl ⟩
+  itn (ω ^_) (εs a [ 0 ]) 1       ∎ where open CrossTreeReasoning
+ε-suc-[s] {n = suc n} = {!   !}
 ```
