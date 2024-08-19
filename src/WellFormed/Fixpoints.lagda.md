@@ -35,14 +35,19 @@ record Normal : Type where
   field
     nml-pres : F preserves _<_
     continuous : ∀ {f} {w : wf f} → F (lim f ⦃ w ⦄) ≡ lim (F ∘ f) ⦃ nml-pres w ⦄
-    ⦃ nml-nz ⦄ : NonZero (F 0)
+    ⦃ nml-zero-nz ⦄ : NonZero (F 0)
 
   instance
-    nml-suc-nz : NonZero (F (suc a))
-    nml-suc-nz = nz-intro $ begin-strict
+    nml-nz : NonZero (F a)
+    nml-nz {(zero)} = it
+    nml-nz {suc a} = nz-intro $ begin-strict
       0                     ≤⟨ z≤ ⟩
       F _                   <⟨ nml-pres zero₁ ⟩
       F (suc _)             ∎ where open SubTreeReasoning
+    nml-nz {lim f} = nz-intro $ begin-strict
+      0                     <⟨ nz-elim ⟩
+      F (f 0)               <⟨ nml-pres f<l ⟩
+      F (lim _)             ∎ where open SubTreeReasoning
 
     lfp-wf : wf (Iₙ F 0)
     lfp-wf {(zero)} = nz-elim
@@ -119,35 +124,14 @@ _[_] (lim f) = f
 module FixpointsProperties {ℱ : Normal}
   (ℱ-infl≼ : (ℱ ⟨_⟩) inflates _≼_)
   (ℱ-pres≼ : (ℱ ⟨_⟩) preserves _≼_)
+  (ℱ-absorb-1 : ∀ {a} → 0 < a → 1 + ℱ ⟨ a ⟩ ≈ ℱ ⟨ a ⟩)
+  (ℱ-absorb-≺ : ∀ {a b} → a ≺ b → ℱ ⟨ a ⟩ + ℱ ⟨ b ⟩ ≈ ℱ ⟨ b ⟩)
   where
-```
-
-```agda
-  fp-infl≼ : (fp ℱ ⟨_⟩) inflates _≼_
-  fp-infl≼ {(zero)} = z≼
-  fp-infl≼ {suc _}  = ≼l {n = 0} (s≼s fp-infl≼)
-  fp-infl≼ {lim f}  = l≼l fp-infl≼
-```
-
-```agda
-  fp-pres≼ : (fp ℱ ⟨_⟩) preserves _≼_
-  fp-pres≼ {y = zero}  z≼ = ≼-refl
-  fp-pres≼ {y = suc y} z≼ = ≼l {n = 0} (≼-suc (fp-pres≼ z≼))
-  fp-pres≼ {y = lim f} z≼ = ≼l {n = 0} (fp-pres≼ z≼)
-  fp-pres≼ (≼l {n} p)     = ≼l {n = n} (fp-pres≼ p)
-  fp-pres≼ (l≼ p)         = l≼ (fp-pres≼ p)
-  fp-pres≼ (s≼s {a} {b} p) = l≼l q where
-    q : fp ℱ ⟨ suc a ⟩ [ n ] ≼ fp ℱ ⟨ suc b ⟩ [ n ]
-    q {n = zero} = s≼s (fp-pres≼ p)
-    q {n = suc n} = +-pres≼ (s≼s (fp-pres≼ p)) (ℱ-pres≼ q)
 ```
 
 ```agda
   ℱ-cong≈ : a ≈ b → ℱ ⟨ a ⟩ ≈ ℱ ⟨ b ⟩
   ℱ-cong≈ (p , q) = ℱ-pres≼ p , ℱ-pres≼ q
-
-  fp-cong≈ : a ≈ b → fp ℱ ⟨ a ⟩ ≈ fp ℱ ⟨ b ⟩
-  fp-cong≈ (p , q) = fp-pres≼ p , fp-pres≼ q
 ```
 
 ```agda
@@ -187,11 +171,18 @@ module FixpointsProperties {ℱ : Normal}
   fp-suc-[s] : fp ℱ ⟨ suc a ⟩ [ suc n ] ≈ ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩
   fp-suc-[s] {a} {n} =                      begin-equality
     fp ℱ ⟨ suc a ⟩ [ suc n ]                ≈⟨ ≈-refl ⟩
-    suc (fp ℱ ⟨ a ⟩) + rhs                  ≈⟨ +a-cong≈ (s≈s fp-fix) ⟩
-    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + 1 + rhs              ≈⟨ {!   !} ⟩
-    rhs                                     ∎ where
+    suc (fp ℱ ⟨ a ⟩) + ℱ ⟨ _ ⟩              ≈⟨ +a-cong≈ (s≈s fp-fix) ⟩
+    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + 1 + ℱ ⟨ _ ⟩          ≈˘⟨ ≡→≈ +-assoc ⟩
+    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + (1 + ℱ ⟨ _ ⟩)        ≈⟨ a+-cong≈ (ℱ-absorb-1 p) ⟩
+    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + ℱ ⟨ _ ⟩              ≈⟨ ℱ-absorb-≺ (<→≺ q) ⟩
+    ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩              ∎ where
     open CrossTreeReasoning
-    rhs = ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩
+    p : 0 < fp ℱ ⟨ suc a ⟩ [ m ]
+    p {(zero)} = z<s
+    p {suc m} = <-trans z<s (+-infl ⦃ nml-nz ℱ ⦄)
+    q : fp ℱ ⟨ a ⟩ < fp ℱ ⟨ suc a ⟩ [ m ]
+    q {(zero)} = zero₁
+    q {suc m} = <-trans q (Fixpoints.wₛ ℱ)
 ```
 
 ```agda
@@ -200,6 +191,51 @@ module FixpointsProperties {ℱ : Normal}
     fp ℱ ⟨ suc a ⟩ [ suc n ]                ≈⟨ fp-suc-[s] ⟩
     ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩              ≈⟨ ℱ-cong≈ fp-suc-[n] ⟩
     ℱ ⟨ Iₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩   ∎ where open CrossTreeReasoning
+```
+
+```agda
+  fp-infl≼ : (fp ℱ ⟨_⟩) inflates _≼_
+  fp-infl≼ {(zero)} = z≼
+  fp-infl≼ {suc _}  = ≼l {n = 0} (s≼s fp-infl≼)
+  fp-infl≼ {lim f}  = l≼l fp-infl≼
+```
+
+```agda
+  fp-pres≼ : (fp ℱ ⟨_⟩) preserves _≼_
+  fp-pres≼ {y = zero}  z≼ = ≼-refl
+  fp-pres≼ {y = suc y} z≼ = ≼l {n = 0} (≼-suc (fp-pres≼ z≼))
+  fp-pres≼ {y = lim f} z≼ = ≼l {n = 0} (fp-pres≼ z≼)
+  fp-pres≼ (≼l {n} p)     = ≼l {n = n} (fp-pres≼ p)
+  fp-pres≼ (l≼ p)         = l≼ (fp-pres≼ p)
+  fp-pres≼ (s≼s {a} {b} p) = l≼l q where
+    q : fp ℱ ⟨ suc a ⟩ [ n ] ≼ fp ℱ ⟨ suc b ⟩ [ n ]
+    q {n = zero} = s≼s (fp-pres≼ p)
+    q {n = suc n} = +-pres≼ (s≼s (fp-pres≼ p)) (ℱ-pres≼ q)
+```
+
+```agda
+  fp-cong≈ : a ≈ b → fp ℱ ⟨ a ⟩ ≈ fp ℱ ⟨ b ⟩
+  fp-cong≈ (p , q) = fp-pres≼ p , fp-pres≼ q
+```
+
+```agda
+  fp-absorb-1 : 0 < a → 1 + fp ℱ ⟨ a ⟩ ≈ fp ℱ ⟨ a ⟩
+  fp-absorb-1 {(zero)} _ = 1+l-absorb
+  fp-absorb-1 {suc a} _  = 1+l-absorb
+  fp-absorb-1 {lim f} _  = 1+l-absorb
+```
+
+```agda
+  fp-absorb-≺ : a ≺ b → fp ℱ ⟨ a ⟩ + fp ℱ ⟨ b ⟩ ≈ fp ℱ ⟨ b ⟩
+  fp-absorb-≺ {a} {b = suc b} (s≼s a≼b) =
+    (l≼ λ {n} →                             begin
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ suc b ⟩ [ n ]     ≤⟨ +a-pres≼ (fp-pres≼ a≼b) ⟩
+      fp ℱ ⟨ b ⟩ + fp ℱ ⟨ suc b ⟩ [ n ]     ≈⟨ {!   !} ⟩
+      fp ℱ ⟨ suc b ⟩                        ∎) ,
+    (l≼ λ {n} → {!   !}
+    ) where
+    open CrossTreeReasoning
+  fp-absorb-≺ (≼l p) = {!   !}
 ```
 
 ```agda
