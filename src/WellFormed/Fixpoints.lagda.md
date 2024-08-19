@@ -77,3 +77,16 @@ record Normal : Type where
     lim- (F ∘ itn F 0)      ≈˘⟨ ≡→≈ nml-cont ⟩
     F lfp                   ∎ where open CrossTreeReasoning
 ```
+
+```agda
+module Jump (i : Ord) (F : Func) ⦃ l : ∀ {a} → IsLim (F a) ⦄
+  (Gₙ : Func → Ord → Seq) (w : wf (Gₙ F i))
+  where
+
+  jump : Func
+  jump zero = lim (Gₙ F i) ⦃ w ⦄
+  jump (suc a) = lim (Gₙ (λ x → j + F x) j) ⦃ {!   !} ⦄
+    module Suc where
+    j = suc (jump a)
+  jump (lim f) = lim (jump ∘ f) ⦃ {!   !} ⦄
+```
