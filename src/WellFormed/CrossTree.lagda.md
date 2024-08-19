@@ -476,7 +476,7 @@ a^-pres≼ : ⦃ _ : NonTrivial a ⦄ → (a ^_) preserves _≼_
 a^-pres≼ z≼ = <→≺ nz-elim                 where instance _ = ^-nz
 a^-pres≼ (s≼s p) = *a-pres≼ (a^-pres≼ p)  where instance _ = ^-nz
 a^-pres≼ (≼l p) = ≼l (a^-pres≼ p)
-a^-pres≼ (l≼ p) = l≼ (a^-pres≼ ⦃ _ ⦄ p)
+a^-pres≼ (l≼ p) = l≼ (a^-pres≼ p)
 ```
 
 ```agda
@@ -525,7 +525,7 @@ a^-infl≼ {a} {x} =          begin
   a ^ x                     ∎ where
   open CrossTreeReasoning
   instance _ : NonTrivial 2   ; _ = _
-  instance _ : NonZero (2 ^ b); _ = ^-nz ⦃ _ ⦄
+  instance _ : NonZero (2 ^ b); _ = ^-nz
   aux : b ≼ 2 ^ b
   aux {(zero)} = z≼
   aux {lim f} = l≼l aux

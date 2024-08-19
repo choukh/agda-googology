@@ -128,9 +128,9 @@ nt-elim {lim f}       = map lim (n<fs f 1)
 instance
   suc-nz : NonZero (suc a)
   suc-nz = _
-  lim-nz : ⦃ _ : wf f ⦄ → NonZero (lim f)
+  lim-nz : {w : wf f} → NonZero (lim f ⦃ w ⦄)
   lim-nz = _
-  lim-nt : ⦃ _ : wf f ⦄ → NonTrivial (lim f)
+  lim-nt : {w : wf f} → NonTrivial (lim f ⦃ w ⦄)
   lim-nt = _
 
 nt-nz : ⦃ NonTrivial a ⦄ → NonZero a
