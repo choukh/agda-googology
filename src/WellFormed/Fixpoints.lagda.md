@@ -38,13 +38,8 @@ continuous {F} pres = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘ f) �
 
 ```agda
 open import Lower using (_∘ⁿ_)
-itn : Func → Ord → Seq
-itn F i n = (F ∘ⁿ n) i
-```
-
-```agda
-itω : (F : Func) (i : Ord) (w : wf (itn F i)) → Ord
-itω F i w = lim (itn F i) ⦃ w ⦄
+Iₙ : Func → Ord → Seq
+Iₙ F i n = (F ∘ⁿ n) i
 ```
 
 ```agda
@@ -64,17 +59,17 @@ record Normal : Type where
       F _                   <⟨ nml-pres zero₁ ⟩
       F (suc _)             ∎ where open SubTreeReasoning
 
-    lfp-wf : wf (itn F 0)
+    lfp-wf : wf (Iₙ F 0)
     lfp-wf {(zero)} = nz-elim
     lfp-wf {suc n} = nml-pres lfp-wf
 
   lfp : Ord
-  lfp = itω F 0 lfp-wf
+  lfp = lim (Iₙ F 0)
 
   lfp-fix : lfp ≈ F lfp
   lfp-fix =                 begin-equality
     lfp                     ≈⟨ l≈ls z≼ ⟩
-    lim- (F ∘ itn F 0)      ≈˘⟨ ≡→≈ nml-cont ⟩
+    lim- (F ∘ Iₙ F 0)       ≈˘⟨ ≡→≈ nml-cont ⟩
     F lfp                   ∎ where open CrossTreeReasoning
 ```
 
