@@ -591,4 +591,3 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
   ω ^ a + ω ^ c             ≈⟨ ω^-absorb p ⟩
   ω ^ c                     ∎ where open CrossTreeReasoning
 ```
-  
