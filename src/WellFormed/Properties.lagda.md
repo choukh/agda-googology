@@ -19,17 +19,18 @@ open import WellFormed.Base
 
 ## 序数函数
 
-我们先定义序数函数的一些性质.
+我们先定义关于序数函数的一些性质.
 
-**定义 2-1-0** 我们把序数函数的类型简记作 $\text{Func}$, 序数的二元关系的类型简记作 $\text{Rel}$, 并约定今后都用大写的 $F$ 表示序数函数.
+**定义 2-1-0** 我们把序数函数的类型简记作 $\text{Func}$, 序数的二元关系的类型简记作 $\text{Rel}$, 并约定用大写的 $F$ 表示序数函数.
 
 ```agda
 Func : Type
 Func = Ord → Ord
-private variable F : Func
 
 Rel : Type₁
 Rel = Ord → Ord → Type
+
+private variable F : Func
 ```
 
 **定义 2-1-1** 我们说一个序数函数 $F$ **保持**一个序数关系 $\sim$, 当且仅当对任意序数 $x, y$ 都有 $x \sim y \to F(x) \sim F(y)$.
@@ -64,20 +65,28 @@ map-inj≤ inj inj< (inr p) = inr (inj p)
 
 ## 一些约定
 
-**记法 2-1-5** 隐参版极限构造子
+**记法 2-1-5** 隐参版极限构造子: 它们与原版的区别在于良构条件为隐式参数, 从而允许从上下文自动推断出它们, 而不用一一显式写出.
 
 ```agda
 lim- : (f : Seq) {w : wf f} → Ord
 lim- f {w} = lim f ⦃ w ⦄
+```
 
+如果我们有 $a$ 通往 $\lim f$ 的序列第 $n$ 项的路径 $r$, 那么我们把 $a$ 通往 $\lim f$ 的路径记作 $\text{rd}[n](r)$.
+
+```agda
 rd[_] : (n : ℕ) {w : wf f} → Road a (f n) → Road a (lim f ⦃ w ⦄)
 rd[_] n = lim {n = n} ⦃ _ ⦄
+```
 
+如果我们有 $a$ 小于 $\lim f$ 的序列第 $n$ 项的证明 $r$, 那么我们把 $a$ 小于 $\lim f$ 的证明记作 $\text{<}[n](r)$.
+
+```agda
 <[_] : (n : ℕ) {w : wf f} → a < f n → a < lim f ⦃ w ⦄
 <[_] n = map rd[ n ]
 ```
 
-**定义 2-1-6** 极限序数的判定
+**事实 2-1-6** 极限序数的判定: 树序数的归纳定义允许我们快速判断一个序数是否是极限序数.
 
 ```agda
 IsLim : Ord → Type
@@ -86,7 +95,7 @@ IsLim (suc a) = ⊥
 IsLim (lim f) = ⊤
 ```
 
-**记法 2-1-7** 极限序数的基本列
+**记法 2-1-7** 极限序数的基本列: 如果 $a$ 是极限序数, 那么我们用 $a[n]$ 表示其基本列的第 $n$ 项. 由序数的定义有 $a[n] < a[n^+]$.
 
 ```agda
 _[_] : (a : Ord) → ⦃ IsLim a ⦄ → Seq
@@ -123,6 +132,9 @@ instance
 
 **事实 2-1-10** 构造子的单射性
 
+- $a^+ =b ^+ → a = b$
+- $\lim f = \lim g → f = g$
+
 ```agda
 suc-inj : suc a ≡ suc b → a ≡ b
 suc-inj refl = refl
@@ -131,13 +143,13 @@ lim-inj : {wff : wf f} {wfg : wf g} → Ord.lim f ⦃ wff ⦄ ≡ lim g ⦃ wfg 
 lim-inj refl = refl
 ```
 
-**事实 2-1-11** 极限路径的反演
+**事实 2-1-11** 极限路径的反演: 如果 $b$ 小于极限序数 $a$, 那么存在一个自然数 $n$ 使得 $b$ 小于 $a[n]$.
 
 ```agda
-lim-inv-rd : {w : wf f} → Road a (lim f ⦃ w ⦄) → Σ[ n ∈ ℕ ] Road a (f n)
+lim-inv-rd : ⦃ _ : IsLim a ⦄ → Road b a → Σ[ n ∈ ℕ ] Road b (a [ n ])
 lim-inv-rd (lim r) = _ , r
 
-lim-inv : {w : wf f} → a < lim f ⦃ w ⦄ → Σ[ n ∈ ℕ ] a < f n
+lim-inv : ⦃ _ : IsLim a ⦄ → b < a → Σ[ n ∈ ℕ ] b < a [ n ]
 lim-inv r with lim-inv-rd (set r)
 ... | n , r = n , ∣ r ∣₁
 ```
