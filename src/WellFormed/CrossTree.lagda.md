@@ -332,8 +332,8 @@ a+-infl≼ {x = lim f} = l≼l a+-infl≼
 ```
 
 ```agda
-1+l-absorb : {w : wf f} → 1 + lim f ⦃ w ⦄ ≈ lim f ⦃ w ⦄
-1+l-absorb {f} {w} = l≼ls (aux (<→≺ w)) , l≼l a+-infl≼ where
+1+l-absorb : IsLim a → 1 + a ≈ a
+1+l-absorb {lim f} tt = l≼ls (aux (<→≺ it)) , l≼l a+-infl≼ where
   aux : a ≺ b → 1 + a ≼ b
   aux {(zero)} (s≼s p) = z≺s
   aux {suc a} (s≼s p)  = s≼s (aux p)
@@ -546,7 +546,7 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
   open CrossTreeReasoning
   aux : ω ^ a + ω ^ f m ≼ lim- (λ m → ω ^ f m)
   aux {m} with <-cmp n m
-  ... | tri< n<m _ _  = ≼l $ begin
+  ... | tri< n<m _ _ = ≼l $ begin
     ω ^ a + ω ^ f m         ≤⟨ fst (ω^-absorb a≺fm) ⟩
     ω ^ f m                 ∎ where
     a≺fm =                  begin-strict
@@ -556,7 +556,7 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
   ... | tri≈ _ refl _ = ≼l $ begin
     ω ^ a + ω ^ f n         ≤⟨ fst (ω^-absorb a≺fn) ⟩
     ω ^ f n                 ∎
-  ... | tri> _ _ m<n  = ≼l $ begin
+  ... | tri> _ _ m<n = ≼l $ begin
     ω ^ a + ω ^ f m         ≤⟨ a+-pres≼ (a^-pres≼ fm≼fn) ⟩
     ω ^ a + ω ^ f n         ≤⟨ fst (ω^-absorb a≺fn) ⟩
     ω ^ f n                 ∎ where

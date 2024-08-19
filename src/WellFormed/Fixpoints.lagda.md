@@ -108,30 +108,19 @@ open Fixpoints public using (fp)
 open Normal public
 ```
 
-```agda
-IsLim : Ord → Type
-IsLim zero = ⊥
-IsLim (suc a) = ⊥
-IsLim (lim f) = ⊤
-```
+### 跨树性质
 
 ```agda
-_[_] : (a : Ord) → ⦃ IsLim a ⦄ → Seq
-_[_] (lim f) = f
-```
+record Fixable (ℱ : Normal) : Type where
+  constructor fixable
+  field
+    fixbl-infl≼ : (ℱ ⟨_⟩) inflates _≼_
+    fixbl-pres≼ : (ℱ ⟨_⟩) preserves _≼_
+    fixbl-isLim : ∀ {a} → NonZero a → IsLim (ℱ ⟨ a ⟩)
+    fixbl-absorb : ∀ {a b} → a ≺ b → ℱ ⟨ a ⟩ + ℱ ⟨ b ⟩ ≈ ℱ ⟨ b ⟩
 
-```agda
-module FixpointsProperties {ℱ : Normal}
-  (ℱ-infl≼ : (ℱ ⟨_⟩) inflates _≼_)
-  (ℱ-pres≼ : (ℱ ⟨_⟩) preserves _≼_)
-  (ℱ-absorb-1 : ∀ {a} → 0 < a → 1 + ℱ ⟨ a ⟩ ≈ ℱ ⟨ a ⟩)
-  (ℱ-absorb-≺ : ∀ {a b} → a ≺ b → ℱ ⟨ a ⟩ + ℱ ⟨ b ⟩ ≈ ℱ ⟨ b ⟩)
-  where
-```
-
-```agda
-  ℱ-cong≈ : a ≈ b → ℱ ⟨ a ⟩ ≈ ℱ ⟨ b ⟩
-  ℱ-cong≈ (p , q) = ℱ-pres≼ p , ℱ-pres≼ q
+  fixbl-cong≈ : a ≈ b → ℱ ⟨ a ⟩ ≈ ℱ ⟨ b ⟩
+  fixbl-cong≈ (p , q) = fixbl-pres≼ p , fixbl-pres≼ q
 ```
 
 ```agda
@@ -144,11 +133,11 @@ module FixpointsProperties {ℱ : Normal}
   fp-fix {a = suc a} = p , q where
     open CrossTreeReasoning
     p =                                     begin
-      fp ℱ ⟨ suc a ⟩                        ≤⟨ l≼l ℱ-infl≼ ⟩
+      fp ℱ ⟨ suc a ⟩                        ≤⟨ l≼l fixbl-infl≼ ⟩
       lim- (λ n → ℱ ⟨ _ ⟩)                  ≈˘⟨ ≡→≈ (continuous ℱ) ⟩
       ℱ ⟨ fp ℱ ⟨ suc a ⟩ ⟩                  ∎
     q[n] = λ {n} →                          begin
-      ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩            ≈⟨ ℱ-cong≈ fp-suc-[n] ⟩
+      ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩            ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
       ℱ ⟨ Iₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩ ≈⟨ ≈-refl ⟩
       Iₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) (suc n) ≈˘⟨ fp-suc-[n] ⟩
       fp ℱ ⟨ suc a ⟩ [ suc n ]              ∎
@@ -173,8 +162,8 @@ module FixpointsProperties {ℱ : Normal}
     fp ℱ ⟨ suc a ⟩ [ suc n ]                ≈⟨ ≈-refl ⟩
     suc (fp ℱ ⟨ a ⟩) + ℱ ⟨ _ ⟩              ≈⟨ +a-cong≈ (s≈s fp-fix) ⟩
     ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + 1 + ℱ ⟨ _ ⟩          ≈˘⟨ ≡→≈ +-assoc ⟩
-    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + (1 + ℱ ⟨ _ ⟩)        ≈⟨ a+-cong≈ (ℱ-absorb-1 p) ⟩
-    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + ℱ ⟨ _ ⟩              ≈⟨ ℱ-absorb-≺ (<→≺ q) ⟩
+    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + (1 + ℱ ⟨ _ ⟩)        ≈⟨ a+-cong≈ (1+l-absorb $ fixbl-isLim $ nz-intro p) ⟩
+    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + ℱ ⟨ _ ⟩              ≈⟨ fixbl-absorb (<→≺ q) ⟩
     ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩              ∎ where
     open CrossTreeReasoning
     p : 0 < fp ℱ ⟨ suc a ⟩ [ m ]
@@ -189,9 +178,11 @@ module FixpointsProperties {ℱ : Normal}
   fp-suc-[n] {n = zero} = ≡→≈ fp-suc-[0]
   fp-suc-[n] {a} {n = suc n} =              begin-equality
     fp ℱ ⟨ suc a ⟩ [ suc n ]                ≈⟨ fp-suc-[s] ⟩
-    ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩              ≈⟨ ℱ-cong≈ fp-suc-[n] ⟩
+    ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩              ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
     ℱ ⟨ Iₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩   ∎ where open CrossTreeReasoning
 ```
+
+### 性质的封闭
 
 ```agda
   fp-infl≼ : (fp ℱ ⟨_⟩) inflates _≼_
@@ -210,7 +201,7 @@ module FixpointsProperties {ℱ : Normal}
   fp-pres≼ (s≼s {a} {b} p) = l≼l q where
     q : fp ℱ ⟨ suc a ⟩ [ n ] ≼ fp ℱ ⟨ suc b ⟩ [ n ]
     q {n = zero} = s≼s (fp-pres≼ p)
-    q {n = suc n} = +-pres≼ (s≼s (fp-pres≼ p)) (ℱ-pres≼ q)
+    q {n = suc n} = +-pres≼ (s≼s (fp-pres≼ p)) (fixbl-pres≼ q)
 ```
 
 ```agda
@@ -219,19 +210,19 @@ module FixpointsProperties {ℱ : Normal}
 ```
 
 ```agda
-  fp-absorb-1 : 0 < a → 1 + fp ℱ ⟨ a ⟩ ≈ fp ℱ ⟨ a ⟩
-  fp-absorb-1 {(zero)} _ = 1+l-absorb
-  fp-absorb-1 {suc a} _  = 1+l-absorb
-  fp-absorb-1 {lim f} _  = 1+l-absorb
+  fp-isLim : NonZero a → IsLim (fp ℱ ⟨ a ⟩)
+  fp-isLim {(zero)} _ = _
+  fp-isLim {suc a} _  = _
+  fp-isLim {lim f} _  = _
 ```
 
 ```agda
-  fp-absorb-≺ : a ≺ b → fp ℱ ⟨ a ⟩ + fp ℱ ⟨ b ⟩ ≈ fp ℱ ⟨ b ⟩
-  fp-absorb-≺ {a} {b = suc b} (s≼s a≼b) =
+  fp-absorb : a ≺ b → fp ℱ ⟨ a ⟩ + fp ℱ ⟨ b ⟩ ≈ fp ℱ ⟨ b ⟩
+  fp-absorb {a} {b = suc b} (s≼s a≼b) =
     (l≼ λ {n} →                                     begin
       fp ℱ ⟨ a ⟩ + fp ℱ ⟨ suc b ⟩ [ n ]             ≤⟨ +a-pres≼ (fp-pres≼ a≼b) ⟩
       fp ℱ ⟨ b ⟩ + fp ℱ ⟨ suc b ⟩ [ n ]             ≤⟨ +a-pres≼ ≼-zero ⟩
-      suc (fp ℱ ⟨ b ⟩) + fp ℱ ⟨ suc b ⟩ [ n ]       ≤⟨ a+-pres≼ ℱ-infl≼ ⟩
+      suc (fp ℱ ⟨ b ⟩) + fp ℱ ⟨ suc b ⟩ [ n ]       ≤⟨ a+-pres≼ fixbl-infl≼ ⟩
       suc (fp ℱ ⟨ b ⟩) + ℱ ⟨ fp ℱ ⟨ suc b ⟩ [ n ] ⟩ ≈⟨ ≈-refl ⟩
       fp ℱ ⟨ suc b ⟩ [ suc n ]                      ≤⟨ f≼l {n = suc n} ⟩
       fp ℱ ⟨ suc b ⟩                                ∎) ,
@@ -241,14 +232,36 @@ module FixpointsProperties {ℱ : Normal}
       fp ℱ ⟨ a ⟩ + fp ℱ ⟨ suc b ⟩ [ suc n ]         ≤⟨ f≼l {n = suc n} ⟩
       fp ℱ ⟨ a ⟩ + fp ℱ ⟨ suc b ⟩                   ∎) where
     open CrossTreeReasoning
-  fp-absorb-≺ {a} {b = lim f} (≼l {n} a≺fn) = l≼ aux , l≼l a+-infl≼ where
+  fp-absorb {a} {b = lim f} (≼l {n} a≺fn) = l≼ aux , l≼l a+-infl≼ where
     open CrossTreeReasoning
     aux : fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f m ⟩ ≼ lim- (λ m → fp ℱ ⟨ f m ⟩)
     aux {m} with <-cmp n m
-    ... | tri< n<m _ _  = {!   !}
-    ... | tri≈ _ refl _ = {!   !}
-    ... | tri> _ _ m<n  = {!   !}
+    ... | tri< n<m _ _ = ≼l $                       begin
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f m ⟩                     ≤⟨ fst (fp-absorb a≺fm) ⟩
+      fp ℱ ⟨ f m ⟩                                  ∎ where
+      a≺fm =                                        begin-strict
+        a                                           <⟨ a≺fn ⟩
+        f n                                         <⟨ <→≺ (seq-pres n<m) ⟩
+        f m                                         ∎
+    ... | tri≈ _ refl _ = ≼l $                      begin
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f n ⟩                     ≤⟨ fst (fp-absorb a≺fn) ⟩
+      fp ℱ ⟨ f n ⟩                                  ∎
+    ... | tri> _ _ m<n = ≼l $                       begin
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f m ⟩                     ≤⟨ a+-pres≼ (fp-pres≼ fm≼fn) ⟩
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f n ⟩                     ≤⟨ fst (fp-absorb a≺fn) ⟩
+      fp ℱ ⟨ f n ⟩                                  ∎ where
+      fm≼fn =                                       begin
+        f m                                         <⟨ <→≺ (seq-pres m<n) ⟩
+        f n                                         ∎
 ```
+
+```agda
+fp-fixbl : ∀ {ℱ} → Fixable ℱ → Fixable (fp ℱ)
+fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
+  where open Fixable fixbl
+```
+
+## 不动点的实例
 
 ```agda
 ω^ : Normal
@@ -256,8 +269,49 @@ module FixpointsProperties {ℱ : Normal}
 ```
 
 ```agda
+ω^-isLim : NonZero a → IsLim (ω ^ a)
+ω^-isLim {suc a} _ = _
+ω^-isLim {lim f} _ = _
+```
+
+```agda
+ω^-fixbl : Fixable ω^
+ω^-fixbl = fixable a^-infl≼ a^-pres≼ ω^-isLim ω^-absorb
+```
+
+```agda
 ε ζ η : Normal
 ε = fp ω^
 ζ = fp ε
 η = fp ζ
+```
+
+```agda
+ε-fixbl : Fixable ε
+ε-fixbl = fp-fixbl ω^-fixbl
+
+ζ-fixbl : Fixable ζ
+ζ-fixbl = fp-fixbl ε-fixbl
+
+η-fixbl : Fixable η
+η-fixbl = fp-fixbl ζ-fixbl
+```
+
+```agda
+η-0 : η ⟨ 0 ⟩ ≡ lfp ζ
+η-0 = refl
+
+η-suc : η ⟨ suc a ⟩ ≡ lim- (Iₙ (λ x → suc (η ⟨ a ⟩) + ζ ⟨ x ⟩) (suc (η ⟨ a ⟩)))
+η-suc = refl
+
+η-lim : {w : wf f} → η ⟨ lim f ⦃ w ⦄ ⟩ ≡ lim- λ n → η ⟨ f n ⟩
+η-lim = refl
+```
+
+```agda
+η-fix : η ⟨ a ⟩ ≈ ζ ⟨ η ⟨ a ⟩ ⟩
+η-fix = Fixable.fp-fix ζ-fixbl
+
+η-suc-[n] : η ⟨ suc a ⟩ [ n ] ≈ Iₙ (ζ ⟨_⟩) (suc (η ⟨ a ⟩)) n
+η-suc-[n] = Fixable.fp-suc-[n] ζ-fixbl
 ```
