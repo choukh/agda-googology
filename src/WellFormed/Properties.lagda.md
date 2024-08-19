@@ -307,7 +307,13 @@ s≤s-inj : suc injects _≤_
 s≤s-inj = map-inj≤ suc-inj s<s-inj
 ```
 
-**定理 2-1-20**
+**定理 2-1-20** 定理 2-1-17-(1) 的逆命题 $a^+ ≤ b → a < b$ 成立.  
+**证明** 对 $b$ 归纳, 且讨论 $r : a^+ ≤ b$.
+
+- $b = 0$ 的情况不可能.
+- 若 $b = b'^+$ 且 $a^+ < b'^+$, 由推论 2-1-19 有 $a < b'$, 所以 $a < b'^+$.
+- 若 $b = b'^+$ 且 $a^+ = b'^+$, 目标改写变为 $b' < b$, 显然成立.
+- 若 $b = \lim(f)$, $r$ 只能为 $r = \lim(r') : a^+ < \lim(f)$ 且 $r' : a^+ < f(n)$, 由传递性即得 $a < a^+ < f(n) < \lim(f)$. ∎
 
 ```agda
 s≤→<-rd : NSRoad (suc a) b → Road a b
@@ -320,33 +326,39 @@ s≤→< (inl r)    = map (s≤→<-rd ∘ inl) r
 s≤→< (inr refl) = zero₁
 ```
 
-**定理 2-1-21**
+**定理 2-1-21** 后继运算在极限序数下封闭.  
+**证明** 要证对任意 $b$ 小于极限序数 $a$ 都有 $b^+ < a$. 讨论 $r : b < a$, 只能有 $r = \lim(r') : b < a$, 且 $r' : b < a[n]$. 由定理 2-1-17 即传递性即得 $b^+ < a[n]^+ ≤ a$. ∎
 
 ```agda
-s<l-rd : {w : wf f} → Road a (lim f ⦃ w ⦄) → Road (suc a) (lim f ⦃ w ⦄)
-s<l-rd {a} (lim {f} {n} r) = begin-strict
-  suc a           <⟨ s<s-rd r ⟩
-  suc (f n)       ≤⟨ <→s≤-rd f<l-rd ⟩
-  lim- f          ∎ where open RoadReasoning
+s<l-rd : ⦃ _ : IsLim a ⦄ → Road b a → Road (suc b) a
+s<l-rd {a} {b} (lim {n} r) = begin-strict
+  suc b           <⟨ s<s-rd r ⟩
+  suc (a [ n ])   ≤⟨ <→s≤-rd f<l-rd ⟩
+  a               ∎ where open RoadReasoning
 
-s<l : {w : wf f} → a < lim f ⦃ w ⦄ → suc a < lim f ⦃ w ⦄
+s<l : ⦃ _ : IsLim a ⦄ → b < a → suc b < a
 s<l = map s<l-rd
 ```
 
-**定理 2-1-22**
+**定理 2-1-22** 直接前驱在极限序数上封闭.  
+**证明** 要证对任意极限序数 $a ≤ b^+$ 有 $a ≤ b$. 讨论 $a ≤ b^+$.
+
+- 不可能有 $a = b^+$ 的情况, 因为 $b^+$ 不可能是极限序数.
+- 若 $a < a^+$, 有 $a = a$.
+- 若 $a < b^+$, 必然有 $a < b$. ∎
 
 ```agda
-l≤p-rd : {w : wf f} → NSRoad (lim f ⦃ w ⦄) (suc a) → NSRoad (lim f ⦃ w ⦄) a
-l≤p-rd (inl zero)    = inr refl
-l≤p-rd (inl (suc r)) = inl r
+l≤p-rd : ⦃ _ : IsLim a ⦄ → NSRoad a (suc b) → NSRoad a b
+l≤p-rd {lim f} (inl zero)    = inr refl
+l≤p-rd {lim f} (inl (suc r)) = inl r
 
-l≤p : {w : wf f} → lim f ⦃ w ⦄ ≤ suc a → lim f ⦃ w ⦄ ≤ a
-l≤p (inl r) = ns→≤ (l≤p-rd (inl (set r)))
+l≤p : ⦃ _ : IsLim a ⦄ → a ≤ suc b → a ≤ b
+l≤p {lim f} (inl r) = ns→≤ (l≤p-rd (inl (set r)))
 ```
 
 ## ω的性质
 
-**定义 2-1-23**
+**定义 2-1-23** 由定义 2-1-9, 显然 $\text{fin}$ 是良构序列, 我们把 $\lim(\text{fin})$ 记作 $\omega$.
 
 ```agda
 instance
@@ -357,7 +369,11 @@ instance
 ω = lim fin
 ```
 
-**引理 2-1-24**
+**引理 2-1-24** 有限序数 $n$ 都小于 $\omega$.  
+**证明** 对 $n$ 归纳.
+
+- 若 $n$ 为零, 由引理 2-1-15 可知零小于极限序数.
+- 若 $n$ 为后继, 由定理 2-1-21 可知后继序数小于极限序数, 只要其直接前驱小于该极限序数, 而这是归纳假设. ∎
 
 ```agda
 n<ω : fin n < ω
@@ -365,7 +381,11 @@ n<ω {n = zero}  = z<l
 n<ω {n = suc n} = s<l n<ω
 ```
 
-**引理 2-1-25**
+**引理 2-1-25** 任意基本列的第 $n$ 项大于等于 $n$.  
+**证明** 对 $n$ 归纳.
+
+- 若 $n$ 为零, 显然 $0 ≤ f(0)$.
+- 若 $n$ 为后继, 由归纳假设 $n ≤ f(n)$ 可得 $n^+ ≤ f(n)^+ < f(n^+)$. ∎
 
 ```agda
 n≤fn : ∀ f → ⦃ _ : wf f ⦄ → fin n ≤ f n
@@ -376,7 +396,8 @@ n≤fn {n = suc n} f  = begin
   f (suc n)           ∎ where open SubTreeReasoning
 ```
 
-**推论 2-1-26**
+**推论 2-1-26** 任意基本列的第 $n^+$ 项大于 $n$.  
+**证明** $n ≤ f(n) < f(n^+)$. ∎
 
 ```agda
 n<fs : ∀ f n → ⦃ _ : wf f ⦄ → fin n < f (suc n)
