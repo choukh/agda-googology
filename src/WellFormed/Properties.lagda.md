@@ -91,6 +91,9 @@ IsLim (lim f) = ⊤
 ```agda
 _[_] : (a : Ord) → ⦃ IsLim a ⦄ → Seq
 _[_] (lim f) = f
+
+[]-wf : ⦃ _ : IsLim a ⦄ → a [ n ] < a [ suc n ]
+[]-wf {lim f} = it
 ```
 
 **定义 2-1-8** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$

@@ -304,8 +304,8 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 η-suc : η ⟨ suc a ⟩ ≡ lim- (Itₙ (λ x → suc (η ⟨ a ⟩) + ζ ⟨ x ⟩) (suc (η ⟨ a ⟩)))
 η-suc = refl
 
-η-lim : {w : wf f} → η ⟨ lim f ⦃ w ⦄ ⟩ ≡ lim- λ n → η ⟨ f n ⟩
-η-lim = refl
+η-lim : ⦃ _ : IsLim a ⦄ → η ⟨ a ⟩ ≡ lim (λ n → η ⟨ a [ n ] ⟩) ⦃ nml-pres η []-wf ⦄
+η-lim {lim f} = refl
 ```
 
 ```agda
