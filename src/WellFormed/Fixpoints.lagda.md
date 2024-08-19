@@ -32,8 +32,8 @@ _[_] (lim f) = f
 ```
 
 ```agda
-continuous : ∀ {F} → F preserves _<_ → Set
-continuous {F} pres = ∀ {f} ⦃ _ : wf f ⦄ → F (lim f) ≡ lim (F ∘ f) ⦃ pres it ⦄
+continuous : {F : Func} → F preserves _<_ → Type
+continuous {F} pres = ∀ {f} {w : wf f} → F (lim f ⦃ w ⦄) ≡ lim (F ∘ f) ⦃ pres w ⦄
 ```
 
 ```agda
@@ -44,7 +44,7 @@ Iₙ F i n = (F ∘ⁿ n) i
 
 ```agda
 record Normal : Type where
-  constructor mkNormal
+  constructor normal
   field _⟨_⟩ : Func
   private F = _⟨_⟩
   field
@@ -94,27 +94,40 @@ module Jump (i : Ord) (F : Func) (Gₙ : Func → Ord → Seq)
   F⁺-pres-rd (lim {n} r) = rd[ n ] $ F⁺-pres-rd r
 
   jump : Normal
-  jump = mkNormal F⁺ F⁺-pres refl
+  jump = normal F⁺ F⁺-pres refl
 
 open Jump public using (jump)
 ```
 
 ```agda
-fixpt : Normal → Normal
-fixpt ℱ = jump 0 F Iₙ zero w₀ wₛ
-  module Fixpt where
+module Fixpt (ℱ : Normal) where
   open Normal ℱ renaming (_⟨_⟩ to F)
-  w₀ : wf (Iₙ F 0)
-  w₀ {(zero)} = it
-  w₀ {suc n} = nml-pres w₀
-  wₛ : wf (Iₙ (λ x → (suc a) + (F x)) (suc a))
+
+  wₛ : wf (Iₙ (λ x → suc a + F x) (suc a))
   wₛ {n = zero} = +-infl
   wₛ {n = suc n} = +-pres (nml-pres wₛ)
+
+  fixpt : Normal
+  fixpt = jump 0 F Iₙ zero lfp-wf wₛ
+
+open Fixpt public using (fixpt)
+open Normal public
+```
+
+```agda
+module _ {ℱ : Normal} where
+  fixpt-fix : fixpt ℱ ⟨ a ⟩ ≈ ℱ ⟨ fixpt ℱ ⟨ a ⟩ ⟩
+  fixpt-fix {a = zero}  = lfp-fix ℱ
+  fixpt-fix {a = suc a} = {!   !}
+  fixpt-fix {a = lim f} =   begin-equality
+    fixpt ℱ ⟨ lim f ⟩       ≈⟨ l≈l fixpt-fix ⟩
+    lim- (λ n → ℱ ⟨ _ ⟩)    ≈˘⟨ ≡→≈ (nml-cont ℱ) ⟩
+    ℱ ⟨ fixpt ℱ ⟨ lim f ⟩ ⟩ ∎ where open CrossTreeReasoning
 ```
 
 ```agda
 ω^ : Normal
-ω^ = mkNormal (ω ^_) ^-pres refl
+ω^ = normal (ω ^_) ^-pres refl
 ```
 
 ```agda
