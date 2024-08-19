@@ -298,7 +298,7 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 ```
 
 ```agda
-η-0 : η ⟨ 0 ⟩ ≡ lfp ζ
+η-0 : η ⟨ 0 ⟩ ≡ lim- (Itₙ (ζ ⟨_⟩) 0)
 η-0 = refl
 
 η-suc : η ⟨ suc a ⟩ ≡ lim- (Itₙ (λ x → suc (η ⟨ a ⟩) + ζ ⟨ x ⟩) (suc (η ⟨ a ⟩)))
