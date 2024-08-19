@@ -178,10 +178,8 @@ l≈ls p = l≼ (λ { {(zero)} → ≼l p ; {suc n} → f≼l }) , l≼ f≼l
 ## 严格序
 
 ```agda
-_≺_ _⋠_ _⊀_ : Rel; infix 6 _≺_ _⋠_ _⊀_
+_≺_ : Rel; infix 6 _≺_
 a ≺ b = suc a ≼ b 
-a ⋠ b = a ≼ b → ⊥
-a ⊀ b = a ≺ b → ⊥
 ```
 
 ```agda
@@ -217,8 +215,8 @@ z≺s = s≼s z≼
 ≼→≺s : a ≼ b → a ≺ suc b
 ≼→≺s z≼ = z≺s
 ≼→≺s (s≼s p) = s≼s (s≼s p)
-≼→≺s (≼l p) = s≼s (≼l p)
-≼→≺s (l≼ p) = s≼s (l≼ p)
+≼→≺s (≼l p)  = s≼s (≼l p)
+≼→≺s (l≼ p)  = s≼s (l≼ p)
 ```
 
 ```agda
@@ -227,23 +225,8 @@ z≺s = s≼s z≼
 ```
 
 ```agda
-s⋠ : suc a ⋠ a
-l⋠f : {w : wf f} → lim f ⦃ w ⦄ ⋠ f n
-l⋠f p = s⋠ (≼-trans (≤→≼ (<→s≤ f<l)) p)
-
-s⋠ {suc a} p = s⋠ (s≼s-inj p)
-s⋠ {lim f} (≼l p) = l⋠f (≼-trans ≼-zero p)
-```
-
-```agda
-≺-irrefl : Irreflexive _≈_ _≺_
-≺-irrefl (_ , p) q = s⋠ (≼-trans q p)
-
 ≺-trans : Transitive _≺_
 ≺-trans p q = ≼-trans p (≺→≼ q)
-
-≺-asym : Asymmetric _≺_
-≺-asym p q = ≺-irrefl ≈-refl (≺-trans p q)
 ```
 
 ```agda
@@ -268,6 +251,14 @@ s⋠ {lim f} (≼l p) = l⋠f (≼-trans ≼-zero p)
 ≺-wfnd zero    = acc λ ()
 ≺-wfnd (suc a) = acc λ { (s≼s p) → ≺-acc p (≺-wfnd a) }
 ≺-wfnd (lim f) = acc λ { (≼l p) → ≺-acc (≺→≼ p) (≺-wfnd (f _)) }
+```
+
+```agda
+≺-irrefl : Irreflexive _≈_ _≺_
+≺-irrefl = wf⇒irrefl ≺-resp-≈ ≈-sym ≺-wfnd
+
+≺-asym : Asymmetric _≺_
+≺-asym = wf⇒asym ≺-wfnd
 ```
 
 ## 结构实例化
