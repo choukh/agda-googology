@@ -19,22 +19,7 @@ open import WellFormed.Arithmetic
 open import WellFormed.CrossTree
 ```
 
-```agda
-IsLim : Ord → Type
-IsLim zero = ⊥
-IsLim (suc a) = ⊥
-IsLim (lim f) = ⊤
-```
-
-```agda
-_[_] : (a : Ord) → ⦃ IsLim a ⦄ → Seq
-_[_] (lim f) = f
-```
-
-```agda
-continuous : {F : Func} → F preserves _<_ → Type
-continuous {F} pres = ∀ {f} {w : wf f} → F (lim f ⦃ w ⦄) ≡ lim (F ∘ f) ⦃ pres w ⦄
-```
+## 不动点定理
 
 ```agda
 open import Lower using (_∘ⁿ_)
@@ -49,7 +34,7 @@ record Normal : Type where
   private F = _⟨_⟩
   field
     nml-pres : F preserves _<_
-    nml-cont : continuous nml-pres
+    continuous : ∀ {f} {w : wf f} → F (lim f ⦃ w ⦄) ≡ lim (F ∘ f) ⦃ nml-pres w ⦄
     ⦃ nml-nz ⦄ : NonZero (F 0)
 
   instance
@@ -69,9 +54,11 @@ record Normal : Type where
   lfp-fix : lfp ≈ F lfp
   lfp-fix =                 begin-equality
     lfp                     ≈⟨ l≈ls z≼ ⟩
-    lim- (F ∘ Iₙ F 0)       ≈˘⟨ ≡→≈ nml-cont ⟩
+    lim- (F ∘ Iₙ F 0)       ≈˘⟨ ≡→≈ continuous ⟩
     F lfp                   ∎ where open CrossTreeReasoning
 ```
+
+## 跳出运算
 
 ```agda
 module Jump (i : Ord) (F : Func) (Gₙ : Func → Ord → Seq)
@@ -99,30 +86,89 @@ module Jump (i : Ord) (F : Func) (Gₙ : Func → Ord → Seq)
 open Jump public using (jump)
 ```
 
+## 不动点的枚举
+
 ```agda
-module Fixpt (ℱ : Normal) where
+module Fixpoints (ℱ : Normal) where
   open Normal ℱ renaming (_⟨_⟩ to F)
 
   wₛ : wf (Iₙ (λ x → suc a + F x) (suc a))
   wₛ {n = zero} = +-infl
   wₛ {n = suc n} = +-pres (nml-pres wₛ)
 
-  fixpt : Normal
-  fixpt = jump 0 F Iₙ zero lfp-wf wₛ
+  fp : Normal
+  fp = jump 0 F Iₙ zero lfp-wf wₛ
 
-open Fixpt public using (fixpt)
+open Fixpoints public using (fp)
 open Normal public
 ```
 
 ```agda
-module _ {ℱ : Normal} where
-  fixpt-fix : fixpt ℱ ⟨ a ⟩ ≈ ℱ ⟨ fixpt ℱ ⟨ a ⟩ ⟩
-  fixpt-fix {a = zero}  = lfp-fix ℱ
-  fixpt-fix {a = suc a} = {!   !}
-  fixpt-fix {a = lim f} =   begin-equality
-    fixpt ℱ ⟨ lim f ⟩       ≈⟨ l≈l fixpt-fix ⟩
-    lim- (λ n → ℱ ⟨ _ ⟩)    ≈˘⟨ ≡→≈ (nml-cont ℱ) ⟩
-    ℱ ⟨ fixpt ℱ ⟨ lim f ⟩ ⟩ ∎ where open CrossTreeReasoning
+IsLim : Ord → Type
+IsLim zero = ⊥
+IsLim (suc a) = ⊥
+IsLim (lim f) = ⊤
+```
+
+```agda
+_[_] : (a : Ord) → ⦃ IsLim a ⦄ → Seq
+_[_] (lim f) = f
+```
+
+```agda
+module FixpointsProperties {ℱ : Normal} (ℱ-pres≼ : (ℱ ⟨_⟩) preserves _≼_) where
+  ℱ-cong≈ : a ≈ b → ℱ ⟨ a ⟩ ≈ ℱ ⟨ b ⟩
+  ℱ-cong≈ (p , q) = ℱ-pres≼ p , ℱ-pres≼ q
+```
+
+```agda
+  fp-pres≼ : (fp ℱ ⟨_⟩) preserves _≼_
+  fp-pres≼ {y = zero}  z≼ = ≼-refl
+  fp-pres≼ {y = suc y} z≼ = ≼l {n = 0} (≼-suc (fp-pres≼ z≼))
+  fp-pres≼ {y = lim f} z≼ = ≼l {n = 0} (fp-pres≼ z≼)
+  fp-pres≼ (≼l {n} p)     = ≼l {n = n} (fp-pres≼ p)
+  fp-pres≼ (l≼ p)         = l≼ (fp-pres≼ p)
+  fp-pres≼ (s≼s {a} {b} p) = l≼l q where
+    q : fp ℱ ⟨ suc a ⟩ [ n ] ≼ fp ℱ ⟨ suc b ⟩ [ n ]
+    q {n = zero} = s≼s (fp-pres≼ p)
+    q {n = suc n} = +-pres≼ (s≼s (fp-pres≼ p)) (ℱ-pres≼ q)
+```
+
+```agda
+  fp-cong≈ : a ≈ b → fp ℱ ⟨ a ⟩ ≈ fp ℱ ⟨ b ⟩
+  fp-cong≈ (p , q) = fp-pres≼ p , fp-pres≼ q
+```
+
+```agda
+  fp-fix : fp ℱ ⟨ a ⟩ ≈ ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩
+  fp-suc-[n] : fp ℱ ⟨ suc a ⟩ [ n ] ≈ Iₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n
+```
+
+```agda
+  fp-fix {a = zero}  = lfp-fix ℱ
+  fp-fix {a = suc a} = {!   !}
+  fp-fix {a = lim f} =      begin-equality
+    fp ℱ ⟨ lim f ⟩          ≈⟨ l≈l fp-fix ⟩
+    lim- (λ n → ℱ ⟨ _ ⟩)    ≈˘⟨ ≡→≈ (continuous ℱ) ⟩
+    ℱ ⟨ fp ℱ ⟨ lim f ⟩ ⟩    ∎ where open CrossTreeReasoning
+```
+
+```agda
+  fp-suc-[0] : fp ℱ ⟨ suc a ⟩ [ 0 ] ≡ suc (fp ℱ ⟨ a ⟩)
+  fp-suc-[0] = refl
+```
+
+```agda
+  fp-suc-[s] : fp ℱ ⟨ suc a ⟩ [ suc n ] ≈ ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩
+  fp-suc-[s] = {!   !}
+```
+
+```agda
+  fp-suc-[n] {n = zero} = ≡→≈ fp-suc-[0]
+  fp-suc-[n] {a} {n = suc n} =              begin-equality
+    fp ℱ ⟨ suc a ⟩ [ suc n ]                ≈⟨ fp-suc-[s] ⟩
+    ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩              ≈⟨ ℱ-cong≈ fp-suc-[n] ⟩
+    ℱ ⟨ Iₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩   ∎ where open CrossTreeReasoning
 ```
 
 ```agda
@@ -132,7 +178,7 @@ module _ {ℱ : Normal} where
 
 ```agda
 ε ζ η : Normal
-ε = fixpt ω^
-ζ = fixpt ε
-η = fixpt ζ
+ε = fp ω^
+ζ = fp ε
+η = fp ζ
 ```
