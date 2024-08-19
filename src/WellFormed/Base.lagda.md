@@ -43,6 +43,7 @@ open import Cubical.HITs.PropositionalTruncation public
 
 ```agda
 open import Data.Nat as ℕ public using (ℕ; zero; suc)
+open import Data.Nat.Properties as ℕ public using (<-cmp)
 open import Function public using (id; flip; _∘_; _$_; _∋_; it; case_of_)
 open import Relation.Binary.PropositionalEquality public
   using (_≡_; refl; sym; trans; cong; subst)
@@ -275,8 +276,8 @@ open OrdSet public using (isSetOrd; isProp≡)
 接下来我们考察路径关系及其截断——子树关系. 我们追加导入标准库中关于自然数的引理, 以及序关系的相关概念, 如什么是严格偏序, 什么是非严格偏序等.
 
 ```agda
-import Data.Nat.Properties as ℕ
 open import Relation.Binary.Definitions
+open import Relation.Binary.Definitions public using (tri<; tri≈; tri>)
 open import Relation.Binary.Structures {A = Ord} _≡_
 open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
 open import Induction.WellFounded
@@ -556,7 +557,7 @@ seq-pres {f} {m} (ℕ.s≤s {n} m≤n) with ℕ.m≤n⇒m<n∨m≡n m≤n
 
 ```agda
 seq-inj≡ : ∀ f → ⦃ wf f ⦄ → f m ≡ f n → m ≡ n
-seq-inj≡ {m} {n} _ eq with ℕ.<-cmp m n
+seq-inj≡ {m} {n} _ eq with <-cmp m n
 ... | tri< m<n _ _  = ⊥-elim $ <-irrefl eq (seq-pres m<n)
 ... | tri≈ _ refl _ = refl
 ... | tri> _ _ n<m  = ⊥-elim $ <-irrefl (sym eq) (seq-pres n<m)
@@ -567,7 +568,7 @@ seq-inj≡ {m} {n} _ eq with ℕ.<-cmp m n
 
 ```agda
 seq-inj< : ∀ f → ⦃ wf f ⦄ → f m < f n → m ℕ.< n
-seq-inj< {m} {n} _ r with ℕ.<-cmp m n
+seq-inj< {m} {n} _ r with <-cmp m n
 ... | tri< m<n _ _  = m<n
 ... | tri≈ _ refl _ = ⊥-elim $ <-irrefl refl r
 ... | tri> _ _ n<m  = ⊥-elim $ <-asym r (seq-pres n<m)
@@ -631,7 +632,7 @@ isPropConnex = isProp⊎ squash₁ isProp≤ λ r s → <-irrefl refl (<-≤-tra
 <-connex-pre zero    (suc s) = inr $ inl ∣ s ∣₁
 <-connex-pre (suc r) zero    = inl ∣ r ∣₁
 <-connex-pre (suc r) (suc s) = <-connex-pre r s
-<-connex-pre (lim {n} r) (lim {n = m} s) with ℕ.<-cmp n m
+<-connex-pre (lim {n} r) (lim {n = m} s) with <-cmp n m
 ... | tri< n<m _ _  = rec isPropConnex (λ t → <-connex-pre (rd-trans r t) s) (seq-pres n<m)
 ... | tri≈ _ refl _ = <-connex-pre r s
 ... | tri> _ _ m<n  = rec isPropConnex (λ t → <-connex-pre r (rd-trans s t)) (seq-pres m<n)
