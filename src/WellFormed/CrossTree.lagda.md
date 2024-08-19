@@ -314,52 +314,7 @@ module CrossTreeReasoning where
 
 ## 跨树算术定理
 
-### 补充引理
-
-```agda
-import Data.Nat as ℕ
-import Data.Nat.Properties as ℕ
-
-+-emb : fin m + fin n ≡ fin (m ℕ.+ n)
-+-emb {m} {n = zero} =    begin-equality
-  fin m + 0               ≈⟨ refl ⟩
-  fin m                   ≈˘⟨ cong fin (ℕ.+-identityʳ m) ⟩
-  fin (m ℕ.+ 0)           ∎ where open SubTreeReasoning
-+-emb {m} {n = suc n} =   begin-equality
-  fin m + fin (suc n)     ≈⟨ refl ⟩
-  suc (fin m + fin n)     ≈⟨ cong suc +-emb ⟩
-  suc (fin (m ℕ.+ n))     ≈⟨ refl ⟩
-  fin (suc (m ℕ.+ n))     ≈˘⟨ cong fin (ℕ.+-suc m n) ⟩
-  fin (m ℕ.+ suc n)       ∎ where open SubTreeReasoning
-```
-
-```agda
-+-assoc-n : ⦃ _ : NonZero a ⦄ → a + a * fin n ≡ a * fin n + a
-+-assoc-n {n = zero} = sym +a-id
-+-assoc-n {a} {n = suc n} = begin-equality
-  a + a * suc (fin n)     ≈⟨ refl ⟩
-  a + (a * fin n + a)     ≈⟨ +-assoc ⟩
-  a + a * fin n + a       ≈⟨ cong (_+ a) +-assoc-n ⟩
-  a * suc (fin n) + a     ∎ where open SubTreeReasoning
-```
-
 ### 加法
-
-```agda
-_ : ω + 1 ≡ suc ω
-_ = refl
-```
-
-```agda
-1+ω≈ω : 1 + ω ≈ ω
-1+ω≈ω =                     begin-equality
-  1 + ω                     ≈⟨ ≈-refl ⟩
-  lim- (λ n → 1 + fin n)    ≈⟨ l≈l (≡→≈ +-emb) ⟩
-  lim (λ n → fin (suc n))   ≈˘⟨ l≈ls ≼-zero ⟩
-  lim- (λ n → fin n)        ≈⟨ ≈-refl ⟩
-  ω                         ∎
-  where open CrossTreeReasoning; instance _ = wf (fin ∘ suc) ∋ zero₁
-```
 
 ```agda
 +a-infl≼ : (_+ a) inflates _≼_
@@ -374,6 +329,16 @@ a+-infl≼ : (a +_) inflates _≼_
 a+-infl≼ {x = zero}  = z≼
 a+-infl≼ {x = suc x} = s≼s a+-infl≼
 a+-infl≼ {x = lim f} = l≼l a+-infl≼
+```
+
+```agda
+1+l-absorb : {w : wf f} → 1 + lim f ⦃ w ⦄ ≈ lim f ⦃ w ⦄
+1+l-absorb {f} {w} = l≼ls (aux (<→≺ w)) , l≼l a+-infl≼ where
+  aux : a ≺ b → 1 + a ≼ b
+  aux {(zero)} (s≼s p) = z≺s
+  aux {suc a} (s≼s p)  = s≼s (aux p)
+  aux {lim f} (s≼s p)  = l≼ (aux (s≼s (≼-trans f≼l p)))
+  aux (≼l p) = ≼l (aux p)
 ```
 
 ```agda
@@ -553,6 +518,16 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
 ```
 
 ```agda
++-assoc-n : ⦃ _ : NonZero a ⦄ → a + a * fin n ≡ a * fin n + a
++-assoc-n {n = zero} = sym +a-id
++-assoc-n {a} {n = suc n} = begin-equality
+  a + a * suc (fin n)     ≈⟨ refl ⟩
+  a + (a * fin n + a)     ≈⟨ +-assoc ⟩
+  a + a * fin n + a       ≈⟨ cong (_+ a) +-assoc-n ⟩
+  a * suc (fin n) + a     ∎ where open SubTreeReasoning
+```
+
+```agda
 ω^-absorb : a ≺ b → ω ^ a + ω ^ b ≈ ω ^ b
 ω^-absorb {a} {b = suc b} (s≼s a≼b) =
   (l≼ λ {n} →               begin
@@ -589,13 +564,4 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
     fm≼fn =                 begin
       f m                   <⟨ <→≺ (seq-pres m<n) ⟩
       f n                   ∎
-```
-
-```agda
-ω^-absorb2 : a ≺ c → b ≺ c → ω ^ a + ω ^ b + ω ^ c ≈ ω ^ c
-ω^-absorb2 {a} {c} {b} p q = begin-equality
-  ω ^ a + ω ^ b + ω ^ c     ≈˘⟨ ≡→≈ +-assoc ⟩
-  ω ^ a + (ω ^ b + ω ^ c)   ≈⟨ a+-cong≈ (ω^-absorb q) ⟩
-  ω ^ a + ω ^ c             ≈⟨ ω^-absorb p ⟩
-  ω ^ c                     ∎ where open CrossTreeReasoning
 ```

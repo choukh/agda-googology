@@ -76,9 +76,9 @@ module Jump (i : Ord) (F : Func) (Gₙ : Func → Ord → Seq)
                lim (Gₙ (λ x → j + F x) j) ⦃ wₛ ⦄
   F⁺ (lim f) = lim (F⁺ ∘ f) ⦃ F⁺-pres it ⦄
 
-  F⁺-pres-rd zero = rd[ 0 ] infl
-  F⁺-pres-rd (suc r) = rd[ 0 ] $ rd-trans (F⁺-pres-rd r) infl
-  F⁺-pres-rd (lim {n} r) = rd[ n ] $ F⁺-pres-rd r
+  F⁺-pres-rd zero         = rd[ 0 ] infl
+  F⁺-pres-rd (suc r)      = rd[ 0 ] $ rd-trans (F⁺-pres-rd r) infl
+  F⁺-pres-rd (lim {n} r)  = rd[ n ] $ F⁺-pres-rd r
 
   jump : Normal
   jump = normal F⁺ F⁺-pres refl
@@ -116,9 +116,17 @@ _[_] (lim f) = f
 ```
 
 ```agda
-module FixpointsProperties {ℱ : Normal} (ℱ-pres≼ : (ℱ ⟨_⟩) preserves _≼_) where
-  ℱ-cong≈ : a ≈ b → ℱ ⟨ a ⟩ ≈ ℱ ⟨ b ⟩
-  ℱ-cong≈ (p , q) = ℱ-pres≼ p , ℱ-pres≼ q
+module FixpointsProperties {ℱ : Normal}
+  (ℱ-infl≼ : (ℱ ⟨_⟩) inflates _≼_)
+  (ℱ-pres≼ : (ℱ ⟨_⟩) preserves _≼_)
+  where
+```
+
+```agda
+  fp-infl≼ : (fp ℱ ⟨_⟩) inflates _≼_
+  fp-infl≼ {(zero)} = z≼
+  fp-infl≼ {suc _}  = ≼l {n = 0} (s≼s fp-infl≼)
+  fp-infl≼ {lim f}  = l≼l fp-infl≼
 ```
 
 ```agda
@@ -135,6 +143,9 @@ module FixpointsProperties {ℱ : Normal} (ℱ-pres≼ : (ℱ ⟨_⟩) preserves
 ```
 
 ```agda
+  ℱ-cong≈ : a ≈ b → ℱ ⟨ a ⟩ ≈ ℱ ⟨ b ⟩
+  ℱ-cong≈ (p , q) = ℱ-pres≼ p , ℱ-pres≼ q
+
   fp-cong≈ : a ≈ b → fp ℱ ⟨ a ⟩ ≈ fp ℱ ⟨ b ⟩
   fp-cong≈ (p , q) = fp-pres≼ p , fp-pres≼ q
 ```
@@ -146,11 +157,25 @@ module FixpointsProperties {ℱ : Normal} (ℱ-pres≼ : (ℱ ⟨_⟩) preserves
 
 ```agda
   fp-fix {a = zero}  = lfp-fix ℱ
-  fp-fix {a = suc a} = {!   !}
-  fp-fix {a = lim f} =      begin-equality
-    fp ℱ ⟨ lim f ⟩          ≈⟨ l≈l fp-fix ⟩
-    lim- (λ n → ℱ ⟨ _ ⟩)    ≈˘⟨ ≡→≈ (continuous ℱ) ⟩
-    ℱ ⟨ fp ℱ ⟨ lim f ⟩ ⟩    ∎ where open CrossTreeReasoning
+  fp-fix {a = suc a} = p , q where
+    open CrossTreeReasoning
+    p =                                     begin
+      fp ℱ ⟨ suc a ⟩                        ≤⟨ l≼l ℱ-infl≼ ⟩
+      lim- (λ n → ℱ ⟨ _ ⟩)                  ≈˘⟨ ≡→≈ (continuous ℱ) ⟩
+      ℱ ⟨ fp ℱ ⟨ suc a ⟩ ⟩                  ∎
+    q[n] = λ {n} →                          begin
+      ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩            ≈⟨ ℱ-cong≈ fp-suc-[n] ⟩
+      ℱ ⟨ Iₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩ ≈⟨ ≈-refl ⟩
+      Iₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) (suc n) ≈˘⟨ fp-suc-[n] ⟩
+      fp ℱ ⟨ suc a ⟩ [ suc n ]              ∎
+    q =                                     begin
+      ℱ ⟨ fp ℱ ⟨ suc a ⟩ ⟩                  ≈⟨ ≡→≈ (continuous ℱ) ⟩
+      lim- (λ n → ℱ ⟨ _ ⟩)                  ≤⟨ l≼ls q[n] ⟩
+      fp ℱ ⟨ suc a ⟩                        ∎
+  fp-fix {a = lim f} =                      begin-equality
+    fp ℱ ⟨ lim f ⟩                          ≈⟨ l≈l fp-fix ⟩
+    lim- (λ n → ℱ ⟨ _ ⟩)                    ≈˘⟨ ≡→≈ (continuous ℱ) ⟩
+    ℱ ⟨ fp ℱ ⟨ lim f ⟩ ⟩                    ∎ where open CrossTreeReasoning
 ```
 
 ```agda
@@ -160,7 +185,13 @@ module FixpointsProperties {ℱ : Normal} (ℱ-pres≼ : (ℱ ⟨_⟩) preserves
 
 ```agda
   fp-suc-[s] : fp ℱ ⟨ suc a ⟩ [ suc n ] ≈ ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩
-  fp-suc-[s] = {!   !}
+  fp-suc-[s] {a} {n} =                      begin-equality
+    fp ℱ ⟨ suc a ⟩ [ suc n ]                ≈⟨ ≈-refl ⟩
+    suc (fp ℱ ⟨ a ⟩) + rhs                  ≈⟨ +a-cong≈ (s≈s fp-fix) ⟩
+    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + 1 + rhs              ≈⟨ {!   !} ⟩
+    rhs                                     ∎ where
+    open CrossTreeReasoning
+    rhs = ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩
 ```
 
 ```agda
