@@ -23,8 +23,8 @@ open import WellFormed.CrossTree
 
 ```agda
 open import Lower using (_∘ⁿ_)
-Iₙ : Func → Ord → Seq
-Iₙ F i n = (F ∘ⁿ n) i
+Itₙ : Func → Ord → Seq
+Itₙ F i n = (F ∘ⁿ n) i
 ```
 
 ```agda
@@ -49,17 +49,17 @@ record Normal : Type where
       F (f 0)               <⟨ nml-pres f<l ⟩
       F (lim _)             ∎ where open SubTreeReasoning
 
-    lfp-wf : wf (Iₙ F 0)
+    lfp-wf : wf (Itₙ F 0)
     lfp-wf {(zero)} = nz-elim
     lfp-wf {suc n} = nml-pres lfp-wf
 
   lfp : Ord
-  lfp = lim (Iₙ F 0)
+  lfp = lim (Itₙ F 0)
 
   lfp-fix : lfp ≈ F lfp
   lfp-fix =                 begin-equality
     lfp                     ≈⟨ l≈ls z≼ ⟩
-    lim- (F ∘ Iₙ F 0)       ≈˘⟨ ≡→≈ continuous ⟩
+    lim- (F ∘ Itₙ F 0)       ≈˘⟨ ≡→≈ continuous ⟩
     F lfp                   ∎ where open CrossTreeReasoning
 ```
 
@@ -97,12 +97,12 @@ open Jump public using (jump)
 module Fixpoints (ℱ : Normal) where
   open Normal ℱ renaming (_⟨_⟩ to F)
 
-  wₛ : wf (Iₙ (λ x → suc a + F x) (suc a))
+  wₛ : wf (Itₙ (λ x → suc a + F x) (suc a))
   wₛ {n = zero} = +-infl
   wₛ {n = suc n} = +-pres (nml-pres wₛ)
 
   fp : Normal
-  fp = jump 0 F Iₙ zero lfp-wf wₛ
+  fp = jump 0 F Itₙ zero lfp-wf wₛ
 
 open Fixpoints public using (fp)
 open Normal public
@@ -125,7 +125,7 @@ record Fixable (ℱ : Normal) : Type where
 
 ```agda
   fp-fix : fp ℱ ⟨ a ⟩ ≈ ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩
-  fp-suc-[n] : fp ℱ ⟨ suc a ⟩ [ n ] ≈ Iₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n
+  fp-suc-[n] : fp ℱ ⟨ suc a ⟩ [ n ] ≈ Itₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n
 ```
 
 ```agda
@@ -138,8 +138,8 @@ record Fixable (ℱ : Normal) : Type where
       ℱ ⟨ fp ℱ ⟨ suc a ⟩ ⟩                  ∎
     q[n] = λ {n} →                          begin
       ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩            ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
-      ℱ ⟨ Iₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩ ≈⟨ ≈-refl ⟩
-      Iₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) (suc n) ≈˘⟨ fp-suc-[n] ⟩
+      ℱ ⟨ Itₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩ ≈⟨ ≈-refl ⟩
+      Itₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) (suc n) ≈˘⟨ fp-suc-[n] ⟩
       fp ℱ ⟨ suc a ⟩ [ suc n ]              ∎
     q =                                     begin
       ℱ ⟨ fp ℱ ⟨ suc a ⟩ ⟩                  ≈⟨ ≡→≈ (continuous ℱ) ⟩
@@ -179,7 +179,7 @@ record Fixable (ℱ : Normal) : Type where
   fp-suc-[n] {a} {n = suc n} =              begin-equality
     fp ℱ ⟨ suc a ⟩ [ suc n ]                ≈⟨ fp-suc-[s] ⟩
     ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩              ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
-    ℱ ⟨ Iₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩   ∎ where open CrossTreeReasoning
+    ℱ ⟨ Itₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩   ∎ where open CrossTreeReasoning
 ```
 
 ### 性质的封闭
@@ -301,7 +301,7 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 η-0 : η ⟨ 0 ⟩ ≡ lfp ζ
 η-0 = refl
 
-η-suc : η ⟨ suc a ⟩ ≡ lim- (Iₙ (λ x → suc (η ⟨ a ⟩) + ζ ⟨ x ⟩) (suc (η ⟨ a ⟩)))
+η-suc : η ⟨ suc a ⟩ ≡ lim- (Itₙ (λ x → suc (η ⟨ a ⟩) + ζ ⟨ x ⟩) (suc (η ⟨ a ⟩)))
 η-suc = refl
 
 η-lim : {w : wf f} → η ⟨ lim f ⦃ w ⦄ ⟩ ≡ lim- λ n → η ⟨ f n ⟩
@@ -312,6 +312,6 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 η-fix : η ⟨ a ⟩ ≈ ζ ⟨ η ⟨ a ⟩ ⟩
 η-fix = Fixable.fp-fix ζ-fixbl
 
-η-suc-[n] : η ⟨ suc a ⟩ [ n ] ≈ Iₙ (ζ ⟨_⟩) (suc (η ⟨ a ⟩)) n
+η-suc-[n] : η ⟨ suc a ⟩ [ n ] ≈ Itₙ (ζ ⟨_⟩) (suc (η ⟨ a ⟩)) n
 η-suc-[n] = Fixable.fp-suc-[n] ζ-fixbl
 ```
