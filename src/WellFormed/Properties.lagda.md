@@ -77,7 +77,23 @@ rd[_] n = lim {n = n} ⦃ _ ⦄
 <[_] n = map rd[ n ]
 ```
 
-**定义 2-1-6** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
+**定义 2-1-6** 极限序数的判定
+
+```agda
+IsLim : Ord → Type
+IsLim zero = ⊥
+IsLim (suc a) = ⊥
+IsLim (lim f) = ⊤
+```
+
+**记法 2-1-7** 极限序数的基本列
+
+```agda
+_[_] : (a : Ord) → ⦃ IsLim a ⦄ → Seq
+_[_] (lim f) = f
+```
+
+**定义 2-1-8** 自然数到序数的嵌入 $\text{fin} : ℕ → \text{Ord}$
 
 $$
 \text{fin}(n) := \text{suc}^n(0)
@@ -91,7 +107,7 @@ fin : Seq
 fin n = (suc ∘ⁿ n) zero
 ```
 
-**约定 2-1-7** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
+**约定 2-1-9** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
 
 ```agda
 open import Agda.Builtin.FromNat public
@@ -102,7 +118,7 @@ instance
 
 ## 一些引理
 
-**事实 2-1-8** 构造子的单射性
+**事实 2-1-10** 构造子的单射性
 
 ```agda
 suc-inj : suc a ≡ suc b → a ≡ b
@@ -112,7 +128,7 @@ lim-inj : {wff : wf f} {wfg : wf g} → Ord.lim f ⦃ wff ⦄ ≡ lim g ⦃ wfg 
 lim-inj refl = refl
 ```
 
-**事实 2-1-9** 极限路径的反演
+**事实 2-1-11** 极限路径的反演
 
 ```agda
 lim-inv-rd : {w : wf f} → Road a (lim f ⦃ w ⦄) → Σ[ n ∈ ℕ ] Road a (f n)
@@ -123,7 +139,7 @@ lim-inv r with lim-inv-rd (set r)
 ... | n , r = n , ∣ r ∣₁
 ```
 
-**定理 2-1-10**
+**定理 2-1-12**
 
 ```agda
 z<b-rd : Road a b → Road 0 b
@@ -136,7 +152,7 @@ z<s : 0 < suc a
 z<s = ∣ z<s-rd ∣₁
 ```
 
-**引理 2-1-10-1**
+**引理 2-1-12-1**
 
 ```agda
 z<fs : ∀ f n → ⦃ _ : wf f ⦄ → 0 < f (suc n)
@@ -146,7 +162,7 @@ z<l : {w : wf f} → 0 < lim f ⦃ w ⦄
 z<l {f} {w} = <[ 1 ] (z<fs f 0 ⦃ w ⦄)
 ```
 
-**引理 2-1-10-2**
+**引理 2-1-12-2**
 
 ```agda
 z<b-rd zero = z<s-rd
@@ -154,7 +170,7 @@ z<b-rd (suc r) = z<s-rd
 z<b-rd (lim r) = set z<l
 ```
 
-**引理 2-1-10-3**
+**引理 2-1-12-3**
 
 ```agda
 z<s-rd {(zero)} = zero
@@ -162,7 +178,7 @@ z<s-rd {suc a} = suc z<s-rd
 z<s-rd {lim f} = suc (lim (set (z<fs f 1)))
 ```
 
-**推论 2-1-11**
+**推论 2-1-13**
 
 ```agda
 z≤ : 0 ≤ a
@@ -171,7 +187,7 @@ z≤ {suc _}  = inl z<s
 z≤ {lim _}  = inl z<l
 ```
 
-**定理 2-1-12** 后继运算的保序性
+**定理 2-1-14** 后继运算的保序性
 
 ```agda
 <→s≤-rd : Road a b → NSRoad (suc a) b
@@ -184,7 +200,7 @@ s<s : suc preserves _<_
 s<s = map s<s-rd
 ```
 
-**引理 2-1-12-1**
+**引理 2-1-14-1**
 
 ```agda
 <→s≤-rd zero = inr refl
@@ -195,7 +211,7 @@ s<s = map s<s-rd
   f (suc n)       ∎ where open RoadReasoning
 ```
 
-**引理 2-1-12-2**
+**引理 2-1-14-2**
 
 ```agda
 s<s-rd zero = zero
@@ -206,7 +222,7 @@ s<s-rd {x} (lim {f} {n} r) = suc $ begin-strict
   lim f           ∎ where open RoadReasoning
 ```
 
-**推论 2-1-13**
+**推论 2-1-15**
 
 ```agda
 s<s-inj-rd : suc injects Road
@@ -217,7 +233,7 @@ s<s-inj : suc injects _<_
 s<s-inj = map s<s-inj-rd
 ```
 
-**定理 2-1-14**
+**定理 2-1-16**
 
 ```agda
 s≤→<-rd : NSRoad (suc a) b → Road a b
@@ -230,7 +246,7 @@ s≤→< (inl r)    = map (s≤→<-rd ∘ inl) r
 s≤→< (inr refl) = zero₁
 ```
 
-**推论 2-1-15**
+**推论 2-1-17**
 
 ```agda
 s≤s : suc preserves _≤_
@@ -240,7 +256,7 @@ s≤s-inj : suc injects _≤_
 s≤s-inj = map-inj≤ suc-inj s<s-inj
 ```
 
-**定理 2-1-16**
+**定理 2-1-18**
 
 ```agda
 s<l-rd : {w : wf f} → Road a (lim f ⦃ w ⦄) → Road (suc a) (lim f ⦃ w ⦄)
@@ -253,7 +269,7 @@ s<l : {w : wf f} → a < lim f ⦃ w ⦄ → suc a < lim f ⦃ w ⦄
 s<l = map s<l-rd
 ```
 
-**定理 2-1-17**
+**定理 2-1-19**
 
 ```agda
 l≤p-rd : {w : wf f} → NSRoad (lim f ⦃ w ⦄) (suc a) → NSRoad (lim f ⦃ w ⦄) a
@@ -266,7 +282,7 @@ l≤p (inl r) = ns→≤ (l≤p-rd (inl (set r)))
 
 ## ω的性质
 
-**定义 2-1-18**
+**定义 2-1-20**
 
 ```agda
 instance
@@ -277,7 +293,7 @@ instance
 ω = lim fin
 ```
 
-**引理 2-1-19**
+**引理 2-1-21**
 
 ```agda
 n<ω : fin n < ω
@@ -285,7 +301,7 @@ n<ω {n = zero}  = z<l
 n<ω {n = suc n} = s<l n<ω
 ```
 
-**引理 2-1-20**
+**引理 2-1-22**
 
 ```agda
 n≤fn : ∀ f → ⦃ _ : wf f ⦄ → fin n ≤ f n
@@ -296,35 +312,35 @@ n≤fn {n = suc n} f  = begin
   f (suc n)           ∎ where open SubTreeReasoning
 ```
 
-**推论 2-1-21**
+**推论 2-1-23**
 
 ```agda
 n<fs : ∀ f n → ⦃ _ : wf f ⦄ → fin n < f (suc n)
 n<fs f _ = ≤-<-trans (n≤fn f) it
 ```
 
-**引理 2-1-22**
+**引理 2-1-24**
 
 ```agda
-l≮ω : ⦃ _ : wf f ⦄ → lim f ≮ ω
-l≮ω {f} r = let n , r = lim-inv r in <-irrefl refl $ begin-strict
+l≮ω : ⦃ IsLim a ⦄ → a ≮ ω
+l≮ω {lim f} r = let n , r = lim-inv r in <-irrefl refl $ begin-strict
   fin n               ≤⟨ n≤fn f ⟩
   f n                 <⟨ f<l ⟩
   lim f               <⟨ r ⟩
   fin n               ∎ where open SubTreeReasoning
 ```
 
-**引理 2-1-23**
+**引理 2-1-25**
 
 ```agda
-ω≤l : ⦃ _ : wf f ⦄ → ω < a → lim f < a → ω ≤ lim f
-ω≤l {f} r s with <-connex r s
+ω≤l : ⦃ IsLim a ⦄ → ω < b → a < b → ω ≤ a
+ω≤l {lim f} r s with <-connex r s
 ... | inl r           = inl r
 ... | inr (inr refl)  = inr refl
 ... | inr (inl r)     = ⊥-elim $ l≮ω r
 ```
 
-**引理 2-1-24**
+**引理 2-1-26**
 
 ```agda
 fin-inj : fin m ≡ fin n → m ≡ n
@@ -332,7 +348,7 @@ fin-inj {(zero)} {(zero)} eq = refl
 fin-inj {suc m}  {suc n}  eq = cong suc $ fin-inj $ suc-inj eq
 ```
 
-**引理 2-1-25**
+**引理 2-1-27**
 
 ```agda
 fin-suj : a < ω → Σ[ n ∈ ℕ ] fin n ≡ a
@@ -340,12 +356,12 @@ fin-suj {(zero)} r  = 0 , refl
 fin-suj {suc _}  r  with fin-suj (<-trans zero₁ r)
 ... | n , refl      = suc n , refl
 fin-suj {lim f}  r  = ⊥-elim $ <-irrefl refl $ begin-strict
-  ω                 ≤⟨ ω≤l zero₁ (<-trans r zero₁) ⟩
-  lim f             <⟨ r ⟩
-  ω                 ∎ where open SubTreeReasoning
+  ω                   ≤⟨ ω≤l zero₁ (<-trans r zero₁) ⟩
+  lim f               <⟨ r ⟩
+  ω                   ∎ where open SubTreeReasoning
 ```
 
-**定理 2-1-26**
+**定理 2-1-28**
 
 ```agda
 ℕ≡ω : ℕ ≡ Σ Ord (_< ω)
