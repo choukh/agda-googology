@@ -197,9 +197,9 @@ z<l {f} {w} = <[ 1 ] (z<fs f 0 ⦃ w ⦄)
 **定理 2-1-13-(1)** $a < b → 0 < b$.  
 **证明** 对路径 $r : a < b$ 归纳.
 
-- 若 $r : a < a^+$, 由定理 2-1-13-(2) 即得 $0 < a^+$.
-- 若 $r : a < b^+$, 由定理 2-1-13-(2) 即得 $0 < b^+$.
-- 若 $r : a < \lim(f)$, 由引理 2-1-15 即得 $0 < \lim(f)$. ∎
+- 若 $r = \text{zero} : a < a^+$, 由定理 2-1-13-(2) 即得 $0 < a^+$.
+- 若 $r = \text{suc}(r') : a < b^+$, 由定理 2-1-13-(2) 即得 $0 < b^+$.
+- 若 $r = \lim(r') : a < \lim(f)$, 由引理 2-1-15 即得 $0 < \lim(f)$. ∎
 
 ```agda
 z<b-rd zero = z<s-rd
@@ -232,8 +232,8 @@ z≤ {lim _}  = inl z<l
 
 **定理 2-1-17** 互递归地, 有
 
-- (1) $a < b \to a^+ ≤ b$
-- (2) 后继运算保持 $<$
+- (1) $a < b \to a^+ ≤ b$.
+- (2) 后继运算保持 $<$.
 
 ```agda
 <→s≤-rd : Road a b → NSRoad (suc a) b
@@ -247,26 +247,36 @@ s<s = map s<s-rd
 ```
 
 **定理 2-1-17-(1)** $a < b \to a^+ ≤ b$.  
-**证明** 
+**证明** 对路径 $r : a < b$ 归纳.
+
+- 若 $r = \text{zero} : a < a^+$, 由自反性即得 $a^+ ≤ a^+$.
+- 若 $r = \text{suc}(r') : a < b^+$, 则有 $r' : a < b$. 由定理 2-1-17-(2) 即得 $a^+ ≤ b^+$.
+- 若 $r = \lim(r') : a < \lim(f)$, 则有 $r' : a < f(n)$. 由定理 2-1-17-(2) 有 $a^+ < f(n)^+$, 由归纳假设有 $f(n)^+ ≤ f(n^+)$, 由传递性即得 $a^+ < \lim(f)$. ∎
 
 ```agda
 <→s≤-rd zero = inr refl
 <→s≤-rd (suc r) = inl (s<s-rd r)
-<→s≤-rd {a} (lim {f} {n} r) = inl $ lim $ begin-strict
+<→s≤-rd {a} (lim {f} {n} r) = inl $ begin-strict
   suc a           <⟨ s<s-rd r ⟩
   suc (f n)       ≤⟨ <→s≤-rd (set it) ⟩
-  f (suc n)       ∎ where open RoadReasoning
+  f (suc n)       <⟨ f<l-rd ⟩
+  lim f           ∎ where open RoadReasoning
 ```
 
 **定理 2-1-17-(2)** 后继运算保持 $<$.  
-**证明** 
+**证明** 对路径 $r : a < b$ 归纳, 要证 $a^+ < b^+$.
+
+- 若 $r = \text{zero} : a < a^+$, 有 $\text{zero} : a^+ < a^{++}$.
+- 若 $r = \text{suc}(r') : a < b^+$, 则有 $r' : a < b$. 由归纳假设即得 $a^+ < b^+$.
+- 若 $r = \lim(r') : a < \lim(f)$, 则有 $r' : a < f(n)$. 与定理 2-1-17-(1) 同理可证 $a^+ < \lim(f)$, 再由路径构造子 $\text{suc}$ 即得 $a^+ < \lim(f)^+$. ∎
 
 ```agda
 s<s-rd zero = zero
 s<s-rd (suc r) = suc (s<s-rd r)
 s<s-rd {x} (lim {f} {n} r) = suc $ begin-strict
   suc x           <⟨ s<s-rd r ⟩
-  suc (f n)       ≤⟨ <→s≤-rd f<l-rd ⟩
+  suc (f n)       ≤⟨ <→s≤-rd (set it) ⟩
+  f (suc n)       <⟨ f<l-rd ⟩
   lim f           ∎ where open RoadReasoning
 ```
 
