@@ -280,7 +280,12 @@ s<s-rd {x} (lim {f} {n} r) = suc $ begin-strict
   lim f           ∎ where open RoadReasoning
 ```
 
-**推论 2-1-18**
+**定理 2-1-18** 后继运算单射 $<$.  
+**证明** 对路径 $r : a^+ < b^+$ 归纳, 要证 $a < b$.
+
+- 若 $r = \text{zero} : a^+ < a^{++}$, 有 $\text{zero} : a < a^+$.
+- 若 $r = \text{suc}(r') : a^+ < b^+$, 则有 $r' : a^+ < b$. 由传递性即得 $a < a^+ < b$.
+- 没有 $r = \lim(r') : a^+ < \lim(f)$ 的情况, 因为 $\lim(f)$ 不可能是后继序数. ∎
 
 ```agda
 s<s-inj-rd : suc injects Road
@@ -291,7 +296,18 @@ s<s-inj : suc injects _<_
 s<s-inj = map s<s-inj-rd
 ```
 
-**定理 2-1-19**
+**推论 2-1-19** 后继运算保持 $\leq$, 且单射 $\leq$.  
+**证明** 由事实 2-1-2 和定理 2-1-17-(2) 可证保持; 由事实 2-1-4, 事实 2-1-11 和定理 2-1-18 可证单射. ∎
+
+```agda
+s≤s : suc preserves _≤_
+s≤s = map-pres≤ s<s
+
+s≤s-inj : suc injects _≤_
+s≤s-inj = map-inj≤ suc-inj s<s-inj
+```
+
+**定理 2-1-20**
 
 ```agda
 s≤→<-rd : NSRoad (suc a) b → Road a b
@@ -302,16 +318,6 @@ s≤→<-rd {b = lim f} (inl (lim r)) = lim (rd-trans zero r)
 s≤→< : suc a ≤ b → a < b
 s≤→< (inl r)    = map (s≤→<-rd ∘ inl) r
 s≤→< (inr refl) = zero₁
-```
-
-**推论 2-1-20**
-
-```agda
-s≤s : suc preserves _≤_
-s≤s = map-pres≤ s<s
-
-s≤s-inj : suc injects _≤_
-s≤s-inj = map-inj≤ suc-inj s<s-inj
 ```
 
 **定理 2-1-21**
