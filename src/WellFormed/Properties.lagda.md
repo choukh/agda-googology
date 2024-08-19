@@ -404,18 +404,20 @@ n<fs : ∀ f n → ⦃ _ : wf f ⦄ → fin n < f (suc n)
 n<fs f _ = ≤-<-trans (n≤fn f) it
 ```
 
-**引理 2-1-27**
+**引理 2-1-27** 没有极限序数小于 $\omega$.  
+**证明** 假设有这样的序数 $a$. 由事实 2-1-12, 存在 $n$ 使得 $a < n$. 但由引理 2-1-25 又有 $n ≤ a[n] < a$. 由传递性有 $n < n$, 违反 $<$ 的反自反性. ∎
 
 ```agda
 l≮ω : ⦃ IsLim a ⦄ → a ≮ ω
-l≮ω {lim f} r = let n , r = lim-inv r in <-irrefl refl $ begin-strict
+l≮ω a@{lim f} r = let n , r = lim-inv r in <-irrefl refl $ begin-strict
   fin n               ≤⟨ n≤fn f ⟩
-  f n                 <⟨ f<l ⟩
-  lim f               <⟨ r ⟩
+  a [ n ]             <⟨ f<l ⟩
+  a                   <⟨ r ⟩
   fin n               ∎ where open SubTreeReasoning
 ```
 
-**引理 2-1-28**
+**引理 2-1-28** 忽略非同株, $\omega$ 是最小的极限序数.  
+**证明** 
 
 ```agda
 ω≤l : ⦃ IsLim a ⦄ → ω < b → a < b → ω ≤ a
@@ -425,7 +427,8 @@ l≮ω {lim f} r = let n , r = lim-inv r in <-irrefl refl $ begin-strict
 ... | inr (inl r)     = ⊥-elim $ l≮ω r
 ```
 
-**引理 2-1-29**
+**引理 2-1-29** $\text{fin}$ 单射 $=$.  
+**证明** 
 
 ```agda
 fin-inj : fin m ≡ fin n → m ≡ n
@@ -433,7 +436,8 @@ fin-inj {(zero)} {(zero)} eq = refl
 fin-inj {suc m}  {suc n}  eq = cong suc $ fin-inj $ suc-inj eq
 ```
 
-**引理 2-1-30**
+**引理 2-1-30** $\text{fin}$ 满射 $\omega$.  
+**证明** 
 
 ```agda
 fin-suj : a < ω → Σ[ n ∈ ℕ ] fin n ≡ a
@@ -446,7 +450,8 @@ fin-suj {lim f}  r  = ⊥-elim $ <-irrefl refl $ begin-strict
   ω                   ∎ where open SubTreeReasoning
 ```
 
-**定理 2-1-31**
+**定理 2-1-31** $ℕ$ 与小于 $\omega$ 的序数同构.  
+**证明** 
 
 ```agda
 ℕ≡ω : ℕ ≡ Σ Ord (_< ω)
