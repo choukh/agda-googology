@@ -398,6 +398,14 @@ a+-pres≺ (≼l p)  = ≼l (a+-pres≼ p)
 ```
 
 ```agda
++-pres≼ : a ≼ b → c ≼ d → a + c ≼ b + d
++-pres≼ {a} {b} {c} {d} p q = begin
+  a + c                     ≤⟨ a+-pres≼ q ⟩
+  a + d                     ≤⟨ +a-pres≼ p ⟩
+  b + d                     ∎ where open CrossTreeReasoning
+```
+
+```agda
 a+-cong≈ : b ≈ c → a + b ≈ a + c
 a+-cong≈ (p , q) = a+-pres≼ p , a+-pres≼ q
 
@@ -426,7 +434,7 @@ a*-pres≼ (l≼ p)   = l≼ (a*-pres≼ p)
 ```agda
 a*-pres≺ : ⦃ _ : NonZero a ⦄ → (a *_) preserves _≺_
 a*-pres≺ {a} {x} (s≼s {b} p) = begin-strict
-  a * x                     <⟨ a+-pres≺ (<→≺ nz-elim) ⟩
+  a * x                     <⟨ +a-infl≺ ⟩
   a * x + a                 ≤⟨ +a-pres≼ (a*-pres≼ p) ⟩
   a * b + a                 ∎ where open CrossTreeReasoning
 a*-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
