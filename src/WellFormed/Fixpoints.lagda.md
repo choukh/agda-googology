@@ -59,7 +59,7 @@ record Normal : Type where
   lfp-fix : lfp ≈ F lfp
   lfp-fix =                 begin-equality
     lfp                     ≈⟨ l≈ls z≼ ⟩
-    lim- (F ∘ Itₙ F 0)       ≈˘⟨ ≡→≈ continuous ⟩
+    lim- (F ∘ Itₙ F 0)      ≈˘⟨ ≡→≈ continuous ⟩
     F lfp                   ∎ where open CrossTreeReasoning
 ```
 
@@ -132,23 +132,23 @@ record Fixable (ℱ : Normal) : Type where
   fp-fix {a = zero}  = lfp-fix ℱ
   fp-fix {a = suc a} = p , q where
     open CrossTreeReasoning
-    p =                                     begin
-      fp ℱ ⟨ suc a ⟩                        ≤⟨ l≼l fixbl-infl≼ ⟩
-      lim- (λ n → ℱ ⟨ _ ⟩)                  ≈˘⟨ ≡→≈ (continuous ℱ) ⟩
-      ℱ ⟨ fp ℱ ⟨ suc a ⟩ ⟩                  ∎
-    q[n] = λ {n} →                          begin
-      ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩            ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
-      ℱ ⟨ Itₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩ ≈⟨ ≈-refl ⟩
-      Itₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) (suc n) ≈˘⟨ fp-suc-[n] ⟩
-      fp ℱ ⟨ suc a ⟩ [ suc n ]              ∎
-    q =                                     begin
-      ℱ ⟨ fp ℱ ⟨ suc a ⟩ ⟩                  ≈⟨ ≡→≈ (continuous ℱ) ⟩
-      lim- (λ n → ℱ ⟨ _ ⟩)                  ≤⟨ l≼ls q[n] ⟩
-      fp ℱ ⟨ suc a ⟩                        ∎
-  fp-fix {a = lim f} =                      begin-equality
-    fp ℱ ⟨ lim f ⟩                          ≈⟨ l≈l fp-fix ⟩
-    lim- (λ n → ℱ ⟨ _ ⟩)                    ≈˘⟨ ≡→≈ (continuous ℱ) ⟩
-    ℱ ⟨ fp ℱ ⟨ lim f ⟩ ⟩                    ∎ where open CrossTreeReasoning
+    p =                                       begin
+      fp ℱ ⟨ suc a ⟩                          ≤⟨ l≼l fixbl-infl≼ ⟩
+      lim- (λ n → ℱ ⟨ _ ⟩)                    ≈˘⟨ ≡→≈ (continuous ℱ) ⟩
+      ℱ ⟨ fp ℱ ⟨ suc a ⟩ ⟩                    ∎
+    q[n] = λ {n} →                            begin
+      ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩              ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
+      ℱ ⟨ Itₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩  ≈⟨ ≈-refl ⟩
+      Itₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) (suc n)  ≈˘⟨ fp-suc-[n] ⟩
+      fp ℱ ⟨ suc a ⟩ [ suc n ]                ∎
+    q =                                       begin
+      ℱ ⟨ fp ℱ ⟨ suc a ⟩ ⟩                    ≈⟨ ≡→≈ (continuous ℱ) ⟩
+      lim- (λ n → ℱ ⟨ _ ⟩)                    ≤⟨ l≼ls q[n] ⟩
+      fp ℱ ⟨ suc a ⟩                          ∎
+  fp-fix {a = lim f} =                        begin-equality
+    fp ℱ ⟨ lim f ⟩                            ≈⟨ l≈l fp-fix ⟩
+    lim- (λ n → ℱ ⟨ _ ⟩)                      ≈˘⟨ ≡→≈ (continuous ℱ) ⟩
+    ℱ ⟨ fp ℱ ⟨ lim f ⟩ ⟩                      ∎ where open CrossTreeReasoning
 ```
 
 ```agda
@@ -158,13 +158,13 @@ record Fixable (ℱ : Normal) : Type where
 
 ```agda
   fp-suc-[s] : fp ℱ ⟨ suc a ⟩ [ suc n ] ≈ ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩
-  fp-suc-[s] {a} {n} =                      begin-equality
-    fp ℱ ⟨ suc a ⟩ [ suc n ]                ≈⟨ ≈-refl ⟩
-    suc (fp ℱ ⟨ a ⟩) + ℱ ⟨ _ ⟩              ≈⟨ +a-cong≈ (s≈s fp-fix) ⟩
-    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + 1 + ℱ ⟨ _ ⟩          ≈˘⟨ ≡→≈ +-assoc ⟩
-    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + (1 + ℱ ⟨ _ ⟩)        ≈⟨ a+-cong≈ (1+l-absorb $ fixbl-isLim $ nz-intro p) ⟩
-    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + ℱ ⟨ _ ⟩              ≈⟨ fixbl-absorb (<→≺ q) ⟩
-    ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩              ∎ where
+  fp-suc-[s] {a} {n} =                        begin-equality
+    fp ℱ ⟨ suc a ⟩ [ suc n ]                  ≈⟨ ≈-refl ⟩
+    suc (fp ℱ ⟨ a ⟩) + ℱ ⟨ _ ⟩                ≈⟨ +a-cong≈ (s≈s fp-fix) ⟩
+    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + 1 + ℱ ⟨ _ ⟩            ≈˘⟨ ≡→≈ +-assoc ⟩
+    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + (1 + ℱ ⟨ _ ⟩)          ≈⟨ a+-cong≈ (1+l-absorb $ fixbl-isLim $ nz-intro p) ⟩
+    ℱ ⟨ fp ℱ ⟨ a ⟩ ⟩ + ℱ ⟨ _ ⟩                ≈⟨ fixbl-absorb (<→≺ q) ⟩
+    ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩                ∎ where
     open CrossTreeReasoning
     p : 0 < fp ℱ ⟨ suc a ⟩ [ m ]
     p {(zero)} = z<s
@@ -176,10 +176,10 @@ record Fixable (ℱ : Normal) : Type where
 
 ```agda
   fp-suc-[n] {n = zero} = ≡→≈ fp-suc-[0]
-  fp-suc-[n] {a} {n = suc n} =              begin-equality
-    fp ℱ ⟨ suc a ⟩ [ suc n ]                ≈⟨ fp-suc-[s] ⟩
-    ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩              ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
-    ℱ ⟨ Itₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩   ∎ where open CrossTreeReasoning
+  fp-suc-[n] {a} {n = suc n} =                begin-equality
+    fp ℱ ⟨ suc a ⟩ [ suc n ]                  ≈⟨ fp-suc-[s] ⟩
+    ℱ ⟨ fp ℱ ⟨ suc a ⟩ [ n ] ⟩                ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
+    ℱ ⟨ Itₙ (ℱ ⟨_⟩) (suc (fp ℱ ⟨ a ⟩)) n ⟩    ∎ where open CrossTreeReasoning
 ```
 
 ### 性质的封闭
@@ -219,40 +219,40 @@ record Fixable (ℱ : Normal) : Type where
 ```agda
   fp-absorb : a ≺ b → fp ℱ ⟨ a ⟩ + fp ℱ ⟨ b ⟩ ≈ fp ℱ ⟨ b ⟩
   fp-absorb {a} {b = suc b} (s≼s a≼b) =
-    (l≼ λ {n} →                                     begin
-      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ suc b ⟩ [ n ]             ≤⟨ +a-pres≼ (fp-pres≼ a≼b) ⟩
-      fp ℱ ⟨ b ⟩ + fp ℱ ⟨ suc b ⟩ [ n ]             ≤⟨ +a-pres≼ ≼-zero ⟩
-      suc (fp ℱ ⟨ b ⟩) + fp ℱ ⟨ suc b ⟩ [ n ]       ≤⟨ a+-pres≼ fixbl-infl≼ ⟩
-      suc (fp ℱ ⟨ b ⟩) + ℱ ⟨ fp ℱ ⟨ suc b ⟩ [ n ] ⟩ ≈⟨ ≈-refl ⟩
-      fp ℱ ⟨ suc b ⟩ [ suc n ]                      ≤⟨ f≼l {n = suc n} ⟩
-      fp ℱ ⟨ suc b ⟩                                ∎) ,
-    (l≼ λ {n} →                                     begin
-      fp ℱ ⟨ suc b ⟩ [ n ]                          ≤⟨ a+-infl≼ ⟩
-      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ suc b ⟩ [ n ]             <⟨ a+-pres≺ (<→≺ (Fixpoints.wₛ ℱ)) ⟩
-      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ suc b ⟩ [ suc n ]         ≤⟨ f≼l {n = suc n} ⟩
-      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ suc b ⟩                   ∎) where
+    (l≼ λ {n} →                               begin
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ suc b ⟩ [ n ]       ≤⟨ +a-pres≼ (fp-pres≼ a≼b) ⟩
+      fp ℱ ⟨ b ⟩ + fp ℱ ⟨ suc b ⟩ [ n ]       ≤⟨ +a-pres≼ ≼-zero ⟩
+      suc (fp ℱ ⟨ b ⟩) + fp ℱ ⟨ suc b ⟩ [ n ] ≤⟨ a+-pres≼ fixbl-infl≼ ⟩
+      suc (fp ℱ ⟨ b ⟩) + ℱ ⟨ _ ⟩              ≈⟨ ≈-refl ⟩
+      fp ℱ ⟨ suc b ⟩ [ suc n ]                ≤⟨ f≼l {n = suc n} ⟩
+      fp ℱ ⟨ suc b ⟩                          ∎) ,
+    (l≼ λ {n} →                               begin
+      fp ℱ ⟨ suc b ⟩ [ n ]                    ≤⟨ a+-infl≼ ⟩
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ suc b ⟩ [ n ]       <⟨ a+-pres≺ (<→≺ (Fixpoints.wₛ ℱ)) ⟩
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ suc b ⟩ [ suc n ]   ≤⟨ f≼l {n = suc n} ⟩
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ suc b ⟩             ∎) where
     open CrossTreeReasoning
   fp-absorb {a} {b = lim f} (≼l {n} a≺fn) = l≼ aux , l≼l a+-infl≼ where
     open CrossTreeReasoning
     aux : fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f m ⟩ ≼ lim- (λ m → fp ℱ ⟨ f m ⟩)
     aux {m} with <-cmp n m
-    ... | tri< n<m _ _ = ≼l $                       begin
-      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f m ⟩                     ≤⟨ fst (fp-absorb a≺fm) ⟩
-      fp ℱ ⟨ f m ⟩                                  ∎ where
-      a≺fm =                                        begin-strict
-        a                                           <⟨ a≺fn ⟩
-        f n                                         <⟨ <→≺ (seq-pres n<m) ⟩
-        f m                                         ∎
-    ... | tri≈ _ refl _ = ≼l $                      begin
-      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f n ⟩                     ≤⟨ fst (fp-absorb a≺fn) ⟩
-      fp ℱ ⟨ f n ⟩                                  ∎
-    ... | tri> _ _ m<n = ≼l $                       begin
-      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f m ⟩                     ≤⟨ a+-pres≼ (fp-pres≼ fm≼fn) ⟩
-      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f n ⟩                     ≤⟨ fst (fp-absorb a≺fn) ⟩
-      fp ℱ ⟨ f n ⟩                                  ∎ where
-      fm≼fn =                                       begin
-        f m                                         <⟨ <→≺ (seq-pres m<n) ⟩
-        f n                                         ∎
+    ... | tri< n<m _ _ = ≼l $                 begin
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f m ⟩               ≤⟨ fst (fp-absorb a≺fm) ⟩
+      fp ℱ ⟨ f m ⟩                            ∎ where
+      a≺fm =                                  begin-strict
+        a                                     <⟨ a≺fn ⟩
+        f n                                   <⟨ <→≺ (seq-pres n<m) ⟩
+        f m                                   ∎
+    ... | tri≈ _ refl _ = ≼l $                begin
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f n ⟩               ≤⟨ fst (fp-absorb a≺fn) ⟩
+      fp ℱ ⟨ f n ⟩                            ∎
+    ... | tri> _ _ m<n = ≼l $                 begin
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f m ⟩               ≤⟨ a+-pres≼ (fp-pres≼ fm≼fn) ⟩
+      fp ℱ ⟨ a ⟩ + fp ℱ ⟨ f n ⟩               ≤⟨ fst (fp-absorb a≺fn) ⟩
+      fp ℱ ⟨ f n ⟩                            ∎ where
+      fm≼fn =                                 begin
+        f m                                   <⟨ <→≺ (seq-pres m<n) ⟩
+        f n                                   ∎
 ```
 
 ```agda
