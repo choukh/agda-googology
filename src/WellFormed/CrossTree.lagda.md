@@ -544,9 +544,8 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
   instance _ = ^-nz
 ω^-absorb {a} {b = lim f} (≼l {n} a≺fn) = l≼ aux , l≼l a+-infl≼ where
   open CrossTreeReasoning
-  import Data.Nat.Properties as ℕ
   aux : ω ^ a + ω ^ f m ≼ lim- (λ m → ω ^ f m)
-  aux {m} with ℕ.<-cmp n m
+  aux {m} with <-cmp n m
   ... | tri< n<m _ _  = ≼l $ begin
     ω ^ a + ω ^ f m         ≤⟨ fst (ω^-absorb a≺fm) ⟩
     ω ^ f m                 ∎ where
