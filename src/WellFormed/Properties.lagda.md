@@ -1,6 +1,7 @@
 ---
 title: 形式化大数数学 (2.1 - 良构树序数的性质)
 zhihu-tags: Agda, 大数数学, 序数
+zhihu-url: https://zhuanlan.zhihu.com/p/715404245
 ---
 
 # 形式化大数数学 (2.1 - 良构树序数的性质)
@@ -120,6 +121,8 @@ open import Lower public using (_∘ⁿ_)
 fin : Seq
 fin n = (suc ∘ⁿ n) zero
 ```
+
+非形式地, 后文中我们把 $\text{fin}$ 视作类型强转 (coercion).
 
 **约定 2-1-10** 数字字面量既可以表示自然数, 也可以表示序数. Agda 使用[字面量重载](https://agda.readthedocs.io/en/v2.6.4.3-r1/language/literal-overloading.html)功能实现该约定.
 
@@ -417,7 +420,7 @@ l≮ω a@{lim f} r = let n , r = lim-inv r in <-irrefl refl $ begin-strict
 ```
 
 **引理 2-1-28** 忽略非同株, $\omega$ 是最小的极限序数.  
-**证明** 
+**证明** 对任意与 $\omega$ 同株的极限序数 $a$, 由推论 2-0-34, 讨论 $\omega$ 与 $a$ 的大小关系. 若 $a < \omega$, 由引理 2-1-27 可得矛盾. 所以只能有 $ω ≤ a$. ∎
 
 ```agda
 ω≤l : ⦃ IsLim a ⦄ → ω < b → a < b → ω ≤ a
@@ -428,7 +431,7 @@ l≮ω a@{lim f} r = let n , r = lim-inv r in <-irrefl refl $ begin-strict
 ```
 
 **引理 2-1-29** $\text{fin}$ 单射 $=$.  
-**证明** 
+**证明** 对 $m, n$ 归纳即得. ∎
 
 ```agda
 fin-inj : fin m ≡ fin n → m ≡ n
@@ -437,7 +440,11 @@ fin-inj {suc m}  {suc n}  eq = cong suc $ fin-inj $ suc-inj eq
 ```
 
 **引理 2-1-30** $\text{fin}$ 满射 $\omega$.  
-**证明** 
+**证明** 要证对任意 $a < ω$ 都存在 $n$ 使得 $n = a$. 对 $a$ 归纳.
+
+- 若 $a = 0$, 取 $n = 0$ 即可.
+- 若 $a = a'^+$, 由归纳假设可得一个 $n' = a'$. 取 $n = n'^+$ 即可.
+- 若 $a = \lim(f)$, 由引理 2-1-27 可得矛盾. ∎
 
 ```agda
 fin-suj : a < ω → Σ[ n ∈ ℕ ] fin n ≡ a
@@ -451,7 +458,7 @@ fin-suj {lim f}  r  = ⊥-elim $ <-irrefl refl $ begin-strict
 ```
 
 **定理 2-1-31** $ℕ$ 与小于 $\omega$ 的序数同构.  
-**证明** 
+**证明** $\text{fin}$ 提供了正映射, 引理 2-1-30 提供了逆映射. 结合引理 2-1-29 可以说明它们互逆. ∎
 
 ```agda
 ℕ≡ω : ℕ ≡ Σ Ord (_< ω)
