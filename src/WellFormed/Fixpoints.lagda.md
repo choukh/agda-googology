@@ -74,14 +74,52 @@ record Normal : Type where
 ```
 
 ```agda
-module Jump (i : Ord) (F : Func) ⦃ l : ∀ {a} → IsLim (F a) ⦄
-  (Gₙ : Func → Ord → Seq) (w : wf (Gₙ F i))
+module Jump (i : Ord) (F : Func) (Gₙ : Func → Ord → Seq)
+  (infl : ∀ {a} → Road a (Gₙ (λ x → suc a + F x) (suc a) 0))
+  (w₀ : wf (Gₙ F i)) (wₛ : ∀ {a} → wf (Gₙ (λ x → suc a + F x) (suc a)))
   where
 
-  jump : Func
-  jump zero = lim (Gₙ F i) ⦃ w ⦄
-  jump (suc a) = lim (Gₙ (λ x → j + F x) j) ⦃ {!   !} ⦄
-    module Suc where
-    j = suc (jump a)
-  jump (lim f) = lim (jump ∘ f) ⦃ {!   !} ⦄
+  F⁺ : Func
+  F⁺-pres-rd : F⁺ preserves Road
+  F⁺-pres : F⁺ preserves _<_
+  F⁺-pres = map F⁺-pres-rd
+
+  F⁺ zero    = lim (Gₙ F i) ⦃ w₀ ⦄
+  F⁺ (suc a) = let j = suc (F⁺ a) in
+               lim (Gₙ (λ x → j + F x) j) ⦃ wₛ ⦄
+  F⁺ (lim f) = lim (F⁺ ∘ f) ⦃ F⁺-pres it ⦄
+
+  F⁺-pres-rd zero = rd[ 0 ] infl
+  F⁺-pres-rd (suc r) = rd[ 0 ] $ rd-trans (F⁺-pres-rd r) infl
+  F⁺-pres-rd (lim {n} r) = rd[ n ] $ F⁺-pres-rd r
+
+  jump : Normal
+  jump = mkNormal F⁺ F⁺-pres refl
+
+open Jump public using (jump)
+```
+
+```agda
+fixpt : Normal → Normal
+fixpt ℱ = jump 0 F Iₙ zero w₀ wₛ
+  module Fixpt where
+  open Normal ℱ renaming (_⟨_⟩ to F)
+  w₀ : wf (Iₙ F 0)
+  w₀ {(zero)} = it
+  w₀ {suc n} = nml-pres w₀
+  wₛ : wf (Iₙ (λ x → (suc a) + (F x)) (suc a))
+  wₛ {n = zero} = +-infl
+  wₛ {n = suc n} = +-pres (nml-pres wₛ)
+```
+
+```agda
+ω^ : Normal
+ω^ = mkNormal (ω ^_) ^-pres refl
+```
+
+```agda
+ε ζ η : Normal
+ε = fixpt ω^
+ζ = fixpt ε
+η = fixpt ζ
 ```
