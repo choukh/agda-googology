@@ -48,7 +48,7 @@ Func↾ : Pred → Type
 Func↾ P = (x : Ord) ⦃ p : P x ⦄ → Ord
 
 _↾_ : Func → (P : Pred) → Func↾ P
-F ↾ P = λ a → F a
+F ↾ P = λ x → F x
 ```
 
 扩展「保持」和「膨胀」的定义, 使得被限制的函数 $F ↾ P$ 也可以谈论保持和膨胀.
