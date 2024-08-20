@@ -423,8 +423,8 @@ module CrossTreeReasoning where
 +a-infl≺ = <→≺ +-infl
 ```
 
-**定理 2-3-33** 右侧加法 $λx,a+x$ 膨胀 $≼$, 即 $x ≼ x + a$.  
-**证明** 这是一个跨树专有定理. 对 $x$ 归纳.
+**定理 2-3-33** 右侧加法 $λx,a+x$ 膨胀 $≼$.  
+**证明** 这是一个跨树专有定理. 要证 $x ≼ x + a$. 对 $x$ 归纳.
 
 - 若 $x = 0$, 有 $\text{z≼} : 0 ≼ a + 0$.
 - 若 $x = x'^+$, 有归纳假设 $x' ≼ a + x'$, 于是 $x'^+ ≼ (a + x')^+ = a + x'^+$.
@@ -437,8 +437,8 @@ a+-infl≼ {x = suc x} = s≼s a+-infl≼
 a+-infl≼ {x = lim f} = l≼l a+-infl≼
 ```
 
-**定理 2-3-34** 右侧加法 $λx,a+x$ 保持 $≼$, 即 $x ≼ y → a + x ≼ a + y$.  
-**证明** 这无法从其子树版本直接推出. 我们对 $p : x ≼ y$ 归纳.
+**定理 2-3-34** 右侧加法 $λx,a+x$ 保持 $≼$.  
+**证明** 这无法从其子树版本直接推出. 要证 $x ≼ y → a + x ≼ a + y$. 我们对 $p : x ≼ y$ 归纳.
 
 - 若 $p = \text{z≼} : 0 ≼ y$, 由事实 2-3-32 有 $a + 0 = a ≼ a + y$.
 - 若 $p = \text{s≼s}(p') : x^+ ≼ y^+$, 有归纳假设 $a + x ≼ a + y$, 两边取后继即得 $a + x^+ ≼ a + y^+$.
@@ -453,8 +453,8 @@ a+-pres≼ (≼l p)   = ≼l (a+-pres≼ p)
 a+-pres≼ (l≼ p)   = l≼ (a+-pres≼ p)
 ```
 
-**推论 2-3-35** 右侧加法 $λx,a+x$ 保持 $≺$, 即 $x ≺ y → a + x ≺ a + y$.  
-**证明** 对 $p : x ≺ y$ 归纳, 只有两种情况.
+**推论 2-3-35** 右侧加法 $λx,a+x$ 保持 $≺$.  
+**证明** 要证 $x ≺ y → a + x ≺ a + y$, 对 $p : x ≺ y$ 归纳, 只有两种情况.
 
 - 若 $p = \text{s≼s}(p') : x ≺ y^+$, 必有 $p' : x ≼ y$. 由定理 2-3-34 有 $a + x ≼ a + y$, 两边取后继即得 $a + x ≺ a + y^+$.
 - 若 $p = \text{≼l}(p') : x ≺ \lim(f)$, 必有 $p' : x ≺ f(n)$. 由定理 2-3-34 有 $a + x ≺ a + f(n)$, 右边取极限即得 $a + x ≺ a + \lim(f)$. ∎
@@ -465,8 +465,8 @@ a+-pres≺ (s≼s p) = s≼s (a+-pres≼ p)
 a+-pres≺ (≼l p)  = ≼l (a+-pres≼ p)
 ```
 
-**定理 2-3-36** 左侧加法 $λx,x+a$ 保持 $≼$, 即 $x ≼ y → x + a ≼ y + a$.  
-**证明** 这是一个跨树专有定理. 对 $a$ 归纳.
+**定理 2-3-36** 左侧加法 $λx,x+a$ 保持 $≼$.  
+**证明** 这是一个跨树专有定理. 要证 $x ≼ y → x + a ≼ y + a$, 对 $a$ 归纳.
 
 - 若 $a = 0$, 有 $x + 0 = x ≼ y = y + 0$.
 - 若 $a = a'^+$, 有归纳假设 $x + a' ≼ y + a'$, 两边取后继即得 $x + a'^+ ≼ y + a'^+$.
@@ -479,8 +479,8 @@ a+-pres≺ (≼l p)  = ≼l (a+-pres≼ p)
 +a-pres≼ {lim f} p  = l≼l (+a-pres≼ p)
 ```
 
-**推论 2-3-37** 加法左右两边同时保持 $≼$, 即 $a ≼ b → c ≼ d → a + c ≼ b + d$.  
-**证明** 由定理 2-3-34 和定理 2-3-36 即得. ∎
+**推论 2-3-37** 加法左右两边同时保持 $≼$.  
+**证明** 要证 $a ≼ b → c ≼ d → a + c ≼ b + d$, 由定理 2-3-34 和定理 2-3-36 即得. ∎
 
 ```agda
 +-pres≼ : a ≼ b → c ≼ d → a + c ≼ b + d
@@ -534,20 +534,31 @@ a+-cong≈ (p , q) = a+-pres≼ p , a+-pres≼ q
 
 ### 乘法
 
+**事实 2-3-41** 左侧乘法 $λx,x·a$ 膨胀 $≼$ 和 $≺$.  
+**证明** 由其子树版本: 推论 2-2-25 和推论 2-2-26 即得. ∎
+
+```agda
+*a-infl≼ : ⦃ NonZero a ⦄ → (_* a) inflates _≼_ within NonZero
+*a-infl≼ = ≤→≼ *-infl≤
+
+*a-infl≺ : ⦃ NonTrivial a ⦄ → (_* a) inflates _≺_ within NonZero
+*a-infl≺ = <→≺ *-infl
+```
+
+**定理 2-3-42** 右侧乘法 $λx,a·x$ 保持 $≼$.  
+**证明** 要证 $x ≼ y → a · x ≼ a · y$, 对 $p : x ≼ y$ 归纳.
+
+- 若 $p = \text{z≼} : 0 ≼ y$, 有 $a · 0 = 0 ≼ a · y$.
+- 若 $p = \text{s≼s}(p') : x^+ ≼ y^+$, 有归纳假设 $a · x ≼ a · y$, 两边加 $a$ 即得 $a · x^+ = ≼ a · y^+$.
+- 若 $p = \text{≼l}(p') : x ≼ \lim(f)$, 有归纳假设 $a · x ≼ a · f(n)$, 右边取极限即得 $a · x ≼ a · \lim(f)$.
+- 若 $p = \text{l≼}(p') : \lim(f) ≼ y$, 有归纳假设 $∀n, a · f(n) ≼ a · y$, 左边取极限即得 $a · \lim(f) ≼ a · y$. ∎
+
 ```agda
 a*-pres≼ : ⦃ _ : NonZero a ⦄ → (a *_) preserves _≼_
 a*-pres≼ z≼       = z≼
 a*-pres≼ (s≼s p)  = +a-pres≼ (a*-pres≼ p)
 a*-pres≼ (≼l p)   = ≼l (a*-pres≼ p)
 a*-pres≼ (l≼ p)   = l≼ (a*-pres≼ p)
-```
-
-```agda
-*a-infl≼ : ⦃ NonZero a ⦄ → (_* a) inflates _≼_ within NonZero
-*a-infl≼ {a} {x} =          begin
-  x                         ≈˘⟨ ≡→≈ a*-id ⟩
-  x * 1                     ≤⟨ a*-pres≼ (<→≺ nz-elim) ⟩
-  x * a                     ∎ where open CrossTreeReasoning
 ```
 
 ```agda
@@ -560,14 +571,6 @@ a*-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
   a * x                     <⟨ a*-pres≺ p ⟩
   a * f n                   ≤⟨ f≼l ⟩
   lim- (λ n → a * f n)      ∎ where open CrossTreeReasoning
-```
-
-```agda
-*a-infl≺ : ⦃ NonTrivial a ⦄ → (_* a) inflates _≺_ within NonZero
-*a-infl≺ {a} {x} =          begin-strict
-  x                         ≈˘⟨ ≡→≈ a*-id ⟩
-  x * 1                     <⟨ a*-pres≺ (<→≺ nt-elim) ⟩
-  x * a                     ∎ where open CrossTreeReasoning
 ```
 
 ```agda
@@ -718,3 +721,4 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
       f m                   <⟨ <→≺ (seq-pres m<n) ⟩
       f n                   ∎
 ```
+ 
