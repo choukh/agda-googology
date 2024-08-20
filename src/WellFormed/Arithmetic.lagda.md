@@ -9,14 +9,14 @@ zhihu-tags: Agda, 大数数学, 序数
 > 本文源码: [Arithmetic.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/WellFormed/Arithmetic.lagda.md)  
 > 高亮渲染: [Arithmetic.html](https://choukh.github.io/agda-googology/WellFormed.Arithmetic.html)  
 
+前两篇我们[定义了良构树序数](https://zhuanlan.zhihu.com/p/711649863)并[讨论了其性质](https://zhuanlan.zhihu.com/p/715404245). 本篇开始向大序数进发. 作为准备, 我们先建立基本的算术运算.
+
 ```agda
 {-# OPTIONS --safe --cubical --lossy-unification #-}
 module WellFormed.Arithmetic where
 open import WellFormed.Base
 open import WellFormed.Properties
 ```
-
-前两篇我们[定义了良构树序数](https://zhuanlan.zhihu.com/p/711649863)并[讨论了其性质](https://zhuanlan.zhihu.com/p/715404245). 本篇开始向大序数进发. 作为准备, 我们先建立基本的算术运算.
 
 ## 序数函数
 
@@ -233,8 +233,12 @@ a+-id = refl
 +-assoc {c = lim _} = limExt λ _ → +-assoc
 ```
 
-**定理 2-2-14** 右侧加法膨胀 $<$, 即 $x < x + a$.  
-**证明** 对 $a$ 归纳. 
+**定理 2-2-14** 右侧加法膨胀 $≤$, 即 $x ≤ x + a$.  
+**证明** 对 $a$ 归纳.
+
+- 若 $a = 0$, 有 $x ≤ x + 0$.
+- 若 $a = a'^+$, 有归纳假设 $x ≤ x + a'$, 于是 $x ≤ x + a' < x + a'^+ = x + a$.
+- 若 $a = \lim(f)$, 有归纳假设 $x ≤ x + f(n)$, 于是 $x ≤ x + f(n) < x + \lim(f)$. ∎
 
 ```agda
 +-infl≤ : (_+ a) inflates _≤_
@@ -248,6 +252,9 @@ a+-id = refl
   x + f 0                 <⟨ f<l ⟩
   x + lim f               ∎ where open SubTreeReasoning
 ```
+
+**推论 2-2-15** 右侧加法在非零序数内膨胀 $<$, 即 $x < x + a$.  
+**证明** 观察定理 2-2-14 的证明不难看出. ∎
 
 ```agda
 +-infl : ⦃ NonZero a ⦄ → (_+ a) inflates _<_

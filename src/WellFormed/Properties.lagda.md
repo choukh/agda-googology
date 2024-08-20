@@ -10,13 +10,13 @@ zhihu-url: https://zhuanlan.zhihu.com/p/715404245
 > 本文源码: [Properties.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/WellFormed/Properties.lagda.md)  
 > 高亮渲染: [Properties.html](https://choukh.github.io/agda-googology/WellFormed.Properties.html)  
 
+[上一篇](https://zhuanlan.zhihu.com/p/711649863)我们定义了良构树序数并证明了一些基本性质, 本文将继续讨论它的更多性质.
+
 ```agda
 {-# OPTIONS --safe --cubical --lossy-unification #-}
 module WellFormed.Properties where
 open import WellFormed.Base
 ```
-
-[上一篇](https://zhuanlan.zhihu.com/p/711649863)我们定义了良构树序数并证明了一些基本性质, 本文将继续讨论它的更多性质.
 
 ## 序数函数
 
