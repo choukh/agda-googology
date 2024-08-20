@@ -116,7 +116,7 @@ record NonTrivial (a : Ord) : Type where
   field .wrap : nonTrivial a
 ```
 
-**事实 2-2-8** $a$ 平凡与 $a > 1$ 等价.
+**事实 2-2-8** $a$ 非平凡与 $a > 1$ 等价.
 
 ```agda
 nt-intro-rd : Road 1 a → NonTrivial a
@@ -157,6 +157,11 @@ nt-nz {lim f} = _
 
 ## 加法
 
+**互递归 2-2-10**
+
+- (1) 定义加法 $+$.
+- (2) 证明 $λx, a + x$ 保持 $<$.
+
 ```agda
 _+_ : Ord → Ord → Ord; infixl 7 _+_
 +-pres-rd : (a +_) preserves Road
@@ -165,20 +170,47 @@ _+_ : Ord → Ord → Ord; infixl 7 _+_
 +-pres = map +-pres-rd
 ```
 
+**定义 2-2-10-(1)** 加法 $a + b$, 讨论 $b$.
+
+$$
+\begin{aligned}
+a + 0 & = a \\
+a + b'^+ & = (a + b')^+ \\
+a + \lim(f) & = \lim (λ n, a + f(n))
+\end{aligned}
+$$
+
+其中第三行要求说明 $λ n, a + f(n)$ 是良构的, 由定理 2-2-10-(2) 及 $f$ 良构即得. ∎
+
 ```agda
 a + zero = a
 a + suc b = suc (a + b)
 a + lim f = lim (λ n → a + f n) ⦃ +-pres it ⦄
+```
 
+**定理 2-2-10-(2)** $λx, a + x$ 保持 $<$.  
+**证明** 假设 $r : x < y$, 要证 $a + x < a + y$. 对路径 $r$ 归纳.
+
+- 若 $r = 0 : x < x^+$, 有 $a + x < (a + x)^+ = a + x^+$.
+- 若 $r = r'^+ : x < y^+$, 有 $r' : x < y$, 于是 $a + x < a + y < (a + y)^+ = a + y^+$.
+- 若 $r = \text{lim}(r') : x < \text{lim}(f)$, 有 $r' : x < f(n)$, 于是 $a + x < a + f(n) < \lim (λ n, a + f(n)) = a + \lim(f)$. ∎
+
+```agda
 +-pres-rd zero = zero
 +-pres-rd (suc r) = suc (+-pres-rd r)
 +-pres-rd (lim r) = lim ⦃ _ ⦄ (+-pres-rd r)
 ```
 
+**事实 2-2-11** 零是加法的右幺元.  
+**证明** 依定义. ∎
+
 ```agda
 a+-id : a + 0 ≡ a
 a+-id = refl
 ```
+
+**定理 2-2-12** 零是加法的左幺元.  
+**证明**
 
 ```agda
 +a-id : 0 + a ≡ a
