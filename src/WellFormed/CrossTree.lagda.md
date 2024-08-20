@@ -346,12 +346,20 @@ z≺s = s≼s z≼
          , (λ { (p , q) u → ≼-≺-trans q u })
 ```
 
-**引理 2-3-28**
+**引理 2-3-28** 如果 $a ≼ b$, 那么 $b$ 可及蕴含 $a$ 可及.  
+**证明** 由 $b$ 可及, 任意 $y ≺ b$ 可及. 要证 $a$ 可及, 即证任意 $x ≺ a$ 可及. 由 $x ≺ a ≼ b$, $x$ 可及. ∎
 
 ```agda
 ≺-acc : a ≼ b → Acc _≺_ b → Acc _≺_ a
 ≺-acc p (acc r) = acc (λ q → r (≺-≼-trans q p))
 ```
+
+**定理 2-3-29** $≺$ 是良基关系, 即任意 $a$ 在 $≺$ 下可及.  
+**证明** 对 $a$ 归纳.
+
+- 若 $a = 0$, 要证任意 $x ≺ a = 0$ 可及, 空虚真.
+- 若 $a = a'^+$, 要证任意 $x ≺ a'^+$, 即任意 $x ≼ a'$ 可及. 由归纳假设 $a'$ 可及, 由引理 2-3-28, $x$ 可及.
+- 若 $a = \lim(f)$, 要证任意 $x ≺ \lim(f)$ 可及, 即任意 $x ≺ f(n)$ 可及. 由归纳假设 $f(n)$ 可及, 由引理 2-3-28, $x$ 可及. ∎
 
 ```agda
 ≺-wfnd : WellFounded _≺_
@@ -360,12 +368,15 @@ z≺s = s≼s z≼
 ≺-wfnd (lim f) = acc λ { (≼l p) → ≺-acc (≺→≼ p) (≺-wfnd (f _)) }
 ```
 
-```agda
-≺-irrefl : Irreflexive _≈_ _≺_
-≺-irrefl = wf⇒irrefl ≺-resp-≈ ≈-sym ≺-wfnd
+**推论 2-3-30** $≺$ 是非对称且反自反的.  
+**证明** 良基关系都是非对称且反自反的. ∎
 
+```agda
 ≺-asym : Asymmetric _≺_
 ≺-asym = wf⇒asym ≺-wfnd
+
+≺-irrefl : Irreflexive _≈_ _≺_
+≺-irrefl = wf⇒irrefl ≺-resp-≈ ≈-sym ≺-wfnd
 ```
 
 ## 结构实例化
@@ -376,33 +387,24 @@ z≺s = s≼s z≼
 open import Relation.Binary.Structures {A = Ord} _≈_
 
 ≈-isEquivalence : IsEquivalence
-≈-isEquivalence = record
-  { refl = ≈-refl
-  ; sym = ≈-sym
-  ; trans = ≈-trans }
+≈-isEquivalence = record { refl = ≈-refl ; sym = ≈-sym ; trans = ≈-trans }
 
 ≼-isPreorder : IsPreorder _≼_
-≼-isPreorder = record
-  { isEquivalence = ≈-isEquivalence
-  ; reflexive = fst
-  ; trans = ≼-trans }
+≼-isPreorder = record { isEquivalence = ≈-isEquivalence ; reflexive = fst ; trans = ≼-trans }
 
 ≼-isPartialOrder : IsPartialOrder _≼_
 ≼-isPartialOrder = record { isPreorder = ≼-isPreorder ; antisym = ≼-antisym }
 
 ≺-isStrictPartialOrder : IsStrictPartialOrder _≺_
 ≺-isStrictPartialOrder = record
-  { isEquivalence = ≈-isEquivalence
-  ; irrefl = ≺-irrefl
-  ; trans = ≺-trans
-  ; <-resp-≈ = ≺-resp-≈ }
+  { isEquivalence = ≈-isEquivalence ; irrefl = ≺-irrefl ; trans = ≺-trans ; <-resp-≈ = ≺-resp-≈ }
 
 module CrossTreeReasoning where
-  open import Relation.Binary.Reasoning.Base.Triple
-    {_≈_ = _≈_} {_≤_ = _≼_} {_<_ = _≺_}
-    ≼-isPreorder ≺-asym ≺-trans ≺-resp-≈ ≺→≼ ≺-≼-trans ≼-≺-trans
-    public
+  open import Relation.Binary.Reasoning.Base.Triple {_≈_ = _≈_} {_≤_ = _≼_} {_<_ = _≺_}
+    ≼-isPreorder ≺-asym ≺-trans ≺-resp-≈ ≺→≼ ≺-≼-trans ≼-≺-trans public
 ```
+
+**注意 2-3-31** 相较于子树关系是同株树序数下的良序, 跨树关系是整个树序数类型下的良基偏序, 但不是全序.
 
 ## 跨树算术定理
 
