@@ -323,7 +323,7 @@ a+-infl≼ {x = lim f} = l≼l a+-infl≼
 ```
 
 ```agda
-1+l-absorb : IsLim a → 1 + a ≈ a
+1+l-absorb : isLim a → 1 + a ≈ a
 1+l-absorb {lim f} tt = l≼ls (aux (<→≺ it)) , l≼l a+-infl≼ where
   aux : a ≺ b → 1 + a ≼ b
   aux {(zero)} (s≼s p) = z≺s
