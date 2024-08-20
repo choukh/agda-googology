@@ -210,7 +210,11 @@ a+-id = refl
 ```
 
 **定理 2-2-12** 零是加法的左幺元.  
-**证明**
+**证明** 要证 $0 + a = a$. 对 $a$ 归纳.
+
+- 若 $a = 0$, 有 $0 + 0 = 0$.
+- 若 $a = a'^+$, 有归纳假设 $0 + a' = a'$, 于是 $0 + a'^+ = (0 + a')^+ = a'^+$.
+- 若 $a = \lim(f)$, 有归纳假设 $∀n, 0 + f(n) = f(n)$, 于是 $0 + \lim(f) = \lim(λ n, 0 + f(n)) =^{\text{ext}} \lim(λ n, f(n)) = \lim(f)$. 其中 $=^{\text{ext}}$ 表示依赖函数外延性. ∎
 
 ```agda
 +a-id : 0 + a ≡ a
@@ -219,6 +223,9 @@ a+-id = refl
 +a-id {lim f} = limExt λ _ → +a-id
 ```
 
+**定理 2-2-13** 加法满足结合律 $a + (b + c) = (a + b) + c$.  
+**证明** 对 $c$ 归纳. 与定理 2-2-12 类似. ∎
+
 ```agda
 +-assoc : a + (b + c) ≡ (a + b) + c
 +-assoc {c = zero} = refl
@@ -226,26 +233,29 @@ a+-id = refl
 +-assoc {c = lim _} = limExt λ _ → +-assoc
 ```
 
+**定理 2-2-14** 右侧加法膨胀 $<$, 即 $x < x + a$.  
+**证明** 对 $a$ 归纳. 
+
 ```agda
-+-infl≤ : (_+ b) inflates _≤_
-+-infl≤ {b = zero} = inr refl
-+-infl≤ {b = suc b} {x} = begin
++-infl≤ : (_+ a) inflates _≤_
++-infl≤ {a = zero} = inr refl
++-infl≤ {a = suc a} {x} = begin
   x                       ≤⟨ +-infl≤ ⟩
-  x + b                   <⟨ +-pres zero₁ ⟩
-  x + suc b               ∎ where open SubTreeReasoning
-+-infl≤ {b = lim f} {x} = begin
+  x + a                   <⟨ +-pres zero₁ ⟩
+  x + suc a               ∎ where open SubTreeReasoning
++-infl≤ {a = lim f} {x} = begin
   x                       ≤⟨ +-infl≤ ⟩
   x + f 0                 <⟨ f<l ⟩
   x + lim f               ∎ where open SubTreeReasoning
 ```
 
 ```agda
-+-infl : ⦃ NonZero b ⦄ → (_+ b) inflates _<_
-+-infl {b = suc b} {x} = begin-strict
++-infl : ⦃ NonZero a ⦄ → (_+ a) inflates _<_
++-infl {a = suc a} {x} = begin-strict
   x                       ≤⟨ +-infl≤ ⟩
-  x + b                   <⟨ +-pres zero₁ ⟩
-  x + suc b               ∎ where open SubTreeReasoning
-+-infl {b = lim f} {x} = begin-strict
+  x + a                   <⟨ +-pres zero₁ ⟩
+  x + suc a               ∎ where open SubTreeReasoning
++-infl {a = lim f} {x} = begin-strict
   x                       ≤⟨ +-infl≤ ⟩
   x + f 0                 <⟨ f<l ⟩
   x + lim f               ∎ where open SubTreeReasoning
