@@ -1,6 +1,7 @@
 ---
 title: 形式化大数数学 (2.3 - 跨树关系)
 zhihu-tags: Agda, 大数数学, 序数
+zhihu-url: https://zhuanlan.zhihu.com/p/715624377
 ---
 
 # 形式化大数数学 (2.3 - 跨树关系)
