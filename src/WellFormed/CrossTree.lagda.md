@@ -589,7 +589,7 @@ a*-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
 ```agda
 *a-pres≼ : (_* a) preserves _≼_ within NonZero
 *a-pres≼ {(zero)} _ = ≼-refl
-*a-pres≼ {suc a} {x} {y} p = +-pres≼ (*a-pres≼ p) p
+*a-pres≼ {suc a} p = +-pres≼ (*a-pres≼ p) p
 *a-pres≼ {lim f} p = l≼l (*a-pres≼ p)
 ```
 
@@ -604,7 +604,18 @@ a*-infl≼ {a} {x} =          begin
   a * x                     ∎ where open CrossTreeReasoning
 ```
 
-**推论 2-3-46** 左右两侧乘法都尊重 $≈$:
+**推论 2-3-46** 右侧乘法 $λx,a·x$ 保持 $≺$.  
+**证明** 与推论 2-3-35 同理. ∎
+
+```agda
+*-pres≼ : ⦃ _ : NonZero a ⦄ ⦃ _ : NonZero b ⦄ → a ≼ b → c ≼ d → a * c ≼ b * d
+*-pres≼ {a} {b} {c} {d} p q = begin
+  a * c                     ≤⟨ a*-pres≼ q ⟩
+  a * d                     ≤⟨ *a-pres≼ p ⟩
+  b * d                     ∎ where open CrossTreeReasoning
+```
+
+**推论 2-3-47** 左右两侧乘法都尊重 $≈$:
 - $b ≈ c → a · b ≈ a · c$.
 - $b ≈ c → b · a ≈ c · a$.
 
@@ -620,6 +631,9 @@ a*-cong≈ (p , q) = a*-pres≼ p , a*-pres≼ q
 
 ## 幂运算
 
+**事实 2-3-48** 左侧幂运算 $λx,x^a$ 膨胀 $≼$ 和 $≺$.  
+**证明** 由其子树版本: 推论 2-2-33 和推论 2-2-34 即得. ∎
+
 ```agda
 ^a-infl≼ : ⦃ NonZero a ⦄ → (_^ a) inflates _≼_ within NonTrivial
 ^a-infl≼ = ≤→≼ ^-infl≤
@@ -628,6 +642,14 @@ a*-cong≈ (p , q) = a*-pres≼ p , a*-pres≼ q
 ^a-infl≺ = <→≺ ^-infl
 ```
 
+**定理 2-3-49** 右侧幂运算 $λx,a^x$ 保持 $≼$.  
+**证明** 要证 $x ≼ y → a^x ≼ a^y$, 对 $p : x ≼ y$ 归纳.
+
+- 若 $p = \text{z≼} : 0 ≼ y$, 有 $a^0 = 1 ≤ a^y$.
+- 若 $p = \text{s≼s}(p') : x^+ ≼ y^+$, 有归纳假设 $a^x ≼ a^y$, 两边乘 $a$ 即得 $a^x * a ≼ a^y * a$.
+- 若 $p = \text{≼l}(p') : x ≼ \lim(f)$, 有归纳假设 $a^x ≼ a^{f(n)}$, 右边取极限即得 $a^x ≼ a^{\lim(f)}$.
+- 若 $p = \text{l≼}(p') : \lim(f) ≼ y$, 有归纳假设 $∀n, a^{f(n)} ≼ a^y$, 左边取极限即得 $a^{\lim(f)} ≼ a^y$. ∎
+
 ```agda
 a^-pres≼ : ⦃ _ : NonTrivial a ⦄ → (a ^_) preserves _≼_
 a^-pres≼ z≼ = <→≺ nz-elim                 where instance _ = ^-nz
@@ -635,6 +657,12 @@ a^-pres≼ (s≼s p) = *a-pres≼ (a^-pres≼ p)  where instance _ = ^-nz
 a^-pres≼ (≼l p) = ≼l (a^-pres≼ p)
 a^-pres≼ (l≼ p) = l≼ (a^-pres≼ p)
 ```
+
+**定理 2-3-50** 右侧幂运算 $λx,a^x$ 保持 $≺$.  
+**证明** 要证 $x ≺ y → a^x ≺ a^y$, 对 $p : x ≺ y$ 归纳, 只有两种情况.
+
+- 若 $p = \text{s≼s}(p') : x ≺ y^+$, 必有 $p' : x ≼ y$, 于是 $a^x ≺ a^x * a ≼ a^y * a = a^{y^+}$.
+- 若 $p = \text{≼l}(p') : x ≺ \lim(f)$, 必有 $p' : x ≺ f(n)$, 有归纳假设 $a^x ≺ a^{f(n)}$, 右边取极限即得 $a^x ≺ a^{\lim(f)}$. ∎
 
 ```agda
 a^-pres≺ : ⦃ _ : NonTrivial a ⦄ → (a ^_) preserves _≺_
@@ -648,14 +676,18 @@ a^-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
   lim- (λ n → a ^ f n)      ∎ where open CrossTreeReasoning
 ```
 
+**定理 2-3-51** 左侧幂运算 $λx,x^a$ 保持 $≼$.  
+**证明** 这是一个跨树专有定理. 要证 $x ≼ y → x^a ≼ y^a$, 对 $a$ 归纳.
+
+- 若 $a = 0$, 有 $x^0 ≼ y^0$.
+- 若 $a = a'^+$, 有归纳假设 $x^{a'} ≼ y^{a'}$. 由推论 2-3-46 即得 $x^{a'} * x ≼ y^{a'} * y$.
+- 若 $a = \lim(f)$, 有归纳假设 $∀n, x^{f(n)} ≼ y^{f(n)}$, 两边取极限即得 $x^{\lim(f)} ≼ y^{\lim(f)}$. ∎
+
 ```agda
 ^a-pres≼ : (_^ a) preserves _≼_ within NonTrivial
 ^a-pres≼ {(zero)} _ = ≼-refl
+^a-pres≼ {suc a} p = *-pres≼ (^a-pres≼ p) p where instance _ = ^-nz
 ^a-pres≼ {lim f} p = l≼l (^a-pres≼ p)
-^a-pres≼ {suc a} {x} {y} p = begin
-  x ^ a * x                 ≤⟨ a*-pres≼ p ⟩
-  x ^ a * y                 ≤⟨ *a-pres≼ (^a-pres≼ p) ⟩
-  y ^ a * y                 ∎ where open CrossTreeReasoning; instance _ = ^-nz
 ```
 
 ```agda
