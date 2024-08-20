@@ -646,7 +646,7 @@ a*-cong≈ (p , q) = a*-pres≼ p , a*-pres≼ q
 **证明** 要证 $x ≼ y → a^x ≼ a^y$, 对 $p : x ≼ y$ 归纳.
 
 - 若 $p = \text{z≼} : 0 ≼ y$, 有 $a^0 = 1 ≤ a^y$.
-- 若 $p = \text{s≼s}(p') : x^+ ≼ y^+$, 有归纳假设 $a^x ≼ a^y$, 两边乘 $a$ 即得 $a^x * a ≼ a^y * a$.
+- 若 $p = \text{s≼s}(p') : x^+ ≼ y^+$, 有归纳假设 $a^x ≼ a^y$, 两边乘 $a$ 即得 $a^x · a ≼ a^y · a$.
 - 若 $p = \text{≼l}(p') : x ≼ \lim(f)$, 有归纳假设 $a^x ≼ a^{f(n)}$, 右边取极限即得 $a^x ≼ a^{\lim(f)}$.
 - 若 $p = \text{l≼}(p') : \lim(f) ≼ y$, 有归纳假设 $∀n, a^{f(n)} ≼ a^y$, 左边取极限即得 $a^{\lim(f)} ≼ a^y$. ∎
 
@@ -661,7 +661,7 @@ a^-pres≼ (l≼ p) = l≼ (a^-pres≼ p)
 **定理 2-3-50** 右侧幂运算 $λx,a^x$ 保持 $≺$.  
 **证明** 要证 $x ≺ y → a^x ≺ a^y$, 对 $p : x ≺ y$ 归纳, 只有两种情况.
 
-- 若 $p = \text{s≼s}(p') : x ≺ y^+$, 必有 $p' : x ≼ y$, 于是 $a^x ≺ a^x * a ≼ a^y * a = a^{y^+}$.
+- 若 $p = \text{s≼s}(p') : x ≺ y^+$, 必有 $p' : x ≼ y$, 于是 $a^x ≺ a^x · a ≼ a^y · a = a^{y^+}$.
 - 若 $p = \text{≼l}(p') : x ≺ \lim(f)$, 必有 $p' : x ≺ f(n)$, 有归纳假设 $a^x ≺ a^{f(n)}$, 右边取极限即得 $a^x ≺ a^{\lim(f)}$. ∎
 
 ```agda
@@ -679,8 +679,8 @@ a^-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
 **定理 2-3-51** 左侧幂运算 $λx,x^a$ 保持 $≼$.  
 **证明** 这是一个跨树专有定理. 要证 $x ≼ y → x^a ≼ y^a$, 对 $a$ 归纳.
 
-- 若 $a = 0$, 有 $x^0 ≼ y^0$.
-- 若 $a = a'^+$, 有归纳假设 $x^{a'} ≼ y^{a'}$. 由推论 2-3-46 即得 $x^{a'} * x ≼ y^{a'} * y$.
+- 若 $a = 0$, 有 $x^0 ≼ y^0 = 1$.
+- 若 $a = a'^+$, 有归纳假设 $x^{a'} ≼ y^{a'}$. 由推论 2-3-46 即得 $x^{a'} · x ≼ y^{a'} · y$.
 - 若 $a = \lim(f)$, 有归纳假设 $∀n, x^{f(n)} ≼ y^{f(n)}$, 两边取极限即得 $x^{\lim(f)} ≼ y^{\lim(f)}$. ∎
 
 ```agda
@@ -689,6 +689,22 @@ a^-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
 ^a-pres≼ {suc a} p = *-pres≼ (^a-pres≼ p) p where instance _ = ^-nz
 ^a-pres≼ {lim f} p = l≼l (^a-pres≼ p)
 ```
+
+**定理 2-3-52** 右侧幂运算 $λx,a^x$ 膨胀 $≼$.  
+**证明** $x ≼ 2^x ≼ a^x$. 其中第一个 $≼$ 号由归纳法证明: 对 $x$ 归纳.
+
+- 若 $x = 0$, 有 $0 ≼ 2^0 = 1$.
+- 若 $x = \lim(f)$, 有归纳假设 $∀n, f(n) ≼ 2^{f(n)}$, 两边取极限即得 $\lim(f) ≼ 2^{\lim(f)}$. ∎
+- 若 $x = x'^+$, 有
+
+$$
+\begin{aligned}
+x' + 1 &≼ 2^{x'} + 1 \\
+&≼ 2^{x'} + 2^{x'} \\
+&= 2^{x'} · 2 \\
+&= 2^{x'+1}
+\end{aligned}
+$$
 
 ```agda
 a^-infl≼ : ⦃ _ : NonTrivial a ⦄ → (a ^_) inflates _≼_
@@ -706,8 +722,25 @@ a^-infl≼ {a} {x} =          begin
     b + 1                   ≤⟨ +a-pres≼ aux ⟩
     2^b + 1                 ≤⟨ a+-pres≼ (<→≺ nz-elim) ⟩
     2^b + 2^b               ≈˘⟨ ≡→≈ (cong (_+ 2^b) +a-id) ⟩
-    0 + 2^b + 2^b           ∎ where 2^b = 2 ^ b
+    2^b * 2                 ∎ where 2^b = 2 ^ b
 ```
+
+**推论 2-3-53** 右侧幂运算 $λx,a^x$ 保持 $≺$.  
+**证明** 与推论 2-3-46 同理. ∎
+
+```agda
+^-pres≼ : ⦃ _ : NonTrivial a ⦄ ⦃ _ : NonTrivial b ⦄ → a ≼ b → c ≼ d → a ^ c ≼ b ^ d
+^-pres≼ {a} {b} {c} {d} p q = begin
+  a ^ c                     ≤⟨ a^-pres≼ q ⟩
+  a ^ d                     ≤⟨ ^a-pres≼ p ⟩
+  b ^ d                     ∎ where open CrossTreeReasoning
+```
+
+**推论 2-3-54** 左右两侧幂运算都尊重 $≈$:
+- $b ≈ c → a ^ b ≈ a ^ c$.
+- $b ≈ c → b ^ a ≈ c ^ a$.
+
+**证明** 由定理 2-3-49 和定理 2-3-51 即得. ∎
 
 ```agda
 a^-cong≈ : ⦃ _ : NonTrivial a ⦄ → b ≈ c → a ^ b ≈ a ^ c
@@ -716,6 +749,8 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
 ^a-cong≈ : ⦃ _ : NonTrivial b ⦄ ⦃ _ : NonTrivial c ⦄ → b ≈ c → b ^ a ≈ c ^ a
 ^a-cong≈ (p , q) = ^a-pres≼ p , ^a-pres≼ q
 ```
+
+**引理 2-3-55**
 
 ```agda
 +-assoc-n : ⦃ _ : NonZero a ⦄ → a + a * fin n ≡ a * fin n + a
@@ -726,6 +761,8 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
   a + a * fin n + a       ≈⟨ cong (_+ a) +-assoc-n ⟩
   a * suc (fin n) + a     ∎ where open SubTreeReasoning
 ```
+
+**定理 2-3-56**
 
 ```agda
 ω^-absorb : a ≺ b → ω ^ a + ω ^ b ≈ ω ^ b
