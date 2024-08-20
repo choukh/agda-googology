@@ -22,16 +22,22 @@ open import WellFormed.Base
 
 我们先定义关于序数函数的一些性质.
 
-**定义 2-1-0** 我们把序数函数的类型简记作 $\text{Func}$, 序数的二元关系的类型简记作 $\text{Rel}$, 并约定用大写的 $F$ 表示序数函数.
+**定义 2-1-0** 我们把
+
+- 序数函数的类型记作 $\text{Func}$, 并约定用大写的 $F$ 表示序数函数.
+- 序数的一元关系类型记作 $\text{Pred}$, 也叫做序数上的谓词 (predicate).
+- 序数的二元关系类型记作 $\text{Rel}$
 
 ```agda
 Func : Type
 Func = Ord → Ord
+private variable F : Func
+
+Pred : Type₁
+Pred = Ord → Type
 
 Rel : Type₁
 Rel = Ord → Ord → Type
-
-private variable F : Func
 ```
 
 **定义 2-1-1** 我们说一个序数函数 $F$ **保持**一个序数关系 $\sim$, 当且仅当对任意序数 $x, y$ 都有 $x \sim y \to F(x) \sim F(y)$.
@@ -56,7 +62,7 @@ _injects_ : Func → Rel → Type
 F injects _~_ = ∀ {x y} → F x ~ F y → x ~ y
 ```
 
-**事实 2-1-4** 如果 $F$ 单射 $\lt$, 那么 $F$ 单射 $\leq$.
+**事实 2-1-4** 如果 $F$ 单射 $=$ 且单射 $\lt$, 那么 $F$ 单射 $\leq$.
 
 ```agda
 map-inj≤ : F injects _≡_ → F injects _<_ → F injects _≤_
@@ -89,22 +95,24 @@ rd[_] n = lim {n = n} ⦃ _ ⦄
 
 **约定 2-1-6** 鉴于路径关系与子树关系的高度可互换性, 我们今后在自然语言中会适当地混淆两者, 例如把路径的构造说成是子树关系的证明, 或反之. 读者应该理解为是调用了上一篇的引理进行了两者的转换.
 
-**事实 2-1-7** 极限序数的判定: 树序数的归纳定义允许我们快速判断一个序数是否是极限序数.
+树序数的归纳定义允许我们快速判定一个序数是否是极限序数.
+
+**定义 2-1-7** 极限序数谓词: 它仅在遇到极限序数时为真. 该谓词是可判定的.
 
 ```agda
-IsLim : Ord → Type
-IsLim zero = ⊥
-IsLim (suc a) = ⊥
-IsLim (lim f) = ⊤
+isLim : Pred
+isLim zero = ⊥
+isLim (suc a) = ⊥
+isLim (lim f) = ⊤
 ```
 
 **记法 2-1-8** 极限序数的基本列: 如果 $a$ 是极限序数, 那么我们用 $a[n]$ 表示其基本列的第 $n$ 项. 由序数的定义有 $a[n] < a[n^+]$.
 
 ```agda
-_[_] : (a : Ord) → ⦃ IsLim a ⦄ → Seq
+_[_] : (a : Ord) → ⦃ isLim a ⦄ → Seq
 _[_] (lim f) = f
 
-[]-wf : ⦃ _ : IsLim a ⦄ → a [ n ] < a [ suc n ]
+[]-wf : ⦃ _ : isLim a ⦄ → a [ n ] < a [ suc n ]
 []-wf {lim f} = it
 ```
 
@@ -151,10 +159,10 @@ lim-inj refl = refl
 **事实 2-1-12** 极限路径的反演: 如果 $b$ 小于极限序数 $a$, 那么存在一个自然数 $n$ 使得 $b$ 小于 $a[n]$.
 
 ```agda
-lim-inv-rd : ⦃ _ : IsLim a ⦄ → Road b a → Σ[ n ∈ ℕ ] Road b (a [ n ])
+lim-inv-rd : ⦃ _ : isLim a ⦄ → Road b a → Σ[ n ∈ ℕ ] Road b (a [ n ])
 lim-inv-rd (lim r) = _ , r
 
-lim-inv : ⦃ _ : IsLim a ⦄ → b < a → Σ[ n ∈ ℕ ] b < a [ n ]
+lim-inv : ⦃ _ : isLim a ⦄ → b < a → Σ[ n ∈ ℕ ] b < a [ n ]
 lim-inv r with lim-inv-rd (set r)
 ... | n , r = n , ∣ r ∣₁
 ```
@@ -333,13 +341,13 @@ s≤→< (inr refl) = zero₁
 **证明** 要证对任意 $b$ 小于极限序数 $a$ 都有 $b^+ < a$. 讨论 $r : b < a$, 只能有 $r = \lim(r') : b < a$, 且 $r' : b < a[n]$. 由定理 2-1-17 即传递性即得 $b^+ < a[n]^+ ≤ a$. ∎
 
 ```agda
-s<l-rd : ⦃ _ : IsLim a ⦄ → Road b a → Road (suc b) a
+s<l-rd : ⦃ _ : isLim a ⦄ → Road b a → Road (suc b) a
 s<l-rd {a} {b} (lim {n} r) = begin-strict
   suc b           <⟨ s<s-rd r ⟩
   suc (a [ n ])   ≤⟨ <→s≤-rd f<l-rd ⟩
   a               ∎ where open RoadReasoning
 
-s<l : ⦃ _ : IsLim a ⦄ → b < a → suc b < a
+s<l : ⦃ _ : isLim a ⦄ → b < a → suc b < a
 s<l = map s<l-rd
 ```
 
@@ -351,11 +359,11 @@ s<l = map s<l-rd
 - 若 $a < b^+$, 必然有 $a < b$. ∎
 
 ```agda
-l≤p-rd : ⦃ _ : IsLim a ⦄ → NSRoad a (suc b) → NSRoad a b
+l≤p-rd : ⦃ _ : isLim a ⦄ → NSRoad a (suc b) → NSRoad a b
 l≤p-rd {lim f} (inl zero)    = inr refl
 l≤p-rd {lim f} (inl (suc r)) = inl r
 
-l≤p : ⦃ _ : IsLim a ⦄ → a ≤ suc b → a ≤ b
+l≤p : ⦃ _ : isLim a ⦄ → a ≤ suc b → a ≤ b
 l≤p {lim f} (inl r) = ns→≤ (l≤p-rd (inl (set r)))
 ```
 
@@ -411,7 +419,7 @@ n<fs f _ = ≤-<-trans (n≤fn f) it
 **证明** 假设有这样的序数 $a$. 由事实 2-1-12, 存在 $n$ 使得 $a < n$. 但由引理 2-1-25 又有 $n ≤ a[n] < a$. 由传递性有 $n < n$, 违反 $<$ 的反自反性. ∎
 
 ```agda
-l≮ω : ⦃ IsLim a ⦄ → a ≮ ω
+l≮ω : ⦃ isLim a ⦄ → a ≮ ω
 l≮ω a@{lim f} r = let n , r = lim-inv r in <-irrefl refl $ begin-strict
   fin n               ≤⟨ n≤fn f ⟩
   a [ n ]             <⟨ f<l ⟩
@@ -423,7 +431,7 @@ l≮ω a@{lim f} r = let n , r = lim-inv r in <-irrefl refl $ begin-strict
 **证明** 对任意与 $\omega$ 同株的极限序数 $a$, 由推论 2-0-34, 讨论 $\omega$ 与 $a$ 的大小关系. 若 $a < \omega$, 由引理 2-1-27 可得矛盾. 所以只能有 $ω ≤ a$. ∎
 
 ```agda
-ω≤l : ⦃ IsLim a ⦄ → ω < b → a < b → ω ≤ a
+ω≤l : ⦃ isLim a ⦄ → ω < b → a < b → ω ≤ a
 ω≤l {lim f} r s with <-connex r s
 ... | inl r           = inl r
 ... | inr (inr refl)  = inr refl

@@ -16,13 +16,15 @@ open import WellFormed.Base
 open import WellFormed.Properties
 ```
 
+前两篇我们[定义了良构树序数](https://zhuanlan.zhihu.com/p/711649863)并[讨论了其性质](https://zhuanlan.zhihu.com/p/715404245). 本篇开始向大序数进发. 作为准备, 我们先建立基本的算术运算.
+
 ## 序数函数
+
+先补充定义序数函数的一些性质. 我们用大写的 $F$ 表示序数函数.
 
 ```agda
 private variable F : Func
 ```
-
-我们先定义序数函数的一些性质.
 
 **定义 2-2-0** 我们说一个序数函数 $F$ **膨胀**一个序数关系 $\sim$, 当且仅当对任意序数 $x$ 都有 $x \sim F(x)$.
 
@@ -38,44 +40,56 @@ map-infl≤ : F inflates _<_ → F inflates _≤_
 map-infl≤ p = <→≤ p
 ```
 
+**定义 2-2-2** 给定序数谓词 $P : \text{Pred}$, 我们把限制到 $P$ 上的序数函数记作 $F ↾ P$, 其类型记作 $\text{Func}↾P$.
+
 ```agda
-Func↾ : (Ord → Type) → Type
+Func↾ : Pred → Type
 Func↾ P = (x : Ord) ⦃ p : P x ⦄ → Ord
 
-_↾_ : Func → (P : Ord → Type) → Func↾ P
+_↾_ : Func → (P : Pred) → Func↾ P
 F ↾ P = λ a → F a
 ```
 
+扩展「保持」和「膨胀」的定义, 使得被限制的函数 $F ↾ P$ 也可以谈论保持和膨胀.
+
+**定义 2-2-3** 我们说 $F$ 在 $P$ **之内**保持(或膨胀) $\sim$, 当且仅当 $F$ 在限制到 $P$ 后保持(或膨胀) $\sim$.
+
 ```agda
-restricted-infl-syntax : {P : Ord → Type} → Func↾ P → Rel → Type
+restricted-pres-syntax : {P : Pred} → Func↾ P → Rel → Type
+restricted-pres-syntax {P} F _~_ = ∀ {x y} ⦃ p : P x ⦄ ⦃ q : P y ⦄ → x ~ y → F x ~ F y
+syntax restricted-pres-syntax {P} F _~_ = F preserves _~_ within P
+
+restricted-infl-syntax : {P : Pred} → Func↾ P → Rel → Type
 restricted-infl-syntax {P} F _~_ = ∀ {x} ⦃ p : P x ⦄ → x ~ F x
 syntax restricted-infl-syntax {P} F _~_ = F inflates _~_ within P
 ```
 
-```agda
-restricted-pres-syntax : {P : Ord → Type} → Func↾ P → Rel → Type
-restricted-pres-syntax {P} F _~_ = ∀ {x y} ⦃ p : P x ⦄ ⦃ q : P y ⦄ → x ~ y → F x ~ F y
-syntax restricted-pres-syntax {P} F _~_ = F preserves _~_ within P
-```
-
 ## 一些约定
 
-**约定 2-2-x** 我们将 $\text{suc}(\text{suc}(a))$ 记作 $a^{++}$.
+**约定 2-2-4** 我们将 $\text{suc}(\text{suc}(a))$ 简记作 $a^{++}$.
 
 ```agda
 pattern 2+ a = suc (suc a)
 ```
 
-**约定 2-2-x** 非零序数指不等于零的序数.
+类似定义 2-1-7, 我们有
+
+**定义 2-2-5** 非零序数谓词: 它仅在遇到零时为假. 该谓词是可判定的.
 
 ```agda
-nonZero : Ord → Type
+nonZero : Pred
 nonZero zero = ⊥
 nonZero _ = ⊤
+```
 
+该谓词将只作为一个守护条件, 而不参与运算的构造, 我们将它封装为证明无关的记录类型, 以方便证明运算的性质.
+
+```agda
 record NonZero (a : Ord) : Type where
   field .wrap : nonZero a
 ```
+
+**事实 2-2-6** $a$ 非零与 $a > 0$ 等价.
 
 ```agda
 nz-intro-rd : Road 0 a → NonZero a
@@ -84,18 +98,16 @@ nz-intro-rd {lim _} _ = _
 
 nz-intro : 0 < a → NonZero a
 nz-intro = nz-intro-rd ∘ set
-```
 
-```agda
 nz-elim : ⦃ NonZero a ⦄ → 0 < a
 nz-elim {suc a} = z<s
 nz-elim {lim f} = z<l
 ```
 
-**约定 2-2-x** 非平凡序数指不等于零和一的序数.
+**定义 2-2-7** 非平凡序数指不等于零和一的序数. 该谓词是可判定的.
 
 ```agda
-nonTrivial : Ord → Type
+nonTrivial : Pred
 nonTrivial zero       = ⊥
 nonTrivial (suc zero) = ⊥
 nonTrivial _          = ⊤
@@ -103,6 +115,8 @@ nonTrivial _          = ⊤
 record NonTrivial (a : Ord) : Type where
   field .wrap : nonTrivial a
 ```
+
+**事实 2-2-8** $a$ 平凡与 $a > 1$ 等价.
 
 ```agda
 nt-intro-rd : Road 1 a → NonTrivial a
@@ -113,16 +127,18 @@ nt-intro-rd {lim _}        _ = _
 
 nt-intro : 1 < a → NonTrivial a
 nt-intro = nt-intro-rd ∘ set
-```
 
-```agda
 nt-elim : ⦃ NonTrivial a ⦄ → 1 < a
 nt-elim {2+ _}        = s<s z<s
 nt-elim {suc (lim _)} = s<s z<l
 nt-elim {lim f}       = map lim (n<fs f 1)
 ```
 
-**事实 2-2-x** 后继序数和极限序数都是非零序数; 极限序数都是非平凡序数; 非平凡序数都是非零序数.
+**事实 2-2-9**
+
+- 后继序数和极限序数都是非零序数.
+- 极限序数都是非平凡序数.
+- 非平凡序数都是非零序数.
 
 ```agda
 instance

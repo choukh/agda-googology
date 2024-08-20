@@ -116,7 +116,7 @@ record Fixable (ℱ : Normal) : Type where
   field
     fixbl-infl≼ : (ℱ ⟨_⟩) inflates _≼_
     fixbl-pres≼ : (ℱ ⟨_⟩) preserves _≼_
-    fixbl-isLim : ∀ {a} → NonZero a → IsLim (ℱ ⟨ a ⟩)
+    fixbl-isLim : ∀ {a} → NonZero a → isLim (ℱ ⟨ a ⟩)
     fixbl-absorb : ∀ {a b} → a ≺ b → ℱ ⟨ a ⟩ + ℱ ⟨ b ⟩ ≈ ℱ ⟨ b ⟩
 
   fixbl-cong≈ : a ≈ b → ℱ ⟨ a ⟩ ≈ ℱ ⟨ b ⟩
@@ -210,7 +210,7 @@ record Fixable (ℱ : Normal) : Type where
 ```
 
 ```agda
-  fp-isLim : NonZero a → IsLim (fp ℱ ⟨ a ⟩)
+  fp-isLim : NonZero a → isLim (fp ℱ ⟨ a ⟩)
   fp-isLim {(zero)} _ = _
   fp-isLim {suc a} _  = _
   fp-isLim {lim f} _  = _
@@ -269,7 +269,7 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 ```
 
 ```agda
-ω^-isLim : NonZero a → IsLim (ω ^ a)
+ω^-isLim : NonZero a → isLim (ω ^ a)
 ω^-isLim {suc a} _ = _
 ω^-isLim {lim f} _ = _
 ```
@@ -304,7 +304,7 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 η-suc : η ⟨ suc a ⟩ ≡ lim- (Itₙ (λ x → suc (η ⟨ a ⟩) + ζ ⟨ x ⟩) (suc (η ⟨ a ⟩)))
 η-suc = refl
 
-η-lim : ⦃ _ : IsLim a ⦄ → η ⟨ a ⟩ ≡ lim (λ n → η ⟨ a [ n ] ⟩) ⦃ nml-pres η []-wf ⦄
+η-lim : ⦃ _ : isLim a ⦄ → η ⟨ a ⟩ ≡ lim (λ n → η ⟨ a [ n ] ⟩) ⦃ nml-pres η []-wf ⦄
 η-lim {lim f} = refl
 ```
 
