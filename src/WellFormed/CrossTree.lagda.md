@@ -9,6 +9,8 @@ zhihu-tags: Agda, 大数数学, 序数
 > 本文源码: [CrossTree.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/WellFormed/CrossTree.lagda.md)  
 > 高亮渲染: [CrossTree.html](https://choukh.github.io/agda-googology/WellFormed.CrossTree.html)  
 
+[上一篇](https://zhuanlan.zhihu.com/p/715504174)我们定义了序数的加法, 乘法和幂运算. 为了进一步研究序数运算的性质, 我们追加定义一种更宽泛的序关系, 它允许非同株树序数间建立关系, 我们称之为跨树关系. 本文将讨论跨树关系的性质, 并证明序数运算在跨树关系下的性质.
+
 ```agda
 {-# OPTIONS --safe --cubical --lossy-unification #-}
 module WellFormed.CrossTree where
@@ -23,7 +25,25 @@ open import Induction.WellFounded
 
 ## 非严格序
 
-**定义 2-3-x**
+**定义 2-3-0** 归纳定义非严格跨树关系 $a ≼ b$.
+
+$$
+\frac{}
+{\quad\text{z≼} : 0 ≼ a\quad}
+\qquad
+\frac{a ≼ b}
+{\quad\text{s≼s} : a^+ ≼ b^+\quad}
+$$
+
+$$
+\frac{a ≼ f(n)}
+{\quad\text{≼l} : a ≼ \lim(f)\quad}
+\qquad
+\frac{∀n, f(n) ≼ a}
+{\quad\text{l≼} : \lim(f) ≼ a\quad}
+$$
+
+其中 $\text{s≼s}$ 说后继运算保持 $≼$, $\text{≼l}$ 说极限是基本列的上界, $\text{l≼}$ 说极限是基本列的上确界.
 
 ```agda
 infix 6 _≼_
@@ -34,44 +54,56 @@ data _≼_ : Rel where
   l≼  : {w : wf f} → (∀ {n} → f n ≼ a) → lim f ⦃ w ⦄ ≼ a
 ```
 
-**事实 2-3-x**
+**事实 2-3-1** 后继运算单射 $≼$.  
+**证明** 由归纳定义反演即得. ∎
 
 ```agda
 s≼s-inj : suc injects _≼_
 s≼s-inj (s≼s p) = p
 ```
 
-**事实 2-3-x**
+**事实 2-3-2** $\text{l≼l}$ : 如果两个基本列逐项满足 $≼$, 那么它们的极限也满足 $≼$.  
+**证明** 复合构造子 $\text{l≼}$ 与 $\text{≼l}$ 即得. ∎
 
 ```agda
 l≼l : {wff : wf f} {wfg : wf g} → (∀ {n} → f n ≼ g n) → lim f ⦃ wff ⦄ ≼ lim g ⦃ wfg ⦄
 l≼l p = l≼ (≼l p)
 ```
 
-**事实 2-3-x**
+**事实 2-3-3** 如果两个基本列错开一项后逐项满足 $≼$, 那么它们的极限也满足 $≼$.  
+**证明** 复合构造子 $\text{l≼}$ 与 $\text{≼l}$ 并调整 $\text{≼l}$ 的参数即得. ∎
 
 ```agda
 l≼ls : {wff : wf f} {wfg : wf g} → (∀ {n} → f n ≼ g (suc n)) → lim f ⦃ wff ⦄ ≼ lim g ⦃ wfg ⦄
 l≼ls p = l≼ (λ {n} → (≼l {n = suc n} p))
 ```
 
-**定理 2-3-x**
+**定理 2-3-4** $≼$ 是自反关系.  
+**证明** 即证 $a ≼ a$, 对 $a$ 归纳. 零的情况用 $\text{z≼}$, 后继的情况用 $\text{s≼s}$ 和归纳假设, 极限的情况用 $\text{l≼l}$ 和归纳假设即得. ∎
 
 ```agda
 ≼-refl : Reflexive _≼_
 ≼-refl {(zero)} = z≼
 ≼-refl {suc x} = s≼s ≼-refl
-≼-refl {lim f} = l≼ (≼l ≼-refl)
+≼-refl {lim f} = l≼l ≼-refl
 ```
 
-**推论 2-3-x**
+**推论 2-3-5** 基本列的任一项都 $≼$ 其极限.  
+**证明** 由 $\text{≼l}$ 配合 $≼$ 的自反性即得. ∎
 
 ```agda
 f≼l : {w : wf f} → f n ≼ lim f ⦃ w ⦄
 f≼l = ≼l ≼-refl
 ```
 
-**定理 2-3-x**
+**定理 2-3-6** $≼$ 是传递关系.  
+**证明** 要证 $p : a ≼ b$ 且 $q : b ≼ c$ 蕴含 $a ≼ c$. 同时对 $p,q$ 归纳, 分五种情况.
+
+- 若 $p = \text{z≼} : 0 ≼ b$, 不管 $q$ 是什么, 都有 $\text{z≼} : 0 ≼ c$.
+- 若 $p = \text{s≼s}(p') : a^+ ≼ b^+$, 且 $q = \text{s≼s}(q') : b^+ ≼ c^+$, 必有 $p' : a ≼ b$ 且 $q' : b ≼ c$, 由归纳假设得 $a ≼ c$, 再由 $\text{s≼s}$ 得 $a^+ ≼ c^+$.
+- 不管 $p$ 是什么, 若 $q = \text{≼l}(q') : b ≼ \lim(f)$, 必有 $q' : b ≼ f(n)$, 要证 $a ≼ \lim(f)$. 由归纳假设得 $a ≼ f(n)$, 再由 $\text{≼l}$ 得 $a ≼ \lim(f)$.
+- 不管 $q$ 是什么, 若 $p = \text{l≼}(p') : \lim(f) ≼ b$, 必有 $p' : ∀n, f(n) ≼ b$. 要证 $\lim(f) ≼ c$. 由归纳假设得 $∀n, f(n) ≼ c$, 再由 $\text{l≼}$ 得 $\lim(f) ≼ c$.
+- 若 $p = \text{≼l}(p') : a ≼ \lim(f)$, 且 $q = \text{l≼}(q') : \lim(f) ≼ c$, 必有 $p' : a ≼ f(n)$ 且 $q' : ∀n, f(n) ≼ c$. 要证 $a ≼ c$. 由归纳假设即得. ∎
 
 ```agda
 ≼-trans : Transitive _≼_
