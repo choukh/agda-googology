@@ -623,7 +623,18 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ ⦃ _ : NonZero b ⦄ where
     a ^ (b * suc c)             ∎ where open SubTreeReasoning
 ```
 
-**推论 2-2-33** 非平凡左侧幂运算在非平凡序数内膨胀 $<$, 即 $x < x^a$, 其中 $a, x$ 非平凡.  
+**推论 2-2-33** 非零左侧幂运算在非平凡序数内膨胀 $≤$, 即 $x ≤ x^a$, 其中 $a$ 非零, x$ 非平凡.  
+**证明** $x = x^1 ≤ x^a$. ∎
+
+```agda
+^-infl≤ : ⦃ NonZero a ⦄ → (_^ a) inflates _≤_ within NonTrivial
+^-infl≤ {a} {x} =               begin
+  x                             ≈˘⟨ a^-id ⟩
+  x ^ 1                         ≤⟨ map-pres≤ ^-pres (<→s≤ nz-elim) ⟩
+  x ^ a                         ∎ where open SubTreeReasoning
+```
+
+**推论 2-2-34** 非平凡左侧幂运算在非平凡序数内膨胀 $<$, 即 $x < x^a$, 其中 $a, x$ 非平凡.  
 **证明** $x = x^1 < x^a$. ∎
 
 ```agda
@@ -632,14 +643,6 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ ⦃ _ : NonZero b ⦄ where
   x                             ≈˘⟨ a^-id ⟩
   x ^ 1                         <⟨ ^-pres nt-elim ⟩
   x ^ a                         ∎ where open SubTreeReasoning
-```
-
-**推论 2-2-34** 非平凡左侧幂运算在非平凡序数内膨胀 $≤$, 即 $x ≤ x^a$, 其中 $a, x$ 非平凡.  
-**证明** $x = x^1 ≤ x^a$. ∎
-
-```agda
-^-infl≤ : ⦃ NonTrivial a ⦄ → (_^ a) inflates _≤_ within NonTrivial
-^-infl≤ {a} {x} = <→≤ ^-infl
 ```
 
 ## 伪迭代幂次
@@ -682,7 +685,7 @@ a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres it ⦄
 **定理 2-2-35-(2)** 右侧伪迭代幂次 $λx, a↑↑x$ 保持 $<$.  
 **证明** 假设 $r : x < y$, 要证 $a↑↑x < a↑↑y$. 对路径 $r$ 归纳.
 
-- 若 $r = 0 : x < x^+$, 由于 $a$ 和 $a↑↑x$ 非平凡, 由推论 2-2-33 有 $a↑↑x < (a↑↑x)^a = a↑↑x^+$.
+- 若 $r = 0 : x < x^+$, 由于 $a$ 和 $a↑↑x$ 非平凡, 由推论 2-2-34 有 $a↑↑x < (a↑↑x)^a = a↑↑x^+$.
 - 若 $r = r'^+ : x < y^+$, 有 $r' : x < y$, 于是 $a↑↑x < a↑↑y < (a↑↑y) ^ a = a↑↑y^+$.
 - 若 $r = \text{lim}(r') : x < \text{lim}(f)$, 有 $r' : x < f(n)$, 于是 $a↑↑x < a↑↑f(n) < \lim (λ n, a↑↑f(n)) = a↑↑\lim(f)$. ∎
 
