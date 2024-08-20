@@ -160,7 +160,9 @@ nt-nz {lim f} = _
 **互递归 2-2-10**
 
 - (1) 定义加法 $+$.
-- (2) 证明 $λx, a + x$ 保持 $<$.
+- (2) 证明右侧加法 $λx, a + x$ 保持 $<$.
+
+我们约定今后区分左右侧运算始终是以 $λ$ 绑定变量为基准的——$λ$ 绑定变量在二元运算符的右侧就叫右侧运算, 在左侧就叫左侧加法.
 
 ```agda
 _+_ : Ord → Ord → Ord; infixl 7 _+_
@@ -233,7 +235,7 @@ a+-id = refl
 +-assoc {c = lim _} = limExt λ _ → +-assoc
 ```
 
-**定理 2-2-14** 右侧加法膨胀 $≤$, 即 $x ≤ x + a$.  
+**定理 2-2-14** 左侧加法膨胀 $≤$, 即 $x ≤ x + a$.  
 **证明** 对 $a$ 归纳.
 
 - 若 $a = 0$, 有 $x ≤ x + 0$.
@@ -253,7 +255,7 @@ a+-id = refl
   x + lim f               ∎ where open SubTreeReasoning
 ```
 
-**推论 2-2-15** 右侧加法在非零序数内膨胀 $<$, 即 $x < x + a$.  
+**推论 2-2-15** 左侧加法在非零序数内膨胀 $<$, 即 $x < x + a$.  
 **证明** 观察定理 2-2-14 的证明不难看出. ∎
 
 ```agda
@@ -270,6 +272,13 @@ a+-id = refl
 
 ## 乘法
 
+**互递归 2-2-16**
+
+- 定义乘法 $a \cdot b$.
+- 证明右侧乘法 $λx, a \cdot x$ 保持 $<$.
+
+其中 $a$ 非零.
+
 ```agda
 _*_ : (a : Ord) → Ord → ⦃ NonZero a ⦄ → Ord; infixl 8 _*_
 *-pres-rd : ⦃ _ : NonZero a ⦄ → (a *_) preserves Road
@@ -278,11 +287,32 @@ _*_ : (a : Ord) → Ord → ⦃ NonZero a ⦄ → Ord; infixl 8 _*_
 *-pres = map *-pres-rd
 ```
 
+**定义 2-2-16-(1)** 乘法 $a \cdot b$, 讨论 $b$.
+
+$$
+\begin{aligned}
+a \cdot 0 & = 0 \\
+a \cdot b'^+ & = a \cdot b' + a \\
+a \cdot \lim(f) & = \lim (λ n, a \cdot f(n))
+\end{aligned}
+$$
+
+其中第三行要求说明 $λ n, a \cdot f(n)$ 是良构的, 由定理 2-2-16-(2) 及 $f$ 良构即得. ∎
+
 ```agda
 a * zero = 0
 a * suc b = a * b + a
 a * lim f = lim (λ n → a * f n) ⦃ *-pres it ⦄
+```
 
+**定理 2-2-16-(2)** $λx, a \cdot x$ 保持 $<$.  
+**证明** 假设 $r : x < y$, 要证 $a \cdot x < a \cdot y$. 对路径 $r$ 归纳.
+
+- 若 $r = 0 : x < x^+$, 由于 $a$ 非零, 由推论 2-2-15 有 $a \cdot x < a \cdot x + a = a \cdot x^+$.
+- 若 $r = r'^+ : x < y^+$, 有 $r' : x < y$, 于是 $a \cdot x < a \cdot y < a \cdot y + a = a \cdot y^+$.
+- 若 $r = \text{lim}(r') : x < \text{lim}(f)$, 有 $r' : x < f(n)$, 于是 $a \cdot x < a \cdot f(n) < \lim (λ n, a \cdot f(n)) = a \cdot \lim(f)$. ∎
+
+```agda
 *-pres-rd zero = set +-infl
 *-pres-rd {a} {x} (suc {b} r) = begin-strict
   a * x                   <⟨ *-pres-rd r ⟩
@@ -294,15 +324,22 @@ a * lim f = lim (λ n → a * f n) ⦃ *-pres it ⦄
   a * lim f               ∎ where open RoadReasoning
 ```
 
+**事实 2-2-17** 左侧乘法尊重相等, 即 $a = b$ 蕴含 $a ⋅ c = b ⋅ c$, 其中 $a, b$ 非零.
+
 ```agda
 *a-cong : {nza : NonZero a} {nzb : NonZero b} → a ≡ b → (a * c) ⦃ nza ⦄ ≡ (b * c) ⦃ nzb ⦄
 *a-cong refl = refl
 ```
 
+**事实 2-2-18** 零是乘法的右零元.
+
 ```agda
 a*-z : ⦃ _ : NonZero a ⦄ → a * 0 ≡ 0
 a*-z = refl
 ```
+
+**定理 2-2-19** 一是乘法的右幺元.  
+**证明** 由定义, 归结为零是加法的左幺元. ∎
 
 ```agda
 a*-id : ⦃ _ : NonZero a ⦄ → a * 1 ≡ a
@@ -312,12 +349,18 @@ a*-id {a} =               begin-equality
   a                       ∎ where open SubTreeReasoning
 ```
 
+**定理 2-2-20** 一是乘法的左幺元.  
+**证明** 与定理 2-2-12 类似. ∎
+
 ```agda
 *a-id : 1 * a ≡ a
 *a-id {(zero)} = refl
 *a-id {suc a} = cong suc *a-id
 *a-id {lim f} = limExt λ _ → *a-id
 ```
+
+**推论 2-2-21** $a ⋅ 2 = a + a$.  
+**证明** 由定理 2-2-19 即得. ∎
 
 ```
 *-2 : ⦃ _ : NonZero a ⦄ → a * 2 ≡ a + a
@@ -326,6 +369,11 @@ a*-id {a} =               begin-equality
   a * 1 + a               ≈⟨ cong (_+ a) a*-id ⟩
   a + a                   ∎ where open SubTreeReasoning
 ```
+
+**定理 2-2-23** 乘法满足分配律 $a \cdot (b + c) = a \cdot b + a \cdot c$.  
+**证明** 对 $c$ 归纳.
+
+- 若 $c = 0$, 有 $a \cdot (b + 0) = a \cdot b = a \cdot b + a \cdot 0$.
 
 ```agda
 *-distrib : ⦃ _ : NonZero a ⦄ → a * (b + c) ≡ a * b + a * c
