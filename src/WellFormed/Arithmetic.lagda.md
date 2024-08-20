@@ -436,7 +436,18 @@ module _ {a} {b} ⦃ _ : NonZero a ⦄ ⦃ _ : NonZero b ⦄ where
     a * b * suc c         ∎ where open SubTreeReasoning
 ```
 
-**推论 2-2-25** 非平凡左侧乘法在非零序数内膨胀 $<$, 即 $x < x \cdot a$, 其中 $a$ 非平凡, $x$ 非零.  
+**推论 2-2-25** 非零左侧乘法在非零序数内膨胀 $≤$, 即 $x ≤ x \cdot a$, 其中 $a,x$ 非零.  
+**证明** $x = x ⋅ 1 ≤ x ⋅ a$. ∎
+
+```agda
+*-infl≤ : ⦃ NonZero a ⦄ → (_* a) inflates _≤_ within NonZero
+*-infl≤ {a} {x} =        begin
+  x                       ≈˘⟨ a*-id ⟩
+  x * 1                   ≤⟨ map-pres≤ *-pres (<→s≤ nz-elim) ⟩
+  x * a                   ∎ where open SubTreeReasoning
+```
+
+**推论 2-2-26** 非平凡左侧乘法在非零序数内膨胀 $<$, 即 $x < x \cdot a$, 其中 $a$ 非平凡, $x$ 非零.  
 **证明** $x = x ⋅ 1 < x ⋅ a$. ∎
 
 ```agda
@@ -449,7 +460,7 @@ module _ {a} {b} ⦃ _ : NonZero a ⦄ ⦃ _ : NonZero b ⦄ where
 
 ## 幂运算
 
-**互递归 2-2-26**
+**互递归 2-2-27**
 
 - (1) 定义幂运算 $a^b$.
 - (2) 证明右侧幂运算 $λx, a^x$ 保持 $<$.
@@ -466,7 +477,7 @@ _^_ : (a : Ord) → Ord → ⦃ NonTrivial a ⦄ → Ord; infix 9 _^_
 ^-pres = map ^-pres-rd
 ```
 
-**定义 2-2-26-(1)** 幂运算 $a^b$, 讨论 $b$.
+**定义 2-2-27-(1)** 幂运算 $a^b$, 讨论 $b$.
 
 $$
 \begin{aligned}
@@ -476,7 +487,7 @@ a^{\lim(f)} & = \lim (λ n, a^{f(n)})
 \end{aligned}
 $$
 
-其中第三行要求说明 $λ n, a^{f(n)}$ 是良构的, 由定理 2-2-26-(2) 及 $f$ 良构即得. ∎
+其中第三行要求说明 $λ n, a^{f(n)}$ 是良构的, 由定理 2-2-27-(2) 及 $f$ 良构即得. ∎
 
 ```agda
 a ^ zero = 1
@@ -484,10 +495,10 @@ a ^ suc b = (a ^ b * a) ⦃ ^-nz ⦄
 a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres it ⦄
 ```
 
-**定理 2-2-26-(2)** 右侧幂运算 $λx, a^x$ 保持 $<$.  
+**定理 2-2-27-(2)** 右侧幂运算 $λx, a^x$ 保持 $<$.  
 **证明** 假设 $r : x < y$, 要证 $a^x < a^y$. 对路径 $r$ 归纳.
 
-- 若 $r = 0 : x < x^+$, 由于 $a$ 非平凡, 由定理 2-2-25 有 $a^x < a^x \cdot a = a^{x^+}$.
+- 若 $r = 0 : x < x^+$, 由于 $a$ 非平凡, 由推论 2-2-26 有 $a^x < a^x \cdot a = a^{x^+}$.
 - 若 $r = r'^+ : x < y^+$, 有 $r' : x < y$, 于是 $a^x < a^y < a^y \cdot a = a^{y^+}$.
 - 若 $r = \text{lim}(r') : x < \text{lim}(f)$, 有 $r' : x < f(n)$, 于是 $a^x < a^{f(n)} < \lim (λ n, a^{f(n)}) = a^{\lim(f)}$. ∎
 
@@ -503,7 +514,7 @@ a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres it ⦄
   a ^ lim f               ∎ where open RoadReasoning
 ```
 
-**定理 2-2-26-(3)** 幂非零.  
+**定理 2-2-27-(3)** 幂非零.  
 **证明** 依定义. ∎
 
 ```agda
@@ -512,14 +523,14 @@ a ^ lim f = lim (λ n → a ^ f n) ⦃ ^-pres it ⦄
 ^-nz {b = lim f} = _
 ```
 
-**事实 2-2-27** 左侧幂运算尊重相等, 即 $a = b$ 蕴含 $a^c = b^c$, 其中 $a, b$ 非平凡.
+**事实 2-2-28** 左侧幂运算尊重相等, 即 $a = b$ 蕴含 $a^c = b^c$, 其中 $a, b$ 非平凡.
 
 ```agda
 ^a-cong : {nta : NonTrivial a} {ntb : NonTrivial b} → a ≡ b → (a ^ c) ⦃ nta ⦄ ≡ (b ^ c) ⦃ ntb ⦄
 ^a-cong refl = refl
 ```
 
-**事实 2-2-28** 一是幂运算的右幺元.  
+**事实 2-2-29** 一是幂运算的右幺元.  
 **证明** 由定义, 归结为一是乘法的左幺元. ∎
 
 ```agda
@@ -531,7 +542,7 @@ a^-id {a} =               begin-equality
   a                       ∎ where open SubTreeReasoning
 ```
 
-**定理 2-2-29** 幂运算满足分配律 $a^{b + c} = a^b \cdot a^c$.  
+**定理 2-2-30** 幂运算满足分配律 $a^{b + c} = a^b \cdot a^c$.  
 **证明** 对 $c$ 归纳. 零和极限的情况与定理 2-2-22 类似. 对于后继的情况有
 
 $$
@@ -557,7 +568,7 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ where
     a ^ b * (a ^ suc c)         ∎ where open SubTreeReasoning
 ```
 
-**定理 2-2-30** 幂非平凡, 即 $a^b$ 非平凡, 其中 $a$ 非平凡, $b$ 非零.  
+**定理 2-2-31** 幂非平凡, 即 $a^b$ 非平凡, 其中 $a$ 非平凡, $b$ 非零.  
 **证明** 难点在于 $a, b$ 都是后继的情况, 我们证 ${(a'^+)}^{b'^+} > 1$, 其中 $a'$ 非零.
 
 $$
@@ -586,7 +597,7 @@ $$
   suc a ^ b * a + suc a ^ b     ∎ where open SubTreeReasoning; instance _ = ^-nz
 ```
 
-**定理 2-2-31** 幂运算满足结合律 ${(a^b)}^c = a^{(b⋅c)}$.  
+**定理 2-2-32** 幂运算满足结合律 ${(a^b)}^c = a^{(b⋅c)}$.  
 **证明** 对 $c$ 归纳. 零和极限的情况与定理 2-2-22 类似. 对于后继的情况有
 
 $$
@@ -612,7 +623,7 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ ⦃ _ : NonZero b ⦄ where
     a ^ (b * suc c)             ∎ where open SubTreeReasoning
 ```
 
-**推论 2-2-32** 非平凡左侧幂运算在非平凡序数内膨胀 $<$, 即 $x < x^a$, 其中 $a, x$ 非平凡.  
+**推论 2-2-33** 非平凡左侧幂运算在非平凡序数内膨胀 $<$, 即 $x < x^a$, 其中 $a, x$ 非平凡.  
 **证明** $x = x^1 < x^a$. ∎
 
 ```agda
@@ -623,9 +634,17 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ ⦃ _ : NonZero b ⦄ where
   x ^ a                         ∎ where open SubTreeReasoning
 ```
 
+**推论 2-2-34** 非平凡左侧幂运算在非平凡序数内膨胀 $≤$, 即 $x ≤ x^a$, 其中 $a, x$ 非平凡.  
+**证明** $x = x^1 ≤ x^a$. ∎
+
+```agda
+^-infl≤ : ⦃ NonTrivial a ⦄ → (_^ a) inflates _≤_ within NonTrivial
+^-infl≤ {a} {x} = <→≤ ^-infl
+```
+
 ## 伪迭代幂次
 
-**互递归 2-2-33**
+**互递归 2-2-35**
 
 - (1) 定义伪迭代幂次 $a ↑↑ b$
 - (2) 证明右侧伪迭代幂次 $λx, a↑↑x$ 保持 $<$.
@@ -642,7 +661,7 @@ _^^_ : (a b : Ord) → ⦃ NonTrivial a ⦄ → Ord
 ^^-pres = map ^^-pres-rd
 ```
 
-**定义 2-2-33-(1)** 伪迭代幂次 $a ↑↑ b$, 讨论 $b$.
+**定义 2-2-35-(1)** 伪迭代幂次 $a ↑↑ b$, 讨论 $b$.
 
 $$
 \begin{aligned}
@@ -652,7 +671,7 @@ a ↑↑ \lim(f) & = \lim (λ n, a ↑↑ f(n))
 \end{aligned}
 $$
 
-其中第三行要求说明 $λ n, a ↑↑ f(n)$ 是良构的, 由定理 2-2-33-(2) 及 $f$ 良构即得. ∎
+其中第三行要求说明 $λ n, a ↑↑ f(n)$ 是良构的, 由定理 2-2-35-(2) 及 $f$ 良构即得. ∎
 
 ```agda
 a ^^ zero = a
@@ -660,10 +679,10 @@ a ^^ suc b = ((a ^^ b) ^ a) ⦃ ^^-nt ⦄
 a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres it ⦄
 ```
 
-**定理 2-2-33-(2)** 右侧伪迭代幂次 $λx, a↑↑x$ 保持 $<$.  
+**定理 2-2-35-(2)** 右侧伪迭代幂次 $λx, a↑↑x$ 保持 $<$.  
 **证明** 假设 $r : x < y$, 要证 $a↑↑x < a↑↑y$. 对路径 $r$ 归纳.
 
-- 若 $r = 0 : x < x^+$, 由于 $a$ 和 $a↑↑x$ 非平凡, 由定理 2-2-32 有 $a↑↑x < (a↑↑x)^a = a↑↑x^+$.
+- 若 $r = 0 : x < x^+$, 由于 $a$ 和 $a↑↑x$ 非平凡, 由推论 2-2-33 有 $a↑↑x < (a↑↑x)^a = a↑↑x^+$.
 - 若 $r = r'^+ : x < y^+$, 有 $r' : x < y$, 于是 $a↑↑x < a↑↑y < (a↑↑y) ^ a = a↑↑y^+$.
 - 若 $r = \text{lim}(r') : x < \text{lim}(f)$, 有 $r' : x < f(n)$, 于是 $a↑↑x < a↑↑f(n) < \lim (λ n, a↑↑f(n)) = a↑↑\lim(f)$. ∎
 
@@ -680,7 +699,7 @@ a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres it ⦄
   a ^^ lim f                    ∎ where open RoadReasoning
 ```
 
-**定理 2-2-33-(3)** 伪迭代幂次非平凡.  
+**定理 2-2-35-(3)** 伪迭代幂次非平凡.  
 **证明** 依定义. ∎
 
 ```agda
@@ -689,8 +708,8 @@ a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres it ⦄
 ^^-nt {b = lim f} = _
 ```
 
-**定理 2-2-34** 伪迭代幂次之伪: $a ↑↑ b = a ^ {(a ^ b)}$, 而不是我们期待的 $b$ 层塔 $a^{a^{a^{⋰}}}$.  
-**证明** 对 $b$ 归纳. 零和极限的情况与定理 2-2-29 类似. 对于后继的情况有
+**定理 2-2-36** 伪迭代幂次之伪: $a ↑↑ b = a ^ {(a ^ b)}$, 而不是我们期待的 $b$ 层塔 $a^{a^{a^{⋰}}}$.  
+**证明** 对 $b$ 归纳. 零和极限的情况与定理 2-2-30 类似. 对于后继的情况有
 
 $$
 \begin{aligned}
