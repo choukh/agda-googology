@@ -150,7 +150,7 @@ l≼-inv (l≼ p) = p
 ≼-zero = ≼-suc ≼-refl
 ```
 
-**定理 2-3-10** 子树关系蕴含跨树关系, 即 $a ≤ b → a ≼ b$.  
+**定理 2-3-10** 子树关系蕴含跨树关系: $a ≤ b → a ≼ b$.  
 **证明** 归纳 r : a ≤ b$, 分四种情况.
 
 - 若 $r = 0 : a < a^+$, 有 $0 : a ≼ a^+$.
@@ -240,10 +240,44 @@ l≈ls {w} = l≼l (≤→≼ (inl w)) , l≼ f≼l
 
 ## 严格序
 
+**定义 2-3-18** 严格跨树关系 $a ≺ b := a^+ ≼ b$.
+
 ```agda
 _≺_ : Rel; infix 6 _≺_
-a ≺ b = suc a ≼ b 
+a ≺ b = suc a ≼ b
 ```
+
+该定义是定理 2-1-17-(1) 和 定理 2-1-20 的跨树版本.
+
+**事实 2-3-19** 零 ≺ 后继.  
+**证明** $0 ≼ a → 0^+ ≼ a^+ = 0 ≺a^+$. ∎
+
+```agda
+z≺s : 0 ≺ suc a
+z≺s = s≼s z≼
+```
+
+**事实 2-3-20** 事实 2-0-22 的跨树版本成立: $a ≼ b → a ≺ b^+$.  
+**证明** 此即构造子 $\text{s≼s}$. ∎
+
+```agda
+≼→≺s : a ≼ b → a ≺ suc b
+≼→≺s = s≼s
+```
+
+**事实 2-3-21** 定理 2-0-20 的跨树版本成立: $a ≺ b^+ → a ≼ b$.  
+**证明** 此即事实 2-3-1. ∎
+
+```agda
+≺s→≼ : a ≺ suc b → a ≼ b
+≺s→≼ p = s≼s-inj p
+```
+
+**定理 2-3-22** $≺$ 可以非严格化: $a ≺ b → a ≼ b$.  
+**证明** 讨论 $p : a ≺ b = a^+ ≼ b$, 只可能有两种情况.
+
+- 若 $p = \text{s≼s}(p') : a^+ ≼ b^+$, 必有 $p' : a ≼ b$, 所以 $p'^+ : a ≼ b^+$.
+- 若 $p = \text{≼l}(p') : a^+ ≼ \lim(f)$, 必有 $p' : a^+ ≼ f(n)$. 由传递性即得 $a ≼ a^+ ≼ f(n) ≼ \lim(f)$. ∎
 
 ```agda
 ≺→≼ : a ≺ b → a ≼ b
@@ -251,13 +285,28 @@ a ≺ b = suc a ≼ b
 ≺→≼ (≼l p) = ≼l (≼-trans ≼-zero p)
 ```
 
+**引理 2-3-23** 类似路径构造子, 我们有 $0 : a ≺ a^+$.  
+**证明** $a ≼ a → a^+ ≼ a^+ = a ≺ a^+$. ∎
+
 ```agda
 ≺-zero : a ≺ suc a
 ≺-zero = s≼s ≼-refl
+```
 
+**引理 2-3-24** 类似路径构造子, 对任意 $p : a ≺ b$ 有 $p^+ : a ≺ b^+$.  
+**证明** $a ≺ b → a ≼ b → a^+ ≼ b^+ = a ≺ b^+$. ∎
+
+```agda
 ≺-suc : a ≺ b → a ≺ suc b
 ≺-suc p = s≼s (≺→≼ p)
 ```
+
+**定理 2-3-25** 子树关系蕴含跨树关系: $a < b → a ≺ b$.  
+**证明** 对路径 $r : a < b$ 归纳, 分三种情况.
+
+- 若 $r = 0 : a < a^+$, 有 $0 : a ≺ a^+$.
+- 若 $r = r'^+ : a < b^+$, 必有 $r' : a < b$, 由归纳假设有 $p : a ≺ b$, 所以 $p^+ : a ≺ b^+$.
+- 若 $r = \lim(r') : a < \lim(f)$, 必有 $r' : a < f(n)$, 于是有 $a^+ ≤ f(n)$, 乃至 $a^+ ≼ f(n)$, 所以 $a^+ ≼ \lim(f)$, 即 $a < \lim(f)$. ∎
 
 ```agda
 <→≺-rd : Road a b → a ≺ b
@@ -267,24 +316,6 @@ a ≺ b = suc a ≼ b
 
 <→≺ : a < b → a ≺ b
 <→≺ r = <→≺-rd (set r)
-```
-
-```agda
-z≺s : 0 ≺ suc a
-z≺s = s≼s z≼
-```
-
-```agda
-≼→≺s : a ≼ b → a ≺ suc b
-≼→≺s z≼ = z≺s
-≼→≺s (s≼s p) = s≼s (s≼s p)
-≼→≺s (≼l p)  = s≼s (≼l p)
-≼→≺s (l≼ p)  = s≼s (l≼ p)
-```
-
-```agda
-≺s→≼ : a ≺ suc b → a ≼ b
-≺s→≼ p = s≼s-inj p
 ```
 
 ```agda
@@ -326,19 +357,17 @@ z≺s = s≼s z≼
 
 ## 结构实例化
 
-```agda
-open import Relation.Binary.Structures {A = Ord} _≈_
-```
+由以上讨论可知 $≈$ 是等价关系, $≼$ 是相对于 $≈$ 的非严格偏序, $≺$ 是相对于 $≈$ 的严格偏序. 我们以此实例化标准库的抽象结构, 并得到第三套序关系推理链记法: `CrossTreeReasoning`.
 
 ```agda
+open import Relation.Binary.Structures {A = Ord} _≈_
+
 ≈-isEquivalence : IsEquivalence
 ≈-isEquivalence = record
   { refl = ≈-refl
   ; sym = ≈-sym
   ; trans = ≈-trans }
-```
 
-```agda
 ≼-isPreorder : IsPreorder _≼_
 ≼-isPreorder = record
   { isEquivalence = ≈-isEquivalence
@@ -347,18 +376,14 @@ open import Relation.Binary.Structures {A = Ord} _≈_
 
 ≼-isPartialOrder : IsPartialOrder _≼_
 ≼-isPartialOrder = record { isPreorder = ≼-isPreorder ; antisym = ≼-antisym }
-```
 
-```agda
 ≺-isStrictPartialOrder : IsStrictPartialOrder _≺_
 ≺-isStrictPartialOrder = record
   { isEquivalence = ≈-isEquivalence
   ; irrefl = ≺-irrefl
   ; trans = ≺-trans
   ; <-resp-≈ = ≺-resp-≈ }
-```
 
-```agda
 module CrossTreeReasoning where
   open import Relation.Binary.Reasoning.Base.Triple
     {_≈_ = _≈_} {_≤_ = _≼_} {_<_ = _≺_}
