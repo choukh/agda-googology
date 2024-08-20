@@ -413,7 +413,7 @@ module CrossTreeReasoning where
 ### 加法
 
 **事实 2-3-32** 左侧加法 $λx,x+a$ 膨胀 $≼$, 且当 $a$ 非零时膨胀 $≺$.  
-**证明** 由子树版本即得. ∎
+**证明** 由其子树版本: 定理 2-2-14 和推论 2-2-15 即得. ∎
 
 ```agda
 +a-infl≼ : (_+ a) inflates _≼_
@@ -423,6 +423,13 @@ module CrossTreeReasoning where
 +a-infl≺ = <→≺ +-infl
 ```
 
+**定理 2-3-33** 右侧加法 $λx,a+x$ 膨胀 $≼$, 即 $x ≼ x + a$.  
+**证明** 这是一个跨树专有定理. 对 $x$ 归纳.
+
+- 若 $x = 0$, 有 $\text{z≼} : 0 ≼ a + 0$.
+- 若 $x = x'^+$, 有归纳假设 $x' ≼ a + x'$, 于是 $x'^+ ≼ (a + x')^+ = a + x'^+$.
+- 若 $x = \lim(f)$, 有归纳假设 $f(n) ≼ a + f(n)$, 于是 $\lim(f) = \lim(λn,f(n)) ≼ \lim(λn,a + f(n)) = \lim(a + f)$. ∎
+
 ```agda
 a+-infl≼ : (a +_) inflates _≼_
 a+-infl≼ {x = zero}  = z≼
@@ -430,15 +437,13 @@ a+-infl≼ {x = suc x} = s≼s a+-infl≼
 a+-infl≼ {x = lim f} = l≼l a+-infl≼
 ```
 
-```agda
-1+l-absorb : isLim a → 1 + a ≈ a
-1+l-absorb {lim f} tt = l≼ls (aux (<→≺ it)) , l≼l a+-infl≼ where
-  aux : a ≺ b → 1 + a ≼ b
-  aux {(zero)} (s≼s p) = z≺s
-  aux {suc a} (s≼s p)  = s≼s (aux p)
-  aux {lim f} (s≼s p)  = l≼ (aux (s≼s (≼-trans f≼l p)))
-  aux (≼l p) = ≼l (aux p)
-```
+**定理 2-3-34** 右侧加法 $λx,a+x$ 保持 $≼$, 即 $x ≼ y → a + x ≼ a + y$.  
+**证明** 这无法从其子树版本直接推出. 我们对 $p : x ≼ y$ 归纳.
+
+- 若 $p = \text{z≼} : 0 ≼ y$, 由事实 2-3-32 有 $a + 0 = a ≼ a + y$.
+- 若 $p = \text{s≼s}(p') : x^+ ≼ y^+$, 有归纳假设 $a + x ≼ a + y$, 两边取后继即得 $a + x^+ ≼ a + y^+$.
+- 若 $p = \text{≼l}(p') : x ≼ \lim(f)$, 有归纳假设 $a + x ≼ a + f(n)$, 右边取极限即得 $a + x ≼ a + \lim(f)$.
+- 若 $p = \text{l≼}(p') : \lim(f) ≼ y$, 有归纳假设 $∀n, a + f(n) ≼ a + y$, 左边取极限即得 $a + \lim(f) ≼ a + y$. ∎
 
 ```agda
 a+-pres≼ : (a +_) preserves _≼_
@@ -448,11 +453,24 @@ a+-pres≼ (≼l p)   = ≼l (a+-pres≼ p)
 a+-pres≼ (l≼ p)   = l≼ (a+-pres≼ p)
 ```
 
+**推论 2-3-35** 右侧加法 $λx,a+x$ 保持 $≺$, 即 $x ≺ y → a + x ≺ a + y$.  
+**证明** 对 $p : x ≺ y$ 归纳, 只有两种情况.
+
+- 若 $p = \text{s≼s}(p') : x ≺ y^+$, 必有 $p' : x ≼ y$. 由定理 2-3-34 有 $a + x ≼ a + y$, 两边取后继即得 $a + x ≺ a + y^+$.
+- 若 $p = \text{≼l}(p') : x ≺ \lim(f)$, 必有 $p' : x ≺ f(n)$. 由定理 2-3-34 有 $a + x ≺ a + f(n)$, 右边取极限即得 $a + x ≺ a + \lim(f)$. ∎
+
 ```agda
 a+-pres≺ : (a +_) preserves _≺_
 a+-pres≺ (s≼s p) = s≼s (a+-pres≼ p)
 a+-pres≺ (≼l p)  = ≼l (a+-pres≼ p)
 ```
+
+**定理 2-3-36** 左侧加法 $λx,x+a$ 保持 $≼$, 即 $x ≼ y → x + a ≼ y + a$.  
+**证明** 这是一个跨树专有定理. 对 $a$ 归纳.
+
+- 若 $a = 0$, 有 $x + 0 = x ≼ y = y + 0$.
+- 若 $a = a'^+$, 有归纳假设 $x + a' ≼ y + a'$, 两边取后继即得 $x + a'^+ ≼ y + a'^+$.
+- 若 $a = \lim(f)$, 有归纳假设 $∀n, x + f(n) ≼ y + f(n)$, 两边取极限即得 $x + \lim(f) ≼ y + \lim(f)$. ∎
 
 ```agda
 +a-pres≼ : (_+ a) preserves _≼_
@@ -460,6 +478,9 @@ a+-pres≺ (≼l p)  = ≼l (a+-pres≼ p)
 +a-pres≼ {suc a} p  = s≼s (+a-pres≼ p)
 +a-pres≼ {lim f} p  = l≼l (+a-pres≼ p)
 ```
+
+**推论 2-3-37** 加法左右两边同时保持 $≼$, 即 $a ≼ b → c ≼ d → a + c ≼ b + d$.  
+**证明** 由定理 2-3-34 和定理 2-3-36 即得. ∎
 
 ```agda
 +-pres≼ : a ≼ b → c ≼ d → a + c ≼ b + d
@@ -469,12 +490,46 @@ a+-pres≺ (≼l p)  = ≼l (a+-pres≼ p)
   b + d                     ∎ where open CrossTreeReasoning
 ```
 
+**推论 2-3-38** 左右两侧加法都尊重 $≈$:
+- $b ≈ c → a + b ≈ a + c$.
+- $b ≈ c → b + a ≈ c + a$.
+
+**证明** 由定理 2-3-34 和定理 2-3-36 即得. ∎
+
 ```agda
 a+-cong≈ : b ≈ c → a + b ≈ a + c
 a+-cong≈ (p , q) = a+-pres≼ p , a+-pres≼ q
 
 +a-cong≈ : b ≈ c → b + a ≈ c + a
 +a-cong≈ (p , q) = +a-pres≼ p , +a-pres≼ q
+```
+
+**引理 2-3-39** 我们知道 $a ≺ b$ 意味为 $a + 1 = a^+ ≼ b$. 现在把 $a + 1$ 换成 $1 + a$ 也一样成立.  
+**证明** 对 $p : a ≺ b$ 归纳, 只有两种情况.
+
+- 若 $p = \text{s≼s}(p') : a ≺ b'^+$, 必有 $p' : a ≼ b'$. 讨论 $a$.
+  - 若 $a = 0$, 有 $1 + 0 = 1 ≼ b'^+$, 显然成立.
+  - 若 $a = a'^+$, $p'$ 变为 $p' : a' ≺ b'$, 有归纳假设 $1 + a' ≼ b'$. 两边取后继即得 $1 + a'^+ ≼ b'^+$.
+  - 若 $a = \lim(f)$, $p'$ 变为 $p' : \lim(f) ≼ b'$, 由传递性有 $∀ n, f(n) ≼ b'$, 两边取后继有 $∀ n, f(n)^+ ≼ b'^+$, 即 $∀ n, f(n) ≺ b'^+$. 此时有归纳假设 $∀ n, 1 + f(n) ≼ b'^+$, 左边取极限即得 $1 + \lim(f) ≼ b'^+$.
+- 若 $p = \text{≼l}(p') : a ≺ \lim(f)$, 必有 $p' : a ≺ f(n)$. 此时有归纳假设 $1 + a ≼ f(n)$, 右边取极限即得 $1 + a ≼ \lim(f)$. ∎
+
+```agda
+≺→1+a≼ : a ≺ b → 1 + a ≼ b
+≺→1+a≼ {(zero)} (s≼s p) = z≺s
+≺→1+a≼ {suc a} (s≼s p)  = s≼s (≺→1+a≼ p)
+≺→1+a≼ {lim f} (s≼s p)  = l≼ (≺→1+a≼ (s≼s (≼-trans f≼l p)))
+≺→1+a≼ (≼l p)           = ≼l (≺→1+a≼ p)
+```
+
+**定理 2-3-40** 在极限序数的左边加一不影响其大小.  
+**证明** 要证 $1 + \lim(f) ≈ \lim(f)$.
+
+- 先证 $1 + \lim(f) ≼ \lim(f)$. 由 $f$ 良构有 $∀ n, f(n) ≺ f(n^+)$, 由引理 2-3-39 有 $∀ n, 1 + f(n) ≼ f(n^+)$, 由事实 2-3-3 即得 $1 + \lim(f) ≼ \lim(f)$.
+- 再证 $\lim(f) ≼ 1 + \lim(f)$, 只需证 $f(n) ≼ 1 + f(n)$, 由定理 2-3-33 即得. ∎
+
+```agda
+1+l-absorb : isLim a → 1 + a ≈ a
+1+l-absorb {lim f} tt = l≼ls (≺→1+a≼ (<→≺ it)) , l≼l a+-infl≼
 ```
 
 ### 乘法
