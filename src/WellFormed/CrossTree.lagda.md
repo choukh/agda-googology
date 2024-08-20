@@ -750,7 +750,22 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
 ^a-cong≈ (p , q) = ^a-pres≼ p , ^a-pres≼ q
 ```
 
-**引理 2-3-55**
+**引理 2-3-55** 加法结合律的变体: $a + (a + ... + a) = (a + ... + a) + a$.  
+**证明** 即证 $a + a ⋅ n = a ⋅ n + a$. 对 $n$ 归纳.
+
+- 若 $n = 0$, 有 $a + 0 = 0 + a$.
+- 若 $n = n'^+$, 有归纳假设 $a + a ⋅ n' = a ⋅ n' + a$, 于是有
+
+$$
+\begin{aligned}
+a + a ⋅ n'^+ &= a + (a ⋅ n' + a) \\
+&= (a + a ⋅ n') + a \\
+&= (a ⋅ n' + a) + a \\
+&= a ⋅ n'^+ + a \quad ∎
+\end{aligned}
+$$
+
+注意这里的相等是内涵相等.
 
 ```agda
 +-assoc-n : ⦃ _ : NonZero a ⦄ → a + a * fin n ≡ a * fin n + a
@@ -762,7 +777,32 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
   a * suc (fin n) + a     ∎ where open SubTreeReasoning
 ```
 
-**定理 2-3-56**
+**定理 2-3-56** 以 $ω$ 为底的幂运算满足吸收律: $a ≺ b →  ω^a + ω^b ≈ ω^b$.  
+**证明** 对 $p : a ≺ b$ 归纳, 分两种情况.
+
+(1) 若 $p = \text{s≼s}(p') : a ≺ b'^+$, 必有 $p' : a ≼ b'$, 要证 $ω ^ a + ω ^ {b'^+} ≈ ω ^ {b'^+}$.
+
+先证 $ω ^ a + ω ^ {b'} ⋅ n ≼ ω ^ {b'^+}$:
+
+$$
+\begin{aligned}
+ω ^ a + ω ^ {b'} ⋅ n &≼ ω ^ {b'} + ω ^ {b'} ⋅ n \\
+&≈ ω ^ {b'} ⋅ n + ω ^ {b'} \\
+&≈ ω ^ {b'} ⋅ n^+ \\
+&≼ ω ^ {b'} ⋅ ω \\
+&≈ ω ^ {b'^+}
+\end{aligned}
+$$
+
+再证 $ω ^ {b'} ⋅ n ≼ ω ^ a + ω ^ {b'^+}$:
+
+$$
+\begin{aligned}
+ω ^ {b'} ⋅ n &≼ ω ^ a + ω ^ {b'} ⋅ n \\
+&≼ ω ^ a + ω ^ {b'} ⋅ ω \\
+&≈ ω ^ a +ω ^ {b'^+}
+\end{aligned}
+$$
 
 ```agda
 ω^-absorb : a ≺ b → ω ^ a + ω ^ b ≈ ω ^ b
@@ -779,6 +819,11 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
     ω ^ a + ω ^ b * ω       ∎) where
   open CrossTreeReasoning
   instance _ = ^-nz
+```
+
+(2) 若 $p = \text{≼l}(p') : a ≺ \lim(f)$, 必有 $p' : a ≺ f(n)$, 要证 $ω ^ a + ω ^ {\lim(f)} ≈ ω ^ {\lim(f)}$.
+
+```agda
 ω^-absorb {a} {b = lim f} (≼l {n} a≺fn) = l≼ aux , l≼l a+-infl≼ where
   open CrossTreeReasoning
   aux : ω ^ a + ω ^ f m ≼ lim- (λ m → ω ^ f m)
