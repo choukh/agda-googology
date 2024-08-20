@@ -579,15 +579,22 @@ a*-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
   lim- (λ n → a * f n)      ∎ where open CrossTreeReasoning
 ```
 
+**定理 2-3-44** 左侧乘法 $λx,x·a$ 保持 $≼$.  
+**证明** 这是一个跨树专有定理. 要证 $x ≼ y → x · a ≼ y · a$, 对 $a$ 归纳.
+
+- 若 $a = 0$, 有 $x · 0 ≼ y · 0$.
+- 若 $a = a'^+$, 有归纳假设 $x · a' ≼ y · a'$. 由推论 2-3-37 即得 $x · a' + x ≼ y · a' + y$.
+- 若 $a = \lim(f)$, 有归纳假设 $∀n, x · f(n) ≼ y · f(n)$, 两边取极限即得 $x · \lim(f) ≼ y · \lim(f)$. ∎
+
 ```agda
 *a-pres≼ : (_* a) preserves _≼_ within NonZero
 *a-pres≼ {(zero)} _ = ≼-refl
+*a-pres≼ {suc a} {x} {y} p = +-pres≼ (*a-pres≼ p) p
 *a-pres≼ {lim f} p = l≼l (*a-pres≼ p)
-*a-pres≼ {suc a} {x} {y} p = begin
-  x * a + x                 ≤⟨ a+-pres≼ p ⟩
-  x * a + y                 ≤⟨ +a-pres≼ (*a-pres≼ p) ⟩
-  y * a + y                 ∎ where open CrossTreeReasoning
 ```
+
+**推论 2-3-45** 右侧乘法 $λx,a·x$ 保持 $≼$.  
+**证明** $x ≼ 1 * x ≼ a · x$. ∎
 
 ```agda
 a*-infl≼ : ⦃ _ : NonZero a ⦄ → (a *_) inflates _≼_
@@ -596,6 +603,12 @@ a*-infl≼ {a} {x} =          begin
   (1 * x) ⦃ _ ⦄             ≤⟨ *a-pres≼ ⦃ _ ⦄ (<→≺ nz-elim) ⟩
   a * x                     ∎ where open CrossTreeReasoning
 ```
+
+**推论 2-3-46** 左右两侧乘法都尊重 $≈$:
+- $b ≈ c → a · b ≈ a · c$.
+- $b ≈ c → b · a ≈ c · a$.
+
+**证明** 由定理 2-3-42 和定理 2-3-44 即得. ∎
 
 ```agda
 a*-cong≈ : ⦃ _ : NonZero a ⦄ → b ≈ c → a * b ≈ a * c
