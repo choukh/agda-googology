@@ -318,22 +318,35 @@ z≺s = s≼s z≼
 <→≺ r = <→≺-rd (set r)
 ```
 
+**定理 2-3-26** $≺$ 满足传递性
+
+- $a ≺ b → b ≺ c → a ≺ c$.
+- $a ≺ b → b ≼ c → a ≺ c$.
+- $a ≼ b → b ≺ c → a ≺ c$.
+
+**证明** 继承自 $≼$ 的传递性. ∎
+
 ```agda
 ≺-trans : Transitive _≺_
 ≺-trans p q = ≼-trans p (≺→≼ q)
-```
 
-```agda
 ≺-≼-trans : Trans _≺_ _≼_ _≺_
 ≺-≼-trans p q = ≼-trans p q
 
 ≼-≺-trans : Trans _≼_ _≺_ _≺_
 ≼-≺-trans p q = ≼-trans (s≼s p) q
+```
 
+**推论 2-3-27** $≺$ 尊重 $≈$.  
+**证明** 由定理 2-3-26 即得. ∎
+
+```agda
 ≺-resp-≈ : _≺_ Respects₂ _≈_
 ≺-resp-≈ = (λ { (p , q) u → ≺-≼-trans u p })
          , (λ { (p , q) u → ≼-≺-trans q u })
 ```
+
+**引理 2-3-28**
 
 ```agda
 ≺-acc : a ≼ b → Acc _≺_ b → Acc _≺_ a
