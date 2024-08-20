@@ -277,7 +277,7 @@ a+-id = refl
 - 定义乘法 $a \cdot b$.
 - 证明右侧乘法 $λx, a \cdot x$ 保持 $<$.
 
-其中 $a$ 非零.
+其中 $a$ 非零, 因为 $a$ 为零时没有良构的乘法定义——基本列全为零.
 
 ```agda
 _*_ : (a : Ord) → Ord → ⦃ NonZero a ⦄ → Ord; infixl 8 _*_
@@ -370,22 +370,36 @@ a*-id {a} =               begin-equality
   a + a                   ∎ where open SubTreeReasoning
 ```
 
-**定理 2-2-23** 乘法满足分配律 $a \cdot (b + c) = a \cdot b + a \cdot c$.  
+**定理 2-2-22** 乘法满足分配律 $a \cdot (b + c) = a \cdot b + a \cdot c$.  
 **证明** 对 $c$ 归纳.
 
 - 若 $c = 0$, 有 $a \cdot (b + 0) = a \cdot b = a \cdot b + a \cdot 0$.
+- 若 $c = \lim(f)$, 有归纳假设 $∀n, a \cdot (b + f(n)) = a \cdot b + a \cdot f(n)$, 于是 $a \cdot (b + \lim(f)) = a \cdot b + a \cdot \lim(f)$.
+- 若 $c = c'^+$, 有归纳假设 $a \cdot (b + c') = a \cdot b + a \cdot c'$, 于是
+
+$$
+\begin{aligned}
+a \cdot (b + c'^+) & = a \cdot (b + c') + a \\
+& = a \cdot b + a \cdot c' + a \\
+& = a \cdot b + (a \cdot c' + a) \\
+& = a \cdot b + a \cdot c'^+
+\end{aligned}
+$$
 
 ```agda
 *-distrib : ⦃ _ : NonZero a ⦄ → a * (b + c) ≡ a * b + a * c
 *-distrib {c = zero} = refl
+*-distrib {c = lim _} = limExt λ _ → *-distrib
 *-distrib {a} {b} {c = suc c} = begin-equality
   a * (b + suc c)         ≈⟨ refl ⟩
   a * (b + c) + a         ≈⟨ cong (_+ a) *-distrib ⟩
   a * b + a * c + a       ≈˘⟨ +-assoc ⟩
   a * b + (a * c + a)     ≈⟨ refl ⟩
   a * b + (a * suc c)     ∎ where open SubTreeReasoning
-*-distrib {c = lim _} = limExt λ _ → *-distrib
 ```
+
+**事实 2-2-23** 积非零.  
+**证明** 依定义. ∎
 
 ```agda
 *-nz : ⦃ _ : NonZero a ⦄ ⦃ _ : NonZero b ⦄ → NonZero (a * b)
@@ -395,19 +409,34 @@ a*-id {a} =               begin-equality
 *-nz {a = lim f} {b = lim f₁} = _
 ```
 
+**定理 2-2-24** 乘法满足结合律 $a \cdot (b \cdot c) = (a \cdot b) \cdot c$.  
+**证明** 对 $c$ 归纳. 零和极限的情况与定理 2-2-22 类似. 对于后继的情况有
+
+$$
+\begin{aligned}
+a \cdot (b \cdot c'^+) & = a \cdot (b \cdot c' + b) \\
+& = a \cdot (b \cdot c') + a \cdot b \\
+& = (a \cdot b) \cdot c' + a \cdot b \\
+& = (a \cdot b) \cdot c'^+ \quad ∎
+\end{aligned}
+$$
+
 ```agda
 module _ {a} {b} ⦃ _ : NonZero a ⦄ ⦃ _ : NonZero b ⦄ where
   instance _ = *-nz {a} {b}
   *-assoc : a * (b * c) ≡ (a * b) * c
   *-assoc {c = zero}  = refl
+  *-assoc {c = lim _} = limExt λ _ → *-assoc
   *-assoc {c = suc c} =   begin-equality
     a * (b * suc c)       ≈⟨ refl ⟩
     a * (b * c + b)       ≈⟨ *-distrib ⟩
     a * (b * c) + a * b   ≈⟨ cong (_+ a * b) *-assoc ⟩
     a * b * c + a * b     ≈⟨ refl ⟩
     a * b * suc c         ∎ where open SubTreeReasoning
-  *-assoc {c = lim _} = limExt λ _ → *-assoc
 ```
+
+**定理 2-2-25** 非平凡左侧乘法在非零序数内膨胀 $<$, 即 $x < x \cdot a$, 其中 $a$ 非平凡, $x$ 非零.  
+**证明** $x = x ⋅ 1 < x ⋅ a$. ∎
 
 ```agda
 *-infl : ⦃ NonTrivial a ⦄ → (_* a) inflates _<_ within NonZero
