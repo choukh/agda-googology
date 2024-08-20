@@ -1,6 +1,7 @@
 ---
 title: 形式化大数数学 (2.2 - 序数算术)
 zhihu-tags: Agda, 大数数学, 序数
+zhihu-url: https://zhuanlan.zhihu.com/p/715504174
 ---
 
 # 形式化大数数学 (2.2 - 序数算术)
@@ -624,24 +625,49 @@ module _ {a} {b} ⦃ _ : NonTrivial a ⦄ ⦃ _ : NonZero b ⦄ where
 
 ## 伪迭代幂次
 
+**互递归 2-2-33**
+
+- (1) 定义伪迭代幂次 $a ↑↑ b$
+- (2) 证明右侧伪迭代幂次 $λx, a↑↑x$ 保持 $<$.
+- (3) 证明伪迭代幂次非平凡.
+
+其中 $a$ 非平凡, 因为 $a$ 为零或一时没有良构的伪迭代幂次定义——基本列全为零或一.
+
 ```agda
 _^^_ : (a b : Ord) → ⦃ NonTrivial a ⦄ → Ord
-^^-nt : ⦃ _ : NonTrivial a ⦄ → NonTrivial (a ^^ b)
 ^^-pres-rd : ⦃ _ : NonTrivial a ⦄ → (a ^^_) preserves Road
+^^-nt : ⦃ _ : NonTrivial a ⦄ → NonTrivial (a ^^ b)
 
 ^^-pres : ⦃ _ : NonTrivial a ⦄ → (a ^^_) preserves _<_
 ^^-pres = map ^^-pres-rd
 ```
 
+**定义 2-2-33-(1)** 伪迭代幂次 $a ↑↑ b$, 讨论 $b$.
+
+$$
+\begin{aligned}
+a ↑↑ 0 & = a \\
+a ↑↑ b'^+ & = (a ↑↑ b) ^ a \\
+a ↑↑ \lim(f) & = \lim (λ n, a ↑↑ f(n))
+\end{aligned}
+$$
+
+其中第三行要求说明 $λ n, a ↑↑ f(n)$ 是良构的, 由定理 2-2-33-(2) 及 $f$ 良构即得. ∎
+
 ```agda
 a ^^ zero = a
 a ^^ suc b = ((a ^^ b) ^ a) ⦃ ^^-nt ⦄
 a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres it ⦄
+```
 
-^^-nt {b = zero} = it
-^^-nt {b = suc b} = ^-nt ⦃ _ ⦄ ⦃ nt-nz ⦄
-^^-nt {b = lim f} = _
+**定理 2-2-33-(2)** 右侧伪迭代幂次 $λx, a↑↑x$ 保持 $<$.  
+**证明** 假设 $r : x < y$, 要证 $a↑↑x < a↑↑y$. 对路径 $r$ 归纳.
 
+- 若 $r = 0 : x < x^+$, 由于 $a$ 和 $a↑↑x$ 非平凡, 由定理 2-2-32 有 $a↑↑x < (a↑↑x)^a = a↑↑x^+$.
+- 若 $r = r'^+ : x < y^+$, 有 $r' : x < y$, 于是 $a↑↑x < a↑↑y < (a↑↑y) ^ a = a↑↑y^+$.
+- 若 $r = \text{lim}(r') : x < \text{lim}(f)$, 有 $r' : x < f(n)$, 于是 $a↑↑x < a↑↑f(n) < \lim (λ n, a↑↑f(n)) = a↑↑\lim(f)$. ∎
+
+```agda
 ^^-pres-rd {a} {x} zero = set ^-infl where instance _ = ^^-nt {a} {x}
 ^^-pres-rd {a} {x} (suc {b} r) = begin-strict
   a ^^ x                        <⟨ ^^-pres-rd r ⟩
@@ -654,14 +680,37 @@ a ^^ lim f = lim (λ n → a ^^ f n) ⦃ ^^-pres it ⦄
   a ^^ lim f                    ∎ where open RoadReasoning
 ```
 
+**定理 2-2-33-(3)** 伪迭代幂次非平凡.  
+**证明** 依定义. ∎
+
+```agda
+^^-nt {b = zero} = it
+^^-nt {b = suc b} = ^-nt ⦃ _ ⦄ ⦃ nt-nz ⦄
+^^-nt {b = lim f} = _
+```
+
+**定理 2-2-34** 伪迭代幂次之伪: $a ↑↑ b = a ^ {(a ^ b)}$, 而不是我们期待的 $b$ 层塔 $a^{a^{a^{⋰}}}$.  
+**证明** 对 $b$ 归纳. 零和极限的情况与定理 2-2-29 类似. 对于后继的情况有
+
+$$
+\begin{aligned}
+a ↑↑ b'^+ & = (a ↑↑ b') ^ a \\
+& = {(a^{(a^{b'})})}^a \\
+& = a^{(a^{b'} \cdot a)} \\
+& = a^{(a^{b'^+})} \quad ∎
+\end{aligned}
+$$
+
 ```agda
 ^^-fake : ⦃ _ : NonTrivial a ⦄ → a ^^ b ≡ a ^ (a ^ b)
 ^^-fake {a} {b = zero}  = sym *a-id
+^^-fake {a} {b = lim f} = limExt λ _ → ^^-fake
 ^^-fake {a} {b = suc b} =       begin-equality
   a ^^ suc b                    ≈⟨ refl ⟩
   ((a ^^ b) ^ a) ⦃ _ ⦄          ≈⟨ ^a-cong ^^-fake ⟩
   ((a ^ (a ^ b)) ^ a) ⦃ _ ⦄     ≈⟨ ^-assoc ⟩
   a ^ (a ^ b * a) ⦃ _ ⦄         ≈⟨ refl ⟩
   a ^ (a ^ suc b)               ∎ where open SubTreeReasoning; instance _ = ^-nz
-^^-fake {a} {b = lim f} = limExt λ _ → ^^-fake
 ```
+
+为了定义真正的迭代幂次, 我们需要研究不动点, 这将在后篇展开.
