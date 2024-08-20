@@ -561,12 +561,18 @@ a*-pres≼ (≼l p)   = ≼l (a*-pres≼ p)
 a*-pres≼ (l≼ p)   = l≼ (a*-pres≼ p)
 ```
 
+**定理 2-3-43** 右侧乘法 $λx,a·x$ 保持 $≺$.  
+**证明** 要证 $x ≺ y → a · x ≺ a · y$, 对 $p : x ≺ y$ 归纳, 只有两种情况.
+
+- 若 $p = \text{s≼s}(p') : x ≺ y^+$, 必有 $p' : x ≼ y$, 于是 $a · x ≺ a · x + a ≼ a · y + a = a · y'^+$.
+- 若 $p = \text{≼l}(p') : x ≺ \lim(f)$, 必有 $p' : x ≺ f(n)$, 有归纳假设 $a · x ≺ a · f(n)$, 右边取极限即得 $a · x ≺ a · \lim(f)$. ∎
+
 ```agda
 a*-pres≺ : ⦃ _ : NonZero a ⦄ → (a *_) preserves _≺_
-a*-pres≺ {a} {x} (s≼s {b} p) = begin-strict
+a*-pres≺ {a} {x} (s≼s {b = y} p) = begin-strict
   a * x                     <⟨ +a-infl≺ ⟩
   a * x + a                 ≤⟨ +a-pres≼ (a*-pres≼ p) ⟩
-  a * b + a                 ∎ where open CrossTreeReasoning
+  a * y + a                 ∎ where open CrossTreeReasoning
 a*-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
   a * x                     <⟨ a*-pres≺ p ⟩
   a * f n                   ≤⟨ f≼l ⟩
@@ -602,6 +608,14 @@ a*-cong≈ (p , q) = a*-pres≼ p , a*-pres≼ q
 ## 幂运算
 
 ```agda
+^a-infl≼ : ⦃ NonZero a ⦄ → (_^ a) inflates _≼_ within NonTrivial
+^a-infl≼ = ≤→≼ ^-infl≤
+
+^a-infl≺ : ⦃ NonTrivial a ⦄ → (_^ a) inflates _≺_ within NonTrivial
+^a-infl≺ = <→≺ ^-infl
+```
+
+```agda
 a^-pres≼ : ⦃ _ : NonTrivial a ⦄ → (a ^_) preserves _≼_
 a^-pres≼ z≼ = <→≺ nz-elim                 where instance _ = ^-nz
 a^-pres≼ (s≼s p) = *a-pres≼ (a^-pres≼ p)  where instance _ = ^-nz
@@ -610,31 +624,15 @@ a^-pres≼ (l≼ p) = l≼ (a^-pres≼ p)
 ```
 
 ```agda
-^a-infl≼ : ⦃ NonZero a ⦄ → (_^ a) inflates _≼_ within NonTrivial
-^a-infl≼ {a} {x} =          begin
-  x                         ≈˘⟨ ≡→≈ a^-id ⟩
-  x ^ 1                     ≤⟨ a^-pres≼ (<→≺ nz-elim) ⟩
-  x ^ a                     ∎ where open CrossTreeReasoning
-```
-
-```agda
 a^-pres≺ : ⦃ _ : NonTrivial a ⦄ → (a ^_) preserves _≺_
-a^-pres≺ {a} {x} (s≼s {b} p) = begin-strict
+a^-pres≺ {a} {x} (s≼s {b = y} p) = begin-strict
   a ^ x                     <⟨ *a-infl≺ ⟩
   a ^ x * a                 ≤⟨ *a-pres≼ (a^-pres≼ p) ⟩
-  a ^ b * a                 ∎ where open CrossTreeReasoning; instance _ = ^-nz
+  a ^ y * a                 ∎ where open CrossTreeReasoning; instance _ = ^-nz
 a^-pres≺ {a} {x} (≼l {f} {n} p) = begin-strict
   a ^ x                     <⟨ a^-pres≺ p ⟩
   a ^ f n                   ≤⟨ f≼l ⟩
   lim- (λ n → a ^ f n)      ∎ where open CrossTreeReasoning
-```
-
-```agda
-^a-infl≺ : ⦃ NonTrivial a ⦄ → (_^ a) inflates _≺_ within NonTrivial
-^a-infl≺ {a} {x} =          begin-strict
-  x                         ≈˘⟨ ≡→≈ a^-id ⟩
-  x ^ 1                     <⟨ a^-pres≺ (<→≺ nt-elim) ⟩
-  x ^ a                     ∎ where open CrossTreeReasoning
 ```
 
 ```agda
@@ -721,4 +719,3 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
       f m                   <⟨ <→≺ (seq-pres m<n) ⟩
       f n                   ∎
 ```
- 
