@@ -58,7 +58,7 @@ record Normal : Type where
 
   lfp-fix : lfp ≈ F lfp
   lfp-fix =                 begin-equality
-    lfp                     ≈⟨ l≈ls z≼ ⟩
+    lfp                     ≈⟨ l≈ls ⟩
     lim- (F ∘ Itₙ F 0)      ≈˘⟨ ≡→≈ continuous ⟩
     F lfp                   ∎ where open CrossTreeReasoning
 ```

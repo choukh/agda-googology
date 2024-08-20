@@ -114,7 +114,11 @@ f≼l = ≼l ≼-refl
 ≼-trans (≼l p)  (l≼ q)  = ≼-trans p q
 ```
 
-**推论 2-3-x**
+**推论 2-3-7** 构造子 $\text{l≼}$ 的反演: 如果 $\lim(f) ≼ a$, 那么 $∀n, f(n) ≼ a$.  
+**证明** 讨论 $p : \lim(f) ≼ a$, 只可能有两种情况.
+
+- 若 $p = \text{≼l}(p') : \lim(f) ≼ \lim(g)$, 必有 $p' : \lim(f) ≼ g(m)$. 要证 $∀n, f(n) ≼ \lim(g)$. 由传递性有 $∀n, f(n) ≼ \lim(f) ≼ g(m) ≼ \lim(g)$. ∎
+- 若 $p = \text{l≼}(p') : \lim(f) ≼ a$, 必有 $p' : ∀n, f(n) ≼ a$. ∎
 
 ```agda
 l≼-inv : {w : wf f} → lim f ⦃ w ⦄ ≼ a → f n ≼ a
@@ -122,7 +126,13 @@ l≼-inv (≼l p) = ≼-trans f≼l (≼l p)
 l≼-inv (l≼ p) = p
 ```
 
-**引理 2-3-x**
+**引理 2-3-8** 类似路径构造子, 对任意 $p : a ≼ b$ 有 $p^+ : a ≼ b^+$.  
+**证明** 对 $p$ 归纳, 分四种情况.
+
+- 若 $p = \text{z≼} : 0 ≼ b$, 有 $\text{z≼} : 0 ≼ b^+$.
+- 若 $p = \text{s≼s}(p') : a^+ ≼ b^+$, 必有 $p' : a ≼ b$, 则 $\text{s≼s}(p'^+) : a^+ ≼ b^{++}$.
+- 若 $p = \text{≼l}(p') : a ≼ \lim(f)$, 必有 $p' : a ≼ f(n)$, 则 $p'^+:a≼ f(n)^+$, 由传递性即得 $a≼\lim(f)^+$.
+- 若 $p = \text{l≼}(p') : \lim(f) ≼ b$, 必有 $p' : ∀n, f(n) ≼ b$, 则 $p'^+ : ∀n, f(n) ≼ b^+$, 由 $\text{l≼}$ 即得 $\lim(f) ≼ b^+$. ∎
 
 ```agda
 ≼-suc : a ≼ b → a ≼ suc b
@@ -130,16 +140,27 @@ l≼-inv (l≼ p) = p
 ≼-suc (s≼s p) = s≼s (≼-suc p)
 ≼-suc (≼l p) = ≼-trans (≼-suc p) (s≼s f≼l)
 ≼-suc (l≼ p) = l≼ (≼-suc p)
+```
 
+**推论 2-3-9** 类似路径构造子, 有 $0 : a ≼ a^+$.  
+**证明** 由引理 2-3-8 和 $≼$ 的自反性即得. ∎
+
+```agda
 ≼-zero : a ≼ suc a
 ≼-zero = ≼-suc ≼-refl
 ```
 
-**定理 2-3-x**
+**定理 2-3-10** 子树关系蕴含跨树关系, 即 $a ≤ b → a ≼ b$.  
+**证明** 归纳 r : a ≤ b$, 分四种情况.
+
+- 若 $r = 0 : a < a^+$, 有 $0 : a ≼ a^+$.
+- 若 $r = r'^+ : a < b^+$, 必有 $r' : a < b$, 由归纳假设有 $p : a ≼ b$, 所以 $p^+ : a ≼ b^+$.
+- 若 $r = \lim(r') : a < \lim(f)$, 必有 $r' : a < f(n)$, 由归纳假设有 $p : a ≼ f(n)$, 所以 $\text{≼l}(p) : a ≼ \lim(f)$.
+- 若 $r : a = b$, 由 $≼$ 的自反性即得. ∎
 
 ```agda
 ≤→≼-rd : NSRoad a b → a ≼ b
-≤→≼-rd (inl zero) = ≼-suc ≼-refl
+≤→≼-rd (inl zero) = ≼-zero
 ≤→≼-rd (inl (suc r)) = ≼-suc (≤→≼-rd (inl r))
 ≤→≼-rd (inl (lim r)) = ≼l (≤→≼-rd (inl r))
 ≤→≼-rd (inr refl) = ≼-refl
@@ -151,21 +172,23 @@ l≼-inv (l≼ p) = p
 
 ## 外延相等
 
-**定义 2-3-x**
+**定义 2-3-11** 我们说 $a$ 与 $b$ 外延相等, 记作 $a ≈ b$, 但且仅当 $a ≼ b$ 且 $b ≼ a$.
 
 ```agda
 _≈_ : Rel; infix 5 _≈_
 a ≈ b = a ≼ b × b ≼ a
 ```
 
-**事实 2-3-x**
+**事实 2-3-12** $≼$ 相对于 $≈$ 是反对称关系.  
+**证明** 依定义. ∎
 
 ```agda
 ≼-antisym : Antisymmetric _≈_ _≼_
 ≼-antisym p q = p , q
 ```
 
-**定理 2-3-x**
+**定理 2-3-13** $≈$ 是自反, 对称且传递的.  
+**证明** 自反性和对称性依定义即得, 传递性依 $≼$ 的传递性即得. ∎
 
 ```agda
 ≈-refl : Reflexive _≈_
@@ -178,33 +201,41 @@ a ≈ b = a ≼ b × b ≼ a
 ≈-trans (p , q) (u , v) = ≼-trans p u , ≼-trans v q
 ```
 
+**事实 2-3-14** 内涵相等蕴含外延相等.
+
 ```agda
 ≡→≈ : a ≡ b → a ≈ b
 ≡→≈ refl = ≈-refl
 ```
 
-**事实 2-3-x**
+**事实 2-3-15** 后继运算保持且单射 $≈$.  
+**证明** 继承自 $≼$ 的性质. ∎
 
 ```agda
-s≈s : a ≈ b → suc a ≈ suc b
+s≈s : suc preserves _≈_
 s≈s (p , q) = s≼s p , s≼s q
 
 s≈s-inj : suc injects _≈_
 s≈s-inj (p , q) = s≼s-inj p , s≼s-inj q
 ```
 
-**事实 2-3-x**
+**事实 2-3-16** 如果两条基本列逐项外延相等, 那么它们的极限外延相等.  
+**证明** 继承自 $≼$ 的性质. ∎
 
 ```agda
 l≈l : {wff : wf f} {wfg : wf g} → (∀ {n} → f n ≈ g n) → lim f ⦃ wff ⦄ ≈ lim g ⦃ wfg ⦄
 l≈l p = l≼l (fst p) , l≼l (snd p)
 ```
 
-**事实 2-3-x**
+**定理 2-3-17** 基本列去掉前 $n$ 项, 在外延的意义上不影响其极限.  
+**证明** 我们只证去掉第一项的情况. 对任意基本列 $f$, 去掉第一项的基本列为 $f ∘ \text{suc}$, 要证 $\lim(f) ≈ \lim(f ∘ \text{suc})$.
+
+- 先证 $\lim(f) ≼ \lim(f ∘ \text{suc})$, 只需证 $f(n)≼(f ∘ \text{suc})(n) = f(n^+)$, 由基本列的良构性即得.
+- 再证 $\lim(f ∘ \text{suc}) ≼ \lim(f)$, 由 $(f ∘ \text{suc})(n) = f(n^+) ≼ \lim(f)$ 即得. ∎
 
 ```agda
-l≈ls : {w : wf f} {ws : wf (f ∘ suc)} → f 0 ≼ f 1 → lim f ⦃ w ⦄ ≈ lim (f ∘ ℕ.suc) ⦃ ws ⦄
-l≈ls p = l≼ (λ { {(zero)} → ≼l p ; {suc n} → f≼l }) , l≼ f≼l
+l≈ls : {w : wf f} {ws : wf (f ∘ suc)} → lim f ⦃ w ⦄ ≈ lim (f ∘ ℕ.suc) ⦃ ws ⦄
+l≈ls {w} = l≼l (≤→≼ (inl w)) , l≼ f≼l
 ```
 
 ## 严格序
