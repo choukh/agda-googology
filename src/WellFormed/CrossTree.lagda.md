@@ -782,7 +782,7 @@ $$
 
 (1) 若 $p = \text{s≼s}(p') : a ≺ b'^+$, 必有 $p' : a ≼ b'$, 要证 $ω ^ a + ω ^ {b'^+} ≈ ω ^ {b'^+}$.
 
-先证 $ω ^ a + ω ^ {b'} ⋅ n ≼ ω ^ {b'^+}$:
+(1.1) 先证 $ω ^ a + ω ^ {b'} ⋅ n ≼ ω ^ {b'^+}$:
 
 $$
 \begin{aligned}
@@ -794,7 +794,7 @@ $$
 \end{aligned}
 $$
 
-再证 $ω ^ {b'} ⋅ n ≼ ω ^ a + ω ^ {b'^+}$:
+(1.2) 再证 $ω ^ {b'} ⋅ n ≼ ω ^ a + ω ^ {b'^+}$:
 
 $$
 \begin{aligned}
@@ -823,26 +823,29 @@ $$
 
 (2) 若 $p = \text{≼l}(p') : a ≺ \lim(f)$, 必有 $p' : a ≺ f(n)$, 要证 $ω ^ a + ω ^ {\lim(f)} ≈ ω ^ {\lim(f)}$.
 
+(2.1) 先证 $ω ^ a + ω ^ {f(m)} ≼ ω ^ {\lim(f)}$: 讨论 $n, m$ 的大小关系.
+
+- 若 $n ≤ m$, 有 $a ≺ f(n) ≼ f(m)$, 由归纳假设有 $ω ^ a + ω ^ {f(m)} ≈ ω ^ {f(m)} ≼ ω ^ {\lim(f)}$.
+- 若 $m < n$, 有 $f(m) ≼ f(n)$. 又 $a ≺ f(n)$, 由归纳假设有 $ω^a + ω^{f(n)}≈ω^{f(n)}$, 于是 $ω^a + ω^{f(m)}≼ω^a + ω^{f(n)}≈ω^{f(n)}≼ ω ^ {\lim(f)}$.
+
+(2.2) 再证 $ω ^ {f(n)} ≼ ω ^ a + ω ^ {\lim(f)}$: 由 $ω ^ {f(n)} ≼ ω ^ a + ω ^ {f(n)}$ 即证. ∎
+
 ```agda
 ω^-absorb {a} {b = lim f} (≼l {n} a≺fn) = l≼ aux , l≼l a+-infl≼ where
   open CrossTreeReasoning
-  aux : ω ^ a + ω ^ f m ≼ lim- (λ m → ω ^ f m)
+  aux : ω ^ a + ω ^ f m ≼ ω ^ lim f
   aux {m} with <-cmp n m
-  ... | tri< n<m _ _ = ≼l $ begin
-    ω ^ a + ω ^ f m         ≤⟨ fst (ω^-absorb a≺fm) ⟩
-    ω ^ f m                 ∎ where
-    a≺fm =                  begin-strict
-      a                     <⟨ a≺fn ⟩
-      f n                   <⟨ <→≺ (seq-pres n<m) ⟩
-      f m                   ∎
-  ... | tri≈ _ refl _ = ≼l $ begin
-    ω ^ a + ω ^ f n         ≤⟨ fst (ω^-absorb a≺fn) ⟩
-    ω ^ f n                 ∎
-  ... | tri> _ _ m<n = ≼l $ begin
-    ω ^ a + ω ^ f m         ≤⟨ a+-pres≼ (a^-pres≼ fm≼fn) ⟩
-    ω ^ a + ω ^ f n         ≤⟨ fst (ω^-absorb a≺fn) ⟩
-    ω ^ f n                 ∎ where
-    fm≼fn =                 begin
-      f m                   <⟨ <→≺ (seq-pres m<n) ⟩
-      f n                   ∎
+  ... | tri< n<m _ _ =      begin
+    ω ^ a + ω ^ f m         ≈⟨ ω^-absorb (≺-trans a≺fn (<→≺ (seq-pres n<m))) ⟩
+    ω ^ f m                 ≤⟨ f≼l ⟩
+    ω ^ lim f               ∎
+  ... | tri≈ _ refl _ =     begin
+    ω ^ a + ω ^ f n         ≈⟨ ω^-absorb a≺fn ⟩
+    ω ^ f n                 ≤⟨ f≼l ⟩
+    ω ^ lim f               ∎
+  ... | tri> _ _ m<n =      begin
+    ω ^ a + ω ^ f m         ≤⟨ a+-pres≼ $ a^-pres≼ $ ≤→≼ $ <→≤ (seq-pres m<n) ⟩
+    ω ^ a + ω ^ f n         ≈⟨ ω^-absorb a≺fn ⟩
+    ω ^ f n                 ≤⟨ f≼l ⟩
+    ω ^ lim f               ∎
 ```
