@@ -304,8 +304,8 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 η-suc : η ⟨ suc a ⟩ ≡ lim- (Itₙ (λ x → suc (η ⟨ a ⟩) + ζ ⟨ x ⟩) (suc (η ⟨ a ⟩)))
 η-suc = refl
 
-η-lim : ⦃ _ : isLim a ⦄ → η ⟨ a ⟩ ≡ lim (λ n → η ⟨ a [ n ] ⟩) ⦃ nml-pres η []-wf ⦄
-η-lim {lim f} = refl
+η-lim : ⦃ _ : wf f ⦄ → η ⟨ lim f ⟩ ≡ lim- λ n → η ⟨ f n ⟩
+η-lim = refl
 ```
 
 ```agda
@@ -314,4 +314,55 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 
 η-suc-[n] : η ⟨ suc a ⟩ [ n ] ≈ Itₙ (ζ ⟨_⟩) (suc (η ⟨ a ⟩)) n
 η-suc-[n] = Fixable.fp-suc-[n] ζ-fixbl
+```
+
+```agda
+private variable ℱ : Normal
+
+Φ : Normal → Ord → Normal
+Φ-infl : Road a (Φ ℱ b ⟨ suc a ⟩)
+Φ-pres-0-rd : (λ x → Φ ℱ x ⟨ 0 ⟩) preserves Road
+
+Φ-pres-0 : (λ x → Φ ℱ x ⟨ 0 ⟩) preserves _<_
+Φ-pres-0 = map Φ-pres-0-rd
+```
+
+```agda
+Φ ℱ zero = ℱ
+Φ ℱ (suc a) = fp (Φ ℱ a)
+Φ ℱ (lim f) = jump 0 id (λ _ a n → Φ ℱ (f n) ⟨ a ⟩) Φ-infl (Φ-pres-0 it) {!   !}
+```
+
+```agda
+Φ-infl {b = zero} = {!   !}
+Φ-infl {b = suc b} = rd[ 0 ] {!   !}
+Φ-infl {b = lim f} = {!   !}
+```
+
+```agda
+Φ-pres-0-rd zero = rd[ 2 ] {!   !}
+Φ-pres-0-rd (suc r) = {!   !}
+Φ-pres-0-rd (lim r) = {!   !}
+```
+
+```agda
+φ : Ord → Normal
+φ = Φ ω^
+```
+
+```agda
+φ-0 : φ 0 ≡ ω^
+φ-0 = refl
+
+φ-suc : φ (suc a) ≡ fp (φ a)
+φ-suc = refl
+
+φ-lim-0 : ⦃ _ : wf f ⦄ → φ (lim f) ⟨ 0 ⟩ ≡ lim- λ n → φ (f n) ⟨ 0 ⟩
+φ-lim-0 = refl
+
+φ-lim-suc : ⦃ _ : wf f ⦄ → φ (lim f) ⟨ suc a ⟩ ≡ lim- λ n → φ (f n) ⟨ suc (φ (lim f) ⟨ a ⟩) ⟩
+φ-lim-suc = refl
+
+φ-lim-lim : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → φ (lim f) ⟨ lim g ⟩ ≡ lim- λ n → φ (lim f) ⟨ g n ⟩
+φ-lim-lim = refl
 ```
