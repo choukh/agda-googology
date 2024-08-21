@@ -51,8 +51,8 @@ A →ⁿ suc n = Ord → A →ⁿ n
 
 $$
 \begin{aligned}
-Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,\text{Tri}.Φ\kern{0.17em}(\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{α,β,0}\kern{0.17em}0))) \\
-&(λφ,\text{Tri}.Φ\kern{0.17em}(\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\text{lim}\kern{0.17em}λn,φ[ n ]_{β,0}\kern{0.17em}0)))
+Φ\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_α,\text{Tri}.Φ\kern{0.17em}(\text{Bin}.Φ\kern{0.17em}(\text{fixpt}\kern{0.17em} λ β ,φ_{α,β,0}\kern{0.17em}0))) \\
+&(λφ,\text{Tri}.Φ\kern{0.17em}(\text{Bin}.Φ\kern{0.17em}(\text{jump}\kern{0.17em} λ β ,\text{lim}\kern{0.17em}λn,φ[ n ]_{β,0}\kern{0.17em}0)))
 \end{aligned}
 $$
 
@@ -145,7 +145,7 @@ $$
 回顾不动点的起点 (梦的开始) $λα,ω\kern{0.17em}^α : \text{Ord}^{→1}$, 我们需要从它开始, 迭代 $Φ_{\le n}$, 以得到 $Φ_{n^+}$. 直观上该迭代具有
 
 $$
-Φ_{n} (... (Φ_2 (Φ_1 (Φ_1 (λα,ω\kern{0.17em}^α))))...) : \text{Ord}^{→n^+}\quad (*)
+Φ_{n} (... (Φ_3 (Φ_2 (Φ_1 (λα,ω\kern{0.17em}^α))))...) : \text{Ord}^{→n^+}\quad (*)
 $$
 
 的形式. 我们把这整个迭代过程记作 $Φ$, 它具有类型
@@ -166,12 +166,18 @@ $$
 
 $$
 \begin{aligned}
-&Φ_{n^+}\kern{0.17em}F :\text{Ord}^{→n^{++}} &:=& \text{rec}\kern{0.17em}F \\
-&&&\quad (λ(φ_{n^+,α}:\text{Ord}^{→n^+}),Φ^n\kern{0.17em}(\text{fixpt}\kern{0.17em}λβ,φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
-&&&\quad (λ(φ_{n^+,f\kern{0.17em}m}:ℕ→\text{Ord}^{→n^+}), Φ^n\kern{0.17em}(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
-\\
-&Φ^0\kern{0.17em}F : \text{Ord}^{→1} &:=& F \\
-&Φ^{n^+}\kern{0.17em}F : \text{Ord}^{→n^{++}} &:=& Φ_{n^+}\kern{0.17em}(Φ^n\kern{0.17em}F)
+&Φ_{n^+}\kern{0.17em}F :\text{Ord}^{→n^{++}} :=
+\text{rec}\kern{0.17em}F \\
+&\quad (λ(φ_{n^{+},α}:\text{Ord}^{→n^{+}}),Φ^n\kern{0.17em}(\text{fixpt}\kern{0.17em} λ β ,φ_{n^{+},α}\kern{0.17em}β\kern{0.17em}\overset{.}{0})) \\
+&\quad (λ(φ_{n^{+},f\kern{0.17em}m}:ℕ→\text{Ord}^{→n^{+}}), Φ^{n}\kern{0.17em}
+(\text{jump}\kern{0.17em}λ β , \limλm,φ_{n^{+},f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0}))
+\end{aligned}
+$$
+
+$$
+\begin{aligned}
+Φ^{0}\kern{0.17em}F : \text{Ord}^{→1} &:= F \\
+Φ^{n^{+}}\kern{0.17em}F : \text{Ord}^{→n^{++}} &:= Φ_{n^{+}}\kern{0.17em}(Φ^{n}\kern{0.17em}F)
 \end{aligned}
 $$
 
@@ -189,8 +195,8 @@ $$
 
 $$
 \begin{aligned}
-Φ_{n^+}\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_{n^+,α},Φ_{n} (... (Φ_2 (Φ_1(\text{fixpt}\kern{0.17em}λβ,φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...) \\
-&(λφ_{n^+,f\kern{0.17em}m}, Φ_{n} (... (Φ_2 (Φ_1(\text{jump}\kern{0.17em}λβ,\limλm,φ_{n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...)
+Φ_{n^+}\kern{0.17em}F := \text{rec}\kern{0.17em}F\kern{0.17em}&(λφ_{n^+,α},Φ_{n} (... (Φ_2 (Φ_1(\text{fixpt}\kern{0.17em} λ β , φ_{n^+,α}\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...) \\
+&(λφ_{n^+,f\kern{0.17em}m}, Φ_{n} (... (Φ_2 (Φ_1(\text{jump}\kern{0.17em} λ β , \limλm,φ_{n^+,f\kern{0.17em}m}\kern{0.17em}β\kern{0.17em}\overset{.}{0}))))...)
 \end{aligned}
 $$
 
@@ -255,8 +261,8 @@ $$
 
 $$
 \begin{aligned}
-&Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 &=& (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0\kern{0.17em}0)^ω\kern{0.17em}0 \\
-&Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β^+ &=& (λβ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0\kern{0.17em}0)^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β)^+ \\
+&Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 &=& (λ β , Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0\kern{0.17em}0)^ω\kern{0.17em}0 \\
+&Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β^+ &=& ( λ β ,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}0\kern{0.17em}0)^ω\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β)^+ \\
 &Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 &=& \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}0 \\
 &Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β^+ &=& \lim λn,Φ\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}n)\kern{0.17em}(Φ\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}0\kern{0.17em}0\kern{0.17em}β)^+\kern{0.17em}0\kern{0.17em}0 \\
 &Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}0\kern{0.17em}(\lim g) &=& \lim λn,Φ\kern{0.17em}F\kern{0.17em}α\kern{0.17em}0\kern{0.17em}0\kern{0.17em}(g\kern{0.17em}n)
@@ -301,8 +307,8 @@ $$
 
 $$
 \begin{aligned}
-&Φ^{n^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0} &=& (λβ,Φ^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}0 \\
-&Φ^{n^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+ &=& (λβ,Φ^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}(Φ^{n^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+ \\
+&Φ^{n^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0} &=& ( λ β ,Φ^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}0 \\
+&Φ^{n^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+ &=& ( λ β ,Φ^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}β\kern{0.17em}\overset{.}{0})^ω\kern{0.17em}(Φ^{n^+}\kern{0.17em}F\kern{0.17em}α^+\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+ \\
 &Φ^{n^+}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0} &=& \lim λm,Φ^{n^+}\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}\overset{.}{0} \\
 &Φ^{n^+}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}β^+ &=& \lim λm,Φ^{n^+}\kern{0.17em}F\kern{0.17em}(f\kern{0.17em}m)\kern{0.17em}(Φ^{n^+}\kern{0.17em}F\kern{0.17em}(\lim f)\kern{0.17em}\overset{.}{0}\kern{0.17em}β)^+\kern{0.17em}\overset{.}{0} \\
 &Φ^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}(\lim g) &=& \lim λm,Φ^{n^+}\kern{0.17em}F\kern{0.17em}α\kern{0.17em}\overset{.}{0}\kern{0.17em}(g\kern{0.17em}m)
@@ -334,8 +340,9 @@ $$
 **推论** $(\mathcal{α,s,Z,β})$
 
 $$
-φ_{n^{++}}\kern{0.17em}α\kern{0.17em}β^+\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}=
-\text{fixpt}\kern{0.17em}λγ,φ_{n^{++}}\kern{0.17em}α\kern{0.17em}β\kern{0.17em}γ\kern{0.17em}\overset{.}{0}
+φ_{n^{++}}\kern{0.17em}α\kern{0.17em}β^{+}\kern{0.17em}\overset{.}{0}\kern{0.17em}\underline{\kern{0.5em}}
+=
+\text{fixpt}\kern{0.17em} λ γ , φ_{n^{++}}\kern{0.17em}α\kern{0.17em}β\kern{0.17em}γ\kern{0.17em}\overset{.}{0}
 $$
 
 **(证明)** 讨论 $α$, 由定理 $(\mathcal{S,Z,α})$ 即得. ∎
