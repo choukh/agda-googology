@@ -30,18 +30,18 @@ open import Induction.WellFounded
 
 $$
 \frac{}
-{\quad\text{z≼} : 0 ≼ a\quad}
+{\quad\text{z≼} : 0 ≼ a \quad}
 \qquad
 \frac{a ≼ b}
-{\quad\text{s≼s} : a^+ ≼ b^+\quad}
+{\quad\text{s≼s} : a^{+} ≼ b^{+} \quad}
 $$
 
 $$
 \frac{a ≼ f(n)}
-{\quad\text{≼l} : a ≼ \lim(f)\quad}
+{\quad\text{≼l} : a ≼ \lim(f) \quad}
 \qquad
 \frac{∀n, f(n) ≼ a}
-{\quad\text{l≼} : \lim(f) ≼ a\quad}
+{\quad\text{l≼} : \lim(f) ≼ a \quad}
 $$
 
 其中 $\text{s≼s}$ 说后继运算保持 $≼$, $\text{≼l}$ 说极限是基本列的上界, $\text{l≼}$ 说极限是基本列的上确界.
@@ -118,7 +118,7 @@ f≼l = ≼l ≼-refl
 **推论 2-3-7** 构造子 $\text{l≼}$ 的反演: 如果 $\lim(f) ≼ a$, 那么 $∀n, f(n) ≼ a$.  
 **证明** 讨论 $p : \lim(f) ≼ a$, 只可能有两种情况.
 
-- 若 $p = \text{≼l}(p') : \lim(f) ≼ \lim(g)$, 必有 $p' : \lim(f) ≼ g(m)$. 要证 $∀n, f(n) ≼ \lim(g)$. 由传递性有 $∀n, f(n) ≼ \lim(f) ≼ g(m) ≼ \lim(g)$. ∎
+- 若 $p = \text{≼l}(p') : \lim(f) ≼ \lim(g)$, 必有 $p' : \lim(f) ≼ g(m)$. 要证 $∀n, f(n) ≼ \lim(g)$. 由传递性有 $∀n, f(n) ≼ \lim(f) ≼ g(m) ≼ \lim(g)$.
 - 若 $p = \text{l≼}(p') : \lim(f) ≼ a$, 必有 $p' : ∀n, f(n) ≼ a$. ∎
 
 ```agda
