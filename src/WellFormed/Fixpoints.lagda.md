@@ -41,13 +41,13 @@ record Normal : Type where
     nml-nz : NonZero (F a)
     nml-nz {(zero)} = it
     nml-nz {suc a} = nz-intro $ begin-strict
-      0                     ≤⟨ z≤ ⟩
-      F _                   <⟨ nml-pres zero₁ ⟩
-      F (suc _)             ∎ where open SubTreeReasoning
+      0                         ≤⟨ z≤ ⟩
+      F _                       <⟨ nml-pres zero₁ ⟩
+      F (suc _)                 ∎ where open SubTreeReasoning
     nml-nz {lim f} = nz-intro $ begin-strict
-      0                     <⟨ nz-elim ⟩
-      F (f 0)               <⟨ nml-pres f<l ⟩
-      F (lim _)             ∎ where open SubTreeReasoning
+      0                         <⟨ nz-elim ⟩
+      F (f 0)                   <⟨ nml-pres f<l ⟩
+      F (lim _)                 ∎ where open SubTreeReasoning
 
     lfp-wf : wf (Itₙ F 0)
     lfp-wf {(zero)} = nz-elim
@@ -57,10 +57,39 @@ record Normal : Type where
   lfp = lim (Itₙ F 0)
 
   lfp-fix : lfp ≈ F lfp
-  lfp-fix =                 begin-equality
-    lfp                     ≈⟨ l≈ls ⟩
-    lim- (F ∘ Itₙ F 0)      ≈˘⟨ ≡→≈ continuous ⟩
-    F lfp                   ∎ where open CrossTreeReasoning
+  lfp-fix =                     begin-equality
+    lfp                         ≈⟨ l≈ls ⟩
+    lim- (F ∘ Itₙ F 0)          ≈˘⟨ ≡→≈ continuous ⟩
+    F lfp                       ∎ where open CrossTreeReasoning
+```
+
+```agda
+record Jumpable : Type where
+  constructor mkJumpable
+  field
+    i : Ord
+    ⦃ i-nz ⦄ : NonZero i
+    fₐ : Ord → Seq
+    fₐ-0 : ∀ {a} → fₐ (suc a) 0 ≡ suc a
+    fₐ-wf : ∀ {a} → wf (fₐ (suc a))
+
+  F⁺ : Func
+  F⁺-pres-rd : F⁺ preserves Road
+  F⁺-pres : F⁺ preserves _<_
+  F⁺-pres = map F⁺-pres-rd
+
+  F⁺ zero    = i
+  F⁺ (suc a) = lim (fₐ (suc (F⁺ a))) ⦃ fₐ-wf ⦄
+  F⁺ (lim f) = lim (F⁺ ∘ f) ⦃ F⁺-pres it ⦄
+
+  F⁺-pres-rd zero         = rd[ 0 ] $ subst (Road _) (sym fₐ-0) zero
+  F⁺-pres-rd (suc r)      = rd[ 0 ] $ subst (Road _) (sym fₐ-0) (suc (F⁺-pres-rd r))
+  F⁺-pres-rd (lim {n} r)  = rd[ n ] $ F⁺-pres-rd r
+
+  jump : Normal
+  jump = normal F⁺ F⁺-pres refl
+
+open Jumpable public using (jump)
 ```
 
 ## 不动点的枚举
@@ -74,22 +103,8 @@ module FpEnum (ν : Normal) where
   sfp-wf {n = zero} = +-infl
   sfp-wf {n = suc n} = +-pres (nml-pres sfp-wf)
 
-  F′ : Func
-  F′-pres-rd : F′ preserves Road
-  F′-pres : F′ preserves _<_
-  F′-pres = map F′-pres-rd
-
-  F′ zero = lfp
-  F′ (suc a) = let j = suc (F′ a) in
-               lim (λ n → Itₙ (λ x → j + ν ⟨ x ⟩) j n) ⦃ sfp-wf ⦄
-  F′ (lim f) = lim (F′ ∘ f) ⦃ F′-pres it ⦄
-
-  F′-pres-rd zero = rd[ 0 ] zero
-  F′-pres-rd (suc r) = rd[ 0 ] $ rd-trans (F′-pres-rd r) zero
-  F′-pres-rd (lim {n} r)  = rd[ n ] $ F′-pres-rd r
-
   fp : Normal
-  fp = normal F′ F′-pres refl
+  fp = jump $ mkJumpable lfp (λ i → Itₙ (λ x → i + ν ⟨ x ⟩) i) refl sfp-wf
 
 open FpEnum public using (fp; sfp-wf)
 open Normal public
@@ -318,78 +333,56 @@ module BinaryVeblenAux (ν : Normal) where
 ```
 
 ```agda
-  module Jump (f : Seq) ⦃ w : wf f ⦄ where
-    h : Ord → Seq
-    h a zero    = a
-    h a (suc n) = h a n + Φ (f n) ⟨ a ⟩
-```
+  module _ (f : Seq) ⦃ _ : wf f ⦄ where
+    w : wf (λ n → Itₙ (λ x → x + (Φ (f n) ⟨ suc a ⟩)) (suc a) n)
+    w {n = zero} = {!   !} --+-infl ⦃ Φ-nz ⦄
+    w {n = suc zero} = {! +-pres-rd  !}
+    w {n = 2+ n} = {!   !}
 
-```agda
-    F⁺ : Func
-    F⁺-pres-rd : F⁺ preserves Road
-    F⁺-pres : F⁺ preserves _<_
-    F⁺-pres = map F⁺-pres-rd
-```
-
-```agda
-    F⁺ zero     = lim (λ n → Φ (f n) ⟨ 0 ⟩) ⦃ Φ-pres it nz-elim ⦄
-    F⁺ (suc a)  = lim (Itₙ (λ x → x + {!   !}) (suc (F⁺ a))) ⦃ {!   !} ⦄
-    F⁺ (lim g)  = lim (F⁺ ∘ g) ⦃ F⁺-pres it ⦄
-```
-
-```agda
-    F⁺-pres-rd zero = {!   !}
-    F⁺-pres-rd (suc r) = {!   !}
-    F⁺-pres-rd (lim r) = {!   !}
-```
-
-```agda
-    jump : Normal
-    jump = normal F⁺ F⁺-pres refl
-  open Jump public using (jump)
+    jumper : Jumpable
+    jumper = mkJumpable
+      (lim (λ n → Φ (f n) ⟨ 0 ⟩) ⦃ Φ-pres it nz-elim ⦄)
+      (λ i n → Itₙ (λ x → x + Φ (f n) ⟨ i ⟩) i n)
+      refl w
 ```
 
 ```agda
   Φ zero = ν
   Φ (suc a) = fp (Φ a)
-  Φ (lim f) = jump f
+  Φ (lim f) = jump (jumper f)
 ```
 
 ```agda
   Φ-nz {(zero)} = nml-nz ν
   Φ-nz {suc a}  = nml-nz (fp (Φ a))
-  Φ-nz {lim f}  = nml-nz (jump f)
+  Φ-nz {lim f}  = nml-nz (jump (jumper f))
 ```
 
 ```agda
-  Φ-pres-rd = {!   !}
+  Φ-pres-rd = {!    !}
 ```
 
 ```agda
-module Jump (i : Ord) (Fₙ : ℕ → Func) (Gₙ : Func → Ord → Seq)
-  (infl : ∀ {a} → Road a (Gₙ (λ x → suc a + Fₙ 0 x) (suc a) 0))
-  (w₀ : wf λ n → Gₙ (Fₙ n) i n)
-  where
+module BinaryVeblen where
+  open BinaryVeblenAux
 
-  F⁺ : Func
-  wₛ : let j = suc (F⁺ a) in wf (λ n → Gₙ (λ x → j + Fₙ n x) j n)
-  wₛ = {!   !}
+  φ : Ord → Normal
+  φ = Φ ω^
+```
 
-  F⁺-pres-rd : F⁺ preserves Road
-  F⁺-pres : F⁺ preserves _<_
-  F⁺-pres = map F⁺-pres-rd
+```agda
+  φ-0 : φ 0 ≡ ω^
+  φ-0 = refl
 
-  F⁺ zero    = lim (λ n → Gₙ (Fₙ n) i n) ⦃ w₀ ⦄
-  F⁺ (suc a) = let j = suc (F⁺ a) in
-               lim (λ n → Gₙ (λ x → j + (Fₙ n) x) j n) ⦃ wₛ ⦄
-  F⁺ (lim f) = lim (F⁺ ∘ f) ⦃ F⁺-pres it ⦄
+  φ-suc : φ (suc a) ≡ fp (φ a)
+  φ-suc = refl
 
-  F⁺-pres-rd zero         = rd[ 0 ] infl
-  F⁺-pres-rd (suc r)      = rd[ 0 ] $ rd-trans (F⁺-pres-rd r) infl
-  F⁺-pres-rd (lim {n} r)  = rd[ n ] $ F⁺-pres-rd r
+  φ-lim-0 : ⦃ _ : wf f ⦄ → φ (lim f) ⟨ 0 ⟩ ≡ lim- λ n → φ (f n) ⟨ 0 ⟩
+  φ-lim-0 = refl
 
-  jump : Normal
-  jump = normal F⁺ F⁺-pres refl
+  φ-lim-suc : ⦃ _ : wf f ⦄ → φ (lim f) ⟨ suc a ⟩ ≡ {!   !}
+  φ-lim-suc = {! refl  !}
 
-open Jump public using (jump)
+  φ-lim-lim : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → φ (lim f) ⟨ lim g ⟩ ≡ lim- λ n → φ (lim f) ⟨ g n ⟩
+  φ-lim-lim = refl
 ```
