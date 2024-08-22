@@ -22,9 +22,9 @@ open import WellFormed.CrossTree
 ## 不动点定理
 
 ```agda
-open import Lower using (_∘ⁿ_)
-Itₙ : Func → Ord → Seq
-Itₙ F i n = (F ∘ⁿ n) i
+Itₙ : (ℕ → Func) → Ord → Seq
+Itₙ F i zero = i
+Itₙ F i (suc n) = F n (Itₙ F i n)
 ```
 
 ```agda
@@ -49,17 +49,17 @@ record Normal : Type where
       F (f 0)                   <⟨ nml-pres f<l ⟩
       F (lim _)                 ∎ where open SubTreeReasoning
 
-    lfp-wf : wf (Itₙ F 0)
+    lfp-wf : wf (Itₙ (λ _ → F) 0)
     lfp-wf {(zero)} = nz-elim
     lfp-wf {suc n} = nml-pres lfp-wf
 
   lfp : Ord
-  lfp = lim (Itₙ F 0)
+  lfp = lim (Itₙ (λ _ → F) 0)
 
   lfp-fix : lfp ≈ F lfp
   lfp-fix =                     begin-equality
     lfp                         ≈⟨ l≈ls ⟩
-    lim- (F ∘ Itₙ F 0)          ≈˘⟨ ≡→≈ continuous ⟩
+    lim- (F ∘ Itₙ (λ _ → F) 0)  ≈˘⟨ ≡→≈ continuous ⟩
     F lfp                       ∎ where open CrossTreeReasoning
 ```
 
@@ -67,23 +67,23 @@ record Normal : Type where
 record Jumpable : Type where
   constructor mkJumpable
   field
-    i : Ord
-    ⦃ i-nz ⦄ : NonZero i
-    fₐ : Ord → Seq
-    fₐ-0 : ∀ {a} → fₐ (suc a) 0 ≡ suc a
-    fₐ-wf : ∀ {a} → wf (fₐ (suc a))
+    initial : Ord
+    ⦃ initial-nz ⦄ : NonZero initial
+    stepper : Ord → ℕ → Func
+    stepper-wf : wf (Itₙ (stepper a) a)
 
   F⁺ : Func
   F⁺-pres-rd : F⁺ preserves Road
   F⁺-pres : F⁺ preserves _<_
   F⁺-pres = map F⁺-pres-rd
 
-  F⁺ zero    = i
-  F⁺ (suc a) = lim (fₐ (suc (F⁺ a))) ⦃ fₐ-wf ⦄
+  F⁺ zero    = initial
+  F⁺ (suc a) = let j = suc (F⁺ a) in
+               lim (Itₙ (stepper j) j) ⦃ stepper-wf ⦄
   F⁺ (lim f) = lim (F⁺ ∘ f) ⦃ F⁺-pres it ⦄
 
-  F⁺-pres-rd zero         = rd[ 0 ] $ subst (Road _) (sym fₐ-0) zero
-  F⁺-pres-rd (suc r)      = rd[ 0 ] $ subst (Road _) (sym fₐ-0) (suc (F⁺-pres-rd r))
+  F⁺-pres-rd zero         = rd[ 0 ] $ zero
+  F⁺-pres-rd (suc r)      = rd[ 0 ] $ suc (F⁺-pres-rd r)
   F⁺-pres-rd (lim {n} r)  = rd[ n ] $ F⁺-pres-rd r
 
   jump : Normal
@@ -99,14 +99,17 @@ module FpEnum (ν : Normal) where
   open Normal using (_⟨_⟩)
   open Normal ν
 
-  sfp-wf : wf (Itₙ (λ x → suc a + ν ⟨ x ⟩) (suc a))
-  sfp-wf {n = zero} = +-infl
-  sfp-wf {n = suc n} = +-pres (nml-pres sfp-wf)
+  stepper : Ord → ℕ → Func
+  stepper j _ x = j + ν ⟨ x ⟩
+
+  w : wf (Itₙ (stepper a) a)
+  w {n = zero} = +-infl
+  w {n = suc n} = +-pres (nml-pres w)
 
   fp : Normal
-  fp = jump $ mkJumpable lfp (λ i → Itₙ (λ x → i + ν ⟨ x ⟩) i) refl sfp-wf
+  fp = jump $ mkJumpable lfp stepper w
 
-open FpEnum public using (fp; sfp-wf)
+open FpEnum public using (fp)
 open Normal public
 ```
 
@@ -127,30 +130,30 @@ record Fixable (ν : Normal) : Type where
 
 ```agda
   fp-fix : fp ν ⟨ a ⟩ ≈ ν ⟨ fp ν ⟨ a ⟩ ⟩
-  fp-suc-[n] : fp ν ⟨ suc a ⟩ [ n ] ≈ Itₙ (ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) n
+  fp-suc-[n] : fp ν ⟨ suc a ⟩ [ n ] ≈ Itₙ (λ _ → ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) n
 ```
 
 ```agda
   fp-fix {a = zero}  = lfp-fix ν
   fp-fix {a = suc a} = p , q where
     open CrossTreeReasoning
-    p =                                       begin
-      fp ν ⟨ suc a ⟩                          ≤⟨ l≼l fixbl-infl≼ ⟩
-      lim- (λ n → ν ⟨ _ ⟩)                    ≈˘⟨ ≡→≈ (continuous ν) ⟩
-      ν ⟨ fp ν ⟨ suc a ⟩ ⟩                    ∎
-    q[n] = λ {n} →                            begin
-      ν ⟨ fp ν ⟨ suc a ⟩ [ n ] ⟩              ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
-      ν ⟨ Itₙ (ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) n ⟩  ≈⟨ ≈-refl ⟩
-      Itₙ (ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) (suc n)  ≈˘⟨ fp-suc-[n] ⟩
-      fp ν ⟨ suc a ⟩ [ suc n ]                ∎
-    q =                                       begin
-      ν ⟨ fp ν ⟨ suc a ⟩ ⟩                    ≈⟨ ≡→≈ (continuous ν) ⟩
-      lim- (λ n → ν ⟨ _ ⟩)                    ≤⟨ l≼ls q[n] ⟩
-      fp ν ⟨ suc a ⟩                          ∎
-  fp-fix {a = lim f} =                        begin-equality
-    fp ν ⟨ lim f ⟩                            ≈⟨ l≈l fp-fix ⟩
-    lim- (λ n → ν ⟨ _ ⟩)                      ≈˘⟨ ≡→≈ (continuous ν) ⟩
-    ν ⟨ fp ν ⟨ lim f ⟩ ⟩                      ∎ where open CrossTreeReasoning
+    p =                                             begin
+      fp ν ⟨ suc a ⟩                                ≤⟨ l≼l fixbl-infl≼ ⟩
+      lim- (λ n → ν ⟨ _ ⟩)                          ≈˘⟨ ≡→≈ (continuous ν) ⟩
+      ν ⟨ fp ν ⟨ suc a ⟩ ⟩                          ∎
+    q[n] = λ {n} →                                  begin
+      ν ⟨ fp ν ⟨ suc a ⟩ [ n ] ⟩                    ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
+      ν ⟨ Itₙ (λ _ → ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) n ⟩  ≈⟨ ≈-refl ⟩
+      Itₙ (λ _ → ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) (suc n)  ≈˘⟨ fp-suc-[n] ⟩
+      fp ν ⟨ suc a ⟩ [ suc n ]                      ∎
+    q =                                             begin
+      ν ⟨ fp ν ⟨ suc a ⟩ ⟩                          ≈⟨ ≡→≈ (continuous ν) ⟩
+      lim- (λ n → ν ⟨ _ ⟩)                          ≤⟨ l≼ls q[n] ⟩
+      fp ν ⟨ suc a ⟩                                ∎
+  fp-fix {a = lim f} =                              begin-equality
+    fp ν ⟨ lim f ⟩                                  ≈⟨ l≈l fp-fix ⟩
+    lim- (λ n → ν ⟨ _ ⟩)                            ≈˘⟨ ≡→≈ (continuous ν) ⟩
+    ν ⟨ fp ν ⟨ lim f ⟩ ⟩                            ∎ where open CrossTreeReasoning
 ```
 
 ```agda
@@ -160,28 +163,28 @@ record Fixable (ν : Normal) : Type where
 
 ```agda
   fp-suc-[s] : fp ν ⟨ suc a ⟩ [ suc n ] ≈ ν ⟨ fp ν ⟨ suc a ⟩ [ n ] ⟩
-  fp-suc-[s] {a} {n} =                        begin-equality
-    fp ν ⟨ suc a ⟩ [ suc n ]                  ≈⟨ ≈-refl ⟩
-    suc (fp ν ⟨ a ⟩) + ν ⟨ _ ⟩                ≈⟨ +a-cong≈ (s≈s fp-fix) ⟩
-    ν ⟨ fp ν ⟨ a ⟩ ⟩ + 1 + ν ⟨ _ ⟩            ≈˘⟨ ≡→≈ +-assoc ⟩
-    ν ⟨ fp ν ⟨ a ⟩ ⟩ + (1 + ν ⟨ _ ⟩)          ≈⟨ a+-cong≈ (1+l-absorb $ fixbl-isLim $ nz-intro p) ⟩
-    ν ⟨ fp ν ⟨ a ⟩ ⟩ + ν ⟨ _ ⟩                ≈⟨ fixbl-absorb (<→≺ q) ⟩
-    ν ⟨ fp ν ⟨ suc a ⟩ [ n ] ⟩                ∎ where
+  fp-suc-[s] {a} {n} =                              begin-equality
+    fp ν ⟨ suc a ⟩ [ suc n ]                        ≈⟨ ≈-refl ⟩
+    suc (fp ν ⟨ a ⟩) + ν ⟨ _ ⟩                      ≈⟨ +a-cong≈ (s≈s fp-fix) ⟩
+    ν ⟨ fp ν ⟨ a ⟩ ⟩ + 1 + ν ⟨ _ ⟩                  ≈˘⟨ ≡→≈ +-assoc ⟩
+    ν ⟨ fp ν ⟨ a ⟩ ⟩ + (1 + ν ⟨ _ ⟩)                ≈⟨ a+-cong≈ (1+l-absorb $ fixbl-isLim $ nz-intro p) ⟩
+    ν ⟨ fp ν ⟨ a ⟩ ⟩ + ν ⟨ _ ⟩                      ≈⟨ fixbl-absorb (<→≺ q) ⟩
+    ν ⟨ fp ν ⟨ suc a ⟩ [ n ] ⟩                      ∎ where
     open CrossTreeReasoning
     p : 0 < fp ν ⟨ suc a ⟩ [ m ]
     p {(zero)} = z<s
     p {suc m} = <-trans z<s (+-infl ⦃ nml-nz ν ⦄)
     q : fp ν ⟨ a ⟩ < fp ν ⟨ suc a ⟩ [ m ]
     q {(zero)} = zero₁
-    q {suc m} = <-trans q (sfp-wf ν)
+    q {suc m} = <-trans q (FpEnum.w ν)
 ```
 
 ```agda
   fp-suc-[n] {n = zero} = ≡→≈ fp-suc-[0]
-  fp-suc-[n] {a} {n = suc n} =                begin-equality
-    fp ν ⟨ suc a ⟩ [ suc n ]                  ≈⟨ fp-suc-[s] ⟩
-    ν ⟨ fp ν ⟨ suc a ⟩ [ n ] ⟩                ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
-    ν ⟨ Itₙ (ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) n ⟩    ∎ where open CrossTreeReasoning
+  fp-suc-[n] {a} {n = suc n} =                      begin-equality
+    fp ν ⟨ suc a ⟩ [ suc n ]                        ≈⟨ fp-suc-[s] ⟩
+    ν ⟨ fp ν ⟨ suc a ⟩ [ n ] ⟩                      ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
+    ν ⟨ Itₙ (λ _ → ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) n ⟩    ∎ where open CrossTreeReasoning
 ```
 
 ### 性质的封闭
@@ -221,40 +224,40 @@ record Fixable (ν : Normal) : Type where
 ```agda
   fp-absorb : a ≺ b → fp ν ⟨ a ⟩ + fp ν ⟨ b ⟩ ≈ fp ν ⟨ b ⟩
   fp-absorb {a} {b = suc b} (s≼s a≼b) =
-    (l≼ λ {n} →                               begin
-      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩ [ n ]       ≤⟨ +a-pres≼ (fp-pres≼ a≼b) ⟩
-      fp ν ⟨ b ⟩ + fp ν ⟨ suc b ⟩ [ n ]       ≤⟨ +a-pres≼ ≼-zero ⟩
-      suc (fp ν ⟨ b ⟩) + fp ν ⟨ suc b ⟩ [ n ] ≤⟨ a+-pres≼ fixbl-infl≼ ⟩
-      suc (fp ν ⟨ b ⟩) + ν ⟨ _ ⟩              ≈⟨ ≈-refl ⟩
-      fp ν ⟨ suc b ⟩ [ suc n ]                ≤⟨ f≼l {n = suc n} ⟩
-      fp ν ⟨ suc b ⟩                          ∎) ,
-    (l≼ λ {n} →                               begin
-      fp ν ⟨ suc b ⟩ [ n ]                    ≤⟨ a+-infl≼ ⟩
-      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩ [ n ]       <⟨ a+-pres≺ (<→≺ (sfp-wf ν)) ⟩
-      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩ [ suc n ]   ≤⟨ f≼l {n = suc n} ⟩
-      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩             ∎) where
+    (l≼ λ {n} →                                     begin
+      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩ [ n ]             ≤⟨ +a-pres≼ (fp-pres≼ a≼b) ⟩
+      fp ν ⟨ b ⟩ + fp ν ⟨ suc b ⟩ [ n ]             ≤⟨ +a-pres≼ ≼-zero ⟩
+      suc (fp ν ⟨ b ⟩) + fp ν ⟨ suc b ⟩ [ n ]       ≤⟨ a+-pres≼ fixbl-infl≼ ⟩
+      suc (fp ν ⟨ b ⟩) + ν ⟨ _ ⟩                    ≈⟨ ≈-refl ⟩
+      fp ν ⟨ suc b ⟩ [ suc n ]                      ≤⟨ f≼l {n = suc n} ⟩
+      fp ν ⟨ suc b ⟩                                ∎) ,
+    (l≼ λ {n} →                                     begin
+      fp ν ⟨ suc b ⟩ [ n ]                          ≤⟨ a+-infl≼ ⟩
+      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩ [ n ]             <⟨ a+-pres≺ (<→≺ (FpEnum.w ν)) ⟩
+      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩ [ suc n ]         ≤⟨ f≼l {n = suc n} ⟩
+      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩                   ∎) where
     open CrossTreeReasoning
   fp-absorb {a} {b = lim f} (≼l {n} a≺fn) = l≼ aux , l≼l a+-infl≼ where
     open CrossTreeReasoning
     aux : fp ν ⟨ a ⟩ + fp ν ⟨ f m ⟩ ≼ lim- (λ m → fp ν ⟨ f m ⟩)
     aux {m} with <-cmp n m
-    ... | tri< n<m _ _ = ≼l $                 begin
-      fp ν ⟨ a ⟩ + fp ν ⟨ f m ⟩               ≤⟨ fst (fp-absorb a≺fm) ⟩
-      fp ν ⟨ f m ⟩                            ∎ where
-      a≺fm =                                  begin-strict
-        a                                     <⟨ a≺fn ⟩
-        f n                                   <⟨ <→≺ (seq-pres n<m) ⟩
-        f m                                   ∎
-    ... | tri≈ _ refl _ = ≼l $                begin
-      fp ν ⟨ a ⟩ + fp ν ⟨ f n ⟩               ≤⟨ fst (fp-absorb a≺fn) ⟩
-      fp ν ⟨ f n ⟩                            ∎
-    ... | tri> _ _ m<n = ≼l $                 begin
-      fp ν ⟨ a ⟩ + fp ν ⟨ f m ⟩               ≤⟨ a+-pres≼ (fp-pres≼ fm≼fn) ⟩
-      fp ν ⟨ a ⟩ + fp ν ⟨ f n ⟩               ≤⟨ fst (fp-absorb a≺fn) ⟩
-      fp ν ⟨ f n ⟩                            ∎ where
-      fm≼fn =                                 begin
-        f m                                   <⟨ <→≺ (seq-pres m<n) ⟩
-        f n                                   ∎
+    ... | tri< n<m _ _ = ≼l $                       begin
+      fp ν ⟨ a ⟩ + fp ν ⟨ f m ⟩                     ≤⟨ fst (fp-absorb a≺fm) ⟩
+      fp ν ⟨ f m ⟩                                  ∎ where
+      a≺fm =                                        begin-strict
+        a                                           <⟨ a≺fn ⟩
+        f n                                         <⟨ <→≺ (seq-pres n<m) ⟩
+        f m                                         ∎
+    ... | tri≈ _ refl _ = ≼l $                      begin
+      fp ν ⟨ a ⟩ + fp ν ⟨ f n ⟩                     ≤⟨ fst (fp-absorb a≺fn) ⟩
+      fp ν ⟨ f n ⟩                                  ∎
+    ... | tri> _ _ m<n = ≼l $                       begin
+      fp ν ⟨ a ⟩ + fp ν ⟨ f m ⟩                     ≤⟨ a+-pres≼ (fp-pres≼ fm≼fn) ⟩
+      fp ν ⟨ a ⟩ + fp ν ⟨ f n ⟩                     ≤⟨ fst (fp-absorb a≺fn) ⟩
+      fp ν ⟨ f n ⟩                                  ∎ where
+      fm≼fn =                                       begin
+        f m                                         <⟨ <→≺ (seq-pres m<n) ⟩
+        f n                                         ∎
 ```
 
 ```agda
@@ -300,10 +303,10 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 ```
 
 ```agda
-η-0 : η ⟨ 0 ⟩ ≡ lim- (Itₙ (ζ ⟨_⟩) 0)
+η-0 : η ⟨ 0 ⟩ ≡ lim- (Itₙ (λ _ → ζ ⟨_⟩) 0)
 η-0 = refl
 
-η-suc : η ⟨ suc a ⟩ ≡ lim- (Itₙ (λ x → suc (η ⟨ a ⟩) + ζ ⟨ x ⟩) (suc (η ⟨ a ⟩)))
+η-suc : η ⟨ suc a ⟩ ≡ lim- (Itₙ (λ _ x → suc (η ⟨ a ⟩) + ζ ⟨ x ⟩) (suc (η ⟨ a ⟩)))
 η-suc = refl
 
 η-lim : ⦃ _ : wf f ⦄ → η ⟨ lim f ⟩ ≡ lim- λ n → η ⟨ f n ⟩
@@ -314,7 +317,7 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 η-fix : η ⟨ a ⟩ ≈ ζ ⟨ η ⟨ a ⟩ ⟩
 η-fix = Fixable.fp-fix ζ-fixbl
 
-η-suc-[n] : η ⟨ suc a ⟩ [ n ] ≈ Itₙ (ζ ⟨_⟩) (suc (η ⟨ a ⟩)) n
+η-suc-[n] : η ⟨ suc a ⟩ [ n ] ≈ Itₙ (λ _ → ζ ⟨_⟩) (suc (η ⟨ a ⟩)) n
 η-suc-[n] = Fixable.fp-suc-[n] ζ-fixbl
 ```
 
@@ -334,16 +337,14 @@ module BinaryVeblenAux (ν : Normal) where
 
 ```agda
   module _ (f : Seq) ⦃ _ : wf f ⦄ where
-    w : wf (λ n → Itₙ (λ x → x + (Φ (f n) ⟨ suc a ⟩)) (suc a) n)
-    w {n = zero} = {!   !} --+-infl ⦃ Φ-nz ⦄
-    w {n = suc zero} = {! +-pres-rd  !}
-    w {n = 2+ n} = {!   !}
+    initial : Ord
+    initial = lim (λ n → Φ (f n) ⟨ 0 ⟩) ⦃ Φ-pres it nz-elim ⦄
+
+    stepper : Ord → ℕ → Func
+    stepper j n x = x + Φ (f n) ⟨ j ⟩
 
     jumper : Jumpable
-    jumper = mkJumpable
-      (lim (λ n → Φ (f n) ⟨ 0 ⟩) ⦃ Φ-pres it nz-elim ⦄)
-      (λ i n → Itₙ (λ x → x + Φ (f n) ⟨ i ⟩) i n)
-      refl w
+    jumper = mkJumpable initial stepper +-infl
 ```
 
 ```agda
@@ -380,8 +381,8 @@ module BinaryVeblen where
   φ-lim-0 : ⦃ _ : wf f ⦄ → φ (lim f) ⟨ 0 ⟩ ≡ lim- λ n → φ (f n) ⟨ 0 ⟩
   φ-lim-0 = refl
 
-  φ-lim-suc : ⦃ _ : wf f ⦄ → φ (lim f) ⟨ suc a ⟩ ≡ {!   !}
-  φ-lim-suc = {! refl  !}
+  φ-lim-suc : ⦃ _ : wf f ⦄ → φ (lim f) ⟨ suc a ⟩ ≡ lim- λ n → Itₙ (λ n x → x + φ (f n) ⟨ suc (φ (lim f) ⟨ a ⟩) ⟩) (suc (φ (lim f) ⟨ a ⟩)) n
+  φ-lim-suc = refl
 
   φ-lim-lim : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → φ (lim f) ⟨ lim g ⟩ ≡ lim- λ n → φ (lim f) ⟨ g n ⟩
   φ-lim-lim = refl
