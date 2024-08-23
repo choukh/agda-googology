@@ -64,32 +64,31 @@ record Normal : Type where
 ```
 
 ```agda
-record Jumpable : Type where
-  constructor mkJumpable
-  field
-    initial : Ord
-    ⦃ initial-nz ⦄ : NonZero initial
-    stepper : Ord → ℕ → Func
-    stepper-wf : wf (Itₙ (stepper a) a)
+module Jump
+  (Z : Ord)
+  (⦃ Z-nz ⦄ : NonZero Z)
+  (S : Ord → ℕ → Func)
+  (S-wf : ∀ {a} → wf (Itₙ (S (suc a)) (suc a)))
+  where
 
   F⁺ : Func
   F⁺-pres-rd : F⁺ preserves Road
   F⁺-pres : F⁺ preserves _<_
   F⁺-pres = map F⁺-pres-rd
 
-  F⁺ zero    = initial
+  F⁺ zero    = Z
   F⁺ (suc a) = let j = suc (F⁺ a) in
-               lim (Itₙ (stepper j) j) ⦃ stepper-wf ⦄
+               lim (Itₙ (S j) j) ⦃ S-wf ⦄
   F⁺ (lim f) = lim (F⁺ ∘ f) ⦃ F⁺-pres it ⦄
 
   F⁺-pres-rd zero         = rd[ 0 ] $ zero
-  F⁺-pres-rd (suc r)      = rd[ 0 ] $ suc (F⁺-pres-rd r)
+  F⁺-pres-rd (suc r)      = rd[ 0 ] $ suc $ F⁺-pres-rd r
   F⁺-pres-rd (lim {n} r)  = rd[ n ] $ F⁺-pres-rd r
 
   jump : Normal
   jump = normal F⁺ F⁺-pres refl
 
-open Jumpable public using (jump)
+open Jump public using (jump)
 ```
 
 ## 不动点的枚举
@@ -99,15 +98,24 @@ module FpEnum (ν : Normal) where
   open Normal using (_⟨_⟩)
   open Normal ν
 
-  stepper : Ord → ℕ → Func
-  stepper j _ x = j + ν ⟨ x ⟩
+  S : Ord → ℕ → Func
+  S j _ x = j + ν ⟨ x ⟩
 
-  w : wf (Itₙ (stepper a) a)
-  w {n = zero} = +-infl
-  w {n = suc n} = +-pres (nml-pres w)
+  S-wf : wf (Itₙ (S a) a)
+  S-wf {n = zero} = +-infl
+  S-wf {n = suc n} = +-pres (nml-pres S-wf)
 
   fp : Normal
-  fp = jump $ mkJumpable lfp stepper w
+  fp = jump lfp S S-wf
+
+  fp-0 : fp ⟨ 0 ⟩ ≡ lfp
+  fp-0 = refl
+
+  fp-suc : fp ⟨ suc a ⟩ ≡ lim (Itₙ (λ _ x → suc (fp ⟨ a ⟩) + ν ⟨ x ⟩) (suc (fp ⟨ a ⟩))) ⦃ S-wf ⦄
+  fp-suc = refl
+
+  fp-lim : {w : wf f} → fp ⟨ lim f ⦃ w ⦄ ⟩ ≡ lim- (λ n → fp ⟨ f n ⟩)
+  fp-lim = refl
 
 open FpEnum public using (fp)
 open Normal public
@@ -176,7 +184,7 @@ record Fixable (ν : Normal) : Type where
     p {suc m} = <-trans z<s (+-infl ⦃ nml-nz ν ⦄)
     q : fp ν ⟨ a ⟩ < fp ν ⟨ suc a ⟩ [ m ]
     q {(zero)} = zero₁
-    q {suc m} = <-trans q (FpEnum.w ν)
+    q {suc m} = <-trans q (FpEnum.S-wf ν)
 ```
 
 ```agda
@@ -233,7 +241,7 @@ record Fixable (ν : Normal) : Type where
       fp ν ⟨ suc b ⟩                                ∎) ,
     (l≼ λ {n} →                                     begin
       fp ν ⟨ suc b ⟩ [ n ]                          ≤⟨ a+-infl≼ ⟩
-      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩ [ n ]             <⟨ a+-pres≺ (<→≺ (FpEnum.w ν)) ⟩
+      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩ [ n ]             <⟨ a+-pres≺ (<→≺ (FpEnum.S-wf ν)) ⟩
       fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩ [ suc n ]         ≤⟨ f≼l {n = suc n} ⟩
       fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩                   ∎) where
     open CrossTreeReasoning
@@ -330,37 +338,39 @@ module BinaryVeblenAux (ν : Normal) where
   Φ-nz : NonZero (Φ a ⟨ b ⟩)
   instance _ = Φ-nz
 
-  Φ-pres-rd : ∀ {x y} → Road x y → Road a (Φ y ⟨ a ⟩) → Road (Φ x ⟨ a ⟩) (Φ y ⟨ a ⟩)
-  Φ-pres : ∀ {x y} → x < y → a < Φ y ⟨ a ⟩ → Φ x ⟨ a ⟩ < Φ y ⟨ a ⟩
-  Φ-pres = map2 Φ-pres-rd
+  Φ-pres₀-rd : (λ x → Φ x ⟨ 0 ⟩) preserves Road
+  Φ-pres₀ : (λ x → Φ x ⟨ 0 ⟩) preserves _<_
+  Φ-pres₀ = map Φ-pres₀-rd
 ```
 
 ```agda
   module _ (f : Seq) ⦃ _ : wf f ⦄ where
-    initial : Ord
-    initial = lim (λ n → Φ (f n) ⟨ 0 ⟩) ⦃ Φ-pres it nz-elim ⦄
+    Z : Ord
+    Z = lim (λ n → Φ (f n) ⟨ 0 ⟩) ⦃ Φ-pres₀ it ⦄
 
-    stepper : Ord → ℕ → Func
-    stepper j n x = x + Φ (f n) ⟨ j ⟩
+    S : Ord → ℕ → Func
+    S j n x = x + Φ (f n) ⟨ j ⟩
 
-    jumper : Jumpable
-    jumper = mkJumpable initial stepper +-infl
+    jumper : Normal
+    jumper = jump Z S +-infl
 ```
 
 ```agda
   Φ zero = ν
   Φ (suc a) = fp (Φ a)
-  Φ (lim f) = jump (jumper f)
+  Φ (lim f) = jumper f
 ```
 
 ```agda
   Φ-nz {(zero)} = nml-nz ν
   Φ-nz {suc a}  = nml-nz (fp (Φ a))
-  Φ-nz {lim f}  = nml-nz (jump (jumper f))
+  Φ-nz {lim f}  = nml-nz (jumper f)
 ```
 
 ```agda
-  Φ-pres-rd = {!    !}
+  Φ-pres₀-rd zero        = rd[ 2 ] (set (nml-pres (Φ _) nz-elim))
+  Φ-pres₀-rd (suc r)     = rd[ 1 ] (Φ-pres₀-rd r)
+  Φ-pres₀-rd (lim {n} r) = rd[ n ] (Φ-pres₀-rd r)
 ```
 
 ```agda
