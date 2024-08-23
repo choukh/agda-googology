@@ -88,6 +88,11 @@ module Binary where
   φ-lim-lim = refl
 ```
 
+```agda
+  Γ₀ : Normal
+  Γ₀ = fp (normal (λ a → φ a ⟨ 0 ⟩) (Φ-pres₀ ω^) refl)
+```
+
 ## 有限元Veblen函数
 
 ```agda
@@ -122,6 +127,8 @@ module FinitaryAux where
 ```agda
   Φₙ : Normal →ⁿ n → Normal →ⁿ suc n
   Φ  : Normal → (∀ {n} → Normal →ⁿ n)
+
+  Φₙ-nz : {νⁿ : Normal →ⁿ n} → NonZero (⟪ Φₙ νⁿ a ⟫ (suc b) 0̇)
 ```
 
 ```agda
@@ -129,6 +136,8 @@ module FinitaryAux where
   Φₙ {n} νⁿ (suc a) = Φ (fp (Φₙ νⁿ a 0̇))
   Φₙ {n} νⁿ (lim f) = Φ jumper
     module FinitaryJump where
+    instance _ = Φₙ-nz
+
     Z : Ord
     Z = lim (λ m → ⟪ Φₙ νⁿ (f n) ⟫ 0̇) ⦃ {!   !} ⦄
 
@@ -136,10 +145,16 @@ module FinitaryAux where
     S j n x = x + ⟪ Φₙ νⁿ (f n) ⟫ j 0̇
 
     jumper : Normal
-    jumper = jump Z S {!   !}
+    jumper = jump Z S +-infl
 ```
 
 ```agda
   Φ ν {n = zero}  = ν
   Φ ν {n = suc n} = Φₙ (Φ ν)
+```
+
+```agda
+  Φₙ-nz {n} {a = zero} = {!   !}
+  Φₙ-nz {n} {a = suc a} = {!   !}
+  Φₙ-nz {n} {a = lim f} = {!   !}
 ```
