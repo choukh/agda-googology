@@ -44,6 +44,7 @@ module BinaryAux (ν : Normal) where
     Z : Ord
     Z = lim (λ n → Φ (f n) ⟨ 0 ⟩) ⦃ Φ-pres₀ it ⦄
 
+    -- non-standard
     S : Ord → ℕ → Func
     S j n x = x + Φ (f n) ⟨ j ⟩
 
@@ -125,10 +126,21 @@ module FinitaryAux where
 ```
 
 ```agda
+  ⟪⟫0 : {νⁿ : Normal →ⁿ suc n} → νⁿ a 0̇ ⟨ 0 ⟩ ≡ ⟪ νⁿ ⟫ a 0̇
+  ⟪⟫0 {(zero)} = refl
+  ⟪⟫0 {suc n} {a} {νⁿ} = ⟪⟫0 {n} {0} {νⁿ a}
+```
+
+```agda
+  ⟪⟫-nz : (νⁿ : Normal →ⁿ n) → NonZero (⟪ νⁿ ⟫ a 0̇)
+  ⟪⟫-nz = {!   !}
+```
+
+```agda
   Φₙ : Normal →ⁿ n → Normal →ⁿ suc n
   Φ  : Normal → (∀ {n} → Normal →ⁿ n)
 
-  Φₙ-nz : {νⁿ : Normal →ⁿ n} → NonZero (⟪ Φₙ νⁿ a ⟫ (suc b) 0̇)
+  Φₙ-nz : {νⁿ : Normal →ⁿ n} → NonZero (⟪ Φₙ νⁿ a ⟫ b 0̇)
 ```
 
 ```agda
@@ -141,6 +153,7 @@ module FinitaryAux where
     Z : Ord
     Z = lim (λ m → ⟪ Φₙ νⁿ (f n) ⟫ 0̇) ⦃ {!   !} ⦄
 
+    -- non-standard
     S : Ord → ℕ → Func
     S j n x = x + ⟪ Φₙ νⁿ (f n) ⟫ j 0̇
 
@@ -154,7 +167,5 @@ module FinitaryAux where
 ```
 
 ```agda
-  Φₙ-nz {n} {a = zero} = {!   !}
-  Φₙ-nz {n} {a = suc a} = {!   !}
-  Φₙ-nz {n} {a = lim f} = {!   !}
+  Φₙ-nz = ⟪⟫-nz (Φₙ _ _)
 ```
