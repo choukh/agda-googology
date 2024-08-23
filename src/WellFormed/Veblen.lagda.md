@@ -39,17 +39,15 @@ module BinaryAux (ν : Normal) where
   Φ (suc a) = fp (Φ a)
   Φ (lim f) = jumper
     module BinaryVeblenJump where
-    instance _ = Φ-nz
-
     Z : Ord
     Z = lim (λ n → Φ (f n) ⟨ 0 ⟩) ⦃ Φ-pres₀ it ⦄
 
-    -- non-standard
+    -- non-standard: slightly larger
     S : Ord → ℕ → Func
     S j n x = x + Φ (f n) ⟨ j ⟩
 
     jumper : Normal
-    jumper = jump Z S +-infl
+    jumper = jump Z S (+-infl ⦃ Φ-nz ⦄)
 ```
 
 ```agda
@@ -90,14 +88,14 @@ module Binary where
 ```
 
 ```agda
-  Γ₀ : Normal
-  Γ₀ = fp (normal (λ a → φ a ⟨ 0 ⟩) (Φ-pres₀ ω^) refl)
+  Γ : Normal
+  Γ = fp (normal (λ a → φ a ⟨ 0 ⟩) (Φ-pres₀ ω^) refl)
 ```
 
 ## 有限元Veblen函数
 
 ```agda
-module FinitaryAux where
+module Finitary where
   private variable A : Type
 ```
 
@@ -126,21 +124,36 @@ module FinitaryAux where
 ```
 
 ```agda
-  ⟪⟫0 : {νⁿ : Normal →ⁿ suc n} → νⁿ a 0̇ ⟨ 0 ⟩ ≡ ⟪ νⁿ ⟫ a 0̇
-  ⟪⟫0 {(zero)} = refl
-  ⟪⟫0 {suc n} {a} {νⁿ} = ⟪⟫0 {n} {0} {νⁿ a}
+  ⟪⟫-nz : (νⁿ : Normal →ⁿ n) → NonZero (⟪ νⁿ ⟫ a 0̇)
+  ⟪⟫-nz {(zero)} νⁿ = nml-nz νⁿ
+  ⟪⟫-nz {suc n} {a} νⁿ = ⟪⟫-nz {n} (νⁿ a)
 ```
 
 ```agda
-  ⟪⟫-nz : (νⁿ : Normal →ⁿ n) → NonZero (⟪ νⁿ ⟫ a 0̇)
-  ⟪⟫-nz = {!   !}
+  private variable
+    ν : Normal
+    νⁿ : Normal →ⁿ n
 ```
 
 ```agda
   Φₙ : Normal →ⁿ n → Normal →ⁿ suc n
   Φ  : Normal → (∀ {n} → Normal →ⁿ n)
+```
 
-  Φₙ-nz : {νⁿ : Normal →ⁿ n} → NonZero (⟪ Φₙ νⁿ a ⟫ b 0̇)
+```agda
+  Φₙ-nz : NonZero (⟪ Φₙ νⁿ a ⟫ b 0̇)
+  Φ-nz : NonZero (⟪ Φ ν {n} ⟫ a 0̇)
+  Φ-nz {ν} = Φₙ-nz {νⁿ = Φ ν} {a = 0}
+  instance _ = Φ-nz
+```
+
+```agda
+  Φₙ-pres₀-rd : (λ x → ⟪ Φₙ {n} νⁿ x ⟫ 0̇) preserves Road
+  Φₙ-pres₀ : (λ x → ⟪ Φₙ {n} νⁿ x ⟫ 0̇) preserves _<_
+  Φₙ-pres₀ = map Φₙ-pres₀-rd
+
+  Φ-pres₀ : (λ x → ⟪ Φ ν {suc n} x ⟫ 0̇) preserves _<_
+  Φ-pres₀ = Φₙ-pres₀
 ```
 
 ```agda
@@ -148,17 +161,15 @@ module FinitaryAux where
   Φₙ {n} νⁿ (suc a) = Φ (fp (Φₙ νⁿ a 0̇))
   Φₙ {n} νⁿ (lim f) = Φ jumper
     module FinitaryJump where
-    instance _ = Φₙ-nz
-
     Z : Ord
-    Z = lim (λ m → ⟪ Φₙ νⁿ (f n) ⟫ 0̇) ⦃ {!   !} ⦄
+    Z = lim (λ n → ⟪ Φₙ νⁿ (f n) ⟫ 0̇) ⦃ Φₙ-pres₀ it ⦄
 
-    -- non-standard
+    -- non-standard: slightly larger
     S : Ord → ℕ → Func
     S j n x = x + ⟪ Φₙ νⁿ (f n) ⟫ j 0̇
 
     jumper : Normal
-    jumper = jump Z S +-infl
+    jumper = jump Z ⦃ _ ⦄ S (+-infl ⦃ Φₙ-nz ⦄)
 ```
 
 ```agda
@@ -168,4 +179,20 @@ module FinitaryAux where
 
 ```agda
   Φₙ-nz = ⟪⟫-nz (Φₙ _ _)
+```
+
+```agda
+  Φₙ-pres₀-rd zero    = {! rd[ 0 ]  !}
+  Φₙ-pres₀-rd (suc r) = {!   !}
+  Φₙ-pres₀-rd (lim r) = {!   !}
+```
+
+```agda
+  φ : ∀ {n} → Normal →ⁿ n
+  φ = Φ ω^
+```
+
+```agda
+  SVO : Ord
+  SVO = lim (Itₙ (λ n x → x + ⟪ φ {n} ⟫ 1 0̇) 0) ⦃ +-infl ⦄
 ```
