@@ -10,7 +10,7 @@ zhihu-tags: Agda, 大数数学, 序数
 > 高亮渲染: [Veblen.html](https://choukh.github.io/agda-googology/WellFormed.Veblen.html)  
 
 ```agda
-{-# OPTIONS --safe --cubical --lossy-unification #-}
+{-# OPTIONS --rewriting --cubical --lossy-unification #-}
 module WellFormed.Veblen where
 
 open import WellFormed.Base
@@ -18,6 +18,9 @@ open import WellFormed.Properties
 open import WellFormed.Arithmetic
 open import WellFormed.CrossTree
 open import WellFormed.Fixpoints
+
+open import Agda.Builtin.Equality public
+open import Agda.Builtin.Equality.Rewrite public
 ```
 
 ## 二元Veblen函数
@@ -42,7 +45,7 @@ module BinaryAux (ν : Normal) where
     Z : Ord
     Z = lim (λ n → Φ (f n) ⟨ 0 ⟩) ⦃ Φ-pres₀ it ⦄
 
-    -- slightly larger than standard one, but not a big deal
+    -- slightly larger than standard one in some cases, but not a big deal
     S : Ord → ℕ → Func
     S j n x = x + Φ (f n) ⟨ j ⟩
 
@@ -127,12 +130,13 @@ module Finitary where
   ⟪⟫-0 : (νⁿ : Normal →ⁿ n) → ⟪ νⁿ ⟫ 0 0̇ ≡ νⁿ 0̇ ⟨ 0 ⟩
   ⟪⟫-0 {(zero)} νⁿ = refl
   ⟪⟫-0 {suc n} νⁿ = ⟪⟫-0 {n} (νⁿ _)
+  {-# REWRITE ⟪⟫-0 #-}
 ```
 
 ```agda
   ⟪⟫-nz : (νⁿ : Normal →ⁿ n) → NonZero (⟪ νⁿ ⟫ a 0̇)
   ⟪⟫-nz {(zero)} νⁿ = nml-nz νⁿ
-  ⟪⟫-nz {suc n} {a} νⁿ = ⟪⟫-nz {n} (νⁿ a)
+  ⟪⟫-nz {suc n} {a} νⁿ = nml-nz (νⁿ a 0̇)
 ```
 
 ```agda
@@ -165,7 +169,7 @@ module Finitary where
     Z : Ord
     Z = lim (λ n → ⟪ Φₙ νⁿ (f n) ⟫ 0̇) ⦃ Φₙ-pres₀ it ⦄
 
-    -- slightly larger than standard one, but not a big deal
+    -- slightly larger than standard one in some cases, but not a big deal
     S : Ord → ℕ → Func
     S j n x = x + ⟪ Φₙ νⁿ (f n) ⟫ j 0̇
 
@@ -179,26 +183,28 @@ module Finitary where
 ```
 
 ```agda
-  Φ-ż : ⟪ Φ ν {n} ⟫ 0 0̇ ≡ ν ⟨ 0 ⟩
+  Φ-ż : Φ ν {n} 0̇ ⟨ 0 ⟩ ≡ ν ⟨ 0 ⟩
   Φ-ż {n = zero} = refl
   Φ-ż {n = suc n} = Φ-ż {n = n}
 ```
 
 ```agda
-  Φₙ-0->0 : 0 < Φₙ νⁿ a 0̇ ⟨ 0 ⟩
-  Φₙ-0->0 = subst (0 <_) (⟪⟫-0 _) (nz-elim ⦃ Φₙ-nz ⦄)
-```
-
-```agda
-  Φₙ-pres₀-rd {n} {νⁿ} {x} zero = begin-strict
-    ⟪ Φₙ νⁿ x ⟫ 0 0̇               ≈⟨ ⟪⟫-0 (Φₙ νⁿ x) ⟩
-    Φₙ νⁿ x 0̇ ⟨ 0 ⟩               <⟨ set $ nml-pres (Φₙ νⁿ x 0̇) Φₙ-0->0 ⟩
-    Φₙ νⁿ x 0̇ ⟨ Φₙ νⁿ x 0̇ ⟨ 0 ⟩ ⟩ <⟨ f<l-rd {n = 2} ⟩
-    fp (Φₙ νⁿ x 0̇) ⟨ 0 ⟩          ≈˘⟨ Φ-ż ⟩
-    ⟪ Φ (fp (Φₙ νⁿ x 0̇)) ⟫ 0̇      ≈⟨ refl ⟩
-    ⟪ Φₙ νⁿ (suc x) ⟫ 0̇       ∎ where open RoadReasoning
-  Φₙ-pres₀-rd (suc r) = {!   !}
-  Φₙ-pres₀-rd (lim r) = {!   !}
+  Φₙ-pres₀-rd {νⁿ} {x} zero =             begin-strict
+    Φₙ νⁿ x 0̇ ⟨ 0 ⟩                       <⟨ set $ nml-pres (Φₙ νⁿ x 0̇) (nz-elim ⦃ Φₙ-nz {b = 0} ⦄) ⟩
+    Φₙ νⁿ x 0̇ ⟨ Φₙ νⁿ x 0̇ ⟨ 0 ⟩ ⟩         <⟨ f<l-rd {n = 2} ⟩
+    fp (Φₙ νⁿ x 0̇) ⟨ 0 ⟩                  ≈˘⟨ Φ-ż ⟩
+    Φₙ νⁿ (suc x) 0̇ ⟨ 0 ⟩                 ∎ where open RoadReasoning
+  Φₙ-pres₀-rd {νⁿ} {x} (suc {b} r) =      begin-strict
+    Φₙ νⁿ x 0̇ ⟨ 0 ⟩                       <⟨ Φₙ-pres₀-rd r ⟩
+    Φₙ νⁿ b 0̇ ⟨ 0 ⟩                       <⟨ set $ nml-pres (Φₙ νⁿ b 0̇) (nz-elim ⦃ Φₙ-nz {b = 0} ⦄) ⟩
+    Φₙ νⁿ b 0̇ ⟨ Φₙ νⁿ b 0̇ ⟨ 0 ⟩ ⟩         <⟨ f<l-rd {n = 2} ⟩
+    fp (Φₙ νⁿ b 0̇) ⟨ 0 ⟩                  ≈˘⟨ Φ-ż ⟩
+    Φₙ νⁿ (suc b) 0̇ ⟨ 0 ⟩                 ∎ where open RoadReasoning
+  Φₙ-pres₀-rd {νⁿ} {x} (lim {f} {n} r) =  begin-strict
+    Φₙ νⁿ x 0̇ ⟨ 0 ⟩                       <⟨ Φₙ-pres₀-rd r ⟩
+    Φₙ νⁿ (f n) 0̇ ⟨ 0 ⟩                   <⟨ f<l-rd ⟩
+    jumper νⁿ f ⟨ 0 ⟩                     ≈˘⟨ Φ-ż ⟩
+    Φ (jumper νⁿ f) 0̇ ⟨ 0 ⟩               ∎ where open RoadReasoning; open FinitaryJump
 ```
 
 ```agda
@@ -207,12 +213,11 @@ module Finitary where
 ```
 
 ```agda
-  instance
-    φ-nz : NonZero (⟪ φ {n} ⟫ a 0̇)
-    φ-nz = Φₙ-nz {νⁿ = φ} {a = 0}
+  φ-nz : NonZero (⟪ φ {n} ⟫ a 0̇)
+  φ-nz = Φₙ-nz {νⁿ = φ} {a = 0}
 ```
 
 ```agda
   SVO : Ord
-  SVO = lim (Itₙ (λ n x → x + ⟪ φ {n} ⟫ 1 0̇) 0) ⦃ +-infl ⦄
+  SVO = lim (Itₙ (λ n x → x + ⟪ φ {n} ⟫ 1 0̇) 0) ⦃ +-infl ⦃ φ-nz ⦄ ⦄
 ```
