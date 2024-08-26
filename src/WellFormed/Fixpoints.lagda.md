@@ -34,7 +34,7 @@ record Normal : Type where
   private F = _⟨_⟩
   field
     nml-pres : F preserves _<_
-    continuous : ∀ {f} {w : wf f} → F (lim f ⦃ w ⦄) ≡ lim (F ∘ f) ⦃ nml-pres w ⦄
+    continuous : ∀ {f} {w : wf f} → F (lim f ⦃ w ⦄) ≈ lim (F ∘ f) ⦃ nml-pres w ⦄
     ⦃ nml-zero-nz ⦄ : NonZero (F 0)
 
   instance
@@ -59,7 +59,7 @@ record Normal : Type where
   lfp-fix : lfp ≈ F lfp
   lfp-fix =                     begin-equality
     lfp                         ≈⟨ l≈ls ⟩
-    lim- (F ∘ Itₙ (λ _ → F) 0)  ≈˘⟨ ≡→≈ continuous ⟩
+    lim- (F ∘ Itₙ (λ _ → F) 0)  ≈˘⟨ continuous ⟩
     F lfp                       ∎ where open CrossTreeReasoning
 ```
 
@@ -86,7 +86,7 @@ module Jump
   F⁺-pres-rd (lim {n} r)  = rd[ n ] $ F⁺-pres-rd r
 
   jump : Normal
-  jump = normal F⁺ F⁺-pres refl
+  jump = normal F⁺ F⁺-pres ≈-refl
 
 open Jump public using (jump)
 ```
@@ -147,7 +147,7 @@ record Fixable (ν : Normal) : Type where
     open CrossTreeReasoning
     p =                                             begin
       fp ν ⟨ suc a ⟩                                ≤⟨ l≼l fixbl-infl≼ ⟩
-      lim- (λ n → ν ⟨ _ ⟩)                          ≈˘⟨ ≡→≈ (continuous ν) ⟩
+      lim- (λ n → ν ⟨ _ ⟩)                          ≈˘⟨ continuous ν ⟩
       ν ⟨ fp ν ⟨ suc a ⟩ ⟩                          ∎
     q[n] = λ {n} →                                  begin
       ν ⟨ fp ν ⟨ suc a ⟩ [ n ] ⟩                    ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
@@ -155,12 +155,12 @@ record Fixable (ν : Normal) : Type where
       Itₙ (λ _ → ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) (suc n)  ≈˘⟨ fp-suc-[n] ⟩
       fp ν ⟨ suc a ⟩ [ suc n ]                      ∎
     q =                                             begin
-      ν ⟨ fp ν ⟨ suc a ⟩ ⟩                          ≈⟨ ≡→≈ (continuous ν) ⟩
+      ν ⟨ fp ν ⟨ suc a ⟩ ⟩                          ≈⟨ continuous ν ⟩
       lim- (λ n → ν ⟨ _ ⟩)                          ≤⟨ l≼ls q[n] ⟩
       fp ν ⟨ suc a ⟩                                ∎
   fp-fix {a = lim f} =                              begin-equality
     fp ν ⟨ lim f ⟩                                  ≈⟨ l≈l fp-fix ⟩
-    lim- (λ n → ν ⟨ _ ⟩)                            ≈˘⟨ ≡→≈ (continuous ν) ⟩
+    lim- (λ n → ν ⟨ _ ⟩)                            ≈˘⟨ continuous ν ⟩
     ν ⟨ fp ν ⟨ lim f ⟩ ⟩                            ∎ where open CrossTreeReasoning
 ```
 
@@ -278,7 +278,7 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 
 ```agda
 ω^ : Normal
-ω^ = normal (ω ^_) ^-pres refl
+ω^ = normal (ω ^_) ^-pres ≈-refl
 ```
 
 ```agda

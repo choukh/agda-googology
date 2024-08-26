@@ -92,7 +92,7 @@ module Binary where
 
 ```agda
   Γ : Normal
-  Γ = fp (normal (λ a → φ a ⟨ 0 ⟩) (Φ-pres₀ ω^) refl)
+  Γ = fp (normal (λ a → φ a ⟨ 0 ⟩) (Φ-pres₀ ω^) ≈-refl)
 ```
 
 ## 有限元Veblen函数
@@ -326,7 +326,7 @@ module Transfinitary where
 
     -- might be slightly larger than standard one in some cases, but not a big deal
     S : Ord → ℕ → Func
-    S j n x = x + (⟪ Φₗ {f} νᵃ {n} b ⟫ j 0̇)
+    S j n x = x + ⟪ Φₗ {f} νᵃ {n} b ⟫ j 0̇
 
     jumper : Normal
     jumper = jump Z ⦃ _ ⦄ S (+-infl ⦃ Φₗ-nz ⦄)
@@ -374,4 +374,44 @@ module Transfinitary where
     Φₛ νᵃ (f n) 0̇ ⟨ 0 ⟩                   <⟨ f<l-rd ⟩
     jumper νᵃ f ⟨ 0 ⟩                     ≈˘⟨ Φ-ż ⟩
     Φ (jumper νᵃ f) 0̇ ⟨ 0 ⟩               ∎ where open RoadReasoning; open SucJump
+```
+
+```agda
+  Φ-nz : ∀ ν a b → NonZero (⟪ Φ ν {a} ⟫ b 0̇)
+  Φ-nz ν zero    b = nml-nz ν
+  Φ-nz ν (suc a) b = Φₛ-nz {a} {b = b} {c = 0}
+  Φ-nz ν (lim f) b = Φₗ-nz {f} {b = b} {c = 0}
+```
+
+```agda
+  φ : Normal →^ a
+  φ = Φ ω^
+```
+
+```agda
+  SVO : Ord
+  SVO = φ {ω} {0} 1 ⟨ 0 ⟩
+```
+
+```agda
+  ω̇^ : Normal
+  ω̇^ = normal F F-pres ≈-refl ⦃ Φ-nz ω^ 0 1 ⦄
+    module SecondBaseOmega where
+    F : Func
+    F-pres-rd : F preserves Road
+    F-pres : F preserves _<_
+    F-pres = map F-pres-rd
+
+    F zero = φ ⟨ 1 ⟩
+    F (suc a) = F a + ⟪ φ {suc a} 1 ⟫ 0 0̇
+    F (lim f) = lim (F ∘ f) ⦃ F-pres it ⦄
+
+    F-pres-rd zero    = set $ +-infl ⦃ Φ-nz _ _ 0 ⦄
+    F-pres-rd (suc r) = rd-trans (F-pres-rd r) (set $ +-infl ⦃ Φ-nz _ _ 0 ⦄)
+    F-pres-rd (lim r) = rd-trans (F-pres-rd r) f<l-rd
+```
+
+```agda
+  LVO : Ord
+  LVO = lfp ω̇^
 ```
