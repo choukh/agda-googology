@@ -140,43 +140,43 @@ record Fixable (ν : Normal) : Type where
 ```
 
 ```agda
-  fp-fix : F′ a ≈ F (F′ a)
-  fp-suc-[n] : F′ (suc a) [ n ] ≈ Itₙ (λ _ → F) (suc (F′ a)) n
+  F′-fix : F′ a ≈ F (F′ a)
+  F′-suc-[n] : F′ (suc a) [ n ] ≈ Itₙ (λ _ → F) (suc (F′ a)) n
 ```
 
 ```agda
-  fp-fix {a = zero}  = lfp-fix
-  fp-fix {a = suc a} = p , q where
+  F′-fix {a = zero}  = lfp-fix
+  F′-fix {a = suc a} = p , q where
     open CrossTreeReasoning
     p =                                   begin
       F′ (suc a)                          ≤⟨ l≼l fixbl-infl≼ ⟩
       lim- (λ n → F _)                    ≈˘⟨ continuous ⟩
       F (F′ (suc a))                      ∎
     q[n] = λ {n} →                        begin
-      F (F′ (suc a) [ n ])                ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
+      F (F′ (suc a) [ n ])                ≈⟨ fixbl-cong≈ F′-suc-[n] ⟩
       F (Itₙ (λ _ → F) (suc (F′ a)) n)    ≈⟨ ≈-refl ⟩
-      Itₙ (λ _ → F) (suc (F′ a)) (suc n)  ≈˘⟨ fp-suc-[n] ⟩
+      Itₙ (λ _ → F) (suc (F′ a)) (suc n)  ≈˘⟨ F′-suc-[n] ⟩
       F′ (suc a) [ suc n ]                ∎
     q =                                   begin
       F (F′ (suc a ))                     ≈⟨ continuous ⟩
       lim- (λ n → F _)                    ≤⟨ l≼ls q[n] ⟩
       F′ (suc a)                          ∎
-  fp-fix {a = lim f} =                    begin-equality
-    F′ (lim f)                            ≈⟨ l≈l fp-fix ⟩
+  F′-fix {a = lim f} =                    begin-equality
+    F′ (lim f)                            ≈⟨ l≈l F′-fix ⟩
     lim- (λ n → F _)                      ≈˘⟨ continuous ⟩
     F (F′ (lim f))                        ∎ where open CrossTreeReasoning
 ```
 
 ```agda
-  fp-suc-[0] : F′ (suc a) [ 0 ] ≡ suc (F′ a)
-  fp-suc-[0] = refl
+  F′-suc-[0] : F′ (suc a) [ 0 ] ≡ suc (F′ a)
+  F′-suc-[0] = refl
 ```
 
 ```agda
-  fp-suc-[s] : F′ (suc a) [ suc n ] ≈ F (F′ (suc a) [ n ])
-  fp-suc-[s] {a} {n} =                    begin-equality
+  F′-suc-[s] : F′ (suc a) [ suc n ] ≈ F (F′ (suc a) [ n ])
+  F′-suc-[s] {a} {n} =                    begin-equality
     F′ (suc a) [ suc n ]                  ≈⟨ ≈-refl ⟩
-    suc (F′ a) + F _                      ≈⟨ +a-cong≈ (s≈s fp-fix) ⟩
+    suc (F′ a) + F _                      ≈⟨ +a-cong≈ (s≈s F′-fix) ⟩
     F (F′ a) + 1 + F _                    ≈˘⟨ ≡→≈ +-assoc ⟩
     F (F′ a) + (1 + F _)                  ≈⟨ a+-cong≈ (1+l-absorb $ fixbl-isLim $ nz-intro p) ⟩
     F (F′ a) + F _                        ≈⟨ fixbl-absorb (<→≺ q) ⟩
@@ -191,52 +191,52 @@ record Fixable (ν : Normal) : Type where
 ```
 
 ```agda
-  fp-suc-[n] {n = zero} = ≡→≈ fp-suc-[0]
-  fp-suc-[n] {a} {n = suc n} =            begin-equality
-    F′ (suc a) [ suc n ]                  ≈⟨ fp-suc-[s] ⟩
-    F (F′ (suc a) [ n ])                  ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
+  F′-suc-[n] {n = zero} = ≡→≈ F′-suc-[0]
+  F′-suc-[n] {a} {n = suc n} =            begin-equality
+    F′ (suc a) [ suc n ]                  ≈⟨ F′-suc-[s] ⟩
+    F (F′ (suc a) [ n ])                  ≈⟨ fixbl-cong≈ F′-suc-[n] ⟩
     F (Itₙ (λ _ → F) (suc (F′ a)) n)      ∎ where open CrossTreeReasoning
 ```
 
 ### 性质的封闭
 
 ```agda
-  fp-infl≼ : F′ inflates _≼_
-  fp-infl≼ {(zero)} = z≼
-  fp-infl≼ {suc _}  = ≼l {n = 0} (s≼s fp-infl≼)
-  fp-infl≼ {lim f}  = l≼l fp-infl≼
+  F′-infl≼ : F′ inflates _≼_
+  F′-infl≼ {(zero)} = z≼
+  F′-infl≼ {suc _}  = ≼l {n = 0} (s≼s F′-infl≼)
+  F′-infl≼ {lim f}  = l≼l F′-infl≼
 ```
 
 ```agda
-  fp-pres≼ : F′ preserves _≼_
-  fp-pres≼ {y = zero}  z≼ = ≼-refl
-  fp-pres≼ {y = suc y} z≼ = ≼l {n = 0} (≼-suc (fp-pres≼ z≼))
-  fp-pres≼ {y = lim f} z≼ = ≼l {n = 0} (fp-pres≼ z≼)
-  fp-pres≼ (≼l {n} p)     = ≼l {n = n} (fp-pres≼ p)
-  fp-pres≼ (l≼ p)         = l≼ (fp-pres≼ p)
-  fp-pres≼ (s≼s {a} {b} p) = l≼l q where
+  F′-pres≼ : F′ preserves _≼_
+  F′-pres≼ {y = zero}  z≼ = ≼-refl
+  F′-pres≼ {y = suc y} z≼ = ≼l {n = 0} (≼-suc (F′-pres≼ z≼))
+  F′-pres≼ {y = lim f} z≼ = ≼l {n = 0} (F′-pres≼ z≼)
+  F′-pres≼ (≼l {n} p)     = ≼l {n = n} (F′-pres≼ p)
+  F′-pres≼ (l≼ p)         = l≼ (F′-pres≼ p)
+  F′-pres≼ (s≼s {a} {b} p) = l≼l q where
     q : F′ (suc a) [ n ] ≼ F′ (suc b) [ n ]
-    q {n = zero} = s≼s (fp-pres≼ p)
-    q {n = suc n} = +-pres≼ (s≼s (fp-pres≼ p)) (fixbl-pres≼ q)
+    q {n = zero} = s≼s (F′-pres≼ p)
+    q {n = suc n} = +-pres≼ (s≼s (F′-pres≼ p)) (fixbl-pres≼ q)
 ```
 
 ```agda
-  fp-cong≈ : a ≈ b → F′ a ≈ F′ b
-  fp-cong≈ (p , q) = fp-pres≼ p , fp-pres≼ q
+  F′-cong≈ : a ≈ b → F′ a ≈ F′ b
+  F′-cong≈ (p , q) = F′-pres≼ p , F′-pres≼ q
 ```
 
 ```agda
-  fp-isLim : NonZero a → isLim (F′ a)
-  fp-isLim {(zero)} _ = _
-  fp-isLim {suc a} _  = _
-  fp-isLim {lim f} _  = _
+  F′-isLim : NonZero a → isLim (F′ a)
+  F′-isLim {(zero)} _ = _
+  F′-isLim {suc a} _  = _
+  F′-isLim {lim f} _  = _
 ```
 
 ```agda
-  fp-absorb : a ≺ b → F′ a + F′ b ≈ F′ b
-  fp-absorb {a} {b = suc b} (s≼s a≼b) =
+  F′-absorb : a ≺ b → F′ a + F′ b ≈ F′ b
+  F′-absorb {a} {b = suc b} (s≼s a≼b) =
     (l≼ λ {n} →                           begin
-      F′ a + F′ (suc b) [ n ]             ≤⟨ +a-pres≼ (fp-pres≼ a≼b) ⟩
+      F′ a + F′ (suc b) [ n ]             ≤⟨ +a-pres≼ (F′-pres≼ a≼b) ⟩
       F′ b + F′ (suc b) [ n ]             ≤⟨ +a-pres≼ ≼-zero ⟩
       suc (F′ b) + F′ (suc b) [ n ]       ≤⟨ a+-pres≼ fixbl-infl≼ ⟩
       suc (F′ b) + F _                    ≈⟨ ≈-refl ⟩
@@ -248,23 +248,23 @@ record Fixable (ν : Normal) : Type where
       F′ a + F′ (suc b) [ suc n ]         ≤⟨ f≼l {n = suc n} ⟩
       F′ a + F′ (suc b)                   ∎) where
     open CrossTreeReasoning
-  fp-absorb {a} {b = lim f} (≼l {n} a≺fn) = l≼ aux , l≼l a+-infl≼ where
+  F′-absorb {a} {b = lim f} (≼l {n} a≺fn) = l≼ aux , l≼l a+-infl≼ where
     open CrossTreeReasoning
     aux : F′ a + F′ (f m) ≼ lim- (λ m → F′ (f m))
     aux {m} with <-cmp n m
     ... | tri< n<m _ _ = ≼l $             begin
-      F′ a + F′ (f m)                     ≤⟨ fst (fp-absorb a≺fm) ⟩
+      F′ a + F′ (f m)                     ≤⟨ fst (F′-absorb a≺fm) ⟩
       F′ (f m)                            ∎ where
       a≺fm =                              begin-strict
         a                                 <⟨ a≺fn ⟩
         f n                               <⟨ <→≺ (seq-pres n<m) ⟩
         f m                               ∎
     ... | tri≈ _ refl _ = ≼l $            begin
-      F′ a + F′ (f n)                     ≤⟨ fst (fp-absorb a≺fn) ⟩
+      F′ a + F′ (f n)                     ≤⟨ fst (F′-absorb a≺fn) ⟩
       F′ (f n)                            ∎
     ... | tri> _ _ m<n = ≼l $             begin
-      F′ a + F′ (f m)                     ≤⟨ a+-pres≼ (fp-pres≼ fm≼fn) ⟩
-      F′ a + F′ (f n)                     ≤⟨ fst (fp-absorb a≺fn) ⟩
+      F′ a + F′ (f m)                     ≤⟨ a+-pres≼ (F′-pres≼ fm≼fn) ⟩
+      F′ a + F′ (f n)                     ≤⟨ fst (F′-absorb a≺fn) ⟩
       F′ (f n)                            ∎ where
       fm≼fn =                             begin
         f m                               <⟨ <→≺ (seq-pres m<n) ⟩
@@ -273,7 +273,7 @@ record Fixable (ν : Normal) : Type where
 
 ```agda
 fpᶠ : ∀ {ν} → Fixable ν → Fixable (fpⁿ ν)
-fpᶠ p = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
+fpᶠ p = fixable F′-infl≼ F′-pres≼ F′-isLim F′-absorb
   where open Fixable p
 ```
 
@@ -324,8 +324,8 @@ fixbl (ν , p) = p
 
 ```agda
 η-fix : η ⟨ a ⟩ ≈ ζ ⟨ η ⟨ a ⟩ ⟩
-η-fix = Fixable.fp-fix (fixbl ζ)
+η-fix = Fixable.F′-fix (fixbl ζ)
 
 η-suc-[n] : η ⟨ suc a ⟩ [ n ] ≈ Itₙ (λ _ → ζ ⟨_⟩) (suc (η ⟨ a ⟩)) n
-η-suc-[n] = Fixable.fp-suc-[n] (fixbl ζ)
+η-suc-[n] = Fixable.F′-suc-[n] (fixbl ζ)
 ```
