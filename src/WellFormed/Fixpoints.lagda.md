@@ -30,8 +30,8 @@ Itₙ F i (suc n) = F n (Itₙ F i n)
 ```agda
 record Normal : Type where
   constructor normal
-  field _⟨_⟩ : Func
-  private F = _⟨_⟩
+  field func : Func
+  private F = func
   field
     nml-pres : F preserves _<_
     continuous : ∀ {f} {w : wf f} → F (lim f ⦃ w ⦄) ≈ lim (F ∘ f) ⦃ nml-pres w ⦄
@@ -95,30 +95,31 @@ open Jump public using (jump)
 
 ```agda
 module FpEnum (ν : Normal) where
-  open Normal using (_⟨_⟩)
-  open Normal ν
+  open Normal ν renaming (func to F)
 
   S : Ord → ℕ → Func
-  S j _ x = j + ν ⟨ x ⟩
+  S j _ x = j + F x
 
   S-wf : wf (Itₙ (S a) a)
   S-wf {n = zero} = +-infl
   S-wf {n = suc n} = +-pres (nml-pres S-wf)
 
-  fp : Normal
-  fp = jump lfp S S-wf
+  fpⁿ : Normal
+  fpⁿ = jump lfp S S-wf
 
-  fp-0 : fp ⟨ 0 ⟩ ≡ lfp
-  fp-0 = refl
+  F′ : Func
+  F′ = Normal.func fpⁿ
 
-  fp-suc : fp ⟨ suc a ⟩ ≡ lim (Itₙ (λ _ x → suc (fp ⟨ a ⟩) + ν ⟨ x ⟩) (suc (fp ⟨ a ⟩))) ⦃ S-wf ⦄
-  fp-suc = refl
+  F′-0 : F′ 0 ≡ lfp
+  F′-0 = refl
 
-  fp-lim : {w : wf f} → fp ⟨ lim f ⦃ w ⦄ ⟩ ≡ lim- (λ n → fp ⟨ f n ⟩)
-  fp-lim = refl
+  F′-suc : F′ (suc a) ≡ lim (Itₙ (λ _ x → suc (F′ a) + F x) (suc (F′ a))) ⦃ S-wf ⦄
+  F′-suc = refl
 
-open FpEnum public using (fp)
-open Normal public
+  F′-lim : {w : wf f} → F′ (lim f ⦃ w ⦄) ≡ lim- (λ n → F′ (f n))
+  F′-lim = refl
+
+open FpEnum public using (fpⁿ)
 ```
 
 ### 跨树性质
@@ -126,160 +127,170 @@ open Normal public
 ```agda
 record Fixable (ν : Normal) : Type where
   constructor fixable
+  open Normal ν       renaming (func to F)
+  open Normal (fpⁿ ν) renaming (func to F′) using ()
   field
-    fixbl-infl≼ : (ν ⟨_⟩) inflates _≼_
-    fixbl-pres≼ : (ν ⟨_⟩) preserves _≼_
-    fixbl-isLim : ∀ {a} → NonZero a → isLim (ν ⟨ a ⟩)
-    fixbl-absorb : ∀ {a b} → a ≺ b → ν ⟨ a ⟩ + ν ⟨ b ⟩ ≈ ν ⟨ b ⟩
+    fixbl-infl≼ : F inflates _≼_
+    fixbl-pres≼ : F preserves _≼_
+    fixbl-isLim : ∀ {a} → NonZero a → isLim (F a)
+    fixbl-absorb : ∀ {a b} → a ≺ b → F a + F b ≈ F b
 
-  fixbl-cong≈ : a ≈ b → ν ⟨ a ⟩ ≈ ν ⟨ b ⟩
+  fixbl-cong≈ : a ≈ b → F a ≈ F b
   fixbl-cong≈ (p , q) = fixbl-pres≼ p , fixbl-pres≼ q
 ```
 
 ```agda
-  fp-fix : fp ν ⟨ a ⟩ ≈ ν ⟨ fp ν ⟨ a ⟩ ⟩
-  fp-suc-[n] : fp ν ⟨ suc a ⟩ [ n ] ≈ Itₙ (λ _ → ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) n
+  fp-fix : F′ a ≈ F (F′ a)
+  fp-suc-[n] : F′ (suc a) [ n ] ≈ Itₙ (λ _ → F) (suc (F′ a)) n
 ```
 
 ```agda
-  fp-fix {a = zero}  = lfp-fix ν
+  fp-fix {a = zero}  = lfp-fix
   fp-fix {a = suc a} = p , q where
     open CrossTreeReasoning
-    p =                                             begin
-      fp ν ⟨ suc a ⟩                                ≤⟨ l≼l fixbl-infl≼ ⟩
-      lim- (λ n → ν ⟨ _ ⟩)                          ≈˘⟨ continuous ν ⟩
-      ν ⟨ fp ν ⟨ suc a ⟩ ⟩                          ∎
-    q[n] = λ {n} →                                  begin
-      ν ⟨ fp ν ⟨ suc a ⟩ [ n ] ⟩                    ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
-      ν ⟨ Itₙ (λ _ → ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) n ⟩  ≈⟨ ≈-refl ⟩
-      Itₙ (λ _ → ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) (suc n)  ≈˘⟨ fp-suc-[n] ⟩
-      fp ν ⟨ suc a ⟩ [ suc n ]                      ∎
-    q =                                             begin
-      ν ⟨ fp ν ⟨ suc a ⟩ ⟩                          ≈⟨ continuous ν ⟩
-      lim- (λ n → ν ⟨ _ ⟩)                          ≤⟨ l≼ls q[n] ⟩
-      fp ν ⟨ suc a ⟩                                ∎
-  fp-fix {a = lim f} =                              begin-equality
-    fp ν ⟨ lim f ⟩                                  ≈⟨ l≈l fp-fix ⟩
-    lim- (λ n → ν ⟨ _ ⟩)                            ≈˘⟨ continuous ν ⟩
-    ν ⟨ fp ν ⟨ lim f ⟩ ⟩                            ∎ where open CrossTreeReasoning
+    p =                                   begin
+      F′ (suc a)                          ≤⟨ l≼l fixbl-infl≼ ⟩
+      lim- (λ n → F _)                    ≈˘⟨ continuous ⟩
+      F (F′ (suc a))                      ∎
+    q[n] = λ {n} →                        begin
+      F (F′ (suc a) [ n ])                ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
+      F (Itₙ (λ _ → F) (suc (F′ a)) n)    ≈⟨ ≈-refl ⟩
+      Itₙ (λ _ → F) (suc (F′ a)) (suc n)  ≈˘⟨ fp-suc-[n] ⟩
+      F′ (suc a) [ suc n ]                ∎
+    q =                                   begin
+      F (F′ (suc a ))                     ≈⟨ continuous ⟩
+      lim- (λ n → F _)                    ≤⟨ l≼ls q[n] ⟩
+      F′ (suc a)                          ∎
+  fp-fix {a = lim f} =                    begin-equality
+    F′ (lim f)                            ≈⟨ l≈l fp-fix ⟩
+    lim- (λ n → F _)                      ≈˘⟨ continuous ⟩
+    F (F′ (lim f))                        ∎ where open CrossTreeReasoning
 ```
 
 ```agda
-  fp-suc-[0] : fp ν ⟨ suc a ⟩ [ 0 ] ≡ suc (fp ν ⟨ a ⟩)
+  fp-suc-[0] : F′ (suc a) [ 0 ] ≡ suc (F′ a)
   fp-suc-[0] = refl
 ```
 
 ```agda
-  fp-suc-[s] : fp ν ⟨ suc a ⟩ [ suc n ] ≈ ν ⟨ fp ν ⟨ suc a ⟩ [ n ] ⟩
-  fp-suc-[s] {a} {n} =                              begin-equality
-    fp ν ⟨ suc a ⟩ [ suc n ]                        ≈⟨ ≈-refl ⟩
-    suc (fp ν ⟨ a ⟩) + ν ⟨ _ ⟩                      ≈⟨ +a-cong≈ (s≈s fp-fix) ⟩
-    ν ⟨ fp ν ⟨ a ⟩ ⟩ + 1 + ν ⟨ _ ⟩                  ≈˘⟨ ≡→≈ +-assoc ⟩
-    ν ⟨ fp ν ⟨ a ⟩ ⟩ + (1 + ν ⟨ _ ⟩)                ≈⟨ a+-cong≈ (1+l-absorb $ fixbl-isLim $ nz-intro p) ⟩
-    ν ⟨ fp ν ⟨ a ⟩ ⟩ + ν ⟨ _ ⟩                      ≈⟨ fixbl-absorb (<→≺ q) ⟩
-    ν ⟨ fp ν ⟨ suc a ⟩ [ n ] ⟩                      ∎ where
+  fp-suc-[s] : F′ (suc a) [ suc n ] ≈ F (F′ (suc a) [ n ])
+  fp-suc-[s] {a} {n} =                    begin-equality
+    F′ (suc a) [ suc n ]                  ≈⟨ ≈-refl ⟩
+    suc (F′ a) + F _                      ≈⟨ +a-cong≈ (s≈s fp-fix) ⟩
+    F (F′ a) + 1 + F _                    ≈˘⟨ ≡→≈ +-assoc ⟩
+    F (F′ a) + (1 + F _)                  ≈⟨ a+-cong≈ (1+l-absorb $ fixbl-isLim $ nz-intro p) ⟩
+    F (F′ a) + F _                        ≈⟨ fixbl-absorb (<→≺ q) ⟩
+    F (F′ (suc a) [ n ])                  ∎ where
     open CrossTreeReasoning
-    p : 0 < fp ν ⟨ suc a ⟩ [ m ]
+    p : 0 < F′ (suc a) [ m ]
     p {(zero)} = z<s
-    p {suc m} = <-trans z<s (+-infl ⦃ nml-nz ν ⦄)
-    q : fp ν ⟨ a ⟩ < fp ν ⟨ suc a ⟩ [ m ]
+    p {suc m} = <-trans z<s (+-infl ⦃ nml-nz ⦄)
+    q : F′ a < F′ (suc a) [ m ]
     q {(zero)} = zero₁
     q {suc m} = <-trans q (FpEnum.S-wf ν)
 ```
 
 ```agda
   fp-suc-[n] {n = zero} = ≡→≈ fp-suc-[0]
-  fp-suc-[n] {a} {n = suc n} =                      begin-equality
-    fp ν ⟨ suc a ⟩ [ suc n ]                        ≈⟨ fp-suc-[s] ⟩
-    ν ⟨ fp ν ⟨ suc a ⟩ [ n ] ⟩                      ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
-    ν ⟨ Itₙ (λ _ → ν ⟨_⟩) (suc (fp ν ⟨ a ⟩)) n ⟩    ∎ where open CrossTreeReasoning
+  fp-suc-[n] {a} {n = suc n} =            begin-equality
+    F′ (suc a) [ suc n ]                  ≈⟨ fp-suc-[s] ⟩
+    F (F′ (suc a) [ n ])                  ≈⟨ fixbl-cong≈ fp-suc-[n] ⟩
+    F (Itₙ (λ _ → F) (suc (F′ a)) n)      ∎ where open CrossTreeReasoning
 ```
 
 ### 性质的封闭
 
 ```agda
-  fp-infl≼ : (fp ν ⟨_⟩) inflates _≼_
+  fp-infl≼ : F′ inflates _≼_
   fp-infl≼ {(zero)} = z≼
   fp-infl≼ {suc _}  = ≼l {n = 0} (s≼s fp-infl≼)
   fp-infl≼ {lim f}  = l≼l fp-infl≼
 ```
 
 ```agda
-  fp-pres≼ : (fp ν ⟨_⟩) preserves _≼_
+  fp-pres≼ : F′ preserves _≼_
   fp-pres≼ {y = zero}  z≼ = ≼-refl
   fp-pres≼ {y = suc y} z≼ = ≼l {n = 0} (≼-suc (fp-pres≼ z≼))
   fp-pres≼ {y = lim f} z≼ = ≼l {n = 0} (fp-pres≼ z≼)
   fp-pres≼ (≼l {n} p)     = ≼l {n = n} (fp-pres≼ p)
   fp-pres≼ (l≼ p)         = l≼ (fp-pres≼ p)
   fp-pres≼ (s≼s {a} {b} p) = l≼l q where
-    q : fp ν ⟨ suc a ⟩ [ n ] ≼ fp ν ⟨ suc b ⟩ [ n ]
+    q : F′ (suc a) [ n ] ≼ F′ (suc b) [ n ]
     q {n = zero} = s≼s (fp-pres≼ p)
     q {n = suc n} = +-pres≼ (s≼s (fp-pres≼ p)) (fixbl-pres≼ q)
 ```
 
 ```agda
-  fp-cong≈ : a ≈ b → fp ν ⟨ a ⟩ ≈ fp ν ⟨ b ⟩
+  fp-cong≈ : a ≈ b → F′ a ≈ F′ b
   fp-cong≈ (p , q) = fp-pres≼ p , fp-pres≼ q
 ```
 
 ```agda
-  fp-isLim : NonZero a → isLim (fp ν ⟨ a ⟩)
+  fp-isLim : NonZero a → isLim (F′ a)
   fp-isLim {(zero)} _ = _
   fp-isLim {suc a} _  = _
   fp-isLim {lim f} _  = _
 ```
 
 ```agda
-  fp-absorb : a ≺ b → fp ν ⟨ a ⟩ + fp ν ⟨ b ⟩ ≈ fp ν ⟨ b ⟩
+  fp-absorb : a ≺ b → F′ a + F′ b ≈ F′ b
   fp-absorb {a} {b = suc b} (s≼s a≼b) =
-    (l≼ λ {n} →                                     begin
-      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩ [ n ]             ≤⟨ +a-pres≼ (fp-pres≼ a≼b) ⟩
-      fp ν ⟨ b ⟩ + fp ν ⟨ suc b ⟩ [ n ]             ≤⟨ +a-pres≼ ≼-zero ⟩
-      suc (fp ν ⟨ b ⟩) + fp ν ⟨ suc b ⟩ [ n ]       ≤⟨ a+-pres≼ fixbl-infl≼ ⟩
-      suc (fp ν ⟨ b ⟩) + ν ⟨ _ ⟩                    ≈⟨ ≈-refl ⟩
-      fp ν ⟨ suc b ⟩ [ suc n ]                      ≤⟨ f≼l {n = suc n} ⟩
-      fp ν ⟨ suc b ⟩                                ∎) ,
-    (l≼ λ {n} →                                     begin
-      fp ν ⟨ suc b ⟩ [ n ]                          ≤⟨ a+-infl≼ ⟩
-      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩ [ n ]             <⟨ a+-pres≺ (<→≺ (FpEnum.S-wf ν)) ⟩
-      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩ [ suc n ]         ≤⟨ f≼l {n = suc n} ⟩
-      fp ν ⟨ a ⟩ + fp ν ⟨ suc b ⟩                   ∎) where
+    (l≼ λ {n} →                           begin
+      F′ a + F′ (suc b) [ n ]             ≤⟨ +a-pres≼ (fp-pres≼ a≼b) ⟩
+      F′ b + F′ (suc b) [ n ]             ≤⟨ +a-pres≼ ≼-zero ⟩
+      suc (F′ b) + F′ (suc b) [ n ]       ≤⟨ a+-pres≼ fixbl-infl≼ ⟩
+      suc (F′ b) + F _                    ≈⟨ ≈-refl ⟩
+      F′ (suc b) [ suc n ]                ≤⟨ f≼l {n = suc n} ⟩
+      F′ (suc b)                          ∎) ,
+    (l≼ λ {n} →                           begin
+      F′ (suc b) [ n ]                    ≤⟨ a+-infl≼ ⟩
+      F′ a + F′ (suc b) [ n ]             <⟨ a+-pres≺ (<→≺ (FpEnum.S-wf ν)) ⟩
+      F′ a + F′ (suc b) [ suc n ]         ≤⟨ f≼l {n = suc n} ⟩
+      F′ a + F′ (suc b)                   ∎) where
     open CrossTreeReasoning
   fp-absorb {a} {b = lim f} (≼l {n} a≺fn) = l≼ aux , l≼l a+-infl≼ where
     open CrossTreeReasoning
-    aux : fp ν ⟨ a ⟩ + fp ν ⟨ f m ⟩ ≼ lim- (λ m → fp ν ⟨ f m ⟩)
+    aux : F′ a + F′ (f m) ≼ lim- (λ m → F′ (f m))
     aux {m} with <-cmp n m
-    ... | tri< n<m _ _ = ≼l $                       begin
-      fp ν ⟨ a ⟩ + fp ν ⟨ f m ⟩                     ≤⟨ fst (fp-absorb a≺fm) ⟩
-      fp ν ⟨ f m ⟩                                  ∎ where
-      a≺fm =                                        begin-strict
-        a                                           <⟨ a≺fn ⟩
-        f n                                         <⟨ <→≺ (seq-pres n<m) ⟩
-        f m                                         ∎
-    ... | tri≈ _ refl _ = ≼l $                      begin
-      fp ν ⟨ a ⟩ + fp ν ⟨ f n ⟩                     ≤⟨ fst (fp-absorb a≺fn) ⟩
-      fp ν ⟨ f n ⟩                                  ∎
-    ... | tri> _ _ m<n = ≼l $                       begin
-      fp ν ⟨ a ⟩ + fp ν ⟨ f m ⟩                     ≤⟨ a+-pres≼ (fp-pres≼ fm≼fn) ⟩
-      fp ν ⟨ a ⟩ + fp ν ⟨ f n ⟩                     ≤⟨ fst (fp-absorb a≺fn) ⟩
-      fp ν ⟨ f n ⟩                                  ∎ where
-      fm≼fn =                                       begin
-        f m                                         <⟨ <→≺ (seq-pres m<n) ⟩
-        f n                                         ∎
+    ... | tri< n<m _ _ = ≼l $             begin
+      F′ a + F′ (f m)                     ≤⟨ fst (fp-absorb a≺fm) ⟩
+      F′ (f m)                            ∎ where
+      a≺fm =                              begin-strict
+        a                                 <⟨ a≺fn ⟩
+        f n                               <⟨ <→≺ (seq-pres n<m) ⟩
+        f m                               ∎
+    ... | tri≈ _ refl _ = ≼l $            begin
+      F′ a + F′ (f n)                     ≤⟨ fst (fp-absorb a≺fn) ⟩
+      F′ (f n)                            ∎
+    ... | tri> _ _ m<n = ≼l $             begin
+      F′ a + F′ (f m)                     ≤⟨ a+-pres≼ (fp-pres≼ fm≼fn) ⟩
+      F′ a + F′ (f n)                     ≤⟨ fst (fp-absorb a≺fn) ⟩
+      F′ (f n)                            ∎ where
+      fm≼fn =                             begin
+        f m                               <⟨ <→≺ (seq-pres m<n) ⟩
+        f n                               ∎
 ```
 
 ```agda
-fp-fixbl : ∀ {ν} → Fixable ν → Fixable (fp ν)
-fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
-  where open Fixable fixbl
+fpᶠ : ∀ {ν} → Fixable ν → Fixable (fpⁿ ν)
+fpᶠ p = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
+  where open Fixable p
+```
+
+```agda
+FNormal = Σ Normal Fixable
+
+fp : FNormal → FNormal
+fp (ν , p) = fpⁿ ν , fpᶠ p
+
+_⟨_⟩ : FNormal → Func
+(ν , _) ⟨ a ⟩ = Normal.func ν a
+
+fixbl : ((ν , _) : FNormal) → Fixable ν
+fixbl (ν , p) = p
 ```
 
 ## 不动点的实例
-
-```agda
-ω^ : Normal
-ω^ = normal (ω ^_) ^-pres ≈-refl
-```
 
 ```agda
 ω^-isLim : NonZero a → isLim (ω ^ a)
@@ -287,27 +298,17 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 ω^-isLim {lim f} _ = _
 ```
 
-```agda
-ω^-fixbl : Fixable ω^
-ω^-fixbl = fixable a^-infl≼ a^-pres≼ ω^-isLim ω^-absorb
+```
+ω^ : FNormal
+ω^ = normal (ω ^_) ^-pres ≈-refl
+   , fixable a^-infl≼ a^-pres≼ ω^-isLim ω^-absorb
 ```
 
 ```agda
-ε ζ η : Normal
+ε ζ η : FNormal
 ε = fp ω^
 ζ = fp ε
 η = fp ζ
-```
-
-```agda
-ε-fixbl : Fixable ε
-ε-fixbl = fp-fixbl ω^-fixbl
-
-ζ-fixbl : Fixable ζ
-ζ-fixbl = fp-fixbl ε-fixbl
-
-η-fixbl : Fixable η
-η-fixbl = fp-fixbl ζ-fixbl
 ```
 
 ```agda
@@ -323,8 +324,8 @@ fp-fixbl fixbl = fixable fp-infl≼ fp-pres≼ fp-isLim fp-absorb
 
 ```agda
 η-fix : η ⟨ a ⟩ ≈ ζ ⟨ η ⟨ a ⟩ ⟩
-η-fix = Fixable.fp-fix ζ-fixbl
+η-fix = Fixable.fp-fix (fixbl ζ)
 
 η-suc-[n] : η ⟨ suc a ⟩ [ n ] ≈ Itₙ (λ _ → ζ ⟨_⟩) (suc (η ⟨ a ⟩)) n
-η-suc-[n] = Fixable.fp-suc-[n] ζ-fixbl
+η-suc-[n] = Fixable.fp-suc-[n] (fixbl ζ)
 ```
