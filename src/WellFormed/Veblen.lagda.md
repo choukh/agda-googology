@@ -129,7 +129,7 @@ module Finitary where
 ```agda
   ⟪⟫-0 : (νⁿ : Normal →ⁿ n) → ⟪ νⁿ ⟫ 0 0̇ ≡ νⁿ 0̇ ⟨ 0 ⟩
   ⟪⟫-0 {(zero)} νⁿ = refl
-  ⟪⟫-0 {suc n} νⁿ = ⟪⟫-0 {n} (νⁿ _)
+  ⟪⟫-0 {suc n} νⁿ = ⟪⟫-0 (νⁿ 0)
   {-# REWRITE ⟪⟫-0 #-}
 ```
 
@@ -156,18 +156,18 @@ module Finitary where
 ```
 
 ```agda
-  Φₙ-pres₀-rd : (λ x → ⟪ Φₙ {n} νⁿ x ⟫ 0̇) preserves Road
-  Φₙ-pres₀ : (λ x → ⟪ Φₙ {n} νⁿ x ⟫ 0̇) preserves _<_
+  Φₙ-pres₀-rd : (λ x → Φₙ {n} νⁿ x 0̇ ⟨ 0 ⟩) preserves Road
+  Φₙ-pres₀ : (λ x → Φₙ {n} νⁿ x 0̇ ⟨ 0 ⟩) preserves _<_
   Φₙ-pres₀ = map Φₙ-pres₀-rd
 ```
 
 ```agda
-  Φₙ {n} νⁿ zero = νⁿ
-  Φₙ {n} νⁿ (suc a) = Φ (fp (Φₙ νⁿ a 0̇))
-  Φₙ {n} νⁿ (lim f) = Φ jumper
+  Φₙ νⁿ zero = νⁿ
+  Φₙ νⁿ (suc a) = Φ (fp (Φₙ νⁿ a 0̇))
+  Φₙ νⁿ (lim f) = Φ jumper
     module FinitaryJump where
     Z : Ord
-    Z = lim (λ n → ⟪ Φₙ νⁿ (f n) ⟫ 0̇) ⦃ Φₙ-pres₀ it ⦄
+    Z = lim (λ n → Φₙ νⁿ (f n) 0̇ ⟨ 0 ⟩) ⦃ Φₙ-pres₀ it ⦄
 
     -- slightly larger than standard one in some cases, but not a big deal
     S : Ord → ℕ → Func
@@ -220,4 +220,129 @@ module Finitary where
 ```agda
   SVO : Ord
   SVO = lim (Itₙ (λ n x → x + ⟪ φ {n} ⟫ 1 0̇) 0) ⦃ +-infl ⦃ φ-nz ⦄ ⦄
+```
+
+## 超限元Veblen函数
+
+```agda
+module Transfinitary where
+  private variable A : Type
+```
+
+```agda
+  _→^_ : Type → Ord → Type
+  A →^ zero = A
+  A →^ suc a = Ord → A →^ a
+  A →^ lim f = ∀ {n} → Ord → A →^ f n
+```
+
+```agda
+  _0̇ : A →^ a → A
+  _0̇ {a = zero} = id
+  _0̇ {a = suc a} F = F 0 0̇
+  _0̇ {a = lim f} F = F {0} 0 0̇
+```
+
+```agda
+  _0̇,_ : A →^ suc a → A →^ 1
+  _0̇,_ {a = zero} = id
+  _0̇,_ {a = suc a} F = F 0 0̇,_
+  _0̇,_ {a = lim f} F = F 0 {0} 0̇,_
+```
+
+```agda
+  ⟪_⟫ : Normal →^ a → Ord →^ suc a
+  ⟪_⟫ {(zero)} ν = ν ⟨_⟩
+  ⟪_⟫ {suc a} ν b = ⟪ ν b ⟫
+  ⟪_⟫ {lim f} ν b = ⟪ ν b ⟫
+```
+
+```agda
+  ⟪⟫-0 : (νᵃ : Normal →^ a) → ⟪ νᵃ ⟫ 0 0̇ ≡ νᵃ 0̇ ⟨ 0 ⟩
+  ⟪⟫-0 {(zero)} νᵃ = refl
+  ⟪⟫-0 {suc a} νᵃ = ⟪⟫-0 (νᵃ 0)
+  ⟪⟫-0 {lim f} νᵃ = ⟪⟫-0 (νᵃ 0)
+  {-# REWRITE ⟪⟫-0 #-}
+```
+
+```agda
+  ⟪⟫-nz : (νᵃ : Normal →^ a) → NonZero (⟪ νᵃ ⟫ b 0̇)
+  ⟪⟫-nz {(zero)} νⁿ = nml-nz νⁿ
+  ⟪⟫-nz {suc a} {b} νⁿ = nml-nz (νⁿ b 0̇)
+  ⟪⟫-nz {lim f} {b} νⁿ = nml-nz (νⁿ b 0̇)
+```
+
+```agda
+  private variable
+    ν : Normal
+    νᵃ : Normal →^ a
+```
+
+```agda
+  Φₛ : Normal →^ a → Normal →^ suc a
+  Φₗ : ⦃ _ : wf f ⦄ → Ord →^ lim f → Normal →^ lim f
+  Φ  : Normal → (∀ {a} → Normal →^ a)
+```
+
+```agda
+  Φₛ-nz : NonZero (⟪ Φₛ νᵃ b ⟫ c 0̇)
+  Φₛ-nz = ⟪⟫-nz (Φₛ _ _)
+```
+
+```agda
+  Φₛ-pres₀-rd : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves Road
+  Φₛ-pres₀ : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves _<_
+  Φₛ-pres₀ = map Φₛ-pres₀-rd
+```
+
+```agda
+  Φₛ νᵃ zero = νᵃ
+  Φₛ νᵃ (suc a) = Φ (fp (Φₛ νᵃ a 0̇))
+  Φₛ νᵃ (lim f) = Φ jumper
+    module TransfinitaryJump where
+    Z : Ord
+    Z = lim (λ n → Φₛ νᵃ (f n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres₀ it ⦄
+
+    -- slightly larger than standard one in some cases, but not a big deal
+    S : Ord → ℕ → Func
+    S j n x = x + ⟪ Φₛ νᵃ (f n) ⟫ j 0̇
+
+    jumper : Normal
+    jumper = jump Z ⦃ _ ⦄ S (+-infl ⦃ Φₛ-nz ⦄)
+```
+
+```agda
+  Φₗ = {!   !}
+```
+
+```agda
+  Φ ν {(zero)} = ν
+  Φ ν {suc a} = Φₛ (Φ ν)
+  Φ ν {lim f} = Φₗ {f} ⟪ Φ ν ⟫
+```
+
+```agda
+  Φ-ż : Φ ν {a} 0̇ ⟨ 0 ⟩ ≡ ν ⟨ 0 ⟩
+  Φ-ż {a = zero} = refl
+  Φ-ż {a = suc a} = Φ-ż {a = a}
+  Φ-ż {a = lim f} = {!   !}
+```
+
+```agda
+  Φₛ-pres₀-rd {νᵃ} {x} zero =             begin-strict
+    Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ set $ nml-pres (Φₛ νᵃ x 0̇) (nz-elim ⦃ Φₛ-nz {c = 0} ⦄) ⟩
+    Φₛ νᵃ x 0̇ ⟨ Φₛ νᵃ x 0̇ ⟨ 0 ⟩ ⟩         <⟨ f<l-rd {n = 2} ⟩
+    fp (Φₛ νᵃ x 0̇) ⟨ 0 ⟩                  ≈˘⟨ Φ-ż ⟩
+    Φₛ νᵃ (suc x) 0̇ ⟨ 0 ⟩                 ∎ where open RoadReasoning
+  Φₛ-pres₀-rd {νᵃ} {x} (suc {b} r) =      begin-strict
+    Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ Φₛ-pres₀-rd r ⟩
+    Φₛ νᵃ b 0̇ ⟨ 0 ⟩                       <⟨ set $ nml-pres (Φₛ νᵃ b 0̇) (nz-elim ⦃ Φₛ-nz {c = 0} ⦄) ⟩
+    Φₛ νᵃ b 0̇ ⟨ Φₛ νᵃ b 0̇ ⟨ 0 ⟩ ⟩         <⟨ f<l-rd {n = 2} ⟩
+    fp (Φₛ νᵃ b 0̇) ⟨ 0 ⟩                  ≈˘⟨ Φ-ż ⟩
+    Φₛ νᵃ (suc b) 0̇ ⟨ 0 ⟩                 ∎ where open RoadReasoning
+  Φₛ-pres₀-rd {νᵃ} {x} (lim {f} {n} r) =  begin-strict
+    Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ Φₛ-pres₀-rd r ⟩
+    Φₛ νᵃ (f n) 0̇ ⟨ 0 ⟩                   <⟨ f<l-rd ⟩
+    jumper νᵃ f ⟨ 0 ⟩                     ≈˘⟨ Φ-ż ⟩
+    Φ (jumper νᵃ f) 0̇ ⟨ 0 ⟩               ∎ where open RoadReasoning; open TransfinitaryJump
 ```
