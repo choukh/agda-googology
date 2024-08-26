@@ -280,7 +280,7 @@ module Transfinitary where
 
 ```agda
   Φₛ : Normal →^ a → Normal →^ suc a
-  Φₗ : ⦃ _ : wf f ⦄ → Ord →^ lim f → Normal →^ lim f
+  Φₗ : ⦃ _ : wf f ⦄ → (∀ {n} → Normal →^ f n) → Normal →^ lim f
   Φ  : Normal → (∀ {a} → Normal →^ a)
 ```
 
@@ -290,42 +290,71 @@ module Transfinitary where
 ```
 
 ```agda
+  Φₗ-nz : ⦃ _ : wf f ⦄ {νᵃ : ∀ {n} → Normal →^ f n} → NonZero (⟪ Φₗ {f} νᵃ {n} b ⟫ c 0̇)
+  Φₗ-nz = ⟪⟫-nz (Φₗ _ _)
+```
+
+```agda
   Φₛ-pres₀-rd : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves Road
   Φₛ-pres₀ : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves _<_
   Φₛ-pres₀ = map Φₛ-pres₀-rd
 ```
 
 ```agda
-  Φₛ νᵃ zero = νᵃ
-  Φₛ νᵃ (suc a) = Φ (fp (Φₛ νᵃ a 0̇))
-  Φₛ νᵃ (lim f) = Φ jumper
-    module TransfinitaryJump where
+  Φₛ {a} νᵃ zero = νᵃ
+  Φₛ {a} νᵃ (suc b) = Φ (fp (Φₛ νᵃ b 0̇))
+  Φₛ {a} νᵃ (lim g) = Φ jumper
+    module SucJump where
     Z : Ord
-    Z = lim (λ n → Φₛ νᵃ (f n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres₀ it ⦄
+    Z = lim (λ n → Φₛ νᵃ (g n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres₀ it ⦄
 
-    -- slightly larger than standard one in some cases, but not a big deal
+    -- might be slightly larger than standard one in some cases, but not a big deal
     S : Ord → ℕ → Func
-    S j n x = x + ⟪ Φₛ νᵃ (f n) ⟫ j 0̇
+    S j n x = x + ⟪ Φₛ νᵃ (g n) ⟫ j 0̇
 
     jumper : Normal
     jumper = jump Z ⦃ _ ⦄ S (+-infl ⦃ Φₛ-nz ⦄)
 ```
 
 ```agda
-  Φₗ = {!   !}
+  Φₗ {f} νᵃ zero = νᵃ
+
+  Φₗ {f} νᵃ (suc b) = Φ jumper
+    module LimSucJump where
+    Z : Ord
+    Z = lim (Itₙ (λ n x → x + ⟪ Φₗ {f} νᵃ {n} b ⟫ 1 0̇) 0) ⦃ +-infl ⦃ Φₗ-nz ⦄ ⦄
+
+    -- might be slightly larger than standard one in some cases, but not a big deal
+    S : Ord → ℕ → Func
+    S j n x = x + (⟪ Φₗ {f} νᵃ {n} b ⟫ j 0̇)
+
+    jumper : Normal
+    jumper = jump Z ⦃ _ ⦄ S (+-infl ⦃ Φₗ-nz ⦄)
+
+  Φₗ {f} νᵃ (lim g) = Φ jumper
+    module LimLimJump where
+    Z : Ord
+    Z = lim (Itₙ (λ n x → x + ⟪ Φₗ {f} νᵃ {n} (g n) ⟫ 0 0̇) 0) ⦃ +-infl ⦃ Φₗ-nz ⦄ ⦄
+
+    -- might be slightly larger than standard one in some cases, but not a big deal
+    S : Ord → ℕ → Func
+    S j n x = x + (⟪ Φₗ {f} νᵃ {n} (g n) ⟫ j 0̇)
+
+    jumper : Normal
+    jumper = jump Z ⦃ _ ⦄ S (+-infl ⦃ Φₗ-nz ⦄)
 ```
 
 ```agda
   Φ ν {(zero)} = ν
-  Φ ν {suc a} = Φₛ (Φ ν)
-  Φ ν {lim f} = Φₗ {f} ⟪ Φ ν ⟫
+  Φ ν {suc a} = Φₛ {a} (Φ ν)
+  Φ ν {lim f} = Φₗ {f} (Φ ν)
 ```
 
 ```agda
   Φ-ż : Φ ν {a} 0̇ ⟨ 0 ⟩ ≡ ν ⟨ 0 ⟩
   Φ-ż {a = zero} = refl
   Φ-ż {a = suc a} = Φ-ż {a = a}
-  Φ-ż {a = lim f} = {!   !}
+  Φ-ż {a = lim f} = Φ-ż {a = f 0}
 ```
 
 ```agda
@@ -344,5 +373,5 @@ module Transfinitary where
     Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ Φₛ-pres₀-rd r ⟩
     Φₛ νᵃ (f n) 0̇ ⟨ 0 ⟩                   <⟨ f<l-rd ⟩
     jumper νᵃ f ⟨ 0 ⟩                     ≈˘⟨ Φ-ż ⟩
-    Φ (jumper νᵃ f) 0̇ ⟨ 0 ⟩               ∎ where open RoadReasoning; open TransfinitaryJump
+    Φ (jumper νᵃ f) 0̇ ⟨ 0 ⟩               ∎ where open RoadReasoning; open SucJump
 ```
