@@ -125,6 +125,26 @@ open FpEnum public using (fpⁿ)
 ### 跨树性质
 
 ```agda
+≼a : ⦃ _ : isLim a ⦄ → b ≼ a [ n ] → b ≼ a
+≼a {lim f} = ≼l
+
+a≼ : ⦃ _ : isLim a ⦄ → (∀ {n} → a [ n ] ≼ b) → a ≼ b
+a≼ {lim f} = l≼
+
+[]≼a : ⦃ _ : isLim a ⦄ → a [ n ] ≼ a
+[]≼a {lim f} = f≼l
+```
+
+```agda
++l-isLim : ⦃ _ : isLim b ⦄ → isLim (a + b)
++l-isLim {lim f} = tt
+
+a+[] : ⦃ l : isLim b ⦄ → let instance _ = +l-isLim ⦃ l ⦄ in
+  a + b [ n ] ≡ (a + b) [ n ]
+a+[] {lim f} = refl
+```
+
+```agda
 record Fixable (ν : Normal) : Type where
   constructor fixable
   open Normal ν       renaming (func to F)
@@ -132,11 +152,68 @@ record Fixable (ν : Normal) : Type where
   field
     fixbl-infl≼ : F inflates _≼_
     fixbl-pres≼ : F preserves _≼_
-    fixbl-isLim : ∀ {a} → NonZero a → isLim (F a)
-    fixbl-absorb : ∀ {a b} → a ≺ b → F a + F b ≈ F b
+    fixbl-isLim : ∀ {a} → ⦃ NonZero a ⦄ → isLim (F a)
+    fixbl-wf    : let instance _ = fixbl-isLim in
+                  ∀ {a} → wf λ n → F (suc a) [ n ]
+    fixbl-wf-+  : let instance _ = fixbl-isLim in
+                  ∀ {a} → F a + F (suc a) [ n ] ≼ F (suc a) [ suc n ]
 
   fixbl-cong≈ : a ≈ b → F a ≈ F b
   fixbl-cong≈ (p , q) = fixbl-pres≼ p , fixbl-pres≼ q
+```
+
+```agda
+  fixbl-absorb : a ≺ b → F a + F b ≈ F b
+  fixbl-absorb {a} {b = suc b} (s≼s a≼b) =
+    (a≼ λ {n} →                           begin
+      (F a + F (suc b)) [ n ]             ≈˘⟨ ≡→≈ a+[] ⟩
+      F a + F (suc b) [ n ]               ≤⟨ +a-pres≼ (fixbl-pres≼ a≼b) ⟩
+      F b + F (suc b) [ n ]               ≤⟨ fixbl-wf-+ ⟩
+      F (suc b) [ suc n ]                 ≤⟨ []≼a ⟩
+      F (suc b)                           ∎) ,
+    (a≼ λ {n} →                           begin
+      F (suc b) [ n ]                     ≤⟨ a+-infl≼ ⟩
+      F a + F (suc b) [ n ]               <⟨ a+-pres≺ (<→≺ fixbl-wf) ⟩
+      F a + F (suc b) [ suc n ]           ≤⟨ a+-pres≼ []≼a ⟩
+      F a + F (suc b)                     ∎) where
+    open CrossTreeReasoning
+    instance
+      _ = fixbl-isLim
+      _ : isLim (F a + F (suc b))
+      _ = +l-isLim
+      _ : isLim (F b + F (suc b))
+      _ = +l-isLim
+  fixbl-absorb {a} {b = lim f} (≼l {n} a≺fn) =
+    (                                     begin
+      F a + F (lim f)                     ≈⟨ a+-cong≈ continuous ⟩
+      F a + lim- (λ n → F (f n))          ≤⟨ l≼ aux ⟩
+      lim- (λ n → F (f n))                ≈˘⟨ continuous ⟩
+      F (lim f)                           ∎) ,
+    (                                     begin
+      F (lim f)                           ≈⟨ continuous ⟩
+      lim- (λ n → F (f n))                ≤⟨ l≼l a+-infl≼ ⟩
+      F a + lim- (λ n → F (f n))          ≈˘⟨ a+-cong≈ continuous ⟩
+      F a + F (lim f)                     ∎) where
+    open CrossTreeReasoning
+    aux : F a + F (f m) ≼ lim- λ m → F (f m)
+    aux {m} with <-cmp n m
+    ... | tri< n<m _ _ = ≼l $             begin
+      F a + F (f m)                       ≤⟨ fst (fixbl-absorb a≺fm) ⟩
+      F (f m)                             ∎ where
+      a≺fm =                              begin-strict
+        a                                 <⟨ a≺fn ⟩
+        f n                               <⟨ <→≺ (seq-pres n<m) ⟩
+        f m                               ∎
+    ... | tri≈ _ refl _ = ≼l $            begin
+      F a + F (f n)                       ≤⟨ fst (fixbl-absorb a≺fn) ⟩
+      F (f n)                             ∎
+    ... | tri> _ _ m<n = ≼l $             begin
+      F a + F (f m)                       ≤⟨ a+-pres≼ (fixbl-pres≼ fm≼fn) ⟩
+      F a + F (f n)                       ≤⟨ fst (fixbl-absorb a≺fn) ⟩
+      F (f n)                             ∎ where
+      fm≼fn =                             begin
+        f m                               <⟨ <→≺ (seq-pres m<n) ⟩
+        f n                               ∎
 ```
 
 ```agda
@@ -178,7 +255,7 @@ record Fixable (ν : Normal) : Type where
     F′ (suc a) [ suc n ]                  ≈⟨ ≈-refl ⟩
     suc (F′ a) + F _                      ≈⟨ +a-cong≈ (s≈s F′-fix) ⟩
     F (F′ a) + 1 + F _                    ≈˘⟨ ≡→≈ +-assoc ⟩
-    F (F′ a) + (1 + F _)                  ≈⟨ a+-cong≈ (1+l-absorb $ fixbl-isLim $ nz-intro p) ⟩
+    F (F′ a) + (1 + F _)                  ≈⟨ a+-cong≈ $ 1+l-absorb $ fixbl-isLim ⦃ nz-intro p ⦄ ⟩
     F (F′ a) + F _                        ≈⟨ fixbl-absorb (<→≺ q) ⟩
     F (F′ (suc a) [ n ])                  ∎ where
     open CrossTreeReasoning
@@ -226,10 +303,10 @@ record Fixable (ν : Normal) : Type where
 ```
 
 ```agda
-  F′-isLim : NonZero a → isLim (F′ a)
-  F′-isLim {(zero)} _ = _
-  F′-isLim {suc a} _  = _
-  F′-isLim {lim f} _  = _
+  F′-isLim : ⦃ NonZero a ⦄ → isLim (F′ a)
+  F′-isLim {(zero)} = _
+  F′-isLim {suc a}  = _
+  F′-isLim {lim f}  = _
 ```
 
 ```agda
@@ -273,18 +350,19 @@ record Fixable (ν : Normal) : Type where
 
 ```agda
 fpᶠ : ∀ {ν} → Fixable ν → Fixable (fpⁿ ν)
-fpᶠ p = fixable F′-infl≼ F′-pres≼ F′-isLim F′-absorb
+fpᶠ p = fixable F′-infl≼ F′-pres≼ F′-isLim {!   !} {!   !} --F′-absorb
   where open Fixable p
 ```
 
 ```agda
+open Normal public
 FNormal = Σ Normal Fixable
 
 fp : FNormal → FNormal
 fp (ν , p) = fpⁿ ν , fpᶠ p
 
 _⟨_⟩ : FNormal → Func
-(ν , _) ⟨ a ⟩ = Normal.func ν a
+(ν , _) ⟨ a ⟩ = func ν a
 
 fixbl : ((ν , _) : FNormal) → Fixable ν
 fixbl (ν , p) = p
@@ -293,15 +371,15 @@ fixbl (ν , p) = p
 ## 不动点的实例
 
 ```agda
-ω^-isLim : NonZero a → isLim (ω ^ a)
-ω^-isLim {suc a} _ = _
-ω^-isLim {lim f} _ = _
+ω^-isLim : ⦃ NonZero a ⦄ → isLim (ω ^ a)
+ω^-isLim {suc a} = _
+ω^-isLim {lim f} = _
 ```
 
 ```
 ω^ : FNormal
 ω^ = normal (ω ^_) ^-pres ≈-refl
-   , fixable a^-infl≼ a^-pres≼ ω^-isLim ω^-absorb
+   , fixable a^-infl≼ a^-pres≼ ω^-isLim {!   !} {!   !} --ω^-absorb
 ```
 
 ```agda

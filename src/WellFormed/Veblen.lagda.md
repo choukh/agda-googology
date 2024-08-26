@@ -24,6 +24,54 @@ open import Agda.Builtin.Equality.Rewrite public
 ```
 
 ```agda
+module FixableJump
+  (Z : Ord)
+  (⦃ Z-nz ⦄ : NonZero Z)
+  (S : Ord → ℕ → Func)
+  (S-wf : ∀ {a} → wf (Itₙ (S (suc a)) (suc a)))
+  where
+  open Jump Z ⦃ Z-nz ⦄ S S-wf renaming (jump to ι)
+```
+
+```agda
+  F⁺-infl≼ : F⁺ inflates _≼_
+  F⁺-infl≼ {(zero)} = z≼
+  F⁺-infl≼ {suc x} = ≼l {n = 0} (s≼s F⁺-infl≼)
+  F⁺-infl≼ {lim f} = l≼l F⁺-infl≼
+```
+
+```agda
+  F⁺-isLim : NonZero a → isLim (F⁺ a)
+  F⁺-isLim {suc a} _ = _
+  F⁺-isLim {lim f} _ = _
+```
+
+```agda
+  module _ (Z≼ : ∀ {a} → Z ≼ F⁺ a) (S-pres≼ : ∀ {a b c d n} → a ≼ b → c ≼ d → S a n c ≼ S b n d) where
+    F⁺-pres≼ : F⁺ preserves _≼_
+    F⁺-pres≼ z≼ = Z≼
+    F⁺-pres≼ (≼l p) = ≼l (F⁺-pres≼ p)
+    F⁺-pres≼ (l≼ p) = l≼ (F⁺-pres≼ p)
+    F⁺-pres≼ (s≼s {a} {b} p) = l≼l q where
+      q : Itₙ (S (suc (F⁺ a))) (suc (F⁺ a)) n ≼ Itₙ (S (suc (F⁺ b))) (suc (F⁺ b)) n
+      q {n = zero} = s≼s (F⁺-pres≼ p)
+      q {n = suc n} = S-pres≼ (s≼s (F⁺-pres≼ p)) q
+```
+
+```agda
+    F⁺-absorb : a ≺ b → F⁺ a + F⁺ b ≈ F⁺ b
+    F⁺-absorb (s≼s p) = {!   !}
+    F⁺-absorb (≼l p) = {!   !}
+```
+
+```agda
+    jump-fixbl : Fixable ι
+    jump-fixbl = fixable F⁺-infl≼ F⁺-pres≼ F⁺-isLim {!   !}
+
+open FixableJump using (jump-fixbl)
+```
+
+```agda
 private variable A : Type
 _→^_ : Type → Ord → Type
 A →^ zero = A
@@ -46,14 +94,14 @@ _0̇,_ {a = lim f} F = F 0 {0} 0̇,_
 ```
 
 ```agda
-⟪_⟫ : Normal →^ a → Ord →^ suc a
+⟪_⟫ : FNormal →^ a → Ord →^ suc a
 ⟪_⟫ {(zero)} ν = ν ⟨_⟩
 ⟪_⟫ {suc a} ν b = ⟪ ν b ⟫
 ⟪_⟫ {lim f} ν b = ⟪ ν b ⟫
 ```
 
 ```agda
-⟪⟫-0 : (νᵃ : Normal →^ a) → ⟪ νᵃ ⟫ 0 0̇ ≡ νᵃ 0̇ ⟨ 0 ⟩
+⟪⟫-0 : (νᵃ : FNormal →^ a) → ⟪ νᵃ ⟫ 0 0̇ ≡ νᵃ 0̇ ⟨ 0 ⟩
 ⟪⟫-0 {(zero)} νᵃ = refl
 ⟪⟫-0 {suc a} νᵃ = ⟪⟫-0 (νᵃ 0)
 ⟪⟫-0 {lim f} νᵃ = ⟪⟫-0 (νᵃ 0)
@@ -62,22 +110,22 @@ _0̇,_ {a = lim f} F = F 0 {0} 0̇,_
 
 ```agda
 instance
-  ⟪⟫-nz : {νᵃ : Normal →^ a} → NonZero (⟪ νᵃ ⟫ b 0̇)
-  ⟪⟫-nz {(zero)} {b} {νᵃ} = nml-nz νᵃ
-  ⟪⟫-nz {suc a} {b} {νᵃ} = nml-nz (νᵃ b 0̇)
-  ⟪⟫-nz {lim f} {b} {νᵃ} = nml-nz (νᵃ b 0̇)
+  ⟪⟫-nz : {νᵃ : FNormal →^ a} → NonZero (⟪ νᵃ ⟫ b 0̇)
+  ⟪⟫-nz {(zero)} {b} {νᵃ} = nml-nz (fst νᵃ)
+  ⟪⟫-nz {suc a} {b} {νᵃ} = nml-nz (fst $ νᵃ b 0̇)
+  ⟪⟫-nz {lim f} {b} {νᵃ} = nml-nz (fst $ νᵃ b 0̇)
 ```
 
 ```agda
 private variable
-  ν : Normal
-  νᵃ : Normal →^ a
+  ν : FNormal
+  νᵃ : FNormal →^ a
 ```
 
 ```agda
-Φₛ : Normal →^ a → Normal →^ suc a
-Φₗ : ⦃ _ : wf f ⦄ → (∀ {n} → Normal →^ f n) → Normal →^ lim f
-Φ  : Normal → (∀ {a} → Normal →^ a)
+Φₛ : FNormal →^ a → FNormal →^ suc a
+Φₗ : ⦃ _ : wf f ⦄ → (∀ {n} → FNormal →^ f n) → FNormal →^ lim f
+Φ  : FNormal → (∀ {a} → FNormal →^ a)
 ```
 
 ```agda
@@ -98,8 +146,8 @@ private variable
   S : Ord → ℕ → Func
   S j n x = x + ⟪ Φₛ νᵃ (g n) ⟫ j 0̇
 
-  jumper : Normal
-  jumper = jump Z ⦃ _ ⦄ S +-infl
+  jumper : FNormal
+  jumper = jump Z ⦃ _ ⦄ S +-infl , {!   !}
 ```
 
 ```agda
@@ -114,8 +162,8 @@ private variable
   S : Ord → ℕ → Func
   S j n x = x + ⟪ Φₗ {f} νᵃ {n} b ⟫ j 0̇
 
-  jumper : Normal
-  jumper = jump Z ⦃ _ ⦄ S +-infl
+  jumper : FNormal
+  jumper = jump Z ⦃ _ ⦄ S +-infl , {!   !}
 
 Φₗ {f} νᵃ (lim g) = Φ jumper
   module LimLimJump where
@@ -126,8 +174,8 @@ private variable
   S : Ord → ℕ → Func
   S j n x = x + (⟪ Φₗ {f} νᵃ {n} (g n) ⟫ j 0̇)
 
-  jumper : Normal
-  jumper = jump Z ⦃ _ ⦄ S +-infl
+  jumper : FNormal
+  jumper = jump Z ⦃ _ ⦄ S +-infl , {!   !}
 ```
 
 ```agda
@@ -145,13 +193,13 @@ private variable
 
 ```agda
 Φₛ-pres₀-rd {νᵃ} {x} zero =             begin-strict
-  Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ set $ nml-pres (Φₛ νᵃ x 0̇) (nz-elim ⦃ ⟪⟫-nz {b = 0} ⦄) ⟩
+  Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ set $ nml-pres (fst $ Φₛ νᵃ x 0̇) (nz-elim ⦃ ⟪⟫-nz {b = 0} ⦄) ⟩
   Φₛ νᵃ x 0̇ ⟨ Φₛ νᵃ x 0̇ ⟨ 0 ⟩ ⟩         <⟨ f<l-rd {n = 2} ⟩
   fp (Φₛ νᵃ x 0̇) ⟨ 0 ⟩                  ≈˘⟨ Φ-ż ⟩
   Φₛ νᵃ (suc x) 0̇ ⟨ 0 ⟩                 ∎ where open RoadReasoning
 Φₛ-pres₀-rd {νᵃ} {x} (suc {b} r) =      begin-strict
   Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ Φₛ-pres₀-rd r ⟩
-  Φₛ νᵃ b 0̇ ⟨ 0 ⟩                       <⟨ set $ nml-pres (Φₛ νᵃ b 0̇) (nz-elim ⦃ ⟪⟫-nz {b = 0} ⦄) ⟩
+  Φₛ νᵃ b 0̇ ⟨ 0 ⟩                       <⟨ set $ nml-pres (fst $ Φₛ νᵃ b 0̇) (nz-elim ⦃ ⟪⟫-nz {b = 0} ⦄) ⟩
   Φₛ νᵃ b 0̇ ⟨ Φₛ νᵃ b 0̇ ⟨ 0 ⟩ ⟩         <⟨ f<l-rd {n = 2} ⟩
   fp (Φₛ νᵃ b 0̇) ⟨ 0 ⟩                  ≈˘⟨ Φ-ż ⟩
   Φₛ νᵃ (suc b) 0̇ ⟨ 0 ⟩                 ∎ where open RoadReasoning
@@ -163,12 +211,12 @@ private variable
 ```
 
 ```agda
-φ : Normal →^ a
+φ : FNormal →^ a
 φ = Φ ω^
 ```
 
 ```agda
-Γ : Normal
+Γ : FNormal
 Γ = φ {2} 1 0
 ```
 
@@ -178,8 +226,9 @@ SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
 
 ```agda
-ω̇^ : Normal
+ω̇^ : FNormal
 ω̇^ = normal F F-pres ≈-refl ⦃ ⟪⟫-nz {a = 0} {b = 1} {νᵃ = Φ ω^} ⦄
+   , fixable F-infl≼ {!   !} {!   !} {!   !}
   module SecondBaseOmega where
   F : Func
   F-pres-rd : F preserves Road
@@ -193,9 +242,22 @@ SVO = φ {ω} {0} 1 ⟨ 0 ⟩
   F-pres-rd zero    = set $ +-infl ⦃ ⟪⟫-nz {b = 0} ⦄
   F-pres-rd (suc r) = rd-trans (F-pres-rd r) (set $ +-infl ⦃ ⟪⟫-nz {b = 0} ⦄)
   F-pres-rd (lim r) = rd-trans (F-pres-rd r) f<l-rd
+
+  F-infl≼ : F inflates _≼_
+  F-infl≼ {(zero)} = z≼
+  F-infl≼ {suc x} = ≼-trans (s≼s F-infl≼) (a+-pres≼ $ ≤→≼ $ <→s≤ $ nz-elim ⦃ ⟪⟫-nz {b = 0} ⦄)
+  F-infl≼ {lim f} = l≼l F-infl≼
+
+  F-pres≼ : F preserves _≼_
+  F-pres≼ {y = zero}  z≼ = ≼-refl
+  F-pres≼ {y = suc y} z≼ = ≼-trans (F-pres≼ {y = y} z≼) +a-infl≼
+  F-pres≼ {y = lim f} z≼ = ≼l (F-pres≼ {y = f 0} z≼)
+  F-pres≼ (s≼s p) = +-pres≼ (F-pres≼ p) {!   !}
+  F-pres≼ (≼l p) = {!   !}
+  F-pres≼ (l≼ x) = {!   !}
 ```
 
 ```agda
 LVO : Ord
-LVO = lfp ω̇^
+LVO = fp ω̇^ ⟨ 0 ⟩
 ```
