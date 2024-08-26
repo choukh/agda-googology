@@ -10,7 +10,7 @@ zhihu-tags: Agda, 大数数学, 序数
 > 高亮渲染: [Veblen.html](https://choukh.github.io/agda-googology/WellFormed.Veblen.html)  
 
 ```agda
-{-# OPTIONS --rewriting --cubical --lossy-unification #-}
+{-# OPTIONS --safe --cubical --lossy-unification #-}
 module WellFormed.Veblen where
 
 open import WellFormed.Base
@@ -18,9 +18,6 @@ open import WellFormed.Properties
 open import WellFormed.Arithmetic
 open import WellFormed.CrossTree
 open import WellFormed.Fixpoints
-
-open import Agda.Builtin.Equality public
-open import Agda.Builtin.Equality.Rewrite public
 ```
 
 ## 二元Veblen函数
@@ -127,10 +124,9 @@ module Finitary where
 ```
 
 ```agda
-  ⟪⟫-0 : {νⁿ : Normal →ⁿ n} → ⟪ νⁿ ⟫ 0̇ ≡ νⁿ 0̇ ⟨ 0 ⟩
-  ⟪⟫-0 {(zero)} = refl
-  ⟪⟫-0 {suc n} = ⟪⟫-0 {n}
-  --{-# REWRITE ⟪⟫-0 #-}
+  ⟪⟫-0 : (νⁿ : Normal →ⁿ n) → ⟪ νⁿ ⟫ 0 0̇ ≡ νⁿ 0̇ ⟨ 0 ⟩
+  ⟪⟫-0 {(zero)} νⁿ = refl
+  ⟪⟫-0 {suc n} νⁿ = ⟪⟫-0 {n} (νⁿ _)
 ```
 
 ```agda
@@ -153,18 +149,12 @@ module Finitary where
 ```agda
   Φₙ-nz : NonZero (⟪ Φₙ νⁿ a ⟫ b 0̇)
   Φₙ-nz = ⟪⟫-nz (Φₙ _ _)
-
-  Φ-nz : NonZero (⟪ Φ ν {n} ⟫ a 0̇)
-  Φ-nz {ν} = Φₙ-nz {νⁿ = Φ ν} {a = 0}
 ```
 
 ```agda
   Φₙ-pres₀-rd : (λ x → ⟪ Φₙ {n} νⁿ x ⟫ 0̇) preserves Road
   Φₙ-pres₀ : (λ x → ⟪ Φₙ {n} νⁿ x ⟫ 0̇) preserves _<_
   Φₙ-pres₀ = map Φₙ-pres₀-rd
-
-  Φ-pres₀ : (λ x → ⟪ Φ ν {suc n} x ⟫ 0̇) preserves _<_
-  Φ-pres₀ = Φₙ-pres₀
 ```
 
 ```agda
@@ -189,11 +179,25 @@ module Finitary where
 ```
 
 ```agda
-  Φₙ-pres₀-rd {(zero)} zero = rd[ 2 ] $ set $ nml-pres (Φₙ _ _) (nz-elim ⦃ Φₙ-nz {0} ⦄)
-  Φₙ-pres₀-rd {suc zero} zero = {!   !} --rd[ 2 ] $ set $ nml-pres (Φₙ _ _ _) (nz-elim ⦃ Φₙ-nz {1} ⦄)
-  Φₙ-pres₀-rd {2+ zero} {(νⁿ)} {(x)} zero = {! fp (Φₙ νⁿ x 0 0) ⟨ 0 ⟩ !}
-  Φₙ-pres₀-rd {2+ (suc n)} {(νⁿ)} {(x)} zero = subst (Road _) (sym ⟪⟫-0) {!   !}
-  Φₙ-pres₀-rd (suc r) = {! Φₙ νⁿ (suc x)  !}
+  Φ-ż : ⟪ Φ ν {n} ⟫ 0 0̇ ≡ ν ⟨ 0 ⟩
+  Φ-ż {n = zero} = refl
+  Φ-ż {n = suc n} = Φ-ż {n = n}
+```
+
+```agda
+  Φₙ-0->0 : 0 < Φₙ νⁿ a 0̇ ⟨ 0 ⟩
+  Φₙ-0->0 = subst (0 <_) (⟪⟫-0 _) (nz-elim ⦃ Φₙ-nz ⦄)
+```
+
+```agda
+  Φₙ-pres₀-rd {n} {νⁿ} {x} zero = begin-strict
+    ⟪ Φₙ νⁿ x ⟫ 0 0̇               ≈⟨ ⟪⟫-0 (Φₙ νⁿ x) ⟩
+    Φₙ νⁿ x 0̇ ⟨ 0 ⟩               <⟨ set $ nml-pres (Φₙ νⁿ x 0̇) Φₙ-0->0 ⟩
+    Φₙ νⁿ x 0̇ ⟨ Φₙ νⁿ x 0̇ ⟨ 0 ⟩ ⟩ <⟨ f<l-rd {n = 2} ⟩
+    fp (Φₙ νⁿ x 0̇) ⟨ 0 ⟩          ≈˘⟨ Φ-ż ⟩
+    ⟪ Φ (fp (Φₙ νⁿ x 0̇)) ⟫ 0̇      ≈⟨ refl ⟩
+    ⟪ Φₙ νⁿ (suc x) ⟫ 0̇       ∎ where open RoadReasoning
+  Φₙ-pres₀-rd (suc r) = {!   !}
   Φₙ-pres₀-rd (lim r) = {!   !}
 ```
 
@@ -203,7 +207,12 @@ module Finitary where
 ```
 
 ```agda
-  instance _ = Φ-nz
+  instance
+    φ-nz : NonZero (⟪ φ {n} ⟫ a 0̇)
+    φ-nz = Φₙ-nz {νⁿ = φ} {a = 0}
+```
+
+```agda
   SVO : Ord
   SVO = lim (Itₙ (λ n x → x + ⟪ φ {n} ⟫ 1 0̇) 0) ⦃ +-infl ⦄
 ```
