@@ -773,4 +773,3 @@ a^-cong≈ (p , q) = a^-pres≼ p , a^-pres≼ q
 ^a-cong≈ : ⦃ _ : NonTrivial b ⦄ ⦃ _ : NonTrivial c ⦄ → b ≈ c → b ^ a ≈ c ^ a
 ^a-cong≈ (p , q) = ^a-pres≼ p , ^a-pres≼ q
 ```
- 
