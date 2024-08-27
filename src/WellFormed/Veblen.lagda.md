@@ -21,18 +21,20 @@ open import WellFormed.Fixpoints
 
 open import Agda.Builtin.Equality public
 open import Agda.Builtin.Equality.Rewrite public
+{-# REWRITE +a-id #-}
 ```
 
 ```agda
 record Jumper : Type where
   constructor by
   field
-    jump-init : Ord
-    jump-step : ℕ → Func
-    ⦃ jump-init-nz ⦄ : NonZero jump-init
-    ⦃ jump-step-nz ⦄ : NonZero (jump-step n b)
-    jump-step-infl≼ : (jump-step n) inflates _≼_
-    jump-step-pres≼ : (jump-step n) preserves _≼_
+    init : Ord
+    step : ℕ → Func
+    ⦃ init-nz ⦄ : NonZero init
+    ⦃ step-nz ⦄ : NonZero (step n b)
+    step-infl≼ : (step n) inflates _≼_
+    step-pres≼ : (step n) preserves _≼_
+    step-wf≼   : step n a ≼ step (suc n) a
 ```
 
 ```agda
@@ -43,9 +45,13 @@ record Jumper : Type where
 ```
 
 ```agda
-  F⁺ zero    = jump-init
-  F⁺ (suc a) = let b = suc (F⁺ a) in
-               b + lim (Itₙ (λ n x → x + jump-step n b) 0) ⦃ +-infl ⦄
+  It : Ord → Seq
+  It a = Itₙ (λ n x → x + step n (suc (F⁺ a))) 0
+```
+
+```agda
+  F⁺ zero    = init
+  F⁺ (suc a) = suc (F⁺ a) + lim (It a) ⦃ +-infl ⦄
   F⁺ (lim f) = lim (F⁺ ∘ f) ⦃ F⁺-pres it ⦄
 ```
 
@@ -76,16 +82,20 @@ record Jumper : Type where
   F⁺-pres≼ (≼l p) = ≼l (F⁺-pres≼ p)
   F⁺-pres≼ (l≼ p) = l≼ (F⁺-pres≼ p)
   F⁺-pres≼ (s≼s {a} {b} p) = l≼l (+-pres≼ (s≼s (F⁺-pres≼ p)) q) where
-    q : Itₙ (λ n x → x + jump-step n (suc (F⁺ a))) 0 n
-      ≼ Itₙ (λ n x → x + jump-step n (suc (F⁺ b))) 0 n
+    q : It a n ≼ It b n
     q {(zero)} = ≼-refl
-    q {suc n} = +-pres≼ q $ jump-step-pres≼ $ s≼s $ F⁺-pres≼ p
+    q {suc n} = +-pres≼ q $ step-pres≼ $ s≼s $ F⁺-pres≼ p
 ```
 
 ```agda
-  F⁺[n]≼ : F⁺ (suc a) [ n ] ≼ Itₙ (λ n x → x + jump-step n (suc (F⁺ a))) 0 (suc n)
-  F⁺[n]≼ {n = zero} = {!   !}
-  F⁺[n]≼ {n = suc n} = {!   !}
+  F⁺[n]≼ : F⁺ (suc a) [ n ] ≼ It a (suc n)
+  F⁺[n]≼ {a} {(zero)} = step-infl≼
+  F⁺[n]≼ {a} {suc n} =                    begin
+    F⁺ (suc a) [ suc n ]                  ≈⟨ ≈-refl ⟩
+    suc (F⁺ a) + (It a n + step n _)      ≈⟨ ≡→≈ +-assoc ⟩
+    (suc (F⁺ a) + It a n) + step n _      ≤⟨ +-pres≼ F⁺[n]≼ step-wf≼ ⟩
+    (It a n + step n _) + step (suc n) _  ≈⟨ ≈-refl ⟩
+    It a (2+ n)                           ∎ where open CrossTreeReasoning
 ```
 
 ```agda
