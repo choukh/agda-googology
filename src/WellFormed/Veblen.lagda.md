@@ -50,7 +50,7 @@ module FixableJump
   module _
     (Z≼ : ∀ {a} → Z ≼ F⁺ a)
     (S-pres≼ : ∀ {a b c d n} → a ≼ b → c ≼ d → S a n c ≼ S b n d)
-    (S-⋟+ : ∀ {a b n} → a + b ≼ S a n b)
+    (S-≽+ : ∀ {a b n} → a + b ≼ S a n b)
     where
 
     F⁺-pres≼ : F⁺ preserves _≼_
@@ -67,7 +67,7 @@ module FixableJump
     F⁺-absorb-pre : F⁺ a + F⁺ (suc a) [ n ] ≼ F⁺ (suc a) [ suc n ]
     F⁺-absorb-pre {a} {n} =                 begin
       F⁺ a + F⁺ (suc a) [ n ]               ≤⟨ +a-pres≼ ≼-zero ⟩
-      suc (F⁺ a) + F⁺ (suc a) [ n ]         ≤⟨ S-⋟+ ⟩
+      suc (F⁺ a) + F⁺ (suc a) [ n ]         ≤⟨ {!   !} ⟩
       S (suc (F⁺ a)) n (F⁺ (suc a) [ n ])   ≈⟨ ≈-refl ⟩
       F⁺ (suc a) [ suc n ]                  ∎ where open CrossTreeReasoning
 ```
@@ -157,6 +157,14 @@ private variable
   jumper : FNormal
   jumper = jump Z ⦃ _ ⦄ S +-infl ,
     jump-fixbl Z S +-infl {!   !} {!   !} {!   !}
+
+  open Jump Z ⦃ _ ⦄ S +-infl
+
+  F⁺-absorb-pre : F⁺ a + F⁺ (suc a) [ n ] ≼ F⁺ (suc a) [ suc n ]
+  F⁺-absorb-pre {(zero)} = {!   !}
+  F⁺-absorb-pre {suc zero} = {!   !}
+  F⁺-absorb-pre {2+ zero} = {!   !}
+  F⁺-absorb-pre {2+ (suc n)} = {!   !}
 ```
 
 ```agda
@@ -172,7 +180,7 @@ private variable
   S j n x = x + ⟪ Φₗ {f} νᵃ {n} b ⟫ j 0̇
 
   jumper : FNormal
-  jumper = jump Z ⦃ _ ⦄ S +-infl , {!   !}
+  jumper = jump Z ⦃ _ ⦄ S +-infl , jump-fixbl Z S +-infl {!   !} {!   !} {!   !}
 
 Φₗ {f} νᵃ (lim g) = Φ jumper
   module LimLimJump where
@@ -184,7 +192,7 @@ private variable
   S j n x = x + (⟪ Φₗ {f} νᵃ {n} (g n) ⟫ j 0̇)
 
   jumper : FNormal
-  jumper = jump Z ⦃ _ ⦄ S +-infl , {!   !}
+  jumper = jump Z ⦃ _ ⦄ S +-infl , jump-fixbl Z S +-infl {!   !} {!   !} {!   !}
 ```
 
 ```agda
@@ -237,7 +245,7 @@ SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```agda
 ω̇^ : FNormal
 ω̇^ = normal F F-pres ≈-refl ⦃ ⟪⟫-nz {a = 0} {b = 1} {νᵃ = Φ ω^} ⦄
-   , fixable F-infl≼ {!   !} ⦃ {!   !} ⦄ {!   !}
+   , fixable F-infl≼ F-pres≼ ⦃ {!   !} ⦄ {!   !}
   module SecondBaseOmega where
   F : Func
   F-pres-rd : F preserves Road
@@ -262,8 +270,11 @@ SVO = φ {ω} {0} 1 ⟨ 0 ⟩
   F-pres≼ {y = suc y} z≼ = ≼-trans (F-pres≼ {y = y} z≼) +a-infl≼
   F-pres≼ {y = lim f} z≼ = ≼l (F-pres≼ {y = f 0} z≼)
   F-pres≼ (s≼s p) = +-pres≼ (F-pres≼ p) {!   !}
-  F-pres≼ (≼l p) = {!   !}
-  F-pres≼ (l≼ x) = {!   !}
+  F-pres≼ (≼l p) = ≼l (F-pres≼ p)
+  F-pres≼ (l≼ p) = l≼ (F-pres≼ p)
+
+  F-absorb-pre : ⦃ _ : isLim (F (suc a)) ⦄ → F a + (F (suc a) [ n ]) ≼ (F (suc a) [ suc n ])
+  F-absorb-pre = {!   !}
 ```
 
 ```agda

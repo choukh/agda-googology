@@ -125,15 +125,6 @@ open FpEnum public using (fpⁿ)
 ### 跨树性质
 
 ```agda
-+l-isLim : ⦃ _ : isLim b ⦄ → isLim (a + b)
-+l-isLim {lim f} = tt
-
-a+[] : ⦃ l : isLim b ⦄ → let instance _ = +l-isLim ⦃ l ⦄ in
-  a + b [ n ] ≡ (a + b) [ n ]
-a+[] {lim f} = refl
-```
-
-```agda
 record Fixable (ν : Normal) : Type where
   constructor fixable
   open Normal ν       renaming (func to F)
@@ -146,6 +137,15 @@ record Fixable (ν : Normal) : Type where
 
   fixbl-cong≈ : a ≈ b → F a ≈ F b
   fixbl-cong≈ (p , q) = fixbl-pres≼ p , fixbl-pres≼ q
+```
+
+```agda
+  +l-isLim : ⦃ _ : isLim b ⦄ → isLim (a + b)
+  +l-isLim {lim f} = tt
+
+  a+[] : ⦃ l : isLim b ⦄ → let instance _ = +l-isLim ⦃ l ⦄ in
+    a + b [ n ] ≡ (a + b) [ n ]
+  a+[] {lim f} = refl
 ```
 
 ```agda
