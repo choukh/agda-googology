@@ -36,18 +36,23 @@ module FixableJump
 ```agda
   F⁺-infl≼ : F⁺ inflates _≼_
   F⁺-infl≼ {(zero)} = z≼
-  F⁺-infl≼ {suc x} = ≼l {n = 0} (s≼s F⁺-infl≼)
+  F⁺-infl≼ {suc x} = ≼[ 0 ] (s≼s F⁺-infl≼)
   F⁺-infl≼ {lim f} = l≼l F⁺-infl≼
 ```
 
 ```agda
-  F⁺-isLim : NonZero a → isLim (F⁺ a)
-  F⁺-isLim {suc a} _ = _
-  F⁺-isLim {lim f} _ = _
+  F⁺-isLim : ⦃ NonZero a ⦄ → isLim (F⁺ a)
+  F⁺-isLim {suc a} = _
+  F⁺-isLim {lim f} = _
 ```
 
 ```agda
-  module _ (Z≼ : ∀ {a} → Z ≼ F⁺ a) (S-pres≼ : ∀ {a b c d n} → a ≼ b → c ≼ d → S a n c ≼ S b n d) where
+  module _
+    (Z≼ : ∀ {a} → Z ≼ F⁺ a)
+    (S-pres≼ : ∀ {a b c d n} → a ≼ b → c ≼ d → S a n c ≼ S b n d)
+    (S-⋟+ : ∀ {a b n} → a + b ≼ S a n b)
+    where
+
     F⁺-pres≼ : F⁺ preserves _≼_
     F⁺-pres≼ z≼ = Z≼
     F⁺-pres≼ (≼l p) = ≼l (F⁺-pres≼ p)
@@ -59,14 +64,17 @@ module FixableJump
 ```
 
 ```agda
-    F⁺-absorb : a ≺ b → F⁺ a + F⁺ b ≈ F⁺ b
-    F⁺-absorb (s≼s p) = {!   !}
-    F⁺-absorb (≼l p) = {!   !}
+    F⁺-absorb-pre : F⁺ a + F⁺ (suc a) [ n ] ≼ F⁺ (suc a) [ suc n ]
+    F⁺-absorb-pre {a} {n} =                 begin
+      F⁺ a + F⁺ (suc a) [ n ]               ≤⟨ +a-pres≼ ≼-zero ⟩
+      suc (F⁺ a) + F⁺ (suc a) [ n ]         ≤⟨ S-⋟+ ⟩
+      S (suc (F⁺ a)) n (F⁺ (suc a) [ n ])   ≈⟨ ≈-refl ⟩
+      F⁺ (suc a) [ suc n ]                  ∎ where open CrossTreeReasoning
 ```
 
 ```agda
     jump-fixbl : Fixable ι
-    jump-fixbl = fixable F⁺-infl≼ F⁺-pres≼ F⁺-isLim {!   !}
+    jump-fixbl = fixable F⁺-infl≼ F⁺-pres≼ ⦃ F⁺-isLim ⦄ F⁺-absorb-pre
 
 open FixableJump using (jump-fixbl)
 ```
@@ -147,7 +155,8 @@ private variable
   S j n x = x + ⟪ Φₛ νᵃ (g n) ⟫ j 0̇
 
   jumper : FNormal
-  jumper = jump Z ⦃ _ ⦄ S +-infl , {!   !}
+  jumper = jump Z ⦃ _ ⦄ S +-infl ,
+    jump-fixbl Z S +-infl {!   !} {!   !} {!   !}
 ```
 
 ```agda
@@ -228,7 +237,7 @@ SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```agda
 ω̇^ : FNormal
 ω̇^ = normal F F-pres ≈-refl ⦃ ⟪⟫-nz {a = 0} {b = 1} {νᵃ = Φ ω^} ⦄
-   , fixable F-infl≼ {!   !} {!   !} {!   !}
+   , fixable F-infl≼ {!   !} ⦃ {!   !} ⦄ {!   !}
   module SecondBaseOmega where
   F : Func
   F-pres-rd : F preserves Road

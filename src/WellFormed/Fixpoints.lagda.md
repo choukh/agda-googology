@@ -125,17 +125,6 @@ open FpEnum public using (fpⁿ)
 ### 跨树性质
 
 ```agda
-≼a : ⦃ _ : isLim a ⦄ → b ≼ a [ n ] → b ≼ a
-≼a {lim f} = ≼l
-
-a≼ : ⦃ _ : isLim a ⦄ → (∀ {n} → a [ n ] ≼ b) → a ≼ b
-a≼ {lim f} = l≼
-
-[]≼a : ⦃ _ : isLim a ⦄ → a [ n ] ≼ a
-[]≼a {lim f} = f≼l
-```
-
-```agda
 +l-isLim : ⦃ _ : isLim b ⦄ → isLim (a + b)
 +l-isLim {lim f} = tt
 
@@ -276,16 +265,16 @@ record Fixable (ν : Normal) : Type where
 ```agda
   F′-infl≼ : F′ inflates _≼_
   F′-infl≼ {(zero)} = z≼
-  F′-infl≼ {suc _}  = ≼l {n = 0} (s≼s F′-infl≼)
+  F′-infl≼ {suc _}  = ≼[ 0 ] (s≼s F′-infl≼)
   F′-infl≼ {lim f}  = l≼l F′-infl≼
 ```
 
 ```agda
   F′-pres≼ : F′ preserves _≼_
   F′-pres≼ {y = zero}  z≼ = ≼-refl
-  F′-pres≼ {y = suc y} z≼ = ≼l {n = 0} (≼-suc (F′-pres≼ z≼))
-  F′-pres≼ {y = lim f} z≼ = ≼l {n = 0} (F′-pres≼ z≼)
-  F′-pres≼ (≼l {n} p)     = ≼l {n = n} (F′-pres≼ p)
+  F′-pres≼ {y = suc y} z≼ = ≼[ 0 ] (≼-suc (F′-pres≼ z≼))
+  F′-pres≼ {y = lim f} z≼ = ≼[ 0 ] (F′-pres≼ z≼)
+  F′-pres≼ (≼l {n} p)     = ≼[ n ] (F′-pres≼ p)
   F′-pres≼ (l≼ p)         = l≼ (F′-pres≼ p)
   F′-pres≼ (s≼s {a} {b} p) = l≼l q where
     q : F′ (suc a) [ n ] ≼ F′ (suc b) [ n ]
@@ -306,8 +295,7 @@ record Fixable (ν : Normal) : Type where
 ```
 
 ```agda
-  F′-absorb-pre : let instance _ = F′-isLim in
-    F′ a + F′ (suc a) [ n ] ≼ F′ (suc a) [ suc n ]
+  F′-absorb-pre : F′ a + F′ (suc a) [ n ] ≼ F′ (suc a) [ suc n ]
   F′-absorb-pre {a} {n} =                 begin
     F′ a + F′ (suc a) [ n ]               ≤⟨ +a-pres≼ ≼-zero ⟩
     suc (F′ a) + F′ (suc a) [ n ]         ≤⟨ a+-pres≼ fixbl-infl≼ ⟩

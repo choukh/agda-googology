@@ -55,6 +55,26 @@ data _≼_ : Rel where
   l≼  : {w : wf f} → (∀ {n} → f n ≼ a) → lim f ⦃ w ⦄ ≼ a
 ```
 
+如果我们有 $a ≼ f(n)$ 的证明 $r$, 我们把 $a ≼ \lim f$ 的证明记作 $\text{≼}[n](r)$.
+
+```agda
+≼[_] : (n : ℕ) {w : wf f} → a ≼ f n → a ≼ lim f ⦃ w ⦄
+≼[_] _ = ≼l
+```
+
+如果已知极限序数 $a$, 我们有 $\text{≼l}$ 与 $\text{l≼}$ 的另一种表述:
+
+- $\text{≼a}$: 如果 $b ≼ a[n]$, 那么 $b ≼ a$.
+- $\text{a≼}$: 如果 $∀n, a[n] ≼ b$, 那么 $a ≼ b$.
+
+```agda
+≼a : ⦃ _ : isLim a ⦄ → b ≼ a [ n ] → b ≼ a
+≼a {lim f} = ≼l
+
+a≼ : ⦃ _ : isLim a ⦄ → (∀ {n} → a [ n ] ≼ b) → a ≼ b
+a≼ {lim f} = l≼
+```
+
 **事实 2-3-1** 后继运算单射 $≼$.  
 **证明** 由归纳定义反演即得. ∎
 
@@ -76,7 +96,7 @@ l≼l p = l≼ (≼l p)
 
 ```agda
 l≼ls : {wff : wf f} {wfg : wf g} → (∀ {n} → f n ≼ g (suc n)) → lim f ⦃ wff ⦄ ≼ lim g ⦃ wfg ⦄
-l≼ls p = l≼ (λ {n} → (≼l {n = suc n} p))
+l≼ls p = l≼ λ {n} → ≼[ suc n ] p
 ```
 
 **定理 2-3-4** $≼$ 是自反关系.  
@@ -95,6 +115,9 @@ l≼ls p = l≼ (λ {n} → (≼l {n = suc n} p))
 ```agda
 f≼l : {w : wf f} → f n ≼ lim f ⦃ w ⦄
 f≼l = ≼l ≼-refl
+
+[]≼a : ⦃ _ : isLim a ⦄ → a [ n ] ≼ a
+[]≼a {lim f} = f≼l
 ```
 
 **定理 2-3-6** $≼$ 是传递关系.  
