@@ -175,14 +175,8 @@ private variable
 ```
 
 ```agda
+Φ-infl≼ : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) inflates _≼_
 Φₛ-infl≼ : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) inflates _≼_
-Φₛ-infl≼ {x = zero} = z≼
-Φₛ-infl≼ {b = zero} {x = suc x} = {!   !}
-Φₛ-infl≼ {b = suc b} {x = suc x} = {!   !}
-Φₛ-infl≼ {b = lim f} {x = suc x} = {!   !}
-Φₛ-infl≼ {b = zero} {x = lim f} = {!   !}
-Φₛ-infl≼ {b = suc b} {x = lim f} = {!   !}
-Φₛ-infl≼ {b = lim f} {x = lim g} = {!   !}
 ```
 
 ```agda
@@ -250,6 +244,24 @@ private variable
 ```
 
 ```agda
+Φ-infl≼ = {!   !}
+```
+
+```agda
+Φₛ-infl≼ {(zero)} {νᵃ} {(zero)}           = Fixable.infl≼ (fixbl νᵃ)
+Φₛ-infl≼ {(zero)} {νᵃ} {suc b}            = Fixable.F′-infl≼ (fixbl (Φₛ νᵃ b))
+Φₛ-infl≼ {(zero)} {νᵃ} {lim f}  {(zero)}  = z≼
+Φₛ-infl≼ {(zero)} {νᵃ} {lim f}  {suc x}   = ≼[ 0 ] $ s≼s $ Φₛ-infl≼ {zero} {νᵃ} {lim f}
+Φₛ-infl≼ {(zero)} {νᵃ} {lim f}  {lim g}   = l≼l $ Φₛ-infl≼ {zero} {νᵃ} {lim f}
+Φₛ-infl≼ {suc a} {νᵃ} {(zero)}  {x}       = {! Φ-infl≼ {ν = νᵃ x 0̇} {a = 0} {0}  !}
+Φₛ-infl≼ {suc a} {νᵃ} {suc b}             = Φ-infl≼
+Φₛ-infl≼ {suc a} {νᵃ} {lim g}             = Φ-infl≼
+Φₛ-infl≼ {lim f} {νᵃ} {(zero)}            = {!   !}
+Φₛ-infl≼ {lim f} {νᵃ} {suc b}             = Φ-infl≼
+Φₛ-infl≼ {lim f} {νᵃ} {lim g}             = Φ-infl≼
+```
+
+```agda
 φ : FNormal →^ a
 φ = Φ ω^
 ```
@@ -263,3 +275,4 @@ private variable
 SVO : Ord
 SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
+ 
