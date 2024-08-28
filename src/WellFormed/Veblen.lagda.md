@@ -158,7 +158,7 @@ instance
 
 ```agda
 private variable
-  ν : FNormal
+  ν ν₁ ν₂ : FNormal
   νᵃ : FNormal →^ a
 ```
 
@@ -169,53 +169,50 @@ private variable
 ```
 
 ```agda
-Φₛ-pres₀-rd : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves Road
-Φₛ-pres₀ : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves _<_
-Φₛ-pres₀ = map Φₛ-pres₀-rd
+Φₛ-pres-rd : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves Road
+Φₛ-pres : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves _<_
+Φₛ-pres = map Φₛ-pres-rd
 ```
 
 ```agda
-Φ-infl≼ : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) inflates _≼_
-Φₛ-infl≼ : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) inflates _≼_
-Φₗ-infl≼ : ⦃ _ : wf f ⦄ {νᶠ : ∀ {n} → FNormal →^ f n} →
+Φ-infl≼-x0 : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) inflates _≼_
+Φₛ-infl≼-x0 : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) inflates _≼_
+Φₛ-infl≼-bx : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) inflates _≼_
+Φₗ-infl≼-x0 : ⦃ _ : wf f ⦄ {νᶠ : ∀ {n} → FNormal →^ f n} →
            (λ x → Φₗ {f} νᶠ {n} x 0̇ ⟨ 0 ⟩) inflates _≼_
-Φₛ-infl≼₂ : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) inflates _≼_
+```
+
+```agda
+Φ-pres≼-x0 : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) preserves _≼_
+Φₛ-pres≼-x0 : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves _≼_
+Φₛ-pres≼-bx : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) preserves _≼_
+```
+
+```agda
+Φₛ-pres≼-xb : (λ x → ⟪ Φₛ {a} νᵃ x ⟫ b 0̇) preserves _≼_
 ```
 
 ```agda
 Φₛ {a} νᵃ zero = νᵃ
 Φₛ {a} νᵃ (suc b) = Φ (fp (Φₛ νᵃ b 0̇))
-Φₛ {a} νᵃ (lim g) = Φ (jump by init step ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!   !} {!   !} {!   !})
-  module SucJump where
-  init : Ord
-  init = lim (λ n → Φₛ νᵃ (g n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres₀ it ⦄
-
-  step : ℕ → Func
-  step n x = ⟪ Φₛ νᵃ (g n) ⟫ x 0̇
+Φₛ {a} νᵃ (lim g) = Φ $ jump by
+  (lim (λ n → Φₛ νᵃ (g n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres it ⦄)
+  (λ n x → ⟪ Φₛ νᵃ (g n) ⟫ x 0̇)
+  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ Φₛ-infl≼-bx Φₛ-pres≼-bx (Φₛ-pres≼-xb (≤→≼ (<→≤ it)))
 ```
 
 ```agda
 Φₗ {f} νᶠ zero = νᶠ
-```
 
-```agda
-Φₗ {f} νᶠ (suc b) = Φ (jump by init step ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {! νᶠ  !} {!   !} {!   !})
-  module LimSucJump where
-  init : Ord
-  init = lim (Itₙ (λ n x → x + ⟪ Φₗ {f} νᶠ {n} b ⟫ 1 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄
+Φₗ {f} νᶠ (suc b) = Φ $ jump by
+  (lim (Itₙ (λ n x → x + ⟪ Φₗ {f} νᶠ {n} b ⟫ 1 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄)
+  (λ n x → ⟪ Φₗ {f} νᶠ {n} b ⟫ x 0̇)
+  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!    !} {!   !} {!   !}
 
-  step : ℕ → Func
-  step n x = ⟪ Φₗ {f} νᶠ {n} b ⟫ x 0̇
-```
-
-```agda
-Φₗ {f} νᶠ (lim g) = Φ (jump by init step ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!   !} {!   !} {!   !})
-  module LimLimJump where
-  init : Ord
-  init = lim (Itₙ (λ n x → x + ⟪ Φₗ {f} νᶠ {n} (g n) ⟫ 0 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄
-
-  step : ℕ → Func
-  step n x = ⟪ Φₗ {f} νᶠ {n} (g n) ⟫ x 0̇
+Φₗ {f} νᶠ (lim g) = Φ $ jump by
+  (lim (Itₙ (λ n x → x + ⟪ Φₗ {f} νᶠ {n} (g n) ⟫ 0 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄)
+  (λ n x → ⟪ Φₗ {f} νᶠ {n} (g n) ⟫ x 0̇)
+  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!   !} {!   !} {!   !}
 ```
 
 ```agda
@@ -232,57 +229,90 @@ private variable
 ```
 
 ```agda
-Φₛ-pres₀-rd {νᵃ} {x} zero =             begin-strict
+Φₛ-pres-rd {νᵃ} {x} zero =              begin-strict
   Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ set $ Normal.pres (fst $ Φₛ νᵃ x 0̇) (nz-elim ⦃ ⟪⟫-nz {b = 0} ⦄) ⟩
   Φₛ νᵃ x 0̇ ⟨ Φₛ νᵃ x 0̇ ⟨ 0 ⟩ ⟩         <⟨ f<l-rd {n = 2} ⟩
   fp (Φₛ νᵃ x 0̇) ⟨ 0 ⟩                  ≈˘⟨ Φ-ż ⟩
   Φₛ νᵃ (suc x) 0̇ ⟨ 0 ⟩                 ∎ where open RoadReasoning
-Φₛ-pres₀-rd {νᵃ} {x} (suc {b} r) =      begin-strict
-  Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ Φₛ-pres₀-rd r ⟩
+Φₛ-pres-rd {νᵃ} {x} (suc {b} r) =       begin-strict
+  Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ Φₛ-pres-rd r ⟩
   Φₛ νᵃ b 0̇ ⟨ 0 ⟩                       <⟨ set $ Normal.pres (fst $ Φₛ νᵃ b 0̇) (nz-elim ⦃ ⟪⟫-nz {b = 0} ⦄) ⟩
   Φₛ νᵃ b 0̇ ⟨ Φₛ νᵃ b 0̇ ⟨ 0 ⟩ ⟩         <⟨ f<l-rd {n = 2} ⟩
   fp (Φₛ νᵃ b 0̇) ⟨ 0 ⟩                  ≈˘⟨ Φ-ż ⟩
   Φₛ νᵃ (suc b) 0̇ ⟨ 0 ⟩                 ∎ where open RoadReasoning
-Φₛ-pres₀-rd {νᵃ} {x} (lim {f} {n} r) =  begin-strict
-  Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ Φₛ-pres₀-rd r ⟩
+Φₛ-pres-rd {νᵃ} {x} (lim {f} {n} r) =   begin-strict
+  Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ Φₛ-pres-rd r ⟩
   Φₛ νᵃ (f n) 0̇ ⟨ 0 ⟩                   <⟨ f<l-rd ⟩
   (jump _) ⟨ 0 ⟩                        ≈˘⟨ Φ-ż ⟩
-  Φ (jump _) 0̇ ⟨ 0 ⟩                    ∎ where open RoadReasoning; open SucJump
+  Φ (jump _) 0̇ ⟨ 0 ⟩                    ∎ where open RoadReasoning
 ```
 
 ```agda
-Φ-infl≼ {ν} {(zero)} = Fixable.infl≼ (fixbl ν)
-Φ-infl≼ {ν} {suc a} = Φₛ-infl≼
-Φ-infl≼ {ν} {lim f} = Φₗ-infl≼
+Φ-infl≼-x0{ν} {(zero)} = Fixable.infl≼ (fixbl ν)
+Φ-infl≼-x0{ν} {suc a} = Φₛ-infl≼-x0
+Φ-infl≼-x0{ν} {lim f} = Φₗ-infl≼-x0
 ```
 
 ```agda
-Φₛ-infl≼ {νᵃ} {(zero)} = z≼
-Φₛ-infl≼ {νᵃ} {suc x} = subst (suc x ≼_) (sym Φ-ż) $ ≼[ 2 ] $ begin
-  suc x                                   ≤⟨ s≼s Φₛ-infl≼ ⟩
-  suc (Φₛ νᵃ x 0̇ ⟨ 0 ⟩)                   ≤⟨ {!   !} ⟩
-  Φₛ νᵃ x 0̇ ⟨ Φₛ νᵃ x 0̇ ⟨ 0 ⟩ ⟩           ∎ where open CrossTreeReasoning
-Φₛ-infl≼ {νᵃ} {lim f} = subst (lim f ≼_) (sym Φ-ż) (l≼l Φₛ-infl≼)
+Φₛ-infl≼-x0 {νᵃ} {(zero)} = z≼
+Φₛ-infl≼-x0 {νᵃ} {suc x} = subst (suc x ≼_) (sym Φ-ż) $ ≼[ 2 ] $ begin
+  suc x                                   ≤⟨ s≼s Φₛ-infl≼-x0 ⟩
+  suc (Φₛ νᵃ x 0̇ ⟨ 0 ⟩)                   ≤⟨ <→≺ (pres (nz-elim ⦃ zero-nz ⦄)) ⟩
+  Φₛ νᵃ x 0̇ ⟨ Φₛ νᵃ x 0̇ ⟨ 0 ⟩ ⟩           ∎ where open CrossTreeReasoning; open Normal (nml $ Φₛ νᵃ x 0̇)
+Φₛ-infl≼-x0 {νᵃ} {lim f} = subst (lim f ≼_) (sym Φ-ż) (l≼l Φₛ-infl≼-x0)
 ```
 
 ```agda
-Φₛ-infl≼₂ {(zero)} {νᵃ} {(zero)}           = Fixable.infl≼ (fixbl νᵃ)
-Φₛ-infl≼₂ {(zero)} {νᵃ} {suc b}            = Fixable.F′-infl≼ (fixbl (Φₛ νᵃ b))
-Φₛ-infl≼₂ {(zero)} {νᵃ} {lim f}  {(zero)}  = z≼
-Φₛ-infl≼₂ {(zero)} {νᵃ} {lim f}  {suc x}   = ≼[ 0 ] $ s≼s $ Φₛ-infl≼₂ {zero} {νᵃ} {lim f}
-Φₛ-infl≼₂ {(zero)} {νᵃ} {lim f}  {lim g}   = l≼l $ Φₛ-infl≼₂ {zero} {νᵃ} {lim f}
-Φₛ-infl≼₂ {suc a} {νᵃ} {(zero)}  {x}       = {!   !}
-Φₛ-infl≼₂ {suc a} {νᵃ} {suc b}             = Φ-infl≼
-Φₛ-infl≼₂ {suc a} {νᵃ} {lim g}             = Φ-infl≼
-Φₛ-infl≼₂ {lim f} {νᵃ} {(zero)}            = {!   !}
-Φₛ-infl≼₂ {lim f} {νᵃ} {suc b}             = Φ-infl≼
-Φₛ-infl≼₂ {lim f} {νᵃ} {lim g}             = Φ-infl≼
+Φₛ-infl≼-bx {(zero)}  {νᵃ} {(zero)} = Fixable.infl≼ (fixbl νᵃ)
+Φₛ-infl≼-bx {(zero)}  {νᵃ} {suc b}  = Φ-infl≼-x0
+Φₛ-infl≼-bx {(zero)}  {νᵃ} {lim f}  = Φ-infl≼-x0
+Φₛ-infl≼-bx {suc a}   {νᵃ} {(zero)} = {!   !}
+Φₛ-infl≼-bx {suc a}   {νᵃ} {suc b}  = Φ-infl≼-x0
+Φₛ-infl≼-bx {suc a}   {νᵃ} {lim g}  = Φ-infl≼-x0
+Φₛ-infl≼-bx {lim f}   {νᵃ} {(zero)} = {!   !}
+Φₛ-infl≼-bx {lim f}   {νᵃ} {suc b}  = Φ-infl≼-x0
+Φₛ-infl≼-bx {lim f}   {νᵃ} {lim g}  = Φ-infl≼-x0
 ```
 
 ```agda
-Φₗ-infl≼ {νᶠ} {(zero)} = z≼
-Φₗ-infl≼ {νᶠ} {suc x} = subst (suc x ≼_) (sym Φ-ż) $ ≼[ 1 ] {!   !}
-Φₗ-infl≼ {νᶠ} {lim f} = subst (lim f ≼_) (sym Φ-ż) (l≼l {!   !})
+Φₗ-infl≼-x0 {νᶠ} {(zero)} = z≼
+Φₗ-infl≼-x0 {νᶠ} {suc x} = subst (suc x ≼_) (sym Φ-ż) $ ≼[ 1 ] {!   !}
+Φₗ-infl≼-x0 {νᶠ} {lim f} = subst (lim f ≼_) (sym Φ-ż) (l≼l {!   !})
+```
+
+```agda
+Φ-pres≼-x0 {ν} {(zero)} = Fixable.pres≼ (fixbl ν)
+Φ-pres≼-x0 {ν} {suc a} = Φₛ-pres≼-x0
+Φ-pres≼-x0 {ν} {lim f} = {!   !}
+```
+
+```agda
+Φₛ-pres≼-x0 {y = zero} z≼ = ≼-refl
+Φₛ-pres≼-x0 {y = suc y} z≼ = subst (_ ≼_) (sym Φ-ż) $ ≼[ 1 ] $ Φₛ-pres≼-x0 z≼
+Φₛ-pres≼-x0 {y = lim f} z≼ = subst (_ ≼_) (sym Φ-ż) $ ≼[ 0 ] $ Φₛ-pres≼-x0 z≼
+Φₛ-pres≼-x0 (s≼s p) = subst₂ _≼_ (sym Φ-ż) (sym Φ-ż) $ l≼l $
+  λ { {(zero)} → ≼-refl ; {suc n} → {!   !} }
+Φₛ-pres≼-x0 (≼l p) = {!   !}
+Φₛ-pres≼-x0 (l≼ x) = {!   !}
+```
+
+```agda
+Φₛ-pres≼-bx {(zero)} {νᵃ} {b} p = Fixable.pres≼ (fixbl (Φₛ νᵃ b)) p
+Φₛ-pres≼-bx {suc a} {νᵃ} {(zero)} p = {!   !}
+Φₛ-pres≼-bx {suc a} {νᵃ} {suc b} = Φ-pres≼-x0
+Φₛ-pres≼-bx {suc a} {νᵃ} {lim f} = Φ-pres≼-x0
+Φₛ-pres≼-bx {lim f} = {!   !}
+```
+
+```agda
+Φₛ-pres≼-xb {b = zero} p = Φₛ-pres≼-x0 p
+Φₛ-pres≼-xb {b = suc b} {y = zero} z≼ = {!   !}
+Φₛ-pres≼-xb {b = suc b} {y = suc y} z≼ = {!   !}
+Φₛ-pres≼-xb {b = suc b} {y = lim f} z≼ = {!   !}
+Φₛ-pres≼-xb {b = suc b} (s≼s p) = {!   !}
+Φₛ-pres≼-xb {b = suc b} (≼l p) = {!   !}
+Φₛ-pres≼-xb {b = suc b} (l≼ x) = {!   !}
+Φₛ-pres≼-xb {b = lim f} p = {!   !}
 ```
 
 ```agda
@@ -299,4 +329,3 @@ private variable
 SVO : Ord
 SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
- 
