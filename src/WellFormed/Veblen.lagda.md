@@ -176,13 +176,16 @@ private variable
 
 ```agda
 Φ-infl≼ : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) inflates _≼_
-Φₛ-infl≼ : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) inflates _≼_
+Φₛ-infl≼ : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) inflates _≼_
+Φₗ-infl≼ : ⦃ _ : wf f ⦄ {νᶠ : ∀ {n} → FNormal →^ f n} →
+           (λ x → Φₗ {f} νᶠ {n} x 0̇ ⟨ 0 ⟩) inflates _≼_
+Φₛ-infl≼₂ : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) inflates _≼_
 ```
 
 ```agda
 Φₛ {a} νᵃ zero = νᵃ
 Φₛ {a} νᵃ (suc b) = Φ (fp (Φₛ νᵃ b 0̇))
-Φₛ {a} νᵃ (lim g) = Φ (jump by init step ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ Φₛ-infl≼ {!   !} {!   !})
+Φₛ {a} νᵃ (lim g) = Φ (jump by init step ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!   !} {!   !} {!   !})
   module SucJump where
   init : Ord
   init = lim (λ n → Φₛ νᵃ (g n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres₀ it ⦄
@@ -192,27 +195,27 @@ private variable
 ```
 
 ```agda
-Φₗ {f} νᵃ zero = νᵃ
+Φₗ {f} νᶠ zero = νᶠ
 ```
 
 ```agda
-Φₗ {f} νᵃ (suc b) = Φ (jump by init step ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!   !} {!   !} {!   !})
+Φₗ {f} νᶠ (suc b) = Φ (jump by init step ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {! νᶠ  !} {!   !} {!   !})
   module LimSucJump where
   init : Ord
-  init = lim (Itₙ (λ n x → x + ⟪ Φₗ {f} νᵃ {n} b ⟫ 1 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄
+  init = lim (Itₙ (λ n x → x + ⟪ Φₗ {f} νᶠ {n} b ⟫ 1 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄
 
   step : ℕ → Func
-  step n x = ⟪ Φₗ {f} νᵃ {n} b ⟫ x 0̇
+  step n x = ⟪ Φₗ {f} νᶠ {n} b ⟫ x 0̇
 ```
 
 ```agda
-Φₗ {f} νᵃ (lim g) = Φ (jump by init step ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!   !} {!   !} {!   !})
+Φₗ {f} νᶠ (lim g) = Φ (jump by init step ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!   !} {!   !} {!   !})
   module LimLimJump where
   init : Ord
-  init = lim (Itₙ (λ n x → x + ⟪ Φₗ {f} νᵃ {n} (g n) ⟫ 0 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄
+  init = lim (Itₙ (λ n x → x + ⟪ Φₗ {f} νᶠ {n} (g n) ⟫ 0 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄
 
   step : ℕ → Func
-  step n x = ⟪ Φₗ {f} νᵃ {n} (g n) ⟫ x 0̇
+  step n x = ⟪ Φₗ {f} νᶠ {n} (g n) ⟫ x 0̇
 ```
 
 ```agda
@@ -240,25 +243,46 @@ private variable
   Φₛ νᵃ b 0̇ ⟨ Φₛ νᵃ b 0̇ ⟨ 0 ⟩ ⟩         <⟨ f<l-rd {n = 2} ⟩
   fp (Φₛ νᵃ b 0̇) ⟨ 0 ⟩                  ≈˘⟨ Φ-ż ⟩
   Φₛ νᵃ (suc b) 0̇ ⟨ 0 ⟩                 ∎ where open RoadReasoning
-Φₛ-pres₀-rd {νᵃ} {x} (lim {f} {n} r) =  {!   !}
+Φₛ-pres₀-rd {νᵃ} {x} (lim {f} {n} r) =  begin-strict
+  Φₛ νᵃ x 0̇ ⟨ 0 ⟩                       <⟨ Φₛ-pres₀-rd r ⟩
+  Φₛ νᵃ (f n) 0̇ ⟨ 0 ⟩                   <⟨ f<l-rd ⟩
+  (jump _) ⟨ 0 ⟩                        ≈˘⟨ Φ-ż ⟩
+  Φ (jump _) 0̇ ⟨ 0 ⟩                    ∎ where open RoadReasoning; open SucJump
 ```
 
 ```agda
-Φ-infl≼ = {!   !}
+Φ-infl≼ {ν} {(zero)} = Fixable.infl≼ (fixbl ν)
+Φ-infl≼ {ν} {suc a} = Φₛ-infl≼
+Φ-infl≼ {ν} {lim f} = Φₗ-infl≼
 ```
 
 ```agda
-Φₛ-infl≼ {(zero)} {νᵃ} {(zero)}           = Fixable.infl≼ (fixbl νᵃ)
-Φₛ-infl≼ {(zero)} {νᵃ} {suc b}            = Fixable.F′-infl≼ (fixbl (Φₛ νᵃ b))
-Φₛ-infl≼ {(zero)} {νᵃ} {lim f}  {(zero)}  = z≼
-Φₛ-infl≼ {(zero)} {νᵃ} {lim f}  {suc x}   = ≼[ 0 ] $ s≼s $ Φₛ-infl≼ {zero} {νᵃ} {lim f}
-Φₛ-infl≼ {(zero)} {νᵃ} {lim f}  {lim g}   = l≼l $ Φₛ-infl≼ {zero} {νᵃ} {lim f}
-Φₛ-infl≼ {suc a} {νᵃ} {(zero)}  {x}       = {! Φ-infl≼ {ν = νᵃ x 0̇} {a = 0} {0}  !}
-Φₛ-infl≼ {suc a} {νᵃ} {suc b}             = Φ-infl≼
-Φₛ-infl≼ {suc a} {νᵃ} {lim g}             = Φ-infl≼
-Φₛ-infl≼ {lim f} {νᵃ} {(zero)}            = {!   !}
-Φₛ-infl≼ {lim f} {νᵃ} {suc b}             = Φ-infl≼
-Φₛ-infl≼ {lim f} {νᵃ} {lim g}             = Φ-infl≼
+Φₛ-infl≼ {νᵃ} {(zero)} = z≼
+Φₛ-infl≼ {νᵃ} {suc x} = subst (suc x ≼_) (sym Φ-ż) $ ≼[ 2 ] $ begin
+  suc x                                   ≤⟨ s≼s Φₛ-infl≼ ⟩
+  suc (Φₛ νᵃ x 0̇ ⟨ 0 ⟩)                   ≤⟨ {!   !} ⟩
+  Φₛ νᵃ x 0̇ ⟨ Φₛ νᵃ x 0̇ ⟨ 0 ⟩ ⟩           ∎ where open CrossTreeReasoning
+Φₛ-infl≼ {νᵃ} {lim f} = subst (lim f ≼_) (sym Φ-ż) (l≼l Φₛ-infl≼)
+```
+
+```agda
+Φₛ-infl≼₂ {(zero)} {νᵃ} {(zero)}           = Fixable.infl≼ (fixbl νᵃ)
+Φₛ-infl≼₂ {(zero)} {νᵃ} {suc b}            = Fixable.F′-infl≼ (fixbl (Φₛ νᵃ b))
+Φₛ-infl≼₂ {(zero)} {νᵃ} {lim f}  {(zero)}  = z≼
+Φₛ-infl≼₂ {(zero)} {νᵃ} {lim f}  {suc x}   = ≼[ 0 ] $ s≼s $ Φₛ-infl≼₂ {zero} {νᵃ} {lim f}
+Φₛ-infl≼₂ {(zero)} {νᵃ} {lim f}  {lim g}   = l≼l $ Φₛ-infl≼₂ {zero} {νᵃ} {lim f}
+Φₛ-infl≼₂ {suc a} {νᵃ} {(zero)}  {x}       = {!   !}
+Φₛ-infl≼₂ {suc a} {νᵃ} {suc b}             = Φ-infl≼
+Φₛ-infl≼₂ {suc a} {νᵃ} {lim g}             = Φ-infl≼
+Φₛ-infl≼₂ {lim f} {νᵃ} {(zero)}            = {!   !}
+Φₛ-infl≼₂ {lim f} {νᵃ} {suc b}             = Φ-infl≼
+Φₛ-infl≼₂ {lim f} {νᵃ} {lim g}             = Φ-infl≼
+```
+
+```agda
+Φₗ-infl≼ {νᶠ} {(zero)} = z≼
+Φₗ-infl≼ {νᶠ} {suc x} = subst (suc x ≼_) (sym Φ-ż) $ ≼[ 1 ] {!   !}
+Φₗ-infl≼ {νᶠ} {lim f} = subst (lim f ≼_) (sym Φ-ż) (l≼l {!   !})
 ```
 
 ```agda
