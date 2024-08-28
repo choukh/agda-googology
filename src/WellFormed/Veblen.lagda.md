@@ -25,6 +25,16 @@ open import Agda.Builtin.Equality.Rewrite public
 ```
 
 ```agda
+module _ {ν : Normal} where
+  open Normal ν renaming (func to F)
+  open Normal (fpⁿ ν) renaming (func to F′)
+  test : F a ≼ F′ a
+  test {(zero)} = ≼[ 1 ] ≼-refl
+  test {suc a} = ≼[ 1 ] {!   !}
+  test {lim f} = {!   !}
+```
+
+```agda
 record Jump : Type where
   constructor by
   field
@@ -175,15 +185,15 @@ private variable
 ```
 
 ```agda
-Φ-infl≼-x0 : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) inflates _≼_
+Φ-infl≼-x0  : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) inflates _≼_
 Φₛ-infl≼-x0 : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) inflates _≼_
 Φₛ-infl≼-bx : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) inflates _≼_
 Φₗ-infl≼-x0 : ⦃ _ : wf f ⦄ {νᶠ : ∀ {n} → FNormal →^ f n} →
-           (λ x → Φₗ {f} νᶠ {n} x 0̇ ⟨ 0 ⟩) inflates _≼_
+              (λ x → Φₗ {f} νᶠ {n} x 0̇ ⟨ 0 ⟩) inflates _≼_
 ```
 
 ```agda
-Φ-pres≼-x0 : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) preserves _≼_
+Φ-pres≼-x0  : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) preserves _≼_
 Φₛ-pres≼-x0 : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves _≼_
 Φₛ-pres≼-bx : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) preserves _≼_
 ```
@@ -256,9 +266,9 @@ private variable
 ```agda
 Φₛ-infl≼-x0 {νᵃ} {(zero)} = z≼
 Φₛ-infl≼-x0 {νᵃ} {suc x} = subst (suc x ≼_) (sym Φ-ż) $ ≼[ 2 ] $ begin
-  suc x                                   ≤⟨ s≼s Φₛ-infl≼-x0 ⟩
-  suc (Φₛ νᵃ x 0̇ ⟨ 0 ⟩)                   ≤⟨ <→≺ (pres (nz-elim ⦃ zero-nz ⦄)) ⟩
-  Φₛ νᵃ x 0̇ ⟨ Φₛ νᵃ x 0̇ ⟨ 0 ⟩ ⟩           ∎ where open CrossTreeReasoning; open Normal (nml $ Φₛ νᵃ x 0̇)
+  suc x                                 ≤⟨ s≼s Φₛ-infl≼-x0 ⟩
+  suc (Φₛ νᵃ x 0̇ ⟨ 0 ⟩)                 ≤⟨ <→≺ (pres (nz-elim ⦃ zero-nz ⦄)) ⟩
+  Φₛ νᵃ x 0̇ ⟨ Φₛ νᵃ x 0̇ ⟨ 0 ⟩ ⟩         ∎ where open CrossTreeReasoning; open Normal (nml $ Φₛ νᵃ x 0̇)
 Φₛ-infl≼-x0 {νᵃ} {lim f} = subst (lim f ≼_) (sym Φ-ż) (l≼l Φₛ-infl≼-x0)
 ```
 
@@ -305,14 +315,17 @@ private variable
 ```
 
 ```agda
-Φₛ-pres≼-xb {b = zero} p = Φₛ-pres≼-x0 p
-Φₛ-pres≼-xb {b = suc b} {y = zero} z≼ = {!   !}
-Φₛ-pres≼-xb {b = suc b} {y = suc y} z≼ = {!   !}
-Φₛ-pres≼-xb {b = suc b} {y = lim f} z≼ = {!   !}
-Φₛ-pres≼-xb {b = suc b} (s≼s p) = {!   !}
-Φₛ-pres≼-xb {b = suc b} (≼l p) = {!   !}
-Φₛ-pres≼-xb {b = suc b} (l≼ x) = {!   !}
-Φₛ-pres≼-xb {b = lim f} p = {!   !}
+Φₛ-pres≼-xb {(zero)} {y = zero} z≼ = ≼-refl
+Φₛ-pres≼-xb {(zero)} {y = suc y} z≼ = {! ≼[ 0 ]  !}
+Φₛ-pres≼-xb {(zero)} {y = lim f} z≼ = {!   !}
+Φₛ-pres≼-xb {(zero)} (s≼s p) = {!   !}
+Φₛ-pres≼-xb {(zero)} (≼l p) = {!   !}
+Φₛ-pres≼-xb {(zero)} (l≼ x) = {!   !}
+Φₛ-pres≼-xb {suc a} z≼ = {!   !}
+Φₛ-pres≼-xb {suc a} (s≼s p) = {!   !}
+Φₛ-pres≼-xb {suc a} (≼l p) = {!   !}
+Φₛ-pres≼-xb {suc a} (l≼ x) = {!   !}
+Φₛ-pres≼-xb {lim f} p = {!   !}
 ```
 
 ```agda
