@@ -295,11 +295,14 @@ FNormal = Σ Normal Fixable
 fp : FNormal → FNormal
 fp (ν , p) = fpⁿ ν , fpᶠ p
 
-_⟨_⟩ : FNormal → Func
-(ν , _) ⟨ a ⟩ = Normal.func ν a
+nml : FNormal → Normal
+nml = fst
 
 fixbl : ((ν , _) : FNormal) → Fixable ν
-fixbl (ν , p) = p
+fixbl = snd
+
+_⟨_⟩ : FNormal → Func
+ν ⟨ a ⟩ = Normal.func (nml ν) a
 ```
 
 ## 不动点的实例
