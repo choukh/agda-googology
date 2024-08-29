@@ -105,8 +105,8 @@ record Jump : Type where
 ```
 
 ```agda
-  jump_ : FNormal
-  jump_ = normal F⁺ F⁺-pres ≈-refl , fixable F⁺-infl≼ F⁺-pres≼ ⦃ F⁺-isLim ⦄ F⁺-absorb-n
+  jump_ : SNormal
+  jump_ = normal F⁺ F⁺-pres ≈-refl , strong F⁺-infl≼ F⁺-pres≼ ⦃ F⁺-isLim ⦄ F⁺-absorb-n
 
 open Jump using (jump_)
 ```
@@ -134,14 +134,14 @@ _0̇,_ {a = lim f} F = F 0 {0} 0̇,_
 ```
 
 ```agda
-⟪_⟫ : FNormal →^ a → Ord →^ suc a
+⟪_⟫ : SNormal →^ a → Ord →^ suc a
 ⟪_⟫ {(zero)} ν = ν ⟨_⟩
 ⟪_⟫ {suc a} ν b = ⟪ ν b ⟫
 ⟪_⟫ {lim f} ν b = ⟪ ν b ⟫
 ```
 
 ```agda
-⟪⟫-0 : (νᵃ : FNormal →^ a) → ⟪ νᵃ ⟫ 0 0̇ ≡ νᵃ 0̇ ⟨ 0 ⟩
+⟪⟫-0 : (νᵃ : SNormal →^ a) → ⟪ νᵃ ⟫ 0 0̇ ≡ νᵃ 0̇ ⟨ 0 ⟩
 ⟪⟫-0 {(zero)} νᵃ = refl
 ⟪⟫-0 {suc a} νᵃ = ⟪⟫-0 (νᵃ 0)
 ⟪⟫-0 {lim f} νᵃ = ⟪⟫-0 (νᵃ 0)
@@ -150,7 +150,7 @@ _0̇,_ {a = lim f} F = F 0 {0} 0̇,_
 
 ```agda
 instance
-  ⟪⟫-nz : {νᵃ : FNormal →^ a} → NonZero (⟪ νᵃ ⟫ b 0̇)
+  ⟪⟫-nz : {νᵃ : SNormal →^ a} → NonZero (⟪ νᵃ ⟫ b 0̇)
   ⟪⟫-nz {(zero)} {b} {νᵃ} = Normal.nz (fst νᵃ)
   ⟪⟫-nz {suc a} {b} {νᵃ} = Normal.nz (fst $ νᵃ b 0̇)
   ⟪⟫-nz {lim f} {b} {νᵃ} = Normal.nz (fst $ νᵃ b 0̇)
@@ -158,14 +158,14 @@ instance
 
 ```agda
 private variable
-  ν ν₁ ν₂ : FNormal
-  νᵃ : FNormal →^ a
+  ν ν₁ ν₂ : SNormal
+  νᵃ : SNormal →^ a
 ```
 
 ```agda
-Φₛ : FNormal →^ a → FNormal →^ suc a
-Φₗ : ⦃ _ : wf f ⦄ → (∀ {n} → FNormal →^ f n) → FNormal →^ lim f
-Φ  : FNormal → (∀ {a} → FNormal →^ a)
+Φₛ : SNormal →^ a → SNormal →^ suc a
+Φₗ : ⦃ _ : wf f ⦄ → (∀ {n} → SNormal →^ f n) → SNormal →^ lim f
+Φ  : SNormal → (∀ {a} → SNormal →^ a)
 ```
 
 ```agda
@@ -178,7 +178,7 @@ private variable
 Φ-infl≼-x0  : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) inflates _≼_
 Φₛ-infl≼-x0 : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) inflates _≼_
 Φₛ-infl≼-bx : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) inflates _≼_
-Φₗ-infl≼-x0 : ⦃ _ : wf f ⦄ {νᶠ : ∀ {n} → FNormal →^ f n} →
+Φₗ-infl≼-x0 : ⦃ _ : wf f ⦄ {νᶠ : ∀ {n} → SNormal →^ f n} →
               (λ x → Φₗ {f} νᶠ {n} x 0̇ ⟨ 0 ⟩) inflates _≼_
 ```
 
@@ -248,9 +248,9 @@ private variable
 ```
 
 ```agda
-Φ-infl≼-x0{ν} {(zero)} = Fixable.infl≼ (fixbl ν)
-Φ-infl≼-x0{ν} {suc a} = Φₛ-infl≼-x0
-Φ-infl≼-x0{ν} {lim f} = Φₗ-infl≼-x0
+Φ-infl≼-x0 {ν} {(zero)} = Strong.infl≼ (sn ν)
+Φ-infl≼-x0 {ν} {suc a} = Φₛ-infl≼-x0
+Φ-infl≼-x0 {ν} {lim f} = Φₗ-infl≼-x0
 ```
 
 ```agda
@@ -263,7 +263,7 @@ private variable
 ```
 
 ```agda
-Φₛ-infl≼-bx {(zero)}  {νᵃ} {(zero)} = Fixable.infl≼ (fixbl νᵃ)
+Φₛ-infl≼-bx {(zero)}  {νᵃ} {(zero)} = Strong.infl≼ (sn νᵃ)
 Φₛ-infl≼-bx {(zero)}  {νᵃ} {suc b}  = Φ-infl≼-x0
 Φₛ-infl≼-bx {(zero)}  {νᵃ} {lim f}  = Φ-infl≼-x0
 Φₛ-infl≼-bx {suc a}   {νᵃ} {(zero)} = {!   !}
@@ -281,7 +281,7 @@ private variable
 ```
 
 ```agda
-Φ-pres≼-x0 {ν} {(zero)} = Fixable.pres≼ (fixbl ν)
+Φ-pres≼-x0 {ν} {(zero)} = Strong.pres≼ (sn ν)
 Φ-pres≼-x0 {ν} {suc a} = Φₛ-pres≼-x0
 Φ-pres≼-x0 {ν} {lim f} = {!   !}
 ```
@@ -297,7 +297,7 @@ private variable
 ```
 
 ```agda
-Φₛ-pres≼-bx {(zero)} {νᵃ} {b} p = Fixable.pres≼ (fixbl (Φₛ νᵃ b)) p
+Φₛ-pres≼-bx {(zero)} {νᵃ} {b} p = Strong.pres≼ (sn (Φₛ νᵃ b)) p
 Φₛ-pres≼-bx {suc a} {νᵃ} {(zero)} p = {!   !}
 Φₛ-pres≼-bx {suc a} {νᵃ} {suc b} = Φ-pres≼-x0
 Φₛ-pres≼-bx {suc a} {νᵃ} {lim f} = Φ-pres≼-x0
@@ -305,18 +305,27 @@ private variable
 ```
 
 ```agda
-Φₛ-pres≼-xb {(zero)} = {!   !}
-Φₛ-pres≼-xb {suc a} = {!   !}
-Φₛ-pres≼-xb {lim f} = {!   !}
+Φₛ-pres≼-xb {a} {νᵃ} {b} {(zero)} {(zero)}  p = ≼-refl
+Φₛ-pres≼-xb {a} {νᵃ} {b} {(zero)} {suc y}   p = begin
+  ⟪ Φₛ νᵃ zero ⟫ b 0̇                            ≤⟨ Φₛ-pres≼-xb z≼ ⟩
+  ⟪ Φₛ νᵃ y ⟫ b 0̇                               ≤⟨ {!   !} ⟩
+  ⟪ Φₛ νᵃ (suc y) ⟫ b 0̇                         ∎ where open CrossTreeReasoning
+Φₛ-pres≼-xb {a} {νᵃ} {b} {(zero)} {lim g}   p = {!   !}
+Φₛ-pres≼-xb {a} {νᵃ} {b} {suc x}  {(zero)}  p = {!   !}
+Φₛ-pres≼-xb {a} {νᵃ} {b} {suc x}  {suc y}   p = {!   !}
+Φₛ-pres≼-xb {a} {νᵃ} {b} {suc x}  {lim g}   p = {!   !}
+Φₛ-pres≼-xb {a} {νᵃ} {b} {lim f}  {(zero)}  p = {!   !}
+Φₛ-pres≼-xb {a} {νᵃ} {b} {lim f}  {suc y}   p = {!   !}
+Φₛ-pres≼-xb {a} {νᵃ} {b} {lim f}  {lim g}   p = {!   !}
 ```
 
 ```agda
-φ : FNormal →^ a
+φ : SNormal →^ a
 φ = Φ ω^
 ```
 
 ```agda
-Γ : FNormal
+Γ : SNormal
 Γ = φ {2} 1 0
 ```
 
