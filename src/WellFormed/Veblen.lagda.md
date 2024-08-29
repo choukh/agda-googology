@@ -24,6 +24,8 @@ open import Agda.Builtin.Equality.Rewrite public
 {-# REWRITE +a-id #-}
 ```
 
+## 强正规跳出
+
 ```agda
 record Jump : Type where
   constructor by
@@ -111,6 +113,8 @@ record Jump : Type where
 open Jump using (jump_)
 ```
 
+## 序元函数
+
 ```agda
 private variable A : Type
 _→^_ : Type → Ord → Type
@@ -156,18 +160,30 @@ instance
   ⟪⟫-nz {lim f} {b} {νᵃ} = Normal.nz (fst $ νᵃ b 0̇)
 ```
 
+**定义 2-5-xx** 高阶强正规函数
+
 ```agda
-record HigherSNormal (a : Ord) : Type where
+record Higher (νᵃ : SNormal →^ a) : Type where
+  constructor higher
   field
-    hsn : SNormal →^ a
-    hsn-infl≼ : (λ x → ⟪ hsn ⟫ x 0̇) inflates _≼_
-    hsn-pres≼ : (λ x → ⟪ hsn ⟫ x 0̇) preserves _≼_
+    infl≼ : (λ x → ⟪ νᵃ ⟫ x 0̇) inflates _≼_
+    pres≼ : (λ x → ⟪ νᵃ ⟫ x 0̇) preserves _≼_
+
+HigherSNormal : Ord → Type
+HigherSNormal a = Σ (SNormal →^ a) (Higher {a})
+
+sn : HigherSNormal a → SNormal →^ a
+sn = fst
+
+hg : ((νᵃ , _) : HigherSNormal a) → Higher νᵃ
+hg = snd
 ```
 
 ```agda
 private variable
   ν ν₁ ν₂ : SNormal
   νᵃ : SNormal →^ a
+  ν̇ᵃ : HigherSNormal a
 ```
 
 ```agda
@@ -180,6 +196,11 @@ private variable
 Φₛ-pres-rd : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves Road
 Φₛ-pres : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves _<_
 Φₛ-pres = map Φₛ-pres-rd
+```
+
+```agda
+Φ-higher : Higher {a} (Φ ν)
+Φₛ-higher : Higher {a} νᵃ → Higher {suc a} (Φₛ νᵃ)
 ```
 
 ```agda
@@ -258,7 +279,17 @@ private variable
 ```
 
 ```agda
-Φ-infl≼-x0 {ν} {(zero)} = Strong.infl≼ (sn ν)
+Φ-higher {(zero)} {ν} = higher infl≼ pres≼ where open Strong (srg ν)
+Φ-higher {suc a} = Φₛ-higher (Φ-higher {a})
+Φ-higher {lim f} = {!   !}
+```
+
+```agda
+Φₛ-higher = {!   !}
+```
+
+```agda
+Φ-infl≼-x0 {ν} {(zero)} = Strong.infl≼ (srg ν)
 Φ-infl≼-x0 {ν} {suc a} = Φₛ-infl≼-x0
 Φ-infl≼-x0 {ν} {lim f} = Φₗ-infl≼-x0
 ```
@@ -273,7 +304,7 @@ private variable
 ```
 
 ```agda
-Φₛ-infl≼-bx0 {(zero)}  {νᵃ} {(zero)} = Strong.infl≼ (sn νᵃ)
+Φₛ-infl≼-bx0 {(zero)}  {νᵃ} {(zero)} = Strong.infl≼ (srg νᵃ)
 Φₛ-infl≼-bx0 {(zero)}  {νᵃ} {suc b}  = Φ-infl≼-x0
 Φₛ-infl≼-bx0 {(zero)}  {νᵃ} {lim f}  = Φ-infl≼-x0
 Φₛ-infl≼-bx0 {suc a}   {νᵃ} {(zero)} = {!   !}
@@ -291,7 +322,7 @@ private variable
 ```
 
 ```agda
-Φ-pres≼-x0 {ν} {(zero)} = Strong.pres≼ (sn ν)
+Φ-pres≼-x0 {ν} {(zero)} = Strong.pres≼ (srg ν)
 Φ-pres≼-x0 {ν} {suc a} = Φₛ-pres≼-x0
 Φ-pres≼-x0 {ν} {lim f} = {!   !}
 ```
@@ -307,7 +338,7 @@ private variable
 ```
 
 ```agda
-Φₛ-pres≼-bx {(zero)} {νᵃ} {b} p = Strong.pres≼ (sn (Φₛ νᵃ b)) p
+Φₛ-pres≼-bx {(zero)} {νᵃ} {b} p = Strong.pres≼ (srg (Φₛ νᵃ b)) p
 Φₛ-pres≼-bx {suc a} {νᵃ} {(zero)} p = {!   !}
 Φₛ-pres≼-bx {suc a} {νᵃ} {suc b} = Φ-pres≼-x0
 Φₛ-pres≼-bx {suc a} {νᵃ} {lim f} = Φ-pres≼-x0
@@ -360,4 +391,3 @@ private variable
 SVO : Ord
 SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
-   
