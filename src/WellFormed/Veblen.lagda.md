@@ -183,7 +183,7 @@ hi = snd
 private variable
   ν ν₁ ν₂ : SNormal
   νᵃ : SNormal →^ a
-  ν̇ᵃ : HigherSNormal a
+  ν̇ᵃ ν̇ᵃ₁ ν̇ᵃ₂ : HigherSNormal a
 ```
 
 ```agda
@@ -215,6 +215,7 @@ private variable
 
 ```agda
 Φ-pres≼-νb0   : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {b} → ⟪ Φ ν₁ {a} ⟫ b 0̇ ≼ ⟪ Φ ν₂ {a} ⟫ b 0̇
+Φₛ-pres≼-νb0c : (∀ {b} → ⟪ sn ν̇ᵃ₁ ⟫ b 0̇ ≼ ⟪ sn ν̇ᵃ₂ ⟫ b 0̇) → Φₛ {a} ν̇ᵃ₁ b 0̇ ⟨ c ⟩ ≼ Φₛ {a} ν̇ᵃ₂ b 0̇ ⟨ c ⟩
 Φₛ-pres≼-x0b  : (λ x → Φₛ {a} ν̇ᵃ x 0̇ ⟨ b ⟩) preserves _≼_
 Φₛ-pres≼-xb0  : (λ x → ⟪ Φₛ {a} ν̇ᵃ x ⟫ b 0̇) preserves _≼_
 ```
@@ -330,8 +331,8 @@ private variable
     Φₛ ν̇ᵃ a 0̇ ⟨ _ ⟩                     ≤⟨ Strong.pres≼ (srg (Φₛ ν̇ᵃ a 0̇)) q ⟩
     Φₛ ν̇ᵃ a 0̇ ⟨ _ ⟩                     ≤⟨ Φₛ-pres≼-x0b p ⟩
     Φₛ ν̇ᵃ b 0̇ ⟨ _ ⟩                     ∎ where open CrossTreeReasoning
-Φₛ-pres≼-x0 (≼l p) = {!   !}
-Φₛ-pres≼-x0 (l≼ x) = {!   !}
+Φₛ-pres≼-x0 (≼l {n} p) = subst (_ ≼_) (sym Φ-0b) $ ≼[ n ] (Φₛ-pres≼-x0 p)
+Φₛ-pres≼-x0 (l≼ p) = subst (_≼ _) (sym Φ-0b) $ l≼ (Φₛ-pres≼-x0 p)
 ```
 
 ```agda
@@ -347,9 +348,16 @@ private variable
 ```agda
 Φ-pres≼-νb0 {a = zero} p = p
 Φ-pres≼-νb0 {a = suc a} p {(zero)} = Φ-pres≼-νb0 {a = a} p {0}
-Φ-pres≼-νb0 {a = suc a} p {suc b} = {!   !}
+Φ-pres≼-νb0 {a = suc a} p {suc b} = subst₂ _≼_ (sym Φ-0b) (sym $ Φ-0b {ν = fp _}) $
+  fp-pres≼ (Φₛ _ b 0̇) (Φₛ _ b 0̇) (Φₛ-pres≼-νb0c (Φ-pres≼-νb0 p))
 Φ-pres≼-νb0 {a = suc a} p {lim f} = {!   !}
 Φ-pres≼-νb0 {a = lim f} p = {!   !}
+```
+
+```agda
+Φₛ-pres≼-νb0c {(zero)} = {!   !}
+Φₛ-pres≼-νb0c {suc a} = {!   !}
+Φₛ-pres≼-νb0c {lim f} = {!   !}
 ```
 
 ```agda
@@ -390,3 +398,4 @@ private variable
 SVO : Ord
 SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
+ 
