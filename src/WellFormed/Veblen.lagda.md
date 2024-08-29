@@ -157,6 +157,14 @@ instance
 ```
 
 ```agda
+record HigherSNormal : Type where
+  field
+    hsn : SNormal →^ a
+    hsn-infl≼ : (λ x → ⟪_⟫ {a} hsn x 0̇) inflates _≼_
+    hsn-pres≼ : (λ x → ⟪_⟫ {a} hsn x 0̇) preserves _≼_
+```
+
+```agda
 private variable
   ν ν₁ ν₂ : SNormal
   νᵃ : SNormal →^ a
@@ -190,8 +198,6 @@ private variable
 
 ```agda
 Φ-pres≼-νb0   : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {b} → ⟪ Φ ν₁ {a} ⟫ b 0̇ ≼ ⟪ Φ ν₂ {a} ⟫ b 0̇
-Φₛ-pres≼-νb0  : {νᵃ₁ νᵃ₂ : SNormal →^ a} → (∀ {b} → ⟪ νᵃ₁ ⟫ b 0̇ ≼ ⟪ νᵃ₂ ⟫ b 0̇) →
-                ∀ {b} → Φₛ {a} νᵃ₁ b 0̇ ⟨ 0 ⟩ ≼ Φₛ {a} νᵃ₂ b 0̇ ⟨ 0 ⟩
 Φₛ-pres≼-ν0b  : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ b ⟩) preserves _≼_
 Φₛ-pres≼-xb0  : (λ x → ⟪ Φₛ {a} νᵃ x ⟫ b 0̇) preserves _≼_
 ```
@@ -310,12 +316,10 @@ private variable
 
 ```agda
 Φ-pres≼-νb0 {a = zero} p = p
-Φ-pres≼-νb0 {a = suc a} p = Φₛ-pres≼-νb0 (Φ-pres≼-νb0 p)
+Φ-pres≼-νb0 {a = suc a} p {(zero)} = Φ-pres≼-νb0 {a = a} p {0}
+Φ-pres≼-νb0 {a = suc a} p {suc b} = {!   !}
+Φ-pres≼-νb0 {a = suc a} p {lim f} = {!   !}
 Φ-pres≼-νb0 {a = lim f} p = {!   !}
-```
-
-```agda
-Φₛ-pres≼-νb0 p = {!   !}
 ```
 
 ```agda
@@ -356,4 +360,4 @@ private variable
 SVO : Ord
 SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
- 
+   
