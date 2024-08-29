@@ -102,11 +102,11 @@ module FpEnum (ν : Normal) where
 open FpEnum public using (fpⁿ)
 ```
 
-### 跨树性质
+## 强正规函数
 
 ```agda
-record Fixable (ν : Normal) : Type where
-  constructor fixable
+record Strong (ν : Normal) : Type where
+  constructor strong
   open Normal ν       public renaming (func to F)
   open Normal (fpⁿ ν) public renaming (func to F′) using ()
   field
@@ -240,7 +240,7 @@ record Fixable (ν : Normal) : Type where
     F (Itₙ (λ _ → F) (suc (F′ a)) n)      ∎ where open CrossTreeReasoning
 ```
 
-### 性质的封闭
+### 对不动点的封闭
 
 ```agda
   F′-infl≼ : F′ inflates _≼_
@@ -283,35 +283,33 @@ record Fixable (ν : Normal) : Type where
     F′ (suc a) [ suc n ]                  ∎ where open CrossTreeReasoning
 ```
 
-## 强正规函数
-
 ```agda
-fpᶠ : ∀ {ν} → Fixable ν → Fixable (fpⁿ ν)
-fpᶠ p = fixable F′-infl≼ F′-pres≼ ⦃ F′-isLim ⦄ F′-absorb-n
-  where open Fixable p
+fpˢ : ∀ {ν} → Strong ν → Strong (fpⁿ ν)
+fpˢ p = strong F′-infl≼ F′-pres≼ ⦃ F′-isLim ⦄ F′-absorb-n
+  where open Strong p
 ```
 
 ```agda
-FNormal = Σ Normal Fixable
+SNormal = Σ Normal Strong
 
-fp : FNormal → FNormal
-fp (ν , p) = fpⁿ ν , fpᶠ p
+fp : SNormal → SNormal
+fp (ν , p) = fpⁿ ν , fpˢ p
 
-nml : FNormal → Normal
+nml : SNormal → Normal
 nml = fst
 
-fixbl : ((ν , _) : FNormal) → Fixable ν
-fixbl = snd
+sn : ((ν , _) : SNormal) → Strong ν
+sn = snd
 
-_⟨_⟩ : FNormal → Func
+_⟨_⟩ : SNormal → Func
 ν ⟨ a ⟩ = Normal.func (nml ν) a
 ```
 
 ### 高阶性质
 
 ```agda
-module _ (ν₁ : FNormal) where
-  open Fixable (fixbl ν₁)
+module _ (ν₁ : SNormal) where
+  open Strong (sn ν₁)
 
   fp-infl≼ : F a ≼ F′ a
   fp-infl≼ {a} =                          begin
@@ -321,8 +319,8 @@ module _ (ν₁ : FNormal) where
 ```
 
 ```agda
-  module _ (ν₂ : FNormal) where
-    open Fixable (fixbl ν₂) renaming (F to G; F′ to G′; F′-suc-[n] to G′-suc-[n]) using ()
+  module _ (ν₂ : SNormal) where
+    open Strong (sn ν₂) renaming (F to G; F′ to G′; F′-suc-[n] to G′-suc-[n]) using ()
 
     module _ (p : ∀ {a} → F a ≼ G a) where
       fp-pres≼-pre : a ≼ b → Itₙ (λ _ → F) a n ≼ Itₙ (λ _ → G) b n
@@ -386,13 +384,13 @@ $$
 ```
 
 ```
-ω^ : FNormal
+ω^ : SNormal
 ω^ = normal (ω ^_) ^-pres ≈-refl
-   , fixable a^-infl≼ a^-pres≼ ⦃ ω^-isLim ⦄ ω^-absorb-n
+   , strong a^-infl≼ a^-pres≼ ⦃ ω^-isLim ⦄ ω^-absorb-n
 ```
 
 ```agda
-ε ζ η : FNormal
+ε ζ η : SNormal
 ε = fp ω^
 ζ = fp ε
 η = fp ζ
@@ -411,9 +409,8 @@ $$
 
 ```agda
 η-fix : η ⟨ a ⟩ ≈ ζ ⟨ η ⟨ a ⟩ ⟩
-η-fix = Fixable.F′-fix (fixbl ζ)
+η-fix = Strong.F′-fix (sn ζ)
 
 η-suc-[n] : η ⟨ suc a ⟩ [ n ] ≈ Itₙ (λ _ → ζ ⟨_⟩) (suc (η ⟨ a ⟩)) n
-η-suc-[n] = Fixable.F′-suc-[n] (fixbl ζ)
+η-suc-[n] = Strong.F′-suc-[n] (sn ζ)
 ```
-  
