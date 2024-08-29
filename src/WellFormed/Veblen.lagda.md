@@ -157,11 +157,11 @@ instance
 ```
 
 ```agda
-record HigherSNormal : Type where
+record HigherSNormal (a : Ord) : Type where
   field
     hsn : SNormal →^ a
-    hsn-infl≼ : (λ x → ⟪_⟫ {a} hsn x 0̇) inflates _≼_
-    hsn-pres≼ : (λ x → ⟪_⟫ {a} hsn x 0̇) preserves _≼_
+    hsn-infl≼ : (λ x → ⟪ hsn ⟫ x 0̇) inflates _≼_
+    hsn-pres≼ : (λ x → ⟪ hsn ⟫ x 0̇) preserves _≼_
 ```
 
 ```agda
