@@ -25,16 +25,6 @@ open import Agda.Builtin.Equality.Rewrite public
 ```
 
 ```agda
-module _ {ν : Normal} where
-  open Normal ν renaming (func to F)
-  open Normal (fpⁿ ν) renaming (func to F′)
-  test : F a ≼ F′ a
-  test {(zero)} = ≼[ 1 ] ≼-refl
-  test {suc a} = ≼[ 1 ] {!   !}
-  test {lim f} = {!   !}
-```
-
-```agda
 record Jump : Type where
   constructor by
   field
@@ -315,17 +305,9 @@ private variable
 ```
 
 ```agda
-Φₛ-pres≼-xb {(zero)} {y = zero} z≼ = ≼-refl
-Φₛ-pres≼-xb {(zero)} {y = suc y} z≼ = {! ≼[ 0 ]  !}
-Φₛ-pres≼-xb {(zero)} {y = lim f} z≼ = {!   !}
-Φₛ-pres≼-xb {(zero)} (s≼s p) = {!   !}
-Φₛ-pres≼-xb {(zero)} (≼l p) = {!   !}
-Φₛ-pres≼-xb {(zero)} (l≼ x) = {!   !}
-Φₛ-pres≼-xb {suc a} z≼ = {!   !}
-Φₛ-pres≼-xb {suc a} (s≼s p) = {!   !}
-Φₛ-pres≼-xb {suc a} (≼l p) = {!   !}
-Φₛ-pres≼-xb {suc a} (l≼ x) = {!   !}
-Φₛ-pres≼-xb {lim f} p = {!   !}
+Φₛ-pres≼-xb {(zero)} = {!   !}
+Φₛ-pres≼-xb {suc a} = {!   !}
+Φₛ-pres≼-xb {lim f} = {!   !}
 ```
 
 ```agda

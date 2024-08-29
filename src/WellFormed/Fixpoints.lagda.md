@@ -107,8 +107,8 @@ open FpEnum public using (fpⁿ)
 ```agda
 record Fixable (ν : Normal) : Type where
   constructor fixable
-  open Normal ν       renaming (func to F)
-  open Normal (fpⁿ ν) renaming (func to F′) using ()
+  open Normal ν       public renaming (func to F)
+  open Normal (fpⁿ ν) public renaming (func to F′) using ()
   field
     infl≼ : F inflates _≼_
     pres≼ : F preserves _≼_
@@ -283,6 +283,8 @@ record Fixable (ν : Normal) : Type where
     F′ (suc a) [ suc n ]                  ∎ where open CrossTreeReasoning
 ```
 
+## 强正规函数
+
 ```agda
 fpᶠ : ∀ {ν} → Fixable ν → Fixable (fpⁿ ν)
 fpᶠ p = fixable F′-infl≼ F′-pres≼ ⦃ F′-isLim ⦄ F′-absorb-n
@@ -303,6 +305,41 @@ fixbl = snd
 
 _⟨_⟩ : FNormal → Func
 ν ⟨ a ⟩ = Normal.func (nml ν) a
+```
+
+### 高阶性质
+
+```agda
+module _ (ν₁ : FNormal) where
+  open Fixable (fixbl ν₁)
+
+  fp-infl≼ : F a ≼ F′ a
+  fp-infl≼ {a} =                          begin
+    F a                                   ≤⟨ pres≼ F′-infl≼ ⟩
+    F (F′ a)                              ≈˘⟨ F′-fix ⟩
+    F′ a                                  ∎ where open CrossTreeReasoning
+```
+
+```agda
+  module _ (ν₂ : FNormal) where
+    open Fixable (fixbl ν₂) renaming (F to G; F′ to G′; F′-suc-[n] to G′-suc-[n]) using ()
+
+    module _ (p : ∀ {a} → F a ≼ G a) where
+      fp-pres≼-pre : a ≼ b → Itₙ (λ _ → F) a n ≼ Itₙ (λ _ → G) b n
+      fp-pres≼-pre {n = zero} q = q
+      fp-pres≼-pre {a} {b} {suc n} q =    begin
+        F (Itₙ (λ _ → F) a n)             ≤⟨ pres≼ (fp-pres≼-pre q) ⟩
+        F (Itₙ (λ _ → G) b n)             ≤⟨ p ⟩
+        G (Itₙ (λ _ → G) b n)             ∎ where open CrossTreeReasoning
+
+      fp-pres≼ : ∀ {a} → F′ a ≼ G′ a
+      fp-pres≼ {(zero)} = l≼l (fp-pres≼-pre ≼-refl)
+      fp-pres≼ {suc a} = l≼l $ λ {n} →    begin
+        F′ (suc a) [ n ]                  ≈⟨ F′-suc-[n] ⟩
+        Itₙ (λ _ → F) (suc (F′ a)) n      ≤⟨ fp-pres≼-pre (s≼s fp-pres≼) ⟩
+        Itₙ (λ _ → G) (suc (G′ a)) n      ≈˘⟨ G′-suc-[n] ⟩
+        G′ (suc a) [ n ]                  ∎ where open CrossTreeReasoning
+      fp-pres≼ {lim f} = l≼l fp-pres≼
 ```
 
 ## 不动点的实例
@@ -379,3 +416,4 @@ $$
 η-suc-[n] : η ⟨ suc a ⟩ [ n ] ≈ Itₙ (λ _ → ζ ⟨_⟩) (suc (η ⟨ a ⟩)) n
 η-suc-[n] = Fixable.F′-suc-[n] (fixbl ζ)
 ```
+  
