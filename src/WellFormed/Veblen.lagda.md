@@ -188,7 +188,7 @@ private variable
 
 ```agda
 Φₛ : HigherSNormal a → SNormal →^ suc a
-Φₗ : ⦃ _ : wf f ⦄ → (∀ {n} → SNormal →^ f n) → SNormal →^ lim f
+Φₗ : ⦃ _ : wf f ⦄ → (∀ {n} → HigherSNormal (f n)) → SNormal →^ lim f
 Φ  : SNormal → (∀ {a} → SNormal →^ a)
 Φ-higher : Higher {a} (Φ ν)
 ```
@@ -203,8 +203,8 @@ private variable
 Φ-infl≼-x0    : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) inflates _≼_
 Φₛ-infl≼-x0   : (λ x → Φₛ {a} ν̇ᵃ x 0̇ ⟨ 0 ⟩) inflates _≼_
 Φₛ-infl≼-bx0  : (λ x → ⟪ Φₛ {a} ν̇ᵃ b ⟫ x 0̇) inflates _≼_
-Φₗ-infl≼-x0   : ⦃ _ : wf f ⦄ {νᶠ : ∀ {n} → SNormal →^ f n} →
-                (λ x → Φₗ {f} νᶠ {n} x 0̇ ⟨ 0 ⟩) inflates _≼_
+Φₗ-infl≼-x0   : ⦃ _ : wf f ⦄ {ν̇ᶠ : ∀ {n} → HigherSNormal (f n)} →
+                (λ x → Φₗ {f} ν̇ᶠ {n} x 0̇ ⟨ 0 ⟩) inflates _≼_
 ```
 
 ```agda
@@ -220,7 +220,7 @@ private variable
 ```
 
 ```agda
-Φₛ {a} (νᵃ , _) zero = νᵃ
+Φₛ {a} ν̇ᵃ zero = sn ν̇ᵃ
 Φₛ {a} ν̇ᵃ (suc b) = Φ (fp (Φₛ ν̇ᵃ b 0̇))
 Φₛ {a} ν̇ᵃ (lim g) = Φ $ jump by
   (lim (λ n → Φₛ ν̇ᵃ (g n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres it ⦄)
@@ -229,23 +229,23 @@ private variable
 ```
 
 ```agda
-Φₗ {f} νᶠ zero = νᶠ
+Φₗ {f} ν̇ᶠ zero = sn ν̇ᶠ
 
-Φₗ {f} νᶠ (suc b) = Φ $ jump by
-  (lim (Itₙ (λ n x → x + ⟪ Φₗ {f} νᶠ {n} b ⟫ 1 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄)
-  (λ n x → ⟪ Φₗ {f} νᶠ {n} b ⟫ x 0̇)
+Φₗ {f} ν̇ᶠ (suc b) = Φ $ jump by
+  (lim (Itₙ (λ n x → x + ⟪ Φₗ {f} ν̇ᶠ {n} b ⟫ 1 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄)
+  (λ n x → ⟪ Φₗ {f} ν̇ᶠ {n} b ⟫ x 0̇)
   ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!    !} {!   !} {!   !}
 
-Φₗ {f} νᶠ (lim g) = Φ $ jump by
-  (lim (Itₙ (λ n x → x + ⟪ Φₗ {f} νᶠ {n} (g n) ⟫ 0 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄)
-  (λ n x → ⟪ Φₗ {f} νᶠ {n} (g n) ⟫ x 0̇)
+Φₗ {f} ν̇ᶠ (lim g) = Φ $ jump by
+  (lim (Itₙ (λ n x → x + ⟪ Φₗ {f} ν̇ᶠ {n} (g n) ⟫ 0 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄)
+  (λ n x → ⟪ Φₗ {f} ν̇ᶠ {n} (g n) ⟫ x 0̇)
   ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!   !} {!   !} {!   !}
 ```
 
 ```agda
 Φ ν {(zero)} = ν
 Φ ν {suc a} = Φₛ {a} (Φ ν , Φ-higher)
-Φ ν {lim f} = Φₗ {f} (Φ ν)
+Φ ν {lim f} = Φₗ {f} (Φ ν , Φ-higher)
 ```
 
 ```agda
@@ -308,9 +308,9 @@ private variable
 ```
 
 ```agda
-Φₗ-infl≼-x0 {νᶠ} {(zero)} = z≼
-Φₗ-infl≼-x0 {νᶠ} {suc x} = subst (suc x ≼_) (sym Φ-0b) $ ≼[ 1 ] {!   !}
-Φₗ-infl≼-x0 {νᶠ} {lim f} = subst (lim f ≼_) (sym Φ-0b) (l≼l {!   !})
+Φₗ-infl≼-x0 {ν̇ᶠ} {(zero)} = z≼
+Φₗ-infl≼-x0 {ν̇ᶠ} {suc x} = subst (suc x ≼_) (sym Φ-0b) $ ≼[ 1 ] {!   !}
+Φₗ-infl≼-x0 {ν̇ᶠ} {lim f} = subst (lim f ≼_) (sym Φ-0b) (l≼l {!   !})
 ```
 
 ```agda
