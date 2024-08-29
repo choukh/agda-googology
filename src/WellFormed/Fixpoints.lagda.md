@@ -298,8 +298,8 @@ fp (ν , p) = fpⁿ ν , fpˢ p
 nml : SNormal → Normal
 nml = fst
 
-sn : ((ν , _) : SNormal) → Strong ν
-sn = snd
+srg : ((ν , _) : SNormal) → Strong ν
+srg = snd
 
 _⟨_⟩ : SNormal → Func
 ν ⟨ a ⟩ = Normal.func (nml ν) a
@@ -309,7 +309,7 @@ _⟨_⟩ : SNormal → Func
 
 ```agda
 module _ (ν₁ : SNormal) where
-  open Strong (sn ν₁)
+  open Strong (srg ν₁)
 
   fp-infl≼ : F a ≼ F′ a
   fp-infl≼ {a} =                          begin
@@ -320,7 +320,7 @@ module _ (ν₁ : SNormal) where
 
 ```agda
   module _ (ν₂ : SNormal) where
-    open Strong (sn ν₂) renaming (F to G; F′ to G′; F′-suc-[n] to G′-suc-[n]) using ()
+    open Strong (srg ν₂) renaming (F to G; F′ to G′; F′-suc-[n] to G′-suc-[n]) using ()
 
     module _ (p : ∀ {a} → F a ≼ G a) where
       fp-pres≼-pre : a ≼ b → Itₙ (λ _ → F) a n ≼ Itₙ (λ _ → G) b n
@@ -409,8 +409,8 @@ $$
 
 ```agda
 η-fix : η ⟨ a ⟩ ≈ ζ ⟨ η ⟨ a ⟩ ⟩
-η-fix = Strong.F′-fix (sn ζ)
+η-fix = Strong.F′-fix (srg ζ)
 
 η-suc-[n] : η ⟨ suc a ⟩ [ n ] ≈ Itₙ (λ _ → ζ ⟨_⟩) (suc (η ⟨ a ⟩)) n
-η-suc-[n] = Strong.F′-suc-[n] (sn ζ)
+η-suc-[n] = Strong.F′-suc-[n] (srg ζ)
 ```
