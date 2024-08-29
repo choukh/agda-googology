@@ -175,21 +175,29 @@ private variable
 ```
 
 ```agda
-Φ-infl≼-x0  : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) inflates _≼_
-Φₛ-infl≼-x0 : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) inflates _≼_
-Φₛ-infl≼-bx : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) inflates _≼_
-Φₗ-infl≼-x0 : ⦃ _ : wf f ⦄ {νᶠ : ∀ {n} → SNormal →^ f n} →
-              (λ x → Φₗ {f} νᶠ {n} x 0̇ ⟨ 0 ⟩) inflates _≼_
+Φ-infl≼-x0    : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) inflates _≼_
+Φₛ-infl≼-x0   : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) inflates _≼_
+Φₛ-infl≼-bx0  : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) inflates _≼_
+Φₗ-infl≼-x0   : ⦃ _ : wf f ⦄ {νᶠ : ∀ {n} → SNormal →^ f n} →
+                (λ x → Φₗ {f} νᶠ {n} x 0̇ ⟨ 0 ⟩) inflates _≼_
 ```
 
 ```agda
-Φ-pres≼-x0  : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) preserves _≼_
-Φₛ-pres≼-x0 : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves _≼_
-Φₛ-pres≼-bx : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) preserves _≼_
+Φ-pres≼-x0    : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) preserves _≼_
+Φₛ-pres≼-x0   : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ 0 ⟩) preserves _≼_
+Φₛ-pres≼-bx   : (λ x → ⟪ Φₛ {a} νᵃ b ⟫ x 0̇) preserves _≼_
 ```
 
 ```agda
-Φₛ-pres≼-xb : (λ x → ⟪ Φₛ {a} νᵃ x ⟫ b 0̇) preserves _≼_
+Φ-pres≼-ν0b   : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {b} → Φ ν₁ {a} 0̇ ⟨ b ⟩ ≼ Φ ν₂ {a} 0̇ ⟨ b ⟩
+Φₛ-pres≼-ν0b  : (λ x → Φₛ {a} νᵃ x 0̇ ⟨ b ⟩) preserves _≼_
+```
+
+```agda
+Φ-pres≼-νb0   : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {b} → ⟪ Φ ν₁ {a} ⟫ b 0̇ ≼ ⟪ Φ ν₂ {a} ⟫ b 0̇
+Φₛ-pres≼-νb0  : {νᵃ₁ νᵃ₂ : SNormal →^ a} → (∀ {b} → ⟪ νᵃ₁ ⟫ b 0̇ ≼ ⟪ νᵃ₂ ⟫ b 0̇) →
+                ∀ {b} → Φₛ {a} νᵃ₁ b 0̇ ⟨ 0 ⟩ ≼ Φₛ {a} νᵃ₂ b 0̇ ⟨ 0 ⟩
+Φₛ-pres≼-xb0  : (λ x → ⟪ Φₛ {a} νᵃ x ⟫ b 0̇) preserves _≼_
 ```
 
 ```agda
@@ -198,7 +206,7 @@ private variable
 Φₛ {a} νᵃ (lim g) = Φ $ jump by
   (lim (λ n → Φₛ νᵃ (g n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres it ⦄)
   (λ n x → ⟪ Φₛ νᵃ (g n) ⟫ x 0̇)
-  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ Φₛ-infl≼-bx Φₛ-pres≼-bx (Φₛ-pres≼-xb (≤→≼ (<→≤ it)))
+  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ Φₛ-infl≼-bx0 Φₛ-pres≼-bx (Φₛ-pres≼-xb0 (≤→≼ (<→≤ it)))
 ```
 
 ```agda
@@ -263,15 +271,15 @@ private variable
 ```
 
 ```agda
-Φₛ-infl≼-bx {(zero)}  {νᵃ} {(zero)} = Strong.infl≼ (sn νᵃ)
-Φₛ-infl≼-bx {(zero)}  {νᵃ} {suc b}  = Φ-infl≼-x0
-Φₛ-infl≼-bx {(zero)}  {νᵃ} {lim f}  = Φ-infl≼-x0
-Φₛ-infl≼-bx {suc a}   {νᵃ} {(zero)} = {!   !}
-Φₛ-infl≼-bx {suc a}   {νᵃ} {suc b}  = Φ-infl≼-x0
-Φₛ-infl≼-bx {suc a}   {νᵃ} {lim g}  = Φ-infl≼-x0
-Φₛ-infl≼-bx {lim f}   {νᵃ} {(zero)} = {!   !}
-Φₛ-infl≼-bx {lim f}   {νᵃ} {suc b}  = Φ-infl≼-x0
-Φₛ-infl≼-bx {lim f}   {νᵃ} {lim g}  = Φ-infl≼-x0
+Φₛ-infl≼-bx0 {(zero)}  {νᵃ} {(zero)} = Strong.infl≼ (sn νᵃ)
+Φₛ-infl≼-bx0 {(zero)}  {νᵃ} {suc b}  = Φ-infl≼-x0
+Φₛ-infl≼-bx0 {(zero)}  {νᵃ} {lim f}  = Φ-infl≼-x0
+Φₛ-infl≼-bx0 {suc a}   {νᵃ} {(zero)} = {!   !}
+Φₛ-infl≼-bx0 {suc a}   {νᵃ} {suc b}  = Φ-infl≼-x0
+Φₛ-infl≼-bx0 {suc a}   {νᵃ} {lim g}  = Φ-infl≼-x0
+Φₛ-infl≼-bx0 {lim f}   {νᵃ} {(zero)} = {!   !}
+Φₛ-infl≼-bx0 {lim f}   {νᵃ} {suc b}  = Φ-infl≼-x0
+Φₛ-infl≼-bx0 {lim f}   {νᵃ} {lim g}  = Φ-infl≼-x0
 ```
 
 ```agda
@@ -305,18 +313,40 @@ private variable
 ```
 
 ```agda
-Φₛ-pres≼-xb {a} {νᵃ} {b} {(zero)} {(zero)}  p = ≼-refl
-Φₛ-pres≼-xb {a} {νᵃ} {b} {(zero)} {suc y}   p = begin
-  ⟪ Φₛ νᵃ zero ⟫ b 0̇                            ≤⟨ Φₛ-pres≼-xb z≼ ⟩
-  ⟪ Φₛ νᵃ y ⟫ b 0̇                               ≤⟨ {!   !} ⟩
-  ⟪ Φₛ νᵃ (suc y) ⟫ b 0̇                         ∎ where open CrossTreeReasoning
-Φₛ-pres≼-xb {a} {νᵃ} {b} {(zero)} {lim g}   p = {!   !}
-Φₛ-pres≼-xb {a} {νᵃ} {b} {suc x}  {(zero)}  p = {!   !}
-Φₛ-pres≼-xb {a} {νᵃ} {b} {suc x}  {suc y}   p = {!   !}
-Φₛ-pres≼-xb {a} {νᵃ} {b} {suc x}  {lim g}   p = {!   !}
-Φₛ-pres≼-xb {a} {νᵃ} {b} {lim f}  {(zero)}  p = {!   !}
-Φₛ-pres≼-xb {a} {νᵃ} {b} {lim f}  {suc y}   p = {!   !}
-Φₛ-pres≼-xb {a} {νᵃ} {b} {lim f}  {lim g}   p = {!   !}
+Φ-pres≼-ν0b = {!   !}
+```
+
+```agda
+Φₛ-pres≼-ν0b {x = zero} {(zero)} p = {!   !}
+Φₛ-pres≼-ν0b {x = zero} {suc y} p = {!   !}
+Φₛ-pres≼-ν0b {x = zero} {lim g} p = {!   !}
+Φₛ-pres≼-ν0b {x = suc x} {suc y} (s≼s p) = Φ-pres≼-ν0b $ fp-pres≼ (Φₛ _ x 0̇) (Φₛ _ y 0̇) (Φₛ-pres≼-ν0b p)
+Φₛ-pres≼-ν0b {x = suc x} {lim g} p = {!   !}
+Φₛ-pres≼-ν0b {x = lim f} {(zero)} p = {!   !}
+Φₛ-pres≼-ν0b {x = lim f} {suc y} p = {!   !}
+Φₛ-pres≼-ν0b {x = lim f} {lim g} p = {!   !}
+```
+
+```agda
+Φ-pres≼-νb0 {a = zero} p = p
+Φ-pres≼-νb0 {a = suc a} p = Φₛ-pres≼-νb0 (Φ-pres≼-νb0 p)
+Φ-pres≼-νb0 {a = lim f} p = {!   !}
+```
+
+```agda
+Φₛ-pres≼-νb0 p = {!   !}
+```
+
+```agda
+Φₛ-pres≼-xb0 {a} {νᵃ} {b} {(zero)} {(zero)}  p = ≼-refl
+Φₛ-pres≼-xb0 {a} {νᵃ} {b} {(zero)} {suc y}   p = {!   !}
+Φₛ-pres≼-xb0 {a} {νᵃ} {b} {(zero)} {lim g}   p = {!   !}
+Φₛ-pres≼-xb0 {a} {νᵃ} {b} {suc x}  {(zero)}  p = {!   !}
+Φₛ-pres≼-xb0 {a} {νᵃ} {b} {suc x}  {suc y}   (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ νᵃ x 0̇) (Φₛ νᵃ y 0̇) (Φₛ-pres≼-ν0b p)
+Φₛ-pres≼-xb0 {a} {νᵃ} {b} {suc x}  {lim g}   p = {!   !}
+Φₛ-pres≼-xb0 {a} {νᵃ} {b} {lim f}  {(zero)}  p = {!   !}
+Φₛ-pres≼-xb0 {a} {νᵃ} {b} {lim f}  {suc y}   p = {!   !}
+Φₛ-pres≼-xb0 {a} {νᵃ} {b} {lim f}  {lim g}   p = {!   !}
 ```
 
 ```agda
