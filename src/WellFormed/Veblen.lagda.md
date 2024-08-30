@@ -233,7 +233,7 @@ private variable
 -- `Φ ν₁ {suc a} b 0̇ ⟨ c ⟩ ≼ Φ ν₂ {suc a} b 0̇ ⟨ c ⟩` and
 -- `⟪ Φ ν₁ {suc a} b ⟫ c 0̇ ≼ ⟪ Φ ν₂ {suc a} b ⟫ c 0`
 -- has to be writen as below due to termination checker limitation
-Φₛ-pres≼-νb0c : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → (∀ {c} → (Φₛ {a} (Φ ν₁ , Φ-higher) b 0̇) ⟨ c ⟩ ≼ (Φₛ {a} (Φ ν₂ , Φ-higher) b 0̇) ⟨ c ⟩)
+Φₛ-pres≼-νb0c : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → (∀ {c} → Φₛ {a} (Φ ν₁ , Φ-higher) b 0̇ ⟨ c ⟩ ≼ Φₛ {a} (Φ ν₂ , Φ-higher) b 0̇ ⟨ c ⟩)
 Φₛ-pres≼-νbc0 : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → (∀ {b c} → ⟪ Φₛ {a} (Φ ν₁ , Φ-higher) b ⟫ c 0̇ ≼ ⟪ Φₛ {a} (Φ ν₂ , Φ-higher) b ⟫ c 0̇)
 ```
 
@@ -370,7 +370,7 @@ private variable
 ```agda
 Φ-pres≼-νb0 {a = zero} p = p
 Φ-pres≼-νb0 {a = suc a} p = Φₛ-pres≼-νb0c p
-Φ-pres≼-νb0 {a = lim f} p {b} = {!   !}
+Φ-pres≼-νb0 {a = lim f} p = {!   !}
 ```
 
 ```agda
@@ -394,31 +394,43 @@ private variable
 ```
 
 ```agda
-Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {(zero)}  {(zero)}  p = ≼-refl
-Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {(zero)}  {suc y}   p = begin
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {y = zero}  z≼ = ≼-refl
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {y = suc y} z≼ = begin
   Φₛ {a} ν̇ᵃ 0 0̇ ⟨ b ⟩                   ≤⟨ Φₛ-pres≼-x0b z≼ ⟩
   Φₛ {a} ν̇ᵃ y 0̇ ⟨ b ⟩                   ≤⟨ fp-infl≼ (Φₛ {a} ν̇ᵃ y 0̇) ⟩
   fp (Φₛ ν̇ᵃ y 0̇) ⟨ b ⟩                  ≈˘⟨ ≡→≈ Φ-0b ⟩
   Φ (fp (Φₛ ν̇ᵃ y 0̇)) 0̇ ⟨ b ⟩            ∎ where open CrossTreeReasoning
-Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {(zero)}  {lim g}   p = {!   !}
-Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {suc x}   {suc y}   (s≼s p) = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $
-  fp-pres≼ (Φₛ _ x 0̇) (Φₛ _ y 0̇) (Φₛ-pres≼-x0b p)
-Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {suc x}   {lim g}   p = {!   !}
-Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {lim f}   {(zero)}  p = {!   !}
-Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {lim f}   {suc y}   p = {!   !}
-Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {lim f}   {lim g}   p = {!   !}
+
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {(zero)} {y = lim g} z≼ =
+  subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] $ Φₛ-pres≼-x0b z≼
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {suc b}  {y = lim g} z≼ =
+  subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ {!   !}
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {lim f}  {y = lim g} z≼ =
+  subst (_ ≼_) (sym Φ-0b) $             begin
+  Φₛ {a} ν̇ᵃ 0 0̇ ⟨ lim f ⟩               ≈⟨ Normal.continuous (nml $ sn ν̇ᵃ 0̇) ⟩
+  lim- (λ n → Φₛ {a} ν̇ᵃ 0 0̇ ⟨ f n ⟩)    ≤⟨ l≼l p ⟩
+  (jump _) ⟨ lim f ⟩                    ∎ where
+  open CrossTreeReasoning
+  p = λ {n} →                           begin
+    Φₛ {a} ν̇ᵃ 0 0̇ ⟨ f n ⟩               ≤⟨ {! Φₛ-pres≼-x0b {y = lim g} z≼  !} ⟩
+    Φ (jump _) {a} 0̇ ⟨ f n ⟩            ≈⟨ ≡→≈ Φ-0b ⟩
+    (jump _) ⟨ f n ⟩                    ∎
+
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} (s≼s p) = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $
+  fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} (≼l p) = {!   !}
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} (l≼ p) = {!   !}
 ```
+Φₛ {a} ν̇ᵃ 0 0̇ ⟨ suc b ⟩
+suc (jump _) ⟨ b ⟩ + ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc (jump _) ⟨ b ⟩) 0̇
 
 ```agda
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {(zero)}  {(zero)}  p = ≼-refl
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {(zero)}  {suc y}   p = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {(zero)}  {lim g}   p = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {suc x}   {(zero)}  p = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {suc x}   {suc y}   (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ ν̇ᵃ x 0̇) (Φₛ ν̇ᵃ y 0̇) (Φₛ-pres≼-x0b p)
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {suc x}   {lim g}   p = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {lim f}   {(zero)}  p = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {lim f}   {suc y}   p = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {lim f}   {lim g}   p = {!   !}
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {y = zero}  z≼ = ≼-refl
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {y = suc y} z≼ = {!   !}
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {y = lim f} z≼ = {!   !}
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ ν̇ᵃ _ 0̇) (Φₛ ν̇ᵃ _ 0̇) (Φₛ-pres≼-x0b p)
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} (≼l p) = {!   !}
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} (l≼ x) = {!   !}
 ```
 
 ```agda
@@ -435,3 +447,4 @@ private variable
 SVO : Ord
 SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
+ 
