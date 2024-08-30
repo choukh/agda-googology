@@ -330,7 +330,7 @@ module _ (ν₁ : SNormal) where
         F (Itₙ (λ _ → G) b n)             ≤⟨ p ⟩
         G (Itₙ (λ _ → G) b n)             ∎ where open CrossTreeReasoning
 
-      fp-pres≼ : ∀ {a} → F′ a ≼ G′ a
+      fp-pres≼ : F′ a ≼ G′ a
       fp-pres≼ {(zero)} = l≼l (fp-pres≼-pre ≼-refl)
       fp-pres≼ {suc a} = l≼l $ λ {n} →    begin
         F′ (suc a) [ n ]                  ≈⟨ F′-suc-[n] ⟩

@@ -225,7 +225,7 @@ private variable
 ```agda
 Φ-pres≼-x0    : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) preserves _≼_
 Φₛ-pres≼-x0   : (λ x → Φₛ {a} ν̇ᵃ x 0̇ ⟨ 0 ⟩) preserves _≼_
-Φₛ-pres≼-bx0   : (λ x → ⟪ Φₛ {a} ν̇ᵃ b ⟫ x 0̇) preserves _≼_
+Φₛ-pres≼-bx0  : (λ x → ⟪ Φₛ {a} ν̇ᵃ b ⟫ x 0̇) preserves _≼_
 ```
 
 ```agda
@@ -391,31 +391,34 @@ private variable
   ⟪ Φₛ (Φ ν₁ , Φ-higher) (f n) ⟫ x 0̇    ≤⟨ Φₛ-pres≼-bx0 q ⟩
   ⟪ Φₛ (Φ ν₁ , Φ-higher) (f n) ⟫ y 0̇    ≤⟨ Φₛ-pres≼-νbc0 p ⟩
   ⟪ Φₛ (Φ ν₂ , Φ-higher) (f n) ⟫ y 0̇    ∎ where open CrossTreeReasoning
-
 ```
 
 ```agda
-Φₛ-pres≼-x0b {x = zero} {(zero)}  p = ≼-refl
-Φₛ-pres≼-x0b {x = zero} {suc y}   p = {!   !}
-Φₛ-pres≼-x0b {x = zero} {lim g}   p = {!   !}
-Φₛ-pres≼-x0b {x = suc x} {suc y} (s≼s p) = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {(zero)}  {(zero)}  p = ≼-refl
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {(zero)}  {suc y}   p = begin
+  Φₛ {a} ν̇ᵃ 0 0̇ ⟨ b ⟩                   ≤⟨ Φₛ-pres≼-x0b z≼ ⟩
+  Φₛ {a} ν̇ᵃ y 0̇ ⟨ b ⟩                   ≤⟨ fp-infl≼ (Φₛ {a} ν̇ᵃ y 0̇) ⟩
+  fp (Φₛ ν̇ᵃ y 0̇) ⟨ b ⟩                  ≈˘⟨ ≡→≈ Φ-0b ⟩
+  Φ (fp (Φₛ ν̇ᵃ y 0̇)) 0̇ ⟨ b ⟩            ∎ where open CrossTreeReasoning
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {(zero)}  {lim g}   p = {!   !}
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {suc x}   {suc y}   (s≼s p) = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $
   fp-pres≼ (Φₛ _ x 0̇) (Φₛ _ y 0̇) (Φₛ-pres≼-x0b p)
-Φₛ-pres≼-x0b {x = suc x} {lim g}  p = {!   !}
-Φₛ-pres≼-x0b {x = lim f} {(zero)} p = {!   !}
-Φₛ-pres≼-x0b {x = lim f} {suc y}  p = {!   !}
-Φₛ-pres≼-x0b {x = lim f} {lim g}  p = {!   !}
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {suc x}   {lim g}   p = {!   !}
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {lim f}   {(zero)}  p = {!   !}
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {lim f}   {suc y}   p = {!   !}
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {lim f}   {lim g}   p = {!   !}
 ```
 
 ```agda
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {(zero)} {(zero)}  p = ≼-refl
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {(zero)} {suc y}   p = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {(zero)} {lim g}   p = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {suc x}  {(zero)}  p = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {suc x}  {suc y}   (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ ν̇ᵃ x 0̇) (Φₛ ν̇ᵃ y 0̇) (Φₛ-pres≼-x0b p)
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {suc x}  {lim g}   p = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {lim f}  {(zero)}  p = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {lim f}  {suc y}   p = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {lim f}  {lim g}   p = {!   !}
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {(zero)}  {(zero)}  p = ≼-refl
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {(zero)}  {suc y}   p = {!   !}
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {(zero)}  {lim g}   p = {!   !}
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {suc x}   {(zero)}  p = {!   !}
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {suc x}   {suc y}   (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ ν̇ᵃ x 0̇) (Φₛ ν̇ᵃ y 0̇) (Φₛ-pres≼-x0b p)
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {suc x}   {lim g}   p = {!   !}
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {lim f}   {(zero)}  p = {!   !}
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {lim f}   {suc y}   p = {!   !}
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {lim f}   {lim g}   p = {!   !}
 ```
 
 ```agda
