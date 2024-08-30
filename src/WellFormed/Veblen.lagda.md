@@ -113,7 +113,8 @@ open Jump
 ```
 
 ```agda
-module _ (j k : Jump) (init≼ : init j ≼ init k)
+module _ {j k : Jump}
+  (init≼ : init j ≼ init k)
   (step≼ : ∀ {n a b} → a ≼ b → step j n a ≼ step k n b) where
 
   It-pres≼ : It j a n ≼ It k a n
@@ -224,11 +225,13 @@ private variable
 ```agda
 Φ-pres≼-x0    : (λ x → ⟪ Φ ν {a} ⟫ x 0̇) preserves _≼_
 Φₛ-pres≼-x0   : (λ x → Φₛ {a} ν̇ᵃ x 0̇ ⟨ 0 ⟩) preserves _≼_
-Φₛ-pres≼-bx   : (λ x → ⟪ Φₛ {a} ν̇ᵃ b ⟫ x 0̇) preserves _≼_
+Φₛ-pres≼-bx0   : (λ x → ⟪ Φₛ {a} ν̇ᵃ b ⟫ x 0̇) preserves _≼_
 ```
 
 ```agda
 Φ-pres≼-νb0   : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {b} → ⟪ Φ ν₁ {a} ⟫ b 0̇ ≼ ⟪ Φ ν₂ {a} ⟫ b 0̇
+-- `⟪ Φ ν₁ {suc a} b ⟫ c 0̇ ≼ ⟪ Φ ν₂ {suc a} b ⟫ c 0` has to be writen as below due to termination checker limitation
+Φₛ-pres≼-νbc0 : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → (∀ {b c} → ⟪ Φₛ {a} (Φ ν₁ , Φ-higher) b ⟫ c 0̇ ≼ ⟪ Φₛ {a} (Φ ν₂ , Φ-higher) b ⟫ c 0̇)
 -- `Φ ν₁ {suc a} b 0̇ ⟨ c ⟩ ≼ Φ ν₂ {suc a} b 0̇ ⟨ c ⟩` has to be writen as below due to termination checker limitation
 Φₛ-pres≼-νb0c : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → (∀ {c} → (Φₛ {a} (Φ ν₁ , Φ-higher) b 0̇) ⟨ c ⟩ ≼ (Φₛ {a} (Φ ν₂ , Φ-higher) b 0̇) ⟨ c ⟩)
 Φₛ-pres≼-x0b  : (λ x → Φₛ {a} ν̇ᵃ x 0̇ ⟨ b ⟩) preserves _≼_
@@ -241,7 +244,7 @@ private variable
 Φₛ {a} ν̇ᵃ (lim g) = Φ $ jump by
   (lim (λ n → Φₛ ν̇ᵃ (g n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres it ⦄)
   (λ n x → ⟪ Φₛ ν̇ᵃ (g n) ⟫ x 0̇)
-  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ Φₛ-infl≼-bx0 Φₛ-pres≼-bx (Φₛ-pres≼-xb0 (≤→≼ (<→≤ it)))
+  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ Φₛ-infl≼-bx0 Φₛ-pres≼-bx0 (Φₛ-pres≼-xb0 (≤→≼ (<→≤ it)))
 ```
 
 ```agda
@@ -351,13 +354,13 @@ private variable
 ```
 
 ```agda
-Φₛ-pres≼-bx {(zero)} {ν̇ᵃ} {b} = Strong.pres≼ (srg (Φₛ ν̇ᵃ b))
-Φₛ-pres≼-bx {suc a} {ν̇ᵃ} {(zero)} = Higher.pres≼ (hi ν̇ᵃ)
-Φₛ-pres≼-bx {suc a} {ν̇ᵃ} {suc b} = Φ-pres≼-x0
-Φₛ-pres≼-bx {suc a} {ν̇ᵃ} {lim g} = Φ-pres≼-x0
-Φₛ-pres≼-bx {lim f} {ν̇ᵃ} {(zero)} = Higher.pres≼ (hi ν̇ᵃ)
-Φₛ-pres≼-bx {lim f} {ν̇ᵃ} {suc b} = Φ-pres≼-x0
-Φₛ-pres≼-bx {lim f} {ν̇ᵃ} {lim g} = Φ-pres≼-x0
+Φₛ-pres≼-bx0 {(zero)} {ν̇ᵃ} {b} = Strong.pres≼ (srg (Φₛ ν̇ᵃ b))
+Φₛ-pres≼-bx0 {suc a} {ν̇ᵃ} {(zero)} = Higher.pres≼ (hi ν̇ᵃ)
+Φₛ-pres≼-bx0 {suc a} {ν̇ᵃ} {suc b} = Φ-pres≼-x0
+Φₛ-pres≼-bx0 {suc a} {ν̇ᵃ} {lim g} = Φ-pres≼-x0
+Φₛ-pres≼-bx0 {lim f} {ν̇ᵃ} {(zero)} = Higher.pres≼ (hi ν̇ᵃ)
+Φₛ-pres≼-bx0 {lim f} {ν̇ᵃ} {suc b} = Φ-pres≼-x0
+Φₛ-pres≼-bx0 {lim f} {ν̇ᵃ} {lim g} = Φ-pres≼-x0
 ```
 
 ```agda
@@ -367,9 +370,24 @@ private variable
 ```
 
 ```agda
+Φₛ-pres≼-νbc0 p {(zero)} = Φ-pres≼-νb0 p
+Φₛ-pres≼-νbc0 p {suc b} = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ _ b 0̇) (Φₛ _ b 0̇) $ Φₛ-pres≼-νb0c p
+Φₛ-pres≼-νbc0 {ν₁} {ν₂} p {lim f} = Φ-pres≼-νb0 $ jump-pres≼ (l≼l $ Φₛ-pres≼-νb0c p)
+  λ {n} {x} {y} q →                     begin
+  ⟪ Φₛ (Φ ν₁ , Φ-higher) (f n) ⟫ x 0̇    ≤⟨ Φₛ-pres≼-bx0 q ⟩
+  ⟪ Φₛ (Φ ν₁ , Φ-higher) (f n) ⟫ y 0̇    ≤⟨ Φₛ-pres≼-νbc0 p ⟩
+  ⟪ Φₛ (Φ ν₂ , Φ-higher) (f n) ⟫ y 0̇    ∎ where open CrossTreeReasoning
+
+```
+
+```agda
 Φₛ-pres≼-νb0c {b = zero} p = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ p
 Φₛ-pres≼-νb0c {b = suc b} p = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ fp-pres≼ (Φₛ _ b 0̇) (Φₛ _ b 0̇) $ Φₛ-pres≼-νb0c p
-Φₛ-pres≼-νb0c {b = lim f} p = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ {!   !}
+Φₛ-pres≼-νb0c {ν₁} {ν₂} {a} {lim f} p = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ jump-pres≼ (l≼l $ Φₛ-pres≼-νb0c p)
+  λ {n} {x} {y} q →                     begin
+  ⟪ Φₛ (Φ ν₁ , Φ-higher) (f n) ⟫ x 0̇    ≤⟨ Φₛ-pres≼-bx0 q ⟩
+  ⟪ Φₛ (Φ ν₁ , Φ-higher) (f n) ⟫ y 0̇    ≤⟨ Φₛ-pres≼-νbc0 p ⟩
+  ⟪ Φₛ (Φ ν₂ , Φ-higher) (f n) ⟫ y 0̇    ∎ where open CrossTreeReasoning
 ```
 
 ```agda
@@ -410,4 +428,3 @@ private variable
 SVO : Ord
 SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
- 
