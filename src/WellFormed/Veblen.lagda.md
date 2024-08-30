@@ -109,8 +109,22 @@ record Jump : Type where
 ```agda
   jump_ : SNormal
   jump_ = normal F⁺ F⁺-pres ≈-refl , strong F⁺-infl≼ F⁺-pres≼ ⦃ F⁺-isLim ⦄ F⁺-absorb-n
+open Jump
+```
 
-open Jump using (jump_)
+```agda
+module _ (j k : Jump) (init≼ : init j ≼ init k)
+  (step≼ : ∀ {n a b} → a ≼ b → step j n a ≼ step k n b) where
+
+  It-pres≼ : It j a n ≼ It k a n
+  jump-pres≼ : F⁺ j a ≼ F⁺ k a
+
+  It-pres≼ {n = zero} = ≼-refl
+  It-pres≼ {n = suc n} = +-pres≼ It-pres≼ (step≼ (s≼s jump-pres≼))
+
+  jump-pres≼ {(zero)} = init≼
+  jump-pres≼ {suc a} = l≼l (+-pres≼ (s≼s jump-pres≼) It-pres≼)
+  jump-pres≼ {lim f} = l≼l jump-pres≼
 ```
 
 ## 序元函数
@@ -215,7 +229,8 @@ private variable
 
 ```agda
 Φ-pres≼-νb0   : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {b} → ⟪ Φ ν₁ {a} ⟫ b 0̇ ≼ ⟪ Φ ν₂ {a} ⟫ b 0̇
-Φₛ-pres≼-νb0c : (∀ {b} → ⟪ sn ν̇ᵃ₁ ⟫ b 0̇ ≼ ⟪ sn ν̇ᵃ₂ ⟫ b 0̇) → Φₛ {a} ν̇ᵃ₁ b 0̇ ⟨ c ⟩ ≼ Φₛ {a} ν̇ᵃ₂ b 0̇ ⟨ c ⟩
+-- `Φ ν₁ {suc a} b 0̇ ⟨ c ⟩ ≼ Φ ν₂ {suc a} b 0̇ ⟨ c ⟩` has to be writen as below due to termination checker limitation
+Φₛ-pres≼-νb0c : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → (∀ {c} → (Φₛ {a} (Φ ν₁ , Φ-higher) b 0̇) ⟨ c ⟩ ≼ (Φₛ {a} (Φ ν₂ , Φ-higher) b 0̇) ⟨ c ⟩)
 Φₛ-pres≼-x0b  : (λ x → Φₛ {a} ν̇ᵃ x 0̇ ⟨ b ⟩) preserves _≼_
 Φₛ-pres≼-xb0  : (λ x → ⟪ Φₛ {a} ν̇ᵃ x ⟫ b 0̇) preserves _≼_
 ```
@@ -293,7 +308,7 @@ private variable
   suc x                                 ≤⟨ s≼s Φₛ-infl≼-x0 ⟩
   suc (Φₛ ν̇ᵃ x 0̇ ⟨ 0 ⟩)                 ≤⟨ <→≺ (pres (nz-elim ⦃ zero-nz ⦄)) ⟩
   Φₛ ν̇ᵃ x 0̇ ⟨ Φₛ ν̇ᵃ x 0̇ ⟨ 0 ⟩ ⟩         ∎ where open CrossTreeReasoning; open Normal (nml $ Φₛ ν̇ᵃ x 0̇)
-Φₛ-infl≼-x0 {ν̇ᵃ} {lim f} = subst (lim f ≼_) (sym Φ-0b) (l≼l Φₛ-infl≼-x0)
+Φₛ-infl≼-x0 {ν̇ᵃ} {lim f} = subst (lim f ≼_) (sym Φ-0b) $ l≼l Φₛ-infl≼-x0
 ```
 
 ```agda
@@ -310,8 +325,8 @@ private variable
 
 ```agda
 Φₗ-infl≼-x0 {ν̇ᶠ} {(zero)} = z≼
-Φₗ-infl≼-x0 {ν̇ᶠ} {suc x} = subst (suc x ≼_) (sym Φ-0b) $ ≼[ 1 ] {!   !}
-Φₗ-infl≼-x0 {ν̇ᶠ} {lim f} = subst (lim f ≼_) (sym Φ-0b) (l≼l {!   !})
+Φₗ-infl≼-x0 {ν̇ᶠ} {suc x} = subst (suc x ≼_) (sym Φ-0b) $ ≼[ 1 ] $ {!   !}
+Φₗ-infl≼-x0 {ν̇ᶠ} {lim f} = subst (lim f ≼_) (sym Φ-0b) $ l≼ls $ ≼-trans Φₗ-infl≼-x0 a+-infl≼
 ```
 
 ```agda
@@ -347,17 +362,14 @@ private variable
 
 ```agda
 Φ-pres≼-νb0 {a = zero} p = p
-Φ-pres≼-νb0 {a = suc a} p {(zero)} = Φ-pres≼-νb0 {a = a} p {0}
-Φ-pres≼-νb0 {a = suc a} p {suc b} = subst₂ _≼_ (sym Φ-0b) (sym $ Φ-0b {ν = fp _}) $
-  fp-pres≼ (Φₛ _ b 0̇) (Φₛ _ b 0̇) (Φₛ-pres≼-νb0c (Φ-pres≼-νb0 p))
-Φ-pres≼-νb0 {a = suc a} p {lim f} = {!   !}
-Φ-pres≼-νb0 {a = lim f} p = {!   !}
+Φ-pres≼-νb0 {a = suc a} p = Φₛ-pres≼-νb0c p
+Φ-pres≼-νb0 {a = lim f} p {b} = {!   !}
 ```
 
 ```agda
-Φₛ-pres≼-νb0c {(zero)} = {!   !}
-Φₛ-pres≼-νb0c {suc a} = {!   !}
-Φₛ-pres≼-νb0c {lim f} = {!   !}
+Φₛ-pres≼-νb0c {b = zero} p = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ p
+Φₛ-pres≼-νb0c {b = suc b} p = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ fp-pres≼ (Φₛ _ b 0̇) (Φₛ _ b 0̇) $ Φₛ-pres≼-νb0c p
+Φₛ-pres≼-νb0c {b = lim f} p = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ {!   !}
 ```
 
 ```agda
