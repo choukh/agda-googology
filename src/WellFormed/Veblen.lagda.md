@@ -405,24 +405,17 @@ private variable
   subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] $ Φₛ-pres≼-x0b z≼
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {suc b}  {y = lim g} z≼ =
   subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ {!   !}
-Φₛ-pres≼-x0b {a} {ν̇ᵃ} {lim f}  {y = lim g} z≼ =
-  subst (_ ≼_) (sym Φ-0b) $             begin
-  Φₛ {a} ν̇ᵃ 0 0̇ ⟨ lim f ⟩               ≈⟨ Normal.continuous (nml $ sn ν̇ᵃ 0̇) ⟩
-  lim- (λ n → Φₛ {a} ν̇ᵃ 0 0̇ ⟨ f n ⟩)    ≤⟨ l≼l p ⟩
-  (jump _) ⟨ lim f ⟩                    ∎ where
-  open CrossTreeReasoning
-  p = λ {n} →                           begin
-    Φₛ {a} ν̇ᵃ 0 0̇ ⟨ f n ⟩               ≤⟨ {! Φₛ-pres≼-x0b {y = lim g} z≼  !} ⟩
-    Φ (jump _) {a} 0̇ ⟨ f n ⟩            ≈⟨ ≡→≈ Φ-0b ⟩
-    (jump _) ⟨ f n ⟩                    ∎
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {lim f}  {y = lim g} z≼ = begin
+  sn ν̇ᵃ 0̇ ⟨ lim f ⟩                     ≈⟨ Normal.continuous (nml $ sn ν̇ᵃ 0̇) ⟩
+  lim- (λ n → sn ν̇ᵃ 0̇ ⟨ f n ⟩)          ≤⟨ l≼l $ Φₛ-pres≼-x0b {y = lim g} z≼ ⟩
+  lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)     ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
+  Φ (jump _) 0̇ ⟨ lim f ⟩                ∎ where open CrossTreeReasoning
 
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} (s≼s p) = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $
   fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} (≼l p) = {!   !}
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} (l≼ p) = {!   !}
 ```
-Φₛ {a} ν̇ᵃ 0 0̇ ⟨ suc b ⟩
-suc (jump _) ⟨ b ⟩ + ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc (jump _) ⟨ b ⟩) 0̇
 
 ```agda
 Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {y = zero}  z≼ = ≼-refl
@@ -447,4 +440,3 @@ suc (jump _) ⟨ b ⟩ + ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc (jump _) ⟨ b ⟩) 0�
 SVO : Ord
 SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
- 
