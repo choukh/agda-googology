@@ -401,21 +401,23 @@ private variable
   fp (Φₛ ν̇ᵃ y 0̇) ⟨ b ⟩                  ≈˘⟨ ≡→≈ Φ-0b ⟩
   Φ (fp (Φₛ ν̇ᵃ y 0̇)) 0̇ ⟨ b ⟩            ∎ where open CrossTreeReasoning
 
-Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {y = lim g} z≼ = aux (Φₛ-pres≼-x0b z≼) where
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {y = lim g} z≼ = aux (Φₛ-pres≼-x0b z≼) (Φₛ-pres≼-xb0 z≼) where
   -- this `aux` indirection is also due to termination checker limitation
-  aux : Φₛ ν̇ᵃ 0 0̇ ⟨ 0 ⟩ ≼ Φₛ ν̇ᵃ (g 0) 0̇ ⟨ 0 ⟩ → Φₛ ν̇ᵃ 0 0̇ ⟨ c ⟩ ≼ Φ (jump _) 0̇ ⟨ c ⟩
-  aux {(zero)} p = subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] $ p
-  aux {suc c}  p = subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ begin
-    Φₛ ν̇ᵃ 0 0̇ ⟨ suc c ⟩                       ≤⟨ {!   !} ⟩
-    ⟪ Φₛ ν̇ᵃ 0 ⟫ (suc (Φₛ ν̇ᵃ 0 0̇ ⟨ c ⟩)) 0̇     ≤⟨ {!   !} ⟩
-    ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc (Φₛ ν̇ᵃ 0 0̇ ⟨ c ⟩)) 0̇ ≤⟨ {!   !} ⟩
-    ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc ((jump _) ⟨ c ⟩)) 0̇  ≤⟨ a+-infl≼ ⟩
+  aux : (∀ {c} → Φₛ ν̇ᵃ 0 0̇ ⟨ c ⟩ ≼ Φₛ ν̇ᵃ (g 0) 0̇ ⟨ c ⟩)
+      → (∀ {c} → ⟪ Φₛ ν̇ᵃ 0 ⟫ c 0̇ ≼ ⟪ Φₛ ν̇ᵃ (g 0) ⟫ c 0̇)
+      → Φₛ ν̇ᵃ 0 0̇ ⟨ d ⟩ ≼ Φ (jump _) 0̇ ⟨ d ⟩
+  aux {(zero)} p q = subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] $ p
+  aux {suc d}  p q = subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ begin
+    Φₛ ν̇ᵃ 0 0̇ ⟨ suc d ⟩                       ≤⟨ {!   !} ⟩
+    ⟪ Φₛ ν̇ᵃ 0 ⟫ (suc (Φₛ ν̇ᵃ 0 0̇ ⟨ d ⟩)) 0̇     ≤⟨ q ⟩
+    ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc (Φₛ ν̇ᵃ 0 0̇ ⟨ d ⟩)) 0̇ ≤⟨ Φₛ-pres≼-bx0 $ s≼s $ subst (_ ≼_) Φ-0b $ aux p q ⟩
+    ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc ((jump _) ⟨ d ⟩)) 0̇  ≤⟨ a+-infl≼ ⟩
     suc _ + ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc _) 0̇         ∎ where open CrossTreeReasoning
-  aux {lim f} p =                       begin
-    Φₛ ν̇ᵃ 0 0̇ ⟨ lim f ⟩                 ≈⟨ Normal.continuous (nml $ Φₛ ν̇ᵃ 0 0̇) ⟩
-    lim- (λ n → Φₛ ν̇ᵃ 0 0̇ ⟨ f n ⟩)      ≤⟨ l≼l $ aux p ⟩
-    lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)   ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
-    Φ (jump _) 0̇ ⟨ lim f ⟩              ∎ where open CrossTreeReasoning
+  aux {lim f} p q =                           begin
+    Φₛ ν̇ᵃ 0 0̇ ⟨ lim f ⟩                       ≈⟨ Normal.continuous (nml $ Φₛ ν̇ᵃ 0 0̇) ⟩
+    lim- (λ n → Φₛ ν̇ᵃ 0 0̇ ⟨ f n ⟩)            ≤⟨ l≼l $ aux p q ⟩
+    lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)         ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
+    Φ (jump _) 0̇ ⟨ lim f ⟩                    ∎ where open CrossTreeReasoning
 
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} (s≼s p) = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} (≼l p) = {!   !}
