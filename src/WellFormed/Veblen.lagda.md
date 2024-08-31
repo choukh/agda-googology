@@ -232,7 +232,7 @@ private variable
 Φ-pres≼-νb0   : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {b} → ⟪ Φ ν₁ {a} ⟫ b 0̇ ≼ ⟪ Φ ν₂ {a} ⟫ b 0̇
 -- `Φ ν₁ {suc a} b 0̇ ⟨ c ⟩ ≼ Φ ν₂ {suc a} b 0̇ ⟨ c ⟩` and
 -- `⟪ Φ ν₁ {suc a} b ⟫ c 0̇ ≼ ⟪ Φ ν₂ {suc a} b ⟫ c 0`
--- has to be writen as below due to termination checker limitation
+-- has to be written as follow due to termination checker limitation
 Φₛ-pres≼-νb0c : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → (∀ {c} → Φₛ {a} (Φ ν₁ , Φ-higher) b 0̇ ⟨ c ⟩ ≼ Φₛ {a} (Φ ν₂ , Φ-higher) b 0̇ ⟨ c ⟩)
 Φₛ-pres≼-νbc0 : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → (∀ {b c} → ⟪ Φₛ {a} (Φ ν₁ , Φ-higher) b ⟫ c 0̇ ≼ ⟪ Φₛ {a} (Φ ν₂ , Φ-higher) b ⟫ c 0̇)
 ```
@@ -402,12 +402,18 @@ private variable
   Φ (fp (Φₛ ν̇ᵃ y 0̇)) 0̇ ⟨ b ⟩            ∎ where open CrossTreeReasoning
 
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {y = lim g} z≼ = aux (Φₛ-pres≼-x0b z≼) where
+  -- this `aux` indirection is also due to termination checker limitation
   aux : Φₛ ν̇ᵃ 0 0̇ ⟨ 0 ⟩ ≼ Φₛ ν̇ᵃ (g 0) 0̇ ⟨ 0 ⟩ → Φₛ ν̇ᵃ 0 0̇ ⟨ c ⟩ ≼ Φ (jump _) 0̇ ⟨ c ⟩
-  aux {(zero)} p = subst (Φₛ ν̇ᵃ 0 0̇ ⟨ 0 ⟩ ≼_) (sym Φ-0b) $ ≼[ 0 ] $ p
-  aux {suc b} p = {!   !}
-  aux {lim f} p = begin
-    sn ν̇ᵃ 0̇ ⟨ lim f ⟩                   ≈⟨ Normal.continuous (nml $ sn ν̇ᵃ 0̇) ⟩
-    lim- (λ n → sn ν̇ᵃ 0̇ ⟨ f n ⟩)        ≤⟨ l≼l $ aux p ⟩
+  aux {(zero)} p = subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] $ p
+  aux {suc c}  p = subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ begin
+    Φₛ ν̇ᵃ 0 0̇ ⟨ suc c ⟩                       ≤⟨ {!   !} ⟩
+    ⟪ Φₛ ν̇ᵃ 0 ⟫ (suc (Φₛ ν̇ᵃ 0 0̇ ⟨ c ⟩)) 0̇     ≤⟨ {!   !} ⟩
+    ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc (Φₛ ν̇ᵃ 0 0̇ ⟨ c ⟩)) 0̇ ≤⟨ {!   !} ⟩
+    ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc ((jump _) ⟨ c ⟩)) 0̇  ≤⟨ a+-infl≼ ⟩
+    suc _ + ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc _) 0̇         ∎ where open CrossTreeReasoning
+  aux {lim f} p =                       begin
+    Φₛ ν̇ᵃ 0 0̇ ⟨ lim f ⟩                 ≈⟨ Normal.continuous (nml $ Φₛ ν̇ᵃ 0 0̇) ⟩
+    lim- (λ n → Φₛ ν̇ᵃ 0 0̇ ⟨ f n ⟩)      ≤⟨ l≼l $ aux p ⟩
     lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)   ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
     Φ (jump _) 0̇ ⟨ lim f ⟩              ∎ where open CrossTreeReasoning
 
@@ -420,7 +426,7 @@ private variable
 Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {y = zero}  z≼ = ≼-refl
 Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {y = suc y} z≼ = {!   !}
 Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} {y = lim f} z≼ = {!   !}
-Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ ν̇ᵃ _ 0̇) (Φₛ ν̇ᵃ _ 0̇) (Φₛ-pres≼-x0b p)
+Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ ν̇ᵃ _ 0̇) (Φₛ ν̇ᵃ _ 0̇) $ Φₛ-pres≼-x0b p
 Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} (≼l p) = {!   !}
 Φₛ-pres≼-xb0 {a} {ν̇ᵃ} {b} (l≼ x) = {!   !}
 ```
