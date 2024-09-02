@@ -183,6 +183,7 @@ record Higher (νᵃ : SNormal →^ a) : Type where
   field
     infl≼ : (λ x → ⟪ νᵃ ⟫ x 0̇) inflates _≼_
     pres≼ : (λ x → ⟪ νᵃ ⟫ x 0̇) preserves _≼_
+    ary≼  : νᵃ 0̇ ⟨ b ⟩ ≼ ⟪ νᵃ ⟫ b 0̇
 
 HigherSNormal : Ord → Type
 HigherSNormal a = Σ (SNormal →^ a) (Higher {a})
@@ -229,6 +230,13 @@ private variable
 ```
 
 ```agda
+Φ-infl≼-νb0 : ν ⟨ b ⟩ ≼ ⟪ Φ ν {a} ⟫ b 0̇
+Φₛ-infl≼-νb0 : ν ⟨ b ⟩ ≼ Φₛ {a} (Φ ν , Φ-higher) b 0̇ ⟨ 0 ⟩
+Φₛ-infl≼-νc0b : ν ⟨ b ⟩ ≼ Φₛ {a} (Φ ν , Φ-higher) c 0̇ ⟨ b ⟩
+Φₛ-infl≼-νᵃ : Φₛ {a} ν̇ᵃ b 0̇ ⟨ c ⟩ ≼ ⟪ Φₛ {a} ν̇ᵃ b ⟫ c 0̇
+```
+
+```agda
 Φₛ-pres≼-x0b  : (λ x → Φₛ {a} ν̇ᵃ x 0̇ ⟨ b ⟩) preserves _≼_
 Φₛ-pres≼-xb0  : (λ x → ⟪ Φₛ {a} ν̇ᵃ x ⟫ b 0̇) preserves _≼_
 ```
@@ -263,16 +271,16 @@ private variable
 ```
 
 ```agda
-Φ-higher {(zero)} {ν} = higher infl≼ pres≼ where open Strong (srg ν)
-Φ-higher {suc a} = higher Φₛ-infl≼-x0 Φₛ-pres≼-x0
-Φ-higher {lim f} = higher Φₗ-infl≼-x0 {!   !}
-```
-
-```agda
 Φ-0b : Φ ν {a} 0̇ ⟨ b ⟩ ≡ ν ⟨ b ⟩
 Φ-0b {a = zero} = refl
 Φ-0b {a = suc a} = Φ-0b {a = a}
 Φ-0b {a = lim f} = Φ-0b {a = f 0}
+```
+
+```agda
+Φ-higher {(zero)} {ν} = higher infl≼ pres≼ ≼-refl where open Strong (srg ν)
+Φ-higher {suc a} {ν} = higher Φₛ-infl≼-x0 Φₛ-pres≼-x0 $ subst (_≼ Φₛ _ _ 0̇ ⟨ 0 ⟩) (sym Φ-0b) Φₛ-infl≼-νb0
+Φ-higher {lim f} {ν} = higher Φₗ-infl≼-x0 {!   !} {!   !}
 ```
 
 ```agda
@@ -399,11 +407,6 @@ private variable
 ```
 
 ```agda
-Φ-infl≼-νb0 : ν ⟨ b ⟩ ≼ ⟪ Φ ν {a} ⟫ b 0̇
-Φₛ-infl≼-νb0 : ν ⟨ b ⟩ ≼ Φₛ {a} (Φ ν , Φ-higher) b 0̇ ⟨ 0 ⟩
-Φₛ-infl≼-νc0b : ν ⟨ b ⟩ ≼ Φₛ {a} (Φ ν , Φ-higher) c 0̇ ⟨ b ⟩
-Φₛ-infl≼-νᵃ : Φₛ {a} ν̇ᵃ b 0̇ ⟨ c ⟩ ≼ ⟪ Φₛ {a} ν̇ᵃ b ⟫ c 0̇
-
 Φ-infl≼-νb0 {a = zero}  = ≼-refl
 Φ-infl≼-νb0 {a = suc a} = Φₛ-infl≼-νb0
 Φ-infl≼-νb0 {a = lim f} = {!   !}
@@ -428,9 +431,9 @@ private variable
   suc _ + ⟪ Φₛ _ (f 0) ⟫ (suc _) 0̇            ∎ where open CrossTreeReasoning
 Φₛ-infl≼-νc0b {ν} {lim f} {a} {lim g} = subst (_ ≼_) (sym Φ-0b) $ {!   !}
 
-Φₛ-infl≼-νᵃ {b = zero} = {!  !}
-Φₛ-infl≼-νᵃ {b = suc b} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) (sym Φ-0b) Φ-infl≼-νb0
-Φₛ-infl≼-νᵃ {b = lim f} = {!   !}
+Φₛ-infl≼-νᵃ {ν̇ᵃ} {(zero)} = Higher.ary≼ (hi ν̇ᵃ)
+Φₛ-infl≼-νᵃ {ν̇ᵃ} {suc b} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) (sym Φ-0b) Φ-infl≼-νb0
+Φₛ-infl≼-νᵃ {ν̇ᵃ} {lim f} = {!   !}
 ```
 
 ```agda
@@ -486,3 +489,4 @@ private variable
 SVO : Ord
 SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
+ 
