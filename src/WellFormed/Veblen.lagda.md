@@ -271,7 +271,7 @@ private variable
 ```
 
 ```agda
-Φ-0b : Φ ν {a} 0̇ ⟨ b ⟩ ≡ ν ⟨ b ⟩
+Φ-0b : ν ⟨ b ⟩ ≡ Φ ν {a} 0̇ ⟨ b ⟩
 Φ-0b {a = zero} = refl
 Φ-0b {a = suc a} = Φ-0b {a = a}
 Φ-0b {a = lim f} = Φ-0b {a = f 0}
@@ -279,7 +279,7 @@ private variable
 
 ```agda
 Φ-higher {(zero)} {ν} = higher infl≼ pres≼ ≼-refl where open Strong (srg ν)
-Φ-higher {suc a} {ν} = higher Φₛ-infl≼-x0 Φₛ-pres≼-x0 $ subst (_≼ Φₛ _ _ 0̇ ⟨ 0 ⟩) (sym Φ-0b) Φₛ-infl≼-νb0
+Φ-higher {suc a} {ν} = higher Φₛ-infl≼-x0 Φₛ-pres≼-x0 $ subst (_≼ Φₛ _ _ 0̇ ⟨ 0 ⟩) Φ-0b Φₛ-infl≼-νb0
 Φ-higher {lim f} {ν} = higher Φₗ-infl≼-x0 {!   !} {!   !}
 ```
 
@@ -287,18 +287,18 @@ private variable
 Φₛ-pres-rd {ν̇ᵃ} {x} zero =              begin-strict
   Φₛ ν̇ᵃ x 0̇ ⟨ 0 ⟩                       <⟨ set $ Normal.pres (fst $ Φₛ ν̇ᵃ x 0̇) (nz-elim ⦃ ⟪⟫-nz {b = 0} ⦄) ⟩
   Φₛ ν̇ᵃ x 0̇ ⟨ Φₛ ν̇ᵃ x 0̇ ⟨ 0 ⟩ ⟩         <⟨ f<l-rd {n = 2} ⟩
-  fp (Φₛ ν̇ᵃ x 0̇) ⟨ 0 ⟩                  ≈˘⟨ Φ-0b ⟩
+  fp (Φₛ ν̇ᵃ x 0̇) ⟨ 0 ⟩                  ≈⟨ Φ-0b ⟩
   Φₛ ν̇ᵃ (suc x) 0̇ ⟨ 0 ⟩                 ∎ where open RoadReasoning
 Φₛ-pres-rd {ν̇ᵃ} {x} (suc {b} r) =       begin-strict
   Φₛ ν̇ᵃ x 0̇ ⟨ 0 ⟩                       <⟨ Φₛ-pres-rd r ⟩
   Φₛ ν̇ᵃ b 0̇ ⟨ 0 ⟩                       <⟨ set $ Normal.pres (fst $ Φₛ ν̇ᵃ b 0̇) (nz-elim ⦃ ⟪⟫-nz {b = 0} ⦄) ⟩
   Φₛ ν̇ᵃ b 0̇ ⟨ Φₛ ν̇ᵃ b 0̇ ⟨ 0 ⟩ ⟩         <⟨ f<l-rd {n = 2} ⟩
-  fp (Φₛ ν̇ᵃ b 0̇) ⟨ 0 ⟩                  ≈˘⟨ Φ-0b ⟩
+  fp (Φₛ ν̇ᵃ b 0̇) ⟨ 0 ⟩                  ≈⟨ Φ-0b ⟩
   Φₛ ν̇ᵃ (suc b) 0̇ ⟨ 0 ⟩                 ∎ where open RoadReasoning
 Φₛ-pres-rd {ν̇ᵃ} {x} (lim {f} {n} r) =   begin-strict
   Φₛ ν̇ᵃ x 0̇ ⟨ 0 ⟩                       <⟨ Φₛ-pres-rd r ⟩
   Φₛ ν̇ᵃ (f n) 0̇ ⟨ 0 ⟩                   <⟨ f<l-rd ⟩
-  (jump _) ⟨ 0 ⟩                        ≈˘⟨ Φ-0b ⟩
+  (jump _) ⟨ 0 ⟩                        ≈⟨ Φ-0b ⟩
   Φ (jump _) 0̇ ⟨ 0 ⟩                    ∎ where open RoadReasoning
 ```
 
@@ -318,8 +318,8 @@ private variable
 
 ```agda
 Φₛ-infl≼-x0 {ν̇ᵃ} {(zero)} = z≼
-Φₛ-infl≼-x0 {ν̇ᵃ} {suc x} = subst (suc x ≼_) (sym Φ-0b) $ ≼[ 2 ] Φₛ-Φₛ-infl≺
-Φₛ-infl≼-x0 {ν̇ᵃ} {lim f} = subst (lim f ≼_) (sym Φ-0b) $ l≼l Φₛ-infl≼-x0
+Φₛ-infl≼-x0 {ν̇ᵃ} {suc x} = subst (suc x ≼_) Φ-0b $ ≼[ 2 ] Φₛ-Φₛ-infl≺
+Φₛ-infl≼-x0 {ν̇ᵃ} {lim f} = subst (lim f ≼_) Φ-0b $ l≼l Φₛ-infl≼-x0
 ```
 
 ```agda
@@ -336,8 +336,8 @@ private variable
 
 ```agda
 Φₗ-infl≼-x0 {ν̇ᶠ} {(zero)} = z≼
-Φₗ-infl≼-x0 {ν̇ᶠ} {suc x} = subst (suc x ≼_) (sym Φ-0b) $ ≼[ 1 ] $ {!   !}
-Φₗ-infl≼-x0 {ν̇ᶠ} {lim f} = subst (lim f ≼_) (sym Φ-0b) $ l≼ls $ ≼-trans Φₗ-infl≼-x0 a+-infl≼
+Φₗ-infl≼-x0 {ν̇ᶠ} {suc x} = subst (suc x ≼_) Φ-0b $ ≼[ 1 ] $ {!   !}
+Φₗ-infl≼-x0 {ν̇ᶠ} {lim f} = subst (lim f ≼_) Φ-0b $ l≼ls $ ≼-trans Φₗ-infl≼-x0 a+-infl≼
 ```
 
 ```agda
@@ -348,17 +348,17 @@ private variable
 
 ```agda
 Φₛ-pres≼-x0 {y = zero} z≼  = ≼-refl
-Φₛ-pres≼-x0 {y = suc y} z≼ = subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ Φₛ-pres≼-x0 z≼
-Φₛ-pres≼-x0 {y = lim f} z≼ = subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] $ Φₛ-pres≼-x0 z≼
-Φₛ-pres≼-x0 {ν̇ᵃ} (s≼s {a} {b} p) = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ l≼l q where
+Φₛ-pres≼-x0 {y = suc y} z≼ = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ Φₛ-pres≼-x0 z≼
+Φₛ-pres≼-x0 {y = lim f} z≼ = subst (_ ≼_) Φ-0b $ ≼[ 0 ] $ Φₛ-pres≼-x0 z≼
+Φₛ-pres≼-x0 {ν̇ᵃ} (s≼s {a} {b} p) = subst₂ _≼_ Φ-0b Φ-0b $ l≼l q where
   q : Itₙ (λ _ x → Φₛ ν̇ᵃ a 0̇ ⟨ x ⟩) 0 n ≼ Itₙ (λ _ x → Φₛ ν̇ᵃ b 0̇ ⟨ x ⟩) 0 n
   q {(zero)} = ≼-refl
   q {suc n} =                           begin
     Φₛ ν̇ᵃ a 0̇ ⟨ _ ⟩                     ≤⟨ Strong.pres≼ (srg (Φₛ ν̇ᵃ a 0̇)) q ⟩
     Φₛ ν̇ᵃ a 0̇ ⟨ _ ⟩                     ≤⟨ Φₛ-pres≼-x0b p ⟩
     Φₛ ν̇ᵃ b 0̇ ⟨ _ ⟩                     ∎ where open CrossTreeReasoning
-Φₛ-pres≼-x0 (≼l {n} p) = subst (_ ≼_) (sym Φ-0b) $ ≼[ n ] (Φₛ-pres≼-x0 p)
-Φₛ-pres≼-x0 (l≼ p) = subst (_≼ _) (sym Φ-0b) $ l≼ (Φₛ-pres≼-x0 p)
+Φₛ-pres≼-x0 (≼l {n} p) = subst (_ ≼_) Φ-0b $ ≼[ n ] (Φₛ-pres≼-x0 p)
+Φₛ-pres≼-x0 (l≼ p) = subst (_≼ _) Φ-0b $ l≼ (Φₛ-pres≼-x0 p)
 ```
 
 ```agda
@@ -387,9 +387,9 @@ private variable
 ```
 
 ```agda
-Φₛ-pres≼-νb0c {b = zero} p  = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ p
-Φₛ-pres≼-νb0c {b = suc b} p = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ fp-pres≼ (Φₛ _ b 0̇) (Φₛ _ b 0̇) $ Φₛ-pres≼-νb0c p
-Φₛ-pres≼-νb0c {ν₁} {ν₂} {a} {lim f} p = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ jump-pres≼ (l≼l $ Φₛ-pres≼-νb0c p)
+Φₛ-pres≼-νb0c {b = zero} p  = subst₂ _≼_ Φ-0b Φ-0b $ p
+Φₛ-pres≼-νb0c {b = suc b} p = subst₂ _≼_ Φ-0b Φ-0b $ fp-pres≼ (Φₛ _ b 0̇) (Φₛ _ b 0̇) $ Φₛ-pres≼-νb0c p
+Φₛ-pres≼-νb0c {ν₁} {ν₂} {a} {lim f} p = subst₂ _≼_ Φ-0b Φ-0b $ jump-pres≼ (l≼l $ Φₛ-pres≼-νb0c p)
   λ {n} {x} {y} q →                     begin
   ⟪ Φₛ (Φ ν₁ , Φ-higher) (f n) ⟫ x 0̇    ≤⟨ Φₛ-pres≼-bx0 q ⟩
   ⟪ Φₛ (Φ ν₁ , Φ-higher) (f n) ⟫ y 0̇    ≤⟨ Φₛ-pres≼-νbc0 p ⟩
@@ -411,22 +411,22 @@ private variable
 Φ-infl≼-νb0 {a = suc a} = Φₛ-infl≼-νb0
 Φ-infl≼-νb0 {a = lim f} = {!   !}
 
-Φₛ-infl≼-νb0 {ν} {(zero)} = subst (_ ≼_) (sym Φ-0b) ≼-refl
+Φₛ-infl≼-νb0 {ν} {(zero)} = subst (_ ≼_) Φ-0b ≼-refl
 Φₛ-infl≼-νb0 {ν} {suc b} {a} =                begin
   ν ⟨ suc b ⟩                                 ≤⟨ Strong.pres≼ (srg ν) Φₛ-Φₛ-infl≺ ⟩
   ν ⟨ Φₛ {a} _ b 0̇ ⟨ Φₛ _ b 0̇ ⟨ 0 ⟩ ⟩ ⟩       ≤⟨ Φₛ-infl≼-νc0b ⟩
   Φₛ _ b 0̇ ⟨ Φₛ _ b 0̇ ⟨ Φₛ _ b 0̇ ⟨ 0 ⟩ ⟩ ⟩    ≤⟨ f≼l {n = 3} ⟩
-  fp (Φₛ (Φ ν , Φ-higher) b 0̇) ⟨ 0 ⟩          ≈˘⟨ ≡→≈ Φ-0b ⟩
+  fp (Φₛ (Φ ν , Φ-higher) b 0̇) ⟨ 0 ⟩          ≈⟨ ≡→≈ Φ-0b ⟩
   Φ (fp (Φₛ (Φ ν , Φ-higher) b 0̇)) 0̇ ⟨ 0 ⟩    ∎ where open CrossTreeReasoning
-Φₛ-infl≼-νb0 {ν} {lim f} = subst (_ ≼_) (sym Φ-0b) $ begin
+Φₛ-infl≼-νb0 {ν} {lim f} = subst (_ ≼_) Φ-0b $ begin
   ν ⟨ lim f ⟩                                 ≈⟨ Normal.continuous (nml $ ν) ⟩
   lim- (λ n → ν ⟨ f n ⟩)                      ≤⟨ l≼l Φₛ-infl≼-νb0 ⟩
   lim- (λ n → Φₛ _ (f n) 0̇ ⟨ 0 ⟩)             ∎ where open CrossTreeReasoning
 
-Φₛ-infl≼-νc0b {c = zero} = subst (_ ≼_) (sym Φ-0b) $ ≼-refl
-Φₛ-infl≼-νc0b {c = suc c} = subst (_ ≼_) (sym Φ-0b) $ ≼-trans Φₛ-infl≼-νc0b (fp-infl≼ (Φₛ _ c 0̇))
-Φₛ-infl≼-νc0b {ν} {(zero)} {a} {lim g} = subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] Φₛ-infl≼-νc0b
-Φₛ-infl≼-νc0b {ν} {suc b}  {a} {lim g} = subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ begin
+Φₛ-infl≼-νc0b {c = zero} = subst (_ ≼_) Φ-0b $ ≼-refl
+Φₛ-infl≼-νc0b {c = suc c} = subst (_ ≼_) Φ-0b $ ≼-trans Φₛ-infl≼-νc0b (fp-infl≼ (Φₛ _ c 0̇))
+Φₛ-infl≼-νc0b {ν} {(zero)} {a} {lim g} = subst (_ ≼_) Φ-0b $ ≼[ 0 ] Φₛ-infl≼-νc0b
+Φₛ-infl≼-νc0b {ν} {suc b}  {a} {lim g} = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
   ν ⟨ suc b ⟩                                 ≤⟨ Φₛ-infl≼-νc0b ⟩
   Φₛ _ (g 0) 0̇ ⟨ suc b ⟩                      ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
   Φₛ _ (g 0) 0̇ ⟨ suc ((jump _) ⟨ b ⟩ ) ⟩      ≤⟨ Φₛ-infl≼-νᵃ ⟩
@@ -439,8 +439,8 @@ private variable
   Φ (jump _) 0̇ ⟨ lim f ⟩                      ∎ where open CrossTreeReasoning
 
 Φₛ-infl≼-νᵃ {ν̇ᵃ} {(zero)} = Higher.ary≼ (hi ν̇ᵃ)
-Φₛ-infl≼-νᵃ {ν̇ᵃ} {suc b} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) (sym Φ-0b) Φ-infl≼-νb0
-Φₛ-infl≼-νᵃ {ν̇ᵃ} {lim f} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) (sym Φ-0b) Φ-infl≼-νb0
+Φₛ-infl≼-νᵃ {ν̇ᵃ} {suc b} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) Φ-0b Φ-infl≼-νb0
+Φₛ-infl≼-νᵃ {ν̇ᵃ} {lim f} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) Φ-0b Φ-infl≼-νb0
 ```
 
 ```agda
@@ -448,15 +448,15 @@ private variable
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {y = suc y} z≼ = begin
   Φₛ {a} ν̇ᵃ 0 0̇ ⟨ b ⟩                         ≤⟨ Φₛ-pres≼-x0b z≼ ⟩
   Φₛ {a} ν̇ᵃ y 0̇ ⟨ b ⟩                         ≤⟨ fp-infl≼ (Φₛ {a} ν̇ᵃ y 0̇) ⟩
-  fp (Φₛ ν̇ᵃ y 0̇) ⟨ b ⟩                        ≈˘⟨ ≡→≈ Φ-0b ⟩
+  fp (Φₛ ν̇ᵃ y 0̇) ⟨ b ⟩                        ≈⟨ ≡→≈ Φ-0b ⟩
   Φ (fp (Φₛ ν̇ᵃ y 0̇)) 0̇ ⟨ b ⟩                  ∎ where open CrossTreeReasoning
 
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {y = lim g} z≼ = aux (Φₛ-pres≼-x0b z≼) where
   -- this `aux` indirection is also due to termination checker limitation
   aux : (∀ {c} → Φₛ ν̇ᵃ 0 0̇ ⟨ c ⟩ ≼ Φₛ ν̇ᵃ (g 0) 0̇ ⟨ c ⟩)
       → Φₛ ν̇ᵃ 0 0̇ ⟨ d ⟩ ≼ Φ (jump _) 0̇ ⟨ d ⟩
-  aux {(zero)} p = subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] $ p
-  aux {suc d}  p = subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ begin
+  aux {(zero)} p = subst (_ ≼_) Φ-0b $ ≼[ 0 ] $ p
+  aux {suc d}  p = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
     Φₛ ν̇ᵃ 0 0̇ ⟨ suc d ⟩                       ≤⟨ p ⟩
     Φₛ ν̇ᵃ (g 0) 0̇ ⟨ suc d ⟩                   ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
     Φₛ ν̇ᵃ (g 0) 0̇ ⟨ suc ((jump _) ⟨ d ⟩) ⟩    ≤⟨ Φₛ-infl≼-νᵃ ⟩
@@ -468,7 +468,7 @@ private variable
     lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)         ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
     Φ (jump _) 0̇ ⟨ lim f ⟩                    ∎ where open CrossTreeReasoning
 
-Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} (s≼s p) = subst₂ _≼_ (sym Φ-0b) (sym Φ-0b) $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} (s≼s p) = subst₂ _≼_ Φ-0b Φ-0b $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} (≼l p) = {!   !}
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} (l≼ p) = {!   !}
 ```
