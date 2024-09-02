@@ -418,22 +418,29 @@ private variable
   Φₛ _ b 0̇ ⟨ Φₛ _ b 0̇ ⟨ Φₛ _ b 0̇ ⟨ 0 ⟩ ⟩ ⟩    ≤⟨ f≼l {n = 3} ⟩
   fp (Φₛ (Φ ν , Φ-higher) b 0̇) ⟨ 0 ⟩          ≈˘⟨ ≡→≈ Φ-0b ⟩
   Φ (fp (Φₛ (Φ ν , Φ-higher) b 0̇)) 0̇ ⟨ 0 ⟩    ∎ where open CrossTreeReasoning
-Φₛ-infl≼-νb0 {ν} {lim f} = subst (_ ≼_) (sym Φ-0b) $ {!   !}
+Φₛ-infl≼-νb0 {ν} {lim f} = subst (_ ≼_) (sym Φ-0b) $ begin
+  ν ⟨ lim f ⟩                                 ≈⟨ Normal.continuous (nml $ ν) ⟩
+  lim- (λ n → ν ⟨ f n ⟩)                      ≤⟨ l≼l Φₛ-infl≼-νb0 ⟩
+  lim- (λ n → Φₛ _ (f n) 0̇ ⟨ 0 ⟩)             ∎ where open CrossTreeReasoning
 
 Φₛ-infl≼-νc0b {c = zero} = subst (_ ≼_) (sym Φ-0b) $ ≼-refl
 Φₛ-infl≼-νc0b {c = suc c} = subst (_ ≼_) (sym Φ-0b) $ ≼-trans Φₛ-infl≼-νc0b (fp-infl≼ (Φₛ _ c 0̇))
-Φₛ-infl≼-νc0b {ν} {(zero)} {a} {lim f} = subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] Φₛ-infl≼-νc0b
-Φₛ-infl≼-νc0b {ν} {suc b} {a} {lim f} = subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ begin
+Φₛ-infl≼-νc0b {ν} {(zero)} {a} {lim g} = subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] Φₛ-infl≼-νc0b
+Φₛ-infl≼-νc0b {ν} {suc b}  {a} {lim g} = subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ begin
   ν ⟨ suc b ⟩                                 ≤⟨ Φₛ-infl≼-νc0b ⟩
-  Φₛ _ (f 0) 0̇ ⟨ suc b ⟩                      ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
-  Φₛ _ (f 0) 0̇ ⟨ suc ((jump _) ⟨ b ⟩ ) ⟩      ≤⟨ Φₛ-infl≼-νᵃ ⟩
-  ⟪ Φₛ _ (f 0) ⟫ (suc ((jump _) ⟨ b ⟩ )) 0̇    ≤⟨ a+-infl≼ ⟩
-  suc _ + ⟪ Φₛ _ (f 0) ⟫ (suc _) 0̇            ∎ where open CrossTreeReasoning
-Φₛ-infl≼-νc0b {ν} {lim f} {a} {lim g} = subst (_ ≼_) (sym Φ-0b) $ {!   !}
+  Φₛ _ (g 0) 0̇ ⟨ suc b ⟩                      ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
+  Φₛ _ (g 0) 0̇ ⟨ suc ((jump _) ⟨ b ⟩ ) ⟩      ≤⟨ Φₛ-infl≼-νᵃ ⟩
+  ⟪ Φₛ _ (g 0) ⟫ (suc ((jump _) ⟨ b ⟩ )) 0̇    ≤⟨ a+-infl≼ ⟩
+  suc _ + ⟪ Φₛ _ (g 0) ⟫ (suc _) 0̇            ∎ where open CrossTreeReasoning
+Φₛ-infl≼-νc0b {ν} {lim f} {a} {lim g} = begin
+  ν ⟨ lim f ⟩                                 ≈⟨ Normal.continuous (nml $ ν) ⟩
+  lim- (λ n → ν ⟨ f n ⟩)                      ≤⟨ l≼l $ Φₛ-infl≼-νc0b {c = lim g} ⟩
+  lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)           ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
+  Φ (jump _) 0̇ ⟨ lim f ⟩                      ∎ where open CrossTreeReasoning
 
 Φₛ-infl≼-νᵃ {ν̇ᵃ} {(zero)} = Higher.ary≼ (hi ν̇ᵃ)
 Φₛ-infl≼-νᵃ {ν̇ᵃ} {suc b} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) (sym Φ-0b) Φ-infl≼-νb0
-Φₛ-infl≼-νᵃ {ν̇ᵃ} {lim f} = {!   !}
+Φₛ-infl≼-νᵃ {ν̇ᵃ} {lim f} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) (sym Φ-0b) Φ-infl≼-νb0
 ```
 
 ```agda
@@ -489,4 +496,3 @@ private variable
 SVO : Ord
 SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
- 
