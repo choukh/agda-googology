@@ -229,15 +229,6 @@ private variable
 ```
 
 ```agda
-Φ-pres≼-νb0   : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {b} → ⟪ Φ ν₁ {a} ⟫ b 0̇ ≼ ⟪ Φ ν₂ {a} ⟫ b 0̇
--- `Φ ν₁ {suc a} b 0̇ ⟨ c ⟩ ≼ Φ ν₂ {suc a} b 0̇ ⟨ c ⟩` and
--- `⟪ Φ ν₁ {suc a} b ⟫ c 0̇ ≼ ⟪ Φ ν₂ {suc a} b ⟫ c 0`
--- has to be written as follow due to termination checker limitation
-Φₛ-pres≼-νb0c : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → (∀ {c} → Φₛ {a} (Φ ν₁ , Φ-higher) b 0̇ ⟨ c ⟩ ≼ Φₛ {a} (Φ ν₂ , Φ-higher) b 0̇ ⟨ c ⟩)
-Φₛ-pres≼-νbc0 : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → (∀ {b c} → ⟪ Φₛ {a} (Φ ν₁ , Φ-higher) b ⟫ c 0̇ ≼ ⟪ Φₛ {a} (Φ ν₂ , Φ-higher) b ⟫ c 0̇)
-```
-
-```agda
 Φₛ-pres≼-x0b  : (λ x → Φₛ {a} ν̇ᵃ x 0̇ ⟨ b ⟩) preserves _≼_
 Φₛ-pres≼-xb0  : (λ x → ⟪ Φₛ {a} ν̇ᵃ x ⟫ b 0̇) preserves _≼_
 ```
@@ -368,6 +359,15 @@ private variable
 ```
 
 ```agda
+Φ-pres≼-νb0   : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {b} → ⟪ Φ ν₁ {a} ⟫ b 0̇ ≼ ⟪ Φ ν₂ {a} ⟫ b 0̇
+-- `Φ ν₁ {suc a} b 0̇ ⟨ c ⟩ ≼ Φ ν₂ {suc a} b 0̇ ⟨ c ⟩` and
+-- `⟪ Φ ν₁ {suc a} b ⟫ c 0̇ ≼ ⟪ Φ ν₂ {suc a} b ⟫ c 0`
+-- has to be written as follow due to termination checker limitation
+Φₛ-pres≼-νb0c : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → (∀ {c} → Φₛ {a} (Φ ν₁ , Φ-higher) b 0̇ ⟨ c ⟩ ≼ Φₛ {a} (Φ ν₂ , Φ-higher) b 0̇ ⟨ c ⟩)
+Φₛ-pres≼-νbc0 : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → (∀ {b c} → ⟪ Φₛ {a} (Φ ν₁ , Φ-higher) b ⟫ c 0̇ ≼ ⟪ Φₛ {a} (Φ ν₂ , Φ-higher) b ⟫ c 0̇)
+```
+
+```agda
 Φ-pres≼-νb0 {a = zero} p = p
 Φ-pres≼-νb0 {a = suc a} p = Φₛ-pres≼-νb0c p
 Φ-pres≼-νb0 {a = lim f} p = {!   !}
@@ -394,6 +394,41 @@ private variable
 ```
 
 ```agda
+Φ-infl≼-νb0 : ν ⟨ b ⟩ ≼ ⟪ Φ ν {a} ⟫ b 0̇
+Φₛ-infl≼-νb0 : ν ⟨ b ⟩ ≼ Φₛ {a} (Φ ν , Φ-higher) b 0̇ ⟨ 0 ⟩
+Φₛ-infl≼-νc0b : ν ⟨ b ⟩ ≼ Φₛ {a} (Φ ν , Φ-higher) c 0̇ ⟨ b ⟩
+Φₛ-infl≼-νᵃ : Φₛ {a} ν̇ᵃ b 0̇ ⟨ c ⟩ ≼ ⟪ Φₛ {a} ν̇ᵃ b ⟫ c 0̇
+
+Φ-infl≼-νb0 {a = zero}  = ≼-refl
+Φ-infl≼-νb0 {a = suc a} = Φₛ-infl≼-νb0
+Φ-infl≼-νb0 {a = lim f} = {!   !}
+
+Φₛ-infl≼-νb0 {ν} {(zero)} = subst (_ ≼_) (sym Φ-0b) ≼-refl
+Φₛ-infl≼-νb0 {ν} {suc b} {a} =             begin
+  ν ⟨ suc b ⟩                               ≤⟨ {!   !} ⟩
+  ν ⟨ Φₛ {a} _ b 0̇ ⟨ Φₛ (Φ ν , Φ-higher) b 0̇ ⟨ 0 ⟩ ⟩ ⟩ ≤⟨ Φₛ-infl≼-νc0b ⟩
+  Φₛ _ b 0̇ ⟨ Φₛ _ b 0̇ ⟨ Φₛ _ b 0̇ ⟨ 0 ⟩ ⟩ ⟩  ≤⟨ f≼l {n = 3} ⟩
+  fp (Φₛ (Φ ν , Φ-higher) b 0̇) ⟨ 0 ⟩        ≈˘⟨ ≡→≈ Φ-0b ⟩
+  Φ (fp (Φₛ (Φ ν , Φ-higher) b 0̇)) 0̇ ⟨ 0 ⟩  ∎ where open CrossTreeReasoning
+Φₛ-infl≼-νb0 {ν} {lim f} = {!   !}
+
+Φₛ-infl≼-νc0b {c = zero} = subst (_ ≼_) (sym Φ-0b) $ ≼-refl
+Φₛ-infl≼-νc0b {c = suc c} = subst (_ ≼_) (sym Φ-0b) $ ≼-trans Φₛ-infl≼-νc0b (fp-infl≼ (Φₛ _ c 0̇))
+Φₛ-infl≼-νc0b {ν} {(zero)} {a} {lim f} = subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] Φₛ-infl≼-νc0b
+Φₛ-infl≼-νc0b {ν} {suc b} {a} {lim f} = subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ begin
+  ν ⟨ suc b ⟩                           ≤⟨ Φₛ-infl≼-νc0b ⟩
+  Φₛ {a} _ (f 0) 0̇ ⟨ suc b ⟩            ≤⟨ {!   !} ⟩
+  Φₛ _ (f 0) 0̇ ⟨ suc _ ⟩                ≤⟨ Φₛ-infl≼-νᵃ ⟩
+  ⟪ Φₛ _ (f 0) ⟫ (suc _) 0̇              ≤⟨ a+-infl≼ ⟩
+  suc _ + ⟪ Φₛ _ (f 0) ⟫ (suc _) 0̇      ∎ where open CrossTreeReasoning
+Φₛ-infl≼-νc0b {ν} {lim f} {a} {lim g} = subst (_ ≼_) (sym Φ-0b) $ {!   !}
+
+Φₛ-infl≼-νᵃ {b = zero} = {!  !}
+Φₛ-infl≼-νᵃ {b = suc b} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) (sym Φ-0b) Φ-infl≼-νb0
+Φₛ-infl≼-νᵃ {b = lim f} = {!   !}
+```
+
+```agda
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {y = zero}  z≼ = ≼-refl
 Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {y = suc y} z≼ = begin
   Φₛ {a} ν̇ᵃ 0 0̇ ⟨ b ⟩                   ≤⟨ Φₛ-pres≼-x0b z≼ ⟩
@@ -401,21 +436,21 @@ private variable
   fp (Φₛ ν̇ᵃ y 0̇) ⟨ b ⟩                  ≈˘⟨ ≡→≈ Φ-0b ⟩
   Φ (fp (Φₛ ν̇ᵃ y 0̇)) 0̇ ⟨ b ⟩            ∎ where open CrossTreeReasoning
 
-Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {y = lim g} z≼ = aux (Φₛ-pres≼-x0b z≼) (Φₛ-pres≼-xb0 z≼) where
+Φₛ-pres≼-x0b {a} {ν̇ᵃ} {b} {y = lim g} z≼ = aux (Φₛ-pres≼-x0b z≼) where
   -- this `aux` indirection is also due to termination checker limitation
   aux : (∀ {c} → Φₛ ν̇ᵃ 0 0̇ ⟨ c ⟩ ≼ Φₛ ν̇ᵃ (g 0) 0̇ ⟨ c ⟩)
-      → (∀ {c} → ⟪ Φₛ ν̇ᵃ 0 ⟫ c 0̇ ≼ ⟪ Φₛ ν̇ᵃ (g 0) ⟫ c 0̇)
       → Φₛ ν̇ᵃ 0 0̇ ⟨ d ⟩ ≼ Φ (jump _) 0̇ ⟨ d ⟩
-  aux {(zero)} p q = subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] $ p
-  aux {suc d}  p q = subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ begin
-    Φₛ ν̇ᵃ 0 0̇ ⟨ suc d ⟩                       ≤⟨ {!   !} ⟩
-    ⟪ Φₛ ν̇ᵃ 0 ⟫ (suc (Φₛ ν̇ᵃ 0 0̇ ⟨ d ⟩)) 0̇     ≤⟨ q ⟩
-    ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc (Φₛ ν̇ᵃ 0 0̇ ⟨ d ⟩)) 0̇ ≤⟨ Φₛ-pres≼-bx0 $ s≼s $ subst (_ ≼_) Φ-0b $ aux p q ⟩
+  aux {(zero)} p = subst (_ ≼_) (sym Φ-0b) $ ≼[ 0 ] $ p
+  aux {suc d}  p = subst (_ ≼_) (sym Φ-0b) $ ≼[ 1 ] $ begin
+    Φₛ ν̇ᵃ 0 0̇ ⟨ suc d ⟩                       ≤⟨ p ⟩
+    Φₛ ν̇ᵃ (g 0) 0̇ ⟨ suc d ⟩                   ≤⟨ {!   !} ⟩
+    Φₛ ν̇ᵃ (g 0) 0̇ ⟨ suc (Φₛ ν̇ᵃ 0 0̇ ⟨ d ⟩) ⟩   ≤⟨ Φₛ-infl≼-νᵃ ⟩
+    ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc (Φₛ ν̇ᵃ 0 0̇ ⟨ d ⟩)) 0̇ ≤⟨ Φₛ-pres≼-bx0 $ s≼s $ subst (_ ≼_) Φ-0b $ aux p ⟩
     ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc ((jump _) ⟨ d ⟩)) 0̇  ≤⟨ a+-infl≼ ⟩
     suc _ + ⟪ Φₛ ν̇ᵃ (g 0) ⟫ (suc _) 0̇         ∎ where open CrossTreeReasoning
-  aux {lim f} p q =                           begin
+  aux {lim f} p =                             begin
     Φₛ ν̇ᵃ 0 0̇ ⟨ lim f ⟩                       ≈⟨ Normal.continuous (nml $ Φₛ ν̇ᵃ 0 0̇) ⟩
-    lim- (λ n → Φₛ ν̇ᵃ 0 0̇ ⟨ f n ⟩)            ≤⟨ l≼l $ aux p q ⟩
+    lim- (λ n → Φₛ ν̇ᵃ 0 0̇ ⟨ f n ⟩)            ≤⟨ l≼l $ aux p ⟩
     lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)         ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
     Φ (jump _) 0̇ ⟨ lim f ⟩                    ∎ where open CrossTreeReasoning
 
