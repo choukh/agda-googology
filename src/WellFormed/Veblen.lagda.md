@@ -27,8 +27,8 @@ open import Agda.Builtin.Equality.Rewrite public
 ## 强正规跳出
 
 ```agda
-record Jump : Type where
-  constructor by
+record Jumper : Type where
+  constructor jumper
   field
     init : Ord
     step : ℕ → Func
@@ -107,13 +107,13 @@ record Jump : Type where
 ```
 
 ```agda
-  jump_ : SNormal
-  jump_ = normal F⁺ F⁺-pres ≈-refl , strong F⁺-infl≼ F⁺-pres≼ ⦃ F⁺-isLim ⦄ F⁺-absorb-n
-open Jump
+  jump : SNormal
+  jump = normal F⁺ F⁺-pres ≈-refl , strong F⁺-infl≼ F⁺-pres≼ ⦃ F⁺-isLim ⦄ F⁺-absorb-n
+open Jumper
 ```
 
 ```agda
-module _ {j k : Jump}
+module _ {j k : Jumper}
   (init≼ : init j ≼ init k)
   (step≼ : ∀ {n a b} → a ≼ b → step j n a ≼ step k n b) where
 
@@ -233,24 +233,39 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : ΦSegment a ν
 ```
 
 ```agda
-Φₛ Φ̇ᵃ zero = fst Φ̇ᵃ
-Φₛ Φ̇ᵃ (suc b) = Φ (fp (Φₛ Φ̇ᵃ b 0̇))
-Φₛ Φ̇ᵃ (lim g) = Φ $ jump by
-  (lim (λ n → Φₛ Φ̇ᵃ (g n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres it ⦄)
+jumperₛ : (Φ̇ᵃ : ΦSegment a ν) (g : Seq) (w : wf g) → Jumper
+jumperₛ Φ̇ᵃ g w = jumper
+  (lim (λ n → Φₛ Φ̇ᵃ (g n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres w ⦄)
   (λ n x → ⟪ Φₛ Φ̇ᵃ (g n) ⟫ x 0̇)
-  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ Φₛ-infl≼-bx0 Φₛ-pres≼-bx0 (Φₛ-pres≼-xb0 (≤→≼ (<→≤ it)))
+  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ Φₛ-infl≼-bx0 Φₛ-pres≼-bx0 (Φₛ-pres≼-xb0 (≤→≼ (<→≤ w)))
 ```
 
 ```agda
-Φₗ {f} Φ̇ᶠ zero = fst Φ̇ᶠ
-Φₗ {f} Φ̇ᶠ (suc b) = Φ $ jump by
+Φₛ Φ̇ᵃ zero = fst Φ̇ᵃ
+Φₛ Φ̇ᵃ (suc b) = Φ (fp (Φₛ Φ̇ᵃ b 0̇))
+Φₛ Φ̇ᵃ (lim g) = Φ (jump (jumperₛ Φ̇ᵃ g it))
+```
+
+```agda
+jumperₗₛ : (f : Seq) ⦃ _ : wf f ⦄ (Φ̇ᶠ : ∀ {n} → ΦSegment (f n) ν) (b : Ord) → Jumper
+jumperₗₛ f Φ̇ᶠ b = jumper
   (lim (Itₙ (λ n x → x + ⟪ Φₗ {f} Φ̇ᶠ {n} b ⟫ 1 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄)
   (λ n x → ⟪ Φₗ {f} Φ̇ᶠ {n} b ⟫ x 0̇)
   ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!    !} {!   !} {!   !}
-Φₗ {f} Φ̇ᶠ (lim g) = Φ $ jump by
+```
+
+```agda
+jumperₗₗ : (f : Seq) ⦃ _ : wf f ⦄ (Φ̇ᶠ : ∀ {n} → ΦSegment (f n) ν) (g : Seq) (w : wf g) → Jumper
+jumperₗₗ f Φ̇ᶠ g w = jumper
   (lim (Itₙ (λ n x → x + ⟪ Φₗ {f} Φ̇ᶠ {n} (g n) ⟫ 0 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄)
   (λ n x → ⟪ Φₗ {f} Φ̇ᶠ {n} (g n) ⟫ x 0̇)
   ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!   !} {!   !} {!   !}
+```
+
+```agda
+Φₗ Φ̇ᶠ zero = fst Φ̇ᶠ
+Φₗ {f} Φ̇ᶠ (suc b) = Φ (jump (jumperₗₛ f Φ̇ᶠ b))
+Φₗ {f} Φ̇ᶠ (lim g) = Φ (jump (jumperₗₗ f Φ̇ᶠ g it))
 ```
 
 ```agda
@@ -275,7 +290,7 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : ΦSegment a ν
 Φₛ-pres-rd {Φ̇ᵃ} {x} (lim {f} {n} r) =   begin-strict
   Φₛ Φ̇ᵃ x 0̇ ⟨ 0 ⟩                       <⟨ Φₛ-pres-rd r ⟩
   Φₛ Φ̇ᵃ (f n) 0̇ ⟨ 0 ⟩                   <⟨ f<l-rd ⟩
-  (jump _) ⟨ 0 ⟩                        ≈⟨ Φ-0b ⟩
+  jump _ ⟨ 0 ⟩                          ≈⟨ Φ-0b ⟩
   Φ (jump _) 0̇ ⟨ 0 ⟩                    ∎ where open RoadReasoning
 ```
 
@@ -418,8 +433,8 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : ΦSegment a ν
 Φₛ-infl≼-νb0x {ν} {suc x}  {Φ̇ᵃ} {b = lim g} = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
   ν ⟨ suc x ⟩                                 ≤⟨ Φₛ-infl≼-νb0x ⟩
   Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc x ⟩                     ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
-  Φₛ _ (g 0) 0̇ ⟨ suc ((jump _) ⟨ x ⟩ ) ⟩      ≤⟨ Φₛ-infl≼-νbx0 ⟩
-  ⟪ Φₛ _ (g 0) ⟫ (suc ((jump _) ⟨ x ⟩ )) 0̇    ≤⟨ a+-infl≼ ⟩
+  Φₛ _ (g 0) 0̇ ⟨ suc (jump _ ⟨ x ⟩ ) ⟩        ≤⟨ Φₛ-infl≼-νbx0 ⟩
+  ⟪ Φₛ _ (g 0) ⟫ (suc (jump _ ⟨ x ⟩ )) 0̇      ≤⟨ a+-infl≼ ⟩
   suc _ + ⟪ Φₛ Φ̇ᵃ (g 0) ⟫ (suc _) 0̇           ∎ where open CrossTreeReasoning
 Φₛ-infl≼-νb0x {ν} {lim f}  {Φ̇ᵃ} {b = lim g} = begin
   ν ⟨ lim f ⟩                                 ≈⟨ Normal.continuous (nml $ ν) ⟩
@@ -436,6 +451,39 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : ΦSegment a ν
 
 ## 主互递归构造第二部
 
+```agda
+-- these verbose `aux`s indirection are due to termination checker limitation
+Φₛ-pres≼-x0b-aux-0 : {w : wf g} → (∀ {x} → Φₛ {a} Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ x ⟩)
+                    → Φₛ Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φ {a} (jump (jumperₛ Φ̇ᵃ g w)) 0̇ ⟨ x ⟩
+Φₛ-pres≼-x0b-aux-0 {x = zero} p = subst (_ ≼_) Φ-0b $ ≼[ 0 ] $ p
+Φₛ-pres≼-x0b-aux-0 {g} {Φ̇ᵃ} {suc x} p = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
+  Φₛ Φ̇ᵃ 0 0̇ ⟨ suc x ⟩                         ≤⟨ p ⟩
+  Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc x ⟩                     ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
+  Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc (jump _ ⟨ x ⟩) ⟩        ≤⟨ Φₛ-infl≼-νbx0 ⟩
+  ⟪ Φₛ Φ̇ᵃ (g 0) ⟫ (suc (jump _ ⟨ x ⟩)) 0̇      ≤⟨ a+-infl≼ ⟩
+  suc _ + ⟪ Φₛ Φ̇ᵃ (g 0) ⟫ (suc _) 0̇           ∎ where open CrossTreeReasoning
+Φₛ-pres≼-x0b-aux-0 {Φ̇ᵃ} {x = lim h} p =       begin
+  Φₛ Φ̇ᵃ 0 0̇ ⟨ lim h ⟩                         ≈⟨ Normal.continuous (nml $ Φₛ Φ̇ᵃ 0 0̇) ⟩
+  lim- (λ n → Φₛ Φ̇ᵃ 0 0̇ ⟨ h n ⟩)              ≤⟨ l≼l $ Φₛ-pres≼-x0b-aux-0 p ⟩
+  lim- (λ n → Φ (jump _) 0̇ ⟨ h n ⟩)           ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
+  Φ (jump _) 0̇ ⟨ lim h ⟩                      ∎ where open CrossTreeReasoning
+
+Φₛ-pres≼-x0b-aux-b : {w : wf g} → (∀ {x} → Φₛ {a} Φ̇ᵃ b 0̇ ⟨ x ⟩ ≼ Φₛ Φ̇ᵃ (g n) 0̇ ⟨ x ⟩)
+                    → Φₛ Φ̇ᵃ b 0̇ ⟨ x ⟩ ≼ Φ {a} (jump (jumperₛ Φ̇ᵃ g w)) 0̇ ⟨ x ⟩
+Φₛ-pres≼-x0b-aux-b {n} {x = zero} p = subst (_ ≼_) Φ-0b $ ≼[ n ] p
+Φₛ-pres≼-x0b-aux-b {g} {Φ̇ᵃ} {b} {n} {suc x} p = subst (_ ≼_) Φ-0b $ ≼[ suc n ] $ begin
+  Φₛ Φ̇ᵃ b 0̇ ⟨ suc x ⟩                         ≤⟨ p ⟩
+  Φₛ Φ̇ᵃ (g n) 0̇ ⟨ suc x ⟩                     ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
+  Φₛ Φ̇ᵃ (g n) 0̇ ⟨ suc (jump _ ⟨ x ⟩) ⟩        ≤⟨ Φₛ-infl≼-νbx0 ⟩
+  ⟪ Φₛ Φ̇ᵃ (g n) ⟫ (suc (jump _ ⟨ x ⟩)) 0̇      ≤⟨ a+-infl≼ ⟩
+  It (jumperₛ Φ̇ᵃ g _) x n + _                 ≤⟨ a+-infl≼ ⟩
+  suc _ + It (jumperₛ Φ̇ᵃ g _) x (suc n)       ∎ where open CrossTreeReasoning
+Φₛ-pres≼-x0b-aux-b {Φ̇ᵃ} {b} {x = lim h} p =   begin
+  Φₛ Φ̇ᵃ b 0̇ ⟨ lim h ⟩                         ≈⟨ Normal.continuous (nml $ Φₛ Φ̇ᵃ b 0̇) ⟩
+  lim- (λ n → Φₛ Φ̇ᵃ b 0̇ ⟨ h n ⟩)              ≤⟨ l≼l $ Φₛ-pres≼-x0b-aux-b p ⟩
+  lim- (λ n → Φ (jump _) 0̇ ⟨ h n ⟩)           ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
+  Φ (jump _) 0̇ ⟨ lim h ⟩                      ∎ where open CrossTreeReasoning
+```
 
 ```agda
 Φₛ-pres≼-x0b {y = zero} z≼ = ≼-refl
@@ -444,27 +492,9 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : ΦSegment a ν
   Φₛ _ y 0̇ ⟨ b ⟩                              ≤⟨ fp-infl≼ (Φₛ _ y 0̇) ⟩
   fp (Φₛ _ y 0̇) ⟨ b ⟩                         ≈⟨ ≡→≈ Φ-0b ⟩
   Φ (fp (Φₛ _ y 0̇)) 0̇ ⟨ b ⟩                   ∎ where open CrossTreeReasoning
-Φₛ-pres≼-x0b {Φ̇ᵃ} {y = lim g} z≼ = aux (Φₛ-pres≼-x0b z≼) where
-  -- this `aux` indirection is due to termination checker limitation
-  aux : (∀ {c} → Φₛ Φ̇ᵃ 0 0̇ ⟨ c ⟩ ≼ Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ c ⟩)
-      → Φₛ Φ̇ᵃ 0 0̇ ⟨ c ⟩ ≼ Φ (jump _) 0̇ ⟨ c ⟩
-  aux {(zero)} p = subst (_ ≼_) Φ-0b $ ≼[ 0 ] $ p
-  aux {suc c}  p = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
-    Φₛ Φ̇ᵃ 0 0̇ ⟨ suc c ⟩                       ≤⟨ p ⟩
-    Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc c ⟩                   ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
-    Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc ((jump _) ⟨ c ⟩) ⟩    ≤⟨ Φₛ-infl≼-νbx0 ⟩
-    ⟪ Φₛ Φ̇ᵃ (g 0) ⟫ (suc ((jump _) ⟨ c ⟩)) 0̇  ≤⟨ a+-infl≼ ⟩
-    suc _ + ⟪ Φₛ Φ̇ᵃ (g 0) ⟫ (suc _) 0̇         ∎ where open CrossTreeReasoning
-  aux {lim f} p =                             begin
-    Φₛ Φ̇ᵃ 0 0̇ ⟨ lim f ⟩                       ≈⟨ Normal.continuous (nml $ Φₛ Φ̇ᵃ 0 0̇) ⟩
-    lim- (λ n → Φₛ Φ̇ᵃ 0 0̇ ⟨ f n ⟩)            ≤⟨ l≼l $ aux p ⟩
-    lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)         ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
-    Φ (jump _) 0̇ ⟨ lim f ⟩                    ∎ where open CrossTreeReasoning
+Φₛ-pres≼-x0b {y = lim g} z≼ = Φₛ-pres≼-x0b-aux-0 (Φₛ-pres≼-x0b z≼)
 Φₛ-pres≼-x0b (s≼s p) = subst₂ _≼_ Φ-0b Φ-0b $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
-Φₛ-pres≼-x0b {Φ̇ᵃ} {x} (≼l {f = g} {n} p) = aux (Φₛ-pres≼-x0b p) where
-  aux : (∀ {c} → Φₛ Φ̇ᵃ x 0̇ ⟨ c ⟩ ≼ Φₛ Φ̇ᵃ (g n) 0̇ ⟨ c ⟩)
-      → Φₛ Φ̇ᵃ x 0̇ ⟨ c ⟩ ≼ Φ (jump _) 0̇ ⟨ c ⟩
-  aux = {!   !}
+Φₛ-pres≼-x0b (≼l p) = Φₛ-pres≼-x0b-aux-b (Φₛ-pres≼-x0b p)
 Φₛ-pres≼-x0b {y = zero} (l≼ p) = subst (_≼ _) Φ-0b $ {!   !}
 Φₛ-pres≼-x0b {y = suc y} (l≼ p) = subst (_≼ _) Φ-0b $ {!   !}
 Φₛ-pres≼-x0b {y = lim f} (l≼ p) = subst₂ (_≼_) Φ-0b Φ-0b $ {!   !}
