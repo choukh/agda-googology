@@ -221,7 +221,7 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : HSNormal a ν
 
 ```agda
 Φₛ-pres≼-x0b  : (λ x → Φₛ {a} Φ̇ᵃ x 0̇ ⟨ b ⟩) preserves _≼_
-Φₛ-pres≼-xb0  : (λ x → ⟪ Φₛ {a} Φ̇ᵃ x ⟫ b 0̇) preserves _≼_
+Φₛ-pres≼-xb0  : (λ x → ⟪ Φₛ {a} {ν} Φ̇ᵃ x ⟫ b 0̇) preserves _≼_
 ```
 
 ## 主互递归构造第一部
@@ -414,16 +414,16 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : HSNormal a ν
 ```agda
 Φₛ-infl≼-νb0x {Φ̇ᵃ = _ , refl} {b = zero} = subst (_ ≼_) Φ-0b $ ≼-refl
 Φₛ-infl≼-νb0x {b = suc b} = subst (_ ≼_) Φ-0b $ ≼-trans Φₛ-infl≼-νb0x (fp-infl≼ (Φₛ _ b 0̇))
-Φₛ-infl≼-νb0x {ν} {(zero)} {a} {b = lim g} = subst (_ ≼_) Φ-0b $ ≼[ 0 ] Φₛ-infl≼-νb0x
-Φₛ-infl≼-νb0x {ν} {suc x}  {a} {b = lim g} = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
+Φₛ-infl≼-νb0x {ν} {(zero)} {Φ̇ᵃ} {b = lim g} = subst (_ ≼_) Φ-0b $ ≼[ 0 ] Φₛ-infl≼-νb0x
+Φₛ-infl≼-νb0x {ν} {suc x}  {Φ̇ᵃ} {b = lim g} = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
   ν ⟨ suc x ⟩                                 ≤⟨ Φₛ-infl≼-νb0x ⟩
-  Φₛ _ (g 0) 0̇ ⟨ suc x ⟩                      ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
+  Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc x ⟩                     ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
   Φₛ _ (g 0) 0̇ ⟨ suc ((jump _) ⟨ x ⟩ ) ⟩      ≤⟨ Φₛ-infl≼-νbx0 ⟩
   ⟪ Φₛ _ (g 0) ⟫ (suc ((jump _) ⟨ x ⟩ )) 0̇    ≤⟨ a+-infl≼ ⟩
-  suc _ + ⟪ Φₛ _ (g 0) ⟫ (suc _) 0̇            ∎ where open CrossTreeReasoning
-Φₛ-infl≼-νb0x {ν} {lim f} {a} {b = lim g} =   begin
+  suc _ + ⟪ Φₛ Φ̇ᵃ (g 0) ⟫ (suc _) 0̇           ∎ where open CrossTreeReasoning
+Φₛ-infl≼-νb0x {ν} {lim f}  {Φ̇ᵃ} {b = lim g} = begin
   ν ⟨ lim f ⟩                                 ≈⟨ Normal.continuous (nml $ ν) ⟩
-  lim- (λ n → ν ⟨ f n ⟩)                      ≤⟨ l≼l $ Φₛ-infl≼-νb0x {b = lim g} ⟩
+  lim- (λ n → ν ⟨ f n ⟩)                      ≤⟨ l≼l $ Φₛ-infl≼-νb0x {Φ̇ᵃ = Φ̇ᵃ} {lim g} ⟩
   lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)           ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
   Φ (jump _) 0̇ ⟨ lim f ⟩                      ∎ where open CrossTreeReasoning
 ```
