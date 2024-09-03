@@ -452,7 +452,7 @@ jumperₗₗ f Φ̇ᶠ g w = jumper
 ## 主互递归构造第二部
 
 ```agda
--- these verbose `aux`s indirection are due to termination checker limitation
+-- these verbose `aux` indirections are due to termination checker limitation
 Φₛ-pres≼-x0b-aux-0 : {w : wf g} → (∀ {x} → Φₛ {a} Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ x ⟩)
                     → Φₛ Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φ {a} (jump (jumperₛ Φ̇ᵃ g w)) 0̇ ⟨ x ⟩
 Φₛ-pres≼-x0b-aux-0 {x = zero} p = subst (_ ≼_) Φ-0b $ ≼[ 0 ] $ p
@@ -495,7 +495,7 @@ jumperₗₗ f Φ̇ᶠ g w = jumper
 Φₛ-pres≼-x0b {y = lim g} z≼ = Φₛ-pres≼-x0b-aux-0 (Φₛ-pres≼-x0b z≼)
 Φₛ-pres≼-x0b (s≼s p) = subst₂ _≼_ Φ-0b Φ-0b $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
 Φₛ-pres≼-x0b (≼l p) = Φₛ-pres≼-x0b-aux-b (Φₛ-pres≼-x0b p)
-Φₛ-pres≼-x0b {y = zero} (l≼ p) = subst (_≼ _) Φ-0b $ {!   !}
+Φₛ-pres≼-x0b {y = zero} (l≼ {f} {w} p) = ⊥-elim $ ≺-asym (<→≺ (n<fs f 1 ⦃ w ⦄)) (s≼s p)
 Φₛ-pres≼-x0b {y = suc y} (l≼ p) = subst (_≼ _) Φ-0b $ {!   !}
 Φₛ-pres≼-x0b {y = lim f} (l≼ p) = subst₂ (_≼_) Φ-0b Φ-0b $ {!   !}
 ```
