@@ -24,6 +24,21 @@ open import Agda.Builtin.Equality.Rewrite public
 {-# REWRITE +a-id #-}
 ```
 
+## 引理
+
+```agda
+l⋠z : ⦃ _ : isLim a ⦄ → a ≼ 0 → ⊥
+l⋠z (l≼ {f} {w} p) = ⊥-elim $ ≺-asym (<→≺ (n<fs f 1 ⦃ w ⦄)) (s≼s p)
+```
+
+```agda
+l≼p : ⦃ _ : isLim a ⦄ → a ≼ suc b → a ≼ b
+l≼p {a} {b} (l≼ p) = l≼ λ {n} → ≺s→≼ $ begin-strict
+  a [ n ]                       <⟨ <→≺ []-wf ⟩
+  a [ suc n ]                   ≤⟨ p ⟩
+  suc b                         ∎ where open CrossTreeReasoning
+```
+
 ## 强正规跳出
 
 ```agda
@@ -495,18 +510,22 @@ jumperₗₗ f Φ̇ᶠ g w = jumper
 Φₛ-pres≼-x0b {y = lim g} z≼ = Φₛ-pres≼-x0b-aux-0 (Φₛ-pres≼-x0b z≼)
 Φₛ-pres≼-x0b (s≼s p) = subst₂ _≼_ Φ-0b Φ-0b $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
 Φₛ-pres≼-x0b (≼l p) = Φₛ-pres≼-x0b-aux-b (Φₛ-pres≼-x0b p)
-Φₛ-pres≼-x0b {y = zero} (l≼ {f} {w} p) = ⊥-elim $ ≺-asym (<→≺ (n<fs f 1 ⦃ w ⦄)) (s≼s p)
-Φₛ-pres≼-x0b {y = suc y} (l≼ p) = subst (_≼ _) Φ-0b $ {!   !}
+Φₛ-pres≼-x0b {y = zero} p@(l≼ _) = ⊥-elim (l⋠z p)
+Φₛ-pres≼-x0b {b} {y = suc y} p@(l≼ _) =       begin
+  Φ (jump _) 0̇ ⟨ b ⟩                          ≤⟨ Φₛ-pres≼-x0b (l≼p p) ⟩
+  Φₛ _ y 0̇ ⟨ b ⟩                              ≤⟨ fp-infl≼ (Φₛ _ y 0̇) ⟩
+  fp (Φₛ _ y 0̇) ⟨ b ⟩                         ≈⟨ ≡→≈ Φ-0b ⟩
+  Φ (fp (Φₛ _ y 0̇)) 0̇ ⟨ b ⟩                   ∎ where open CrossTreeReasoning
 Φₛ-pres≼-x0b {y = lim f} (l≼ p) = subst₂ (_≼_) Φ-0b Φ-0b $ {!   !}
 ```
 
 ```agda
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero} z≼ = ≼-refl
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y} z≼ = Φ-pres≼-νb0 $ ≼-trans Φₛ-infl≼-νb0x (fp-infl≼ (Φₛ _ _ 0̇))
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim f} z≼ = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim f} z≼ = Φ-pres≼-νb0 $ {!   !}
 Φₛ-pres≼-xb0 (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) $ Φₛ-pres≼-x0b p
-Φₛ-pres≼-xb0 (≼l p) = {!   !}
-Φₛ-pres≼-xb0 (l≼ p) = {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} (≼l p) = {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} (l≼ p) = {!   !}
 ```
 
 ```agda
