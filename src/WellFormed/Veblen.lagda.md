@@ -446,14 +446,14 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : ΦSegment a ν
   Φ (fp (Φₛ _ y 0̇)) 0̇ ⟨ b ⟩                   ∎ where open CrossTreeReasoning
 Φₛ-pres≼-x0b {Φ̇ᵃ} {y = lim g} z≼ = aux (Φₛ-pres≼-x0b z≼) where
   -- this `aux` indirection is due to termination checker limitation
-  aux : (∀ {x} → Φₛ Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ x ⟩)
-      → Φₛ Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φ (jump _) 0̇ ⟨ x ⟩
+  aux : (∀ {c} → Φₛ Φ̇ᵃ 0 0̇ ⟨ c ⟩ ≼ Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ c ⟩)
+      → Φₛ Φ̇ᵃ 0 0̇ ⟨ c ⟩ ≼ Φ (jump _) 0̇ ⟨ c ⟩
   aux {(zero)} p = subst (_ ≼_) Φ-0b $ ≼[ 0 ] $ p
-  aux {suc x}  p = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
-    Φₛ Φ̇ᵃ 0 0̇ ⟨ suc x ⟩                       ≤⟨ p ⟩
-    Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc x ⟩                   ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
-    Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc ((jump _) ⟨ x ⟩) ⟩    ≤⟨ Φₛ-infl≼-νbx0 ⟩
-    ⟪ Φₛ Φ̇ᵃ (g 0) ⟫ (suc ((jump _) ⟨ x ⟩)) 0̇  ≤⟨ a+-infl≼ ⟩
+  aux {suc c}  p = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
+    Φₛ Φ̇ᵃ 0 0̇ ⟨ suc c ⟩                       ≤⟨ p ⟩
+    Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc c ⟩                   ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
+    Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc ((jump _) ⟨ c ⟩) ⟩    ≤⟨ Φₛ-infl≼-νbx0 ⟩
+    ⟪ Φₛ Φ̇ᵃ (g 0) ⟫ (suc ((jump _) ⟨ c ⟩)) 0̇  ≤⟨ a+-infl≼ ⟩
     suc _ + ⟪ Φₛ Φ̇ᵃ (g 0) ⟫ (suc _) 0̇         ∎ where open CrossTreeReasoning
   aux {lim f} p =                             begin
     Φₛ Φ̇ᵃ 0 0̇ ⟨ lim f ⟩                       ≈⟨ Normal.continuous (nml $ Φₛ Φ̇ᵃ 0 0̇) ⟩
@@ -461,7 +461,10 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : ΦSegment a ν
     lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)         ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
     Φ (jump _) 0̇ ⟨ lim f ⟩                    ∎ where open CrossTreeReasoning
 Φₛ-pres≼-x0b (s≼s p) = subst₂ _≼_ Φ-0b Φ-0b $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
-Φₛ-pres≼-x0b (≼l p) = {!   !}
+Φₛ-pres≼-x0b {Φ̇ᵃ} {x} (≼l {f = g} {n} p) = aux (Φₛ-pres≼-x0b p) where
+  aux : (∀ {c} → Φₛ Φ̇ᵃ x 0̇ ⟨ c ⟩ ≼ Φₛ Φ̇ᵃ (g n) 0̇ ⟨ c ⟩)
+      → Φₛ Φ̇ᵃ x 0̇ ⟨ c ⟩ ≼ Φ (jump _) 0̇ ⟨ c ⟩
+  aux = {!   !}
 Φₛ-pres≼-x0b {y = zero} (l≼ p) = subst (_≼ _) Φ-0b $ {!   !}
 Φₛ-pres≼-x0b {y = suc y} (l≼ p) = subst (_≼ _) Φ-0b $ {!   !}
 Φₛ-pres≼-x0b {y = lim f} (l≼ p) = subst₂ (_≼_) Φ-0b Φ-0b $ {!   !}
