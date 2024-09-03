@@ -182,6 +182,8 @@ private variable
   νᵃ : SNormal →^ a
 ```
 
+## 主互递归声明
+
 ```agda
 Φ : SNormal → SNormal →^ a
 ```
@@ -189,7 +191,7 @@ private variable
 ```agda
 HSNormal : Ord → SNormal → Type
 HSNormal a ν = Σ (SNormal →^ a) (λ Φᵃ → Φᵃ ≡ Φ ν)
-private variable Φ̇ᵃ : HSNormal a ν
+private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : HSNormal a ν
 ```
 
 ```agda
@@ -204,12 +206,25 @@ private variable Φ̇ᵃ : HSNormal a ν
 ```
 
 ```agda
-Φ-infl≼-x0   : (λ x → ⟪ Φ {a} ν ⟫ x 0̇) inflates _≼_
-Φₛ-infl≼-x0  : (λ x → Φₛ {a} Φ̇ᵃ x 0̇ ⟨ 0 ⟩) inflates _≼_
-Φₛ-infl≼-bx0 : (λ x → ⟪ Φₛ {a} Φ̇ᵃ b ⟫ x 0̇) inflates _≼_
-Φₗ-infl≼-x0  : ⦃ _ : wf f ⦄ {Φ̇ᶠ : ∀ {n} → HSNormal (f n) ν} →
+Φ-infl≼-x0    : (λ x → ⟪ Φ {a} ν ⟫ x 0̇) inflates _≼_
+Φₛ-infl≼-x0   : (λ x → Φₛ {a} Φ̇ᵃ x 0̇ ⟨ 0 ⟩) inflates _≼_
+Φₛ-infl≼-bx0  : (λ x → ⟪ Φₛ {a} Φ̇ᵃ b ⟫ x 0̇) inflates _≼_
+Φₗ-infl≼-x0   : ⦃ _ : wf f ⦄ {Φ̇ᶠ : ∀ {n} → HSNormal (f n) ν} →
                 (λ x → Φₗ {f} Φ̇ᶠ {n} x 0̇ ⟨ 0 ⟩) inflates _≼_
 ```
+
+```agda
+Φ-pres≼-x0    : (λ x → ⟪ Φ {a} ν ⟫ x 0̇) preserves _≼_
+Φₛ-pres≼-x0   : (λ x → Φₛ {a} Φ̇ᵃ x 0̇ ⟨ 0 ⟩) preserves _≼_
+Φₛ-pres≼-bx0  : (λ x → ⟪ Φₛ {a} Φ̇ᵃ b ⟫ x 0̇) preserves _≼_
+```
+
+```agda
+Φₛ-pres≼-x0b  : (λ x → Φₛ {a} Φ̇ᵃ x 0̇ ⟨ b ⟩) preserves _≼_
+Φₛ-pres≼-xb0  : (λ x → ⟪ Φₛ {a} Φ̇ᵃ x ⟫ b 0̇) preserves _≼_
+```
+
+## 主互递归构造第一部
 
 ```agda
 Φ {(zero)} ν = ν
@@ -223,7 +238,7 @@ private variable Φ̇ᵃ : HSNormal a ν
 Φₛ Φ̇ᵃ (lim g) = Φ $ jump by
   (lim (λ n → Φₛ Φ̇ᵃ (g n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres it ⦄)
   (λ n x → ⟪ Φₛ Φ̇ᵃ (g n) ⟫ x 0̇)
-  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ Φₛ-infl≼-bx0 {!   !} {!   !}
+  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ Φₛ-infl≼-bx0 Φₛ-pres≼-bx0 (Φₛ-pres≼-xb0 (≤→≼ (<→≤ it)))
 ```
 
 ```agda
@@ -300,4 +315,161 @@ private variable Φ̇ᵃ : HSNormal a ν
 Φₛ-infl≼-bx0 {(zero)}  {Φ̇ᵃ} {lim f}  = Φ-infl≼-x0
 Φₛ-infl≼-bx0 {suc a}   {Φ̇ᵃ} {lim g}  = Φ-infl≼-x0
 Φₛ-infl≼-bx0 {lim f}   {Φ̇ᵃ} {lim g}  = Φ-infl≼-x0
+```
+
+```agda
+Φ-pres≼-x0 {(zero)} {ν} = Strong.pres≼ (srg ν)
+Φ-pres≼-x0 {suc a} = Φₛ-pres≼-x0
+Φ-pres≼-x0 {lim f} = {!   !}
+```
+
+```agda
+Φₛ-pres≼-x0 {y = zero} z≼  = ≼-refl
+Φₛ-pres≼-x0 {y = suc y} z≼ = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ Φₛ-pres≼-x0 z≼
+Φₛ-pres≼-x0 {y = lim f} z≼ = subst (_ ≼_) Φ-0b $ ≼[ 0 ] $ Φₛ-pres≼-x0 z≼
+Φₛ-pres≼-x0 {Φ̇ᵃ} (s≼s {a} {b} p) = subst₂ _≼_ Φ-0b Φ-0b $ l≼l q where
+  q : Itₙ (λ _ x → Φₛ Φ̇ᵃ a 0̇ ⟨ x ⟩) 0 n ≼ Itₙ (λ _ x → Φₛ Φ̇ᵃ b 0̇ ⟨ x ⟩) 0 n
+  q {(zero)} = ≼-refl
+  q {suc n} =                           begin
+    Φₛ Φ̇ᵃ a 0̇ ⟨ _ ⟩                     ≤⟨ Strong.pres≼ (srg (Φₛ Φ̇ᵃ a 0̇)) q ⟩
+    Φₛ Φ̇ᵃ a 0̇ ⟨ _ ⟩                     ≤⟨ Φₛ-pres≼-x0b p ⟩
+    Φₛ Φ̇ᵃ b 0̇ ⟨ _ ⟩                     ∎ where open CrossTreeReasoning
+Φₛ-pres≼-x0 (≼l {n} p) = subst (_ ≼_) Φ-0b $ ≼[ n ] (Φₛ-pres≼-x0 p)
+Φₛ-pres≼-x0 (l≼ p) = subst (_≼ _) Φ-0b $ l≼ (Φₛ-pres≼-x0 p)
+```
+
+```agda
+Φₛ-pres≼-bx0 {(zero)} {Φ̇ᵃ} {b} = Strong.pres≼ (srg (Φₛ Φ̇ᵃ b))
+Φₛ-pres≼-bx0 {suc a}  {Φ̇ᵃ = Φᵃ , refl} {(zero)} = Φ-pres≼-x0
+Φₛ-pres≼-bx0 {lim f}  {Φ̇ᵃ = Φᵃ , refl} {(zero)} = Φ-pres≼-x0
+Φₛ-pres≼-bx0 {suc a}  {Φ̇ᵃ} {suc b} = Φ-pres≼-x0
+Φₛ-pres≼-bx0 {lim f}  {Φ̇ᵃ} {suc b} = Φ-pres≼-x0
+Φₛ-pres≼-bx0 {suc a}  {Φ̇ᵃ} {lim g} = Φ-pres≼-x0
+Φₛ-pres≼-bx0 {lim f}  {Φ̇ᵃ} {lim g} = Φ-pres≼-x0
+```
+
+## 次互递归引理第一部
+
+```agda
+Φ-pres≼-νb0   : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {b} → ⟪ Φ {a} ν₁ ⟫ b 0̇ ≼ ⟪ Φ {a} ν₂ ⟫ b 0̇
+Φₛ-pres≼-νb0c : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {c} → Φₛ {a} {ν₁} Φ̇ᵃ₁ b 0̇ ⟨ c ⟩ ≼ Φₛ {a} {ν₂} Φ̇ᵃ₂ b 0̇ ⟨ c ⟩
+Φₛ-pres≼-νbc0 : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {b c} → ⟪ Φₛ {a} {ν₁} Φ̇ᵃ₁ b ⟫ c 0̇ ≼ ⟪ Φₛ {a} {ν₂} Φ̇ᵃ₂ b ⟫ c 0̇
+```
+
+```agda
+Φ-pres≼-νb0 {a = zero} p = p
+Φ-pres≼-νb0 {a = suc a} p = Φₛ-pres≼-νb0c p
+Φ-pres≼-νb0 {a = lim f} p = {!   !}
+```
+
+```agda
+Φₛ-pres≼-νb0c {Φ̇ᵃ₁ = _ , refl} {b = zero} {Φ̇ᵃ₂ = _ , refl} p = subst₂ _≼_ Φ-0b Φ-0b $ p
+Φₛ-pres≼-νb0c {b = suc b} p = subst₂ _≼_ Φ-0b Φ-0b $ fp-pres≼ (Φₛ _ b 0̇) (Φₛ _ b 0̇) $ Φₛ-pres≼-νb0c p
+Φₛ-pres≼-νb0c {b = lim f} p = subst₂ _≼_ Φ-0b Φ-0b $ jump-pres≼ (l≼l $ Φₛ-pres≼-νb0c p)
+  λ {n} {x} {y} q →                     begin
+  ⟪ Φₛ _ (f n) ⟫ x 0̇                    ≤⟨ Φₛ-pres≼-bx0 q ⟩
+  ⟪ Φₛ _ (f n) ⟫ y 0̇                    ≤⟨ Φₛ-pres≼-νbc0 p ⟩
+  ⟪ Φₛ _ (f n) ⟫ y 0̇                    ∎ where open CrossTreeReasoning
+```
+
+```agda
+Φₛ-pres≼-νbc0 {Φ̇ᵃ₁ = _ , refl} {Φ̇ᵃ₂ = _ , refl} p {b = zero} = Φ-pres≼-νb0 p
+Φₛ-pres≼-νbc0 p {b = suc b} = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ _ b 0̇) (Φₛ _ b 0̇) $ Φₛ-pres≼-νb0c p
+Φₛ-pres≼-νbc0 p {b = lim f} = Φ-pres≼-νb0 $ jump-pres≼ (l≼l $ Φₛ-pres≼-νb0c p)
+  λ {n} {x} {y} q →                     begin
+  ⟪ Φₛ _ (f n) ⟫ x 0̇                    ≤⟨ Φₛ-pres≼-bx0 q ⟩
+  ⟪ Φₛ _ (f n) ⟫ y 0̇                    ≤⟨ Φₛ-pres≼-νbc0 p ⟩
+  ⟪ Φₛ _ (f n) ⟫ y 0̇                    ∎ where open CrossTreeReasoning
+```
+
+## 次互递归引理第二部
+
+```agda
+Φ-infl≼-νx0   : ν ⟨ x ⟩ ≼ ⟪ Φ {a} ν ⟫ x 0̇
+Φₛ-infl≼-νx0   : ν ⟨ x ⟩ ≼ Φₛ {a} {ν} Φ̇ᵃ x 0̇ ⟨ 0 ⟩
+Φₛ-infl≼-νb0x  : ν ⟨ x ⟩ ≼ Φₛ {a} {ν} Φ̇ᵃ b 0̇ ⟨ x ⟩
+Φₛ-infl≼-νbx0  : Φₛ {a} Φ̇ᵃ b 0̇ ⟨ x ⟩ ≼ ⟪ Φₛ {a} Φ̇ᵃ b ⟫ x 0̇
+```
+
+```agda
+Φ-infl≼-νx0 {a = zero}  = ≼-refl
+Φ-infl≼-νx0 {a = suc a} = Φₛ-infl≼-νx0
+Φ-infl≼-νx0 {a = lim f} = {!   !}
+```
+
+```agda
+Φₛ-infl≼-νx0 {ν} {(zero)} {Φ̇ᵃ = _ , refl} = subst (_ ≼_) Φ-0b ≼-refl
+Φₛ-infl≼-νx0 {ν} {suc x} =                    begin
+  ν ⟨ suc x ⟩                                 ≤⟨ Strong.pres≼ (srg ν) Φₛ-Φₛ-infl≺ ⟩
+  ν ⟨ Φₛ _ x 0̇ ⟨ Φₛ _ x 0̇ ⟨ 0 ⟩ ⟩ ⟩           ≤⟨ Φₛ-infl≼-νb0x ⟩
+  Φₛ _ x 0̇ ⟨ Φₛ _ x 0̇ ⟨ Φₛ _ x 0̇ ⟨ 0 ⟩ ⟩ ⟩    ≤⟨ f≼l {n = 3} ⟩
+  fp (Φₛ _ x 0̇) ⟨ 0 ⟩                         ≈⟨ ≡→≈ Φ-0b ⟩
+  Φ (fp (Φₛ _ x 0̇)) 0̇ ⟨ 0 ⟩                   ∎ where open CrossTreeReasoning
+Φₛ-infl≼-νx0 {ν} {lim f} = subst (_ ≼_) Φ-0b $ begin
+  ν ⟨ lim f ⟩                                 ≈⟨ Normal.continuous (nml $ ν) ⟩
+  lim- (λ n → ν ⟨ f n ⟩)                      ≤⟨ l≼l Φₛ-infl≼-νx0 ⟩
+  lim- (λ n → Φₛ _ (f n) 0̇ ⟨ 0 ⟩)             ∎ where open CrossTreeReasoning
+```
+
+```agda
+Φₛ-infl≼-νb0x {Φ̇ᵃ = _ , refl} {b = zero} = subst (_ ≼_) Φ-0b $ ≼-refl
+Φₛ-infl≼-νb0x {b = suc b} = subst (_ ≼_) Φ-0b $ ≼-trans Φₛ-infl≼-νb0x (fp-infl≼ (Φₛ _ b 0̇))
+Φₛ-infl≼-νb0x {ν} {(zero)} {a} {b = lim g} = subst (_ ≼_) Φ-0b $ ≼[ 0 ] Φₛ-infl≼-νb0x
+Φₛ-infl≼-νb0x {ν} {suc x}  {a} {b = lim g} = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
+  ν ⟨ suc x ⟩                                 ≤⟨ Φₛ-infl≼-νb0x ⟩
+  Φₛ _ (g 0) 0̇ ⟨ suc x ⟩                      ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
+  Φₛ _ (g 0) 0̇ ⟨ suc ((jump _) ⟨ x ⟩ ) ⟩      ≤⟨ Φₛ-infl≼-νbx0 ⟩
+  ⟪ Φₛ _ (g 0) ⟫ (suc ((jump _) ⟨ x ⟩ )) 0̇    ≤⟨ a+-infl≼ ⟩
+  suc _ + ⟪ Φₛ _ (g 0) ⟫ (suc _) 0̇            ∎ where open CrossTreeReasoning
+Φₛ-infl≼-νb0x {ν} {lim f} {a} {b = lim g} =   begin
+  ν ⟨ lim f ⟩                                 ≈⟨ Normal.continuous (nml $ ν) ⟩
+  lim- (λ n → ν ⟨ f n ⟩)                      ≤⟨ l≼l $ Φₛ-infl≼-νb0x {b = lim g} ⟩
+  lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)           ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
+  Φ (jump _) 0̇ ⟨ lim f ⟩                      ∎ where open CrossTreeReasoning
+```
+
+```agda
+Φₛ-infl≼-νbx0 {Φ̇ᵃ = _ , refl} {b = zero} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) Φ-0b Φ-infl≼-νx0
+Φₛ-infl≼-νbx0 {b = suc b} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) Φ-0b Φ-infl≼-νx0
+Φₛ-infl≼-νbx0 {b = lim f} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) Φ-0b Φ-infl≼-νx0
+```
+
+## 主互递归构造第二部
+
+```agda
+Φₛ-pres≼-x0b {a} {Φ̇ᵃ} {b} {y = zero}  z≼ = ≼-refl
+Φₛ-pres≼-x0b {a} {Φ̇ᵃ} {b} {y = suc y} z≼ = begin
+  Φₛ {a} Φ̇ᵃ 0 0̇ ⟨ b ⟩                         ≤⟨ Φₛ-pres≼-x0b z≼ ⟩
+  Φₛ {a} Φ̇ᵃ y 0̇ ⟨ b ⟩                         ≤⟨ fp-infl≼ (Φₛ {a} Φ̇ᵃ y 0̇) ⟩
+  fp (Φₛ Φ̇ᵃ y 0̇) ⟨ b ⟩                        ≈⟨ ≡→≈ Φ-0b ⟩
+  Φ (fp (Φₛ Φ̇ᵃ y 0̇)) 0̇ ⟨ b ⟩                  ∎ where open CrossTreeReasoning
+
+Φₛ-pres≼-x0b {a} {Φ̇ᵃ} {b} {y = lim g} z≼ = {!   !}
+Φₛ-pres≼-x0b (s≼s p) = subst₂ _≼_ Φ-0b Φ-0b $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
+Φₛ-pres≼-x0b (≼l p) = subst (_ ≼_) Φ-0b $ {!   !}
+Φₛ-pres≼-x0b (l≼ p) = subst (_≼ _) Φ-0b $ {!   !}
+```
+
+```agda
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero} z≼ = ≼-refl
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y} z≼ = Φ-pres≼-νb0 $ ≼-trans Φₛ-infl≼-νb0x (fp-infl≼ (Φₛ _ _ 0̇))
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim f} z≼ = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) $ Φₛ-pres≼-x0b p
+Φₛ-pres≼-xb0 (≼l p) = {!   !}
+Φₛ-pres≼-xb0 (l≼ p) = {!   !}
+```
+
+```agda
+φ : SNormal →^ a
+φ = Φ ω^
+```
+
+```agda
+Γ : SNormal
+Γ = φ {2} 1 0
+```
+
+```agda
+SVO : Ord
+SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
