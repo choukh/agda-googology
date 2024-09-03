@@ -189,14 +189,14 @@ private variable
 ```
 
 ```agda
-HSNormal : Ord → SNormal → Type
-HSNormal a ν = Σ (SNormal →^ a) (λ Φᵃ → Φᵃ ≡ Φ ν)
-private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : HSNormal a ν
+ΦSegment : Ord → SNormal → Type
+ΦSegment a ν = Σ (SNormal →^ a) (λ Φᵃ → Φᵃ ≡ Φ ν)
+private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : ΦSegment a ν
 ```
 
 ```agda
-Φₛ : HSNormal a ν → SNormal →^ suc a
-Φₗ : ⦃ _ : wf f ⦄ → (∀ {n} → HSNormal (f n) ν) → SNormal →^ lim f
+Φₛ : ΦSegment a ν → SNormal →^ suc a
+Φₗ : ⦃ _ : wf f ⦄ → (∀ {n} → ΦSegment (f n) ν) → SNormal →^ lim f
 ```
 
 ```agda
@@ -209,7 +209,7 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : HSNormal a ν
 Φ-infl≼-x0    : (λ x → ⟪ Φ {a} ν ⟫ x 0̇) inflates _≼_
 Φₛ-infl≼-x0   : (λ x → Φₛ {a} Φ̇ᵃ x 0̇ ⟨ 0 ⟩) inflates _≼_
 Φₛ-infl≼-bx0  : (λ x → ⟪ Φₛ {a} Φ̇ᵃ b ⟫ x 0̇) inflates _≼_
-Φₗ-infl≼-x0   : ⦃ _ : wf f ⦄ {Φ̇ᶠ : ∀ {n} → HSNormal (f n) ν} →
+Φₗ-infl≼-x0   : ⦃ _ : wf f ⦄ {Φ̇ᶠ : ∀ {n} → ΦSegment (f n) ν} →
                 (λ x → Φₗ {f} Φ̇ᶠ {n} x 0̇ ⟨ 0 ⟩) inflates _≼_
 ```
 
