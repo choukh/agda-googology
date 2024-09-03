@@ -467,6 +467,15 @@ jumperₗₗ f Φ̇ᶠ g w = jumper
 ## 主互递归构造第二部
 
 ```agda
+jumperₛ-pres≼ : {wff : wf f} {wfg : wf g} → lim f ⦃ wff ⦄ ≼ lim g ⦃ wfg ⦄
+  → jump (jumperₛ Φ̇ᵃ f wff) ⟨ b ⟩ ≼ jump (jumperₛ Φ̇ᵃ g wfg) ⟨ b ⟩
+jumperₛ-pres≼ {b = zero} (≼l p) = l≼ $ ≼l $ Φₛ-pres≼-x0 $ ≼-trans f≼l p
+jumperₛ-pres≼ {b = zero} (l≼ p) = l≼ $ ≼l $ Φₛ-pres≼-x0 {!  ≼l !}
+jumperₛ-pres≼ {b = suc b} p = {!   !}
+jumperₛ-pres≼ {b = lim f} p = {!   !}
+```
+
+```agda
 -- these verbose `aux` indirections are due to termination checker limitation
 Φₛ-pres≼-x0b-aux-0 : {w : wf g} → (∀ {x} → Φₛ {a} Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ x ⟩)
                     → Φₛ Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φ {a} (jump (jumperₛ Φ̇ᵃ g w)) 0̇ ⟨ x ⟩
@@ -516,7 +525,7 @@ jumperₗₗ f Φ̇ᶠ g w = jumper
   Φₛ _ y 0̇ ⟨ b ⟩                              ≤⟨ fp-infl≼ (Φₛ _ y 0̇) ⟩
   fp (Φₛ _ y 0̇) ⟨ b ⟩                         ≈⟨ ≡→≈ Φ-0b ⟩
   Φ (fp (Φₛ _ y 0̇)) 0̇ ⟨ b ⟩                   ∎ where open CrossTreeReasoning
-Φₛ-pres≼-x0b {y = lim g} (l≼ p) = subst₂ (_≼_) Φ-0b Φ-0b $ {!   !}
+Φₛ-pres≼-x0b {y = lim g} p@(l≼ _) = subst₂ (_≼_) Φ-0b Φ-0b $ jumperₛ-pres≼ p
 ```
 
 ```agda
@@ -524,12 +533,12 @@ jumperₗₗ f Φ̇ᶠ g w = jumper
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y} z≼ = Φ-pres≼-νb0 $ ≼-trans Φₛ-infl≼-νb0x (fp-infl≼ (Φₛ _ _ 0̇))
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim g} z≼ = Φ-pres≼-νb0 $ {!   !}
 Φₛ-pres≼-xb0 (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) $ Φₛ-pres≼-x0b p
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = zero}   (≼l {f = h} p) = Φ-pres≼-νb0 {!   !}
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = suc x}  (≼l {f = h} p) = Φ-pres≼-νb0 {!   !}
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = lim g}  (≼l {f = h} p) = Φ-pres≼-νb0 {!   !}
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero}   (l≼ {f = g} p) = Φ-pres≼-νb0 {!   !}
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y}  (l≼ {f = g} p) = Φ-pres≼-νb0 {!   !}
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim h}  (l≼ {f = g} p) = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = zero}   p@(≼l _) = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = suc x}  p@(≼l _) = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = lim g}  p@(≼l _) = Φ-pres≼-νb0 (jumperₛ-pres≼ p)
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero}   p@(l≼ _) = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y}  p@(l≼ _) = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim g}  p@(l≼ _) = Φ-pres≼-νb0 (jumperₛ-pres≼ p)
 ```
 
 ```agda
