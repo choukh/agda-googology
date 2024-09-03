@@ -516,16 +516,20 @@ jumperₗₗ f Φ̇ᶠ g w = jumper
   Φₛ _ y 0̇ ⟨ b ⟩                              ≤⟨ fp-infl≼ (Φₛ _ y 0̇) ⟩
   fp (Φₛ _ y 0̇) ⟨ b ⟩                         ≈⟨ ≡→≈ Φ-0b ⟩
   Φ (fp (Φₛ _ y 0̇)) 0̇ ⟨ b ⟩                   ∎ where open CrossTreeReasoning
-Φₛ-pres≼-x0b {y = lim f} (l≼ p) = subst₂ (_≼_) Φ-0b Φ-0b $ {!   !}
+Φₛ-pres≼-x0b {y = lim g} (l≼ p) = subst₂ (_≼_) Φ-0b Φ-0b $ {!   !}
 ```
 
 ```agda
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero} z≼ = ≼-refl
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y} z≼ = Φ-pres≼-νb0 $ ≼-trans Φₛ-infl≼-νb0x (fp-infl≼ (Φₛ _ _ 0̇))
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim f} z≼ = Φ-pres≼-νb0 $ {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim g} z≼ = Φ-pres≼-νb0 $ {!   !}
 Φₛ-pres≼-xb0 (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) $ Φₛ-pres≼-x0b p
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} (≼l p) = {!   !}
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} (l≼ p) = {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = zero}   (≼l {f = h} p) = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = suc x}  (≼l {f = h} p) = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = lim g}  (≼l {f = h} p) = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero}   (l≼ {f = g} p) = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y}  (l≼ {f = g} p) = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim h}  (l≼ {f = g} p) = Φ-pres≼-νb0 {!   !}
 ```
 
 ```agda
