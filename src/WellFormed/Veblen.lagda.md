@@ -436,10 +436,6 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : ΦSegment a ν
 
 ## 主互递归构造第二部
 
-```agda
-Φₛ-pres≼-x0b-aux : ⦃ _ : isLim c ⦄ → b ≼ c [ n ] → Φₛ Φ̇ᵃ b 0̇ ⟨ x ⟩ ≼ Φₛ Φ̇ᵃ c 0̇ ⟨ x ⟩
-Φₛ-pres≼-x0b-aux = {!   !}
-```
 
 ```agda
 Φₛ-pres≼-x0b {y = zero} z≼ = ≼-refl
@@ -448,10 +444,27 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : ΦSegment a ν
   Φₛ _ y 0̇ ⟨ b ⟩                              ≤⟨ fp-infl≼ (Φₛ _ y 0̇) ⟩
   fp (Φₛ _ y 0̇) ⟨ b ⟩                         ≈⟨ ≡→≈ Φ-0b ⟩
   Φ (fp (Φₛ _ y 0̇)) 0̇ ⟨ b ⟩                   ∎ where open CrossTreeReasoning
-Φₛ-pres≼-x0b {y = lim g} z≼ = Φₛ-pres≼-x0b-aux {n = 0} z≼
+Φₛ-pres≼-x0b {Φ̇ᵃ} {y = lim g} z≼ = aux (Φₛ-pres≼-x0b z≼) where
+  -- this `aux` indirection is due to termination checker limitation
+  aux : (∀ {x} → Φₛ Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ x ⟩)
+      → Φₛ Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φ (jump _) 0̇ ⟨ x ⟩
+  aux {(zero)} p = subst (_ ≼_) Φ-0b $ ≼[ 0 ] $ p
+  aux {suc x}  p = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
+    Φₛ Φ̇ᵃ 0 0̇ ⟨ suc x ⟩                       ≤⟨ p ⟩
+    Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc x ⟩                   ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
+    Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc ((jump _) ⟨ x ⟩) ⟩    ≤⟨ Φₛ-infl≼-νbx0 ⟩
+    ⟪ Φₛ Φ̇ᵃ (g 0) ⟫ (suc ((jump _) ⟨ x ⟩)) 0̇  ≤⟨ a+-infl≼ ⟩
+    suc _ + ⟪ Φₛ Φ̇ᵃ (g 0) ⟫ (suc _) 0̇         ∎ where open CrossTreeReasoning
+  aux {lim f} p =                             begin
+    Φₛ Φ̇ᵃ 0 0̇ ⟨ lim f ⟩                       ≈⟨ Normal.continuous (nml $ Φₛ Φ̇ᵃ 0 0̇) ⟩
+    lim- (λ n → Φₛ Φ̇ᵃ 0 0̇ ⟨ f n ⟩)            ≤⟨ l≼l $ aux p ⟩
+    lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)         ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
+    Φ (jump _) 0̇ ⟨ lim f ⟩                    ∎ where open CrossTreeReasoning
 Φₛ-pres≼-x0b (s≼s p) = subst₂ _≼_ Φ-0b Φ-0b $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
-Φₛ-pres≼-x0b (≼l p) = Φₛ-pres≼-x0b-aux p
-Φₛ-pres≼-x0b (l≼ p) = subst (_≼ _) Φ-0b $ {!   !}
+Φₛ-pres≼-x0b (≼l p) = {!   !}
+Φₛ-pres≼-x0b {y = zero} (l≼ p) = subst (_≼ _) Φ-0b $ {!   !}
+Φₛ-pres≼-x0b {y = suc y} (l≼ p) = subst (_≼ _) Φ-0b $ {!   !}
+Φₛ-pres≼-x0b {y = lim f} (l≼ p) = subst₂ (_≼_) Φ-0b Φ-0b $ {!   !}
 ```
 
 ```agda
