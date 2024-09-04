@@ -197,7 +197,7 @@ private variable
   νᵃ : SNormal →^ a
 ```
 
-## 主互递归声明
+## 主要互递归声明
 
 ```agda
 Φ : SNormal → SNormal →^ a
@@ -239,7 +239,7 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : ΦSegment a ν
 Φₛ-pres≼-xb0  : (λ x → ⟪ Φₛ {a} {ν} Φ̇ᵃ x ⟫ b 0̇) preserves _≼_
 ```
 
-## 主互递归构造第一部
+## 主要互递归构造第一部
 
 ```agda
 Φ {(zero)} ν = ν
@@ -248,17 +248,17 @@ private variable Φ̇ᵃ Φ̇ᵃ₁ Φ̇ᵃ₂ : ΦSegment a ν
 ```
 
 ```agda
-jumperₛ : (Φ̇ᵃ : ΦSegment a ν) (g : Seq) (w : wf g) → Jumper
-jumperₛ Φ̇ᵃ g w = jumper
-  (lim (λ n → Φₛ Φ̇ᵃ (g n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres w ⦄)
+jumperₛ : (Φ̇ᵃ : ΦSegment a ν) (g : Seq) ⦃ _ : wf g ⦄ → Jumper
+jumperₛ Φ̇ᵃ g = jumper
+  (lim (λ n → Φₛ Φ̇ᵃ (g n) 0̇ ⟨ 0 ⟩) ⦃ Φₛ-pres it ⦄)
   (λ n x → ⟪ Φₛ Φ̇ᵃ (g n) ⟫ x 0̇)
-  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ Φₛ-infl≼-bx0 Φₛ-pres≼-bx0 (Φₛ-pres≼-xb0 (≤→≼ (<→≤ w)))
+  ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ Φₛ-infl≼-bx0 Φₛ-pres≼-bx0 (Φₛ-pres≼-xb0 (≤→≼ (<→≤ it)))
 ```
 
 ```agda
 Φₛ Φ̇ᵃ zero = fst Φ̇ᵃ
 Φₛ Φ̇ᵃ (suc b) = Φ (fp (Φₛ Φ̇ᵃ b 0̇))
-Φₛ Φ̇ᵃ (lim g) = Φ (jump (jumperₛ Φ̇ᵃ g it))
+Φₛ Φ̇ᵃ (lim g) = Φ (jump (jumperₛ Φ̇ᵃ g))
 ```
 
 ```agda
@@ -270,8 +270,8 @@ jumperₗₛ f Φ̇ᶠ b = jumper
 ```
 
 ```agda
-jumperₗₗ : (f : Seq) ⦃ _ : wf f ⦄ (Φ̇ᶠ : ∀ {n} → ΦSegment (f n) ν) (g : Seq) (w : wf g) → Jumper
-jumperₗₗ f Φ̇ᶠ g w = jumper
+jumperₗₗ : (f : Seq) ⦃ _ : wf f ⦄ (Φ̇ᶠ : ∀ {n} → ΦSegment (f n) ν) (g : Seq) ⦃ _ : wf g ⦄ → Jumper
+jumperₗₗ f Φ̇ᶠ g = jumper
   (lim (Itₙ (λ n x → x + ⟪ Φₗ {f} Φ̇ᶠ {n} (g n) ⟫ 0 0̇) 0) ⦃ +-infl ⦃ ⟪⟫-nz ⦄ ⦄)
   (λ n x → ⟪ Φₗ {f} Φ̇ᶠ {n} (g n) ⟫ x 0̇)
   ⦃ _ ⦄ ⦃ ⟪⟫-nz ⦄ {!   !} {!   !} {!   !}
@@ -280,7 +280,7 @@ jumperₗₗ f Φ̇ᶠ g w = jumper
 ```agda
 Φₗ Φ̇ᶠ zero = fst Φ̇ᶠ
 Φₗ {f} Φ̇ᶠ (suc b) = Φ (jump (jumperₗₛ f Φ̇ᶠ b))
-Φₗ {f} Φ̇ᶠ (lim g) = Φ (jump (jumperₗₗ f Φ̇ᶠ g it))
+Φₗ {f} Φ̇ᶠ (lim g) = Φ (jump (jumperₗₗ f Φ̇ᶠ g))
 ```
 
 ```agda
@@ -378,7 +378,7 @@ jumperₗₗ f Φ̇ᶠ g w = jumper
 Φₛ-pres≼-bx0 {lim f}  {Φ̇ᵃ} {lim g} = Φ-pres≼-x0
 ```
 
-## 次互递归引理第一部
+## 次级互递归引理第一部
 
 ```agda
 Φ-pres≼-νb0   : (∀ {b} → ν₁ ⟨ b ⟩ ≼ ν₂ ⟨ b ⟩) → ∀ {b} → ⟪ Φ {a} ν₁ ⟫ b 0̇ ≼ ⟪ Φ {a} ν₂ ⟫ b 0̇
@@ -412,7 +412,7 @@ jumperₗₗ f Φ̇ᶠ g w = jumper
   ⟪ Φₛ _ (f n) ⟫ y 0̇                    ∎ where open CrossTreeReasoning
 ```
 
-## 次互递归引理第二部
+## 次级互递归引理第二部
 
 ```agda
 Φ-infl≼-νx0   : ν ⟨ x ⟩ ≼ ⟪ Φ {a} ν ⟫ x 0̇
@@ -464,21 +464,44 @@ jumperₗₗ f Φ̇ᶠ g w = jumper
 Φₛ-infl≼-νbx0 {b = lim f} = subst (_≼ ⟪ Φ _ ⟫ _ 0̇) Φ-0b Φ-infl≼-νx0
 ```
 
-## 主互递归构造第二部
+## 次级互递归引理第三部
 
 ```agda
-jumperₛ-pres≼ : {wff : wf f} {wfg : wf g} → lim f ⦃ wff ⦄ ≼ lim g ⦃ wfg ⦄
-  → jump (jumperₛ Φ̇ᵃ f wff) ⟨ b ⟩ ≼ jump (jumperₛ Φ̇ᵃ g wfg) ⟨ b ⟩
-jumperₛ-pres≼ {b = zero} (≼l p) = l≼ $ ≼l $ Φₛ-pres≼-x0 $ ≼-trans f≼l p
-jumperₛ-pres≼ {b = zero} (l≼ p) = l≼ $ ≼l $ Φₛ-pres≼-x0 {!  ≼l !}
-jumperₛ-pres≼ {b = suc b} p = {!   !}
-jumperₛ-pres≼ {b = lim f} p = {!   !}
+jumperₛ-pres≼-init-aux : ⦃ _ : wf g ⦄ → b ≼ lim g → Φₛ Φ̇ᵃ b 0̇ ⟨ 0 ⟩ ≼ init (jumperₛ Φ̇ᵃ g)
+jumperₛ-pres≼-init : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≼ lim g → init (jumperₛ Φ̇ᵃ f) ≼ init (jumperₛ Φ̇ᵃ g)
+jumperₛ-pres≼-step : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≼ lim g → jump (jumperₛ Φ̇ᵃ f) ⟨ suc b ⟩ ≼ jump (jumperₛ Φ̇ᵃ g) ⟨ suc b ⟩
+jumperₛ-pres≼ : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≼ lim g → jump (jumperₛ Φ̇ᵃ f) ⟨ b ⟩ ≼ jump (jumperₛ Φ̇ᵃ g) ⟨ b ⟩
 ```
 
 ```agda
+jumperₛ-pres≼-init-aux {b = zero} Φ̇ᵃ@{Φ̇ᵃ = _ , refl} _ = subst (_≼ jump (jumperₛ Φ̇ᵃ _) ⟨ 0 ⟩) Φ-0b $ ≼[ 0 ] Φₛ-infl≼-νb0x
+jumperₛ-pres≼-init-aux {b = suc b} (≼l {n} p) = ≼[ n ] $ Φₛ-pres≼-x0 p
+jumperₛ-pres≼-init-aux {b = lim f} p = subst (_≼ _) Φ-0b $ jumperₛ-pres≼ p
+
+jumperₛ-pres≼-init (≼l {n} p) = l≼ $ ≼[ n ] $ Φₛ-pres≼-x0 $ ≼-trans f≼l p
+jumperₛ-pres≼-init (l≼ p) = l≼ $ jumperₛ-pres≼-init-aux p
+```
+
+```agda
+jumperₛ-pres≼-step {f} {g} {Φ̇ᵃ} {b} p@(≼l {n} q) = l≼ λ {m} → ≼[ n ] $ +-pres≼ (s≼s (jumperₛ-pres≼ p)) (u q) where
+  u : ∀ {m n} → lim f ≼ g n → It (jumperₛ Φ̇ᵃ f) b m ≼ It (jumperₛ Φ̇ᵃ g) b n
+  u {(zero)} v = {!   !}
+  u {suc m} v = {!   !}
+jumperₛ-pres≼-step (l≼ p) = l≼ $ {!   !}
+```
+
+```agda
+jumperₛ-pres≼ {b = zero} p = jumperₛ-pres≼-init p
+jumperₛ-pres≼ {b = suc b} p = jumperₛ-pres≼-step p
+jumperₛ-pres≼ {b = lim f} p = l≼l (jumperₛ-pres≼ p)
+```
+
+## 主要互递归构造第二部
+
+```agda
 -- these verbose `aux` indirections are due to termination checker limitation
-Φₛ-pres≼-x0b-aux-0 : {w : wf g} → (∀ {x} → Φₛ {a} Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ x ⟩)
-                    → Φₛ Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φ {a} (jump (jumperₛ Φ̇ᵃ g w)) 0̇ ⟨ x ⟩
+Φₛ-pres≼-x0b-aux-0 : ⦃ w : wf g ⦄ → (∀ {x} → Φₛ {a} Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ x ⟩)
+                    → Φₛ Φ̇ᵃ 0 0̇ ⟨ x ⟩ ≼ Φ {a} (jump (jumperₛ Φ̇ᵃ g)) 0̇ ⟨ x ⟩
 Φₛ-pres≼-x0b-aux-0 {x = zero} p = subst (_ ≼_) Φ-0b $ ≼[ 0 ] $ p
 Φₛ-pres≼-x0b-aux-0 {g} {Φ̇ᵃ} {suc x} p = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
   Φₛ Φ̇ᵃ 0 0̇ ⟨ suc x ⟩                         ≤⟨ p ⟩
@@ -492,16 +515,16 @@ jumperₛ-pres≼ {b = lim f} p = {!   !}
   lim- (λ n → Φ (jump _) 0̇ ⟨ h n ⟩)           ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
   Φ (jump _) 0̇ ⟨ lim h ⟩                      ∎ where open CrossTreeReasoning
 
-Φₛ-pres≼-x0b-aux-b : {w : wf g} → (∀ {x} → Φₛ {a} Φ̇ᵃ b 0̇ ⟨ x ⟩ ≼ Φₛ Φ̇ᵃ (g n) 0̇ ⟨ x ⟩)
-                    → Φₛ Φ̇ᵃ b 0̇ ⟨ x ⟩ ≼ Φ {a} (jump (jumperₛ Φ̇ᵃ g w)) 0̇ ⟨ x ⟩
+Φₛ-pres≼-x0b-aux-b : ⦃ w : wf g ⦄ → (∀ {x} → Φₛ {a} Φ̇ᵃ b 0̇ ⟨ x ⟩ ≼ Φₛ Φ̇ᵃ (g n) 0̇ ⟨ x ⟩)
+                    → Φₛ Φ̇ᵃ b 0̇ ⟨ x ⟩ ≼ Φ {a} (jump (jumperₛ Φ̇ᵃ g)) 0̇ ⟨ x ⟩
 Φₛ-pres≼-x0b-aux-b {n} {x = zero} p = subst (_ ≼_) Φ-0b $ ≼[ n ] p
 Φₛ-pres≼-x0b-aux-b {g} {Φ̇ᵃ} {b} {n} {suc x} p = subst (_ ≼_) Φ-0b $ ≼[ suc n ] $ begin
   Φₛ Φ̇ᵃ b 0̇ ⟨ suc x ⟩                         ≤⟨ p ⟩
   Φₛ Φ̇ᵃ (g n) 0̇ ⟨ suc x ⟩                     ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
   Φₛ Φ̇ᵃ (g n) 0̇ ⟨ suc (jump _ ⟨ x ⟩) ⟩        ≤⟨ Φₛ-infl≼-νbx0 ⟩
   ⟪ Φₛ Φ̇ᵃ (g n) ⟫ (suc (jump _ ⟨ x ⟩)) 0̇      ≤⟨ a+-infl≼ ⟩
-  It (jumperₛ Φ̇ᵃ g _) x n + _                 ≤⟨ a+-infl≼ ⟩
-  suc _ + It (jumperₛ Φ̇ᵃ g _) x (suc n)       ∎ where open CrossTreeReasoning
+  It (jumperₛ Φ̇ᵃ g) x n + _                   ≤⟨ a+-infl≼ ⟩
+  suc _ + It (jumperₛ Φ̇ᵃ g) x (suc n)         ∎ where open CrossTreeReasoning
 Φₛ-pres≼-x0b-aux-b {Φ̇ᵃ} {b} {x = lim h} p =   begin
   Φₛ Φ̇ᵃ b 0̇ ⟨ lim h ⟩                         ≈⟨ Normal.continuous (nml $ Φₛ Φ̇ᵃ b 0̇) ⟩
   lim- (λ n → Φₛ Φ̇ᵃ b 0̇ ⟨ h n ⟩)              ≤⟨ l≼l $ Φₛ-pres≼-x0b-aux-b p ⟩
@@ -518,14 +541,14 @@ jumperₛ-pres≼ {b = lim f} p = {!   !}
   Φ (fp (Φₛ _ y 0̇)) 0̇ ⟨ b ⟩                   ∎ where open CrossTreeReasoning
 Φₛ-pres≼-x0b {y = lim g} z≼ = Φₛ-pres≼-x0b-aux-0 (Φₛ-pres≼-x0b z≼)
 Φₛ-pres≼-x0b (s≼s p) = subst₂ _≼_ Φ-0b Φ-0b $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
-Φₛ-pres≼-x0b (≼l p) = Φₛ-pres≼-x0b-aux-b (Φₛ-pres≼-x0b p)
+Φₛ-pres≼-x0b (≼l {w} p) = Φₛ-pres≼-x0b-aux-b (Φₛ-pres≼-x0b p) where instance _ = w
 Φₛ-pres≼-x0b {y = zero} p@(l≼ _) = ⊥-elim (l⋠z p)
 Φₛ-pres≼-x0b {b} {y = suc y} p@(l≼ _) =       begin
   Φ (jump _) 0̇ ⟨ b ⟩                          ≤⟨ Φₛ-pres≼-x0b (l≼p p) ⟩
   Φₛ _ y 0̇ ⟨ b ⟩                              ≤⟨ fp-infl≼ (Φₛ _ y 0̇) ⟩
   fp (Φₛ _ y 0̇) ⟨ b ⟩                         ≈⟨ ≡→≈ Φ-0b ⟩
   Φ (fp (Φₛ _ y 0̇)) 0̇ ⟨ b ⟩                   ∎ where open CrossTreeReasoning
-Φₛ-pres≼-x0b {y = lim g} p@(l≼ _) = subst₂ (_≼_) Φ-0b Φ-0b $ jumperₛ-pres≼ p
+Φₛ-pres≼-x0b {y = lim g} p@(l≼ {w} _) = subst₂ (_≼_) Φ-0b Φ-0b $ jumperₛ-pres≼ p where instance _ = w
 ```
 
 ```agda
@@ -535,10 +558,10 @@ jumperₛ-pres≼ {b = lim f} p = {!   !}
 Φₛ-pres≼-xb0 (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) $ Φₛ-pres≼-x0b p
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = zero}   p@(≼l _) = Φ-pres≼-νb0 {!   !}
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = suc x}  p@(≼l _) = Φ-pres≼-νb0 {!   !}
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = lim g}  p@(≼l _) = Φ-pres≼-νb0 (jumperₛ-pres≼ p)
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = lim g}  p@(≼l {w} _) = Φ-pres≼-νb0 (jumperₛ-pres≼ p) where instance _ = w
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero}   p@(l≼ _) = Φ-pres≼-νb0 {!   !}
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y}  p@(l≼ _) = Φ-pres≼-νb0 {!   !}
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim g}  p@(l≼ _) = Φ-pres≼-νb0 (jumperₛ-pres≼ p)
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim g}  p@(l≼ {w} _) = Φ-pres≼-νb0 (jumperₛ-pres≼ p) where instance _ = w
 ```
 
 ```agda
@@ -555,3 +578,4 @@ jumperₛ-pres≼ {b = lim f} p = {!   !}
 SVO : Ord
 SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
+ 
