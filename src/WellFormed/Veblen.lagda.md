@@ -415,7 +415,7 @@ jumperₗₗ f Φ̇ᶠ g = jumper
 ## 次级互递归引理第二部
 
 ```agda
-Φ-infl≼-νx0   : ν ⟨ x ⟩ ≼ ⟪ Φ {a} ν ⟫ x 0̇
+Φ-infl≼-νx0    : ν ⟨ x ⟩ ≼ ⟪ Φ {a} ν ⟫ x 0̇
 Φₛ-infl≼-νx0   : ν ⟨ x ⟩ ≼ Φₛ {a} {ν} Φ̇ᵃ x 0̇ ⟨ 0 ⟩
 Φₛ-infl≼-νb0x  : ν ⟨ x ⟩ ≼ Φₛ {a} {ν} Φ̇ᵃ b 0̇ ⟨ x ⟩
 Φₛ-infl≼-νbx0  : Φₛ {a} Φ̇ᵃ b 0̇ ⟨ x ⟩ ≼ ⟪ Φₛ {a} Φ̇ᵃ b ⟫ x 0̇
@@ -467,6 +467,12 @@ jumperₗₗ f Φ̇ᶠ g = jumper
 ## 次级互递归引理第三部
 
 ```agda
+Φₛ-absorb : b ≺ c → ⟪ Φₛ {a} Φ̇ᵃ b ⟫ d 0̇ + ⟪ Φₛ {a} Φ̇ᵃ c ⟫ d 0̇ ≈ ⟪ Φₛ {a} Φ̇ᵃ c ⟫ d 0̇
+Φₛ-absorb (s≼s p) = {!   !}
+Φₛ-absorb (≼l p) = {!   !}
+```
+
+```agda
 jumperₛ-pres≼-init-aux : ⦃ _ : wf g ⦄ → b ≼ lim g → Φₛ Φ̇ᵃ b 0̇ ⟨ 0 ⟩ ≼ init (jumperₛ Φ̇ᵃ g)
 jumperₛ-pres≼-init : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≼ lim g → init (jumperₛ Φ̇ᵃ f) ≼ init (jumperₛ Φ̇ᵃ g)
 jumperₛ-pres≼-step : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≼ lim g → jump (jumperₛ Φ̇ᵃ f) ⟨ suc b ⟩ ≼ jump (jumperₛ Φ̇ᵃ g) ⟨ suc b ⟩
@@ -483,10 +489,10 @@ jumperₛ-pres≼-init (l≼ p) = l≼ $ jumperₛ-pres≼-init-aux p
 ```
 
 ```agda
-jumperₛ-pres≼-step {f} {g} {Φ̇ᵃ} {b} p@(≼l {n} q) = l≼ λ {m} → ≼[ n ] $ +-pres≼ (s≼s (jumperₛ-pres≼ p)) (u q) where
-  u : ∀ {m n} → lim f ≼ g n → It (jumperₛ Φ̇ᵃ f) b m ≼ It (jumperₛ Φ̇ᵃ g) b n
-  u {(zero)} v = {!   !}
-  u {suc m} v = {!   !}
+jumperₛ-pres≼-step {f} {g} {Φ̇ᵃ} {b} p@(≼l {n} q) = l≼ $ ≼[ n ] $ +-pres≼ (s≼s (jumperₛ-pres≼ p)) u where
+  u : It (jumperₛ Φ̇ᵃ f) b m ≼ It (jumperₛ Φ̇ᵃ g) b n
+  u {(zero)} = z≼
+  u {suc m} = {!   !}
 jumperₛ-pres≼-step (l≼ p) = l≼ $ {!   !}
 ```
 
@@ -578,4 +584,3 @@ jumperₛ-pres≼ {b = lim f} p = l≼l (jumperₛ-pres≼ p)
 SVO : Ord
 SVO = φ {ω} {0} 1 ⟨ 0 ⟩
 ```
- 
