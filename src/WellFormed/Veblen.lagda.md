@@ -442,20 +442,25 @@ jumperₗₗ f Φ̇ᶠ g = jumper
 ```
 
 ```agda
+jumperₛ-infl≼ : ⦃ _ : wf f ⦄ → ν ⟨ b ⟩ ≼ jump (jumperₛ {a} {ν} Φ̇ᵃ f) ⟨ b ⟩
+jumperₛ-infl≼ {b = zero} = ≼[ 0 ] Φₛ-infl≼-νb0x
+jumperₛ-infl≼ {f} {ν} {b = suc b} {Φ̇ᵃ} = ≼[ 1 ] $ begin
+  ν ⟨ suc b ⟩                                 ≤⟨ Φₛ-infl≼-νb0x ⟩
+  Φₛ Φ̇ᵃ (f 0) 0̇ ⟨ suc b ⟩                     ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
+  Φₛ _ (f 0) 0̇ ⟨ suc (jump _ ⟨ b ⟩ ) ⟩        ≤⟨ Φₛ-infl≼-νbx0 ⟩
+  ⟪ Φₛ _ (f 0) ⟫ (suc (jump _ ⟨ b ⟩ )) 0̇      ≤⟨ a+-infl≼ ⟩
+  suc _ + ⟪ Φₛ Φ̇ᵃ (f 0) ⟫ (suc _) 0̇           ∎ where open CrossTreeReasoning
+jumperₛ-infl≼ {f} {ν} {b = lim g} {Φ̇ᵃ} =      begin
+  ν ⟨ lim g ⟩                                 ≈⟨ Normal.continuous (nml $ ν) ⟩
+  lim- (λ n → ν ⟨ g n ⟩)                      ≤⟨ l≼l $ jumperₛ-infl≼ ⟩
+  lim- (λ n → jump _ ⟨ g n ⟩)                 ≈˘⟨ Normal.continuous (nml $ jump _) ⟩
+  jump _ ⟨ lim g ⟩                            ∎ where open CrossTreeReasoning
+```
+
+```agda
 Φₛ-infl≼-νb0x {Φ̇ᵃ = _ , refl} {b = zero} = subst (_ ≼_) Φ-0b $ ≼-refl
 Φₛ-infl≼-νb0x {b = suc b} = subst (_ ≼_) Φ-0b $ ≼-trans Φₛ-infl≼-νb0x (fp-infl≼ (Φₛ _ b 0̇))
-Φₛ-infl≼-νb0x {ν} {(zero)} {Φ̇ᵃ} {b = lim g} = subst (_ ≼_) Φ-0b $ ≼[ 0 ] Φₛ-infl≼-νb0x
-Φₛ-infl≼-νb0x {ν} {suc x}  {Φ̇ᵃ} {b = lim g} = subst (_ ≼_) Φ-0b $ ≼[ 1 ] $ begin
-  ν ⟨ suc x ⟩                                 ≤⟨ Φₛ-infl≼-νb0x ⟩
-  Φₛ Φ̇ᵃ (g 0) 0̇ ⟨ suc x ⟩                     ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
-  Φₛ _ (g 0) 0̇ ⟨ suc (jump _ ⟨ x ⟩ ) ⟩        ≤⟨ Φₛ-infl≼-νbx0 ⟩
-  ⟪ Φₛ _ (g 0) ⟫ (suc (jump _ ⟨ x ⟩ )) 0̇      ≤⟨ a+-infl≼ ⟩
-  suc _ + ⟪ Φₛ Φ̇ᵃ (g 0) ⟫ (suc _) 0̇           ∎ where open CrossTreeReasoning
-Φₛ-infl≼-νb0x {ν} {lim f}  {Φ̇ᵃ} {b = lim g} = begin
-  ν ⟨ lim f ⟩                                 ≈⟨ Normal.continuous (nml $ ν) ⟩
-  lim- (λ n → ν ⟨ f n ⟩)                      ≤⟨ l≼l $ Φₛ-infl≼-νb0x {Φ̇ᵃ = Φ̇ᵃ} {lim g} ⟩
-  lim- (λ n → Φ (jump _) 0̇ ⟨ f n ⟩)           ≈˘⟨ Normal.continuous (nml $ Φ (jump _) 0̇) ⟩
-  Φ (jump _) 0̇ ⟨ lim f ⟩                      ∎ where open CrossTreeReasoning
+Φₛ-infl≼-νb0x {b = lim g} = subst (_ ≼_) Φ-0b $ jumperₛ-infl≼
 ```
 
 ```agda
@@ -548,7 +553,7 @@ jumperₛ-pres≼ {b = lim f} p = l≼l (jumperₛ-pres≼ p)
 Φₛ-pres≼-x0b {y = lim g} z≼ = Φₛ-pres≼-x0b-aux-0 (Φₛ-pres≼-x0b z≼)
 Φₛ-pres≼-x0b (s≼s p) = subst₂ _≼_ Φ-0b Φ-0b $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) (Φₛ-pres≼-x0b p)
 Φₛ-pres≼-x0b (≼l {w} p) = Φₛ-pres≼-x0b-aux-b (Φₛ-pres≼-x0b p) where instance _ = w
-Φₛ-pres≼-x0b {y = zero} p@(l≼ _) = ⊥-elim (l⋠z p)
+Φₛ-pres≼-x0b {y = zero} p@(l≼ _) = ⊥-elim $ l⋠z p
 Φₛ-pres≼-x0b {b} {y = suc y} p@(l≼ _) =       begin
   Φ (jump _) 0̇ ⟨ b ⟩                          ≤⟨ Φₛ-pres≼-x0b (l≼p p) ⟩
   Φₛ _ y 0̇ ⟨ b ⟩                              ≤⟨ fp-infl≼ (Φₛ _ y 0̇) ⟩
@@ -560,12 +565,12 @@ jumperₛ-pres≼ {b = lim f} p = l≼l (jumperₛ-pres≼ p)
 ```agda
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero} z≼ = ≼-refl
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y} z≼ = Φ-pres≼-νb0 $ ≼-trans Φₛ-infl≼-νb0x (fp-infl≼ (Φₛ _ _ 0̇))
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim g} z≼ = Φ-pres≼-νb0 $ {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim g} z≼ = Φ-pres≼-νb0 $ jumperₛ-infl≼
 Φₛ-pres≼-xb0 (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) $ Φₛ-pres≼-x0b p
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = zero}   p@(≼l _) = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = zero}   p@(≼l {w} _) = Φ-pres≼-νb0 jumperₛ-infl≼ where instance _ = w
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = suc x}  p@(≼l _) = Φ-pres≼-νb0 {!   !}
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = lim g}  p@(≼l {w} _) = Φ-pres≼-νb0 (jumperₛ-pres≼ p) where instance _ = w
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero}   p@(l≼ _) = Φ-pres≼-νb0 {!   !}
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero}   p@(l≼ _) = ⊥-elim $ l⋠z p
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y}  p@(l≼ _) = Φ-pres≼-νb0 {!   !}
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim g}  p@(l≼ {w} _) = Φ-pres≼-νb0 (jumperₛ-pres≼ p) where instance _ = w
 ```
