@@ -442,17 +442,17 @@ jumperₗₗ f Φ̇ᶠ g = jumper
 ```
 
 ```agda
-jumperₛ-infl≼ : ⦃ _ : wf f ⦄ → ν ⟨ b ⟩ ≼ jump (jumperₛ {a} {ν} Φ̇ᵃ f) ⟨ b ⟩
-jumperₛ-infl≼ {b = zero} = ≼[ 0 ] Φₛ-infl≼-νb0x
-jumperₛ-infl≼ {f} {ν} {b = suc b} {Φ̇ᵃ} = ≼[ 1 ] $ begin
+jumpₛ-infl≼ : ⦃ _ : wf f ⦄ → ν ⟨ b ⟩ ≼ jump (jumperₛ {a} {ν} Φ̇ᵃ f) ⟨ b ⟩
+jumpₛ-infl≼ {b = zero} = ≼[ 0 ] Φₛ-infl≼-νb0x
+jumpₛ-infl≼ {f} {ν} {b = suc b} {Φ̇ᵃ} = ≼[ 1 ] $ begin
   ν ⟨ suc b ⟩                                 ≤⟨ Φₛ-infl≼-νb0x ⟩
   Φₛ Φ̇ᵃ (f 0) 0̇ ⟨ suc b ⟩                     ≤⟨ Strong.pres≼ (srg $ Φₛ _ _ 0̇) $ s≼s $ Strong.infl≼ (srg $ jump _) ⟩
   Φₛ _ (f 0) 0̇ ⟨ suc (jump _ ⟨ b ⟩ ) ⟩        ≤⟨ Φₛ-infl≼-νbx0 ⟩
   ⟪ Φₛ _ (f 0) ⟫ (suc (jump _ ⟨ b ⟩ )) 0̇      ≤⟨ a+-infl≼ ⟩
   suc _ + ⟪ Φₛ Φ̇ᵃ (f 0) ⟫ (suc _) 0̇           ∎ where open CrossTreeReasoning
-jumperₛ-infl≼ {f} {ν} {b = lim g} {Φ̇ᵃ} =      begin
+jumpₛ-infl≼ {f} {ν} {b = lim g} {Φ̇ᵃ} =      begin
   ν ⟨ lim g ⟩                                 ≈⟨ Normal.continuous (nml $ ν) ⟩
-  lim- (λ n → ν ⟨ g n ⟩)                      ≤⟨ l≼l $ jumperₛ-infl≼ ⟩
+  lim- (λ n → ν ⟨ g n ⟩)                      ≤⟨ l≼l $ jumpₛ-infl≼ ⟩
   lim- (λ n → jump _ ⟨ g n ⟩)                 ≈˘⟨ Normal.continuous (nml $ jump _) ⟩
   jump _ ⟨ lim g ⟩                            ∎ where open CrossTreeReasoning
 ```
@@ -460,7 +460,7 @@ jumperₛ-infl≼ {f} {ν} {b = lim g} {Φ̇ᵃ} =      begin
 ```agda
 Φₛ-infl≼-νb0x {Φ̇ᵃ = _ , refl} {b = zero} = subst (_ ≼_) Φ-0b $ ≼-refl
 Φₛ-infl≼-νb0x {b = suc b} = subst (_ ≼_) Φ-0b $ ≼-trans Φₛ-infl≼-νb0x (fp-infl≼ (Φₛ _ b 0̇))
-Φₛ-infl≼-νb0x {b = lim g} = subst (_ ≼_) Φ-0b $ jumperₛ-infl≼
+Φₛ-infl≼-νb0x {b = lim g} = subst (_ ≼_) Φ-0b $ jumpₛ-infl≼
 ```
 
 ```agda
@@ -478,33 +478,43 @@ jumperₛ-infl≼ {f} {ν} {b = lim g} {Φ̇ᵃ} =      begin
 ```
 
 ```agda
-jumperₛ-pres≼-init-aux : ⦃ _ : wf g ⦄ → b ≼ lim g → Φₛ Φ̇ᵃ b 0̇ ⟨ 0 ⟩ ≼ init (jumperₛ Φ̇ᵃ g)
-jumperₛ-pres≼-init : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≼ lim g → init (jumperₛ Φ̇ᵃ f) ≼ init (jumperₛ Φ̇ᵃ g)
-jumperₛ-pres≼-step : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≼ lim g → jump (jumperₛ Φ̇ᵃ f) ⟨ suc b ⟩ ≼ jump (jumperₛ Φ̇ᵃ g) ⟨ suc b ⟩
-jumperₛ-pres≼ : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≼ lim g → jump (jumperₛ Φ̇ᵃ f) ⟨ b ⟩ ≼ jump (jumperₛ Φ̇ᵃ g) ⟨ b ⟩
+jumpₛ-pres≼-init-aux : ⦃ _ : wf g ⦄ → b ≼ lim g → Φₛ Φ̇ᵃ b 0̇ ⟨ 0 ⟩ ≼ init (jumperₛ Φ̇ᵃ g)
+jumpₛ-pres≼-init : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≼ lim g → init (jumperₛ Φ̇ᵃ f) ≼ init (jumperₛ Φ̇ᵃ g)
+jumpₛ-pres≼-step : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≼ lim g → jump (jumperₛ Φ̇ᵃ f) ⟨ suc b ⟩ ≼ jump (jumperₛ Φ̇ᵃ g) ⟨ suc b ⟩
+jumpₛ-pres≼ : ⦃ _ : wf f ⦄ ⦃ _ : wf g ⦄ → lim f ≼ lim g → jump (jumperₛ Φ̇ᵃ f) ⟨ b ⟩ ≼ jump (jumperₛ Φ̇ᵃ g) ⟨ b ⟩
 ```
 
 ```agda
-jumperₛ-pres≼-init-aux {b = zero} Φ̇ᵃ@{Φ̇ᵃ = _ , refl} _ = subst (_≼ jump (jumperₛ Φ̇ᵃ _) ⟨ 0 ⟩) Φ-0b $ ≼[ 0 ] Φₛ-infl≼-νb0x
-jumperₛ-pres≼-init-aux {b = suc b} (≼l {n} p) = ≼[ n ] $ Φₛ-pres≼-x0 p
-jumperₛ-pres≼-init-aux {b = lim f} p = subst (_≼ _) Φ-0b $ jumperₛ-pres≼ p
+jumpₛ-pres≼-init-aux {b = zero} Φ̇ᵃ@{Φ̇ᵃ = _ , refl} _ = subst (_≼ jump (jumperₛ Φ̇ᵃ _) ⟨ 0 ⟩) Φ-0b $ ≼[ 0 ] Φₛ-infl≼-νb0x
+jumpₛ-pres≼-init-aux {b = suc b} (≼l {n} p) = ≼[ n ] $ Φₛ-pres≼-x0 p
+jumpₛ-pres≼-init-aux {b = lim f} p = subst (_≼ _) Φ-0b $ jumpₛ-pres≼ p
 
-jumperₛ-pres≼-init (≼l {n} p) = l≼ $ ≼[ n ] $ Φₛ-pres≼-x0 $ ≼-trans f≼l p
-jumperₛ-pres≼-init (l≼ p) = l≼ $ jumperₛ-pres≼-init-aux p
+jumpₛ-pres≼-init (≼l {n} p) = l≼ $ ≼[ n ] $ Φₛ-pres≼-x0 $ ≼-trans f≼l p
+jumpₛ-pres≼-init (l≼ p) = l≼ $ jumpₛ-pres≼-init-aux p
 ```
 
 ```agda
-jumperₛ-pres≼-step {f} {g} {Φ̇ᵃ} {b} p@(≼l {n} q) = l≼ $ ≼[ n ] $ +-pres≼ (s≼s (jumperₛ-pres≼ p)) u where
+jumpₛ-pres≼-step {f} {g} {Φ̇ᵃ} {b} p@(≼l {n} q) = l≼ $ ≼[ n ] $ +-pres≼ (s≼s (jumpₛ-pres≼ p)) u where
   u : It (jumperₛ Φ̇ᵃ f) b m ≼ It (jumperₛ Φ̇ᵃ g) b n
   u {(zero)} = z≼
   u {suc m} = {!   !}
-jumperₛ-pres≼-step (l≼ p) = l≼ $ {!   !}
+jumpₛ-pres≼-step (l≼ p) = l≼ {!   !}
 ```
 
 ```agda
-jumperₛ-pres≼ {b = zero} p = jumperₛ-pres≼-init p
-jumperₛ-pres≼ {b = suc b} p = jumperₛ-pres≼-step p
-jumperₛ-pres≼ {b = lim f} p = l≼l (jumperₛ-pres≼ p)
+jumpₛ-pres≼ {b = zero} p = jumpₛ-pres≼-init p
+jumpₛ-pres≼ {b = suc b} p = jumpₛ-pres≼-step p
+jumpₛ-pres≼ {b = lim f} p = l≼l (jumpₛ-pres≼ p)
+```
+
+```agda
+fp≼jumpₛ : ⦃ _ : wf f ⦄ → suc b ≼ lim f → fp (Φₛ {a} {ν} Φ̇ᵃ b 0̇) ⟨ c ⟩ ≼ jump (jumperₛ {a} {ν} Φ̇ᵃ f) ⟨ c ⟩
+fp≼jumpₛ {b} {c = zero} (≼l {f} {n} p) = ≼[ n ] $ l≼ q where
+  q : Itₙ (λ _ x → Φₛ Φ̇ᵃ b 0̇ ⟨ x ⟩) 0 m ≼ Φₛ Φ̇ᵃ (f n) 0̇ ⟨ 0 ⟩
+  q {m = zero} = z≼
+  q {m = suc m} = {!   !}
+fp≼jumpₛ {c = suc c} (≼l p) = {!   !}
+fp≼jumpₛ {c = lim f} (≼l p) = {!   !}
 ```
 
 ## 主要互递归构造第二部
@@ -559,20 +569,20 @@ jumperₛ-pres≼ {b = lim f} p = l≼l (jumperₛ-pres≼ p)
   Φₛ _ y 0̇ ⟨ b ⟩                              ≤⟨ fp-infl≼ (Φₛ _ y 0̇) ⟩
   fp (Φₛ _ y 0̇) ⟨ b ⟩                         ≈⟨ ≡→≈ Φ-0b ⟩
   Φ (fp (Φₛ _ y 0̇)) 0̇ ⟨ b ⟩                   ∎ where open CrossTreeReasoning
-Φₛ-pres≼-x0b {y = lim g} p@(l≼ {w} _) = subst₂ (_≼_) Φ-0b Φ-0b $ jumperₛ-pres≼ p where instance _ = w
+Φₛ-pres≼-x0b {y = lim g} p@(l≼ {w} _) = subst₂ (_≼_) Φ-0b Φ-0b $ jumpₛ-pres≼ p where instance _ = w
 ```
 
 ```agda
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero} z≼ = ≼-refl
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero}  z≼ = ≼-refl
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y} z≼ = Φ-pres≼-νb0 $ ≼-trans Φₛ-infl≼-νb0x (fp-infl≼ (Φₛ _ _ 0̇))
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim g} z≼ = Φ-pres≼-νb0 $ jumperₛ-infl≼
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim g} z≼ = Φ-pres≼-νb0 $ jumpₛ-infl≼
 Φₛ-pres≼-xb0 (s≼s p) = Φ-pres≼-νb0 $ fp-pres≼ (Φₛ _ _ 0̇) (Φₛ _ _ 0̇) $ Φₛ-pres≼-x0b p
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = zero}   p@(≼l {w} _) = Φ-pres≼-νb0 jumperₛ-infl≼ where instance _ = w
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = suc x}  p@(≼l _) = Φ-pres≼-νb0 {!   !}
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = lim g}  p@(≼l {w} _) = Φ-pres≼-νb0 (jumperₛ-pres≼ p) where instance _ = w
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = zero}   p@(≼l {w} _) = Φ-pres≼-νb0 jumpₛ-infl≼ where instance _ = w
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = suc x}  (≼l {n} {w} p) = Φ-pres≼-νb0 {!   !} where instance _ = w
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {x = lim g}  p@(≼l {w} _) = Φ-pres≼-νb0 $ jumpₛ-pres≼ p where instance _ = w
 Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = zero}   p@(l≼ _) = ⊥-elim $ l⋠z p
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y}  p@(l≼ _) = Φ-pres≼-νb0 {!   !}
-Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim g}  p@(l≼ {w} _) = Φ-pres≼-νb0 (jumperₛ-pres≼ p) where instance _ = w
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = suc y}  p@(l≼ {w} _) = Φ-pres≼-νb0 {!   !} where instance _ = w
+Φₛ-pres≼-xb0 {Φ̇ᵃ = _ , refl} {y = lim g}  p@(l≼ {w} _) = Φ-pres≼-νb0 $ jumpₛ-pres≼ p where instance _ = w
 ```
 
 ```agda
