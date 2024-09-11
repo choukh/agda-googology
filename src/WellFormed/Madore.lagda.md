@@ -1,12 +1,10 @@
 ```agda
-{-# OPTIONS --safe --cubical --lossy-unification #-}
+{-# OPTIONS --rewriting --cubical --lossy-unification #-}
 module WellFormed.Madore where
 ```
 
 ```agda
 import Cubical.Foundations.Prelude as 🧊
-open import Relation.Binary.PropositionalEquality using (subst-sym-subst; subst-subst-sym)
-
 open import WellFormed.Base as Level public
   hiding (Level; Lift; wf; f; g; zero₁; suc₁; lim₁; isPropWf; limExtPath; limExt)
   renaming (Ord to Level; Road to _⊏_; _<_ to _⊏₁_)
@@ -48,7 +46,7 @@ data _<_ {a} {E} where
   zero : α < suc α
   suc  : α < β → α < suc β
   lim  : ⦃ _ : wf f ⦄ → α < f n → α < lim f
-  Lim  : {⊏a : x ⊏ a} {F : E x ⊏a → U a E} {ι : E x ⊏a} → α < F ι → α < Lim ⊏a F
+  Lim  : {⊏a : x ⊏ a} {F : E x ⊏a → U a E} (ι : E x ⊏a) → α < F ι → α < Lim ⊏a F
 ```
 
 ```agda
@@ -167,21 +165,22 @@ elm α = subst id (sym Elm≡Ord) α
 ```
 
 ```agda
-elm-ord : {⊏x : a ⊏ x} {α : Elm a ⊏x} → elm (ord α) ≡ α
-elm-ord = subst-sym-subst Elm≡Ord
+open import Relation.Binary.PropositionalEquality using (subst-sym-subst; subst-subst-sym)
+open import Agda.Builtin.Equality public
+open import Agda.Builtin.Equality.Rewrite public
 
-ord-elm : {⊏x : a ⊏ x} {α : Ord a} → ord (elm {⊏x = ⊏x} α) ≡ α
+elm-ord : {⊏x : a ⊏ x} {α : Elm a ⊏x} → subst id (sym Elm≡Ord) (ord α) ≡ α
+elm-ord = subst-sym-subst Elm≡Ord
+{-# REWRITE elm-ord #-}
+
+ord-elm : {⊏x : a ⊏ x} {α : Ord a} → subst id Elm≡Ord (elm {⊏x = ⊏x} α) ≡ α
 ord-elm = subst-subst-sym Elm≡Ord
+{-# REWRITE ord-elm #-}
 ```
 
 ```agda
 swap : {⊏x : a ⊏ x} {⊏y : a ⊏ y} → Elm a ⊏x → Elm a ⊏y
 swap α = elm (ord α)
-```
-
-```agda
-swap-swap : {⊏x : a ⊏ x} {⊏y : a ⊏ y} {α : Elm a ⊏x} → swap {⊏x = ⊏y} {⊏y = ⊏x} (swap α) ≡ α
-swap-swap = trans (cong elm ord-elm) elm-ord
 ```
 
 ```agda
@@ -196,7 +195,7 @@ Lift ab (Lim xa F) = Lim (rd-trans xa ab) λ ι → Lift ab (F (swap ι))
 Lift-pres zero = zero
 Lift-pres (suc r) = suc (Lift-pres r)
 Lift-pres (lim r) = lim ⦃ map Lift-pres it ⦄ (Lift-pres r)
-Lift-pres (Lim {F} {ι} r) = Lim {ι = swap ι} (Lift-pres (subst (_ <_) (cong F (sym swap-swap)) r))
+Lift-pres (Lim {F} ι r) = Lim (swap ι) (Lift-pres (subst (_ <_) refl r))
 ```
 
 ```agda
@@ -218,7 +217,7 @@ Lift-trans {α = Lim ⊏a F} = {!   !}
 Ω (suc a) = Lim zero (Lift zero)
 Ω (lim f) = lim (λ n → Lift f<l-rd (Ω (f n))) ⦃ map Ω-pres it ⦄
 
-Ω-pres zero = {!   !}
+Ω-pres {a} {ac} zero = Lim (elm (suc (Ω a))) (subst (Lift ac (Ω a) <_) (sym Lift-trans) (Lift-pres zero))
 Ω-pres (suc r) = {!   !}
-Ω-pres (lim r) = {!   !}
+Ω-pres (lim r) = lim ⦃ {!   !} ⦄ {!   !}
 ```
