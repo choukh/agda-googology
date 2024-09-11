@@ -8,6 +8,7 @@ import Cubical.Foundations.Prelude as 🧊
 open import WellFormed.Base as Level public
   hiding (Level; Lift; wf; f; g; zero₁; suc₁; lim₁; isPropWf; limExtPath; limExt)
   renaming (Ord to Level; Road to _⊏_; _<_ to _⊏₁_)
+open CanonicalRoad using (cano; cano-2const)
 ```
 
 ```agda
@@ -38,7 +39,7 @@ data U a E where
   zero : U a E
   suc  : U a E → U a E
   lim  : (f : ℕ → U a E) → ⦃ wf f ⦄ → U a E
-  Lim : (⊏a : x ⊏ a) → (E x ⊏a → U a E) → U a E
+  Lim : (⊏a : x ⊏ a) → (∀ {r} → cano r 🧊.≡ ⊏a) → (E x ⊏a → U a E) → U a E
 ```
 
 ```agda
@@ -46,7 +47,8 @@ data _<_ {a} {E} where
   zero : α < suc α
   suc  : α < β → α < suc β
   lim  : ⦃ _ : wf f ⦄ → α < f n → α < lim f
-  Lim  : {⊏a : x ⊏ a} {F : E x ⊏a → U a E} (ι : E x ⊏a) → α < F ι → α < Lim ⊏a F
+  Lim  : {⊏a : x ⊏ a} {c : ∀ {r} → cano r 🧊.≡ ⊏a} {F : E x ⊏a → U a E}
+         (ι : E x ⊏a) → α < F ι → α < Lim ⊏a c F
 ```
 
 ```agda
@@ -190,12 +192,12 @@ Lift-pres : {p : a ⊏ b} → α < β → Lift p α < Lift p β
 Lift ab zero = zero
 Lift ab (suc α) = suc (Lift ab α)
 Lift ab (lim f) = lim (Lift ab ∘ f) ⦃ map Lift-pres it ⦄
-Lift ab (Lim xa F) = Lim (rd-trans xa ab) λ ι → Lift ab (F (swap ι))
+Lift ab (Lim xa c F) = Lim (cano $ rd-trans xa ab) (cano-2const _ _) λ ι → Lift ab (F $ swap ι)
 
 Lift-pres zero = zero
 Lift-pres (suc r) = suc (Lift-pres r)
 Lift-pres (lim r) = lim ⦃ map Lift-pres it ⦄ (Lift-pres r)
-Lift-pres (Lim {F} ι r) = Lim (swap ι) (Lift-pres (subst (_ <_) refl r))
+Lift-pres (Lim {F} ι r) = Lim (swap ι) (Lift-pres $ subst (_ <_) refl r)
 ```
 
 ```agda
@@ -203,7 +205,7 @@ Lift-trans : {p : a ⊏ b} {q : b ⊏ c} {r : a ⊏ c} → Lift q (Lift p α) �
 Lift-trans {α = zero} = refl
 Lift-trans {α = suc α} = cong suc Lift-trans
 Lift-trans {α = lim f} = limExt λ _ → Lift-trans
-Lift-trans {α = Lim ⊏a F} = {!   !}
+Lift-trans {α = Lim ⊏a c F} = {!   !}
 ```
 
 ```agda
@@ -214,10 +216,10 @@ Lift-trans {α = Lim ⊏a F} = {!   !}
 Ω-pres : {ac : a ⊏ c} {bc : b ⊏ c} → a ⊏ b → Lift ac (Ω a) < Lift bc (Ω b)
 
 Ω zero = ω
-Ω (suc a) = Lim zero (Lift zero)
-Ω (lim f) = lim (λ n → Lift f<l-rd (Ω (f n))) ⦃ map Ω-pres it ⦄
+Ω (suc a) = Lim zero (cano-2const _ _) (Lift zero)
+Ω (lim f) = lim (λ n → Lift f<l-rd (Ω $ f n)) ⦃ map Ω-pres it ⦄
 
-Ω-pres {a} {ac} zero = Lim (elm (suc (Ω a))) (subst (Lift ac (Ω a) <_) (sym Lift-trans) (Lift-pres zero))
+Ω-pres {a} {ac} zero = Lim (elm $ suc (Ω a)) (subst (Lift ac (Ω a) <_) (sym Lift-trans) (Lift-pres zero))
 Ω-pres (suc r) = {!   !}
 Ω-pres (lim r) = lim ⦃ {!   !} ⦄ {!   !}
 ```
