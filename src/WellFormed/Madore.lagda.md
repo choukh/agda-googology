@@ -5,10 +5,19 @@ module WellFormed.Madore where
 
 ```agda
 import Cubical.Foundations.Prelude as 🧊
+open import Cubical.Foundations.HLevels
 open import WellFormed.Base as Level public
   hiding (Level; Lift; wf; f; g; zero₁; suc₁; lim₁; isPropWf; limExtPath; limExt)
   renaming (Ord to Level; Road to _⊏_; _<_ to _⊏₁_)
+```
+
+```agda
 open CanonicalRoad using (cano; cano-2const)
+canonical : a ⊏ b → Type
+canonical r = ∀ {s} → r 🧊.≡ cano s
+
+isPropCanonical : isProp (canonical r)
+isPropCanonical = isPropImplicitΠ (λ _ → isSetRoad _ _)
 ```
 
 ```agda
@@ -39,7 +48,7 @@ data U a E where
   zero : U a E
   suc  : U a E → U a E
   lim  : (f : ℕ → U a E) → ⦃ wf f ⦄ → U a E
-  Lim : (⊏a : x ⊏ a) → (∀ {r} → cano r 🧊.≡ ⊏a) → (E x ⊏a → U a E) → U a E
+  Lim : (⊏a : x ⊏ a) → canonical ⊏a → (E x ⊏a → U a E) → U a E
 ```
 
 ```agda
@@ -47,7 +56,7 @@ data _<_ {a} {E} where
   zero : α < suc α
   suc  : α < β → α < suc β
   lim  : ⦃ _ : wf f ⦄ → α < f n → α < lim f
-  Lim  : {⊏a : x ⊏ a} {c : ∀ {r} → cano r 🧊.≡ ⊏a} {F : E x ⊏a → U a E}
+  Lim  : {⊏a : x ⊏ a} {c : canonical ⊏a} {F : E x ⊏a → U a E}
          (ι : E x ⊏a) → α < F ι → α < Lim ⊏a c F
 ```
 
@@ -82,6 +91,19 @@ limExtPath p = 🧊.cong₂ (λ f (wff : wf f) → U.lim f ⦃ wff ⦄) (funExt 
 
 limExt : {wff : wf f} {wfg : wf g} → (∀ n → f n ≡ g n) → lim f ⦃ wff ⦄ ≡ lim g ⦃ wfg ⦄
 limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
+```
+
+```agda
+module LimExt {⊏a₁ : x ⊏ a} {c₁ : canonical ⊏a₁} {F : E x ⊏a₁ → U a E}
+         {⊏a₂ : x ⊏ a} {c₂ : canonical ⊏a₂} {G : E x ⊏a₂ → U a E} where
+
+  eq : ⊏a₁ 🧊.≡ ⊏a₂
+  eq = c₁ {s = ⊏a₂} ∙ 🧊.sym c₂
+
+  LimExtPath : (∀ ι → Path _ (F ι) (G (transport (🧊.cong (E x) eq) ι))) → Path (U a E) (Lim ⊏a₁ c₁ F) (Lim ⊏a₂ c₂ G)
+  LimExtPath p i = Lim (eq i) (isPropCanonical ceq ceq i) {!   !} where
+    ceq : canonical (eq i)
+    ceq = {!   !}
 ```
 
 ```agda
@@ -223,3 +245,4 @@ Lift-trans {α = Lim ⊏a c F} = {!   !}
 Ω-pres (suc r) = {!   !}
 Ω-pres (lim r) = lim ⦃ {!   !} ⦄ {!   !}
 ```
+ 
