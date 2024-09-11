@@ -46,7 +46,7 @@ open import Data.Nat as ℕ public using (ℕ; zero; suc)
 open import Data.Nat.Properties as ℕ public using (<-cmp)
 open import Function public using (id; flip; _∘_; _$_; _∋_; it; case_of_)
 open import Relation.Binary.PropositionalEquality public
-  using (_≡_; refl; sym; trans; cong; subst; subst₂)
+  using (_≡_; refl; sym; trans; cong; cong₂; subst; subst₂)
 ```
 
 **桥接库**
