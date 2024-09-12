@@ -66,7 +66,7 @@ data _<_ {ℓ} {E} where
   zero : α < suc α
   suc  : α < β → α < suc β
   lim  : ⦃ _ : wf f ⦄ → α < f n → α < lim f
-  Lim  : {aℓ : a ⊏ ℓ} {F : E a aℓ → U ℓ E} (ι : E a aℓ) → α < F ι → α < Lim aℓ F
+  Lim  : {aℓ : a ⊏ ℓ} {F : E a aℓ → U ℓ E} {ι : E a aℓ} → α < F ι → α < Lim aℓ F
 ```
 
 ## 层级的表示
@@ -158,7 +158,7 @@ lift ab (Lim xa F) = Lim (cano $ ⊏-trans xa ab) λ ι → lift ab (F $ trsp ι
 lift-pres zero = zero
 lift-pres (suc r) = suc (lift-pres r)
 lift-pres (lim r) = lim ⦃ map lift-pres it ⦄ (lift-pres r)
-lift-pres (Lim ι r) = Lim (trsp ι) (lift-pres $ subst (_ <_) refl r)
+lift-pres (Lim {ι} r) = Lim {ι = trsp ι} (lift-pres $ subst (_ <_) refl r)
 ```
 
 提升的复合
@@ -200,8 +200,12 @@ instance
 ## 高阶 ω
 
 ```agda
+instance
+  finOrd-wf : wf (finOrd {a})
+  finOrd-wf = ∣ zero ∣₁
+
 ω : Ord a
-ω = lim finOrd ⦃ ∣ zero ∣₁ ⦄
+ω = lim finOrd
 
 Ω : ∀ a → Ord a
 Ω-pres : {ac : a ⊏ c} {bc : b ⊏ c} → a ⊏ b → lift ac (Ω a) < lift bc (Ω b)
@@ -210,9 +214,9 @@ instance
 Ω (suc a) = Lim zero (lift zero)
 Ω (lim f) = lim (λ n → lift f⊏l (Ω $ f n)) ⦃ map Ω-pres it ⦄
 
-Ω-pres {a} {ac} zero        = Lim (elm $ suc (Ω a)) (subst (lift ac (Ω a) <_) lift-comp (lift-pres zero))
-Ω-pres {bc}     (suc {b} r) = Lim (elm (Ω b)) (subst (_ <_) lift-trans (Ω-pres r))
-Ω-pres {bc}     (lim r)     = lim ⦃ _ ⦄ (subst (_ <_) lift-trans (Ω-pres r))
+Ω-pres {a} {ac} zero        = Lim {ι = elm $ suc (Ω a)} (subst (lift ac (Ω a) <_) lift-comp (lift-pres zero))
+Ω-pres {bc}     (suc {b} r) = Lim {ι = elm $ Ω b}       (subst (_ <_) lift-trans (Ω-pres r))
+Ω-pres {bc}     (lim r)     = lim ⦃ _ ⦄                 (subst (_ <_) lift-trans (Ω-pres r))
 ```
 
 ## 路径关系
@@ -224,8 +228,11 @@ open import Relation.Binary.Definitions
 ### 严格序
 
 ```agda
-<-trans : Transitive _<_
-<-trans r s = {!   !}
+<-trans : Transitive (_<_ {ℓ} {E = Elm})
+<-trans r zero = suc r
+<-trans r (suc s) = suc (<-trans r s)
+<-trans r (lim s) = lim (<-trans r s)
+<-trans r (Lim s) = Lim (<-trans r s)
 ```
 
 ## 高阶算术
@@ -242,5 +249,5 @@ _+_ : Ord a → Ord a → Ord a; infixl 7 _+_
 +-pres zero = zero
 +-pres (suc r) = suc (+-pres r)
 +-pres (lim r) = lim ⦃ _ ⦄ (+-pres r)
-+-pres (Lim ι r) = Lim _ (+-pres r)
++-pres (Lim r) = Lim (+-pres r)
 ```
