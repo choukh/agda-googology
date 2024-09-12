@@ -6,8 +6,8 @@ zhihu-tags: Agda, 大数数学, 序数
 # 形式化大数数学 (3.0 - 序数崩塌函数)
 
 > 交流Q群: 893531731  
-> 本文源码: [Base.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/Madore/Base.lagda.md)  
-> 高亮渲染: [Base.html](https://choukh.github.io/agda-googology/Madore.Base.html)  
+> 本文源码: [Base.lagda.md](httrsps://github.com/choukh/agda-googology/blob/main/src/Madore/Base.lagda.md)  
+> 高亮渲染: [Base.html](httrsps://choukh.github.io/agda-googology/Madore.Base.html)  
 
 ```agda
 {-# OPTIONS --rewriting --cubical --lossy-unification #-}
@@ -20,7 +20,7 @@ module Madore.Base where
 import Cubical.Foundations.Prelude as 🧊
 open import Cubical.Foundations.HLevels
 open import WellFormed.Base as Level public
-  hiding (Level; lift; wf; f; g; isPropWf; limExtPath; limExt)
+  hiding (Level; Lift; lift; f; g; wf; isPropWf; limExtPath; limExt)
   renaming (Ord to Level; Road to _⊏_; _<_ to _⊏₁_; rd-trans to ⊏-trans)
 open CanonicalRoad using (cano; cano-2const)
 ```
@@ -110,8 +110,8 @@ ord-elm = subst-subst-sym Elm≡Ord
 ```
 
 ```agda
-swap : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Elm a aℓ → Elm a aℓ′
-swap α = elm (ord α)
+trsp : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Elm a aℓ → Elm a aℓ′
+trsp α = elm (ord α)
 ```
 
 ## 极限的外延性
@@ -133,7 +133,7 @@ limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
 ```agda
 module _ {aℓ₁ : a ⊏ ℓ} {F₁ : Elm a (cano aℓ₁) → U ℓ Elm}
          {aℓ₂ : a ⊏ ℓ} {F₂ : Elm a (cano aℓ₂) → U ℓ Elm}
-         (p : {aℓ : a ⊏ ℓ} (ι : Elm a aℓ) → F₁ (swap ι) ≡ F₂ (swap ι))
+         (p : {aℓ : a ⊏ ℓ} (ι : Elm a aℓ) → F₁ (trsp ι) ≡ F₂ (trsp ι))
          where
 
   LimExtPath : Path (U ℓ Elm) (Lim (cano aℓ₁) F₁) (Lim (cano aℓ₂) F₂)
@@ -152,12 +152,12 @@ lift-pres : {ab : a ⊏ b} → α < β → lift ab α < lift ab β
 lift ab zero = zero
 lift ab (suc α) = suc (lift ab α)
 lift ab (lim f) = lim (lift ab ∘ f) ⦃ map lift-pres it ⦄
-lift ab (Lim xa F) = Lim (cano $ ⊏-trans xa ab) λ ι → lift ab (F $ swap ι)
+lift ab (Lim xa F) = Lim (cano $ ⊏-trans xa ab) λ ι → lift ab (F $ trsp ι)
 
 lift-pres zero = zero
 lift-pres (suc r) = suc (lift-pres r)
 lift-pres (lim r) = lim ⦃ map lift-pres it ⦄ (lift-pres r)
-lift-pres (Lim ι r) = Lim (swap ι) (lift-pres $ subst (_ <_) refl r)
+lift-pres (Lim ι r) = Lim (trsp ι) (lift-pres $ subst (_ <_) refl r)
 ```
 
 提升的复合
@@ -168,4 +168,43 @@ lift-trans {α = zero} = refl
 lift-trans {α = suc α} = cong suc lift-trans
 lift-trans {α = lim f} = limExt λ _ → lift-trans
 lift-trans {α = Lim xa F} = LimExt λ _ → lift-trans
+```
+
+## 数字字面量
+
+```agda
+open import Lower public using (_∘ⁿ_)
+finLvl : ℕ → Level
+finLvl n = (suc ∘ⁿ n) zero
+finOrd : ℕ → Ord a
+finOrd n = (suc ∘ⁿ n) zero
+```
+
+```agda
+open import Agda.Builtin.FromNat public
+instance
+  nNat : Number ℕ
+  nNat = record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
+  nLvl : Number Level
+  nLvl = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finLvl n }
+  nOrd : Number (Ord a)
+  nOrd = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finOrd n }
+```
+
+## 高阶 ω
+
+```agda
+ω : Ord 0
+ω = lim finOrd ⦃ ∣ zero ∣₁ ⦄
+
+Ω : ∀ a → Ord a
+Ω-pres : {ac : a ⊏ c} {bc : b ⊏ c} → a ⊏ b → lift ac (Ω a) < lift bc (Ω b)
+
+Ω zero = ω
+Ω (suc a) = Lim zero (lift zero)
+Ω (lim f) = lim (λ n → lift f<l-rd (Ω $ f n)) ⦃ map Ω-pres it ⦄
+
+Ω-pres {a} {ac} zero = Lim (elm $ suc (Ω a)) (subst (lift ac (Ω a) <_) (sym lift-trans) (lift-pres zero))
+Ω-pres (suc r) = {!   !}
+Ω-pres (lim r) = {!   !}
 ```
