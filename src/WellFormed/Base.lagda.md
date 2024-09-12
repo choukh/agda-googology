@@ -24,29 +24,33 @@ module WellFormed.Base where
 
 ### 库依赖
 
-我们采用[命题相等](https://ncatlab.org/nlab/show/propositional+equality)作为主要使用的[同一性概念](https://ncatlab.org/nlab/show/equality), 而[道路类型 (path type)](https://ncatlab.org/nlab/show/path+type) 只作为一个辅助. 在 HoTT 中这两者是等价的, 但分情况使用可以简化证明. 命题相等的相关引理的道路版本会带上命名空间 `🧊` ([冰立方](https://emojipedia.org/zh/%E5%86%B0%E5%9D%97)) 以示区别. 它来源于立方类型论不像 HoTT 那么热 (hot), 而是冷的, 所以是冰立方. 知乎正文无法显示颜文字, 所以只会留下一个空格, 不过没关系, 只需视作函数重载.
+我们采用[命题相等](https://ncatlab.org/nlab/show/propositional+equality)作为主要使用的[同一性概念](https://ncatlab.org/nlab/show/equality), 而[道路类型 (path type)](https://ncatlab.org/nlab/show/path+type) 只作为一个辅助. 在 HoTT 中这两者是等价的, 但分情况使用可以简化证明.
+
+```agda
+module Foundations where
+```
 
 **Cubical库**
 
 ```agda
-open import Cubical.Foundations.Prelude as 🧊 public
-  hiding (_≡_; refl; sym; cong; cong₂; subst; _∎)
-open import Cubical.Data.Equality public
-  using (pathToEq; eqToPath; PathPathEq)
-open import Cubical.Data.Sigma public
-  using (Σ-syntax; _×_; _,_; fst; snd; ΣPathP)
-open import Cubical.HITs.PropositionalTruncation public
-  using (∥_∥₁; ∣_∣₁; squash₁; rec; rec2; map; map2; rec→Set)
+  open import Cubical.Foundations.Prelude public
+    hiding (Level; Lift; lift; _≡_; refl; sym; cong; cong₂; subst; _∎)
+  open import Cubical.Data.Equality public
+    using (pathToEq; eqToPath; PathPathEq)
+  open import Cubical.Data.Sigma public
+    using (Σ-syntax; _×_; _,_; fst; snd; ΣPathP)
+  open import Cubical.HITs.PropositionalTruncation public
+    using (∥_∥₁; ∣_∣₁; squash₁; rec; rec2; map; map2; rec→Set)
 ```
 
 **标准库**
 
 ```agda
-open import Data.Nat as ℕ public using (ℕ; zero; suc)
-open import Data.Nat.Properties as ℕ public using (<-cmp)
-open import Function public using (id; flip; _∘_; _$_; _∋_; it; case_of_)
-open import Relation.Binary.PropositionalEquality public
-  using (_≡_; refl; sym; trans; cong; subst; subst₂)
+  open import Data.Nat public using (ℕ; zero; suc)
+  open import Data.Nat.Properties public using (<-cmp)
+  open import Function public using (id; flip; _∘_; _$_; _∋_; it; case_of_)
+  open import Relation.Binary.PropositionalEquality public
+    using (_≡_; refl; sym; trans; cong; subst; subst₂)
 ```
 
 **桥接库**
@@ -54,9 +58,18 @@ open import Relation.Binary.PropositionalEquality public
 用于处理Cubical库与标准库混用时的一些问题.
 
 ```agda
-open import Bridged.Data.Empty public using (⊥; ⊥-elim; isProp⊥)
-open import Bridged.Data.Unit public using (⊤; tt; isProp⊤)
-open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
+  open import Bridged.Data.Empty public using (⊥; ⊥-elim; isProp⊥)
+  open import Bridged.Data.Unit public using (⊤; tt; isProp⊤)
+  open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
+```
+
+命题相等的相关引理的道路版本会带上命名空间 `🧊` ([冰立方](https://emojipedia.org/zh/%E5%86%B0%E5%9D%97)) 以示区别. 它来源于立方类型论不像 HoTT 那么热 (hot), 而是冷的, 所以是冰立方. 知乎正文无法显示颜文字, 所以只会留下一个空格, 不过没关系, 只需视作函数重载.
+
+```agda
+open Foundations public
+import Data.Nat as ℕ
+import Data.Nat.Properties as ℕ
+import Cubical.Foundations.Prelude as 🧊
 ```
 
 ## 良构树序数

@@ -19,12 +19,13 @@ open import Agda.Builtin.Equality.Rewrite public
 ```
 
 ```agda
-import Cubical.Foundations.Prelude as 🧊
-open import Cubical.Foundations.HLevels
 open import WellFormed.Base as Level public
-  hiding (Level; Lift; lift; f; g; wf; isPropWf; limExtPath; limExt)
-  renaming (Ord to Level; Road to _⊏_; _<_ to _⊏₁_; rd-trans to ⊏-trans)
-open CanonicalRoad using (cano; cano-2const)
+  using (a; b; c; n; m; zero; suc; lim)
+  renaming (Ord to Level; Road to _⊏_; _<_ to _⊏₁_; rd-trans to ⊏-trans; f<l-rd to f⊏l)
+
+open Level.Foundations public
+open Level.CanonicalRoad using (cano; cano-2const)
+import Cubical.Foundations.Prelude as 🧊
 ```
 
 ## 高阶递归层级
@@ -199,7 +200,7 @@ instance
 ## 高阶 ω
 
 ```agda
-ω : Ord 0
+ω : Ord a
 ω = lim finOrd ⦃ ∣ zero ∣₁ ⦄
 
 Ω : ∀ a → Ord a
@@ -207,9 +208,39 @@ instance
 
 Ω zero = ω
 Ω (suc a) = Lim zero (lift zero)
-Ω (lim f) = lim (λ n → lift f<l-rd (Ω $ f n)) ⦃ map Ω-pres it ⦄
+Ω (lim f) = lim (λ n → lift f⊏l (Ω $ f n)) ⦃ map Ω-pres it ⦄
 
 Ω-pres {a} {ac} zero        = Lim (elm $ suc (Ω a)) (subst (lift ac (Ω a) <_) lift-comp (lift-pres zero))
 Ω-pres {bc}     (suc {b} r) = Lim (elm (Ω b)) (subst (_ <_) lift-trans (Ω-pres r))
-Ω-pres {bc}     (lim r)     = lim ⦃ map lift-pres (map Ω-pres it) ⦄ (subst (_ <_) lift-trans (Ω-pres r))
+Ω-pres {bc}     (lim r)     = lim ⦃ _ ⦄ (subst (_ <_) lift-trans (Ω-pres r))
+```
+
+## 路径关系
+
+```agda
+open import Relation.Binary.Definitions
+```
+
+### 严格序
+
+```agda
+<-trans : Transitive _<_
+<-trans r s = {!   !}
+```
+
+## 高阶算术
+
+```agda
+_+_ : Ord a → Ord a → Ord a; infixl 7 _+_
++-pres : β < γ → α + β < α + γ
+
+α + zero = α
+α + suc β = suc (α + β)
+α + lim f = lim (λ n → α + f n) ⦃ map +-pres it ⦄
+α + Lim aℓ F = Lim aℓ (λ ι → α + F ι)
+
++-pres zero = zero
++-pres (suc r) = suc (+-pres r)
++-pres (lim r) = lim ⦃ _ ⦄ (+-pres r)
++-pres (Lim ι r) = Lim _ (+-pres r)
 ```
