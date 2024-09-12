@@ -320,8 +320,9 @@ module Order (a : Level) where
 ```
 
 ```agda
-module _ (a : Level) where
-  open Order a
+module _ {a : Level} where
+  open Order a hiding (_≤_)
+  open Order a using (_≤_) public
   module HigherRoadReasoning where
     open import Relation.Binary.Reasoning.Base.Triple
       {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<ₐ_}
@@ -381,13 +382,18 @@ instance
 Ω-pres {a} {c} {ac} {bc} zero = Lim {ι = elm $ suc (Ω a)} (begin-strict
   lift ac (Ω a)                       <⟨ lift-pres zero ⟩
   lift ac (suc (Ω a))                 ≈⟨ lift-comp ⟩
-  lift bc (lift zero (suc (Ω a)))     ∎) where open HigherRoadReasoning c
+  lift bc (lift zero (suc (Ω a)))     ∎) where open HigherRoadReasoning
 Ω-pres {a} {c} {ac} {bc} (suc {b} r) = Lim {ι = elm $ Ω b} $ begin-strict
   lift ac (Ω a)                       <⟨ Ω-pres r ⟩
   lift _ (Ω b)                        ≈⟨ lift-trans ⟩
-  lift bc (lift zero (Ω b))           ∎ where open HigherRoadReasoning c
+  lift bc (lift zero (Ω b))           ∎ where open HigherRoadReasoning
 Ω-pres {a} {c} {ac} {bc} (lim {f} {n} r) = lim ⦃ _ ⦄ $ begin-strict
   lift ac (Ω a)                       <⟨ Ω-pres r ⟩
   lift _ (Ω (f n))                    ≈⟨ lift-trans ⟩
-  lift bc (lift f⊏l (Ω (f n)))        ∎ where open HigherRoadReasoning c
+  lift bc (lift f⊏l (Ω (f n)))        ∎ where open HigherRoadReasoning
+```
+
+```agda
+f<₁l : {w : wf f} → f n <₁ lim f ⦃ w ⦄
+f<₁l {w} = map (lim ⦃ _ ⦄) w
 ```
