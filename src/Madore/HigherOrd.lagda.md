@@ -1,19 +1,19 @@
 ---
-title: 形式化大数数学 (3.0 - 序数崩塌函数)
+title: 形式化大数数学 (3.0 - 高阶递归序数层级)
 zhihu-tags: Agda, 大数数学, 序数
 ---
 
-# 形式化大数数学 (3.0 - 序数崩塌函数)
+# 形式化大数数学 (3.0 - 高阶递归序数层级)
 
 > 交流Q群: 893531731  
-> 本文源码: [Base.lagda.md](httrsps://github.com/choukh/agda-googology/blob/main/src/Madore/Base.lagda.md)  
-> 高亮渲染: [Base.html](httrsps://choukh.github.io/agda-googology/Madore.Base.html)  
+> 本文源码: [HigherOrd.lagda.md](httrsps://github.com/choukh/agda-googology/blob/main/src/Madore/HigherOrd.lagda.md)  
+> 高亮渲染: [HigherOrd.html](httrsps://choukh.github.io/agda-googology/Madore.HigherOrd.html)  
 
 ## 工作环境
 
 ```agda
 {-# OPTIONS --rewriting --cubical --lossy-unification #-}
-module Madore.Base where
+module Madore.HigherOrd where
 open import Agda.Builtin.Equality public
 open import Agda.Builtin.Equality.Rewrite public
 ```
@@ -28,7 +28,7 @@ open Level.CanonicalRoad using (cano; cano-2const)
 import Cubical.Foundations.Prelude as 🧊
 ```
 
-## 高阶递归层级
+## 高阶递归序数层级
 
 ```agda
 data U (ℓ : Level) (E : ∀ a → a ⊏ ℓ → Type) : Type
@@ -390,21 +390,4 @@ instance
   lift ac (Ω a)                       <⟨ Ω-pres r ⟩
   lift _ (Ω (f n))                    ≈⟨ lift-trans ⟩
   lift bc (lift f⊏l (Ω (f n)))        ∎ where open HigherRoadReasoning c
-```
-
-## 高阶算术
-
-```agda
-_+_ : Ord a → Ord a → Ord a; infixl 7 _+_
-+-pres : β < γ → α + β < α + γ
-
-α + zero = α
-α + suc β = suc (α + β)
-α + lim f = lim (λ n → α + f n) ⦃ map +-pres it ⦄
-α + Lim aℓ F = Lim aℓ (λ ι → α + F ι)
-
-+-pres zero = zero
-+-pres (suc r) = suc (+-pres r)
-+-pres (lim r) = lim ⦃ _ ⦄ (+-pres r)
-+-pres (Lim r) = Lim (+-pres r)
 ```
