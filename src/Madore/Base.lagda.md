@@ -215,6 +215,120 @@ module OrdIso where
   Ord0≡Level = pathToEq $ isoToPath $ iso to from sec ret
 ```
 
+## 高阶路径关系
+
+```agda
+open import Relation.Binary.Definitions
+open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
+open import Induction.WellFounded
+```
+
+```agda
+module Order (a : Level) where
+  open import Relation.Binary.Structures {A = Ord a} _≡_
+  _<ₐ_ : Ord a → Ord a → Type
+  _<ₐ_ = _<_
+```
+
+### 严格序
+
+```agda
+  <-resp-≡ : _<ₐ_ Respects₂ _≡_
+  <-resp-≡ = (λ { refl → id }) , (λ { refl → id })
+```
+
+```agda
+  <-trans : Transitive _<ₐ_
+  <-trans r zero = suc r
+  <-trans r (suc s) = suc (<-trans r s)
+  <-trans r (lim s) = lim (<-trans r s)
+  <-trans r (Lim s) = Lim (<-trans r s)
+```
+
+```agda
+  <-acc : α <ₐ β → Acc _<ₐ_ α
+  <-acc zero    = acc λ s → <-acc s
+  <-acc (suc r) = acc λ s → <-acc (<-trans s r)
+  <-acc (lim r) = acc λ s → <-acc (<-trans s r)
+  <-acc (Lim r) = acc λ s → <-acc (<-trans s r)
+
+  <-wfnd : WellFounded _<ₐ_
+  <-wfnd _ = <-acc zero
+```
+
+```agda
+  <-asym : Asymmetric _<ₐ_
+  <-asym = wf⇒asym <-wfnd
+
+  <-irrefl : Irreflexive _≡_ _<ₐ_
+  <-irrefl = wf⇒irrefl <-resp-≡ sym <-wfnd
+```
+
+```agda
+  <-isStrictPartialOrder : IsStrictPartialOrder _<_
+  <-isStrictPartialOrder = record
+    { isEquivalence = isEquivalence
+    ; irrefl = <-irrefl
+    ; trans = <-trans
+    ; <-resp-≈ = <-resp-≡ }
+```
+
+### 非严格序
+
+```agda
+  open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<ₐ_
+    as NonStrict public using () renaming (_≤_ to infix 6 _≤_; <⇒≤ to <→≤)
+```
+
+```agda
+  <s→≤ : α < suc β → α ≤ β
+  <s→≤ zero    = inr refl
+  <s→≤ (suc r) = inl r
+
+  ≤→<s : α ≤ β → α < suc β
+  ≤→<s (inl r)    = suc r
+  ≤→<s (inr refl) = zero
+```
+
+```agda
+  ≤-refl : Reflexive _≤_
+  ≤-refl = NonStrict.reflexive refl
+
+  ≤-antisym : Antisymmetric _≡_ _≤_
+  ≤-antisym = NonStrict.antisym isEquivalence <-trans <-irrefl
+
+  ≤-trans : Transitive _≤_
+  ≤-trans = NonStrict.trans isEquivalence <-resp-≡ <-trans
+
+  <-≤-trans : Trans _<ₐ_ _≤_ _<ₐ_
+  <-≤-trans = NonStrict.<-≤-trans <-trans (fst <-resp-≡)
+
+  ≤-<-trans : Trans _≤_ _<ₐ_ _<ₐ_
+  ≤-<-trans = NonStrict.≤-<-trans sym <-trans (snd <-resp-≡)
+```
+
+```agda
+  ≤-isPreorder : IsPreorder _≤_
+  ≤-isPreorder = record
+    { isEquivalence = isEquivalence
+    ; reflexive = inr
+    ; trans = ≤-trans
+    }
+
+  ≤-isPartialOrder : IsPartialOrder _≤_
+  ≤-isPartialOrder = record { isPreorder = ≤-isPreorder ; antisym = ≤-antisym }
+```
+
+```agda
+module _ (a : Level) where
+  open Order a
+  module HigherRoadReasoning where
+    open import Relation.Binary.Reasoning.Base.Triple
+      {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<ₐ_}
+      ≤-isPreorder <-asym <-trans <-resp-≡ <→≤ <-≤-trans ≤-<-trans
+      public
+```
+
 ## 层级的提升
 
 ```agda
@@ -264,37 +378,18 @@ instance
 Ω (suc a) = Lim zero (lift zero)
 Ω (lim f) = lim (λ n → lift f⊏l (Ω $ f n)) ⦃ map Ω-pres it ⦄
 
-Ω-pres {a} {ac} zero        = Lim {ι = elm $ suc (Ω a)} (subst (lift ac (Ω a) <_) lift-comp (lift-pres zero))
-Ω-pres {bc}     (suc {b} r) = Lim {ι = elm $ Ω b}       (subst (_ <_) lift-trans (Ω-pres r))
-Ω-pres {bc}     (lim r)     = lim ⦃ _ ⦄                 (subst (_ <_) lift-trans (Ω-pres r))
-```
-
-## 高阶路径关系
-
-```agda
-open import Relation.Binary.Definitions
-open import Induction.WellFounded
-```
-
-### 严格序
-
-```agda
-<-trans : Transitive (_<_ {ℓ} {E = Elm})
-<-trans r zero = suc r
-<-trans r (suc s) = suc (<-trans r s)
-<-trans r (lim s) = lim (<-trans r s)
-<-trans r (Lim s) = Lim (<-trans r s)
-```
-
-```agda
-<-acc : {α β : Ord a} → α < β → Acc _<_ α
-<-acc zero    = acc λ s → <-acc s
-<-acc (suc r) = acc λ s → <-acc (<-trans s r)
-<-acc (lim r) = acc λ s → <-acc (<-trans s r)
-<-acc (Lim r) = acc λ s → <-acc (<-trans s r)
-
-<-wfnd : WellFounded (_<_ {ℓ} {E = Elm})
-<-wfnd _ = <-acc zero
+Ω-pres {a} {c} {ac} {bc} zero = Lim {ι = elm $ suc (Ω a)} (begin-strict
+  lift ac (Ω a)                       <⟨ lift-pres zero ⟩
+  lift ac (suc (Ω a))                 ≈⟨ lift-comp ⟩
+  lift bc (lift zero (suc (Ω a)))     ∎) where open HigherRoadReasoning c
+Ω-pres {a} {c} {ac} {bc} (suc {b} r) = Lim {ι = elm $ Ω b} $ begin-strict
+  lift ac (Ω a)                       <⟨ Ω-pres r ⟩
+  lift _ (Ω b)                        ≈⟨ lift-trans ⟩
+  lift bc (lift zero (Ω b))           ∎ where open HigherRoadReasoning c
+Ω-pres {a} {c} {ac} {bc} (lim {f} {n} r) = lim ⦃ _ ⦄ $ begin-strict
+  lift ac (Ω a)                       <⟨ Ω-pres r ⟩
+  lift _ (Ω (f n))                    ≈⟨ lift-trans ⟩
+  lift bc (lift f⊏l (Ω (f n)))        ∎ where open HigherRoadReasoning c
 ```
 
 ## 高阶算术
