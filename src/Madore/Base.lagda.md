@@ -115,6 +115,27 @@ trsp : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Elm a aℓ → Elm a aℓ
 trsp α = elm (ord α)
 ```
 
+## 数字字面量
+
+```agda
+open import Lower public using (_∘ⁿ_)
+finLvl : ℕ → Level
+finLvl n = (suc ∘ⁿ n) zero
+finOrd : ℕ → Ord a
+finOrd n = (suc ∘ⁿ n) zero
+```
+
+```agda
+open import Agda.Builtin.FromNat public
+instance
+  nNat : Number ℕ
+  nNat = record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
+  nLvl : Number Level
+  nLvl = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finLvl n }
+  nOrd : Number (Ord a)
+  nOrd = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finOrd n }
+```
+
 ## 极限的外延性
 
 ```agda
@@ -176,27 +197,6 @@ lift-trans : {ab : a ⊏ b} {bc : b ⊏ c} → lift (⊏-trans ab bc) α ≡ lif
 lift-trans = lift-comp
 ```
 
-## 数字字面量
-
-```agda
-open import Lower public using (_∘ⁿ_)
-finLvl : ℕ → Level
-finLvl n = (suc ∘ⁿ n) zero
-finOrd : ℕ → Ord a
-finOrd n = (suc ∘ⁿ n) zero
-```
-
-```agda
-open import Agda.Builtin.FromNat public
-instance
-  nNat : Number ℕ
-  nNat = record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
-  nLvl : Number Level
-  nLvl = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finLvl n }
-  nOrd : Number (Ord a)
-  nOrd = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finOrd n }
-```
-
 ## 高阶 ω
 
 ```agda
@@ -223,6 +223,7 @@ instance
 
 ```agda
 open import Relation.Binary.Definitions
+open import Induction.WellFounded
 ```
 
 ### 严格序
@@ -233,6 +234,12 @@ open import Relation.Binary.Definitions
 <-trans r (suc s) = suc (<-trans r s)
 <-trans r (lim s) = lim (<-trans r s)
 <-trans r (Lim s) = Lim (<-trans r s)
+
+<-acc : {α β : Ord a} → α < β → Acc _<_ α
+<-acc zero    = acc λ s → <-acc s
+<-acc (suc r) = acc λ s → <-acc (<-trans s r)
+<-acc (lim r) = acc λ s → <-acc (<-trans s r)
+<-acc (Lim r) = acc λ s → <-acc (<-trans s r)
 ```
 
 ## 高阶算术
