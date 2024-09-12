@@ -269,7 +269,7 @@ instance
 Ω-pres {bc}     (lim r)     = lim ⦃ _ ⦄                 (subst (_ <_) lift-trans (Ω-pres r))
 ```
 
-## 路径关系
+## 高阶路径关系
 
 ```agda
 open import Relation.Binary.Definitions
@@ -284,12 +284,17 @@ open import Induction.WellFounded
 <-trans r (suc s) = suc (<-trans r s)
 <-trans r (lim s) = lim (<-trans r s)
 <-trans r (Lim s) = Lim (<-trans r s)
+```
 
+```agda
 <-acc : {α β : Ord a} → α < β → Acc _<_ α
 <-acc zero    = acc λ s → <-acc s
 <-acc (suc r) = acc λ s → <-acc (<-trans s r)
 <-acc (lim r) = acc λ s → <-acc (<-trans s r)
 <-acc (Lim r) = acc λ s → <-acc (<-trans s r)
+
+<-wfnd : WellFounded (_<_ {ℓ} {E = Elm})
+<-wfnd _ = <-acc zero
 ```
 
 ## 高阶算术
