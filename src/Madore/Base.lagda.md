@@ -9,12 +9,14 @@ zhihu-tags: Agda, 大数数学, 序数
 > 本文源码: [Base.lagda.md](httrsps://github.com/choukh/agda-googology/blob/main/src/Madore/Base.lagda.md)  
 > 高亮渲染: [Base.html](httrsps://choukh.github.io/agda-googology/Madore.Base.html)  
 
+## 工作环境
+
 ```agda
 {-# OPTIONS --rewriting --cubical --lossy-unification #-}
 module Madore.Base where
+open import Agda.Builtin.Equality public
+open import Agda.Builtin.Equality.Rewrite public
 ```
-
-## 工作环境
 
 ```agda
 import Cubical.Foundations.Prelude as 🧊
@@ -97,8 +99,6 @@ elm α = subst id (sym Elm≡Ord) α
 
 ```agda
 open import Relation.Binary.PropositionalEquality using (subst-sym-subst; subst-subst-sym)
-open import Agda.Builtin.Equality public
-open import Agda.Builtin.Equality.Rewrite public
 
 elm-ord : {aℓ : a ⊏ ℓ} {α : Elm a aℓ} → subst id (sym Elm≡Ord) (ord α) ≡ α
 elm-ord = subst-sym-subst Elm≡Ord
@@ -163,11 +163,16 @@ lift-pres (Lim ι r) = Lim (trsp ι) (lift-pres $ subst (_ <_) refl r)
 提升的复合
 
 ```agda
-lift-trans : {ab : a ⊏ b} {bc : b ⊏ c} {ac : a ⊏ c} → lift bc (lift ab α) ≡ lift ac α
-lift-trans {α = zero} = refl
-lift-trans {α = suc α} = cong suc lift-trans
-lift-trans {α = lim f} = limExt λ _ → lift-trans
-lift-trans {α = Lim xa F} = LimExt λ _ → lift-trans
+lift-comp : {ab : a ⊏ b} {bc : b ⊏ c} {ac : a ⊏ c} → lift ac α ≡ lift bc (lift ab α)
+lift-comp {α = zero} = refl
+lift-comp {α = suc α} = cong suc lift-comp
+lift-comp {α = lim f} = limExt λ _ → lift-comp
+lift-comp {α = Lim xa F} = LimExt λ _ → lift-comp
+```
+
+```agda
+lift-trans : {ab : a ⊏ b} {bc : b ⊏ c} → lift (⊏-trans ab bc) α ≡ lift bc (lift ab α)
+lift-trans = lift-comp
 ```
 
 ## 数字字面量
@@ -204,7 +209,7 @@ instance
 Ω (suc a) = Lim zero (lift zero)
 Ω (lim f) = lim (λ n → lift f<l-rd (Ω $ f n)) ⦃ map Ω-pres it ⦄
 
-Ω-pres {a} {ac} zero = Lim (elm $ suc (Ω a)) (subst (lift ac (Ω a) <_) (sym lift-trans) (lift-pres zero))
-Ω-pres (suc r) = {!   !}
-Ω-pres (lim r) = {!   !}
+Ω-pres {a} {ac} zero        = Lim (elm $ suc (Ω a)) (subst (lift ac (Ω a) <_) lift-comp (lift-pres zero))
+Ω-pres {bc}     (suc {b} r) = Lim (elm (Ω b)) (subst (_ <_) lift-trans (Ω-pres r))
+Ω-pres {bc}     (lim r)     = lim ⦃ map lift-pres (map Ω-pres it) ⦄ (subst (_ <_) lift-trans (Ω-pres r))
 ```
