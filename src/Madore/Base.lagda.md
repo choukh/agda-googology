@@ -165,6 +165,56 @@ module _ {aℓ₁ : a ⊏ ℓ} {F₁ : Elm a (cano aℓ₁) → U ℓ Elm}
   LimExt = pathToEq LimExtPath
 ```
 
+## 第零层与层级序数同构
+
+```agda
+module OrdIso where
+  open import Cubical.Foundations.Isomorphism
+```
+
+```agda
+  to : Ord 0 → Level
+  from< : α < β → to α ⊏ to β
+
+  to zero = zero
+  to (suc α) = suc (to α)
+  to (lim f) = lim (to ∘ f) ⦃ map from< it ⦄
+  
+  from< zero = zero
+  from< (suc r) = suc (from< r)
+  from< (lim r) = lim ⦃ map from< it ⦄ (from< r)
+```
+
+```agda
+  from : Level → Ord 0
+  from⊏ : a ⊏ b → from a < from b
+
+  from zero = zero
+  from (suc a) = suc (from a)
+  from (lim f) = lim (from ∘ f) ⦃ map from⊏ it ⦄
+
+  from⊏ zero = zero
+  from⊏ (suc r) = suc (from⊏ r)
+  from⊏ (lim r) = lim ⦃ map from⊏ it ⦄ (from⊏ r)
+```
+
+```agda
+  sec : section to from
+  sec zero = 🧊.refl
+  sec (suc a) = 🧊.cong suc (sec a)
+  sec (lim f) = Level.limExtPath λ n → sec (f n)
+
+  ret : retract to from
+  ret zero = 🧊.refl
+  ret (suc α) = 🧊.cong suc (ret α)
+  ret (lim f) = limExtPath λ n → ret (f n)
+```
+
+```agda
+  Ord0≡Level : Ord 0 ≡ Level
+  Ord0≡Level = pathToEq $ isoToPath $ iso to from sec ret
+```
+
 ## 层级的提升
 
 ```agda
