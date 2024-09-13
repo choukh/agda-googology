@@ -49,24 +49,24 @@ _+_ : Ord a → Ord a → Ord a; infixl 7 _+_
 
 +-pres zero = zero
 +-pres (suc r) = suc (+-pres r)
-+-pres (lim r) = lim ⦃ _ ⦄ (+-pres r)
++-pres (lim r) = lim (+-pres r)
 +-pres (Lim r) = Lim (+-pres r)
-+-pres f<l = f<l ⦃ _ ⦄
++-pres f<l = f<l
 ```
 
 ```agda
-+-infl≤ : ⦃ Wf α ⦄ → β ≤ β + α
-+-infl≤ {α = zero} {β} = inr refl
-+-infl≤ {α = suc α} {β} = begin
-  β                       ≤⟨ +-infl≤ ⟩
++-infl≤ : Wf α → β ≤ β + α
++-infl≤ zero = inr refl
++-infl≤ {α = suc α} {β} (suc α̇) = begin
+  β                       ≤⟨ +-infl≤ α̇ ⟩
   β + α                   <⟨ +-pres zero ⟩
   β + suc α               ∎ where open HigherRoadReasoning
-+-infl≤ {α = lim f} {β} = begin
-  β                       ≤⟨ +-infl≤ ⟩
++-infl≤ {α = lim f} {β} (lim ḟ) = begin
+  β                       ≤⟨ +-infl≤ ḟ ⟩
   β + f 0                 <⟨ +-pres f<l ⟩
   β + lim f               ∎ where open HigherRoadReasoning
-+-infl≤ {α = Lim aℓ F} {β} ⦃ W , F-pres ⦄ = begin
-  β                       ≤⟨ +-infl≤ ⦃ W ⦄ ⟩
++-infl≤ {α = Lim aℓ F} {β} (Lim Ḟ F-pres) = begin
+  β                       ≤⟨ +-infl≤ (Ḟ {0}) ⟩
   β + F (elm 0)           <⟨ +-pres $ Lim $ F-pres zero ⟩
   β + Lim aℓ F            ∎ where open HigherRoadReasoning
 ```
@@ -86,4 +86,3 @@ _*_ : (α : Ord a) → Ord a → ⦃ NonZero α ⦄ → Ord a; infixl 8 _*_
 *-pres (Lim r) = {!   !}
 *-pres f<l = {!   !}
 ```
- 
