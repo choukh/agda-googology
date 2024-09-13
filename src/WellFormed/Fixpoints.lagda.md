@@ -22,7 +22,7 @@ open import WellFormed.CrossTree
 ## 不动点定理
 
 ```agda
-Itₙ : (ℕ → Ord → Ord) → Ord → Seq
+Itₙ : {A : Type} → (ℕ → A → A) → A → ℕ → A
 Itₙ F i zero = i
 Itₙ F i (suc n) = F n (Itₙ F i n)
 ```
