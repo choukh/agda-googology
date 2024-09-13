@@ -22,7 +22,7 @@ open import WellFormed.CrossTree
 ## 不动点定理
 
 ```agda
-Itₙ : (ℕ → Func) → Ord → Seq
+Itₙ : (ℕ → Ord → Ord) → Ord → Seq
 Itₙ F i zero = i
 Itₙ F i (suc n) = F n (Itₙ F i n)
 ```
@@ -30,7 +30,7 @@ Itₙ F i (suc n) = F n (Itₙ F i n)
 ```agda
 record Normal : Type where
   constructor normal
-  field func : Func
+  field func : Ord → Ord
   private F = func
   field
     pres : F preserves _<_
@@ -73,7 +73,7 @@ module FpEnum (ν : Normal) where
   w {n = zero} = +-infl
   w {n = suc n} = +-pres (pres w)
 
-  F′ : Func
+  F′ : Ord → Ord
   F′-pres-rd : F′ preserves Road
   F′-pres : F′ preserves _<_
   F′-pres = map F′-pres-rd
@@ -301,7 +301,7 @@ nml = fst
 srg : ((ν , _) : SNormal) → Strong ν
 srg = snd
 
-_⟨_⟩ : SNormal → Func
+_⟨_⟩ : SNormal → Ord → Ord
 ν ⟨ a ⟩ = Normal.func (nml ν) a
 ```
 
