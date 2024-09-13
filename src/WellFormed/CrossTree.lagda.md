@@ -48,7 +48,7 @@ $$
 
 ```agda
 infix 6 _≼_
-data _≼_ : Rel where
+data _≼_ : Ord → Ord → Type where
   z≼  : 0 ≼ a
   s≼s : a ≼ b → suc a ≼ suc b
   ≼l  : {w : wf f} → a ≼ f n → a ≼ lim f ⦃ w ⦄
@@ -199,7 +199,7 @@ l≼-inv (l≼ p) = p
 **定义 2-3-11** 我们说 $a$ 与 $b$ 外延相等, 记作 $a ≈ b$, 但且仅当 $a ≼ b$ 且 $b ≼ a$.
 
 ```agda
-_≈_ : Rel; infix 5 _≈_
+_≈_ : Ord → Ord → Type; infix 5 _≈_
 a ≈ b = a ≼ b × b ≼ a
 ```
 
@@ -267,7 +267,7 @@ l≈ls {w} = l≼l (≤→≼ (inl w)) , l≼ f≼l
 **定义 2-3-18** 严格跨树关系 $a ≺ b := a^+ ≼ b$.
 
 ```agda
-_≺_ : Rel; infix 6 _≺_
+_≺_ : Ord → Ord → Type; infix 6 _≺_
 a ≺ b = suc a ≼ b
 ```
 

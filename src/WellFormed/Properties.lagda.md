@@ -18,32 +18,25 @@ module WellFormed.Properties where
 open import WellFormed.Base
 ```
 
-## 序数函数
+## 序数运算
 
-我们先定义关于序数函数的一些性质.
+我们先定义关于序数运算的一些性质.
 
-**定义 2-1-0** 我们把
+**约定 2-1-0** 我们用
 
-- 序数函数的类型记作 $\text{Func}$, 并约定用大写的 $F$ 表示序数函数.
-- 序数的一元关系类型记作 $\text{Pred}$, 也叫做序数上的谓词 (predicate).
-- 序数的二元关系类型记作 $\text{Rel}$
+- $A$ 表示任意类型.
+- $F$ 表示 $A$ 上的一元运算.
 
 ```agda
-Func : Type
-Func = Ord → Ord
-private variable F : Func
-
-Pred : Type₁
-Pred = Ord → Type
-
-Rel : Type₁
-Rel = Ord → Ord → Type
+private variable
+  A : Type
+  F : A → A
 ```
 
-**定义 2-1-1** 我们说一个序数函数 $F$ **保持**一个序数关系 $\sim$, 当且仅当对任意序数 $x, y$ 都有 $x \sim y \to F(x) \sim F(y)$.
+**定义 2-1-1** 我们说 $A$ 上的一个运算 $F : A → A$ **保持** $A$ 上的一个二元关系 $\sim$, 当且仅当对任意序数 $x, y$ 都有 $x \sim y \to F(x) \sim F(y)$.
 
 ```agda
-_preserves_ : Func → Rel → Type
+_preserves_ : (A → A) → (A → A → Type) → Type
 F preserves _~_ = ∀ {x y} → x ~ y → F x ~ F y
 ```
 
@@ -55,10 +48,10 @@ map-pres≤ pres (inl p)    = <→≤ (pres p)
 map-pres≤ pres (inr refl) = inr refl
 ```
 
-**定义 2-1-3** 我们说一个序数函数 $F$ **单射**一个序数关系 $\sim$, 当且仅当对任意序数 $x, y$ 都有 $F(x) \sim F(y) \to x \sim y$.
+**定义 2-1-3** 我们说 $A$ 上的一个运算 $F : A → A$ **单射** $A$ 上的一个二元关系 $\sim$, 当且仅当对任意序数 $x, y$ 都有 $F(x) \sim F(y) \to x \sim y$.
 
 ```agda
-_injects_ : Func → Rel → Type
+_injects_ : (A → A) → (A → A → Type) → Type
 F injects _~_ = ∀ {x y} → F x ~ F y → x ~ y
 ```
 
@@ -100,7 +93,7 @@ rd[_] n = lim {n = n} ⦃ _ ⦄
 **定义 2-1-7** 极限序数谓词: 它仅在遇到极限序数时为真. 该谓词是可判定的.
 
 ```agda
-isLim : Pred
+isLim : Ord → Type
 isLim zero = ⊥
 isLim (suc a) = ⊥
 isLim (lim f) = ⊤
