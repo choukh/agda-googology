@@ -6,14 +6,14 @@ zhihu-tags: Agda, 大数数学, 序数
 # 形式化大数数学 (3.0 - 高阶递归序数层级)
 
 > 交流Q群: 893531731  
-> 本文源码: [HigherOrd.lagda.md](httrsps://github.com/choukh/agda-googology/blob/main/src/Madore/HigherOrd.lagda.md)  
-> 高亮渲染: [HigherOrd.html](httrsps://choukh.github.io/agda-googology/Madore.HigherOrd.html)  
+> 本文源码: [HigherOrd.lagda.md](httrsps://github.com/choukh/agda-googology/blob/main/src/OCF/HigherOrd.lagda.md)  
+> 高亮渲染: [HigherOrd.html](httrsps://choukh.github.io/agda-googology/OCF.HigherOrd.html)  
 
 ## 工作环境
 
 ```agda
 {-# OPTIONS --rewriting --cubical --lossy-unification #-}
-module Madore.HigherOrd where
+module OCF.HigherOrd where
 open import Agda.Builtin.Equality public
 open import Agda.Builtin.Equality.Rewrite public
 ```
@@ -117,6 +117,11 @@ trsp : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Elm a aℓ → Elm a aℓ
 trsp α = elm (ord α)
 ```
 
+```agda
+lim- : (f : ℕ → Ord a) {w : wf f} → Ord a
+lim- f {w} = lim f ⦃ w ⦄
+```
+
 ## 数字字面量
 
 ```agda
@@ -216,6 +221,11 @@ module OrdIso where
 ```agda
   Ord0≡Level : Ord 0 ≡ Level
   Ord0≡Level = pathToEq $ isoToPath $ iso to from sec ret
+```
+
+```agda
+level : Ord 0 → Level
+level = subst id OrdIso.Ord0≡Level
 ```
 
 ## 高阶路径关系
