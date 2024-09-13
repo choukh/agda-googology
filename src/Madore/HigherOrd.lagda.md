@@ -38,6 +38,7 @@ data _<_ {ℓ : Level} {E : ∀ a → a ⊏ ℓ → Type} : U ℓ E → U ℓ E 
 ```agda
 variable
   ℓ ℓ′ : Level
+  aℓ : a ⊏ ℓ
   E : ∀ a → a ⊏ ℓ → Type
   α β γ : U ℓ E
   f g : ℕ → U ℓ E
@@ -65,6 +66,7 @@ data U ℓ E where
 data _<_ {ℓ} {E} where
   zero : α < suc α
   suc  : α < β → α < suc β
+  f<l  : ⦃ _ : wf f ⦄ → f n < lim f
   lim  : ⦃ _ : wf f ⦄ → α < f n → α < lim f
   Lim  : {aℓ : a ⊏ ℓ} {F : E a aℓ → U ℓ E} {ι : E a aℓ} → α < F ι → α < Lim aℓ F
 ```
@@ -84,24 +86,24 @@ Ord a = U a Elm
 ```
 
 ```agda
-Elm≡Ord : {aℓ : a ⊏ ℓ} → Elm a aℓ ≡ Ord a
+Elm≡Ord : Elm a aℓ ≡ Ord a
 Elm≡Ord {aℓ = zero} = refl
 Elm≡Ord {aℓ = suc aℓ} = Elm≡Ord {aℓ = aℓ}
 Elm≡Ord {aℓ = lim aℓ} = Elm≡Ord {aℓ = aℓ}
 ```
 
 ```agda
-ord : {aℓ : a ⊏ ℓ} → Elm a aℓ → Ord a
+ord : Elm a aℓ → Ord a
 ord {aℓ} α = subst id Elm≡Ord α
 
-elm : {aℓ : a ⊏ ℓ} → Ord a → Elm a aℓ
+elm : Ord a → Elm a aℓ
 elm α = subst id (sym Elm≡Ord) α
 ```
 
 ```agda
 open import Relation.Binary.PropositionalEquality using (subst-sym-subst; subst-subst-sym)
 
-elm-ord : {aℓ : a ⊏ ℓ} {α : Elm a aℓ} → subst id (sym Elm≡Ord) (ord α) ≡ α
+elm-ord : {α : Elm a aℓ} → subst id (sym Elm≡Ord) (ord α) ≡ α
 elm-ord = subst-sym-subst Elm≡Ord
 {-# REWRITE elm-ord #-}
 
@@ -182,7 +184,8 @@ module OrdIso where
   
   from< zero = zero
   from< (suc r) = suc (from< r)
-  from< (lim r) = lim ⦃ map from< it ⦄ (from< r)
+  from< (lim r) = lim ⦃ _ ⦄ (from< r)
+  from< f<l = f⊏l
 ```
 
 ```agda
@@ -243,6 +246,7 @@ module Order (a : Level) where
   <-trans r (suc s) = suc (<-trans r s)
   <-trans r (lim s) = lim (<-trans r s)
   <-trans r (Lim s) = Lim (<-trans r s)
+  <-trans r f<l = lim r
 ```
 
 ```agda
@@ -251,6 +255,7 @@ module Order (a : Level) where
   <-acc (suc r) = acc λ s → <-acc (<-trans s r)
   <-acc (lim r) = acc λ s → <-acc (<-trans s r)
   <-acc (Lim r) = acc λ s → <-acc (<-trans s r)
+  <-acc f<l     = acc λ s → <-acc s
 
   <-wfnd : WellFounded _<ₐ_
   <-wfnd _ = <-acc zero
@@ -343,8 +348,9 @@ lift ab (Lim xa F) = Lim (cano $ ⊏-trans xa ab) λ ι → lift ab (F $ trsp ι
 
 lift-pres zero = zero
 lift-pres (suc r) = suc (lift-pres r)
-lift-pres (lim r) = lim ⦃ map lift-pres it ⦄ (lift-pres r)
+lift-pres (lim r) = lim ⦃ _ ⦄ (lift-pres r)
 lift-pres (Lim {ι} r) = Lim {ι = trsp ι} (lift-pres $ subst (_ <_) refl r)
+lift-pres f<l = f<l ⦃ _ ⦄
 ```
 
 提升的复合
@@ -362,38 +368,19 @@ lift-trans : {ab : a ⊏ b} {bc : b ⊏ c} → lift (⊏-trans ab bc) α ≡ lif
 lift-trans = lift-comp
 ```
 
-## 高阶 ω
+## 高阶良构性
 
 ```agda
-instance
-  finOrd-wf : wf (finOrd {a})
-  finOrd-wf = ∣ zero ∣₁
-
-ω : Ord a
-ω = lim finOrd
-
-Ω : ∀ a → Ord a
-Ω-pres : {ac : a ⊏ c} {bc : b ⊏ c} → a ⊏ b → lift ac (Ω a) < lift bc (Ω b)
-
-Ω zero = ω
-Ω (suc a) = Lim zero (lift zero)
-Ω (lim f) = lim (λ n → lift f⊏l (Ω $ f n)) ⦃ map Ω-pres it ⦄
-
-Ω-pres {a} {c} {ac} {bc} zero = Lim {ι = elm $ suc (Ω a)} (begin-strict
-  lift ac (Ω a)                       <⟨ lift-pres zero ⟩
-  lift ac (suc (Ω a))                 ≈⟨ lift-comp ⟩
-  lift bc (lift zero (suc (Ω a)))     ∎) where open HigherRoadReasoning
-Ω-pres {a} {c} {ac} {bc} (suc {b} r) = Lim {ι = elm $ Ω b} $ begin-strict
-  lift ac (Ω a)                       <⟨ Ω-pres r ⟩
-  lift _ (Ω b)                        ≈⟨ lift-trans ⟩
-  lift bc (lift zero (Ω b))           ∎ where open HigherRoadReasoning
-Ω-pres {a} {c} {ac} {bc} (lim {f} {n} r) = lim ⦃ _ ⦄ $ begin-strict
-  lift ac (Ω a)                       <⟨ Ω-pres r ⟩
-  lift _ (Ω (f n))                    ≈⟨ lift-trans ⟩
-  lift bc (lift f⊏l (Ω (f n)))        ∎ where open HigherRoadReasoning
+Wf : (Elm a aℓ → Ord b) → Type
+Wf {a} F = {β γ : Ord a} → β < γ → F (elm β) < F (elm γ)
 ```
 
 ```agda
-f<₁l : {w : wf f} → f n <₁ lim f ⦃ w ⦄
-f<₁l {w} = map (lim ⦃ _ ⦄) w
+wfo : Ord ℓ → Type
+wfo zero = ⊤
+wfo (suc α) = wfo α
+wfo (lim f) = ∀ {n} → wfo (f n)
+wfo (Lim {a} zero F) = ({ι : Ord a} → wfo ι → wfo (F ι)) × Wf F
+wfo (Lim {a} (suc aℓ) F) = {!   !}
+wfo (Lim {a} (lim aℓ) F) = {!   !}
 ```

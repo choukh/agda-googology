@@ -19,18 +19,23 @@ open import WellFormed.Base
 open import WellFormed.Properties
 ```
 
-## 序数函数
+## 序数运算
 
-先补充定义序数函数的一些性质. 我们用大写的 $F$ 表示序数函数.
+如上一篇一样, 我们用
+
+- $A$ 表示任意类型.
+- $F$ 表示 $A$ 上的一元运算.
 
 ```agda
-private variable F : Func
+private variable
+  A : Type
+  F : A → A
 ```
 
-**定义 2-2-0** 我们说一个序数函数 $F$ **膨胀**一个序数关系 $\sim$, 当且仅当对任意序数 $x$ 都有 $x \sim F(x)$.
+**定义 2-2-0** 我们说 $A$ 上的一个运算 $F : A → A$ **膨胀** $A$ 上的一个二元关系 $\sim$, 当且仅当对任意序数 $x$ 都有 $x \sim F(x)$.
 
 ```agda
-_inflates_ : Func → Rel → Type
+_inflates_ : (A → A) → (A → A → Type) → Type
 F inflates _~_ = ∀ {x} → x ~ F x
 ```
 
@@ -41,13 +46,13 @@ map-infl≤ : F inflates _<_ → F inflates _≤_
 map-infl≤ p = <→≤ p
 ```
 
-**定义 2-2-2** 给定序数谓词 $P : \text{Pred}$, 我们把限制到 $P$ 上的序数函数记作 $F ↾ P$, 其类型记作 $\text{Func}↾P$.
+**定义 2-2-2** 给定谓词 $P : A → \text{Type}$, 我们把限制到 $P$ 上的运算记作 $F ↾ P$, 其类型记作 $\text{Func}↾P$.
 
 ```agda
-Func↾ : Pred → Type
-Func↾ P = (x : Ord) ⦃ p : P x ⦄ → Ord
+Func↾ : (A → Type) → Type
+Func↾ {A} P = (x : A) ⦃ p : P x ⦄ → A
 
-_↾_ : Func → (P : Pred) → Func↾ P
+_↾_ : (A → A) → (P : A → Type) → Func↾ P
 F ↾ P = λ x → F x
 ```
 
@@ -56,13 +61,13 @@ F ↾ P = λ x → F x
 **定义 2-2-3** 我们说 $F$ 在 $P$ **之内**保持(或膨胀) $\sim$, 当且仅当 $F$ 在限制到 $P$ 后保持(或膨胀) $\sim$.
 
 ```agda
-restricted-pres-syntax : {P : Pred} → Func↾ P → Rel → Type
+restricted-pres-syntax : {P : A → Type} → Func↾ P → (A → A → Type) → Type
 restricted-pres-syntax {P} F _~_ = ∀ {x y} ⦃ p : P x ⦄ ⦃ q : P y ⦄ → x ~ y → F x ~ F y
-syntax restricted-pres-syntax {P} F _~_ = F preserves _~_ within P
+syntax restricted-pres-syntax {P = P} F _~_ = F preserves _~_ within P
 
-restricted-infl-syntax : {P : Pred} → Func↾ P → Rel → Type
+restricted-infl-syntax : {P : A → Type} → Func↾ P → (A → A → Type) → Type
 restricted-infl-syntax {P} F _~_ = ∀ {x} ⦃ p : P x ⦄ → x ~ F x
-syntax restricted-infl-syntax {P} F _~_ = F inflates _~_ within P
+syntax restricted-infl-syntax {P = P} F _~_ = F inflates _~_ within P
 ```
 
 ## 一些约定
@@ -78,7 +83,7 @@ pattern 2+ a = suc (suc a)
 **定义 2-2-5** 非零序数谓词: 它仅在遇到零时为假. 该谓词是可判定的.
 
 ```agda
-nonZero : Pred
+nonZero : Ord → Type
 nonZero zero = ⊥
 nonZero _ = ⊤
 ```
@@ -108,7 +113,7 @@ nz-elim {lim f} = z<l
 **定义 2-2-7** 非平凡序数指不等于零和一的序数. 该谓词是可判定的.
 
 ```agda
-nonTrivial : Pred
+nonTrivial : Ord → Type
 nonTrivial zero       = ⊥
 nonTrivial (suc zero) = ⊥
 nonTrivial _          = ⊤
