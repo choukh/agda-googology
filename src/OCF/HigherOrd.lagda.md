@@ -25,7 +25,7 @@ open import WellFormed.Base as Level public
     rd-trans to ⊏-trans; f<l-rd to f⊏l; rd-trich to ⊏-trich)
 
 open Level.Foundations public
-open Level.CanonicalRoad using (cano; cano-2const)
+open Level.CanonicalRoad public using (cano; cano-2const)
 import Cubical.Foundations.Prelude as 🧊
 ```
 
@@ -161,15 +161,16 @@ limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
 ```
 
 ```agda
-module _ {aℓ₁ : a ⊏ ℓ} {F₁ : Elm a (cano aℓ₁) → U ℓ Elm}
-         {aℓ₂ : a ⊏ ℓ} {F₂ : Elm a (cano aℓ₂) → U ℓ Elm}
-         (p : {aℓ : a ⊏ ℓ} (ι : Elm a aℓ) → F₁ (trsp ι) ≡ F₂ (trsp ι))
+module _ {aℓ₁ : a ⊏ ℓ} {F₁ : Elm a aℓ₁ → U ℓ Elm}
+         {aℓ₂ : a ⊏ ℓ} {F₂ : Elm a aℓ₂ → U ℓ Elm}
+         (p : aℓ₁ ≡ aℓ₂)
+         (q : {aℓ : a ⊏ ℓ} (ι : Elm a aℓ) → F₁ (trsp ι) ≡ F₂ (trsp ι))
          where
 
-  LimExtPath : Path (U ℓ Elm) (Lim (cano aℓ₁) F₁) (Lim (cano aℓ₂) F₂)
-  LimExtPath i = Lim (cano-2const aℓ₁ aℓ₂ i) λ ι → eqToPath (p ι) i
+  LimExtPath : Path (U ℓ Elm) (Lim aℓ₁ F₁) (Lim aℓ₂ F₂)
+  LimExtPath i = Lim (eqToPath p i) λ ι → eqToPath (q ι) i
 
-  LimExt : U.Lim (cano aℓ₁) F₁ ≡ Lim (cano aℓ₂) F₂
+  LimExt : U.Lim aℓ₁ F₁ ≡ Lim aℓ₂ F₂
   LimExt = pathToEq LimExtPath
 ```
 
@@ -367,7 +368,7 @@ lift-comp : {ab : a ⊏ b} {bc : b ⊏ c} {ac : a ⊏ c} → lift ac α ≡ lift
 lift-comp {α = zero} = refl
 lift-comp {α = suc α} = cong suc lift-comp
 lift-comp {α = lim f} = limExt λ _ → lift-comp
-lift-comp {α = Lim xa F} = LimExt λ _ → lift-comp
+lift-comp {α = Lim xa F} = LimExt (pathToEq $ cano-2const _ _) (λ _ → lift-comp)
 ```
 
 ```agda

@@ -87,6 +87,17 @@ _+_ : Ord a → Ord a → Ord a; infixl 7 _+_
 ```
 
 ```agda
++α-id : 0 + α ≡ α
++α-id {α = zero} = refl
++α-id {α = suc α} = cong suc +α-id
++α-id {α = lim f} = limExt λ _ → +α-id
++α-id {α = Lim _ F} = LimExt refl λ _ → +α-id
+{-# REWRITE +α-id #-}
+```
+
+## 序数崩塌函数
+
+```agda
 lfp : (F : Ord a → Ord a) → NonZero (F 0) → F preserves _<_ → Ord a
 lfp F nz pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
   w : wf (λ n → (F ∘ⁿ n) 0)
@@ -99,9 +110,9 @@ lfp F nz pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
 ψₐ-pres : {aℓ : a ⊏ ℓ} → β < γ → ψₐ aℓ β < ψₐ aℓ γ
 ψₐ-nz : NonZero (ψₐ aℓ α)
 
-ψₐ aℓ zero        = lfp (Ω _ +_)      Ω-nz  +-pres
-ψₐ aℓ (suc α)     = lfp (ψₐ aℓ α +_)  ψₐ-nz +-pres
-ψₐ aℓ (lim f)     = lim (ψₐ aℓ ∘ f) ⦃ map ψₐ-pres it ⦄
+ψₐ aℓ zero          = lfp (Ω _ +_)      Ω-nz  +-pres
+ψₐ aℓ (suc α)       = lfp (ψₐ aℓ α +_)  ψₐ-nz +-pres
+ψₐ aℓ (lim f)       = lim (ψₐ aℓ ∘ f) ⦃ map ψₐ-pres it ⦄
 ψₐ aℓ (Lim {a = b} bℓ F) rewrite Elm≡Ord {aℓ = bℓ} with ⊏-trich aℓ bℓ
 ... | tri< a⊏b _ _  = lfp (λ x → ψₐ aℓ (F $ lift a⊏b x)) ψₐ-nz λ x → ψₐ-pres {!   !}
 ... | tri≈ _ refl _ = lfp (λ x → ψₐ aℓ (F x))            ψₐ-nz λ x → ψₐ-pres {!   !}
@@ -113,13 +124,13 @@ lfp F nz pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
 ψₐ-pres (lim {n} r) = lim {n = n} (ψₐ-pres r)
 ψₐ-pres (Lim r) = {!   !}
 
-ψₐ-nz {α = zero} = _
+ψₐ-nz {α = zero}  = _
 ψₐ-nz {α = suc α} = _
 ψₐ-nz {α = lim f} = _
 ψₐ-nz {aℓ} {α = Lim bℓ F} rewrite Elm≡Ord {aℓ = bℓ} with ⊏-trich aℓ bℓ
-... | tri< _ _ _ = _
+... | tri< _ _ _    = _
 ... | tri≈ _ refl _ = _
-... | tri> _ _ _ = _
+... | tri> _ _ _    = _
 ```
 
 ```agda
@@ -131,6 +142,8 @@ lfp F nz pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
   w {(zero)} = {!   !}
   w {suc n} = map (+-infl {α = ψ _ _} ⦃ {!   !} ⦄) {!   !}
 ```
+
+## 本方法的极限
 
 ```agda
 ψₙ : ℕ → Ord 0
