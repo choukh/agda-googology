@@ -21,7 +21,8 @@ open import Agda.Builtin.Equality.Rewrite public
 ```agda
 open import WellFormed.Base as Level public
   using (a; b; c; n; m; zero; suc; lim)
-  renaming (Ord to Level; Road to _⊏_; _<_ to _⊏₁_; rd-trans to ⊏-trans; f<l-rd to f⊏l)
+  renaming (Ord to Level; Road to _⊏_; _<_ to _⊏₁_;
+    rd-trans to ⊏-trans; f<l-rd to f⊏l; rd-trich to ⊏-trich)
 
 open Level.Foundations public
 open Level.CanonicalRoad using (cano; cano-2const)
@@ -231,13 +232,9 @@ level = subst id OrdIso.Ord0≡Level
 ## 高阶路径关系
 
 ```agda
-open import Relation.Binary.Definitions
-open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
-open import Induction.WellFounded
-```
-
-```agda
 module Order (a : Level) where
+  open import Relation.Binary.Definitions
+  open import Induction.WellFounded
   open import Relation.Binary.Structures {A = Ord a} _≡_
   _<ₐ_ : Ord a → Ord a → Type
   _<ₐ_ = _<_
