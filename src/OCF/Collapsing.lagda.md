@@ -29,31 +29,37 @@ record NonZero (α : Ord a) : Type where
 ```
 
 ```agda
-z<s : 0 <ₐ suc α
-z≤ : 0 ≤ α
+z<s : Wf α → 0 <ₐ suc α
+z≤  : Wf α → 0 ≤ α
 
-z<l : {w : wf f} → 0 <ₐ lim f ⦃ w ⦄
-z<l {f} =                 begin-strict
-  0                       ≤⟨ z≤ ⟩
+z<l : Wf (f 0) → {w : wf f} → 0 <ₐ lim f ⦃ w ⦄
+z<l {f} W =               begin-strict
+  0                       ≤⟨ z≤ W ⟩
   f 0                     <⟨ f<l ⟩
   lim- f                  ∎ where open HigherRoadReasoning
 
-z<s {α = zero} = zero
-z<s {α = suc α} = suc z<s
-z<s {α = lim f} = suc z<l
-z<s {α = Lim aℓ F} = suc {!   !}
+z<L : Wf (F (elm 0)) → Pres _ F → 0 <ₐ Lim aℓ F
+z<L {F} W F-Pres =        begin-strict
+  0                       ≤⟨ z≤ W ⟩
+  F (elm 0)               <⟨ Lim (F-Pres zero) ⟩
+  Lim _ F                 ∎ where open HigherRoadReasoning
 
-z≤ {α = zero}     = inr refl
-z≤ {α = suc _}    = inl z<s
-z≤ {α = lim _}    = inl z<l
-z≤ {α = Lim _ _}  = inl {!   !}
+z<s zero           = zero
+z<s (suc α̇)        = suc (z<s α̇)
+z<s (lim ḟ)        = suc (z<l ḟ)
+z<s (Lim Ḟ F-pres) = suc (z<L (Ḟ {0}) F-pres)
+
+z≤ zero            = inr refl
+z≤ (suc α̇)         = inl (z<s α̇)
+z≤ (lim ḟ)         = inl (z<l ḟ)
+z≤ (Lim Ḟ F-pres)  = inl (z<L (Ḟ {0}) F-pres)
 ```
 
 ```agda
-nz-elim : ⦃ NonZero α ⦄ → 0 < α
-nz-elim {α = suc α} = {!   !}
-nz-elim {α = lim f} = {!   !}
-nz-elim {α = Lim _ F} = {!   !}
+nz-elim : NonZero α → Wf α → 0 < α
+nz-elim _ (suc α̇)        = z<s α̇
+nz-elim _ (lim ḟ)        = z<l ḟ
+nz-elim _ (Lim Ḟ F-pres) = z<L (Ḟ {0}) F-pres
 ```
 
 ```agda
@@ -99,16 +105,16 @@ _+_ : Ord a → Ord a → Ord a; infixl 7 _+_
 ```
 
 ```agda
-+-infl : ⦃ _ : NonZero α ⦄ → Wf α → β < β + α
-+-infl {β} (suc {α} α̇) = begin-strict
++-infl : NonZero α → Wf α → β < β + α
++-infl {β} _ (suc {α} α̇) = begin-strict
   β                       ≤⟨ +-infl≤ α̇ ⟩
   β + α                   <⟨ +-pres zero ⟩
   β + suc α               ∎ where open HigherRoadReasoning
-+-infl {β} (lim {f} ḟ) = begin-strict
++-infl {β} _ (lim {f} ḟ) = begin-strict
   β                       ≤⟨ +-infl≤ ḟ ⟩
   β + f 0                 <⟨ +-pres f<l ⟩
   β + lim- f              ∎ where open HigherRoadReasoning
-+-infl {β} (Lim {aℓ} {F} Ḟ F-pres) = begin-strict
++-infl {β} _ (Lim {aℓ} {F} Ḟ F-pres) = begin-strict
   β                       ≤⟨ +-infl≤ (Ḟ {0}) ⟩
   β + F (elm 0)           <⟨ +-pres $ Lim $ F-pres zero ⟩
   β + Lim aℓ F            ∎ where open HigherRoadReasoning
@@ -126,10 +132,10 @@ _+_ : Ord a → Ord a → Ord a; infixl 7 _+_
 ## 序数崩塌函数
 
 ```agda
-lfp : (F : Ord a → Ord a) → NonZero (F 0) → F preserves _<_ → Ord a
-lfp F nz pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
+lfp : (F : Ord a → Ord a) → NonZero (F 0) → Wf (F 0) → F preserves _<_ → Ord a
+lfp F nz W pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
   w : wf (λ n → (F ∘ⁿ n) 0)
-  w {(zero)} = {! nz  !}
+  w {(zero)} = ∣ nz-elim nz W ∣₁
   w {suc n} = map pres w
 ```
 
@@ -137,17 +143,18 @@ lfp F nz pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
 ψₐ : a ⊏ ℓ → Ord ℓ → Ord a
 ψₐ-pres : {aℓ : a ⊏ ℓ} → β < γ → ψₐ aℓ β < ψₐ aℓ γ
 ψₐ-nz : NonZero (ψₐ aℓ α)
+ψₐ-Wf : Wf (ψₐ aℓ α)
 
-ψₐ aℓ zero          = lfp (Ω _ +_)      Ω-nz  +-pres
-ψₐ aℓ (suc α)       = lfp (ψₐ aℓ α +_)  ψₐ-nz +-pres
+ψₐ aℓ zero          = lfp (Ω _ +_)      Ω-nz Ω-Wf   +-pres
+ψₐ aℓ (suc α)       = lfp (ψₐ aℓ α +_)  ψₐ-nz ψₐ-Wf +-pres
 ψₐ aℓ (lim f)       = lim (ψₐ aℓ ∘ f) ⦃ map ψₐ-pres it ⦄
 ψₐ aℓ (Lim {a = b} bℓ F) rewrite Elm≡Ord {aℓ = bℓ} with ⊏-trich aℓ bℓ
-... | tri< a⊏b _ _  = lfp (λ x → ψₐ aℓ (F $ lift a⊏b x)) ψₐ-nz λ x → ψₐ-pres {!   !}
-... | tri≈ _ refl _ = lfp (λ x → ψₐ aℓ (F x))            ψₐ-nz λ x → ψₐ-pres {!   !}
+... | tri< a⊏b _ _  = lfp (λ x → ψₐ aℓ (F $ lift a⊏b x)) ψₐ-nz ψₐ-Wf λ x → ψₐ-pres {!   !}
+... | tri≈ _ refl _ = lfp (λ x → ψₐ aℓ (F x))            ψₐ-nz ψₐ-Wf λ x → ψₐ-pres {!   !}
 ... | tri> _ _ b⊏a  = Lim b⊏a λ x → ψₐ aℓ (F $ ord x)
 
-ψₐ-pres zero = lim {n = 2} {!   !}
-ψₐ-pres (suc r) = lim {n = 2} {!   !}
+ψₐ-pres zero = lim {n = 2} (+-infl ψₐ-nz ψₐ-Wf)
+ψₐ-pres (suc r) = lim {n = 1} (ψₐ-pres r)
 ψₐ-pres f<l = f<l
 ψₐ-pres (lim {n} r) = lim {n = n} (ψₐ-pres r)
 ψₐ-pres (Lim r) = {!   !}
@@ -159,22 +166,27 @@ lfp F nz pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
 ... | tri< _ _ _    = _
 ... | tri≈ _ refl _ = _
 ... | tri> _ _ _    = _
+
+ψₐ-Wf = {!   !}
 ```
 
 ```agda
 ψ : ∀ ℓ → Ord ℓ → Ord 0
 ψ-nz : NonZero (ψ ℓ α)
+ψ-Wf : Wf (ψ ℓ α)
 
 ψ zero α = suc α
 ψ (suc ℓ) α = ψ ℓ (ψₐ zero α)
 ψ (lim f) α = lim (Itₙ (λ n x → x + ψ (f n) (ψₐ f⊏l α)) 0) ⦃ w ⦄ where
-  w : wf (Itₙ (λ n x → x + ψ (f n) (ψₐ f⊏l α)) (finOrd 0))
-  w {(zero)} = {!   !}
-  w {suc n} = map (+-infl {α = ψ _ _} ⦃ ψ-nz ⦄) {!   !}
+  w : wf (Itₙ (λ n x → x + ψ (f n) (ψₐ f⊏l α)) 0)
+  w {(zero)} = ∣ nz-elim ψ-nz ψ-Wf ∣₁
+  w {suc n}  = ∣ +-infl ψ-nz ψ-Wf ∣₁
 
 ψ-nz {(zero)} = _
 ψ-nz {suc ℓ} = ψ-nz {ℓ}
 ψ-nz {lim f} = _
+
+ψ-Wf = {!   !}
 ```
 
 ## 本方法的极限
