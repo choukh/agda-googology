@@ -171,14 +171,14 @@ lfp F nz W pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
 ```
 
 ```agda
-ψ : ∀ ℓ → Ord ℓ → Ord 0
-ψ-nz : NonZero (ψ ℓ α)
-ψ-Wf : Wf (ψ ℓ α)
+ψ : ∀ ℓ (α : Ord ℓ) → Wf α → Ord 0
+ψ-nz : {α̇ : Wf α} → NonZero (ψ ℓ α α̇)
+ψ-Wf : {α̇ : Wf α} → Wf (ψ ℓ α α̇)
 
-ψ zero α = suc α
-ψ (suc ℓ) α = ψ ℓ (ψₐ zero α)
-ψ (lim f) α = lim (Itₙ (λ n x → x + ψ (f n) (ψₐ f⊏l α)) 0) ⦃ w ⦄ where
-  w : wf (Itₙ (λ n x → x + ψ (f n) (ψₐ f⊏l α)) 0)
+ψ zero α α̇ = suc α
+ψ (suc ℓ) α α̇ = ψ ℓ (ψₐ zero α) ψₐ-Wf
+ψ (lim f) α α̇ = lim (Itₙ (λ n x → x + ψ (f n) (ψₐ f⊏l α) ψₐ-Wf) 0) ⦃ w ⦄ where
+  w : wf (Itₙ (λ n x → x + ψ (f n) (ψₐ f⊏l α) ψₐ-Wf) 0)
   w {(zero)} = ∣ nz-elim ψ-nz ψ-Wf ∣₁
   w {suc n}  = ∣ +-infl ψ-nz ψ-Wf ∣₁
 
@@ -194,7 +194,7 @@ lfp F nz W pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
 ```agda
 ψₙ : ℕ → Ord 0
 ψₙ zero = 0
-ψₙ (suc n) = ψ (level (ψₙ n)) (Ω _)
+ψₙ (suc n) = ψ (level (ψₙ n)) (Ω _) Ω-Wf
 ```
 
 ```agda
@@ -217,3 +217,4 @@ plainLim f = lim (plain ∘ f)
 ψ-Ω_Ω-99 : ℕ
 ψ-Ω_Ω-99 = FGH.f ψ-Ω_Ω 99
 ```
+ 
