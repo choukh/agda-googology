@@ -17,7 +17,7 @@ open import WellFormed.Properties using (_preserves_)
 open import WellFormed.Fixpoints using (Itₙ)
 ```
 
-## 一些约定
+## 非零序数
 
 ```agda
 nonZero : Ord a → Type
@@ -26,6 +26,34 @@ nonZero _ = ⊤
 
 record NonZero (α : Ord a) : Type where
   field .wrap : nonZero α
+```
+
+```agda
+z<s : 0 <ₐ suc α
+z≤ : 0 ≤ α
+
+z<l : {w : wf f} → 0 <ₐ lim f ⦃ w ⦄
+z<l {f} =                 begin-strict
+  0                       ≤⟨ z≤ ⟩
+  f 0                     <⟨ f<l ⟩
+  lim- f                  ∎ where open HigherRoadReasoning
+
+z<s {α = zero} = zero
+z<s {α = suc α} = suc z<s
+z<s {α = lim f} = suc z<l
+z<s {α = Lim aℓ F} = suc {!   !}
+
+z≤ {α = zero}     = inr refl
+z≤ {α = suc _}    = inl z<s
+z≤ {α = lim _}    = inl z<l
+z≤ {α = Lim _ _}  = inl {!   !}
+```
+
+```agda
+nz-elim : ⦃ NonZero α ⦄ → 0 < α
+nz-elim {α = suc α} = {!   !}
+nz-elim {α = lim f} = {!   !}
+nz-elim {α = Lim _ F} = {!   !}
 ```
 
 ```agda
@@ -135,12 +163,18 @@ lfp F nz pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
 
 ```agda
 ψ : ∀ ℓ → Ord ℓ → Ord 0
-ψ zero α = α
+ψ-nz : NonZero (ψ ℓ α)
+
+ψ zero α = suc α
 ψ (suc ℓ) α = ψ ℓ (ψₐ zero α)
 ψ (lim f) α = lim (Itₙ (λ n x → x + ψ (f n) (ψₐ f⊏l α)) 0) ⦃ w ⦄ where
   w : wf (Itₙ (λ n x → x + ψ (f n) (ψₐ f⊏l α)) (finOrd 0))
   w {(zero)} = {!   !}
-  w {suc n} = map (+-infl {α = ψ _ _} ⦃ {!   !} ⦄) {!   !}
+  w {suc n} = map (+-infl {α = ψ _ _} ⦃ ψ-nz ⦄) {!   !}
+
+ψ-nz {(zero)} = _
+ψ-nz {suc ℓ} = ψ-nz {ℓ}
+ψ-nz {lim f} = _
 ```
 
 ## 本方法的极限
