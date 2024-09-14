@@ -43,6 +43,7 @@ variable
   E : ∀ a → a ⊏ ℓ → Type
   α β γ : U ℓ E
   f g : ℕ → U ℓ E
+  F : E a aℓ → U ℓ E
 ```
 
 ```agda
@@ -334,8 +335,8 @@ module Order (a : Level) where
 
 ```agda
 module _ {a : Level} where
-  open Order a hiding (_<ₐ_; _≤_)
-  open Order a using (_<ₐ_; _≤_) public
+  open Order a hiding (_<ₐ_; _≤_; <→≤; <s→≤; ≤→<s)
+  open Order a using (_<ₐ_; _≤_; <→≤; <s→≤; ≤→<s) public
   module HigherRoadReasoning where
     open import Relation.Binary.Reasoning.Base.Triple
       {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<ₐ_}
