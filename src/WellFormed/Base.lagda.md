@@ -49,8 +49,10 @@ module Foundations where
   open import Data.Nat public using (ℕ; zero; suc)
   open import Data.Nat.Properties public using (<-cmp)
   open import Function public using (id; flip; _∘_; _$_; _∋_; it; case_of_)
+  open import Relation.Binary.Definitions public using (tri<; tri≈; tri>)
   open import Relation.Binary.PropositionalEquality public
     using (_≡_; refl; sym; trans; cong; subst; subst₂)
+  open import Relation.Binary.PropositionalEquality.Properties public using (isEquivalence)
 ```
 
 **桥接库**
@@ -290,9 +292,7 @@ open OrdSet public using (isSetOrd; isProp≡)
 
 ```agda
 open import Relation.Binary.Definitions
-open import Relation.Binary.Definitions public using (tri<; tri≈; tri>)
 open import Relation.Binary.Structures {A = Ord} _≡_
-open import Relation.Binary.PropositionalEquality.Properties using (isEquivalence)
 open import Induction.WellFounded
 ```
 

@@ -95,19 +95,31 @@ lfp F nz pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
 ```
 
 ```agda
-ψₐ : a ⊏ b → Ord b → Ord a
-ψₐ-pres : {ab : a ⊏ b} → β < γ → ψₐ ab β < ψₐ ab γ
+ψₐ : a ⊏ ℓ → Ord ℓ → Ord a
+ψₐ-pres : {aℓ : a ⊏ ℓ} → β < γ → ψₐ aℓ β < ψₐ aℓ γ
+ψₐ-nz : NonZero (ψₐ aℓ α)
 
-ψₐ ab zero        = lfp (Ω _ +_) Ω-nz +-pres
-ψₐ ab (suc α)     = lfp (ψₐ ab α +_) {!   !} +-pres
-ψₐ ab (lim f)     = lim (ψₐ ab ∘ f) ⦃ map ψₐ-pres it ⦄
-ψₐ ab (Lim aℓ F)  = {!   !}
+ψₐ aℓ zero        = lfp (Ω _ +_)      Ω-nz  +-pres
+ψₐ aℓ (suc α)     = lfp (ψₐ aℓ α +_)  ψₐ-nz +-pres
+ψₐ aℓ (lim f)     = lim (ψₐ aℓ ∘ f) ⦃ map ψₐ-pres it ⦄
+ψₐ aℓ (Lim {a = b} bℓ F) rewrite Elm≡Ord {aℓ = bℓ} with ⊏-trich aℓ bℓ
+... | tri< a⊏b _ _  = lfp (λ x → ψₐ aℓ (F $ lift a⊏b x)) ψₐ-nz λ x → ψₐ-pres {!   !}
+... | tri≈ _ refl _ = lfp (λ x → ψₐ aℓ (F x))            ψₐ-nz λ x → ψₐ-pres {!   !}
+... | tri> _ _ b⊏a  = Lim b⊏a λ x → ψₐ aℓ (F $ ord x)
 
 ψₐ-pres zero = lim {n = 2} {!   !}
 ψₐ-pres (suc r) = lim {n = 2} {!   !}
 ψₐ-pres f<l = f<l
 ψₐ-pres (lim {n} r) = lim {n = n} (ψₐ-pres r)
 ψₐ-pres (Lim r) = {!   !}
+
+ψₐ-nz {α = zero} = _
+ψₐ-nz {α = suc α} = _
+ψₐ-nz {α = lim f} = _
+ψₐ-nz {aℓ} {α = Lim bℓ F} rewrite Elm≡Ord {aℓ = bℓ} with ⊏-trich aℓ bℓ
+... | tri< _ _ _ = _
+... | tri≈ _ refl _ = _
+... | tri> _ _ _ = _
 ```
 
 ```agda
@@ -140,9 +152,9 @@ plainLim f = lim (plain ∘ f)
 ```
 
 ```agda
-EBO : PlainOrd
-EBO = plainLim ψₙ
+ψ-Ω_Ω : PlainOrd
+ψ-Ω_Ω = plainLim ψₙ
 
-ebo99 : ℕ
-ebo99 = FGH.f EBO 99
+ψ-Ω_Ω-99 : ℕ
+ψ-Ω_Ω-99 = FGH.f ψ-Ω_Ω 99
 ```
