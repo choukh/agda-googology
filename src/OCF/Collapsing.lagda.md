@@ -41,7 +41,7 @@ z<l {f} W =               begin-strict
 z<L : Wf (F (elm 0)) → Pres _ F → 0 <ₐ Lim aℓ F
 z<L {F} W F-Pres =        begin-strict
   0                       ≤⟨ z≤ W ⟩
-  F (elm 0)               <⟨ Lim (F-Pres zero) ⟩
+  F (elm 0)               <⟨ Lim {! F-Pres ∣ zero ∣₁  !} ⟩
   Lim _ F                 ∎ where open HigherRoadReasoning
 
 z<s zero           = zero
@@ -100,7 +100,7 @@ _+_ : Ord a → Ord a → Ord a; infixl 7 _+_
   β + lim- f              ∎ where open HigherRoadReasoning
 +-infl≤ {β} (Lim {aℓ} {F} Ḟ F-pres) = begin
   β                       ≤⟨ +-infl≤ (Ḟ {0}) ⟩
-  β + F (elm 0)           <⟨ +-pres $ Lim $ F-pres zero ⟩
+  β + F (elm 0)           <⟨ +-pres $ {!   !} ⟩
   β + Lim aℓ F            ∎ where open HigherRoadReasoning
 ```
 
@@ -116,7 +116,7 @@ _+_ : Ord a → Ord a → Ord a; infixl 7 _+_
   β + lim- f              ∎ where open HigherRoadReasoning
 +-infl {β} _ (Lim {aℓ} {F} Ḟ F-pres) = begin-strict
   β                       ≤⟨ +-infl≤ (Ḟ {0}) ⟩
-  β + F (elm 0)           <⟨ +-pres $ Lim $ F-pres zero ⟩
+  β + F (elm 0)           <⟨ +-pres $ {!   !} ⟩
   β + Lim aℓ F            ∎ where open HigherRoadReasoning
 ```
 
