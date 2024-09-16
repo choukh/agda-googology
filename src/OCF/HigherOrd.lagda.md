@@ -104,6 +104,9 @@ variable α β : Ord a
 
 _<_ : Ord a → Ord a → Type
 _<_ = Road _ Elm _<ᵉ_
+
+_<₁_ : Ord a → Ord a → Type
+_<₁_ = SubTree _ Elm _<ᵉ_
 ```
 
 ```agda
