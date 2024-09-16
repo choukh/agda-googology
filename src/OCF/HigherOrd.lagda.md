@@ -42,8 +42,8 @@ module _ (ℓ : Level) (El : ∀ a → a ⊏ ℓ → Type)
 ```
 
 ```agda
-  SubTree : U → U → Type
-  SubTree α β = ∥ Road α β ∥₁
+  Road₁ : U → U → Type
+  Road₁ α β = ∥ Road α β ∥₁
 ```
 
 ```agda
@@ -55,7 +55,7 @@ module _ (ℓ : Level) (El : ∀ a → a ⊏ ℓ → Type)
 
 ```agda
   wf : (El a aℓ → U) → Type
-  wf f = ∀ {ν μ} → R ν μ → SubTree (f ν) (f μ)
+  wf f = ∀ {ν μ} → R ν μ → Road₁ (f ν) (f μ)
 ```
 
 ```agda
@@ -106,7 +106,7 @@ _<_ : Ord a → Ord a → Type
 _<_ = Road _ Elm _<ᵉ_
 
 _<₁_ : Ord a → Ord a → Type
-_<₁_ = SubTree _ Elm _<ᵉ_
+_<₁_ = Road₁ _ Elm _<ᵉ_
 ```
 
 ```agda
