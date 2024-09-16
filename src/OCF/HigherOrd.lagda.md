@@ -26,7 +26,9 @@ open import WellFormed.Base as Level public
 
 open Level.Foundations public
 open Level.CanonicalRoad public using (cano; cano-2const)
+
 import Cubical.Foundations.Prelude as 🧊
+open import Cubical.Foundations.HLevels using (isProp→)
 ```
 
 ## 高阶递归序数层级
@@ -148,14 +150,14 @@ instance
 ## 极限的外延性
 
 ```agda
-isPropWf : isProp (wf f)
-isPropWf = isPropImplicitΠ λ _ → squash₁
+wf-isProp : isProp (wf f)
+wf-isProp = isPropImplicitΠ λ _ → squash₁
   where open import Cubical.Foundations.HLevels
 ```
 
 ```agda
 limExtPath : {wff : wf f} {wfg : wf g} → (∀ n → Path _ (f n) (g n)) → Path (U a E) (lim f ⦃ wff ⦄) (lim g ⦃ wfg ⦄)
-limExtPath p = 🧊.cong₂ (λ f (wff : wf f) → U.lim f ⦃ wff ⦄) (funExt p) (toPathP $ isPropWf _ _)
+limExtPath p = 🧊.cong₂ (λ f (wff : wf f) → U.lim f ⦃ wff ⦄) (funExt p) (toPathP $ wf-isProp _ _)
 
 limExt : {wff : wf f} {wfg : wf g} → (∀ n → f n ≡ g n) → lim f ⦃ wff ⦄ ≡ lim g ⦃ wfg ⦄
 limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
@@ -412,7 +414,7 @@ instance
 
 ```agda
 Pres : (aℓ : a ⊏ ℓ) → (Elm a aℓ → Ord ℓ) → Type
-Pres aℓ F = ∀ {β γ} → β < γ → F (elm β) < F (elm γ)
+Pres aℓ F = ∀ {β γ} → β <₁ γ → F (elm β) <₁ F (elm γ)
 ```
 
 ```agda
@@ -422,6 +424,15 @@ data Wf {ℓ : Level} : Ord ℓ → Type where
   lim  : {w : wf f} (ḟ : ∀ {n} → Wf (f n)) → Wf (lim f ⦃ w ⦄)
   Lim  : {aℓ : a ⊏ ℓ} {F : Elm a aℓ → Ord ℓ}
          (Ḟ : ∀ {n} → Wf (F $ elm $ finOrd n)) (F-pres : Pres aℓ F) → Wf (Lim aℓ F)
+```
+
+```agda
+Wf-isProp : isProp (Wf α)
+Wf-isProp {α = zero} zero zero i = zero
+Wf-isProp {α = suc α} (suc p) (suc q) i = suc (Wf-isProp p q i)
+Wf-isProp {α = lim f} (lim ḟ) (lim ġ) i = lim (Wf-isProp ḟ ġ i)
+Wf-isProp {α = Lim aℓ F} (Lim Ḟ F-pres) (Lim Ġ Ġ-pres) i =
+  Lim (Wf-isProp Ḟ Ġ i) (isProp→ squash₁ F-pres Ġ-pres i)
 ```
 
 ```agda
@@ -435,12 +446,12 @@ lift-Wf : {ab : a ⊏ b} {α : Ord a} → Wf α → Wf (lift ab α)
 lift-Wf zero = zero
 lift-Wf (suc α̇) = suc (lift-Wf α̇)
 lift-Wf (lim ḟ) = lim (lift-Wf ḟ)
-lift-Wf (Lim Ḟ F-pres) = Lim (lift-Wf Ḟ) (lift-pres ∘ F-pres)
+lift-Wf (Lim Ḟ F-pres) = Lim (lift-Wf Ḟ) (map lift-pres ∘ F-pres)
 ```
 
 ```agda
 Ω-Wf : Wf (Ω a)
 Ω-Wf {(zero)} = lim finOrd-Wf
-Ω-Wf {suc a} = Lim (lift-Wf finOrd-Wf) lift-pres
+Ω-Wf {suc a} = Lim (lift-Wf finOrd-Wf) (map lift-pres)
 Ω-Wf {lim f} = lim (lift-Wf Ω-Wf)
 ```
