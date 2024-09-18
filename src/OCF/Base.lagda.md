@@ -19,8 +19,12 @@ module OCF.Base where
 **Cubical库**
 
 ```agda
-open import Cubical.Foundations.Prelude public
+open import Cubical.Foundations.Prelude as 🧊 public
   hiding (Level; Lift; lift; _≡_; refl; sym; cong; cong₂; subst; _∎)
+open import Cubical.Data.Equality public
+  using (pathToEq; eqToPath; PathPathEq)
+open import Cubical.Foundations.Isomorphism public
+  using (Iso; iso; isoToPath)
 open import Cubical.Data.Sigma public
   using (Σ-syntax; _×_; _,_; fst; snd; ΣPathP)
 open import Cubical.HITs.PropositionalTruncation public
@@ -193,4 +197,29 @@ finOrd k@{zero}  zero    = zero
 finOrd k@{zero}  (suc n) = suc (finOrd {k} n)
 finOrd k@{suc _} zero    = zero
 finOrd k@{suc _} (suc n) = suc (finOrd {k} n)
+```
+
+```agda
+module OrdZeroIso where
+  to : Ord zero tt → ℕ
+  to zero = zero
+  to (suc n) = suc (to n)
+
+  from : ℕ → Ord zero tt
+  from zero = zero
+  from (suc n) = suc (from n)
+
+  to-from : ∀ n → to (from n) 🧊.≡ n
+  to-from zero = 🧊.refl
+  to-from (suc n) = 🧊.cong suc (to-from n)
+
+  from-to : ∀ α → from (to α) 🧊.≡ α
+  from-to zero = 🧊.refl
+  from-to (suc n) = 🧊.cong suc (from-to n)
+
+  Ord₀≅ℕ : Iso (Ord zero tt) ℕ
+  Ord₀≅ℕ = iso to from to-from from-to
+
+  Ord₀≡ℕ : Ord zero tt ≡ ℕ
+  Ord₀≡ℕ = pathToEq $ isoToPath Ord₀≅ℕ
 ```
