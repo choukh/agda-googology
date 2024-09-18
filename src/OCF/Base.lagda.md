@@ -77,7 +77,7 @@ OrderStruct = Σ Type λ A → A → A → Type
 ```
 
 ```agda
-module Fix (Lv : Type) (_⊏_ : Lv → Lv → Type) (⊏-wf : WellFounded _⊏_) where
+module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_) where
   private variable
     a l : Lv
     al : a ⊏ l
@@ -183,11 +183,11 @@ instance
 Lv zero     = ℕ
 Lv (suc k)  = OrdStr k 1 .fst
 
-OrdStr zero    = Fix.OrdStr _ _ <ᴺ-wf
-OrdStr (suc k) = Fix.OrdStr _ _ Road-wf
+OrdStr zero    = Fix.OrdStr <ᴺ-wf
+OrdStr (suc k) = Fix.OrdStr Road-wf
 
-Road-wf {(zero)} {l} = Fix.Road-wf _ _ <ᴺ-wf
-Road-wf {suc k}  {l} = Fix.Road-wf _ _ Road-wf
+Road-wf {(zero)} {l} = Fix.Road-wf <ᴺ-wf
+Road-wf {suc k}  {l} = Fix.Road-wf Road-wf
 ```
 
 ```agda
