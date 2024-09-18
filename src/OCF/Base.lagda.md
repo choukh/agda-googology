@@ -70,34 +70,34 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 
 ```agda
   module O (ℓ : Lv) (O⁻ : ∀ {a} → a ⊏ ℓ → OrderStruct) where
-    data U : Type
-    data R : U → U → Type
+    data A : Type
+    data R : A → A → Type
 
-    R₁ : U → U → Type
+    R₁ : A → A → Type
     R₁ α β = ∥ R α β ∥₁
 ```
 
 ```agda
     Seq : (aℓ : a ⊏ ℓ) → Type
-    Seq aℓ = O⁻ aℓ .fst → U
+    Seq aℓ = O⁻ aℓ .fst → A
 
     mono : Seq aℓ → Type
     mono {aℓ} f = Monotonic₁ (O⁻ aℓ .snd) R₁ f
 ```
 
 ```agda
-    data U where
-      zero : U
-      suc : U → U
-      lim : (aℓ : a ⊏ ℓ) (f : O⁻ aℓ .fst → U) (mᶠ : mono f) → U
+    data A where
+      zero : A
+      suc : A → A
+      lim : (aℓ : a ⊏ ℓ) (f : O⁻ aℓ .fst → A) (mᶠ : mono f) → A
 ```
 
 ```agda
-    private variable α β : U
+    private variable α β : A
     data R where
       zero : R α (suc α)
       suc  : R α β → R α (suc β)
-      lim  : {f : O⁻ aℓ .fst → U} {mᶠ : mono f} {ν : O⁻ aℓ .fst} → R α (f ν) → R α (lim aℓ f mᶠ)
+      lim  : {f : O⁻ aℓ .fst → A} {mᶠ : mono f} {ν : O⁻ aℓ .fst} → R α (f ν) → R α (lim aℓ f mᶠ)
 ```
 
 ```agda
@@ -111,10 +111,10 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
     open WF.All ⊏-wf
 
     OrdStr⁻ : a ⊏ ℓ → OrderStruct
-    OrdStr⁻ = wfRecBuilder _ _ (λ ℓ o → O.U ℓ o , O.R ℓ o) _
+    OrdStr⁻ = wfRecBuilder _ _ (λ ℓ o → O.A ℓ o , O.R ℓ o) _
 
     OrdStr : Lv → OrderStruct
-    OrdStr = wfRec _ _ (λ ℓ o → O.U ℓ o , O.R ℓ o)
+    OrdStr = wfRec _ _ (λ ℓ o → O.A ℓ o , O.R ℓ o)
 ```
 
 ```agda
@@ -122,16 +122,16 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
   Ord ℓ = OrdStr ℓ .fst
   private variable α β : Ord ℓ
 
-  Road : Ord ℓ → Ord ℓ → Type
-  Road = OrdStr _ .snd
+  _<_ : Ord ℓ → Ord ℓ → Type
+  _<_ = OrdStr _ .snd
 ```
 
 ```agda
   Ord⁻ : a ⊏ ℓ → Type
   Ord⁻ aℓ = OrdStr⁻ aℓ .fst
 
-  Road⁻ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type
-  Road⁻ {aℓ} = OrdStr⁻ aℓ .snd
+  _<⁻_ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type
+  _<⁻_ {aℓ} = OrdStr⁻ aℓ .snd
 ```
 
 ### 表示变换
@@ -140,7 +140,7 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
   opaque
     OrdStrFp : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ ≡ OrdStr a
     OrdStrFp = FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
-      🧊.cong (O.U ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
+      🧊.cong (O.A ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
       🧊.cong (O.R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
 
     OrdStrFpPath : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ 🧊.≡ OrdStr a
@@ -149,7 +149,7 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
     OrdFpPath : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ 🧊.≡ Ord a
     OrdFpPath = fst $ PathPΣ $ OrdStrFpPath
 
-    RoadFpPath : {aℓ : a ⊏ ℓ} → PathP (λ i → OrdFpPath {aℓ = aℓ} i → OrdFpPath {aℓ = aℓ} i → Type) (Road⁻ {aℓ = aℓ}) (Road {a})
+    RoadFpPath : {aℓ : a ⊏ ℓ} → PathP (λ i → OrdFpPath {aℓ = aℓ} i → OrdFpPath {aℓ = aℓ} i → Type) (_<⁻_ {aℓ = aℓ}) (_<_ {a})
     RoadFpPath = snd $ PathPΣ $ OrdStrFpPath
 
     OrdFp : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
@@ -179,25 +179,25 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 ```agda
   opaque
     unfolding OrdFpPath
-    Road♯Fp : {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → Road⁻ α β ≡ Road (♯ α) (♯ β)
+    Road♯Fp : {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → α <⁻ β ≡ ♯ α < ♯ β
     Road♯Fp = pathToEq λ i → RoadFpPath i {!   !} {!   !}
 ```
 
 ### 路径的良基性
 
 ```agda
-  Road-trans : Transitive (Road {ℓ})
-  Road-trans r zero = suc r
-  Road-trans r (suc s) = suc (Road-trans r s)
-  Road-trans r (lim s) = lim (Road-trans r s)
+  <-trans : Transitive (_<_ {ℓ})
+  <-trans r zero = suc r
+  <-trans r (suc s) = suc (<-trans r s)
+  <-trans r (lim s) = lim (<-trans r s)
 
-  Road-acc : Road α β → Acc Road α
-  Road-acc zero = acc λ s → Road-acc s
-  Road-acc (suc r) = acc λ s → Road-acc (Road-trans s r)
-  Road-acc (lim r) = acc λ s → Road-acc (Road-trans s r)
+  <-acc : α < β → Acc _<_ α
+  <-acc zero = acc λ s → <-acc s
+  <-acc (suc r) = acc λ s → <-acc (<-trans s r)
+  <-acc (lim r) = acc λ s → <-acc (<-trans s r)
 
-  Road-wf : WellFounded (Road {ℓ})
-  Road-wf _ = Road-acc zero
+  <-wf : WellFounded (_<_ {ℓ})
+  <-wf _ = <-acc zero
 ```
 
 ```agda
@@ -220,8 +220,8 @@ variable
 ```
 
 ```agda
-Road : Ord ℓ → Ord ℓ → Type
-Road-wf : WellFounded (Road {k} {ℓ})
+_<_ : Ord ℓ → Ord ℓ → Type
+<-wf : WellFounded (_<_ {k} {ℓ})
 ```
 
 ```agda
@@ -246,13 +246,13 @@ Lv (suc k) = Ord {k} 1
 ⊤-wf _ = acc λ ()
 
 Ord {(zero)}   = Fix.Ord ⊤-wf
-Ord {suc k}    = Fix.Ord Road-wf
+Ord {suc k}    = Fix.Ord <-wf
 
-Road {(zero)}   = Fix.Road ⊤-wf
-Road {suc k}    = Fix.Road Road-wf
+_<_ {(zero)}   = Fix._<_ ⊤-wf
+_<_ {suc k}    = Fix._<_ <-wf
 
-Road-wf {(zero)}  = Fix.Road-wf ⊤-wf
-Road-wf {suc k}   = Fix.Road-wf Road-wf
+<-wf {(zero)}  = Fix.<-wf ⊤-wf
+<-wf {suc k}   = Fix.<-wf <-wf
 ```
 
 ```agda
@@ -275,20 +275,20 @@ finOrd k@{suc _} (suc n) = suc (finOrd {k} n)
 ```agda
 _⊏_ : ∀ {k} → Lv k → Lv k → Type
 _⊏_ {(zero)} a b = ⊥
-_⊏_ {suc k} = Road
+_⊏_ {suc k} = _<_
 variable aℓ : a ⊏ ℓ
 
 ⊏-wf : WellFounded (_⊏_ {k})
 ⊏-wf {(zero)} = ⊤-wf
-⊏-wf {suc k} = Road-wf
+⊏-wf {suc k} = <-wf
 ```
 
 ```agda
 Ord⁻ : {ℓ : Lv k} → a ⊏ ℓ → Type
 Ord⁻ = Fix.Ord⁻ ⊏-wf
 
-Road⁻ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type
-Road⁻ = Fix.Road⁻ ⊏-wf
+_<⁻_ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type
+_<⁻_ = Fix._<⁻_ ⊏-wf
 ```
 
 ```agda
@@ -311,15 +311,15 @@ Road⁻ = Fix.Road⁻ ⊏-wf
 ### 极限的外延性
 
 ```agda
-Road₁ : Ord ℓ → Ord ℓ → Type
-Road₁ α β = ∥ Road α β ∥₁
+_<₁_ : Ord ℓ → Ord ℓ → Type
+α <₁ β = ∥ α < β ∥₁
 
 Seq : {ℓ : Lv k} (aℓ : a ⊏ ℓ) → Type
 Seq {ℓ} aℓ = Ord⁻ aℓ → Ord ℓ
 variable f g : Seq aℓ
 
 mono : {ℓ : Lv k} (aℓ : a ⊏ ℓ) → Seq aℓ → Type
-mono aℓ f = Monotonic₁ Road⁻ Road₁ f
+mono aℓ f = Monotonic₁ _<⁻_ _<₁_ f
 
 isPropMono : isProp (mono aℓ f)
 isPropMono {aℓ} {f} = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
@@ -371,6 +371,6 @@ mutual
   lift : a ⊏ b → Ord a → Ord b
   lift ab α = {!   !}
 
-  lift-mono : {a b : Lv k} {ab : a ⊏ b} {α β : Ord a} → Monotonic₁ Road Road (lift ab)
+  lift-mono : {a b : Lv k} {ab : a ⊏ b} {α β : Ord a} → Monotonic₁ _<_ _<_ (lift ab)
   lift-mono = {!   !}
 ```
