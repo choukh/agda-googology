@@ -200,8 +200,8 @@ finLv k@{suc (suc _)} (suc n) = suc (finLv {k} n)
 ```
 
 ```agda
-finOrd k@{(zero)} zero      = zero
-finOrd k@{(zero)} (suc n)   = suc (finOrd {k} n)
-finOrd {k@(suc _)} zero     = zero
-finOrd {k@(suc _)} (suc n)  = suc (finOrd {k} n)
+finOrd k@{(zero)} zero    = zero
+finOrd k@{(zero)} (suc n) = suc (finOrd {k} n)
+finOrd k@{suc _}  zero    = zero
+finOrd k@{suc _}  (suc n) = suc (finOrd {k} n)
 ```
