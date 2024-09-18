@@ -34,7 +34,7 @@ open import Cubical.HITs.PropositionalTruncation public
 
 ```agda
 open import Data.Nat public using (ℕ; zero; suc)
-open import Function public using (id; flip; _∘_; _∘₂_; _$_; _∋_)
+open import Function public using (id; flip; _∘_; _$_; _∋_)
 open import Relation.Binary.Definitions public
 open import Relation.Binary.PropositionalEquality public
   using (_≡_; refl; sym; trans; cong; subst; subst₂)
@@ -124,9 +124,6 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 
   Road : Ord ℓ → Ord ℓ → Type
   Road = OrdStr _ .snd
-
-  Road₁ : Ord ℓ → Ord ℓ → Type
-  Road₁ = ∥_∥₁ ∘₂ Road
 ```
 
 ```agda
@@ -146,8 +143,17 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
       🧊.cong (O.U ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
       🧊.cong (O.R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
 
+    OrdStrFpPath : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ 🧊.≡ OrdStr a
+    OrdStrFpPath = eqToPath OrdStrFp
+
+    OrdFpPath : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ 🧊.≡ Ord a
+    OrdFpPath = fst $ PathPΣ $ OrdStrFpPath
+
+    RoadFpPath : {aℓ : a ⊏ ℓ} → PathP (λ i → OrdFpPath {aℓ = aℓ} i → OrdFpPath {aℓ = aℓ} i → Type) (Road⁻ {aℓ = aℓ}) (Road {a})
+    RoadFpPath = snd $ PathPΣ $ OrdStrFpPath
+
     OrdFp : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
-    OrdFp = pathToEq $ fst $ PathPΣ $ eqToPath OrdStrFp
+    OrdFp = pathToEq OrdFpPath
 ```
 
 ```agda
@@ -171,11 +177,13 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 ```
 
 ```agda
-  Road♯Fp : {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → Road⁻ α β ≡ Road (♯ α) (♯ β)
-  Road♯Fp = {!   !}
+  opaque
+    unfolding OrdFpPath
+    Road♯Fp : {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → Road⁻ α β ≡ Road (♯ α) (♯ β)
+    Road♯Fp = pathToEq λ i → RoadFpPath i {!   !} {!   !}
 ```
 
-### 基本性质
+### 路径的良基性
 
 ```agda
   Road-trans : Transitive (Road {ℓ})
@@ -190,27 +198,6 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 
   Road-wf : WellFounded (Road {ℓ})
   Road-wf _ = Road-acc zero
-```
-
-```agda
-  Seq : (aℓ : a ⊏ ℓ) → Type
-  Seq {ℓ} aℓ = Ord⁻ aℓ → Ord ℓ
-
-  mono : (aℓ : a ⊏ ℓ) → Seq aℓ → Type
-  mono aℓ f = Monotonic₁ Road⁻ Road₁ f
-
-  isPropMono : ∀ {f} → isProp (mono aℓ f)
-  isPropMono {aℓ} {f} = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
-```
-
-```agda
-  limExtPath : {f g : Seq aℓ} {mᶠ : mono aℓ f} {mᵍ : mono aℓ g}
-             → (∀ ν → f ν 🧊.≡ g ν) → lim aℓ f mᶠ 🧊.≡ lim aℓ g mᵍ
-  limExtPath {aℓ} p = 🧊.cong₂ (λ f (mᶠ : mono aℓ f) → lim aℓ f mᶠ) (funExt p) (toPathP $ isPropMono _ _)
-
-  limExt : {f g : Seq aℓ} {mᶠ : mono aℓ f} {mᵍ : mono aℓ g}
-         → (∀ ν → f ν ≡ g ν) → lim aℓ f mᶠ ≡ lim aℓ g mᵍ
-  limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
 ```
 
 ```agda
@@ -289,6 +276,7 @@ finOrd k@{suc _} (suc n) = suc (finOrd {k} n)
 _⊏_ : ∀ {k} → Lv k → Lv k → Type
 _⊏_ {(zero)} a b = ⊥
 _⊏_ {suc k} = Road
+variable aℓ : a ⊏ ℓ
 
 ⊏-wf : WellFounded (_⊏_ {k})
 ⊏-wf {(zero)} = ⊤-wf
@@ -304,11 +292,50 @@ Road⁻ = Fix.Road⁻ ⊏-wf
 ```
 
 ```agda
-OrdFp : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
-OrdFp {suc k} = {! refl  !}
+♯ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
+♯ {suc k} = Fix.♯ ⊏-wf
+
+♭ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord a → Ord⁻ aℓ
+♭ {suc k} = Fix.♭ ⊏-wf
+
+♮ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Ord⁻ aℓ → Ord⁻ aℓ′
+♮ {suc k} = Fix.♮ ⊏-wf
+
+♭♯ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α : Ord⁻ aℓ} → ♭ (♯ α) ≡ α
+♭♯ {suc k} = Fix.♭♯ ⊏-wf
+
+♯♭ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α : Ord a} → ♯ {aℓ = aℓ} (♭ α) ≡ α
+♯♭ {suc k} = Fix.♯♭ ⊏-wf
 ```
 
-## 第零簇唯一层与自然数同构
+### 极限的外延性
+
+```agda
+Road₁ : Ord ℓ → Ord ℓ → Type
+Road₁ α β = ∥ Road α β ∥₁
+
+Seq : {ℓ : Lv k} (aℓ : a ⊏ ℓ) → Type
+Seq {ℓ} aℓ = Ord⁻ aℓ → Ord ℓ
+variable f g : Seq aℓ
+
+mono : {ℓ : Lv k} (aℓ : a ⊏ ℓ) → Seq aℓ → Type
+mono aℓ f = Monotonic₁ Road⁻ Road₁ f
+
+isPropMono : isProp (mono aℓ f)
+isPropMono {aℓ} {f} = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
+```
+
+```agda
+limExtPath : {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} {f g : Seq aℓ} {mᶠ : mono aℓ f} {mᵍ : mono aℓ g}
+            → (∀ ν → f ν 🧊.≡ g ν) → lim aℓ f mᶠ 🧊.≡ lim aℓ g mᵍ
+limExtPath {aℓ} p = 🧊.cong₂ (λ f (mᶠ : mono aℓ f) → lim aℓ f mᶠ) (funExt p) (toPathP $ isPropMono _ _)
+
+limExt : {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} {f g : Seq aℓ} {mᶠ : mono aℓ f} {mᵍ : mono aℓ g}
+        → (∀ ν → f ν ≡ g ν) → lim aℓ f mᶠ ≡ lim aℓ g mᵍ
+limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
+```
+
+### 零簇唯一层与自然数同构
 
 ```agda
 module OrdZeroIso where
