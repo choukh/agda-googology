@@ -158,6 +158,7 @@ variable a b l l′ : Lv k
 ```agda
 Ord : ∀ k → Lv k → Type
 Ord k l = OrdStr k l .fst
+variable α β : Ord k l
 
 Road : Ord _ l → Ord _ l → Type
 Road {l} = OrdStr _ l .snd
@@ -186,8 +187,8 @@ Lv (suc k)  = OrdStr k 1 .fst
 OrdStr zero    = Fix.OrdStr <ᴺ-wf
 OrdStr (suc k) = Fix.OrdStr Road-wf
 
-Road-wf {(zero)} {l} = Fix.Road-wf <ᴺ-wf
-Road-wf {suc k}  {l} = Fix.Road-wf Road-wf
+Road-wf {(zero)} = Fix.Road-wf <ᴺ-wf
+Road-wf {suc k}  = Fix.Road-wf Road-wf
 ```
 
 ```agda
