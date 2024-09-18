@@ -23,10 +23,9 @@ open import Cubical.Foundations.Prelude as 🧊 public
   hiding (Level; Lift; lift; _≡_; refl; sym; cong; cong₂; subst; _∎)
 open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.HLevels
-open import Cubical.Data.Nat using ()
 open import Cubical.Data.Equality using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
-  using (Σ-syntax; _×_; _,_; fst; snd; ΣPathP)
+  using (Σ-syntax; _×_; _,_; fst; snd; ΣPathP; PathPΣ)
 open import Cubical.HITs.PropositionalTruncation public
   using (∥_∥₁; ∣_∣₁; squash₁; rec; rec2; map; map2; rec→Set)
 ```
@@ -52,11 +51,13 @@ open import Bridged.Data.Unit public using (⊤; tt; isProp⊤)
 open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```
 
-## 高阶递归序数层级
+**定义** 序结构
 
 ```agda
 OrderStruct = Σ Type λ A → A → A → Type
 ```
+
+## 层级
 
 ```agda
 module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_) where
@@ -64,6 +65,8 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
     a ℓ : Lv
     aℓ : a ⊏ ℓ
 ```
+
+### 定义的第1步: 互递归
 
 ```agda
   module O (ℓ : Lv) (O⁻ : ∀ {a} → a ⊏ ℓ → OrderStruct) where
@@ -101,20 +104,17 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
   open O using (zero; suc; lim) public
 ```
 
+### 定义的第2步: 强归纳
+
 ```agda
   module _ where
     open WF.All ⊏-wf
 
     OrdStr⁻ : a ⊏ ℓ → OrderStruct
-    OrdStr⁻ = wfRecBuilder _ _ (λ ℓ⁻ o⁻ → O.U ℓ⁻ o⁻ , O.R ℓ⁻ o⁻) _
+    OrdStr⁻ = wfRecBuilder _ _ (λ ℓ o → O.U ℓ o , O.R ℓ o) _
 
     OrdStr : Lv → OrderStruct
-    OrdStr = wfRec _ _ (λ ℓ⁻ o⁻ → O.U ℓ⁻ o⁻ , O.R ℓ⁻ o⁻)
-```
-
-```agda
-  OrdStrFp : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ ≡ OrdStr a
-  OrdStrFp {ℓ} {aℓ} = FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o⁻ → {!   !}) aℓ
+    OrdStr = wfRec _ _ (λ ℓ o → O.U ℓ o , O.R ℓ o)
 ```
 
 ```agda
@@ -130,6 +130,34 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 ```
 
 ```agda
+  Ord⁻ : a ⊏ ℓ → Type
+  Ord⁻ aℓ = OrdStr⁻ aℓ .fst
+
+  Road⁻ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type
+  Road⁻ {aℓ} = OrdStr⁻ aℓ .snd
+```
+
+### 表示变换
+
+```agda
+  OrdStrFp : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ ≡ OrdStr a
+  OrdStrFp = FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
+    🧊.cong (O.U ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
+    🧊.cong (O.R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
+
+  OrdFp : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
+  OrdFp = pathToEq $ fst $ PathPΣ $ eqToPath OrdStrFp
+
+  o⁺ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
+  o⁺ = {!   !}
+
+  RoadFp : {aℓ : a ⊏ ℓ} → Road⁻ {aℓ = aℓ} ≡ {!   !}
+  RoadFp = {!   !}
+```
+
+### 基本性质
+
+```agda
   Road-trans : Transitive (Road {ℓ})
   Road-trans r zero = suc r
   Road-trans r (suc s) = suc (Road-trans r s)
@@ -142,14 +170,6 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 
   Road-wf : WellFounded (Road {ℓ})
   Road-wf _ = Road-acc zero
-```
-
-```agda
-  Ord⁻ : a ⊏ ℓ → Type
-  Ord⁻ aℓ = OrdStr⁻ aℓ .fst
-
-  Road⁻ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type
-  Road⁻ {aℓ} = OrdStr⁻ aℓ .snd
 ```
 
 ```agda
@@ -178,7 +198,7 @@ open Fix using (zero; suc; lim) public
 pattern one = suc zero
 ```
 
-## 层级的迭代
+## 层级簇
 
 ```agda
 Lv : ℕ → Type
@@ -243,6 +263,33 @@ finOrd k@{suc _} zero    = zero
 finOrd k@{suc _} (suc n) = suc (finOrd {k} n)
 ```
 
+### 表示变换
+
+```agda
+_⊏_ : ∀ {k} → Lv k → Lv k → Type
+_⊏_ {(zero)} a b = ⊥
+_⊏_ {suc k} = Road
+
+⊏-wf : WellFounded (_⊏_ {k})
+⊏-wf {(zero)} = ⊤-wf
+⊏-wf {suc k} = Road-wf
+```
+
+```agda
+Ord⁻ : {ℓ : Lv k} → a ⊏ ℓ → Type
+Ord⁻ = Fix.Ord⁻ ⊏-wf
+
+Road⁻ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type
+Road⁻ = Fix.Road⁻ ⊏-wf
+```
+
+```agda
+OrdFp : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
+OrdFp {suc k} = {! refl  !}
+```
+
+## 第零簇唯一层与自然数同构
+
 ```agda
 module OrdZeroIso where
   Ord₀ = Ord {zero} tt
@@ -268,29 +315,6 @@ module OrdZeroIso where
 
   Ord₀≡ℕ : Ord₀ ≡ ℕ
   Ord₀≡ℕ = pathToEq $ isoToPath Ord₀≅ℕ
-```
-
-```agda
-_⊏_ : ∀ {k} → Lv k → Lv k → Type
-_⊏_ {(zero)} a b = ⊥
-_⊏_ {suc k} = Road
-
-⊏-wf : WellFounded (_⊏_ {k})
-⊏-wf {(zero)} = ⊤-wf
-⊏-wf {suc k} = Road-wf
-```
-
-```agda
-Ord⁻ : {ℓ : Lv k} → a ⊏ ℓ → Type
-Ord⁻ = Fix.Ord⁻ ⊏-wf
-
-Road⁻ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type
-Road⁻ = Fix.Road⁻ ⊏-wf
-```
-
-```agda
-OrdFp : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
-OrdFp {suc k} = {! refl  !}
 ```
 
 ## 层级的提升
