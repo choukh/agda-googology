@@ -162,6 +162,10 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
   limExtPath : {f g : Seq aℓ} {mᶠ : mono aℓ f} {mᵍ : mono aℓ g}
              → (∀ ν → f ν 🧊.≡ g ν) → lim aℓ f mᶠ 🧊.≡ lim aℓ g mᵍ
   limExtPath {aℓ} p = 🧊.cong₂ (λ f (mᶠ : mono aℓ f) → lim aℓ f mᶠ) (funExt p) (toPathP $ isPropMono _ _)
+
+  limExt : {f g : Seq aℓ} {mᶠ : mono aℓ f} {mᵍ : mono aℓ g}
+         → (∀ ν → f ν ≡ g ν) → lim aℓ f mᶠ ≡ lim aℓ g mᵍ
+  limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
 ```
 
 ```agda
