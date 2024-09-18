@@ -241,11 +241,13 @@ finOrd k@{suc _} (suc n) = suc (finOrd {k} n)
 
 ```agda
 module OrdZeroIso where
-  to : Ord {zero} tt → ℕ
+  Ord₀ = Ord {zero} tt
+
+  to : Ord₀ → ℕ
   to zero = zero
   to (suc n) = suc (to n)
 
-  from : ℕ → Ord {zero} tt
+  from : ℕ → Ord₀
   from zero = zero
   from (suc n) = suc (from n)
 
@@ -257,9 +259,9 @@ module OrdZeroIso where
   from-to zero = 🧊.refl
   from-to (suc n) = 🧊.cong suc (from-to n)
 
-  Ord₀≅ℕ : Iso (Ord {zero} tt) ℕ
+  Ord₀≅ℕ : Iso Ord₀ ℕ
   Ord₀≅ℕ = iso to from to-from from-to
 
-  Ord₀≡ℕ : Ord {zero} tt ≡ ℕ
+  Ord₀≡ℕ : Ord₀ ≡ ℕ
   Ord₀≡ℕ = pathToEq $ isoToPath Ord₀≅ℕ
 ```
