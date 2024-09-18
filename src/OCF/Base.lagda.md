@@ -58,12 +58,12 @@ OrderStruct = Σ Type λ A → A → A → Type
 ```agda
 module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_) where
   private variable
-    a l : Lv
-    al : a ⊏ l
+    a ℓ : Lv
+    al : a ⊏ ℓ
 ```
 
 ```agda
-  module O (l : Lv) (O⁻ : ∀ {a} → a ⊏ l → OrderStruct) where
+  module O (ℓ : Lv) (O⁻ : ∀ {a} → a ⊏ ℓ → OrderStruct) where
     data U : Type
     data R : U → U → Type
 ```
@@ -82,7 +82,7 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
     data U where
       zero : U
       suc : U → U
-      lim : (al : a ⊏ l) (f : O⁻ al .fst → U) (mᶠ : mono f) → U
+      lim : (al : a ⊏ ℓ) (f : O⁻ al .fst → U) (mᶠ : mono f) → U
 ```
 
 ```agda
@@ -99,18 +99,18 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 
 ```agda
   OrdStr : Lv → OrderStruct
-  OrdStr = wfRec ⊏-wf _ _ λ l u⁻ → O.U l u⁻ , O.R l u⁻
+  OrdStr = wfRec ⊏-wf _ _ λ ℓ u⁻ → O.U ℓ u⁻ , O.R ℓ u⁻
 
   Ord : Lv → Type
-  Ord l = OrdStr l .fst
-  private variable α β : Ord l
+  Ord ℓ = OrdStr ℓ .fst
+  private variable α β : Ord ℓ
 
-  Road : Ord l → Ord l → Type
+  Road : Ord ℓ → Ord ℓ → Type
   Road = OrdStr _ .snd
 ```
 
 ```agda
-  Road-trans : Transitive (Road {l})
+  Road-trans : Transitive (Road {ℓ})
   Road-trans r zero = suc r
   Road-trans r (suc s) = suc (Road-trans r s)
   Road-trans r (lim s) = lim (Road-trans r s)
@@ -120,7 +120,7 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
   Road-acc (suc r) = acc λ s → Road-acc (Road-trans s r)
   Road-acc (lim r) = acc λ s → Road-acc (Road-trans s r)
 
-  Road-wf : WellFounded (Road {l})
+  Road-wf : WellFounded (Road {ℓ})
   Road-wf _ = Road-acc zero
 ```
 
@@ -135,26 +135,26 @@ Lv : ℕ → Type
 OrdStr : ∀ k → Lv k → OrderStruct
 
 Ord : ∀ k → Lv k → Type
-Ord k l = OrdStr k l .fst
+Ord k ℓ = OrdStr k ℓ .fst
 ```
 
 ```agda
 variable
   k n m : ℕ
-  a b l l′ : Lv k
-  α β : Ord k l
+  a b ℓ ℓ′ : Lv k
+  α β : Ord k ℓ
 ```
 
 ```agda
-Road : Ord _ l → Ord _ l → Type
-Road {l} = OrdStr _ l .snd
+Road : Ord _ ℓ → Ord _ ℓ → Type
+Road {ℓ} = OrdStr _ ℓ .snd
 
-Road-wf : WellFounded (Road {k} {l})
+Road-wf : WellFounded (Road {k} {ℓ})
 ```
 
 ```agda
 finLv : ℕ → Lv k
-finOrd : {l : Lv k} → ℕ → Ord _ l
+finOrd : {ℓ : Lv k} → ℕ → Ord _ ℓ
 
 open import Agda.Builtin.FromNat public
 instance
@@ -162,7 +162,7 @@ instance
   nNat = record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
   nLv : Number (Lv k)
   nLv = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finLv n }
-  nOrd : Number (Ord k l)
+  nOrd : Number (Ord k ℓ)
   nOrd = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finOrd n }
 ```
 
