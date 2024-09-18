@@ -21,10 +21,10 @@ module OCF.Base where
 ```agda
 open import Cubical.Foundations.Prelude as 🧊 public
   hiding (Level; Lift; lift; _≡_; refl; sym; cong; cong₂; subst; _∎)
-open import Cubical.Data.Equality public
-  using (pathToEq; eqToPath; PathPathEq)
-open import Cubical.Foundations.Isomorphism public
-  using (Iso; iso; isoToPath)
+open import Cubical.Foundations.Isomorphism
+open import Cubical.Foundations.HLevels
+open import Cubical.Data.Nat using ()
+open import Cubical.Data.Equality using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
   using (Σ-syntax; _×_; _,_; fst; snd; ΣPathP)
 open import Cubical.HITs.PropositionalTruncation public
@@ -40,7 +40,6 @@ open import Relation.Binary.Definitions public
 open import Relation.Binary.PropositionalEquality public
   using (_≡_; refl; sym; trans; cong; subst; subst₂)
 open import Induction.WellFounded as WF public
-open WF.All using (wfRec)
 ```
 
 **桥接库**
@@ -63,30 +62,31 @@ OrderStruct = Σ Type λ A → A → A → Type
 module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_) where
   private variable
     a ℓ : Lv
-    al : a ⊏ ℓ
+    aℓ : a ⊏ ℓ
 ```
 
 ```agda
   module O (ℓ : Lv) (O⁻ : ∀ {a} → a ⊏ ℓ → OrderStruct) where
     data U : Type
     data R : U → U → Type
-```
 
-```agda
     R₁ : U → U → Type
     R₁ α β = ∥ R α β ∥₁
 ```
 
 ```agda
-    mono : (O⁻ al .fst → U) → Type
-    mono {al} f = Monotonic₁ (O⁻ al .snd) R₁ f
+    Seq : (aℓ : a ⊏ ℓ) → Type
+    Seq aℓ = O⁻ aℓ .fst → U
+
+    mono : Seq aℓ → Type
+    mono {aℓ} f = Monotonic₁ (O⁻ aℓ .snd) R₁ f
 ```
 
 ```agda
     data U where
       zero : U
       suc : U → U
-      lim : (al : a ⊏ ℓ) (f : O⁻ al .fst → U) (mᶠ : mono f) → U
+      lim : (aℓ : a ⊏ ℓ) (f : O⁻ aℓ .fst → U) (mᶠ : mono f) → U
 ```
 
 ```agda
@@ -94,7 +94,7 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
     data R where
       zero : R α (suc α)
       suc  : R α β → R α (suc β)
-      lim  : {f : O⁻ al .fst → U} {mᶠ : mono f} {ν : O⁻ al .fst} → R α (f ν) → R α (lim al f mᶠ)
+      lim  : {f : O⁻ aℓ .fst → U} {mᶠ : mono f} {ν : O⁻ aℓ .fst} → R α (f ν) → R α (lim aℓ f mᶠ)
 ```
 
 ```agda
@@ -102,15 +102,26 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 ```
 
 ```agda
-  OrdStr : Lv → OrderStruct
-  OrdStr = wfRec ⊏-wf _ _ λ ℓ u⁻ → O.U ℓ u⁻ , O.R ℓ u⁻
+  module _ where
+    open WF.All ⊏-wf
 
+    OrdStr⁻ : ∀ ℓ → a ⊏ ℓ → OrderStruct
+    OrdStr⁻ ℓ = wfRecBuilder _ _ (λ ℓ u⁻ → O.U ℓ u⁻ , O.R ℓ u⁻) ℓ
+
+    OrdStr : Lv → OrderStruct
+    OrdStr = wfRec _ _ (λ ℓ u⁻ → O.U ℓ u⁻ , O.R ℓ u⁻)
+```
+
+```agda
   Ord : Lv → Type
   Ord ℓ = OrdStr ℓ .fst
   private variable α β : Ord ℓ
 
   Road : Ord ℓ → Ord ℓ → Type
   Road = OrdStr _ .snd
+
+  Road₁ : Ord ℓ → Ord ℓ → Type
+  Road₁ α β = ∥ Road α β ∥₁
 ```
 
 ```agda
@@ -129,6 +140,31 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 ```
 
 ```agda
+  Ord⁻ : a ⊏ ℓ → Type
+  Ord⁻ aℓ = OrdStr⁻ _ aℓ .fst
+
+  Road⁻ : (aℓ : a ⊏ ℓ) → Ord⁻ aℓ → Ord⁻ aℓ → Type
+  Road⁻ aℓ = OrdStr⁻ _ aℓ .snd
+```
+
+```agda
+  Seq : (aℓ : a ⊏ ℓ) → Type
+  Seq {ℓ} aℓ = Ord⁻ aℓ → Ord ℓ
+
+  mono : (aℓ : a ⊏ ℓ) → Seq aℓ → Type
+  mono aℓ f = Monotonic₁ (Road⁻ aℓ) Road₁ f
+
+  isPropMono : ∀ {f} → isProp (mono aℓ f)
+  isPropMono {aℓ} {f} = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
+```
+
+```agda
+  limExtPath : {f g : Seq aℓ} {mᶠ : mono aℓ f} {mᵍ : mono aℓ g}
+             → (∀ ν → f ν 🧊.≡ g ν) → lim aℓ f mᶠ 🧊.≡ lim aℓ g mᵍ
+  limExtPath {aℓ} p = 🧊.cong₂ (λ f (mᶠ : mono aℓ f) → lim aℓ f mᶠ) (funExt p) (toPathP $ isPropMono _ _)
+```
+
+```agda
 open Fix using (zero; suc; lim) public
 ```
 
@@ -136,29 +172,29 @@ open Fix using (zero; suc; lim) public
 
 ```agda
 Lv : ℕ → Type
-OrdStr : ∀ k → Lv k → OrderStruct
+OrdStr : ∀ {k} → Lv k → OrderStruct
 
-Ord : ∀ k → Lv k → Type
-Ord k ℓ = OrdStr k ℓ .fst
+Ord : ∀ {k} → Lv k → Type
+Ord ℓ = OrdStr ℓ .fst
 ```
 
 ```agda
 variable
   k n m : ℕ
   a b ℓ ℓ′ : Lv k
-  α β : Ord k ℓ
+  α β : Ord ℓ
 ```
 
 ```agda
-Road : Ord _ ℓ → Ord _ ℓ → Type
-Road {ℓ} = OrdStr _ ℓ .snd
+Road : Ord ℓ → Ord ℓ → Type
+Road {ℓ} = OrdStr ℓ .snd
 
 Road-wf : WellFounded (Road {k} {ℓ})
 ```
 
 ```agda
-finLv : ℕ → Lv k
-finOrd : {ℓ : Lv k} → ℕ → Ord _ ℓ
+finLv  : ℕ → Lv k
+finOrd : ℕ → Ord ℓ
 
 open import Agda.Builtin.FromNat public
 instance
@@ -166,22 +202,22 @@ instance
   nNat = record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
   nLv : Number (Lv k)
   nLv = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finLv n }
-  nOrd : Number (Ord k ℓ)
+  nOrd : Number (Ord ℓ)
   nOrd = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finOrd n }
 ```
 
 ```agda
 Lv zero    = ⊤
-Lv (suc k) = OrdStr k 1 .fst
+Lv (suc k) = OrdStr {k} 1 .fst
 
 ⊤-wf : WellFounded (λ (_ _ : ⊤) → ⊥)
 ⊤-wf _ = acc λ ()
 
-OrdStr zero    = Fix.OrdStr ⊤-wf
-OrdStr (suc k) = Fix.OrdStr Road-wf
+OrdStr {(zero)}   = Fix.OrdStr ⊤-wf
+OrdStr {suc k}    = Fix.OrdStr Road-wf
 
-Road-wf {(zero)} = Fix.Road-wf ⊤-wf
-Road-wf {suc k}  = Fix.Road-wf Road-wf
+Road-wf {(zero)}  = Fix.Road-wf ⊤-wf
+Road-wf {suc k}   = Fix.Road-wf Road-wf
 ```
 
 ```agda
@@ -201,11 +237,11 @@ finOrd k@{suc _} (suc n) = suc (finOrd {k} n)
 
 ```agda
 module OrdZeroIso where
-  to : Ord zero tt → ℕ
+  to : Ord {zero} tt → ℕ
   to zero = zero
   to (suc n) = suc (to n)
 
-  from : ℕ → Ord zero tt
+  from : ℕ → Ord {zero} tt
   from zero = zero
   from (suc n) = suc (from n)
 
@@ -217,9 +253,9 @@ module OrdZeroIso where
   from-to zero = 🧊.refl
   from-to (suc n) = 🧊.cong suc (from-to n)
 
-  Ord₀≅ℕ : Iso (Ord zero tt) ℕ
+  Ord₀≅ℕ : Iso (Ord {zero} tt) ℕ
   Ord₀≅ℕ = iso to from to-from from-to
 
-  Ord₀≡ℕ : Ord zero tt ≡ ℕ
+  Ord₀≡ℕ : Ord {zero} tt ≡ ℕ
   Ord₀≡ℕ = pathToEq $ isoToPath Ord₀≅ℕ
 ```
