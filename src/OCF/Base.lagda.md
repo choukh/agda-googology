@@ -49,27 +49,6 @@ open import Bridged.Data.Unit public using (⊤; tt; isProp⊤)
 open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```
 
-## 自然数
-
-```agda
-variable k n m : ℕ
-
-data _<ᴺ_ : ℕ → ℕ → Type where
-  zero : n <ᴺ suc n
-  suc  : n <ᴺ m → n <ᴺ suc m
-
-<ᴺ-trans : Transitive _<ᴺ_
-<ᴺ-trans r zero = suc r
-<ᴺ-trans r (suc s) = suc (<ᴺ-trans r s)
-
-<ᴺ-acc : n <ᴺ m → Acc _<ᴺ_ n
-<ᴺ-acc zero = acc λ s → <ᴺ-acc s
-<ᴺ-acc (suc r) = acc (λ s → <ᴺ-acc (<ᴺ-trans s r))
-
-<ᴺ-wf : WellFounded _<ᴺ_
-<ᴺ-wf _ = <ᴺ-acc zero
-```
-
 ## 高阶递归序数层级
 
 ```agda
@@ -149,17 +128,24 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 open Fix using (zero; suc; lim) public
 ```
 
+## 层级的迭代
+
 ```agda
 Lv : ℕ → Type
 OrdStr : ∀ k → Lv k → OrderStruct
-variable a b l l′ : Lv k
+
+Ord : ∀ k → Lv k → Type
+Ord k l = OrdStr k l .fst
 ```
 
 ```agda
-Ord : ∀ k → Lv k → Type
-Ord k l = OrdStr k l .fst
-variable α β : Ord k l
+variable
+  k n m : ℕ
+  a b l l′ : Lv k
+  α β : Ord k l
+```
 
+```agda
 Road : Ord _ l → Ord _ l → Type
 Road {l} = OrdStr _ l .snd
 
@@ -174,25 +160,28 @@ open import Agda.Builtin.FromNat public
 instance
   nNat : Number ℕ
   nNat = record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
-  nLv : Number (Lv n)
+  nLv : Number (Lv k)
   nLv = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finLv n }
-  nOrd : Number (Ord _ l)
+  nOrd : Number (Ord k l)
   nOrd = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finOrd n }
 ```
 
 ```agda
-Lv zero     = ℕ
-Lv (suc k)  = OrdStr k 1 .fst
+Lv zero    = ⊤
+Lv (suc k) = OrdStr k 1 .fst
 
-OrdStr zero    = Fix.OrdStr <ᴺ-wf
+⊤-wf : WellFounded (λ (_ _ : ⊤) → ⊥)
+⊤-wf _ = acc λ ()
+
+OrdStr zero    = Fix.OrdStr ⊤-wf
 OrdStr (suc k) = Fix.OrdStr Road-wf
 
-Road-wf {(zero)} = Fix.Road-wf <ᴺ-wf
+Road-wf {(zero)} = Fix.Road-wf ⊤-wf
 Road-wf {suc k}  = Fix.Road-wf Road-wf
 ```
 
 ```agda
-finLv k@{(zero)}              = id
+finLv k@{zero}        _       = tt
 finLv k@{suc zero}    zero    = zero
 finLv k@{suc zero}    (suc n) = suc (finLv {k} n)
 finLv k@{suc (suc _)} zero    = zero
@@ -200,8 +189,8 @@ finLv k@{suc (suc _)} (suc n) = suc (finLv {k} n)
 ```
 
 ```agda
-finOrd k@{(zero)} zero    = zero
-finOrd k@{(zero)} (suc n) = suc (finOrd {k} n)
-finOrd k@{suc _}  zero    = zero
-finOrd k@{suc _}  (suc n) = suc (finOrd {k} n)
+finOrd k@{zero}  zero    = zero
+finOrd k@{zero}  (suc n) = suc (finOrd {k} n)
+finOrd k@{suc _} zero    = zero
+finOrd k@{suc _} (suc n) = suc (finOrd {k} n)
 ```
