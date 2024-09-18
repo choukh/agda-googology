@@ -35,7 +35,7 @@ open import Cubical.HITs.PropositionalTruncation public
 
 ```agda
 open import Data.Nat public using (ℕ; zero; suc)
-open import Function public using (id; flip; _∘_; _$_)
+open import Function public using (id; flip; _∘_; _$_; _∋_)
 open import Relation.Binary.Definitions public
 open import Relation.Binary.PropositionalEquality public
   using (_≡_; refl; sym; trans; cong; subst; subst₂)
@@ -105,11 +105,16 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
   module _ where
     open WF.All ⊏-wf
 
-    OrdStr⁻ : ∀ ℓ → a ⊏ ℓ → OrderStruct
-    OrdStr⁻ ℓ = wfRecBuilder _ _ (λ ℓ u⁻ → O.U ℓ u⁻ , O.R ℓ u⁻) ℓ
+    OrdStr⁻ : a ⊏ ℓ → OrderStruct
+    OrdStr⁻ = wfRecBuilder _ _ (λ ℓ⁻ o⁻ → O.U ℓ⁻ o⁻ , O.R ℓ⁻ o⁻) _
 
     OrdStr : Lv → OrderStruct
-    OrdStr = wfRec _ _ (λ ℓ u⁻ → O.U ℓ u⁻ , O.R ℓ u⁻)
+    OrdStr = wfRec _ _ (λ ℓ⁻ o⁻ → O.U ℓ⁻ o⁻ , O.R ℓ⁻ o⁻)
+```
+
+```agda
+  OrdStrFp : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ ≡ OrdStr a
+  OrdStrFp {ℓ} {aℓ} = FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o⁻ → {!   !}) aℓ
 ```
 
 ```agda
@@ -141,10 +146,10 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 
 ```agda
   Ord⁻ : a ⊏ ℓ → Type
-  Ord⁻ aℓ = OrdStr⁻ _ aℓ .fst
+  Ord⁻ aℓ = OrdStr⁻ aℓ .fst
 
-  Road⁻ : (aℓ : a ⊏ ℓ) → Ord⁻ aℓ → Ord⁻ aℓ → Type
-  Road⁻ aℓ = OrdStr⁻ _ aℓ .snd
+  Road⁻ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type
+  Road⁻ {aℓ} = OrdStr⁻ aℓ .snd
 ```
 
 ```agda
@@ -152,7 +157,7 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
   Seq {ℓ} aℓ = Ord⁻ aℓ → Ord ℓ
 
   mono : (aℓ : a ⊏ ℓ) → Seq aℓ → Type
-  mono aℓ f = Monotonic₁ (Road⁻ aℓ) Road₁ f
+  mono aℓ f = Monotonic₁ Road⁻ Road₁ f
 
   isPropMono : ∀ {f} → isProp (mono aℓ f)
   isPropMono {aℓ} {f} = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
@@ -170,16 +175,14 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 
 ```agda
 open Fix using (zero; suc; lim) public
+pattern one = suc zero
 ```
 
 ## 层级的迭代
 
 ```agda
 Lv : ℕ → Type
-OrdStr : ∀ {k} → Lv k → OrderStruct
-
 Ord : ∀ {k} → Lv k → Type
-Ord ℓ = OrdStr ℓ .fst
 ```
 
 ```agda
@@ -191,8 +194,6 @@ variable
 
 ```agda
 Road : Ord ℓ → Ord ℓ → Type
-Road {ℓ} = OrdStr ℓ .snd
-
 Road-wf : WellFounded (Road {k} {ℓ})
 ```
 
@@ -212,13 +213,16 @@ instance
 
 ```agda
 Lv zero    = ⊤
-Lv (suc k) = OrdStr {k} 1 .fst
+Lv (suc k) = Ord {k} 1
 
 ⊤-wf : WellFounded (λ (_ _ : ⊤) → ⊥)
 ⊤-wf _ = acc λ ()
 
-OrdStr {(zero)}   = Fix.OrdStr ⊤-wf
-OrdStr {suc k}    = Fix.OrdStr Road-wf
+Ord {(zero)}   = Fix.Ord ⊤-wf
+Ord {suc k}    = Fix.Ord Road-wf
+
+Road {(zero)}   = Fix.Road ⊤-wf
+Road {suc k}    = Fix.Road Road-wf
 
 Road-wf {(zero)}  = Fix.Road-wf ⊤-wf
 Road-wf {suc k}   = Fix.Road-wf Road-wf
@@ -226,8 +230,8 @@ Road-wf {suc k}   = Fix.Road-wf Road-wf
 
 ```agda
 finLv k@{zero}        _       = tt
-finLv k@{suc zero}    zero    = zero
-finLv k@{suc zero}    (suc n) = suc (finLv {k} n)
+finLv k@{one}         zero    = zero
+finLv k@{one}         (suc n) = suc (finLv {k} n)
 finLv k@{suc (suc _)} zero    = zero
 finLv k@{suc (suc _)} (suc n) = suc (finLv {k} n)
 ```
@@ -264,4 +268,38 @@ module OrdZeroIso where
 
   Ord₀≡ℕ : Ord₀ ≡ ℕ
   Ord₀≡ℕ = pathToEq $ isoToPath Ord₀≅ℕ
+```
+
+```agda
+_⊏_ : ∀ {k} → Lv k → Lv k → Type
+_⊏_ {(zero)} a b = ⊥
+_⊏_ {suc k} = Road
+
+⊏-wf : WellFounded (_⊏_ {k})
+⊏-wf {(zero)} = ⊤-wf
+⊏-wf {suc k} = Road-wf
+```
+
+```agda
+Ord⁻ : {ℓ : Lv k} → a ⊏ ℓ → Type
+Ord⁻ = Fix.Ord⁻ ⊏-wf
+
+Road⁻ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type
+Road⁻ = Fix.Road⁻ ⊏-wf
+```
+
+```agda
+OrdFp : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
+OrdFp {suc k} = {! refl  !}
+```
+
+## 层级的提升
+
+```agda
+mutual
+  lift : a ⊏ b → Ord a → Ord b
+  lift ab α = {!   !}
+
+  lift-mono : {a b : Lv k} {ab : a ⊏ b} {α β : Ord a} → Monotonic₁ Road Road (lift ab)
+  lift-mono = {!   !}
 ```
