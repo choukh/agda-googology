@@ -34,7 +34,7 @@ open import Cubical.HITs.PropositionalTruncation public
 
 ```agda
 open import Data.Nat public using (ℕ; zero; suc)
-open import Function public using (id; flip; _∘_; _$_; _∋_)
+open import Function public using (id; flip; _∘_; _∘₂_; _$_; _∋_)
 open import Relation.Binary.Definitions public
 open import Relation.Binary.PropositionalEquality public
   using (_≡_; refl; sym; trans; cong; subst; subst₂)
@@ -62,7 +62,7 @@ OrderStruct = Σ Type λ A → A → A → Type
 ```agda
 module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_) where
   private variable
-    a ℓ : Lv
+    a ℓ ℓ′ : Lv
     aℓ : a ⊏ ℓ
 ```
 
@@ -126,7 +126,7 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
   Road = OrdStr _ .snd
 
   Road₁ : Ord ℓ → Ord ℓ → Type
-  Road₁ α β = ∥ Road α β ∥₁
+  Road₁ = ∥_∥₁ ∘₂ Road
 ```
 
 ```agda
@@ -140,19 +140,39 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 ### 表示变换
 
 ```agda
-  OrdStrFp : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ ≡ OrdStr a
-  OrdStrFp = FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
-    🧊.cong (O.U ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
-    🧊.cong (O.R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
+  opaque
+    OrdStrFp : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ ≡ OrdStr a
+    OrdStrFp = FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
+      🧊.cong (O.U ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
+      🧊.cong (O.R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
 
-  OrdFp : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
-  OrdFp = pathToEq $ fst $ PathPΣ $ eqToPath OrdStrFp
+    OrdFp : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
+    OrdFp = pathToEq $ fst $ PathPΣ $ eqToPath OrdStrFp
+```
 
-  o⁺ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
-  o⁺ = {!   !}
+```agda
+  ♯ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
+  ♯ = subst id OrdFp
 
-  RoadFp : {aℓ : a ⊏ ℓ} → Road⁻ {aℓ = aℓ} ≡ {!   !}
-  RoadFp = {!   !}
+  ♭ : {aℓ : a ⊏ ℓ} → Ord a → Ord⁻ aℓ
+  ♭ = subst id (sym OrdFp)
+
+  ♮ : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Ord⁻ aℓ → Ord⁻ aℓ′
+  ♮ = ♭ ∘ ♯
+```
+
+```agda
+  open import Relation.Binary.PropositionalEquality using (subst-sym-subst; subst-subst-sym)
+  ♭♯ : {aℓ : a ⊏ ℓ} {α : Ord⁻ aℓ} → ♭ (♯ α) ≡ α
+  ♭♯ = subst-sym-subst OrdFp
+
+  ♯♭ : {aℓ : a ⊏ ℓ} {α : Ord a} → ♯ {aℓ = aℓ} (♭ α) ≡ α
+  ♯♭ = subst-subst-sym OrdFp
+```
+
+```agda
+  Road♯Fp : {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → Road⁻ α β ≡ Road (♯ α) (♯ β)
+  Road♯Fp = {!   !}
 ```
 
 ### 基本性质
