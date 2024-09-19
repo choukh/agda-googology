@@ -172,14 +172,14 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 ```
 
 ```agda
-    ♭<♭≡subst : {aℓ : a ⊏ ℓ} → (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) OrdFp (_<⁻_ {aℓ = aℓ})
-    ♭<♭≡subst = Eq.J (λ _ eq → (λ α β → subst id (sym eq) α <⁻ subst id (sym eq) β) ≡ subst _ eq _<⁻_) OrdFp refl
+    <-distrib-subst : {aℓ : a ⊏ ℓ} → (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) OrdFp (_<⁻_ {aℓ = aℓ})
+    <-distrib-subst = Eq.J (λ _ eq → (λ α β → subst id (sym eq) α <⁻ subst id (sym eq) β) ≡ subst _ eq _<⁻_) OrdFp refl
 
-    Road♭Fp : {aℓ : a ⊏ ℓ} {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
-    Road♭Fp {aℓ} {α} {β} = cong-app (cong-app (trans ♭<♭≡subst RoadFp) α) β
+    ♭<⁻♭→< : {aℓ : a ⊏ ℓ} {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
+    ♭<⁻♭→< = cong-app (cong-app (trans <-distrib-subst RoadFp) _) _
 
-    Road♯Fp : {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → α <⁻ β ≡ ♯ α < ♯ β
-    Road♯Fp {aℓ} {α} = {!   !}
+    ♯<♯→<⁻ : {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
+    ♯<♯→<⁻ = subst₂ (λ x y → ♯ _ < ♯ _ ≡ x <⁻ y) ♭♯ ♭♯ (sym ♭<⁻♭→<)
 ```
 
 ### 路径的良基性
@@ -305,6 +305,12 @@ _<⁻_ = Fix._<⁻_ ⊏-wf
 
 ♯♭ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α : Ord a} → ♯ {aℓ = aℓ} (♭ α) ≡ α
 ♯♭ {suc k} = Fix.♯♭ ⊏-wf
+
+♭<⁻♭→< : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
+♭<⁻♭→< {suc k} = Fix.♭<⁻♭→< ⊏-wf
+
+♯<♯→<⁻ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
+♯<♯→<⁻ {suc k} = Fix.♯<♯→<⁻ ⊏-wf
 ```
 
 ### 极限的外延性
