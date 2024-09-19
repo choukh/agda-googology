@@ -25,7 +25,7 @@ open import Cubical.Foundations.Isomorphism
 open import Cubical.Foundations.HLevels
 open import Cubical.Data.Equality using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
-  using (Σ-syntax; _×_; _,_; fst; snd; ΣPathP; PathPΣ)
+  using (Σ-syntax; _×_; _,_; fst; snd; ΣPathP)
 open import Cubical.HITs.PropositionalTruncation public
   using (∥_∥₁; ∣_∣₁; squash₁; rec; rec2; map; map2; rec→Set)
 ```
@@ -34,10 +34,12 @@ open import Cubical.HITs.PropositionalTruncation public
 
 ```agda
 open import Data.Nat public using (ℕ; zero; suc)
-open import Function public using (id; flip; _∘_; _$_; _∋_)
+open import Data.Product.Properties using (Σ-≡,≡→≡; Σ-≡,≡←≡)
+open import Function public using (id; flip; _∘_; _$_; _∋_; case_of_)
 open import Relation.Binary.Definitions public
 open import Relation.Binary.PropositionalEquality public
-  using (_≡_; refl; sym; trans; cong; subst; subst₂)
+  using (_≡_; refl; sym; trans; cong; cong-app; subst; subst₂)
+open import Relation.Binary.PropositionalEquality as Eq
 open import Induction.WellFounded as WF public
 ```
 
@@ -122,7 +124,7 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
   Ord ℓ = OrdStr ℓ .fst
   private variable α β : Ord ℓ
 
-  _<_ : Ord ℓ → Ord ℓ → Type
+  _<_ : Ord ℓ → Ord ℓ → Type; infix 6 _<_
   _<_ = OrdStr _ .snd
 ```
 
@@ -130,7 +132,7 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
   Ord⁻ : a ⊏ ℓ → Type
   Ord⁻ aℓ = OrdStr⁻ aℓ .fst
 
-  _<⁻_ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type
+  _<⁻_ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type; infix 6 _<⁻_
   _<⁻_ {aℓ} = OrdStr⁻ aℓ .snd
 ```
 
@@ -143,44 +145,41 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
       🧊.cong (O.A ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
       🧊.cong (O.R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
 
-    OrdStrFpPath : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ 🧊.≡ OrdStr a
-    OrdStrFpPath = eqToPath OrdStrFp
-
-    OrdFpPath : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ 🧊.≡ Ord a
-    OrdFpPath = fst $ PathPΣ $ OrdStrFpPath
-
-    RoadFpPath : {aℓ : a ⊏ ℓ} → PathP (λ i → OrdFpPath {aℓ = aℓ} i → OrdFpPath {aℓ = aℓ} i → Type) (_<⁻_ {aℓ = aℓ}) (_<_ {a})
-    RoadFpPath = snd $ PathPΣ $ OrdStrFpPath
-
     OrdFp : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
-    OrdFp = pathToEq OrdFpPath
+    OrdFp = Σ-≡,≡←≡ OrdStrFp .fst
+
+    RoadFp : {aℓ : a ⊏ ℓ} → subst (λ A → A → A → Type) OrdFp (_<⁻_ {aℓ = aℓ}) ≡ _<_
+    RoadFp = Σ-≡,≡←≡ OrdStrFp .snd
 ```
 
 ```agda
-  ♯ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
-  ♯ = subst id OrdFp
+    ♯ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
+    ♯ = subst id OrdFp
 
-  ♭ : {aℓ : a ⊏ ℓ} → Ord a → Ord⁻ aℓ
-  ♭ = subst id (sym OrdFp)
+    ♭ : {aℓ : a ⊏ ℓ} → Ord a → Ord⁻ aℓ
+    ♭ = subst id (sym OrdFp)
 
-  ♮ : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Ord⁻ aℓ → Ord⁻ aℓ′
-  ♮ = ♭ ∘ ♯
+    ♮ : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Ord⁻ aℓ → Ord⁻ aℓ′
+    ♮ = ♭ ∘ ♯
 ```
 
 ```agda
-  open import Relation.Binary.PropositionalEquality using (subst-sym-subst; subst-subst-sym)
-  ♭♯ : {aℓ : a ⊏ ℓ} {α : Ord⁻ aℓ} → ♭ (♯ α) ≡ α
-  ♭♯ = subst-sym-subst OrdFp
+    ♭♯ : {aℓ : a ⊏ ℓ} {α : Ord⁻ aℓ} → ♭ (♯ α) ≡ α
+    ♭♯ = subst-sym-subst OrdFp
 
-  ♯♭ : {aℓ : a ⊏ ℓ} {α : Ord a} → ♯ {aℓ = aℓ} (♭ α) ≡ α
-  ♯♭ = subst-subst-sym OrdFp
+    ♯♭ : {aℓ : a ⊏ ℓ} {α : Ord a} → ♯ {aℓ = aℓ} (♭ α) ≡ α
+    ♯♭ = subst-subst-sym OrdFp
 ```
 
 ```agda
-  opaque
-    unfolding OrdFpPath
+    ♭<♭≡subst : {aℓ : a ⊏ ℓ} → (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) OrdFp (_<⁻_ {aℓ = aℓ})
+    ♭<♭≡subst = Eq.J (λ _ eq → (λ α β → subst id (sym eq) α <⁻ subst id (sym eq) β) ≡ subst _ eq _<⁻_) OrdFp refl
+
+    Road♭Fp : {aℓ : a ⊏ ℓ} {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
+    Road♭Fp {aℓ} {α} {β} = cong-app (cong-app (trans ♭<♭≡subst RoadFp) α) β
+
     Road♯Fp : {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → α <⁻ β ≡ ♯ α < ♯ β
-    Road♯Fp = pathToEq λ i → RoadFpPath i {!   !} {!   !}
+    Road♯Fp {aℓ} {α} = {!   !}
 ```
 
 ### 路径的良基性
@@ -220,7 +219,7 @@ variable
 ```
 
 ```agda
-_<_ : Ord ℓ → Ord ℓ → Type
+_<_ : Ord ℓ → Ord ℓ → Type; infix 6 _<_
 <-wf : WellFounded (_<_ {k} {ℓ})
 ```
 
@@ -273,7 +272,7 @@ finOrd k@{suc _} (suc n) = suc (finOrd {k} n)
 ### 表示变换
 
 ```agda
-_⊏_ : ∀ {k} → Lv k → Lv k → Type
+_⊏_ : ∀ {k} → Lv k → Lv k → Type; infix 6 _⊏_
 _⊏_ {(zero)} a b = ⊥
 _⊏_ {suc k} = _<_
 variable aℓ : a ⊏ ℓ
@@ -287,7 +286,7 @@ variable aℓ : a ⊏ ℓ
 Ord⁻ : {ℓ : Lv k} → a ⊏ ℓ → Type
 Ord⁻ = Fix.Ord⁻ ⊏-wf
 
-_<⁻_ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type
+_<⁻_ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type; infix 6 _<⁻_
 _<⁻_ = Fix._<⁻_ ⊏-wf
 ```
 
@@ -311,7 +310,7 @@ _<⁻_ = Fix._<⁻_ ⊏-wf
 ### 极限的外延性
 
 ```agda
-_<₁_ : Ord ℓ → Ord ℓ → Type
+_<₁_ : Ord ℓ → Ord ℓ → Type; infix 6 _<₁_
 α <₁ β = ∥ α < β ∥₁
 
 Seq : {ℓ : Lv k} (aℓ : a ⊏ ℓ) → Type
