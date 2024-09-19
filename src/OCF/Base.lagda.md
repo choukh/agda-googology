@@ -53,6 +53,16 @@ open import Bridged.Data.Unit public using (⊤; tt; isProp⊤)
 open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```
 
+**定义** 转移
+
+```agda
+coe : {A B : Type} → A ≡ B → A → B
+coe = subst id
+
+coe⁻ : {A B : Type} → A ≡ B → B → A
+coe⁻ = subst id ∘ sym
+```
+
 **定义** 序结构
 
 ```agda
@@ -154,10 +164,10 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 
 ```agda
     ♯ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
-    ♯ = subst id OrdFp
+    ♯ = coe OrdFp
 
     ♭ : {aℓ : a ⊏ ℓ} → Ord a → Ord⁻ aℓ
-    ♭ = subst id (sym OrdFp)
+    ♭ = coe⁻ OrdFp
 
     ♮ : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Ord⁻ aℓ → Ord⁻ aℓ′
     ♮ = ♭ ∘ ♯
@@ -173,13 +183,16 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 
 ```agda
     <-distrib-subst : {aℓ : a ⊏ ℓ} → (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) OrdFp (_<⁻_ {aℓ = aℓ})
-    <-distrib-subst = Eq.J (λ _ eq → (λ α β → subst id (sym eq) α <⁻ subst id (sym eq) β) ≡ subst _ eq _<⁻_) OrdFp refl
+    <-distrib-subst = Eq.J (λ _ eq → (λ α β → coe⁻ eq α <⁻ coe⁻ eq β) ≡ subst _ eq _<⁻_) OrdFp refl
 
-    ♭<⁻♭→< : {aℓ : a ⊏ ℓ} {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
-    ♭<⁻♭→< = cong-app (cong-app (trans <-distrib-subst RoadFp) _) _
+    ♭<⁻♭≡< : {aℓ : a ⊏ ℓ} {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
+    ♭<⁻♭≡< = cong-app (cong-app (trans <-distrib-subst RoadFp) _) _
 
-    ♯<♯→<⁻ : {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
-    ♯<♯→<⁻ = subst₂ (λ x y → ♯ _ < ♯ _ ≡ x <⁻ y) ♭♯ ♭♯ (sym ♭<⁻♭→<)
+    ♯<♯≡<⁻ : {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
+    ♯<♯≡<⁻ = subst₂ (λ x y → ♯ _ < ♯ _ ≡ x <⁻ y) ♭♯ ♭♯ (sym ♭<⁻♭≡<)
+
+    ♮<⁻♮≡<⁻ : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮ {aℓ′ = aℓ′} α <⁻ ♮ β ≡ α <⁻ β
+    ♮<⁻♮≡<⁻ = trans ♭<⁻♭≡< ♯<♯≡<⁻
 ```
 
 ### 路径的良基性
@@ -306,11 +319,14 @@ _<⁻_ = Fix._<⁻_ ⊏-wf
 ♯♭ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α : Ord a} → ♯ {aℓ = aℓ} (♭ α) ≡ α
 ♯♭ {suc k} = Fix.♯♭ ⊏-wf
 
-♭<⁻♭→< : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
-♭<⁻♭→< {suc k} = Fix.♭<⁻♭→< ⊏-wf
+♭<⁻♭≡< : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
+♭<⁻♭≡< {suc k} = Fix.♭<⁻♭≡< ⊏-wf
 
-♯<♯→<⁻ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
-♯<♯→<⁻ {suc k} = Fix.♯<♯→<⁻ ⊏-wf
+♯<♯≡<⁻ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
+♯<♯≡<⁻ {suc k} = Fix.♯<♯≡<⁻ ⊏-wf
+
+♮<⁻♮≡<⁻ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮ {aℓ′ = aℓ′} α <⁻ ♮ β ≡ α <⁻ β
+♮<⁻♮≡<⁻ {suc k} = Fix.♮<⁻♮≡<⁻ ⊏-wf
 ```
 
 ### 极限的外延性
@@ -369,13 +385,23 @@ module OrdZeroIso where
   Ord₀≡ℕ = pathToEq $ isoToPath Ord₀≅ℕ
 ```
 
+## 路径关系
+
+```agda
+<-trans : Transitive (_<_ {k} {ℓ})
+<-trans {k} {ℓ} = {!   !}
+```
+
 ## 层级的提升
 
 ```agda
 mutual
-  lift : a ⊏ b → Ord a → Ord b
-  lift ab α = {!   !}
+  lift : {a b : Lv (suc k)} → a < b → Ord a → Ord b
+  lift ab zero = zero
+  lift ab (suc α) = suc (lift ab α)
+  lift ab (lim xa f mᶠ) = lim (<-trans xa ab) (λ ν → lift ab (f (♮ ν)))
+    λ {ν} {μ} p → map (lift-mono {α = f (♮ ν)} {β = f (♮ μ)}) (mᶠ $ coe⁻ ♮<⁻♮≡<⁻ p)
 
-  lift-mono : {a b : Lv k} {ab : a ⊏ b} {α β : Ord a} → Monotonic₁ _<_ _<_ (lift ab)
+  lift-mono : {a b : Lv (suc k)} {ab : a ⊏ b} {α β : Ord a} → Monotonic₁ _<_ _<_ (lift ab)
   lift-mono = {!   !}
 ```
