@@ -74,7 +74,7 @@ OrderStruct = Σ Type λ A → A → A → Type
 ```agda
 module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_) where
   private variable
-    a ℓ ℓ′ : Lv
+    a b ℓ ℓ′ : Lv
     aℓ : a ⊏ ℓ
 ```
 
@@ -383,25 +383,4 @@ module OrdZeroIso where
 
   Ord₀≡ℕ : Ord₀ ≡ ℕ
   Ord₀≡ℕ = pathToEq $ isoToPath Ord₀≅ℕ
-```
-
-## 路径关系
-
-```agda
-<-trans : Transitive (_<_ {k} {ℓ})
-<-trans {k} {ℓ} = {!   !}
-```
-
-## 层级的提升
-
-```agda
-mutual
-  lift : {a b : Lv (suc k)} → a < b → Ord a → Ord b
-  lift ab zero = zero
-  lift ab (suc α) = suc (lift ab α)
-  lift ab (lim xa f mᶠ) = lim (<-trans xa ab) (λ ν → lift ab (f (♮ ν)))
-    λ {ν} {μ} p → map (lift-mono {α = f (♮ ν)} {β = f (♮ μ)}) (mᶠ $ coe⁻ ♮<⁻♮≡<⁻ p)
-
-  lift-mono : {a b : Lv (suc k)} {ab : a ⊏ b} {α β : Ord a} → Monotonic₁ _<_ _<_ (lift ab)
-  lift-mono = {!   !}
 ```
