@@ -94,7 +94,7 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
     Seq aℓ = O⁻ aℓ .fst → A
 
     mono : Seq aℓ → Type
-    mono {aℓ} f = Monotonic₁ (O⁻ aℓ .snd) R₁ f
+    mono {aℓ} f = ∀ {ν μ} → O⁻ aℓ .snd ν μ → R₁ (f ν) (f μ)
 ```
 
 ```agda
@@ -149,50 +149,53 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 ### 表示变换
 
 ```agda
-  opaque
-    OrdStrFp : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ ≡ OrdStr a
-    OrdStrFp = FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
-      🧊.cong (O.A ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
-      🧊.cong (O.R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
+  OrdStrFp : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ ≡ OrdStr a
+  OrdStrFp = FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
+    🧊.cong (O.A ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
+    🧊.cong (O.R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
 
-    OrdFp : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
-    OrdFp = Σ-≡,≡←≡ OrdStrFp .fst
+  OrdFp : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
+  OrdFp = Σ-≡,≡←≡ OrdStrFp .fst
 
-    RoadFp : {aℓ : a ⊏ ℓ} → subst (λ A → A → A → Type) OrdFp (_<⁻_ {aℓ = aℓ}) ≡ _<_
-    RoadFp = Σ-≡,≡←≡ OrdStrFp .snd
+  RoadFp : {aℓ : a ⊏ ℓ} → subst (λ A → A → A → Type) OrdFp (_<⁻_ {aℓ = aℓ}) ≡ _<_
+  RoadFp = Σ-≡,≡←≡ OrdStrFp .snd
 ```
 
 ```agda
-    ♯ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
-    ♯ = coe OrdFp
+  ♯ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
+  ♯ = coe OrdFp
 
-    ♭ : {aℓ : a ⊏ ℓ} → Ord a → Ord⁻ aℓ
-    ♭ = coe⁻ OrdFp
+  ♭ : {aℓ : a ⊏ ℓ} → Ord a → Ord⁻ aℓ
+  ♭ = coe⁻ OrdFp
 
-    ♮ : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Ord⁻ aℓ → Ord⁻ aℓ′
-    ♮ = ♭ ∘ ♯
+  ♮ : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Ord⁻ aℓ → Ord⁻ aℓ′
+  ♮ = ♭ ∘ ♯
 ```
 
 ```agda
-    ♭♯ : {aℓ : a ⊏ ℓ} {α : Ord⁻ aℓ} → ♭ (♯ α) ≡ α
-    ♭♯ = subst-sym-subst OrdFp
+  ♭♯ : {aℓ : a ⊏ ℓ} {α : Ord⁻ aℓ} → ♭ (♯ α) ≡ α
+  ♭♯ = subst-sym-subst OrdFp
 
-    ♯♭ : {aℓ : a ⊏ ℓ} {α : Ord a} → ♯ {aℓ = aℓ} (♭ α) ≡ α
-    ♯♭ = subst-subst-sym OrdFp
+  ♯♭ : {aℓ : a ⊏ ℓ} {α : Ord a} → ♯ {aℓ = aℓ} (♭ α) ≡ α
+  ♯♭ = subst-subst-sym OrdFp
+
+  --♭(♯♭)♯ = ♭♯
+  ♮♮ : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α : Ord⁻ aℓ} → ♮ {aℓ = aℓ′} (♮ α) ≡ α
+  ♮♮ = trans (cong ♭ (trans ♯♭ (cong ♯ refl))) ♭♯
 ```
 
 ```agda
-    <-distrib-subst : {aℓ : a ⊏ ℓ} → (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) OrdFp (_<⁻_ {aℓ = aℓ})
-    <-distrib-subst = Eq.J (λ _ eq → (λ α β → coe⁻ eq α <⁻ coe⁻ eq β) ≡ subst _ eq _<⁻_) OrdFp refl
+  <-distrib-subst : {aℓ : a ⊏ ℓ} → (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) OrdFp (_<⁻_ {aℓ = aℓ})
+  <-distrib-subst = Eq.J (λ _ eq → (λ α β → coe⁻ eq α <⁻ coe⁻ eq β) ≡ subst _ eq _<⁻_) OrdFp refl
 
-    ♭<⁻♭≡< : {aℓ : a ⊏ ℓ} {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
-    ♭<⁻♭≡< = cong-app (cong-app (trans <-distrib-subst RoadFp) _) _
+  ♭<⁻♭≡< : {aℓ : a ⊏ ℓ} {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
+  ♭<⁻♭≡< = cong-app (cong-app (trans <-distrib-subst RoadFp) _) _
 
-    ♯<♯≡<⁻ : {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
-    ♯<♯≡<⁻ = subst₂ (λ x y → ♯ _ < ♯ _ ≡ x <⁻ y) ♭♯ ♭♯ (sym ♭<⁻♭≡<)
+  ♯<♯≡<⁻ : {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
+  ♯<♯≡<⁻ = subst₂ (λ x y → ♯ _ < ♯ _ ≡ x <⁻ y) ♭♯ ♭♯ (sym ♭<⁻♭≡<)
 
-    ♮<⁻♮≡<⁻ : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮ {aℓ′ = aℓ′} α <⁻ ♮ β ≡ α <⁻ β
-    ♮<⁻♮≡<⁻ = trans ♭<⁻♭≡< ♯<♯≡<⁻
+  ♮<⁻♮≡<⁻ : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮ {aℓ′ = aℓ′} α <⁻ ♮ β ≡ α <⁻ β
+  ♮<⁻♮≡<⁻ = trans ♭<⁻♭≡< ♯<♯≡<⁻
 ```
 
 ### 路径的良基性
@@ -296,37 +299,29 @@ variable aℓ : a ⊏ ℓ
 ```
 
 ```agda
-Ord⁻ : {ℓ : Lv k} → a ⊏ ℓ → Type
+Ord⁻ : {a ℓ : Lv k} → a ⊏ ℓ → Type
 Ord⁻ = Fix.Ord⁻ ⊏-wf
 
-_<⁻_ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type; infix 6 _<⁻_
+_<⁻_ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type; infix 6 _<⁻_
 _<⁻_ = Fix._<⁻_ ⊏-wf
 ```
 
 ```agda
-♯ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
-♯ {suc k} = Fix.♯ ⊏-wf
+opaque
+  ♯ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
+  ♯ {suc k} = Fix.♯ ⊏-wf
 
-♭ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord a → Ord⁻ aℓ
-♭ {suc k} = Fix.♭ ⊏-wf
+  ♭ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord a → Ord⁻ aℓ
+  ♭ {suc k} = Fix.♭ ⊏-wf
 
-♮ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Ord⁻ aℓ → Ord⁻ aℓ′
-♮ {suc k} = Fix.♮ ⊏-wf
+  ♮ : {a ℓ ℓ′ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Ord⁻ aℓ → Ord⁻ aℓ′
+  ♮ {suc k} = Fix.♮ ⊏-wf
 
-♭♯ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α : Ord⁻ aℓ} → ♭ (♯ α) ≡ α
-♭♯ {suc k} = Fix.♭♯ ⊏-wf
+  ♮♮ : {a ℓ ℓ′ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α : Ord⁻ aℓ} → ♮ {aℓ = aℓ′} (♮ α) ≡ α
+  ♮♮ {suc k} = Fix.♮♮ ⊏-wf
 
-♯♭ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α : Ord a} → ♯ {aℓ = aℓ} (♭ α) ≡ α
-♯♭ {suc k} = Fix.♯♭ ⊏-wf
-
-♭<⁻♭≡< : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
-♭<⁻♭≡< {suc k} = Fix.♭<⁻♭≡< ⊏-wf
-
-♯<♯≡<⁻ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {α β : Ord⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
-♯<♯≡<⁻ {suc k} = Fix.♯<♯≡<⁻ ⊏-wf
-
-♮<⁻♮≡<⁻ : {ℓ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮ {aℓ′ = aℓ′} α <⁻ ♮ β ≡ α <⁻ β
-♮<⁻♮≡<⁻ {suc k} = Fix.♮<⁻♮≡<⁻ ⊏-wf
+  ♮<⁻♮≡<⁻ : {a ℓ ℓ′ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮ {aℓ′ = aℓ′} α <⁻ ♮ β ≡ α <⁻ β
+  ♮<⁻♮≡<⁻ {suc k} = Fix.♮<⁻♮≡<⁻ ⊏-wf
 ```
 
 ### 极限的外延性
@@ -335,12 +330,12 @@ _<⁻_ = Fix._<⁻_ ⊏-wf
 _<₁_ : Ord ℓ → Ord ℓ → Type; infix 6 _<₁_
 α <₁ β = ∥ α < β ∥₁
 
-Seq : {ℓ : Lv k} (aℓ : a ⊏ ℓ) → Type
+Seq : {a ℓ : Lv k} (aℓ : a ⊏ ℓ) → Type
 Seq {ℓ} aℓ = Ord⁻ aℓ → Ord ℓ
 variable f g : Seq aℓ
 
-mono : {ℓ : Lv k} (aℓ : a ⊏ ℓ) → Seq aℓ → Type
-mono aℓ f = Monotonic₁ _<⁻_ _<₁_ f
+mono : {a ℓ : Lv k} (aℓ : a ⊏ ℓ) → Seq aℓ → Type
+mono aℓ f = ∀ {ν μ} → ν <⁻ μ → f ν <₁ f μ
 
 isPropMono : isProp (mono aℓ f)
 isPropMono {aℓ} {f} = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
@@ -383,4 +378,27 @@ module OrdZeroIso where
 
   Ord₀≡ℕ : Ord₀ ≡ ℕ
   Ord₀≡ℕ = pathToEq $ isoToPath Ord₀≅ℕ
+```
+
+## 路径关系
+
+```agda
+<-trans : Transitive (_<_ {k} {ℓ})
+<-trans {(zero)} = Fix.<-trans ⊤-wf
+<-trans {suc k} = Fix.<-trans ⊏-wf
+```
+
+## 层级的提升
+
+```agda
+mutual
+  lift : {a b : Lv (suc k)} → a < b → Ord a → Ord b
+  lift ab zero = zero
+  lift ab (suc α) = suc (lift ab α)
+  lift ab (lim xa f mᶠ) = lim (<-trans xa ab) (λ ν → lift ab (f $ ♮ ν)) (map lift-mono ∘ mᶠ ∘ coe⁻ ♮<⁻♮≡<⁻)
+
+  lift-mono : {a b : Lv (suc k)} {ab : a < b} {α β : Ord a} → α < β → _<_ {suc k} (lift ab α) (lift ab β)
+  lift-mono zero = zero
+  lift-mono (suc r) = suc (lift-mono r)
+  lift-mono (lim {f} r) = lim (lift-mono $ subst (λ x → _ < f x) (sym ♮♮) r)
 ```
