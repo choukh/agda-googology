@@ -136,6 +136,9 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 
   _<_ : Ord ℓ → Ord ℓ → Type; infix 6 _<_
   _<_ = OrdStr _ .snd
+
+  _<₁_ : Ord ℓ → Ord ℓ → Type; infix 6 _<₁_
+  α <₁ β = ∥ α < β ∥₁
 ```
 
 ```agda
@@ -216,6 +219,20 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 ```
 
 ```agda
+  isPropAcc : isProp (Acc (_<₁_ {ℓ}) α)
+  isPropAcc (acc p) (acc q) i = acc (λ r → isPropAcc (p r) (q r) i)
+
+  <₁-acc : α <₁ β → Acc (_<₁_ {ℓ}) α
+  <₁-acc ∣ zero  ∣₁ = acc λ r → <₁-acc r
+  <₁-acc ∣ suc r ∣₁ = acc λ s → <₁-acc (map2 <-trans s ∣ r ∣₁)
+  <₁-acc ∣ lim r ∣₁ = acc λ s → <₁-acc (map2 <-trans s ∣ r ∣₁)
+  <₁-acc (squash₁ p q i) = isPropAcc (<₁-acc p) (<₁-acc q) i
+
+  <₁-wf : WellFounded (_<₁_ {ℓ})
+  <₁-wf _ = <₁-acc ∣ zero ∣₁
+```
+
+```agda
 open Fix using (zero; suc; lim) public
 pattern one = suc zero
 pattern ssuc x = suc (suc x)
@@ -237,7 +254,11 @@ variable
 
 ```agda
 _<_ : Ord ℓ → Ord ℓ → Type; infix 6 _<_
-<-wf : WellFounded (_<_ {k} {ℓ})
+
+_<₁_ : Ord ℓ → Ord ℓ → Type; infix 6 _<₁_
+α <₁ β = ∥ α < β ∥₁
+
+<₁-wf : WellFounded (_<₁_ {k} {ℓ})
 ```
 
 ```agda
@@ -262,13 +283,13 @@ Lv (suc k) = Ord {k} 1
 ⊤-wf _ = acc λ ()
 
 Ord {(zero)}   = Fix.Ord ⊤-wf
-Ord {suc k}    = Fix.Ord <-wf
+Ord {suc k}    = Fix.Ord <₁-wf
 
 _<_ {(zero)}   = Fix._<_ ⊤-wf
-_<_ {suc k}    = Fix._<_ <-wf
+_<_ {suc k}    = Fix._<_ <₁-wf
 
-<-wf {(zero)}  = Fix.<-wf ⊤-wf
-<-wf {suc k}   = Fix.<-wf <-wf
+<₁-wf {(zero)}  = Fix.<₁-wf ⊤-wf
+<₁-wf {suc k}   = Fix.<₁-wf <₁-wf
 ```
 
 ```agda
@@ -291,12 +312,12 @@ finOrd k@{suc _} (suc n) = suc (finOrd {k} n)
 ```agda
 _⊏_ : ∀ {k} → Lv k → Lv k → Type; infix 6 _⊏_
 _⊏_ {(zero)} a b = ⊥
-_⊏_ {suc k} = _<_
+_⊏_ {suc k} = _<₁_
 variable aℓ : a ⊏ ℓ
 
 ⊏-wf : WellFounded (_⊏_ {k})
 ⊏-wf {(zero)} = ⊤-wf
-⊏-wf {suc k} = <-wf
+⊏-wf {suc k} = <₁-wf
 ```
 
 ```agda
@@ -308,29 +329,25 @@ _<⁻_ = Fix._<⁻_ ⊏-wf
 ```
 
 ```agda
-opaque
-  ♯ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
-  ♯ {suc k} = Fix.♯ ⊏-wf
+♯ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord a
+♯ {suc k} = Fix.♯ ⊏-wf
 
-  ♭ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord a → Ord⁻ aℓ
-  ♭ {suc k} = Fix.♭ ⊏-wf
+♭ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord a → Ord⁻ aℓ
+♭ {suc k} = Fix.♭ ⊏-wf
 
-  ♮ : {a ℓ ℓ′ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Ord⁻ aℓ → Ord⁻ aℓ′
-  ♮ {suc k} = Fix.♮ ⊏-wf
+♮ : {a ℓ ℓ′ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} → Ord⁻ aℓ → Ord⁻ aℓ′
+♮ {suc k} = Fix.♮ ⊏-wf
 
-  ♮♮ : {a ℓ ℓ′ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α : Ord⁻ aℓ} → ♮ {aℓ = aℓ′} (♮ α) ≡ α
-  ♮♮ {suc k} = Fix.♮♮ ⊏-wf
+♮♮ : {a ℓ ℓ′ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α : Ord⁻ aℓ} → ♮ {aℓ = aℓ′} (♮ α) ≡ α
+♮♮ {suc k} = Fix.♮♮ ⊏-wf
 
-  ♮<⁻♮≡<⁻ : {a ℓ ℓ′ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮ {aℓ′ = aℓ′} α <⁻ ♮ β ≡ α <⁻ β
-  ♮<⁻♮≡<⁻ {suc k} = Fix.♮<⁻♮≡<⁻ ⊏-wf
+♮<⁻♮≡<⁻ : {a ℓ ℓ′ : Lv k} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮ {aℓ′ = aℓ′} α <⁻ ♮ β ≡ α <⁻ β
+♮<⁻♮≡<⁻ {suc k} = Fix.♮<⁻♮≡<⁻ ⊏-wf
 ```
 
 ### 极限的外延性
 
 ```agda
-_<₁_ : Ord ℓ → Ord ℓ → Type; infix 6 _<₁_
-α <₁ β = ∥ α < β ∥₁
-
 Seq : {a ℓ : Lv k} (aℓ : a ⊏ ℓ) → Type
 Seq {ℓ} aℓ = Ord⁻ aℓ → Ord ℓ
 variable f g : Seq aℓ
@@ -340,6 +357,22 @@ mono aℓ f = ∀ {ν μ} → ν <⁻ μ → f ν <₁ f μ
 
 isPropMono : isProp (mono aℓ f)
 isPropMono {aℓ} {f} = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
+```
+
+```agda
+module _ {a ℓ : Lv (suc k)}
+         {aℓᶠ : a ⊏ ℓ} {f : Ord⁻ aℓᶠ → Ord ℓ} {mᶠ : mono aℓᶠ f}
+         {aℓᵍ : a ⊏ ℓ} {g : Ord⁻ aℓᵍ → Ord ℓ} {mᵍ : mono aℓᵍ g}
+         (p : {aℓ : a ⊏ ℓ} (ν : Ord⁻ aℓ) → f (♮ {aℓ′ = aℓᶠ} ν) ≡ g (♮ {aℓ′ = aℓᵍ} ν))
+         where
+
+  limExtPath : lim aℓᶠ f mᶠ 🧊.≡ lim aℓᵍ g mᵍ
+  limExtPath i = lim (squash₁ aℓᶠ aℓᵍ i)
+    (λ (ν : Ord⁻ (squash₁ aℓᶠ aℓᵍ i)) → {! eqToPath (p ν) i  !})
+    {!   !}
+
+  limExt : lim aℓᶠ f mᶠ ≡ lim aℓᵍ g mᵍ
+  limExt = pathToEq limExtPath
 ```
 
 ### 零簇唯一层与自然数同构
@@ -377,4 +410,30 @@ module OrdZeroIso where
 <-trans : Transitive (_<_ {k} {ℓ})
 <-trans {(zero)} = Fix.<-trans ⊤-wf
 <-trans {suc k} = Fix.<-trans ⊏-wf
+```
+
+## 层级的提升
+
+```agda
+lift : {a b : Lv (suc k)} → a ⊏ b → Ord a → Ord b
+lift-mono : {a b : Lv (suc k)} {ab : a ⊏ b} {α β : Ord a} → α < β → _<_ {suc k} (lift ab α) (lift ab β)
+
+lift ab zero = zero
+lift ab (suc α) = suc (lift ab α)
+lift ab (lim xa f mᶠ) = lim (map2 <-trans xa ab) (λ ν → lift ab (f $ ♮ ν)) (map lift-mono ∘ mᶠ ∘ coe⁻ ♮<⁻♮≡<⁻)
+
+lift-mono zero = zero
+lift-mono (suc r) = suc (lift-mono r)
+lift-mono (lim {f} r) = lim (lift-mono $ subst (λ x → _ < f x) (sym ♮♮) r)
+```
+
+提升的复合
+
+```agda
+lift-comp : {a b : Lv (suc k)} {ab : a ⊏ b} {bc : b ⊏ c} {ac : a ⊏ c} {α : Ord a} → lift ac α ≡ lift bc (lift ab α)
+lift-comp {α = zero} = refl
+lift-comp {α = suc α} = cong suc lift-comp
+lift-comp {ab} {bc} {ac} {α = lim _ f _} = {!   !}
+  --limExt (λ ν → subst₂ (λ x y → lift ac (f x) ≡ lift bc (lift ab (f y)))
+  --{!  ν !} {!   !} lift-comp)
 ```
