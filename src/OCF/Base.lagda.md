@@ -218,6 +218,7 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 ```agda
 open Fix using (zero; suc; lim) public
 pattern one = suc zero
+pattern ssuc x = suc (suc x)
 ```
 
 ## 层级簇
@@ -230,7 +231,7 @@ Ord : ∀ {k} → Lv k → Type
 ```agda
 variable
   k n m : ℕ
-  a b ℓ ℓ′ : Lv k
+  a b c ℓ ℓ′ : Lv k
   α β : Ord ℓ
 ```
 
@@ -341,16 +342,6 @@ isPropMono : isProp (mono aℓ f)
 isPropMono {aℓ} {f} = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
 ```
 
-```agda
-limExtPath : {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} {f g : Seq aℓ} {mᶠ : mono aℓ f} {mᵍ : mono aℓ g}
-            → (∀ ν → f ν 🧊.≡ g ν) → lim aℓ f mᶠ 🧊.≡ lim aℓ g mᵍ
-limExtPath {aℓ} p = 🧊.cong₂ (λ f (mᶠ : mono aℓ f) → lim aℓ f mᶠ) (funExt p) (toPathP $ isPropMono _ _)
-
-limExt : {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} {f g : Seq aℓ} {mᶠ : mono aℓ f} {mᵍ : mono aℓ g}
-        → (∀ ν → f ν ≡ g ν) → lim aℓ f mᶠ ≡ lim aℓ g mᵍ
-limExt p = pathToEq $ limExtPath $ eqToPath ∘ p
-```
-
 ### 零簇唯一层与自然数同构
 
 ```agda
@@ -386,19 +377,4 @@ module OrdZeroIso where
 <-trans : Transitive (_<_ {k} {ℓ})
 <-trans {(zero)} = Fix.<-trans ⊤-wf
 <-trans {suc k} = Fix.<-trans ⊏-wf
-```
-
-## 层级的提升
-
-```agda
-mutual
-  lift : {a b : Lv (suc k)} → a < b → Ord a → Ord b
-  lift ab zero = zero
-  lift ab (suc α) = suc (lift ab α)
-  lift ab (lim xa f mᶠ) = lim (<-trans xa ab) (λ ν → lift ab (f $ ♮ ν)) (map lift-mono ∘ mᶠ ∘ coe⁻ ♮<⁻♮≡<⁻)
-
-  lift-mono : {a b : Lv (suc k)} {ab : a < b} {α β : Ord a} → α < β → _<_ {suc k} (lift ab α) (lift ab β)
-  lift-mono zero = zero
-  lift-mono (suc r) = suc (lift-mono r)
-  lift-mono (lim {f} r) = lim (lift-mono $ subst (λ x → _ < f x) (sym ♮♮) r)
 ```
