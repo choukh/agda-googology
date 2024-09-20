@@ -34,7 +34,7 @@ open import Cubical.HITs.PropositionalTruncation public
 
 ```agda
 open import Data.Nat public using (ℕ; zero; suc)
-open import Function public using (id; _∘_; _$_)
+open import Function public using (id; _∘_; _$_; _⟨_⟩_)
 open import Relation.Binary.Definitions public
 open import Relation.Binary.PropositionalEquality as Eq public
   using () renaming (_≡_ to _＝_; refl to rfl)
@@ -323,16 +323,16 @@ module _ {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} where
 ```agda
 module _ {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} where
   <-distrib-transp : (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) OrdP (_<⁻_ {aℓ = aℓ})
-  <-distrib-transp = J (λ _ eq → (λ α β → transport⁻ eq α <⁻ transport⁻ eq β) ≡ subst (λ A → A → A → Type) eq _<⁻_) refl OrdP
+  <-distrib-transp = J (λ _ p → (λ α β → transport⁻ p α <⁻ transport⁻ p β) ≡ subst (λ A → A → A → Type) p _<⁻_) refl OrdP
 
-  ♭-inj<⁻ : {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α <̇ β
-  ♭-inj<⁻ = funExt⁻ (funExt⁻ (<-distrib-transp ∙ fromPathP RoadP) _) _
+  ♭-inj< : {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α <̇ β
+  ♭-inj< = funExt⁻ (funExt⁻ (<-distrib-transp ∙ fromPathP RoadP) _) _
 
   ♯-inj< : {α β : Ord⁻ aℓ} → ♯ α <̇ ♯ β ≡ α <⁻ β
-  ♯-inj< {α} {β} = subst2 (λ x y → ♯ α <̇ ♯ β ≡ x <⁻ y) ♭♯ ♭♯ (sym ♭-inj<⁻)
+  ♯-inj< {α} {β} = subst2 (λ x y → ♯ α <̇ ♯ β ≡ x <⁻ y) ♭♯ ♭♯ (sym ♭-inj<)
 
-♮-inj<⁻ : {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮$ aℓ aℓ′ α <⁻ ♮ β ≡ α <⁻ β
-♮-inj<⁻ = ♭-inj<⁻ ∙ ♯-inj<
+♮-inj< : {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮$ aℓ aℓ′ α <⁻ ♮ β ≡ α <⁻ β
+♮-inj< = ♭-inj< ∙ ♯-inj<
 ```
 
 ### 极限的外延性
@@ -357,10 +357,10 @@ module _ {a ℓ : Lv (suc k)}
          where
 
   limExt : lim aℓᶠ f mᶠ ≡ lim aℓᵍ g mᵍ
-  limExt i = lim (squash₁ aℓᶠ aℓᵍ i) (λ ν → {!   !})
+  limExt i = lim (squash₁ aℓᶠ aℓᵍ i)
+    (λ ν → {!   !})
     {!   !}
 ```
-(J (λ _ op → f {! transport⁻ op  !} ≡ {!   !}) {!   !} (cong Ord⁻ (squash₁ {!   !} aℓᶠ)) ∙ {!   !})
 
 ### 层级的提升
 
@@ -377,7 +377,7 @@ lift-mono : {a b : Lv (suc k)} {ab : a ⊏ b} {α β : Ord a} → α < β → _<
 lift ab zero = zero
 lift ab (suc α) = suc (lift ab α)
 lift ab (lim {a = x} xa f mᶠ) = lim (map2 <-trans xa ab)
-  (λ ν → lift ab (f $ ♮ ν)) (map lift-mono ∘ mᶠ ∘ transport⁻ ♮-inj<⁻)
+  (λ ν → lift ab (f $ ♮ ν)) (map lift-mono ∘ mᶠ ∘ transport⁻ ♮-inj<)
 
 lift-mono zero = zero
 lift-mono (suc r) = suc (lift-mono r)
@@ -395,3 +395,5 @@ lift-comp {ab} {bc} {ac} {α = lim _ f _} = limExt λ _ →
   subst2 (λ x y → lift ac (f x) ≡ lift bc (lift ab (f y)))
     (♮-comp ∙ ♮-comp ∙ sym ♮-comp) refl lift-comp
 ```
+
+### 高阶 ω
