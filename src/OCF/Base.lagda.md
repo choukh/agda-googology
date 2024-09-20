@@ -326,7 +326,7 @@ module _ {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} where
   <-distrib-transp = J (λ _ p → (λ α β → transport⁻ p α <⁻ transport⁻ p β) ≡ subst (λ A → A → A → Type) p _<⁻_) refl OrdP
 
   ♭-inj< : {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α <̇ β
-  ♭-inj< = funExt⁻ (funExt⁻ (<-distrib-transp ∙ fromPathP RoadP) _) _
+  ♭-inj< = (<-distrib-transp ∙ fromPathP RoadP) ≡$ _ ≡$ _
 
   ♯-inj< : {α β : Ord⁻ aℓ} → ♯ α <̇ ♯ β ≡ α <⁻ β
   ♯-inj< {α} {β} = subst2 (λ x y → ♯ α <̇ ♯ β ≡ x <⁻ y) ♭♯ ♭♯ (sym ♭-inj<)
@@ -353,13 +353,12 @@ isPropMono {aℓ} {f} = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
 module _ {a ℓ : Lv (suc k)}
          {aℓᶠ : a ⊏ ℓ} {f : Ord⁻ aℓᶠ → Ord ℓ} {mᶠ : mono aℓᶠ f}
          {aℓᵍ : a ⊏ ℓ} {g : Ord⁻ aℓᵍ → Ord ℓ} {mᵍ : mono aℓᵍ g}
-         (p : {aℓ : a ⊏ ℓ} (ν : Ord⁻ aℓ) → f (♮ ν) ≡ g (♮ ν))
+         (p : (ν : Ord⁻ aℓᶠ) → f ν ≡ g (♮ ν))
          where
 
   limExt : lim aℓᶠ f mᶠ ≡ lim aℓᵍ g mᵍ
-  limExt i = lim (squash₁ aℓᶠ aℓᵍ i)
-    (λ ν → {!   !})
-    {!   !}
+  limExt with (pathToEq $ squash₁ aℓᶠ aℓᵍ)
+  ... | rfl = cong₂ (lim aℓᶠ) (funExt λ ν → subst (λ x → f ν ≡ g x) ♭♯ (p ν)) (toPathP $ isPropMono _ _)
 ```
 
 ### 层级的提升
@@ -392,8 +391,7 @@ lift-comp : {a b : Lv (suc k)} {ab : a ⊏ b} {bc : b ⊏ c} {ac : a ⊏ c} {α 
 lift-comp {α = zero} = refl
 lift-comp {α = suc α} = cong suc (lift-comp {α = α})
 lift-comp {ab} {bc} {ac} {α = lim _ f _} = limExt λ _ →
-  subst2 (λ x y → lift ac (f x) ≡ lift bc (lift ab (f y)))
-    (♮-comp ∙ ♮-comp ∙ sym ♮-comp) refl lift-comp
+  subst2 (λ x y → lift ac (f x) ≡ lift bc (lift ab (f y))) (♮-comp ∙ ♮-comp) refl lift-comp
 ```
 
 ### 高阶 ω
