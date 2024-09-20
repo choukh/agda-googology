@@ -195,6 +195,7 @@ pattern ssuc x = suc (suc x)
 ```agda
 Lv : ℕ → Type
 Ord : ∀ {k} → Lv k → Type
+IterΩ⁺ : ∀ k → Lv k
 ```
 
 ```agda
@@ -217,22 +218,8 @@ _<₁_ : Ord ℓ → Ord ℓ → Type; infix 6 _<₁_
 ```
 
 ```agda
-finLv  : ℕ → Lv k
-finOrd : ℕ → Ord ℓ
-
-open import Agda.Builtin.FromNat public
-instance
-  nNat : Number ℕ
-  nNat = record { Constraint = λ _ → ⊤ ; fromNat = λ n → n }
-  nLv : Number (Lv k)
-  nLv = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finLv n }
-  nOrd : Number (Ord ℓ)
-  nOrd = record { Constraint = λ _ → ⊤ ; fromNat = λ n → finOrd n }
-```
-
-```agda
 Lv zero    = ⊤
-Lv (suc k) = Ord {k} 1
+Lv (suc k) = Ord {k} (IterΩ⁺ k)
 
 ⊤-wf : WellFounded (λ (_ _ : ⊤) → ⊥)
 ⊤-wf _ = acc λ ()
@@ -245,21 +232,6 @@ _<_ {suc k}    = Fix._<_ <₁-wf
 
 <₁-wf {(zero)}  = Fix.<₁-wf ⊤-wf
 <₁-wf {suc k}   = Fix.<₁-wf <₁-wf
-```
-
-```agda
-finLv k@{zero}        _       = tt
-finLv k@{one}         zero    = zero
-finLv k@{one}         (suc n) = suc (finLv {k} n)
-finLv k@{suc (suc _)} zero    = zero
-finLv k@{suc (suc _)} (suc n) = suc (finLv {k} n)
-```
-
-```agda
-finOrd k@{zero}  zero    = zero
-finOrd k@{zero}  (suc n) = suc (finOrd {k} n)
-finOrd k@{suc _} zero    = zero
-finOrd k@{suc _} (suc n) = suc (finOrd {k} n)
 ```
 
 ### 变体表示
@@ -372,7 +344,9 @@ module _ {a ℓ : Lv (suc k)}
 ```agda
 lift : {a b : Lv (suc k)} → a ⊏ b → Ord a → Ord b
 lift-mono : {a b : Lv (suc k)} {ab : a ⊏ b} {α β : Ord a} → α < β → _<_ {suc k} (lift ab α) (lift ab β)
+```
 
+```agda
 lift ab zero = zero
 lift ab (suc α) = suc (lift ab α)
 lift ab (lim {a = x} xa f mᶠ) = lim (map2 <-trans xa ab)
@@ -395,3 +369,32 @@ lift-comp {ab} {bc} {ac} {α = lim _ f _} = limExt λ _ →
 ```
 
 ### 高阶 ω
+
+```agda
+Ω₀ : (ℓ : Lv zero) → Ord {zero} ℓ
+Ω₀ tt = zero
+
+Ω₁ : (ℓ : Lv one) → Ord {one} ℓ
+Ω₁ zero = zero
+Ω₁ (suc ℓ) = lim ∣ zero ∣₁ (λ ν → lift {zero} ∣ zero ∣₁ {! ♯ ν  !}) {!   !}
+```
+
+```agda
+Ω₊₊ : (ℓ : Lv (ssuc k)) → Ord {ssuc k} ℓ
+Ω₊₊ zero = zero
+Ω₊₊ (suc ℓ) = {!   !}
+Ω₊₊ (lim aℓ f mᶠ) = {!   !}
+```
+
+```agda
+Ω : ∀ k (ℓ : Lv k) → Ord ℓ
+Ω zero = Ω₀
+Ω one = Ω₁
+Ω (ssuc k) = Ω₊₊
+```
+
+```agda
+IterΩ⁺ zero = tt
+IterΩ⁺ one = suc (Ω zero (IterΩ⁺ zero))
+IterΩ⁺ (ssuc k) = suc (Ω (suc k) (IterΩ⁺ (suc k)))
+```
