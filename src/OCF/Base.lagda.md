@@ -376,13 +376,13 @@ lift-comp {ab} {bc} {ac} {α = lim _ f _} = limExt λ _ →
 
 Ω₁ : (ℓ : Lv one) → Ord {one} ℓ
 Ω₁ zero = zero
-Ω₁ (suc ℓ) = lim ∣ zero ∣₁ (λ ν → lift {zero} ∣ zero ∣₁ {! ♯ ν  !}) {!   !}
+Ω₁ (suc ℓ) = lim ∣ zero ∣₁ (λ ν → lift ∣ zero ∣₁ (♯ ν)) {!   !}
 ```
 
 ```agda
 Ω₊₊ : (ℓ : Lv (ssuc k)) → Ord {ssuc k} ℓ
 Ω₊₊ zero = zero
-Ω₊₊ (suc ℓ) = {!   !}
+Ω₊₊ (suc ℓ) = lim ∣ zero ∣₁ (λ ν → lift ∣ zero ∣₁ (♯ ν)) {!   !}
 Ω₊₊ (lim aℓ f mᶠ) = {!   !}
 ```
 
@@ -395,6 +395,6 @@ lift-comp {ab} {bc} {ac} {α = lim _ f _} = limExt λ _ →
 
 ```agda
 IterΩ⁺ zero = tt
-IterΩ⁺ one = suc (Ω zero (IterΩ⁺ zero))
-IterΩ⁺ (ssuc k) = suc (Ω (suc k) (IterΩ⁺ (suc k)))
+IterΩ⁺ one = {!   !} --suc (Ω zero (IterΩ⁺ zero))
+IterΩ⁺ (ssuc k) = {!   !} --suc (Ω (suc k) (IterΩ⁺ (suc k)))
 ```
