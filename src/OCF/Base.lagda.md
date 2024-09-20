@@ -206,6 +206,10 @@ variable
 
 ```agda
 _<_ : Ord ℓ → Ord ℓ → Type; infix 6 _<_
+
+_<̇_ : {ℓ : Lv (suc k)} → Ord ℓ → Ord ℓ → Type; infix 6 _<̇_
+α <̇ β = α < β
+
 _<₁_ : Ord ℓ → Ord ℓ → Type; infix 6 _<₁_
 α <₁ β = ∥ α < β ∥₁
 
@@ -301,16 +305,34 @@ module _ {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} where
 ```
 
 ```agda
-♮ : {a ℓ ℓ′ : Lv (suc k)} (from : a ⊏ ℓ) (to : a ⊏ ℓ′) → Ord⁻ from → Ord⁻ to
-♮ _ _ = ♭ ∘ ♯
+♮$ : {a ℓ ℓ′ : Lv (suc k)} (from : a ⊏ ℓ) (to : a ⊏ ℓ′) → Ord⁻ from → Ord⁻ to
+♮$ _ _ = ♭ ∘ ♯
+
+♮ : {a ℓ ℓ′ : Lv (suc k)} {from : a ⊏ ℓ} {to : a ⊏ ℓ′} → Ord⁻ from → Ord⁻ to
+♮ = ♮$ _ _
 
 ♮-comp : {a ℓ ℓ′ ℓ″ : Lv (suc k)} {p : a ⊏ ℓ} {q : a ⊏ ℓ′} {r : a ⊏ ℓ″} {α : Ord⁻ p}
-       → ♮ q r (♮ p q α) ≡ ♮ p r α
+       → ♮$ q r (♮$ p q α) ≡ ♮$ p r α
 ♮-comp = cong ♭ ♯♭
 
-♮-back : {a ℓ ℓ′ : Lv (suc k)} {from : a ⊏ ℓ} {to : a ⊏ ℓ′} {α : Ord⁻ from}
-      → ♮ to from (♮ from to α) ≡ α
-♮-back = ♮-comp ∙ ♭♯
+♮-invo : {a ℓ ℓ′ : Lv (suc k)} {from : a ⊏ ℓ} {to : a ⊏ ℓ′} {α : Ord⁻ from}
+      → ♮$ to from (♮$ from to α) ≡ α
+♮-invo = ♮-comp ∙ ♭♯
+```
+
+```agda
+module _ {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} where
+  <-distrib-transp : (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) OrdP (_<⁻_ {aℓ = aℓ})
+  <-distrib-transp = J (λ _ eq → (λ α β → transport⁻ eq α <⁻ transport⁻ eq β) ≡ subst (λ A → A → A → Type) eq _<⁻_) refl OrdP
+
+  ♭-inj<⁻ : {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α <̇ β
+  ♭-inj<⁻ = funExt⁻ (funExt⁻ (<-distrib-transp ∙ fromPathP RoadP) _) _
+
+  ♯-inj< : {α β : Ord⁻ aℓ} → ♯ α <̇ ♯ β ≡ α <⁻ β
+  ♯-inj< {α} {β} = subst2 (λ x y → ♯ α <̇ ♯ β ≡ x <⁻ y) ♭♯ ♭♯ (sym ♭-inj<⁻)
+
+♮-inj<⁻ : {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮$ aℓ aℓ′ α <⁻ ♮ β ≡ α <⁻ β
+♮-inj<⁻ = ♭-inj<⁻ ∙ ♯-inj<
 ```
 
 ### 极限的外延性
@@ -331,7 +353,7 @@ isPropMono {aℓ} {f} = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
 module _ {a ℓ : Lv (suc k)}
          {aℓᶠ : a ⊏ ℓ} {f : Ord⁻ aℓᶠ → Ord ℓ} {mᶠ : mono aℓᶠ f}
          {aℓᵍ : a ⊏ ℓ} {g : Ord⁻ aℓᵍ → Ord ℓ} {mᵍ : mono aℓᵍ g}
-         (p : {aℓ : a ⊏ ℓ} (ν : Ord⁻ aℓ) → f (♮ aℓ aℓᶠ ν) ≡ g (♮ aℓ aℓᵍ ν))
+         (p : {aℓ : a ⊏ ℓ} (ν : Ord⁻ aℓ) → f (♮ ν) ≡ g (♮ ν))
          where
 
   limExt : lim aℓᶠ f mᶠ ≡ lim aℓᵍ g mᵍ
@@ -340,7 +362,7 @@ module _ {a ℓ : Lv (suc k)}
 ```
 (J (λ _ op → f {! transport⁻ op  !} ≡ {!   !}) {!   !} (cong Ord⁻ (squash₁ {!   !} aℓᶠ)) ∙ {!   !})
 
-## 层级的提升
+### 层级的提升
 
 ```agda
 <-trans : Transitive (_<_ {k} {ℓ})
@@ -354,11 +376,12 @@ lift-mono : {a b : Lv (suc k)} {ab : a ⊏ b} {α β : Ord a} → α < β → _<
 
 lift ab zero = zero
 lift ab (suc α) = suc (lift ab α)
-lift ab (lim xa f mᶠ) = lim (map2 <-trans xa ab) (λ ν → lift ab (f $ ♮ _ _ ν)) (map lift-mono ∘ mᶠ ∘ transport⁻ {!   !})
+lift ab (lim {a = x} xa f mᶠ) = lim (map2 <-trans xa ab)
+  (λ ν → lift ab (f $ ♮ ν)) (map lift-mono ∘ mᶠ ∘ transport⁻ ♮-inj<⁻)
 
 lift-mono zero = zero
 lift-mono (suc r) = suc (lift-mono r)
-lift-mono {k} (lim {f} r) = lim (lift-mono $ subst⁻ (λ x → _<_ {suc k} _ (f x)) ♮-back r)
+lift-mono (lim {f} r) = lim (lift-mono $ subst⁻ (λ x → _ <̇ f x) ♮-invo r)
 ```
 
 提升的复合
