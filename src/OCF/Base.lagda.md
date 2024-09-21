@@ -371,30 +371,17 @@ lift-comp {ab} {bc} {ac} {α = lim _ f _} = limExt λ _ →
 ### 高阶 ω
 
 ```agda
-Ω₀ : (ℓ : Lv zero) → Ord {zero} ℓ
-Ω₀ tt = zero
-
-Ω₁ : (ℓ : Lv one) → Ord {one} ℓ
-Ω₁ zero = zero
-Ω₁ (suc ℓ) = lim ∣ zero ∣₁ (λ ν → lift ∣ zero ∣₁ (♯ ν)) {!   !}
-```
-
-```agda
-Ω₊₊ : (ℓ : Lv (ssuc k)) → Ord {ssuc k} ℓ
-Ω₊₊ zero = zero
-Ω₊₊ (suc ℓ) = lim ∣ zero ∣₁ (λ ν → lift ∣ zero ∣₁ (♯ ν)) {!   !}
-Ω₊₊ (lim aℓ f mᶠ) = {!   !}
-```
-
-```agda
 Ω : ∀ k (ℓ : Lv k) → Ord ℓ
-Ω zero = Ω₀
-Ω one = Ω₁
-Ω (ssuc k) = Ω₊₊
+Ω zero tt = zero
+Ω one zero = zero
+Ω one (suc ℓ) = lim ∣ zero ∣₁ (λ ν → lift ∣ zero ∣₁ {!   !}) {!   !}
+Ω (ssuc k) zero = zero
+Ω (ssuc k) (suc ℓ) = {!   !} --lim ∣ zero ∣₁ (λ ν → lift ∣ zero ∣₁ (♯ ν)) {!   !}
+Ω (ssuc k) (lim aℓ f mᶠ) = {!   !}
 ```
 
 ```agda
 IterΩ⁺ zero = tt
-IterΩ⁺ one = {!   !} --suc (Ω zero (IterΩ⁺ zero))
-IterΩ⁺ (ssuc k) = {!   !} --suc (Ω (suc k) (IterΩ⁺ (suc k)))
+IterΩ⁺ one = suc (Ω zero (IterΩ⁺ zero))
+IterΩ⁺ (ssuc k) = suc (Ω (suc k) (IterΩ⁺ (suc k)))
 ```
