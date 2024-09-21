@@ -75,7 +75,7 @@ record LevelStruct : Type₁ where
 ## 层级
 
 ```agda
-module Hierarchy (L : LevelStruct) where
+module Hierarchy {L : LevelStruct} where
   open LevelStruct L
   private variable
     a b ℓ ℓ′ ℓ″ : Lv
@@ -291,8 +291,7 @@ module Hierarchy (L : LevelStruct) where
 ```
 
 ```agda
-open LevelStruct
-open Hierarchy using (zero; suc; lim) public
+open Hierarchy using (zero; suc; lim; lift; ♯) public
 pattern one = suc zero
 pattern ssuc x = suc (suc x)
 ```
@@ -300,8 +299,8 @@ pattern ssuc x = suc (suc x)
 ## 层级族
 
 ```agda
-UnitLvStr : LevelStruct
-UnitLvStr = record
+unitLvStr : LevelStruct
+unitLvStr = record
   { Lv = ⊤
   ; _⊏_ = λ _ _ → ⊥
   ; ⊏-wf = λ _ → acc λ ()
@@ -310,53 +309,76 @@ UnitLvStr = record
 ```
 
 ```agda
-NextLvStr : (L : LevelStruct) (ℓ : L .Lv) → LevelStruct
-NextLvStr L ℓ = record
+nextLvStr : (L : LevelStruct) (ℓ : LevelStruct.Lv L) → LevelStruct
+nextLvStr L ℓ = record
   { Lv = Ord ℓ
   ; _⊏_ = _<₁_
   ; ⊏-wf = <₁-wf
   ; ⊏-trans = map2 <-trans
   ; ⊏-prop = squash₁ }
-  where open Hierarchy L
+  where open Hierarchy {L}
 ```
 
 ```agda
 LvStr : ℕ → LevelStruct
-IterΩ⁺ : ∀ k → LvStr k .Lv
-variable
-  k : ℕ
-  ℓ : LvStr k .Lv
+
+Lv : ℕ → Type
+Lv k = LevelStruct.Lv (LvStr k)
+variable k : ℕ; ℓ : Lv k
+
+_⊏_ : Lv k → Lv k → Type; infix 6 _⊏_
+_⊏_ {k} = LevelStruct._⊏_ (LvStr k)
 ```
 
 ```agda
-LvStr zero = UnitLvStr
-LvStr (suc k) = NextLvStr (LvStr k) (IterΩ⁺ k)
+iterΩ⁺ : ∀ k → Lv k
+
+LvStr zero = unitLvStr
+LvStr (suc k) = nextLvStr (LvStr k) (iterΩ⁺ k)
 ```
 
 ```agda
-OrdStr : ∀ k → LvStr k .Lv → OrderStruct
-OrdStr zero = Hierarchy.OrdStr (LvStr zero)
-OrdStr (suc k) = Hierarchy.OrdStr (LvStr (suc k))
-```
+OrdStr : ∀ k → Lv k → OrderStruct
+OrdStr k = Hierarchy.OrdStr {LvStr k}
 
-```agda
-Ord : LvStr k .Lv → Type
+Ord : Lv k → Type
 Ord ℓ = OrdStr _ ℓ .fst
-private variable α β : Ord ℓ
+
+_<_ : {ℓ : Lv k} → Ord ℓ → Ord ℓ → Type; infix 6 _<_
+_<_ {ℓ} = OrdStr _ ℓ .snd
+
+_<₁_ : {ℓ : Lv k} → Ord ℓ → Ord ℓ → Type; infix 6 _<₁_
+_<₁_ = Hierarchy._<₁_
 ```
 
 ```agda
-Ω : ∀ k (ℓ : LvStr k .Lv) → Ord ℓ
+OrdStr⁻ : {a ℓ : Lv k} → a ⊏ ℓ → OrderStruct
+OrdStr⁻ {k} aℓ = Hierarchy.OrdStr⁻ {LvStr k} aℓ
+
+Ord⁻ : {a ℓ : Lv k} → a ⊏ ℓ → Type
+Ord⁻ aℓ = OrdStr⁻ aℓ .fst
+
+_<⁻_ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type; infix 6 _<⁻_
+_<⁻_ {aℓ} = OrdStr⁻ aℓ .snd
+```
+
+```agda
+Ω : ∀ k (ℓ : Lv k) → Ord ℓ
+Ω-mono-suc : {a : Lv (suc k)} {ν μ : Ord⁻ {suc k} {a} ∣ zero ∣₁}
+  → ν <⁻ μ → lift ∣ zero ∣₁ (♯ ν) <₁ lift ∣ zero ∣₁ (♯ μ)
+
 Ω zero ℓ = zero
 Ω one zero = zero
-Ω one (suc ℓ) = lim ∣ zero ∣₁ (λ ν → Hierarchy.lift _ ∣ zero ∣₁ (Hierarchy.♯ _ ν)) {!   !}
+Ω one (suc ℓ) = lim ∣ zero ∣₁ (λ ν → lift ∣ zero ∣₁ (♯ ν)) Ω-mono-suc
 Ω (ssuc k) zero = zero
-Ω (ssuc k) (suc ℓ) = lim ∣ zero ∣₁ (λ ν → Hierarchy.lift _ ∣ zero ∣₁ (Hierarchy.♯ _ ν)) {!   !}
+Ω (ssuc k) (suc ℓ) = lim ∣ zero ∣₁ (λ ν → lift ∣ zero ∣₁ (♯ ν)) Ω-mono-suc
 Ω (ssuc k) (lim aℓ f mᶠ) = {!   !}
+
+Ω-mono-suc = {!   !}
 ```
 
 ```agda
-IterΩ⁺ zero = tt
-IterΩ⁺ one = suc (Ω zero (IterΩ⁺ zero))
-IterΩ⁺ (ssuc k) = suc (Ω (suc k) (IterΩ⁺ (suc k)))
+iterΩ⁺ zero = tt
+iterΩ⁺ one = suc (Ω zero (iterΩ⁺ zero))
+iterΩ⁺ (ssuc k) = suc (Ω (suc k) (iterΩ⁺ (suc k)))
 ```
