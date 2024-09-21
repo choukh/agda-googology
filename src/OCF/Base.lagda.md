@@ -290,13 +290,22 @@ module Hierarchy {L : LevelStruct} where
   lift-mono (lim {f} r) = lim (lift-mono $ subst⁻ (λ x → _ < f x) ♮-invo r)
 ```
 
+### 高阶 ω
+
 ```agda
-open Hierarchy using (zero; suc; lim; lift; ♯) public
+  Ω : (ℓ : Lv) → Ord ℓ
+  Ω ℓ = {!   !}
+```
+
+```agda
+open Hierarchy using (zero; suc; lim; Ω) public
 pattern one = suc zero
 pattern ssuc x = suc (suc x)
 ```
 
 ## 层级族
+
+### 互递归定义
 
 ```agda
 unitLvStr : LevelStruct
@@ -320,21 +329,25 @@ nextLvStr L ℓ = record
 ```
 
 ```agda
-LvStr : ℕ → LevelStruct
+mutual
+  LvStr : ℕ → LevelStruct
+  LvStr zero    = unitLvStr
+  LvStr (suc k) = nextLvStr (LvStr k) (iterΩ⁺ k)
 
+  iterΩ⁺ : ∀ k → LevelStruct.Lv (LvStr k)
+  iterΩ⁺ zero    = tt
+  iterΩ⁺ (suc k) = Ω (iterΩ⁺ k)
+```
+
+### 概念实例化
+
+```agda
 Lv : ℕ → Type
 Lv k = LevelStruct.Lv (LvStr k)
 variable k : ℕ; ℓ : Lv k
 
 _⊏_ : Lv k → Lv k → Type; infix 6 _⊏_
 _⊏_ {k} = LevelStruct._⊏_ (LvStr k)
-```
-
-```agda
-iterΩ⁺ : ∀ k → Lv k
-
-LvStr zero = unitLvStr
-LvStr (suc k) = nextLvStr (LvStr k) (iterΩ⁺ k)
 ```
 
 ```agda
@@ -360,25 +373,4 @@ Ord⁻ aℓ = OrdStr⁻ aℓ .fst
 
 _<⁻_ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type; infix 6 _<⁻_
 _<⁻_ {aℓ} = OrdStr⁻ aℓ .snd
-```
-
-```agda
-Ω : ∀ k (ℓ : Lv k) → Ord ℓ
-Ω-mono-suc : {a : Lv (suc k)} {ν μ : Ord⁻ {suc k} {a} ∣ zero ∣₁}
-  → ν <⁻ μ → lift ∣ zero ∣₁ (♯ ν) <₁ lift ∣ zero ∣₁ (♯ μ)
-
-Ω zero ℓ = zero
-Ω one zero = zero
-Ω one (suc ℓ) = lim ∣ zero ∣₁ (λ ν → lift ∣ zero ∣₁ (♯ ν)) Ω-mono-suc
-Ω (ssuc k) zero = zero
-Ω (ssuc k) (suc ℓ) = lim ∣ zero ∣₁ (λ ν → lift ∣ zero ∣₁ (♯ ν)) Ω-mono-suc
-Ω (ssuc k) (lim aℓ f mᶠ) = {!   !}
-
-Ω-mono-suc = {!   !}
-```
-
-```agda
-iterΩ⁺ zero = tt
-iterΩ⁺ one = suc (Ω zero (iterΩ⁺ zero))
-iterΩ⁺ (ssuc k) = suc (Ω (suc k) (iterΩ⁺ (suc k)))
 ```
