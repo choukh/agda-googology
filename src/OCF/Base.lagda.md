@@ -323,6 +323,9 @@ NextLvStr L ℓ = record
 ```agda
 LvStr : ℕ → LevelStruct
 IterΩ⁺ : ∀ k → LvStr k .Lv
+variable
+  k : ℕ
+  ℓ : LvStr k .Lv
 ```
 
 ```agda
@@ -334,6 +337,22 @@ LvStr (suc k) = NextLvStr (LvStr k) (IterΩ⁺ k)
 OrdStr : ∀ k → LvStr k .Lv → OrderStruct
 OrdStr zero = Hierarchy.OrdStr (LvStr zero)
 OrdStr (suc k) = Hierarchy.OrdStr (LvStr (suc k))
+```
+
+```agda
+Ord : LvStr k .Lv → Type
+Ord ℓ = OrdStr _ ℓ .fst
+private variable α β : Ord ℓ
+```
+
+```agda
+Ω : ∀ k (ℓ : LvStr k .Lv) → Ord ℓ
+Ω zero ℓ = zero
+Ω one zero = zero
+Ω one (suc ℓ) = lim ∣ zero ∣₁ (λ ν → Hierarchy.lift _ ∣ zero ∣₁ (Hierarchy.♯ _ ν)) {!   !}
+Ω (ssuc k) zero = zero
+Ω (ssuc k) (suc ℓ) = {!   !}
+Ω (ssuc k) (lim aℓ f mᶠ) = {!   !}
 ```
 
 ```agda
