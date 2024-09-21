@@ -351,12 +351,12 @@ private variable α β : Ord ℓ
 Ω one zero = zero
 Ω one (suc ℓ) = lim ∣ zero ∣₁ (λ ν → Hierarchy.lift _ ∣ zero ∣₁ (Hierarchy.♯ _ ν)) {!   !}
 Ω (ssuc k) zero = zero
-Ω (ssuc k) (suc ℓ) = {!   !}
+Ω (ssuc k) (suc ℓ) = lim ∣ zero ∣₁ (λ ν → Hierarchy.lift _ ∣ zero ∣₁ (Hierarchy.♯ _ ν)) {!   !}
 Ω (ssuc k) (lim aℓ f mᶠ) = {!   !}
 ```
 
 ```agda
 IterΩ⁺ zero = tt
-IterΩ⁺ one = {!   !}
-IterΩ⁺ (ssuc k) = {!   !}
+IterΩ⁺ one = suc (Ω zero (IterΩ⁺ zero))
+IterΩ⁺ (ssuc k) = suc (Ω (suc k) (IterΩ⁺ (suc k)))
 ```
