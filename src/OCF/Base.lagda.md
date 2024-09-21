@@ -1,9 +1,9 @@
 ---
-title: 形式化大数数学 (3.0 - 高阶递归序数层级)
+title: 形式化大数数学 (3.0 - 高阶递归序数)
 zhihu-tags: Agda, 大数数学, 序数
 ---
 
-# 形式化大数数学 (3.0 - 高阶递归序数层级)
+# 形式化大数数学 (3.0 - 高阶递归序数)
 
 > 交流Q群: 893531731  
 > 本文源码: [Base.lagda.md](httrsps://github.com/choukh/agda-googology/blob/main/src/OCF/Base.lagda.md)  
@@ -51,18 +51,34 @@ open import Bridged.Data.Unit public using (⊤; tt; isProp⊤)
 open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```
 
+## 基本结构
+
 **定义** 序结构
 
 ```agda
+OrderStruct : Type₁
 OrderStruct = Σ Type λ A → A → A → Type
+```
+
+**定义** 等级结构
+
+```agda
+record LevelStruct : Type₁ where
+  field
+    Lv : Type
+    _⊏_ : Lv → Lv → Type
+    ⊏-wf : WellFounded _⊏_
+    ⊏-trans : Transitive _⊏_
+    ⊏-prop : ∀ {a b} → isProp (a ⊏ b)
 ```
 
 ## 层级
 
 ```agda
-module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_) where
+module Hierarchy (L : LevelStruct) where
+  open LevelStruct L
   private variable
-    a b ℓ ℓ′ : Lv
+    a b ℓ ℓ′ ℓ″ : Lv
     aℓ : a ⊏ ℓ
 ```
 
@@ -140,17 +156,89 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
 ```
 
 ```agda
-  opaque
-    OrdStrP : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ ≡ OrdStr a
-    OrdStrP = eqToPath $ FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
-      cong (O.A ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
-      cong (O.R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
+  module _ {aℓ : a ⊏ ℓ} where
+    opaque
+      OrdStrP : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ ≡ OrdStr a
+      OrdStrP = eqToPath $ FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
+        cong (O.A ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
+        cong (O.R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
 
-  OrdP : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
-  OrdP = PathPΣ OrdStrP .fst
+    OrdP : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
+    OrdP = PathPΣ OrdStrP .fst
 
-  RoadP : {aℓ : a ⊏ ℓ} → PathP (λ i → OrdP i → OrdP i → Type) (_<⁻_ {aℓ = aℓ}) _<_
-  RoadP = PathPΣ OrdStrP .snd
+    RoadP : {aℓ : a ⊏ ℓ} → PathP (λ i → OrdP i → OrdP i → Type) (_<⁻_ {aℓ = aℓ}) _<_
+    RoadP = PathPΣ OrdStrP .snd
+```
+
+```agda
+    ♯ : Ord⁻ aℓ → Ord a
+    ♯ = transport OrdP
+
+    ♭ : Ord a → Ord⁻ aℓ
+    ♭ = transport⁻ OrdP
+
+    ♭♯ : {α : Ord⁻ aℓ} → ♭ (♯ α) ≡ α
+    ♭♯ = transport⁻Transport _ _
+
+    ♯♭ : {α : Ord a} → ♯ (♭ α) ≡ α
+    ♯♭ = transportTransport⁻ _ _
+```
+
+```agda
+  ♮$ : (from : a ⊏ ℓ) (to : a ⊏ ℓ′) → Ord⁻ from → Ord⁻ to
+  ♮$ _ _ = ♭ ∘ ♯
+
+  ♮ : {from : a ⊏ ℓ} {to : a ⊏ ℓ′} → Ord⁻ from → Ord⁻ to
+  ♮ = ♮$ _ _
+
+  ♮-comp : {p : a ⊏ ℓ} {q : a ⊏ ℓ′} {r : a ⊏ ℓ″} {α : Ord⁻ p}
+        → ♮$ q r (♮$ p q α) ≡ ♮$ p r α
+  ♮-comp = cong ♭ ♯♭
+
+  ♮-invo : {from : a ⊏ ℓ} {to : a ⊏ ℓ′} {α : Ord⁻ from}
+        → ♮$ to from (♮$ from to α) ≡ α
+  ♮-invo = ♮-comp ∙ ♭♯
+```
+
+```agda
+  module _ {aℓ : a ⊏ ℓ} where
+    <-distrib-transp : (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) OrdP (_<⁻_ {aℓ = aℓ})
+    <-distrib-transp = J (λ _ p → (λ α β → transport⁻ p α <⁻ transport⁻ p β) ≡ subst (λ A → A → A → Type) p _<⁻_) refl OrdP
+
+    ♭-inj< : {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
+    ♭-inj< = (<-distrib-transp ∙ fromPathP RoadP) ≡$ _ ≡$ _
+
+    ♯-inj< : {α β : Ord⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
+    ♯-inj< {α} {β} = subst2 (λ x y → ♯ α < ♯ β ≡ x <⁻ y) ♭♯ ♭♯ (sym ♭-inj<)
+
+  ♮-inj< : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮$ aℓ aℓ′ α <⁻ ♮ β ≡ α <⁻ β
+  ♮-inj< = ♭-inj< ∙ ♯-inj<
+```
+
+### 极限的外延性
+
+```agda
+  Seq : (aℓ : a ⊏ ℓ) → Type
+  Seq {ℓ} aℓ = Ord⁻ aℓ → Ord ℓ
+  variable f g : Seq aℓ
+
+  mono : (aℓ : a ⊏ ℓ) → Seq aℓ → Type
+  mono aℓ f = ∀ {ν μ} → ν <⁻ μ → f ν <₁ f μ
+
+  mono-prop : isProp (mono aℓ f)
+  mono-prop {aℓ} {f} = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
+```
+
+```agda
+  module _ 
+          {aℓᶠ : a ⊏ ℓ} {f : Ord⁻ aℓᶠ → Ord ℓ} {mᶠ : mono aℓᶠ f}
+          {aℓᵍ : a ⊏ ℓ} {g : Ord⁻ aℓᵍ → Ord ℓ} {mᵍ : mono aℓᵍ g}
+          (p : (ν : Ord⁻ aℓᶠ) → f ν ≡ g (♮ ν))
+          where
+
+    limExt : lim aℓᶠ f mᶠ ≡ lim aℓᵍ g mᵍ
+    limExt with (pathToEq $ ⊏-prop aℓᶠ aℓᵍ)
+    ... | rfl = cong₂ (O.A.lim aℓᶠ) (funExt λ ν → subst (λ x → f ν ≡ g x) ♭♯ (p ν)) (toPathP $ mono-prop _ _)
 ```
 
 ### 路径的良基性
@@ -184,204 +272,72 @@ module Fix {Lv : Type} {_⊏_ : Lv → Lv → Type} (⊏-wf : WellFounded _⊏_)
   <₁-wf _ = <₁-acc ∣ zero ∣₁
 ```
 
+### 层级的提升
+
 ```agda
-open Fix using (zero; suc; lim) public
+  lift : a ⊏ b → Ord a → Ord b
+  lift-mono : {ab : a ⊏ b} {α β : Ord a} → α < β → lift ab α < lift ab β
+```
+
+```agda
+  lift ab zero = zero
+  lift ab (suc α) = suc (lift ab α)
+  lift ab (lim {a = x} xa f mᶠ) = lim (⊏-trans xa ab)
+    (λ ν → lift ab (f $ ♮ ν)) (map lift-mono ∘ mᶠ ∘ transport⁻ ♮-inj<)
+
+  lift-mono zero = zero
+  lift-mono (suc r) = suc (lift-mono r)
+  lift-mono (lim {f} r) = lim (lift-mono $ subst⁻ (λ x → _ < f x) ♮-invo r)
+```
+
+```agda
+open LevelStruct
+open Hierarchy using (zero; suc; lim) public
 pattern one = suc zero
 pattern ssuc x = suc (suc x)
 ```
 
-## 层级簇
+## 层级族
 
 ```agda
-Lv : ℕ → Type
-Ord : ∀ {k} → Lv k → Type
-IterΩ⁺ : ∀ k → Lv k
+UnitLvStr : LevelStruct
+UnitLvStr = record
+  { Lv = ⊤
+  ; _⊏_ = λ _ _ → ⊥
+  ; ⊏-wf = λ _ → acc λ ()
+  ; ⊏-trans = λ ()
+  ; ⊏-prop = isProp⊥ }
 ```
 
 ```agda
-variable
-  k n m : ℕ
-  a b c ℓ ℓ′ : Lv k
-  α β : Ord ℓ
+NextLvStr : (L : LevelStruct) (ℓ : L .Lv) → LevelStruct
+NextLvStr L ℓ = record
+  { Lv = Ord ℓ
+  ; _⊏_ = _<₁_
+  ; ⊏-wf = <₁-wf
+  ; ⊏-trans = map2 <-trans
+  ; ⊏-prop = squash₁ }
+  where open Hierarchy L
 ```
 
 ```agda
-_<_ : Ord ℓ → Ord ℓ → Type; infix 6 _<_
-
-_<̇_ : {ℓ : Lv (suc k)} → Ord ℓ → Ord ℓ → Type; infix 6 _<̇_
-α <̇ β = α < β
-
-_<₁_ : Ord ℓ → Ord ℓ → Type; infix 6 _<₁_
-α <₁ β = ∥ α < β ∥₁
-
-<₁-wf : WellFounded (_<₁_ {k} {ℓ})
+LvStr : ℕ → LevelStruct
+IterΩ⁺ : ∀ k → LvStr k .Lv
 ```
 
 ```agda
-Lv zero    = ⊤
-Lv (suc k) = Ord {k} (IterΩ⁺ k)
-
-⊤-wf : WellFounded (λ (_ _ : ⊤) → ⊥)
-⊤-wf _ = acc λ ()
-
-Ord {(zero)}   = Fix.Ord ⊤-wf
-Ord {suc k}    = Fix.Ord <₁-wf
-
-_<_ {(zero)}   = Fix._<_ ⊤-wf
-_<_ {suc k}    = Fix._<_ <₁-wf
-
-<₁-wf {(zero)}  = Fix.<₁-wf ⊤-wf
-<₁-wf {suc k}   = Fix.<₁-wf <₁-wf
-```
-
-### 变体表示
-
-```agda
-_⊏_ : ∀ {k} → Lv k → Lv k → Type; infix 6 _⊏_
-_⊏_ {(zero)} a b = ⊥
-_⊏_ {suc k} = _<₁_
-variable aℓ : a ⊏ ℓ
-
-⊏-wf : WellFounded (_⊏_ {k})
-⊏-wf {(zero)} = ⊤-wf
-⊏-wf {suc k} = <₁-wf
+LvStr zero = UnitLvStr
+LvStr (suc k) = NextLvStr (LvStr k) (IterΩ⁺ k)
 ```
 
 ```agda
-Ord⁻ : {a ℓ : Lv k} → a ⊏ ℓ → Type
-Ord⁻ = Fix.Ord⁻ ⊏-wf
-
-_<⁻_ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type; infix 6 _<⁻_
-_<⁻_ = Fix._<⁻_ ⊏-wf
-```
-
-```agda
-module _ {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} where
-  OrdP : Ord⁻ aℓ ≡ Ord a
-  OrdP = Fix.OrdP ⊏-wf
-
-  RoadP : PathP (λ i → OrdP i → OrdP i → Type) (_<⁻_ {aℓ = aℓ}) (_<_ {ℓ = a})
-  RoadP = Fix.RoadP ⊏-wf
-
-  ♯ : Ord⁻ aℓ → Ord a
-  ♯ = transport OrdP
-
-  ♭ : Ord a → Ord⁻ aℓ
-  ♭ = transport⁻ OrdP
-
-  ♭♯ : {α : Ord⁻ aℓ} → ♭ (♯ α) ≡ α
-  ♭♯ = transport⁻Transport _ _
-
-  ♯♭ : {α : Ord a} → ♯ (♭ α) ≡ α
-  ♯♭ = transportTransport⁻ _ _
-```
-
-```agda
-♮$ : {a ℓ ℓ′ : Lv (suc k)} (from : a ⊏ ℓ) (to : a ⊏ ℓ′) → Ord⁻ from → Ord⁻ to
-♮$ _ _ = ♭ ∘ ♯
-
-♮ : {a ℓ ℓ′ : Lv (suc k)} {from : a ⊏ ℓ} {to : a ⊏ ℓ′} → Ord⁻ from → Ord⁻ to
-♮ = ♮$ _ _
-
-♮-comp : {a ℓ ℓ′ ℓ″ : Lv (suc k)} {p : a ⊏ ℓ} {q : a ⊏ ℓ′} {r : a ⊏ ℓ″} {α : Ord⁻ p}
-       → ♮$ q r (♮$ p q α) ≡ ♮$ p r α
-♮-comp = cong ♭ ♯♭
-
-♮-invo : {a ℓ ℓ′ : Lv (suc k)} {from : a ⊏ ℓ} {to : a ⊏ ℓ′} {α : Ord⁻ from}
-      → ♮$ to from (♮$ from to α) ≡ α
-♮-invo = ♮-comp ∙ ♭♯
-```
-
-```agda
-module _ {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} where
-  <-distrib-transp : (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) OrdP (_<⁻_ {aℓ = aℓ})
-  <-distrib-transp = J (λ _ p → (λ α β → transport⁻ p α <⁻ transport⁻ p β) ≡ subst (λ A → A → A → Type) p _<⁻_) refl OrdP
-
-  ♭-inj< : {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α <̇ β
-  ♭-inj< = (<-distrib-transp ∙ fromPathP RoadP) ≡$ _ ≡$ _
-
-  ♯-inj< : {α β : Ord⁻ aℓ} → ♯ α <̇ ♯ β ≡ α <⁻ β
-  ♯-inj< {α} {β} = subst2 (λ x y → ♯ α <̇ ♯ β ≡ x <⁻ y) ♭♯ ♭♯ (sym ♭-inj<)
-
-♮-inj< : {a ℓ : Lv (suc k)} {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮$ aℓ aℓ′ α <⁻ ♮ β ≡ α <⁻ β
-♮-inj< = ♭-inj< ∙ ♯-inj<
-```
-
-### 极限的外延性
-
-```agda
-Seq : {a ℓ : Lv k} (aℓ : a ⊏ ℓ) → Type
-Seq {ℓ} aℓ = Ord⁻ aℓ → Ord ℓ
-variable f g : Seq aℓ
-
-mono : {a ℓ : Lv k} (aℓ : a ⊏ ℓ) → Seq aℓ → Type
-mono aℓ f = ∀ {ν μ} → ν <⁻ μ → f ν <₁ f μ
-
-isPropMono : isProp (mono aℓ f)
-isPropMono {aℓ} {f} = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
-```
-
-```agda
-module _ {a ℓ : Lv (suc k)}
-         {aℓᶠ : a ⊏ ℓ} {f : Ord⁻ aℓᶠ → Ord ℓ} {mᶠ : mono aℓᶠ f}
-         {aℓᵍ : a ⊏ ℓ} {g : Ord⁻ aℓᵍ → Ord ℓ} {mᵍ : mono aℓᵍ g}
-         (p : (ν : Ord⁻ aℓᶠ) → f ν ≡ g (♮ ν))
-         where
-
-  limExt : lim aℓᶠ f mᶠ ≡ lim aℓᵍ g mᵍ
-  limExt with (pathToEq $ squash₁ aℓᶠ aℓᵍ)
-  ... | rfl = cong₂ (lim aℓᶠ) (funExt λ ν → subst (λ x → f ν ≡ g x) ♭♯ (p ν)) (toPathP $ isPropMono _ _)
-```
-
-### 层级的提升
-
-```agda
-<-trans : Transitive (_<_ {k} {ℓ})
-<-trans {(zero)} = Fix.<-trans ⊤-wf
-<-trans {suc k} = Fix.<-trans ⊏-wf
-```
-
-```agda
-lift : {a b : Lv (suc k)} → a ⊏ b → Ord a → Ord b
-lift-mono : {a b : Lv (suc k)} {ab : a ⊏ b} {α β : Ord a} → α < β → _<_ {suc k} (lift ab α) (lift ab β)
-```
-
-```agda
-lift ab zero = zero
-lift ab (suc α) = suc (lift ab α)
-lift ab (lim {a = x} xa f mᶠ) = lim (map2 <-trans xa ab)
-  (λ ν → lift ab (f $ ♮ ν)) (map lift-mono ∘ mᶠ ∘ transport⁻ ♮-inj<)
-
-lift-mono zero = zero
-lift-mono (suc r) = suc (lift-mono r)
-lift-mono (lim {f} r) = lim (lift-mono $ subst⁻ (λ x → _ <̇ f x) ♮-invo r)
-```
-
-提升的复合
-
-```agda
-lift-comp : {a b : Lv (suc k)} {ab : a ⊏ b} {bc : b ⊏ c} {ac : a ⊏ c} {α : Ord a}
-          → lift ac α ≡ lift bc (lift ab α)
-lift-comp {α = zero} = refl
-lift-comp {α = suc α} = cong suc (lift-comp {α = α})
-lift-comp {ab} {bc} {ac} {α = lim _ f _} = limExt λ _ →
-  subst2 (λ x y → lift ac (f x) ≡ lift bc (lift ab (f y))) (♮-comp ∙ ♮-comp) refl lift-comp
-```
-
-### 高阶 ω
-
-```agda
-Ω : ∀ k (ℓ : Lv k) → Ord ℓ
-Ω zero tt = zero
-Ω one zero = zero
-Ω one (suc ℓ) = lim ∣ zero ∣₁ (λ ν → lift ∣ zero ∣₁ {!   !}) {!   !}
-Ω (ssuc k) zero = zero
-Ω (ssuc k) (suc ℓ) = {!   !} --lim ∣ zero ∣₁ (λ ν → lift ∣ zero ∣₁ (♯ ν)) {!   !}
-Ω (ssuc k) (lim aℓ f mᶠ) = {!   !}
+OrdStr : ∀ k → LvStr k .Lv → OrderStruct
+OrdStr zero = Hierarchy.OrdStr (LvStr zero)
+OrdStr (suc k) = Hierarchy.OrdStr (LvStr (suc k))
 ```
 
 ```agda
 IterΩ⁺ zero = tt
-IterΩ⁺ one = suc (Ω zero (IterΩ⁺ zero))
-IterΩ⁺ (ssuc k) = suc (Ω (suc k) (IterΩ⁺ (suc k)))
+IterΩ⁺ one = {!   !}
+IterΩ⁺ (ssuc k) = {!   !}
 ```
