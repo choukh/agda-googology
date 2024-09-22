@@ -129,20 +129,20 @@ module Hierarchy {L : LevelStruct} where
   module _ where
     open WF.All ⊏-wf
 
-    UStr⁻ : a ⊏ ℓ → OrderStruct
-    UStr⁻ = wfRecBuilder _ _ (λ ℓ o → A ℓ o , R ℓ o) _
+    ⟨U,R⟩⁻ : a ⊏ ℓ → OrderStruct
+    ⟨U,R⟩⁻ = wfRecBuilder _ _ (λ ℓ o → A ℓ o , R ℓ o) _
 
-    UStr : Lv → OrderStruct
-    UStr = wfRec _ _ (λ ℓ o → A ℓ o , R ℓ o)
+    ⟨U,R⟩ : Lv → OrderStruct
+    ⟨U,R⟩ = wfRec _ _ (λ ℓ o → A ℓ o , R ℓ o)
 ```
 
 ```agda
   U : Lv → Type
-  U ℓ = UStr ℓ .fst
+  U ℓ = ⟨U,R⟩ ℓ .fst
   private variable α β : U ℓ
 
   _<_ : U ℓ → U ℓ → Type; infix 6 _<_
-  _<_ = UStr _ .snd
+  _<_ = ⟨U,R⟩ _ .snd
 
   _<₁_ : U ℓ → U ℓ → Type; infix 6 _<₁_
   α <₁ β = ∥ α < β ∥₁
@@ -152,25 +152,25 @@ module Hierarchy {L : LevelStruct} where
 
 ```agda
   U⁻ : a ⊏ ℓ → Type
-  U⁻ aℓ = UStr⁻ aℓ .fst
+  U⁻ aℓ = ⟨U,R⟩⁻ aℓ .fst
 
   _<⁻_ : {aℓ : a ⊏ ℓ} → U⁻ aℓ → U⁻ aℓ → Type; infix 6 _<⁻_
-  _<⁻_ {aℓ} = UStr⁻ aℓ .snd
+  _<⁻_ {aℓ} = ⟨U,R⟩⁻ aℓ .snd
 ```
 
 ```agda
   module _ {aℓ : a ⊏ ℓ} where
     opaque
-      UStrPath : {aℓ : a ⊏ ℓ} → UStr⁻ aℓ ≡ UStr a
-      UStrPath = eqToPath $ FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
+      ⟨U,R⟩Path : {aℓ : a ⊏ ℓ} → ⟨U,R⟩⁻ aℓ ≡ ⟨U,R⟩ a
+      ⟨U,R⟩Path = eqToPath $ FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
         cong (A ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
         cong (R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
 
     UPath : {aℓ : a ⊏ ℓ} → U⁻ aℓ ≡ U a
-    UPath = PathPΣ UStrPath .fst
+    UPath = PathPΣ ⟨U,R⟩Path .fst
 
     RPath : {aℓ : a ⊏ ℓ} → PathP (λ i → UPath i → UPath i → Type) (_<⁻_ {aℓ = aℓ}) _<_
-    RPath = PathPΣ UStrPath .snd
+    RPath = PathPΣ ⟨U,R⟩Path .snd
 ```
 
 ```agda
@@ -352,26 +352,26 @@ _⊏_ {k} = LevelStruct._⊏_ (LvStr k)
 ```
 
 ```agda
-OrdStr : ∀ k → Lv k → OrderStruct
-OrdStr k = Hierarchy.UStr {LvStr k}
+⟨Ord,<⟩ : ∀ k → Lv k → OrderStruct
+⟨Ord,<⟩ k = Hierarchy.⟨U,R⟩ {LvStr k}
 
 Ord : Lv k → Type
-Ord ℓ = OrdStr _ ℓ .fst
+Ord ℓ = ⟨Ord,<⟩ _ ℓ .fst
 
 _<_ : {ℓ : Lv k} → Ord ℓ → Ord ℓ → Type; infix 6 _<_
-_<_ {ℓ} = OrdStr _ ℓ .snd
+_<_ {ℓ} = ⟨Ord,<⟩ _ ℓ .snd
 
 _<₁_ : {ℓ : Lv k} → Ord ℓ → Ord ℓ → Type; infix 6 _<₁_
 _<₁_ = Hierarchy._<₁_
 ```
 
 ```agda
-OrdStr⁻ : {a ℓ : Lv k} → a ⊏ ℓ → OrderStruct
-OrdStr⁻ {k} aℓ = Hierarchy.UStr⁻ {LvStr k} aℓ
+⟨Ord,<⟩⁻ : {a ℓ : Lv k} → a ⊏ ℓ → OrderStruct
+⟨Ord,<⟩⁻ {k} aℓ = Hierarchy.⟨U,R⟩⁻ {LvStr k} aℓ
 
 Ord⁻ : {a ℓ : Lv k} → a ⊏ ℓ → Type
-Ord⁻ aℓ = OrdStr⁻ aℓ .fst
+Ord⁻ aℓ = ⟨Ord,<⟩⁻ aℓ .fst
 
 _<⁻_ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type; infix 6 _<⁻_
-_<⁻_ {aℓ} = OrdStr⁻ aℓ .snd
+_<⁻_ {aℓ} = ⟨Ord,<⟩⁻ aℓ .snd
 ```
