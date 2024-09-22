@@ -1,9 +1,9 @@
 ---
-title: 形式化大数数学 (3.0 - 高阶递归序数)
+title: 形式化大数数学 (3.0 -邱奇-克莱尼序数)
 zhihu-tags: Agda, 大数数学, 序数
 ---
 
-# 形式化大数数学 (3.0 - 高阶递归序数)
+# 形式化大数数学 (3.0 - 邱奇-克莱尼序数)
 
 > 交流Q群: 893531731  
 > 本文源码: [Base.lagda.md](httrsps://github.com/choukh/agda-googology/blob/main/src/OCF/Base.lagda.md)  
@@ -51,7 +51,7 @@ open import Bridged.Data.Unit public using (⊤; tt; isProp⊤)
 open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```
 
-## 基本结构
+## 抽象树序数
 
 **定义** 序结构
 
@@ -82,6 +82,8 @@ module Tree ((Lv , _⊏_) : OrderStruct) (ℓ : Lv) (O⁻ : ∀ {a} → a ⊏ �
     a : Lv
     aℓ : a ⊏ ℓ
 ```
+
+互归纳定义
 
 ```agda
   data A : Type
@@ -114,7 +116,7 @@ module Tree ((Lv , _⊏_) : OrderStruct) (ℓ : Lv) (O⁻ : ∀ {a} → a ⊏ �
     lim  : {f : O⁻ aℓ .fst → A} {mᶠ : mono f} {ν : O⁻ aℓ .fst} → R α (f ν) → R α (lim aℓ f mᶠ)
 ```
 
-## 层级
+## CK序数层级
 
 ```agda
 module Hierarchy {L : LevelStruct} where
@@ -124,6 +126,8 @@ module Hierarchy {L : LevelStruct} where
     a b ℓ ℓ′ ℓ″ : Lv
     aℓ : a ⊏ ℓ
 ```
+
+### 强归纳定义
 
 ```agda
   module _ where
@@ -293,7 +297,7 @@ module Hierarchy {L : LevelStruct} where
   lift-mono (lim {f} r) = lim (lift-mono $ subst⁻ (λ x → _ < f x) ♮-invo r)
 ```
 
-### 高阶 ω
+**定义** ω
 
 ```agda
   Ω : (ℓ : Lv) → U ℓ
@@ -306,7 +310,7 @@ pattern one = suc zero
 pattern ssuc x = suc (suc x)
 ```
 
-## 层级族
+## 迭代CK序数
 
 ### 互递归定义
 
