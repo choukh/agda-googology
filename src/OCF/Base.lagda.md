@@ -65,11 +65,53 @@ OrderStruct = Σ Type λ A → A → A → Type
 ```agda
 record LevelStruct : Type₁ where
   field
-    Lv : Type
-    _⊏_ : Lv → Lv → Type
+    ⟨Lv,⊏⟩ : OrderStruct
+  Lv = ⟨Lv,⊏⟩ .fst
+  _⊏_ = ⟨Lv,⊏⟩ .snd
+  field
     ⊏-wf : WellFounded _⊏_
     ⊏-trans : Transitive _⊏_
     ⊏-prop : ∀ {a b} → isProp (a ⊏ b)
+```
+
+**定义** 抽象树序数
+
+```agda
+module Tree ((Lv , _⊏_) : OrderStruct) (ℓ : Lv) (O⁻ : ∀ {a} → a ⊏ ℓ → OrderStruct) where
+  private variable
+    a : Lv
+    aℓ : a ⊏ ℓ
+```
+
+```agda
+  data A : Type
+  data R : A → A → Type
+
+  R₁ : A → A → Type
+  R₁ α β = ∥ R α β ∥₁
+```
+
+```agda
+  Seq : (aℓ : a ⊏ ℓ) → Type
+  Seq aℓ = O⁻ aℓ .fst → A
+
+  mono : Seq aℓ → Type
+  mono {aℓ} f = ∀ {ν μ} → O⁻ aℓ .snd ν μ → R₁ (f ν) (f μ)
+```
+
+```agda
+  data A where
+    zero : A
+    suc : A → A
+    lim : (aℓ : a ⊏ ℓ) (f : O⁻ aℓ .fst → A) (mᶠ : mono f) → A
+```
+
+```agda
+  private variable α β : A
+  data R where
+    zero : R α (suc α)
+    suc  : R α β → R α (suc β)
+    lim  : {f : O⁻ aℓ .fst → A} {mᶠ : mono f} {ν : O⁻ aℓ .fst} → R α (f ν) → R α (lim aℓ f mᶠ)
 ```
 
 ## 层级
@@ -77,141 +119,102 @@ record LevelStruct : Type₁ where
 ```agda
 module Hierarchy {L : LevelStruct} where
   open LevelStruct L
+  open Tree ⟨Lv,⊏⟩ using (A ; R; zero; suc; lim) public
   private variable
     a b ℓ ℓ′ ℓ″ : Lv
     aℓ : a ⊏ ℓ
 ```
 
-### 定义的第1步: 互递归
-
-```agda
-  module O (ℓ : Lv) (O⁻ : ∀ {a} → a ⊏ ℓ → OrderStruct) where
-    data A : Type
-    data R : A → A → Type
-
-    R₁ : A → A → Type
-    R₁ α β = ∥ R α β ∥₁
-```
-
-```agda
-    Seq : (aℓ : a ⊏ ℓ) → Type
-    Seq aℓ = O⁻ aℓ .fst → A
-
-    mono : Seq aℓ → Type
-    mono {aℓ} f = ∀ {ν μ} → O⁻ aℓ .snd ν μ → R₁ (f ν) (f μ)
-```
-
-```agda
-    data A where
-      zero : A
-      suc : A → A
-      lim : (aℓ : a ⊏ ℓ) (f : O⁻ aℓ .fst → A) (mᶠ : mono f) → A
-```
-
-```agda
-    private variable α β : A
-    data R where
-      zero : R α (suc α)
-      suc  : R α β → R α (suc β)
-      lim  : {f : O⁻ aℓ .fst → A} {mᶠ : mono f} {ν : O⁻ aℓ .fst} → R α (f ν) → R α (lim aℓ f mᶠ)
-```
-
-```agda
-  open O using (zero; suc; lim) public
-```
-
-### 定义的第2步: 强归纳
-
 ```agda
   module _ where
     open WF.All ⊏-wf
 
-    OrdStr⁻ : a ⊏ ℓ → OrderStruct
-    OrdStr⁻ = wfRecBuilder _ _ (λ ℓ o → O.A ℓ o , O.R ℓ o) _
+    UStr⁻ : a ⊏ ℓ → OrderStruct
+    UStr⁻ = wfRecBuilder _ _ (λ ℓ o → A ℓ o , R ℓ o) _
 
-    OrdStr : Lv → OrderStruct
-    OrdStr = wfRec _ _ (λ ℓ o → O.A ℓ o , O.R ℓ o)
+    UStr : Lv → OrderStruct
+    UStr = wfRec _ _ (λ ℓ o → A ℓ o , R ℓ o)
 ```
 
 ```agda
-  Ord : Lv → Type
-  Ord ℓ = OrdStr ℓ .fst
-  private variable α β : Ord ℓ
+  U : Lv → Type
+  U ℓ = UStr ℓ .fst
+  private variable α β : U ℓ
 
-  _<_ : Ord ℓ → Ord ℓ → Type; infix 6 _<_
-  _<_ = OrdStr _ .snd
+  _<_ : U ℓ → U ℓ → Type; infix 6 _<_
+  _<_ = UStr _ .snd
 
-  _<₁_ : Ord ℓ → Ord ℓ → Type; infix 6 _<₁_
+  _<₁_ : U ℓ → U ℓ → Type; infix 6 _<₁_
   α <₁ β = ∥ α < β ∥₁
 ```
 
 ### 变体表示
 
 ```agda
-  Ord⁻ : a ⊏ ℓ → Type
-  Ord⁻ aℓ = OrdStr⁻ aℓ .fst
+  U⁻ : a ⊏ ℓ → Type
+  U⁻ aℓ = UStr⁻ aℓ .fst
 
-  _<⁻_ : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type; infix 6 _<⁻_
-  _<⁻_ {aℓ} = OrdStr⁻ aℓ .snd
+  _<⁻_ : {aℓ : a ⊏ ℓ} → U⁻ aℓ → U⁻ aℓ → Type; infix 6 _<⁻_
+  _<⁻_ {aℓ} = UStr⁻ aℓ .snd
 ```
 
 ```agda
   module _ {aℓ : a ⊏ ℓ} where
     opaque
-      OrdStrP : {aℓ : a ⊏ ℓ} → OrdStr⁻ aℓ ≡ OrdStr a
-      OrdStrP = eqToPath $ FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
-        cong (O.A ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
-        cong (O.R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
+      UStrPath : {aℓ : a ⊏ ℓ} → UStr⁻ aℓ ≡ UStr a
+      UStrPath = eqToPath $ FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
+        cong (A ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
+        cong (R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
 
-    OrdP : {aℓ : a ⊏ ℓ} → Ord⁻ aℓ ≡ Ord a
-    OrdP = PathPΣ OrdStrP .fst
+    UPath : {aℓ : a ⊏ ℓ} → U⁻ aℓ ≡ U a
+    UPath = PathPΣ UStrPath .fst
 
-    RoadP : {aℓ : a ⊏ ℓ} → PathP (λ i → OrdP i → OrdP i → Type) (_<⁻_ {aℓ = aℓ}) _<_
-    RoadP = PathPΣ OrdStrP .snd
+    RPath : {aℓ : a ⊏ ℓ} → PathP (λ i → UPath i → UPath i → Type) (_<⁻_ {aℓ = aℓ}) _<_
+    RPath = PathPΣ UStrPath .snd
 ```
 
 ```agda
-    ♯ : Ord⁻ aℓ → Ord a
-    ♯ = transport OrdP
+    ♯ : U⁻ aℓ → U a
+    ♯ = transport UPath
 
-    ♭ : Ord a → Ord⁻ aℓ
-    ♭ = transport⁻ OrdP
+    ♭ : U a → U⁻ aℓ
+    ♭ = transport⁻ UPath
 
-    ♭♯ : {α : Ord⁻ aℓ} → ♭ (♯ α) ≡ α
+    ♭♯ : {α : U⁻ aℓ} → ♭ (♯ α) ≡ α
     ♭♯ = transport⁻Transport _ _
 
-    ♯♭ : {α : Ord a} → ♯ (♭ α) ≡ α
+    ♯♭ : {α : U a} → ♯ (♭ α) ≡ α
     ♯♭ = transportTransport⁻ _ _
 ```
 
 ```agda
-  ♮$ : (from : a ⊏ ℓ) (to : a ⊏ ℓ′) → Ord⁻ from → Ord⁻ to
+  ♮$ : (from : a ⊏ ℓ) (to : a ⊏ ℓ′) → U⁻ from → U⁻ to
   ♮$ _ _ = ♭ ∘ ♯
 
-  ♮ : {from : a ⊏ ℓ} {to : a ⊏ ℓ′} → Ord⁻ from → Ord⁻ to
+  ♮ : {from : a ⊏ ℓ} {to : a ⊏ ℓ′} → U⁻ from → U⁻ to
   ♮ = ♮$ _ _
 
-  ♮-comp : {p : a ⊏ ℓ} {q : a ⊏ ℓ′} {r : a ⊏ ℓ″} {α : Ord⁻ p}
+  ♮-comp : {p : a ⊏ ℓ} {q : a ⊏ ℓ′} {r : a ⊏ ℓ″} {α : U⁻ p}
         → ♮$ q r (♮$ p q α) ≡ ♮$ p r α
   ♮-comp = cong ♭ ♯♭
 
-  ♮-invo : {from : a ⊏ ℓ} {to : a ⊏ ℓ′} {α : Ord⁻ from}
+  ♮-invo : {from : a ⊏ ℓ} {to : a ⊏ ℓ′} {α : U⁻ from}
         → ♮$ to from (♮$ from to α) ≡ α
   ♮-invo = ♮-comp ∙ ♭♯
 ```
 
 ```agda
   module _ {aℓ : a ⊏ ℓ} where
-    <-distrib-transp : (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) OrdP (_<⁻_ {aℓ = aℓ})
-    <-distrib-transp = J (λ _ p → (λ α β → transport⁻ p α <⁻ transport⁻ p β) ≡ subst (λ A → A → A → Type) p _<⁻_) refl OrdP
+    <-distrib-transp : (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) UPath (_<⁻_ {aℓ = aℓ})
+    <-distrib-transp = J (λ _ p → (λ α β → transport⁻ p α <⁻ transport⁻ p β) ≡ subst (λ A → A → A → Type) p _<⁻_) refl UPath
 
-    ♭-inj< : {α β : Ord a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
-    ♭-inj< = (<-distrib-transp ∙ fromPathP RoadP) ≡$ _ ≡$ _
+    ♭-inj< : {α β : U a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
+    ♭-inj< = (<-distrib-transp ∙ fromPathP RPath) ≡$ _ ≡$ _
 
-    ♯-inj< : {α β : Ord⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
+    ♯-inj< : {α β : U⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
     ♯-inj< {α} {β} = subst2 (λ x y → ♯ α < ♯ β ≡ x <⁻ y) ♭♯ ♭♯ (sym ♭-inj<)
 
-  ♮-inj< : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : Ord⁻ aℓ} → ♮$ aℓ aℓ′ α <⁻ ♮ β ≡ α <⁻ β
+  ♮-inj< : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : U⁻ aℓ} → ♮$ aℓ aℓ′ α <⁻ ♮ β ≡ α <⁻ β
   ♮-inj< = ♭-inj< ∙ ♯-inj<
 ```
 
@@ -219,7 +222,7 @@ module Hierarchy {L : LevelStruct} where
 
 ```agda
   Seq : (aℓ : a ⊏ ℓ) → Type
-  Seq {ℓ} aℓ = Ord⁻ aℓ → Ord ℓ
+  Seq {ℓ} aℓ = U⁻ aℓ → U ℓ
   variable f g : Seq aℓ
 
   mono : (aℓ : a ⊏ ℓ) → Seq aℓ → Type
@@ -231,14 +234,14 @@ module Hierarchy {L : LevelStruct} where
 
 ```agda
   module _ 
-          {aℓᶠ : a ⊏ ℓ} {f : Ord⁻ aℓᶠ → Ord ℓ} {mᶠ : mono aℓᶠ f}
-          {aℓᵍ : a ⊏ ℓ} {g : Ord⁻ aℓᵍ → Ord ℓ} {mᵍ : mono aℓᵍ g}
-          (p : (ν : Ord⁻ aℓᶠ) → f ν ≡ g (♮ ν))
+          {aℓᶠ : a ⊏ ℓ} {f : U⁻ aℓᶠ → U ℓ} {mᶠ : mono aℓᶠ f}
+          {aℓᵍ : a ⊏ ℓ} {g : U⁻ aℓᵍ → U ℓ} {mᵍ : mono aℓᵍ g}
+          (p : (ν : U⁻ aℓᶠ) → f ν ≡ g (♮ ν))
           where
 
     limExt : lim aℓᶠ f mᶠ ≡ lim aℓᵍ g mᵍ
     limExt with (pathToEq $ ⊏-prop aℓᶠ aℓᵍ)
-    ... | rfl = cong₂ (O.A.lim aℓᶠ) (funExt λ ν → subst (λ x → f ν ≡ g x) ♭♯ (p ν)) (toPathP $ mono-prop _ _)
+    ... | rfl = cong₂ (A.lim aℓᶠ) (funExt λ ν → subst (λ x → f ν ≡ g x) ♭♯ (p ν)) (toPathP $ mono-prop _ _)
 ```
 
 ### 路径的良基性
@@ -275,8 +278,8 @@ module Hierarchy {L : LevelStruct} where
 ### 层级的提升
 
 ```agda
-  lift : a ⊏ b → Ord a → Ord b
-  lift-mono : {ab : a ⊏ b} {α β : Ord a} → α < β → lift ab α < lift ab β
+  lift : a ⊏ b → U a → U b
+  lift-mono : {ab : a ⊏ b} {α β : U a} → α < β → lift ab α < lift ab β
 ```
 
 ```agda
@@ -293,7 +296,7 @@ module Hierarchy {L : LevelStruct} where
 ### 高阶 ω
 
 ```agda
-  Ω : (ℓ : Lv) → Ord ℓ
+  Ω : (ℓ : Lv) → U ℓ
   Ω ℓ = {!   !}
 ```
 
@@ -310,8 +313,7 @@ pattern ssuc x = suc (suc x)
 ```agda
 unitLvStr : LevelStruct
 unitLvStr = record
-  { Lv = ⊤
-  ; _⊏_ = λ _ _ → ⊥
+  { ⟨Lv,⊏⟩ = ⊤ , λ _ _ → ⊥
   ; ⊏-wf = λ _ → acc λ ()
   ; ⊏-trans = λ ()
   ; ⊏-prop = isProp⊥ }
@@ -320,8 +322,7 @@ unitLvStr = record
 ```agda
 nextLvStr : (L : LevelStruct) (ℓ : LevelStruct.Lv L) → LevelStruct
 nextLvStr L ℓ = record
-  { Lv = Ord ℓ
-  ; _⊏_ = _<₁_
+  { ⟨Lv,⊏⟩ = U ℓ , _<₁_
   ; ⊏-wf = <₁-wf
   ; ⊏-trans = map2 <-trans
   ; ⊏-prop = squash₁ }
@@ -352,7 +353,7 @@ _⊏_ {k} = LevelStruct._⊏_ (LvStr k)
 
 ```agda
 OrdStr : ∀ k → Lv k → OrderStruct
-OrdStr k = Hierarchy.OrdStr {LvStr k}
+OrdStr k = Hierarchy.UStr {LvStr k}
 
 Ord : Lv k → Type
 Ord ℓ = OrdStr _ ℓ .fst
@@ -366,7 +367,7 @@ _<₁_ = Hierarchy._<₁_
 
 ```agda
 OrdStr⁻ : {a ℓ : Lv k} → a ⊏ ℓ → OrderStruct
-OrdStr⁻ {k} aℓ = Hierarchy.OrdStr⁻ {LvStr k} aℓ
+OrdStr⁻ {k} aℓ = Hierarchy.UStr⁻ {LvStr k} aℓ
 
 Ord⁻ : {a ℓ : Lv k} → a ⊏ ℓ → Type
 Ord⁻ aℓ = OrdStr⁻ aℓ .fst
