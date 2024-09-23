@@ -130,14 +130,13 @@ module Hierarchy {L : LevelStruct} where
 ### 强归纳定义
 
 ```agda
-  module _ where
-    open WF.All ⊏-wf
+  module W = WF.All ⊏-wf
 
-    ⟨U,R⟩⁻ : a ⊏ ℓ → OrderStruct
-    ⟨U,R⟩⁻ = wfRecBuilder _ _ (λ ℓ o → A ℓ o , R ℓ o) _
+  ⟨U,R⟩⁻ : a ⊏ ℓ → OrderStruct
+  ⟨U,R⟩⁻ = W.wfRecBuilder _ _ (λ ℓ o → A ℓ o , R ℓ o) _
 
-    ⟨U,R⟩ : Lv → OrderStruct
-    ⟨U,R⟩ = wfRec _ _ (λ ℓ o → A ℓ o , R ℓ o)
+  ⟨U,R⟩ : Lv → OrderStruct
+  ⟨U,R⟩ = W.wfRec _ _ λ ℓ o → A ℓ o , R ℓ o
 ```
 
 ```agda
@@ -297,15 +296,18 @@ module Hierarchy {L : LevelStruct} where
   lift-mono (lim {f} r) = lim (lift-mono $ subst⁻ (λ x → _ < f x) ♮-invo r)
 ```
 
-**定义** ω
+**定义** CK序数: 层级提升的极限
 
 ```agda
-  Ω : (ℓ : Lv) → U ℓ
-  Ω ℓ = {!   !}
+  module _ (O⁻@(Lv⁻ , _⊏⁻_) : OrderStruct) (ℓ⁻ : Lv⁻) (O⁻⁻ : ∀ {a} → a ⊏⁻ ℓ⁻ → OrderStruct) where
+    CK : Lv Eq.≡ Tree.A O⁻ ℓ⁻ O⁻⁻ → (ℓ : Lv) → U ℓ
+    CK rfl zero = zero
+    CK rfl (suc ℓ) = lim {!   !} (λ ν → lift {!   !} (♯ ν)) {!   !}
+    CK rfl (lim aℓ f mᶠ) = lim {!   !} {!   !} {!   !}
 ```
 
 ```agda
-open Hierarchy using (zero; suc; lim; Ω) public
+open Hierarchy using (zero; suc; lim) public
 pattern one = suc zero
 pattern ssuc x = suc (suc x)
 ```
@@ -334,14 +336,21 @@ nextLvStr L ℓ = record
 ```
 
 ```agda
-mutual
-  LvStr : ℕ → LevelStruct
-  LvStr zero    = unitLvStr
-  LvStr (suc k) = nextLvStr (LvStr k) (iterΩ⁺ k)
+module _ where
+  open LevelStruct
+  open Hierarchy
+  mutual
+    LvStr : ℕ → LevelStruct
+    LvStr zero    = unitLvStr
+    LvStr (suc k) = nextLvStr (LvStr k) (iterΩ⁺ k)
 
-  iterΩ⁺ : ∀ k → LevelStruct.Lv (LvStr k)
-  iterΩ⁺ zero    = tt
-  iterΩ⁺ (suc k) = Ω (iterΩ⁺ k)
+    Ω : ∀ k → (ℓ : LvStr k .⟨Lv,⊏⟩ .fst) → U {LvStr k} ℓ
+    Ω zero ℓ = zero {LvStr zero}
+    Ω (suc k) = CK (LvStr k .⟨Lv,⊏⟩) (iterΩ⁺ k) {!   !} {!   !}
+
+    iterΩ⁺ : ∀ k → Lv (LvStr k)
+    iterΩ⁺ zero    = tt
+    iterΩ⁺ (suc k) = suc {LvStr k} (Ω k (iterΩ⁺ k))
 ```
 
 ### 概念实例化
