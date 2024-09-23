@@ -296,16 +296,6 @@ module Hierarchy {L : LevelStruct} where
   lift-mono (lim {f} r) = lim (lift-mono $ subst⁻ (λ x → _ < f x) ♮-invo r)
 ```
 
-**定义** CK序数: 层级提升的极限
-
-```agda
-  module _ (O⁻@(Lv⁻ , _⊏⁻_) : OrderStruct) (ℓ⁻ : Lv⁻) (O⁻⁻ : ∀ {a} → a ⊏⁻ ℓ⁻ → OrderStruct) where
-    CK : Lv Eq.≡ Tree.A O⁻ ℓ⁻ O⁻⁻ → (ℓ : Lv) → U ℓ
-    CK rfl zero = zero
-    CK rfl (suc ℓ) = lim {!   !} (λ ν → lift {!   !} (♯ ν)) {!   !}
-    CK rfl (lim aℓ f mᶠ) = lim {!   !} {!   !} {!   !}
-```
-
 ```agda
 open Hierarchy using (zero; suc; lim) public
 pattern one = suc zero
@@ -313,8 +303,6 @@ pattern ssuc x = suc (suc x)
 ```
 
 ## 迭代CK序数
-
-### 互递归定义
 
 ```agda
 unitLvStr : LevelStruct
@@ -335,6 +323,8 @@ nextLvStr L ℓ = record
   where open Hierarchy {L}
 ```
 
+### 互递归定义
+
 ```agda
 module _ where
   open LevelStruct
@@ -344,13 +334,18 @@ module _ where
     LvStr zero    = unitLvStr
     LvStr (suc k) = nextLvStr (LvStr k) (iterΩ⁺ k)
 
-    Ω : ∀ k → (ℓ : LvStr k .⟨Lv,⊏⟩ .fst) → U {LvStr k} ℓ
-    Ω zero ℓ = zero {LvStr zero}
-    Ω (suc k) = CK (LvStr k .⟨Lv,⊏⟩) (iterΩ⁺ k) {!   !} {!   !}
-
     iterΩ⁺ : ∀ k → Lv (LvStr k)
     iterΩ⁺ zero    = tt
     iterΩ⁺ (suc k) = suc {LvStr k} (Ω k (iterΩ⁺ k))
+
+    Ω : ∀ k (ℓ : LvStr k .⟨Lv,⊏⟩ .fst) → U {LvStr k} ℓ
+    Ω zero _ = zero {LvStr zero}
+    Ω (suc k) = Ω₊ k
+
+    Ω₊ : ∀ k (ℓ : U (iterΩ⁺ k)) → U ℓ
+    Ω₊ k zero = zero {LvStr (suc k)}
+    Ω₊ k (suc ℓ) = lim {LvStr (suc k)} ∣ zero {LvStr k} ∣₁ (λ ν → lift ∣ zero {LvStr k} ∣₁ (♯ ν)) {!   !}
+    Ω₊ k (lim aℓ f mᶠ) = lim {LvStr (suc k)} (map lim (mᶠ {!   !})) (λ ν → lift {!   !} (Ω₊ k (f {! ν  !}))) {!   !}
 ```
 
 ### 概念实例化
@@ -388,3 +383,4 @@ Ord⁻ aℓ = ⟨Ord,<⟩⁻ aℓ .fst
 _<⁻_ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type; infix 6 _<⁻_
 _<⁻_ {aℓ} = ⟨Ord,<⟩⁻ aℓ .snd
 ```
+  
