@@ -20,7 +20,7 @@ module OCF.Base where
 
 ```agda
 open import Cubical.Foundations.Prelude public
-  hiding (Level; Lift; lift) renaming (_∎ to _≡∎)
+  hiding (Level; Lift; lift; lower) renaming (_∎ to _≡∎)
 open import Cubical.Foundations.HLevels public
 open import Cubical.Foundations.Isomorphism public
 open import Cubical.Foundations.Transport public
@@ -119,11 +119,11 @@ module Tree ((Lv , _⊏_) : OrderStruct) (ℓ : Lv) (O⁻ : ∀ {a} → a ⊏ �
 ## CK序数层级
 
 ```agda
-module Hierarchy {L : LevelStruct} where
+module CK {L : LevelStruct} where
   open LevelStruct L
   open Tree ⟨Lv,⊏⟩ using (A ; R; zero; suc; lim) public
   private variable
-    a b ℓ ℓ′ ℓ″ : Lv
+    a b c ℓ ℓ′ ℓ″ : Lv
     aℓ : a ⊏ ℓ
 ```
 
@@ -296,8 +296,20 @@ module Hierarchy {L : LevelStruct} where
   lift-mono (lim {f} r) = lim (lift-mono $ subst⁻ (λ x → _ < f x) ♮-invo r)
 ```
 
+提升的复合
+
 ```agda
-open Hierarchy using (zero; suc; lim) public
+  lift-comp : {ab : a ⊏ b} {bc : b ⊏ c} {ac : a ⊏ c} {α : U a}
+            → lift ac α ≡ lift bc (lift ab α)
+  lift-comp {α = zero} = refl
+  lift-comp {α = suc α} = cong suc (lift-comp {α = α})
+  lift-comp {ab} {bc} {ac} {α = lim _ f _} = limExt λ _ →
+    subst2 (λ x y → lift ac (f x) ≡ lift bc (lift ab (f y))) (♮-comp ∙ ♮-comp) refl lift-comp
+```
+
+```agda
+open CK using (zero; suc; lim) public
+open LevelStruct using (⟨Lv,⊏⟩; Lv) public
 pattern one = suc zero
 pattern ssuc x = suc (suc x)
 ```
@@ -305,82 +317,44 @@ pattern ssuc x = suc (suc x)
 ## 迭代CK序数
 
 ```agda
-unitLvStr : LevelStruct
-unitLvStr = record
-  { ⟨Lv,⊏⟩ = ⊤ , λ _ _ → ⊥
-  ; ⊏-wf = λ _ → acc λ ()
-  ; ⊏-trans = λ ()
-  ; ⊏-prop = isProp⊥ }
-```
-
-```agda
-nextLvStr : (L : LevelStruct) (ℓ : LevelStruct.Lv L) → LevelStruct
-nextLvStr L ℓ = record
+L₊ : (L : LevelStruct) (ℓ : Lv L) → LevelStruct
+L₊ L ℓ = record
   { ⟨Lv,⊏⟩ = U ℓ , _<₁_
   ; ⊏-wf = <₁-wf
   ; ⊏-trans = map2 <-trans
   ; ⊏-prop = squash₁ }
-  where open Hierarchy {L}
-```
-
-### 互递归定义
-
-```agda
-module _ where
-  open LevelStruct
-  open Hierarchy
-  mutual
-    LvStr : ℕ → LevelStruct
-    LvStr zero    = unitLvStr
-    LvStr (suc k) = nextLvStr (LvStr k) (iterΩ⁺ k)
-
-    iterΩ⁺ : ∀ k → Lv (LvStr k)
-    iterΩ⁺ zero    = tt
-    iterΩ⁺ (suc k) = suc {LvStr k} (Ω k (iterΩ⁺ k))
-
-    Ω : ∀ k (ℓ : LvStr k .⟨Lv,⊏⟩ .fst) → U {LvStr k} ℓ
-    Ω zero _ = zero {LvStr zero}
-    Ω (suc k) = Ω₊ k
-
-    Ω₊ : ∀ k (ℓ : U (iterΩ⁺ k)) → U ℓ
-    Ω₊ k zero = zero {LvStr (suc k)}
-    Ω₊ k (suc ℓ) = lim {LvStr (suc k)} ∣ zero {LvStr k} ∣₁ (λ ν → lift ∣ zero {LvStr k} ∣₁ (♯ ν)) {!   !}
-    Ω₊ k (lim aℓ f mᶠ) = lim {LvStr (suc k)} (map lim (mᶠ {!   !})) (λ ν → lift {!   !} (Ω₊ k (f {! ν  !}))) {!   !}
-```
-
-### 概念实例化
-
-```agda
-Lv : ℕ → Type
-Lv k = LevelStruct.Lv (LvStr k)
-variable k : ℕ; ℓ : Lv k
-
-_⊏_ : Lv k → Lv k → Type; infix 6 _⊏_
-_⊏_ {k} = LevelStruct._⊏_ (LvStr k)
+  where open CK {L}
 ```
 
 ```agda
-⟨Ord,<⟩ : ∀ k → Lv k → OrderStruct
-⟨Ord,<⟩ k = Hierarchy.⟨U,R⟩ {LvStr k}
+module ICK (L₀ : LevelStruct) (ℓ₀ : Lv L₀) where
+  open CK using (♭; ♯)
+  L₁ : LevelStruct
+  L₁ = L₊ L₀ ℓ₀
 
-Ord : Lv k → Type
-Ord ℓ = ⟨Ord,<⟩ _ ℓ .fst
+  _⊏₀_ = ⟨Lv,⊏⟩ L₀ .snd
+  _⊏₁_ = ⟨Lv,⊏⟩ L₁ .snd
 
-_<_ : {ℓ : Lv k} → Ord ℓ → Ord ℓ → Type; infix 6 _<_
-_<_ {ℓ} = ⟨Ord,<⟩ _ ℓ .snd
+  module _ (ℓ₁ : Lv L₁) (lift₀ : Lv L₀ → Lv L₁)
+      (lift⊏₀ : {a₀ : Lv L₀} → a₀ ⊏₀ ℓ₀ → lift₀ a₀ ⊏₁ ℓ₁) where
+    L₂ : LevelStruct
+    L₂ = L₊ L₁ ℓ₁
+    _⊏₂_ = ⟨Lv,⊏⟩ L₂ .snd
 
-_<₁_ : {ℓ : Lv k} → Ord ℓ → Ord ℓ → Type; infix 6 _<₁_
-_<₁_ = Hierarchy._<₁_
+    lower : {a₀ : Lv L₀} (a₁ : Lv L₁) (aℓ : a₁ ⊏₁ lift₀ a₀) → Lv L₀
+    lower = {!   !}
+
+    trace : {a₀ : Lv L₀} → CK.U {L₁} (lift₀ a₀) → CK.U {L₀} a₀
+    trace zero = zero {L₀}
+    trace (suc α) = suc {L₀} (trace α)
+    trace (lim {a} aℓ f mᶠ) = lim {L₀} {a = lower a aℓ} {!   !}
+      (λ ν → trace (f {!   !}))
+      {!   !}
+
+    lift : Lv L₁ → Lv L₂
+    lift zero = zero {L₁}
+    lift (suc α) = suc {L₁} (lift α)
+    lift (lim {a} aℓ f mᶠ) = lim {L₁} {a = lift₀ a} (lift⊏₀ aℓ)
+      (λ ν → lift $ f $ ♭ $ trace $ ♯ ν)
+      {!   !}
 ```
-
-```agda
-⟨Ord,<⟩⁻ : {a ℓ : Lv k} → a ⊏ ℓ → OrderStruct
-⟨Ord,<⟩⁻ {k} aℓ = Hierarchy.⟨U,R⟩⁻ {LvStr k} aℓ
-
-Ord⁻ : {a ℓ : Lv k} → a ⊏ ℓ → Type
-Ord⁻ aℓ = ⟨Ord,<⟩⁻ aℓ .fst
-
-_<⁻_ : {a ℓ : Lv k} {aℓ : a ⊏ ℓ} → Ord⁻ aℓ → Ord⁻ aℓ → Type; infix 6 _<⁻_
-_<⁻_ {aℓ} = ⟨Ord,<⟩⁻ aℓ .snd
-```
-  
