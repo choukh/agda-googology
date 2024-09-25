@@ -317,6 +317,15 @@ pattern ssuc x = suc (suc x)
 ## 迭代CK序数
 
 ```agda
+L₀ : LevelStruct
+L₀ = record
+  { ⟨Lv,⊏⟩ = ⊤ , λ _ _ → ⊥
+  ; ⊏-wf = λ _ → acc λ ()
+  ; ⊏-trans = λ ()
+  ; ⊏-prop = isProp⊥ }
+```
+
+```agda
 L₊ : (L : LevelStruct) (ℓ : Lv L) → LevelStruct
 L₊ L ℓ = record
   { ⟨Lv,⊏⟩ = U ℓ , _<₁_
@@ -324,37 +333,4 @@ L₊ L ℓ = record
   ; ⊏-trans = map2 <-trans
   ; ⊏-prop = squash₁ }
   where open CK {L}
-```
-
-```agda
-module ICK (L₀ : LevelStruct) (ℓ₀ : Lv L₀) where
-  open CK using (♭; ♯)
-  L₁ : LevelStruct
-  L₁ = L₊ L₀ ℓ₀
-
-  _⊏₀_ = ⟨Lv,⊏⟩ L₀ .snd
-  _⊏₁_ = ⟨Lv,⊏⟩ L₁ .snd
-
-  module _ (ℓ₁ : Lv L₁) (lift₀ : Lv L₀ → Lv L₁)
-      (lift⊏₀ : {a₀ : Lv L₀} → a₀ ⊏₀ ℓ₀ → lift₀ a₀ ⊏₁ ℓ₁) where
-    L₂ : LevelStruct
-    L₂ = L₊ L₁ ℓ₁
-    _⊏₂_ = ⟨Lv,⊏⟩ L₂ .snd
-
-    lower : {a₀ : Lv L₀} (a₁ : Lv L₁) (aℓ : a₁ ⊏₁ lift₀ a₀) → Lv L₀
-    lower = {!   !}
-
-    trace : {a₀ : Lv L₀} → CK.U {L₁} (lift₀ a₀) → CK.U {L₀} a₀
-    trace zero = zero {L₀}
-    trace (suc α) = suc {L₀} (trace α)
-    trace (lim {a} aℓ f mᶠ) = lim {L₀} {a = lower a aℓ} {!   !}
-      (λ ν → trace (f {!   !}))
-      {!   !}
-
-    lift : Lv L₁ → Lv L₂
-    lift zero = zero {L₁}
-    lift (suc α) = suc {L₁} (lift α)
-    lift (lim {a} aℓ f mᶠ) = lim {L₁} {a = lift₀ a} (lift⊏₀ aℓ)
-      (λ ν → lift $ f $ ♭ $ trace $ ♯ ν)
-      {!   !}
 ```
