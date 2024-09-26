@@ -34,7 +34,7 @@ open import Cubical.HITs.PropositionalTruncation public
 
 ```agda
 open import Data.Nat public using (ℕ; zero; suc)
-open import Function public using (id; _∘_; _$_; _⟨_⟩_)
+open import Function public using (id; _∘_; _$_; _∋_; _⟨_⟩_; case_of_)
 open import Relation.Binary.Definitions public
 open import Relation.Binary.PropositionalEquality as Eq public
   using () renaming (_≡_ to _＝_; refl to rfl)
@@ -105,7 +105,7 @@ module Tree ((Lv , _⊏_) : OrderStruct) (ℓ : Lv) (O⁻ : ∀ {a} → a ⊏ �
   data A where
     zero : A
     suc : A → A
-    lim : (aℓ : a ⊏ ℓ) (f : O⁻ aℓ .fst → A) (mᶠ : mono f) → A
+    lim : (aℓ : a ⊏ ℓ) (f : O⁻ aℓ .fst → A) (mo : mono f) → A
 ```
 
 ```agda
@@ -113,7 +113,7 @@ module Tree ((Lv , _⊏_) : OrderStruct) (ℓ : Lv) (O⁻ : ∀ {a} → a ⊏ �
   data R where
     zero : R α (suc α)
     suc  : R α β → R α (suc β)
-    lim  : {f : O⁻ aℓ .fst → A} {mᶠ : mono f} {ν : O⁻ aℓ .fst} → R α (f ν) → R α (lim aℓ f mᶠ)
+    lim  : {f : O⁻ aℓ .fst → A} {mo : mono f} {ν : O⁻ aℓ .fst} → R α (f ν) → R α (lim aℓ f mo)
 ```
 
 ## CK序数层级
@@ -121,7 +121,7 @@ module Tree ((Lv , _⊏_) : OrderStruct) (ℓ : Lv) (O⁻ : ∀ {a} → a ⊏ �
 ```agda
 module CK {L : LevelStruct} where
   open LevelStruct L
-  open Tree ⟨Lv,⊏⟩ using (A ; R; zero; suc; lim) public
+  open Tree ⟨Lv,⊏⟩ using (A ; R; zero; suc; lim)
   private variable
     a b c ℓ ℓ′ ℓ″ : Lv
     aℓ : a ⊏ ℓ
@@ -133,10 +133,10 @@ module CK {L : LevelStruct} where
   module W = WF.All ⊏-wf
 
   ⟨U,R⟩⁻ : a ⊏ ℓ → OrderStruct
-  ⟨U,R⟩⁻ = W.wfRecBuilder _ _ (λ ℓ o → A ℓ o , R ℓ o) _
+  ⟨U,R⟩⁻ = W.wfRecBuilder _ _ (λ ℓ IH → A ℓ IH , R ℓ IH) _
 
   ⟨U,R⟩ : Lv → OrderStruct
-  ⟨U,R⟩ = W.wfRec _ _ λ ℓ o → A ℓ o , R ℓ o
+  ⟨U,R⟩ = W.wfRec _ _ λ ℓ IH → A ℓ IH , R ℓ IH
 ```
 
 ```agda
@@ -163,16 +163,15 @@ module CK {L : LevelStruct} where
 
 ```agda
   module _ {aℓ : a ⊏ ℓ} where
-    opaque
-      ⟨U,R⟩Path : {aℓ : a ⊏ ℓ} → ⟨U,R⟩⁻ aℓ ≡ ⟨U,R⟩ a
-      ⟨U,R⟩Path = eqToPath $ FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
-        cong (A ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
-        cong (R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
+    ⟨U,R⟩Path : ⟨U,R⟩⁻ aℓ ≡ ⟨U,R⟩ a
+    ⟨U,R⟩Path = eqToPath $ FixPoint.wfRecBuilder-wfRec ⊏-wf _ _ (λ ℓ o → pathToEq $ ΣPathP $
+      cong (A ℓ) (λ i aℓ → eqToPath (o aℓ) i) ,
+      cong (R ℓ) (λ i aℓ → eqToPath (o aℓ) i)) _
 
-    UPath : {aℓ : a ⊏ ℓ} → U⁻ aℓ ≡ U a
+    UPath : U⁻ aℓ ≡ U a
     UPath = PathPΣ ⟨U,R⟩Path .fst
 
-    RPath : {aℓ : a ⊏ ℓ} → PathP (λ i → UPath i → UPath i → Type) (_<⁻_ {aℓ = aℓ}) _<_
+    RPath : PathP (λ i → UPath i → UPath i → Type) (_<⁻_ {aℓ = aℓ}) _<_
     RPath = PathPΣ ⟨U,R⟩Path .snd
 ```
 
@@ -237,12 +236,12 @@ module CK {L : LevelStruct} where
 
 ```agda
   module _ 
-          {aℓᶠ : a ⊏ ℓ} {f : U⁻ aℓᶠ → U ℓ} {mᶠ : mono aℓᶠ f}
+          {aℓᶠ : a ⊏ ℓ} {f : U⁻ aℓᶠ → U ℓ} {mo : mono aℓᶠ f}
           {aℓᵍ : a ⊏ ℓ} {g : U⁻ aℓᵍ → U ℓ} {mᵍ : mono aℓᵍ g}
           (p : (ν : U⁻ aℓᶠ) → f ν ≡ g (♮ ν))
           where
 
-    limExt : lim aℓᶠ f mᶠ ≡ lim aℓᵍ g mᵍ
+    limExt : lim aℓᶠ f mo ≡ lim aℓᵍ g mᵍ
     limExt with (pathToEq $ ⊏-prop aℓᶠ aℓᵍ)
     ... | rfl = cong₂ (A.lim aℓᶠ) (funExt λ ν → subst (λ x → f ν ≡ g x) ♭♯ (p ν)) (toPathP $ mono-prop _ _)
 ```
@@ -288,8 +287,8 @@ module CK {L : LevelStruct} where
 ```agda
   lift ab zero = zero
   lift ab (suc α) = suc (lift ab α)
-  lift ab (lim {a = x} xa f mᶠ) = lim (⊏-trans xa ab)
-    (λ ν → lift ab (f $ ♮ ν)) (map lift-mono ∘ mᶠ ∘ transport⁻ ♮-inj<)
+  lift ab (lim {a = x} xa f mo) = lim (⊏-trans xa ab)
+    (λ ν → lift ab (f $ ♮ ν)) (map lift-mono ∘ mo ∘ transport⁻ ♮-inj<)
 
   lift-mono zero = zero
   lift-mono (suc r) = suc (lift-mono r)
@@ -308,7 +307,7 @@ module CK {L : LevelStruct} where
 ```
 
 ```agda
-open CK using (zero; suc; lim) public
+open Tree using (zero; suc; lim) public
 open LevelStruct using (⟨Lv,⊏⟩; Lv) public
 pattern one = suc zero
 pattern ssuc x = suc (suc x)
@@ -333,4 +332,55 @@ L₊ L ℓ = record
   ; ⊏-trans = map2 <-trans
   ; ⊏-prop = squash₁ }
   where open CK {L}
+```
+
+### 互递归定义
+
+```agda
+module ICK where
+  open LevelStruct
+  open CK
+
+  iterΩ⁺0 : Lv L₀
+  iterΩ⁺0 = tt
+
+  L₁ : LevelStruct
+  L₁ = L₊ L₀ iterΩ⁺0
+
+  Ω0 : (ℓ : Lv L₀) → U {L₀} ℓ
+  Ω0 _ = zero
+
+  iterΩ⁺1 : Lv L₁
+  iterΩ⁺1 = suc (Ω0 iterΩ⁺0)
+
+  L₂ : LevelStruct
+  L₂ = L₊ L₁ iterΩ⁺1
+
+  _⊏₀_ = ⟨Lv,⊏⟩ L₀ .snd
+  _⊏₁_ = ⟨Lv,⊏⟩ L₁ .snd
+  _⊏₂_ = ⟨Lv,⊏⟩ L₂ .snd
+
+  to1 : U {L₀} tt → U {L₁} zero
+  to1 zero = zero
+  to1 (suc α) = suc (to1 α)
+
+  to1-mono : {α β : U {L₀} tt} → α <₁ β → to1 α < to1 β
+  to1-mono = {!   !}
+
+  Ω1 : (ℓ : Lv L₁) → U {L₁} ℓ
+  Ω1 zero = zero
+  Ω1 (suc ℓ) = lim ∣ zero ∣₁ (lift ∣ zero ∣₁) {!   !}
+
+  iterΩ⁺2 : Lv L₂
+  iterΩ⁺2 = suc (Ω1 iterΩ⁺1)
+
+  L₃ : LevelStruct
+  L₃ = L₊ L₂ iterΩ⁺2
+  _⊏₃_ = ⟨Lv,⊏⟩ L₃ .snd
+
+  Ω2 : (ℓ : Lv L₂) → U {L₂} ℓ
+  Ω2 zero = zero
+  Ω2 (suc ℓ) = lim ∣ zero ∣₁ (lift ∣ zero ∣₁) {!   !}
+  Ω2 (lim {a} aℓ f mo) = lim {a = zero} {! a   !}
+    (λ ν → lift {!   !} (Ω2 (f {! a  !}))) {!   !}
 ```
