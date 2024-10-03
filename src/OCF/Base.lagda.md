@@ -76,7 +76,7 @@ record Segment (⟨L,⊏⟩ : OrderStruct) : Type₁ where
 **定义** 抽象树序数 (由前段族索引)
 
 ```agda
-module Tree (k : ℕ) (L⃗ : Vec OrderStruct k) (S : (n̂ : Fin k) → Segment (lookup L⃗ n̂)) where
+module Tree (k : ℕ) (L⃗ : Vec OrderStruct k) (S : (k⁻ : Fin k) → Segment (lookup L⃗ k⁻)) where
 ```
 
 互归纳定义
@@ -90,8 +90,8 @@ module Tree (k : ℕ) (L⃗ : Vec OrderStruct k) (S : (n̂ : Fin k) → Segment 
 ```
 
 ```agda
-  module Seg (n̂ : Fin k) where
-    open Segment (S n̂) public
+  module Seg (k⁻ : Fin k) where
+    open Segment (S k⁻) public
     private variable
       a : L
       aℓ : a ⊏ ℓ
@@ -107,7 +107,7 @@ module Tree (k : ℕ) (L⃗ : Vec OrderStruct k) (S : (n̂ : Fin k) → Segment 
   data A where
     zero : A
     suc : A → A
-    lim : (n̂ : Fin k) → let open Seg n̂ in
+    lim : (k⁻ : Fin k) → let open Seg k⁻ in
       (a : L) (aℓ : a ⊏ ℓ) (f : Seq aℓ) (mo : mono f) → A
 ```
 
@@ -116,9 +116,9 @@ module Tree (k : ℕ) (L⃗ : Vec OrderStruct k) (S : (n̂ : Fin k) → Segment 
   data R where
     zero : R α (suc α)
     suc  : R α β → R α (suc β)
-    lim  : (n̂ : Fin k) → let open Seg n̂ in
+    lim  : (k⁻ : Fin k) → let open Seg k⁻ in
       (a : L) (aℓ : a ⊏ ℓ) {f : Seq aℓ} {mo : mono f} {ν : O⁻ aℓ .fst} →
-      R α (f ν) → R α (lim n̂ a aℓ f mo)
+      R α (f ν) → R α (lim k⁻ a aℓ f mo)
 ```
 
 ## CK序数层级
