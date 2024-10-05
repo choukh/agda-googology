@@ -53,13 +53,27 @@ open import Bridged.Data.Unit public using (⊤; tt; isProp⊤)
 open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```
 
-## 抽象树序数
+## 基础结构
 
 **定义** 序结构
 
 ```agda
 OrderStruct : Type₁
 OrderStruct = Σ Type λ A → A → A → Type
+```
+
+**定义** 等级结构
+
+```agda
+record LevelStruct : Type₁ where
+  field
+    ⟨L,⊏⟩ : OrderStruct
+  L = ⟨L,⊏⟩ .fst
+  _⊏_ = ⟨L,⊏⟩ .snd
+  field
+    ⊏-wf : WellFounded _⊏_
+    ⊏-trans : Transitive _⊏_
+    ⊏-prop : ∀ {a b} → isProp (a ⊏ b)
 ```
 
 **定义** 由序结构索引的序结构族前段
@@ -71,13 +85,31 @@ record Segment (⟨L,⊏⟩ : OrderStruct) : Type₁ where
   _⊏_ = ⟨L,⊏⟩ .snd
   field
     ℓ : L
-    O⁻ : {a : L} → a ⊏ ℓ → OrderStruct
+    S : {a : L} → a ⊏ ℓ → OrderStruct
 ```
 
-**定义** 抽象树序数 (由自然数索引前段族索引)
+**定义** 自然数索引的前段族
 
 ```agda
-module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S : (k⁻ : Fin k) → Segment (lookup O⃗ k⁻)) where
+Segments : {k : ℕ} (O⃗ : Vec OrderStruct k) → Type₁
+Segments {k} O⃗ = (k⁻ : Fin k) → Segment (lookup O⃗ k⁻)
+```
+
+**定义** 前段族的构造方法
+
+```agda
+_∷ˢ_ : {O@(L , _⊏_) : OrderStruct} {ℓ : L} (S : {a : L} → a ⊏ ℓ → OrderStruct)
+       {k : ℕ} {O⃗ : Vec OrderStruct k} (S⃗ : Segments O⃗) → Segments (O ∷ O⃗)
+(S ∷ˢ S⃗) zero = seg _ S
+(S ∷ˢ S⃗) (suc k) = S⃗ k
+```
+
+## 抽象树序数
+
+**定义** 抽象树序数 (由前段族索引)
+
+```agda
+module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) where
 ```
 
 互归纳定义
@@ -92,16 +124,16 @@ module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S : (k⁻ : Fin k) → Segment
 
 ```agda
   module Seg (k⁻ : Fin k) where
-    open Segment (S k⁻) public
+    open Segment (S⃗ k⁻) public
     private variable
       a : L
       aℓ : a ⊏ ℓ
 
     Seq : a ⊏ ℓ → Type
-    Seq aℓ = O⁻ aℓ .fst → A
+    Seq aℓ = S aℓ .fst → A
 
     mono : Seq aℓ → Type
-    mono {aℓ} f = ∀ {ν μ} → O⁻ aℓ .snd ν μ → R₁ (f ν) (f μ)
+    mono {aℓ} f = ∀ {ν μ} → S aℓ .snd ν μ → R₁ (f ν) (f μ)
 ```
 
 ```agda
@@ -118,28 +150,14 @@ module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S : (k⁻ : Fin k) → Segment
     zero : R α (suc α)
     suc  : R α β → R α (suc β)
     lim  : (k⁻ : Fin k) → let open Seg k⁻ in
-      (a : L) (aℓ : a ⊏ ℓ) {f : Seq aℓ} {mo : mono f} {ν : O⁻ aℓ .fst} →
+      (a : L) (aℓ : a ⊏ ℓ) {f : Seq aℓ} {mo : mono f} {ν : S aℓ .fst} →
       R α (f ν) → R α (lim k⁻ a aℓ f mo)
 ```
 
 ## CK序数层级
 
-**定义** 等级结构
-
 ```agda
-record LevelStruct : Type₁ where
-  field
-    ⟨L,⊏⟩ : OrderStruct
-  L = ⟨L,⊏⟩ .fst
-  _⊏_ = ⟨L,⊏⟩ .snd
-  field
-    ⊏-wf : WellFounded _⊏_
-    ⊏-trans : Transitive _⊏_
-    ⊏-prop : ∀ {a b} → isProp (a ⊏ b)
-```
-
-```agda
-module CK (k : ℕ) (O⃗ : Vec OrderStruct k) (S : (k⁻ : Fin k) → Segment (lookup O⃗ k⁻)) (L̂ : LevelStruct) where
+module CK (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) (L̂ : LevelStruct) where
   open LevelStruct L̂
   open Tree (suc k) (⟨L,⊏⟩ ∷ O⃗) using (A ; R; zero; suc; lim)
   module W = WF.All ⊏-wf
@@ -149,10 +167,6 @@ module CK (k : ℕ) (O⃗ : Vec OrderStruct k) (S : (k⁻ : Fin k) → Segment (
 ```
 
 ```agda
-  seg-cons : (O⁻ : {a : L} → a ⊏ ℓ → OrderStruct) (k⁻ : Fin (suc k)) → Segment (lookup (⟨L,⊏⟩ ∷ O⃗) k⁻)
-  seg-cons O⁻ zero = seg _ O⁻
-  seg-cons _ (suc k⁻) = S k⁻
-
   ⟨U,R⟩⁻ : a ⊏ ℓ → OrderStruct
-  ⟨U,R⟩⁻ = W.wfRecBuilder _ _ (λ _ O⁻ → A (seg-cons O⁻) , R (seg-cons O⁻)) _
+  ⟨U,R⟩⁻ = W.wfRecBuilder _ _ (λ _ S → A (S ∷ˢ S⃗) , R (S ∷ˢ S⃗)) _
 ```
