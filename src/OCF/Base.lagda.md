@@ -34,8 +34,8 @@ open import Cubical.HITs.PropositionalTruncation public
 
 ```agda
 open import Data.Nat public using (ℕ; zero; suc)
-open import Data.Fin public using (Fin)
-open import Data.Vec public using (Vec; lookup) renaming (map to map⃗)
+open import Data.Fin public using (Fin; zero; suc)
+open import Data.Vec public using (Vec; _∷_; lookup) renaming (map to map⃗)
 open import Function public using (id; _∘_; _$_; _∋_; _⟨_⟩_; case_of_)
 open import Relation.Binary.Definitions public
 open import Relation.Binary.PropositionalEquality as Eq public
@@ -66,6 +66,7 @@ OrderStruct = Σ Type λ A → A → A → Type
 
 ```agda
 record Segment (⟨L,⊏⟩ : OrderStruct) : Type₁ where
+  constructor seg
   L = ⟨L,⊏⟩ .fst
   _⊏_ = ⟨L,⊏⟩ .snd
   field
@@ -73,10 +74,10 @@ record Segment (⟨L,⊏⟩ : OrderStruct) : Type₁ where
     O⁻ : {a : L} → a ⊏ ℓ → OrderStruct
 ```
 
-**定义** 抽象树序数 (由前段族索引)
+**定义** 抽象树序数 (由自然数索引前段族索引)
 
 ```agda
-module Tree (k : ℕ) (L⃗ : Vec OrderStruct k) (S : (k⁻ : Fin k) → Segment (lookup L⃗ k⁻)) where
+module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S : (k⁻ : Fin k) → Segment (lookup O⃗ k⁻)) where
 ```
 
 互归纳定义
@@ -123,7 +124,35 @@ module Tree (k : ℕ) (L⃗ : Vec OrderStruct k) (S : (k⁻ : Fin k) → Segment
 
 ## CK序数层级
 
+**定义** 等级结构
+
 ```agda
-module CK (k : ℕ) (L⃗ : Vec OrderStruct (suc k)) where
-  open Tree (suc k) L⃗ using (A ; R; zero; suc; lim)
+record LevelStruct : Type₁ where
+  field
+    ⟨L,⊏⟩ : OrderStruct
+  L = ⟨L,⊏⟩ .fst
+  _⊏_ = ⟨L,⊏⟩ .snd
+  field
+    ⊏-wf : WellFounded _⊏_
+    ⊏-trans : Transitive _⊏_
+    ⊏-prop : ∀ {a b} → isProp (a ⊏ b)
+```
+
+```agda
+module CK (k : ℕ) (O⃗ : Vec OrderStruct k) (S : (k⁻ : Fin k) → Segment (lookup O⃗ k⁻)) (L̂ : LevelStruct) where
+  open LevelStruct L̂
+  open Tree (suc k) (⟨L,⊏⟩ ∷ O⃗) using (A ; R; zero; suc; lim)
+  module W = WF.All ⊏-wf
+  private variable
+    a b c ℓ ℓ′ ℓ″ : L
+    aℓ : a ⊏ ℓ
+```
+
+```agda
+  seg-cons : (O⁻ : {a : L} → a ⊏ ℓ → OrderStruct) (k⁻ : Fin (suc k)) → Segment (lookup (⟨L,⊏⟩ ∷ O⃗) k⁻)
+  seg-cons O⁻ zero = seg _ O⁻
+  seg-cons _ (suc k⁻) = S k⁻
+
+  ⟨U,R⟩⁻ : a ⊏ ℓ → OrderStruct
+  ⟨U,R⟩⁻ = W.wfRecBuilder _ _ (λ _ O⁻ → A (seg-cons O⁻) , R (seg-cons O⁻)) _
 ```
