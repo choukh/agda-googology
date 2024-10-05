@@ -55,51 +55,40 @@ open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 
 ## 基础结构
 
-**定义** 序结构
+**定义** 良基结构
 
 ```agda
-OrderStruct : Type₁
-OrderStruct = Σ Type λ A → A → A → Type
+record WfStruct : Type₁ where
+  constructor wf
+  field
+    A : Type
+    R : A → A → Type
+    R-wf : WellFounded R
 ```
 
-**定义** 等级结构
+**定义** 由良基结构索引的良基结构族前段
 
 ```agda
-record LevelStruct : Type₁ where
-  field
-    ⟨L,⊏⟩ : OrderStruct
-  L = ⟨L,⊏⟩ .fst
-  _⊏_ = ⟨L,⊏⟩ .snd
-  field
-    ⊏-wf : WellFounded _⊏_
-    ⊏-trans : Transitive _⊏_
-    ⊏-prop : ∀ {a b} → isProp (a ⊏ b)
-```
-
-**定义** 由序结构索引的序结构族前段
-
-```agda
-record Segment (⟨L,⊏⟩ : OrderStruct) : Type₁ where
+record Segment (L : WfStruct) : Type₁ where
   constructor seg
-  L = ⟨L,⊏⟩ .fst
-  _⊏_ = ⟨L,⊏⟩ .snd
+  open WfStruct L public renaming (A to Lv; R to _⊏_; R-wf to ⊏-wf)
   field
-    ℓ : L
-    S : {a : L} → a ⊏ ℓ → OrderStruct
+    ℓ : Lv
+    S : {a : Lv} → a ⊏ ℓ → WfStruct
 ```
 
 **定义** 自然数索引的前段族
 
 ```agda
-Segments : {k : ℕ} (O⃗ : Vec OrderStruct k) → Type₁
-Segments {k} O⃗ = (k⁻ : Fin k) → Segment (lookup O⃗ k⁻)
+Segments : {k : ℕ} (L⃗ : Vec WfStruct k) → Type₁
+Segments {k} L⃗ = (k⁻ : Fin k) → Segment (lookup L⃗ k⁻)
 ```
 
 **定义** 前段族的构造方法
 
 ```agda
-_∷ˢ_ : {O@(L , _⊏_) : OrderStruct} {ℓ : L} (S : {a : L} → a ⊏ ℓ → OrderStruct)
-       {k : ℕ} {O⃗ : Vec OrderStruct k} (S⃗ : Segments O⃗) → Segments (O ∷ O⃗)
+_∷ˢ_ : {L@(wf Lv _⊏_ _) : WfStruct} {ℓ : Lv} (S : {a : Lv} → a ⊏ ℓ → WfStruct)
+       {k : ℕ} {L⃗ : Vec WfStruct k} (S⃗ : Segments L⃗) → Segments (L ∷ L⃗)
 (S ∷ˢ S⃗) zero = seg _ S
 (S ∷ˢ S⃗) (suc k) = S⃗ k
 ```
@@ -109,7 +98,7 @@ _∷ˢ_ : {O@(L , _⊏_) : OrderStruct} {ℓ : L} (S : {a : L} → a ⊏ ℓ →
 **定义** 抽象树序数 (由前段族索引)
 
 ```agda
-module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) where
+module Tree (k : ℕ) (L⃗ : Vec WfStruct k) (S⃗ : Segments L⃗) where
 ```
 
 互归纳定义
@@ -126,14 +115,14 @@ module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) where
   module Seg (k⁻ : Fin k) where
     open Segment (S⃗ k⁻) public
     private variable
-      a : L
+      a : Lv
       aℓ : a ⊏ ℓ
 
     Seq : a ⊏ ℓ → Type
-    Seq aℓ = S aℓ .fst → O
+    Seq aℓ = WfStruct.A (S aℓ) → O
 
     mono : Seq aℓ → Type
-    mono {aℓ} f = ∀ {ν μ} → S aℓ .snd ν μ → f ν <₁ f μ
+    mono {aℓ} f = ∀ {ν μ} → WfStruct.R (S aℓ) ν μ → f ν <₁ f μ
 ```
 
 ```agda
@@ -141,7 +130,7 @@ module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) where
     zero : O
     suc : O → O
     lim : (k⁻ : Fin k) → let open Seg k⁻ in
-      (a : L) (aℓ : a ⊏ ℓ) (f : Seq aℓ) (mo : mono f) → O
+      (a : Lv) (aℓ : a ⊏ ℓ) (f : Seq aℓ) (mo : mono f) → O
 ```
 
 ```agda
@@ -150,7 +139,7 @@ module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) where
     zero : α < suc α
     suc  : α < β → α < suc β
     lim  : {k⁻ : Fin k} → let open Seg k⁻ in
-      {a : L} {aℓ : a ⊏ ℓ} {f : Seq aℓ} {mo : mono f} {ν : S aℓ .fst} →
+      {a : Lv} {aℓ : a ⊏ ℓ} {f : Seq aℓ} {mo : mono f} {ν : WfStruct.A (S aℓ)} →
       α < f ν → α < lim k⁻ a aℓ f mo
 ```
 
@@ -185,22 +174,30 @@ module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) where
   <₁-wf _ = <₁-acc ∣ zero ∣₁
 ```
 
+**定理** 抽象树序数构成良基结构.  
+
+```agda
+  tree : WfStruct
+  tree = wf O _<₁_ <₁-wf
+```
+
 ## CK序数层级
 
 ```agda
-module CK (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) (L̂ : LevelStruct) where
-  open LevelStruct L̂
-  open Tree (suc k) (⟨L,⊏⟩ ∷ O⃗) using (O ; _<_; zero; suc; lim)
+module CK (k : ℕ) (L⃗ : Vec WfStruct k) (S⃗ : Segments L⃗) (L : WfStruct) where
+  open WfStruct L renaming (A to Lv; R to _⊏_; R-wf to ⊏-wf)
+  module T = Tree (suc k) (L ∷ L⃗)
+  open T using (zero; suc; lim)
   module W = WF.All ⊏-wf
   private variable
-    a b c ℓ ℓ′ ℓ″ : L
+    a b c ℓ ℓ′ ℓ″ : Lv
     aℓ : a ⊏ ℓ
 ```
 
 ```agda
-  ⟨O,<⟩⁻ : a ⊏ ℓ → OrderStruct
-  ⟨O,<⟩⁻ = W.wfRecBuilder _ _ (λ _ S → O (S ∷ˢ S⃗) , _<_ (S ∷ˢ S⃗)) _
+  tree⁻ : a ⊏ ℓ → WfStruct
+  tree⁻ = W.wfRecBuilder _ _ (λ _ S → T.tree (S ∷ˢ S⃗)) _
 
-  ⟨O,<⟩ : L → OrderStruct
-  ⟨O,<⟩ = W.wfRec _ _ λ _ S → O (S ∷ˢ S⃗) , _<_ (S ∷ˢ S⃗)
+  tree : Lv → WfStruct
+  tree = W.wfRec _ _ λ _ S → T.tree (S ∷ˢ S⃗)
 ```
