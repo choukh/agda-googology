@@ -154,11 +154,35 @@ module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) where
       α < f ν → α < lim k⁻ a aℓ f mo
 ```
 
+### 路径的良基性
+
 ```agda
   <-trans : Transitive _<_
   <-trans r zero = suc r
   <-trans r (suc s) = suc (<-trans r s)
   <-trans r (lim s) = lim (<-trans r s)
+
+  <-acc : α < β → Acc _<_ α
+  <-acc zero = acc λ s → <-acc s
+  <-acc (suc r) = acc λ s → <-acc (<-trans s r)
+  <-acc (lim r) = acc λ s → <-acc (<-trans s r)
+
+  <-wf : WellFounded _<_
+  <-wf _ = <-acc zero
+```
+
+```agda
+  isPropAcc : isProp (Acc _<₁_ α)
+  isPropAcc (acc p) (acc q) i = acc (λ r → isPropAcc (p r) (q r) i)
+
+  <₁-acc : α <₁ β → Acc _<₁_ α
+  <₁-acc ∣ zero  ∣₁ = acc λ r → <₁-acc r
+  <₁-acc ∣ suc r ∣₁ = acc λ s → <₁-acc (map2 <-trans s ∣ r ∣₁)
+  <₁-acc ∣ lim r ∣₁ = acc λ s → <₁-acc (map2 <-trans s ∣ r ∣₁)
+  <₁-acc (squash₁ p q i) = isPropAcc (<₁-acc p) (<₁-acc q) i
+
+  <₁-wf : WellFounded _<₁_
+  <₁-wf _ = <₁-acc ∣ zero ∣₁
 ```
 
 ## CK序数层级
