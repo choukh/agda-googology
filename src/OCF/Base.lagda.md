@@ -115,11 +115,11 @@ module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) where
 互归纳定义
 
 ```agda
-  data A : Type
-  data R : A → A → Type
+  data O : Type
+  data _<_ : O → O → Type
 
-  R₁ : A → A → Type
-  R₁ α β = ∥ R α β ∥₁
+  _<₁_ : O → O → Type
+  α <₁ β = ∥ α < β ∥₁
 ```
 
 ```agda
@@ -130,28 +130,35 @@ module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) where
       aℓ : a ⊏ ℓ
 
     Seq : a ⊏ ℓ → Type
-    Seq aℓ = S aℓ .fst → A
+    Seq aℓ = S aℓ .fst → O
 
     mono : Seq aℓ → Type
-    mono {aℓ} f = ∀ {ν μ} → S aℓ .snd ν μ → R₁ (f ν) (f μ)
+    mono {aℓ} f = ∀ {ν μ} → S aℓ .snd ν μ → f ν <₁ f μ
 ```
 
 ```agda
-  data A where
-    zero : A
-    suc : A → A
+  data O where
+    zero : O
+    suc : O → O
     lim : (k⁻ : Fin k) → let open Seg k⁻ in
-      (a : L) (aℓ : a ⊏ ℓ) (f : Seq aℓ) (mo : mono f) → A
+      (a : L) (aℓ : a ⊏ ℓ) (f : Seq aℓ) (mo : mono f) → O
 ```
 
 ```agda
-  private variable α β : A
-  data R where
-    zero : R α (suc α)
-    suc  : R α β → R α (suc β)
-    lim  : (k⁻ : Fin k) → let open Seg k⁻ in
-      (a : L) (aℓ : a ⊏ ℓ) {f : Seq aℓ} {mo : mono f} {ν : S aℓ .fst} →
-      R α (f ν) → R α (lim k⁻ a aℓ f mo)
+  private variable α β : O
+  data _<_ where
+    zero : α < suc α
+    suc  : α < β → α < suc β
+    lim  : {k⁻ : Fin k} → let open Seg k⁻ in
+      {a : L} {aℓ : a ⊏ ℓ} {f : Seq aℓ} {mo : mono f} {ν : S aℓ .fst} →
+      α < f ν → α < lim k⁻ a aℓ f mo
+```
+
+```agda
+  <-trans : Transitive _<_
+  <-trans r zero = suc r
+  <-trans r (suc s) = suc (<-trans r s)
+  <-trans r (lim s) = lim (<-trans r s)
 ```
 
 ## CK序数层级
@@ -159,7 +166,7 @@ module Tree (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) where
 ```agda
 module CK (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) (L̂ : LevelStruct) where
   open LevelStruct L̂
-  open Tree (suc k) (⟨L,⊏⟩ ∷ O⃗) using (A ; R; zero; suc; lim)
+  open Tree (suc k) (⟨L,⊏⟩ ∷ O⃗) using (O ; _<_; zero; suc; lim)
   module W = WF.All ⊏-wf
   private variable
     a b c ℓ ℓ′ ℓ″ : L
@@ -167,6 +174,9 @@ module CK (k : ℕ) (O⃗ : Vec OrderStruct k) (S⃗ : Segments O⃗) (L̂ : Lev
 ```
 
 ```agda
-  ⟨U,R⟩⁻ : a ⊏ ℓ → OrderStruct
-  ⟨U,R⟩⁻ = W.wfRecBuilder _ _ (λ _ S → A (S ∷ˢ S⃗) , R (S ∷ˢ S⃗)) _
+  ⟨O,<⟩⁻ : a ⊏ ℓ → OrderStruct
+  ⟨O,<⟩⁻ = W.wfRecBuilder _ _ (λ _ S → O (S ∷ˢ S⃗) , _<_ (S ∷ˢ S⃗)) _
+
+  ⟨O,<⟩ : L → OrderStruct
+  ⟨O,<⟩ = W.wfRec _ _ λ _ S → O (S ∷ˢ S⃗) , _<_ (S ∷ˢ S⃗)
 ```
