@@ -55,41 +55,43 @@ open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 
 ## 基础结构
 
-**定义** 良基结构
+**定义** 良基传递结构
 
 ```agda
-record WfStruct : Type₁ where
-  constructor wf
+record WfTrans : Type₁ where
+  constructor mkWf
   field
     A : Type
     R : A → A → Type
+    R-prop : ∀ {a b} → isProp (R a b)
     R-wf : WellFounded R
+    R-trans : Transitive R
 ```
 
 **定义** 由良基结构索引的良基结构族前段
 
 ```agda
-record Segment (L : WfStruct) : Type₁ where
-  constructor seg
-  open WfStruct L public renaming (A to Lv; R to _⊏_; R-wf to ⊏-wf)
+record Segment (L : WfTrans) : Type₁ where
+  constructor mkSeg
+  open WfTrans L public renaming (A to Lv; R to _⊏_; R-wf to ⊏-wf)
   field
     ℓ : Lv
-    S : {a : Lv} → a ⊏ ℓ → WfStruct
+    S : {a : Lv} → a ⊏ ℓ → WfTrans
 ```
 
 **定义** 自然数索引的前段族
 
 ```agda
-Segments : {k : ℕ} (L⃗ : Vec WfStruct k) → Type₁
+Segments : {k : ℕ} (L⃗ : Vec WfTrans k) → Type₁
 Segments {k} L⃗ = (k⁻ : Fin k) → Segment (lookup L⃗ k⁻)
 ```
 
 **定义** 前段族的构造方法
 
 ```agda
-_∷ˢ_ : {L@(wf Lv _⊏_ _) : WfStruct} {ℓ : Lv} (S : {a : Lv} → a ⊏ ℓ → WfStruct)
-       {k : ℕ} {L⃗ : Vec WfStruct k} (S⃗ : Segments L⃗) → Segments (L ∷ L⃗)
-(S ∷ˢ S⃗) zero = seg _ S
+_∷ˢ_ : {L@(mkWf Lv _⊏_ _ _ _) : WfTrans} {ℓ : Lv} (S : {a : Lv} → a ⊏ ℓ → WfTrans)
+       {k : ℕ} {L⃗ : Vec WfTrans k} (S⃗ : Segments L⃗) → Segments (L ∷ L⃗)
+(S ∷ˢ S⃗) zero = mkSeg _ S
 (S ∷ˢ S⃗) (suc k) = S⃗ k
 ```
 
@@ -98,7 +100,7 @@ _∷ˢ_ : {L@(wf Lv _⊏_ _) : WfStruct} {ℓ : Lv} (S : {a : Lv} → a ⊏ ℓ 
 **定义** 抽象树序数 (由前段族索引)
 
 ```agda
-module Tree (k : ℕ) (L⃗ : Vec WfStruct k) (S⃗ : Segments L⃗) where
+module Tree (k : ℕ) (L⃗ : Vec WfTrans k) (S⃗ : Segments L⃗) where
 ```
 
 互归纳定义
@@ -119,10 +121,10 @@ module Tree (k : ℕ) (L⃗ : Vec WfStruct k) (S⃗ : Segments L⃗) where
       aℓ : a ⊏ ℓ
 
     Seq : a ⊏ ℓ → Type
-    Seq aℓ = WfStruct.A (S aℓ) → O
+    Seq aℓ = WfTrans.A (S aℓ) → O
 
     mono : Seq aℓ → Type
-    mono {aℓ} f = ∀ {ν μ} → WfStruct.R (S aℓ) ν μ → f ν <₁ f μ
+    mono {aℓ} f = ∀ {ν μ} → WfTrans.R (S aℓ) ν μ → f ν <₁ f μ
 ```
 
 ```agda
@@ -139,7 +141,7 @@ module Tree (k : ℕ) (L⃗ : Vec WfStruct k) (S⃗ : Segments L⃗) where
     zero : α < suc α
     suc  : α < β → α < suc β
     lim  : {k⁻ : Fin k} → let open Seg k⁻ in
-      {a : Lv} {aℓ : a ⊏ ℓ} {f : Seq aℓ} {mo : mono f} {ν : WfStruct.A (S aℓ)} →
+      {a : Lv} {aℓ : a ⊏ ℓ} {f : Seq aℓ} {mo : mono f} {ν : WfTrans.A (S aℓ)} →
       α < f ν → α < lim k⁻ a aℓ f mo
 ```
 
@@ -174,18 +176,18 @@ module Tree (k : ℕ) (L⃗ : Vec WfStruct k) (S⃗ : Segments L⃗) where
   <₁-wf _ = <₁-acc ∣ zero ∣₁
 ```
 
-**定理** 抽象树序数构成良基结构.  
+**定理** 抽象树序数构成良基传递结构.  
 
 ```agda
-  tree : WfStruct
-  tree = wf O _<₁_ <₁-wf
+  tree : WfTrans
+  tree = mkWf O _<₁_ squash₁ <₁-wf (map2 <-trans)
 ```
 
 ## CK序数层级
 
 ```agda
-module CK (k : ℕ) (L⃗ : Vec WfStruct k) (S⃗ : Segments L⃗) (L : WfStruct) where
-  open WfStruct L renaming (A to Lv; R to _⊏_; R-wf to ⊏-wf)
+module CK (k : ℕ) (L⃗ : Vec WfTrans k) (S⃗ : Segments L⃗) (L : WfTrans) where
+  open WfTrans L renaming (A to Lv; R to _⊏_; R-prop to ⊏-prop; R-wf to ⊏-wf; R-trans to ⊏-trans)
   module T = Tree (suc k) (L ∷ L⃗)
   open T using (zero; suc; lim)
   module W = WF.All ⊏-wf
@@ -195,9 +197,9 @@ module CK (k : ℕ) (L⃗ : Vec WfStruct k) (S⃗ : Segments L⃗) (L : WfStruct
 ```
 
 ```agda
-  tree⁻ : a ⊏ ℓ → WfStruct
+  tree⁻ : a ⊏ ℓ → WfTrans
   tree⁻ = W.wfRecBuilder _ _ (λ _ S → T.tree (S ∷ˢ S⃗)) _
 
-  tree : Lv → WfStruct
+  tree : Lv → WfTrans
   tree = W.wfRec _ _ λ _ S → T.tree (S ∷ˢ S⃗)
 ```
