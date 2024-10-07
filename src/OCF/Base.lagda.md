@@ -52,7 +52,7 @@ open import Bridged.Data.Unit public using (⊤; tt; isProp⊤)
 open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 ```
 
-## 基础结构
+## 良基传递结构
 
 **引理** 可及关系是命题.  
 
@@ -85,71 +85,138 @@ record WfTrans : Type₁ where
   R₁-wf = R₁-acc ∘ R-wf
 ```
 
-**定义** 抽象树序数
+## 抽象树序数
 
 ```agda
-module Tree ((mk Lv _⊏_ _ _) : WfTrans) (ℓ : Lv) (Rec : ∀ {a} → a ⊏ ℓ → WfTrans) where
-  private variable
-    a : Lv
-    aℓ : a ⊏ ℓ
+module Tree (L : WfTrans) where
+  open WfTrans L using () renaming (A to Lv; R₁ to _⊏_)
+  module _ (ℓ : Lv) (Rec : ∀ {a} → a ⊏ ℓ → WfTrans) where
+    private variable
+      a : Lv
+      aℓ : a ⊏ ℓ
+    module _ (aℓ : a ⊏ ℓ) where
+      open WfTrans (Rec aℓ) public using () renaming (A to O⁻)
+    module _ {aℓ : a ⊏ ℓ} where
+      open WfTrans (Rec aℓ) public using () renaming (R to _<⁻_)
 ```
 
 ```agda
-  data O : Type
-  data _<_ : O → O → Type
+    data O : Type
+    data _<_ : O → O → Type
 
-  _<₁_ : O → O → Type
-  α <₁ β = ∥ α < β ∥₁
+    _<₁_ : O → O → Type
+    α <₁ β = ∥ α < β ∥₁
 ```
 
 ```agda
-  module _ (aℓ : a ⊏ ℓ) where
-    open WfTrans (Rec aℓ) public using () renaming (A to O⁻)
-  module _ {aℓ : a ⊏ ℓ} where
-    open WfTrans (Rec aℓ) public using () renaming (R to _<⁻_)
+    Seq : a ⊏ ℓ → Type
+    Seq aℓ = O⁻ aℓ → O
 
-  Seq : a ⊏ ℓ → Type
-  Seq aℓ = O⁻ aℓ → O
-
-  mono : Seq aℓ → Type
-  mono {aℓ} f = ∀ {ν μ} → ν <⁻ μ → f ν <₁ f μ
+    mono : Seq aℓ → Type
+    mono {aℓ} f = ∀ {ν μ} → ν <⁻ μ → f ν <₁ f μ
 ```
 
 ```agda
-  data O where
-    zero : O
-    suc : O → O
-    lim : (aℓ : a ⊏ ℓ) (f : Seq aℓ) (mo : mono f) → O
+    data O where
+      zero : O
+      suc : O → O
+      lim : (a : Lv) (aℓ : a ⊏ ℓ) (f : Seq aℓ) (mo : mono f) → O
 ```
 
 ```agda
-  private variable α β : O
-  data _<_ where
-    zero : α < suc α
-    suc  : α < β → α < suc β
-    lim  : {f : Seq aℓ} {mo : mono f} {ν : O⁻ aℓ} → α < f ν → α < lim aℓ f mo
+    private variable α β : O
+    data _<_ where
+      zero : α < suc α
+      suc  : α < β → α < suc β
+      lim  : {f : Seq aℓ} {mo : mono f} {ν : O⁻ aℓ} → α < f ν → α < lim _ _ f mo
 ```
 
-### 路径的良基性
+### 极限的外延性
 
 ```agda
-  <-trans : Transitive _<_
-  <-trans r zero = suc r
-  <-trans r (suc s) = suc (<-trans r s)
-  <-trans r (lim s) = lim (<-trans r s)
+    mono-prop : {f : Seq aℓ} → isProp (mono f)
+    mono-prop = isPropImplicitΠ2 λ _ _ → isProp→ squash₁
+```
 
-  <-acc : α < β → Acc _<_ α
-  <-acc zero = acc λ s → <-acc s
-  <-acc (suc r) = acc λ s → <-acc (<-trans s r)
-  <-acc (lim r) = acc λ s → <-acc (<-trans s r)
+```agda
+    module _
+      {aℓᶠ : a ⊏ ℓ} {f : O⁻ aℓᶠ → O} {moᶠ : mono f}
+      {aℓᵍ : a ⊏ ℓ} {g : O⁻ aℓᵍ → O} {moᵍ : mono g}
+      {♮ : {aℓ₁ aℓ₂ : a ⊏ ℓ} → O⁻ aℓ₁ → O⁻ aℓ₂} {♮-id : {aℓ : a ⊏ ℓ} {ν : O⁻ aℓ} → ♮ ν ≡ ν}
+      (p : (ν : O⁻ aℓᶠ) → f ν ≡ g (♮ ν))
+      where
 
-  <-wf : WellFounded _<_
-  <-wf _ = <-acc zero
+      limExt : lim a aℓᶠ f moᶠ ≡ lim a aℓᵍ g moᵍ
+      limExt with (pathToEq $ squash₁ aℓᶠ aℓᵍ)
+      ... | rfl = cong₂ (lim a aℓᶠ) (funExt λ ν → subst (λ x → f ν ≡ g x) ♮-id (p ν)) (toPathP $ mono-prop _ _)
+```
+
+### 良基传递性
+
+**引理** $<$ 是传递关系.  
+
+```agda
+    <-trans : Transitive _<_
+    <-trans r zero = suc r
+    <-trans r (suc s) = suc (<-trans r s)
+    <-trans r (lim s) = lim (<-trans r s)
+```
+
+**引理** $<$ 是良基关系.  
+
+```agda
+    <-acc : α < β → Acc _<_ α
+    <-acc zero = acc λ s → <-acc s
+    <-acc (suc r) = acc λ s → <-acc (<-trans s r)
+    <-acc (lim r) = acc λ s → <-acc (<-trans s r)
+
+    <-wf : WellFounded _<_
+    <-wf _ = <-acc zero
 ```
 
 **定理** 抽象树序数构成良基传递结构.  
 
 ```agda
-  wfTrans : WfTrans
-  wfTrans = mk O _<_ <-wf <-trans
+    wfTrans : WfTrans
+    wfTrans = mk O _<_ <-wf <-trans
+```
+
+## CK序数层级
+
+```agda
+module CK {L : WfTrans} where
+  open WfTrans L using () renaming (A to Lv; R₁ to _⊏_; R₁-wf to ⊏-wf)
+  open Tree using (zero; suc; lim)
+  module W = WF.All ⊏-wf
+  private variable
+    a b c ℓ ℓ′ ℓ″ : Lv
+    aℓ : a ⊏ ℓ
+```
+
+```agda
+  wfTrans⁻ : a ⊏ ℓ → WfTrans
+  wfTrans⁻ = W.wfRecBuilder _ _ (λ _ → Tree.wfTrans L _) _
+
+  wfTrans : Lv → WfTrans
+  wfTrans = W.wfRec _ _ λ _ → Tree.wfTrans L _
+```
+
+```agda
+  module _ (ℓ : Lv) where
+    open WfTrans (wfTrans ℓ) public using () renaming (A to O)
+  module _ {ℓ : Lv} where
+    open WfTrans (wfTrans ℓ) public using () renaming (R to _<_; R₁ to _<₁_)
+```
+
+### 层级的提升
+
+```agda
+  mutual
+    lft : a ⊏ b → O a → O b
+    lft ab zero = zero
+    lft ab (suc α) = suc (lft ab α)
+    lft ab (lim x xa f mo) = {!   !}
+
+    lft-mono : {ab : a ⊏ b} {α β : O a} → α < β → lft ab α < lft ab β
+    lft-mono = {!   !}
 ```
