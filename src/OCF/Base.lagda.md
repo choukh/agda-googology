@@ -63,17 +63,23 @@ record WfTrans : Type₁ where
   field
     A : Type
     R : A → A → Type
-    R-prop : ∀ {a b} → isProp (R a b)
     R-wf : WellFounded R
     R-trans : Transitive R
+
+  R₁ : A → A → Type
+  R₁ a b = ∥ R a b ∥₁
+
+  field
+    R₁-wf : WellFounded R₁
+    R₁-trans : Transitive R₁
 ```
 
-**定义** 由良基结构索引的良基结构族前段
+**定义** 由良基传递结构索引的良基传递结构族前段
 
 ```agda
 record Segment (L : WfTrans) : Type₁ where
   constructor mkSeg
-  open WfTrans L public renaming (A to Lv; R to _⊏_; R-wf to ⊏-wf)
+  open WfTrans L public renaming (A to Lv; R₁ to _⊏_)
   field
     ℓ : Lv
     S : {a : Lv} → a ⊏ ℓ → WfTrans
@@ -89,7 +95,8 @@ Segments {k} L⃗ = (k⁻ : Fin k) → Segment (lookup L⃗ k⁻)
 **定义** 前段族的构造方法
 
 ```agda
-_∷ˢ_ : {L@(mkWf Lv _⊏_ _ _ _) : WfTrans} {ℓ : Lv} (S : {a : Lv} → a ⊏ ℓ → WfTrans)
+_∷ˢ_ : {L : WfTrans} → let open WfTrans L renaming (A to Lv; R₁ to _⊏_) in
+       {ℓ : Lv} (S : {a : Lv} → a ⊏ ℓ → WfTrans)
        {k : ℕ} {L⃗ : Vec WfTrans k} (S⃗ : Segments L⃗) → Segments (L ∷ L⃗)
 (S ∷ˢ S⃗) zero = mkSeg _ S
 (S ∷ˢ S⃗) (suc k) = S⃗ k
@@ -180,17 +187,17 @@ module Tree (k : ℕ) (L⃗ : Vec WfTrans k) (S⃗ : Segments L⃗) where
 
 ```agda
   tree : WfTrans
-  tree = mkWf O _<₁_ squash₁ <₁-wf (map2 <-trans)
+  tree = mkWf O _<_ <-wf <-trans <₁-wf (map2 <-trans)
 ```
 
 ## CK序数层级
 
 ```agda
 module CK (k : ℕ) (L⃗ : Vec WfTrans k) (S⃗ : Segments L⃗) (L : WfTrans) where
-  open WfTrans L renaming (A to Lv; R to _⊏_; R-prop to ⊏-prop; R-wf to ⊏-wf; R-trans to ⊏-trans)
-  module T = Tree (suc k) (L ∷ L⃗)
-  open T using (zero; suc; lim)
-  module W = WF.All ⊏-wf
+  open WfTrans L renaming (A to Lv; R₁ to _⊏_; R₁-wf to ⊏-wf; R₁-trans to ⊏-trans)
+  open Tree using (zero; suc; lim)
+  module Nxt = Tree (suc k) (L ∷ L⃗)
+  module Wf  = WF.All ⊏-wf
   private variable
     a b c ℓ ℓ′ ℓ″ : Lv
     aℓ : a ⊏ ℓ
@@ -198,8 +205,29 @@ module CK (k : ℕ) (L⃗ : Vec WfTrans k) (S⃗ : Segments L⃗) (L : WfTrans) 
 
 ```agda
   tree⁻ : a ⊏ ℓ → WfTrans
-  tree⁻ = W.wfRecBuilder _ _ (λ _ S → T.tree (S ∷ˢ S⃗)) _
+  tree⁻ = Wf.wfRecBuilder _ _ (λ _ S → Nxt.tree (S ∷ˢ S⃗)) _
 
   tree : Lv → WfTrans
-  tree = W.wfRec _ _ λ _ S → T.tree (S ∷ˢ S⃗)
+  tree = Wf.wfRec _ _ λ _ S → Nxt.tree (S ∷ˢ S⃗)
+```
+
+```agda
+  module _ (ℓ : Lv) where
+    open WfTrans (tree ℓ) public renaming (A to O)
+  module _ {ℓ : Lv} where
+    open WfTrans (tree ℓ) public renaming (R to _<_; R₁ to _<₁_)
+```
+
+### 层级的提升
+
+```agda
+  mutual
+    lift : a ⊏ b → O a → O b
+    lift ab zero = zero
+    lift ab (suc α) = suc (lift ab α)
+    lift ab (lim zero     x xa f mo) = lim zero     x (⊏-trans xa ab) {!   !} {!   !}
+    lift ab (lim (suc k⁻) x xa f mo) = lim (suc k⁻) x {!   !} {!   !} {!   !}
+
+    lift-mono : {ab : a ⊏ b} {α β : O a} → α < β → lift ab α < lift ab β
+    lift-mono = {!   !}
 ```
