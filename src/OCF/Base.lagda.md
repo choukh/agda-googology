@@ -19,8 +19,7 @@ module OCF.Base where
 **Cubical库**
 
 ```agda
-open import Cubical.Foundations.Prelude public
-  hiding (Level; Lift; lift; lower) renaming (_∎ to _≡∎)
+open import Cubical.Foundations.Prelude public renaming (_∎ to _≡∎)
 open import Cubical.Foundations.HLevels public
 open import Cubical.Foundations.Isomorphism public
 open import Cubical.Foundations.Transport public
@@ -55,11 +54,18 @@ open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 
 ## 基础结构
 
+**引理** 可及关系是命题.  
+
+```agda
+isPropAcc : {a b : Level} {A : Type a} {R : A → A → Type b} {a : A} → isProp (Acc R a)
+isPropAcc (acc p) (acc q) i = acc (λ r → isPropAcc (p r) (q r) i)
+```
+
 **定义** 良基传递结构
 
 ```agda
 record WfTrans : Type₁ where
-  constructor mkWf
+  constructor mk
   field
     A : Type
     R : A → A → Type
@@ -69,165 +75,21 @@ record WfTrans : Type₁ where
   R₁ : A → A → Type
   R₁ a b = ∥ R a b ∥₁
 
-  field
-    R₁-wf : WellFounded R₁
-    R₁-trans : Transitive R₁
+  R₁-trans : Transitive R₁
+  R₁-trans = map2 R-trans
+
+  R₁-acc : ∀ {a} → Acc R a → Acc R₁ a
+  R₁-acc (acc r) = acc (rec isPropAcc (R₁-acc ∘ r))
+
+  R₁-wf : WellFounded R₁
+  R₁-wf = R₁-acc ∘ R-wf
 ```
 
-**定义** 由良基传递结构索引的良基传递结构族前段
+**定义** 抽象树序数
 
 ```agda
-record Segment (L : WfTrans) : Type₁ where
-  constructor mkSeg
-  open WfTrans L public renaming (A to Lv; R₁ to _⊏_)
-  field
-    ℓ : Lv
-    S : {a : Lv} → a ⊏ ℓ → WfTrans
-```
-
-**定义** 自然数索引的前段族
-
-```agda
-Segments : {k : ℕ} (L⃗ : Vec WfTrans k) → Type₁
-Segments {k} L⃗ = (k⁻ : Fin k) → Segment (lookup L⃗ k⁻)
-```
-
-**定义** 前段族的构造方法
-
-```agda
-_∷ˢ_ : {L : WfTrans} → let open WfTrans L renaming (A to Lv; R₁ to _⊏_) in
-       {ℓ : Lv} (S : {a : Lv} → a ⊏ ℓ → WfTrans)
-       {k : ℕ} {L⃗ : Vec WfTrans k} (S⃗ : Segments L⃗) → Segments (L ∷ L⃗)
-(S ∷ˢ S⃗) zero = mkSeg _ S
-(S ∷ˢ S⃗) (suc k) = S⃗ k
-```
-
-## 抽象树序数
-
-**定义** 抽象树序数 (由前段族索引)
-
-```agda
-module Tree (k : ℕ) (L⃗ : Vec WfTrans k) (S⃗ : Segments L⃗) where
-```
-
-互归纳定义
-
-```agda
-  data O : Type
-  data _<_ : O → O → Type
-
-  _<₁_ : O → O → Type
-  α <₁ β = ∥ α < β ∥₁
-```
-
-```agda
-  module Seg (k⁻ : Fin k) where
-    open Segment (S⃗ k⁻) public
-    private variable
-      a : Lv
-      aℓ : a ⊏ ℓ
-
-    Seq : a ⊏ ℓ → Type
-    Seq aℓ = WfTrans.A (S aℓ) → O
-
-    mono : Seq aℓ → Type
-    mono {aℓ} f = ∀ {ν μ} → WfTrans.R (S aℓ) ν μ → f ν <₁ f μ
-```
-
-```agda
-  data O where
-    zero : O
-    suc : O → O
-    lim : (k⁻ : Fin k) → let open Seg k⁻ in
-      (a : Lv) (aℓ : a ⊏ ℓ) (f : Seq aℓ) (mo : mono f) → O
-```
-
-```agda
-  private variable α β : O
-  data _<_ where
-    zero : α < suc α
-    suc  : α < β → α < suc β
-    lim  : {k⁻ : Fin k} → let open Seg k⁻ in
-      {a : Lv} {aℓ : a ⊏ ℓ} {f : Seq aℓ} {mo : mono f} {ν : WfTrans.A (S aℓ)} →
-      α < f ν → α < lim k⁻ a aℓ f mo
-```
-
-### 路径的良基性
-
-```agda
-  <-trans : Transitive _<_
-  <-trans r zero = suc r
-  <-trans r (suc s) = suc (<-trans r s)
-  <-trans r (lim s) = lim (<-trans r s)
-
-  <-acc : α < β → Acc _<_ α
-  <-acc zero = acc λ s → <-acc s
-  <-acc (suc r) = acc λ s → <-acc (<-trans s r)
-  <-acc (lim r) = acc λ s → <-acc (<-trans s r)
-
-  <-wf : WellFounded _<_
-  <-wf _ = <-acc zero
-```
-
-```agda
-  isPropAcc : isProp (Acc _<₁_ α)
-  isPropAcc (acc p) (acc q) i = acc (λ r → isPropAcc (p r) (q r) i)
-
-  <₁-acc : α <₁ β → Acc _<₁_ α
-  <₁-acc ∣ zero  ∣₁ = acc λ r → <₁-acc r
-  <₁-acc ∣ suc r ∣₁ = acc λ s → <₁-acc (map2 <-trans s ∣ r ∣₁)
-  <₁-acc ∣ lim r ∣₁ = acc λ s → <₁-acc (map2 <-trans s ∣ r ∣₁)
-  <₁-acc (squash₁ p q i) = isPropAcc (<₁-acc p) (<₁-acc q) i
-
-  <₁-wf : WellFounded _<₁_
-  <₁-wf _ = <₁-acc ∣ zero ∣₁
-```
-
-**定理** 抽象树序数构成良基传递结构.  
-
-```agda
-  tree : WfTrans
-  tree = mkWf O _<_ <-wf <-trans <₁-wf (map2 <-trans)
-```
-
-## CK序数层级
-
-```agda
-module CK (k : ℕ) (L⃗ : Vec WfTrans k) (S⃗ : Segments L⃗) (L : WfTrans) where
-  open WfTrans L renaming (A to Lv; R₁ to _⊏_; R₁-wf to ⊏-wf; R₁-trans to ⊏-trans)
-  open Tree using (zero; suc; lim)
-  module Nxt = Tree (suc k) (L ∷ L⃗)
-  module Wf  = WF.All ⊏-wf
+module Tree ((mk Lv _⊏_ _ _) : WfTrans) (ℓ : Lv) (IH : ∀ {a} → a ⊏ ℓ → WfTrans) where
   private variable
-    a b c ℓ ℓ′ ℓ″ : Lv
+    a : Lv
     aℓ : a ⊏ ℓ
-```
-
-```agda
-  tree⁻ : a ⊏ ℓ → WfTrans
-  tree⁻ = Wf.wfRecBuilder _ _ (λ _ S → Nxt.tree (S ∷ˢ S⃗)) _
-
-  tree : Lv → WfTrans
-  tree = Wf.wfRec _ _ λ _ S → Nxt.tree (S ∷ˢ S⃗)
-```
-
-```agda
-  module _ (ℓ : Lv) where
-    open WfTrans (tree ℓ) public renaming (A to O)
-  module _ {ℓ : Lv} where
-    open WfTrans (tree ℓ) public renaming (R to _<_; R₁ to _<₁_)
-```
-
-### 层级的提升
-
-```agda
-  mutual
-    lift : a ⊏ b → O a → O b
-    lift ab zero = zero
-    lift ab (suc α) = suc (lift ab α)
-    lift ab (lim zero     x xa f mo) = lim zero     x (⊏-trans xa ab) {!   !} {!   !}
-    lift ab (lim (suc k⁻) x xa f mo) = lim (suc k⁻) x {!   !} {!   !} {!   !}
-
-    lift-mono : {ab : a ⊏ b} {α β : O a} → α < β → lift ab α < lift ab β
-    lift-mono = {!   !}
 ```
