@@ -88,8 +88,68 @@ record WfTrans : Type₁ where
 **定义** 抽象树序数
 
 ```agda
-module Tree ((mk Lv _⊏_ _ _) : WfTrans) (ℓ : Lv) (IH : ∀ {a} → a ⊏ ℓ → WfTrans) where
+module Tree ((mk Lv _⊏_ _ _) : WfTrans) (ℓ : Lv) (Rec : ∀ {a} → a ⊏ ℓ → WfTrans) where
   private variable
     a : Lv
     aℓ : a ⊏ ℓ
+```
+
+```agda
+  data O : Type
+  data _<_ : O → O → Type
+
+  _<₁_ : O → O → Type
+  α <₁ β = ∥ α < β ∥₁
+```
+
+```agda
+  module _ (aℓ : a ⊏ ℓ) where
+    open WfTrans (Rec aℓ) public using () renaming (A to O⁻)
+  module _ {aℓ : a ⊏ ℓ} where
+    open WfTrans (Rec aℓ) public using () renaming (R to _<⁻_)
+
+  Seq : a ⊏ ℓ → Type
+  Seq aℓ = O⁻ aℓ → O
+
+  mono : Seq aℓ → Type
+  mono {aℓ} f = ∀ {ν μ} → ν <⁻ μ → f ν <₁ f μ
+```
+
+```agda
+  data O where
+    zero : O
+    suc : O → O
+    lim : (aℓ : a ⊏ ℓ) (f : Seq aℓ) (mo : mono f) → O
+```
+
+```agda
+  private variable α β : O
+  data _<_ where
+    zero : α < suc α
+    suc  : α < β → α < suc β
+    lim  : {f : Seq aℓ} {mo : mono f} {ν : O⁻ aℓ} → α < f ν → α < lim aℓ f mo
+```
+
+### 路径的良基性
+
+```agda
+  <-trans : Transitive _<_
+  <-trans r zero = suc r
+  <-trans r (suc s) = suc (<-trans r s)
+  <-trans r (lim s) = lim (<-trans r s)
+
+  <-acc : α < β → Acc _<_ α
+  <-acc zero = acc λ s → <-acc s
+  <-acc (suc r) = acc λ s → <-acc (<-trans s r)
+  <-acc (lim r) = acc λ s → <-acc (<-trans s r)
+
+  <-wf : WellFounded _<_
+  <-wf _ = <-acc zero
+```
+
+**定理** 抽象树序数构成良基传递结构.  
+
+```agda
+  wfTrans : WfTrans
+  wfTrans = mk O _<_ <-wf <-trans
 ```
