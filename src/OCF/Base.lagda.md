@@ -60,7 +60,7 @@ open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 module _ where
   private variable
     A : Type
-    a : A
+    a b : A
     R : A → A → Type
 ```
 
@@ -110,7 +110,7 @@ module _ where
     _<₁_ : A → A → Type
     _<₁_ = ∥_∥₁ ∘₂ _<_
 
-    <₁-acc : ∀ {a} → Acc _<_ a → Acc _<₁_ a
+    <₁-acc : Acc _<_ a → Acc _<₁_ a
     <₁-acc (acc r) = acc (rec isPropAcc (<₁-acc ∘ r))
 
     <₁-wf : WellFounded _<₁_
@@ -198,27 +198,10 @@ record W̅oset : Type₁ where
 
 ```agda
   open IsWfTrans <-isWfTrans public
-  open IsWfTrans (mk <₁-wf <₁-trans) public using ()
-    renaming (_≤_ to _≤₁_; <-irrefl to <₁-irrefl)
   private variable a b : A
-```
 
-```agda
-  ≤₁-prop : isProp (a ≤₁ b)
-  ≤₁-prop = isProp⊎ squash₁ (A-set _ _) (flip <₁-irrefl)
-
-  ≤→≤₁ : a ≤ b → a ≤₁ b
-  ≤→≤₁ (inl r) = inl ∣ r ∣₁
-  ≤→≤₁ (inr r) = inr r
-```
-
-```agda
   set : a <₁ b → a < b
   set = rec→Set <-set (fst <-cano) (snd <-cano)
-
-  ≤₁→≤ : a ≤₁ b → a ≤ b
-  ≤₁→≤ (inl r) = inl (set r)
-  ≤₁→≤ (inr r) = inr r
 
   <₁-trich : LocallyTrichotomous _<₁_
   <₁-trich r s with <-trich (set r) (set s)
@@ -300,7 +283,7 @@ module Tree (L : W̅oset) where
       ... | rfl = cong₂ (lim aℓᶠ) (funExt λ ν → subst (λ x → f ν ≡ g x) coe-id (p ν)) (toPathP $ mono-prop _ _)
 ```
 
-### 准良序性
+### 良基传递性
 
 **引理** $<$ 是传递关系.  
 
@@ -323,7 +306,12 @@ module Tree (L : W̅oset) where
     <-wf _ = <-acc zero
 ```
 
-**引理** $O$ 是集合.  
+```agda
+    isWfTrans : IsWfTrans _<_
+    isWfTrans = mk <-wf <-trans
+```
+
+### 集合性
 
 ```agda
     Cover : O → O → Type
@@ -339,9 +327,20 @@ module Tree (L : W̅oset) where
     O-set = {!   !}
 ```
 
+### 连通性
+
 ```agda
-    open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<₁_
-      as NonStrictSubTree public using () renaming (_≤_ to infix 6 _≤₁_; <⇒≤ to <→≤₁)
+    open IsWfTrans isWfTrans public using (_≤_; <₁-wf; <₁-trans)
+    open IsWfTrans (mk <₁-wf <₁-trans) public using ()
+      renaming (_≤_ to _≤₁_; <-irrefl to <₁-irrefl; <-≤-trans to <₁-≤₁-trans)
+```
+
+```agda
+    ≤₁-prop : isProp (α ≤₁ β)
+    ≤₁-prop = isProp⊎ squash₁ (O-set _ _) (flip <₁-irrefl)
+
+    isPropConnex : isProp (α <₁ β ⊎ β ≤₁ α)
+    isPropConnex = isProp⊎ squash₁ ≤₁-prop λ r s → <₁-irrefl refl (<₁-≤₁-trans r s)
 ```
 
 ```agda
@@ -350,11 +349,12 @@ module Tree (L : W̅oset) where
     <₁-connex-pre zero    (suc s) = inr (inl ∣ s ∣₁)
     <₁-connex-pre (suc r) zero    = inl ∣ r ∣₁
     <₁-connex-pre (suc r) (suc s) = <₁-connex-pre r s
-    <₁-connex-pre (lim {aℓ} r) (lim {aℓ = bℓ} s) with ⊏-trich aℓ bℓ
-    ... | tri< r ¬s ¬t = {!   !}
-    ... | tri≈ ¬r s ¬t = {!   !}
-    ... | tri> ¬r ¬s t = {!   !}
+    <₁-connex-pre (lim {ν} r) (lim {ν = μ} s) = {!   !}
 ```
+with ⊏-trich aℓ bℓ
+    ... | tri< r ¬s ¬t = rec isPropConnex {!   !} {!   !}
+    ... | tri≈ _ p _ = case pathToEq p of λ { x → {! <-connex-pre r s  !} }
+    ... | tri> ¬r ¬s t = {!   !}
 
 **引理** $<$ 是局域三歧关系.  
 
@@ -367,7 +367,7 @@ module Tree (L : W̅oset) where
 
 ```agda
     tree : W̅oset
-    tree = mk O _<_ (mk <-wf <-trans) O-set {!   !} {!   !} <-trich
+    tree = mk O _<_ isWfTrans O-set {!   !} {!   !} <-trich
 ```
 
 ```agda
