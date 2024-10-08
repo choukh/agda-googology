@@ -36,7 +36,7 @@ open import Cubical.HITs.PropositionalTruncation public
 open import Data.Nat public using (ℕ; zero; suc)
 open import Data.Fin public using (Fin; zero; suc)
 open import Data.Vec public using (Vec; _∷_; lookup) renaming (map to map⃗)
-open import Function public using (id; _∘_; _∘₂_; _$_; flip)
+open import Function public using (id; _∘_; _∘₂_; _$_; flip; case_of_)
 open import Relation.Binary.Definitions public
 open import Relation.Binary.Structures using (IsEquivalence)
 open import Relation.Binary.PropositionalEquality as Eq public
@@ -262,7 +262,7 @@ module Tree (L : W̅oset) where
     data O where
       zero : O
       suc : O → O
-      lim : (a : Lv) (aℓ : a ⊏ ℓ) (f : Seq aℓ) (mo : mono f) → O
+      lim : (aℓ : a ⊏ ℓ) (f : Seq aℓ) (mo : mono f) → O
 ```
 
 ```agda
@@ -270,7 +270,7 @@ module Tree (L : W̅oset) where
     data _<_ where
       zero : α < suc α
       suc  : α < β → α < suc β
-      lim  : {aℓ : a ⊏ ℓ} {f : Seq aℓ} {mo : mono f} {ν : O⁻ aℓ} → α < f ν → α < lim _ _ f mo
+      lim  : {aℓ : a ⊏ ℓ} {f : Seq aℓ} {mo : mono f} {ν : O⁻ aℓ} → α < f ν → α < lim aℓ f mo
 ```
 
 ### 极限的外延性
@@ -295,9 +295,9 @@ module Tree (L : W̅oset) where
       (p : (ν : O⁻ aℓᶠ) → f ν ≡ g (coe ν))
       where
 
-      limExt : lim a aℓᶠ f moᶠ ≡ lim a aℓᵍ g moᵍ
+      limExt : lim aℓᶠ f moᶠ ≡ lim aℓᵍ g moᵍ
       limExt with (pathToEq $ squash₁ aℓᶠ aℓᵍ)
-      ... | rfl = cong₂ (lim a aℓᶠ) (funExt λ ν → subst (λ x → f ν ≡ g x) coe-id (p ν)) (toPathP $ mono-prop _ _)
+      ... | rfl = cong₂ (lim aℓᶠ) (funExt λ ν → subst (λ x → f ν ≡ g x) coe-id (p ν)) (toPathP $ mono-prop _ _)
 ```
 
 ### 准良序性
@@ -326,6 +326,15 @@ module Tree (L : W̅oset) where
 **引理** $O$ 是集合.  
 
 ```agda
+    Cover : O → O → Type
+    Cover zero zero = ⊤
+    Cover (suc a) (suc b) = Cover a b
+    Cover (lim aℓ f moᶠ) (lim bℓ g mpᵍ) with ⊏-trich aℓ bℓ
+    ... | tri< _ _ _ = ⊥
+    ... | tri> _ _ _ = ⊥
+    ... | tri≈ _ p _ = case pathToEq p of λ { rfl → ∀ ν → Cover (f ν) (g (coe ν)) }
+    Cover _ _ = ⊥
+
     O-set : isSet O
     O-set = {!   !}
 ```
@@ -342,9 +351,9 @@ module Tree (L : W̅oset) where
     <₁-connex-pre (suc r) zero    = inl ∣ r ∣₁
     <₁-connex-pre (suc r) (suc s) = <₁-connex-pre r s
     <₁-connex-pre (lim {aℓ} r) (lim {aℓ = bℓ} s) with ⊏-trich aℓ bℓ
-    ... | tri< a ¬b ¬c = {!   !}
-    ... | tri≈ ¬a b ¬c = {!   !}
-    ... | tri> ¬a ¬b c = {!   !}
+    ... | tri< r ¬s ¬t = {!   !}
+    ... | tri≈ ¬r s ¬t = {!   !}
+    ... | tri> ¬r ¬s t = {!   !}
 ```
 
 **引理** $<$ 是局域三歧关系.  
