@@ -60,8 +60,8 @@ open import Bridged.Data.Sum public using (_⊎_; inl; inr; isProp⊎)
 module _ where
   private variable
     A : Type
-    a b : A
-    R : A → A → Type
+    _<_ : A → A → Type
+    a : A
 ```
 
 **引理** 道路是等价关系.  
@@ -78,151 +78,125 @@ module _ where
 **引理** 可及关系是命题.  
 
 ```agda
-  isPropAcc : isProp (Acc R a)
+  isPropAcc : isProp (Acc _<_ a)
   isPropAcc (acc p) (acc q) i = acc (λ r → isPropAcc (p r) (q r) i)
 ```
 
 **定义** 局域三歧性
 
 ```agda
-  LocallyTrichotomous : (R : A → A → Type) → Type
-  LocallyTrichotomous R = ∀ {x y z} → R x z → R y z → Tri (R x y) (x ≡ y) (R y x)
+  LocallyTrichotomous : (_<_ : A → A → Type) → Type
+  LocallyTrichotomous _<_ = ∀ {x y z} → x < z → y < z → Tri (x < y) (x ≡ y) (y < x)
 ```
 
 **定义** 典范性
 
 ```agda
-  Canonical : (R : A → A → Type) → Type
-  Canonical R = ∀ {x y} → Σ (R x y → R x y) 2-Constant
+  Canonical : (_<_ : A → A → Type) → Type
+  Canonical _<_ = ∀ {x y} → Σ (x < y → x < y) 2-Constant
 ```
 
 **定义** 良基传递结构
 
 ```agda
-  record IsWfTrans (_<_ : A → A → Type) : Type₁ where
-    constructor mk
-    field
-      <-wf : WellFounded _<_
-      <-trans : Transitive _<_
-```
-
-```agda
-    _<₁_ : A → A → Type
-    _<₁_ = ∥_∥₁ ∘₂ _<_
-
-    <₁-acc : Acc _<_ a → Acc _<₁_ a
-    <₁-acc (acc r) = acc (rec isPropAcc (<₁-acc ∘ r))
-
-    <₁-wf : WellFounded _<₁_
-    <₁-wf = <₁-acc ∘ <-wf
-
-    <₁-trans : Transitive _<₁_
-    <₁-trans = map2 <-trans
-```
-
-```agda
-    <-resp-≡ : _<_ Respects₂ _≡_
-    <-resp-≡ = subst (_ <_) , subst (_< _)
-
-    <-irrefl : Irreflexive _≡_ _<_
-    <-irrefl = wf⇒irrefl <-resp-≡ sym <-wf
-
-    <-asym : Asymmetric _<_
-    <-asym = wf⇒asym <-wf
-```
-
-```agda
-    open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
-      as NonStrict public using (_≤_) renaming (<⇒≤ to <→≤)
-```
-
-```agda
-    ≤-refl : Reflexive _≤_
-    ≤-refl = NonStrict.reflexive refl
-
-    ≤-antisym : Antisymmetric _≡_ _≤_
-    ≤-antisym = NonStrict.antisym ≡-isEquivalence <-trans <-irrefl
-
-    ≤-trans : Transitive _≤_
-    ≤-trans = NonStrict.trans ≡-isEquivalence <-resp-≡ <-trans
-
-    <-≤-trans : Trans _<_ _≤_ _<_
-    <-≤-trans = NonStrict.<-≤-trans <-trans (fst <-resp-≡)
-
-    ≤-<-trans : Trans _≤_ _<_ _<_
-    ≤-<-trans = NonStrict.≤-<-trans sym <-trans (snd <-resp-≡)
-```
-
-```agda
-    open import Relation.Binary.Structures {A = A} _≡_
-
-    <-isStrictPartialOrder : IsStrictPartialOrder _<_
-    <-isStrictPartialOrder = record
-      { isEquivalence = ≡-isEquivalence
-      ; irrefl = <-irrefl
-      ; trans = <-trans
-      ; <-resp-≈ = <-resp-≡ }
-
-    ≤-isPreorder : IsPreorder _≤_
-    ≤-isPreorder = record
-      { isEquivalence = ≡-isEquivalence
-      ; reflexive = inr
-      ; trans = ≤-trans
-      }
-
-    ≤-isPartialOrder : IsPartialOrder _≤_
-    ≤-isPartialOrder = record { isPreorder = ≤-isPreorder ; antisym = ≤-antisym }
-
-    module Reasoning where
-      open import Relation.Binary.Reasoning.Base.Triple
-        {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<_}
-        ≤-isPreorder <-asym <-trans <-resp-≡ <→≤ <-≤-trans ≤-<-trans
-        public
-```
-
-**定义** 准良序集
-
-```agda
-record W̅oset : Type₁ where
+record WfTrans : Type₁ where
   constructor mk
   field
     A : Type
     _<_ : A → A → Type
-    <-isWfTrans : IsWfTrans _<_
-
-    A-set : isSet A
-    <-set : ∀ {a b} → isSet (a < b)
-    <-cano : Canonical _<_
-    <-trich : LocallyTrichotomous _<_
+    <-wf : WellFounded _<_
+    <-trans : Transitive _<_
 ```
 
 ```agda
-  open IsWfTrans <-isWfTrans public
-  private variable a b : A
+  private variable a : A
 
-  set : a <₁ b → a < b
-  set = rec→Set <-set (fst <-cano) (snd <-cano)
+  _<₁_ : A → A → Type
+  _<₁_ = ∥_∥₁ ∘₂ _<_
 
-  <₁-trich : LocallyTrichotomous _<₁_
-  <₁-trich r s with <-trich (set r) (set s)
-  ... | tri< a ¬b ¬c = tri< ∣ a ∣₁ ¬b (rec isProp⊥ ¬c)
-  ... | tri≈ ¬a b ¬c = tri≈ (rec isProp⊥ ¬a) b (rec isProp⊥ ¬c)
-  ... | tri> ¬a ¬b c = tri> (rec isProp⊥ ¬a) ¬b ∣ c ∣₁
+  <₁-acc : Acc _<_ a → Acc _<₁_ a
+  <₁-acc (acc r) = acc (rec isPropAcc (<₁-acc ∘ r))
+
+  <₁-wf : WellFounded _<₁_
+  <₁-wf = <₁-acc ∘ <-wf
+
+  <₁-trans : Transitive _<₁_
+  <₁-trans = map2 <-trans
+```
+
+```agda
+  <-resp-≡ : _<_ Respects₂ _≡_
+  <-resp-≡ = subst (_ <_) , subst (_< _)
+
+  <-irrefl : Irreflexive _≡_ _<_
+  <-irrefl = wf⇒irrefl <-resp-≡ sym <-wf
+
+  <-asym : Asymmetric _<_
+  <-asym = wf⇒asym <-wf
+```
+
+```agda
+  open import Relation.Binary.Construct.StrictToNonStrict _≡_ _<_
+    as NonStrict public using (_≤_) renaming (<⇒≤ to <→≤)
+```
+
+```agda
+  ≤-refl : Reflexive _≤_
+  ≤-refl = NonStrict.reflexive refl
+
+  ≤-antisym : Antisymmetric _≡_ _≤_
+  ≤-antisym = NonStrict.antisym ≡-isEquivalence <-trans <-irrefl
+
+  ≤-trans : Transitive _≤_
+  ≤-trans = NonStrict.trans ≡-isEquivalence <-resp-≡ <-trans
+
+  <-≤-trans : Trans _<_ _≤_ _<_
+  <-≤-trans = NonStrict.<-≤-trans <-trans (fst <-resp-≡)
+
+  ≤-<-trans : Trans _≤_ _<_ _<_
+  ≤-<-trans = NonStrict.≤-<-trans sym <-trans (snd <-resp-≡)
+```
+
+```agda
+  open import Relation.Binary.Structures {A = A} _≡_
+
+  <-isStrictPartialOrder : IsStrictPartialOrder _<_
+  <-isStrictPartialOrder = record
+    { isEquivalence = ≡-isEquivalence
+    ; irrefl = <-irrefl
+    ; trans = <-trans
+    ; <-resp-≈ = <-resp-≡ }
+
+  ≤-isPreorder : IsPreorder _≤_
+  ≤-isPreorder = record
+    { isEquivalence = ≡-isEquivalence
+    ; reflexive = inr
+    ; trans = ≤-trans
+    }
+
+  ≤-isPartialOrder : IsPartialOrder _≤_
+  ≤-isPartialOrder = record { isPreorder = ≤-isPreorder ; antisym = ≤-antisym }
+
+  module Reasoning where
+    open import Relation.Binary.Reasoning.Base.Triple
+      {_≈_ = _≡_} {_≤_ = _≤_} {_<_ = _<_}
+      ≤-isPreorder <-asym <-trans <-resp-≡ <→≤ <-≤-trans ≤-<-trans
+      public
 ```
 
 ## 抽象树序数
 
 ```agda
-module Tree (L : W̅oset) where
-  open W̅oset L using () renaming (A to Lv; _<₁_ to _⊏_; <₁-trich to ⊏-trich)
-  module _ (ℓ : Lv) (IH : ∀ {a} → a ⊏ ℓ → W̅oset) where
+module Tree (L : WfTrans) where
+  open WfTrans L using () renaming (A to Lv; _<₁_ to _⊏_)
+  module _ (ℓ : Lv) (IH : ∀ {a} → a ⊏ ℓ → WfTrans) where
     private variable
       a : Lv
       aℓ : a ⊏ ℓ
     module _ (aℓ : a ⊏ ℓ) where
-      open W̅oset (IH aℓ) public using () renaming (A to O⁻)
+      open WfTrans (IH aℓ) public using () renaming (A to O⁻)
     module _ {aℓ : a ⊏ ℓ} where
-      open W̅oset (IH aℓ) public using () renaming (_<_ to _<⁻_)
+      open WfTrans (IH aℓ) public using () renaming (_<_ to _<⁻_)
 ```
 
 ```agda
@@ -283,6 +257,7 @@ module Tree (L : W̅oset) where
       ... | rfl = cong₂ (lim aℓᶠ) (funExt λ ν → subst (λ x → f ν ≡ g x) coe-id (p ν)) (toPathP $ mono-prop _ _)
 ```
 
+
 ### 良基传递性
 
 **引理** $<$ 是传递关系.  
@@ -306,68 +281,11 @@ module Tree (L : W̅oset) where
     <-wf _ = <-acc zero
 ```
 
-```agda
-    isWfTrans : IsWfTrans _<_
-    isWfTrans = mk <-wf <-trans
-```
-
-### 集合性
-
-```agda
-    Cover : O → O → Type
-    Cover zero zero = ⊤
-    Cover (suc a) (suc b) = Cover a b
-    Cover (lim aℓ f moᶠ) (lim bℓ g mpᵍ) with ⊏-trich aℓ bℓ
-    ... | tri< _ _ _ = ⊥
-    ... | tri> _ _ _ = ⊥
-    ... | tri≈ _ p _ = case pathToEq p of λ { rfl → ∀ ν → Cover (f ν) (g (coe ν)) }
-    Cover _ _ = ⊥
-
-    O-set : isSet O
-    O-set = {!   !}
-```
-
-### 连通性
-
-```agda
-    open IsWfTrans isWfTrans public using (_≤_; <₁-wf; <₁-trans)
-    open IsWfTrans (mk <₁-wf <₁-trans) public using ()
-      renaming (_≤_ to _≤₁_; <-irrefl to <₁-irrefl; <-≤-trans to <₁-≤₁-trans)
-```
-
-```agda
-    ≤₁-prop : isProp (α ≤₁ β)
-    ≤₁-prop = isProp⊎ squash₁ (O-set _ _) (flip <₁-irrefl)
-
-    isPropConnex : isProp (α <₁ β ⊎ β ≤₁ α)
-    isPropConnex = isProp⊎ squash₁ ≤₁-prop λ r s → <₁-irrefl refl (<₁-≤₁-trans r s)
-```
-
-```agda
-    <₁-connex-pre : α < γ → β < γ → α <₁ β ⊎ β ≤₁ α
-    <₁-connex-pre zero    zero    = inr (inr refl)
-    <₁-connex-pre zero    (suc s) = inr (inl ∣ s ∣₁)
-    <₁-connex-pre (suc r) zero    = inl ∣ r ∣₁
-    <₁-connex-pre (suc r) (suc s) = <₁-connex-pre r s
-    <₁-connex-pre (lim {ν} r) (lim {ν = μ} s) = {!   !}
-```
-with ⊏-trich aℓ bℓ
-    ... | tri< r ¬s ¬t = rec isPropConnex {!   !} {!   !}
-    ... | tri≈ _ p _ = case pathToEq p of λ { x → {! <-connex-pre r s  !} }
-    ... | tri> ¬r ¬s t = {!   !}
-
-**引理** $<$ 是局域三歧关系.  
-
-```agda
-    <-trich : LocallyTrichotomous _<_
-    <-trich = {!   !}
-```
-
 **定理** 抽象树序数构成准良序结构.  
 
 ```agda
-    tree : W̅oset
-    tree = mk O _<_ isWfTrans O-set {!   !} {!   !} <-trich
+    tree : WfTrans
+    tree = mk O _<_ <-wf <-trans
 ```
 
 ```agda
