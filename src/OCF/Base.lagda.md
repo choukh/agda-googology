@@ -275,4 +275,63 @@ module Tree (L : WfTrans) where
 ```agda
 open Tree using (zero; suc; lim) public
 ```
-    
+
+## 抽象CK序数层级
+
+```agda
+module CK (L : WfTrans) where
+  open WfTrans L using () renaming (A to Lv; _<₁_ to _⊏_; <₁-wf to ⊏-wf; <₁-trans to ⊏-trans)
+  open Tree L using (tree)
+  module W = WF.All ⊏-wf
+  private variable
+    a b c ℓ ℓ′ ℓ″ : Lv
+    aℓ : a ⊏ ℓ
+```
+
+```agda
+  ck⁻ : a ⊏ ℓ → WfTrans
+  ck⁻ = W.wfRecBuilder _ _ (λ _ → tree _) _
+
+  ck : Lv → WfTrans
+  ck = W.wfRec _ _ λ _ → tree _
+```
+
+```agda
+  module _ (ℓ : Lv) where
+    open WfTrans (ck ℓ) public using () renaming (A to O)
+  module _ {ℓ : Lv} where
+    open WfTrans (ck ℓ) public using (_<_)
+```
+
+### 变体表示
+
+```agda
+  module _ (aℓ : a ⊏ ℓ) where
+    open WfTrans (ck⁻ aℓ) public using () renaming (A to O⁻)
+  module _ {aℓ : a ⊏ ℓ} where
+    open WfTrans (ck⁻ aℓ) public using () renaming (_<_ to _<⁻_)
+```
+
+```agda
+  module _ {aℓ : a ⊏ ℓ} where
+    tonePath : ck⁻ aℓ ≡ ck a
+    tonePath = eqToPath $ FixPoint.wfRecBuilder-wfRec ⊏-wf _ _
+      (λ ℓ IH → Eq.cong (tree ℓ) (pathToEq λ i aℓ → eqToPath (IH aℓ) i)) _
+
+    ♯ : O⁻ aℓ → O a
+    ♯ = transport (cong WfTrans.A tonePath)
+```
+
+### 层级的提升
+
+```agda
+  mutual
+    lft : a ⊏ b → O a → O b
+    lft ab zero = zero
+    lft ab (suc α) = suc (lft ab α)
+    lft ab (lim xa f mo) = lim (⊏-trans xa ab)
+      (λ ν → lft ab (f {!   !})) {!   !}
+
+    lft-mono : {ab : a ⊏ b} {α β : O a} → α < β → lft ab α < lft ab β
+    lft-mono = {!   !}
+```
