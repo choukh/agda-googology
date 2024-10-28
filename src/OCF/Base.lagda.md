@@ -24,7 +24,6 @@ open import Cubical.Foundations.HLevels public
 open import Cubical.Foundations.Isomorphism public
 open import Cubical.Foundations.Transport public
 open import Cubical.Foundations.Structure public
-open import Cubical.Foundations.Function public using (2-Constant)
 open import Cubical.Data.Equality public using (pathToEq; eqToPath; PathPathEq)
 open import Cubical.Data.Sigma public
 open import Cubical.HITs.PropositionalTruncation public
@@ -80,20 +79,6 @@ module _ where
 ```agda
   isPropAcc : isProp (Acc _<_ a)
   isPropAcc (acc p) (acc q) i = acc (λ r → isPropAcc (p r) (q r) i)
-```
-
-**定义** 局域三歧性
-
-```agda
-  LocallyTrichotomous : (_<_ : A → A → Type) → Type
-  LocallyTrichotomous _<_ = ∀ {x y z} → x < z → y < z → Tri (x < y) (x ≡ y) (y < x)
-```
-
-**定义** 典范性
-
-```agda
-  Canonical : (_<_ : A → A → Type) → Type
-  Canonical _<_ = ∀ {x y} → Σ (x < y → x < y) 2-Constant
 ```
 
 **定义** 良基传递结构
@@ -242,7 +227,7 @@ module Tree (L : WfTrans) where
     coe = subst O⁻ (squash₁ _ _)
 
     coe-id : {aℓ : a ⊏ ℓ} {ν : O⁻ aℓ} → coe ν ≡ ν
-    coe-id = {!   !}
+    coe-id {aℓ} {ν} = subst (λ p → subst O⁻ p ν ≡ ν) (isProp→isSet squash₁ _ _ _ _) (fromPathP refl)
 ```
 
 ```agda
@@ -256,7 +241,6 @@ module Tree (L : WfTrans) where
       limExt with (pathToEq $ squash₁ aℓᶠ aℓᵍ)
       ... | rfl = cong₂ (lim aℓᶠ) (funExt λ ν → subst (λ x → f ν ≡ g x) coe-id (p ν)) (toPathP $ mono-prop _ _)
 ```
-
 
 ### 良基传递性
 
@@ -281,7 +265,7 @@ module Tree (L : WfTrans) where
     <-wf _ = <-acc zero
 ```
 
-**定理** 抽象树序数构成准良序结构.  
+**定理** 抽象树序数构成良基传递结构.  
 
 ```agda
     tree : WfTrans
@@ -291,3 +275,4 @@ module Tree (L : WfTrans) where
 ```agda
 open Tree using (zero; suc; lim) public
 ```
+    
