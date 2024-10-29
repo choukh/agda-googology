@@ -19,7 +19,8 @@ module OCF.Base where
 **Cubical库**
 
 ```agda
-open import Cubical.Foundations.Prelude public renaming (_∎ to _≡∎)
+open import Cubical.Foundations.Prelude public
+  hiding (lift) renaming (_∎ to _≡∎)
 open import Cubical.Foundations.HLevels public
 open import Cubical.Foundations.Isomorphism public
 open import Cubical.Foundations.Transport public
@@ -320,18 +321,76 @@ module CK (L : WfTrans) where
 
     ♯ : O⁻ aℓ → O a
     ♯ = transport (cong WfTrans.A tonePath)
+
+    ♭ : O a → O⁻ aℓ
+    ♭ = transport⁻ (cong WfTrans.A tonePath)
+
+    ♭∘♯ : {α : O⁻ aℓ} → ♭ (♯ α) ≡ α
+    ♭∘♯ = transport⁻Transport _ _
+
+    ♯∘♭ : {α : O a} → ♯ (♭ α) ≡ α
+    ♯∘♭ = transportTransport⁻ _ _
+```
+
+```agda
+  ♮⟨_,_⟩ : (p : a ⊏ ℓ) (q : a ⊏ ℓ′) → O⁻ p → O⁻ q
+  ♮⟨ _ , _ ⟩ = ♭ ∘ ♯
+
+  ♮ : {p : a ⊏ ℓ} {q : a ⊏ ℓ′} → O⁻ p → O⁻ q
+  ♮ = ♮⟨ _ , _ ⟩
+
+  ♮-comp : {p : a ⊏ ℓ} {q : a ⊏ ℓ′} {r : a ⊏ ℓ″} {α : O⁻ p}
+    → ♮⟨ q , r ⟩ (♮⟨ p , q ⟩ α) ≡ ♮⟨ p , r ⟩ α
+  ♮-comp = cong ♭ ♯∘♭
+
+  ♮-invo : {p : a ⊏ ℓ} {q : a ⊏ ℓ′} {α : O⁻ p}
+    → ♮⟨ q , p ⟩ (♮⟨ p , q ⟩ α) ≡ α
+  ♮-invo = ♮-comp ∙ ♭∘♯
+```
+
+```agda
+  module _ {aℓ : a ⊏ ℓ} where
+    <-distrib-transp : (λ α β → ♭ {aℓ = aℓ} α <⁻ ♭ β) ≡ subst (λ A → A → A → Type) (cong WfTrans.A tonePath) (_<⁻_ {aℓ = aℓ})
+    <-distrib-transp = J (λ _ p → (λ α β → transport⁻ p α <⁻ transport⁻ p β) ≡ subst (λ A → A → A → Type) p _<⁻_) refl (cong WfTrans.A tonePath)
+
+    ♭-inj< : {α β : O a} → ♭ {aℓ = aℓ} α <⁻ ♭ β ≡ α < β
+    ♭-inj< = (<-distrib-transp ∙ fromPathP (cong WfTrans._<_ tonePath)) ≡$ _ ≡$ _
+
+    ♯-inj< : {α β : O⁻ aℓ} → ♯ α < ♯ β ≡ α <⁻ β
+    ♯-inj< {α} {β} = subst2 (λ x y → ♯ α < ♯ β ≡ x <⁻ y) ♭∘♯ ♭∘♯ (sym ♭-inj<)
+
+  ♮-inj< : {aℓ : a ⊏ ℓ} {aℓ′ : a ⊏ ℓ′} {α β : O⁻ aℓ} → ♮⟨ aℓ , aℓ′ ⟩ α <⁻ ♮ β ≡ α <⁻ β
+  ♮-inj< = ♭-inj< ∙ ♯-inj<
 ```
 
 ### 层级的提升
 
 ```agda
   mutual
-    lft : a ⊏ b → O a → O b
-    lft ab zero = zero
-    lft ab (suc α) = suc (lft ab α)
-    lft ab (lim xa f mo) = lim (⊏-trans xa ab)
-      (λ ν → lft ab (f {!   !})) {!   !}
+    lift : a ⊏ b → O a → O b
+    lift ab zero = zero
+    lift ab (suc α) = suc (lift ab α)
+    lift ab (lim xa f mo) = lim (⊏-trans xa ab)
+      (λ ν → lift ab (f $ ♮⟨ ⊏-trans xa ab , xa ⟩ ν)) (map lift-mono ∘ mo ∘ transport⁻ ♮-inj<)
 
-    lft-mono : {ab : a ⊏ b} {α β : O a} → α < β → lft ab α < lft ab β
-    lft-mono = {!   !}
+    lift-mono : {ab : a ⊏ b} {α β : O a} → α < β → lift ab α < lift ab β
+    lift-mono zero = zero
+    lift-mono (suc r) = suc (lift-mono r)
+    lift-mono (lim {f} r) = lim (lift-mono $ subst⁻ (λ x → _ < f x) ♮-invo r)
 ```
+
+提升的复合
+
+```agda
+  lift-comp : {ab : a ⊏ b} {bc : b ⊏ c} {ac : a ⊏ c} {α : O a}
+            → lift ac α ≡ lift bc (lift ab α)
+  lift-comp {α = zero} = refl
+  lift-comp {α = suc α} = cong suc (lift-comp {α = α})
+  lift-comp {c} {ab} {bc} {ac} {α = lim aℓ f _} = Tree.limExt _ _ _ λ ν →
+    subst2 (λ x y → lift ac (f x) ≡ lift bc (lift ab (f y)))
+      --(subst (λ x → ♮ (♮ x) ≡ ♮ ν) (sym {!   !}) {!  ♮-comp !})
+      (♮-comp ∙ {! ⊏-trans (⊏-trans aℓ ab) bc !})
+      refl lift-comp
+```
+
+## CK序数层级
