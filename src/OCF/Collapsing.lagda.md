@@ -157,7 +157,7 @@ lfp F nz W pres = lim (λ n → (F ∘ⁿ n) 0) ⦃ w ⦄ where
 ψₐ-pres (suc r) = lim {n = 1} (ψₐ-pres r)
 ψₐ-pres f<l = f<l
 ψₐ-pres (lim {n} r) = lim {n = n} (ψₐ-pres r)
-ψₐ-pres (Lim r) = {!   !}
+ψₐ-pres {aℓ} (Lim {aℓ = bℓ} {F} {ι} r) = {!   !}
 
 ψₐ-nz {α = zero}  = _
 ψₐ-nz {α = suc α} = _
@@ -217,3 +217,4 @@ plainLim f = lim (plain ∘ f)
 ψ-Ω_Ω-99 : ℕ
 ψ-Ω_Ω-99 = FGH.f ψ-Ω_Ω 99
 ```
+ 
