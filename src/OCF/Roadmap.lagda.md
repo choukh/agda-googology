@@ -60,7 +60,7 @@ $$
 
 而 $\texttt{Ord}_3$ 到 $\texttt{Ord}_2$ 的折叠就是各种增长层级.
 
-再往后的折叠就是通常所说的 OOrd. 只不过通常的定义是非直谓的, 从某个很大的 $\texttt{Ord}_\alpha$ 折叠到 $\texttt{Ord}_3$, 而我们这里需要明确的递归算法一层一层往下: $\texttt{Ord}_\alpha$ 到 ... 到 $\texttt{Ord}_4$ 到 $\texttt{Ord}_3$ (大可数序数) 到 $\texttt{Ord}_2$ (大自然数).
+再往后的折叠就是通常所说的 OCF. 只不过通常的定义是非直谓的, 从某个很大的 $\texttt{Ord}_\alpha$ 折叠到 $\texttt{Ord}_3$, 而我们这里需要明确的递归算法一层一层往下: $\texttt{Ord}_\alpha$ 到 ... 到 $\texttt{Ord}_4$ 到 $\texttt{Ord}_3$ (大可数序数) 到 $\texttt{Ord}_2$ (大自然数).
 
 因此我们的任务主要分解成两部分, 一是写出很大的 $\texttt{Ord}_\alpha$, 二是一层层折叠到 $\texttt{Ord}_2$.
 
@@ -93,7 +93,7 @@ module Ord_omega where
   -- 不难证明开篇代码定义的 `ℕ` 与标准库的 `ℕ` 同构, 方便起见直接从库中导入.
   open import Data.Nat hiding (_<_)
 
-  -- 但是序采用以下定义
+  -- 方便起见, 序采用以下定义
   data _<_ : ℕ → ℕ → Set where
     base : ∀ {n} → n < suc n
     step  : ∀ {n m} → n < m → n < suc m
