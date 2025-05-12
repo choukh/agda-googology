@@ -9,7 +9,7 @@ module OCF.Roadmap where
 首先, 从零开始 (字面意义), 我们能看得跟清晰一些.
 
 ```agda
-module OrdLiteral where
+module Ord_literal where
 
   data 𝟘 : Set where
 
@@ -86,10 +86,10 @@ data Ordₖ₊₁ : Set where
 - `seq₃` 构造了长度为 $\texttt{Ord}_3 = \omega_1$ 的基本列, 代表更高阶的极限.
 - ...
 
-归纳这个模式, 稍微借鉴一下类型宇宙的技巧我们可以写出 `Ord : ℕ → Set`.
+归纳这个模式, 稍微使用一些类型宇宙的技巧我们可以写出 `Ordω : ℕ → Set` 这个类型族.
 
 ```agda
-module Ordω where
+module Ord_omega where
   -- 不难证明开篇代码定义的 `ℕ` 与标准库的 `ℕ` 同构, 方便起见直接从库中导入.
   open import Data.Nat hiding (_<_)
 
@@ -108,38 +108,70 @@ module Ordω where
   Elm (suc k) k base = U k (Elm k)
   Elm (suc n) k (step p) = Elm n k p
 
-  -- 完成以自然数为下标的 `Ord` 层级
-  Ord : ℕ → Set
-  Ord n = U n (Elm n)
+  -- 完成以自然数为下标的 `Ordω` 层级
+  Ordω : ℕ → Set
+  Ordω n = U n (Elm n)
 ```
 
-下面将这个 `Ord : ℕ → Set` 简记作 `Ordω`, 并引入传统记法 $\Omega$. 虽然 $\Omega$ 跟 `Ordω` 的下标没有完全对齐, 但我们可以说此时能达到的大致“量级”是 $\Omega_n$, 上确界为 $\Omega_{\omega}$. 在这层意义上我们可以说 `Ordω` 等于 $\Omega_{\omega}$.
+我们认为 `Ordω : ℕ → Set` 这个类型族形式化了 $\texttt{Ord}_\omega$. 也就是说, 我们认为
 
-继续往上, 很明显了, 我们要以 $\texttt{Ord}_3$ 为下标, 写出一个新的 `Ord` 层级, 那么就可以达到 $\Omega_\omega$, 上确界为 $\Omega_{\Omega}$.
+- 当 $\alpha$ 为后继时, $\texttt{Ord}_\alpha$ 是一个类型, 其共尾度为 $1$
+- 当 $\alpha$ 为极限时, $\texttt{Ord}_\alpha$ 是一个类型族, 索引类型就是其共尾度
+
+现在引入传统记法 $\Omega$. 虽然 $\texttt{Ord}_\omega$ 跟 $\Omega$ 的下标没有完全对齐
+
+$$
+\begin{align}
+\texttt{Ord}_3 &= \Omega \\
+\texttt{Ord}_4 &= \Omega_1 \\
+\texttt{Ord}_5 &= \Omega_2 \\
+\end{align}
+$$
+
+但 $\texttt{Ord}_\omega$ 凌驾于 $\Omega_n$, 上确界为 $\Omega_{\omega}$. 在这层意义上我们说 $\texttt{Ord}_\omega$ 实现了 $\Omega_{\omega}$.
+
+继续往上, 很明显了, 我们要以 $\texttt{Ord}_3 = \Omega$ 为下标, 写出一个新的类型族 `OrdΩ : Ord₃ → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a). 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$, 凌驾于 $\Omega_\omega$.
+ 
+以此类推, 我们有
+
+|类型族|索引类型|共尾度|上确界|凌驾|
+|-|-|-|-|-|
+|$\texttt{Ord}_\omega$|$\texttt{Ord}_2$|$\omega$|$\Omega_{ \omega}$|$\Omega_n$|
+|$\texttt{Ord}_\Omega$|$\texttt{Ord}_3$|$\omega_1$|$\Omega_{ \Omega}$|$\Omega_{\omega}$|
+|$\texttt{Ord}_{\Omega_1}$|$\texttt{Ord}_4$|$\omega_2$|$\Omega_{\Omega_1}$|$\Omega_{\Omega}$|
+|...|...|...|...|...|
+|$\texttt{Ord}_{\Omega_\omega}$|$\texttt{Ord}_2,\texttt{Ord}_\omega$|$\omega$|$\Omega_{\Omega_\omega}$|$\Omega_{\Omega_n}$|
+|$\texttt{Ord}_{\Omega_{\Omega_\omega}}$|$\texttt{Ord}_2,\texttt{Ord}_\omega,\texttt{Ord}_{\Omega_\omega}$|$\omega$|$\Omega_{\Omega_\omega}$|$\Omega_{\Omega_n}$|
+|...|...|...|...|...|
+|$\texttt{Ord}_{\Lambda}$|$\texttt{Ord}_2,\texttt{Ord}_\omega,\texttt{Ord}_{\Omega_\omega},...$|$\omega$|$\Omega_{\Omega_{._{._.}}}$|$\Omega_{\Omega_{._{._{._{\Omega_n}}}}}$|
+
+其中最后三行将具有以下类型
+
+```agda
+module Ord_Omega_fixpoint where
+  open import Data.Nat
+  open Ord_omega using (Ordω)
+  postulate
+    OrdΩω : (n : ℕ) → Ordω n → Set
+    OrdΩΩω : (n : ℕ) (α : Ordω n) → OrdΩω n α → Set
+    OrdΛ : ℕ → Set
+```
+
+我们还没有研究它们的具体实现, 因为 $\texttt{Ord}_{\Omega_1}$ 的折叠就已经遇到的困难.
+
+## 任务二
+
+回顾前文
+
+- $\texttt{Ord}_1$ 到 $\texttt{Ord}_0$ 的折叠是平凡的
+- $\texttt{Ord}_2$ 到 $\texttt{Ord}_1$ 的折叠是平凡的
+- $\texttt{Ord}_3$ 到 $\texttt{Ord}_2$ 的折叠就是各种增长层级
+- 再往后的折叠就是通常所说的 OCF
+
+跳过各种增长层级, 我们首先来到 $\texttt{Ord}_4$ 到 $\texttt{Ord}_3$ 的折叠, 这是已知可以实现的.
 
 ```agda
 -- TODO
 ```
-
-以此类推, 我们有
-
-|下标类型|上确界|可达量级|
-|-|-|-|
-|$\texttt{Ord}_2$|$\Omega_{ \omega}$|$\Omega_n$|
-|$\texttt{Ord}_3$|$\Omega_{ \Omega}$|$\Omega_{\omega}$|
-|$\texttt{Ord}_4$|$\Omega_{\Omega_1}$|$\Omega_{\Omega}$|
-|$\texttt{Ord}_5$|$\Omega_{\Omega_2}$|$\Omega_{\Omega_1}$|
-|...|...|...|...|...|
-|$\texttt{Ord}_\omega$|$\Omega_{ \Omega_\omega}$|$\Omega_{\Omega_n}$|
-
-`Ord_ω : (n : Ord 2) → Ord n → Set`
-
-`Ord_Ω : (α : Ord 3) → Ord α → Set`
-
-`Ord_I : (n : Ord 2) (α : Ord n) → Ord α → Set`
-
-## 任务二
-
-$\texttt{Ord}_4$ 到 $\texttt{Ord}_3$ 的折叠是已知可以实现的.
 
 “自下而上使用相同基本列”这个意义下的真前段
