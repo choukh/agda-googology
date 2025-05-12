@@ -118,7 +118,7 @@ module Ord_omega where
 - 当 $\alpha$ 为后继时, $\texttt{Ord}_\alpha$ 是一个类型, 其共尾度为 $1$
 - 当 $\alpha$ 为极限时, $\texttt{Ord}_\alpha$ 是一个类型族, 索引类型就是其共尾度
 
-现在引入传统记法 $\Omega$. 虽然 $\texttt{Ord}_\omega$ 跟 $\Omega$ 的下标没有完全对齐
+现在引入传统记法 $\Omega$. 虽然 $\texttt{Ord}_\omega$ 跟 $\Omega$ 的下标没有完全对齐, 即有
 
 $$
 \begin{align}
@@ -130,8 +130,8 @@ $$
 
 但 $\texttt{Ord}_\omega$ 凌驾于 $\Omega_n$, 上确界为 $\Omega_{\omega}$. 在这层意义上我们说 $\texttt{Ord}_\omega$ 实现了 $\Omega_{\omega}$.
 
-继续往上, 很明显了, 我们要以 $\texttt{Ord}_3 = \Omega$ 为下标, 写出一个新的类型族 `OrdΩ : Ord₃ → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a). 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$, 凌驾于 $\Omega_\omega$.
- 
+继续往上, 很明显了, 我们要以 $\texttt{Ord}_3 = \Omega$ 为下标, 写出一个新的类型族 `OrdΩ : Ord₃ → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a). 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$, 凌驾于 $\Omega_\omega$. Andras Kovacs 用它写出了 $\psi(\Omega_{\varepsilon_0}) = \text{PTO}(\text{ID}_{<\varepsilon_0})$
+
 以此类推, 我们有
 
 |类型族|索引类型|共尾度|上确界|凌驾|
