@@ -181,8 +181,8 @@ $$
 
 |类型族|索引类型|共尾度|上确界|
 |-|-|-|-|
-|$\texttt{Ord}_\omega$|$\N$|$\omega$|$\Omega_{ \omega}$|
-|$\texttt{Ord}_\Omega$|$\texttt{Ord}$|$\omega_1$|$\Omega_{ \Omega}$|
+|$\texttt{Ord}_\omega$|$\N$|$\omega$|$\Omega_{\omega}$|
+|$\texttt{Ord}_\Omega$|$\texttt{Ord}$|$\omega_1$|$\Omega_{\Omega}$|
 |$\texttt{Ord}_{\Omega_2}$|$\texttt{Ord}_2$|$\omega_2$|$\Omega_{\Omega_2}$|
 |...|...|...|...|
 |$\texttt{Ord}_{\Omega_\omega}$|$\N,\texttt{Ord}_\omega$|$\omega$|$\Omega_{\Omega_\omega}$|
@@ -190,7 +190,7 @@ $$
 |...|...|...|...|
 |$\texttt{Ord}_{\Lambda}$|$\N,\texttt{Ord}_\omega,\texttt{Ord}_{\Omega_\omega},...$|$\omega$|$\Omega_{\Omega_{._{._.}}}$|
 
-其中最后三行可能将具有以下类型
+其中索引类型如果包含多个, 那么表示它是一个嵌套的依赖类型. 如果需要实现任意多个的嵌套, 可以先从 `ℕ` 递归得到类型签名, 从而签名可以简化到只剩 `ℕ` 索引. 所以最后三行可能将具有以下类型
 
 ```agda
 module Ord_Omega_fixpoint where
@@ -213,7 +213,7 @@ module Ord_Omega_fixpoint where
 - $\texttt{Tree}_3$ 到 $\texttt{Tree}_2$ 的折叠就是各种增长层级
 - 再往后的折叠就是通常所说的 OCF
 
-### 最初几层的折叠
+### $\Omega_2$的折叠
 
 ```agda
 module NaiveCollapsing where
@@ -231,9 +231,9 @@ module NaiveCollapsing where
     Lim : (Ord → Ord₂) → Ord₂
 ```
 
-### BO, TFBO, 及其上不远的位置
+### $\Omega_{\omega}$ 乃至 $\Omega_{\Omega}$ 的折叠
 
-## 为什么 $\Omega_{\Omega_2}$ 的折叠是困难的
+### 为什么 $\Omega_{\Omega_2}$ 的折叠是困难的
 
 “自下而上使用相同基本列”这个意义下的真前段
 
