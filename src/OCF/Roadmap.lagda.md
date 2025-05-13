@@ -14,45 +14,67 @@
 
 ```agda
 module OCF.Roadmap where
+open import Data.Nat using (ℕ; suc; zero)
 ```
 
 ## 什么是树序数
 
-首先, 从零开始 (字面意义), 我们能看得跟清晰一些.
+首先, 从零开始 (字面意义), 我们能看得更清晰一些.
 
 ```agda
 module Tree_literal where
 
-  data 𝟘 : Set where
+  data 𝟎 : Set where
 
-  data 𝟙 : Set where
-    zero : (𝟘 → 𝟙) → 𝟙
+  data 𝟏 : Set where
+    zero : (𝟎 → 𝟏) → 𝟏
 
-  data ℕ : Set where
-    zero : (𝟘 → ℕ) → ℕ
-    suc : (𝟙 → ℕ) → ℕ
+  data 𝕆₀ : Set where
+    zero : (𝟎 → 𝕆₀) → 𝕆₀
+    suc : (𝟏 → 𝕆₀) → 𝕆₀
 
-  data 𝕎₁ : Set where
-    zero : (𝟘 → 𝕎₁) → 𝕎₁
-    suc : (𝟙 → 𝕎₁) → 𝕎₁
-    lim : (ℕ → 𝕎₁) → 𝕎₁
+  data 𝕆₁ : Set where
+    zero : (𝟎 → 𝕆₁) → 𝕆₁
+    suc : (𝟏 → 𝕆₁) → 𝕆₁
+    lim : (𝕆₀ → 𝕆₁) → 𝕆₁
 
-  data 𝕎₂ : Set where
-    zero : (𝟘 → 𝕎₂) → 𝕎₂
-    suc : (𝟙 → 𝕎₂) → 𝕎₂
-    lim : (ℕ → 𝕎₂) → 𝕎₂
-    lim₁ : (𝕎₁ → 𝕎₂) → 𝕎₂
+  data 𝕆₂ : Set where
+    zero : (𝟎 → 𝕆₂) → 𝕆₂
+    suc : (𝟏 → 𝕆₂) → 𝕆₂
+    lim : (𝕆₀ → 𝕆₂) → 𝕆₂
+    lim₁ : (𝕆₁ → 𝕆₂) → 𝕆₂
 ```
 
-不难看出这里的
+这样的一系列类型就叫做树序数 (tree ordinal), 又叫布劳威尔序数 (Brouwer ordinal). 为了方便表述, 非形式地, 我们把这里的 `𝟎`, `𝟏`, `𝕆₀`, `𝕆₁`, `𝕆₂`, ... 记作 $\texttt{Tree}_\alpha$. 当然这里的下标 $\alpha$ 的类型目前是非形式地, 根据上下文它可能是自然数, 可能是某个小于 $\omega_\beta$ 的数, 而这里的 $\beta$ 也跟 $\alpha$ 一样类型未定. 为了讨论我们总得先往前说.
 
-`𝟘`, `𝟙`, `ℕ`, `𝕎₁`, `𝕎₂`, ...
+不难看出
 
-所能表示的序数的上确界 (记作 $\sup$) 为
+- `𝟎` 与标准库的 `⊥` 同构
+- `𝟏` 与标准库的 `⊤` 同构
+- `𝕆₀` 与标准库的 `ℕ` 同构
+
+而 `𝕆₁` 和 `𝕆₂` 又与如下定义的 `Ord`, `Ord₂` 同构
+
+```agda
+data Ord : Set where
+  zero : Ord
+  suc : Ord → Ord
+  lim : (ℕ → Ord) → Ord
+
+data Ord₂ : Set where
+  zero : Ord₂
+  suc : Ord₂ → Ord₂
+  lim : (ℕ → Ord₂) → Ord₂
+  lim₁ : (Ord → Ord₂) → Ord₂
+```
+
+`𝕆₁`, `𝕆₂` 的定义方便往上归纳定义 $\texttt{Tree}_\alpha$, 而 `Ord`, `Ord₂` 则方便直接使用.
+
+我们认为 $\texttt{Tree}_\alpha$ 所能表示的序数的上确界 (记作 $\sup$) 分别为
 
 $$0, 1, \omega, \omega_1, \omega_2, ...$$
 
-把 `𝟘`, `𝟙`, `ℕ`, `𝕎₁`, `𝕎₂`, ... 重命名为 $\texttt{Tree}_\alpha$, 使得
+即有
 
 $$
 \begin{align}
@@ -64,8 +86,6 @@ $$
 ...
 \end{align}
 $$
-
-当然这里的下标 $\alpha$ 的类型目前是非形式地, 根据上下文它可能是自然数, 可能是某个小于 $\omega_\beta$ 的数, 而这里的 $\beta$ 也跟 $\alpha$ 一样类型未定. 为了讨论我们总得先往前说.
 
 不难看出 $\texttt{Tree}_1$ 到 $\texttt{Tree}_0$ 以及 $\texttt{Tree}_2$ 到 $\texttt{Tree}_1$ 的折叠是平凡的.
 
@@ -101,10 +121,7 @@ data Treeₖ₊₁ : Set where
 
 ```agda
 module Tree_omega where
-  -- 不难证明开篇代码定义的 `ℕ` 与标准库的 `ℕ` 同构, 方便起见直接从库中导入.
-  open import Data.Nat hiding (_<_)
-
-  -- 方便起见, 序采用以下定义
+  -- 方便起见, `ℕ` 的序采用以下定义
   data _<_ : ℕ → ℕ → Set where
     base : ∀ {n} → n < suc n
     step  : ∀ {n m} → n < m → n < suc m
@@ -175,6 +192,36 @@ $$
 \sup(\texttt{Ord}_\omega) = \Omega_\omega
 $$
 
+[ccz181078](https://github.com/ccz181078) 使用[另一种方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v)实现了 $\texttt{Ord}_\omega$, 但似乎更难以往上扩展. 我们给出该方法的 Agda 版本, 以供参考.
+
+```agda
+module Ord_omega where
+  open import Data.Unit
+  open import Data.Nat
+
+  module _ {X : Set} (cf : X → Set) where
+    data Ordₓ : Set where
+      zero : Ordₓ
+      suc : Ordₓ → Ordₓ
+      limω : (f : ℕ → Ordₓ) → Ordₓ
+      limX : (x : X) (f : cf x → Ordₓ) → Ordₓ
+      limΩ : (f : X → Ordₓ) → Ordₓ
+
+    cfₓ : Ordₓ → Set
+    cfₓ (limΩ _) = X
+    cfₓ (limX x _) = cf x
+    cfₓ _ = ⊤
+
+  mutual
+    Ordω : ℕ → Set
+    Ordω zero = Ord
+    Ordω (suc n) = Ordₓ (cfω n)
+
+    cfω : (n : ℕ) → Ordω n → Set
+    cfω zero _ = ⊤
+    cfω (suc n) = cfₓ (cfω n)
+```
+
 继续往上, 很明显了, 我们要以 `Treeω 3`, 也即 $\texttt{Ord}$ 为下标, 写出一个新的类型族 `OrdΩ : Treeω 3 → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a) 中的 `U`. 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$. Andras Kovacs 用它写出了 $\psi(\Omega_{\varepsilon_0}) = \text{PTO}(\text{ID}_{<\varepsilon_0})$, 其中 $\psi$ 是 [Madore 的 $\psi$](https://googology.fandom.com/wiki/Madore%27s_function), 但扩张到了 $\Omega$ 多个 $\Omega$.
 
 以此类推, 我们有
@@ -216,19 +263,7 @@ module Ord_Omega_fixpoint where
 ### $\Omega_2$的折叠
 
 ```agda
-module NaiveCollapsing where
-  open import Data.Nat
 
-  data Ord : Set where
-    zero : Ord
-    suc : Ord → Ord
-    lim : (ℕ → Ord) → Ord
-
-  data Ord₂ : Set where
-    zero : Ord₂
-    suc : Ord₂ → Ord₂
-    lim : (ℕ → Ord₂) → Ord₂
-    Lim : (Ord → Ord₂) → Ord₂
 ```
 
 ### $\Omega_{\omega}$ 乃至 $\Omega_{\Omega}$ 的折叠
