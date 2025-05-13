@@ -230,7 +230,7 @@ module Ord_omega where
     cfω (suc n) = cf₊ (cfω n)
 ```
 
-接着 $\texttt{Tree}_\omega$ 的定义继续往上, 规律很明显了. 我们要以 `Treeω 3`, 也即 $\texttt{Ord}$ 为下标, 写出一个新的类型族 `OrdΩ : Treeω 3 → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a) 中的 `U`. 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$. Andras Kovacs 用它写出了 $\psi(\Omega_{\varepsilon_0}) = \text{PTO}(\text{ID}_{<\varepsilon_0})$, 其中 $\psi$ 是 [Madore 的 $\psi$](https://googology.fandom.com/wiki/Madore%27s_function), 但扩张到了 $\Omega$ 多个 $\Omega$.
+接着 $\texttt{Tree}_\omega$ 的定义继续往上, 规律很明显了. 我们要以 $\texttt{Ord}$ 为下标, 写出一个新的类型族 `OrdΩ : Ord → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a) 中的 `U`. 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$. Andras Kovacs 用它写出了 $\psi(\Omega_{\varepsilon_0}) = \text{PTO}(\text{ID}_{<\varepsilon_0})$, 其中 $\psi$ 是 [Madore 的 $\psi$](https://googology.fandom.com/wiki/Madore%27s_function), 但扩张到了 $\Omega$ 多个 $\Omega$.
 
 以此类推, 我们有
 
@@ -261,12 +261,11 @@ module Ord_Omega_fixpoint where
 
 ## 任务二: $\Omega$数的折叠
 
-回顾前文
+先准备一些辅助函数
 
-- $\texttt{Tree}_1$ 到 $\texttt{Tree}_0$ 的折叠是平凡的
-- $\texttt{Tree}_2$ 到 $\texttt{Tree}_1$ 的折叠是平凡的
-- $\texttt{Tree}_3$ 到 $\texttt{Tree}_2$ 的折叠就是各种增长层级
-- 再往后的折叠就是通常所说的 OCF
+```agda
+-- TODO
+```
 
 ### $\Omega_2$的折叠
 

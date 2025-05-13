@@ -2,6 +2,7 @@ module OCF.Base where
 
 open import Data.Unit
 open import Data.Nat
+open import Function using (_∘_)
 
 data Ord : Set where
   zero : Ord
@@ -39,7 +40,14 @@ mutual
 ord₁ : Ordω 0 → Ordω 1
 ord₁ zero = zero
 ord₁ (suc α) = suc (ord₁ α)
-ord₁ (lim f) = limω (λ n → ord₁ (f n))
+ord₁ (lim f) = limω (ord₁ ∘ f)
+
+ord₊ : {n : ℕ} → Ordω (suc n) → Ordω (suc (suc n))
+ord₊ zero = zero
+ord₊ (suc a) = suc (ord₊ a)
+ord₊ (limω f) = limω (ord₊ ∘ f)
+ord₊ a@(limX _ f) = limX a (ord₊ ∘ f)
+ord₊ a@(limΩ f) = limX a (ord₊ ∘ f)
 
 Ω₁ : Ordω 1
 Ω₁ = limΩ ord₁
@@ -54,6 +62,11 @@ mutual
   cfΩ zero _ = ⊤
   cfΩ (suc α) = cfₓ (cfΩ α)
   cfΩ (lim _) _ = ⊤
+
+ψ : (α : Ord) → OrdΩ α → Ord
+ψ zero a = a
+ψ (suc α) a = ψ α {!   !}
+ψ (lim f) a = lim (λ n → ψ (f n) {! a n  !})
 
 module ConstructorAnalysis where
   o₁ : Ordω 1 → Set
