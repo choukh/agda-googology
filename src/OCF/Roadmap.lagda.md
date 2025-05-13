@@ -199,30 +199,38 @@ module Ord_omega where
   open import Data.Unit
   open import Data.Nat
 
+  -- 假设某 `X = Ordₙ` 已完成, 并且已知任意 `x : X` 的共尾度 (基本列的长度) `cf x`
   module _ {X : Set} (cf : X → Set) where
-    data Ordₓ : Set where
-      zero : Ordₓ
-      suc : Ordₓ → Ordₓ
-      limω : (f : ℕ → Ordₓ) → Ordₓ
-      limX : (x : X) (f : cf x → Ordₓ) → Ordₓ
-      limΩ : (f : X → Ordₓ) → Ordₓ
+    -- 定义 Ordₙ₊₁, 将其共尾度划分为5类: 0, 1, ω, (ω, Ω), Ω
+    data Ord₊ : Set where
+      zero : Ord₊
+      suc : Ord₊ → Ord₊
+      limω : (f : ℕ → Ord₊) → Ord₊
+      -- 代表所有 `k≤n` 的 `Ordₖ` 的 `limΩ`.
+      limX : (x : X) (f : cf x → Ord₊) → Ord₊
+      limΩ : (f : X → Ord₊) → Ord₊
 
-    cfₓ : Ordₓ → Set
-    cfₓ (limΩ _) = X
-    cfₓ (limX x _) = cf x
-    cfₓ _ = ⊤
+    -- 定义 `α : Ordₙ₊₁` 的共尾度
+    cf₊ : Ord₊ → Set
+    -- 如果 `α` 由 `limΩ` 构造, 那么它的共尾度就是 `X`
+    cf₊ (limΩ _) = X
+    -- 如果 `α` 由 `limX` 构造, 那么它的共尾度就是某 `x : X` 的共尾度 `cf x`
+    cf₊ (limX x _) = cf x
+    -- 其他情况我们不关心
+    cf₊ _ = ⊤
 
+  -- 互递归完成 `Ordω` 和 `cfω` 的定义
   mutual
     Ordω : ℕ → Set
     Ordω zero = Ord
-    Ordω (suc n) = Ordₓ (cfω n)
+    Ordω (suc n) = Ord₊ (cfω n)
 
     cfω : (n : ℕ) → Ordω n → Set
     cfω zero _ = ⊤
-    cfω (suc n) = cfₓ (cfω n)
+    cfω (suc n) = cf₊ (cfω n)
 ```
 
-继续往上, 很明显了, 我们要以 `Treeω 3`, 也即 $\texttt{Ord}$ 为下标, 写出一个新的类型族 `OrdΩ : Treeω 3 → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a) 中的 `U`. 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$. Andras Kovacs 用它写出了 $\psi(\Omega_{\varepsilon_0}) = \text{PTO}(\text{ID}_{<\varepsilon_0})$, 其中 $\psi$ 是 [Madore 的 $\psi$](https://googology.fandom.com/wiki/Madore%27s_function), 但扩张到了 $\Omega$ 多个 $\Omega$.
+接着 $\texttt{Tree}_\omega$ 的定义继续往上, 规律很明显了. 我们要以 `Treeω 3`, 也即 $\texttt{Ord}$ 为下标, 写出一个新的类型族 `OrdΩ : Treeω 3 → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a) 中的 `U`. 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$. Andras Kovacs 用它写出了 $\psi(\Omega_{\varepsilon_0}) = \text{PTO}(\text{ID}_{<\varepsilon_0})$, 其中 $\psi$ 是 [Madore 的 $\psi$](https://googology.fandom.com/wiki/Madore%27s_function), 但扩张到了 $\Omega$ 多个 $\Omega$.
 
 以此类推, 我们有
 
@@ -263,7 +271,11 @@ module Ord_Omega_fixpoint where
 ### $\Omega_2$的折叠
 
 ```agda
-
+ψ : Ord₂ → Ord
+ψ zero = suc zero
+ψ (suc α) = suc (ψ α)
+ψ (lim f) = lim (λ n → ψ (f n))
+ψ (lim₁ f) = lim (λ x → {!   !})
 ```
 
 ### $\Omega_{\omega}$ 乃至 $\Omega_{\Omega}$ 的折叠
