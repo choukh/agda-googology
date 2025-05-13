@@ -1,10 +1,22 @@
-# 为什么用树序数的方法折叠EBO是困难的
+# 树序数大数计划综述
 
-还是决定写篇文章详细解释一下现在的总体思路以及遇到的困难.
+我们主张的树序数大数计划基于以下纲领:
+
+1. 遵循序数的指引
+  - 即先实现序数再实现以该序数为增长率的函数
+  - 而不是先实现函数, 再分析其增长率上下界, 或者非序数增长率函数
+2. 可运行于理想的计算机中
+  - 实践上可以选择在以类型论为基础的证明助理中无公理地写出定义
+3. 保证停机
+  - 实践上可以通过证明助理的自动停机检查器保证
+
+本文介绍了该计划的总体思路, 当前的进展, 以及遇到的困难.
 
 ```agda
 module OCF.Roadmap where
 ```
+
+## 什么是树序数
 
 首先, 从零开始 (字面意义), 我们能看得跟清晰一些.
 
@@ -66,7 +78,7 @@ $$
 
 只考虑任务一的话是相对简单的, 难点在于我们后面会看到任务二会给任务一很多附加的要求, 导致很大的 $\texttt{Ord}_\alpha$ 也难以实现. 我们一步步看.
 
-## 任务一
+## Ω不动点
 
 首先由开篇的代码, 通过简单的复制粘贴我们可以写出任意 $\texttt{Ord}_{<\omega}$. 伪代码如下
 
@@ -157,9 +169,9 @@ module Ord_Omega_fixpoint where
     OrdΛ : ℕ → Set
 ```
 
-我们还没有研究它们的具体实现, 因为 $\texttt{Ord}_{\Omega_1}$ 的折叠就已经遇到的困难.
+我们还没有研究它们的具体实现, 因为 $\texttt{Ord}_{\Omega_1}$ 的折叠就已经遇到了困难.
 
-## 任务二
+## 最初几层的折叠
 
 回顾前文
 
@@ -168,10 +180,60 @@ module Ord_Omega_fixpoint where
 - $\texttt{Ord}_3$ 到 $\texttt{Ord}_2$ 的折叠就是各种增长层级
 - 再往后的折叠就是通常所说的 OCF
 
-跳过各种增长层级, 我们首先来到 $\texttt{Ord}_4$ 到 $\texttt{Ord}_3$ 的折叠, 这是已知可以实现的.
+举最初几层折叠为例. 先写出 $\texttt{Ord}_2, \texttt{Ord}_3, \texttt{Ord}_4$ 的定义.
 
 ```agda
--- TODO
+module NaiveCollapsing where
+  open import Data.Nat renaming (ℕ to Ord₂)
+
+  data Ord₃ : Set where
+    zero : Ord₃
+    suc : Ord₃ → Ord₃
+    lim : (Ord₂ → Ord₃) → Ord₃
+
+  data Ord₄ : Set where
+    zero : Ord₄
+    suc : Ord₄ → Ord₄
+    lim : (Ord₂ → Ord₄) → Ord₄
+    Lim : (Ord₃ → Ord₄) → Ord₄
 ```
+
+$\texttt{Ord}_3$ 到 $\texttt{Ord}_2$ 的折叠的例子有 Hardy 层级
+
+```agda
+  hardy : Ord₃ → Ord₂ → Ord₂
+  hardy zero n = n
+  hardy (suc α) n = hardy α (suc n)
+  hardy (lim f) n = hardy (f n) n
+```
+
+慢速增长层级
+
+```agda
+  slow : Ord₃ → Ord₂ → Ord₂
+  slow zero n = 0
+  slow (suc α) n = suc (slow α n)
+  slow (lim f) n = slow (f zero) n
+```
+
+简单推广则有 $\texttt{Ord}_4$ 到 $\texttt{Ord}_3$ 的折叠
+
+```agda
+  Hardy : Ord₄ → Ord₃ → Ord₃
+  Hardy zero α = α
+  Hardy (suc μ) α = Hardy μ (suc α)
+  Hardy (lim f) α = lim λ n → Hardy (f n) α
+  Hardy (Lim F) α = Hardy (F α) α
+
+  Slow : Ord₄ → Ord₂ → Ord₃
+  Slow zero n = {!   !}
+  Slow (suc μ) n = {!   !}
+  Slow (lim f) n = {!   !}
+  Slow (Lim Ord_Omega_fixpoint) n = {!   !}
+```
+
+## BO, TFBO, 及其上不远的位置
+
+## 为什么 EBO 是困难的
 
 “自下而上使用相同基本列”这个意义下的真前段
