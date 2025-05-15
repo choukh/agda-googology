@@ -1,6 +1,6 @@
-# 树序数大数计划综述
+# 树序数大数综述
 
-我们主张的树序数大数计划基于以下纲领:
+我们主张的树序数大数基于以下纲领:
 
 1. 序数先行
    - 即先实现序数再折叠成大数
@@ -10,7 +10,7 @@
 3. 保证停机
    - 通过证明助理的自动停机检查器保证停机
 
-本文介绍了该计划的总体思路, 当前的进展, 以及遇到的困难.
+本文介绍该计划的总体思路, 当前的进展, 以及遇到的困难.
 
 ```agda
 module OCF.Roadmap where
@@ -22,7 +22,7 @@ open import Data.Nat using (ℕ; suc; zero)
 首先, 从零开始 (字面意义), 我们能看得更清晰一些.
 
 ```agda
-module Tree_literal where
+module Tree_basic where
 
   data 𝟎 : Set where
 
@@ -45,7 +45,7 @@ module Tree_literal where
     lim₁ : (𝕆₁ → 𝕆₂) → 𝕆₂
 ```
 
-这样的一系列类型的项所能表示的序数就叫做树序数 (tree ordinal), 又叫布劳威尔序数 (Brouwer ordinal). 为了方便表述, 非形式地, 我们把这里的 `𝟎`, `𝟏`, `𝕆₀`, `𝕆₁`, `𝕆₂`, ... 记作 $\texttt{Tree}_\alpha$. 当然这里的下标 $\alpha$ 的类型目前是非形式地, 根据上下文它可能是自然数, 可能是某个小于 $\omega_\beta$ 的数, 而这里的 $\beta$ 也跟 $\alpha$ 一样类型未定. 为了讨论我们总得先往前说.
+这样的一系列类型的项所能表示的序数就叫做树序数 (tree ordinal), 又叫布劳威尔序数 (Brouwer ordinal). 为了方便表述, 非形式地, 我们把这些类型记作 $\texttt{Tree}_\alpha$. 当然这里的下标 $\alpha$ 的类型目前是非形式地, 根据上下文它可能是自然数, 可能是某个小于 $\omega_\beta$ 的数, 而这里的 $\beta$ 也跟 $\alpha$ 一样类型未定. 为了讨论我们总得先往前说.
 
 不难看出
 
