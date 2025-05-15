@@ -45,7 +45,7 @@ module Tree_literal where
     lim₁ : (𝕆₁ → 𝕆₂) → 𝕆₂
 ```
 
-这样的一系列类型就叫做树序数 (tree ordinal), 又叫布劳威尔序数 (Brouwer ordinal). 为了方便表述, 非形式地, 我们把这里的 `𝟎`, `𝟏`, `𝕆₀`, `𝕆₁`, `𝕆₂`, ... 记作 $\texttt{Tree}_\alpha$. 当然这里的下标 $\alpha$ 的类型目前是非形式地, 根据上下文它可能是自然数, 可能是某个小于 $\omega_\beta$ 的数, 而这里的 $\beta$ 也跟 $\alpha$ 一样类型未定. 为了讨论我们总得先往前说.
+这样的一系列类型的项所能表示的序数就叫做树序数 (tree ordinal), 又叫布劳威尔序数 (Brouwer ordinal). 为了方便表述, 非形式地, 我们把这里的 `𝟎`, `𝟏`, `𝕆₀`, `𝕆₁`, `𝕆₂`, ... 记作 $\texttt{Tree}_\alpha$. 当然这里的下标 $\alpha$ 的类型目前是非形式地, 根据上下文它可能是自然数, 可能是某个小于 $\omega_\beta$ 的数, 而这里的 $\beta$ 也跟 $\alpha$ 一样类型未定. 为了讨论我们总得先往前说.
 
 不难看出
 
@@ -103,18 +103,18 @@ $$
 
 ```pseudocode
 data Treeₖ₊₁ : Set where
-  seq₀ : (Tree₀ → Treeₖ₊₁) → Treeₖ₊₁
-  seq₁ : (Tree₁ → Treeₖ₊₁) → Treeₖ₊₁
+  cf₀ : (Tree₀ → Treeₖ₊₁) → Treeₖ₊₁
+  cf₁ : (Tree₁ → Treeₖ₊₁) → Treeₖ₊₁
   ...
-  seqₖ : (Treeₖ → Treeₖ₊₁) → Treeₖ₊₁
+  cfₖ : (Treeₖ → Treeₖ₊₁) → Treeₖ₊₁
 ```
 
 其中下标 `k + 1` 代表了不同构造子的个数, 而下标为 `k` 的构造子则构造了以 `Treeₖ` 为长度的基本列.
 
-- `seq₀` 构造了长度为 $\texttt{Tree}_0 = 0$ 的基本列, 它只有一个, 就是空列 `λ ()`, 代表序数 $0$
-- `seq₁` 构造了长度为 $\texttt{Tree}_1 = 1$ 的基本列, 代表了该基本列的唯一元素的后继.
-- `seq₂` 构造了长度为 $\texttt{Tree}_2 = \omega$ 的基本列, 代表基本列的极限.
-- `seq₃` 构造了长度为 $\texttt{Tree}_3 = \omega_1$ 的基本列, 代表更高阶的极限.
+- `cf₀` 构造了长度为 $\texttt{Tree}_0 = 0$ 的基本列, 它只有一个, 就是空列 `λ ()`, 代表序数 $0$
+- `cf₁` 构造了长度为 $\texttt{Tree}_1 = 1$ 的基本列, 代表了该基本列的唯一元素的后继.
+- `cf₂` 构造了长度为 $\texttt{Tree}_2 = \omega$ 的基本列, 代表基本列的极限.
+- `cf₃` 构造了长度为 $\texttt{Tree}_3 = \omega_1$ 的基本列, 代表更高阶的极限.
 - ...
 
 归纳这个模式, 稍微使用一些类型宇宙的技巧我们可以写出 `Treeω : ℕ → Set` 这个类型族.
@@ -126,19 +126,20 @@ module Tree_omega where
     base : ∀ {n} → n < suc n
     step  : ∀ {n m} → n < m → n < suc m
 
-  -- 假设所有 `k < n` 层已经定义完成, 定义第 `n` 层
-  data U (n : ℕ) (E : ∀ k → k < n → Set) : Set where
-    -- `Treeₙ` 的元素由那些长度为 `Tree₀`, `Tree₁`, ... `Treeₖ` 的基本列构成
-    seq : (k : ℕ) (p : k < n) (a : E k p → U n E) → U n E
+  -- 假设下标为 `k < n` 的树序数 `E k` 已经定义完成, 定义下标为 `n` 的树序数 `U`
+  module _ (n : ℕ) (E : ∀ k → k < n → Set) where
+    data U : Set where
+      -- `U` 的元素的共尾度 (基本列的长度) 为任意满足 `k < n` 的 `E k`
+      cf : (k : ℕ) (p : k < n) (f : E k p → U) → U
 
-  -- 递归完成所有 `k < n` 层的定义
-  Elm : ∀ n k → k < n → Set
-  Elm (suc k) k base = U k (Elm k)
-  Elm (suc n) k (step p) = Elm n k p
+  -- 递归完成所有 `k < n` 的树序数的定义
+  E : ∀ {n} k → k < n → Set
+  E k base = U k E
+  E k (step p) = E k p
 
-  -- 完成以自然数为下标的 `Treeω` 层级
+  -- 消掉 `k < n` 的条件
   Treeω : ℕ → Set
-  Treeω n = U n (Elm n)
+  Treeω n = E n base
 ```
 
 我们认为 `Treeω : ℕ → Set` 这个类型族形式化了 $\texttt{Tree}_\omega$. 也就是说, 我们认为
@@ -186,7 +187,7 @@ $$
 \sup(\texttt{Ord}_\alpha) = \Omega_\alpha
 $$
 
-上一个代码块我们以 `ℕ` 为下标, 写出了 `Treeω`, 它形式化了 $\texttt{Ord}_{\omega}$, 满足
+总之, 我们以 `ℕ` 为下标, 写出了 `Treeω`, 它形式化了 $\texttt{Ord}_{\omega}$, 满足
 
 $$
 \sup(\texttt{Ord}_\omega) = \Omega_\omega
@@ -212,14 +213,12 @@ module Ord_omega where
 
     -- 定义 `α : Ordₙ₊₁` 的共尾度
     cf₊ : Ord₊ → Set
-    -- 如果 `α` 由 `limΩ` 构造, 那么它的共尾度就是 `X`
     cf₊ (limΩ _) = X
-    -- 如果 `α` 由 `limX` 构造, 那么它的共尾度就是某 `x : X` 的共尾度 `cf x`
     cf₊ (limX x _) = cf x
-    -- 其他情况我们不关心
+    -- 我们只关心 >ω 的情况
     cf₊ _ = ⊤
 
-  -- 互递归完成 `Ordω` 和 `cfω` 的定义
+  -- 互递归完成下标为自然数的整个 `Ordₙ` 的层级以及每层的共尾度
   mutual
     Ordω : ℕ → Set
     Ordω zero = Ord
@@ -264,7 +263,9 @@ module Ord_Omega_fixpoint where
 先准备一些辅助函数
 
 ```agda
--- TODO
+iter : {T : Set} → (T → T) → ℕ → T → T
+iter f zero    m = m
+iter f (suc n) m = f (iter f n m)
 ```
 
 ### $\Omega_2$的折叠
@@ -275,6 +276,32 @@ module Ord_Omega_fixpoint where
 ψ (suc α) = suc (ψ α)
 ψ (lim f) = lim (λ n → ψ (f n))
 ψ (lim₁ f) = lim (λ x → {!   !})
+```
+
+```agda
+module Tree_omega_collapsing where
+  open Tree_omega
+  open import Relation.Binary.PropositionalEquality
+
+  U≡E : {k n : ℕ} (p : k < n) → U k E ≡ E k p
+  U≡E base = refl
+  U≡E (step p) = U≡E p
+
+  coe : {A B : Set} → A ≡ B → A → B
+  coe refl x = x
+
+  z<s : {n : ℕ} → 0 < suc n
+  z<s {(zero)} = base
+  z<s {suc n} = step z<s
+
+  zeroᵀ : {n : ℕ} → Treeω (suc n)
+  zeroᵀ = cf 0 z<s λ { x → {! x  !} }
+
+  FGH : Treeω 3 → Treeω 2 → Treeω 2
+  FGH (cf 2 base f) n = FGH (f n) n
+  FGH (cf 1 (step base) α) n = iter (FGH (α zeroᵀ)) {! n  !} n
+  FGH (cf 0 (step (step base)) _) n = cf 1 base λ _ → n
+  FGH (cf _ (step (step (step ()))) _) _
 ```
 
 ### $\Omega_{\omega}$ 乃至 $\Omega_{\Omega}$ 的折叠
