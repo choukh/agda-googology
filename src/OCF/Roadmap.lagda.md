@@ -103,18 +103,18 @@ $$
 
 ```pseudocode
 data Treeₖ₊₁ : Set where
-  cf₀ : (Tree₀ → Treeₖ₊₁) → Treeₖ₊₁
-  cf₁ : (Tree₁ → Treeₖ₊₁) → Treeₖ₊₁
+  cof₀ : (Tree₀ → Treeₖ₊₁) → Treeₖ₊₁
+  cof₁ : (Tree₁ → Treeₖ₊₁) → Treeₖ₊₁
   ...
-  cfₖ : (Treeₖ → Treeₖ₊₁) → Treeₖ₊₁
+  cofₖ : (Treeₖ → Treeₖ₊₁) → Treeₖ₊₁
 ```
 
 其中下标 `k + 1` 代表了不同构造子的个数, 而下标为 `k` 的构造子则构造了以 `Treeₖ` 为长度的基本列.
 
-- `cf₀` 构造了长度为 $\texttt{Tree}_0 = 0$ 的基本列, 它只有一个, 就是空列 `λ ()`, 代表序数 $0$
-- `cf₁` 构造了长度为 $\texttt{Tree}_1 = 1$ 的基本列, 代表了该基本列的唯一元素的后继.
-- `cf₂` 构造了长度为 $\texttt{Tree}_2 = \omega$ 的基本列, 代表基本列的极限.
-- `cf₃` 构造了长度为 $\texttt{Tree}_3 = \omega_1$ 的基本列, 代表更高阶的极限.
+- `cof₀` 构造了长度为 $\texttt{Tree}_0 = 0$ 的基本列, 它只有一个, 就是空列 `λ ()`, 代表序数 $0$
+- `cof₁` 构造了长度为 $\texttt{Tree}_1 = 1$ 的基本列, 代表了该基本列的唯一元素的后继.
+- `cof₂` 构造了长度为 $\texttt{Tree}_2 = \omega$ 的基本列, 代表基本列的极限.
+- `cof₃` 构造了长度为 $\texttt{Tree}_3 = \omega_1$ 的基本列, 代表更高阶的极限.
 - ...
 
 归纳这个模式, 稍微使用一些类型宇宙的技巧我们可以写出 `Treeω : ℕ → Set` 这个类型族.
@@ -130,7 +130,7 @@ module Tree_omega where
   module _ (n : ℕ) (E : ∀ k → k < n → Set) where
     data U : Set where
       -- `U` 的元素的共尾度 (基本列的长度) 为任意满足 `k < n` 的 `E k`
-      cf : (k : ℕ) (p : k < n) (f : E k p → U) → U
+      cof : (k : ℕ) (p : k < n) (f : E k p → U) → U
 
   -- 递归完成所有 `k < n` 的树序数的定义
   E : ∀ {n} k → k < n → Set
@@ -144,10 +144,10 @@ module Tree_omega where
 
 我们认为 `Treeω : ℕ → Set` 这个类型族形式化了 $\texttt{Tree}_\omega$. 也就是说, 我们认为
 
-- 当 $\alpha$ 为后继时, $\texttt{Tree}_\alpha$ 是一个类型, 且有 $\text{cf}(\sup(\texttt{Tree}_\alpha)) = \sup(\texttt{Tree}_\alpha)$
-- 当 $\alpha$ 为极限时, $\texttt{Tree}_\alpha$ 是一个类型族, 且有 $\text{cf}(\sup(\texttt{Tree}_\alpha)) = \sup(\text{idx}(\texttt{Tree}_\alpha))$
+- 当 $\alpha$ 为后继时, $\texttt{Tree}_\alpha$ 是一个类型, 且有 $\text{cof}(\sup(\texttt{Tree}_\alpha)) = \sup(\texttt{Tree}_\alpha)$
+- 当 $\alpha$ 为极限时, $\texttt{Tree}_\alpha$ 是一个类型族, 且有 $\text{cof}(\sup(\texttt{Tree}_\alpha)) = \sup(\text{idx}(\texttt{Tree}_\alpha))$
 
-其中 $\text{cf}$ 表示共尾度, $\text{idx}$ 表示类型族的索引类型.
+其中 $\text{cof}$ 表示共尾度, $\text{idx}$ 表示类型族的索引类型.
 
 为了对齐下标我们引入 $\texttt{Ord}$ 的记法
 
@@ -200,33 +200,33 @@ module Ord_omega where
   open import Data.Unit
   open import Data.Nat
 
-  -- 假设某 `X = Ordₙ` 已完成, 并且已知任意 `x : X` 的共尾度 (基本列的长度) `cf x`
-  module _ {X : Set} (cf : X → Set) where
+  -- 假设某 `X = Ordₙ` 已完成, 并且已知任意 `x : X` 的共尾度 (基本列的长度) `cof x`
+  module _ {X : Set} (cof : X → Set) where
     -- 定义 Ordₙ₊₁, 将其共尾度划分为5类: 0, 1, ω, (ω, Ω), Ω
     data Ord₊ : Set where
       zero : Ord₊
       suc : Ord₊ → Ord₊
       limω : (f : ℕ → Ord₊) → Ord₊
       -- 代表所有 `k≤n` 的 `Ordₖ` 的 `limΩ`.
-      limX : (x : X) (f : cf x → Ord₊) → Ord₊
+      limX : (x : X) (f : cof x → Ord₊) → Ord₊
       limΩ : (f : X → Ord₊) → Ord₊
 
     -- 定义 `α : Ordₙ₊₁` 的共尾度
-    cf₊ : Ord₊ → Set
-    cf₊ (limΩ _) = X
-    cf₊ (limX x _) = cf x
+    cof₊ : Ord₊ → Set
+    cof₊ (limΩ _) = X
+    cof₊ (limX x _) = cof x
     -- 我们只关心 >ω 的情况
-    cf₊ _ = ⊤
+    cof₊ _ = ⊤
 
   -- 互递归完成下标为自然数的整个 `Ordₙ` 的层级以及每层的共尾度
   mutual
     Ordω : ℕ → Set
     Ordω zero = Ord
-    Ordω (suc n) = Ord₊ (cfω n)
+    Ordω (suc n) = Ord₊ (cofω n)
 
-    cfω : (n : ℕ) → Ordω n → Set
-    cfω zero _ = ⊤
-    cfω (suc n) = cf₊ (cfω n)
+    cofω : (n : ℕ) → Ordω n → Set
+    cofω zero _ = ⊤
+    cofω (suc n) = cof₊ (cofω n)
 ```
 
 接着 $\texttt{Tree}_\omega$ 的定义继续往上, 规律很明显了. 我们要以 $\texttt{Ord}$ 为下标, 写出一个新的类型族 `OrdΩ : Ord → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a) 中的 `U`. 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$. Andras Kovacs 用它写出了 $\psi(\Omega_{\varepsilon_0}) = \text{PTO}(\text{ID}_{<\varepsilon_0})$, 其中 $\psi$ 是 [Madore 的 $\psi$](https://googology.fandom.com/wiki/Madore%27s_function), 但扩张到了 $\Omega$ 多个 $\Omega$.
@@ -243,18 +243,6 @@ module Ord_omega where
 |$\texttt{Ord}_{\Omega_{\Omega_\omega}}$|$\N,\texttt{Ord}_\omega,\texttt{Ord}_{\Omega_\omega}$|$\omega$|$\Omega_{\Omega_\omega}$|
 |...|...|...|...|
 |$\texttt{Ord}_{\Lambda}$|$\N,\texttt{Ord}_\omega,\texttt{Ord}_{\Omega_\omega},...$|$\omega$|$\Omega_{\Omega_{._{._.}}}$|
-
-其中索引类型如果包含多个, 那么表示它是一个嵌套的依赖类型. 如果需要实现任意多层的嵌套, 可以先从 `ℕ` 递归得到类型签名, 所以签名可以简化到只剩 `ℕ` 索引. 从而最后三行可能将具有以下类型
-
-```agda
-module Ord_Omega_fixpoint where
-  open import Data.Nat
-  open Tree_omega renaming (Treeω to Ordω)
-  postulate
-    OrdΩω : (n : ℕ) → Ordω n → Set
-    OrdΩΩω : (n : ℕ) (α : Ordω n) → OrdΩω n α → Set
-    OrdΛ : ℕ → Set
-```
 
 我们还没有研究它们的具体实现, 因为 $\texttt{Ord}_{\Omega_2}$ 的折叠就已经遇到了困难.
 
@@ -295,13 +283,13 @@ module Tree_omega_collapsing where
   z<s {suc n} = step z<s
 
   zeroᵀ : {n : ℕ} → Treeω (suc n)
-  zeroᵀ = cf 0 z<s λ { x → {! x  !} }
+  zeroᵀ = cof 0 z<s λ { x → {! x  !} }
 
   FGH : Treeω 3 → Treeω 2 → Treeω 2
-  FGH (cf 2 base f) n = FGH (f n) n
-  FGH (cf 1 (step base) α) n = iter (FGH (α zeroᵀ)) {! n  !} n
-  FGH (cf 0 (step (step base)) _) n = cf 1 base λ _ → n
-  FGH (cf _ (step (step (step ()))) _) _
+  FGH (cof 2 base f) n = FGH (f n) n
+  FGH (cof 1 (step base) α) n = iter (FGH (α zeroᵀ)) {! n  !} n
+  FGH (cof 0 (step (step base)) _) n = cof 1 base λ _ → n
+  FGH (cof _ (step (step (step ()))) _) _
 ```
 
 ### $\Omega_{\omega}$ 乃至 $\Omega_{\Omega}$ 的折叠
