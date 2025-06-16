@@ -55,11 +55,11 @@ module Brw_basic where
 有时候为了对齐某些下标, 我们也会使用 $\texttt{Ord}$ 的记法
 
 $$
-\begin{align}
-\texttt{Ord}_n &:= \texttt{Brw}_{n+3}\;\;\;&n<\omega \\
-
-\texttt{Ord}_\alpha &:= \texttt{Brw}_\alpha\;\;\;&\alpha\ge\omega\\
-\end{align}
+\texttt{Ord}_\alpha :=
+\begin{cases}
+   \texttt{Brw}_{\alpha+3} &\text{if } \alpha < \omega \\
+   \texttt{Brw}_\alpha &\text{if } \alpha\ge\omega
+\end{cases}
 $$
 
 不难看出
@@ -68,12 +68,16 @@ $$
 - `𝟏` 与标准库的 `⊤` 同构
 - `ℕ` 与标准库的 `ℕ` 同构
 
+```agda
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤)
+open import Data.Nat using (ℕ; zero; suc)
+```
+
 而 `O₀` 和 `O₁` 又与如下定义的 `Ord₀`, `Ord₁` 同构
 
 ```agda
 module Ord_basic where
-  open import Data.Nat using (ℕ)
-
   data Ord₀ : Set where
     zero : Ord₀
     suc : Ord₀ → Ord₀
@@ -88,7 +92,17 @@ module Ord_basic where
 
 `O₀`, `O₁` 的定义方便往上归纳定义 $\texttt{Brw}_\alpha$, 而 `Ord₀`, `Ord₁` 则方便直接使用.
 
-将布劳威尔树 $\texttt{Brw}_\alpha$ 所能表示的序数的上确界记作 $\sup(\texttt{Brw}_\alpha)$, 并按惯例令 $\Omega_\alpha := \omega_\alpha$, 其中 $\Omega_1$ 简记作 $\Omega$. 则有
+将布劳威尔树 $\texttt{Brw}_\alpha$ 所能表示的序数的上确界记作 $\sup(\texttt{Brw}_\alpha)$, 并按 Buchholz 的惯例令
+
+$$
+\Omega_\alpha :=
+\begin{cases}
+   1 &\text{if } \alpha = 0 \\
+   \omega_\alpha &\text{if } \alpha > 0
+\end{cases}
+$$
+
+其中 $\Omega_1$ 简记作 $\Omega$, 则有
 
 $$
 \begin{align}
@@ -103,15 +117,16 @@ $$
 
 考虑 $\texttt{Brw}_{\alpha^+}$ 到 $\texttt{Brw}_{\alpha}$ 的折叠. 从最底层开始,  $\texttt{Brw}_1$ 到 $\texttt{Brw}_0$ 以及 $\texttt{Brw}_2$ 到 $\texttt{Brw}_1$ 的折叠是平凡的. 而 $\texttt{Brw}_3$ 到 $\texttt{Brw}_2$ 的折叠就是各种增长层级. 再往后的折叠就是通常所说的 OCF.
 
-只不过通常的 OCF 是非直谓的, 它通过一个抽象的描述从某个很大的 $\texttt{Brw}_\alpha$ 一步折叠到 $\texttt{Brw}_3$, 而我们这里需要具体的递归算法一层一层往下: $\texttt{Brw}_\alpha$ 到 ... 到 $\texttt{Brw}_4$ 到 $\texttt{Brw}_3$ (大可数序数) 到 $\texttt{Brw}_2$ (大自然数).
+只不过通常的 OCF 使用集合论语言非直谓定义, 而我们这里需要具体的递归算法一层一层往下: $\texttt{Brw}_\alpha$ 到 ... 到 $\texttt{Brw}_4$ 到 $\texttt{Brw}_3$ (大可数序数), 最后到 $\texttt{Brw}_2$ (大自然数).
 
-因此我们的任务主要分解成两部分, 一是写出很大的 $\texttt{Brw}_\alpha$, 二是一层层折叠到 $\texttt{Brw}_2$. 只考虑任务一的话是相对简单的, 难点在于我们后面会看到任务二会给任务一很多附加的要求. 我们一步步来.
+因此我们的任务主要分解成两部分, 一是写出很大的 $\texttt{Brw}_\alpha$, 二是一层层折叠到 $\texttt{Brw}_2$. 只考虑任务一的话是相对简单的, 难点在于我们后面会看到任务二会给任务一附加很多要求. 我们一步步来.
 
 ## 大布劳威尔树的实现
 
 首先由开篇的代码, 通过简单的复制粘贴我们可以写出任意 $\texttt{Brw}_{<\omega}$. 伪代码如下
 
 ```pseudocode
+data Brw₀ : Set where
 data Brwₖ₊₁ : Set where
   cf₀ : (Brw₀ → Brwₖ₊₁) → Brwₖ₊₁
   cf₁ : (Brw₁ → Brwₖ₊₁) → Brwₖ₊₁
@@ -119,20 +134,18 @@ data Brwₖ₊₁ : Set where
   cfₖ : (Brwₖ → Brwₖ₊₁) → Brwₖ₊₁
 ```
 
-其中 `Brwₖ₊₁` 的下标 `k + 1` 代表了该类型的构造子的个数, 而下标为 `k` 的构造子 `cfₖ` 则构造了共尾度至多为 $\sup(\texttt{Brw}_k)$ 的序数, 即这些序数的基本列的长度至多为 $\sup(\texttt{Brw}_k)$.
+其中 `Brwₖ₊₁` 的下标 `k + 1` 代表了该类型的构造子的个数, 而下标为 `k` 的构造子 `cfₖ` 则构造了共尾度 (基本列的长度) 为 `Brwₖ` 的序数. (当某个类型 `A` 被期待为序数的时候, 我们指序数 $\sup(A)$)
 
-- `cf₀` 构造了长度为 $0$ 的基本列所能表示的序数, 它只有一个, 就是空列 `λ ()`, 代表序数 $0$
-- `cf₁` 构造了长度为 $1$ 的基本列所能表示的序数, 代表了该基本列的唯一元素的后继.
-- `cf₂` 构造了长度为 $\omega$ 的基本列所能表示的序数, 代表序数基本列的极限.
-- `cf₃` 构造了长度为 $\Omega$ 的基本列所能表示的序数, 代表更高阶的极限.
+- `cf₀` 构造了共尾度为 $0$ 的序数, 它只有一个, 就是空列 `λ ()`, 代表序数 $0$
+- `cf₁` 构造了共尾度为 $1$ 的序数, 即后继序数.
+- `cf₂` 构造了共尾度为 $\omega$ 的序数, 表示可数极限序数.
+- `cf₃` 构造了共尾度为 $\Omega$ 的序数, 表示不可数极限序数.
 - ...
 
 归纳这个模式, 稍微使用一些类型宇宙的技巧我们可以写出 `Brw : ℕ → Set` 这个类型族.
 
 ```agda
 module Brw_nat where
-  open import Data.Nat using (ℕ; zero; suc )
-
   -- 方便起见, `ℕ` 的序采用以下定义
   data _<_ : ℕ → ℕ → Set where
     zero : ∀ {n} → n < suc n
@@ -154,12 +167,10 @@ module Brw_nat where
   Brw n = Brw< n zero
 ```
 
-这样我们就形式化了任意 $\texttt{Brw}_n$. [ccz181078](https://github.com/ccz181078) 使用[另一种方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v) 实现了 $\texttt{Ord}_n$, 但似乎更难以往上扩展. 我们给出该方法的 Agda 版本, 以供参考.
+这样我们就形式化了任意 $\texttt{Brw}_n$. 此外, [ccz181078](https://github.com/ccz181078) 使用[另一种方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v) 实现了 $\texttt{Ord}_n$, 但似乎更难以往上推广. 我们给出该方法的 Agda 版本, 以供参考.
 
 ```agda
 module Ord_nat where
-  open import Data.Unit
-  open import Data.Nat
   open Ord_basic
 
   -- 假设某 `X = Ordₙ` 已完成, 并且已知任意 `x : X` 的共尾度 `cf x`
@@ -192,6 +203,37 @@ module Ord_nat where
 ```
 
 有了 $\texttt{Brw}_n$ 的定义, 我们可以立即写出 $\texttt{Brw}_\omega$ 的定义.
+
+```agda
+module Brw_omega where
+  open Brw_nat
+
+  data Brwω : Set where
+    cf  : (n : ℕ) (f : Brw n → Brwω) → Brwω
+    cfω : (f : ℕ → Brwω) → Brwω
+```
+
+```agda
+  data Brwω+1 : Set where
+    cf    : (n : ℕ) (f : Brw n → Brwω+1) → Brwω+1
+    cfω   : (f : ℕ → Brwω+1) → Brwω+1
+    cfω+1 : (f : Brwω → Brwω+1) → Brwω+1
+```
+
+```agda
+  module _ (n : ℕ) (Brwω< : ∀ k → k < n → Set) where
+    data Brwω₊ : Set where
+      cf    : (n : ℕ) (f : Brw n → Brwω₊) → Brwω₊
+      cfω   : (f : ℕ → Brwω₊) → Brwω₊
+      cfω+ : (k : ℕ) (p : k < n) (f : Brwω< k p → Brwω₊) → Brwω₊
+
+  Brwω< : ∀ {n} k → k < n → Set
+  Brwω< k zero = Brwω₊ k Brwω<
+  Brwω< k (suc p) = Brwω< k p
+
+  Brwω+ : ℕ → Set
+  Brwω+ n = Brwω< n zero
+```
 
 接着 $\texttt{Brw}_\omega$ 的定义继续往上, 规律很明显了. 我们要以 $\texttt{Ord}$ 为下标, 写出一个新的类型族 `OrdΩ : Ord → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a) 中的 `U`. 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$. Andras Kovacs 用它写出了 $\psi(\Omega_{\varepsilon_0}) = \text{PTO}(\text{ID}_{<\varepsilon_0})$, 其中 $\psi$ 是 [Madore 的 $\psi$](https://googology.fandom.com/wiki/Madore%27s_function), 但扩张到了 $\Omega$ 多个 $\Omega$.
 
@@ -227,8 +269,6 @@ module Ord_nat where
 我们还没有研究它们的具体实现, 因为 $\texttt{Ord}_{\Omega_2}$ 的折叠就已经遇到了困难.
 
 ```agda
-open import Data.Unit using (⊤)
-open import Data.Empty using (⊥)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
 open import Function using (_∘_; it)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
@@ -240,13 +280,8 @@ pattern injᶜ x = inj₂ (inj₂ x)
 transport : {A B : Set} → A ≡ B → A → B
 transport refl x = x
 
-module ℕ where
-  open import Data.Nat using (ℕ; zero; suc) public
-  variable n m : ℕ
-
-  iter : {T : Set} (f : T → T) (init : T) (times : ℕ) → T
-  iter f a zero    = a
-  iter f a (suc n) = f (iter f a n)
+module Nat where
+  private variable n m : ℕ
 
   data _<_ : ℕ → ℕ → Set where
     zero : n < suc n
@@ -269,15 +304,15 @@ module ℕ where
   ... | injᵇ p = injᵇ (s<s p)
   ... | injᶜ p = injᶜ (cong suc p)
 
-open ℕ using (ℕ; zero; suc; iter)
-
 module Ordᴰ where
+  open Nat renaming (_<_ to _<ᴺ_; <-dec to <ᴺ-dec)
+
   infix 10 _<_
   data Ordᴰ : Set
   data _<_ : Ordᴰ → Ordᴰ → Set
 
   monotonic : (ℕ → Ordᴰ) → Set
-  monotonic f = ∀ {n m} → n ℕ.< m → f n < f m
+  monotonic f = ∀ {n m} → n <ᴺ m → f n < f m
 
   private variable
     a b c : Ordᴰ
@@ -307,7 +342,7 @@ module Ordᴰ where
   <-dec zero (suc q)    = injᵇ q
   <-dec (suc p) zero    = injᵃ p
   <-dec (suc p) (suc q) = <-dec p q
-  <-dec (lim {mono} n p) (lim m q) with ℕ.<-dec n m
+  <-dec (lim {mono} n p) (lim m q) with <ᴺ-dec n m
   ... | injᵃ n<m  = <-dec (<-trans p (mono n<m)) q
   ... | injᵇ m<n  = <-dec p (<-trans q (mono m<n))
   ... | injᶜ refl = <-dec p q
@@ -400,6 +435,10 @@ a + zero = a
 a + suc b = suc (a + b)
 a + lim f = lim (λ n → a + f n)
 a + limₗ p f = limₗ p (λ x → a + f x)
+
+iter : {T : Set} (f : T → T) (init : T) (times : ℕ) → T
+iter f a zero    = a
+iter f a (suc n) = f (iter f a n)
 
 lfp : (Ord ℓ → Ord ℓ) → Ord ℓ
 lfp f = lim (iter f zero)
