@@ -207,9 +207,17 @@ toOrdᴰ zero     = zero
 toOrdᴰ (suc a)  = suc (toOrdᴰ a)
 toOrdᴰ (lim f)  = lim (cumsum (toOrdᴰ ∘ f)) (cumsum-mono (toOrdᴰ ∘ f))
 
--- ψ(Ω_Ω)
+-- n-iteration of ψ₀
+ψⁿ : ℕ → Ord₀
+ψⁿ = ℕ.iter (ψ₀ ∘ Ω ∘ toOrdᴰ) zero
+
+ex0 = ψⁿ 0    -- ω
+ex1 = ψⁿ 1    -- Buchholz's ordinal
+ex2 = ψⁿ 2    -- ψ(Ω_BO)
+ex3 = ψⁿ 3    -- ψ(Ω_ψ(Ω_BO))
+
 BTBO : Ord₀
-BTBO = lim (ℕ.iter (ψ₀ ∘ Ω ∘ toOrdᴰ) (suc zero))
+BTBO = lim ψⁿ -- ψ(Ω_Ω)
 
 FGH : Ord₀ → ℕ → ℕ
 FGH zero    n = suc n
