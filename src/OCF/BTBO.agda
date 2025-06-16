@@ -211,10 +211,10 @@ toOrdᴰ (lim f)  = lim (cumsum (toOrdᴰ ∘ f)) (cumsum-mono (toOrdᴰ ∘ f))
 ψⁿ : ℕ → Ord₀
 ψⁿ = ℕ.iter (ψ₀ ∘ Ω ∘ toOrdᴰ) zero
 
-ex0 = ψⁿ 0    -- ω
-ex1 = ψⁿ 1    -- Buchholz's ordinal
-ex2 = ψⁿ 2    -- ψ(Ω_BO)
-ex3 = ψⁿ 3    -- ψ(Ω_ψ(Ω_BO))
+ex1 = ψⁿ 1    -- ω
+ex2 = ψⁿ 2    -- Buchholz's ordinal
+ex3 = ψⁿ 3    -- ψ(Ω_BO)
+ex4 = ψⁿ 4    -- ψ(Ω_ψ(Ω_BO))
 
 BTBO : Ord₀
 BTBO = lim ψⁿ -- ψ(Ω_Ω)
