@@ -5,7 +5,7 @@ module OCF.BTBO where
 open import Data.Unit using (⊤)
 open import Data.Empty using (⊥)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Function using (_∘_)
+open import Function using (_∘_; it)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
 
 pattern injᵃ x = inj₁ x
@@ -113,17 +113,17 @@ module Ordᴰ where
   z<nz {suc (lim f mono)} _ = suc (z<nz _)
   z<nz {lim f mono}       _ = lim 1 (z<nz (sth<nz (mono zero)))
 
-  +-incr : ⦃ _ : NonZero b ⦄ → a < a + b
-  +-incr {b = suc b} = +-mono (z<nz _)
-  +-incr {b = lim f mono} = +-mono (z<nz _)
+  a<a+b : ⦃ _ : NonZero b ⦄ → a < a + b
+  a<a+b = +-mono (z<nz it)
 
+  -- cumulative sum
   cumsum : (ℕ → Ordᴰ) → (ℕ → Ordᴰ)
-  cumsum f zero = f zero
-  cumsum f (suc n) = cumsum f n + suc (f (suc n))
+  cumsum f zero     = f zero
+  cumsum f (suc n)  = cumsum f n + suc (f (suc n))
 
   cumsum-mono : (f : ℕ → Ordᴰ) → monotonic (cumsum f)
-  cumsum-mono f zero = +-incr
-  cumsum-mono f (suc p) = <-trans (cumsum-mono f p) +-incr
+  cumsum-mono f zero    = a<a+b
+  cumsum-mono f (suc p) = <-trans (cumsum-mono f p) a<a+b
 
 open Ordᴰ hiding (_+_)
 private variable i ℓ ℓ₁ ℓ₂ : Ordᴰ
@@ -170,15 +170,15 @@ coe₀ = coe {p = zero}
 ↑ p (limₗ q f)  = limₗ (<-trans q p) (↑ p ∘ f ∘ coe)
 
 Ω : (ℓ : Ordᴰ) → Ord ℓ
-Ω zero = lim ↑₀
-Ω (suc ℓ) = limₗ zero (↑ zero)
-Ω (lim f mono) = lim (λ n → ↑ (f<l n) (Ω (f n)))
+Ω zero          = lim ↑₀
+Ω (suc ℓ)       = limₗ zero (↑ zero)
+Ω (lim f mono)  = lim (λ n → ↑ (f<l n) (Ω (f n)))
 
 iter : (f : Ord ℓ → Ord ℓ) (init : Ord ℓ) (times : Ord ℓ) → Ord ℓ
-iter f a zero         = a
-iter f a (suc b)      = f (iter f a b)
-iter f a (lim g)      = lim (iter f a ∘ g)
-iter f a (limₗ p g)   = limₗ p (iter f a ∘ g)
+iter f a zero       = a
+iter f a (suc b)    = f (iter f a b)
+iter f a (lim g)    = lim (iter f a ∘ g)
+iter f a (limₗ p g) = limₗ p (iter f a ∘ g)
 
 _+_ _*_ _^_ : Ord ℓ → Ord ℓ → Ord ℓ
 _+_ a = iter suc a
