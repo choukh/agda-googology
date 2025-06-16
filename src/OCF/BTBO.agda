@@ -202,14 +202,14 @@ lfp f = lim (ℕ.iter f zero)
 ψ₀ {ℓ = suc ℓ}      a = ψ₀ (ψ< zero a)
 ψ₀ {ℓ = lim f mono} a = lim (λ n → ψ₀ (ψ< (f<l n) a))
 
-toOrdᴰ : Ord₀ → Ordᴰ
-toOrdᴰ zero     = zero
-toOrdᴰ (suc a)  = suc (toOrdᴰ a)
-toOrdᴰ (lim f)  = lim (cumsum (toOrdᴰ ∘ f)) (cumsum-mono (toOrdᴰ ∘ f))
+ordᴰ : Ord₀ → Ordᴰ
+ordᴰ zero     = zero
+ordᴰ (suc a)  = suc (ordᴰ a)
+ordᴰ (lim f)  = lim (cumsum (ordᴰ ∘ f)) (cumsum-mono (ordᴰ ∘ f))
 
 -- n-iteration of ψ₀
 ψⁿ : ℕ → Ord₀
-ψⁿ = ℕ.iter (ψ₀ ∘ Ω ∘ toOrdᴰ) zero
+ψⁿ = ℕ.iter (ψ₀ ∘ Ω ∘ ordᴰ) zero
 
 ex1 = ψⁿ 1    -- ω
 ex2 = ψⁿ 2    -- Buchholz's ordinal
