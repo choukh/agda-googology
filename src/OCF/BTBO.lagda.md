@@ -1,7 +1,28 @@
+# 形式化大数数学 (3.0 - 布劳威尔树壁垒序数)
+
+> 交流Q群: 893531731  
+> 本文源码: [BTBO.lagda.md](https://github.com/choukh/agda-googology/blob/main/src/OCF/BTBO.lagda.md)  
+> 高亮渲染: [BTBO.html](https://choukh.github.io/agda-googology/OCF.BTBO.html)  
+> 纯代码版: [BTBO.agda](https://gist.github.com/choukh/d7ca58dd90ee112162debce78eb7ad78)
+
+我们主张的形式化大数基于以下纲领:
+
+1. 序数先行
+   - 先实现序数再折叠成大数
+   - 排除很难分析序数上下界的函数以及非序数增长率函数
+2. 理想计算机可运行
+   - 在以类型论为基础的证明助理中无公理地写出定义
+3. 保证停机
+   - 通过证明助理的自动停机检查器保证停机
+
+本文可能是该系列的最后一篇, 因为遵循该纲领, 我们目前卡在了 $\psi(\Omega_\Omega)$. 为了引起重视, 我们将其命名为布劳威尔树壁垒序数 (Brouser Tree Barrier Ordinal), 简称 BTBO. 本文将介绍该序数的实现.
+
+```agda
 {-# OPTIONS --safe --lossy-unification #-}
-
 module OCF.BTBO where
+```
 
+```agda
 open import Data.Unit using (⊤)
 open import Data.Empty using (⊥)
 open import Data.Sum using (_⊎_; inj₁; inj₂)
@@ -226,3 +247,13 @@ FGH (lim a) n = FGH (a n) n
 
 mynum : ℕ
 mynum = FGH BTBO 99
+```
+
+## 参考
+
+- [Andras Kovacs - Large countable ordinals and numbers in Agda](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a?permalink_comment_id=5617267)
+- [ccz181078 - googology](https://github.com/ccz181078/googology)
+- [Thierry Coquand - Inductive Definitions and Constructive Mathematics](https://www.cse.chalmers.se/~coquand/prague1.pdf)
+- [Googology Wiki - Ordinal collapsing function](https://googology.fandom.com/wiki/Ordinal_collapsing_function)
+- [ユーザーブログ:Hexirp - ブラウワー順序数の制限と拡張](https://googology.fandom.com/ja/wiki/ユーザーブログ:Hexirp/ブラウワー順序数の制限と拡張)
+- [ユーザーブログ:Hexirp - 2024-12-25 のメモ](https://googology.fandom.com/ja/wiki/ユーザーブログ:Hexirp/2024-12-25_のメモ)
