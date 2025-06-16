@@ -1,5 +1,4 @@
-{-# OPTIONS --safe --without-K #-}
-{-# OPTIONS --hidden-argument-puns --lossy-unification #-}
+{-# OPTIONS --safe --lossy-unification #-}
 
 module OCF.BTBO where
 
@@ -209,8 +208,8 @@ toOrdᴰ (suc a)  = suc (toOrdᴰ a)
 toOrdᴰ (lim f)  = lim (cumsum (toOrdᴰ ∘ f)) (cumsum-mono (toOrdᴰ ∘ f))
 
 -- ψ(Ω_Ω)
-ψ₀-lfp : Ord₀
-ψ₀-lfp = lim (ℕ.iter (ψ₀ ∘ Ω ∘ toOrdᴰ) (suc zero))
+BTBO : Ord₀
+BTBO = lim (ℕ.iter (ψ₀ ∘ Ω ∘ toOrdᴰ) (suc zero))
 
 FGH : Ord₀ → ℕ → ℕ
 FGH zero    n = suc n
@@ -218,4 +217,4 @@ FGH (suc a) n = ℕ.iter (FGH a) n n
 FGH (lim a) n = FGH (a n) n
 
 mynum : ℕ
-mynum = FGH ψ₀-lfp 99
+mynum = FGH BTBO 99
