@@ -1,0 +1,221 @@
+{-# OPTIONS --safe --without-K #-}
+{-# OPTIONS --hidden-argument-puns --lossy-unification #-}
+
+module OCF.BTBO where
+
+open import Data.Unit using (⊤)
+open import Data.Empty using (⊥)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Function using (_∘_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
+
+pattern injᵃ x = inj₁ x
+pattern injᵇ x = inj₂ (inj₁ x)
+pattern injᶜ x = inj₂ (inj₂ x)
+
+transport : {A B : Set} → A ≡ B → A → B
+transport refl x = x
+
+module ℕ where
+  open import Data.Nat using (ℕ; zero; suc) public
+  variable n m : ℕ
+
+  iter : {T : Set} (f : T → T) (init : T) (times : ℕ) → T
+  iter f a zero    = a
+  iter f a (suc n) = f (iter f a n)
+
+  data _<_ : ℕ → ℕ → Set where
+    zero : n < suc n
+    suc  : n < m → n < suc m
+
+  z<s : ∀ n → zero < suc n
+  z<s zero    = zero
+  z<s (suc n) = suc (z<s n)
+
+  s<s : n < m → suc n < suc m
+  s<s zero      = zero
+  s<s (suc p)  = suc (s<s p)
+
+  <-dec : ∀ n m → n < m ⊎ m < n ⊎ n ≡ m
+  <-dec zero zero = injᶜ refl
+  <-dec zero (suc m) = injᵃ (z<s m)
+  <-dec (suc n) zero = injᵇ (z<s n)
+  <-dec (suc n) (suc m) with <-dec n m
+  ... | injᵃ p = injᵃ (s<s p)
+  ... | injᵇ p = injᵇ (s<s p)
+  ... | injᶜ p = injᶜ (cong suc p)
+
+open ℕ using (ℕ; zero; suc)
+
+module Ordᴰ where
+  infix 10 _<_
+  data Ordᴰ : Set
+  data _<_ : Ordᴰ → Ordᴰ → Set
+
+  monotonic : (ℕ → Ordᴰ) → Set
+  monotonic f = ∀ {n m} → n ℕ.< m → f n < f m
+
+  private variable
+    a b c : Ordᴰ
+    f :  ℕ → Ordᴰ
+    mono : monotonic f
+
+  data Ordᴰ where
+    zero : Ordᴰ
+    suc  : Ordᴰ → Ordᴰ
+    lim  : (f : ℕ → Ordᴰ) (mono : monotonic f) → Ordᴰ
+
+  data _<_ where
+    zero : a < suc a
+    suc  : a < b → a < suc b
+    lim  : ∀ n → a < f n → a < lim f mono
+
+  f<l : ∀ n → f n < lim f mono
+  f<l {mono} n = lim (suc n) (mono zero)
+
+  <-trans : a < b → b < c → a < c
+  <-trans p zero      = suc p
+  <-trans p (suc q)   = suc (<-trans p q)
+  <-trans p (lim n q) = lim n (<-trans p q)
+
+  <-dec : ∀ {a b c} → a < c → b < c → a < b ⊎ b < a ⊎ a ≡ b
+  <-dec zero zero       = injᶜ refl
+  <-dec zero (suc q)    = injᵇ q
+  <-dec (suc p) zero    = injᵃ p
+  <-dec (suc p) (suc q) = <-dec p q
+  <-dec (lim {mono} n p) (lim m q) with ℕ.<-dec n m
+  ... | injᵃ n<m  = <-dec (<-trans p (mono n<m)) q
+  ... | injᵇ m<n  = <-dec p (<-trans q (mono m<n))
+  ... | injᶜ refl = <-dec p q
+
+  mutual
+    _+_ : Ordᴰ → Ordᴰ → Ordᴰ
+    a + zero          = a
+    a + suc b         = suc (a + b)
+    a + lim f f-mono  = lim (λ n → a + f n) (+-mono ∘ f-mono)
+
+    +-mono : b < c → a + b < a + c
+    +-mono zero       = zero
+    +-mono (suc p)    = suc (+-mono p)
+    +-mono (lim n p)  = lim n (+-mono p)
+
+  NonZero : Ordᴰ → Set
+  NonZero zero = ⊥
+  NonZero _    = ⊤
+
+  sth<nz : a < b → NonZero b
+  sth<nz zero       = _
+  sth<nz (suc _)    = _
+  sth<nz (lim _ _)  = _
+
+  z<nz : NonZero a → zero < a
+  z<nz {suc zero}         _ = zero
+  z<nz {suc (suc a)}      _ = suc (z<nz _)
+  z<nz {suc (lim f mono)} _ = suc (z<nz _)
+  z<nz {lim f mono}       _ = lim 1 (z<nz (sth<nz (mono zero)))
+
+  +-incr : ⦃ _ : NonZero b ⦄ → a < a + b
+  +-incr {b = suc b} = +-mono (z<nz _)
+  +-incr {b = lim f mono} = +-mono (z<nz _)
+
+  cumsum : (ℕ → Ordᴰ) → (ℕ → Ordᴰ)
+  cumsum f zero = f zero
+  cumsum f (suc n) = cumsum f n + suc (f (suc n))
+
+  cumsum-mono : (f : ℕ → Ordᴰ) → monotonic (cumsum f)
+  cumsum-mono f zero = +-incr
+  cumsum-mono f (suc p) = <-trans (cumsum-mono f p) +-incr
+
+open Ordᴰ hiding (_+_)
+private variable i ℓ ℓ₁ ℓ₂ : Ordᴰ
+
+module _ (ℓ : Ordᴰ) (Ord< : (i : Ordᴰ) (p : i < ℓ) → Set) where
+  data Ord₊ : Set where
+    zero  : Ord₊
+    suc   : Ord₊ → Ord₊
+    lim   : (f : ℕ → Ord₊) → Ord₊
+    limₗ  : (p : i < ℓ) (f : Ord< i p → Ord₊) → Ord₊
+
+Ord< : (i : Ordᴰ) (p : i < ℓ) → Set
+Ord< i zero      = Ord₊ i Ord<
+Ord< i (suc p)   = Ord< i p
+Ord< i (lim n p) = Ord< i p
+
+Ord : Ordᴰ → Set
+Ord ℓ = Ord< ℓ zero
+
+Ord₀ : Set
+Ord₀ = Ord zero
+
+Ord<-≡ : (p : i < ℓ₁) (q : i < ℓ₂) → Ord< i p ≡ Ord< i q
+Ord<-≡ zero zero      = refl
+Ord<-≡ (suc p) zero   = Ord<-≡ p zero
+Ord<-≡ (lim n p) zero = Ord<-≡ p zero
+Ord<-≡ p (suc q)      = trans (Ord<-≡ p q) refl
+Ord<-≡ p (lim n q)    = trans (Ord<-≡ p q) refl
+
+coe : {p : i < ℓ₁} {q : i < ℓ₂} → Ord< i p → Ord< i q
+coe {p} {q} = transport (Ord<-≡ p q)
+
+coe₀ : {p : i < ℓ₂} → Ord i → Ord< i p
+coe₀ = coe {p = zero}
+
+↑₀ : ℕ → Ord₀
+↑₀ zero = zero
+↑₀ (suc n) = suc (↑₀ n)
+
+↑ : ℓ₁ < ℓ₂ → Ord ℓ₁ → Ord ℓ₂
+↑ p zero        = zero
+↑ p (suc a)     = suc (↑ p a)
+↑ p (lim f)     = lim (↑ p ∘ f)
+↑ p (limₗ q f)  = limₗ (<-trans q p) (↑ p ∘ f ∘ coe)
+
+Ω : (ℓ : Ordᴰ) → Ord ℓ
+Ω zero = lim ↑₀
+Ω (suc ℓ) = limₗ zero (↑ zero)
+Ω (lim f mono) = lim (λ n → ↑ (f<l n) (Ω (f n)))
+
+iter : (f : Ord ℓ → Ord ℓ) (init : Ord ℓ) (times : Ord ℓ) → Ord ℓ
+iter f a zero         = a
+iter f a (suc b)      = f (iter f a b)
+iter f a (lim g)      = lim (iter f a ∘ g)
+iter f a (limₗ p g)   = limₗ p (iter f a ∘ g)
+
+_+_ _*_ _^_ : Ord ℓ → Ord ℓ → Ord ℓ
+_+_ a = iter suc a
+_*_ a = iter (_+ a) zero
+_^_ a = iter (_* a) (suc zero)
+
+lfp : (Ord ℓ → Ord ℓ) → Ord ℓ
+lfp f = lim (ℕ.iter f zero)
+
+ψ< : i < ℓ → Ord ℓ → Ord i
+ψ< p zero     = lfp (Ω _ ^_)
+ψ< p (suc a)  = lfp (ψ< p a ^_)
+ψ< p (lim f)  = lim (ψ< p ∘ f)
+ψ< {i} {ℓ} p (limₗ {i = j} q f) with <-dec q p
+... | injᵃ j<i  = limₗ j<i (ψ< p ∘ f ∘ coe)
+... | injᵇ i<j  = lfp (ψ< p ∘ f ∘ coe₀ ∘ ↑ i<j)
+... | injᶜ refl = lfp (ψ< p ∘ f ∘ coe₀)
+
+ψ₀ : Ord ℓ → Ord₀
+ψ₀ {ℓ = zero}       a = a
+ψ₀ {ℓ = suc ℓ}      a = ψ₀ (ψ< zero a)
+ψ₀ {ℓ = lim f mono} a = lim (λ n → ψ₀ (ψ< (f<l n) a))
+
+toOrdᴰ : Ord₀ → Ordᴰ
+toOrdᴰ zero     = zero
+toOrdᴰ (suc a)  = suc (toOrdᴰ a)
+toOrdᴰ (lim f)  = lim (cumsum (toOrdᴰ ∘ f)) (cumsum-mono (toOrdᴰ ∘ f))
+
+-- ψ(Ω_Ω)
+ψ₀-lfp : Ord₀
+ψ₀-lfp = lim (ℕ.iter (ψ₀ ∘ Ω ∘ toOrdᴰ) (suc zero))
+
+FGH : Ord₀ → ℕ → ℕ
+FGH zero    n = suc n
+FGH (suc a) n = ℕ.iter (FGH a) n n
+FGH (lim a) n = FGH (a n) n
+
+mynum : ℕ
+mynum = FGH ψ₀-lfp 99
