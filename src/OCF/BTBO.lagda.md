@@ -15,7 +15,7 @@
 3. 保证停机
    - 通过证明助理的自动停机检查器保证停机
 
-本文可能是该系列的最后一篇, 因为遵循该纲领, 我们目前卡在了 $\psi(\Omega_\Omega)$, 其中 $\psi$ 是 [Madore 的 $\psi$](https://googology.fandom.com/wiki/Madore%27s_function). 为了引起重视, 我们将其命名为布劳威尔树壁垒序数 (Brouser Brw Barrier Ordinal), 简称 BTBO. 本文将介绍该序数的实现.
+本文可能是该系列的最后一篇, 因为遵循该纲领, 我们目前卡在了 $\psi(\Omega_\Omega)$. 为了引起重视, 我们将其命名为布劳威尔树壁垒序数 (Brouser Brw Barrier Ordinal), 简称 BTBO. 本文将介绍该序数的实现.
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
@@ -154,7 +154,7 @@ module Brw_nat where
   Brw n = Brw< n zero
 ```
 
-这样我们就形式化了任意 $\texttt{Brw}_n$. [ccz181078](https://github.com/ccz181078) 使用[另一种方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v)实现了 $\texttt{Ord}_n$, 但似乎更难以往上扩展. 我们给出该方法的 Agda 版本, 以供参考.
+这样我们就形式化了任意 $\texttt{Brw}_n$. [ccz181078](https://github.com/ccz181078) 使用[另一种方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v) 实现了 $\texttt{Ord}_n$, 但似乎更难以往上扩展. 我们给出该方法的 Agda 版本, 以供参考.
 
 ```agda
 module Ord_nat where
@@ -269,7 +269,7 @@ module ℕ where
   ... | injᵇ p = injᵇ (s<s p)
   ... | injᶜ p = injᶜ (cong suc p)
 
-open ℕ using (ℕ; zero; suc)
+open ℕ using (ℕ; zero; suc; iter)
 
 module Ordᴰ where
   infix 10 _<_
@@ -384,10 +384,6 @@ coe {p} {q} = transport (Ord<-≡ p q)
 coe₀ : {p : i < ℓ₂} → Ord i → Ord< i p
 coe₀ = coe {p = zero}
 
-↑₀ : ℕ → Ord₀
-↑₀ zero = zero
-↑₀ (suc n) = suc (↑₀ n)
-
 ↑ : ℓ₁ < ℓ₂ → Ord ℓ₁ → Ord ℓ₂
 ↑ p zero        = zero
 ↑ p (suc a)     = suc (↑ p a)
@@ -395,27 +391,23 @@ coe₀ = coe {p = zero}
 ↑ p (limₗ q f)  = limₗ (<-trans q p) (↑ p ∘ f ∘ coe)
 
 Ω : (ℓ : Ordᴰ) → Ord ℓ
-Ω zero          = lim ↑₀
+Ω zero          = suc zero
 Ω (suc ℓ)       = limₗ zero (↑ zero)
 Ω (lim f mono)  = lim (λ n → ↑ (f<l n) (Ω (f n)))
 
-iter : (f : Ord ℓ → Ord ℓ) (init : Ord ℓ) (times : Ord ℓ) → Ord ℓ
-iter f a zero       = a
-iter f a (suc b)    = f (iter f a b)
-iter f a (lim g)    = lim (iter f a ∘ g)
-iter f a (limₗ p g) = limₗ p (iter f a ∘ g)
-
-_+_ _*_ _^_ : Ord ℓ → Ord ℓ → Ord ℓ
-_+_ a = iter suc a
-_*_ a = iter (_+ a) zero
-_^_ a = iter (_* a) (suc zero)
+_+_ : Ord ℓ → Ord ℓ → Ord ℓ
+a + zero = a
+a + suc b = suc (a + b)
+a + lim f = lim (λ n → a + f n)
+a + limₗ p f = limₗ p (λ x → a + f x)
 
 lfp : (Ord ℓ → Ord ℓ) → Ord ℓ
-lfp f = lim (ℕ.iter f zero)
+lfp f = lim (iter f zero)
 
+-- Buchholz's ψ
 ψ< : i < ℓ → Ord ℓ → Ord i
-ψ< p zero     = lfp (Ω _ ^_)
-ψ< p (suc a)  = lfp (ψ< p a ^_)
+ψ< p zero     = Ω _
+ψ< p (suc a)  = lfp (ψ< p a +_)
 ψ< p (lim f)  = lim (ψ< p ∘ f)
 ψ< {i} {ℓ} p (limₗ {i = j} q f) with <-dec q p
 ... | injᵃ j<i  = limₗ j<i (ψ< p ∘ f ∘ coe)
@@ -432,21 +424,22 @@ ordᴰ zero     = zero
 ordᴰ (suc a)  = suc (ordᴰ a)
 ordᴰ (lim f)  = lim (cumsum (ordᴰ ∘ f)) (cumsum-mono (ordᴰ ∘ f))
 
--- n-iteration of ψ₀
+-- n-iteration of ψ₀(Ω_x)
 ψⁿ : ℕ → Ord₀
-ψⁿ = ℕ.iter (ψ₀ ∘ Ω ∘ ordᴰ) zero
+ψⁿ = iter (ψ₀ ∘ Ω ∘ ordᴰ) zero
 
 ex1 = ψⁿ 1    -- ω
 ex2 = ψⁿ 2    -- Buchholz's ordinal
 ex3 = ψⁿ 3    -- ψ(Ω_BO)
 ex4 = ψⁿ 4    -- ψ(Ω_ψ(Ω_BO))
 
+-- Brouwer tree barrier ordinal
 BTBO : Ord₀
 BTBO = lim ψⁿ -- ψ(Ω_Ω)
 
 FGH : Ord₀ → ℕ → ℕ
 FGH zero    n = suc n
-FGH (suc a) n = ℕ.iter (FGH a) n n
+FGH (suc a) n = iter (FGH a) n n
 FGH (lim a) n = FGH (a n) n
 
 mynum : ℕ
