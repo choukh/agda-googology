@@ -138,8 +138,9 @@ data Brwₖ₊₁ : Set where
 
 - `cf₀` 构造了共尾度为 $0$ 的序数, 它只有一个, 就是空列 `λ ()`, 代表序数 $0$
 - `cf₁` 构造了共尾度为 $1$ 的序数, 即后继序数.
-- `cf₂` 构造了共尾度为 $\omega$ 的序数, 表示可数极限序数.
-- `cf₃` 构造了共尾度为 $\Omega$ 的序数, 表示不可数极限序数.
+- `cf₂` 构造了共尾度为 $\omega$ 的序数, 可表示可数极限序数.
+- `cf₃` 构造了共尾度为 $\Omega$ 的序数, 可表示不可数极限序数.
+- `cf₄` 构造了共尾度为 $\Omega_2$ 的序数, 可表示更高阶的不可数极限序数.
 - ...
 
 归纳这个模式, 稍微使用一些类型宇宙的技巧我们可以写出 `Brw : ℕ → Set` 这个类型族.
@@ -202,7 +203,7 @@ module Ord_nat where
     cf (suc n) = cf₊ (cf n)
 ```
 
-有了 $\texttt{Brw}_n$ 的定义, 我们可以立即写出 $\texttt{Brw}_\omega$ 的定义.
+继续往上, 在共尾度为任意 $\sup(\texttt{Brw}_n)$ 的序数的基础上, 添加共尾度为 `ℕ` 的序数, 就得到了 $\texttt{Brw}_\omega$.
 
 ```agda
 module Brw_omega where
@@ -213,12 +214,16 @@ module Brw_omega where
     cfω : (f : ℕ → Brwω) → Brwω
 ```
 
+再添加共尾度为 $\sup(\texttt{Brw}_\omega)$ 的序数, 就得到了 $\texttt{Brw}_{\omega+1}$.
+
 ```agda
   data Brwω+1 : Set where
     cf    : (n : ℕ) (f : Brw n → Brwω+1) → Brwω+1
     cfω   : (f : ℕ → Brwω+1) → Brwω+1
     cfω+1 : (f : Brwω → Brwω+1) → Brwω+1
 ```
+
+重复上述过程可以得到 $\texttt{Brw}_{\omega+n}$, $\texttt{Brw}_{\omega2}$ 和 $\texttt{Brw}_{\omega2+1}$.
 
 ```agda
   module _ (n : ℕ) (Brwω< : ∀ k → k < n → Set) where
@@ -233,13 +238,22 @@ module Brw_omega where
 
   Brwω+ : ℕ → Set
   Brwω+ n = Brwω< n zero
+
+  data Brwω2 : Set where
+    cf    : (n : ℕ) (f : Brw n → Brwω2) → Brwω2
+    cfω+  : (n : ℕ) (f : Brwω+ n → Brwω2) → Brwω2
+    cfω2  : (f : ℕ → Brwω2) → Brwω2
+
+  data Brwω2+1 : Set where
+    cf    : (n : ℕ) (f : Brw n → Brwω2+1) → Brwω2+1
+    cfω+  : (n : ℕ) (f : Brwω+ n → Brwω2+1) → Brwω2+1
+    cfω2  : (f : ℕ → Brwω2+1) → Brwω2+1
+    cfω2+1 : (f : Brwω2 → Brwω2+1) → Brwω2+1
 ```
 
-接着 $\texttt{Brw}_\omega$ 的定义继续往上, 规律很明显了. 我们要以 $\texttt{Ord}$ 为下标, 写出一个新的类型族 `OrdΩ : Ord → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a) 中的 `U`. 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$. Andras Kovacs 用它写出了 $\psi(\Omega_{\varepsilon_0}) = \text{PTO}(\text{ID}_{<\varepsilon_0})$, 其中 $\psi$ 是 [Madore 的 $\psi$](https://googology.fandom.com/wiki/Madore%27s_function), 但扩张到了 $\Omega$ 多个 $\Omega$.
+目前的成果可以总结如下:
 
-我们有如下对应关系:
-
-|类型|共尾度|典型项|上确界|
+|类型|共尾度|最大$\Omega$数|上确界|
 |-|-|-|-|
 |$\mathbb{0}$|n/a|n/a|$0$|
 |$\mathbb{1}$|$0$|$0$|$1$|
@@ -250,8 +264,11 @@ module Brw_omega where
 |$\texttt{Ord}_n$|$\Omega_n$|$\Omega_n$|$\Omega_{n+1}$|
 |$\texttt{Ord}_{\omega}$|$\omega$|$\Omega_\omega$|$\Omega_{\omega+1}$|
 |$\texttt{Ord}_{\omega+1}$|$\Omega_{\omega+1}$|$\Omega_{\omega+1}$|$\Omega_{\omega+2}$|
-|$\texttt{Ord}_{\omega+2}$|$\Omega_{\omega+2}$|$\Omega_{\omega+2}$|$\Omega_{\omega+3}$|
-|...|...|...|...|
+|$\texttt{Ord}_{\omega+n}$|$\Omega_{\omega+n}$|$\Omega_{\omega+n}$|$\Omega_{\omega+n+1}$|
+|$\texttt{Ord}_{\omega2}$|$\omega$|$\Omega_{\omega2}$|$\Omega_{\omega2+1}$|
+|$\texttt{Ord}_{\omega2+1}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2+2}$|
+
+接着 $\texttt{Brw}_\omega$ 的定义继续往上, 规律很明显了. 我们要以 $\texttt{Ord}$ 为下标, 写出一个新的类型族 `OrdΩ : Ord → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a) 中的 `U`. 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$. Andras Kovacs 用它写出了 $\psi(\Omega_{\varepsilon_0}) = \text{PTO}(\text{ID}_{<\varepsilon_0})$, 其中 $\psi$ 是 [Madore 的 $\psi$](https://googology.fandom.com/wiki/Madore%27s_function), 但扩张到了 $\Omega$ 多个 $\Omega$.
 
 以此类推, 我们有
 
