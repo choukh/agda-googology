@@ -15,7 +15,7 @@
 3. 保证停机
    - 通过证明助理的自动停机检查器保证停机
 
-本文可能是该系列的最后一篇, 因为遵循该纲领, 我们目前卡在了 $\psi(\Omega_\Omega)$. 为了引起关注, 我们将其命名为布劳威尔树壁垒序数 (Brouser Brw Barrier Ordinal), 简称 BTBO. 本文将介绍该序数的实现.
+本文可能是《形式化大数》系列的最后一篇, 因为遵循该纲领, 我们目前卡在了 $\psi(\Omega_\Omega)$. 为了引起关注, 我们将其命名为布劳威尔树壁垒序数 (Brouser Tree Barrier Ordinal), 简称 BTBO. 本文将介绍该序数的实现.
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
@@ -150,9 +150,7 @@ transport : {A B : Set} → A ≡ B → A → B
 transport refl x = x
 ```
 
-还需要自然数上的 $<$ 序及其传递性. 方便起见, 采用以下归纳定义.
-
-**定义 ($<$)**  
+**定义** 自然数上的 $<$ 序
 $$
 \cfrac{}{\;n<n^+\;}\;\;\texttt{zero}\;\;\;\;\;\;\;\cfrac{n<m}{\;n<m^+\;}\;\;\texttt{suc}
 $$
@@ -166,15 +164,7 @@ module Nat_lt where
     suc  : n < m → n < suc m
 ```
 
-容易证明其传递性.
-
-```agda
-  <-trans : m < n → n < o → m < o
-  <-trans p zero      = suc p
-  <-trans p (suc q)   = suc (<-trans p q)
-```
-
-由开篇的代码, 通过简单的复制粘贴我们可以写出任意 $\texttt{Brw}_{<\omega}$. 伪代码如下
+由开篇的代码, 通过简单的复制粘贴我们可以写出任意 $\texttt{Brw}_n$. 伪代码如下
 
 ```pseudocode
 data Brw₀ : Set where
@@ -235,7 +225,7 @@ module Ord_nat where
 剩下的定义跟 $\texttt{Brw}_n$ 是一样的. 给定 $n$, 我们递归定义满足 $p:i<n$ 的任意 $i$ 所给出的树 $\texttt{Ord}_{<i,\;p\,:\,i<n}$. 并定义
 
 $$
-\texttt{Ord}_n := \texttt{Ord}_{<n,\;\texttt{zero}\,:\,n<n^+}
+\texttt{Ord}_n := \texttt{Ord}_{<n,\;0\,:\,n<n^+}
 $$
 
 ```agda
@@ -330,7 +320,7 @@ $$
 **定义 (向上嵌入)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_{n^+}$ 的嵌入 $↑_+$ 如下:
 
 - 如果 $a : \text{Ord}_n$ 由 $\texttt{zero}$, $\texttt{suc}$ 或 $\texttt{lim}$ 构造, 我们直接使用 $\text{Ord}_{n^+}$ 的同名构造子递归构造 $↑_+a$.
-- 如果 $a = \texttt{lim}_n(p,f)$, 其中 $p:i<n$ 且 $f:\texttt{Ord}_{<i,\;p}\to\text{Ord}_n$, 则 $↑_+a:=\texttt{lim}_n(\texttt{suc}(p),↑_+\circ f)$, 其中 $\texttt{suc}(p):i<n^+$ 且 $↑_+\circ f:\texttt{Ord}_{<i,\;p}\to\text{Ord}_{n^+}$.
+- 如果 $a = \texttt{lim}_n(p,f)$, 其中 $p:i<n$ 且 $f:\texttt{Ord}_{<i,\;p}\to\text{Ord}_n$, 则 $↑_+a:=\texttt{lim}_n(p^+,↑_+\circ f)$, 其中 $p^+:i<n^+$ 且 $↑_+\circ f:\texttt{Ord}_{<i,\;p}\to\text{Ord}_{n^+}$.
 
 ```agda
   ↑₊ : Ord n → Ord (suc n)
@@ -348,7 +338,7 @@ $$
 \Omega_n :=
 \begin{cases}
    1 &\text{if } n = 0 \\
-   \texttt{lim}_{n'}(\texttt{zero}:n'<n'^+,↑_+) &\text{if } n = n'^+
+   \texttt{lim}_{n'}(0:n'<n'^+,↑_+) &\text{if } n = n'^+
 \end{cases}
 $$
 
@@ -396,7 +386,7 @@ $$
 
 ## 可数序数的有界三歧性
 
-为了一劳永逸地定义 $\texttt{Ord}_\alpha$ (其中 $\alpha < \Omega$), 我们要以可数序数 $\texttt{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`. 但是我们现有的 `Ord₀` 太过于宽泛了, 缺乏一些关键性质, 不能直接作为索引类型, 否则会导致后续无法折叠. 为此我们将专门定义具有所谓**有界三歧性 (bounded decidability)** 的可数序数类型 $\texttt{Ord}^D$.
+为了一劳永逸地定义 $\texttt{Ord}_\alpha$ (其中 $\alpha < \Omega$), 我们要以可数序数 $\texttt{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`. 但是我们现有的 `Ord₀` 太过于宽泛了, 缺乏一些关键性质, 不能直接作为索引类型, 否则会导致后续无法折叠. 为此我们将专门定义具有所谓**有界三歧性 (bounded decidability)** 的可数序数类型 $\texttt{Ord}^D$, 它也就是我们在 [2.0系列](https://zhuanlan.zhihu.com/p/711649863) 介绍的良构序数.
 
 为了表达三歧性, 我们引入和类型.
 
@@ -408,20 +398,25 @@ pattern injᵇ x = inj₂ (inj₁ x)
 pattern injᶜ x = inj₂ (inj₂ x)
 ```
 
-不难证明自然数的 $<$ 满足**无条件三歧性 (unconditional decidability)**, 即对任意 $n,m$, 都有 $(n < m) \lor (m < n) \lor (n = m)$.
+**引理** 在自然数上, 零小于后继, 且后继运算保持小于关系.
 
 ```agda
 module Nat where
-  open Nat_lt hiding (<-trans) public
+  open Nat_lt public
 
   z<s : ∀ n → zero < suc n
   z<s zero    = zero
   z<s (suc n) = suc (z<s n)
 
   s<s : n < m → suc n < suc m
-  s<s zero      = zero
-  s<s (suc p)  = suc (s<s p)
+  s<s zero    = zero
+  s<s (suc p) = suc (s<s p)
+```
 
+**定理** 自然数的 $<$ 满足**无条件三歧性 (unconditional decidability)**, 即对任意 $n,m$, 都有 $(n < m) \lor (m < n) \lor (n = m)$.  
+**证明** 对 $n,m$ 归纳. ∎
+
+```agda
   <-dec : ∀ n m → n < m ⊎ m < n ⊎ n ≡ m
   <-dec zero zero = injᶜ refl
   <-dec zero (suc m) = injᵃ (z<s m)
@@ -435,9 +430,16 @@ module Nat where
 **定义 (有界三歧可数序数)** 互归纳定义 $\texttt{Ord}^D$ 及其上的 $<$ 序.
 
 - $\texttt{Ord}^D$ 的定义与 $\texttt{Ord}_0$ 类似, 只不过要求基本列 $f:\mathbb{N}\to\texttt{Ord}^D$ 单调.
-- $<$ 的定义与自然数的 $<$ 类似, 只不过自然推广到了极限序数: 对任意 $f:\mathbb{N}\to\texttt{Ord}^D$ 和 $n : \mathbb{N}$, 如果 $a < f(n)$, 那么 $a < \texttt{lim}(f,mono)$. 其中 $mono$ 是 $f$ 的单调性证明.
+- $<$ 的定义与自然数的 $<$ 类似, 只不过自然推广到了极限序数.
 
-其中 $f:\mathbb{N}\to\texttt{Ord}^D$ 单调性是指: 对任意 $n,m:\mathbb{N}$, 如果 $n<m$, 那么 $f(n)<f(m)$.
+$$
+\cfrac{a<f(n)}{\;a<\texttt{lim}(f,mono)\;}\;\;\texttt{lim}
+$$
+
+其中
+- $f:\mathbb{N}\to\texttt{Ord}^D$ 且 $n : \mathbb{N}$
+- $mono$ 是 $f$ 的单调性证明
+- $f$ 的单调性是指: 对任意 $n,m:\mathbb{N}$, 如果 $n<m$, 那么 $f(n)<f(m)$. ∎
 
 ```agda
 module Ordᴰ where
@@ -466,15 +468,35 @@ module Ordᴰ where
     lim  : ∀ n → a < f n → a < lim f mono
 ```
 
+**引理** 对任意单调 ($mono$) 的 $f:\mathbb{N}\to\texttt{Ord}^D$ 和 $n:\mathbb{N}$, 有 $f(n)<\texttt{lim}(f,mono)$.  
+**证明** $f(n)<f(n^+)<\texttt{lim}(f,mono)$. ∎
+
 ```agda
   f<l : ∀ n → f n < lim f mono
   f<l {mono} n = lim (suc n) (mono zero)
+```
 
+**引理** $\texttt{Ord}^D$ 上的 $<$ 满足传递性.  
+**证明** 令 $p:a<b$ 且 $q:b<c$, 要证 $a<c$. 对 $q$ 归纳.
+
+- 若 $q=0$, 则有 $c=b^+$, 所以 $p^+:a<c$.
+- 若 $q=q'^+$, 则有 $c=c'^+$ 且 $q':b<c'$. 此时有归纳假设 $ih:a<c'$, 所以 $ih^+:a<c$.
+- 若 $q=\texttt{lim}(n,q')$, 则有 $c=\texttt{lim}(f,\_)$ 且 $q':b<f(n)$. 此时有归纳假设 $ih:a<f(n)$, 所以 $\texttt{lim}(n,ih):a<c$. ∎
+
+```agda
   <-trans : a < b → b < c → a < c
   <-trans p zero      = suc p
   <-trans p (suc q)   = suc (<-trans p q)
   <-trans p (lim n q) = lim n (<-trans p q)
+```
 
+**定理 (有界三歧性)** 对任意 $a,b:\texttt{Ord}^D$, 如果它们小于一个共同的序数, 那么它们满足三歧性.  
+**证明** 令 $p:a<c$ 且 $q:b<c$, 讨论它们.
+
+- 非极限的情况是显然的
+- 两者都是极限的情况时, 有 ∎
+
+```agda
   <-dec : ∀ {a b c} → a < c → b < c → a < b ⊎ b < a ⊎ a ≡ b
   <-dec zero zero       = injᶜ refl
   <-dec zero (suc q)    = injᵇ q
@@ -563,7 +585,9 @@ module Ord_ord where
   Ord<-≡ (lim n p) zero = Ord<-≡ p zero
   Ord<-≡ p (suc q)      = trans (Ord<-≡ p q) refl
   Ord<-≡ p (lim n q)    = trans (Ord<-≡ p q) refl
+```
 
+```agda
   coe : {p : i < ℓ₁} {q : i < ℓ₂} → Ord< i p → Ord< i q
   coe {p} {q} = transport (Ord<-≡ p q)
 
@@ -577,7 +601,9 @@ module Ord_ord where
   ↑ p (suc a)     = suc (↑ p a)
   ↑ p (lim f)     = lim (↑ p ∘ f)
   ↑ p (limₗ q f)  = limₗ (<-trans q p) (↑ p ∘ f ∘ coe)
+```
 
+```agda
   Ω : (ℓ : Ordᴰ) → Ord ℓ
   Ω zero          = suc zero
   Ω (suc ℓ)       = limₗ zero (↑ zero)
@@ -592,7 +618,9 @@ module Ord_ord where
   a + suc b = suc (a + b)
   a + lim f = lim (λ n → a + f n)
   a + limₗ p f = limₗ p (λ x → a + f x)
+```
 
+```agda
   iter : {T : Set} (f : T → T) (init : T) (times : ℕ) → T
   iter f a zero    = a
   iter f a (suc n) = f (iter f a n)
@@ -611,7 +639,9 @@ module Ord_ord where
   ... | injᵃ j<i  = limₗ j<i (ψ< p ∘ f ∘ coe)
   ... | injᵇ i<j  = lfp (ψ< p ∘ f ∘ coe₀ ∘ ↑ i<j)
   ... | injᶜ refl = lfp (ψ< p ∘ f ∘ coe₀)
+```
 
+```agda
   ψ₀ : Ord ℓ → Ord₀
   ψ₀ {ℓ = zero}       a = a
   ψ₀ {ℓ = suc ℓ}      a = ψ₀ (ψ< zero a)
@@ -623,7 +653,9 @@ module Ord_ord where
   ordᴰ zero     = zero
   ordᴰ (suc a)  = suc (ordᴰ a)
   ordᴰ (lim f)  = lim (cumsum (ordᴰ ∘ f)) (cumsum-mono (ordᴰ ∘ f))
+```
 
+```agda
   -- n-iteration of ψ₀(Ω_x)
   ψⁿ : ℕ → Ord₀
   ψⁿ = iter (ψ₀ ∘ Ω ∘ ordᴰ) zero
@@ -634,7 +666,9 @@ module Ord_ord where
   ex2 = ψⁿ 2    -- Buchholz's ordinal
   ex3 = ψⁿ 3    -- ψ(Ω_BO)
   ex4 = ψⁿ 4    -- ψ(Ω_ψ(Ω_BO))
+```
 
+```agda
   -- Brouwer tree barrier ordinal
   BTBO : Ord₀
   BTBO = lim ψⁿ -- ψ(Ω_Ω)
@@ -645,7 +679,9 @@ module Ord_ord where
   FGH zero    n = suc n
   FGH (suc a) n = iter (FGH a) n n
   FGH (lim a) n = FGH (a n) n
+```
 
+```agda
   mynum : ℕ
   mynum = FGH BTBO 99
 ```
