@@ -32,13 +32,13 @@ $$
 \begin{align}
 \mathbf{0}&:=
 \\[2em]
-\mathbf{1}&:=\cfrac{\;\mathbf{0}\to\mathbf{1}\;}{\mathbf{1}}\;\text{zero}
+\mathbf{1}&:=\cfrac{\;\mathbf{0}\to\mathbf{1}\;}{\mathbf{1}}\;\texttt{zero}
 \\[2em]
-\mathbb{N}&:=\cfrac{\;\mathbf{0}\to\mathbb{N}\;}{\mathbb{N}}\;\text{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{N}\;}{\mathbb{N}}\;\text{suc}
+\mathbb{N}&:=\cfrac{\;\mathbf{0}\to\mathbb{N}\;}{\mathbb{N}}\;\texttt{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{N}\;}{\mathbb{N}}\;\texttt{suc}
 \\[2em]
-\mathbb{O}_0&:=\cfrac{\;\mathbf{0}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\text{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\text{suc}\;\;\;\;\cfrac{\;\mathbb{N}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\text{lim}
+\mathbb{O}_0&:=\cfrac{\;\mathbf{0}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\texttt{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\texttt{suc}\;\;\;\;\cfrac{\;\mathbb{N}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\texttt{lim}
 \\[2em]
-\mathbb{O}_1&:=\cfrac{\;\mathbf{0}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\text{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\text{suc}\;\;\;\;\cfrac{\;\mathbb{N}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\text{lim}\;\;\;\;\cfrac{\;\mathbb{O}_0\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\text{lim}_1
+\mathbb{O}_1&:=\cfrac{\;\mathbf{0}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\texttt{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\texttt{suc}\;\;\;\;\cfrac{\;\mathbb{N}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\texttt{lim}\;\;\;\;\cfrac{\;\mathbb{O}_0\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\texttt{lim}_1
 \end{align}
 $$
 
@@ -66,7 +66,7 @@ module Brw_basic where
     lim₁  : (O₀ → O₁) → O₁
 ```
 
-这样的一系列类型就叫**布劳威尔树**, 它们的项所能表示的序数就叫布劳威尔树序数. 不难看出
+这样的一系列类型就叫 **布劳威尔树**, 它们的项所能表示的序数就叫布劳威尔树序数. 不难看出
 
 - `𝟎` 与标准库的 `⊥` 同构
 - `𝟏` 与标准库的 `⊤` 同构
@@ -154,7 +154,7 @@ transport refl x = x
 
 **定义 ($<$)**  
 $$
-\cfrac{}{\;n<n^+\;}\;\;\text{zero}\;\;\;\;\;\;\;\cfrac{n<m}{\;n<m^+\;}\;\;\text{suc}
+\cfrac{}{\;n<n^+\;}\;\;\texttt{zero}\;\;\;\;\;\;\;\cfrac{n<m}{\;n<m^+\;}\;\;\texttt{suc}
 $$
 
 ```agda
@@ -235,7 +235,7 @@ module Ord_nat where
 剩下的定义跟 $\texttt{Brw}_n$ 是一样的. 给定 $n$, 我们递归定义满足 $p:i<n$ 的任意 $i$ 所给出的树 $\texttt{Ord}_{<i,\;p\,:\,i<n}$. 并定义
 
 $$
-\texttt{Ord}_n := \texttt{Ord}_{<n,\;\text{zero}\,:\,n<n^+}
+\texttt{Ord}_n := \texttt{Ord}_{<n,\;\texttt{zero}\,:\,n<n^+}
 $$
 
 ```agda
@@ -268,7 +268,7 @@ $$
 
 ## $\omega2$ 层布劳威尔树
 
-继续往上, 把 `Ord : ℕ → Set` 封装进构造子 `limₙ`, 它允许构造共尾度为任意 $\sup(\texttt{Ord}_n)$ 的序数, 这样就得到了 $\texttt{Ord}_\omega$.
+继续往上, 把 `Ord : ℕ → Set` 封装进构造子 $\texttt{lim}_n$, 它允许构造共尾度为任意 $\sup(\texttt{Ord}_n)$ 的序数, 这样就得到了 $\texttt{Ord}_\omega$.
 
 ```agda
   data Ordω : Set where
@@ -325,12 +325,12 @@ $$
 
 ## 内 $\Omega$ 数
 
-前面说过, 一个布劳威尔树类型 `Ord n` 本身可以视作一个 $\Omega$ 数, 代表该类型的项所能表示的序数的上确界. 现在我们转而研究该类型的项所能表示的 $\Omega$ 数, 我们称为**内 $\Omega$ 数**. 其中最大的那个, 称为最大内 $\Omega$ 数, 记作 `Ω n : Ord n`.
+前面说过, 一个布劳威尔树类型 `Ord n` 本身可以视作一个 $\Omega$ 数, 代表该类型的项所能表示的序数的上确界. 现在我们转而研究该类型的项所能表示的 $\Omega$ 数, 我们称为 **内 $\Omega$ 数**. 其中最大的那个, 称为最大内 $\Omega$ 数.
 
 **定义 (向上嵌入)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_{n^+}$ 的嵌入 $↑_+$ 如下:
 
-- 如果 $a : \text{Ord}_n$ 由 `zero`, `suc` 或 `lim` 构造, 我们直接使用 $\text{Ord}_{n^+}$ 的同名构造子递归构造 $↑_+a$.
-- 如果 $a = \text{lim}_n(p,f)$, 其中 $p:i<n$ 且 $f:\texttt{Ord}_{<i,\;p}\to\text{Ord}_n$, 则 $↑_+a:=\text{lim}_n(\text{suc}(p),↑_+\circ f)$, 其中 $\text{suc}(p):i<n^+$ 且 $↑_+\circ f:\texttt{Ord}_{<i,\;p}\to\text{Ord}_{n^+}$.
+- 如果 $a : \text{Ord}_n$ 由 $\texttt{zero}$, $\texttt{suc}$ 或 $\texttt{lim}$ 构造, 我们直接使用 $\text{Ord}_{n^+}$ 的同名构造子递归构造 $↑_+a$.
+- 如果 $a = \texttt{lim}_n(p,f)$, 其中 $p:i<n$ 且 $f:\texttt{Ord}_{<i,\;p}\to\text{Ord}_n$, 则 $↑_+a:=\texttt{lim}_n(\texttt{suc}(p),↑_+\circ f)$, 其中 $\texttt{suc}(p):i<n^+$ 且 $↑_+\circ f:\texttt{Ord}_{<i,\;p}\to\text{Ord}_{n^+}$.
 
 ```agda
   ↑₊ : Ord n → Ord (suc n)
@@ -348,7 +348,7 @@ $$
 \Omega_n :=
 \begin{cases}
    1 &\text{if } n = 0 \\
-   \omega_n &\text{if } n > 0
+   \texttt{lim}_{n'}(\texttt{zero}:n'<n'^+,↑_+) &\text{if } n = n'^+
 \end{cases}
 $$
 
@@ -368,7 +368,7 @@ $$
   ↑ω (limₙ p f) = limₙ _ (↑ω ∘ f ∘ coe₀)
 ```
 
-由此, 对每个 $n$, 我们可以表达 $↑_ω : \text{Ord}_n\to\text{Ord}_\omega$ 的极限, 它们都是 $\text{Ord}_\omega$ 的内 $\Omega$ 数, 但都不是最大的那个. 在 $\text{Ord}_\omega$ 里可以取它们的极限, 得到的就是 $\text{Ord}_\omega$ 的最大内 $\Omega$ 数 $\Omega_\omega$.
+由此, 对每个 $n$, 我们可以表达 $↑_ω : \text{Ord}_n\to\text{Ord}_\omega$ 的 $\texttt{lim}_n$ 极限, 它们都是 $\text{Ord}_\omega$ 的内 $\Omega$ 数, 但都不是最大的那个. 在 $\text{Ord}_\omega$ 里可以取它们的 $\texttt{lim}$ 极限, 得到的就是 $\text{Ord}_\omega$ 的最大内 $\Omega$ 数 $\Omega_\omega$.
 
 ```agda
   Ωω : Ordω
@@ -394,11 +394,11 @@ $$
 |$\texttt{Ord}_{\omega2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2}$|$\omega$|
 |$\texttt{Ord}_{\omega2+1}$|$\Omega_{\omega2+2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2+1}$|
 
-为了一劳永逸地定义 $\texttt{Ord}_\alpha$ (其中 $\alpha < \Omega$), 我们要以可数序数 $\texttt{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`. 但是我们现有的 `Ord₀` 太过于宽泛了, 缺乏一些关键性质, 不能直接作为索引类型, 否则会导致后续无法折叠. 为此我们将在下一小节专门定义具有所谓**有界三歧性**的可数序数类型 $\texttt{Ord}^D$.
-
 ## 可数序数的有界三歧性
 
-引入和类型, 并定义构造子模式简写.
+为了一劳永逸地定义 $\texttt{Ord}_\alpha$ (其中 $\alpha < \Omega$), 我们要以可数序数 $\texttt{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`. 但是我们现有的 `Ord₀` 太过于宽泛了, 缺乏一些关键性质, 不能直接作为索引类型, 否则会导致后续无法折叠. 为此我们将专门定义具有所谓 **有界三歧性 (bounded decidability)** 的可数序数类型 $\texttt{Ord}^D$.
+
+为了表达三歧性, 我们引入和类型.
 
 ```agda
 open import Data.Sum using (_⊎_; inj₁; inj₂)
@@ -407,6 +407,8 @@ pattern injᵃ x = inj₁ x
 pattern injᵇ x = inj₂ (inj₁ x)
 pattern injᶜ x = inj₂ (inj₂ x)
 ```
+
+不难证明自然数的 $<$ 满足 **无条件三歧性 (unconditional decidability)**, 即对任意 $n,m$, 都有 $(n < m) \lor (m < n) \lor (n = m)$.
 
 ```agda
 module Nat where
@@ -428,7 +430,9 @@ module Nat where
   ... | injᵃ p = injᵃ (s<s p)
   ... | injᵇ p = injᵇ (s<s p)
   ... | injᶜ p = injᶜ (cong suc p)
+```
 
+```agda
 module Ordᴰ where
   open Nat renaming (_<_ to _<ᴺ_; <-dec to <ᴺ-dec)
 
@@ -453,7 +457,9 @@ module Ordᴰ where
     zero : a < suc a
     suc  : a < b → a < suc b
     lim  : ∀ n → a < f n → a < lim f mono
+```
 
+```agda
   f<l : ∀ n → f n < lim f mono
   f<l {mono} n = lim (suc n) (mono zero)
 
@@ -471,7 +477,9 @@ module Ordᴰ where
   ... | injᵃ n<m  = <-dec (<-trans p (mono n<m)) q
   ... | injᵇ m<n  = <-dec p (<-trans q (mono m<n))
   ... | injᶜ refl = <-dec p q
+```
 
+```agda
   mutual
     _+_ : Ordᴰ → Ordᴰ → Ordᴰ
     a + zero          = a
@@ -482,7 +490,9 @@ module Ordᴰ where
     +-mono zero       = zero
     +-mono (suc p)    = suc (+-mono p)
     +-mono (lim n p)  = lim n (+-mono p)
+```
 
+```agda
   NonZero : Ordᴰ → Set
   NonZero zero = ⊥
   NonZero _    = ⊤
@@ -497,7 +507,9 @@ module Ordᴰ where
   z<nz {suc (suc a)}      _ = suc (z<nz _)
   z<nz {suc (lim f mono)} _ = suc (z<nz _)
   z<nz {lim f mono}       _ = lim 1 (z<nz (sth<nz (mono zero)))
+```
 
+```agda
   a<a+b : ⦃ _ : NonZero b ⦄ → a < a + b
   a<a+b = +-mono (z<nz it)
 
@@ -535,7 +547,9 @@ module Ord_ord where
 
   Ord₀ : Set
   Ord₀ = Ord zero
+```
 
+```agda
   Ord<-≡ : (p : i < ℓ₁) (q : i < ℓ₂) → Ord< i p ≡ Ord< i q
   Ord<-≡ zero zero      = refl
   Ord<-≡ (suc p) zero   = Ord<-≡ p zero
@@ -548,7 +562,9 @@ module Ord_ord where
 
   coe₀ : {p : i < ℓ₂} → Ord i → Ord< i p
   coe₀ = coe {p = zero}
+```
 
+```agda
   ↑ : ℓ₁ < ℓ₂ → Ord ℓ₁ → Ord ℓ₂
   ↑ p zero        = zero
   ↑ p (suc a)     = suc (↑ p a)
@@ -559,11 +575,11 @@ module Ord_ord where
   Ω zero          = suc zero
   Ω (suc ℓ)       = limₗ zero (↑ zero)
   Ω (lim f mono)  = lim (λ n → ↑ (f<l n) (Ω (f n)))
-  ```
+```
 
 ## 布劳威尔树的折叠
 
-  ```agda
+```agda
   _+_ : Ord ℓ → Ord ℓ → Ord ℓ
   a + zero = a
   a + suc b = suc (a + b)
@@ -576,7 +592,9 @@ module Ord_ord where
 
   lfp : (Ord ℓ → Ord ℓ) → Ord ℓ
   lfp f = lim (iter f zero)
+```
 
+```agda
   -- Buchholz's ψ
   ψ< : i < ℓ → Ord ℓ → Ord i
   ψ< p zero     = Ω _
@@ -591,7 +609,9 @@ module Ord_ord where
   ψ₀ {ℓ = zero}       a = a
   ψ₀ {ℓ = suc ℓ}      a = ψ₀ (ψ< zero a)
   ψ₀ {ℓ = lim f mono} a = lim (λ n → ψ₀ (ψ< (f<l n) a))
+```
 
+```agda
   ordᴰ : Ord₀ → Ordᴰ
   ordᴰ zero     = zero
   ordᴰ (suc a)  = suc (ordᴰ a)
@@ -600,7 +620,9 @@ module Ord_ord where
   -- n-iteration of ψ₀(Ω_x)
   ψⁿ : ℕ → Ord₀
   ψⁿ = iter (ψ₀ ∘ Ω ∘ ordᴰ) zero
+```
 
+```agda
   ex1 = ψⁿ 1    -- ω
   ex2 = ψⁿ 2    -- Buchholz's ordinal
   ex3 = ψⁿ 3    -- ψ(Ω_BO)
@@ -609,7 +631,9 @@ module Ord_ord where
   -- Brouwer tree barrier ordinal
   BTBO : Ord₀
   BTBO = lim ψⁿ -- ψ(Ω_Ω)
+```
 
+```agda
   FGH : Ord₀ → ℕ → ℕ
   FGH zero    n = suc n
   FGH (suc a) n = iter (FGH a) n n
