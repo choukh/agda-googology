@@ -115,6 +115,8 @@ $$
 \end{align}
 $$
 
+**约定** 当某个类型 `A` 被期待为序数的时候, 我们指序数 $\sup(A)$
+
 考虑 $\texttt{Brw}_{\alpha^+}$ 到 $\texttt{Brw}_{\alpha}$ 的折叠. 从最底层开始, $\texttt{Brw}_1$ 到 $\texttt{Brw}_0$ 以及 $\texttt{Brw}_2$ 到 $\texttt{Brw}_1$ 的折叠是平凡的. 而 $\texttt{Brw}_3$ 到 $\texttt{Brw}_2$ 的折叠就是各种增长层级. 再往后的折叠就是通常所说的 OCF.
 
 只不过通常的 OCF 使用集合论语言的非直谓定义, 而我们这里需要具体的递归算法一层一层往下: $\texttt{Brw}_\alpha$ 到 ... 到 $\texttt{Brw}_4$ 到 $\texttt{Brw}_3$ (大可数序数), 最后到 $\texttt{Brw}_2$ (大自然数).
@@ -150,7 +152,7 @@ data Brwₖ₊₁ : Set where
   cfₖ : (Brwₖ → Brwₖ₊₁) → Brwₖ₊₁
 ```
 
-其中 `Brwₖ₊₁` 的下标 `k + 1` 代表了该类型的构造子的个数, 而下标为 `k` 的构造子 `cfₖ` 则构造了共尾度 (基本列的长度) 为 `Brwₖ` 的序数. (当某个类型 `A` 被期待为序数的时候, 我们指序数 $\sup(A)$)
+其中 `Brwₖ₊₁` 的下标 `k + 1` 代表了该类型的构造子的个数, 而下标为 `k` 的构造子 `cfₖ` 则构造了共尾度 (基本列的长度) 为 `Brwₖ` 的序数.
 
 - `cf₀` 构造了共尾度为 $0$ 的序数, 它只有一个, 就是空列 `λ ()`, 代表序数 $0$
 - `cf₁` 构造了共尾度为 $1$ 的序数, 即后继序数.
@@ -159,7 +161,7 @@ data Brwₖ₊₁ : Set where
 - `cf₄` 构造了共尾度为 $\Omega_2$ 的序数, 可表示更高阶的不可数极限序数.
 - ...
 
-归纳这个模式, 稍微使用一些类型宇宙的技巧我们可以写出 `Brw : ℕ → Set` 这个类型族.
+归纳这个模式, 稍微使用一些类型宇宙的技巧我们可以定义 `Brw : ℕ → Set` 这个类型族.
 
 ```agda
 module Brw_nat where
@@ -172,22 +174,22 @@ module Brw_nat where
       -- `Brw₊` 的元素的共尾度为任意满足 `i < n` 的 `Brw< i`
       cf : (p : i < n) (f : Brw< i p → Brw₊) → Brw₊
 
-  -- 递归完成所有 `i < n` 的树序数的定义
+  -- 给定 `n`, 递归定义满足 `p : i < n` 的任意 `i` 所给出的树 `Brw< i p`
   Brw< : ∀ i → i < n → Set
   Brw< i zero = Brw₊ i Brw<
   Brw< i (suc p) = Brw< i p
 
-  -- 消掉 `i < n` 的条件
+  -- 消掉 `i < n` 条件
   Brw : ℕ → Set
   Brw n = Brw< n zero
 ```
 
-这样我们就定义了任意 $\texttt{Brw}_n$. 虽然它只需要一个构造子“族”, 非常优雅, 但不方便使用. 从现在起我们改用 $\texttt{Ord}_n$ 层级, 它的定义显式写出了最初的三个构造子 `zero`, `suc`, `lim`, 其后才使用族 `limₙ`.
+这样我们就定义了任意 $\texttt{Brw}_n$. 虽然它只需要一个构造子“族”, 非常优雅, 但不方便使用. 从现在起我们改用 $\texttt{Ord}_n$ 层级, 显式写出最初的三个构造子 `zero`, `suc`, `lim`, 其后才使用族 `limₙ`.
 
 ```agda
 module Ord_nat where
   open Nat_lt public
-  variable i j : ℕ
+  variable i : ℕ
 
   module _ (n : ℕ) (Ord< : ∀ i → i < n → Set) where
     data Ord₊ : Set where
@@ -195,7 +197,15 @@ module Ord_nat where
       suc  : Ord₊ → Ord₊
       lim  : (f : ℕ → Ord₊) → Ord₊
       limₙ : (p : i < n) (f : Ord< i p → Ord₊) → Ord₊
+```
 
+剩下的定义跟 $\texttt{Brw}_n$ 是一样的. 给定 $n$, 我们递归定义满足 $p:i<n$ 的任意 $i$ 所给出的树 $\texttt{Ord}_{<i,\;p\,:\,i<n}$. 并定义
+
+$$
+\texttt{Ord}_n := \texttt{Ord}_{<n,\;\text{zero}\,:\,n<n^+}
+$$
+
+```agda
   Ord< : ∀ i → i < n → Set
   Ord< i zero = Ord₊ i Ord<
   Ord< i (suc p) = Ord< i p
@@ -204,7 +214,7 @@ module Ord_nat where
   Ord n = Ord< n zero
 ```
 
-此外, [ccz181078](https://github.com/ccz181078) 使用[另一种类似的方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v) 实现了 $\texttt{Ord}_n$, 但似乎更难以往上推广. 我们给出该方法的 Agda 版本, 以供参考.
+[ccz181078](https://github.com/ccz181078) 使用[另一种类似的方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v) 实现了 $\texttt{Ord}_n$, 但似乎更难以往上推广. 我们给出该方法的 Agda 版本, 以供参考.
 
 ```agda
 module Ord_nat_ccz181078 where
@@ -251,65 +261,84 @@ transport : {A B : Set} → A ≡ B → A → B
 transport refl x = x
 ```
 
-前面说过, 一个布劳威尔树类型 `Ord n` 本身可以视作一个 $\Omega$ 数, 代表该类型的项所能表示的序数的上确界. 现在我们转而研究该类型的项所能表示的最大 $\Omega$ 数, 我们称为**内 $\Omega$ 数**, 记作 `Ω n : Ord n`.
+前面说过, 一个布劳威尔树类型 `Ord n` 本身可以视作一个 $\Omega$ 数, 代表该类型的项所能表示的序数的上确界. 现在我们转而研究该类型的项所能表示的最大 $\Omega$ 数, 我们称为**内 $\Omega$ 数**, 记作 `Ω n : Ord n`. 为了定义它, 首先要证明一个引理.
+
+**引理** $\texttt{Ord}_{<i,\;p\,:\,i<n}$ 与 $\texttt{Ord}_{<i,\;p\,:\,i<m}$ 表示相同的树.
 
 ```agda
 module Ω_nat where
   open Ord_nat
+  private variable j : ℕ
 
+  Ord<-≡ : (p : i < n) (q : i < m) → Ord< i p ≡ Ord< i q
+  Ord<-≡ zero zero    = refl
+  Ord<-≡ (suc p) zero = Ord<-≡ p zero
+  Ord<-≡ p (suc q)    = trans (Ord<-≡ p q) refl
+```
+
+也就是说 $\texttt{Ord}_{<i,\;p\,:\,i<n}$ 里的 $i<n$ 条件是**证明无关的 (proof-irrelevant)**, 我们改记作 $\texttt{Ord}_{<i,\;\_\,:\,i<n}$.
+
+```agda
+  coe : {p : i < n} {q : i < m} → Ord< i p → Ord< i q
+  coe {p} {q} = transport (Ord<-≡ p q)
+```
+
+**定义 (向上嵌入)**
+
+```agda
   ↑ : i < j → Ord i → Ord j
   ↑ p zero        = zero
   ↑ p (suc a)     = suc (↑ p a)
   ↑ p (lim f)     = lim (↑ p ∘ f)
-  ↑ p (limₙ q f)  = limₙ (<-trans q p) (↑ p ∘ f ∘ {!   !})
+  ↑ p (limₙ q f)  = limₙ (<-trans q p) (↑ p ∘ f ∘ coe)
 ```
 
 ## $\omega2$ 层布劳威尔树
 
-继续往上, 把 `Brw : ℕ → Set` 封装成构造子 `cf`, 允许构造共尾度为任意 $\sup(\texttt{Brw}_n)$ 的序数, 就得到了 $\texttt{Brw}_\omega$. 注意其共尾度为 `ℕ`.
+继续往上, 把 `Ord : ℕ → Set` 封装成构造子 `cf`, 它允许构造共尾度为任意 $\sup(\texttt{Ord}_n)$ 的序数, 这样就得到了 $\texttt{Brw}_\omega$.
 
+```agda
+module Ord_omega where
+  open Ord_nat
 
-module Brw_omega where
-  open Brw_nat
+  data Ordω : Set where
+    cf : (n : ℕ) (f : Ord n → Ordω) → Ordω
+```
 
-  data Brwω : Set where
-    cf : (n : ℕ) (f : Brw n → Brwω) → Brwω
+再添加共尾度为 $\sup(\texttt{Ord}_\omega)$ 的序数, 就得到了 $\texttt{Ord}_{\omega+1}$.
 
+```agda
+  data Ordω+1 : Set where
+    cf  : (n : ℕ) (f : Ord n → Ordω+1) → Ordω+1
+    cfω : (f : Ordω → Ordω+1) → Ordω+1
+```
 
-再添加共尾度为 $\sup(\texttt{Brw}_\omega)$ 的序数, 就得到了 $\texttt{Brw}_{\omega+1}$.
+重复上述过程可以得到 $\texttt{Ord}_{\omega+n}$, $\texttt{Ord}_{\omega2}$ 和 $\texttt{Ord}_{\omega2+1}$.
 
+```agda
+  module _ (n : ℕ) (Ordω< : ∀ k → k < n → Set) where
+    data Ordω₊ : Set where
+      cf   : (n : ℕ) (f : Ord n → Ordω₊) → Ordω₊
+      cfω+ : (k : ℕ) (p : k < n) (f : Ordω< k p → Ordω₊) → Ordω₊
 
-  data Brwω+1 : Set where
-    cf  : (n : ℕ) (f : Brw n → Brwω+1) → Brwω+1
-    cfω : (f : Brwω → Brwω+1) → Brwω+1
+  Ordω< : ∀ {n} k → k < n → Set
+  Ordω< k zero = Ordω₊ k Ordω<
+  Ordω< k (suc p) = Ordω< k p
 
+  Ordω+ : ℕ → Set
+  Ordω+ n = Ordω< n zero
 
-重复上述过程可以得到 $\texttt{Brw}_{\omega+n}$, $\texttt{Brw}_{\omega2}$ 和 $\texttt{Brw}_{\omega2+1}$.
+  data Ordω2 : Set where
+    cf   : (n : ℕ) (f : Ord n → Ordω2) → Ordω2
+    cfω+ : (n : ℕ) (f : Ordω+ n → Ordω2) → Ordω2
 
+  data Ordω2+1 : Set where
+    cf   : (n : ℕ) (f : Ord n → Ordω2+1) → Ordω2+1
+    cfω+ : (n : ℕ) (f : Ordω+ n → Ordω2+1) → Ordω2+1
+    cfω2 : (f : Ordω2 → Ordω2+1) → Ordω2+1
+```
 
-  module _ (n : ℕ) (Brwω< : ∀ k → k < n → Set) where
-    data Brwω₊ : Set where
-      cf   : (n : ℕ) (f : Brw n → Brwω₊) → Brwω₊
-      cfω+ : (k : ℕ) (p : k < n) (f : Brwω< k p → Brwω₊) → Brwω₊
-
-  Brwω< : ∀ {n} k → k < n → Set
-  Brwω< k zero = Brwω₊ k Brwω<
-  Brwω< k (suc p) = Brwω< k p
-
-  Brwω+ : ℕ → Set
-  Brwω+ n = Brwω< n zero
-
-  data Brwω2 : Set where
-    cf   : (n : ℕ) (f : Brw n → Brwω2) → Brwω2
-    cfω+ : (n : ℕ) (f : Brwω+ n → Brwω2) → Brwω2
-
-  data Brwω2+1 : Set where
-    cf   : (n : ℕ) (f : Brw n → Brwω2+1) → Brwω2+1
-    cfω+ : (n : ℕ) (f : Brwω+ n → Brwω2+1) → Brwω2+1
-    cfω2 : (f : Brwω2 → Brwω2+1) → Brwω2+1
-
-
-目前的成果可以总结如下:
+将目前的成果总结如下:
 
 |类型|上确界|最大$\Omega$数|共尾度|
 |-|-|-|-|
@@ -326,24 +355,9 @@ module Brw_omega where
 |$\texttt{Ord}_{\omega2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2}$|$\omega$|
 |$\texttt{Ord}_{\omega2+1}$|$\Omega_{\omega2+2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2+1}$|
 
-接着 $\texttt{Brw}_\omega$ 的定义继续往上, 规律很明显了. 我们要以 $\texttt{Ord}$ 为下标, 写出一个新的类型族 `OrdΩ : Ord → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a) 中的 `U`. 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$. Andras Kovacs 用它写出了 $\psi(\Omega_{\varepsilon_0}) = \text{PTO}(\text{ID}_{<\varepsilon_0})$, 其中 $\psi$ 是 [Madore 的 $\psi$](https://googology.fandom.com/wiki/Madore%27s_function), 但扩张到了 $\Omega$ 多个 $\Omega$.
-
-以此类推, 我们有
-
-|类型族|索引类型|共尾度|上确界|
-|-|-|-|-|
-|$\texttt{Ord}_\omega$|$\N$|$\omega$|$\Omega_{\omega}$|
-|$\texttt{Ord}_\Omega$|$\texttt{Ord}$|$\omega_1$|$\Omega_{\Omega}$|
-|$\texttt{Ord}_{\Omega_2}$|$\texttt{Ord}_2$|$\omega_2$|$\Omega_{\Omega_2}$|
-|...|...|...|...|
-|$\texttt{Ord}_{\Omega_\omega}$|$\N,\texttt{Ord}_\omega$|$\omega$|$\Omega_{\Omega_\omega}$|
-|$\texttt{Ord}_{\Omega_{\Omega_\omega}}$|$\N,\texttt{Ord}_\omega,\texttt{Ord}_{\Omega_\omega}$|$\omega$|$\Omega_{\Omega_\omega}$|
-|...|...|...|...|
-|$\texttt{Ord}_{\Lambda}$|$\N,\texttt{Ord}_\omega,\texttt{Ord}_{\Omega_\omega},...$|$\omega$|$\Omega_{\Omega_{._{._.}}}$|
-
-我们还没有研究它们的具体实现, 因为 $\texttt{Ord}_{\Omega_2}$ 的折叠就已经遇到了困难.
-
 ## 可数序数层布劳威尔树
+
+接着 $\texttt{Ord}_{\omega2}$ 的定义继续往上, 规律很明显了. 为了一劳永逸地定义 $\texttt{Ord}_\alpha$, 其中 $\alpha < \Omega$, 我们要以可数序数 $\texttt{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`.
 
 ```agda
 open import Data.Sum using (_⊎_; inj₁; inj₂)
