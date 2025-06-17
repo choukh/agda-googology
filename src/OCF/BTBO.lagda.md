@@ -268,7 +268,7 @@ $$
 
 ## $\omega2$ 层布劳威尔树
 
-继续往上, 把 `Ord : ℕ → Set` 封装进构造子 `limₙ`, 它允许构造共尾度为任意 $\sup(\texttt{Ord}_n)$ 的序数, 这样就得到了 $\texttt{Brw}_\omega$.
+继续往上, 把 `Ord : ℕ → Set` 封装进构造子 `limₙ`, 它允许构造共尾度为任意 $\sup(\texttt{Ord}_n)$ 的序数, 这样就得到了 $\texttt{Ord}_\omega$.
 
 ```agda
   data Ordω : Set where
@@ -325,7 +325,7 @@ $$
 
 ## 内 $\Omega$ 数
 
-前面说过, 一个布劳威尔树类型 `Ord n` 本身可以视作一个 $\Omega$ 数, 代表该类型的项所能表示的序数的上确界. 现在我们转而研究该类型的项所能表示的最大 $\Omega$ 数, 我们称为**内 $\Omega$ 数**, 记作 `Ω n : Ord n`. 首先我们需要定义一个嵌入操作.
+前面说过, 一个布劳威尔树类型 `Ord n` 本身可以视作一个 $\Omega$ 数, 代表该类型的项所能表示的序数的上确界. 现在我们转而研究该类型的项所能表示的 $\Omega$ 数, 我们称为**内 $\Omega$ 数**. 其中最大的那个, 称为最大内 $\Omega$ 数, 记作 `Ω n : Ord n`.
 
 **定义 (向上嵌入)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_{n^+}$ 的嵌入 $↑_+$ 如下:
 
@@ -340,7 +340,7 @@ $$
   ↑₊ (limₙ p f) = limₙ (suc p) (↑₊ ∘ f)
 ```
 
-向上嵌入允许我们在 $\text{Ord}_{n^+}$ 中表达 $↑:\text{Ord}_{n}\to\text{Ord}_{n^+}$ 的极限, 该极限就是我们所需的内 $\Omega$ 数.
+向上嵌入允许我们在 $\text{Ord}_{n^+}$ 中表达 $↑_+:\text{Ord}_{n}\to\text{Ord}_{n^+}$ 的极限, 该极限就是我们所需的最大内 $\Omega$ 数.
 
 **定义 (Ω数)** 遵循 [Buchholz](https://en.wikipedia.org/wiki/Buchholz_psi_functions) 的定义
 
@@ -358,24 +358,28 @@ $$
   Ω (suc n) = limₙ zero ↑₊
 ```
 
+继续往上, 任意 $\text{Ord}_n$ 到 $\text{Ord}_\omega$ 的嵌入 $↑_ω$ 的定义与 $↑_+$ 类似.
+
 ```agda
-  ↑ : Ord n → Ordω
-  ↑ zero = zero
-  ↑ (suc a) = suc (↑ a)
-  ↑ (lim f) = lim (↑ ∘ f)
-  ↑ (limₙ p f) = limₙ _ (↑ ∘ f ∘ coe₀)
+  ↑ω : Ord n → Ordω
+  ↑ω zero = zero
+  ↑ω (suc a) = suc (↑ω a)
+  ↑ω (lim f) = lim (↑ω ∘ f)
+  ↑ω (limₙ p f) = limₙ _ (↑ω ∘ f ∘ coe₀)
 ```
+
+由此, 对每个 $n$, 我们可以表达 $↑_ω : \text{Ord}_n\to\text{Ord}_\omega$ 的极限, 它们都是 $\text{Ord}_\omega$ 的内 $\Omega$ 数, 但都不是最大的那个. 在 $\text{Ord}_\omega$ 里可以取它们的极限, 得到的就是 $\text{Ord}_\omega$ 的最大内 $\Omega$ 数 $\Omega_\omega$.
 
 ```agda
   Ωω : Ordω
-  Ωω = lim (λ n → limₙ n ↑)
+  Ωω = lim (λ n → limₙ n ↑ω)
 ```
 
 类似地可以定义 $\Omega_{\omega+n}$ 和 $\Omega_{\omega2}$. 因为这些都会在后面由更一般化的定义给出, 这里的代码就省略不写了.
 
 目前的成果可以总结如下:
 
-|类型|上确界|内$\Omega$数|内$\Omega$数共尾度|
+|类型|上确界|最大内$\Omega$数|最大内$\Omega$数的共尾度|
 |-|-|-|-|
 |$\mathbb{0}$|$0$|n/a|n/a|
 |$\mathbb{1}$|$1$|$0$|$0$|
