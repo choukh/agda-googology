@@ -15,7 +15,7 @@
 3. 保证停机
    - 通过证明助理的自动停机检查器保证停机
 
-本文可能是该系列的最后一篇, 因为遵循该纲领, 我们目前卡在了 $\psi(\Omega_\Omega)$. 为了引起重视, 我们将其命名为布劳威尔树壁垒序数 (Brouser Brw Barrier Ordinal), 简称 BTBO. 本文将介绍该序数的实现.
+本文可能是该系列的最后一篇, 因为遵循该纲领, 我们目前卡在了 $\psi(\Omega_\Omega)$. 为了引起关注, 我们将其命名为布劳威尔树壁垒序数 (Brouser Brw Barrier Ordinal), 简称 BTBO. 本文将介绍该序数的实现.
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
@@ -25,6 +25,22 @@ module OCF.BTBO where
 ## 布劳威尔树
 
 什么是布劳威尔树? 从零开始 (字面意义), 我们能看得更清晰一些.
+
+**定义 (布劳威尔树)**
+
+$$
+\begin{align}
+\mathbf{0}&:=
+\\[2em]
+\mathbf{1}&:=\cfrac{\;\mathbf{0}\to\mathbf{1}\;}{\mathbf{1}}\;\text{zero}
+\\[2em]
+\mathbb{N}&:=\cfrac{\;\mathbf{0}\to\mathbb{N}\;}{\mathbb{N}}\;\text{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{N}\;}{\mathbb{N}}\;\text{suc}
+\\[2em]
+\mathbb{O}_0&:=\cfrac{\;\mathbf{0}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\text{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\text{suc}\;\;\;\;\cfrac{\;\mathbb{N}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\text{lim}
+\\[2em]
+\mathbb{O}_1&:=\cfrac{\;\mathbf{0}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\text{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\text{suc}\;\;\;\;\cfrac{\;\mathbb{N}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\text{lim}\;\;\;\;\cfrac{\;\mathbb{O}_0\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\text{lim}_1
+\end{align}
+$$
 
 ```agda
 module Brw_basic where
@@ -50,19 +66,7 @@ module Brw_basic where
     lim₁  : (O₀ → O₁) → O₁
 ```
 
-这样的一系列类型就叫**布劳威尔树**, 它们的项所能表示的序数就叫布劳威尔树序数. 为了方便表述, 非形式地, 我们把这些类型记作 $\texttt{Brw}_\alpha$. 当然这里的下标 $\alpha$ 的类型目前是非形式地, 根据上下文它可能是自然数, 可能是某个小于 $\omega_\beta$ 的数, 而这里的 $\beta$ 也跟 $\alpha$ 一样类型未定. 为了讨论我们总得先往前说.
-
-有时候为了对齐某些下标, 我们也会使用 $\texttt{Ord}$ 的记法
-
-$$
-\texttt{Ord}_\alpha :=
-\begin{cases}
-   \texttt{Brw}_{\alpha+3} &\text{if } \alpha < \omega \\
-   \texttt{Brw}_\alpha &\text{if } \alpha\ge\omega
-\end{cases}
-$$
-
-不难看出
+这样的一系列类型就叫**布劳威尔树**, 它们的项所能表示的序数就叫布劳威尔树序数. 不难看出
 
 - `𝟎` 与标准库的 `⊥` 同构
 - `𝟏` 与标准库的 `⊤` 同构
@@ -92,6 +96,18 @@ module Ord_basic where
 
 `O₀`, `O₁` 的定义方便往上归纳定义 $\texttt{Brw}_\alpha$, 而 `Ord₀`, `Ord₁` 则方便直接使用.
 
+为了方便表述, 我们把这些类型记作 $\texttt{Brw}_\alpha$ 或者 $\texttt{Ord}_\alpha$. 它们有如下关系
+
+$$
+\texttt{Ord}_\alpha :=
+\begin{cases}
+   \texttt{Brw}_{\alpha+3} &\text{if } \alpha < \omega \\
+   \texttt{Brw}_\alpha &\text{if } \alpha\ge\omega
+\end{cases}
+$$
+
+当然这里的下标 $\alpha$ 的类型目前是非形式地, 根据上下文它可能是自然数, 可能是某个小于 $\omega_\beta$ 的数, 而这里的 $\beta$ 也跟 $\alpha$ 一样类型未定. 为了讨论我们总得先往前说.
+
 将布劳威尔树 $\texttt{Brw}_\alpha$ 所能表示的序数的上确界记作 $\sup(\texttt{Brw}_\alpha)$, 并按 Buchholz 的惯例令
 
 $$
@@ -115,7 +131,7 @@ $$
 \end{align}
 $$
 
-**约定** 当某个类型 `A` 被期待为序数的时候, 我们指序数 $\sup(A)$
+**约定** 如果一个类型 `A` 被当作序数, 我们指该类型所能表示的序数的上确界 $\sup(A)$.
 
 考虑 $\texttt{Brw}_{\alpha^+}$ 到 $\texttt{Brw}_{\alpha}$ 的折叠. 从最底层开始, $\texttt{Brw}_1$ 到 $\texttt{Brw}_0$ 以及 $\texttt{Brw}_2$ 到 $\texttt{Brw}_1$ 的折叠是平凡的. 而 $\texttt{Brw}_3$ 到 $\texttt{Brw}_2$ 的折叠就是各种增长层级. 再往后的折叠就是通常所说的 OCF.
 
@@ -125,23 +141,32 @@ $$
 
 ## 自然数层布劳威尔树
 
-我们需要自然数上的序 `_<_` 及其传递性.
+我们需要自然数上的 $<$ 序及其传递性. 方便起见, 我们采用以下归纳定义.
+
+**定义 ($<$)**
+
+$$
+\cfrac{}{\;n<n^+\;}\;\;\text{zero}\;\;\;\;\;\;\;\;\;\;\cfrac{n<m}{\;n<m^+\;}\;\;\text{suc}
+$$
 
 ```agda
 module Nat_lt where
   variable n m o : ℕ
 
-  -- 方便起见, 自然数上的序采用以下定义
   data _<_ : ℕ → ℕ → Set where
     zero : n < suc n
     suc  : n < m → n < suc m
+```
 
+容易证明其传递性.
+
+```agda
   <-trans : m < n → n < o → m < o
   <-trans p zero      = suc p
   <-trans p (suc q)   = suc (<-trans p q)
 ```
 
-首先由开篇的代码, 通过简单的复制粘贴我们可以写出任意 $\texttt{Brw}_{<\omega}$. 伪代码如下
+由开篇的代码, 通过简单的复制粘贴我们可以写出任意 $\texttt{Brw}_{<\omega}$. 伪代码如下
 
 ```pseudocode
 data Brw₀ : Set where
@@ -283,7 +308,10 @@ module Ω_nat where
   coe {p} {q} = transport (Ord<-≡ p q)
 ```
 
-**定义 (向上嵌入)**
+**定义 (向上嵌入)** 给定满足 $i < j$ 的任意 $i, j$, 定义 $\text{Ord}_i$ 到 $\text{Ord}_j$ 的嵌入如下:
+
+- 如果 $\text{Ord}_i$ 由 `zero`, `suc` 或 `lim` 构造, 我们直接使用 $\text{Ord}_j$ 的同名构造子完成递归.
+- 
 
 ```agda
   ↑ : i < j → Ord i → Ord j
@@ -340,11 +368,11 @@ module Ord_omega where
 
 将目前的成果总结如下:
 
-|类型|上确界|最大$\Omega$数|共尾度|
+|类型|上确界|内$\Omega$数|内$\Omega$数共尾度|
 |-|-|-|-|
 |$\mathbb{0}$|$0$|n/a|n/a|
 |$\mathbb{1}$|$1$|$0$|$0$|
-|$\N$|$\omega$|$1$|$1$|
+|$\mathbb{N}$|$\omega$|$1$|$1$|
 |$\texttt{Ord}_0$|$\Omega$|$\omega$|$\omega$|
 |$\texttt{Ord}_1$|$\Omega_2$|$\Omega$|$\Omega$|
 |$\texttt{Ord}_2$|$\Omega_3$|$\Omega_2$|$\Omega_2$|
