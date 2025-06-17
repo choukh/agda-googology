@@ -66,7 +66,7 @@ module Brw_basic where
     lim₁  : (O₀ → O₁) → O₁
 ```
 
-这样的一系列类型就叫 **布劳威尔树**, 它们的项所能表示的序数就叫布劳威尔树序数. 不难看出
+这样的一系列类型就叫**布劳威尔树**, 它们的项所能表示的序数就叫布劳威尔树序数. 不难看出
 
 - `𝟎` 与标准库的 `⊥` 同构
 - `𝟏` 与标准库的 `⊤` 同构
@@ -325,7 +325,7 @@ $$
 
 ## 内 $\Omega$ 数
 
-前面说过, 一个布劳威尔树类型 `Ord n` 本身可以视作一个 $\Omega$ 数, 代表该类型的项所能表示的序数的上确界. 现在我们转而研究该类型的项所能表示的 $\Omega$ 数, 我们称为 **内 $\Omega$ 数**. 其中最大的那个, 称为最大内 $\Omega$ 数.
+前面说过, 一个布劳威尔树类型 `Ord n` 本身可以视作一个 $\Omega$ 数, 代表该类型的项所能表示的序数的上确界. 现在我们转而研究该类型的项所能表示的 $\Omega$ 数, 我们称为**内 $\Omega$ 数**. 其中最大的那个, 称为最大内 $\Omega$ 数.
 
 **定义 (向上嵌入)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_{n^+}$ 的嵌入 $↑_+$ 如下:
 
@@ -396,7 +396,7 @@ $$
 
 ## 可数序数的有界三歧性
 
-为了一劳永逸地定义 $\texttt{Ord}_\alpha$ (其中 $\alpha < \Omega$), 我们要以可数序数 $\texttt{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`. 但是我们现有的 `Ord₀` 太过于宽泛了, 缺乏一些关键性质, 不能直接作为索引类型, 否则会导致后续无法折叠. 为此我们将专门定义具有所谓 **有界三歧性 (bounded decidability)** 的可数序数类型 $\texttt{Ord}^D$.
+为了一劳永逸地定义 $\texttt{Ord}_\alpha$ (其中 $\alpha < \Omega$), 我们要以可数序数 $\texttt{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`. 但是我们现有的 `Ord₀` 太过于宽泛了, 缺乏一些关键性质, 不能直接作为索引类型, 否则会导致后续无法折叠. 为此我们将专门定义具有所谓**有界三歧性 (bounded decidability)** 的可数序数类型 $\texttt{Ord}^D$.
 
 为了表达三歧性, 我们引入和类型.
 
@@ -408,7 +408,7 @@ pattern injᵇ x = inj₂ (inj₁ x)
 pattern injᶜ x = inj₂ (inj₂ x)
 ```
 
-不难证明自然数的 $<$ 满足 **无条件三歧性 (unconditional decidability)**, 即对任意 $n,m$, 都有 $(n < m) \lor (m < n) \lor (n = m)$.
+不难证明自然数的 $<$ 满足**无条件三歧性 (unconditional decidability)**, 即对任意 $n,m$, 都有 $(n < m) \lor (m < n) \lor (n = m)$.
 
 ```agda
 module Nat where
@@ -431,6 +431,13 @@ module Nat where
   ... | injᵇ p = injᵇ (s<s p)
   ... | injᶜ p = injᶜ (cong suc p)
 ```
+
+**定义 (有界三歧可数序数)** 互归纳定义 $\texttt{Ord}^D$ 及其上的 $<$ 序.
+
+- $\texttt{Ord}^D$ 的定义与 $\texttt{Ord}_0$ 类似, 只不过要求基本列 $f:\mathbb{N}\to\texttt{Ord}^D$ 单调.
+- $<$ 的定义与自然数的 $<$ 类似, 只不过自然推广到了极限序数: 对任意 $f:\mathbb{N}\to\texttt{Ord}^D$ 和 $n : \mathbb{N}$, 如果 $a < f(n)$, 那么 $a < \texttt{lim}(f,mono)$. 其中 $mono$ 是 $f$ 的单调性证明.
+
+其中 $f:\mathbb{N}\to\texttt{Ord}^D$ 单调性是指: 对任意 $n,m:\mathbb{N}$, 如果 $n<m$, 那么 $f(n)<f(m)$.
 
 ```agda
 module Ordᴰ where
