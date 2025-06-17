@@ -247,6 +247,25 @@ $$
   Ord n = Ord< n zero
 ```
 
+**定理** $\texttt{Ord}_{<i,\;p\,:\,i<n}$ 与 $\texttt{Ord}_{<i,\;q\,:\,i<m}$ 表示相同的树.
+
+```agda
+  Ord<-≡ : (p : i < n) (q : i < m) → Ord< i p ≡ Ord< i q
+  Ord<-≡ zero zero      = refl
+  Ord<-≡ (suc p) zero   = Ord<-≡ p zero
+  Ord<-≡ p (suc q)      = trans (Ord<-≡ p q) refl
+```
+
+也就是说 $\texttt{Ord}_{<i,\;p\,:\,i<n}$ 与 $p$ 和 $n$ 无关, 我们改记作 $\texttt{Ord}_{<i<\_}$.
+
+```agda
+  coe : {p : i < n} {q : i < m} → Ord< i p → Ord< i q
+  coe {p} {q} = transport (Ord<-≡ p q)
+
+  coe₀ : {p : i < m} → Ord i → Ord< i p
+  coe₀ = coe {p = zero}
+```
+
 ## $\omega2$ 层布劳威尔树
 
 继续往上, 把 `Ord : ℕ → Set` 封装进构造子 `limₙ`, 它允许构造共尾度为任意 $\sup(\texttt{Ord}_n)$ 的序数, 这样就得到了 $\texttt{Brw}_\omega$.
@@ -340,19 +359,21 @@ $$
 ```
 
 ```agda
-  ↑ω : Ord n → Ordω
-  ↑ω zero = zero
-  ↑ω (suc a) = suc (↑ω a)
-  ↑ω (lim f) = lim (↑ω ∘ f)
-  ↑ω (limₙ p f) = limₙ _ (λ x → ↑ω (f {! x  !}))
+  ↑ : Ord n → Ordω
+  ↑ zero = zero
+  ↑ (suc a) = suc (↑ a)
+  ↑ (lim f) = lim (↑ ∘ f)
+  ↑ (limₙ p f) = limₙ _ (↑ ∘ f ∘ coe₀)
 ```
 
 ```agda
   Ωω : Ordω
-  Ωω = lim (λ n → limₙ n ↑ω)
+  Ωω = lim (λ n → limₙ n ↑)
 ```
 
-将目前的成果总结如下:
+类似地可以定义 $\Omega_{\omega+n}$ 和 $\Omega_{\omega2}$. 因为这些都会在后面由更一般化的定义给出, 这里的代码就省略不写了.
+
+目前的成果可以总结如下:
 
 |类型|上确界|内$\Omega$数|内$\Omega$数共尾度|
 |-|-|-|-|
@@ -369,7 +390,7 @@ $$
 |$\texttt{Ord}_{\omega2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2}$|$\omega$|
 |$\texttt{Ord}_{\omega2+1}$|$\Omega_{\omega2+2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2+1}$|
 
-为了一劳永逸地定义 $\texttt{Ord}_\alpha$, 其中 $\alpha < \Omega$, 我们要以可数序数 $\texttt{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`.
+为了一劳永逸地定义 $\texttt{Ord}_\alpha$ (其中 $\alpha < \Omega$), 我们要以可数序数 $\texttt{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`. 但是我们现有的 `Ord₀` 太过于宽泛了, 缺乏一些关键性质, 不能直接作为索引类型, 否则会导致后续无法折叠. 为此我们将在下一小节专门定义具有所谓**有界三歧性**的可数序数类型 $\texttt{Ord}^D$.
 
 ## 可数序数的有界三歧性
 
