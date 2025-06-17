@@ -50,7 +50,7 @@ module Brw_basic where
     lim₁  : (O₀ → O₁) → O₁
 ```
 
-这样的一系列类型就叫布劳威尔树, 它们的项所能表示的序数就叫布劳威尔树序数. 为了方便表述, 非形式地, 我们把这些类型记作 $\texttt{Brw}_\alpha$. 当然这里的下标 $\alpha$ 的类型目前是非形式地, 根据上下文它可能是自然数, 可能是某个小于 $\omega_\beta$ 的数, 而这里的 $\beta$ 也跟 $\alpha$ 一样类型未定. 为了讨论我们总得先往前说.
+这样的一系列类型就叫**布劳威尔树**, 它们的项所能表示的序数就叫布劳威尔树序数. 为了方便表述, 非形式地, 我们把这些类型记作 $\texttt{Brw}_\alpha$. 当然这里的下标 $\alpha$ 的类型目前是非形式地, 根据上下文它可能是自然数, 可能是某个小于 $\omega_\beta$ 的数, 而这里的 $\beta$ 也跟 $\alpha$ 一样类型未定. 为了讨论我们总得先往前说.
 
 有时候为了对齐某些下标, 我们也会使用 $\texttt{Ord}$ 的记法
 
@@ -115,13 +115,29 @@ $$
 \end{align}
 $$
 
-考虑 $\texttt{Brw}_{\alpha^+}$ 到 $\texttt{Brw}_{\alpha}$ 的折叠. 从最底层开始,  $\texttt{Brw}_1$ 到 $\texttt{Brw}_0$ 以及 $\texttt{Brw}_2$ 到 $\texttt{Brw}_1$ 的折叠是平凡的. 而 $\texttt{Brw}_3$ 到 $\texttt{Brw}_2$ 的折叠就是各种增长层级. 再往后的折叠就是通常所说的 OCF.
+考虑 $\texttt{Brw}_{\alpha^+}$ 到 $\texttt{Brw}_{\alpha}$ 的折叠. 从最底层开始, $\texttt{Brw}_1$ 到 $\texttt{Brw}_0$ 以及 $\texttt{Brw}_2$ 到 $\texttt{Brw}_1$ 的折叠是平凡的. 而 $\texttt{Brw}_3$ 到 $\texttt{Brw}_2$ 的折叠就是各种增长层级. 再往后的折叠就是通常所说的 OCF.
 
-只不过通常的 OCF 使用集合论语言非直谓定义, 而我们这里需要具体的递归算法一层一层往下: $\texttt{Brw}_\alpha$ 到 ... 到 $\texttt{Brw}_4$ 到 $\texttt{Brw}_3$ (大可数序数), 最后到 $\texttt{Brw}_2$ (大自然数).
+只不过通常的 OCF 使用集合论语言的非直谓定义, 而我们这里需要具体的递归算法一层一层往下: $\texttt{Brw}_\alpha$ 到 ... 到 $\texttt{Brw}_4$ 到 $\texttt{Brw}_3$ (大可数序数), 最后到 $\texttt{Brw}_2$ (大自然数).
 
 因此我们的任务主要分解成两部分, 一是写出很大的 $\texttt{Brw}_\alpha$, 二是一层层折叠到 $\texttt{Brw}_2$. 只考虑任务一的话是相对简单的, 难点在于我们后面会看到任务二会给任务一附加很多要求. 我们一步步来.
 
-## 大布劳威尔树的实现
+## 自然数层布劳威尔树
+
+我们需要自然数上的序 `_<_` 及其传递性.
+
+```agda
+module Nat_lt where
+  variable n m o : ℕ
+
+  -- 方便起见, 自然数上的序采用以下定义
+  data _<_ : ℕ → ℕ → Set where
+    zero : n < suc n
+    suc  : n < m → n < suc m
+
+  <-trans : m < n → n < o → m < o
+  <-trans p zero      = suc p
+  <-trans p (suc q)   = suc (<-trans p q)
+```
 
 首先由开篇的代码, 通过简单的复制粘贴我们可以写出任意 $\texttt{Brw}_{<\omega}$. 伪代码如下
 
@@ -147,31 +163,51 @@ data Brwₖ₊₁ : Set where
 
 ```agda
 module Brw_nat where
-  -- 方便起见, `ℕ` 的序采用以下定义
-  data _<_ : ℕ → ℕ → Set where
-    zero : ∀ {n} → n < suc n
-    suc  : ∀ {n m} → n < m → n < suc m
+  open Nat_lt
+  private variable i : ℕ
 
-  -- 假设下标为 `k < n` 的任意树 `Brw< k` 已经定义完成, 定义下标为 `n` 的树 `Brw₊`
-  module _ (n : ℕ) (Brw< : ∀ k → k < n → Set) where
+  -- 假设下标为 `i < n` 的任意树 `Brw< i` 已经定义完成, 定义下标为 `n` 的树 `Brw₊`
+  module _ (n : ℕ) (Brw< : ∀ i → i < n → Set) where
     data Brw₊ : Set where
-      -- `Brw₊` 的元素的共尾度为任意满足 `k < n` 的 `Brw< k`
-      cf : (k : ℕ) (p : k < n) (f : Brw< k p → Brw₊) → Brw₊
+      -- `Brw₊` 的元素的共尾度为任意满足 `i < n` 的 `Brw< i`
+      cf : (p : i < n) (f : Brw< i p → Brw₊) → Brw₊
 
-  -- 递归完成所有 `k < n` 的树序数的定义
-  Brw< : ∀ {n} k → k < n → Set
-  Brw< k zero = Brw₊ k Brw<
-  Brw< k (suc p) = Brw< k p
+  -- 递归完成所有 `i < n` 的树序数的定义
+  Brw< : ∀ i → i < n → Set
+  Brw< i zero = Brw₊ i Brw<
+  Brw< i (suc p) = Brw< i p
 
-  -- 消掉 `k < n` 的条件
+  -- 消掉 `i < n` 的条件
   Brw : ℕ → Set
   Brw n = Brw< n zero
 ```
 
-这样我们就形式化了任意 $\texttt{Brw}_n$. 此外, [ccz181078](https://github.com/ccz181078) 使用[另一种方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v) 实现了 $\texttt{Ord}_n$, 但似乎更难以往上推广. 我们给出该方法的 Agda 版本, 以供参考.
+这样我们就定义了任意 $\texttt{Brw}_n$. 虽然它只需要一个构造子“族”, 非常优雅, 但不方便使用. 从现在起我们改用 $\texttt{Ord}_n$ 层级, 它的定义显式写出了最初的三个构造子 `zero`, `suc`, `lim`, 其后才使用族 `limₙ`.
 
 ```agda
 module Ord_nat where
+  open Nat_lt public
+  variable i j : ℕ
+
+  module _ (n : ℕ) (Ord< : ∀ i → i < n → Set) where
+    data Ord₊ : Set where
+      zero : Ord₊
+      suc  : Ord₊ → Ord₊
+      lim  : (f : ℕ → Ord₊) → Ord₊
+      limₙ : (p : i < n) (f : Ord< i p → Ord₊) → Ord₊
+
+  Ord< : ∀ i → i < n → Set
+  Ord< i zero = Ord₊ i Ord<
+  Ord< i (suc p) = Ord< i p
+
+  Ord : ℕ → Set
+  Ord n = Ord< n zero
+```
+
+此外, [ccz181078](https://github.com/ccz181078) 使用[另一种类似的方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v) 实现了 $\texttt{Ord}_n$, 但似乎更难以往上推广. 我们给出该方法的 Agda 版本, 以供参考.
+
+```agda
+module Ord_nat_ccz181078 where
   open Ord_basic
 
   -- 假设某 `X = Ordₙ` 已完成, 并且已知任意 `x : X` 的共尾度 `cf x`
@@ -203,33 +239,57 @@ module Ord_nat where
     cf (suc n) = cf₊ (cf n)
 ```
 
-继续往上, 在共尾度为任意 $\sup(\texttt{Brw}_n)$ 的序数的基础上, 添加共尾度为 `ℕ` 的序数, 就得到了 $\texttt{Brw}_\omega$.
+## 内 $\Omega$ 数
+
+从本节开始我们引入函数复合的记法 `_∘_`, 等号 `_≡_` 及其性质.
 
 ```agda
+open import Function using (_∘_; it)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
+
+transport : {A B : Set} → A ≡ B → A → B
+transport refl x = x
+```
+
+前面说过, 一个布劳威尔树类型 `Ord n` 本身可以视作一个 $\Omega$ 数, 代表该类型的项所能表示的序数的上确界. 现在我们转而研究该类型的项所能表示的最大 $\Omega$ 数, 我们称为**内 $\Omega$ 数**, 记作 `Ω n : Ord n`.
+
+```agda
+module Ω_nat where
+  open Ord_nat
+
+  ↑ : i < j → Ord i → Ord j
+  ↑ p zero        = zero
+  ↑ p (suc a)     = suc (↑ p a)
+  ↑ p (lim f)     = lim (↑ p ∘ f)
+  ↑ p (limₙ q f)  = limₙ (<-trans q p) (↑ p ∘ f ∘ {!   !})
+```
+
+## $\omega2$ 层布劳威尔树
+
+继续往上, 把 `Brw : ℕ → Set` 封装成构造子 `cf`, 允许构造共尾度为任意 $\sup(\texttt{Brw}_n)$ 的序数, 就得到了 $\texttt{Brw}_\omega$. 注意其共尾度为 `ℕ`.
+
+
 module Brw_omega where
   open Brw_nat
 
   data Brwω : Set where
-    cf  : (n : ℕ) (f : Brw n → Brwω) → Brwω
-    cfω : (f : ℕ → Brwω) → Brwω
-```
+    cf : (n : ℕ) (f : Brw n → Brwω) → Brwω
+
 
 再添加共尾度为 $\sup(\texttt{Brw}_\omega)$ 的序数, 就得到了 $\texttt{Brw}_{\omega+1}$.
 
-```agda
+
   data Brwω+1 : Set where
-    cf    : (n : ℕ) (f : Brw n → Brwω+1) → Brwω+1
-    cfω   : (f : ℕ → Brwω+1) → Brwω+1
-    cfω+1 : (f : Brwω → Brwω+1) → Brwω+1
-```
+    cf  : (n : ℕ) (f : Brw n → Brwω+1) → Brwω+1
+    cfω : (f : Brwω → Brwω+1) → Brwω+1
+
 
 重复上述过程可以得到 $\texttt{Brw}_{\omega+n}$, $\texttt{Brw}_{\omega2}$ 和 $\texttt{Brw}_{\omega2+1}$.
 
-```agda
+
   module _ (n : ℕ) (Brwω< : ∀ k → k < n → Set) where
     data Brwω₊ : Set where
-      cf    : (n : ℕ) (f : Brw n → Brwω₊) → Brwω₊
-      cfω   : (f : ℕ → Brwω₊) → Brwω₊
+      cf   : (n : ℕ) (f : Brw n → Brwω₊) → Brwω₊
       cfω+ : (k : ℕ) (p : k < n) (f : Brwω< k p → Brwω₊) → Brwω₊
 
   Brwω< : ∀ {n} k → k < n → Set
@@ -240,33 +300,31 @@ module Brw_omega where
   Brwω+ n = Brwω< n zero
 
   data Brwω2 : Set where
-    cf    : (n : ℕ) (f : Brw n → Brwω2) → Brwω2
-    cfω+  : (n : ℕ) (f : Brwω+ n → Brwω2) → Brwω2
-    cfω2  : (f : ℕ → Brwω2) → Brwω2
+    cf   : (n : ℕ) (f : Brw n → Brwω2) → Brwω2
+    cfω+ : (n : ℕ) (f : Brwω+ n → Brwω2) → Brwω2
 
   data Brwω2+1 : Set where
-    cf    : (n : ℕ) (f : Brw n → Brwω2+1) → Brwω2+1
-    cfω+  : (n : ℕ) (f : Brwω+ n → Brwω2+1) → Brwω2+1
-    cfω2  : (f : ℕ → Brwω2+1) → Brwω2+1
-    cfω2+1 : (f : Brwω2 → Brwω2+1) → Brwω2+1
-```
+    cf   : (n : ℕ) (f : Brw n → Brwω2+1) → Brwω2+1
+    cfω+ : (n : ℕ) (f : Brwω+ n → Brwω2+1) → Brwω2+1
+    cfω2 : (f : Brwω2 → Brwω2+1) → Brwω2+1
+
 
 目前的成果可以总结如下:
 
-|类型|共尾度|最大$\Omega$数|上确界|
+|类型|上确界|最大$\Omega$数|共尾度|
 |-|-|-|-|
-|$\mathbb{0}$|n/a|n/a|$0$|
-|$\mathbb{1}$|$0$|$0$|$1$|
-|$\N$|$1$|$1$|$\omega$|
-|$\texttt{Ord}_0$|$\omega$|$\omega$|$\Omega$|
-|$\texttt{Ord}_1$|$\Omega$|$\Omega$|$\Omega_2$|
-|$\texttt{Ord}_2$|$\Omega_2$|$\Omega_2$|$\Omega_3$|
-|$\texttt{Ord}_n$|$\Omega_n$|$\Omega_n$|$\Omega_{n+1}$|
-|$\texttt{Ord}_{\omega}$|$\omega$|$\Omega_\omega$|$\Omega_{\omega+1}$|
-|$\texttt{Ord}_{\omega+1}$|$\Omega_{\omega+1}$|$\Omega_{\omega+1}$|$\Omega_{\omega+2}$|
-|$\texttt{Ord}_{\omega+n}$|$\Omega_{\omega+n}$|$\Omega_{\omega+n}$|$\Omega_{\omega+n+1}$|
-|$\texttt{Ord}_{\omega2}$|$\omega$|$\Omega_{\omega2}$|$\Omega_{\omega2+1}$|
-|$\texttt{Ord}_{\omega2+1}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2+2}$|
+|$\mathbb{0}$|$0$|n/a|n/a|
+|$\mathbb{1}$|$1$|$0$|$0$|
+|$\N$|$\omega$|$1$|$1$|
+|$\texttt{Ord}_0$|$\Omega$|$\omega$|$\omega$|
+|$\texttt{Ord}_1$|$\Omega_2$|$\Omega$|$\Omega$|
+|$\texttt{Ord}_2$|$\Omega_3$|$\Omega_2$|$\Omega_2$|
+|$\texttt{Ord}_n$|$\Omega_{n+1}$|$\Omega_n$|$\Omega_n$|
+|$\texttt{Ord}_{\omega}$|$\Omega_{\omega+1}$|$\Omega_\omega$|$\omega$|
+|$\texttt{Ord}_{\omega+1}$|$\Omega_{\omega+2}$|$\Omega_{\omega+1}$|$\Omega_{\omega+1}$|
+|$\texttt{Ord}_{\omega+n}$|$\Omega_{\omega+n+1}$|$\Omega_{\omega+n}$|$\Omega_{\omega+n}$|
+|$\texttt{Ord}_{\omega2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2}$|$\omega$|
+|$\texttt{Ord}_{\omega2+1}$|$\Omega_{\omega2+2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2+1}$|
 
 接着 $\texttt{Brw}_\omega$ 的定义继续往上, 规律很明显了. 我们要以 $\texttt{Ord}$ 为下标, 写出一个新的类型族 `OrdΩ : Ord → Set`. 具体方法参考 Andras Kovacs 的 [Gist](https://gist.github.com/AndrasKovacs/8d445c8457ea0967e807c726b2ce5a3a) 中的 `U`. 它形式化了 $\texttt{Ord}_\Omega$, 上确界为 $\Omega_{\Omega}$. Andras Kovacs 用它写出了 $\psi(\Omega_{\varepsilon_0}) = \text{PTO}(\text{ID}_{<\varepsilon_0})$, 其中 $\psi$ 是 [Madore 的 $\psi$](https://googology.fandom.com/wiki/Madore%27s_function), 但扩张到了 $\Omega$ 多个 $\Omega$.
 
@@ -285,24 +343,17 @@ module Brw_omega where
 
 我们还没有研究它们的具体实现, 因为 $\texttt{Ord}_{\Omega_2}$ 的折叠就已经遇到了困难.
 
+## 可数序数层布劳威尔树
+
 ```agda
 open import Data.Sum using (_⊎_; inj₁; inj₂)
-open import Function using (_∘_; it)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
 
 pattern injᵃ x = inj₁ x
 pattern injᵇ x = inj₂ (inj₁ x)
 pattern injᶜ x = inj₂ (inj₂ x)
 
-transport : {A B : Set} → A ≡ B → A → B
-transport refl x = x
-
 module Nat where
-  private variable n m : ℕ
-
-  data _<_ : ℕ → ℕ → Set where
-    zero : n < suc n
-    suc  : n < m → n < suc m
+  open Nat_lt hiding (<-trans) public
 
   z<s : ∀ n → zero < suc n
   z<s zero    = zero
@@ -446,7 +497,11 @@ coe₀ = coe {p = zero}
 Ω zero          = suc zero
 Ω (suc ℓ)       = limₗ zero (↑ zero)
 Ω (lim f mono)  = lim (λ n → ↑ (f<l n) (Ω (f n)))
+```
 
+## 布劳威尔树的折叠
+
+```agda
 _+_ : Ord ℓ → Ord ℓ → Ord ℓ
 a + zero = a
 a + suc b = suc (a + b)
