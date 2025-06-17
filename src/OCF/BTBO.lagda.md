@@ -20,14 +20,14 @@
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
 module OCF.BTBO where
+open import Function using (_∘_; it)
 ```
 
 ## 布劳威尔树
 
 什么是布劳威尔树? 从零开始 (字面意义), 我们能看得更清晰一些.
 
-**定义 (布劳威尔树)**
-
+**定义 (布劳威尔树)**  
 $$
 \begin{align}
 \mathbf{0}&:=
@@ -141,12 +141,20 @@ $$
 
 ## 自然数层布劳威尔树
 
-我们需要自然数上的 $<$ 序及其传递性. 方便起见, 我们采用以下归纳定义.
+我们需要等号 `_≡_` 及其性质.
 
-**定义 ($<$)**
+```agda
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
 
+transport : {A B : Set} → A ≡ B → A → B
+transport refl x = x
+```
+
+还需要自然数上的 $<$ 序及其传递性. 方便起见, 采用以下归纳定义.
+
+**定义 ($<$)**  
 $$
-\cfrac{}{\;n<n^+\;}\;\;\text{zero}\;\;\;\;\;\;\;\;\;\;\cfrac{n<m}{\;n<m^+\;}\;\;\text{suc}
+\cfrac{}{\;n<n^+\;}\;\;\text{zero}\;\;\;\;\;\;\;\cfrac{n<m}{\;n<m^+\;}\;\;\text{suc}
 $$
 
 ```agda
@@ -214,7 +222,7 @@ module Brw_nat where
 ```agda
 module Ord_nat where
   open Nat_lt public
-  variable i : ℕ
+  private variable i : ℕ
 
   module _ (n : ℕ) (Ord< : ∀ i → i < n → Set) where
     data Ord₊ : Set where
@@ -239,106 +247,27 @@ $$
   Ord n = Ord< n zero
 ```
 
-[ccz181078](https://github.com/ccz181078) 使用[另一种类似的方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v) 实现了 $\texttt{Ord}_n$, 但似乎更难以往上推广. 我们给出该方法的 Agda 版本, 以供参考.
-
-```agda
-module Ord_nat_ccz181078 where
-  open Ord_basic
-
-  -- 假设某 `X = Ordₙ` 已完成, 并且已知任意 `x : X` 的共尾度 `cf x`
-  module _ {X : Set} (cf : X → Set) where
-    -- 定义 Ordₙ₊₁, 将其共尾度划分为5类: 0, 1, ω, (ω, Ω), Ω
-    data Ord₊ : Set where
-      zero : Ord₊
-      suc : Ord₊ → Ord₊
-      limω : (f : ℕ → Ord₊) → Ord₊
-      -- 代表所有 `k≤n` 的 `Ordₖ` 的 `limΩ`.
-      limX : (x : X) (f : cf x → Ord₊) → Ord₊
-      limΩ : (f : X → Ord₊) → Ord₊
-
-    -- 定义 `α : Ordₙ₊₁` 的共尾度
-    cf₊ : Ord₊ → Set
-    cf₊ (limΩ _) = X
-    cf₊ (limX x _) = cf x
-    -- 我们只关心 >ω 的情况
-    cf₊ _ = ⊤
-
-  -- 互递归完成下标为自然数的整个 `Ordₙ` 层级以及每层的共尾度
-  mutual
-    Ord : ℕ → Set
-    Ord zero = Ord₀
-    Ord (suc n) = Ord₊ (cf n)
-
-    cf : (n : ℕ) → Ord n → Set
-    cf zero _ = ⊤
-    cf (suc n) = cf₊ (cf n)
-```
-
-## 内 $\Omega$ 数
-
-从本节开始我们引入函数复合的记法 `_∘_`, 等号 `_≡_` 及其性质.
-
-```agda
-open import Function using (_∘_; it)
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
-
-transport : {A B : Set} → A ≡ B → A → B
-transport refl x = x
-```
-
-前面说过, 一个布劳威尔树类型 `Ord n` 本身可以视作一个 $\Omega$ 数, 代表该类型的项所能表示的序数的上确界. 现在我们转而研究该类型的项所能表示的最大 $\Omega$ 数, 我们称为**内 $\Omega$ 数**, 记作 `Ω n : Ord n`. 为了定义它, 首先要证明一个引理.
-
-**引理** $\texttt{Ord}_{<i,\;p\,:\,i<n}$ 与 $\texttt{Ord}_{<i,\;p\,:\,i<m}$ 表示相同的树.
-
-```agda
-module Ω_nat where
-  open Ord_nat
-  private variable j : ℕ
-
-  Ord<-≡ : (p : i < n) (q : i < m) → Ord< i p ≡ Ord< i q
-  Ord<-≡ zero zero    = refl
-  Ord<-≡ (suc p) zero = Ord<-≡ p zero
-  Ord<-≡ p (suc q)    = trans (Ord<-≡ p q) refl
-```
-
-也就是说 $\texttt{Ord}_{<i,\;p\,:\,i<n}$ 里的 $i<n$ 条件是**证明无关的 (proof-irrelevant)**, 我们改记作 $\texttt{Ord}_{<i,\;\_\,:\,i<n}$.
-
-```agda
-  coe : {p : i < n} {q : i < m} → Ord< i p → Ord< i q
-  coe {p} {q} = transport (Ord<-≡ p q)
-```
-
-**定义 (向上嵌入)** 给定满足 $i < j$ 的任意 $i, j$, 定义 $\text{Ord}_i$ 到 $\text{Ord}_j$ 的嵌入如下:
-
-- 如果 $\text{Ord}_i$ 由 `zero`, `suc` 或 `lim` 构造, 我们直接使用 $\text{Ord}_j$ 的同名构造子完成递归.
-- 
-
-```agda
-  ↑ : i < j → Ord i → Ord j
-  ↑ p zero        = zero
-  ↑ p (suc a)     = suc (↑ p a)
-  ↑ p (lim f)     = lim (↑ p ∘ f)
-  ↑ p (limₙ q f)  = limₙ (<-trans q p) (↑ p ∘ f ∘ coe)
-```
-
 ## $\omega2$ 层布劳威尔树
 
-继续往上, 把 `Ord : ℕ → Set` 封装成构造子 `cf`, 它允许构造共尾度为任意 $\sup(\texttt{Ord}_n)$ 的序数, 这样就得到了 $\texttt{Brw}_\omega$.
+继续往上, 把 `Ord : ℕ → Set` 封装进构造子 `limₙ`, 它允许构造共尾度为任意 $\sup(\texttt{Ord}_n)$ 的序数, 这样就得到了 $\texttt{Brw}_\omega$.
 
 ```agda
-module Ord_omega where
-  open Ord_nat
-
   data Ordω : Set where
-    cf : (n : ℕ) (f : Ord n → Ordω) → Ordω
+    zero : Ordω
+    suc  : Ordω → Ordω
+    lim  : (f : ℕ → Ordω) → Ordω
+    limₙ : (n : ℕ) (f : Ord n → Ordω) → Ordω
 ```
 
 再添加共尾度为 $\sup(\texttt{Ord}_\omega)$ 的序数, 就得到了 $\texttt{Ord}_{\omega+1}$.
 
 ```agda
   data Ordω+1 : Set where
-    cf  : (n : ℕ) (f : Ord n → Ordω+1) → Ordω+1
-    cfω : (f : Ordω → Ordω+1) → Ordω+1
+    zero : Ordω+1
+    suc  : Ordω+1 → Ordω+1
+    lim  : (f : ℕ → Ordω+1) → Ordω+1
+    limₙ : (n : ℕ) (f : Ord n → Ordω+1) → Ordω+1
+    limω : (f : Ordω → Ordω+1) → Ordω+1
 ```
 
 重复上述过程可以得到 $\texttt{Ord}_{\omega+n}$, $\texttt{Ord}_{\omega2}$ 和 $\texttt{Ord}_{\omega2+1}$.
@@ -346,8 +275,11 @@ module Ord_omega where
 ```agda
   module _ (n : ℕ) (Ordω< : ∀ k → k < n → Set) where
     data Ordω₊ : Set where
-      cf   : (n : ℕ) (f : Ord n → Ordω₊) → Ordω₊
-      cfω+ : (k : ℕ) (p : k < n) (f : Ordω< k p → Ordω₊) → Ordω₊
+      zero  : Ordω₊
+      suc   : Ordω₊ → Ordω₊
+      lim   : (f : ℕ → Ordω₊) → Ordω₊
+      limₙ  : (n : ℕ) (f : Ord n → Ordω₊) → Ordω₊
+      limω+ : (k : ℕ) (p : k < n) (f : Ordω< k p → Ordω₊) → Ordω₊
 
   Ordω< : ∀ {n} k → k < n → Set
   Ordω< k zero = Ordω₊ k Ordω<
@@ -357,13 +289,67 @@ module Ord_omega where
   Ordω+ n = Ordω< n zero
 
   data Ordω2 : Set where
-    cf   : (n : ℕ) (f : Ord n → Ordω2) → Ordω2
-    cfω+ : (n : ℕ) (f : Ordω+ n → Ordω2) → Ordω2
+    zero  : Ordω2
+    suc   : Ordω2 → Ordω2
+    lim   : (f : ℕ → Ordω2) → Ordω2
+    limₙ  : (n : ℕ) (f : Ord n → Ordω2) → Ordω2
+    limω+ : (n : ℕ) (f : Ordω+ n → Ordω2) → Ordω2
 
   data Ordω2+1 : Set where
-    cf   : (n : ℕ) (f : Ord n → Ordω2+1) → Ordω2+1
-    cfω+ : (n : ℕ) (f : Ordω+ n → Ordω2+1) → Ordω2+1
-    cfω2 : (f : Ordω2 → Ordω2+1) → Ordω2+1
+    zero  : Ordω2+1
+    suc   : Ordω2+1 → Ordω2+1
+    lim   : (f : ℕ → Ordω2+1) → Ordω2+1
+    limₙ  : (n : ℕ) (f : Ord n → Ordω2+1) → Ordω2+1
+    limω+ : (n : ℕ) (f : Ordω+ n → Ordω2+1) → Ordω2+1
+    limω2 : (f : Ordω2 → Ordω2+1) → Ordω2+1
+```
+
+## 内 $\Omega$ 数
+
+前面说过, 一个布劳威尔树类型 `Ord n` 本身可以视作一个 $\Omega$ 数, 代表该类型的项所能表示的序数的上确界. 现在我们转而研究该类型的项所能表示的最大 $\Omega$ 数, 我们称为**内 $\Omega$ 数**, 记作 `Ω n : Ord n`. 首先我们需要定义一个嵌入操作.
+
+**定义 (向上嵌入)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_{n^+}$ 的嵌入 $↑_+$ 如下:
+
+- 如果 $a : \text{Ord}_n$ 由 `zero`, `suc` 或 `lim` 构造, 我们直接使用 $\text{Ord}_{n^+}$ 的同名构造子递归构造 $↑_+a$.
+- 如果 $a = \text{lim}_n(p,f)$, 其中 $p:i<n$ 且 $f:\texttt{Ord}_{<i,\;p}\to\text{Ord}_n$, 则 $↑_+a:=\text{lim}_n(\text{suc}(p),↑_+\circ f)$, 其中 $\text{suc}(p):i<n^+$ 且 $↑_+\circ f:\texttt{Ord}_{<i,\;p}\to\text{Ord}_{n^+}$.
+
+```agda
+  ↑₊ : Ord n → Ord (suc n)
+  ↑₊ zero = zero
+  ↑₊ (suc a) = suc (↑₊ a)
+  ↑₊ (lim f) = lim (↑₊ ∘ f)
+  ↑₊ (limₙ p f) = limₙ (suc p) (↑₊ ∘ f)
+```
+
+向上嵌入允许我们在 $\text{Ord}_{n^+}$ 中表达 $↑:\text{Ord}_{n}\to\text{Ord}_{n^+}$ 的极限, 该极限就是我们所需的内 $\Omega$ 数.
+
+**定义 (Ω数)** 遵循 [Buchholz](https://en.wikipedia.org/wiki/Buchholz_psi_functions) 的定义
+
+$$
+\Omega_n :=
+\begin{cases}
+   1 &\text{if } n = 0 \\
+   \omega_n &\text{if } n > 0
+\end{cases}
+$$
+
+```agda
+  Ω : (n : ℕ) → Ord n
+  Ω zero    = suc zero
+  Ω (suc n) = limₙ zero ↑₊
+```
+
+```agda
+  ↑ω : Ord n → Ordω
+  ↑ω zero = zero
+  ↑ω (suc a) = suc (↑ω a)
+  ↑ω (lim f) = lim (↑ω ∘ f)
+  ↑ω (limₙ p f) = limₙ _ (λ x → ↑ω (f {! x  !}))
+```
+
+```agda
+  Ωω : Ordω
+  Ωω = lim (λ n → limₙ n ↑ω)
 ```
 
 将目前的成果总结如下:
@@ -383,9 +369,11 @@ module Ord_omega where
 |$\texttt{Ord}_{\omega2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2}$|$\omega$|
 |$\texttt{Ord}_{\omega2+1}$|$\Omega_{\omega2+2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2+1}$|
 
-## 可数序数层布劳威尔树
+为了一劳永逸地定义 $\texttt{Ord}_\alpha$, 其中 $\alpha < \Omega$, 我们要以可数序数 $\texttt{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`.
 
-接着 $\texttt{Ord}_{\omega2}$ 的定义继续往上, 规律很明显了. 为了一劳永逸地定义 $\texttt{Ord}_\alpha$, 其中 $\alpha < \Omega$, 我们要以可数序数 $\texttt{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`.
+## 可数序数的有界三歧性
+
+引入和类型, 并定义构造子模式简写.
 
 ```agda
 open import Data.Sum using (_⊎_; inj₁; inj₂)
@@ -393,7 +381,9 @@ open import Data.Sum using (_⊎_; inj₁; inj₂)
 pattern injᵃ x = inj₁ x
 pattern injᵇ x = inj₂ (inj₁ x)
 pattern injᶜ x = inj₂ (inj₂ x)
+```
 
+```agda
 module Nat where
   open Nat_lt hiding (<-trans) public
 
@@ -494,109 +484,114 @@ module Ordᴰ where
   cumsum-mono : (f : ℕ → Ordᴰ) → monotonic (cumsum f)
   cumsum-mono f zero    = a<a+b
   cumsum-mono f (suc p) = <-trans (cumsum-mono f p) a<a+b
-
-open Ordᴰ hiding (_+_)
-private variable i ℓ ℓ₁ ℓ₂ : Ordᴰ
-
-module _ (ℓ : Ordᴰ) (Ord< : (i : Ordᴰ) (p : i < ℓ) → Set) where
-  data Ord₊ : Set where
-    zero  : Ord₊
-    suc   : Ord₊ → Ord₊
-    lim   : (f : ℕ → Ord₊) → Ord₊
-    limₗ  : (p : i < ℓ) (f : Ord< i p → Ord₊) → Ord₊
-
-Ord< : (i : Ordᴰ) (p : i < ℓ) → Set
-Ord< i zero      = Ord₊ i Ord<
-Ord< i (suc p)   = Ord< i p
-Ord< i (lim n p) = Ord< i p
-
-Ord : Ordᴰ → Set
-Ord ℓ = Ord< ℓ zero
-
-Ord₀ : Set
-Ord₀ = Ord zero
-
-Ord<-≡ : (p : i < ℓ₁) (q : i < ℓ₂) → Ord< i p ≡ Ord< i q
-Ord<-≡ zero zero      = refl
-Ord<-≡ (suc p) zero   = Ord<-≡ p zero
-Ord<-≡ (lim n p) zero = Ord<-≡ p zero
-Ord<-≡ p (suc q)      = trans (Ord<-≡ p q) refl
-Ord<-≡ p (lim n q)    = trans (Ord<-≡ p q) refl
-
-coe : {p : i < ℓ₁} {q : i < ℓ₂} → Ord< i p → Ord< i q
-coe {p} {q} = transport (Ord<-≡ p q)
-
-coe₀ : {p : i < ℓ₂} → Ord i → Ord< i p
-coe₀ = coe {p = zero}
-
-↑ : ℓ₁ < ℓ₂ → Ord ℓ₁ → Ord ℓ₂
-↑ p zero        = zero
-↑ p (suc a)     = suc (↑ p a)
-↑ p (lim f)     = lim (↑ p ∘ f)
-↑ p (limₗ q f)  = limₗ (<-trans q p) (↑ p ∘ f ∘ coe)
-
-Ω : (ℓ : Ordᴰ) → Ord ℓ
-Ω zero          = suc zero
-Ω (suc ℓ)       = limₗ zero (↑ zero)
-Ω (lim f mono)  = lim (λ n → ↑ (f<l n) (Ω (f n)))
 ```
+
+## 可数序数层布劳威尔树
+
+```agda
+module Ord_ord where
+  open Ordᴰ hiding (_+_)
+  private variable i ℓ ℓ₁ ℓ₂ : Ordᴰ
+
+  module _ (ℓ : Ordᴰ) (Ord< : (i : Ordᴰ) (p : i < ℓ) → Set) where
+    data Ord₊ : Set where
+      zero  : Ord₊
+      suc   : Ord₊ → Ord₊
+      lim   : (f : ℕ → Ord₊) → Ord₊
+      limₗ  : (p : i < ℓ) (f : Ord< i p → Ord₊) → Ord₊
+
+  Ord< : (i : Ordᴰ) (p : i < ℓ) → Set
+  Ord< i zero      = Ord₊ i Ord<
+  Ord< i (suc p)   = Ord< i p
+  Ord< i (lim n p) = Ord< i p
+
+  Ord : Ordᴰ → Set
+  Ord ℓ = Ord< ℓ zero
+
+  Ord₀ : Set
+  Ord₀ = Ord zero
+
+  Ord<-≡ : (p : i < ℓ₁) (q : i < ℓ₂) → Ord< i p ≡ Ord< i q
+  Ord<-≡ zero zero      = refl
+  Ord<-≡ (suc p) zero   = Ord<-≡ p zero
+  Ord<-≡ (lim n p) zero = Ord<-≡ p zero
+  Ord<-≡ p (suc q)      = trans (Ord<-≡ p q) refl
+  Ord<-≡ p (lim n q)    = trans (Ord<-≡ p q) refl
+
+  coe : {p : i < ℓ₁} {q : i < ℓ₂} → Ord< i p → Ord< i q
+  coe {p} {q} = transport (Ord<-≡ p q)
+
+  coe₀ : {p : i < ℓ₂} → Ord i → Ord< i p
+  coe₀ = coe {p = zero}
+
+  ↑ : ℓ₁ < ℓ₂ → Ord ℓ₁ → Ord ℓ₂
+  ↑ p zero        = zero
+  ↑ p (suc a)     = suc (↑ p a)
+  ↑ p (lim f)     = lim (↑ p ∘ f)
+  ↑ p (limₗ q f)  = limₗ (<-trans q p) (↑ p ∘ f ∘ coe)
+
+  Ω : (ℓ : Ordᴰ) → Ord ℓ
+  Ω zero          = suc zero
+  Ω (suc ℓ)       = limₗ zero (↑ zero)
+  Ω (lim f mono)  = lim (λ n → ↑ (f<l n) (Ω (f n)))
+  ```
 
 ## 布劳威尔树的折叠
 
-```agda
-_+_ : Ord ℓ → Ord ℓ → Ord ℓ
-a + zero = a
-a + suc b = suc (a + b)
-a + lim f = lim (λ n → a + f n)
-a + limₗ p f = limₗ p (λ x → a + f x)
+  ```agda
+  _+_ : Ord ℓ → Ord ℓ → Ord ℓ
+  a + zero = a
+  a + suc b = suc (a + b)
+  a + lim f = lim (λ n → a + f n)
+  a + limₗ p f = limₗ p (λ x → a + f x)
 
-iter : {T : Set} (f : T → T) (init : T) (times : ℕ) → T
-iter f a zero    = a
-iter f a (suc n) = f (iter f a n)
+  iter : {T : Set} (f : T → T) (init : T) (times : ℕ) → T
+  iter f a zero    = a
+  iter f a (suc n) = f (iter f a n)
 
-lfp : (Ord ℓ → Ord ℓ) → Ord ℓ
-lfp f = lim (iter f zero)
+  lfp : (Ord ℓ → Ord ℓ) → Ord ℓ
+  lfp f = lim (iter f zero)
 
--- Buchholz's ψ
-ψ< : i < ℓ → Ord ℓ → Ord i
-ψ< p zero     = Ω _
-ψ< p (suc a)  = lfp (ψ< p a +_)
-ψ< p (lim f)  = lim (ψ< p ∘ f)
-ψ< {i} {ℓ} p (limₗ {i = j} q f) with <-dec q p
-... | injᵃ j<i  = limₗ j<i (ψ< p ∘ f ∘ coe)
-... | injᵇ i<j  = lfp (ψ< p ∘ f ∘ coe₀ ∘ ↑ i<j)
-... | injᶜ refl = lfp (ψ< p ∘ f ∘ coe₀)
+  -- Buchholz's ψ
+  ψ< : i < ℓ → Ord ℓ → Ord i
+  ψ< p zero     = Ω _
+  ψ< p (suc a)  = lfp (ψ< p a +_)
+  ψ< p (lim f)  = lim (ψ< p ∘ f)
+  ψ< {i} {ℓ} p (limₗ {i = j} q f) with <-dec q p
+  ... | injᵃ j<i  = limₗ j<i (ψ< p ∘ f ∘ coe)
+  ... | injᵇ i<j  = lfp (ψ< p ∘ f ∘ coe₀ ∘ ↑ i<j)
+  ... | injᶜ refl = lfp (ψ< p ∘ f ∘ coe₀)
 
-ψ₀ : Ord ℓ → Ord₀
-ψ₀ {ℓ = zero}       a = a
-ψ₀ {ℓ = suc ℓ}      a = ψ₀ (ψ< zero a)
-ψ₀ {ℓ = lim f mono} a = lim (λ n → ψ₀ (ψ< (f<l n) a))
+  ψ₀ : Ord ℓ → Ord₀
+  ψ₀ {ℓ = zero}       a = a
+  ψ₀ {ℓ = suc ℓ}      a = ψ₀ (ψ< zero a)
+  ψ₀ {ℓ = lim f mono} a = lim (λ n → ψ₀ (ψ< (f<l n) a))
 
-ordᴰ : Ord₀ → Ordᴰ
-ordᴰ zero     = zero
-ordᴰ (suc a)  = suc (ordᴰ a)
-ordᴰ (lim f)  = lim (cumsum (ordᴰ ∘ f)) (cumsum-mono (ordᴰ ∘ f))
+  ordᴰ : Ord₀ → Ordᴰ
+  ordᴰ zero     = zero
+  ordᴰ (suc a)  = suc (ordᴰ a)
+  ordᴰ (lim f)  = lim (cumsum (ordᴰ ∘ f)) (cumsum-mono (ordᴰ ∘ f))
 
--- n-iteration of ψ₀(Ω_x)
-ψⁿ : ℕ → Ord₀
-ψⁿ = iter (ψ₀ ∘ Ω ∘ ordᴰ) zero
+  -- n-iteration of ψ₀(Ω_x)
+  ψⁿ : ℕ → Ord₀
+  ψⁿ = iter (ψ₀ ∘ Ω ∘ ordᴰ) zero
 
-ex1 = ψⁿ 1    -- ω
-ex2 = ψⁿ 2    -- Buchholz's ordinal
-ex3 = ψⁿ 3    -- ψ(Ω_BO)
-ex4 = ψⁿ 4    -- ψ(Ω_ψ(Ω_BO))
+  ex1 = ψⁿ 1    -- ω
+  ex2 = ψⁿ 2    -- Buchholz's ordinal
+  ex3 = ψⁿ 3    -- ψ(Ω_BO)
+  ex4 = ψⁿ 4    -- ψ(Ω_ψ(Ω_BO))
 
--- Brouwer tree barrier ordinal
-BTBO : Ord₀
-BTBO = lim ψⁿ -- ψ(Ω_Ω)
+  -- Brouwer tree barrier ordinal
+  BTBO : Ord₀
+  BTBO = lim ψⁿ -- ψ(Ω_Ω)
 
-FGH : Ord₀ → ℕ → ℕ
-FGH zero    n = suc n
-FGH (suc a) n = iter (FGH a) n n
-FGH (lim a) n = FGH (a n) n
+  FGH : Ord₀ → ℕ → ℕ
+  FGH zero    n = suc n
+  FGH (suc a) n = iter (FGH a) n n
+  FGH (lim a) n = FGH (a n) n
 
-mynum : ℕ
-mynum = FGH BTBO 99
+  mynum : ℕ
+  mynum = FGH BTBO 99
 ```
 
 ## 参考
@@ -607,3 +602,40 @@ mynum = FGH BTBO 99
 - [Googology Wiki - Ordinal collapsing function](https://googology.fandom.com/wiki/Ordinal_collapsing_function)
 - [ユーザーブログ:Hexirp - ブラウワー順序数の制限と拡張](https://googology.fandom.com/ja/wiki/ユーザーブログ:Hexirp/ブラウワー順序数の制限と拡張)
 - [ユーザーブログ:Hexirp - 2024-12-25 のメモ](https://googology.fandom.com/ja/wiki/ユーザーブログ:Hexirp/2024-12-25_のメモ)
+
+## 附录
+
+[ccz181078](https://github.com/ccz181078) 使用[另一种类似的方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v) 实现了 $\texttt{Ord}_n$, 但似乎更难以往上推广. 我们给出该方法的 Agda 版本, 以供参考.
+
+```agda
+module Ord_nat_ccz181078 where
+  open Ord_basic
+
+  -- 假设某 `X = Ordₙ` 已完成, 并且已知任意 `x : X` 的共尾度 `cf x`
+  module _ {X : Set} (cf : X → Set) where
+    -- 定义 Ordₙ₊₁, 将其共尾度划分为5类: 0, 1, ω, (ω, Ω), Ω
+    data Ord₊ : Set where
+      zero : Ord₊
+      suc : Ord₊ → Ord₊
+      limω : (f : ℕ → Ord₊) → Ord₊
+      -- 代表所有 `k≤n` 的 `Ordₖ` 的 `limΩ`.
+      limX : (x : X) (f : cf x → Ord₊) → Ord₊
+      limΩ : (f : X → Ord₊) → Ord₊
+
+    -- 定义 `α : Ordₙ₊₁` 的共尾度
+    cf₊ : Ord₊ → Set
+    cf₊ (limΩ _) = X
+    cf₊ (limX x _) = cf x
+    -- 我们只关心 >ω 的情况
+    cf₊ _ = ⊤
+
+  -- 互递归完成下标为自然数的整个 `Ordₙ` 层级以及每层的共尾度
+  mutual
+    Ord : ℕ → Set
+    Ord zero = Ord₀
+    Ord (suc n) = Ord₊ (cf n)
+
+    cf : (n : ℕ) → Ord n → Set
+    cf zero _ = ⊤
+    cf (suc n) = cf₊ (cf n)
+```
