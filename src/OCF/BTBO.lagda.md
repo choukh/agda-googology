@@ -512,20 +512,37 @@ $$
 
 目前的成果可以总结如下:
 
-|类型|上确界|最大内$\Omega$数|最大内$\Omega$数的共尾度|
-|-|-|-|-|
-|$\mathbb{0}$|$0$|n/a|n/a|
-|$\mathbb{1}$|$1$|$0$|$0$|
-|$\mathbb{N}$|$\omega$|$1$|$1$|
-|$\mathsf{Ord}_0$|$\Omega$|$\omega$|$\omega$|
-|$\mathsf{Ord}_1$|$\Omega_2$|$\Omega$|$\Omega$|
-|$\mathsf{Ord}_2$|$\Omega_3$|$\Omega_2$|$\Omega_2$|
-|$\mathsf{Ord}_n$|$\Omega_{n+1}$|$\Omega_n$|$\Omega_n$|
-|$\mathsf{Ord}_{\omega}$|$\Omega_{\omega+1}$|$\Omega_\omega$|$\omega$|
-|$\mathsf{Ord}_{\omega+1}$|$\Omega_{\omega+2}$|$\Omega_{\omega+1}$|$\Omega_{\omega+1}$|
-|$\mathsf{Ord}_{\omega+n}$|$\Omega_{\omega+n+1}$|$\Omega_{\omega+n}$|$\Omega_{\omega+n}$|
-|$\mathsf{Ord}_{\omega \cdot 2}$|$\Omega_{\omega \cdot 2+1}$|$\Omega_{\omega \cdot 2}$|$\omega$|
-|$\mathsf{Ord}_{\omega \cdot 2+1}$|$\Omega_{\omega \cdot 2+2}$|$\Omega_{\omega \cdot 2+1}$|$\Omega_{\omega \cdot 2+1}$|
+$$
+\begin{array}{|c|c|c|c|}
+\hline
+\text{type} & \text{supermun} & \text{max inner }\Omega & \text{cofinality} \\
+\hline
+\mathbb{0} & 0 & \text{n/a} & \text{n/a} \\
+\hline
+\mathbb{1} & 1 & 0 & 0 \\
+\hline
+\mathbb{N} & \omega & 1 & 1 \\
+\hline
+\mathsf{Ord}_0 & \Omega & \omega & \omega \\
+\hline
+\mathsf{Ord}_1 & \Omega_2 & \Omega & \Omega \\
+\hline
+\mathsf{Ord}_2 & \Omega_3 & \Omega_2 & \Omega_2 \\
+\hline
+\mathsf{Ord}_n & \Omega_{n+1} & \Omega_n & \Omega_n \\
+\hline
+\mathsf{Ord}_{\omega} & \Omega_{\omega+1} & \Omega_\omega & \omega \\
+\hline
+\mathsf{Ord}_{\omega+1} & \Omega_{\omega+2} & \Omega_{\omega+1} & \Omega_{\omega+1} \\
+\hline
+\mathsf{Ord}_{\omega+n} & \Omega_{\omega+n+1} & \Omega_{\omega+n} & \Omega_{\omega+n} \\
+\hline
+\mathsf{Ord}_{\omega \cdot 2} & \Omega_{\omega \cdot 2+1} & \Omega_{\omega \cdot 2} & \omega \\
+\hline
+\mathsf{Ord}_{\omega \cdot 2+1} & \Omega_{\omega \cdot 2+2} & \Omega_{\omega \cdot 2+1} & \Omega_{\omega \cdot 2+1} \\
+\hline
+\end{array}
+$$
 
 ## 可数序数的有界三歧性
 
