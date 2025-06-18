@@ -678,7 +678,7 @@ module Ordᴰ where
 
 达成 $\psi(\Omega_\Omega)$ 的关键是让 $\psi$ 输出的大可数序数成为 $\Omega$ 的下标, 从而迭代 $\psi(\Omega_x)$ 得到 $\psi(\Omega_\Omega)$. 问题在于, $\Omega$ 的下标的类型必须是我们现在构筑的 $\mathsf{Ord}^D$, 而 $\psi$ 的输出并不是, 因为通常的 OCF 的定义并不保证输出的序数所用的基本列是“遗传地”单调的. 本小节接下来的构筑将提供此问题的一个简易的解决方案.
 
-**定义** 互递归地定义 $\mathsf{Ord}^D$ 上的加法并证明右侧加法 ($x \mapsto a + x$) 保持 $<$ 关系.
+**定义 (可数序数加法)** 互递归地定义 $\mathsf{Ord}^D$ 上的加法并证明右侧加法 ($x \mapsto a + x$) 保持 $<$ 关系.
 
 $$
 a + b := \begin{cases}
@@ -741,12 +741,12 @@ $$
   a<a+b = +-mono (z<nz it)
 ```
 
-**定义 (累积和)** 定义高阶函数 $\mathfrak{C}$ 如下:
+**定义 (累积和)** 定义高阶函数 $f\mapsto f^+$ 如下:
 $$
-\mathfrak{C}(f)(n) := 
+f^{+}(n) := 
 \begin{cases}
    f(0) &\text{if } n = 0 \\
-   \mathfrak{C}(f)(m) + (f(n))^+ &\text{if } n = m^+
+   f^{+}(m) + (f(n))^+ &\text{if } n = m^+
 \end{cases}
 $$
 
@@ -757,10 +757,10 @@ $$
   cumsum f (suc n)  = cumsum f n + suc (f (suc n))
 ```
 
-**定理** 对任意 $f$, $\mathfrak{C}(f)$ 单调.  
-**证明** 要证 $\mathfrak{C}(f)$ 单调, 即对任意 $n < m$ 有 $\mathfrak{C}(f)(n) < \mathfrak{C}(f)(m)$. 对 $n < m$ 的证明归纳:
-- 若 $n < n^+$, 要证 $\mathfrak{C}(f)(n) < \mathfrak{C}(f)(n^+) = \mathfrak{C}(f)(n) + (f(n^+))^+$, 由引理 `a<a+b` 得证.
-- 若 $n < m^+$ 且 $n < m$, 要证 $\mathfrak{C}(f)(n) < \mathfrak{C}(f)(m^+) = \mathfrak{C}(f)(m) + (f(m^+))^+$. 由归纳假设 $\mathfrak{C}(f)(n) < \mathfrak{C}(f)(m)$, 再由传递性和引理 `a<a+b` 得证. ∎
+**定理** 对任意 $f$, $f^{+}$ 单调.  
+**证明** 要证 $f^{+}$ 单调, 即对任意 $n < m$ 有 $f^{+}(n) < f^{+}(m)$. 对 $n < m$ 的证明归纳:
+- 若 $n < n^+$, 要证 $f^{+}(n) < f^{+}(n^+) = f^{+}(n) + (f(n^+))^+$, 由引理 `a<a+b` 得证.
+- 若 $n < m^+$ 且 $n < m$, 要证 $f^{+}(n) < f^{+}(m^+) = f^{+}(m) + (f(m^+))^+$. 由归纳假设 $f^{+}(n) < f^{+}(m)$, 再由传递性和引理 `a<a+b` 得证. ∎
 
 ```agda
   cumsum-mono : (f : ℕ → Ordᴰ) → monotonic (cumsum f)
@@ -900,6 +900,17 @@ $$
 
 ## 布劳威尔树的折叠
 
+**定义 (序数加法)** 对任意 $a,b:\mathsf{Ord}_\ell$, 递归定义加法运算 $+:\mathsf{Ord}_\ell\to\mathsf{Ord}_\ell\to\mathsf{Ord}_\ell$ 如下:
+$$
+a + b :=
+\begin{cases}
+   a &\text{if } b = 0 \\
+   (a + b')^+ &\text{if } b = b'^+ \\
+   \mathsf{lim}(n \mapsto a + f(n)) &\text{if } b = \mathsf{lim}(f) \\
+   \mathsf{lim}_i(p, x \mapsto a + f(x)) &\text{if } b = \mathsf{lim}_i(p, f)
+\end{cases}
+$$
+
 ```agda
   _+_ : Ord ℓ → Ord ℓ → Ord ℓ
   a + zero = a
@@ -907,6 +918,18 @@ $$
   a + lim f = lim (λ n → a + f n)
   a + limᵢ p f = limᵢ p (λ x → a + f x)
 ```
+
+**定义 (迭代和最小不动点)** 定义迭代函数 $(f,a,n)\mapsto f^n(a)$ 和最小不动点构造 $g \mapsto g^\omega$ 如下:
+$$
+\begin{align}
+f^n(a) &:=
+\begin{cases}
+   a &\text{if } n = 0 \\
+   f(f^{n'}(a)) &\text{if } n = n'^+
+\end{cases}\\[2em]
+g^\omega &:= \mathsf{lim}(n \mapsto g^n(0))
+\end{align}
+$$
 
 ```agda
   iter : {T : Set} (f : T → T) (init : T) (times : ℕ) → T
