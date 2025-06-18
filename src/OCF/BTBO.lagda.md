@@ -169,7 +169,7 @@ module Nat_lt where
 - 项 $\mathsf{suc}(x)$ 可简记为 $x^+$
 - 当它们为布劳威尔树项之间关系的证明时, 同样采用此约定
 
-因此我们可以写 $0:x<x^+$, 以及 $p^+:x<y^+$ (此时有 $p:x<y$).
+因此我们可以写 $0_x:x<x^+$, 以及 $p^+:x<y^+$ (此时有 $p:x<y$).
 
 由开篇的代码, 通过简单的复制粘贴我们可以写出任意 $\mathsf{Brw}_n$. 伪代码如下
 
@@ -191,7 +191,7 @@ data Brwₖ₊₁ : Set where
 - `cf₄` 构造了共尾度为 $\Omega_2$ 的序数, 可表示更高阶的不可数极限序数.
 - ...
 
-归纳这个模式, 我们可以定义 `Brw : ℕ → Set` 这个类型族. 核心思想是通过类似类型论塔斯基宇宙的形式来定义自然数索引的布劳威尔树族。对于给定的层数 $n$, 我们首先假设所有更低层的树 $\mathsf{Brw}_{<i}$（其中 $i < n$）都已经定义好, 然后定义第 $n$ 层的树 $\mathsf{Brw}_n$。具体地, $\mathsf{Brw}_n$ 的每个元素都可以通过构造子 $\mathsf{cf}$ 来构造, 该构造子接受一个证明 $p : i < n$ 和一个函数 $f : \mathsf{Brw}_{<i} \to \mathsf{Brw}_n$, 表示该元素的共尾度为 $\mathsf{Brw}_{<i}$。函数 `Brw<` 处理了层次之间的依赖关系, 而 `Brw` 则是对外的接口, 将第 $n$ 层的树定义为 $\mathsf{Brw}_{<n, 0:n<n^+}$。
+归纳这个模式, 我们可以定义 `Brw : ℕ → Set` 这个类型族. 核心思想是通过类似类型论塔斯基宇宙的形式来定义自然数索引的布劳威尔树族。对于给定的层数 $n$, 我们首先假设所有更低层的树 $\mathsf{Brw}_{<i}$（其中 $i < n$）都已经定义好, 然后定义第 $n$ 层的树 $\mathsf{Brw}_n$。具体地, $\mathsf{Brw}_n$ 的每个元素都可以通过构造子 $\mathsf{cf}$ 来构造, 该构造子接受一个证明 $p : i < n$ 和一个函数 $f : \mathsf{Brw}_{<i} \to \mathsf{Brw}_n$, 表示该元素的共尾度为 $\mathsf{Brw}_{<i}$。函数 `Brw<` 处理了层次之间的依赖关系, 而 `Brw` 则是对外的接口, 将第 $n$ 层的树定义为 $\mathsf{Brw}_{<n, 0_n}$。
 
 **定义 (自然数层布劳威尔树)**  
 $$
@@ -200,11 +200,11 @@ $$
 \\[1.5em]
 \mathsf{Brw}_{<}(i, p) &:= 
 \begin{cases}
-   \mathsf{Brw}_+(i, \mathsf{Brw}_{<}) &\text{if } p = 0:i<i^+ \\
-   \mathsf{Brw}_{<}(i, q) &\text{if } p = q^+:i<m^+
+   \mathsf{Brw}_+(i, \mathsf{Brw}_{<}) &\text{if } p = (0_i:i<i^+) \\
+   \mathsf{Brw}_{<}(i, q) &\text{if } p = (q^+:i<m^+)
 \end{cases}
 \\[1.5em]
-\mathsf{Brw}_n &:= \mathsf{Brw}_{<}(n,\;0:n<n^+)
+\mathsf{Brw}_n &:= \mathsf{Brw}_{<}(n,0_n)
 \end{align}
 $$
 
@@ -263,15 +263,15 @@ module Ord_nat where
 $$
 \mathsf{Ord}_{<}(i, p) := 
 \begin{cases}
-   \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) &\text{if } p = 0:i<i^+ \\
-   \mathsf{Ord}_{<}(i, q) &\text{if } p = q^+:i<m^+
+   \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) &\text{if } p = (0_i:i<i^+) \\
+   \mathsf{Ord}_{<}(i, q) &\text{if } p = (q^+:i<m^+)
 \end{cases}
 $$
 
 并定义
 
 $$
-\mathsf{Ord}_n := \mathsf{Ord}_{<}(n,\;0:n<n^+)
+\mathsf{Ord}_n := \mathsf{Ord}_{<}(n,0_n)
 $$
 
 ```agda
@@ -286,8 +286,8 @@ $$
 **定理** $\mathsf{Ord}_{<}(i,\;p:i<n)$ 与 $\mathsf{Ord}_{<}(i,\;q:i<m)$ 表示相同的树.
 
 **证明** 对证明 $p:i<n$ 和 $q:i<m$ 归纳. 由 $\mathsf{Ord}_{<}$ 的定义:
-- 若 $p=(0:i<i^+),\;q=(0:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) = \mathsf{Ord}_{<}(i,q)$.
-- 若 $p=(p'^+:i<n^+),\;q=(0:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
+- 若 $p=(0_i:i<i^+),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) = \mathsf{Ord}_{<}(i,q)$.
+- 若 $p=(p'^+:i<n^+),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
 - 若 $p:i<n,\;q=q'^+:i<m^+$, 则 $\mathsf{Ord}_{<}(i,q) = \mathsf{Ord}_{<}(i,q')$, 由归纳假设直接得 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,q')$. ∎
 
 ```agda
@@ -376,11 +376,11 @@ $$
 \\[2em]
 \mathsf{Ord}_{\omega<}(k, p) &:= 
 \begin{cases}
-   \mathsf{Ord}_{\omega+}(k, \mathsf{Ord}_{\omega<}) &\text{if } p = 0:k<k^+ \\
-   \mathsf{Ord}_{\omega<}(k, q) &\text{if } p = q^+:k<m^+
+   \mathsf{Ord}_{\omega+}(k, \mathsf{Ord}_{\omega<}) &\text{if } p = (0_k:k<k^+) \\
+   \mathsf{Ord}_{\omega<}(k, q) &\text{if } p = (q^+:k<m^+)
 \end{cases}
 \\[1em]
-\mathsf{Ord}_{\omega+n} &:= \mathsf{Ord}_{\omega<}(n, 0:n<n^+)
+\mathsf{Ord}_{\omega+n} &:= \mathsf{Ord}_{\omega<}(n,0_n)
 \\[2em]
 \mathsf{Ord}_{\omega \cdot 2} &:= 
 \cfrac{}{\mathsf{Ord}_{\omega \cdot 2}}\;\mathsf{zero}
@@ -447,7 +447,7 @@ $$
 **定义 (层级提升函数)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_{n^+}$ 的嵌入 $↑_+$ 如下:
 
 - 如果 $a : \text{Ord}_n$ 由 $\mathsf{zero}$, $\mathsf{suc}$ 或 $\mathsf{lim}$ 构造, 我们直接使用 $\text{Ord}_{n^+}$ 的同名构造子递归构造 $↑_+a$.
-- 如果 $a = \mathsf{lim}_n(p,f)$, 其中 $p:i<n$ 且 $f:\mathsf{Ord}_{<}(i,\;p)\to\text{Ord}_n$, 则 $↑_+a:=\mathsf{lim}_n(p^+,↑_+\circ f)$, 其中 $p^+:i<n^+$ 且 $↑_+\circ f:\mathsf{Ord}_{<}(i,\;p)\to\text{Ord}_{n^+}$.
+- 如果 $a = \mathsf{lim}_n(p,f)$, 其中 $p:i<n$ 且 $f:\mathsf{Ord}_{<}(i,\;p)\to\text{Ord}_n$, 则 $↑_+a:=\mathsf{lim}_n(p^+,↑_+\circ f)$, 其中 $p^+:i<n^+$ 且 $(↑_+\circ f):\mathsf{Ord}_{<}(i,\;p)\to\text{Ord}_{n^+}$.
 
 ```agda
   ↑₊ : Ord n → Ord (suc n)
@@ -465,7 +465,7 @@ $$
 \Omega_n :=
 \begin{cases}
    1 &\text{if } n = 0 \\
-   \mathsf{lim}_{n'}(0:n'<n'^+,↑_+) &\text{if } n = n'^+
+   \mathsf{lim}_{n'}(0_{n'},↑_+) &\text{if } n = n'^+
 \end{cases}
 $$
 
@@ -529,7 +529,7 @@ $$
 
 ## 可数序数的有界三歧性
 
-为了一劳永逸地定义 $\mathsf{Ord}_\alpha$ (其中 $\alpha < \Omega$), 我们要以可数序数 $\mathsf{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`. 但是我们现有的 `Ord₀` 太过于宽泛了, 缺乏一些关键性质, 不能直接作为索引类型, 否则会导致后续无法折叠. 为此我们将专门定义具有所谓**有界三歧性 (bounded decidability)** 的可数序数类型 $\mathsf{Ord}^D$, 它也是我们在 [2.0系列](https://zhuanlan.zhihu.com/p/711649863) 介绍的良构序数的简化版本.
+为了一劳永逸地定义 $\mathsf{Ord}_\alpha$ (其中 $\alpha < \Omega$), 我们要以可数序数 $\mathsf{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`. 但是我们现有的 `Ord₀` 太过于宽泛了, 缺乏一些关键性质, 不能直接作为索引类型, 否则会导致后续无法折叠. 为此我们将专门定义具有所谓**有界三歧性 (bounded decidability)** 的可数序数类型 $\mathsf{Ord}^\mathsf{D}$, 它也是我们在 [2.0系列](https://zhuanlan.zhihu.com/p/711649863) 介绍的良构序数的简化版本.
 
 为了表达三歧性, 我们引入和类型.
 
@@ -553,8 +553,8 @@ pattern injᶜ x = inj₂ (inj₂ x)
  - 若 $n = m^+$, 则要证 $0 < (m^+)^+ = m^{++}$. 由归纳假设 $0 < m^+$, 应用 $<$ 的构造子 $\mathsf{suc}$ 得 $0 < m^{++}$.
 
 (2) 要证 $n < m \to n^+ < m^+$, 对 $n < m$ 的证明 $p$ 归纳.
-   - 若 $p = (0 : n < n^+)$, 则要证 $n^+ < (n^+)^+ = n^{++}$, 由 $<$ 的定义 $\mathsf{zero}$ 直接得出.
-   - 若 $p = (p'^+ : n < m^+)$, 其中 $p' : n < m$, 则要证 $n^+ < (m^+)^+ = m^{++}$. 由归纳假设得 $n^+ < m^+$, 应用构造子 $\mathsf{suc}$ 得 $n^+ < m^{++}$. ∎
+   - 若 $p = (0_n:n < n^+)$, 则要证 $n^+ < (n^+)^+ = n^{++}$, 由 $<$ 的定义 $\mathsf{zero}$ 直接得出.
+   - 若 $p = (p'^+:n < m^+)$, 其中 $p' : n < m$, 则要证 $n^+ < (m^+)^+ = m^{++}$. 由归纳假设得 $n^+ < m^+$, 应用构造子 $\mathsf{suc}$ 得 $n^+ < m^{++}$. ∎
 
 ```agda
 module Nat where
@@ -591,9 +591,9 @@ module Nat where
   ... | injᶜ p = injᶜ (cong suc p)
 ```
 
-**定义 (有界三歧可数序数)** 互归纳定义 $\mathsf{Ord}^D$ 及其上的 $<$ 序.
+**定义 (有界三歧可数序数)** 互归纳定义 $\mathsf{Ord}^\mathsf{D}$ 及其上的 $<$ 序.
 
-- $\mathsf{Ord}^D$ 的定义与 $\mathsf{Ord}_0$ 类似, 只不过要求基本列 $f:\mathbb{N}\to\mathsf{Ord}^D$ 单调.
+- $\mathsf{Ord}^\mathsf{D}$ 的定义与 $\mathsf{Ord}_0$ 类似, 只不过要求基本列 $f:\mathbb{N}\to\mathsf{Ord}^\mathsf{D}$ 单调.
 - $<$ 的定义在自然数的 $<$ 的基础上推广到了极限序数.
 
 $$
@@ -631,7 +631,7 @@ module Ordᴰ where
     lim  : ∀ n → a < f n → a < lim f mono
 ```
 
-**引理** 对任意单调的 $f:\mathbb{N}\to\mathsf{Ord}^D$ 和 $n:\mathbb{N}$, 有 $f(n)<\mathsf{lim}(f)$.  
+**引理** 对任意单调的 $f:\mathbb{N}\to\mathsf{Ord}^\mathsf{D}$ 和 $n:\mathbb{N}$, 有 $f(n)<\mathsf{lim}(f)$.  
 **证明** $f(n)<f(n^+)<\mathsf{lim}(f)$. ∎
 
 ```agda
@@ -639,7 +639,7 @@ module Ordᴰ where
   f<l {mono} n = lim (suc n) (mono zero)
 ```
 
-**引理** $\mathsf{Ord}^D$ 上的 $<$ 满足传递性.  
+**引理** $\mathsf{Ord}^\mathsf{D}$ 上的 $<$ 满足传递性.  
 **证明** 令 $p:a<b$ 且 $q:b<c$, 要证 $a<c$. 对 $q$ 归纳.
 
 - 若 $q=0$, 则有 $c=b^+$, 所以 $p^+:a<c$.
@@ -653,7 +653,7 @@ module Ordᴰ where
   <-trans p (lim n q) = lim n (<-trans p q)
 ```
 
-**定理 (有界三歧性)** 对任意 $a,b:\mathsf{Ord}^D$, 如果它们小于一个共同的序数, 那么它们满足三歧性.  
+**定理 (有界三歧性)** 对任意 $a,b:\mathsf{Ord}^\mathsf{D}$, 如果它们小于一个共同的序数, 那么它们满足三歧性.  
 **证明** 令 $p:a<c$ 且 $q:b<c$, 对它们归纳.
 
 - 若 $p=0,\;q=0$, 则 $c=a^+$ 且 $c=b^+$, 所以 $a=b$.
@@ -676,9 +676,9 @@ module Ordᴰ where
   ... | injᶜ refl = <-dec p q
 ```
 
-达成 $\psi(\Omega_\Omega)$ 的关键是让 $\psi$ 输出的大可数序数成为 $\Omega$ 的下标, 从而迭代 $\psi(\Omega_x)$ 得到 $\psi(\Omega_\Omega)$. 问题在于, $\Omega$ 的下标的类型必须是我们现在构筑的 $\mathsf{Ord}^D$, 而 $\psi$ 的输出并不是, 因为通常的 OCF 的定义并不保证输出的序数所用的基本列是“遗传地”单调的. 本小节接下来的构筑将提供此问题的一个简易的解决方案.
+达成 $\psi(\Omega_\Omega)$ 的关键是让 $\psi$ 输出的大可数序数成为 $\Omega$ 的下标, 从而迭代 $\psi(\Omega_x)$ 得到 $\psi(\Omega_\Omega)$. 问题在于, $\Omega$ 的下标的类型必须是我们现在构筑的 $\mathsf{Ord}^\mathsf{D}$, 而 $\psi$ 的输出并不是, 因为通常的 OCF 的定义并不保证输出的序数所用的基本列是“遗传地”单调的. 本小节接下来的构筑将提供此问题的一个简易的解决方案.
 
-**定义 (可数序数加法)** 互递归地定义 $\mathsf{Ord}^D$ 上的加法并证明右侧加法 ($x \mapsto a + x$) 保持 $<$ 关系.
+**定义 (可数序数加法)** 互递归地定义 $\mathsf{Ord}^\mathsf{D}$ 上的加法并证明右侧加法 ($x \mapsto a + x$) 保持 $<$ 关系.
 
 $$
 a + b := \begin{cases}
@@ -711,7 +711,7 @@ $$
 **引理** 如果 $a\neq 0$, 那么 $a>0$.
 
 **证明** 对 $a$ 归纳
-- 若 $a = 0^+$, 则 $0 : 0 < 0^+$.
+- 若 $a = 0^+$, 则 $0_0:0<0^+$.
 - 若 $a = a'^{++}$, 显然 $a'^+\neq 0$, 有归纳假设 $ih : 0 < a'^+$, 所以 $ih^+ : 0 < a'^{++}$.
 - 若 $a = (\mathsf{lim}(f))^+$, 显然 $\mathsf{lim}(f)\neq 0$, 有归纳假设 $ih : 0 < \mathsf{lim}(f)$, 所以 $ih^+ : 0 < (\mathsf{lim}(f))^+$.
 - 若 $a = \mathsf{lim}(f)$, 则由 $f$ 的单调性 $m_f$ 有 $m_f(0) : f(0) < f(1)$. 此时 $f(1) \neq 0$, 故由归纳假设 $ih : 0 < f(1)$, 因此 $\mathsf{lim}(1, ih) : 0 < \mathsf{lim}(f)$. ∎
@@ -772,7 +772,7 @@ $$
 
 ## 可数序数层布劳威尔树
 
-现在我们将自然数层推广到可数序数层. 对任意可数序数 $\ell : \mathsf{Ord}^D$, 我们定义布劳威尔树类型 $\mathsf{Ord}_\ell$.
+现在我们将自然数层推广到可数序数层. 对任意可数序数 $\ell : \mathsf{Ord}^\mathsf{D}$, 我们定义布劳威尔树类型 $\mathsf{Ord}_\ell$.
 
 **定义 (可数序数层布劳威尔树)**  
 $$
@@ -788,12 +788,12 @@ $$
 \\[2em]
 \mathsf{Ord}_{<}(i, p) &:= 
 \begin{cases}
-   \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) &\text{if } p = (0:i<i^+) \\
+   \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) &\text{if } p = (0_i:i<i^+) \\
    \mathsf{Ord}_{<}(i, q) &\text{if } p = (q^+:i<m^+) \\
    \mathsf{Ord}_{<}(i, q) &\text{if } p = (\mathsf{lim}(n,q):i<\mathsf{lim}(f))
 \end{cases}
 \\[2em]
-\mathsf{Ord}_\ell &:= \mathsf{Ord}_{<}(\ell, 0:\ell<\ell^+)
+\mathsf{Ord}_\ell &:= \mathsf{Ord}_{<}(\ell,0_\ell)
 \end{align}
 $$
 
@@ -824,7 +824,7 @@ module Ord_ord where
 
 这里 $\mathsf{Ord}_{<}(i, p)$ 的定义体现了**证明无关性 (proof irrelevance)**: 无论 $p$ 是如何证明 $i < \ell$ 的, 只要 $i$ 相同, 得到的类型都是一样的. 具体来说:
 
-- 当 $p$ 是基础证明 $0:i<i^+$ 时, 我们得到 $\mathsf{Ord}_+(i, \mathsf{Ord}_{<})$
+- 当 $p$ 是基础证明 $0_i:i<i^+$ 时, 我们得到 $\mathsf{Ord}_+(i, \mathsf{Ord}_{<})$
 - 当 $p$ 是后继证明 $q^+:i<m^+$ 时, 我们"剥掉"外层的后继, 递归到 $\mathsf{Ord}_{<}(i, q)$
 - 当 $p$ 是极限证明 $\mathsf{lim}(n,q):i<\mathsf{lim}(f)$ 时, 我们同样"剥掉"外层的极限, 递归到 $\mathsf{Ord}_{<}(i, q)$
 
@@ -833,9 +833,9 @@ module Ord_ord where
 **定理** $\mathsf{Ord}_{<}(i,\;p:i<\ell_1)$ 与 $\mathsf{Ord}_{<}(i,\;q:i<\ell_2)$ 表示相同的树.
 
 **证明** 对证明 $p:i<\ell_1$ 和 $q:i<\ell_2$ 归纳. 由 $\mathsf{Ord}_{<}$ 的定义:
-- 若 $p=(0:i<i^+),\;q=(0:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) = \mathsf{Ord}_{<}(i,q)$.
-- 若 $p=(p'^+:i<\ell_1^+),\;q=(0:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
-- 若 $p=(\mathsf{lim}(n,p'):i<\mathsf{lim}(f)),\;q=(0:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
+- 若 $p=(0_i:i<i^+),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) = \mathsf{Ord}_{<}(i,q)$.
+- 若 $p=(p'^+:i<\ell_1^+),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
+- 若 $p=(\mathsf{lim}(n,p'):i<\mathsf{lim}(f)),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
 - 若 $p:i<\ell_1,\;q=q'^+:i<\ell_2^+$, 则 $\mathsf{Ord}_{<}(i,q) = \mathsf{Ord}_{<}(i,q')$, 由归纳假设直接得 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,q')$.
 - 若 $p:i<\ell_1,\;q=\mathsf{lim}(n,q'):i<\mathsf{lim}(g)$, 则 $\mathsf{Ord}_{<}(i,q) = \mathsf{Ord}_{<}(i,q')$, 由归纳假设直接得 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,q')$. ∎
 
@@ -879,12 +879,12 @@ $$
   ↑ p (limᵢ q f)  = limᵢ (<-trans q p) (↑ p ∘ f ∘ coe)
 ```
 
-**定义 ($\Omega$ 数)** 遵循 [Buchholz](https://en.wikipedia.org/wiki/Buchholz_psi_functions) 的定义, 对任意层级 $\ell:\mathsf{Ord}^D$, 递归定义 $\Omega:\mathsf{Ord}^D\to\mathsf{Ord}_\ell$ 如下:
+**定义 ($\Omega$ 数)** 遵循 [Buchholz](https://en.wikipedia.org/wiki/Buchholz_psi_functions) 的定义, 对任意层级 $\ell:\mathsf{Ord}^\mathsf{D}$, 递归定义 $\Omega:\mathsf{Ord}^\mathsf{D}\to\mathsf{Ord}_\ell$ 如下:
 $$
 \Omega_\ell :=
 \begin{cases}
    0^+ &\text{if } \ell = 0 \\
-   \mathsf{lim}_{\ell'}(0:\ell'<\ell, \uparrow_{0:\ell'<\ell}) &\text{if } \ell = \ell'^+ \\
+   \mathsf{lim}_{\ell'}(0_{\ell'}, \uparrow_{0_\ell'}) &\text{if } \ell = \ell'^+ \\
    \mathsf{lim}(n\mapsto\uparrow_{p:f(n)<\ell} \Omega_{f(n)} &\text{if } \ell = \mathsf{lim}(f, \_)
 \end{cases}
 $$
@@ -919,7 +919,7 @@ $$
   a + limᵢ p f = limᵢ p (λ x → a + f x)
 ```
 
-**定义 (迭代和最小不动点)** 定义迭代函数 $(f,a,n)\mapsto f^n(a)$ 和最小不动点构造 $g \mapsto g^\omega$ 如下:
+**定义 (迭代和最小不动点)** 定义迭代函数 $(f,a,n)\mapsto f^n(a)$ 和最小不动点构造 $g \mapsto \mathsf{lfp}(g)$ 如下:
 $$
 \begin{align}
 f^n(a) &:=
@@ -927,7 +927,7 @@ f^n(a) &:=
    a &\text{if } n = 0 \\
    f(f^{n'}(a)) &\text{if } n = n'^+
 \end{cases}\\[2em]
-g^\omega &:= \mathsf{lim}(n \mapsto g^n(0))
+\mathsf{lfp}(g) &:= \mathsf{lim}(n \mapsto g^n(0))
 \end{align}
 $$
 
@@ -939,6 +939,23 @@ $$
   lfp : (Ord ℓ → Ord ℓ) → Ord ℓ
   lfp f = lim (iter f zero)
 ```
+
+**定义 (Buchholz's $\psi_i$)** 给定证明 $p:i<\ell$, 递归定义序数折叠函数 $\psi_{p}:\mathsf{Ord}_\ell\to\mathsf{Ord}_i$ 如下:
+$$
+\psi_{p}(a) :=
+\begin{cases}
+   \Omega_i &\text{if } a = 0 \\
+   \mathsf{lfp}(x\mapsto\psi_{p}(a') + x) &\text{if } a = a'^+ \\
+   \mathsf{lim}(\psi_{p} \circ f)) &\text{if } a = \mathsf{lim}(f) \\
+   \begin{cases}
+      \mathsf{lim}_j(q,\;\psi_{p} \circ f) &\text{if } r:j < i \\
+      \mathsf{lfp}(\psi_{p} \circ f \circ \uparrow_{r}) &\text{if } r:i < j \\
+      \mathsf{lfp}(\psi_{p} \circ f) &\text{if } r:i = j
+   \end{cases} &\text{if } a = \mathsf{lim}_j(q:j<\ell, f)
+\end{cases}
+$$
+
+其中, 我们能判定 $i,j$ 的大小关系是因为它们都小于 $\ell$, 允许应用有界三歧性.
 
 ```agda
   -- Buchholz's ψ
@@ -952,12 +969,36 @@ $$
   ... | injᶜ refl = lfp (ψ< p ∘ f ∘ coe₀)
 ```
 
+**定义 (Buchholz's $\psi_0$)** 递归定义 $\psi_0:\mathsf{Ord}_\ell\to\mathsf{Ord}_0$ 如下:
+$$
+\psi_0(a) :=
+\begin{cases}
+   a &\text{if } \ell = 0 \\
+   \psi_0(\psi_{0_{\ell'}}(a)) &\text{if } \ell = \ell'^+ \\
+   \mathsf{lim}(n \mapsto \psi_0(\psi_{p}(a))) &\text{if } \ell = \mathsf{lim}(f, \_)
+\end{cases}
+$$
+
+其中 $p:f(n)<\ell$ 由引理 `f<l` 得到.
+
 ```agda
   ψ₀ : Ord ℓ → Ord₀
-  ψ₀ {ℓ = zero}       a = a
-  ψ₀ {ℓ = suc ℓ}      a = ψ₀ (ψ< zero a)
-  ψ₀ {ℓ = lim f mono} a = lim (λ n → ψ₀ (ψ< (f<l n) a))
+  ψ₀ {ℓ = zero}    a = a
+  ψ₀ {ℓ = suc ℓ}   a = ψ₀ (ψ< zero a)
+  ψ₀ {ℓ = lim f _} a = lim (λ n → ψ₀ (ψ< (f<l n) a))
 ```
+
+**定义 (单调化嵌入)** 递归定义 $\mathsf{Ord}_0$ 到 $\mathsf{Ord}^\mathsf{D}$ 的嵌入 $\mathsf{ord}^\mathsf{D}:\mathsf{Ord}_0\to\mathsf{Ord}^\mathsf{D}$ 如下:
+$$
+\mathsf{ord}^\mathsf{D}(a) :=
+\begin{cases}
+   0 &\text{if } a = 0 \\
+   (\mathsf{ord}^\mathsf{D}(a'))^+ &\text{if } a = a'^+ \\
+   \mathsf{lim}((\mathsf{ord}^\mathsf{D}\circ f)^+, m_{(\mathsf{ord}^\mathsf{D}\circ f)^+}) &\text{if } a = \mathsf{lim}(f)
+\end{cases}
+$$
+
+其中 $m_{(\mathsf{ord}^\mathsf{D}\circ f)^+}$ 由引理 `cumsum-mono` 给出.
 
 ```agda
   ordᴰ : Ord₀ → Ordᴰ
@@ -966,11 +1007,26 @@ $$
   ordᴰ (lim f)  = lim (cumsum (ordᴰ ∘ f)) (cumsum-mono (ordᴰ ∘ f))
 ```
 
+**定义 (迭代 $\psi_0$)** 定义 $\psi^n:\mathbb{N}\to\mathsf{Ord}_0$ 为 $\psi_0 \circ \Omega \circ \mathsf{ord}^\mathsf{D}$ 的 $n$ 次迭代:
+$$
+\psi^n(0) := (\psi_0 \circ \Omega \circ \mathsf{ord}^\mathsf{D})^n(0)
+$$
+
 ```agda
   -- n-iteration of ψ₀(Ω_x)
   ψⁿ : ℕ → Ord₀
   ψⁿ = iter (ψ₀ ∘ Ω ∘ ordᴰ) zero
 ```
+
+**例 (关键序数)**
+$$
+\begin{align}
+\psi^1(0) &= \omega \\
+\psi^2(0) &= \mathsf{BO} \\
+\psi^3(0) &= \psi(\Omega_{\mathsf{BO}}) \\
+\psi^4(0) &= \psi(\Omega_{\psi(\Omega_{\mathsf{BO}})})
+\end{align}
+$$
 
 ```agda
   ex1 = ψⁿ 1    -- ω
@@ -979,11 +1035,30 @@ $$
   ex4 = ψⁿ 4    -- ψ(Ω_ψ(Ω_BO))
 ```
 
+**定义 (布劳威尔树壁垒序数)** 
+$$
+\mathsf{BTBO} := \mathsf{lim}(n\mapsto\psi^n(0)) = \psi(\Omega_\Omega)
+$$
+
+这是 $\psi^n(0)$ 序列的极限, 也就是我们能达到的最大序数 $\psi(\Omega_\Omega)$.
+
 ```agda
   -- Brouwer tree barrier ordinal
   BTBO : Ord₀
   BTBO = lim ψⁿ -- ψ(Ω_Ω)
 ```
+
+最后, 遵循传统, 我们写出大数.
+
+**定义 (快速增长层级)** 递归定义 $\mathsf{f}:\mathsf{Ord}_0\to\mathbb{N}\to\mathbb{N}$ 如下:
+$$
+\mathsf{f}^\alpha(n) :=
+\begin{cases}
+   n^+ &\text{if } \alpha = 0 \\
+   (\mathsf{f}^{\alpha'})^n(n) &\text{if } \alpha = \alpha'^+ \\
+   \mathsf{f}^{f(n)}(n) &\text{if } \alpha = \mathsf{lim}(f)
+\end{cases}
+$$
 
 ```agda
   FGH : Ord₀ → ℕ → ℕ
@@ -992,9 +1067,16 @@ $$
   FGH (lim a) n = FGH (a n) n
 ```
 
+**定义 (BTBO大数)** 应用快速增长层级于 BTBO:
+$$
+\mathsf{f}^\mathsf{BTBO}(99)
+$$
+
+这是一个基于布劳威尔树壁垒序数的具体大数.
+
 ```agda
-  mynum : ℕ
-  mynum = FGH BTBO 99
+  _ : ℕ
+  _ = FGH BTBO 99
 ```
 
 ## 参考
