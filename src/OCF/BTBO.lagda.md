@@ -921,7 +921,7 @@ $$
 \Omega_\ell :=
 \begin{cases}
    0^+ &\text{if } \ell = 0 \\
-   \mathsf{lim}_{\ell'}(0_{\ell'}, \uparrow_{0_\ell'}) &\text{if } \ell = \ell'^+ \\
+   \mathsf{lim}_{\ell'}(0_{\ell'}, \uparrow_{0_{\ell'}}) &\text{if } \ell = \ell'^+ \\
    \mathsf{lim}(n\mapsto\uparrow_{p:f(n)<\ell} \Omega_{f(n)} &\text{if } \ell = \mathsf{lim}(f, \_)
 \end{cases}
 $$
