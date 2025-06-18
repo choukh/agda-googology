@@ -290,6 +290,7 @@ $$
 
 **定理** $\mathsf{Ord}_{<}(i,\;p:i<n)$ 与 $\mathsf{Ord}_{<}(i,\;q:i<m)$ 表示相同的树.  
 **证明** 对证明 $p:i<n$ 和 $q:i<m$ 归纳. 由 $\mathsf{Ord}_{<}$ 的定义:
+
 - 若 $p=(0_i:i<i^+),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) = \mathsf{Ord}_{<}(i,q)$.
 - 若 $p=(p'^+:i<n^+),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
 - 若 $p:i<n,\;q=q'^+:i<m^+$, 则 $\mathsf{Ord}_{<}(i,q) = \mathsf{Ord}_{<}(i,q')$, 由归纳假设直接得 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,q')$. ∎
@@ -575,12 +576,14 @@ pattern injᶜ x = inj₂ (inj₂ x)
 **证明**
 
 (1) 要证 $0 < n^+$, 对 $n$ 归纳.
- - 若 $n = 0$, 则 $0 < 0^+ = 1$, 由 $<$ 的定义 $\mathsf{zero}$ 直接得出.
- - 若 $n = m^+$, 则要证 $0 < (m^+)^+ = m^{++}$. 由归纳假设 $0 < m^+$, 应用 $<$ 的构造子 $\mathsf{suc}$ 得 $0 < m^{++}$.
+
+- 若 $n = 0$, 则 $0 < 0^+ = 1$, 由 $<$ 的定义 $\mathsf{zero}$ 直接得出.
+- 若 $n = m^+$, 则要证 $0 < (m^+)^+ = m^{++}$. 由归纳假设 $0 < m^+$, 应用 $<$ 的构造子 $\mathsf{suc}$ 得 $0 < m^{++}$.
 
 (2) 要证 $n < m \to n^+ < m^+$, 对 $n < m$ 的证明 $p$ 归纳.
-   - 若 $p = (0_n:n < n^+)$, 则要证 $n^+ < (n^+)^+ = n^{++}$, 由 $<$ 的定义 $\mathsf{zero}$ 直接得出.
-   - 若 $p = (p'^+:n < m^+)$, 其中 $p' : n < m$, 则要证 $n^+ < (m^+)^+ = m^{++}$. 由归纳假设得 $n^+ < m^+$, 应用构造子 $\mathsf{suc}$ 得 $n^+ < m^{++}$. ∎
+
+- 若 $p = (0_n:n < n^+)$, 则要证 $n^+ < (n^+)^+ = n^{++}$, 由 $<$ 的定义 $\mathsf{zero}$ 直接得出.
+- 若 $p = (p'^+:n < m^+)$, 其中 $p' : n < m$, 则要证 $n^+ < (m^+)^+ = m^{++}$. 由归纳假设得 $n^+ < m^+$, 应用构造子 $\mathsf{suc}$ 得 $n^+ < m^{++}$. ∎
 
 ```agda
 module Nat where
@@ -597,6 +600,7 @@ module Nat where
 
 **定理** 自然数的 $<$ 满足**无条件三歧性 (unconditional decidability)**, 即对任意 $n,m$, 都有 $(n < m) \lor (m < n) \lor (n = m)$.  
 **证明** 对 $n,m$ 归纳.
+
 - 若 $n=0,\;m=0$, 显然 $n=m$.
 - 若 $n=0,\;m=m'^+$, 显然 $n<m$.
 - 若 $n=n'^+,\;m=0$, 显然 $m<n$.
@@ -718,6 +722,7 @@ $$
 其中 $n\mapsto a+f(n)$ 要求满足单调性, 因为有 $f$ 的单调性, 只要证 $x \mapsto a + x$ 保持 $<$ 关系即可.
 
 **证明** 令 $p : b < c$, 对 $p$ 归纳.
+
 - 若 $p = 0$, 则 $c = b^+$, 要证 $a + b < a + b^+ = (a + b)^+$, 应用 $\mathsf{zero}$ 即可.
 - 若 $p = p'^+$, 则 $c = c'^+$ 且 $p' : b < c'$, 要证 $a + b < a + c^+ = (a + c')^+$. 由归纳假设 $a + b < a + c'$, 应用 $\mathsf{suc}$ 即可.
 - 若 $p = \mathsf{lim}(n, p')$, 则 $c = \mathsf{lim}(f)$ 且 $p' : b < f(n)$, 要证 $a + b < a + \mathsf{lim}(f) = \mathsf{lim}(m \mapsto a + f(m))$. 由归纳假设 $a + b < a + f(n)$, 应用 $\mathsf{lim}$ 即可. ∎
@@ -737,6 +742,7 @@ $$
 
 **引理** 如果 $a\neq 0$, 那么 $a>0$.  
 **证明** 对 $a$ 归纳
+
 - 若 $a = 0^+$, 则 $0_0:0<0^+$.
 - 若 $a = a'^{++}$, 显然 $a'^+\neq 0$, 有归纳假设 $ih : 0 < a'^+$, 所以 $ih^+ : 0 < a'^{++}$.
 - 若 $a = (\mathsf{lim}(f))^+$, 显然 $\mathsf{lim}(f)\neq 0$, 有归纳假设 $ih : 0 < \mathsf{lim}(f)$, 所以 $ih^+ : 0 < (\mathsf{lim}(f))^+$.
@@ -786,6 +792,7 @@ $$
 
 **定理** 对任意 $f$, $f^{+}$ 单调.  
 **证明** 要证 $f^{+}$ 单调, 即对任意 $n < m$ 有 $f^{+}(n) < f^{+}(m)$. 对 $n < m$ 的证明归纳:
+
 - 若 $n < n^+$, 要证 $f^{+}(n) < f^{+}(n^+) = f^{+}(n) + (f(n^+))^+$, 由引理 `a<a+b` 得证.
 - 若 $n < m^+$ 且 $n < m$, 要证 $f^{+}(n) < f^{+}(m^+) = f^{+}(m) + (f(m^+))^+$. 由归纳假设 $f^{+}(n) < f^{+}(m)$, 再由传递性和引理 `a<a+b` 得证. ∎
 
@@ -860,6 +867,7 @@ module Ord_ord where
 
 **定理** $\mathsf{Ord}_{<}(i,\;p:i<\ell_1)$ 与 $\mathsf{Ord}_{<}(i,\;q:i<\ell_2)$ 表示相同的树.  
 **证明** 对证明 $p:i<\ell_1$ 和 $q:i<\ell_2$ 归纳. 由 $\mathsf{Ord}_{<}$ 的定义:
+
 - 若 $p=(0_i:i<i^+),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) = \mathsf{Ord}_{<}(i,q)$.
 - 若 $p=(p'^+:i<\ell_1^+),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
 - 若 $p=(\mathsf{lim}(n,p'):i<\mathsf{lim}(f)),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
