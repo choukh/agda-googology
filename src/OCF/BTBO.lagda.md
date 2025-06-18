@@ -1095,14 +1095,14 @@ $$
 
 最后, 遵循传统, 我们写出大数.
 
-**定义 (快速增长层级)** 递归定义 $\mathsf{f}:\mathsf{Ord}_0\to\mathbb{N}\to\mathbb{N}$ 如下:  
+**定义 (快速增长层级)** 递归定义 $\mathfrak{f}:\mathsf{Ord}_0\to\mathbb{N}\to\mathbb{N}$ 如下:  
 
 $$
-\mathsf{f}^\alpha(n) :=
+\mathfrak{f}_\alpha(n) :=
 \begin{cases}
    n^+ &\text{if } \alpha = 0 \\
-   (\mathsf{f}^{\alpha'})^n(n) &\text{if } \alpha = \alpha'^+ \\
-   \mathsf{f}^{f(n)}(n) &\text{if } \alpha = \mathsf{lim}(f)
+   (\mathfrak{f}_{\alpha'})^n(n) &\text{if } \alpha = \alpha'^+ \\
+   \mathfrak{f}_{f(n)}(n) &\text{if } \alpha = \mathsf{lim}(f)
 \end{cases}
 $$
 
@@ -1116,7 +1116,7 @@ $$
 **定义 (BTBO大数)** 应用快速增长层级于 BTBO:  
 
 $$
-\mathsf{f}^\mathsf{BTBO}(99)
+\mathfrak{f}_\mathsf{BTBO}(99)
 $$
 
 这是一个基于布劳威尔树壁垒序数的具体大数.
