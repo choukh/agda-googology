@@ -28,6 +28,7 @@ open import Function using (_∘_; it)
 什么是布劳威尔树? 从零开始 (字面意义), 我们能看得更清晰一些.
 
 **定义 (布劳威尔树)**  
+
 $$
 \begin{align}
 \mathbf{0}&:=
@@ -150,7 +151,8 @@ transport : {A B : Set} → A ≡ B → A → B
 transport refl x = x
 ```
 
-**定义** 自然数上的 $<$ 序
+**定义** 自然数上的 $<$ 序  
+
 $$
 \cfrac{}{\;n<n^+\;}\;\;\mathsf{zero}\;\;\;\;\;\;\;\cfrac{n<m}{\;n<m^+\;}\;\;\mathsf{suc}
 $$
@@ -194,6 +196,7 @@ data Brwₖ₊₁ : Set where
 归纳这个模式, 我们可以定义 `Brw : ℕ → Set` 这个类型族. 核心思想是通过类似类型论塔斯基宇宙的形式来定义自然数索引的布劳威尔树族。对于给定的层数 $n$, 我们首先假设所有更低层的树 $\mathsf{Brw}_{<i}$（其中 $i < n$）都已经定义好, 然后定义第 $n$ 层的树 $\mathsf{Brw}_n$。具体地, $\mathsf{Brw}_n$ 的每个元素都可以通过构造子 $\mathsf{cf}$ 来构造, 该构造子接受一个证明 $p : i < n$ 和一个函数 $f : \mathsf{Brw}_{<i} \to \mathsf{Brw}_n$, 表示该元素的共尾度为 $\mathsf{Brw}_{<i}$。函数 `Brw<` 处理了层次之间的依赖关系, 而 `Brw` 则是对外的接口, 将第 $n$ 层的树定义为 $\mathsf{Brw}_{<n, 0_n}$。
 
 **定义 (自然数层布劳威尔树)**  
+
 $$
 \begin{align}
 \mathsf{Brw}_+(n, \mathsf{Brw}_{<}) &:= \cfrac{\;(p:i<n)\;\;\;(f:\mathsf{Brw}_{<}(i,p)\to\mathsf{Brw}_+)\;}{\mathsf{Brw}_+}\;\mathsf{cf}
@@ -232,6 +235,7 @@ module Brw_nat where
 这样我们就定义了任意 $\mathsf{Brw}_n$. 虽然它只需要一个构造子“族”, 非常优雅, 但不方便使用. 从现在起我们改用 $\mathsf{Ord}_n$ 层级, 显式写出最初的三个构造子 `zero`, `suc`, `lim`, 其后才使用族 `limₙ`.
 
 **定义 (显式构造子的布劳威尔树族)**  
+
 $$
 \begin{align}
 \mathsf{Ord}_+(n, \mathsf{Ord}_{<}) &:= 
@@ -283,8 +287,7 @@ $$
   Ord n = Ord< n zero
 ```
 
-**定理** $\mathsf{Ord}_{<}(i,\;p:i<n)$ 与 $\mathsf{Ord}_{<}(i,\;q:i<m)$ 表示相同的树.
-
+**定理** $\mathsf{Ord}_{<}(i,\;p:i<n)$ 与 $\mathsf{Ord}_{<}(i,\;q:i<m)$ 表示相同的树.  
 **证明** 对证明 $p:i<n$ 和 $q:i<m$ 归纳. 由 $\mathsf{Ord}_{<}$ 的定义:
 - 若 $p=(0_i:i<i^+),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) = \mathsf{Ord}_{<}(i,q)$.
 - 若 $p=(p'^+:i<n^+),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
@@ -312,6 +315,7 @@ $$
 继续往上, 把 `Ord : ℕ → Set` 封装进构造子 $\mathsf{lim}_n$, 它允许构造共尾度为任意 $\sup(\mathsf{Ord}_n)$ 的序数, 这样就得到了 $\mathsf{Ord}_\omega$.
 
 **定义 ($\omega$层树)**  
+
 $$
 \mathsf{Ord}_\omega := 
 \cfrac{}{\mathsf{Ord}_\omega}\;\mathsf{zero}
@@ -334,6 +338,7 @@ $$
 再添加共尾度为 $\sup(\mathsf{Ord}_\omega)$ 的序数, 就得到了 $\mathsf{Ord}_{\omega+1}$.
 
 **定义 ($\omega+1$ 层树)**  
+
 $$
 \begin{align}
 \mathsf{Ord}_{\omega+1} &:= 
@@ -361,6 +366,7 @@ $$
 重复上述过程可以得到 $\mathsf{Ord}_{\omega+n}$, $\mathsf{Ord}_{\omega \cdot 2}$ 和 $\mathsf{Ord}_{\omega \cdot 2+1}$.
 
 **定义 ($\omega \cdot 2$ 层树)**  
+
 $$
 \begin{align}
 \mathsf{Ord}_{\omega+}(n, \mathsf{Ord}_{\omega<}) &:= 
@@ -459,7 +465,7 @@ $$
 
 向上嵌入允许我们在 $\text{Ord}_{n^+}$ 中表达 $↑_+:\text{Ord}_{n}\to\text{Ord}_{n^+}$ 的极限, 该极限就是我们所需的最大内 $\Omega$ 数.
 
-**定义 (Ω数)** 遵循 [Buchholz](https://en.wikipedia.org/wiki/Buchholz_psi_functions) 的定义
+**定义 (Ω数)** 遵循 [Buchholz](https://en.wikipedia.org/wiki/Buchholz_psi_functions) 的定义  
 
 $$
 \Omega_n :=
@@ -477,7 +483,8 @@ $$
 
 继续往上, 与 $↑_+$ 类似地
 
-**定义 (层级提升函数)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_\omega$ 的嵌入 $↑_\omega$ 如下:
+**定义 (层级提升函数)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_\omega$ 的嵌入 $↑_\omega$ 如下:  
+
 $$
 ↑_\omega a :=
 \begin{cases}
@@ -498,7 +505,8 @@ $$
 
 由此, 对每个 $n$, 我们可以表达 $↑_ω : \text{Ord}_n\to\text{Ord}_\omega$ 的 $\mathsf{lim}_n$ 极限, 它们都是 $\text{Ord}_\omega$ 的内 $\Omega$ 数, 但都不是最大的那个. 在 $\text{Ord}_\omega$ 里可以取它们的 $\mathsf{lim}$ 极限, 得到的就是 $\text{Ord}_\omega$ 的最大内 $\Omega$ 数 $\Omega_\omega$.
 
-**定义 ($\Omega_\omega$)** $\text{Ord}_\omega$ 的最大内 $\Omega$ 数定义为:
+**定义 ($\Omega_\omega$)** $\text{Ord}_\omega$ 的最大内 $\Omega$ 数定义为:  
+
 $$
 \Omega_\omega := \mathsf{lim}(n \mapsto \mathsf{lim}_n(↑_\omega))
 $$
@@ -563,7 +571,7 @@ pattern injᶜ x = inj₂ (inj₂ x)
 - (1) 零小于后继
 - (2) 后继运算保持小于关系
 
-**证明** 
+**证明**
 
 (1) 要证 $0 < n^+$, 对 $n$ 归纳.
  - 若 $n = 0$, 则 $0 < 0^+ = 1$, 由 $<$ 的定义 $\mathsf{zero}$ 直接得出.
@@ -618,6 +626,7 @@ $$
 $$
 
 其中
+
 - $m_f$ 是 $f$ 的单调性证明, 通常省略不写.
 - $f$ 的单调性是指: 对任意 $n,m:\mathbb{N}$, 如果 $n<m$, 那么 $f(n)<f(m)$. ∎
 
@@ -725,8 +734,7 @@ $$
     +-mono (lim n p)  = lim n (+-mono p)
 ```
 
-**引理** 如果 $a\neq 0$, 那么 $a>0$.
-
+**引理** 如果 $a\neq 0$, 那么 $a>0$.  
 **证明** 对 $a$ 归纳
 - 若 $a = 0^+$, 则 $0_0:0<0^+$.
 - 若 $a = a'^{++}$, 显然 $a'^+\neq 0$, 有归纳假设 $ih : 0 < a'^+$, 所以 $ih^+ : 0 < a'^{++}$.
@@ -758,7 +766,8 @@ $$
   a<a+b = +-mono (z<nz it)
 ```
 
-**定义 (累积和)** 定义高阶函数 $f\mapsto f^+$ 如下:
+**定义 (累积和)** 定义高阶函数 $f\mapsto f^+$ 如下:  
+
 $$
 f^{+}(n) := 
 \begin{cases}
@@ -792,6 +801,7 @@ $$
 现在我们将自然数层推广到可数序数层. 对任意可数序数 $\ell : \mathsf{Ord}^\mathsf{D}$, 我们定义布劳威尔树类型 $\mathsf{Ord}_\ell$.
 
 **定义 (可数序数层布劳威尔树)**  
+
 $$
 \begin{align}
 \mathsf{Ord}_+(\ell, \mathsf{Ord}_{<}) &:= 
@@ -847,8 +857,7 @@ module Ord_ord where
 
 最终所有证明都会被"剥掉"到基础情况, 因此 $\mathsf{Ord}_{<}(i, p)$ 实际上只依赖于 $i$, 而与具体的证明 $p$ 无关.
 
-**定理** $\mathsf{Ord}_{<}(i,\;p:i<\ell_1)$ 与 $\mathsf{Ord}_{<}(i,\;q:i<\ell_2)$ 表示相同的树.
-
+**定理** $\mathsf{Ord}_{<}(i,\;p:i<\ell_1)$ 与 $\mathsf{Ord}_{<}(i,\;q:i<\ell_2)$ 表示相同的树.  
 **证明** 对证明 $p:i<\ell_1$ 和 $q:i<\ell_2$ 归纳. 由 $\mathsf{Ord}_{<}$ 的定义:
 - 若 $p=(0_i:i<i^+),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) = \mathsf{Ord}_{<}(i,q)$.
 - 若 $p=(p'^+:i<\ell_1^+),\;q=(0_i:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
@@ -875,7 +884,8 @@ module Ord_ord where
   coe₀ = coe {p = zero}
 ```
 
-**定义 (层级提升函数)** 给定证明 $p:\ell_1<\ell_2$, 递归定义 $\mathsf{Ord}_{\ell_1}$ 到 $\mathsf{Ord}_{\ell_2}$ 的嵌入 $\uparrow_p$ 如下:
+**定义 (层级提升函数)** 给定证明 $p:\ell_1<\ell_2$, 递归定义 $\mathsf{Ord}_{\ell_1}$ 到 $\mathsf{Ord}_{\ell_2}$ 的嵌入 $\uparrow_p$ 如下:  
+
 $$
 \uparrow_p a :=
 \begin{cases}
@@ -896,7 +906,8 @@ $$
   ↑ p (limᵢ q f)  = limᵢ (<-trans q p) (↑ p ∘ f ∘ coe)
 ```
 
-**定义 ($\Omega$ 数)** 遵循 [Buchholz](https://en.wikipedia.org/wiki/Buchholz_psi_functions) 的定义, 对任意层级 $\ell:\mathsf{Ord}^\mathsf{D}$, 递归定义 $\Omega:\mathsf{Ord}^\mathsf{D}\to\mathsf{Ord}_\ell$ 如下:
+**定义 ($\Omega$ 数)** 遵循 [Buchholz](https://en.wikipedia.org/wiki/Buchholz_psi_functions) 的定义, 对任意层级 $\ell:\mathsf{Ord}^\mathsf{D}$, 递归定义 $\Omega:\mathsf{Ord}^\mathsf{D}\to\mathsf{Ord}_\ell$ 如下:  
+
 $$
 \Omega_\ell :=
 \begin{cases}
@@ -917,7 +928,8 @@ $$
 
 ## 布劳威尔树的折叠
 
-**定义 (序数加法)** 对任意 $a,b:\mathsf{Ord}_\ell$, 递归定义加法运算 $+:\mathsf{Ord}_\ell\to\mathsf{Ord}_\ell\to\mathsf{Ord}_\ell$ 如下:
+**定义 (序数加法)** 对任意 $a,b:\mathsf{Ord}_\ell$, 递归定义加法运算 $+:\mathsf{Ord}_\ell\to\mathsf{Ord}_\ell\to\mathsf{Ord}_\ell$ 如下:  
+
 $$
 a + b :=
 \begin{cases}
@@ -936,7 +948,8 @@ $$
   a + limᵢ p f = limᵢ p (λ x → a + f x)
 ```
 
-**定义 (迭代和最小不动点)** 定义迭代函数 $(f,a,n)\mapsto f^n(a)$ 和最小不动点构造 $g \mapsto \mathsf{lfp}(g)$ 如下:
+**定义 (迭代和最小不动点)** 定义迭代函数 $(f,a,n)\mapsto f^n(a)$ 和最小不动点构造 $g \mapsto \mathsf{lfp}(g)$ 如下:  
+
 $$
 \begin{align}
 f^n(a) &:=
@@ -957,7 +970,8 @@ $$
   lfp f = lim (iter f zero)
 ```
 
-**定义 (Buchholz's $\psi_i$)** 给定证明 $p:i<\ell$, 递归定义序数折叠函数 $\psi_{p}:\mathsf{Ord}_\ell\to\mathsf{Ord}_i$ 如下:
+**定义 (Buchholz's $\psi_i$)** 给定证明 $p:i<\ell$, 递归定义序数折叠函数 $\psi_{p}:\mathsf{Ord}_\ell\to\mathsf{Ord}_i$ 如下:  
+
 $$
 \psi_{p}(a) :=
 \begin{cases}
@@ -986,7 +1000,8 @@ $$
   ... | injᶜ refl = lfp (ψ< p ∘ f ∘ coe₀)
 ```
 
-**定义 (Buchholz's $\psi_0$)** 递归定义 $\psi_0:\mathsf{Ord}_\ell\to\mathsf{Ord}_0$ 如下:
+**定义 (Buchholz's $\psi_0$)** 递归定义 $\psi_0:\mathsf{Ord}_\ell\to\mathsf{Ord}_0$ 如下:  
+
 $$
 \psi_0(a) :=
 \begin{cases}
@@ -1005,7 +1020,8 @@ $$
   ψ₀ {ℓ = lim f _} a = lim (λ n → ψ₀ (ψ< (f<l n) a))
 ```
 
-**定义 (单调化嵌入)** 递归定义 $\mathsf{Ord}_0$ 到 $\mathsf{Ord}^\mathsf{D}$ 的嵌入 $\mathsf{ord}^\mathsf{D}:\mathsf{Ord}_0\to\mathsf{Ord}^\mathsf{D}$ 如下:
+**定义 (单调化嵌入)** 递归定义 $\mathsf{Ord}_0$ 到 $\mathsf{Ord}^\mathsf{D}$ 的嵌入 $\mathsf{ord}^\mathsf{D}:\mathsf{Ord}_0\to\mathsf{Ord}^\mathsf{D}$ 如下:  
+
 $$
 \mathsf{ord}^\mathsf{D}(a) :=
 \begin{cases}
@@ -1024,7 +1040,8 @@ $$
   ordᴰ (lim f)  = lim (cumsum (ordᴰ ∘ f)) (cumsum-mono (ordᴰ ∘ f))
 ```
 
-**定义 (迭代 $\psi_0$)** 定义 $\psi^n:\mathbb{N}\to\mathsf{Ord}_0$ 为 $\psi_0 \circ \Omega \circ \mathsf{ord}^\mathsf{D}$ 的 $n$ 次迭代:
+**定义 (迭代 $\psi_0$)** 定义 $\psi^n:\mathbb{N}\to\mathsf{Ord}_0$ 为 $\psi_0 \circ \Omega \circ \mathsf{ord}^\mathsf{D}$ 的 $n$ 次迭代:  
+
 $$
 \psi^n(0) := (\psi_0 \circ \Omega \circ \mathsf{ord}^\mathsf{D})^n(0)
 $$
@@ -1035,7 +1052,8 @@ $$
   ψⁿ = iter (ψ₀ ∘ Ω ∘ ordᴰ) zero
 ```
 
-**例 (关键序数)**
+**例 (关键序数)**  
+
 $$
 \begin{align}
 \psi^1(0) &= \omega \\
@@ -1052,7 +1070,8 @@ $$
   ex4 = ψⁿ 4    -- ψ(Ω_ψ(Ω_BO))
 ```
 
-**定义 (布劳威尔树壁垒序数)** 
+**定义 (布劳威尔树壁垒序数)**  
+
 $$
 \mathsf{BTBO} := \mathsf{lim}(n\mapsto\psi^n(0)) = \psi(\Omega_\Omega)
 $$
@@ -1067,7 +1086,9 @@ $$
 
 最后, 遵循传统, 我们写出大数.
 
-**定义 (快速增长层级)** 递归定义 $\mathsf{f}:\mathsf{Ord}_0\to\mathbb{N}\to\mathbb{N}$ 如下:
+**定义 (快速增长层级)** 递归定义  
+
+$\mathsf{f}:\mathsf{Ord}_0\to\mathbb{N}\to\mathbb{N}$ 如下:
 $$
 \mathsf{f}^\alpha(n) :=
 \begin{cases}
@@ -1084,7 +1105,8 @@ $$
   FGH (lim a) n = FGH (a n) n
 ```
 
-**定义 (BTBO大数)** 应用快速增长层级于 BTBO:
+**定义 (BTBO大数)** 应用快速增长层级于 BTBO:  
+
 $$
 \mathsf{f}^\mathsf{BTBO}(99)
 $$
