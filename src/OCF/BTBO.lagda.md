@@ -15,7 +15,7 @@
 3. 保证停机
    - 通过证明助理的自动停机检查器保证停机
 
-本文可能是《形式化大数》系列的最后一篇, 因为遵循该纲领, 我们目前卡在了 $\psi(\Omega_\Omega)$. 为了引起关注, 我们将其命名为布劳威尔树壁垒序数 (Brouser Tree Barrier Ordinal), 简称 BTBO. 本文将介绍该序数的实现.
+本文可能是《形式化大数》系列的最后一篇, 因为遵循该纲领, 我们目前卡在了 $\psi(\Omega_\Omega)$. 为了引起关注, 我们将其命名为布劳威尔树壁垒序数 (Brouwer Tree Barrier Ordinal), 简称 BTBO. 本文将介绍该序数的实现.
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
@@ -144,7 +144,7 @@ $$
 我们需要等号 `_≡_` 及其性质.
 
 ```agda
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
 
 transport : {A B : Set} → A ≡ B → A → B
 transport refl x = x
@@ -184,7 +184,22 @@ data Brwₖ₊₁ : Set where
 - `cf₄` 构造了共尾度为 $\Omega_2$ 的序数, 可表示更高阶的不可数极限序数.
 - ...
 
-归纳这个模式, 稍微使用一些类型宇宙的技巧我们可以定义 `Brw : ℕ → Set` 这个类型族.
+归纳这个模式, 我们可以定义 `Brw : ℕ → Set` 这个类型族. 核心思想是通过类似类型论塔斯基宇宙的形式来定义索引为自然数的布劳威尔树族。对于给定的层数 $n$, 我们首先假设所有更低层的树 $\mathsf{Brw}_{<i}$（其中 $i < n$）都已经定义好, 然后定义第 $n$ 层的树 $\mathsf{Brw}_n$。具体地, $\mathsf{Brw}_n$ 的每个元素都可以通过构造子 $\mathsf{cf}$ 来构造, 该构造子接受一个证明 $p : i < n$ 和一个函数 $f : \mathsf{Brw}_{<i} \to \mathsf{Brw}_n$, 表示该元素的共尾度为 $\mathsf{Brw}_{<i}$。函数 `Brw<` 处理了层次之间的依赖关系, 而 `Brw` 则是对外的接口, 将第 $n$ 层的树定义为 $\mathsf{Brw}_{<n, 0:n<n^+}$。
+
+**定义 (自然数索引的布劳威尔树族)**  
+$$
+\begin{align}
+\mathsf{Brw}_+(n, \mathsf{Brw}_{<}) &:= \cfrac{\;(p:i<n)\;\;\;(f:\mathsf{Brw}_{<}(i,p)\to\mathsf{Brw}_+)\;}{\mathsf{Brw}_+}\;\mathsf{cf}
+\\[1.5em]
+\mathsf{Brw}_{<}(i, p) &:= 
+\begin{cases}
+   \mathsf{Brw}_+(i, \mathsf{Brw}_{<}) &\text{if } p = 0:i<i^+ \\
+   \mathsf{Brw}_{<}(i, q) &\text{if } p = q^+:i<m^+
+\end{cases}
+\\[1.5em]
+\mathsf{Brw}_n &:= \mathsf{Brw}_{<}(n,\;0:n<n^+)
+\end{align}
+$$
 
 ```agda
 module Brw_nat where
@@ -209,6 +224,20 @@ module Brw_nat where
 
 这样我们就定义了任意 $\mathsf{Brw}_n$. 虽然它只需要一个构造子“族”, 非常优雅, 但不方便使用. 从现在起我们改用 $\mathsf{Ord}_n$ 层级, 显式写出最初的三个构造子 `zero`, `suc`, `lim`, 其后才使用族 `limₙ`.
 
+**定义 (显式构造子的布劳威尔树族)**  
+$$
+\begin{align}
+\mathsf{Ord}_+(n, \mathsf{Ord}_{<}) &:= 
+\cfrac{}{\mathsf{Ord}_+}\;\mathsf{zero}
+\;\;\;\;
+\cfrac{\;\mathsf{Ord}_+\;}{\mathsf{Ord}_+}\;\mathsf{suc}
+\;\;\;\;
+\cfrac{\;\mathbb{N}\to\mathsf{Ord}_+\;}{\mathsf{Ord}_+}\;\mathsf{lim}
+\\[2em]
+&\;\;\;\;\cfrac{\;(p:i<n)\;\;\;(\mathsf{Ord}_{<}(i,p)\to\mathsf{Ord}_+)\;}{\mathsf{Ord}_+}\;\mathsf{lim}_i
+\end{align}
+$$
+
 ```agda
 module Ord_nat where
   open Nat_lt public
@@ -222,7 +251,17 @@ module Ord_nat where
       limₙ : (p : i < n) (f : Ord< i p → Ord₊) → Ord₊
 ```
 
-剩下的定义跟 $\mathsf{Brw}_n$ 是一样的. 给定 $n$, 我们递归定义满足 $p:i<n$ 的任意 $i$ 所给出的树 $\mathsf{Ord}_{<i,\;p\,:\,i<n}$. 并定义
+剩下的定义跟 $\mathsf{Brw}_n$ 是一样的. 给定 $n$, 我们递归定义满足 $p:i<n$ 的任意 $i$ 所给出的树
+
+$$
+\mathsf{Ord}_{<}(i, p) := 
+\begin{cases}
+   \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) &\text{if } p = 0:i<i^+ \\
+   \mathsf{Ord}_{<}(i, q) &\text{if } p = q^+:i<m^+
+\end{cases}
+$$
+
+并定义
 
 $$
 \mathsf{Ord}_n := \mathsf{Ord}_{<n,\;0\,:\,n<n^+}
@@ -239,11 +278,16 @@ $$
 
 **定理** $\mathsf{Ord}_{<i,\;p\,:\,i<n}$ 与 $\mathsf{Ord}_{<i,\;q\,:\,i<m}$ 表示相同的树.
 
+**证明** 对证明 $p:i<n$ 和 $q:i<m$ 归纳. 由 $\mathsf{Ord}_{<}$ 的定义:
+- 若 $p=(0:i<i^+),\;q=(0:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) = \mathsf{Ord}_{<}(i,q)$.
+- 若 $p=(p'^+:i<n^+),\;q=(0:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
+- 若 $p:i<n,\;q=q'^+:i<m^+$, 则 $\mathsf{Ord}_{<}(i,q) = \mathsf{Ord}_{<}(i,q')$, 由归纳假设直接得 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,q')$. ∎
+
 ```agda
   Ord<-≡ : (p : i < n) (q : i < m) → Ord< i p ≡ Ord< i q
   Ord<-≡ zero zero      = refl
   Ord<-≡ (suc p) zero   = Ord<-≡ p zero
-  Ord<-≡ p (suc q)      = trans (Ord<-≡ p q) refl
+  Ord<-≡ p (suc q)      = Ord<-≡ p q
 ```
 
 也就是说 $\mathsf{Ord}_{<i,\;p\,:\,i<n}$ 与 $p$ 和 $n$ 无关, 我们改记作 $\mathsf{Ord}_{<i<\_}$.
@@ -256,9 +300,21 @@ $$
   coe₀ = coe {p = zero}
 ```
 
-## $\omega2$ 层布劳威尔树
+## $\omega \cdot 2$ 层布劳威尔树
 
 继续往上, 把 `Ord : ℕ → Set` 封装进构造子 $\mathsf{lim}_n$, 它允许构造共尾度为任意 $\sup(\mathsf{Ord}_n)$ 的序数, 这样就得到了 $\mathsf{Ord}_\omega$.
+
+**定义 ($\omega$层树)**  
+$$
+\mathsf{Ord}_\omega := 
+\cfrac{}{\mathsf{Ord}_\omega}\;\mathsf{zero}
+\;\;\;\;
+\cfrac{\;\mathsf{Ord}_\omega\;}{\mathsf{Ord}_\omega}\;\mathsf{suc}
+\;\;\;\;
+\cfrac{\;\mathbb{N}\to\mathsf{Ord}_\omega\;}{\mathsf{Ord}_\omega}\;\mathsf{lim}
+\;\;\;\;
+\cfrac{\;(n:\mathbb{N})\;\;\;(\mathsf{Ord}_n\to\mathsf{Ord}_\omega)\;}{\mathsf{Ord}_\omega}\;\mathsf{lim}_n
+$$
 
 ```agda
   data Ordω : Set where
@@ -270,6 +326,22 @@ $$
 
 再添加共尾度为 $\sup(\mathsf{Ord}_\omega)$ 的序数, 就得到了 $\mathsf{Ord}_{\omega+1}$.
 
+**定义 ($\omega+1$ 层树)**  
+$$
+\begin{align}
+\mathsf{Ord}_{\omega+1} &:= 
+\cfrac{}{\mathsf{Ord}_{\omega+1}}\;\mathsf{zero}
+\;\;\;\;
+\cfrac{\;\mathsf{Ord}_{\omega+1}\;}{\mathsf{Ord}_{\omega+1}}\;\mathsf{suc}
+\;\;\;\;
+\cfrac{\;\mathbb{N}\to\mathsf{Ord}_{\omega+1}\;}{\mathsf{Ord}_{\omega+1}}\;\mathsf{lim}
+\\[1em]
+&\;\;\;\;\cfrac{\;(n:\mathbb{N})\;\;\;(\mathsf{Ord}_n\to\mathsf{Ord}_{\omega+1})\;}{\mathsf{Ord}_{\omega+1}}\;\mathsf{lim}_n
+\;\;\;\;
+\cfrac{\;\mathsf{Ord}_\omega\to\mathsf{Ord}_{\omega+1}\;}{\mathsf{Ord}_{\omega+1}}\;\mathsf{lim}_\omega
+\end{align}
+$$
+
 ```agda
   data Ordω+1 : Set where
     zero : Ordω+1
@@ -279,7 +351,55 @@ $$
     limω : (f : Ordω → Ordω+1) → Ordω+1
 ```
 
-重复上述过程可以得到 $\mathsf{Ord}_{\omega+n}$, $\mathsf{Ord}_{\omega2}$ 和 $\mathsf{Ord}_{\omega2+1}$.
+重复上述过程可以得到 $\mathsf{Ord}_{\omega+n}$, $\mathsf{Ord}_{\omega \cdot 2}$ 和 $\mathsf{Ord}_{\omega \cdot 2+1}$.
+
+**定义 ($\omega \cdot 2$ 层树)**  
+$$
+\begin{align}
+\mathsf{Ord}_{\omega+}(n, \mathsf{Ord}_{\omega<}) &:= 
+\cfrac{}{\mathsf{Ord}_{\omega+}}\;\mathsf{zero}
+\;\;\;\;
+\cfrac{\;\mathsf{Ord}_{\omega+}\;}{\mathsf{Ord}_{\omega+}}\;\mathsf{suc}
+\;\;\;\;
+\cfrac{\;\mathbb{N}\to\mathsf{Ord}_{\omega+}\;}{\mathsf{Ord}_{\omega+}}\;\mathsf{lim}
+\\[1em]
+&\;\;\;\;\cfrac{\;(n:\mathbb{N})\;\;\;(\mathsf{Ord}_n\to\mathsf{Ord}_{\omega+})\;}{\mathsf{Ord}_{\omega+}}\;\mathsf{lim}_n
+\;\;\;\;
+\cfrac{\;(k:\mathbb{N})\;(p:k<n)\;\;\;(\mathsf{Ord}_{\omega<}(k,p)\to\mathsf{Ord}_{\omega+})\;}{\mathsf{Ord}_{\omega+}}\;\mathsf{lim}_{\omega+k}
+\\[2em]
+\mathsf{Ord}_{\omega<}(k, p) &:= 
+\begin{cases}
+   \mathsf{Ord}_{\omega+}(k, \mathsf{Ord}_{\omega<}) &\text{if } p = 0:k<k^+ \\
+   \mathsf{Ord}_{\omega<}(k, q) &\text{if } p = q^+:k<m^+
+\end{cases}
+\\[1em]
+\mathsf{Ord}_{\omega+n} &:= \mathsf{Ord}_{\omega<}(n, 0:n<n^+)
+\\[2em]
+\mathsf{Ord}_{\omega \cdot 2} &:= 
+\cfrac{}{\mathsf{Ord}_{\omega \cdot 2}}\;\mathsf{zero}
+\;\;\;\;
+\cfrac{\;\mathsf{Ord}_{\omega \cdot 2}\;}{\mathsf{Ord}_{\omega \cdot 2}}\;\mathsf{suc}
+\;\;\;\;
+\cfrac{\;\mathbb{N}\to\mathsf{Ord}_{\omega \cdot 2}\;}{\mathsf{Ord}_{\omega \cdot 2}}\;\mathsf{lim}
+\\[1em]
+&\;\;\;\;\cfrac{\;(n:\mathbb{N})\;\;\;(\mathsf{Ord}_n\to\mathsf{Ord}_{\omega \cdot 2})\;}{\mathsf{Ord}_{\omega \cdot 2}}\;\mathsf{lim}_n
+\;\;\;\;
+\cfrac{\;(n:\mathbb{N})\;\;\;(\mathsf{Ord}_{\omega+n}\to\mathsf{Ord}_{\omega \cdot 2})\;}{\mathsf{Ord}_{\omega \cdot 2}}\;\mathsf{lim}_{\omega+n}
+\\[2em]
+\mathsf{Ord}_{\omega \cdot 2+1} &:= 
+\cfrac{}{\mathsf{Ord}_{\omega \cdot 2+1}}\;\mathsf{zero}
+\;\;\;\;
+\cfrac{\;\mathsf{Ord}_{\omega \cdot 2+1}\;}{\mathsf{Ord}_{\omega \cdot 2+1}}\;\mathsf{suc}
+\;\;\;\;
+\cfrac{\;\mathbb{N}\to\mathsf{Ord}_{\omega \cdot 2+1}\;}{\mathsf{Ord}_{\omega \cdot 2+1}}\;\mathsf{lim}
+\\[1em]
+&\;\;\;\;\cfrac{\;(n:\mathbb{N})\;\;\;(\mathsf{Ord}_n\to\mathsf{Ord}_{\omega \cdot 2+1})\;}{\mathsf{Ord}_{\omega \cdot 2+1}}\;\mathsf{lim}_n
+\;\;\;\;
+\cfrac{\;(n:\mathbb{N})\;\;\;(\mathsf{Ord}_{\omega+n}\to\mathsf{Ord}_{\omega \cdot 2+1})\;}{\mathsf{Ord}_{\omega \cdot 2+1}}\;\mathsf{lim}_{\omega+n}
+\\[1em]
+&\;\;\;\;\cfrac{\;\mathsf{Ord}_{\omega \cdot 2}\to\mathsf{Ord}_{\omega \cdot 2+1}\;}{\mathsf{Ord}_{\omega \cdot 2+1}}\;\mathsf{lim}_{\omega \cdot 2}
+\end{align}
+$$
 
 ```agda
   module _ (n : ℕ) (Ordω< : ∀ k → k < n → Set) where
@@ -348,7 +468,18 @@ $$
   Ω (suc n) = limₙ zero ↑₊
 ```
 
-继续往上, 任意 $\text{Ord}_n$ 到 $\text{Ord}_\omega$ 的嵌入 $↑_ω$ 的定义与 $↑_+$ 类似.
+继续往上, 与 $↑_+$ 类似地
+
+**定义 (向上嵌入到 $\omega$ 层)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_\omega$ 的嵌入 $↑_\omega$ 如下:
+$$
+↑_\omega a :=
+\begin{cases}
+   \mathsf{zero} &\text{if } a = \mathsf{zero} \\
+   \mathsf{suc}(↑_\omega a') &\text{if } a = \mathsf{suc}(a') \\
+   \mathsf{lim}(↑_\omega \circ f) &\text{if } a = \mathsf{lim}(f) \\
+   \mathsf{lim}_i(↑_\omega \circ f) &\text{if } a = \mathsf{lim}_i(p:i<n, f)
+\end{cases}
+$$
 
 ```agda
   ↑ω : Ord n → Ordω
@@ -360,12 +491,17 @@ $$
 
 由此, 对每个 $n$, 我们可以表达 $↑_ω : \text{Ord}_n\to\text{Ord}_\omega$ 的 $\mathsf{lim}_n$ 极限, 它们都是 $\text{Ord}_\omega$ 的内 $\Omega$ 数, 但都不是最大的那个. 在 $\text{Ord}_\omega$ 里可以取它们的 $\mathsf{lim}$ 极限, 得到的就是 $\text{Ord}_\omega$ 的最大内 $\Omega$ 数 $\Omega_\omega$.
 
+**定义 ($\Omega_\omega$)** $\text{Ord}_\omega$ 的最大内 $\Omega$ 数定义为:
+$$
+\Omega_\omega := \mathsf{lim}(n \mapsto \mathsf{lim}_n(↑_\omega))
+$$
+
 ```agda
   Ωω : Ordω
   Ωω = lim (λ n → limₙ n ↑ω)
 ```
 
-类似地可以定义 $\Omega_{\omega+n}$ 和 $\Omega_{\omega2}$. 因为这些都会在后面由更一般化的定义给出, 这里的代码就省略不写了.
+类似地可以定义 $\Omega_{\omega+n}$ 和 $\Omega_{\omega \cdot 2}$. 因为这些都会在后面由更一般化的定义给出, 这里就省略不写了.
 
 目前的成果可以总结如下:
 
@@ -381,8 +517,8 @@ $$
 |$\mathsf{Ord}_{\omega}$|$\Omega_{\omega+1}$|$\Omega_\omega$|$\omega$|
 |$\mathsf{Ord}_{\omega+1}$|$\Omega_{\omega+2}$|$\Omega_{\omega+1}$|$\Omega_{\omega+1}$|
 |$\mathsf{Ord}_{\omega+n}$|$\Omega_{\omega+n+1}$|$\Omega_{\omega+n}$|$\Omega_{\omega+n}$|
-|$\mathsf{Ord}_{\omega2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2}$|$\omega$|
-|$\mathsf{Ord}_{\omega2+1}$|$\Omega_{\omega2+2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2+1}$|
+|$\mathsf{Ord}_{\omega \cdot 2}$|$\Omega_{\omega \cdot 2+1}$|$\Omega_{\omega \cdot 2}$|$\omega$|
+|$\mathsf{Ord}_{\omega \cdot 2+1}$|$\Omega_{\omega \cdot 2+2}$|$\Omega_{\omega \cdot 2+1}$|$\Omega_{\omega \cdot 2+1}$|
 
 ## 可数序数的有界三歧性
 
@@ -398,7 +534,20 @@ pattern injᵇ x = inj₂ (inj₁ x)
 pattern injᶜ x = inj₂ (inj₂ x)
 ```
 
-**引理** 在自然数上, 零小于后继, 且后继运算保持小于关系.
+**引理** 在自然数上
+
+- (1) 零小于后继
+- (2) 后继运算保持小于关系
+
+**证明** 
+
+(1) 要证 $0 < n^+$, 对 $n$ 归纳.
+ - 若 $n = 0$, 则 $0 < 0^+ = 1$, 由 $<$ 的定义 $\mathsf{zero}$ 直接得出.
+ - 若 $n = m^+$, 则要证 $0 < (m^+)^+ = m^{++}$. 由归纳假设 $0 < m^+$, 应用 $<$ 的构造子 $\mathsf{suc}$ 得 $0 < m^{++}$.
+
+(2) 要证 $n < m \to n^+ < m^+$, 对 $n < m$ 的证明 $p$ 归纳.
+   - 若 $p = (0 : n < n^+)$, 则要证 $n^+ < (n^+)^+ = n^{++}$, 由 $<$ 的定义 $\mathsf{zero}$ 直接得出.
+   - 若 $p = (p'^+ : n < m^+)$, 其中 $p' : n < m$, 则要证 $n^+ < (m^+)^+ = m^{++}$. 由归纳假设得 $n^+ < m^+$, 应用构造子 $\mathsf{suc}$ 得 $n^+ < m^{++}$. ∎
 
 ```agda
 module Nat where
@@ -520,6 +669,18 @@ module Ordᴰ where
   ... | injᶜ refl = <-dec p q
 ```
 
+达成 $\psi(\Omega_\Omega)$ 的关键是让 $\psi$ 输出的大可数序数成为 $\Omega$ 的下标, 从而迭代 $\psi(\Omega_x)$ 得到 $\psi(\Omega_\Omega)$. 问题在于, $\Omega$ 的下标的类型必须是我们现在构筑的 $\mathsf{Ord}^D$, 而 $\psi$ 的输出并不是, 因为通常的 OCF 的定义并不保证输出的序数所用的基本列是“遗传地”单调的. 本小节接下来的构筑将提供此问题的一个简易的解决方案.
+
+**定义** 互递归地定义 $\mathsf{Ord}^D$ 上的加法并证明右侧加法 ($x \mapsto a + x$) 保持 $<$ 关系.
+
+$$
+a + b := \begin{cases}
+   a &\text{if } b=0 \\
+   (a+b')^+ &\text{if } b=b'^+ \\
+   \mathsf{lim}(n\mapsto a+f(n)) &\text{if } b=\mathsf{lim}(f)
+\end{cases}
+$$
+
 ```agda
   mutual
     _+_ : Ordᴰ → Ordᴰ → Ordᴰ
@@ -533,11 +694,15 @@ module Ordᴰ where
     +-mono (lim n p)  = lim n (+-mono p)
 ```
 
+**引理** 如果 $a\neq 0$, 那么 $a>0$.
+
 ```agda
   NonZero : Ordᴰ → Set
   NonZero zero = ⊥
   NonZero _    = ⊤
+```
 
+```agda
   sth<nz : a < b → NonZero b
   sth<nz zero       = _
   sth<nz (suc _)    = _
@@ -595,8 +760,8 @@ module Ord_ord where
   Ord<-≡ zero zero      = refl
   Ord<-≡ (suc p) zero   = Ord<-≡ p zero
   Ord<-≡ (lim n p) zero = Ord<-≡ p zero
-  Ord<-≡ p (suc q)      = trans (Ord<-≡ p q) refl
-  Ord<-≡ p (lim n q)    = trans (Ord<-≡ p q) refl
+  Ord<-≡ p (suc q)      = Ord<-≡ p q
+  Ord<-≡ p (lim n q)    = Ord<-≡ p q
 ```
 
 ```agda
