@@ -164,6 +164,13 @@ module Nat_lt where
     suc  : n < m → n < suc m
 ```
 
+**约定** 为了简化表述, 我们采用以下记法约定:
+- 项 $\mathsf{zero}$ 可简记为 $0$
+- 项 $\mathsf{suc}(x)$ 可简记为 $x^+$
+- 当它们为布劳威尔树项之间关系的证明时, 同样采用此约定
+
+因此我们可以写 $0:x<x^+$, 以及 $p^+:x<y^+$ (此时有 $p:x<y$).
+
 由开篇的代码, 通过简单的复制粘贴我们可以写出任意 $\mathsf{Brw}_n$. 伪代码如下
 
 ```pseudocode
@@ -184,9 +191,9 @@ data Brwₖ₊₁ : Set where
 - `cf₄` 构造了共尾度为 $\Omega_2$ 的序数, 可表示更高阶的不可数极限序数.
 - ...
 
-归纳这个模式, 我们可以定义 `Brw : ℕ → Set` 这个类型族. 核心思想是通过类似类型论塔斯基宇宙的形式来定义索引为自然数的布劳威尔树族。对于给定的层数 $n$, 我们首先假设所有更低层的树 $\mathsf{Brw}_{<i}$（其中 $i < n$）都已经定义好, 然后定义第 $n$ 层的树 $\mathsf{Brw}_n$。具体地, $\mathsf{Brw}_n$ 的每个元素都可以通过构造子 $\mathsf{cf}$ 来构造, 该构造子接受一个证明 $p : i < n$ 和一个函数 $f : \mathsf{Brw}_{<i} \to \mathsf{Brw}_n$, 表示该元素的共尾度为 $\mathsf{Brw}_{<i}$。函数 `Brw<` 处理了层次之间的依赖关系, 而 `Brw` 则是对外的接口, 将第 $n$ 层的树定义为 $\mathsf{Brw}_{<n, 0:n<n^+}$。
+归纳这个模式, 我们可以定义 `Brw : ℕ → Set` 这个类型族. 核心思想是通过类似类型论塔斯基宇宙的形式来定义自然数索引的布劳威尔树族。对于给定的层数 $n$, 我们首先假设所有更低层的树 $\mathsf{Brw}_{<i}$（其中 $i < n$）都已经定义好, 然后定义第 $n$ 层的树 $\mathsf{Brw}_n$。具体地, $\mathsf{Brw}_n$ 的每个元素都可以通过构造子 $\mathsf{cf}$ 来构造, 该构造子接受一个证明 $p : i < n$ 和一个函数 $f : \mathsf{Brw}_{<i} \to \mathsf{Brw}_n$, 表示该元素的共尾度为 $\mathsf{Brw}_{<i}$。函数 `Brw<` 处理了层次之间的依赖关系, 而 `Brw` 则是对外的接口, 将第 $n$ 层的树定义为 $\mathsf{Brw}_{<n, 0:n<n^+}$。
 
-**定义 (自然数索引的布劳威尔树族)**  
+**定义 (自然数层布劳威尔树)**  
 $$
 \begin{align}
 \mathsf{Brw}_+(n, \mathsf{Brw}_{<}) &:= \cfrac{\;(p:i<n)\;\;\;(f:\mathsf{Brw}_{<}(i,p)\to\mathsf{Brw}_+)\;}{\mathsf{Brw}_+}\;\mathsf{cf}
@@ -248,7 +255,7 @@ module Ord_nat where
       zero : Ord₊
       suc  : Ord₊ → Ord₊
       lim  : (f : ℕ → Ord₊) → Ord₊
-      limₙ : (p : i < n) (f : Ord< i p → Ord₊) → Ord₊
+      limᵢ : (p : i < n) (f : Ord< i p → Ord₊) → Ord₊
 ```
 
 剩下的定义跟 $\mathsf{Brw}_n$ 是一样的. 给定 $n$, 我们递归定义满足 $p:i<n$ 的任意 $i$ 所给出的树
@@ -264,7 +271,7 @@ $$
 并定义
 
 $$
-\mathsf{Ord}_n := \mathsf{Ord}_{<n,\;0\,:\,n<n^+}
+\mathsf{Ord}_n := \mathsf{Ord}_{<}(n,\;0:n<n^+)
 $$
 
 ```agda
@@ -276,7 +283,7 @@ $$
   Ord n = Ord< n zero
 ```
 
-**定理** $\mathsf{Ord}_{<i,\;p\,:\,i<n}$ 与 $\mathsf{Ord}_{<i,\;q\,:\,i<m}$ 表示相同的树.
+**定理** $\mathsf{Ord}_{<}(i,\;p:i<n)$ 与 $\mathsf{Ord}_{<}(i,\;q:i<m)$ 表示相同的树.
 
 **证明** 对证明 $p:i<n$ 和 $q:i<m$ 归纳. 由 $\mathsf{Ord}_{<}$ 的定义:
 - 若 $p=(0:i<i^+),\;q=(0:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) = \mathsf{Ord}_{<}(i,q)$.
@@ -290,7 +297,7 @@ $$
   Ord<-≡ p (suc q)      = Ord<-≡ p q
 ```
 
-也就是说 $\mathsf{Ord}_{<i,\;p\,:\,i<n}$ 与 $p$ 和 $n$ 无关, 我们改记作 $\mathsf{Ord}_{<i<\_}$.
+也就是说 $\mathsf{Ord}_{<}(i,\;p:i<n)$ 与 $p$ 和 $n$ 无关, 我们改记作 $\mathsf{Ord}_{<i<\_}$.
 
 ```agda
   coe : {p : i < n} {q : i < m} → Ord< i p → Ord< i q
@@ -437,17 +444,17 @@ $$
 
 前面说过, 一个布劳威尔树类型 `Ord n` 本身可以视作一个 $\Omega$ 数, 代表该类型的项所能表示的序数的上确界. 现在我们转而研究该类型的项所能表示的 $\Omega$ 数, 我们称为**内 $\Omega$ 数**. 其中最大的那个, 称为最大内 $\Omega$ 数.
 
-**定义 (向上嵌入)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_{n^+}$ 的嵌入 $↑_+$ 如下:
+**定义 (层级提升函数)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_{n^+}$ 的嵌入 $↑_+$ 如下:
 
 - 如果 $a : \text{Ord}_n$ 由 $\mathsf{zero}$, $\mathsf{suc}$ 或 $\mathsf{lim}$ 构造, 我们直接使用 $\text{Ord}_{n^+}$ 的同名构造子递归构造 $↑_+a$.
-- 如果 $a = \mathsf{lim}_n(p,f)$, 其中 $p:i<n$ 且 $f:\mathsf{Ord}_{<i,\;p}\to\text{Ord}_n$, 则 $↑_+a:=\mathsf{lim}_n(p^+,↑_+\circ f)$, 其中 $p^+:i<n^+$ 且 $↑_+\circ f:\mathsf{Ord}_{<i,\;p}\to\text{Ord}_{n^+}$.
+- 如果 $a = \mathsf{lim}_n(p,f)$, 其中 $p:i<n$ 且 $f:\mathsf{Ord}_{<}(i,\;p)\to\text{Ord}_n$, 则 $↑_+a:=\mathsf{lim}_n(p^+,↑_+\circ f)$, 其中 $p^+:i<n^+$ 且 $↑_+\circ f:\mathsf{Ord}_{<}(i,\;p)\to\text{Ord}_{n^+}$.
 
 ```agda
   ↑₊ : Ord n → Ord (suc n)
   ↑₊ zero = zero
   ↑₊ (suc a) = suc (↑₊ a)
   ↑₊ (lim f) = lim (↑₊ ∘ f)
-  ↑₊ (limₙ p f) = limₙ (suc p) (↑₊ ∘ f)
+  ↑₊ (limᵢ p f) = limᵢ (suc p) (↑₊ ∘ f)
 ```
 
 向上嵌入允许我们在 $\text{Ord}_{n^+}$ 中表达 $↑_+:\text{Ord}_{n}\to\text{Ord}_{n^+}$ 的极限, 该极限就是我们所需的最大内 $\Omega$ 数.
@@ -465,12 +472,12 @@ $$
 ```agda
   Ω : (n : ℕ) → Ord n
   Ω zero    = suc zero
-  Ω (suc n) = limₙ zero ↑₊
+  Ω (suc n) = limᵢ zero ↑₊
 ```
 
 继续往上, 与 $↑_+$ 类似地
 
-**定义 (向上嵌入到 $\omega$ 层)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_\omega$ 的嵌入 $↑_\omega$ 如下:
+**定义 (层级提升函数)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_\omega$ 的嵌入 $↑_\omega$ 如下:
 $$
 ↑_\omega a :=
 \begin{cases}
@@ -486,7 +493,7 @@ $$
   ↑ω zero = zero
   ↑ω (suc a) = suc (↑ω a)
   ↑ω (lim f) = lim (↑ω ∘ f)
-  ↑ω (limₙ p f) = limₙ _ (↑ω ∘ f ∘ coe₀)
+  ↑ω (limᵢ p f) = limₙ _ (↑ω ∘ f ∘ coe₀)
 ```
 
 由此, 对每个 $n$, 我们可以表达 $↑_ω : \text{Ord}_n\to\text{Ord}_\omega$ 的 $\mathsf{lim}_n$ 极限, 它们都是 $\text{Ord}_\omega$ 的内 $\Omega$ 数, 但都不是最大的那个. 在 $\text{Ord}_\omega$ 里可以取它们的 $\mathsf{lim}$ 极限, 得到的就是 $\text{Ord}_\omega$ 的最大内 $\Omega$ 数 $\Omega_\omega$.
@@ -567,11 +574,11 @@ module Nat where
 - 若 $n=0,\;m=0$, 显然 $n=m$.
 - 若 $n=0,\;m=m'^+$, 显然 $n<m$.
 - 若 $n=n'^+,\;m=0$, 显然 $m<n$.
-- 若 $n=n'^+,\;m=m'^+$, 有归纳假设 $ih:n'<m'$ 或 $m'<n'$ 或 $n'=m'$, 讨论它们.
+- 若 $n=n'^+,\;m=m'^+$, 有归纳假设 $n'<m'$ 或 $m'<n'$ 或 $n'=m'$, 讨论它们.
 
-  - 如果 $ih:n'<m'$, 则有 $n<m$.
-  - 如果 $ih:m'<n'$, 则有 $m<n$.
-  - 如果 $ih:n'=m'$, 则有 $n=m$. ∎
+  - 如果 $n'<m'$, 则有 $n<m$.
+  - 如果 $m'<n'$, 则有 $m<n$.
+  - 如果 $n'=m'$, 则有 $n=m$. ∎
 
 ```agda
   <-dec : ∀ n m → n < m ⊎ m < n ⊎ n ≡ m
@@ -681,6 +688,13 @@ a + b := \begin{cases}
 \end{cases}
 $$
 
+其中 $n\mapsto a+f(n)$ 要求满足单调性, 因为有 $f$ 的单调性, 只要证 $x \mapsto a + x$ 保持 $<$ 关系即可.
+
+**证明** 令 $p : b < c$, 对 $p$ 归纳.
+- 若 $p = 0$, 则 $c = b^+$, 要证 $a + b < a + b^+ = (a + b)^+$, 应用 $\mathsf{zero}$ 即可.
+- 若 $p = p'^+$, 则 $c = c'^+$ 且 $p' : b < c'$, 要证 $a + b < a + c^+ = (a + c')^+$. 由归纳假设 $a + b < a + c'$, 应用 $\mathsf{suc}$ 即可.
+- 若 $p = \mathsf{lim}(n, p')$, 则 $c = \mathsf{lim}(f)$ 且 $p' : b < f(n)$, 要证 $a + b < a + \mathsf{lim}(f) = \mathsf{lim}(m \mapsto a + f(m))$. 由归纳假设 $a + b < a + f(n)$, 应用 $\mathsf{lim}$ 即可. ∎
+
 ```agda
   mutual
     _+_ : Ordᴰ → Ordᴰ → Ordᴰ
@@ -696,13 +710,17 @@ $$
 
 **引理** 如果 $a\neq 0$, 那么 $a>0$.
 
+**证明** 对 $a$ 归纳
+- 若 $a = 0^+$, 则 $0 : 0 < 0^+$.
+- 若 $a = a'^{++}$, 显然 $a'^+\neq 0$, 有归纳假设 $ih : 0 < a'^+$, 所以 $ih^+ : 0 < a'^{++}$.
+- 若 $a = (\mathsf{lim}(f))^+$, 显然 $\mathsf{lim}(f)\neq 0$, 有归纳假设 $ih : 0 < \mathsf{lim}(f)$, 所以 $ih^+ : 0 < (\mathsf{lim}(f))^+$.
+- 若 $a = \mathsf{lim}(f)$, 则由 $f$ 的单调性 $m_f$ 有 $m_f(0) : f(0) < f(1)$. 此时 $f(1) \neq 0$, 故由归纳假设 $ih : 0 < f(1)$, 因此 $\mathsf{lim}(1, ih) : 0 < \mathsf{lim}(f)$. ∎
+
 ```agda
   NonZero : Ordᴰ → Set
   NonZero zero = ⊥
   NonZero _    = ⊤
-```
 
-```agda
   sth<nz : a < b → NonZero b
   sth<nz zero       = _
   sth<nz (suc _)    = _
@@ -715,21 +733,69 @@ $$
   z<nz {lim f mono}       _ = lim 1 (z<nz (sth<nz (mono zero)))
 ```
 
+**引理** 如果 $b \neq 0$, 那么 $a < a + b$.  
+**证明** 由引理知若 $b \neq 0$ 则 $0 < b$, 再由加法保持 $<$ 关系即得 $a + 0 < a + b$, 即 $a < a + b$. ∎
+
 ```agda
   a<a+b : ⦃ _ : NonZero b ⦄ → a < a + b
   a<a+b = +-mono (z<nz it)
+```
 
+**定义 (累积和)** 定义高阶函数 $\mathfrak{C}$ 如下:
+$$
+\mathfrak{C}(f)(n) := 
+\begin{cases}
+   f(0) &\text{if } n = 0 \\
+   \mathfrak{C}(f)(m) + (f(n))^+ &\text{if } n = m^+
+\end{cases}
+$$
+
+```agda
   -- cumulative sum
   cumsum : (ℕ → Ordᴰ) → (ℕ → Ordᴰ)
   cumsum f zero     = f zero
   cumsum f (suc n)  = cumsum f n + suc (f (suc n))
+```
 
+**定理** 对任意 $f$, $\mathfrak{C}(f)$ 单调.  
+**证明** 要证 $\mathfrak{C}(f)$ 单调, 即对任意 $n < m$ 有 $\mathfrak{C}(f)(n) < \mathfrak{C}(f)(m)$. 对 $n < m$ 的证明归纳:
+- 若 $n < n^+$, 要证 $\mathfrak{C}(f)(n) < \mathfrak{C}(f)(n^+) = \mathfrak{C}(f)(n) + (f(n^+))^+$, 由引理 `a<a+b` 得证.
+- 若 $n < m^+$ 且 $n < m$, 要证 $\mathfrak{C}(f)(n) < \mathfrak{C}(f)(m^+) = \mathfrak{C}(f)(m) + (f(m^+))^+$. 由归纳假设 $\mathfrak{C}(f)(n) < \mathfrak{C}(f)(m)$, 再由传递性和引理 `a<a+b` 得证. ∎
+
+```agda
   cumsum-mono : (f : ℕ → Ordᴰ) → monotonic (cumsum f)
   cumsum-mono f zero    = a<a+b
   cumsum-mono f (suc p) = <-trans (cumsum-mono f p) a<a+b
 ```
 
+累积和可能会使某些基本列的极限值往上偏移, 但应该不改变我们对这套方法的最终极限的估值 ($\psi(\Omega_\Omega)$).
+
 ## 可数序数层布劳威尔树
+
+现在我们将自然数层推广到可数序数层. 对任意可数序数 $\ell : \mathsf{Ord}^D$, 我们定义布劳威尔树类型 $\mathsf{Ord}_\ell$.
+
+**定义 (可数序数层布劳威尔树)**  
+$$
+\begin{align}
+\mathsf{Ord}_+(\ell, \mathsf{Ord}_{<}) &:= 
+\cfrac{}{\mathsf{Ord}_+}\;\mathsf{zero}
+\;\;\;\;
+\cfrac{\;\mathsf{Ord}_+\;}{\mathsf{Ord}_+}\;\mathsf{suc}
+\;\;\;\;
+\cfrac{\;\mathbb{N}\to\mathsf{Ord}_+\;}{\mathsf{Ord}_+}\;\mathsf{lim}
+\\[1em]
+&\;\;\;\;\cfrac{\;(p:i<\ell)\;\;\;(\mathsf{Ord}_{<}(i,p)\to\mathsf{Ord}_+)\;}{\mathsf{Ord}_+}\;\mathsf{lim}_i
+\\[2em]
+\mathsf{Ord}_{<}(i, p) &:= 
+\begin{cases}
+   \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) &\text{if } p = (0:i<i^+) \\
+   \mathsf{Ord}_{<}(i, q) &\text{if } p = (q^+:i<m^+) \\
+   \mathsf{Ord}_{<}(i, q) &\text{if } p = (\mathsf{lim}(n,q):i<\mathsf{lim}(f))
+\end{cases}
+\\[2em]
+\mathsf{Ord}_\ell &:= \mathsf{Ord}_{<}(\ell, 0:\ell<\ell^+)
+\end{align}
+$$
 
 ```agda
 module Ord_ord where
@@ -741,7 +807,7 @@ module Ord_ord where
       zero  : Ord₊
       suc   : Ord₊ → Ord₊
       lim   : (f : ℕ → Ord₊) → Ord₊
-      limₗ  : (p : i < ℓ) (f : Ord< i p → Ord₊) → Ord₊
+      limᵢ  : (p : i < ℓ) (f : Ord< i p → Ord₊) → Ord₊
 
   Ord< : (i : Ordᴰ) (p : i < ℓ) → Set
   Ord< i zero      = Ord₊ i Ord<
@@ -755,6 +821,24 @@ module Ord_ord where
   Ord₀ = Ord zero
 ```
 
+
+这里 $\mathsf{Ord}_{<}(i, p)$ 的定义体现了**证明无关性 (proof irrelevance)**: 无论 $p$ 是如何证明 $i < \ell$ 的, 只要 $i$ 相同, 得到的类型都是一样的. 具体来说:
+
+- 当 $p$ 是基础证明 $0:i<i^+$ 时, 我们得到 $\mathsf{Ord}_+(i, \mathsf{Ord}_{<})$
+- 当 $p$ 是后继证明 $q^+:i<m^+$ 时, 我们"剥掉"外层的后继, 递归到 $\mathsf{Ord}_{<}(i, q)$
+- 当 $p$ 是极限证明 $\mathsf{lim}(n,q):i<\mathsf{lim}(f)$ 时, 我们同样"剥掉"外层的极限, 递归到 $\mathsf{Ord}_{<}(i, q)$
+
+最终所有证明都会被"剥掉"到基础情况, 因此 $\mathsf{Ord}_{<}(i, p)$ 实际上只依赖于 $i$, 而与具体的证明 $p$ 无关.
+
+**定理** $\mathsf{Ord}_{<}(i,\;p:i<\ell_1)$ 与 $\mathsf{Ord}_{<}(i,\;q:i<\ell_2)$ 表示相同的树.
+
+**证明** 对证明 $p:i<\ell_1$ 和 $q:i<\ell_2$ 归纳. 由 $\mathsf{Ord}_{<}$ 的定义:
+- 若 $p=(0:i<i^+),\;q=(0:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_+(i, \mathsf{Ord}_{<}) = \mathsf{Ord}_{<}(i,q)$.
+- 若 $p=(p'^+:i<\ell_1^+),\;q=(0:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
+- 若 $p=(\mathsf{lim}(n,p'):i<\mathsf{lim}(f)),\;q=(0:i<i^+)$, 则 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,p')$, 由归纳假设 $\mathsf{Ord}_{<}(i,p') = \mathsf{Ord}_{<}(i,q)$.
+- 若 $p:i<\ell_1,\;q=q'^+:i<\ell_2^+$, 则 $\mathsf{Ord}_{<}(i,q) = \mathsf{Ord}_{<}(i,q')$, 由归纳假设直接得 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,q')$.
+- 若 $p:i<\ell_1,\;q=\mathsf{lim}(n,q'):i<\mathsf{lim}(g)$, 则 $\mathsf{Ord}_{<}(i,q) = \mathsf{Ord}_{<}(i,q')$, 由归纳假设直接得 $\mathsf{Ord}_{<}(i,p) = \mathsf{Ord}_{<}(i,q')$. ∎
+
 ```agda
   Ord<-≡ : (p : i < ℓ₁) (q : i < ℓ₂) → Ord< i p ≡ Ord< i q
   Ord<-≡ zero zero      = refl
@@ -764,6 +848,8 @@ module Ord_ord where
   Ord<-≡ p (lim n q)    = Ord<-≡ p q
 ```
 
+也就是说 $\mathsf{Ord}_{<}(i,\;p:i<\ell)$ 与 $p$ 和 $\ell$ 无关, 我们改记作 $\mathsf{Ord}_{<i<\_}$.
+
 ```agda
   coe : {p : i < ℓ₁} {q : i < ℓ₂} → Ord< i p → Ord< i q
   coe {p} {q} = transport (Ord<-≡ p q)
@@ -772,19 +858,44 @@ module Ord_ord where
   coe₀ = coe {p = zero}
 ```
 
+**定义 (层级提升函数)** 给定证明 $p:\ell_1<\ell_2$, 递归定义 $\mathsf{Ord}_{\ell_1}$ 到 $\mathsf{Ord}_{\ell_2}$ 的嵌入 $\uparrow_p$ 如下:
+$$
+\uparrow_p a :=
+\begin{cases}
+   0 &\text{if } a = 0 \\
+   (\uparrow_p a')^+ &\text{if } a = a'^+ \\
+   \mathsf{lim}(\uparrow_p \circ f) &\text{if } a = \mathsf{lim}(f) \\
+   \mathsf{lim}_i(r:i<\ell_2, \uparrow_p \circ f) &\text{if } a = \mathsf{lim}_i(q:i<\ell_1, f)
+\end{cases}
+$$
+
+其中 $r:i<\ell_2$ 由 $p,q$ 和 $<$ 的传递性得到.
+
 ```agda
   ↑ : ℓ₁ < ℓ₂ → Ord ℓ₁ → Ord ℓ₂
   ↑ p zero        = zero
   ↑ p (suc a)     = suc (↑ p a)
   ↑ p (lim f)     = lim (↑ p ∘ f)
-  ↑ p (limₗ q f)  = limₗ (<-trans q p) (↑ p ∘ f ∘ coe)
+  ↑ p (limᵢ q f)  = limᵢ (<-trans q p) (↑ p ∘ f ∘ coe)
 ```
+
+**定义 ($\Omega$ 数)** 遵循 [Buchholz](https://en.wikipedia.org/wiki/Buchholz_psi_functions) 的定义, 对任意层级 $\ell:\mathsf{Ord}^D$, 递归定义 $\Omega:\mathsf{Ord}^D\to\mathsf{Ord}_\ell$ 如下:
+$$
+\Omega_\ell :=
+\begin{cases}
+   0^+ &\text{if } \ell = 0 \\
+   \mathsf{lim}_{\ell'}(0:\ell'<\ell, \uparrow_{0:\ell'<\ell}) &\text{if } \ell = \ell'^+ \\
+   \mathsf{lim}(n\mapsto\uparrow_{p:f(n)<\ell} \Omega_{f(n)} &\text{if } \ell = \mathsf{lim}(f, \_)
+\end{cases}
+$$
+
+其中 $p:f(n)<\ell$ 由引理 `f<l` 得到.
 
 ```agda
   Ω : (ℓ : Ordᴰ) → Ord ℓ
-  Ω zero          = suc zero
-  Ω (suc ℓ)       = limₗ zero (↑ zero)
-  Ω (lim f mono)  = lim (λ n → ↑ (f<l n) (Ω (f n)))
+  Ω zero      = suc zero
+  Ω (suc ℓ)   = limᵢ zero (↑ zero)
+  Ω (lim f _) = lim (λ n → ↑ (f<l n) (Ω (f n)))
 ```
 
 ## 布劳威尔树的折叠
@@ -794,7 +905,7 @@ module Ord_ord where
   a + zero = a
   a + suc b = suc (a + b)
   a + lim f = lim (λ n → a + f n)
-  a + limₗ p f = limₗ p (λ x → a + f x)
+  a + limᵢ p f = limᵢ p (λ x → a + f x)
 ```
 
 ```agda
@@ -812,8 +923,8 @@ module Ord_ord where
   ψ< p zero     = Ω _
   ψ< p (suc a)  = lfp (ψ< p a +_)
   ψ< p (lim f)  = lim (ψ< p ∘ f)
-  ψ< {i} {ℓ} p (limₗ {i = j} q f) with <-dec q p
-  ... | injᵃ j<i  = limₗ j<i (ψ< p ∘ f ∘ coe)
+  ψ< {i} {ℓ} p (limᵢ {i = j} q f) with <-dec q p
+  ... | injᵃ j<i  = limᵢ j<i (ψ< p ∘ f ∘ coe)
   ... | injᵇ i<j  = lfp (ψ< p ∘ f ∘ coe₀ ∘ ↑ i<j)
   ... | injᶜ refl = lfp (ψ< p ∘ f ∘ coe₀)
 ```
