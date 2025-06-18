@@ -32,13 +32,13 @@ $$
 \begin{align}
 \mathbf{0}&:=
 \\[2em]
-\mathbf{1}&:=\cfrac{\;\mathbf{0}\to\mathbf{1}\;}{\mathbf{1}}\;\texttt{zero}
+\mathbf{1}&:=\cfrac{\;\mathbf{0}\to\mathbf{1}\;}{\mathbf{1}}\;\mathsf{zero}
 \\[2em]
-\mathbb{N}&:=\cfrac{\;\mathbf{0}\to\mathbb{N}\;}{\mathbb{N}}\;\texttt{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{N}\;}{\mathbb{N}}\;\texttt{suc}
+\mathbb{N}&:=\cfrac{\;\mathbf{0}\to\mathbb{N}\;}{\mathbb{N}}\;\mathsf{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{N}\;}{\mathbb{N}}\;\mathsf{suc}
 \\[2em]
-\mathbb{O}_0&:=\cfrac{\;\mathbf{0}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\texttt{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\texttt{suc}\;\;\;\;\cfrac{\;\mathbb{N}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\texttt{lim}
+\mathbb{O}_0&:=\cfrac{\;\mathbf{0}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\mathsf{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\mathsf{suc}\;\;\;\;\cfrac{\;\mathbb{N}\to\mathbb{O}_0\;}{\mathbb{O}_0}\;\mathsf{lim}
 \\[2em]
-\mathbb{O}_1&:=\cfrac{\;\mathbf{0}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\texttt{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\texttt{suc}\;\;\;\;\cfrac{\;\mathbb{N}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\texttt{lim}\;\;\;\;\cfrac{\;\mathbb{O}_0\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\texttt{lim}_1
+\mathbb{O}_1&:=\cfrac{\;\mathbf{0}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\mathsf{zero}\;\;\;\;\cfrac{\;\mathbf{1}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\mathsf{suc}\;\;\;\;\cfrac{\;\mathbb{N}\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\mathsf{lim}\;\;\;\;\cfrac{\;\mathbb{O}_0\to\mathbb{O}_1\;}{\mathbb{O}_1}\;\mathsf{lim}_1
 \end{align}
 $$
 
@@ -94,21 +94,21 @@ module Ord_basic where
     lim₁ : (Ord₀ → Ord₁) → Ord₁
 ```
 
-`O₀`, `O₁` 的定义方便往上归纳定义 $\texttt{Brw}_\alpha$, 而 `Ord₀`, `Ord₁` 则方便直接使用.
+`O₀`, `O₁` 的定义方便往上归纳定义 $\mathsf{Brw}_\alpha$, 而 `Ord₀`, `Ord₁` 则方便直接使用.
 
-为了方便表述, 我们把这些类型记作 $\texttt{Brw}_\alpha$ 或者 $\texttt{Ord}_\alpha$. 它们有如下关系
+为了方便表述, 我们把这些类型记作 $\mathsf{Brw}_\alpha$ 或者 $\mathsf{Ord}_\alpha$. 它们有如下关系
 
 $$
-\texttt{Ord}_\alpha :=
+\mathsf{Ord}_\alpha :=
 \begin{cases}
-   \texttt{Brw}_{\alpha+3} &\text{if } \alpha < \omega \\
-   \texttt{Brw}_\alpha &\text{if } \alpha\ge\omega
+   \mathsf{Brw}_{\alpha+3} &\text{if } \alpha < \omega \\
+   \mathsf{Brw}_\alpha &\text{if } \alpha\ge\omega
 \end{cases}
 $$
 
 当然这里的下标 $\alpha$ 的类型目前是非形式地, 根据上下文它可能是自然数, 可能是某个小于 $\omega_\beta$ 的数, 而这里的 $\beta$ 也跟 $\alpha$ 一样类型未定. 为了讨论我们总得先往前说.
 
-将布劳威尔树 $\texttt{Brw}_\alpha$ 所能表示的序数的上确界记作 $\sup(\texttt{Brw}_\alpha)$, 并按 Buchholz 的惯例令
+将布劳威尔树 $\mathsf{Brw}_\alpha$ 所能表示的序数的上确界记作 $\sup(\mathsf{Brw}_\alpha)$, 并按 Buchholz 的惯例令
 
 $$
 \Omega_\alpha :=
@@ -122,22 +122,22 @@ $$
 
 $$
 \begin{align}
-\sup(\texttt{Brw}_0) &= 0 \\
-\sup(\texttt{Brw}_1) &= 1 \\
-\sup(\texttt{Brw}_2) &= \omega \\
-\sup(\texttt{Brw}_3) &= \Omega \\
-\sup(\texttt{Brw}_4) &= \Omega_2 \\
+\sup(\mathsf{Brw}_0) &= 0 \\
+\sup(\mathsf{Brw}_1) &= 1 \\
+\sup(\mathsf{Brw}_2) &= \omega \\
+\sup(\mathsf{Brw}_3) &= \Omega \\
+\sup(\mathsf{Brw}_4) &= \Omega_2 \\
 ...
 \end{align}
 $$
 
 **约定** 如果一个类型 `A` 被当作序数, 我们指该类型所能表示的序数的上确界 $\sup(A)$.
 
-考虑 $\texttt{Brw}_{\alpha^+}$ 到 $\texttt{Brw}_{\alpha}$ 的折叠. 从最底层开始, $\texttt{Brw}_1$ 到 $\texttt{Brw}_0$ 以及 $\texttt{Brw}_2$ 到 $\texttt{Brw}_1$ 的折叠是平凡的. 而 $\texttt{Brw}_3$ 到 $\texttt{Brw}_2$ 的折叠就是各种增长层级. 再往后的折叠就是通常所说的 OCF.
+考虑 $\mathsf{Brw}_{\alpha^+}$ 到 $\mathsf{Brw}_{\alpha}$ 的折叠. 从最底层开始, $\mathsf{Brw}_1$ 到 $\mathsf{Brw}_0$ 以及 $\mathsf{Brw}_2$ 到 $\mathsf{Brw}_1$ 的折叠是平凡的. 而 $\mathsf{Brw}_3$ 到 $\mathsf{Brw}_2$ 的折叠就是各种增长层级. 再往后的折叠就是通常所说的 OCF.
 
-只不过通常的 OCF 使用集合论语言的非直谓定义, 而我们这里需要具体的递归算法一层一层往下: $\texttt{Brw}_\alpha$ 到 ... 到 $\texttt{Brw}_4$ 到 $\texttt{Brw}_3$ (大可数序数), 最后到 $\texttt{Brw}_2$ (大自然数).
+只不过通常的 OCF 使用集合论语言的非直谓定义, 而我们这里需要具体的递归算法一层一层往下: 从 $\mathsf{Brw}_\alpha$ 到 ... 到 $\mathsf{Brw}_4$ 到 $\mathsf{Brw}_3$ (大可数序数), 最后到 $\mathsf{Brw}_2$ (大自然数).
 
-因此我们的任务主要分解成两部分, 一是写出很大的 $\texttt{Brw}_\alpha$, 二是一层层折叠到 $\texttt{Brw}_2$. 只考虑任务一的话是相对简单的, 难点在于我们后面会看到任务二会给任务一附加很多要求. 我们一步步来.
+因此我们的任务主要分解成两部分, 一是写出很大的 $\mathsf{Brw}_\alpha$, 二是一层层折叠到 $\mathsf{Brw}_2$. 只考虑任务一的话是相对简单的, 难点在于我们后面会看到任务二会给任务一附加很多要求. 我们一步步来.
 
 ## 自然数层布劳威尔树
 
@@ -152,7 +152,7 @@ transport refl x = x
 
 **定义** 自然数上的 $<$ 序
 $$
-\cfrac{}{\;n<n^+\;}\;\;\texttt{zero}\;\;\;\;\;\;\;\cfrac{n<m}{\;n<m^+\;}\;\;\texttt{suc}
+\cfrac{}{\;n<n^+\;}\;\;\mathsf{zero}\;\;\;\;\;\;\;\cfrac{n<m}{\;n<m^+\;}\;\;\mathsf{suc}
 $$
 
 ```agda
@@ -164,7 +164,7 @@ module Nat_lt where
     suc  : n < m → n < suc m
 ```
 
-由开篇的代码, 通过简单的复制粘贴我们可以写出任意 $\texttt{Brw}_n$. 伪代码如下
+由开篇的代码, 通过简单的复制粘贴我们可以写出任意 $\mathsf{Brw}_n$. 伪代码如下
 
 ```pseudocode
 data Brw₀ : Set where
@@ -207,7 +207,7 @@ module Brw_nat where
   Brw n = Brw< n zero
 ```
 
-这样我们就定义了任意 $\texttt{Brw}_n$. 虽然它只需要一个构造子“族”, 非常优雅, 但不方便使用. 从现在起我们改用 $\texttt{Ord}_n$ 层级, 显式写出最初的三个构造子 `zero`, `suc`, `lim`, 其后才使用族 `limₙ`.
+这样我们就定义了任意 $\mathsf{Brw}_n$. 虽然它只需要一个构造子“族”, 非常优雅, 但不方便使用. 从现在起我们改用 $\mathsf{Ord}_n$ 层级, 显式写出最初的三个构造子 `zero`, `suc`, `lim`, 其后才使用族 `limₙ`.
 
 ```agda
 module Ord_nat where
@@ -222,10 +222,10 @@ module Ord_nat where
       limₙ : (p : i < n) (f : Ord< i p → Ord₊) → Ord₊
 ```
 
-剩下的定义跟 $\texttt{Brw}_n$ 是一样的. 给定 $n$, 我们递归定义满足 $p:i<n$ 的任意 $i$ 所给出的树 $\texttt{Ord}_{<i,\;p\,:\,i<n}$. 并定义
+剩下的定义跟 $\mathsf{Brw}_n$ 是一样的. 给定 $n$, 我们递归定义满足 $p:i<n$ 的任意 $i$ 所给出的树 $\mathsf{Ord}_{<i,\;p\,:\,i<n}$. 并定义
 
 $$
-\texttt{Ord}_n := \texttt{Ord}_{<n,\;0\,:\,n<n^+}
+\mathsf{Ord}_n := \mathsf{Ord}_{<n,\;0\,:\,n<n^+}
 $$
 
 ```agda
@@ -237,7 +237,7 @@ $$
   Ord n = Ord< n zero
 ```
 
-**定理** $\texttt{Ord}_{<i,\;p\,:\,i<n}$ 与 $\texttt{Ord}_{<i,\;q\,:\,i<m}$ 表示相同的树.
+**定理** $\mathsf{Ord}_{<i,\;p\,:\,i<n}$ 与 $\mathsf{Ord}_{<i,\;q\,:\,i<m}$ 表示相同的树.
 
 ```agda
   Ord<-≡ : (p : i < n) (q : i < m) → Ord< i p ≡ Ord< i q
@@ -246,7 +246,7 @@ $$
   Ord<-≡ p (suc q)      = trans (Ord<-≡ p q) refl
 ```
 
-也就是说 $\texttt{Ord}_{<i,\;p\,:\,i<n}$ 与 $p$ 和 $n$ 无关, 我们改记作 $\texttt{Ord}_{<i<\_}$.
+也就是说 $\mathsf{Ord}_{<i,\;p\,:\,i<n}$ 与 $p$ 和 $n$ 无关, 我们改记作 $\mathsf{Ord}_{<i<\_}$.
 
 ```agda
   coe : {p : i < n} {q : i < m} → Ord< i p → Ord< i q
@@ -258,7 +258,7 @@ $$
 
 ## $\omega2$ 层布劳威尔树
 
-继续往上, 把 `Ord : ℕ → Set` 封装进构造子 $\texttt{lim}_n$, 它允许构造共尾度为任意 $\sup(\texttt{Ord}_n)$ 的序数, 这样就得到了 $\texttt{Ord}_\omega$.
+继续往上, 把 `Ord : ℕ → Set` 封装进构造子 $\mathsf{lim}_n$, 它允许构造共尾度为任意 $\sup(\mathsf{Ord}_n)$ 的序数, 这样就得到了 $\mathsf{Ord}_\omega$.
 
 ```agda
   data Ordω : Set where
@@ -268,7 +268,7 @@ $$
     limₙ : (n : ℕ) (f : Ord n → Ordω) → Ordω
 ```
 
-再添加共尾度为 $\sup(\texttt{Ord}_\omega)$ 的序数, 就得到了 $\texttt{Ord}_{\omega+1}$.
+再添加共尾度为 $\sup(\mathsf{Ord}_\omega)$ 的序数, 就得到了 $\mathsf{Ord}_{\omega+1}$.
 
 ```agda
   data Ordω+1 : Set where
@@ -279,7 +279,7 @@ $$
     limω : (f : Ordω → Ordω+1) → Ordω+1
 ```
 
-重复上述过程可以得到 $\texttt{Ord}_{\omega+n}$, $\texttt{Ord}_{\omega2}$ 和 $\texttt{Ord}_{\omega2+1}$.
+重复上述过程可以得到 $\mathsf{Ord}_{\omega+n}$, $\mathsf{Ord}_{\omega2}$ 和 $\mathsf{Ord}_{\omega2+1}$.
 
 ```agda
   module _ (n : ℕ) (Ordω< : ∀ k → k < n → Set) where
@@ -319,8 +319,8 @@ $$
 
 **定义 (向上嵌入)** 对任意 $n : \mathbb{N}$, 递归定义 $\text{Ord}_n$ 到 $\text{Ord}_{n^+}$ 的嵌入 $↑_+$ 如下:
 
-- 如果 $a : \text{Ord}_n$ 由 $\texttt{zero}$, $\texttt{suc}$ 或 $\texttt{lim}$ 构造, 我们直接使用 $\text{Ord}_{n^+}$ 的同名构造子递归构造 $↑_+a$.
-- 如果 $a = \texttt{lim}_n(p,f)$, 其中 $p:i<n$ 且 $f:\texttt{Ord}_{<i,\;p}\to\text{Ord}_n$, 则 $↑_+a:=\texttt{lim}_n(p^+,↑_+\circ f)$, 其中 $p^+:i<n^+$ 且 $↑_+\circ f:\texttt{Ord}_{<i,\;p}\to\text{Ord}_{n^+}$.
+- 如果 $a : \text{Ord}_n$ 由 $\mathsf{zero}$, $\mathsf{suc}$ 或 $\mathsf{lim}$ 构造, 我们直接使用 $\text{Ord}_{n^+}$ 的同名构造子递归构造 $↑_+a$.
+- 如果 $a = \mathsf{lim}_n(p,f)$, 其中 $p:i<n$ 且 $f:\mathsf{Ord}_{<i,\;p}\to\text{Ord}_n$, 则 $↑_+a:=\mathsf{lim}_n(p^+,↑_+\circ f)$, 其中 $p^+:i<n^+$ 且 $↑_+\circ f:\mathsf{Ord}_{<i,\;p}\to\text{Ord}_{n^+}$.
 
 ```agda
   ↑₊ : Ord n → Ord (suc n)
@@ -338,7 +338,7 @@ $$
 \Omega_n :=
 \begin{cases}
    1 &\text{if } n = 0 \\
-   \texttt{lim}_{n'}(0:n'<n'^+,↑_+) &\text{if } n = n'^+
+   \mathsf{lim}_{n'}(0:n'<n'^+,↑_+) &\text{if } n = n'^+
 \end{cases}
 $$
 
@@ -358,7 +358,7 @@ $$
   ↑ω (limₙ p f) = limₙ _ (↑ω ∘ f ∘ coe₀)
 ```
 
-由此, 对每个 $n$, 我们可以表达 $↑_ω : \text{Ord}_n\to\text{Ord}_\omega$ 的 $\texttt{lim}_n$ 极限, 它们都是 $\text{Ord}_\omega$ 的内 $\Omega$ 数, 但都不是最大的那个. 在 $\text{Ord}_\omega$ 里可以取它们的 $\texttt{lim}$ 极限, 得到的就是 $\text{Ord}_\omega$ 的最大内 $\Omega$ 数 $\Omega_\omega$.
+由此, 对每个 $n$, 我们可以表达 $↑_ω : \text{Ord}_n\to\text{Ord}_\omega$ 的 $\mathsf{lim}_n$ 极限, 它们都是 $\text{Ord}_\omega$ 的内 $\Omega$ 数, 但都不是最大的那个. 在 $\text{Ord}_\omega$ 里可以取它们的 $\mathsf{lim}$ 极限, 得到的就是 $\text{Ord}_\omega$ 的最大内 $\Omega$ 数 $\Omega_\omega$.
 
 ```agda
   Ωω : Ordω
@@ -374,19 +374,19 @@ $$
 |$\mathbb{0}$|$0$|n/a|n/a|
 |$\mathbb{1}$|$1$|$0$|$0$|
 |$\mathbb{N}$|$\omega$|$1$|$1$|
-|$\texttt{Ord}_0$|$\Omega$|$\omega$|$\omega$|
-|$\texttt{Ord}_1$|$\Omega_2$|$\Omega$|$\Omega$|
-|$\texttt{Ord}_2$|$\Omega_3$|$\Omega_2$|$\Omega_2$|
-|$\texttt{Ord}_n$|$\Omega_{n+1}$|$\Omega_n$|$\Omega_n$|
-|$\texttt{Ord}_{\omega}$|$\Omega_{\omega+1}$|$\Omega_\omega$|$\omega$|
-|$\texttt{Ord}_{\omega+1}$|$\Omega_{\omega+2}$|$\Omega_{\omega+1}$|$\Omega_{\omega+1}$|
-|$\texttt{Ord}_{\omega+n}$|$\Omega_{\omega+n+1}$|$\Omega_{\omega+n}$|$\Omega_{\omega+n}$|
-|$\texttt{Ord}_{\omega2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2}$|$\omega$|
-|$\texttt{Ord}_{\omega2+1}$|$\Omega_{\omega2+2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2+1}$|
+|$\mathsf{Ord}_0$|$\Omega$|$\omega$|$\omega$|
+|$\mathsf{Ord}_1$|$\Omega_2$|$\Omega$|$\Omega$|
+|$\mathsf{Ord}_2$|$\Omega_3$|$\Omega_2$|$\Omega_2$|
+|$\mathsf{Ord}_n$|$\Omega_{n+1}$|$\Omega_n$|$\Omega_n$|
+|$\mathsf{Ord}_{\omega}$|$\Omega_{\omega+1}$|$\Omega_\omega$|$\omega$|
+|$\mathsf{Ord}_{\omega+1}$|$\Omega_{\omega+2}$|$\Omega_{\omega+1}$|$\Omega_{\omega+1}$|
+|$\mathsf{Ord}_{\omega+n}$|$\Omega_{\omega+n+1}$|$\Omega_{\omega+n}$|$\Omega_{\omega+n}$|
+|$\mathsf{Ord}_{\omega2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2}$|$\omega$|
+|$\mathsf{Ord}_{\omega2+1}$|$\Omega_{\omega2+2}$|$\Omega_{\omega2+1}$|$\Omega_{\omega2+1}$|
 
 ## 可数序数的有界三歧性
 
-为了一劳永逸地定义 $\texttt{Ord}_\alpha$ (其中 $\alpha < \Omega$), 我们要以可数序数 $\texttt{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`. 但是我们现有的 `Ord₀` 太过于宽泛了, 缺乏一些关键性质, 不能直接作为索引类型, 否则会导致后续无法折叠. 为此我们将专门定义具有所谓**有界三歧性 (bounded decidability)** 的可数序数类型 $\texttt{Ord}^D$, 它也就是我们在 [2.0系列](https://zhuanlan.zhihu.com/p/711649863) 介绍的良构序数.
+为了一劳永逸地定义 $\mathsf{Ord}_\alpha$ (其中 $\alpha < \Omega$), 我们要以可数序数 $\mathsf{Ord}_0$ 为下标, 写出一个新的类型族 `Ord : Ord₀ → Set`. 但是我们现有的 `Ord₀` 太过于宽泛了, 缺乏一些关键性质, 不能直接作为索引类型, 否则会导致后续无法折叠. 为此我们将专门定义具有所谓**有界三歧性 (bounded decidability)** 的可数序数类型 $\mathsf{Ord}^D$, 它也是我们在 [2.0系列](https://zhuanlan.zhihu.com/p/711649863) 介绍的良构序数的简化版本.
 
 为了表达三歧性, 我们引入和类型.
 
@@ -414,7 +414,15 @@ module Nat where
 ```
 
 **定理** 自然数的 $<$ 满足**无条件三歧性 (unconditional decidability)**, 即对任意 $n,m$, 都有 $(n < m) \lor (m < n) \lor (n = m)$.  
-**证明** 对 $n,m$ 归纳. ∎
+**证明** 对 $n,m$ 归纳.
+- 若 $n=0,\;m=0$, 显然 $n=m$.
+- 若 $n=0,\;m=m'^+$, 显然 $n<m$.
+- 若 $n=n'^+,\;m=0$, 显然 $m<n$.
+- 若 $n=n'^+,\;m=m'^+$, 有归纳假设 $ih:n'<m'$ 或 $m'<n'$ 或 $n'=m'$, 讨论它们.
+
+  - 如果 $ih:n'<m'$, 则有 $n<m$.
+  - 如果 $ih:m'<n'$, 则有 $m<n$.
+  - 如果 $ih:n'=m'$, 则有 $n=m$. ∎
 
 ```agda
   <-dec : ∀ n m → n < m ⊎ m < n ⊎ n ≡ m
@@ -427,18 +435,17 @@ module Nat where
   ... | injᶜ p = injᶜ (cong suc p)
 ```
 
-**定义 (有界三歧可数序数)** 互归纳定义 $\texttt{Ord}^D$ 及其上的 $<$ 序.
+**定义 (有界三歧可数序数)** 互归纳定义 $\mathsf{Ord}^D$ 及其上的 $<$ 序.
 
-- $\texttt{Ord}^D$ 的定义与 $\texttt{Ord}_0$ 类似, 只不过要求基本列 $f:\mathbb{N}\to\texttt{Ord}^D$ 单调.
-- $<$ 的定义与自然数的 $<$ 类似, 只不过自然推广到了极限序数.
+- $\mathsf{Ord}^D$ 的定义与 $\mathsf{Ord}_0$ 类似, 只不过要求基本列 $f:\mathbb{N}\to\mathsf{Ord}^D$ 单调.
+- $<$ 的定义在自然数的 $<$ 的基础上推广到了极限序数.
 
 $$
-\cfrac{a<f(n)}{\;a<\texttt{lim}(f,mono)\;}\;\;\texttt{lim}
+\cfrac{a<f(n)}{\;a<\mathsf{lim}(f,m_f)\;}\;\;\mathsf{lim}
 $$
 
 其中
-- $f:\mathbb{N}\to\texttt{Ord}^D$ 且 $n : \mathbb{N}$
-- $mono$ 是 $f$ 的单调性证明
+- $m_f$ 是 $f$ 的单调性证明, 通常省略不写.
 - $f$ 的单调性是指: 对任意 $n,m:\mathbb{N}$, 如果 $n<m$, 那么 $f(n)<f(m)$. ∎
 
 ```agda
@@ -468,20 +475,20 @@ module Ordᴰ where
     lim  : ∀ n → a < f n → a < lim f mono
 ```
 
-**引理** 对任意单调 ($mono$) 的 $f:\mathbb{N}\to\texttt{Ord}^D$ 和 $n:\mathbb{N}$, 有 $f(n)<\texttt{lim}(f,mono)$.  
-**证明** $f(n)<f(n^+)<\texttt{lim}(f,mono)$. ∎
+**引理** 对任意单调的 $f:\mathbb{N}\to\mathsf{Ord}^D$ 和 $n:\mathbb{N}$, 有 $f(n)<\mathsf{lim}(f)$.  
+**证明** $f(n)<f(n^+)<\mathsf{lim}(f)$. ∎
 
 ```agda
   f<l : ∀ n → f n < lim f mono
   f<l {mono} n = lim (suc n) (mono zero)
 ```
 
-**引理** $\texttt{Ord}^D$ 上的 $<$ 满足传递性.  
+**引理** $\mathsf{Ord}^D$ 上的 $<$ 满足传递性.  
 **证明** 令 $p:a<b$ 且 $q:b<c$, 要证 $a<c$. 对 $q$ 归纳.
 
 - 若 $q=0$, 则有 $c=b^+$, 所以 $p^+:a<c$.
 - 若 $q=q'^+$, 则有 $c=c'^+$ 且 $q':b<c'$. 此时有归纳假设 $ih:a<c'$, 所以 $ih^+:a<c$.
-- 若 $q=\texttt{lim}(n,q')$, 则有 $c=\texttt{lim}(f,\_)$ 且 $q':b<f(n)$. 此时有归纳假设 $ih:a<f(n)$, 所以 $\texttt{lim}(n,ih):a<c$. ∎
+- 若 $q=\mathsf{lim}(n,q')$, 则有 $c=\mathsf{lim}(f,\_)$ 且 $q':b<f(n)$. 此时有归纳假设 $ih:a<f(n)$, 所以 $\mathsf{lim}(n,ih):a<c$. ∎
 
 ```agda
   <-trans : a < b → b < c → a < c
@@ -490,11 +497,16 @@ module Ordᴰ where
   <-trans p (lim n q) = lim n (<-trans p q)
 ```
 
-**定理 (有界三歧性)** 对任意 $a,b:\texttt{Ord}^D$, 如果它们小于一个共同的序数, 那么它们满足三歧性.  
-**证明** 令 $p:a<c$ 且 $q:b<c$, 讨论它们.
+**定理 (有界三歧性)** 对任意 $a,b:\mathsf{Ord}^D$, 如果它们小于一个共同的序数, 那么它们满足三歧性.  
+**证明** 令 $p:a<c$ 且 $q:b<c$, 对它们归纳.
 
-- 非极限的情况是显然的
-- 两者都是极限的情况时, 有 ∎
+- 若 $p=0,\;q=0$, 则 $c=a^+$ 且 $c=b^+$, 所以 $a=b$.
+- 若 $p=0,\;q=q'^+$, 则 $c=a^+$, 此时 $q':b<a$.
+- 若 $p=p'^+,\;q=0$, 则 $c=b^+$, 此时 $p':a<b$.
+- 若 $p=\mathsf{lim}(n,p'),\;q=\mathsf{lim}(m,q')$, 则存在单调的 $f$ 使得 $c=\mathsf{lim}(f)$, 且有 $p':a<f(n),\;q':b<f(m)$. 由自然数的无条件三歧性, 讨论 $n,m$ 的大小关系.
+  - 如果 $n<m$, 由 $f$ 的单调性有 $f(n)<f(m)$, 所以 $a,b$ 都小于 $f(m)$, 由归纳假设可知 $a,b$ 的大小关系.
+  - 如果 $m<n$, 由 $f$ 的单调性有 $f(m)<f(n)$, 所以 $a,b$ 都小于 $f(n)$, 由归纳假设可知 $a,b$ 的大小关系.
+  - 如果 $n=m$, 则 $a,b$ 都小于 $f(n) = f(m)$, 由归纳假设可知 $a,b$ 的大小关系. ∎
 
 ```agda
   <-dec : ∀ {a b c} → a < c → b < c → a < b ⊎ b < a ⊎ a ≡ b
@@ -697,7 +709,7 @@ module Ord_ord where
 
 ## 附录
 
-[ccz181078](https://github.com/ccz181078) 使用[另一种类似的方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v) 实现了 $\texttt{Ord}_n$, 但似乎更难以往上推广. 我们给出该方法的 Agda 版本, 以供参考.
+[ccz181078](https://github.com/ccz181078) 使用[另一种类似的方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v) 实现了 $\mathsf{Ord}_n$, 但似乎更难以往上推广. 我们给出该方法的 Agda 版本, 以供参考.
 
 ```agda
 module Ord_nat_ccz181078 where
