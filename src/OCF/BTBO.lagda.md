@@ -1086,9 +1086,8 @@ $$
 
 最后, 遵循传统, 我们写出大数.
 
-**定义 (快速增长层级)** 递归定义  
+**定义 (快速增长层级)** 递归定义 $\mathsf{f}:\mathsf{Ord}_0\to\mathbb{N}\to\mathbb{N}$ 如下:  
 
-$\mathsf{f}:\mathsf{Ord}_0\to\mathbb{N}\to\mathbb{N}$ 如下:
 $$
 \mathsf{f}^\alpha(n) :=
 \begin{cases}
