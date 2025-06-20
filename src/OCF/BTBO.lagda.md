@@ -776,7 +776,7 @@ $$
 **定义 (累积和)** 定义高阶函数 $f\mapsto f^+$ 如下:  
 
 $$
-f^{+}(n) := 
+f^{+}(n) :=
 \begin{cases}
    f(0) &\text{if } n = 0 \\
    f^{+}(m) + (f(n))^+ &\text{if } n = m^+
@@ -920,9 +920,9 @@ $$
 $$
 \Omega_\ell :=
 \begin{cases}
-   0^+ &\text{if } \ell = 0 \\
+   1 &\text{if } \ell = 0 \\
    \mathsf{lim}_{\ell'}(0_{\ell'}, \uparrow_{0_{\ell'}}) &\text{if } \ell = \ell'^+ \\
-   \mathsf{lim}(n\mapsto\uparrow_{p:f(n)<\ell} \Omega_{f(n)} &\text{if } \ell = \mathsf{lim}(f, \_)
+   \mathsf{lim}(n\mapsto\uparrow_{p:f(n)<\ell} \Omega_{f(n)}) &\text{if } \ell = \mathsf{lim}(f, \_)
 \end{cases}
 $$
 
@@ -1065,18 +1065,20 @@ $$
 
 $$
 \begin{align}
+\psi^0(0) &= 0 \\
 \psi^1(0) &= \omega \\
-\psi^2(0) &= \mathsf{BO} \\
+\psi^2(0) &= \psi(\Omega_\omega) = \mathsf{BO} \\
 \psi^3(0) &= \psi(\Omega_{\mathsf{BO}}) \\
 \psi^4(0) &= \psi(\Omega_{\psi(\Omega_{\mathsf{BO}})})
 \end{align}
 $$
 
 ```agda
-  ex1 = ψⁿ 1    -- ω
-  ex2 = ψⁿ 2    -- Buchholz's ordinal
-  ex3 = ψⁿ 3    -- ψ(Ω_BO)
-  ex4 = ψⁿ 4    -- ψ(Ω_ψ(Ω_BO))
+  ex0 = ψⁿ 0  -- 0
+  ex1 = ψⁿ 1  -- ω
+  ex2 = ψⁿ 2  -- ψ(Ω_ω) = Buchholz's ordinal
+  ex3 = ψⁿ 3  -- ψ(Ω_BO)
+  ex4 = ψⁿ 4  -- ψ(Ω_ψ(Ω_BO))
 ```
 
 **定义 (布劳威尔树壁垒序数)**  
@@ -1095,14 +1097,14 @@ $$
 
 最后, 遵循传统, 我们写出大数.
 
-**定义 (快速增长层级)** 递归定义 $\mathfrak{f}:\mathsf{Ord}_0\to\mathbb{N}\to\mathbb{N}$ 如下:  
+**定义 (快速增长层级)** 递归定义 $\mathbf{f}:\mathsf{Ord}_0\to\mathbb{N}\to\mathbb{N}$ 如下:  
 
 $$
-\mathfrak{f}_\alpha(n) :=
+\mathbf{f}_\alpha(n) :=
 \begin{cases}
    n^+ &\text{if } \alpha = 0 \\
-   (\mathfrak{f}_{\alpha'})^n(n) &\text{if } \alpha = \alpha'^+ \\
-   \mathfrak{f}_{f(n)}(n) &\text{if } \alpha = \mathsf{lim}(f)
+   (\mathbf{f}_{\alpha'})^n(n) &\text{if } \alpha = \alpha'^+ \\
+   \mathbf{f}_{f(n)}(n) &\text{if } \alpha = \mathsf{lim}(f)
 \end{cases}
 $$
 
@@ -1116,7 +1118,7 @@ $$
 **定义 (BTBO大数)** 应用快速增长层级于 BTBO:  
 
 $$
-\mathfrak{f}_\mathsf{BTBO}(99)
+\mathbf{f}_\mathsf{BTBO}(99)
 $$
 
 这是一个基于布劳威尔树壁垒序数的具体大数.
