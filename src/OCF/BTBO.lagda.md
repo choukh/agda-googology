@@ -44,7 +44,7 @@ $$
 $$
 
 ```agda
-module Brw_basic where
+module Brw-Basic where
 
   data 𝟎 : Set where
 
@@ -82,7 +82,7 @@ open import Data.Nat using (ℕ; zero; suc)
 而 `O₀` 和 `O₁` 又与如下定义的 `Ord₀`, `Ord₁` 同构
 
 ```agda
-module Ord_basic where
+module Ord-Basic where
   data Ord₀ : Set where
     zero : Ord₀
     suc : Ord₀ → Ord₀
@@ -158,7 +158,7 @@ $$
 $$
 
 ```agda
-module Nat_lt where
+module Nat-Lt where
   variable n m o : ℕ
 
   data _<_ : ℕ → ℕ → Set where
@@ -213,8 +213,8 @@ $$
 $$
 
 ```agda
-module Brw_nat where
-  open Nat_lt
+module Brw-Nat where
+  open Nat-Lt
   private variable i : ℕ
 
   -- 假设下标为 `i < n` 的任意树 `Brw< i` 已经定义完成, 定义下标为 `n` 的树 `Brw₊`
@@ -251,8 +251,8 @@ $$
 $$
 
 ```agda
-module Ord_nat where
-  open Nat_lt public
+module Ord-Nat where
+  open Nat-Lt public
   private variable i : ℕ
 
   module _ (n : ℕ) (Ord< : ∀ i → i < n → Set) where
@@ -586,8 +586,8 @@ pattern injᶜ x = inj₂ (inj₂ x)
 - 若 $p = (p'^+:n < m^+)$, 其中 $p' : n < m$, 则要证 $n^+ < (m^+)^+ = m^{++}$. 由归纳假设得 $n^+ < m^+$, 应用构造子 $\mathsf{suc}$ 得 $n^+ < m^{++}$. ∎
 
 ```agda
-module Nat where
-  open Nat_lt public
+module Trich where
+  open Nat-Lt public
 
   z<s : ∀ n → zero < suc n
   z<s zero    = zero
@@ -636,8 +636,8 @@ $$
 - $f$ 的单调性是指: 对任意 $n,m:\mathbb{N}$, 如果 $n<m$, 那么 $f(n)<f(m)$. ∎
 
 ```agda
-module Ordᴰ where
-  open Nat renaming (_<_ to _<ᴺ_; <-dec to <ᴺ-dec)
+module BoundedTrich where
+  open Trich renaming (_<_ to _<ᴺ_; <-dec to <ᴺ-dec)
 
   infix 10 _<_
   data Ordᴰ : Set
@@ -833,8 +833,8 @@ $$
 $$
 
 ```agda
-module Ord_ord where
-  open Ordᴰ hiding (_+_)
+module Ord-Ord where
+  open BoundedTrich hiding (_+_)
   variable i ℓ ℓ₁ ℓ₂ : Ordᴰ
 
   module _ (ℓ : Ordᴰ) (Ord< : (i : Ordᴰ) (p : i < ℓ) → Set) where
@@ -1142,8 +1142,8 @@ $$
 [ccz181078](https://github.com/ccz181078) 使用[另一种类似的方法](https://github.com/ccz181078/googology/blob/main/BuchholzOCF.v) 实现了 $\mathsf{Ord}_n$, 但似乎更难以往上推广. 我们给出该方法的 Agda 版本, 以供参考.
 
 ```agda
-module Ord_nat_ccz181078 where
-  open Ord_basic
+module Ord-Nat-ccz181078 where
+  open Ord-Basic
 
   -- 假设某 `X = Ordₙ` 已完成, 并且已知任意 `x : X` 的共尾度 `cf x`
   module _ {X : Set} (cf : X → Set) where
