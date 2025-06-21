@@ -835,7 +835,7 @@ $$
 ```agda
 module Ord_ord where
   open Ordᴰ hiding (_+_)
-  private variable i ℓ ℓ₁ ℓ₂ : Ordᴰ
+  variable i ℓ ℓ₁ ℓ₂ : Ordᴰ
 
   module _ (ℓ : Ordᴰ) (Ord< : (i : Ordᴰ) (p : i < ℓ) → Set) where
     data Ord₊ : Set where
