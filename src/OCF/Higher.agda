@@ -6,10 +6,9 @@ open import Data.Nat using (ℕ; zero; suc)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
 open import OCF.BTBO
-open Nat using (n) renaming (_<_ to _<ᴺ_; <-dec to <ᴺ-dec)
-open Ordᴰ using (Ordᴰ; _<_; cumsum; cumsum-mono)
-open Ord_ord using (Ord; Ord₀; Ord₊; ℓ; coe; coe₀; ↑; Ω; _+_; lfp; ψ<; ψⁿ; ψ₀;ordᴰ)
-open _<ᴺ_ ; open _<_; open Ord₊
+open Trich using (n; zero; suc) renaming (_<_ to _<ᴺ_; <-dec to <ᴺ-dec)
+open BoundedTrich hiding (_+_)
+open Ord-Ord
 
 ψᴰ : ℕ → Ordᴰ
 ψᴰ = cumsum (ordᴰ ∘ ψⁿ)
