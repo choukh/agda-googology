@@ -920,7 +920,7 @@ $$
 $$
 \Omega_\ell :=
 \begin{cases}
-   1 &\text{if } \ell = 0 \\
+   \omega &\text{if } \ell = 0 \\
    \mathsf{lim}_{\ell'}(0_{\ell'}, \uparrow_{0_{\ell'}}) &\text{if } \ell = \ell'^+ \\
    \mathsf{lim}(n\mapsto\uparrow_{p:f(n)<\ell} \Omega_{f(n)}) &\text{if } \ell = \mathsf{lim}(f, \_)
 \end{cases}
@@ -929,8 +929,15 @@ $$
 其中 $p:f(n)<\ell$ 由引理 `f<l` 得到.
 
 ```agda
+  ω : Ord zero
+  ω = lim suc-iter
+    where
+      suc-iter : ℕ → Ord zero
+      suc-iter zero    = zero
+      suc-iter (suc n) = suc (suc-iter n)
+
   Ω : (ℓ : Ordᴰ) → Ord ℓ
-  Ω zero      = suc zero
+  Ω zero      = ω
   Ω (suc ℓ)   = limᵢ zero (↑ zero)
   Ω (lim f _) = lim (λ n → ↑ (f<l n) (Ω (f n)))
 ```
@@ -1074,8 +1081,12 @@ $$
 $$
 
 ```agda
-  ex0 = ψⁿ 0  -- 0
-  ex1 = ψⁿ 1  -- ω
+  ex0 : ψⁿ 0 ≡ zero
+  ex0 = refl
+
+  ex1 : ψⁿ 1 ≡ ω
+  ex1 = refl
+
   ex2 = ψⁿ 2  -- ψ(Ω_ω) = Buchholz's ordinal
   ex3 = ψⁿ 3  -- ψ(Ω_BO)
   ex4 = ψⁿ 4  -- ψ(Ω_ψ(Ω_BO))
