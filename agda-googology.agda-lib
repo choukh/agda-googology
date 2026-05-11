@@ -1,7 +1,7 @@
 name: agda-googology
 depend:
-  standard-library-2.2
-  cubical-0.8
+  standard-library-2.3
+  cubical-0.9
 include: src
 flags:
   --cubical-compatible
