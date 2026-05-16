@@ -42,10 +42,10 @@ mutual
 
 ## Phase 2 / 3 / 4 实测结果
 
-Phase 工作文件 + 实施日志:
-- Phase 2: [Phase2.lagda.md](Phase2.lagda.md) + [FINDINGS_Phase2.md](FINDINGS_Phase2.md)
-- Phase 3: [Phase3.lagda.md](Phase3.lagda.md) + [FINDINGS_Phase3.md](FINDINGS_Phase3.md)
-- Phase 4: [Phase4.lagda.md](Phase4.lagda.md) + [FINDINGS_Phase4.md](FINDINGS_Phase4.md)
+Phase 工作文件 (实测 + 撞墙诊断已内嵌各文件):
+- Phase 2: [Phase2.lagda.md](Phase2.lagda.md)
+- Phase 3: [Phase3.lagda.md](Phase3.lagda.md)
+- Phase 4: [Phase4.lagda.md](Phase4.lagda.md)
 
 | Step | Phase 2 | Phase 3 | Phase 4 | 备注 |
 |------|---------|---------|---------|------|
@@ -63,7 +63,7 @@ Phase 工作文件 + 实施日志:
 
 ## Phase 5 三路径 spike 实测结果
 
-工作文件: [Phase5A_SubOrd.lagda.md](Phase5A_SubOrd.lagda.md), [Phase5B_HigherIter.lagda.md](Phase5B_HigherIter.lagda.md), [Phase5C_OpInterp.lagda.md](Phase5C_OpInterp.lagda.md). 实施日志: [FINDINGS_Phase5.md](FINDINGS_Phase5.md).
+工作文件 (含各 spike 内嵌实测): [Phase5A_SubOrd.lagda.md](Phase5A_SubOrd.lagda.md), [Phase5B_HigherIter.lagda.md](Phase5B_HigherIter.lagda.md), [Phase5C_OpInterp.lagda.md](Phase5C_OpInterp.lagda.md). 三路径对比 + Phase 6 推荐 → [FINDINGS.md "Phase 5 三路径对比表"](FINDINGS.md).
 
 | 路径 | spike LOC | 编译 | 强度 binding | 核心目标 |
 |------|-----------|------|--------------|----------|
@@ -71,7 +71,7 @@ Phase 工作文件 + 实施日志:
 | **B: Higher² 迭代** | 60 | ✓ | `lim (n → ψ₀ (ψ<Ω² {n} ΩΩ²))` 顶级 binding | **✓ 严格超过 Higher.agda** |
 | **C: Opᴹ 语义化 v0** | 120 | ✓ (内联绕过) | ⟦_⟧ 独立可用, ψ_M-C 退化 | **✗ Agda 终止检查拒绝直接用 ⟦_⟧** |
 
-**Phase 6 推荐**: **走 Path B (Higher^n / Higher^ω 完整迭代)** — 仅 60 LOC spike 已达成超过 Higher.agda, 进一步迭代到 Higher^ω 预计 200-300 LOC 触达 ψ(Ω_(Ω+ω)). 详 [FINDINGS_Phase5.md §5](FINDINGS_Phase5.md#5-phase-6-主线推荐).
+**Phase 6 推荐**: **走 Path B (Higher^n / Higher^ω 完整迭代)** — 仅 60 LOC spike 已达成超过 Higher.agda, 进一步迭代到 Higher^ω 预计 200-300 LOC 触达 ψ(Ω_(Ω+ω)). 详 [FINDINGS.md "Phase 6 主线推荐"](FINDINGS.md).
 
 **Mahlo 路径定性结论**: 在 Agda `--safe --without-K` 下结构性受限, 无法在合理工程量下超过 Higher.agda. 其价值在结构性贡献 (IR-Mahlo MLQ 编码, `<ˢ`, monoSub, level rank, ⟦_⟧ post-mutual), 不在 ordinal 强度.
 

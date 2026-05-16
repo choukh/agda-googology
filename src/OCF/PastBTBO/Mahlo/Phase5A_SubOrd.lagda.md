@@ -3,6 +3,8 @@
 > Phase 4 mahlo 的 `Sub a = Σ ...` 是 Σ-平铺索引, 强度受限. 本 spike **升级 Sub mahlo case 为 `Ord (level a)`** (BTBO 的 Ord-tree, 带 limᵢ 嵌套), 同步改 mahlo 字段 `b : Ord (level a) → Ordᴹ`. 期望: 结构上让 mahlo 节点拥有 Higher.agda `limₙ`-级索引能力.
 >
 > **关键挑战**: level 必须进 mutual block (因 Sub mahlo case 引用 level a). monoSub / `<ˢ` 在 Ord-indexed Sub 上没有 unconditional trichotomy 的自然定义 — spike 阶段**简化处理** (mahlo case 上 `<ˢ` trivialize), 完整对齐留 Phase 6.
+>
+> 三路径并行 (A/B/C) 对比 + Phase 6 决策见 [FINDINGS.md §Phase 5 三路径对比](FINDINGS.md).
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}

@@ -1,8 +1,10 @@
-# Phase 5 Path C spike: Opᴹ 语义化 (v0 toy)
+# Phase 5 Path C spike: Opᴹ 语义化 (v0 toy) ✗ 撞 Agda 终止墙
 
 > Phase 4 mahlo 的 `f : Opᴹ` 字段当前是结构装饰, 不参与 ψ_M. 本 spike 给 Opᴹ 一个**语义解释** `⟦_⟧ : Opᴹ → Ordᴹ → Ordᴹ`, 让 mahlo 真正变成"反射算子驱动"的折叠节点 — 是 Setzer 1998 真 IR-Mahlo 的简化版.
 >
 > **v0 (toy)**: `⟦ op c g ⟧ a = a` (常值 identity). 只验证类型机制 + post-mutual 函数兼容 mutual block. 强度不增, 但证明 ⟦_⟧ 可定义.
+>
+> 三路径并行 (A/B/C) 对比 + Phase 6 决策见 [FINDINGS.md §Phase 5 三路径对比](FINDINGS.md).
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
