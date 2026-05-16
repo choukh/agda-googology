@@ -107,18 +107,31 @@ E ≠ F: E 是 MLQ 风格 (本次找到), F 是教科书直译 (本次否定).
 4. **Bounded trichotomy** 尝试. 预期最大墙 (函数外延性在 mahlo 节点比较时浮现).
 5. **ψ_M collapser** 仿 [Higher.agda:31-38](../../Higher.agda#L31-L38).
 
-阶段 1-2 大概率通 (Takahashi 示范过). 阶段 3-4 是真正研究. 阶段 5 取决于 4.
+Step 1-2 大概率通 (Takahashi 示范过). Step 3-4 是真正研究. Step 5 取决于 4. (术语: "Step N" 指本节列出的 5 个子步; "Phase N" 指项目阶段, 见 [FINDINGS_Phase2.md](FINDINGS_Phase2.md) 顶部.)
+
+### 6.1 Phase 2 实测 (2026-05-11)
+
+实施于 [Phase2.lagda.md](Phase2.lagda.md), 诊断报告 [FINDINGS_Phase2.md](FINDINGS_Phase2.md).
+
+- ✓ Step 1-2 通过 (Takahashi 示范一致).
+- ⚠️ Step 3 部分通过 (lim 带 monoᴺ, mahlo 未带 monoSub — `Sub a` 内禀序构造循环依赖).
+- ⚠️ Step 4 结构性卡死: mahlo 4 子 case 中 3 blocked, 退回 Maybe-partial. 与 Naive `+-lmono` 死墙同构.
+- ✗ Step 5 跳过 (Step 4 partial → collapser 不可定).
+
+修正原估算 "Step 3-4 真正研究" → **Step 4 在当前 mahlo 字段形状下不可证, 需先扩 Sub-内禀序 + monoSub (项目 Phase 3, Takahashi 2024 未覆盖)**.
 
 ## 7. 对作者的建议
 
 1. **更新 [../Naive/FINDINGS.md](../Naive/FINDINGS.md) §6 行 E**. 标"研究级数千行 + 必须 Takahashi 2024 MLQ 风格 (不能 Setzer 1998 直译)".
 2. **Phase 2 起步参考 [Phase1.lagda.md](Phase1.lagda.md)** 的骨架, 与 Takahashi paper §2.1 的 reflection 部分对照阅读.
-3. **风险**: 阶段 4 (bounded trich on mahlo 节点) 是预期撞墙位置; 即使 Takahashi 2024 也未做这部分 (他做的是类型论解释, 不需 bounded trich).
+3. **风险**: Step 4 (bounded trich on mahlo 节点) 是预期撞墙位置; 即使 Takahashi 2024 也未做这部分 (他做的是类型论解释, 不需 bounded trich).
 4. **保守 fallback**: 若决定不走 Mahlo, V2 同类的"逐级加外部指标" ([Higher.agda](../../Higher.agda) 套路) 可继续推, 强度增益有限但累积可观.
 
 ## 8. 文件清单
 
 - [Phase1.lagda.md](Phase1.lagda.md): Phase 1 工作基底, Brouwer-MLQ 骨架, 编译通过.
+- [Phase2.lagda.md](Phase2.lagda.md): Phase 2 升级 (Sub Σ-closure, `<ᴹ`/`<ᴼ`, lim monoᴺ, partial trichotomy), 编译通过.
+- [FINDINGS_Phase2.md](FINDINGS_Phase2.md): Phase 2 实施日志 + Step 4 死墙诊断.
 - 本报告.
 
 无 `postulate`, 无 `--unsafe`, 通过 Agda 类型检查.
