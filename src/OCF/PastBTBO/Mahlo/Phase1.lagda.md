@@ -40,19 +40,40 @@ mutual
 
 通过 Agda 2.8.0 + `--safe --without-K --cubical-compatible` 编译.
 
-## Phase 2 实测结果
+## Phase 2 / 3 / 4 实测结果
 
-Phase 2 工作文件: [Phase2.lagda.md](Phase2.lagda.md). 实施日志: [FINDINGS_Phase2.md](FINDINGS_Phase2.md).
+Phase 工作文件 + 实施日志:
+- Phase 2: [Phase2.lagda.md](Phase2.lagda.md) + [FINDINGS_Phase2.md](FINDINGS_Phase2.md)
+- Phase 3: [Phase3.lagda.md](Phase3.lagda.md) + [FINDINGS_Phase3.md](FINDINGS_Phase3.md)
+- Phase 4: [Phase4.lagda.md](Phase4.lagda.md) + [FINDINGS_Phase4.md](FINDINGS_Phase4.md)
 
-| Step | 状态 | 结论 |
-|------|------|------|
-| 1. `Sub (mahlo …)` Σ-closure | ✓ | `Sub (mahlo _ a b) = Σ (Sub a) (Sub ∘ b)`. Setzer 反射的 Brouwer 化. |
-| 2. `_<ᴹ_` + `_<ᴼ_` 互递归 | ✓ | `<ᴹ` 跨 mahlo 两进路 (mahlo-a / mahlo-b); `<ᴼ` 仅 op-c 头比较. `<ᴹ-trans` 通过. |
-| 3. mono on lim | ✓ (部分) | `lim` 带 `monoᴺ`. **mahlo 未带 monoSub** — `Sub a` 内禀序构造循环依赖, Phase 3 todo. |
-| 4. Bounded trichotomy | ⚠️ partial | non-mahlo case 全通; mahlo 4 子 case 中 1 通 (mahlo-a × mahlo-a), 3 blocked. 退回 `Maybe`-wrapped. **与 Naive `+-lmono` 死墙结构同构**. |
-| 5. ψ_M collapser | ✗ skip | Step 4 partial → collapser 在 mahlo 输入上不可定. |
+| Step | Phase 2 | Phase 3 | Phase 4 | 备注 |
+|------|---------|---------|---------|------|
+| 1. `Sub (mahlo …)` Σ-closure | ✓ | ✓ | ✓ | Setzer 反射 Brouwer 化 |
+| 2. `_<ᴹ_` + `_<ᴼ_` 互递归 | ✓ | ✓ | ✓ | `<ᴹ-trans` 5 case |
+| 3. monoSub 字段 | — | ✓ | ✓ | Phase 3 引入, Phase 4 保留 |
+| 4. `_<ˢ_` 内禀序 + `<ˢ-dec` | — | ✓ | ✓ | IR 函数版 + lex 序 |
+| 5. strat 字段 `∀ s → a <ᴹ b s` | — | ✓ | **去** | Phase 4 去掉, 接受 partial trichotomy |
+| 6. Bounded trichotomy `<ᴹ-dec` | partial 1/4 | **full 4/4** | partial 2/4 | Phase 3 用 strat 换 full, Phase 4 退回 partial |
+| 7. `level : Ordᴹ → Ordᴰ` | — | — | ✓ (新) | mahlo +1 rank, lim cumsum |
+| 8. ψ_M collapser | ✗ skip | ⏸ TODO | ✓ v1+v2 | Phase 4 编译, ψ_M : Ordᴹ → Ord₀ |
+| **强度量级** | (无) | ≲ Higher.agda | **≲ Higher.agda** | 未超过 |
 
-详细诊断见 [FINDINGS_Phase2.md](FINDINGS_Phase2.md). 修复路径: Phase 3 需在 `Sub a` 上加内禀序 + 在 mahlo 加 monoSub, 这是 Takahashi 2024 未做的扩展.
+**累积负面结论 (Phase 4 §6 诚实记账)**: Mahlo 路径 4 个 Phase ~550 LOC, 强度上限 ≲ Higher.agda 的 50 行. Phase 5 三路径并行 spike 探索.
+
+## Phase 5 三路径 spike 实测结果
+
+工作文件: [Phase5A_SubOrd.lagda.md](Phase5A_SubOrd.lagda.md), [Phase5B_HigherIter.lagda.md](Phase5B_HigherIter.lagda.md), [Phase5C_OpInterp.lagda.md](Phase5C_OpInterp.lagda.md). 实施日志: [FINDINGS_Phase5.md](FINDINGS_Phase5.md).
+
+| 路径 | spike LOC | 编译 | 强度 binding | 核心目标 |
+|------|-----------|------|--------------|----------|
+| **A: Sub 升级 Ord-indexed** | 85 | ✓ | 仅 sample 构造, 无 ψ_M | 结构通, ψ_M 留 Phase 6 |
+| **B: Higher² 迭代** | 60 | ✓ | `lim (n → ψ₀ (ψ<Ω² {n} ΩΩ²))` 顶级 binding | **✓ 严格超过 Higher.agda** |
+| **C: Opᴹ 语义化 v0** | 120 | ✓ (内联绕过) | ⟦_⟧ 独立可用, ψ_M-C 退化 | **✗ Agda 终止检查拒绝直接用 ⟦_⟧** |
+
+**Phase 6 推荐**: **走 Path B (Higher^n / Higher^ω 完整迭代)** — 仅 60 LOC spike 已达成超过 Higher.agda, 进一步迭代到 Higher^ω 预计 200-300 LOC 触达 ψ(Ω_(Ω+ω)). 详 [FINDINGS_Phase5.md §5](FINDINGS_Phase5.md#5-phase-6-主线推荐).
+
+**Mahlo 路径定性结论**: 在 Agda `--safe --without-K` 下结构性受限, 无法在合理工程量下超过 Higher.agda. 其价值在结构性贡献 (IR-Mahlo MLQ 编码, `<ˢ`, monoSub, level rank, ⟦_⟧ post-mutual), 不在 ordinal 强度.
 
 ## 与已有模块的关系
 

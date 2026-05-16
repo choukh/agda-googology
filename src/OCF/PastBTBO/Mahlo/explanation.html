@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mahlo 宇宙的 Brouwer 化探索 · 通俗导读</title>
+<style>
+  :root {
+    --bg: #0f1115;
+    --bg-soft: #161922;
+    --bg-card: #1c2030;
+    --fg: #e7ecf3;
+    --fg-soft: #a6b0c4;
+    --fg-dim: #6b7488;
+    --accent: #7dd3fc;
+    --accent-2: #c4b5fd;
+    --accent-3: #fbbf24;
+    --good: #86efac;
+    --bad: #fca5a5;
+    --warn: #fdba74;
+    --border: #2a2f3f;
+    --code-bg: #11141c;
+    --highlight: rgba(125, 211, 252, 0.12);
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    line-height: 1.75;
+    font-size: 16px;
+  }
+  .container {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 40px 24px 120px;
+  }
+  header.hero {
+    padding: 60px 0 40px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+  h1 {
+    font-size: 2.4rem;
+    margin: 0 0 12px;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 60%, var(--accent-3) 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.5px;
+  }
+  .subtitle {
+    color: var(--fg-soft);
+    font-size: 1.1rem;
+    margin: 0;
+  }
+  .meta {
+    color: var(--fg-dim);
+    font-size: 0.9rem;
+    margin-top: 16px;
+  }
+  h2 {
+    font-size: 1.6rem;
+    margin: 56px 0 16px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  h2::before {
+    content: "";
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 60px;
+    height: 2px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+  }
+  h3 {
+    font-size: 1.2rem;
+    margin: 28px 0 12px;
+    color: var(--accent);
+  }
+  p { margin: 12px 0; }
+  code {
+    background: var(--code-bg);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Menlo, monospace;
+    font-size: 0.9em;
+    color: var(--accent);
+  }
+  pre {
+    background: var(--code-bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 16px 20px;
+    overflow-x: auto;
+    font-family: "JetBrains Mono", "Fira Code", "SF Mono", Menlo, monospace;
+    font-size: 0.85em;
+    line-height: 1.6;
+  }
+  pre code {
+    background: transparent;
+    padding: 0;
+    color: var(--fg);
+  }
+  .keyword { color: #c4b5fd; }
+  .typename { color: #7dd3fc; }
+  .constr { color: #fbbf24; }
+  .lit { color: #86efac; }
+  .com { color: #6b7488; font-style: italic; }
+
+  .card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 24px 0;
+  }
+  .card.highlight {
+    border-color: var(--accent);
+    background: linear-gradient(135deg, var(--bg-card), rgba(125, 211, 252, 0.04));
+  }
+  .grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin: 20px 0;
+  }
+  @media (max-width: 720px) {
+    .grid-2 { grid-template-columns: 1fr; }
+  }
+
+  /* Big ladder visualization */
+  .ladder {
+    display: flex;
+    flex-direction: column-reverse;
+    gap: 4px;
+    padding: 20px 0;
+    align-items: stretch;
+  }
+  .rung {
+    background: var(--bg-soft);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 18px;
+    cursor: pointer;
+    transition: all 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .rung:hover {
+    transform: translateX(4px);
+    border-color: var(--accent);
+  }
+  .rung.active {
+    background: var(--highlight);
+    border-color: var(--accent);
+  }
+  .rung-label {
+    font-family: "JetBrains Mono", monospace;
+    color: var(--accent);
+    font-size: 1.05em;
+  }
+  .rung-name {
+    color: var(--fg);
+    margin-left: 12px;
+    font-weight: 500;
+  }
+  .rung-desc {
+    color: var(--fg-soft);
+    font-size: 0.9em;
+    margin-top: 4px;
+    display: none;
+  }
+  .rung.active .rung-desc { display: block; }
+  .rung-mark {
+    position: absolute;
+    right: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--fg-dim);
+    font-family: "JetBrains Mono", monospace;
+    font-size: 0.85em;
+  }
+  .rung-mark.reached { color: var(--good); }
+  .rung-mark.wall { color: var(--bad); }
+
+  /* Layer diagram */
+  .layers-wrap {
+    background: var(--bg-soft);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+  }
+  .layer-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+  }
+  @media (max-width: 720px) {
+    .layer-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  .layer {
+    background: var(--bg-card);
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+    transition: all 0.25s;
+    text-align: center;
+  }
+  .layer.phase2 { border-color: rgba(125, 211, 252, 0.4); }
+  .layer.phase3-new { border-color: rgba(196, 181, 253, 0.6); background: linear-gradient(135deg, var(--bg-card), rgba(196, 181, 253, 0.07)); }
+  .layer:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+  }
+  .layer.selected {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(125, 211, 252, 0.3);
+    border-color: var(--accent-3);
+  }
+  .layer-name {
+    font-family: "JetBrains Mono", monospace;
+    font-size: 1.1em;
+    color: var(--accent);
+    font-weight: 600;
+  }
+  .layer-type {
+    color: var(--fg-dim);
+    font-size: 0.75em;
+    margin-top: 4px;
+  }
+  .layer-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.7em;
+    margin-top: 6px;
+  }
+  .layer-badge.new {
+    background: rgba(196, 181, 253, 0.15);
+    color: var(--accent-2);
+  }
+  .layer-badge.old {
+    background: rgba(125, 211, 252, 0.12);
+    color: var(--accent);
+  }
+  .layer-detail {
+    margin-top: 20px;
+    padding: 18px;
+    background: var(--bg-card);
+    border-radius: 10px;
+    border-left: 3px solid var(--accent);
+    min-height: 100px;
+  }
+  .layer-detail.empty {
+    color: var(--fg-dim);
+    font-style: italic;
+    text-align: center;
+  }
+
+  /* Sub-decoder visualization */
+  .sub-demo {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 20px 0;
+  }
+  @media (max-width: 720px) {
+    .sub-demo { grid-template-columns: 1fr; }
+  }
+  .ord-card {
+    background: var(--bg-soft);
+    border-radius: 10px;
+    padding: 16px;
+    border: 1px solid var(--border);
+  }
+  .ord-card h4 {
+    margin: 0 0 8px;
+    font-family: "JetBrains Mono", monospace;
+    color: var(--accent-3);
+    font-size: 1em;
+  }
+  .ord-content {
+    color: var(--fg-soft);
+    font-size: 0.92em;
+  }
+  .badge-set {
+    display: inline-block;
+    padding: 3px 10px;
+    background: var(--code-bg);
+    border-radius: 8px;
+    font-family: monospace;
+    color: var(--accent);
+    font-size: 0.88em;
+    margin: 4px 4px 4px 0;
+  }
+
+  /* Intrinsic order interactive */
+  .lex-demo {
+    background: var(--bg-soft);
+    border-radius: 12px;
+    padding: 24px;
+    margin: 20px 0;
+  }
+  .lex-pair-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin: 16px 0;
+    flex-wrap: wrap;
+  }
+  .lex-pair {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .lex-pair:hover { border-color: var(--accent); }
+  .lex-pair.left { border-color: var(--accent); }
+  .lex-pair.right { border-color: var(--accent-2); }
+  .lex-comp {
+    font-family: monospace;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: var(--code-bg);
+  }
+  .lex-comp.first { color: var(--accent); }
+  .lex-comp.second { color: var(--accent-2); }
+  .lex-vs {
+    color: var(--fg-dim);
+    font-weight: bold;
+    font-family: monospace;
+  }
+  .lex-result {
+    margin-top: 20px;
+    padding: 16px;
+    background: var(--bg-card);
+    border-radius: 8px;
+    border-left: 3px solid var(--accent-3);
+    font-family: monospace;
+    min-height: 30px;
+  }
+  .lex-buttons {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
+  }
+  .lex-btn {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    color: var(--fg);
+    padding: 8px 14px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: monospace;
+    font-size: 0.88em;
+    transition: all 0.15s;
+  }
+  .lex-btn:hover { border-color: var(--accent); background: var(--highlight); }
+
+  /* Phase comparison */
+  .phase-compare {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 20px 0;
+  }
+  @media (max-width: 720px) {
+    .phase-compare { grid-template-columns: 1fr; }
+  }
+  .phase-col {
+    background: var(--bg-soft);
+    border-radius: 10px;
+    padding: 16px;
+    border-top: 3px solid var(--fg-dim);
+  }
+  .phase-col.p1 { border-top-color: var(--accent); }
+  .phase-col.p2 { border-top-color: var(--warn); }
+  .phase-col.p3 { border-top-color: var(--good); }
+  .phase-col h4 {
+    margin: 0 0 12px;
+    color: var(--fg);
+  }
+  .phase-col ul {
+    margin: 0;
+    padding-left: 18px;
+    color: var(--fg-soft);
+    font-size: 0.9em;
+  }
+  .phase-col li { margin: 8px 0; }
+  .check { color: var(--good); }
+  .cross { color: var(--bad); }
+  .warn { color: var(--warn); }
+
+  /* Tab navigation */
+  .tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    padding: 10px 18px;
+    background: transparent;
+    border: none;
+    color: var(--fg-dim);
+    cursor: pointer;
+    font-size: 0.95em;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+  .tab:hover { color: var(--fg-soft); }
+  .tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  .tab-content {
+    padding: 20px 0;
+    display: none;
+  }
+  .tab-content.active { display: block; }
+
+  /* Tooltip on key terms */
+  .term {
+    border-bottom: 1px dashed var(--accent);
+    cursor: help;
+    position: relative;
+  }
+  .term:hover { color: var(--accent); }
+
+  /* TL;DR box */
+  .tldr {
+    background: linear-gradient(135deg, rgba(125, 211, 252, 0.08), rgba(196, 181, 253, 0.05));
+    border-left: 4px solid var(--accent);
+    border-radius: 0 8px 8px 0;
+    padding: 16px 24px;
+    margin: 24px 0;
+  }
+  .tldr h3 {
+    margin-top: 0;
+    color: var(--accent-3);
+  }
+
+  /* Mahlo node visualization */
+  .mahlo-svg-wrap {
+    background: var(--bg-soft);
+    border-radius: 12px;
+    padding: 20px;
+    margin: 20px 0;
+    overflow-x: auto;
+  }
+
+  /* Footer */
+  footer {
+    margin-top: 80px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    color: var(--fg-dim);
+    font-size: 0.88em;
+    text-align: center;
+  }
+  footer a { color: var(--fg-soft); }
+
+  .toc {
+    background: var(--bg-soft);
+    border-radius: 10px;
+    padding: 16px 24px;
+    margin: 24px 0;
+  }
+  .toc h3 { margin-top: 0; color: var(--fg-soft); }
+  .toc ol {
+    margin: 0; padding-left: 20px;
+    color: var(--fg-soft);
+  }
+  .toc a {
+    color: var(--fg);
+    text-decoration: none;
+  }
+  .toc a:hover { color: var(--accent); }
+
+  .anchor-shift { scroll-margin-top: 20px; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header class="hero">
+  <h1>Mahlo 宇宙的 Brouwer 化探索</h1>
+  <p class="subtitle">从大基数到构造性序数, 一场 8 层互递归与内禀序的研究级形式化</p>
+  <p class="meta">基于 agda-googology / src/OCF/PastBTBO/Mahlo · Phase 1 → 2 → 3 全编译通过</p>
+</header>
+
+<div class="tldr">
+  <h3>三句话概括</h3>
+  <p><strong>目标</strong>: 把集合论里的 "Mahlo 基数" 翻译成 Agda 类型理论里能跑的"构造性序数", 用作扩展 OCF (ordinal collapse function) 的更大序数标签.</p>
+  <p><strong>核心难题</strong>: Mahlo 的反射性质天然引入"集合在自身函数空间下闭合", 而 Agda 的 strict positivity 拒绝这种递归. 解决路径是 Takahashi 2024 的 MLQ 风格 (两层互递归 universe) + 本工作 (Phase 3) 加 Sub 内禀序 + monoSub + strat.</p>
+  <p><strong>当前成果</strong>: Phase 3 落地 8 层互递归骨架, 全函数化 bounded trichotomy, 代价是 Mahlo 编码弱化为 stratified Σ-reflect — 用强度换操作.</p>
+</div>
+
+<div class="toc">
+  <h3>目录</h3>
+  <ol>
+    <li><a href="#part1">什么是 Mahlo 宇宙? — 大基数阶梯</a></li>
+    <li><a href="#part2">Brouwer 化: 序数树长什么样?</a></li>
+    <li><a href="#part3">8 层互递归的原理与作用</a></li>
+    <li><a href="#part4">内禀序 <code>_&lt;ˢ_</code> 的奥秘</a></li>
+    <li><a href="#part5">Phase 1/2/3 的演进对比</a></li>
+    <li><a href="#part6">妥协与未来</a></li>
+  </ol>
+</div>
+
+<!-- ============================================ -->
+<section id="part1" class="anchor-shift">
+<h2>① 什么是 Mahlo 宇宙? — 大基数阶梯</h2>
+
+<p>在数学里, 我们对"大"的概念有一个无限延伸的阶梯. 从有限数 → 可数无穷 ω → 不可数 ω₁ → ... 一直爬到所谓的 <strong>大基数</strong> (large cardinals). 每往上一级, 数学强度都翻几个台阶.</p>
+
+<p>点击下面阶梯上的任一级查看说明:</p>
+
+<div class="ladder" id="ladder">
+  <!-- Will populate via JS -->
+</div>
+
+<div class="card">
+  <h3>Mahlo 的本质: "反射"</h3>
+  <p>一个基数 κ 是 <strong>Mahlo</strong>, 当且仅当 κ 下面的每一个 "稠密无界" (closed unbounded) 的不可达基数集合, 仍然包含一个不可达基数. 通俗一点: <strong>κ 这么大, 以至于你无论怎么从下面"取一族不可达基数", 总能在里面找到另一个不可达</strong>. 这种自我反射性把它推到比 Ω, Ω_Ω, ..., Ω_(Ω_Ω) 等都高的层级.</p>
+  <p>在类型论里, 对应物是 <strong>Mahlo 宇宙 (Mahlo universe)</strong>: 对任意算子 f, 存在一个 sub-universe 在 f 下闭合. Setzer 1998 给出了第一个 IR-Mahlo 编码.</p>
+</div>
+
+<p>本项目的最终野心: 把 Mahlo 序数喂进 OCF 的 ψ 函数, 得到比 ψ(Ω_Ω) 更大的 collapsed countable ordinal — 即所谓的 <strong>ψ(M)</strong>.</p>
+</section>
+
+<!-- ============================================ -->
+<section id="part2" class="anchor-shift">
+<h2>② Brouwer 化: 序数树长什么样?</h2>
+
+<p>经典集合论的序数是抽象的对象 (实际上是良序集的等价类). 但在<strong>构造性数学</strong>里, 我们要"亲手把序数搭出来". 最经典的搭法是 <strong>Brouwer 序数</strong>: 一棵树, 节点有三种.</p>
+
+<pre><code><span class="keyword">data</span> <span class="typename">Ord</span> : <span class="typename">Set</span> <span class="keyword">where</span>
+  <span class="constr">zero</span> : <span class="typename">Ord</span>                              <span class="com">-- 0</span>
+  <span class="constr">suc</span>  : <span class="typename">Ord</span> → <span class="typename">Ord</span>                       <span class="com">-- α+1</span>
+  <span class="constr">lim</span>  : (<span class="typename">ℕ</span> → <span class="typename">Ord</span>) → <span class="typename">Ord</span>                  <span class="com">-- sup of fundamental sequence</span></code></pre>
+
+<p>这里 <code>lim f</code> 就是"基本列 f 的上确界". 比如 <code>ω = lim (n ↦ ⌜n⌝)</code> 就是 0, 1, 2, ... 的极限.</p>
+
+<h3>Mahlo 加上去后是怎样的?</h3>
+
+<p>Mahlo 序数 <code>Ordᴹ</code> 在三种节点之外, 加上第四种 <strong>mahlo</strong> 节点:</p>
+
+<pre><code><span class="keyword">data</span> <span class="typename">Ordᴹ</span> : <span class="typename">Set</span> <span class="keyword">where</span>
+  <span class="constr">zero</span>  : <span class="typename">Ordᴹ</span>
+  <span class="constr">suc</span>   : <span class="typename">Ordᴹ</span> → <span class="typename">Ordᴹ</span>
+  <span class="constr">lim</span>   : (f : <span class="typename">ℕ</span> → <span class="typename">Ordᴹ</span>) → <span class="typename">monoᴺ</span> f → <span class="typename">Ordᴹ</span>
+  <span class="constr">mahlo</span> : <span class="typename">Opᴹ</span> → (a : <span class="typename">Ordᴹ</span>) → (b : <span class="typename">Sub</span> a → <span class="typename">Ordᴹ</span>)
+        → <span class="typename">monoSub</span> a b → (∀ s → a &lt;ᴹ b s) → <span class="typename">Ordᴹ</span></code></pre>
+
+<p>看起来吓人, 但是<strong>每个字段都对应一个直觉</strong>:</p>
+
+<div class="sub-demo">
+  <div class="ord-card">
+    <h4>a : Ordᴹ</h4>
+    <div class="ord-content">"code" 序数, 它对应的 sub-universe 是 <span class="badge-set">Sub a</span>.</div>
+  </div>
+  <div class="ord-card">
+    <h4>b : Sub a → Ordᴹ</h4>
+    <div class="ord-content">每个 sub-universe 元素 s ∈ Sub a 对应一个 reflected sub-universe <code>b s</code>.</div>
+  </div>
+  <div class="ord-card">
+    <h4>monoSub a b</h4>
+    <div class="ord-content">b 在 Sub a 的内禀序 <code>_&lt;ˢ_</code> 上单调. Phase 3 新增.</div>
+  </div>
+  <div class="ord-card">
+    <h4>∀ s → a &lt;ᴹ b s</h4>
+    <div class="ord-content">strat 字段: code a 严格在每个 reflected sub-universe 下面. Phase 3 新增, 弱化代价.</div>
+  </div>
+</div>
+
+<h3>Sub 是什么? — 每种节点的"宇宙内部"</h3>
+
+<p>Brouwer 树的每个节点都对应一个"我下面有哪些东西"的集合 <code>Sub</code>:</p>
+
+<div class="sub-demo">
+  <div class="ord-card">
+    <h4>Sub zero = ⊥</h4>
+    <div class="ord-content">0 下面没东西.</div>
+  </div>
+  <div class="ord-card">
+    <h4>Sub (suc a) = ⊤</h4>
+    <div class="ord-content">α+1 下面只有 α 一个新元素 (代理).</div>
+  </div>
+  <div class="ord-card">
+    <h4>Sub (lim f _) = ℕ</h4>
+    <div class="ord-content">极限节点下面是一族 f(n), 由 ℕ 索引.</div>
+  </div>
+  <div class="ord-card">
+    <h4>Sub (mahlo _ a b _ _) = Σ (Sub a) (Sub ∘ b)</h4>
+    <div class="ord-content">Mahlo 节点下面 = 一个 a 内的元素 s, 加上 b s 内的元素 t. <strong>这是 Setzer Σ-反射的 Brouwer 化</strong>.</div>
+  </div>
+</div>
+</section>
+
+<!-- ============================================ -->
+<section id="part3" class="anchor-shift">
+<h2>③ 8 层互递归的原理与作用</h2>
+
+<p>Mahlo 编码的核心技术活: <strong>所有这些类型必须同时定义</strong>. Ordᴹ 提到 Sub, Sub 提到 Ordᴹ, mahlo 字段提到 monoSub, monoSub 又提到 <code>_&lt;ᴹ_</code>... 它们循环依赖.</p>
+
+<p>Agda 处理这个的方式叫 <strong>mutual recursion (互递归)</strong>: 先声明所有类型, 再逐一定义. 当前 Phase 3 用 <strong>8 层</strong>互递归. 点击下面任一层查看它的作用:</p>
+
+<div class="layers-wrap">
+  <div class="layer-grid" id="layer-grid"><!-- JS populated --></div>
+  <div class="layer-detail empty" id="layer-detail">
+    点击上方任一层, 查看它的作用与依赖关系.
+  </div>
+</div>
+
+<h3>为什么需要这么多层?</h3>
+
+<p>关键洞察: <strong>每一层都解决一个"循环依赖"</strong>. 我们在尝试 V1 朴素编码 <code>mahlo : (Ordᴹ → Ordᴹ) → Ordᴹ</code> 时直接被 Agda strict positivity 拒. 然后:</p>
+
+<ul>
+  <li><strong>Opᴹ</strong> 出现: 把 "Ordᴹ → Ordᴹ" 改走 "Ordᴹ ↔ Opᴹ 双向" (Takahashi MLQ 技巧).</li>
+  <li><strong>Sub</strong> 出现: 给每个节点一个"我下面有什么"的可解码集合, 是 IR (induction-recursion) 的经典模式.</li>
+  <li><strong>_&lt;ᴹ_</strong> 出现: 序数必须有 &lt; 关系才能跑 ψ.</li>
+  <li><strong>monoᴺ</strong> 出现: lim 不允许任意基本列, 必须单调, 否则下游 bounded trichotomy 不可证.</li>
+  <li><strong>_&lt;ˢ_</strong> 出现 (Phase 3 新): Sub a 必须自带内禀序, 否则 mahlo 节点的 trichotomy 卡死. <em>详 §④.</em></li>
+  <li><strong>monoSub</strong> 出现 (Phase 3 新): b : Sub a → Ordᴹ 不允许是任意函数, 必须在 <code>_&lt;ˢ_</code> 上单调.</li>
+</ul>
+</section>
+
+<!-- ============================================ -->
+<section id="part4" class="anchor-shift">
+<h2>④ 内禀序 <code>_&lt;ˢ_</code> 的奥秘</h2>
+
+<h3>为什么必须有它?</h3>
+
+<p>设想 Phase 2 我们做 bounded trichotomy, 想证: 给定两个证明 <code>p : a &lt;ᴹ c</code> 和 <code>q : b &lt;ᴹ c</code>, 必有 <code>a &lt; b</code> 或 <code>b &lt; a</code> 或 <code>a ≡ b</code>.</p>
+
+<p>当 <code>c = mahlo f a₀ b₀ ...</code> 时, p 和 q 可能是 <code>mahlo-b s p'</code> 和 <code>mahlo-b s' q'</code> 这种形式 — 即 "a 在 sub-universe <code>b₀ s</code> 内, b 在 sub-universe <code>b₀ s'</code> 内".</p>
+
+<p>要继续证, 必须比较 s 和 s'. <strong>但 Sub a₀ 没有序!</strong></p>
+
+<div class="card highlight">
+  <p>这就是 Phase 2 死墙的根源 — Sub a 是个被"解码"出来的集合, 它的元素之间没有任何天然顺序. mahlo 节点下面的两个名字 s, s' 在结构上根本不可区分.</p>
+</div>
+
+<h3>解决方案: 按 a 的形状归纳定义 <code>_&lt;ˢ_</code></h3>
+
+<p>Phase 3 的关键发明: <strong>给每种 a 节点分配一个"和它的 Sub 匹配的序"</strong>. 用 IR-recursive 的方式定义:</p>
+
+<pre><code><span class="typename">_&lt;ˢ_</span> : ∀ {a : <span class="typename">Ordᴹ</span>} → <span class="typename">Sub</span> a → <span class="typename">Sub</span> a → <span class="typename">Set</span>
+<span class="typename">_&lt;ˢ_</span> {a = <span class="constr">zero</span>}        ()  _                <span class="com">-- Sub zero = ⊥, 空</span>
+<span class="typename">_&lt;ˢ_</span> {a = <span class="constr">suc</span> _}       _   _   = <span class="typename">⊥</span>      <span class="com">-- 单点, 没有非平凡序</span>
+<span class="typename">_&lt;ˢ_</span> {a = <span class="constr">lim</span> _ _}     n   m   = n <span class="typename">&lt;ᴺ</span> m  <span class="com">-- 借用 ℕ 的序</span>
+<span class="typename">_&lt;ˢ_</span> {a = <span class="constr">mahlo</span> _ a b _ _} (s , t) (s' , t') =
+   (s <span class="typename">&lt;ˢ</span> s') ⊎ <span class="typename">Σ</span>[ eq ∈ s ≡ s' ] (<span class="keyword">subst</span> (<span class="typename">Sub</span> ∘ b) eq t <span class="typename">&lt;ˢ</span> t')
+                       <span class="com">-- 字典序 (lex order)</span></code></pre>
+
+<h3>字典序: 互动演示</h3>
+
+<p>mahlo 节点的 Sub 元素是一对 <code>(s, t)</code> (第一分量在 Sub a 里, 第二分量在 Sub (b s) 里). 用字典序比较: <strong>先比第一分量, 相等再比第二分量</strong>.</p>
+
+<div class="lex-demo">
+  <p style="color: var(--fg-soft); margin-top: 0;">选择两对 (s, t) 和 (s', t') 比较:</p>
+
+  <div class="lex-pair-row">
+    <span class="lex-pair left">
+      <span class="lex-comp first" id="left-s">s = 0</span>
+      <span class="lex-comp second" id="left-t">t = 1</span>
+    </span>
+    <span class="lex-vs">  vs  </span>
+    <span class="lex-pair right">
+      <span class="lex-comp first" id="right-s">s' = 0</span>
+      <span class="lex-comp second" id="right-t">t' = 2</span>
+    </span>
+  </div>
+
+  <div class="lex-buttons">
+    <button class="lex-btn" data-action="reset">重置 (0,1) vs (0,2)</button>
+    <button class="lex-btn" data-action="first-diff">first 不同: (1,5) vs (2,0)</button>
+    <button class="lex-btn" data-action="first-eq-diff">first 相等, second 不同: (3,1) vs (3,7)</button>
+    <button class="lex-btn" data-action="equal">完全相等: (4,4) vs (4,4)</button>
+  </div>
+
+  <div class="lex-result" id="lex-result">
+    比较 (0, 1) vs (0, 2): first 相同 (都是 0), 比 second: 1 &lt; 2 → <strong style="color: var(--good)">(0,1) &lt;ˢ (0,2)</strong>
+  </div>
+</div>
+
+<h3>关键技术: <code>subst</code> 转移</h3>
+
+<p>注意 mahlo case 第二分量 <code>t : Sub (b s)</code>, <code>t' : Sub (b s')</code> — 它们类型不同 (索引不同)! 当 <code>s ≡ s'</code> 时, 用 <code>subst (Sub ∘ b) eq t</code> 把 t 沿等式同构搬到 <code>Sub (b s')</code>, 然后才能和 t' 比较.</p>
+
+<div class="card">
+  <p><strong>为什么这能通过 Agda 类型检查?</strong> 这里用 IR (induction-recursion) 的 Set-valued 函数定义 <code>_&lt;ˢ_</code>. <code>_&lt;ˢ_ {b s'}</code> 看起来不在 a 上"结构性变小", 但与 Phase 2 已有的 <code>Sub (mahlo _ a b _ _) = Σ (Sub a) (Sub ∘ b)</code> 同构 — 后者也有 <code>Sub (b x)</code> 不变小但被 IR scheme 接受. Agda 接受这种 IR 函数定义.</p>
+</div>
+
+<h3>internal trichotomy on Sub</h3>
+
+<p><code>_&lt;ˢ_</code> 自带<strong>无条件三歧性 <code>&lt;ˢ-dec</code></strong>: 任给 <code>s, s' : Sub a</code>, 总有 <code>s &lt;ˢ s'</code> 或 <code>s' &lt;ˢ s</code> 或 <code>s ≡ s'</code>. 证法: 结构归纳 a, mahlo case 套两层字典序展开. 这是 Phase 3 解锁 mahlo bounded trichotomy 的关键引擎.</p>
+</section>
+
+<!-- ============================================ -->
+<section id="part5" class="anchor-shift">
+<h2>⑤ Phase 1/2/3 的演进对比</h2>
+
+<div class="tabs">
+  <button class="tab active" data-tab="t1">Phase 1: 骨架</button>
+  <button class="tab" data-tab="t2">Phase 2: 撞墙</button>
+  <button class="tab" data-tab="t3">Phase 3: 突破 + 妥协</button>
+</div>
+
+<div class="tab-content active" id="t1">
+  <h3>Phase 1: 最小可行骨架</h3>
+  <p>4 层互递归 (Ordᴹ + Opᴹ + Sub + monoᴺ). Sub 在 mahlo 节点上是占位的 <code>⊤</code> (Phase 2 替换). 目标: 验证 Takahashi MLQ 风格能通过 Agda strict positivity (V1 朴素编码、V3 Setzer 直译都被拒).</p>
+  <p>结果: ✓ 通过. 锁定 MLQ 是唯一可行编码路径.</p>
+</div>
+
+<div class="tab-content" id="t2">
+  <h3>Phase 2: 把骨架填满, 撞墙</h3>
+  <p>升到 6 层: 加 <code>_&lt;ᴹ_</code>, <code>_&lt;ᴼ_</code>, 把 Sub (mahlo) 改成正确的 Σ-closure. 然后做 bounded trichotomy <code>&lt;ᴹ-dec</code>.</p>
+  <div class="phase-compare">
+    <div class="phase-col p2">
+      <h4>非 mahlo case</h4>
+      <ul>
+        <li><span class="check">✓</span> zero/suc 平凡</li>
+        <li><span class="check">✓</span> lim/lim 用 ℕ 三歧 + monoᴺ trans</li>
+      </ul>
+    </div>
+    <div class="phase-col p2">
+      <h4>mahlo case (4 子 case)</h4>
+      <ul>
+        <li><span class="check">✓</span> (mahlo-a, mahlo-a)</li>
+        <li><span class="cross">✗</span> (mahlo-a, mahlo-b)</li>
+        <li><span class="cross">✗</span> (mahlo-b, mahlo-a)</li>
+        <li><span class="cross">✗</span> (mahlo-b s, mahlo-b s')</li>
+      </ul>
+    </div>
+    <div class="phase-col p2">
+      <h4>退路</h4>
+      <ul>
+        <li><span class="warn">⚠</span> 返回 <code>Maybe</code></li>
+        <li><span class="warn">⚠</span> 3 case 给 <code>nothing</code></li>
+        <li><span class="cross">✗</span> ψ_M 不可定</li>
+      </ul>
+    </div>
+  </div>
+  <p>诊断: 3 个卡 case 都根源于 (a) Sub 无内禀序 (b) b 无 mono. 升级方向: Phase 3.</p>
+</div>
+
+<div class="tab-content" id="t3">
+  <h3>Phase 3: 加内禀序 + monoSub + strat</h3>
+  <p>升到 8 层. 加 <code>_&lt;ˢ_</code> (IR 函数版), <code>monoSub</code> 字段, strat 字段 <code>∀ s → a &lt;ᴹ b s</code>.</p>
+  <div class="phase-compare">
+    <div class="phase-col p3">
+      <h4>mahlo case (4 子 case)</h4>
+      <ul>
+        <li><span class="check">✓</span> (mahlo-a, mahlo-a)</li>
+        <li><span class="check">✓</span> (mahlo-a, mahlo-b) — 用 strat</li>
+        <li><span class="check">✓</span> (mahlo-b, mahlo-a) — 用 strat</li>
+        <li><span class="check">✓</span> (mahlo-b s, mahlo-b s') — 用 monoSub + &lt;ˢ-dec</li>
+      </ul>
+    </div>
+    <div class="phase-col p3">
+      <h4>解锁机制</h4>
+      <ul>
+        <li><span class="check">✓</span> &lt;ˢ-dec 无条件三歧</li>
+        <li><span class="check">✓</span> monoSub 提供 b 单调</li>
+        <li><span class="check">✓</span> strat 桥接 a₀ ↔ b s</li>
+        <li><span class="check">✓</span> full &lt;ᴹ-dec, 无 Maybe</li>
+      </ul>
+    </div>
+    <div class="phase-col p3">
+      <h4>代价</h4>
+      <ul>
+        <li><span class="warn">⚠</span> strat 强制 a &lt; b s 链式</li>
+        <li><span class="warn">⚠</span> 不是 Setzer 真 Mahlo</li>
+        <li><span class="warn">⚠</span> 弱化为 stratified Σ-reflect</li>
+        <li><span class="warn">⚠</span> 强度 &lt; 真 ψ(M)</li>
+      </ul>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- ============================================ -->
+<section id="part6" class="anchor-shift">
+<h2>⑥ 妥协与未来</h2>
+
+<div class="card highlight">
+  <h3>本质交换 (Tradeoff)</h3>
+  <p>Phase 3 用<strong>语义弱化 (strat 字段)</strong>换取<strong>操作性全函数 trichotomy</strong>. 这是构造性形式化中"忠实地翻译数学"和"实际能跑"之间的永恒冲突. 真正的 Setzer Mahlo 不要求 <code>a &lt; b s</code>, 但那样 trichotomy 就证不出来.</p>
+</div>
+
+<h3>三条候选路线</h3>
+<div class="grid-2">
+  <div class="card">
+    <h3 style="color: var(--accent);">A. 去 strat 保 mono</h3>
+    <p>退回 3a-only. cross-case 仍卡, partial trichotomy. <strong>强度高但操作弱</strong>, ψ_M 不可定.</p>
+  </div>
+  <div class="card">
+    <h3 style="color: var(--accent-2);">B. 替代 strat</h3>
+    <p>找别的桥接 a ↔ b s 的方式 — 比如要求 Mahlo 节点带 reflection 见证. <strong>研究问题, 未知答案</strong>.</p>
+  </div>
+  <div class="card">
+    <h3 style="color: var(--good);">C. 接受 stratified Mahlo (当前)</h3>
+    <p>把当前编码标识为"弱 Mahlo OCF", 继续走 ψ_M 获取 ψ(stratified-Mahlo). <strong>工程上可走, 强度可量化</strong>.</p>
+  </div>
+  <div class="card">
+    <h3 style="color: var(--accent-3);">D. 换框架</h3>
+    <p>用 Coq/Lean (它们的 strict positivity 检查不同) 重做. <strong>离开 Agda 生态, 重写代价大</strong>.</p>
+  </div>
+</div>
+
+<h3>强度量级评估 (修正版)</h3>
+
+<p>原报告粗估 Phase 3 ≈ ψ((Ω_Ω)^ω). 经过与 <code>Higher.agda</code> (BTBO 之上 +1 级的已有路径) 对比, 这个估算**对单层 mahlo 准确, 对嵌套 mahlo 偏低**.</p>
+
+<div class="card">
+  <h3 style="margin-top: 0;">强度位次对照</h3>
+  <table style="width: 100%; border-collapse: collapse; font-size: 0.92em;">
+    <thead>
+      <tr style="border-bottom: 1px solid var(--border); color: var(--fg-soft);">
+        <th style="text-align: left; padding: 8px 6px;">来源</th>
+        <th style="text-align: left; padding: 8px 6px;">索引结构</th>
+        <th style="text-align: left; padding: 8px 6px;">估算</th>
+      </tr>
+    </thead>
+    <tbody style="color: var(--fg-soft);">
+      <tr style="border-bottom: 1px dashed var(--border);">
+        <td style="padding: 8px 6px;">BTBO</td>
+        <td style="padding: 8px 6px;"><code>ℕ</code></td>
+        <td style="padding: 8px 6px; color: var(--accent);">ψ(Ω_Ω)</td>
+      </tr>
+      <tr style="border-bottom: 1px dashed var(--border);">
+        <td style="padding: 8px 6px;">Phase 3 单层 mahlo</td>
+        <td style="padding: 8px 6px;"><code>Sub a</code> ≈ ℕ (Σ 平铺)</td>
+        <td style="padding: 8px 6px; color: var(--accent-2);">≈ ψ((Ω_Ω)^ω)</td>
+      </tr>
+      <tr style="border-bottom: 1px dashed var(--border);">
+        <td style="padding: 8px 6px;">Phase 3 嵌套 mahlo</td>
+        <td style="padding: 8px 6px;">Σ-of-Σ-of-...</td>
+        <td style="padding: 8px 6px; color: var(--accent-2);">≲ ψ(Ω_(Ω+ω))</td>
+      </tr>
+      <tr style="border-bottom: 1px dashed var(--border); background: rgba(125,211,252,0.04);">
+        <td style="padding: 8px 6px;">Higher.agda (已有)</td>
+        <td style="padding: 8px 6px;"><code>Ord ψᴰ(n)</code> (带 limᵢ 全树)</td>
+        <td style="padding: 8px 6px; color: var(--good);">ψ((Ω_Ω)+(Ω_(ψ(Ω_Ω)+1)))</td>
+      </tr>
+      <tr style="border-bottom: 1px dashed var(--border);">
+        <td style="padding: 8px 6px;">共同上界</td>
+        <td style="padding: 8px 6px;">—</td>
+        <td style="padding: 8px 6px; color: var(--warn);">&lt; ψ(Ω_(Ω+1))</td>
+      </tr>
+      <tr>
+        <td style="padding: 8px 6px;">Setzer 真 Mahlo</td>
+        <td style="padding: 8px 6px;">真 reflection</td>
+        <td style="padding: 8px 6px; color: var(--bad);">ψ(M) (远在上方)</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="card highlight">
+  <h3 style="margin-top: 0;">⚠ 关键判断: Phase 3 ≲ Higher.agda</h3>
+  <p><strong>两者都是 "BTBO 之上 +1 级", 但增量方向不同</strong>:</p>
+  <ul style="color: var(--fg-soft);">
+    <li><strong>Higher.agda</strong> 的增量在 "index 的内部结构": <code>limₙ</code> 让 Brouwer 树以"另一棵带 limᵢ 嵌套的 Brouwer 树"为索引. 索引集结构丰富.</li>
+    <li><strong>Phase 3 mahlo</strong> 的增量在 "节点的外部结构": mahlo 节点带 <code>Sub a</code> 名字集. 但 Sub a 是 Σ-平铺, <strong>没有内部 limᵢ 嵌套</strong>, 比 Ord ℓ 结构更扁.</li>
+  </ul>
+  <p>Cardinality 等价, 结构非等价. <strong>Phase 3 嵌套 mahlo 大概率不超过 Higher.agda</strong>. 即 Phase 3 用 8 层互递归 + strat 弱化换来的强度, Higher.agda 已用 50 行更简单的方式达到了.</p>
+</div>
+
+<h3>下一步: Step 5 ψ_M (定位为结构性贡献, 非强度贡献)</h3>
+<p>有了 full <code>&lt;ᴹ-dec</code>, 现在可以仿 <code>Higher.agda</code> 里的 <code>ψ&lt;Ω</code> 写出 <code>ψ_M</code> collapser. 但<strong>需诚实标识: 它的输出大概率不超过 Higher.agda 已有的 ψ((Ω_Ω)+(Ω_(ψ(Ω_Ω)+1)))</strong>.</p>
+<p>Phase 3 的真正价值不在 ordinal 强度提升, 而在:</p>
+<ol style="color: var(--fg-soft);">
+  <li>探索 IR-Mahlo 的形式化路径 (结构性贡献).</li>
+  <li>为未来 "true Mahlo without strat" 的研究铺垫 (Phase 4+).</li>
+  <li>验证 monoSub + <code>_&lt;ˢ_</code> 的 IR-recursive 定义可行 (Dybjer-Setzer scheme 实证).</li>
+</ol>
+</section>
+
+<footer>
+  <p>所有 Agda 代码通过 <code>--safe --without-K --cubical-compatible --lossy-unification --hidden-argument-puns</code> 类型检查. 无 postulate, 无 unsafe. 详见同目录下 <a href="FINDINGS.md">FINDINGS.md</a> · <a href="FINDINGS_Phase2.md">FINDINGS_Phase2.md</a> · <a href="FINDINGS_Phase3.md">FINDINGS_Phase3.md</a>.</p>
+</footer>
+
+</div>
+
+<script>
+// ========== Ladder data ==========
+const ladderData = [
+  { label: "0, 1, 2, …", name: "有限数", desc: "ω 以下, 可以一个一个数出来.", mark: "✓", markClass: "reached" },
+  { label: "ω", name: "第一个无限序数", desc: "lim (n ↦ n). 可数无穷, 自然数的极限.", mark: "✓", markClass: "reached" },
+  { label: "ω₁ = Ω", name: "第一个不可数序数", desc: "所有可数序数的极限. OCF 中常记作 Ω.", mark: "✓", markClass: "reached" },
+  { label: "Ω_Ω", name: "Ω 的 Ω 次迭代", desc: "ψ(Ω_Ω) 是 Bachmann-Howard 序数. BTBO 框架的顶点.", mark: "✓ (BTBO)", markClass: "reached" },
+  { label: "Inaccessibles", name: "不可达基数", desc: "正则强极限基数. ZFC 不能证明存在.", mark: "↑ 上去", markClass: "" },
+  { label: "M (Mahlo)", name: "Mahlo 基数", desc: "下面任意稠密无界不可达类都含不可达. 本探索目标.", mark: "▲ 目标", markClass: "wall" },
+  { label: "WC (Weakly Compact)", name: "弱紧基数", desc: "更高一级. 本项目暂不涉及.", mark: "未来", markClass: "" },
+];
+const ladder = document.getElementById('ladder');
+ladderData.forEach(d => {
+  const r = document.createElement('div');
+  r.className = 'rung';
+  r.innerHTML = `
+    <span class="rung-label">${d.label}</span>
+    <span class="rung-name">${d.name}</span>
+    <span class="rung-mark ${d.markClass}">${d.mark}</span>
+    <div class="rung-desc">${d.desc}</div>
+  `;
+  r.addEventListener('click', () => {
+    document.querySelectorAll('.rung').forEach(x => x.classList.remove('active'));
+    r.classList.add('active');
+  });
+  ladder.appendChild(r);
+});
+// Default expand the Mahlo rung
+setTimeout(() => ladder.children[1]?.classList.add('active'), 0);
+
+// ========== Layer data ==========
+const layers = [
+  { name: "Ordᴹ", type: "data", phase: "old", role: "Mahlo 序数本身. 4 个构造子 (zero/suc/lim/mahlo).", deps: "依赖 Opᴹ, Sub, monoᴺ, monoSub" },
+  { name: "Opᴹ", type: "data", phase: "old", role: "代理 'Ordᴹ → Ordᴹ' 的算子类型. Takahashi MLQ 技巧, 绕开 strict positivity.", deps: "依赖 Ordᴹ, Sub" },
+  { name: "Sub", type: "function : Ordᴹ → Set", phase: "old", role: "每个序数节点的 sub-universe (它下面的元素集合). IR-recursive 定义.", deps: "依赖 Ordᴹ; mahlo case 用 Σ-closure" },
+  { name: "_<ᴹ_", type: "data", phase: "old", role: "Ordᴹ 上的小于关系. 5 个构造子 (zero/suc/lim/mahlo-a/mahlo-b).", deps: "依赖 Ordᴹ, Sub" },
+  { name: "_<ᴼ_", type: "data", phase: "old", role: "Opᴹ 上的小于关系. 只比较 op 的 'code 头', 不展开算子分支.", deps: "依赖 Opᴹ, _<ᴹ_" },
+  { name: "_<ˢ_", type: "function : ∀{a} → Sub a → Sub a → Set", phase: "new", role: "Sub a 上的内禀序. 按 a 的形状分情况: zero/suc 无序, lim 用 ℕ 序, mahlo 用字典序. Phase 3 新增, 是解锁 trichotomy 的核心.", deps: "依赖 Ordᴹ, Sub; mahlo case 用 subst" },
+  { name: "monoᴺ", type: "predicate : (ℕ → Ordᴹ) → Set", phase: "old", role: "ℕ-索引基本列的单调性约束. 让 lim 不接受任意函数, 否则 trichotomy 不可证.", deps: "依赖 _<ᴹ_, _<ᴺ_" },
+  { name: "monoSub", type: "predicate : (a)(Sub a → Ordᴹ) → Set", phase: "new", role: "Sub a-索引的 b 函数的单调性. 让 mahlo 不接受任意 b: Sub a → Ordᴹ, 烤进 Phase 3 的关键约束.", deps: "依赖 _<ˢ_, _<ᴹ_" },
+];
+const layerGrid = document.getElementById('layer-grid');
+layers.forEach((l, i) => {
+  const d = document.createElement('div');
+  d.className = `layer ${l.phase === 'new' ? 'phase3-new' : 'phase2'}`;
+  d.dataset.idx = i;
+  d.innerHTML = `
+    <div class="layer-name">${l.name}</div>
+    <div class="layer-type">${l.type}</div>
+    <span class="layer-badge ${l.phase === 'new' ? 'new' : 'old'}">${l.phase === 'new' ? 'Phase 3 新增' : 'Phase 1/2'}</span>
+  `;
+  d.addEventListener('click', () => {
+    document.querySelectorAll('.layer').forEach(x => x.classList.remove('selected'));
+    d.classList.add('selected');
+    const detail = document.getElementById('layer-detail');
+    detail.classList.remove('empty');
+    detail.innerHTML = `
+      <div style="font-family: monospace; font-size: 1.1em; color: var(--accent); margin-bottom: 6px;">${l.name}</div>
+      <div style="color: var(--fg-soft); font-family: monospace; font-size: 0.85em; margin-bottom: 12px;">${l.type}</div>
+      <div style="margin-bottom: 12px;">${l.role}</div>
+      <div style="color: var(--fg-dim); font-size: 0.88em;">${l.deps}</div>
+    `;
+  });
+  layerGrid.appendChild(d);
+});
+
+// ========== Lex order demo ==========
+const lexBtns = document.querySelectorAll('.lex-btn');
+const lexResult = document.getElementById('lex-result');
+const leftS = document.getElementById('left-s');
+const leftT = document.getElementById('left-t');
+const rightS = document.getElementById('right-s');
+const rightT = document.getElementById('right-t');
+
+function showLex(s1, t1, s2, t2) {
+  leftS.textContent = `s = ${s1}`;
+  leftT.textContent = `t = ${t1}`;
+  rightS.textContent = `s' = ${s2}`;
+  rightT.textContent = `t' = ${t2}`;
+  let msg = '';
+  if (s1 < s2) {
+    msg = `first 不同: ${s1} &lt; ${s2} → <strong style="color: var(--good)">(${s1},${t1}) &lt;ˢ (${s2},${t2})</strong> 通过 <code>injᵃ s&lt;s'</code>. <br><span style="color: var(--fg-dim);">不需要比较 second 分量.</span>`;
+  } else if (s1 > s2) {
+    msg = `first 不同: ${s2} &lt; ${s1} → <strong style="color: var(--good)">(${s2},${t2}) &lt;ˢ (${s1},${t1})</strong> 通过 <code>injᵃ s'&lt;s</code>. <br><span style="color: var(--fg-dim);">不需要比较 second 分量.</span>`;
+  } else {
+    // s1 == s2
+    if (t1 < t2) {
+      msg = `first 相同 (都是 ${s1}), 比 second: ${t1} &lt; ${t2} → <strong style="color: var(--good)">(${s1},${t1}) &lt;ˢ (${s2},${t2})</strong> 通过 <code>injᵇ (refl, t&lt;t')</code>. <br><span style="color: var(--fg-dim);">subst (Sub ∘ b) refl t ≡ t 定义性 reduce, 类型对齐.</span>`;
+    } else if (t1 > t2) {
+      msg = `first 相同, 比 second: ${t2} &lt; ${t1} → <strong style="color: var(--good)">(${s2},${t2}) &lt;ˢ (${s1},${t1})</strong> 通过 <code>injᵇ (refl, t'&lt;t)</code>.`;
+    } else {
+      msg = `完全相等: ${s1}=${s2}, ${t1}=${t2} → <strong style="color: var(--accent-3)">(${s1},${t1}) ≡ (${s2},${t2})</strong>. <br><span style="color: var(--fg-dim);">三歧的第三个分支.</span>`;
+    }
+  }
+  lexResult.innerHTML = msg;
+}
+
+lexBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const act = btn.dataset.action;
+    if (act === 'reset') showLex(0, 1, 0, 2);
+    if (act === 'first-diff') showLex(1, 5, 2, 0);
+    if (act === 'first-eq-diff') showLex(3, 1, 3, 7);
+    if (act === 'equal') showLex(4, 4, 4, 4);
+  });
+});
+
+// ========== Tabs ==========
+document.querySelectorAll('.tab').forEach(t => {
+  t.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(x => x.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById(t.dataset.tab).classList.add('active');
+  });
+});
+
+// Smooth scroll for TOC
+document.querySelectorAll('.toc a').forEach(a => {
+  a.addEventListener('click', e => {
+    e.preventDefault();
+    const target = document.querySelector(a.getAttribute('href'));
+    if (target) target.scrollIntoView({ behavior: 'smooth' });
+  });
+});
+</script>
+</body>
+</html>
