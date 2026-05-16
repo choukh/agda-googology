@@ -1,8 +1,10 @@
-# Phase 5 Path B spike: Higher² 迭代
+# Phase 5 Path B spike: Higher² 迭代 ✓ 唯一达成超过 Higher.agda 的路径
 
 > Phase 4 Mahlo 路径强度 ≲ Higher.agda. 本 spike 不走 Mahlo, 直接**迭代 Higher.agda** 的 limₙ 模式: 在 OrdΩ 之上构造 OrdΩ², 让 limₙ' 索引在 Higher.agda 已达到的 `ψⁿᴴ` 序列, 而非 BTBO 的 `ψⁿ`. 预期强度 ≈ ψ((Ω_Ω+1)+(Ω_(Higher+1))), **明确超过 Higher.agda 一级**.
 >
 > 模板 100% 仿 [Higher.agda:13-42](../../Higher.agda#L13-L42), 只改 `ψᴰ → ψᴰ'`, `ψⁿ → ψⁿᴴ`, `OrdΩ → OrdΩ²`, `↑Ω → ↑Ω²`, `ψ<Ω → ψ<Ω²`.
+>
+> 三路径并行 (A/B/C) 对比 + Phase 6 决策见 [FINDINGS.md §Phase 5 三路径对比](FINDINGS.md).
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}

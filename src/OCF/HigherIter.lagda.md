@@ -1,8 +1,10 @@
-# Higher Iteration: Higher^k 至 ψ(Ω_(Ω+k))
+# Higher Iteration: Higher^k 至 ψ(Ω_(Ω+k)) (Phase 6.1)
 
 > [Higher.agda](Higher.agda) 用 `limₙ` + `ψ<Ω` 把 BTBO 推到 ψ((Ω_Ω)+(Ω_(ψ(Ω_Ω)+1))). 本模块**机械迭代** Higher.agda 模板, 每层提供下一层的 `ψⁿ` 序列. Higher^k 估算强度 ψ(Ω_(Ω+k))-ish, 远超 Higher.agda 单层.
 >
-> 模板 100% 仿 Higher.agda. 每层符号化拷贝 (替换 `ψᴰ → ψᴰᵏ`, `OrdΩ → OrdΩᵏ`, `↑Ω → ↑Ωᵏ`, `ΩΩ → ΩΩᵏ`, `ψ<Ω → ψ<Ωᵏ`). 4 层 (Higher² 至 Higher⁴) 已足以远超 Higher.agda. ω 层透过 Phase 6.2 `OrdH α` 实现.
+> 模板 100% 仿 Higher.agda. 每层符号化拷贝 (替换 `ψᴰ → ψᴰᵏ`, `OrdΩ → OrdΩᵏ`, `↑Ω → ↑Ωᵏ`, `ΩΩ → ΩΩᵏ`, `ψ<Ω → ψ<Ωᵏ`). 4 层 (Higher² 至 Higher⁴) 已足以远超 Higher.agda. ω 层透过 Phase 6.2 [HigherOrdᴰ.lagda.md](HigherOrdᴰ.lagda.md) 的 `OrdH α` 实现.
+>
+> 6.1 vs 6.2 对比 + Phase 6 强度阶梯 → [FINDINGS_Phase6.md](FINDINGS_Phase6.md) (umbrella).
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
@@ -162,6 +164,6 @@ Higher⁴ = lim ψⁿᴴ⁴     -- ≈ ψ(Ω_(Ω+4))-ish
 | **3** (本模块) | OrdΩ³ | **≈ ψ(Ω_(Ω+3))** |
 | **4** (本模块) | OrdΩ⁴ | **≈ ψ(Ω_(Ω+4))** |
 
-每层 ~30 LOC 符号化拷贝, **完全机械化**. 这暗示 Phase 6.2 单一数据类型 `OrdH α` 是自然的下一步, 把 k = ℕ 推广到 α = Ordᴰ.
+每层 ~30 LOC 符号化拷贝, **完全机械化, 没有概念性 work**. 这暗示 Phase 6.2 单一数据类型 `OrdH α` 是自然的下一步, 把 k = ℕ 推广到 α = Ordᴰ.
 
-强度量级评估留待 [FINDINGS_Phase6.md](FINDINGS_Phase6.md).
+强度阶梯 + 与 Phase 6.2 对比 → [FINDINGS_Phase6.md](FINDINGS_Phase6.md).

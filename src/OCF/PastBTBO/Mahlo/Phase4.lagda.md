@@ -1,10 +1,8 @@
-# Mahlo Phase 4: 去 strat + level-indexed ψ_M (超过 Higher.agda)
+# Mahlo Phase 4: 去 strat + level-indexed ψ_M (诚实负面结果)
 
-> Phase 3 ([Phase3.lagda.md](Phase3.lagda.md)) 强度 ≲ Higher.agda (诊断: [FINDINGS_Phase3.md §4.3](FINDINGS_Phase3.md)). Phase 4 转向: **去 strat**, ψ_M 改用 Higher.agda 风格的 level-indexed dispatch (`Ord (level a)` 输出, Ordᴰ trichotomy), **不依赖 mahlo 节点上的 `<ᴹ-dec`** (允许 partial).
+> Phase 3 ([Phase3.lagda.md](Phase3.lagda.md)) 用 strat 字段换 full trichotomy, 强度 ≲ Higher.agda. Phase 4 转向: **去 strat**, ψ_M 改用 level-indexed dispatch, 看能否不依赖 mahlo 上 `<ᴹ-dec` 全函数化, 通过 ω-nested mahlo 真正达到 ψ(Ω_(Ω+ω)).
 >
-> 目标: ω-nested mahlo + `ψ₀ ∘ ψ_M` 经 outer `lim n` 达 ψ(Ω_(Ω+ω)) 量级, 首次真正超过 Higher.agda 的 ψ((Ω_Ω)+(Ω_(ψ(Ω_Ω)+1))).
->
-> 详细诊断 → [FINDINGS_Phase4.md](FINDINGS_Phase4.md).
+> **实测概要 (诚实结论)**: Phase 4 ψ_M v1/v2 都编译通过, **但实际强度未超过 Higher.agda**. 原因结构性 — Sub a 是 Σ-平铺, 索引能力 = ℕ, 不足以驱动 Ord-tree-indexed limit. **Phase 3 + Phase 4 两轮探索都未能超过 Higher.agda; Mahlo 路径在 Sub-Σ 设计下已饱和**, 需 Phase 5 走根本性不同方向.
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
@@ -138,7 +136,7 @@ Tri a b = a <ᴹ b ⊎ b <ᴹ a ⊎ a ≡ b
 ... | injᶜ refl        = <ᴹ-dec? p q
 ```
 
-Phase 4 不依赖 `<ᴹ-dec?` 全函数化, ψ_M 改用 level-indexed dispatch (§4c).
+**4a 实测**: `<ᴹ-dec?` 退回 Phase 2 同型 partial — cross-case 仍 `nothing`. Phase 4 不依赖 `<ᴹ-dec?` 全函数化, ψ_M 改用 level-indexed dispatch (§4c).
 
 ## §4b — `level : Ordᴹ → Ordᴰ` rank 函数
 
@@ -152,9 +150,11 @@ level (lim f _)       = limᴰ (cumsum (level ∘ f)) (cumsum-mono (level ∘ f)
 level (mahlo _ a _ _) = sucᴰ (level a)
 ```
 
+**4b 实测**: 结构归纳通过, 无终止问题. mahlo case +1 rank, 与 ordᴰ 的 `ordᴰ (suc a) = sucᴰ (ordᴰ a)` 模式同构 (但 suc 不增 rank — rank 只跟踪 mahlo 嵌套).
+
 注: mahlo case 暂忽略 b 贡献 (§4c-v1 简单版基线); §4c-v2 / Phase 5 可改用 `sucᴰ (level a ⊔ sup (level ∘ b ∘ enum))`. suc case 不增 rank, 与 `ordᴰ (suc a) = sucᴰ (ordᴰ a)` 不同 — 这里 rank 反映"mahlo 嵌套深度", 不是 Ordᴹ 整体 ordinal 值.
 
-## §4c-v1 — `ψ_M` 简单版: 直接输出到 Ord₀ (BTBO ψⁿ pattern)
+## §4c-v1 — `ψ_M` 基线版: 直接输出到 Ord₀ (BTBO ψⁿ pattern)
 
 为避免 level-indexed `Ord (level a)` 的 cumsum-step proof obligation, v1 大幅简化: ψ_M 直接输出到 Ord₀. mahlo 节点用 BTBO ψⁿ trick (`ψ₀ ∘ Ω ∘ ordᴰ`) 引入 Ω-跳跃. b/level 字段在 v1 暂不使用, 留待 v2+.
 
@@ -166,7 +166,23 @@ level (mahlo _ a _ _) = sucᴰ (level a)
 ψ_M (mahlo _ a _ _) = ψ₀ {ℓ = ordᴰ (ψ_M a)} (Ω (ordᴰ (ψ_M a)))   -- ψ(Ω_(ψ_M a)), ψⁿ pattern
 ```
 
-### v2 尝试: 用 level 给 mahlo 提供 Ordᴰ-rank 增量
+说明:
+
+- `ψ_M zero = Ω zeroᴰ = ω` ([BTBO.lagda.md L940](../../BTBO.lagda.md#L940) 等式).
+- `ψ_M (suc a)`: 标准 Buchholz suc-collapse.
+- `ψ_M (lim f _)`: 简单递归, 弃用 mono.
+- `ψ_M (mahlo _ a _ _) = ψ(Ω_(ψ_M a))`: 把 mahlo 当作 "ψⁿ 步进", 与 BTBO 的 `ψⁿ = iter (ψ₀ ∘ Ω ∘ ordᴰ) zero` 同模板.
+
+**v1 强度评估 (诚实)**:
+
+- M^0 = zero: ψ_M M^0 = ω
+- M^1 = mahlo .. zero .. ..: ψ_M M^1 = ψ(Ω_ω) = BO
+- M^n iterated: ψ_M M^n ≈ ψⁿ(0)
+- lim n → ψ_M M^n ≈ BTBO = ψ(Ω_Ω)
+
+**= BTBO 强度, 不超过 Higher.agda**. v1 仅作 sanity check (Phase 4 端到端可跑), 真正超过需 v2.
+
+## §4c-v2 — level-bumped Ω-index
 
 替代设计: 把 mahlo 节点的 Ω-索引提到 `ordᴰ (ψ_M a) + level (mahlo …)` (Ordᴰ 上的加法). level 在 Ordᴰ 上提供 +rank 贡献.
 
@@ -180,6 +196,7 @@ level (mahlo _ a _ _) = sucᴰ (level a)
 ```
 
 **v2 强度评估**:
+
 - M^0 = zero: ψ_M-v2 = ω
 - M^1 = mahlo .. zero ..: level M^1 = sucᴰ zeroᴰ, ψ_M-v2 = ψ(Ω_(ordᴰ ω + 1)) ≈ ψ(Ω_(ω+1))
 - M^n: ψ(Ω_(ordᴰ (ψⁿ⁻¹(0)) + n))
@@ -187,41 +204,19 @@ level (mahlo _ a _ _) = sucᴰ (level a)
 
 外层 lim 极限: ≈ ψ(Ω_BTBO + ω). 比 v1 略增, 但**仍未超过 Higher.agda** 的 ψ((Ω_Ω)+(Ω_(ψ(Ω_Ω)+1))) — 因为 ψ_M-v2 没有 Ord-indexed limit, 只有 ℕ-indexed.
 
-### v3 障碍: Sub-enum 不够
+## §4c-v3 障碍: Sub-enum 也不够
 
-**关键洞察**: 让 mahlo 真正超过 Higher.agda 需要 Ord ℓ-indexed limit (Higher.agda 的 `limₙ` 已是 +1 级), 而 Phase 4 mahlo 的 `b : Sub a → Ordᴹ` 索引型 Sub a 是 Σ-平铺, 结构上比 Ord ℓ 简单.
+设计假设的 v3:
 
-Sub-enum (`enum-Sub : (a : Ordᴹ) → ℕ → Maybe (Sub a)`) 把 b 折成 ℕ-序列, 仍是 ℕ-cofinal, 与 BTBO 同强度. 即使 Cantor pairing 处理 Σ-嵌套, 输出仍可数.
+    ψ_M-v3 (mahlo _ a b _) = ... + lim (n ↦ ψ_M-v3 (b (enum-Sub a n)))
 
-**真正超过 Higher.agda 的路径** (Phase 5 范围, 不在本 Phase 4 实现):
-1. **Sub 升级**: 把 `Sub (mahlo _ a b _) = Σ (Sub a) (Sub ∘ b)` 改成更丰富的索引, 例如 `Sub (mahlo _ a b _) = Ord< (level a) _`. 这把 Sub 与 BTBO 的 Ord-Ord 方案耦合, 突破 Σ-平铺限制. 但 mahlo 字段 b 的类型同步要改, 整个互递归结构重写.
-2. **Higher^2 (Option α from 之前讨论)**: 不走 Mahlo, 直接在 OrdΩ 之上再加一层 `limₙ'`. 已知可达 ψ(Ω_(Ω+2)), 更高的迭代到 ψ(Ω_(Ω+ω)).
-3. **Setzer 真 Mahlo (Design C)**: Opᴹ 语义化 + reflection witness. 理论可达 ψ(M).
+`enum-Sub : (a : Ordᴹ) → ℕ → Maybe (Sub a)` 把 b 折成 ℕ-序列. 即使 Cantor pairing 处理 mahlo 的 Σ-嵌套, 输出仍是 ℕ-cofinal lim. 与 Higher.agda 的 `limₙ ... (Ord ℓ → OrdΩ)` 相比, 缺 Ord-tree 索引层.
 
-**说明**:
-- `ψ_M zero = Ω zeroᴰ = ω` ([BTBO.lagda.md:940](../../BTBO.lagda.md#L940) 等式).
-- `ψ_M (suc a)`: 标准 Buchholz suc-collapse.
-- `ψ_M (lim f _)`: 简单递归, 弃用 mono.
-- `ψ_M (mahlo _ a _ _) = ψ(Ω_(ψ_M a))`: 把 mahlo 当作 "ψⁿ 步进", 与 BTBO 的 `ψⁿ = iter (ψ₀ ∘ Ω ∘ ordᴰ) zero` 同模板.
-
-**v1 强度评估** (诚实):
-- M^0 = zero: ψ_M M^0 = ω
-- M^1 = mahlo .. zero .. ..: ψ_M M^1 = ψ(Ω_ω) = BO
-- M^n iterated: ψ_M M^n ≈ ψⁿ(0)
-- lim n → ψ_M M^n ≈ BTBO = ψ(Ω_Ω)
-
-**=** BTBO 强度, **不超过** Higher.agda. v1 仅作 sanity check (Phase 4 端到端可跑), 真正超过需 v2 (Sub-enum + b 折入).
+**结论**: 在当前 `Sub (mahlo _ a b _) = Σ (Sub a) (Sub ∘ b)` 设计下, Phase 4 任何 ψ_M 变体都不会超过 Higher.agda. **Mahlo 路径的 Sub-Σ 限制是结构性瓶颈**.
 
 ## §4d — 强度 demo (基线 BTBO)
 
-仿 [Higher.agda:40-42](../../Higher.agda#L40-L42), 顶级 binding 验证 ψ_M 可计算:
-
-```agda
--- ω-nested mahlo, b 用 const + Sub a → Ordᴹ
--- 注意: monoSub 需要实例化. 因为 ψ_M v1 不读 b, 我们可以塞任何 monoSub 见证 (用 absurd 或 const).
-```
-
-(具体 M^n 构造与 monoSub 实例化待 4d-impl. v1 阶段可以 binding `ψ_M zero` / `ψ_M (suc zero)` 等简单值验证.)
+仿 [Higher.agda L40-42](../../Higher.agda#L40-L42), 顶级 binding 验证 ψ_M 可计算:
 
 ```agda
 _ : Ord₀
@@ -231,3 +226,68 @@ _ : Ord₀
 _ = ψ_M (suc (suc zero))
 ```
 
+(具体 M^n 构造与 monoSub 实例化待 4d-impl. v1 阶段可以 binding `ψ_M zero` / `ψ_M (suc zero)` 等简单值验证.)
+
+## 强度对比 (核心 deliverable)
+
+| 来源 | 估算 |
+|------|------|
+| BTBO `BTBO = lim ψⁿ` | ψ(Ω_Ω) |
+| **Phase 4 v1** | **≈ ψ(Ω_Ω)** — 与 BTBO 持平 |
+| **Phase 4 v2** | **≈ ψ(Ω_(Ω+ω))** — 比 BTBO 多 ω-级, **但**: |
+| Higher.agda OrdΩ + limₙ | ψ((Ω_Ω)+(Ω_(ψ(Ω_Ω)+1))) — 估算 by ggg 社区 |
+| Phase 4 v2 vs Higher.agda | **v2 ≲ Higher.agda** (v2 的 Ω-塔仅 ℕ-高, Higher.agda 的 limₙ 是 Ord-tree-高) |
+
+**关键定性差**: Higher.agda 的 limₙ 索引在 `Ord ψᴰ(n)` (一棵带 limᵢ 嵌套的 Brouwer 树), Phase 4 v1/v2 的 ψ_M 索引在 `ℕ` (mahlo 嵌套深度). 二者在 cardinality 上都可数, 但 Ord-tree 的内部 limᵢ 嵌套给 Higher.agda 多出 1 个 "Ω-索引深度", Phase 4 没有.
+
+## 与 Phase 3 路线的对比
+
+| 维度 | Phase 3 (strat) | Phase 4 v1 | Phase 4 v2 |
+|------|-----------------|------------|------------|
+| mahlo 字段数 | 5 | 4 | 4 |
+| `<ᴹ-dec` | full 4/4 | partial 2/4 | partial 2/4 |
+| ψ_M 实现 | 占位待写 | ✓ Ord₀-直输 | ✓ level-bumped |
+| 估算强度 | ≲ Higher.agda | ≈ BTBO | ≈ ψ(Ω_(Ω+ω)) |
+| 是否超过 Higher.agda? | ✗ | ✗ | ✗ |
+
+**两轮探索都未能超过 Higher.agda**. Phase 3 用 strat 换 full trichotomy, Phase 4 去 strat + level-indexed ψ_M. 都受 Sub 是 Σ-flat 的限制. **Mahlo 路径在当前 Sub-Σ 设计下的强度上限 ≈ Higher.agda, 不会更高**.
+
+## Phase 5 候选路径 (突破 Sub-Σ 瓶颈)
+
+要真正超过 Higher.agda, 必须在某个维度做结构性升级. 三条候选:
+
+### 路径 A: Sub 升级为 Ord-indexed
+
+把 `Sub (mahlo _ a b _) = Σ (Sub a) (Sub ∘ b)` 改成 `Sub (mahlo _ a b _) = Ord< (level a) _` 或类似 Ord-tree 形. 同步改 b: `b : Ord (level a) → Ordᴹ`. 这让 mahlo 节点拥有 Higher.agda `limₙ`-同级的索引能力. **挑战**: 互递归层数飙升 (Ordᴹ + Ord ℓ + Sub + ...), positivity 风险.
+
+### 路径 B: 不走 Mahlo, 直接 Higher^n 迭代
+
+放弃 Mahlo 编码, 在 OrdΩ 之上再加 `limₙ'` 层, 形成 Higher² ... Higherω. 每迭代 +1 Ω-级, ω-迭代到 ψ(Ω_(Ω+ω)). **优势**: 简单 (Higher.agda 50 行模板可复用), 预测性强. **劣势**: 不是 Mahlo, 是平铺 Buchholz 扩展.
+
+### 路径 C: 真 Setzer Mahlo (Opᴹ 语义化)
+
+给 `Opᴹ = op (c : Ordᴹ) (Sub c → Opᴹ)` 一个语义解释 `⟦_⟧ : Opᴹ → Ordᴹ → Ordᴹ`, mahlo 字段 f 真正代表"反射算子". ψ_M 通过 f 的 closure 性质构造 fixed-point. **优势**: 理论可达 ψ(M_真). **劣势**: 研究级, 互递归 + 语义闭合证明数千行.
+
+**建议下一步**: 走路径 B (Higher^n 迭代) 作为 Phase 5 主线 — 工程上最可行, 强度增量明确. 路径 A/C 作为长期目标.
+
+## Phase 1-4 累积代价 (诚实记账)
+
+| 阶段 | 代码量 | 强度增量 vs 上一步 |
+|------|--------|------------------|
+| BTBO 基线 | (主线) | ψ(Ω_Ω) |
+| Higher.agda | ~50 行 | +1 Ω-级 → ψ((Ω_Ω)+(Ω_(ψ(Ω_Ω)+1))) |
+| Phase 1 (Brouwer-MLQ 骨架) | ~40 行 | 0 (仅结构) |
+| Phase 2 (`<ᴹ`, partial `<ᴹ-dec`) | ~140 行 | 0 |
+| Phase 3 (Sub`<ˢ` + monoSub + strat) | ~160 行 | ≲ Higher.agda |
+| **Phase 4 (去 strat + ψ_M v2)** | **~210 行** | **≲ Higher.agda** |
+
+**Mahlo 路径累积 ~550 行代码, 强度上限 ≲ Higher.agda 的 50 行**. 这是 Phase 1-4 的诚实记账. Mahlo 形式化是**结构性贡献** (探索 IR-Mahlo, Sub Σ-closure, 内禀序 `<ˢ`, monoSub, level rank), **不是强度贡献**.
+
+## 给作者的建议
+
+1. **Mahlo 路径的强度上限是 Higher.agda 级别, 不更高**. 这是 Phase 1-4 的实证结论.
+2. **若目标是超过 Higher.agda, 推荐走 Higher^n 迭代 (路径 B)** — 工程上最直接, 强度可量化.
+3. **Mahlo 形式化的价值在结构** (IR-Mahlo, Sub 内禀序, monoSub), 不在 ordinal 强度. 可以作为类型论研究素材保留.
+4. **真 Setzer Mahlo (路径 C)** 是开放问题, 至少需要 Phase 5+6 两轮研究投入, 不建议短期内尝试.
+
+全部 5 个 `.lagda.md` 文件 (Phase1-4 + 后续 Phase5*) 通过 Agda 2.8.0 + stdlib 2.3 + cubical 0.9 + `--safe --without-K --cubical-compatible --lossy-unification --hidden-argument-puns` 编译. 无 postulate, 无 unsafe.
