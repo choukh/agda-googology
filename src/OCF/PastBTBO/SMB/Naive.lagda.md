@@ -1,12 +1,12 @@
 # SMB Naive Probe: 用 SMB Core 重攻 Naive `<-1-dec` (诊断报告)
 
-> **目的**: 检验 [SMB/Core](Core.lagda.md) 的 `bound` 算子能否解锁 [PastBTBO/Naive/Phase1](../PastBTBO/Naive/Phase1.lagda.md) 撞过的 BoundedTrich 障碍.
+> **目的**: 检验 [SMB/Core](Core.lagda.md) 的 `bound` 算子能否解锁 [../Naive/Phase1.lagda.md](../Naive/Phase1.lagda.md) 撞过的 BoundedTrich 障碍.
 >
 > **结论 (剧透)**: ❌ 失败. SMB-trees 解 *算律* (+-lmono 类), 不解 *决策* (BoundedTrich 类). 详见 §3-4.
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
-module OCF.SMB.Naive where
+module OCF.PastBTBO.SMB.Naive where
 
 open import Function using (_∘_)
 open import Data.Nat using (ℕ; zero; suc)
@@ -15,20 +15,20 @@ open import Relation.Binary.PropositionalEquality
   using (_≡_; refl; sym; cong)
 
 open import OCF.BTBO
-open import OCF.SMB.Core
+open import OCF.PastBTBO.SMB.Core
 open Trich renaming (_<_ to _<ᴺ_; <-dec to <ᴺ-dec)
 open BoundedTrich using (Ordᴰ; cumsum; cumsum-mono) renaming (_<_ to _<ᴰ_; zero to zeroᴰ; suc to sucᴰ; lim to limᴰ; monotonic to monotonicᴰ)
 ```
 
 ## §1 — 重温目标
 
-[PastBTBO/Naive/Phase1.lagda.md](../PastBTBO/Naive/Phase1.lagda.md) 在 `<-1-dec` 的 `limΩ/limΩ` 情形撞墙:
+[PastBTBO/Naive/Phase1.lagda.md](../Naive/Phase1.lagda.md) 在 `<-1-dec` 的 `limΩ/limΩ` 情形撞墙:
 
     <-1-dec (limΩ x p) (limΩ y q) = ???    -- 需 Ordᴰ 上 x, y 三歧
 
 需要 `bound : Ordᴰ → Ordᴰ → Ordᴰ` 满足 `x <ᴰ bound x y` 与 `y <ᴰ bound x y`, 然后 `BoundedTrich.<-dec` 给三歧.
 
-[FINDINGS §5.3](../PastBTBO/Naive/FINDINGS.md) 诊断: 所有 `+ᴰ`, `sucᴰ`, `limᴰ` 组合的"自然上界"都需要 `+-lmono` (`a < b → a + c < b + c`), 而**该定理在 Ordᴰ 上不真** (`0 + ω = 1 + ω`).
+[FINDINGS §5.3](../Naive/FINDINGS.md) 诊断: 所有 `+ᴰ`, `sucᴰ`, `limᴰ` 组合的"自然上界"都需要 `+-lmono` (`a < b → a + c < b + c`), 而**该定理在 Ordᴰ 上不真** (`0 + ω = 1 + ω`).
 
 ## §2 — SMB 提供的工具
 
@@ -86,7 +86,7 @@ a ≤ᴰ b = a <ᴰ b ⊎ a ≡ b
 
 ## §5 — 局部胜利: bounded Ord-Ord 已经够了
 
-回看 [BTBO.lagda.md:836-857](../BTBO.lagda.md#L836-L857) 的 `Ord-Ord`:
+回看 [BTBO.lagda.md:836-857](../../BTBO.lagda.md#L836-L857) 的 `Ord-Ord`:
 
 ```agda
 -- 已存在的 BTBO 模板:

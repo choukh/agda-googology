@@ -8,7 +8,7 @@
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
-module OCF.SMB.Core where
+module OCF.PastBTBO.SMB.Core where
 
 open import Function using (_∘_)
 open import Data.Nat using (ℕ; zero; suc)

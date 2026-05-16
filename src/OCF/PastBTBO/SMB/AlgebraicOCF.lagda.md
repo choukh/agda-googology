@@ -10,7 +10,7 @@
 
 ### 1.1 Higher.agda 的关键决策点
 
-[Higher.agda L38](../Higher.agda#L38) 的 `ψ<Ω` 折叠:
+[Higher.agda L38](../../Higher.agda#L38) 的 `ψ<Ω` 折叠:
 
     ψ<Ω {n} (limₙ {n = m} p f) with <ᴺ-dec m n
     ... | injᵃ m<n = limᵢ (cumsum-mono _ m<n) (ψ<Ω ∘ f ∘ ψ< p ∘ coe {q = zero})
@@ -73,11 +73,11 @@ SMB-tree 的 `indMax` 是 monotone (`≤`-mono), 不是 strict-mono (`<`-mono). 
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
-module OCF.SMB.AlgebraicOCF where
+module OCF.PastBTBO.SMB.AlgebraicOCF where
 
 open import Function using (_∘_)
 open import Data.Nat using (ℕ; zero; suc)
-open import OCF.SMB.Core using (Tree; Z; ↑; Lim; indMax)
+open import OCF.PastBTBO.SMB.Core using (Tree; Z; ↑; Lim; indMax)
 ```
 
 ## §3 — 算律序数 `Ordˢ`
@@ -244,13 +244,13 @@ PastBTBO/Mahlo 用 770 LOC 撞了决策性墙. 若用算律方法重做:
 
 - 即便我们**全程**使用算律 (设计算律 OCF), 也不增强强度
 - 算律方法是 BTBO 的"等强度备选实现", 不是"高强度突破口"
-- 真正突破 ψ(Ω_(Ω^Ω)) 天花板 (见 [ROADMAP.md](../ROADMAP.md)) **必须**接受决策性 + 反射性结构 (e.g., Setzer Mahlo), 而那回到了已知撞过的墙
+- 真正突破 ψ(Ω_(Ω^Ω)) 天花板 (见 [ROADMAP.md](../../ROADMAP.md)) **必须**接受决策性 + 反射性结构 (e.g., Setzer Mahlo), 而那回到了已知撞过的墙
 
 ## §11 — 工程结论与研究入口
 
 ### 11.1 推荐工程优先级
 
-- **高**: [ROADMAP §3.1](../ROADMAP.md) Phase 7 HigherOrdᴰ² → ψ(Ω_(Ω·2)) (机械迭代, 150 LOC, 90% 把握)
+- **高**: [ROADMAP §3.1](../../ROADMAP.md) Phase 7 HigherOrdᴰ² → ψ(Ω_(Ω·2)) (机械迭代, 150 LOC, 90% 把握)
 - **中**: 算律 OCF 原型实现 (~500 LOC 完整版, 强度不增, 仅为对称性 / 教学)
 - **低**: 跨范式探索 (postulate / sized types / 换语言)
 
@@ -260,7 +260,7 @@ PastBTBO/Mahlo 用 770 LOC 撞了决策性墙. 若用算律方法重做:
 
 1. 阅读 Rathjen "An ordinal analysis of stability" (强度但用决策)
 2. 阅读 Aczel-Rathjen "Notes on Constructive Set Theory" (集合论 OCF)
-3. 阅读本仓库 [Higher.agda](../Higher.agda) (40 LOC 决策性 OCF, 强度 ψ((Ω_Ω)+(Ω_(ψ(Ω_Ω)+1))))
+3. 阅读本仓库 [Higher.agda](../../Higher.agda) (40 LOC 决策性 OCF, 强度 ψ((Ω_Ω)+(Ω_(ψ(Ω_Ω)+1))))
 4. 对比: 算律方法本仓库无完整实现, 本文件原型 ~80 LOC 仅展示原理. **可作为后续 PhD-level 研究主题**
 
 ## §12 — 一句话总结
@@ -272,4 +272,4 @@ PastBTBO/Mahlo 用 770 LOC 撞了决策性墙. 若用算律方法重做:
 ✅ 算律 OCF **可编译** — 原理上可行 (本文件 ~150 LOC 含分析).
 ⚠️ 强度天花板 = countable Brouwer-tree max ≈ ψ(Ω_Ω). **不超过 BTBO**.
 💡 关键洞察: 决策性是 ψ 强度的**信息源**. 用算律 lub 替代会丢失 m vs n 的精确分级信息, 强度大幅下降.
-📋 工程结论: 不推荐继续走算律 OCF 路线. 回 [ROADMAP §3.1](../ROADMAP.md) Phase 7 HigherOrdᴰ².
+📋 工程结论: 不推荐继续走算律 OCF 路线. 回 [ROADMAP §3.1](../../ROADMAP.md) Phase 7 HigherOrdᴰ².

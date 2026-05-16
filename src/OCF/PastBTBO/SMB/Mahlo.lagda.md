@@ -1,12 +1,12 @@
 # SMB Mahlo Probe: smax 能否解锁 Mahlo `<ᴹ-dec` 跨家族 (诊断报告)
 
-> **目的**: 检验 [SMB/Core](Core.lagda.md) 的 `indMax` 思想能否在 Mahlo 数据类型上定义 `smaxᴹ`, 进而解锁 [PastBTBO/Mahlo/Phase2](../PastBTBO/Mahlo/Phase2.lagda.md) 撞过的"跨函数家族"障碍.
+> **目的**: 检验 [SMB/Core](Core.lagda.md) 的 `indMax` 思想能否在 Mahlo 数据类型上定义 `smaxᴹ`, 进而解锁 [../Mahlo/Phase2.lagda.md](../Mahlo/Phase2.lagda.md) 撞过的"跨函数家族"障碍.
 >
 > **结论 (剧透)**: ❌ 失败. SMB 的 indMax 依赖**结构性归纳**, 而 Mahlo 的 `b : Sub a → Ordᴹ` 是**任意函数**, 无结构性递降.
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
-module OCF.SMB.Mahlo where
+module OCF.PastBTBO.SMB.Mahlo where
 
 open import Data.Nat using (ℕ)
 open import Data.Empty using (⊥)
@@ -14,12 +14,12 @@ open import Data.Unit using (⊤; tt)
 open import Data.Product using (Σ; _,_)
 open import Relation.Binary.PropositionalEquality using (_≡_; refl)
 
-open import OCF.SMB.Core using (Tree; Z; ↑; Lim; indMax)
+open import OCF.PastBTBO.SMB.Core using (Tree; Z; ↑; Lim; indMax)
 ```
 
 ## §1 — Mahlo 障碍重温
 
-[Mahlo Phase 2](../PastBTBO/Mahlo/Phase2.lagda.md) 定义:
+[Mahlo Phase 2](../Mahlo/Phase2.lagda.md) 定义:
 
     data Ordᴹ where
       zero  : Ordᴹ
@@ -108,7 +108,7 @@ _ = tt
 ## §5 — Phase B-2 总结
 
 - ✅ 诊断完成: SMB 不能在 Mahlo 上定义 smaxᴹ
-- ✅ 验证 [ROADMAP §3.3](../ROADMAP.md) 的预测: Mahlo 障碍是 Brouwer-tree-paradigm 的天花板
+- ✅ 验证 [ROADMAP §3.3](../../ROADMAP.md) 的预测: Mahlo 障碍是 Brouwer-tree-paradigm 的天花板
 - 📊 强度增益: **0** — Mahlo `<ᴹ-dec` 仍然撞墙 (与 Phase 1-5 Mahlo 770 LOC 结论一致)
 - 💡 真正洞察: SMB-trees 解决的是**Tree 内部**的算律, 不解 Tree 之外的 OCF 反射性问题
 

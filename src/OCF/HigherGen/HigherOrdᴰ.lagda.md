@@ -11,11 +11,11 @@
 >
 > Plan agent 估算 "500-900 LOC / 70% 可行性" — **实测仅 ~80 LOC, 一次通过**, 远超预期.
 >
-> 6.1 vs 6.2 对比 + Phase 7 候选 → [FINDINGS_Phase6.md](FINDINGS_Phase6.md) (umbrella).
+> 6.1 vs 6.2 对比 + Phase 7 候选 → [FINDINGS.md](FINDINGS.md) (umbrella).
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
-module OCF.HigherOrdᴰ where
+module OCF.HigherGen.HigherOrdᴰ where
 
 open import Function using (_∘_)
 open import Data.Nat using (ℕ; zero; suc)
