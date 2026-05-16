@@ -45,7 +45,9 @@ Higher.agda 的 `limₙ : (p : ℓ < ψᴰ n) (f : Ord ℓ → OrdΩ) → OrdΩ`
 
 **核心定律**: ψ-collapse 的 limₙ-style 构造子可行 ⟺ **bound 域是带 unconditional trichotomy 的全序集** (典型: ℕ). 一旦 bound 域是任意函数像 (Mahlo) 或非全序的 (任意 Ord), 屏障重现.
 
-## 2. 当前可达点 (Phase 6.2)
+## 2. 当前可达点
+
+### 2.1 HigherGen 轴 (Phase 6.2)
 
 ```
 Phase 6.2 HigherOrdᴰ: OrdH α 单一数据类型, α : Ordᴰ 参数化
@@ -54,6 +56,22 @@ Phase 6.2 HigherOrdᴰ: OrdH α 单一数据类型, α : Ordᴰ 参数化
   实际可推到: Higher^BTBO ≈ ψ(Ω_(Ω+BTBO)) = ψ(Ω_(Ω + ψ(Ω_Ω)))
   上限: ψ(Ω·2) 之下 (α 在 Ordᴰ 内部无法达到 Ω)
 ```
+
+### 2.2 Ord₁ᴰ 轴 (Phase C, 2026-05-16, 新方向)
+
+**用户洞察**: 给 Ord₁ (BTBO 中 Brw₄ 阶, sup = Ω_2) 添加 γ-bounded + mono + PI 结构, 实现 BoundedTrich. 然后在 Ord₁ᴰ 上重做 Ord-Ord 模块, 对偶 BTBO 用 sup(Ord₀) = Ω_1 给 ψ(Ω_Ω) 的路径.
+
+```
+Phase A: 五版本并行 spike — A₃ γ-bounded + mono + PI ✓ 走通 BoundedTrich
+Phase B: 完整 <₁-dec + f<l₀ + embedᴰ : Ordᴰ → Ord₁ᴰ
+Phase C: Ord-Ord-on-Ord₁ᴰ 完整移植 (Ord₊₁ + Ord<₁ + Ord<₁-≡ + ↑₁ + sup-by-bound)
+  强度: ψ(Ω_(Ω_2)) = ψ(Ω_Ω_2)
+  形式化状态: 基础设施 ready, 完整 ψ₁ 折叠链是 Phase D 候选
+```
+
+**强度位次**: Ord₁ᴰ 在与 HigherGen 不同的强度轴 — HigherGen 走 ψ(Ω_(Ω+α)) 轴, Ord₁ᴰ 走 ψ(Ω_(Ω_α)) 轴. Ord₁ᴰ 单层 ≈ ψ(Ω_(Ω_2)) 已超过 ROADMAP §3 原估计的 ψ(Ω_(Ω^Ω)) 天花板.
+
+**关键修订**: §1.4 表格中"框架天花板 ψ(Ω_(Ω^Ω))" 的估计**被 Ord₁ᴰ 部分推翻**. 在 Brouwer-tree paradigm + Agda --safe --without-K 框架内, ψ(Ω_Ω_α) 系列可达, 完整理论天花板需重新评估.
 
 ## 3. 未来路线图
 
