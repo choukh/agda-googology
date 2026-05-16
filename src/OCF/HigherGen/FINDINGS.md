@@ -8,8 +8,8 @@
 
 | Phase | 文件 | LOC | 强度 |
 |-------|------|-----|------|
-| BTBO 基线 | [BTBO.lagda.md](BTBO.lagda.md) | (主线) | ψ(Ω_Ω) |
-| Higher.agda | [Higher.agda](Higher.agda) | 43 | ψ((Ω_Ω)+(Ω_(ψ(Ω_Ω)+1))) ≈ ψ(Ω_(Ω+1)) 下方 |
+| BTBO 基线 | [../BTBO.lagda.md](../BTBO.lagda.md) | (主线) | ψ(Ω_Ω) |
+| Higher.agda | [../Higher.agda](../Higher.agda) | 43 | ψ((Ω_Ω)+(Ω_(ψ(Ω_Ω)+1))) ≈ ψ(Ω_(Ω+1)) 下方 |
 | Mahlo Phase 1-5 (PastBTBO) | ~770 | ≲ Higher.agda (饱和) |
 | **Phase 6.1 HigherIter** | [HigherIter.lagda.md](HigherIter.lagda.md) | **~110** | **≈ ψ(Ω_(Ω+4))** |
 | **Phase 6.2 HigherOrdᴰ** | [HigherOrdᴰ.lagda.md](HigherOrdᴰ.lagda.md) | **~80** | **≈ ψ(Ω_(Ω+ω)) (α = ω-asᴰ)** |
@@ -62,6 +62,6 @@ Phase 6.2 已落地 Higher^ω. 自然下一步:
 
 - [HigherIter.lagda.md](HigherIter.lagda.md) — Phase 6.1: Higher² 至 Higher⁴ 机械迭代 + 内嵌实测
 - [HigherOrdᴰ.lagda.md](HigherOrdᴰ.lagda.md) — Phase 6.2: 单一 OrdH α + Higher^ω binding + 内嵌 Plan agent 对照
-- [FINDINGS_Phase6.md](FINDINGS_Phase6.md) — 本 umbrella
+- [FINDINGS.md](FINDINGS.md) — 本 umbrella
 
 全部通过 Agda 2.8.0 + stdlib 2.3 + cubical 0.9 + `--safe --without-K --cubical-compatible --lossy-unification --hidden-argument-puns` 编译.
