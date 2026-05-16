@@ -57,6 +57,18 @@ Phase 6.2 HigherOrdᴰ: OrdH α 单一数据类型, α : Ordᴰ 参数化
 
 ## 3. 未来路线图
 
+### 3.0 已尝试的"跨范式" 探针: SMB-trees (✗ 不解)
+
+**Phase 7 (SMB)** 已实测 ([SMB/FINDINGS.md](SMB/FINDINGS.md)): 把 [Eremondi 2023 SMB-trees](https://arxiv.org/abs/2312.06962) 移植入本仓库, 检验能否绕过 BoundedTrich 障碍. **结论: 不解**.
+
+- ✅ Phase A: Tree + indMax + bound on Tree 落地 ([SMB/Core.lagda.md](SMB/Core.lagda.md), 140 LOC)
+- ❌ Phase B-1: Naive 桥接 Ordᴰ ↔ Tree 需 +-lmono 退化 ([SMB/Naive.lagda.md](SMB/Naive.lagda.md))
+- ❌ Phase B-2: Mahlo `smaxᴹ` 不能递归通过 `b : Sub a → Ordᴹ` ([SMB/Mahlo.lagda.md](SMB/Mahlo.lagda.md))
+
+**核心诊断**: SMB-trees 解 **算律** (`indMax` 的代数), 不解 **决策** (BoundedTrich). 决策性是 Brouwer-tree-paradigm 的内在限制 (constructive taboo 于 de Jong et al. 2026).
+
+强度增益 = 0. 路线图主线 (Phase 7+) 仍按下方推进.
+
 ### 3.1 安全区: Phase 7-9 (ψ(Ω_(Ω·2)) → ψ(Ω_(Ω²)))
 
 **保证不撞屏障**, 因为每一阶仍是"加一层单调 ℕ-indexed 序列".
