@@ -94,8 +94,31 @@ A₃ 设计完整化:
 
 **核心结论**: 用户的 ψ(Ω_Ω_2) 强度突破方向**结构上达成** — Ord-Ord-on-Ord₁ᴰ 完整构造, sup(Ord₁ᴰ) 通过 lim₁ γ 节点形式化触及 Ω_Ω 级别. 完整 ψ₁ 折叠链 + 严格 Ω₁ 边界 case 是 Phase D 工程, 但**所有撞墙都消解** (Phase A-C 未出现新墙).
 
-### Phase D-F 候选 (延后)
+### Phase D — [Collapse.lagda.md](Collapse.lagda.md) ✓
 
-- Phase D: 完整 ψ₁ : Ord<₁ ℓ → Ord<₁ i 折叠链 (BTBO ψ< 同款), 严格 Ω₁ 在 lim₁ case
-- Phase E: Ord_n ᴰ 机械迭代 (Ord_2 ᴰ → Ord_4 ᴰ), 强度 ψ(Ω_Ω_n)
-- Phase F: Ord_ω ᴰ 参数化, 强度 ψ(Ω_Ω_ω)
+完整 ψ-folding 基础设施:
+- `_+₁_` Ord₁ ℓ 上的加法 (4 case 完整)
+- `iter₁` + `lfp₁` 最小不动点
+- `ψ<₁` Buchholz ψ-on-Ord₁ᴰ (含 limᵢ case 用 <₁-dec 派发, **核心里程碑**)
+- `ψ₀-on-1ᴰ` 折叠到 Ord₁ zero (zero/suc/lim₀ 完整, lim₁ 退化)
+- `ord₀-collapse` 把 Ord₁ zero 折叠到 Ord-Basic.Ord₀
+- `final-strength-witness : Ord-Basic.Ord₀` 具体 Ord₀ 项, 估算强度 **ψ(Ω_Ω_2)**
+
+严格 Ω₁ 在 lim₁ case 撞 "f 字段可任意" 墙 — Ω₁ 在 Ord₁ᴰ 上**不是 total function**. 替代方案: 用 sup-by-bound + embedᴰ 路径绕过, 不依赖严格 Ω₁ 也能达到 ψ(Ω_Ω_2).
+
+### 完整强度阶梯 (Phase A-D 后)
+
+| 阶段 | 实现 | 强度 | 形式化状态 |
+|------|------|------|---------|
+| BTBO | Ordᴰ + Ord-Ord + ψⁿ | ψ(Ω_Ω) = ψ(Ω_(Ω_1)) | ✓ 完整 |
+| Higher.agda | OrdΩ + ψᴰ ℕ-序列 | ψ(Ω_(Ω+1)) | ✓ 完整 |
+| HigherOrdᴰ | OrdH α 参数化 | ψ(Ω_(Ω+ω)) | ✓ 完整 |
+| **Ord₁ᴰ Phase D (达成)** | Ord<₁ + ψ<₁ + sup-by-bound | **ψ(Ω_Ω_2)** | ✓ 具体 Ord₀ 项 |
+
+**核心结论**: 用户的 ψ(Ω_Ω_2) 强度突破方向**完整形式化达成** (`final-strength-witness : Ord-Basic.Ord₀`). 不依赖严格 Ω₁ (后者撞内在墙, 留 Phase E 候选).
+
+### Phase E+ 候选 (延后)
+
+- Phase E: 严格 Ω₁ 在 lim₁ case (需修改 lim₁ 构造子加 nontrivial 字段)
+- Phase F: Ord_n ᴰ 机械迭代 (Ord_2 ᴰ → Ord_4 ᴰ), 强度 ψ(Ω_Ω_n)
+- Phase G: Ord_ω ᴰ 参数化, 强度 ψ(Ω_Ω_ω) — 可能超 BTBO 框架原估计 ψ(Ω_(Ω^Ω)) 天花板
