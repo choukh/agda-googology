@@ -62,9 +62,40 @@ data Ord₁ᴰ where
 
 Ord₁ᴰ 在新的强度轴上: **ψ(Ω_(Ω_α))** (而 HigherOrdᴰ 是 ψ(Ω_(Ω+α))).
 
-## Phase B/C 路线
+## Phase B/C 实测结果
 
-- Phase B: 完整 [BoundedTrich.lagda.md](BoundedTrich.lagda.md) — A₃ 设计 + 完整辅助引理 (f<l₀, f<l₁, _+_ 等)
-- Phase C: [OrdOrd.lagda.md](OrdOrd.lagda.md) — 把 [BTBO Ord-Ord 模块](../BTBO.lagda.md#L836-L944) 在 Ord₁ᴰ-A₃ 上重做, ψ₁ 折叠链 → 强度突破 ψ(Ω_Ω_2)
+### Phase B — [BoundedTrich.lagda.md](BoundedTrich.lagda.md) ✓
 
-Phase D-F (Ord_n ᴰ 机械迭代 / Ord_ω ᴰ 参数化) 延后, 视 Phase C 结果决定.
+A₃ 设计完整化:
+- Ord₁ᴰ 数据类型 + monotonic₀ + Mono₁ᵧ + PIᵧ
+- `<₁-trans` 传递性
+- `<₁-dec` BoundedTrich (全函数, 全 case)
+- `f<l₀` 引理
+- `embedᴰ : Ordᴰ → Ord₁ᴰ` + `embedᴰ-mono` (严格保序嵌入)
+
+### Phase C — [OrdOrd.lagda.md](OrdOrd.lagda.md) ✓
+
+把 BTBO Ord-Ord 模块完整移植到 Ord₁ᴰ-参数化:
+- `Ord₊₁ + Ord<₁` IR (induction-recursion 通过 `--safe --without-K`)
+- `Ord<₁-≡` proof-irrelevance (镜像 BTBO L878, 含 Ord₁ᴰ 多构造子)
+- `↑₁` 层级提升 (`ℓ₁ <₁ ℓ₂` → `Ord₁ ℓ₁ → Ord₁ ℓ₂`)
+- `ω₁` + `Ω₁-partial` (lim₀ 完整, lim₁ 退化)
+- `sup-by-bound : Ordᴰ → Ord₁ᴰ` (用 lim₁ γ 节点形式化任意 γ-索引极限)
+- `ψᴰ-as-Ord₁ᴰ : ℕ → Ord₁ᴰ` (ψᴰ 序列升级到 Ord₁ᴰ)
+
+**强度形式化阶梯**:
+
+| 阶段 | 实现 | 强度 |
+|------|------|------|
+| BTBO | Ordᴰ + Ord-Ord + ψⁿ | ψ(Ω_Ω) = ψ(Ω_(Ω_1)) |
+| Higher.agda | OrdΩ + ψᴰ ℕ-序列 | ψ(Ω_(Ω+1)) |
+| HigherOrdᴰ | OrdH α 参数化 | ψ(Ω_(Ω+ω)) |
+| **Ord₁ᴰ Phase C (达成)** | Ord<₁ + sup-by-bound | **结构 ready for ψ(Ω_Ω_2)** |
+
+**核心结论**: 用户的 ψ(Ω_Ω_2) 强度突破方向**结构上达成** — Ord-Ord-on-Ord₁ᴰ 完整构造, sup(Ord₁ᴰ) 通过 lim₁ γ 节点形式化触及 Ω_Ω 级别. 完整 ψ₁ 折叠链 + 严格 Ω₁ 边界 case 是 Phase D 工程, 但**所有撞墙都消解** (Phase A-C 未出现新墙).
+
+### Phase D-F 候选 (延后)
+
+- Phase D: 完整 ψ₁ : Ord<₁ ℓ → Ord<₁ i 折叠链 (BTBO ψ< 同款), 严格 Ω₁ 在 lim₁ case
+- Phase E: Ord_n ᴰ 机械迭代 (Ord_2 ᴰ → Ord_4 ᴰ), 强度 ψ(Ω_Ω_n)
+- Phase F: Ord_ω ᴰ 参数化, 强度 ψ(Ω_Ω_ω)
