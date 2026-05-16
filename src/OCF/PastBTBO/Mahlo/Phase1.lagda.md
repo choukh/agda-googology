@@ -40,17 +40,19 @@ mutual
 
 通过 Agda 2.8.0 + `--safe --without-K --cubical-compatible` 编译.
 
-## Phase 2 待办清单
+## Phase 2 实测结果
 
-按 [FINDINGS.md §7](FINDINGS.md) 的路线:
+Phase 2 工作文件: [Phase2.lagda.md](Phase2.lagda.md). 实施日志: [FINDINGS_Phase2.md](FINDINGS_Phase2.md).
 
-1. **`Sub (mahlo f a b)`** 填非平凡定义. Takahashi paper §2.1 的 reflection rule 给出"`q f a b` 是一个 sub-universe 的 code, `T_𝕄 (q f a b)` 是该 sub-universe 的元素". 移植到 Brouwer 上下文.
-2. **`_<ᴹ_` 互递归**. 既要在 `Ordᴹ` 上定义 `<`, 又要在 `Opᴹ` 上 (跨 mahlo 节点的比较). 互递归 data 至少 4 层 (Ordᴹ, Opᴹ, <ᴹ, <ᴼ).
-3. **Mono 条件**. 当前 `lim`/`mahlo` 不带 mono. 仿 BTBO 加 mono 后, 互递归扩张为 6 层 (再加 monoᴺ, monoSub).
-4. **Bounded trichotomy**. 是 Phase 3 的预期最大墙. 函数外延性在 mahlo 节点比较时再次浮现 (类比 [../Naive/Phase1.lagda.md](../Naive/Phase1.lagda.md) 的 +-lmono 不真).
-5. **ψ_M collapser**. 类比 [Higher.agda:31-38](../../Higher.agda#L31-L38) 的 `ψ<Ω` 写法.
+| Step | 状态 | 结论 |
+|------|------|------|
+| 1. `Sub (mahlo …)` Σ-closure | ✓ | `Sub (mahlo _ a b) = Σ (Sub a) (Sub ∘ b)`. Setzer 反射的 Brouwer 化. |
+| 2. `_<ᴹ_` + `_<ᴼ_` 互递归 | ✓ | `<ᴹ` 跨 mahlo 两进路 (mahlo-a / mahlo-b); `<ᴼ` 仅 op-c 头比较. `<ᴹ-trans` 通过. |
+| 3. mono on lim | ✓ (部分) | `lim` 带 `monoᴺ`. **mahlo 未带 monoSub** — `Sub a` 内禀序构造循环依赖, Phase 3 todo. |
+| 4. Bounded trichotomy | ⚠️ partial | non-mahlo case 全通; mahlo 4 子 case 中 1 通 (mahlo-a × mahlo-a), 3 blocked. 退回 `Maybe`-wrapped. **与 Naive `+-lmono` 死墙结构同构**. |
+| 5. ψ_M collapser | ✗ skip | Step 4 partial → collapser 在 mahlo 输入上不可定. |
 
-工作量估算: 2 通过, 3 中等, 4 不一定通, 5 看 4 结果.
+详细诊断见 [FINDINGS_Phase2.md](FINDINGS_Phase2.md). 修复路径: Phase 3 需在 `Sub a` 上加内禀序 + 在 mahlo 加 monoSub, 这是 Takahashi 2024 未做的扩展.
 
 ## 与已有模块的关系
 
