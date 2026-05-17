@@ -2,6 +2,13 @@
 
 类比 BTBO 中 `Ord₀ + monotonic = Ordᴰ` (满足 BoundedTrich, ψ(Ω_Ω) 强度), 探索给 [`Ord₁`](../BTBO.lagda.md#L91) 添加结构使其满足 BoundedTrich, 命名为 **Ord₁ᴰ**. 强度目标: ψ(Ω_Ω_2) (用户论证: 在 Ord₁ᴰ 上重做 Ord-Ord 模块).
 
+> **2026-05-17 状态更新**: ψ(Ω_Ω_2) 在 Brouwer-tree paradigm + Agda --safe 内**不可达**, 已三重形式化撞墙:
+> - **γ-bounded Phase A-D** (本目录): sup ≤ Ω_1, 实际强度 ψ(Ω_Ω) (见 [REVIEW.md](REVIEW.md))
+> - **DM Path α IIR ψ-image** ([DM/FINDINGS.md](DM/FINDINGS.md)): strength-equivalence refl, 等价 BTBO baseline
+> - **AlphaDec cubical R3-alt** ([AlphaDec/FINDINGS.md](AlphaDec/FINDINGS.md)): mutual data + α-decidable 不增强度, R4 关系层撞 Ord₀ trichotomy 墙
+>
+> 三条路径共同实证 [de Jong-Eremondi-Forsberg 2026 taboo](https://arxiv.org/abs/...). cubical 工具与 α-decidable 框架不改变 taboo 边界.
+
 ## Phase A 五版本对照表
 
 | Spike | 设计核心 | 编译 | BoundedTrich | 强度可达 | 状态 |
