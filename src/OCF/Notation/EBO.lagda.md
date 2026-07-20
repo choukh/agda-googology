@@ -308,9 +308,9 @@ fsn↓c : ∀ u y ys ν → cof (y ∷ ys) ≡ cΩ ν → Cmp → ℕ → Below 
 
 fsn↓ x (y ∷ ys) n =                              -- 规则 1: 和 ⇒ 末项
   let r = fsn↓ y ys n in (x ∷ trm r) ⟨ tl< (dec r) ⟩
-fsn↓ 𝟏 [] n = [] ⟨ []< ⟩                          -- 1[n] = 0
-fsn↓ (ψ (w ∷ ws) []) [] n = fsn↓0 w ws (cof (w ∷ ws)) refl n
 fsn↓ (ψ u (y ∷ ys)) [] n = fsn↓₊ u y ys (cof (y ∷ ys)) refl n
+fsn↓ (ψ (w ∷ ws) []) [] n = fsn↓0 w ws (cof (w ∷ ws)) refl n
+fsn↓ 𝟏 [] n = [] ⟨ []< ⟩                          -- 1[n] = 0
 
 fsn↓0 w ws c0 ue n = [] ⟨ []< ⟩                   -- 不可达哑值
 fsn↓0 w ws c1 ue n =                              -- 正规 Ω_u: FGH 用不到, 给 natT n (仍递减)
