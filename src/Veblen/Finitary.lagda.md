@@ -16,6 +16,7 @@ module Veblen.Finitary where
 open import Veblen.Multinary public
 open import Agda.Builtin.Equality public
 open import Agda.Builtin.Equality.Rewrite public
+open import Relation.Binary.PropositionalEquality.Core using (cong; subst; sym)
 ```
 
 前篇我们讲了二元, 三元和四元Veblen函数 $\text{Bin}.φ,\text{Tri}.φ,\text{Qua}.φ$. 我们希望把元数作为一个参数, 也就是说, 定义一个函数族 $φ$, 使得 $φ_n$ 正好是 $n$ 元Veblen函数. 这样的 $φ$ 叫做 (任意) 有限元Veblen函数 (Finitary Veblen Function), 也叫扩展Veblen函数 (Extended Veblen Function).
@@ -298,10 +299,11 @@ $$
 Φ-ż-α : Φ F (n) 0̇,_ ≡ F
 Φ-ż-α {n = zero} = refl
 Φ-ż-α {n = suc n} = Φ-ż-α {n = n}
-{-# REWRITE Φ-ż-α #-}
+
 ```
 
-将该引理声明为新的重写规则, 可以立即证明:
+在 Agda 2.8 中, 将这个函数等式注册成全局重写规则会产生非合流的关键对.
+以下计算模式因此使用该等式作显式替换来证明.
 
 **定理** 计算模式
 
@@ -318,23 +320,44 @@ $$
 其中第五条要求前提 $F\kern{0.17em}(\lim g) = \lim λm,F\kern{0.17em}(g\kern{0.17em}m)$.
 
 ```agda
-Φ-s-ż-z : Φ F ((suc n)) (suc α) 0̇, 0 ≡ iterω (λ β → Φ F (_) α β 0̇) 0
-Φ-s-ż-z = refl
+Φ-s-ż-z : Φ F ((suc n)) (suc α) 0̇, 0 ≡ iterω (λ β → Φ F (suc n) α β 0̇) 0
+Φ-s-ż-z {F = F} {n = n} {α = α} = cong (λ h → h 0)
+  (Φ-ż-α {F = fixpt λ β → Φ F (suc n) α β 0̇} {n = n})
 
-Φ-s-ż-s : Φ F ((suc n)) (suc α) 0̇, suc β ≡ iterω (λ β → Φ F (_) α β 0̇) (suc (Φ F (_) (suc α) 0̇, β))
-Φ-s-ż-s = refl
+Φ-s-ż-s : Φ F ((suc n)) (suc α) 0̇, suc β ≡ iterω (λ β → Φ F (suc n) α β 0̇) (suc (Φ F (suc n) (suc α) 0̇, β))
+Φ-s-ż-s {F = F} {n = n} {α = α} {β = β} =
+  subst (λ h → h (suc β) ≡ iterω K (suc (h β)))
+    (sym (Φ-ż-α {F = H} {n = n})) refl
+  where
+  K = λ γ → Φ F (suc n) α γ 0̇
+  H = fixpt K
 
 Φ-l-ż-z : Φ F ((suc n)) (lim f) 0̇, 0 ≡ lim λ m → Φ F ((suc n)) (f m) 0̇
-Φ-l-ż-z = refl
+Φ-l-ż-z {F = F} {n = n} {f = f} = cong (λ h → h 0)
+  (Φ-ż-α {F = jump λ β → lim λ m → Φ F (suc n) (f m) β 0̇} {n = n})
 
-Φ-l-ż-s : Φ F ((suc n)) (lim f) 0̇, suc β ≡ lim λ m → Φ F (_) (f m) (suc (Φ F (_) (lim f) 0̇, β)) 0̇
-Φ-l-ż-s = refl
+Φ-l-ż-s : Φ F ((suc n)) (lim f) 0̇, suc β ≡ lim λ m → Φ F (suc n) (f m) (suc (Φ F (suc n) (lim f) 0̇, β)) 0̇
+Φ-l-ż-s {F = F} {n = n} {f = f} {β = β} =
+  subst (λ h → h (suc β) ≡ lim λ m → Φ F (suc n) (f m) (suc (h β)) 0̇)
+    (sym (Φ-ż-α {F = H} {n = n})) refl
+  where
+  H = jump λ γ → lim λ m → Φ F (suc n) (f m) γ 0̇
 
-Φ-α-ż-l : F (lim g) ≡ lim (λ m → F (g m))
+Φ-α-ż-l : ∀ {g : ℕ → Ord} {α : Ord} → F (lim g) ≡ lim (λ m → F (g m))
   → Φ F ((suc n)) α 0̇, lim g ≡ lim λ m → Φ F ((suc n)) α 0̇, g m
-Φ-α-ż-l {α = zero} = id
-Φ-α-ż-l {α = suc _} _ = refl
-Φ-α-ż-l {α = lim _} _ = refl
+Φ-α-ż-l {F = F} {n = n} {g = g} {α = zero} p =
+  subst (λ h → h (lim g) ≡ lim (λ m → h (g m)))
+    (sym (Φ-ż-α {F = F} {n = n})) p
+Φ-α-ż-l {F = F} {n = n} {g = g} {α = suc α} _ =
+  subst (λ h → h (lim g) ≡ lim (λ m → h (g m)))
+    (sym (Φ-ż-α {F = H} {n = n})) refl
+  where
+  H = fixpt λ β → Φ F (suc n) α β 0̇
+Φ-α-ż-l {F = F} {n = n} {g = g} {α = lim f} _ =
+  subst (λ h → h (lim g) ≡ lim (λ m → h (g m)))
+    (sym (Φ-ż-α {F = H} {n = n})) refl
+  where
+  H = jump λ β → lim λ m → Φ F (suc n) (f m) β 0̇
 ```
 
 **推论** $(\mathcal{α,s,Z,β})$
@@ -403,7 +426,7 @@ $$
 Φ-ż-α-β : Φ F ((suc n)) 0̇,_,_ ≡ Φ F (1)
 Φ-ż-α-β {n = zero} = refl
 Φ-ż-α-β {n = suc n} = Φ-ż-α-β {n = n}
-{-# REWRITE Φ-ż-α-β #-}
+
 ```
 
 **定理** 计算模式
@@ -422,22 +445,36 @@ $$
 
 ```agda
 Φ-ż-s-0 : Φ F ((suc n)) 0̇, suc α , 0 ≡ iterω (Φ F ((suc n)) 0̇, α ,_) 0
-Φ-ż-s-0 = refl
+Φ-ż-s-0 {F = F} {n = n} {α = α} =
+  subst (λ h → h (suc α) 0 ≡ iterω (h α) 0)
+    (sym (Φ-ż-α-β {F = F} {n = n})) refl
 
 Φ-ż-s-s : Φ F ((suc n)) 0̇, suc α , suc β ≡ iterω (Φ F ((suc n)) 0̇, α ,_) (suc (Φ F ((suc n)) 0̇, (suc α) , β))
-Φ-ż-s-s = refl
+Φ-ż-s-s {F = F} {n = n} {α = α} {β = β} =
+  subst (λ h → h (suc α) (suc β) ≡ iterω (h α) (suc (h (suc α) β)))
+    (sym (Φ-ż-α-β {F = F} {n = n})) refl
 
 Φ-ż-l-0 : Φ F ((suc n)) 0̇, lim f , 0 ≡ lim λ m → Φ F ((suc n)) 0̇, f m , 0
-Φ-ż-l-0 = refl
+Φ-ż-l-0 {F = F} {n = n} {f = f} =
+  subst (λ h → h (lim f) 0 ≡ lim (λ m → h (f m) 0))
+    (sym (Φ-ż-α-β {F = F} {n = n})) refl
 
 Φ-ż-l-s : Φ F ((suc n)) 0̇, lim f , suc β ≡ lim λ m → Φ F ((suc n)) 0̇, f m , suc (Φ F ((suc n)) 0̇, (lim f) , β)
-Φ-ż-l-s = refl
+Φ-ż-l-s {F = F} {n = n} {f = f} {β = β} =
+  subst (λ h → h (lim f) (suc β) ≡ lim (λ m → h (f m) (suc (h (lim f) β))))
+    (sym (Φ-ż-α-β {F = F} {n = n})) refl
 
-Φ-ż-α-l : F (lim g) ≡ lim (λ m → F (g m))
+Φ-ż-α-l : ∀ {g : ℕ → Ord} {α : Ord} → F (lim g) ≡ lim (λ m → F (g m))
   → Φ F ((suc n)) 0̇, α , lim g ≡ lim λ m → Φ F ((suc n)) 0̇, α , g m
-Φ-ż-α-l {α = zero} = id
-Φ-ż-α-l {α = suc _} _ = refl
-Φ-ż-α-l {α = lim _} _ = refl
+Φ-ż-α-l {F = F} {n = n} {g = g} {α = zero} p =
+  subst (λ h → h zero (lim g) ≡ lim (λ m → h zero (g m)))
+    (sym (Φ-ż-α-β {F = F} {n = n})) p
+Φ-ż-α-l {F = F} {n = n} {g = g} {α = suc α} _ =
+  subst (λ h → h (suc α) (lim g) ≡ lim (λ m → h (suc α) (g m)))
+    (sym (Φ-ż-α-β {F = F} {n = n})) refl
+Φ-ż-α-l {F = F} {n = n} {g = g} {α = lim f} _ =
+  subst (λ h → h (lim f) (lim g) ≡ lim (λ m → h (lim f) (g m)))
+    (sym (Φ-ż-α-β {F = F} {n = n})) refl
 ```
 
 ## SVO

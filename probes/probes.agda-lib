@@ -1,8 +1,8 @@
-name: agda-googology
+name: agda-googology-probes
 depend:
   standard-library-2.4
   cubical-0.9
-include: src
+include: . ../src Lens
 flags:
   --cubical-compatible
   --guardedness

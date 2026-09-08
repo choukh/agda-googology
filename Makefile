@@ -14,7 +14,9 @@
 # ============================================================================
 
 DOCS = ../choukh.github.io/agda-googology
-SOURCES := $(shell find src -type f -name '*.lagda.md')
+# Only finished articles are published. Research lives in src/Mahlo and probes/.
+ARTICLE_DIRS := src/Bridged src/Veblen src/WellFormed
+SOURCES := src/Lower.lagda.md src/OCF/BTBO.lagda.md $(shell find $(ARTICLE_DIRS) -type f -name '*.lagda.md')
 TARGETS := $(addprefix $(DOCS)/,$(subst /,.,$(patsubst src/%.lagda.md,%.html,$(SOURCES))))
 
 .PHONY: all
