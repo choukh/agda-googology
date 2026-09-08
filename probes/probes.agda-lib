@@ -1,0 +1,10 @@
+name: agda-googology-probes
+depend:
+  standard-library-2.4
+  cubical-0.9
+include: . ../src Lens
+flags:
+  --cubical-compatible
+  --guardedness
+  --hidden-argument-puns
+  -W noUnsupportedIndexedMatch

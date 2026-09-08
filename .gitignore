@@ -1,7 +1,8 @@
 /_build
 /docs
 /public
-/tools
+/tools/*
+!/tools/check-src.sh
 /Makefile
 /template.html5
 .DS_Store

@@ -11,7 +11,7 @@ zhihu-url: https://zhuanlan.zhihu.com/p/707292191
 > 高亮渲染: [Infinitary.html](https://choukh.github.io/agda-googology/Veblen.Infinitary.html)  
 
 ```agda
-{-# OPTIONS --lossy-unification --rewriting --local-confluence-check #-}
+{-# OPTIONS --cubical --lossy-unification --rewriting --local-confluence-check #-}
 module Veblen.Infinitary where
 open import Veblen.Base public hiding (F)
 ```
@@ -25,6 +25,8 @@ open import Veblen.Base public hiding (F)
 ```agda
 import Veblen.Finitary as Fin
 open Fin using (_→ⁿ_; _0̇; _0̇,_)
+open import Relation.Binary.PropositionalEquality.Core using (cong; subst; sym; trans)
+open import Cubical.Data.Equality.Conversion using (funExt)
 ```
 
 也就是说, 我们只有有限个非零参数, 而有无限个零参数. 这就是无限元的真相. 确实, 也只有这样, 才能保证可计算性.
@@ -203,11 +205,14 @@ $$
 $$
 
 ```agda
+  private
+    H = jump⟨ 1 ⟩ λ β → lim λ n → Ltω.φ n β 0̇
+
   φ-1⋯0-0 : φ 1 (1) 0 0 ≡ SVO
-  φ-1⋯0-0 = refl
+  φ-1⋯0-0 = cong (λ h → h 0) (Fin.Φ-ż-α {F = H} {n = 1})
 
   φ-1⋯0-0-0 : φ 1 (2) 0 0 0 ≡ SVO
-  φ-1⋯0-0-0 = refl
+  φ-1⋯0-0-0 = cong (λ h → h 0) (Fin.Φ-ż-α {F = H} {n = 2})
 ```
 
 **事实** 如果 $\lt ω$ 位置的参数没有非零, 那么几个零都无所谓.
@@ -218,7 +223,8 @@ $$
 
 ```agda
   φ-1⋯ż-z : φ 1 (n) 0̇, 0 ≡ SVO
-  φ-1⋯ż-z = refl
+  φ-1⋯ż-z {n = n} = cong (λ h → h 0) (Fin.Φ-ż-α {F = H} {n = n})
+
 ```
 
 **定理** 计算模式
@@ -260,19 +266,39 @@ $$
   Φ-s⋯ż-z = refl
 
   Φ-s⋯ż-s : Φ F (suc α) (n) 0̇, suc β ≡ lim λ n → Φ F α (n) (suc (Φ F (suc α) (n) 0̇, β)) 0̇
-  Φ-s⋯ż-s = refl
+  Φ-s⋯ż-s {F = F} {α = α} {n = n} {β = β} =
+    subst (λ h → h (suc β) ≡ lim λ k → Φ F α k (suc (Φ F (suc α) k 0̇, β)) 0̇)
+      (sym (Fin.Φ-ż-α {F = Hs} {n = n}))
+      (cong lim (funExt λ k → cong (λ γ → Φ F α k (suc γ) 0̇)
+        (sym (cong (λ h → h β) (Fin.Φ-ż-α {F = Hs} {n = k})))))
+    where
+    Hs = jump⟨ 1 ⟩ λ γ → lim λ k → Φ F α k γ 0̇
 
   Φ-l⋯ż-z : Φ F (lim f) (0) 0 ≡ lim λ n → Φ F (f n) (n) 0̇
   Φ-l⋯ż-z = refl
 
   Φ-l⋯ż-s : Φ F (lim f) (n) 0̇, suc β ≡ lim λ n → Φ F (f n) (n) (suc (Φ F (lim f) (n) 0̇, β)) 0̇
-  Φ-l⋯ż-s = refl
+  Φ-l⋯ż-s {F = F} {f = f} {n = n} {β = β} =
+    subst (λ h → h (suc β) ≡ lim λ k → Φ F (f k) k (suc (Φ F (lim f) k 0̇, β)) 0̇)
+      (sym (Fin.Φ-ż-α {F = Hl} {n = n}))
+      (cong lim (funExt λ k → cong (λ γ → Φ F (f k) k (suc γ) 0̇)
+        (sym (cong (λ h → h β) (Fin.Φ-ż-α {F = Hl} {n = k})))))
+    where
+    Hl = jump λ γ → lim λ k → Φ F (f k) k γ 0̇
 
-  Φ-α⋯ż-l : (Φ F 0 (n) 0̇, lim g) ≡ lim (λ m → Φ F 0 (n) 0̇, g m)
+  Φ-α⋯ż-l : ∀ {g : ℕ → Ord} {α : Ord} → (Φ F 0 (n) 0̇, lim g) ≡ lim (λ m → Φ F 0 (n) 0̇, g m)
     → Φ F α (n) 0̇, lim g ≡ lim λ m → Φ F α (n) 0̇, g m
   Φ-α⋯ż-l {α = zero} = id
-  Φ-α⋯ż-l {α = suc α} _ = refl
-  Φ-α⋯ż-l {α = lim x} _ = refl
+  Φ-α⋯ż-l {F = F} {n = n} {g = g} {α = suc α} _ =
+    subst (λ h → h (lim g) ≡ lim (λ m → h (g m)))
+      (sym (Fin.Φ-ż-α {F = Hc} {n = n})) refl
+    where
+    Hc = jump⟨ 1 ⟩ λ γ → lim λ k → Φ F α k γ 0̇
+  Φ-α⋯ż-l {F = F} {n = n} {g = g} {α = lim f} _ =
+    subst (λ h → h (lim g) ≡ lim (λ m → h (g m)))
+      (sym (Fin.Φ-ż-α {F = Hcl} {n = n})) refl
+    where
+    Hcl = jump λ γ → lim λ k → Φ F (f k) k γ 0̇
 ```
 
 ## ω⁺⁺元Veblen函数
@@ -345,19 +371,36 @@ $$
   Φ-s-z⋯ż-z = refl
 
   Φ-s-z⋯ż-s : Φ F (suc α) 0 (n) 0̇, suc β ≡ iterω (λ β → Φ F α β (0) 0) (suc (Φ F (suc α) 0 (n) 0̇, β))
-  Φ-s-z⋯ż-s = refl
+  Φ-s-z⋯ż-s {F = F} {α = α} {n = n} {β = β} =
+    subst (λ h → h (suc β) ≡ iterω K (suc (h β)))
+      (sym (Fin.Φ-ż-α {F = Hbs} {n = n})) refl
+    where
+    K = λ γ → Φ F α γ 0 0
+    Hbs = fixpt K
 
   Φ-l-z⋯ż-z : Φ F (lim f) 0 (0) 0 ≡ lim λ m → Φ F (f m) 0 (0) 0
   Φ-l-z⋯ż-z = refl
 
   Φ-l-z⋯ż-s : Φ F (lim f) 0 (n) 0̇, suc β ≡ lim λ m → Φ F (f m) (suc (Φ F (lim f) 0 (n) 0̇, β)) (0) 0
-  Φ-l-z⋯ż-s = refl
+  Φ-l-z⋯ż-s {F = F} {f = f} {n = n} {β = β} =
+    subst (λ h → h (suc β) ≡ lim λ m → Φ F (f m) (suc (h β)) 0 0)
+      (sym (Fin.Φ-ż-α {F = Hbl} {n = n})) refl
+    where
+    Hbl = jump λ γ → lim λ m → Φ F (f m) γ 0 0
 
-  Φ-α-z⋯ż-l : Φ F 0 0 (n) 0̇, lim g ≡ lim (λ m → Φ F 0 0 (n) 0̇, g m)
+  Φ-α-z⋯ż-l : ∀ {g : ℕ → Ord} {α : Ord} → Φ F 0 0 (n) 0̇, lim g ≡ lim (λ m → Φ F 0 0 (n) 0̇, g m)
     → Φ F α 0 (n) 0̇, lim g ≡ lim λ m → Φ F α 0 (n) 0̇, g m
   Φ-α-z⋯ż-l {α = zero} = id
-  Φ-α-z⋯ż-l {α = suc _} _ = refl
-  Φ-α-z⋯ż-l {α = lim _} _ = refl
+  Φ-α-z⋯ż-l {F = F} {n = n} {g = g} {α = suc α} _ =
+    subst (λ h → h (lim g) ≡ lim (λ m → h (g m)))
+      (sym (Fin.Φ-ż-α {F = Hbc} {n = n})) refl
+    where
+    Hbc = fixpt λ γ → Φ F α γ 0 0
+  Φ-α-z⋯ż-l {F = F} {n = n} {g = g} {α = lim f} _ =
+    subst (λ h → h (lim g) ≡ lim (λ m → h (g m)))
+      (sym (Fin.Φ-ż-α {F = Hbcl} {n = n})) refl
+    where
+    Hbcl = jump λ γ → lim λ m → Φ F (f m) γ 0 0
 ```
 
 ## ω倍数元函数类型
@@ -531,10 +574,11 @@ $$
   Φ-ż-α : Φ F (n) 0̇,_ ≡ F
   Φ-ż-α {n = zero} = refl
   Φ-ż-α {n = suc n} = Φ-ż-α {n = n}
-  {-# REWRITE Φ-ż-α #-}
 ```
 
-将该引理声明为新的重写规则, 可以立即证明:
+在 Agda 2.8 中, 该函数等式不再注册为全局重写规则, 以免产生非合流的关键对.
+以下证明使用显式等式替换; 极限分支通过 Cubical 路径得到函数外延性,
+再转回本篇采用的命题等式, 不引入 postulate.
 
 **定理** 计算模式
 
@@ -571,25 +615,73 @@ $$
 ```agda
   Φ-s-ż⋯ż-z : (Φ F ((suc n)) (suc α) 0̇, 0) 0⋯
     ≡ iterω (λ β → Φ F ((suc n)) α β 0̇⋯) 0
-  Φ-s-ż⋯ż-z = refl
+  Φ-s-ż⋯ż-z {F = F} {n = n} {α = α} =
+    cong (λ h → (h 0) 0⋯) (Φ-ż-α {F = H2s} {n = n})
+    where
+    K2 = λ β → Φ F (suc n) α β 0̇⋯
+    H2s = Eqω.Φ (Ltω.Φ (fixpt K2))
 
   Φ-s-ż⋯ż-s : (Φ F ((suc n)) (suc α) 0̇, 0) (m) 0̇, suc β
-    ≡ iterω (λ β → Φ F ((suc n)) α β 0̇⋯) (suc ((Φ F (_) (suc α) 0̇, 0) (m) 0̇, β))
-  Φ-s-ż⋯ż-s = refl
+    ≡ iterω (λ β → Φ F ((suc n)) α β 0̇⋯) (suc ((Φ F (suc n) (suc α) 0̇, 0) (m) 0̇, β))
+  Φ-s-ż⋯ż-s {F = F} {n = n} {α = α} {m = m} {β = β} =
+    subst (λ h → (h 0) m 0̇, suc β
+      ≡ iterω K2ss (suc ((h 0) m 0̇, β)))
+      (sym (Φ-ż-α {F = H2ss} {n = n})) inner
+    where
+    K2ss = λ γ → Φ F (suc n) α γ 0̇⋯
+    H2ss = Eqω.Φ (Ltω.Φ (fixpt K2ss))
+    inner = subst (λ h → h (suc β) ≡ iterω K2ss (suc (h β)))
+      (sym (Fin.Φ-ż-α {F = fixpt K2ss} {n = m})) refl
 
   Φ-l-ż⋯ż-z : (Φ F ((suc n)) (lim f) 0̇, 0) 0⋯
     ≡ lim λ m → Φ F ((suc n)) (f m) 0 0̇⋯
-  Φ-l-ż⋯ż-z = refl
+  Φ-l-ż⋯ż-z {F = F} {n = n} {f = f} =
+    cong (λ h → (h 0) 0⋯) (Φ-ż-α {F = H2l} {n = n})
+    where
+    H2l = Eqω.Φ (Ltω.Φ (jump λ γ → lim λ k → Φ F (suc n) (f k) γ 0̇⋯))
 
   Φ-l-ż⋯ż-s : (Φ F ((suc n)) (lim f) 0̇, 0) (m) 0̇, suc β
     ≡ lim λ m → Φ F ((suc n)) (f m) (suc ((Φ F ((suc n)) (lim f) 0̇, 0) (m) 0̇, β)) 0̇⋯
-  Φ-l-ż⋯ż-s = refl
+  Φ-l-ż⋯ż-s {F = F} {n = n} {f = f} {m = m} {β = β} =
+    subst (λ h → (h 0) m 0̇, suc β
+      ≡ lim λ k → Φ F (suc n) (f k)
+        (suc ((Φ F (suc n) (lim f) 0̇, 0) k 0̇, β)) 0̇⋯)
+      (sym (Φ-ż-α {F = H2ls} {n = n})) inner
+    where
+    K2ls = λ γ → lim λ k → Φ F (suc n) (f k) γ 0̇⋯
+    J = jump K2ls
+    H2ls = Eqω.Φ (Ltω.Φ (jump K2ls))
+    inner = subst (λ h → h (suc β)
+      ≡ lim λ k → Φ F (suc n) (f k)
+        (suc ((Φ F (suc n) (lim f) 0̇, 0) k 0̇, β)) 0̇⋯)
+      (sym (Fin.Φ-ż-α {F = J} {n = m}))
+      (cong lim (funExt λ k → cong (λ γ → Φ F (suc n) (f k) (suc γ) 0̇⋯)
+        (trans
+          (sym (cong (λ h → h β) (Fin.Φ-ż-α {F = J} {n = k})))
+          (sym (cong (λ h → (h 0) k 0̇, β) (Φ-ż-α {F = H2ls} {n = n}))))))
 
-  Φ-α-ż⋯ż-l : F 0 (m) 0̇, lim g ≡ lim (λ k → F 0 (m) 0̇, g k)
+  Φ-α-ż⋯ż-l : ∀ {F : Ord→^ω →ⁿ 1} {n m : ℕ} {g : ℕ → Ord} {α : Ord}
+    → F 0 (m) 0̇, lim g ≡ lim (λ k → F 0 (m) 0̇, g k)
     → (Φ F ((suc n)) α 0̇, 0) (m) 0̇, lim g ≡ lim λ k → (Φ F ((suc n)) α 0̇, 0) (m) 0̇, g k
-  Φ-α-ż⋯ż-l {α = zero} = id
-  Φ-α-ż⋯ż-l {α = suc _} _ = refl
-  Φ-α-ż⋯ż-l {α = lim _} _ = refl
+  Φ-α-ż⋯ż-l {F = F} {n = n} {m = m} {g = g} {α = zero} p =
+    subst (λ h → (h 0) m 0̇, lim g ≡ lim (λ k → (h 0) m 0̇, g k))
+      (sym (Φ-ż-α {F = F} {n = n})) p
+  Φ-α-ż⋯ż-l {F = F} {n = n} {m = m} {g = g} {α = suc α} _ =
+    subst (λ h → (h 0) m 0̇, lim g ≡ lim (λ k → (h 0) m 0̇, g k))
+      (sym (Φ-ż-α {F = H2c} {n = n}))
+      (subst (λ h → h (lim g) ≡ lim (λ k → h (g k)))
+        (sym (Fin.Φ-ż-α {F = fixpt K2c} {n = m})) refl)
+    where
+    K2c = λ γ → Φ F (suc n) α γ 0̇⋯
+    H2c = Eqω.Φ (Ltω.Φ (fixpt K2c))
+  Φ-α-ż⋯ż-l {F = F} {n = n} {m = m} {g = g} {α = lim f} _ =
+    subst (λ h → (h 0) m 0̇, lim g ≡ lim (λ k → (h 0) m 0̇, g k))
+      (sym (Φ-ż-α {F = H2cl} {n = n}))
+      (subst (λ h → h (lim g) ≡ lim (λ k → h (g k)))
+        (sym (Fin.Φ-ż-α {F = jump K2cl} {n = m})) refl)
+    where
+    K2cl = λ γ → lim λ k → Φ F (suc n) (f k) γ 0̇⋯
+    H2cl = Eqω.Φ (Ltω.Φ (jump K2cl))
 ```
 
 **定义** 第二代 $\text{SVO}$
@@ -691,19 +783,41 @@ $$
   Φ-s⋯ż⋯ż-z = refl
 
   Φ-s⋯ż⋯ż-s : Φ F (suc α) (0) 0 (n) 0̇, suc β ≡ lim λ n → Φ F α (n) (suc (Φ F (suc α) (0) 0 (n) 0̇, β)) 0̇⋯
-  Φ-s⋯ż⋯ż-s = refl
+  Φ-s⋯ż⋯ż-s {F = F} {α = α} {n = n} {β = β} =
+    subst (λ h → h (suc β) ≡ lim λ k → Φ F α k
+      (suc (Φ F (suc α) 0 0 k 0̇, β)) 0̇⋯)
+      (sym (Fin.Φ-ż-α {F = Hfs} {n = n}))
+      (cong lim (funExt λ k → cong (λ γ → Φ F α k (suc γ) 0̇⋯)
+        (sym (cong (λ h → h β) (Fin.Φ-ż-α {F = Hfs} {n = k})))))
+    where
+    Hfs = jump⟨ 1 ⟩ λ γ → lim λ k → Φ F α k γ 0̇⋯
 
   Φ-l⋯ż⋯ż-z : Φ F (lim f) 0⋯ ≡ lim λ n → Φ F (f n) (n) 0 0̇⋯
   Φ-l⋯ż⋯ż-z = refl
 
   Φ-l⋯ż⋯ż-s : Φ F (lim f) (0) 0 (n) 0̇, suc β ≡ lim λ n → Φ F (f n) (n) (suc (Φ F (lim f) (0) 0 (n) 0̇, β)) 0̇⋯
-  Φ-l⋯ż⋯ż-s = refl
+  Φ-l⋯ż⋯ż-s {F = F} {f = f} {n = n} {β = β} =
+    subst (λ h → h (suc β) ≡ lim λ k → Φ F (f k) k
+      (suc (Φ F (lim f) 0 0 k 0̇, β)) 0̇⋯)
+      (sym (Fin.Φ-ż-α {F = Hfl} {n = n}))
+      (cong lim (funExt λ k → cong (λ γ → Φ F (f k) k (suc γ) 0̇⋯)
+        (sym (cong (λ h → h β) (Fin.Φ-ż-α {F = Hfl} {n = k})))))
+    where
+    Hfl = jump λ γ → lim λ k → Φ F (f k) k γ 0̇⋯
 
-  Φ-α⋯ż⋯ż-l : (Φ F 0 (0) 0 (n) 0̇, lim g) ≡ lim (λ m → (Φ F 0 (0) 0 (n) 0̇, g m))
+  Φ-α⋯ż⋯ż-l : ∀ {g : ℕ → Ord} {α : Ord} → (Φ F 0 (0) 0 (n) 0̇, lim g) ≡ lim (λ m → (Φ F 0 (0) 0 (n) 0̇, g m))
     → Φ F α (0) 0 (n) 0̇, lim g ≡ lim λ m → (Φ F α (0) 0 (n) 0̇, g m)
   Φ-α⋯ż⋯ż-l {α = zero} = id
-  Φ-α⋯ż⋯ż-l {α = suc α} _ = refl
-  Φ-α⋯ż⋯ż-l {α = lim x} _ = refl
+  Φ-α⋯ż⋯ż-l {F = F} {n = n} {g = g} {α = suc α} _ =
+    subst (λ h → h (lim g) ≡ lim (λ m → h (g m)))
+      (sym (Fin.Φ-ż-α {F = Hfc} {n = n})) refl
+    where
+    Hfc = jump⟨ 1 ⟩ λ γ → lim λ k → Φ F α k γ 0̇⋯
+  Φ-α⋯ż⋯ż-l {F = F} {n = n} {g = g} {α = lim f} _ =
+    subst (λ h → h (lim g) ≡ lim (λ m → h (g m)))
+      (sym (Fin.Φ-ż-α {F = Hfcl} {n = n})) refl
+    where
+    Hfcl = jump λ γ → lim λ k → Φ F (f k) k γ 0̇⋯
 ```
 
 ## 总结
@@ -722,4 +836,3 @@ $$
 - ...
 
 下一篇将正式推广到任意序数元.
-
