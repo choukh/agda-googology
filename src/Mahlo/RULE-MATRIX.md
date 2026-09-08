@@ -19,7 +19,7 @@
 | §5.9 的指定族重编码 | `Recode.codeA/codeB` 及两条解码等式 | 已实现宿主实例 |
 | 基础类型的全部对象消去规则 | 宿主原生构造提供候选 | 逐条翻译尚未完成 |
 | 原论文全部判断等式、转换、代换 | 尚无完整对象推导语法 | 未完成 |
-| 原良序证明需要的谓词／类的表示 | 尚无 distinguished sets 模块 | 未完成 |
+| 原良序证明需要的谓词／类的表示 | Predicates、Accessible、GeneratedCode、Segments、SmallCover | 通用构造已实现；实际 Ag 与局部性未完成 |
 | Lemma 5.10–5.11 | 尚无对应定理 | 未完成 |
 | §5.14 的统一可达性证书 | 见 ENDPOINT.md | 未完成 |
 
