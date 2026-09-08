@@ -304,7 +304,7 @@ U2 可与 U1／U3 交错，但在 G1、G2 未通过之前，限制在检验主�
 
 本路线的文档与后续实现统一放入 `src/Mahlo/`，避免混淆旧 Phase 编号。历史探针已归档到 `probes/OCF/` 与 `probes/Lens/`；成品 `src/OCF/BTBO.lagda.md` 保留原位。默认文档构建只发布成品文章，不发布本研究目录或探针。
 
-模块职责（目前已有 `Universe/` 与 `WellOrder/` 的通用构造，以及 `Notation/` 的有限支撑计算及规则等价证明；真实记号的比较、正规性、对应证明及 Mahlo 良序引理仍待完成，见[第四轮记录](FOURTH-ITERATION.md)）：
+模块职责（目前已有 `Universe/` 与 `WellOrder/` 的通用构造，以及 `Notation/` 的有限支撑计算、原始项语法检查及无损表达式转换；真实记号的比较、OT 正规性、闭包对应及 Mahlo 良序引理仍待完成，见[第五轮记录](FIFTH-ITERATION.md)）：
 
 - `Universe/`：族算子、子宇宙、规则实现与宇宙预算。
 - `Notation/`：有限项、规范性、比较、支撑与目标界。
