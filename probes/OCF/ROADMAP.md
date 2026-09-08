@@ -2,6 +2,11 @@
 
 > 本文是基于 Phase 1-6 实测 (Phase 1-5 PastBTBO Mahlo 探索 + Phase 6 HigherOrdᴰ 一般化) 的**结构性洞察 + 未来路线图**.
 >
+> **⚡ 2026-07-20 重大更新**: 本文的全部"不可达"结论只对 **范式 A (Brouwer 树)** 成立.
+> [Notation/](Notation/) (范式 B, 有限项表记系统) 已实测: §3.3 的"终极目标" ψ(Ω_Ω_Ω) 在范式 B 中是一个
+> 具体的项, Mahlo 级三歧性是 ~60 行可判定函数, 真 Mahlo 语法/序/对角折叠全部编译通过. 详见 §9 与
+> [Notation/FINDINGS.md](Notation/FINDINGS.md). 本文其余部分保留为范式 A 的边界定理记录.
+>
 > 核心命题: Agda `--safe --without-K` 下, OCF 强度的可达性**结构性受限于"trichotomy 是否能降维到一个全序索引集"**. Higher.agda 路线避开了 Mahlo 撞过的 BoundedTrich 屏障, 但**会在 Veblen / 不动点级别重新撞同样的墙**, 大致在 ψ(Ω_(Ω^Ω)) 附近.
 
 ## 1. 核心洞察: 为什么 Higher 走得通, Mahlo 走不通
@@ -234,7 +239,29 @@ PastBTBO/Mahlo 770 LOC 不是浪费, 它**提前在 ψ(Ω_(Ω+α)) 级别遭遇�
 - [PastBTBO/Mahlo/FINDINGS.md](PastBTBO/Mahlo/FINDINGS.md) — Mahlo 探索 umbrella (Phase 2-5 细节内嵌各 .lagda.md)
 - [PastBTBO/Naive/FINDINGS.md](PastBTBO/Naive/FINDINGS.md) — `+-lmono` 不真 (最早的 BoundedTrich 屏障实证)
 - [PastBTBO/SMB/FINDINGS.md](PastBTBO/SMB/FINDINGS.md) — Phase 7 SMB-trees 失败诊断 umbrella
+- [Notation/FINDINGS.md](Notation/FINDINGS.md) — **范式 B umbrella (2026-07-20 起主线)**
+- [Notation/EBO.lagda.md](Notation/EBO.lagda.md) — 范式 B Phase N-1: extended Buchholz 表记全管线
+- [Notation/Mahlo.lagda.md](Notation/Mahlo.lagda.md) — 范式 B Phase N-2: 真 Mahlo 级项系统 + M 对角
 
 ## 8. 一句话总结
 
 **Higher 与 Mahlo 不是两条独立路径, 而是同一座山的两条登山线 — Mahlo 在山脚就撞了崖, Higher 在半山腰才撞**. 半山腰是 ψ(Ω_(Ω^Ω)) 附近. 山顶 ψ(Ω_Ω_Ω) 需要换一座山 (新语言 / 新范式).
+
+## 9. 范式 B: 换山实录 (2026-07-20)
+
+§8 说"需要换一座山" — [Notation/](Notation/) 就是那座山, 且**不需要换语言**:
+
+- **山的名字**: 有限项 notation system (Buchholz T / Rathjen T(M) 的真实数学结构).
+  项是有限语法树, 比较是结构递归全函数 — **范式 A 的 taboo (语义树无条件三歧性) 在语法树上不存在**.
+- **实测** (全部 `--safe --without-K` 无公理编译):
+  - [Notation/EBO.lagda.md](Notation/EBO.lagda.md): extended Buchholz 全管线 (~330 LOC).
+    表记极限 EBO = ψ₀(Λ) ≫ ψ(Ω_(Ω^Ω)) (范式 A 天花板); §3.3 "终极目标" ψ(Ω_Ω_Ω) = 具体项 `ψΩΩΩ`,
+    基本列 6 规则逐值带 `<` 证书, FGH 沿 Acc 递归 (停机检查器认可).
+  - [Notation/Mahlo.lagda.md](Notation/Mahlo.lagda.md): 真 Mahlo 级项系统 (~600 LOC).
+    χ_M(0) 等 M-构建度数是合法项且参与可判定比较 (`refl` 直接算出 χ_M(0) < M);
+    M-共尾折叠的 γ-链实现 Mahlo 对角 (度数由被折叠参数驱动); ψ₀(M) 的 FGH 管线就位.
+- **新墙 (被隔离为单一义务)**: 语法序在标准形子集上的良基性 WF(NF). 这不是 taboo 而是可证明性问题;
+  三条进攻路线 (直接归纳 / **Takahashi-𝕄 语义靶反射** (范式 A 遗产!) / 分段交付) 见
+  [Notation/FINDINGS.md §3](Notation/FINDINGS.md).
+- **修正后的结论**: 不可形式化的是"Brouwer 范式内的 Mahlo", 不是 Mahlo. 范式 A 的 ~1000 LOC 负向
+  结果的价值 = 划定范式边界并留下 WF 语义靶; 强度竞赛的主线自此转移到范式 B.
