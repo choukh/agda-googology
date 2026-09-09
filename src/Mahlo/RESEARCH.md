@@ -1044,3 +1044,85 @@ g(q)\in\mathrm{Fam}_{C(\beta)+3}\subseteq\mathrm{Fam}_\kappa.
 这证明“对界变换封闭足以验证算子闭包”，没有证明必要性。若某个选定的宽松上界 C(β) 超出 κ，只说明该上界不能完成这份验证，并不能推出实际 g 输出不在 κ。初稿据 C(β) 可能等于 I 就断言单层不可达不够，缺少最小性及实际输出的下界，现撤回。也未证明 Π 族仅由代码的语法嵌套深度分层；开放变量和代换必须另行处理。
 
 **下一步的选择。** 暂优先外部取界，因为 §48 及上述条件论证不依赖内部打包，不是因为打包已被排除。停止反复展开同一个 g。接下来检验 Takahashi Definition 2.3 的真实高阶宇宙算子 uM：给一族算子的共同界时，能否沿其有限和／Σ／应用构造组合出统一界，并验证 MinU 所需的闭包条件？必须区分已给高阶界信息与从推导生成该信息。即使组合成立，界表示的有效顺序、基本列与 Mahlo 校准仍须独立证明；不能只按 MinU 嵌套深度计算强度。K1/K2 未通过。
+
+## 51. 高阶算子的充分界组合
+
+停止展开同一个 \(g\)。本轮沿 [Takahashi Definition 2.3](https://lmcs.episciences.org/16822/pdf) 的真实算子 \(u^M:\mathrm{Fam}(O)\to O\)，其中 \(O=\mathrm{Fam}(M)\to\mathrm{Fam}(M)\)、\(\mathrm{Fam}(O)=\Sigma(z:M)\,(T_M(z)\to O)\)。模型阶段、Fam 与项对仍用 Part I Definition 3.1、5.2；普通闭包阶段记 \(C\)，含义同 §48，只作充分条件。相关项对每步同时处理，下文省略撇号。
+
+**原文构造。** 给定 \((z,v):\mathrm{Fam}(O)\) 与 \((x,y):\mathrm{Fam}(M)\)，对 \(w:\mathrm{Fam}(M)\) 用 \(+\) 消去定义
+\[
+h^M_w:\bigl(N_1+T_M(x)+T_M(z)+\Sigma(t:T_M(z))\,T_M(p_1(v\,t\,w))\bigr)\to M,
+\]
+\[
+\begin{aligned}
+h^M_w(\mathsf{iii}\,\star)&=x,\\
+h^M_w(\mathsf{iij}\,x_2)&=y\,x_2,\\
+h^M_w(\mathsf{ij}\,t)&=p_1(v\,t\,w),\\
+h^M_w(\mathsf{j}(t,s))&=p_2(v\,t\,w)\,s.
+\end{aligned}
+\]
+再令
+\[
+f^M[z,v,x,y]=\lambda w.\;\bigl(\widehat N_{1M}\mathbin{\widehat+}_M x\mathbin{\widehat+}_M z\mathbin{\widehat+}_M\widehat\Sigma_M(z,\lambda t.\,p_1(v\,t\,w)),\;h^M_w\bigr),
+\]
+\[
+u^M(z,v)(x,y)=\bigl(\widehat u_{f^M[z,v,x,y]},\;i_{f^M[z,v,x,y]}\bigr).
+\]
+对象规则：Appendix A 的 \(\mathrm{Min}N_n\)、\(\mathrm{Min}{+}\)、\(\mathrm{Min}\Sigma\)、MinU。\(h^M\) 的分支是 \(+\)／\(\Sigma\) 消去后的函数应用，不是 Uf inΠ（后者只形成 Π 代码）。
+
+**给定的共同界信息。** 固定 \(\sigma,\tau\) 与阶段函数 \(\Phi\)。假设：
+- \((x,y)\in\mathrm{Fam}_\sigma\)；
+- \(z\in V_{<\tau}\)，且 \(T_{<\tau}(z)\) 已解码；
+- **共同算子界**：对所有相关 \(t\in T(z)\) 及 \(w\in\mathrm{Fam}_\xi\)，有 \(v(t)(w)\in\mathrm{Fam}_{\Phi(\xi)}\)（整族，含 \(p_1\) 与全部 \(p_2(\,\cdot\,)s\)）。
+
+\(\Phi\) 此处是输入，不是本轮从任意 \(v\) 的推导算出的对象。
+
+**代码分量与整族。** 令 \(\mu(\xi)=\max(\sigma,\tau,\Phi(\xi))\)，\(\theta(\xi)=C(\mu(\xi))\)。要求这些值在 M 以下，且 C(η)≥η、V_<C(η) 满足普通闭包；这些都是给定模型前提。
+
+(i) 指标代码。\(\widehat N_1\) 在任何普通闭包阶段。\(x\in V_{<\sigma}\)，\(z\in V_{<\tau}\)。由共同界，\(\lambda t.\,p_1(v\,t\,w)\) 把 \(T(z)\) 映入 \(V_{<\Phi(\xi)}\)，故
+\[
+\bigl(z,\,\lambda t.\,p_1(v\,t\,w)\bigr)\in\mathrm{Fam}_{\mu(\xi)}.
+\]
+相关族对：若 \(\langle z,z'\rangle\) 在 \(V_{<\tau}\) 相关，且对相关的 \(t,t'\) 有 \(\langle p_1(v\,t\,w),p_1(v'\,t'\,w')\rangle\) 在 \(V_{<\Phi(\xi)}\) 相关，则 \(\Sigma\) 的两个分量代码相关。\(\mathrm{Min}\Sigma\) 与三次 \(\mathrm{Min}{+}\) 是普通构造（Appendix A；Part I §3.2 一轮构造子）。\(\theta(\xi)\) 普通闭包，故该和代码落入 \(V_{<\theta(\xi)}\)。
+
+(ii) 整个解码域上的 \(h^M_w\)。解码 \(T(N_1+x+z+\Sigma(\cdots))\) 同构于四支之和。对相关元素：\(\mathsf{iii}\) 支输出 \(x\in V_{<\sigma}\)；\(\mathsf{iij}\) 支输出 \(y\,x_2\in V_{<\sigma}\)（因 \((x,y)\) 为 \(\mathrm{Fam}_\sigma\)）；\(\mathsf{ij}\) 支输出 \(p_1\in V_{<\Phi(\xi)}\)；\(\mathsf{j}\) 支要求对每个 \(s:T(p_1(v\,t\,w))\) 有 \(p_2(v\,t\,w)\,s\in V_{<\Phi(\xi)}\)。最后一步用的是 \(\mathrm{Fam}_{\Phi(\xi)}\) 的第二分量，不能用“\(p_1\) 已在 \(V_{<\Phi(\xi)}\)”代替。于是指标与 \(h^M_w\) 同时满足 \(\mathrm{Fam}_{\theta(\xi)}\)，即 \(f^M(w)\in\mathrm{Fam}_{\theta(\xi)}\)。
+
+只列有限个 \(t\) 不能代替 \(\mathsf{j}\) 支：即便 \(T(z)\) 有限，\(T(p_1(v\,t\,w))\) 仍可以是整个子宇宙解码域。\(\mathsf{iij}\) 支同样遍历 \(T(x)\)，不是检查 \(y(0)\)。
+
+**条件引理。** 设 \(\kappa+3<M\)，\(V_{<\kappa}\) 普通闭包，且 \(\mathrm{Fam}_\kappa=\bigcup_{\xi<\kappa}\mathrm{Fam}_\xi\)。若 \(\sigma<\kappa\)、\(\tau<\kappa\)，并且
+\[
+\forall\xi<\kappa\;(\Phi(\xi)<\kappa\ \wedge\ C(\mu(\xi))<\kappa),
+\]
+则对任意 \(w\in\mathrm{Fam}_\kappa\) 先取 \(\xi<\kappa\) 使 \(w\in\mathrm{Fam}_\xi\)，再得 \(f^M(w)\in\mathrm{Fam}_{\theta(\xi)}\subseteq\mathrm{Fam}_\kappa\)。故 \(f^M\) 在 \(\kappa\) 上满足 FamOper。按 §48 的代码加入，\(\widehat u_{f^M}\) 有共同充分阶段 \(\kappa+2\)，从而
+\[
+u^M(z,v)(x,y)\in\mathrm{Fam}_{\kappa+3}.
+\]
+局部性不可省：每个固定 \(w\) 有某个 \(\xi\)，不等于 \(\lambda w.f^M(w)\) 作为函数已有统一较小阶段；Part I 用容许性收集族，本引理把它列为前提。这是充分条件，不是必要，也不是最小 \(\kappa\)。未证明某宽松 \(C\) 或 \(\Phi\) 越出 \(\kappa\) 时实际输出越界。\(\widehat u_{f^M}\) 的 \(+2\) 与 §48 一样是代码加入的共同充分偏移，不是点态最小。
+
+**非空实例（有限下标）。** 取 Example 2.4：\(z=\widehat N_{1M}\)，\(v=\lambda \_.g\)（\(g\) 为 Example 2.2 的算子，此处只引用其已给充分界 \(\Phi_g\)，不再展开 \(g\) 的内部），\((x,y)=(\widehat N_M,\lambda\_.\widehat N_M)\)。\(N_1\) 有 \(\star:N_1\)，\(v(\star)=g\)，族非空。§48／§50 给出充分 \(\Phi_g(\xi)=C(\xi)+3\)，未证必要。\(\tau\) 取含 \(\widehat N_1\) 的普通阶段，\(\sigma\) 含 \(\widehat N_M\)。原文用 dummy 族 \(w_0=(\widehat N_0,\lambda.E_0)\) 计算
+\[
+i(\mathrm{res}_1^{g^*}(w_0,\mathsf{iii}\,\star))=a=\widehat N_M,\qquad
+i(\mathrm{res}_1^{g^*}(w_0,\mathsf{iij}\,c))=b\,c=\widehat N_M,
+\]
+以及内部 \((a',b')\) 上 \(i(\mathrm{res}_1^{g^*}(a',b',\mathsf{ij}\,\star))=p_1(g(\widehat q'))\)。这些等式核对 \(h^M\) 的前三支；第四支 \(s\mapsto p_2(g(\widehat q'))\,s\) 必须对整个 \(T(p_1(g(\widehat q')))\) 成立，组合界才给出 \(\mathrm{Fam}\)，而不是只给出一个代码。充分组合为 \(\theta(\xi)=C(\max(\sigma,\tau,C(\xi)+3))\)。
+
+**依赖小类型的算子族。** 改 \(z=\widehat N_M\)、\(v=\lambda n.\,g\)，\(0:N\) 非空。\(\Sigma(t:N)\,T_M(p_1(g(w)))\) 的下标是 \(N\)，不是 \(N_1\)。共同界仍是同一个 \(\Phi_g\)：不逐个列出 \(n\)，只把 \(\lambda n.\,p_1(g(w))\) 当作 \(\mathrm{Fam}\) 的第二分量。\(\mathrm{Min}\Sigma\) 一次形成该代码。此例检验无限小类型下标，但算子并未随下标变化，不能代替非恒定族的检验。
+
+若令 \(v(n)\) 随 \(n\) 而变，例如 \(v(n)=\lambda w.\,\mathrm{const}(q_n)\) 且各 \(q_n\) 不同，组合公式不变，但共同 \(\Phi\) 必须同时服务每一个 \(v(n)\)。给定这样的 \(\Phi\)，\(\lambda n.\,p_1(v(n)\,w)\) 仍是一条 \(\mathrm{Fam}\) 第二分量，不需要把 \(N\) 展开成有限表。未给定 \(\Phi\) 时，不能从若干 \(v(\underline{n})\) 的实例推导拼出 \(\forall n\) 的 \(\Phi\)；这与 §50 纠正的“\(b(0)\) 不能代替全称”是同一缺口。
+
+**共同界 \(\Phi\) 能否由现有推导生成。** 若 \(v=\lambda t.\,g\)，体与 \(t\) 无关，充分 \(\Phi\) 即 \(\Phi_g\)，来自 §48 的条件界，仍依赖未生成的 \(C\)。若 \(v\) 是上下文变元，\(\Phi\) 只能来自环境：判断 \(v:T(z)\to O\) 的形成／引入不携带阶段。\(\mathsf N\)-消去给出项 \(E_N(n,c_0,c_s):O\)，即函数 \(n\mapsto v(n)\)，不是阶段上的上确界。\(\mathrm{Min}{+}\)、\(\mathrm{Min}\Sigma\)、MinΠ、MinU 分别形成代码 \(\widehat+,\widehat\Sigma,\widehat\Pi,\widehat u_f\)，结论类型里没有“共同 \(\Phi\)”。故缺口定位为：缺少一条把 \(T(z)\) 索引的一族充分界收成单个 \(\Phi\) 的规则或已证不变量。这不是“量词无限所以不可计算”；闭项 \(\lambda t.\,g\) 已经给出共同 \(\Phi_g\)。Uf inΠ 仍只形成代码。
+
+**对进展／基本列的判断。** 这条高阶规则实际用到的闭包操作是：参数阶段的 \(\max\)、普通 \(C\)（含 \(N_1,+,\Sigma\)）、算子应用 \(\Phi\)、以及 MinU 的 \(+2/+3\)。条件引理说明对它们封闭足以验证该 MinU 实例。与 §50 对 \(g\) 的充分条件同形，但多出 \(\Sigma\) 越过 \(T(z)\) 以及 \(h^M\) 对算子输出整族的遍历；这是规则本身的组合，不是嵌套深度计数。
+
+有效进展表示须把 \(\max,C,\Phi,\mathrm{MinU}\) 的协同变成可计算顺序，并证下降／共尾。本轮只得到**给定** \(\Phi,C\) 后的组合：有一个实际非空实例上的充分界，没有生成 \(C\) 或 \(\Phi\)，没有 \(\lambda[n]\)。禁止把 \(u^M\) 的迭代次数当作量级，也禁止填入不可达／OT。下一步的关键点是共同 \(\Phi\) 的规则来源，而不是再写一层占位闭包。K1/K2 未通过。
+
+
+### 主代理补充：随下标变化的族也可由不变量统一取界
+
+固定一个普通闭包阶段 δ<M，包含 N̂ 与 1̂。以自然数消去定义 A₀=1̂、A_(n+1)=A_n +̂ 1̂。模型中对自然数归纳：基础代码在 V_<δ，后继由普通和闭包仍在 V_<δ；对相关自然数项先归约到相同数值，代码结果相关。因此所有 A_n 同处该阶段，其解码分别有 n+1 个元素。
+
+令 q_n=(A_n,λ_.N̂)，v(n)(w)=q_n。这里 z=N̂，族非空且输出指标确实随 n 变化，v: N→O。对所有 n 和所有 w∈Fam_ξ，由上述不变量都有 v(n)(w)∈Fam_δ，所以可取共同 Φ(ξ)=δ。这个共同界由归纳保持同一阶段得到，没有先列出各个 Φ_n 再取上确界。
+
+高阶算子接受任意 O 型算子，这个 v 的输出不是子宇宙，不能宣称它自身是宇宙生成算子。若要同时保留 g，可取 z=N̂ +̂ 1̂，以和消去令 v(inl n)=λw.q_n、v(inr ⋆)=g；共同界可取 max(δ,C(ξ)+3)，前提仍是 §48 的 C 合格。§51 的组合因此同时覆盖真正变化的无限算子族与 g 分支。自然数归纳在这里只检验共同界的生成，不作为通向 Mahlo 的强度指标。
+
+这补足一个实例，仍不是一般共同界算法。后续应处理算子族本身经高阶递归而改变其界的情况，并检查是否可由函数解释／归纳不变量自动生成共同界；不应继续把条件 C、Φ 的组合当作整个提取任务已完成。

@@ -44,3 +44,7 @@ RESEARCH.md §32 的实例使用 Takahashi Example 2.1 的常值重编码；参�
 §49 主代理再次核查 Part I Definition 3.1、§3.2、§4.1、§5。保留条件界与对象层子宇宙构造；纠正最小阶段、Σ 嵌入方程、U_α 索引，并撤回对象算子与阶段函数的直接等同。未证明内部阶段打包是必需条件。Setzer 综述只能作为模型／既定 OT 分析的补充来源，本轮没有从中取得规则生成的 C 或基本列。
 
 §50 主代理核查 Takahashi Example 2.1–2.2、Appendix A 的 Uf inΠ、Uf inres0/1；原文证明内部闭包，没有给整阶段提升失败的反例。§50 的条件闭包引理由 §48 加族阶段局部性直接推出，并非原文新增定理。撤回“选定界越界即实际闭包失败”与语法深度自动分层的推断。下一轮目标为同文 Definition 2.3 的高阶算子，而非重复常值实例。
+
+§51 对象构造取 [Takahashi Definition 2.3、Example 2.4](https://lmcs.episciences.org/16822/pdf) 与 Appendix A 的 MinN_n、Min+、MinΣ、MinU；\(h^M\) 的四支是原文 \(+\) 消去定义。阶段／Fam／普通闭包沿用 Part I Definition 3.1、5.2 与 §48 的 \(C\)。组合引理与 \(\theta(\xi)=C(\max(\sigma,\tau,\Phi(\xi)))\) 是本项目在给定 \(\Phi\) 下的充分条件推导，不是 Takahashi 已证的序数定理，也不生成 \(C\) 或 \(\Phi\)。Example 2.4 作非空有限下标实例；\(z=\widehat N_M\) 的变体检验小类型下标。缺口“一族 \(\Phi_n\mapsto\) 共同 \(\Phi\)”不是文献结论。
+
+§51 主代理核查 Definition 2.3 的四分支与 fM 指标公式；补上 κ+3<M 及 C 的阶段前提。非恒定 q_n 及与 g 混合的共同界为本项目基于自然数归纳、普通和闭包与 §48 的条件推导，不是文献给出的基本列或强度定理。
