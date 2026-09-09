@@ -4,7 +4,7 @@
 
 | 来源 | 使用位置 | 不能直接推出 |
 |---|---|---|
-| [Setzer, Extending Martin-Löf Type Theory by One Mahlo-Universe](https://csetzer.github.io/articles/mahlo.pdf)，§4–5 | 原始 Mahlo 规则及独立序数分析依据 | 已有从规则自动提取基本列的算法 |
+| [Setzer, Extending Martin-Löf Type Theory by One Mahlo-Universe](https://csetzer.github.io/articles/mahlo.pdf)，§3–5 | 原始 Mahlo 规则、参考记号的比较／SC／合法性及独立序数分析依据 | 已有从规则自动提取基本列的算法 |
 | [Setzer, Universes in Type Theory Part I](https://csetzer.github.io/articles/modeltypetheoryinaccessiblemahlo.pdf)，§2.1、5.3–5.4 | 模型上界与理论版本审计；注意 KPM⁺ 和 LF 范围 | 等强度就是所需有效证明翻译或基本列转换 |
 | [Takahashi 2025](https://lmcs.episciences.org/16822/pdf)，§2.1、Example 2.1、Appendix A | 规则的明确呈现、常值重编码；核对额外宇宙与 Acc | 宿主 Agda 的全部能力等于原 MLM；闭包等式就是下降关系 |
 | [Dybjer–Setzer, Predicativity of the Mahlo Universe in Type Theory](https://csetzer.github.io/articles/dybjerSetzerWeylVolume2025/dybjerSetzerWeylVolume2025Final.pdf)，§1–2、Appendix B | 内外宇宙与消去权限 | 可把内部 Mahlo 宇宙当普通归纳类型遍历 |
@@ -20,3 +20,5 @@
 - [Fernández-Duque–Weiermann, Fundamental sequences and fast-growing hierarchies for the Bachmann–Howard ordinal](https://arxiv.org/pdf/2203.07758)：在基本列已经生成后，参考其正则性与增长认证方法；不作为 Mahlo 基本列输入。
 
 旧证明枚举、原始递归增长和高阶返回类型的论文记录留在归档，不列为当前执行依据。新的文献调查必须说明它补上“宇宙规则到基本列”的哪一箭头。
+
+本轮定位：Setzer 印刷页 6–7 的 Definition 3.3、3.5、3.6 与 Freund Definition 1.2 支持 [RESEARCH.md §27](RESEARCH.md#27-更具体的正向连接固定截断点的两条坍缩不等式) 的局部不等式核对。该对应是本项目的推导，不是两篇文献已经证明的 Mahlo 提取定理；固定记号上的 SC 尚未成为随任意线性序变化的自然支撑。
