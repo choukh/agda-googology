@@ -36,3 +36,5 @@ RESEARCH.md §32 的实例使用 Takahashi Example 2.1 的常值重编码；参�
 §46 核对：[Freund, arXiv:1809.06759v3](https://arxiv.org/pdf/1809.06759) Definition 3.1、3.2、3.5–3.6、4.2、4.5，Theorem 4.6、9.7；导论中 Kleene–Brouwer 使良基搜索树成 dilator。此文把 KP 公理变成沿 \(X\) 的搜索树，不是 MLM 提取器，也不定义基本列。前印本 [1704.01662](https://arxiv.org/pdf/1704.01662) 作者声明已过时。Girard 的 \(\Pi^1_2\leftrightarrow\mathrm{Dil}(D)\) 完备性不登记为本项目进展。
 
 §46 主代理已核查 Proposition 3.6、Lemma 3.10 在 KB 论证中的使用、Definition 4.5、Theorem 4.6、Proposition 4.9 与 Theorem 4.11。修正了“语义满足关系必是构造输入”以及“MinU 可直接插入”的过强表述；MLM 的保强度逻辑呈现与枝→模型定理尚缺。
+
+§47 主代理核查：[Setzer 1996](https://csetzer.github.io/articles/uppermahlo.pdf) Definition 3.1、4.3–4.4；[Part I](https://csetzer.github.io/articles/modeltypetheoryinaccessiblemahlo.pdf) Definition 5.2、印刷页 26–29。保留统一阶段界及反射闭包机制，撤回初稿的直接保强度声称、L_w 混用和“有名字／全部函数”的错误模型二分。
