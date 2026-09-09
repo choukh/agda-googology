@@ -2,6 +2,8 @@
 
 状态：原文依赖审计；第二轮已实现通用归纳生成与小覆盖，但下表中的具体 Mahlo 引理仍未完成。见 [第二轮记录](SECOND-ITERATION.md)。
 
+2026-09-09 更新：实际算子的类型表、5.10–5.11 条件证明骨架及 R1–R6 债务见[首次关键路径审计](Evidence/CRITICAL-AUDIT-1.md)。当前优先验证跨宇宙性质转移及 5.7／5.6 的数学证明，不立即展开完整比较库。
+
 依据 [Setzer §5，第 18–19 页](https://csetzer.github.io/articles/mahlo.pdf)。沿用原文的 `W`、`A`、闭包算子和 distinguished set 记号；这些符号目前不是本项目已经定义的 Agda 类型。
 
 | 节点 | 原证明中的用途 | 本地下一项义务 |

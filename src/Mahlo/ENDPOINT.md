@@ -2,6 +2,8 @@
 
 状态：识别到真实的元归纳依赖；端点统一化尚未解决。
 
+2026-09-09 更新：[层级实验与证明债务](Evidence/CRITICAL-AUDIT-1.md)已验证有限支撑及正归纳生成可以在固定 `Nat → Set₁` 上形成整个阶段族。真实参数、阶段不变量及端点证书仍未完成；不能把这个类型检查报为端点统一化完成。
+
 ## 1. 原文证据
 
 [Mahlo 原文](https://csetzer.github.io/articles/mahlo.pdf) 的 Definition 5.12、Lemma 5.13 和 Theorem 5.14 通过引用单宇宙加 W 型论文的相应构造得到阶段性结果。
