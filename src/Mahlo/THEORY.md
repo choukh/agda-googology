@@ -2,6 +2,8 @@
 
 状态：首轮规则实现审计，尚未建立整个 MLM 的形式化解释。2026-09-08。
 
+2026-09-09 补充：[理论探索二](Evidence/EXTRACTION-BRIDGE-2.md)核查了 MLM、带额外宇宙的 MLM⁺ 与 MLMacc 的区别，并审计本地 W 编码仍使用宿主索引归纳证明的边界。当前执行主线见 [EXTRACTION-PLAN.md](EXTRACTION-PLAN.md)；本文件末节保存旧反射路线的下一关，不作为当前编码任务。
+
 目标固定为 Setzer 的 `MLM` 及其记号下的 `α_M = ψ_{Ω₁}(Ω_{M+ω})`。新发现的历史 `probes/OCF/Notation/Mahlo.lagda.md` 含有待证的规范性／共尾性／良基性义务，不能按名字直接当作这个参考系统。
 
 ## 1. 已实现的宿主选择
