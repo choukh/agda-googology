@@ -40,3 +40,5 @@ RESEARCH.md §32 的实例使用 Takahashi Example 2.1 的常值重编码；参�
 §47 主代理核查：[Setzer 1996](https://csetzer.github.io/articles/uppermahlo.pdf) Definition 3.1、4.3–4.4；[Part I](https://csetzer.github.io/articles/modeltypetheoryinaccessiblemahlo.pdf) Definition 5.2、印刷页 26–29。保留统一阶段界及反射闭包机制，撤回初稿的直接保强度声称、L_w 混用和“有名字／全部函数”的错误模型二分。
 
 §48 的条件统一界是主代理基于 Part I 页 26–27 的最小闭包阶段／代码加入定义，以及页 14 的模型嵌入归约所作推导。θ 已满足闭包是前提；没有从文献取得可计算的 C(β)，也没有一般 f 或基本列结论。Grok 初稿关于有限推导无法求界的断言已撤回。
+
+§49 主代理再次核查 Part I Definition 3.1、§3.2、§4.1、§5。保留条件界与对象层子宇宙构造；纠正最小阶段、Σ 嵌入方程、U_α 索引，并撤回对象算子与阶段函数的直接等同。未证明内部阶段打包是必需条件。Setzer 综述只能作为模型／既定 OT 分析的补充来源，本轮没有从中取得规则生成的 C 或基本列。
