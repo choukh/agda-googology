@@ -50,3 +50,5 @@ RESEARCH.md §32 的实例使用 Takahashi Example 2.1 的常值重编码；参�
 §51 主代理核查 Definition 2.3 的四分支与 fM 指标公式；补上 κ+3<M 及 C 的阶段前提。非恒定 q_n 及与 g 混合的共同界为本项目基于自然数归纳、普通和闭包与 §48 的条件推导，不是文献给出的基本列或强度定理。初稿 \(\lambda w.\mathrm{const}(q_n)\) 的类型笔误已改为 \(\lambda w.q_n\)。
 
 §52 主代理核查 Kohlenbach, Proof Interpretations, Chapter 4：Definition 4.3、4.5、Lemma 4.8、Proposition 4.10、Theorem 4.11／Remark 4.12、Corollary 4.13。保留有限类型 majorization 和有界参数统一取界的准确范围；未验证 MLM／MinU 的迁移。Howard 1972 DOI 全文访问失败，撤回其精确共尾构造作为已核实依据。Θ 与阶段见证的有效生成仍未证明。
+
+§53 主代理核查 Setzer 1996 Definition 3.1、4.3(b)、4.4、Lemma 4.5。纠正 →* 为函数空间关系；注明 Inacc 参数在原文两处的不一致；撤回未验证的 φ_g 等价式及完整 Δ₀ 生成声称。FAM/K 模板为本项目基于给定 PER／解码数据的有界公式构造，未包含模型历史的生成与有效见证。
