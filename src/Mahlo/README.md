@@ -4,6 +4,8 @@
 
 **当前主线：[从类型宇宙规则统一提取基本列](EXTRACTION-PLAN.md)。** 用户已澄清：研究目标是提取技术本身，不能预先手填 Mahlo 记号和基本列，再把良基证明当作提取。
 
+**当前阶段：文献调查与纸面论证，暂停新增代码。** 见[提取可行性评估](Evidence/EXTRACTION-FEASIBILITY.md)：通用坍缩记号生成有文献先例，但宇宙到其输入的解释、Mahlo 推广及基本列增长认证尚未落实。
+
 最新实验：[Extraction/Countable.agda](Extraction/Countable.agda)。已实现小分支宇宙的树提取、下降保持及可达性证明，并证明不能枚举所有 `Nat → Bool`，排除枚举全部解码元素的朴素方案。尚未从完整宇宙生成序数端点或基本列。
 
 代码分工：`Universe/` 是候选输入与规则实现；`Extraction/` 是当前提取技术实验；`Notation/`、`Fundamental/` 是手写参考系统的校准探针；`Growth/` 是通用输出端。旧反射及良序模块作为潜在证明工具保存。所有部分仍属研究，不是已完成的 Mahlo 强度认证。
