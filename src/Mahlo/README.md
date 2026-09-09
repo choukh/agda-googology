@@ -6,6 +6,8 @@
 
 **当前阶段：文献调查与纸面论证，暂停新增代码。** 见[提取可行性评估](Evidence/EXTRACTION-FEASIBILITY.md)：通用坍缩记号生成有文献先例，但宇宙到其输入的解释、Mahlo 推广及基本列增长认证尚未落实。
 
+最新：[理论探索一](Evidence/EXTRACTION-BRIDGE-1.md)。发现可从有效理论的证明汇总递归序结构的通用定理，并给出条件性端点共尾族推导；尚需对象理论匹配、元层反射、内部基本列和增长校准。
+
 最新实验：[Extraction/Countable.agda](Extraction/Countable.agda)。已实现小分支宇宙的树提取、下降保持及可达性证明，并证明不能枚举所有 `Nat → Bool`，排除枚举全部解码元素的朴素方案。尚未从完整宇宙生成序数端点或基本列。
 
 代码分工：`Universe/` 是候选输入与规则实现；`Extraction/` 是当前提取技术实验；`Notation/`、`Fundamental/` 是手写参考系统的校准探针；`Growth/` 是通用输出端。旧反射及良序模块作为潜在证明工具保存。所有部分仍属研究，不是已完成的 Mahlo 强度认证。
