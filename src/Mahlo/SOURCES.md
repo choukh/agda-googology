@@ -47,4 +47,6 @@ RESEARCH.md §32 的实例使用 Takahashi Example 2.1 的常值重编码；参�
 
 §51 对象构造取 [Takahashi Definition 2.3、Example 2.4](https://lmcs.episciences.org/16822/pdf) 与 Appendix A 的 MinN_n、Min+、MinΣ、MinU；\(h^M\) 的四支是原文 \(+\) 消去定义。阶段／Fam／普通闭包沿用 Part I Definition 3.1、5.2 与 §48 的 \(C\)。组合引理与 \(\theta(\xi)=C(\max(\sigma,\tau,\Phi(\xi)))\) 是本项目在给定 \(\Phi\) 下的充分条件推导，不是 Takahashi 已证的序数定理，也不生成 \(C\) 或 \(\Phi\)。Example 2.4 作非空有限下标实例；\(z=\widehat N_M\) 的变体检验小类型下标。缺口“一族 \(\Phi_n\mapsto\) 共同 \(\Phi\)”不是文献结论。
 
-§51 主代理核查 Definition 2.3 的四分支与 fM 指标公式；补上 κ+3<M 及 C 的阶段前提。非恒定 q_n 及与 g 混合的共同界为本项目基于自然数归纳、普通和闭包与 §48 的条件推导，不是文献给出的基本列或强度定理。
+§51 主代理核查 Definition 2.3 的四分支与 fM 指标公式；补上 κ+3<M 及 C 的阶段前提。非恒定 q_n 及与 g 混合的共同界为本项目基于自然数归纳、普通和闭包与 §48 的条件推导，不是文献给出的基本列或强度定理。初稿 \(\lambda w.\mathrm{const}(q_n)\) 的类型笔误已改为 \(\lambda w.q_n\)。
+
+§52 主代理核查 Kohlenbach, Proof Interpretations, Chapter 4：Definition 4.3、4.5、Lemma 4.8、Proposition 4.10、Theorem 4.11／Remark 4.12、Corollary 4.13。保留有限类型 majorization 和有界参数统一取界的准确范围；未验证 MLM／MinU 的迁移。Howard 1972 DOI 全文访问失败，撤回其精确共尾构造作为已核实依据。Θ 与阶段见证的有效生成仍未证明。
