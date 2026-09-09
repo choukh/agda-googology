@@ -30,3 +30,5 @@ RESEARCH.md §32 的实例使用 Takahashi Example 2.1 的常值重编码；参�
 主代理复核：Takahashi Example 2.2 及 §2.1 支持 RESEARCH.md §35 的局部反射方程。解码相等只支持相容分析的相等替换，不提供前驱域或共尾列。初稿 FS-1/FS-2 不是文献结论，其不共尾论证已撤回；详见 §38。未复核的综述强度简化论断不作为本轮证明依据。
 
 本轮核对：Takahashi Appendix A 的宇宙嵌入／res 计算规则及 Example 2.1–2.2 支持 RESEARCH.md §41–43 的具体等式。Atom/Cong/Trans 是本项目的证书模式，完整前提检查仍未定义；不要把文献规则存在误称为检查器完成。本轮只分析外部推导，不添加对象理论未给出的宇宙消去。局部传输尚未接到 Towsner 的全局进展条件，也没有序数下降或共尾结论。
+
+§45 主代理复核：[Buchholz 的 KPM 分析](https://epub.ub.uni-muenchen.de/3848/1/3848.pdf) §1–2 与印刷页 6 定理／推论；[无穷推导记号](https://epub.ub.uni-muenchen.de/3846/1/13.pdf) §2.3、2.8；Freund Definition 4.1、Theorem 4.3。Rathjen 1991 的存档本轮未能由主代理打开，精确转写不作已复核前提。常值 dilator 例子是本项目从定义的推导，用来纠正统一坍缩具有固定 BH 输出上限的误判，不是 Mahlo 提取方案。
