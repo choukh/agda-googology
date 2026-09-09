@@ -55,7 +55,7 @@
 \alpha_M=\psi_{\Omega_1}(\Omega_{M+\omega}).
 \]
 
-OT 的正确判定及次序仍待接入代码。以下数学定义引用该指定的参考系统，不能用任意布尔函数替代其语义。
+OT 判定及次序已有带递归预算的候选实现 [Reference.agda](Notation/Reference.agda)，与参考系统的等价性仍待证明。以下数学定义引用该指定的参考系统，不能用任意布尔函数替代其语义。
 
 ## 3. 固定语法高度与有限候选集
 
@@ -121,8 +121,13 @@ Pₙ₊₁ = {M} ∪ {φ(a,b), ψ(a,b) | a,b∈Tₙ}
 
 - 外部宇宙 U_F 及解码：已有实际实现。
 - 固定高度、有限枚举、过滤取最大算法：已在 [FiniteSearch.agda](Fundamental/FiniteSearch.agda) 实现，安全检查通过。
-- 搜索算法目前仍接收 `validOT`、`less` 两个参数；其真实实现和正确性未完成。
+- [Reference.agda](Notation/Reference.agda) 已实现比较、SC／sc／G、临界项判定及 OT 检查；不再只有外部参数。返回 `Maybe Bool`，递归预算耗尽时返回 `nothing`。
+- [Mahlo.agda](Fundamental/Mahlo.agda) 将这些实际算法接到 `basicSequence : Term → Nat → Result Term` 和 `endpointSequence : Nat → Result Term`；调用者不必提供比较器。结果区分 `ok`、`invalid`、`exhausted`。端点也检查合法性及低于 Ω₁。
 - FGH 的 `view` 还需要把合法项分类为零／后继／极限，并接入上述规则；统一下降证书仍待构造。
-- 因而数学上的内部列选择已经确定，仓库尚不能直接计算真实 Mahlo 实例。
+- [MahloChecks.agda](Fundamental/MahloChecks.agda) 以 `refl` 检查实际归约：`basicSequence ω 2 = ok 1`、`basicSequence ω 3 = ok 2`、后继取前驱、拒绝 Ω₁、端点第 0／1／2 项及前两项递增。这是高度搜索列，所以不预设通常的 `ω[n] = n`。
 
-本轮只把定义进一步具体化，不报告已经得到目标强度或闭合的 FαM。
+这里的程序在 Agda 意义下总终止，但结果可能是 `exhausted`；尚未证明预算 `32 × (size a + size b)` 足以让所有合法输入返回判定结果，因此还不是已认证的全域基本列算法。
+
+还有一项明确的转录约定需要核实：原文 Definition 3.5 的 Gκ(ψλb) 最后一支在扫描版中写严格条件 κ≺′ψλb，与前一支一起未覆盖相等情形；而 Definition 3.6 会使用 Gκ(κ)。当前代码把“不低于 κ”的情形（含相等）统一定义为 Gκ(λ) ∪ Gκ(b) ∪ {b}，并用一个归约检查固定这一选择。[前身系统 Definition 2.7](https://csetzer.github.io/articles/2papdiss.pdf) 的相关分支含非严格比较，可作为调查线索，不能替代本系统的等价性证明。这个约定影响嵌套 ψ 的合法性检查，须在语义校准时优先审计。
+
+现在有无需外部判定器的可执行候选；尚不报告已得到参考系统正确性、目标强度或闭合的 FαM。
