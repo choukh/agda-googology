@@ -54,3 +54,5 @@ RESEARCH.md §32 的实例使用 Takahashi Example 2.1 的常值重编码；参�
 §53 主代理核查 Setzer 1996 Definition 3.1、4.3(b)、4.4、Lemma 4.5。纠正 →* 为函数空间关系；注明 Inacc 参数在原文两处的不一致；撤回未验证的 φ_g 等价式及完整 Δ₀ 生成声称。FAM/K 模板为本项目基于给定 PER／解码数据的有界公式构造，未包含模型历史的生成与有效见证。
 
 §54 主代理核查 Positive Inductive-Recursive Definitions, Definition 2.1–2.2、Example 2.6、3.6，以及 Dybjer–Setzer 2025 页2对内部 Mahlo 超出普通 IR 的陈述。更正 IR⁺ 可使用非离散底范畴及 Π 可在 Set≅ 上处理。两个有限例／幂函子反例为本项目从定义作出的推导，不是所有规则提取技术的排除定理。
+
+§55 主代理以 Takahashi Example 2.2、Appendix A 的 res 形成规则检验标签候选。严格低标签限制会拒绝重复 res，为本项目对候选的具体反例；并非对原 MLM 的反例。原始语法重命名只支持支撑自然性，没有建立有序进展或强度校准。
