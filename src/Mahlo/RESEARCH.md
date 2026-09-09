@@ -705,3 +705,181 @@ i_g(\operatorname{res}_1^g(a,b,c))=i_{f_{\widehat q}}(c)
 下一代理须给出有限状态／请求／输出判断和可检查的证书规则，分别处理 c 的普通构造、常值 res、开放中性项。至少展开 Π 的一个绑定实例和常值重编码的一次实际传输，验证类型及局部计算相容。若只能得到局部请求传输，就如实停在此处；要接到基本列，另列且尝试证明真正的进展关系，不能以语法长度或生成能力代替。
 
 这项任务用来修复 P_g 的明确缺口；不再沿已撤回的 FS-1/FS-2 或断点 B 展开内部代码枚举。
+
+## 41. 候选探索 06：res₁^g 的带证书请求传输
+
+固定 [Takahashi Example 2.2](https://lmcs.episciences.org/16822/pdf) 的 g，以及 Appendix A 的 Uf inres1、Uf inΠ、Uf inN、Uf inres0。不增加宇宙消去，不枚举 U_f 的全部代码。一般 MLM 定义相等没有完整检查器；凡本片段用到的相等都必须作为下面文法中的有限证书给出。
+
+**证书文法。** 证书 e 是有限树，结论为定向判断 Γ⊢t=u:A 或 Γ⊢A=B：
+
+\[
+e ::= \operatorname{Atom}(R,\vec d)
+ \mid \operatorname{Cong}(R,e_1,\ldots,e_k)
+ \mid \operatorname{Trans}(e_1,e_2)
+ \mid \operatorname{Refl}(t).
+\]
+
+不设 \(\operatorname{Sym}\) 构造子，Takahashi 的等式对称规则不进入本文法。合同节点的子证书必须已是合法定向证书；不能在子树里另写对称再伪装成合同。
+
+原子 \(R\) 只含左到右的计算（Appendix A 的解码／β／投影），本片段用到的是：Uf inN、Uf inΠ、Uf inres0、Uf inres1、TM uni、\(T_M(\widehat{\mathbb N}_M)=N\)、Πeqβ、Σ 的 p1/p2 等式、g 的 λ 等式 Gβ。每个 \(\operatorname{Atom}(R,\vec d)\) 须附上该规则的有限前提推导 \(\vec d\)（形成、引入等侧条件），不能从结论行反推前提。
+
+合同 \(R\) 使用这些计算所依附的有类型合同实例（包括 MinTb、\(T_M\)、应用、投影及绑定处的合同）；完整的前提格式仍须补齐。\(\operatorname{Trans}(e_1,e_2)\) 要求 \(e_1\) 的右端与 \(e_2\) 的左端语法相同。
+
+**递归验证 \(\operatorname{chk}(e;t{=}u{:}A)\)。** 按 e 的根构造子递归，不只读末规则：
+
+- \(\operatorname{Refl}(t')\)：要求 \(t'\equiv t\equiv u\)（语法同一）。
+- \(\operatorname{Atom}(R,\vec d)\)：检查 \(R\) 在原子表中、\(\vec d\) 逐条为有限合法前提、\(R\) 对 \(\vec d\) 的结论恰为 t=u:A。
+- \(\operatorname{Cong}(R,e_i)\)：递归 \(\operatorname{chk}(e_i)\)，再检查 \(R\) 的合同结论为 t=u:A。
+- \(\operatorname{Trans}(e_1,e_2)\)：从 \(e_1,e_2\) 读出中间项 w，递归 \(\operatorname{chk}(e_1;t{=}w)\) 与 \(\operatorname{chk}(e_2;w{=}u)\)。
+- 其它构造子：拒绝。
+
+上述是证书树的验证方案，尚不是完整判定算法：Atom 的“前提合法”、Refl 的良类型以及有依赖的合同侧条件仍须一个明确的推导检查器。有限树本身不消除这些义务。对已给出合法前提的具体实例，可以逐条使用原理论规则核查。文法外的 MLM 转换（其余宇宙构造子、任意对称、未附前提的定义相等）既不接受，也不声称可判定。INPUT.md 的逐规则抄录尚未完成；此处不把片段检查器写成全规则检查器。
+
+**状态。** 当分析嵌入项时，状态为
+
+\[
+\Gamma \vdash i_h(c):M \;\langle d_{\mathrm{tm}},\, d_{\mathrm{code}},\,\tau\rangle
+\]
+
+其中 \(d_{\mathrm{tm}}\) 推导当前嵌入判断，\(d_{\mathrm{code}}\) 推导 Γ⊢c:U_h（若原始类型是 \(T_g(\mathrm{res}_0^g(a,b))\)，须先附类型证书转到 U_h）。迹 τ 记录来源。分析已不带外层 \(i_h\) 的 M 项时，\(d_{\mathrm{code}}\) 为空，只保留 \(d_{\mathrm{tm}}\)。
+
+`inst`、针对代码构造子的 `use`、以及代码侧 `halt` **一律看 \(d_{\mathrm{code}}\) 的末规则**，不看 \(d_{\mathrm{tm}}\)。这些例子里 \(d_{\mathrm{tm}}\) 末规则都是 MinTb；若用它当 halt 条件，一切嵌入项都会停。
+
+| 请求 | 检查 | 后继 |
+|---|---|---|
+| `use(e)` | \(\operatorname{chk}(e;t{=}u{:}A)\) 对当前项 t 成立 | Γ⊢u:A，迹加证书根地址 |
+| `prem(i)` | 指定 \(d_{\mathrm{code}}\) 或 \(d_{\mathrm{tm}}\) 的第 i 个前提 | 该前提判断 |
+| `inst(s,d_s)` | \(d_{\mathrm{code}}\) 末规则为 Uf inΠ，当前项为 \(i_f(\widehat\Pi_f(\alpha,\beta))\)，且 \(d_s\) 推导 Γ⊢s:T_f(α)（类型侧条件用证书转换时须附证书） | Γ⊢i_f(β s):M |
+| `halt` | \(d_{\mathrm{code}}\) 末规则为变元假设 | 终止，保留当前开放代码 |
+
+同一状态上可选用不同合法请求，后继不唯一。下面只展示具体有限路径，不定义“步数”，也不把路径长度当进展量。
+
+**主方程证书。** 取 Γ⊢a:U_g、Γ⊢b:T_g(a)→U_g，写 q̂=(i_g(a),λx.i_g(b x))、f=λz.q̂。设 d_code 推导 Γ⊢c:T_g(res₀^g(a,b))。类型证书 C_ty 为
+
+\[
+\begin{align*}
+C_{\mathrm{ty}}
+&=\operatorname{Trans}\bigl(
+  \operatorname{Atom}(T_g\text{ 定义}),\\
+&\quad\operatorname{Trans}(
+  \operatorname{Cong}(T_M,\operatorname{Atom}(\text{Uf inres0})),\\
+&\quad\operatorname{Trans}(
+  \operatorname{Cong}(T_M,\operatorname{Cong}(p_1,\operatorname{Atom}(\mathrm{G}\beta))),\\
+&\quad\operatorname{Trans}(
+  \operatorname{Cong}(T_M,\operatorname{Atom}(\text{Σeq }p_1)),
+  \operatorname{Atom}(\text{TM uni}))))\bigr).
+\end{align*}
+\]
+
+结论 \(T_g(\mathrm{res}_0^g(a,b))=U_f\)。用它把 d_code 转到 Γ⊢c:U_f。计算证书
+
+\[
+\begin{align*}
+C_{\mathrm{comp}}
+&=\operatorname{Trans}\bigl(
+  \operatorname{Atom}(\text{Uf inres1}),\\
+&\quad\operatorname{Trans}(
+  \operatorname{Cong}(\text{应用},\operatorname{Cong}(p_2,\operatorname{Atom}(\mathrm{G}\beta))),
+  \operatorname{Cong}(\text{应用},\operatorname{Atom}(\text{Σeq }p_2)))\bigr).
+\end{align*}
+\]
+
+结论 \(i_g(\mathrm{res}_1^g(a,b,c))=i_f(c):M\)。对状态 Γ⊢i_g(res₁^g(a,b,c)):M 发 `use(C_comp)`，后继为 Γ⊢i_f(c):M，来源标在该 res₁ 节点。整棵 \(C_{\mathrm{comp}}\) 都须验证，不能只看最外层 Trans。显示的 Atom 省略了前提推导参数，故这些公式是证书模式，不是已由实现检查通过的对象。
+
+以下实例令 a=N̂_g，b=λx.N̂_g。Uf inN 给出 i_g(a)=N̂_M；再 TM 给出 T_g(a)=N，故 b:T_g(a)→U_g。q̂ 经 Atom(Uf inN) 与合同为 (N̂_M,λx.N̂_M)。
+
+## 42. 实际推导：Π 的一个绑定实例
+
+令 f=λz.q̂，N̂_f:U_f。证书
+
+\[
+C_N=\operatorname{Trans}\bigl(
+  \operatorname{Atom}(T_f\text{ 定义}),
+  \operatorname{Trans}(
+    \operatorname{Cong}(T_M,\operatorname{Atom}(\text{Uf inN})),
+    \operatorname{Atom}(T_M(\widehat{\mathbb N}_M)=N))\bigr)
+\]
+
+给出 T_f(N̂_f)=N。取
+
+\[
+c_\Pi=\widehat\Pi_f(\widehat{\mathbb N}_f,\lambda n.\widehat{\mathbb N}_f):U_f.
+\]
+
+利用 C_ty 的类型等同性作反向类型转换，把 c_Π 转到 T_g(res₀^g(a,b))，故 res₁^g(a,b,c_Π):U_g 可形成。此处 \(d_{\mathrm{code}}\) 末规则为 Uf inΠ。展示路径 P_Π（同状态上也可以 `use(C_Π)` 或 `prem`，不唯一）：
+
+- P0：空上下文 ⊢ i_g(res₁^g(a,b,c_Π)):M。请求 `use(C_comp)`。按 C_comp 展开的计算规则核对。后继 P1：⊢ i_f(c_Π):M，\(d_{\mathrm{code}}\) 仍是 c_Π 的 Uf inΠ 推导。
+- P1 发 `inst(0,d_0)`。d_0 为 Nin：⊢0:N；利用 C_N 的类型等同性作反向类型转换，得到 ⊢0:T_f(N̂_f)。后继 P2：⊢ i_f((λn.N̂_f)0):M。
+- P2 发 `use(e_\beta)`，其中
+
+\[
+e_\beta=\operatorname{Cong}(\operatorname{MinTb},\operatorname{Atom}(\Pi\mathrm{eq}\beta)),
+\]
+
+结论 i_f((λn.N̂_f)0)=i_f(N̂_f):M。后继 P3：⊢ i_f(N̂_f):M，此时 \(d_{\mathrm{code}}\) 末规则为 Uf inN。
+- P3 发 `use(\operatorname{Atom}(\text{Uf inN}))`，后继 P4：⊢ N̂_M:M。此后当前项不再形如 i_h(c)，\(d_{\mathrm{code}}\) 为空；本路径停止。不是代码侧 `halt`（halt 只用于变元假设）。
+
+另可选、非本路径必选：在 P1 发 `use(C_Π)`，C_Π=Atom(Uf inΠ)，得到 ⊢ Π̂_M(i_f(N̂_f),λn.i_f(N̂_f)):M，只记录解码，不当前驱。
+
+**局部计算相容。** 展开 C_comp、C_N、e_β 与 Uf inN 的对应规则，得到
+
+\[
+i_g(\mathrm{res}_1^g(a,b,c_\Pi))=i_f(c_\Pi),
+\qquad
+i_f((\lambda n.\widehat{\mathbb N}_f)0)=i_f(\widehat{\mathbb N}_f)=\widehat{\mathbb N}_M,
+\]
+
+与 M 层 (λn.N̂_M)0 的 Πeqβ 一致。res₁ 第三前提的类型用 C_ty；inst 的 s:T_f(α) 用 C_N。分支只读 \(d_{\mathrm{code}}\) 的 Uf inΠ，不是对 U_f 值做模式匹配。
+
+## 43. 实际推导：一次常值重编码；开放中性项
+
+仍用同一 a、b、q̂、f。取空类型代码 N̂_{0,f}:U_f，T_f(N̂_{0,f})=N_0。按 [Takahashi Example 2.1](https://lmcs.episciences.org/16822/pdf) 写 dummy=λv.E_0(v):N_0→U_f，其中 E_0(v) 由 N_0 消去规则（零个分支方法）给出；不声称 N_0→U_f 只有这一元素。取
+
+\[
+c_0=\mathrm{res}_0^f(\widehat{\mathbb N}_{0,f},\mathrm{dummy}):U_f.
+\]
+
+\(d_{\mathrm{code}}\) 末规则为 Uf inres0。展示路径 P_rec：
+
+- R0：⊢ i_g(res₁^g(a,b,c_0)):M。`use(C_comp)` 得 R1：⊢ i_f(c_0):M。
+- R1 发 `use(C_rec)`，
+
+\[
+\begin{align*}
+C_{\mathrm{rec}}
+&=\operatorname{Trans}\bigl(
+  \operatorname{Atom}(\text{Uf inres0}),\\
+&\quad\operatorname{Trans}(
+  \operatorname{Cong}(p_1,\operatorname{Atom}(\Pi\mathrm{eq}\beta\text{ 于 }f=\lambda z.q̂)),\\
+&\quad\operatorname{Trans}(
+  \operatorname{Atom}(\text{Σeq }p_1),
+  \operatorname{Atom}(\text{Uf inN 于 }a)))\bigr).
+\end{align*}
+\]
+
+结论 i_f(c_0)=i_g(a)=N̂_M:M。后继 R2：⊢ N̂_M:M。路径停止。C_comp 只用于外层 f=g 的 res₁；C_rec 只用于内层常值 f 的 res₀。传回 q̂ 的第一分量 i_g(a)。
+
+**开放中性项。** 令 Δ=(y:U_f)。c=y 的 \(d_{\mathrm{code}}\) 末规则是假设。路径 P_open：
+
+- O0：Δ⊢ i_g(res₁^g(a,b,y)):M。`use(C_comp)` 得 O1：Δ⊢ i_f(y):M。
+- O1 的 \(d_{\mathrm{tm}}\) 末规则仍是 MinTb，**不**构成 halt。代码侧 \(d_{\mathrm{code}}\) 末规则是假设，故可发 `halt`，保留开放项 i_f(y)。也可 `prem` 进入 y:U_f 或 f 的形成，仍不解码 y。不发 `inst`，也不写 y 与某构造子相等的证书。
+
+## 44. 局部相容已证；哪些义务尚未证明
+
+**纸面已核对（展示实例）。** C_ty、C_comp、C_N、C_Π、e_β、C_rec 展开为所引用的局部计算及合同规则。完整前提证书和检查器尚未实现，也未完成全规则的判定性证明。P_Π 与 P_rec 的类型及局部计算与 Uf inres1／Uf inΠ／Uf inres0 相容。P_open 在 Δ 下 halt，不误展开。外层 MinTb 不再触发 halt。
+
+**未证。**
+
+1. 片段外的 MLM 定义相等：无全规则检查器；未列入原子／合同表的规则不能靠 `use` 使用。
+2. 后继不唯一；未定义计步。只展示 P_Π、P_rec、P_open 三条有限终止路径，没有“四步 halt”定理。
+3. 全体合法状态上的进展／良基关系。`inst` 对每个有推导的 s 给一个后继，这是无限分支，不是无限路径，也不是下降量。文法排除 \(\operatorname{Sym}\) 避免了第 17 节那种对称往复写进证书树；未证明排除后请求图无环。
+4. `use` 展开后语法可变更长，不是序数高度。
+5. 下降、共尾、基本列、截断分类、与 α_M 的校准。局部传输成功不等于这些。
+
+没有把上述缺口写成提取不可能性。当前缺口仍是：在本证书文法上给出与强度相关的进展关系，并另证共尾。K1/K2 仍未通过。
+
+### 主代理二次复核与停止细节扩张
+
+定向请求 use 与类型转换是两件事：类型等同性可在侧条件中用于两个方向，不意味着允许逆向计算请求。若将所有合法请求视为严格下降，则 use(Refl(t)) 立即给出自环；有限迹增长也不消除无限重复。因此今后必须区分保持内容的计算与真正的进展步骤，不能追求“所有合法请求都下降”。
+
+本轮接受的是三个具体实例的局部传输，不是通用提取器。局部计算方程无论验证得多完整，都不自动给出全局良基／共尾原理。下一轮停止扩建证书检查器，直接调查 Mahlo 反射的全局证明变换或统一序分析方法：寻找可从规则产生进展结构的原始文献定理，核查其是否预填序数系统，再评估其与基本列输出的距离。优先一个能改变路线判断的实质连接，避免继续积累同类局部例子。
