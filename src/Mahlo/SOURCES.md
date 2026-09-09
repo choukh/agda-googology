@@ -52,3 +52,5 @@ RESEARCH.md §32 的实例使用 Takahashi Example 2.1 的常值重编码；参�
 §52 主代理核查 Kohlenbach, Proof Interpretations, Chapter 4：Definition 4.3、4.5、Lemma 4.8、Proposition 4.10、Theorem 4.11／Remark 4.12、Corollary 4.13。保留有限类型 majorization 和有界参数统一取界的准确范围；未验证 MLM／MinU 的迁移。Howard 1972 DOI 全文访问失败，撤回其精确共尾构造作为已核实依据。Θ 与阶段见证的有效生成仍未证明。
 
 §53 主代理核查 Setzer 1996 Definition 3.1、4.3(b)、4.4、Lemma 4.5。纠正 →* 为函数空间关系；注明 Inacc 参数在原文两处的不一致；撤回未验证的 φ_g 等价式及完整 Δ₀ 生成声称。FAM/K 模板为本项目基于给定 PER／解码数据的有界公式构造，未包含模型历史的生成与有效见证。
+
+§54 主代理核查 Positive Inductive-Recursive Definitions, Definition 2.1–2.2、Example 2.6、3.6，以及 Dybjer–Setzer 2025 页2对内部 Mahlo 超出普通 IR 的陈述。更正 IR⁺ 可使用非离散底范畴及 Π 可在 Set≅ 上处理。两个有限例／幂函子反例为本项目从定义作出的推导，不是所有规则提取技术的排除定理。
