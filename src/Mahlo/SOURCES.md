@@ -38,3 +38,5 @@ RESEARCH.md §32 的实例使用 Takahashi Example 2.1 的常值重编码；参�
 §46 主代理已核查 Proposition 3.6、Lemma 3.10 在 KB 论证中的使用、Definition 4.5、Theorem 4.6、Proposition 4.9 与 Theorem 4.11。修正了“语义满足关系必是构造输入”以及“MinU 可直接插入”的过强表述；MLM 的保强度逻辑呈现与枝→模型定理尚缺。
 
 §47 主代理核查：[Setzer 1996](https://csetzer.github.io/articles/uppermahlo.pdf) Definition 3.1、4.3–4.4；[Part I](https://csetzer.github.io/articles/modeltypetheoryinaccessiblemahlo.pdf) Definition 5.2、印刷页 26–29。保留统一阶段界及反射闭包机制，撤回初稿的直接保强度声称、L_w 混用和“有名字／全部函数”的错误模型二分。
+
+§48 的条件统一界是主代理基于 Part I 页 26–27 的最小闭包阶段／代码加入定义，以及页 14 的模型嵌入归约所作推导。θ 已满足闭包是前提；没有从文献取得可计算的 C(β)，也没有一般 f 或基本列结论。Grok 初稿关于有限推导无法求界的断言已撤回。
