@@ -11,6 +11,9 @@
 
 以下为方法候选，尚未接入 K1/K2。保留入口不代表恢复其旧探索路线：
 
+- [Towsner, Ordinal Analysis by Transformations](https://www.math.cmu.edu/~hpt/pubs/transformations.pdf)，§1–2：调查先生成证明变换、避免预置序数的路径。需另行给出 Mahlo 规则的变换、下降及基本列；其归纳定义系统不能直接视为 MLM。
+- [Setzer, Proof Theory of Martin-Löf Type Theory – An Overview](https://csetzer.github.io/articles/overviewProofTheoryTypeTheory2004.pdf)，§2：审计有限表示如何生成无限推导的前提；语法更长仍可能下降，但必须有独立的高度分析。
+
 - [Hancock, Ordinals and Interactive Programs](https://www.lfcs.inf.ed.ac.uk/reports/00/ECS-LFCS-00-421/ECS-LFCS-00-421.pdf)：调查交互／可达性结构是否能从宇宙规则生成前驱。必须核查其是否已经要求输入前驱系统。
 - [Freund, Computable Aspects of the Bachmann–Howard Principle](https://arxiv.org/pdf/1809.06774)：调查统一坍缩生成所需的输入结构。把宇宙规则变成其输入，以及基本列输出，都是另需证明的桥梁。
 - [Kraus–Nordvall Forsberg–Xu, Type-Theoretic Approaches to Ordinals](https://fredriknf.com/papers/ordinals_tcs2023.pdf)：审计无限分支、序数上确界及可判定表示之间的区别。
