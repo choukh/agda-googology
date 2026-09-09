@@ -24,3 +24,5 @@
 本轮定位：Setzer 印刷页 6–7 的 Definition 3.3、3.5、3.6 与 Freund Definition 1.2 支持 [RESEARCH.md §27](RESEARCH.md#27-更具体的正向连接固定截断点的两条坍缩不等式) 的局部不等式核对。该对应是本项目的推导，不是两篇文献已经证明的 Mahlo 提取定理；固定记号上的 SC 尚未成为随任意线性序变化的自然支撑。
 
 后续核对：RESEARCH.md §29 展开 Setzer 的完整形成条件，补入截断点自身的 SC/G 依赖；§30–31 的切开、支撑重建及筛选条件引理是本项目的纸面推导。Freund（所链预印本）Definition 1.1、4.1 与 Theorem 4.3 用来区分输入支撑结构和输出坍缩界，不提供 MLM 到该输入的翻译。
+
+RESEARCH.md §32 的实例使用 Takahashi Example 2.1 的常值重编码；参数交换障碍及其适用边界是本项目的独立证明。Freund §1 的态射明确是序嵌入，不是全部上下文重命名。§34 的下一实例使用 Takahashi Example 2.2 的真实宇宙生成算子，不引用其带额外 Acc 的后续层级作为已获结果。
