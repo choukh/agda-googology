@@ -3,7 +3,7 @@
 ## 阅读入口
 
 - [成品源码](src/README.md)：`Veblen/`、`WellFormed/`、`Bridged/`、`Lower.lagda.md` 与 `OCF/BTBO.lagda.md`。
-- [Mahlo 研究](src/Mahlo/README.md)：通过类型宇宙的闭包与反射探索 `F_{α_M}`，尚非成品。
+- [Mahlo 研究](src/Mahlo/README.md)：研究从类型宇宙规则自动提取基本列，应用于 Mahlo 并认证 `F_{α_M}`；旧路线与探针已归档，尚非成品。
 - [探针与历史探索](probes/README.md)：Lens 全部内容及 BTBO 之外的 OCF 探索，包含半成品、失败实验和待核查的结论。
 
 默认 `make` 只发布成品文章；研究和探针不列入发布目标。
