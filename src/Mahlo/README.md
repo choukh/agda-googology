@@ -2,7 +2,7 @@
 
 **状态：研究中，尚非成品；不参与默认文档发布。**
 
-宇宙构造及具体基本列选择见[定义 v1](UNIVERSE-AND-SEQUENCES.md)。有限搜索算法已实现，真实 OT 比较、合法性及量级校准仍待完成。
+宇宙构造及具体基本列选择见[定义 v1](UNIVERSE-AND-SEQUENCES.md)。[实际基本列入口](Fundamental/Mahlo.agda) 已接入[带预算的 OT 比较与合法性检查](Notation/Reference.agda)，无需调用者提供判定器；[归约检查](Fundamental/MahloChecks.agda) 覆盖内部列与端点前三项。预算充分性、参考语义对应和量级校准仍待完成。
 
 **当前执行优先级（2026-09-09）：按用户要求[先写最终定义](DEFINITION-FIRST.md)，再补依据。** 已实现带明确输入依赖的 FGH 求值及 FαM；尚未构造目标 Mahlo 实例。此前的[关键路径审计](CRITICAL-PATH.md)继续用于填补证明债务。
 
