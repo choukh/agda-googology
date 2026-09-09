@@ -2,15 +2,17 @@
 
 **状态：研究中，尚非成品；不参与默认文档发布。**
 
-宇宙构造及具体基本列选择见[定义 v1](UNIVERSE-AND-SEQUENCES.md)。[实际基本列入口](Fundamental/Mahlo.agda) 已接入[带预算的 OT 比较与合法性检查](Notation/Reference.agda)，无需调用者提供判定器；[归约检查](Fundamental/MahloChecks.agda) 覆盖内部列与端点前三项。预算充分性、参考语义对应和量级校准仍待完成。
+**当前主线：[从类型宇宙规则统一提取基本列](EXTRACTION-PLAN.md)。** 用户已澄清：研究目标是提取技术本身，不能预先手填 Mahlo 记号和基本列，再把良基证明当作提取。
 
-**当前执行优先级（2026-09-09）：按用户要求[先写最终定义](DEFINITION-FIRST.md)，再补依据。** 已实现带明确输入依赖的 FGH 求值及 FαM；尚未构造目标 Mahlo 实例。此前的[关键路径审计](CRITICAL-PATH.md)继续用于填补证明债务。
+最新实验：[Extraction/Countable.agda](Extraction/Countable.agda)。已实现小分支宇宙的树提取、下降保持及可达性证明，并证明不能枚举所有 `Nat → Bool`，排除枚举全部解码元素的朴素方案。尚未从完整宇宙生成序数端点或基本列。
 
-最新研究判断见[第二次关键路径审计](Evidence/CRITICAL-AUDIT-2.md)：固定谓词的条件转移已验证，5.6 的小性构造存在需要独立补足的移植步骤。此前的实际反射算子与阶段类型预算见[首次审计](Evidence/CRITICAL-AUDIT-1.md)。
+代码分工：`Universe/` 是候选输入与规则实现；`Extraction/` 是当前提取技术实验；`Notation/`、`Fundamental/` 是手写参考系统的校准探针；`Growth/` 是通用输出端。旧反射及良序模块作为潜在证明工具保存。所有部分仍属研究，不是已完成的 Mahlo 强度认证。
+
+旧路线的反射研究见[第二次关键路径审计](Evidence/CRITICAL-AUDIT-2.md)：固定谓词的条件转移已验证，5.6 的小性构造存在需要独立补足的移植步骤。实际反射算子与阶段类型预算见[首次审计](Evidence/CRITICAL-AUDIT-1.md)，这些结论尚未连接统一提取器。
 
 目标是利用类型宇宙的闭包与反射，通往单个 Mahlo 宇宙的证明论序数及其基本列，最终定义 `F_{α_M}`。
 
-从 [ROADMAP.md](ROADMAP.md) 开始；首轮结果见 [FINDINGS.md](FINDINGS.md)，最新进展见 [第五轮记录](FIFTH-ITERATION.md)：已实现有限支撑计算、原始项语法检查及无损表达式转换；真实记号的比较与 OT 正规性仍待完成。主线是宇宙规则实现、Mahlo 良序证明、端点统一化、基本列和 FGH。
+从 [EXTRACTION-PLAN.md](EXTRACTION-PLAN.md) 开始；[ROADMAP.md](ROADMAP.md) 保存路线变更与旧计划。历史实验见 [FINDINGS.md](FINDINGS.md) 和 [第五轮记录](FIFTH-ITERATION.md)，不代表当前提取技术已经完成的步骤。
 
 旧的自然数指标迭代路线位于 [probes/OCF/ROADMAP.md](../../probes/OCF/ROADMAP.md)，作为历史探索保存。Lens 探针位于 [probes/Lens](../../probes/Lens/)。两者都不作为本路线已经完成的强度证明。
 
