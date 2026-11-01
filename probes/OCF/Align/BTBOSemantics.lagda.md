@@ -22,7 +22,8 @@ open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst
 
 open import OCF.BTBO using (module Trich; module BoundedTrich; module Ord-Ord; injᵃ; injᵇ; injᶜ)
 open BoundedTrich hiding (_+_)
-open Ord-Ord
+open Ord-Ord hiding (ψ<; ψ₀; ψⁿ; BTBO)
+open import OCF.Align.BTBOOld   -- 本文分析的是修正前的折叠; src 已于 2026-11-01 按 BTBOFix 修正
 open import OCF.Align.Finite using (_≈_; z≈; s≈; l≈; +-≈; iter-≈; chain₁; chain₂; ψᴱ; Ωᴱ)
 ```
 
@@ -31,6 +32,8 @@ open import OCF.Align.Finite using (_≈_; z≈; s≈; l≈; +-≈; iter-≈; ch
 - **[Agda]**: 本文件中以 `refl` 或短证明机器检验;
 - **[标准]**: 序数论的已知事实 (Buchholz 1986; Wikipedia "Ordinal collapsing function" 与 "Buchholz psi functions" 的数值表; 本仓库 EBO 的基本列规则);
 - **[估计]**: 本文的论证, 给出假设与置信度, 未形式化.
+
+> **2026-11-01 更新**: 本文分析的四个定义 (`ψ<`, `ψ₀`, `ψⁿ`, `BTBO`) 是 BTBO **修正前**的版本, 现冻结于 [BTBOOld](BTBOOld.lagda.md); src 中的 BTBO 已按 [BTBOFix](BTBOFix.lagda.md) 的四行补丁修正, 文中 "BTBO 的 ψ<" 一律指修正前. 结论不变: 修正前的构造估计只到 $\psi_0(\Omega_\omega)$; 修正后的标签为扩展 Buchholz 的 $\psi_0(\Omega_\Omega)$, 仍是估计.
 
 ## §1 语义与约定
 

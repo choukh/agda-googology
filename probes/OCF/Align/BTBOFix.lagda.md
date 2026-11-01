@@ -1,6 +1,6 @@
-# BTBO 折叠的四行补丁 (暂不合入 src)
+# BTBO 折叠的四行补丁 (已于 2026-11-01 合入 src)
 
-> [BTBOSemantics](BTBOSemantics.lagda.md) 判定现有 BTBO 的折叠在两处偏离 Buchholz 的规则, 后果是层号到 $\omega$ 以后全部压平到 $\psi_0(\Omega_\omega)$. 本文把修复写成对 [BTBO](../../../src/OCF/BTBO.lagda.md) `Ord-Ord` 模块的四行改动, 在 probes 中完整记录并编译; 是否合入 src 由作者决定.
+> [BTBOSemantics](BTBOSemantics.lagda.md) 判定现有 BTBO 的折叠在两处偏离 Buchholz 的规则, 后果是层号到 $\omega$ 以后全部压平到 $\psi_0(\Omega_\omega)$. 本文把修复写成对 [BTBO](../../../src/OCF/BTBO.lagda.md) `Ord-Ord` 模块的四行改动, 在 probes 中完整记录并编译. 作者已于 2026-11-01 决定合入 src (标签改为估计口吻, `Ordʷ` 不合入); 修正前的定义冻结于 [BTBOOld](BTBOOld.lagda.md). 下文的 `ψ<ᶠ`/`ψ₀ᶠ` 与合入后的 src 定义相同, 保留作为补丁的独立记录.
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}

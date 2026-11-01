@@ -20,7 +20,8 @@ open import OCF.BTBO using (module Trich; module BoundedTrich; module Ord-Ord; i
 open import OCF.Barrier using (nat; nat-mono)
 open Trich renaming (_<_ to _<ᴺ_; <-dec to <ᴺ-dec)
 open BoundedTrich hiding (_+_)
-open Ord-Ord
+open Ord-Ord hiding (ψ<; ψ₀; ψⁿ; BTBO)
+open import OCF.Align.BTBOOld   -- 修正前的 ψ<, ψ₀, ψⁿ, BTBO (§2 分析的对象)
 ```
 
 ## §1 有限层级
@@ -76,7 +77,9 @@ nat< = nat-mono
 
 ## §2 BTBO 的 $\psi$ 不是 Buchholz 的 $\psi$
 
-对齐的第一个发现是负面的. 逐条读 BTBO 的 `ψ<`:
+> 2026-11-01 更新: 本节分析的是 BTBO **修正前**的折叠. src 已按四行补丁修正 (见 [BTBOFix](BTBOFix.lagda.md)), 修正前的定义冻结在 [BTBOOld](BTBOOld.lagda.md), 本节的 `refl` 核对指向它.
+
+对齐的第一个发现是负面的. 逐条读 BTBO 修正前的 `ψ<`:
 
 1. `ψ< p zero = Ω i` 而 `Ω zero = ω`: 取 $\Omega_0=\omega$, 于是 $\psi_0(0)=\omega$. Buchholz 与 EBO 取 $\Omega_0=1$.
 2. `ψ< p (suc a) = lfp (ψ< p a +_)`: 基本列 $\psi(a)\cdot n$, 与 EBO 规则 4 相同.

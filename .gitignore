@@ -3,6 +3,7 @@
 /public
 /tools/*
 !/tools/check-src.sh
+!/tools/zhihu-editing.md
 /Makefile
 /template.html5
 .DS_Store

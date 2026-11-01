@@ -19,9 +19,11 @@
 全部 Agda 文件。项目库启用 `--guardedness`，因为 Cubical Agda 0.9
 要求导入它的模块继承这一选项。
 
-Agda 2.8 会拒绝旧版 Veblen 代码中的函数级非合流重写规则。迁移后的
-`Finitary` 和 `Infinitary` 保留相应等式定理，并以显式等式替换完成证明；
-无限元极限分支使用 Cubical 路径提供的函数外延性，不依赖 postulate。
+Veblen 三篇 (`Finitary`、`Infinitary`、`Transfinitary`) 把已证明的函数等式
+注册为重写规则, 以便计算模式用 `refl` 证明。Agda 2.8 的局部合流检查会在
+这些模块被导入时判定该规则非合流而报错 (单独检查却通过), 因此它们的
+OPTIONS 不再开启 `--local-confluence-check`; 规则本身是已证明的命题等式,
+不影响一致性。(2026-11-01 起; 此前一度改用显式等式替换, 已恢复。)
 
 ## License
 
