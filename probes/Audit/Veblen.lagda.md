@@ -126,7 +126,7 @@ fixpt-suc-fs {α} F n = iterω-fs F (suc (fixpt F α)) n
 
 **标准.** $g_1=3\uparrow^4 3$, $g_{k+1}=3\uparrow^{g_k}3$, 葛立恒数为 $g_{64}$. Lower 的 `↑⟨ k ⟩` 中 `k` 是箭头个数 (`↑⟨ 0 ⟩` 是乘法, `↑⟨ 1 ⟩` 是乘方). 所以 "从 4 个箭头开始" 应写成 $G_0=4$, $G_{n+1}=3\uparrow^{G_n}3$, 这时 $G_{64}=g_{64}$. Lower 正文的非形式说明 "$G\,n := 3 ↑^{3 ↑^{\cdots ↑^{3 ↑↑↑↑ 3} \cdots} 3} 3$" 也是这个意思.
 
-**Agda (Lower 第 220–222 行).**
+**Agda (Lower 第 220–222 行, 审核时的原文).**
 
 ```text
 G zero = 4
@@ -137,18 +137,14 @@ LaTeX 公式 (第 206 行 $G\,n^+ := 3 ↑^n 3$) 也写成了同样的式子.
 
 **判定: 改变数值 (偏小), 确定.** 箭头数用的是下标 $n$, 不是上一项 $G_n$. 于是 $G_{n+1}=3\uparrow^n3$, 从而 `G64` $=3\uparrow^{63}3$. 它大于 $g_1=3\uparrow^43$, 但远小于 $g_2=3\uparrow^{g_1}3$, 更远小于 $g_{64}$. 最小的反例: `G 1` 应为 $3\uparrow^4 3$, 实为 $3\times3=9$.
 
+审核时以下三条在原文上由 `refl` 成立: `G (suc n) ≡ 3 ↑⟨ n ⟩ 3`, `G 1 ≡ 9`, `G 2 ≡ 27`. **修正已于 2026-11-01 应用到 src/Lower.lagda.md** (代码一行, 公式一行, 定义前的说明一句), 因此这三条不再成立, 改为核对修正后的递归式:
+
 ```agda
-G-bug : L.Graham.G (suc n) ≡ 3 L.↑⟨ n ⟩ 3
-G-bug = refl
-
-G-1 : L.Graham.G 1 ≡ 9
-G-1 = refl
-
-G-2 : L.Graham.G 2 ≡ 27
-G-2 = refl
+G-fixed : L.Graham.G (suc n) ≡ 3 L.↑⟨ L.Graham.G n ⟩ 3
+G-fixed = refl
 ```
 
-**修正 (一行代码 + 一行公式, 未应用).**
+**修正 (一行代码 + 一行公式, 已应用; 下面是审核时给出的方案原文).**
 
 ```agda
 module GrahamFix where
@@ -336,6 +332,9 @@ SVO₂-fs = refl
 
 ## §5 Transfinitary: 超限元 Veblen 函数与 LVO
 
+> **应用情况 (2026-11-01).** 作者不采用"显式等式替换"的修法, 原文用 `refl` 正是为了证明直观. 实测发现问题只在 `--local-confluence-check` 这个选项: 它让 Agda 在**加载**本模块的重写规则时重做局部合流检查, 于是导入失败而单独检查通过. 从 Transfinitary 的 OPTIONS 去掉该选项后 (保留 `--rewriting` 与 `REWRITE Φ-ż-α`, 十条引理仍是 `refl`), 单独检查与导入 (`import Veblen.Transfinitary`) 均通过. 代价: 该重写规则不再经过合流检查; 它是已证明的命题等式, 不影响一致性, 只是归约结果可能依赖归约顺序. 下文 §5.1 的 `subst` 模板保留为备选方案, 未采用. 同日, Finitary 与 Infinitary 也从 2026-09-08 迁移时改成的 `subst` 版本恢复为迁移前的 `refl` 加 `REWRITE` 版本, 同样只去掉该选项 (Infinitary 因而也不再需要 `--cubical`); 三篇与导入它们的测试模块均通过检查. 本文 §5 下文提到的 "Finitary/Infinitary 已改用 subst" 是审核当时的状态.
+
+
 ### §5.1 工程问题: 该模块不能被导入
 
 **现象.** 在任何模块中写 `import Veblen.Transfinitary`, 都会报
@@ -508,7 +507,7 @@ TC-ω2-fs = refl
 - 二元 Veblen 的 Wikipedia 基本列 (ii)–(v); 三元与四元的后继/极限规则; $\zeta_0[2]=\varepsilon_{\varepsilon_0}$, $\Gamma_0[3]=\varphi_{\varepsilon_0}(0)$, $\mathrm{SVO}[0..2]=\omega,\varepsilon_0,\Gamma_0$.
 - ω+1 元: 极限位置若用种子 $0$, φ(1@ω) 会退化成 $\sup(1,1,\ldots)$ (`jump⟨0⟩-would-give-1`). 实际定义给出 $\mathrm{SVO}[n]=\varphi(1@n)$ 与 $\varphi(2@\omega)[n]=\varphi(1@\omega,1@n)$. 极限值步的对角基本列; $\varphi(1@\omega{+}1)[2]=\mathrm{SVO}$.
 - 超限元: `agree` (对任意底函数与任意 $n$, 全部参数逐点相等); `SVO-agree`; $\mathrm{LVO}[1]=\omega^1$, $\mathrm{LVO}[2]=\mathrm{SVO}$; $\varphi(2@\omega)[n]=\varphi(1@\omega,1@n)$.
-- Lower: `G (suc n) ≡ 3 ↑⟨ n ⟩ 3`, `G 1 ≡ 9`, `G 2 ≡ 27`.
+- Lower: 审核时 `G (suc n) ≡ 3 ↑⟨ n ⟩ 3`, `G 1 ≡ 9`, `G 2 ≡ 27`; 修正应用后 `G (suc n) ≡ 3 ↑⟨ G n ⟩ 3` (`G-fixed`).
 
 **由论证得到 [估计]:**
 

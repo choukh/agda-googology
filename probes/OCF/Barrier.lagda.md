@@ -3,7 +3,7 @@
 > 交流Q群: 893531731  
 > 本文源码: [Barrier.lagda.md](https://github.com/choukh/agda-googology/blob/main/probes/OCF/Barrier.lagda.md)  
 > 前篇: [BTBO.lagda.md](../../src/OCF/BTBO.lagda.md)  
-> **订正 (2026-11-01)**: 本文沿用前篇的说法 "BTBO = ψ(Ω_Ω)". 后续分析 ([Align/BTBOSemantics](Align/BTBOSemantics.lagda.md)) 表明前篇的折叠不是 Buchholz 的 ψ, BTBO 的估计值是 ψ₀(Ω_ω) (Buchholz 序数), 原标签不成立. 本文的定理与此无关: 它说的是下标类型的结构, 不是任何具体序数的值.
+> **订正 (2026-11-01)**: 本文沿用前篇的说法 "BTBO = ψ(Ω_Ω)". 后续分析 ([Align/BTBOSemantics](Align/BTBOSemantics.lagda.md)) 表明前篇最初的折叠不是 Buchholz 的 ψ, 其值估计只有 ψ₀(Ω_ω) (Buchholz 序数); 前篇已于 2026-11-01 按 Buchholz 规则修正 (四行补丁), 修正后的标签 ψ(Ω_Ω) 仍是估计. 本文的定理与此无关: 它说的是下标类型的结构, 不是任何具体序数的值.
 
 [前篇](../../src/OCF/BTBO.lagda.md)用布劳威尔树实现了 Buchholz 的 $\psi$, 止步于 $\psi(\Omega_\Omega)$, 并把这个序数命名为布劳威尔树壁垒序数 (BTBO). 此后的一系列探针 (见 `archive/probes/OCF`) 试图把 $\Omega$ 层级的下标推过 $\Omega$, 全部在同一个地方停下: 下标类型一旦含有共尾度为 $\Omega$ 的元素, 它的**有界三歧性**就写不出来. 这些探针记录的都是"没证出来", 而不是"证不出来". 本文把后者形式化.
 
@@ -441,9 +441,15 @@ module Naive where
 
 **定理覆盖哪些探针.** 定理 1 的 $\top$ 要位于整个嵌入像 $\iota(\mathsf{Ord}^\mathsf{D})$ 之上. 以 $\mathsf{Ord}^\mathsf{D}$ 为 $\mathsf{lim}_1$ 下标的设计 (`Ord1D/SpikeA2`, 即上节的朴素 $\mathsf{Ord}_1$) 直接提供这样的 $\top$, 被定理覆盖. Kovacs 风格的 IR 宇宙分层 (`Kovacs/Base2`) 以低一层的单调序列树为 `Lim` 的下标, 其 `<ᵁ` 有 `Lim*` 规则, 升层映射精确, 本文的论证可以逐字搬到那里; 该探针记下的 "unbounded trichotomy on U' i" 墙就是定理 1 的结论. 而以原始 $\mathsf{Ord}_0$ (无单调性约束) 为下标的设计 (`Ord1D/SpikeA1`, `AlphaDec/IR`) **不**被覆盖: 那里找不到位于 $\iota(\mathsf{Ord}^\mathsf{D})$ 之上的元素. $\mathsf{lim}_1(f)$ 只在 $f$ 的像之上, 而 $f:\mathsf{Ord}_0\to I$ 无法从原始树重建 $\mathsf{lim}$ 所需的单调性证明; 前篇的单调化 $\mathsf{ord}^\mathsf{D}$ 也不保持原始的 $<_0$, 因为累积和把 $f(n+1)$ 放在加法右侧, 极限不再是子项. 换言之这些设计的 $\mathsf{lim}_1$ 并未在 $\mathsf{Ord}^\mathsf{D}$ 之上提供共尾度 $\Omega$ 的元素, 它们停在定理 1 的上游: 不是"有 $\Omega$-共尾元就不能三歧", 而是"喂不进一个既单调又精确的下标族". 这一点本文没有形式化, 只作为观察记录.
 
+**与社区项目的对照 (2026-11-01 补记, 详见 `probes/Survey/CommunityCubical.md`).** 两个同行的 cubical 项目从另外的基础上触到了本文的两条边界, 结论一致, 没有反驳.
+
+1. **商化不能换回三歧性, 代价反而升高.** `agda-cubical-set-theory-main` 的序数是良序集模序同构的商 (`src/CST/Ordinal/Base.agda`). 它机器证明了: 即使每个代表元自带可判定的序, 商序数之间 $\le$ 的判定仍等价于同层的排中律 (`src/CST/Ordinal/DecidablePresentationWeakBoundary5.agda` 的 `decidablePresentationWeakImpliesLEM5` 与 `lemImpliesDecidablePresentationWeak5`), 良序的最小点原理同样等价于 LEM (`src/CST/Ordinal/WellOrderLeastLogicalBoundary5.agda` 的 `wellOrderLeastPointImpliesLEM5`), 于是该项目把 Veblen、上确界、最小点全部以排中律判定子为参数, 并因此没有 FGH. 这是本文定理 1 在外延一侧的对应物: 对可数的布劳威尔树像, de Jong 等人给出的价格是 LPO; 允许以命题为载体的一般良序集之后, 价格抬到 LEM. 把"内涵等号换成商 (外延相等)"并不是上文"未证明"第 2 条之外的出路, 它只是把壁垒从 LPO 搬到 LEM, 同时失去计算.
+2. **字面等号的分支与公共上界不可兼得.** `agda-cubical-dec-zero-main` 把本文的 $\mathsf{Ord}^\mathsf{D}$ (严格单调族) 移植为 `BoundedTree` (`src/VeblenOrdinal/Controlled/BoundedTree.agda`), 并证明 (`src/VeblenOrdinal/Controlled/BoundedTreeBoundary.agda` 的 `TheoriesNoRawCommonBound`): $\omega$ 与 $\omega\circ\mathsf{suc}$ 两棵语义相等 (`TheoriesShiftedOmegaValue`) 的树在该类型里**没有公共上界**, 证法正是对假想的上界用有界三歧, 三支皆矛盾. 这与后续探针 Level §2 的 `lit→ext` 恰成一对: 若下标类型允许它们有公共上界 (Level 的 $\mathsf{Ord}^\mathsf{I}$, 极限的步进证据模互模拟), 三歧性就只能到互模拟为止, 字面版本蕴含函数外延性. 两个结果合起来说明: 在定理 1 的三条假设内, "严格字面"与"等值项有公共上界"只能取其一, 这正是 Level 选择模 $\cong$ 的精确理由, 也是其折叠的穿透分支需要搬运函数的原因. 另: 该项目同时逐行移植了前篇**修正前**的 BTBO (`BTBOSource.agda`), 并在另一种基础 (cubical 商序数) 上独立证明了累积和会改变序数值 (`BTBOSourceBoundary.agda` 的 `TheoriesNoCumulativeStagewiseLUB`、`TheoriesCumulativeNotAdditive`), 与后续探针 Cumsum 的 `overshoot` 互为佐证.
+
 ## 参考
 
 - Tom de Jong, Nicolai Kraus, Fredrik Nordvall Forsberg, Chuangjie Xu, *Type-Theoretic Approaches to Ordinals*, Theoretical Computer Science 2023. [arXiv:2208.03844](https://arxiv.org/abs/2208.03844). Section 6.6: Theorem 48 ($\mathsf{Brw}$ 上 $<,\le,=$ 可判定 $\iff$ LPO), Theorem 53 ($\mathsf{Brw}$ 三歧 $\iff$ LPO), Lemma 47 (二进制序列到 $\mathsf{Brw}$ 的翻译).
 - Nicolai Kraus, Fredrik Nordvall Forsberg, Chuangjie Xu, *Connecting Constructive Notions of Ordinals in Homotopy Type Theory*, MFCS 2021. [arXiv:2104.02549](https://arxiv.org/abs/2104.02549).
 - Tom de Jong, Nicolai Kraus, Aref Mohammadzadeh, Fredrik Nordvall Forsberg, *Generalized Decidability via Brouwer Trees*, LICS 2026. [arXiv:2602.10844](https://arxiv.org/abs/2602.10844). (探针文档中的 "de Jong-Eremondi-Forsberg 2026" 应指此文与上面的 TCS 文章; 该作者组合不存在.)
 - Anton Setzer, *An introduction to well-ordering proofs in Martin-Löf's type theory*, 1998.
+- 社区项目 (2026-11-01 调查, 均 `--cubical --safe --guardedness`, 无 git 历史与许可证文件): `~/Agentic/agda-cubical-set-theory-main` (CuST), `~/Agentic/agda-cubical-dec-zero-main` (DecZero). 调查报告 `probes/Survey/CommunityCubical.md`.

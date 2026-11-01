@@ -1,17 +1,34 @@
 #!/usr/bin/env python3
 """
 Text transformation script that performs the following steps:
+0. Join every multi-line display formula ($$ ... $$ on its own lines) into a
+   single line (Zhihu's importer turns newlines inside a formula into literal
+   <br> tokens, which the editor later renders as "< b r >"; see
+   tools/zhihu-editing.md)
 1. Replace all ## with #
 2. Replace all $$ with ††
 3. Replace all $ with $$
 4. Replace all †† with $$
 """
+import re
+
+_DISPLAY = re.compile(r'^\$\$\n(.*?)\n\$\$$', re.S | re.M)
+
+def join_display_formulas(text):
+    """Collapse each $$-block that spans several lines into one line."""
+    def _join(m):
+        body = ' '.join(line.strip() for line in m.group(1).split('\n') if line.strip())
+        return '$$' + body + '$$'
+    return _DISPLAY.sub(_join, text)
 
 import sys
 import argparse
 
 def transform_text(text):
     """Apply the transformation steps in order."""
+    # Step 0: Join multi-line display formulas
+    text = join_display_formulas(text)
+
     # Step 1: Replace all ## with #
     text = text.replace('##', '#')
     
