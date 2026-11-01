@@ -2,7 +2,8 @@
 
 > 交流Q群: 893531731  
 > 本文源码: [Barrier.lagda.md](https://github.com/choukh/agda-googology/blob/main/probes/OCF/Barrier.lagda.md)  
-> 前篇: [BTBO.lagda.md](../../src/OCF/BTBO.lagda.md)
+> 前篇: [BTBO.lagda.md](../../src/OCF/BTBO.lagda.md)  
+> **订正 (2026-11-01)**: 本文沿用前篇的说法 "BTBO = ψ(Ω_Ω)". 后续分析 ([Align/BTBOSemantics](Align/BTBOSemantics.lagda.md)) 表明前篇的折叠不是 Buchholz 的 ψ, BTBO 的估计值是 ψ₀(Ω_ω) (Buchholz 序数), 原标签不成立. 本文的定理与此无关: 它说的是下标类型的结构, 不是任何具体序数的值.
 
 [前篇](../../src/OCF/BTBO.lagda.md)用布劳威尔树实现了 Buchholz 的 $\psi$, 止步于 $\psi(\Omega_\Omega)$, 并把这个序数命名为布劳威尔树壁垒序数 (BTBO). 此后的一系列探针 (见 `archive/probes/OCF`) 试图把 $\Omega$ 层级的下标推过 $\Omega$, 全部在同一个地方停下: 下标类型一旦含有共尾度为 $\Omega$ 的元素, 它的**有界三歧性**就写不出来. 这些探针记录的都是"没证出来", 而不是"证不出来". 本文把后者形式化.
 

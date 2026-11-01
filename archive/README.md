@@ -4,6 +4,7 @@
 
 - `src/Mahlo/`: 从类型宇宙规则自动提取基本列的 Mahlo 研究 (Object / Notation / Hierarchy / Probe / Inacc / Sources 及全部文档).
 - `probes/OCF/`: BTBO 之外的旧 OCF 探索 (Higher, HigherGen, Kovacs, Ord1D, AlphaDec, PastBTBO, Explore, 旧 ROADMAP). 旧 ROADMAP §10 记有交替方向的初版表述, 正式版见 probes/README.md.
+- `probes/OCF/Notation/`: 范式 B 的 EBO / Mahlo 表记探针与 Fusion 证书 (2026-11-01 分支 2 完成后归档; 其基本列规则是 probes/OCF/Align 的对照标准).
 - `probes/Lens/`: Lens 探针 (含预期编译失败的实验).
 - `probes/README.md`: 旧探针目录说明.
 
