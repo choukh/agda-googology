@@ -3,7 +3,7 @@
 > 交替路线的第一步 (见 [probes/README.md](../../README.md)): 把表记系统嵌进布劳威尔树, 让"这棵树是 $\psi(\ldots)$"从非形式估计变成定理.
 > 本文做最底层的一段: **下标为自然数的 Buchholz $\psi_\nu$** ($\nu<\omega$, 极限 $\psi_0(\Omega_\omega)$), 对应 [BTBO](../../../src/OCF/BTBO.lagda.md) 的 `Ord (nat n)` 层级.
 >
-> 方法不是把 [Notation/EBO](../Notation/EBO.lagda.md) 的基本列规则搬到树上, 而是反过来: 先写出树的 $\psi$ 实际在算什么 (镜像表记 $\mathsf{T}$ 及其句法基本列), 证明嵌入保持基本列, 再逐条记录镜像规则与 EBO 规则的差异. 树那边的良基性是免费的, 所以一旦嵌入保持基本列, 表记那边的 `Acc` 证书也随之免费.
+> 方法不是把 [Notation/EBO](../../../archive/probes/OCF/Notation/EBO.lagda.md) 的基本列规则搬到树上, 而是反过来: 先写出树的 $\psi$ 实际在算什么 (镜像表记 $\mathsf{T}$ 及其句法基本列), 证明嵌入保持基本列, 再逐条记录镜像规则与 EBO 规则的差异. 树那边的良基性是免费的, 所以一旦嵌入保持基本列, 表记那边的 `Acc` 证书也随之免费.
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
