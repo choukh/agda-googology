@@ -17,6 +17,8 @@
 
 本文可能是《形式化大数》系列的最后一篇, 因为遵循该纲领, 我们目前卡在了 $\psi(\Omega_\Omega)$. 为了引起关注, 我们将其命名为布劳威尔树壁垒序数 (Brouwer Tree Barrier Ordinal), 简称 BTBO. 本文将介绍该序数的实现.
 
+> **订正 (2026-11-01)**: 本文最初的折叠函数 $\psi_p$ 在跨层情况 ($i<j$) 的链只经过目标层, 且 $\psi_0$ 在极限层级取对角, 与 Buchholz 的规则不同, 其后果是 $\omega$ 层以上全部被压平, 原定义的值估计只有 $\psi(\Omega_\omega)$. 现已按 Buchholz 的规则修正 (`ψ<` 的 `injᵇ` 分支与 `ψ₀`, 共四行). 修正后的强度标签仍是**非形式估计**, 未在 Agda 中证明.
+
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}
 module OCF.BTBO where
@@ -996,13 +998,13 @@ $$
    \mathsf{lim}(\psi_{p} \circ f)) &\text{if } a = \mathsf{lim}(f) \\
    \begin{cases}
       \mathsf{lim}_j(q,\;\psi_{p} \circ f) &\text{if } r:j < i \\
-      \mathsf{lfp}(\psi_{p} \circ f \circ \uparrow_{r}) &\text{if } r:i < j \\
+      \mathsf{lim}(n\mapsto\psi_{p}(f(\gamma_n))),\ \gamma_0 := 0,\ \gamma_{k+1} := \psi_{q}(f(\gamma_k)) &\text{if } r:i < j \\
       \mathsf{lfp}(\psi_{p} \circ f) &\text{if } r:i = j
    \end{cases} &\text{if } a = \mathsf{lim}_j(q:j<\ell, f)
 \end{cases}
 $$
 
-其中, 我们能判定 $i,j$ 的大小关系是因为它们都小于 $\ell$, 允许应用有界三歧性.
+其中, 我们能判定 $i,j$ 的大小关系是因为它们都小于 $\ell$, 允许应用有界三歧性. 在 $i<j$ 的情况, 链 $\gamma_k$ 经过到共尾层 $j$ 的折叠 $\psi_q$ (其证明 $q:j<\ell$ 正是 $\mathsf{lim}_j$ 节点自带的), 这是 Buchholz 基本列规则的要求; 若链只经过 $\psi_p$ 自身, 高于 $i+1$ 的层级会被压平 (见文首订正).
 
 ```agda
   -- Buchholz's ψ
@@ -1012,7 +1014,7 @@ $$
   ψ< p (lim f)  = lim (ψ< p ∘ f)
   ψ< {i} {ℓ} p (limᵢ {i = j} q f) with <-dec q p
   ... | injᵃ j<i  = limᵢ j<i (ψ< p ∘ f ∘ coe)
-  ... | injᵇ i<j  = lfp (ψ< p ∘ f ∘ coe₀ ∘ ↑ i<j)
+  ... | injᵇ _    = lim (λ n → ψ< p (f (coe₀ (iter (ψ< q ∘ f ∘ coe₀) zero n))))
   ... | injᶜ refl = lfp (ψ< p ∘ f ∘ coe₀)
 ```
 
@@ -1022,18 +1024,17 @@ $$
 \psi_0(a) :=
 \begin{cases}
    a &\text{if } \ell = 0 \\
-   \psi_0(\psi_{0_{\ell'}}(a)) &\text{if } \ell = \ell'^+ \\
-   \mathsf{lim}(n \mapsto \psi_0(\psi_{p}(a))) &\text{if } \ell = \mathsf{lim}(f, \_)
+   \psi_{p}(a) &\text{otherwise, } p : 0 < \ell
 \end{cases}
 $$
 
-其中 $p:f(n)<\ell$ 由引理 `f<l` 得到.
+即 $\psi_0$ 就是到第 $0$ 层的直接折叠, 证明 $p:0<\ell$ 由引理 `z<nz` 得到. (修正前它在后继层级写成逐层一步折叠的复合、在极限层级写成对 $f(n)$ 的对角, 那会把 $\Omega_\ell$ 换成 $\Omega_{f(n)+1}$ 再折叠, 从不把 $\Omega_\ell$ 当作常量, 见文首订正.)
 
 ```agda
   ψ₀ : Ord ℓ → Ord₀
   ψ₀ {ℓ = zero}    a = a
-  ψ₀ {ℓ = suc ℓ}   a = ψ₀ (ψ< zero a)
-  ψ₀ {ℓ = lim f _} a = lim (λ n → ψ₀ (ψ< (f<l n) a))
+  ψ₀ {ℓ = suc ℓ}   a = ψ< (z<nz _) a
+  ψ₀ {ℓ = lim f _} a = ψ< (z<nz _) a
 ```
 
 **定义 (单调化嵌入)** 递归定义 $\mathsf{Ord}_0$ 到 $\mathsf{Ord}^\mathsf{D}$ 的嵌入 $\mathsf{ord}^\mathsf{D}:\mathsf{Ord}_0\to\mathsf{Ord}^\mathsf{D}$ 如下:  
@@ -1068,15 +1069,15 @@ $$
   ψⁿ = iter (ψ₀ ∘ Ω ∘ ordᴰ) zero
 ```
 
-**例 (关键序数)**  
+**例 (关键序数, 估计)** 前两项由 `refl` 核实, 其余是按构造方式做的非形式估计, 未在 Agda 中证明:
 
 $$
 \begin{align}
 \psi^0(0) &= 0 \\
 \psi^1(0) &= \omega \\
-\psi^2(0) &= \psi(\Omega_\omega) = \mathsf{BO} \\
-\psi^3(0) &= \psi(\Omega_{\mathsf{BO}}) \\
-\psi^4(0) &= \psi(\Omega_{\psi(\Omega_{\mathsf{BO}})})
+\psi^2(0) &\approx \psi(\Omega_\omega) = \mathsf{BO} \\
+\psi^3(0) &\approx \psi(\Omega_{\mathsf{BO}}) \\
+\psi^4(0) &\approx \psi(\Omega_{\psi(\Omega_{\mathsf{BO}})})
 \end{align}
 $$
 
@@ -1087,23 +1088,23 @@ $$
   ex1 : ψⁿ 1 ≡ ω
   ex1 = refl
 
-  ex2 = ψⁿ 2  -- ψ(Ω_ω) = Buchholz's ordinal
-  ex3 = ψⁿ 3  -- ψ(Ω_BO)
-  ex4 = ψⁿ 4  -- ψ(Ω_ψ(Ω_BO))
+  ex2 = ψⁿ 2  -- 估计 ψ(Ω_ω) = Buchholz's ordinal
+  ex3 = ψⁿ 3  -- 估计 ψ(Ω_BO)
+  ex4 = ψⁿ 4  -- 估计 ψ(Ω_ψ(Ω_BO))
 ```
 
 **定义 (布劳威尔树壁垒序数)**  
 
 $$
-\mathsf{BTBO} := \mathsf{lim}(n\mapsto\psi^n(0)) = \psi(\Omega_\Omega)
+\mathsf{BTBO} := \mathsf{lim}(n\mapsto\psi^n(0))
 $$
 
-这是 $\psi^n(0)$ 序列的极限, 也就是我们能达到的最大序数 $\psi(\Omega_\Omega)$.
+这是 $\psi^n(0)$ 序列的极限. 按构造方式估计, 它是 $\alpha\mapsto\psi(\Omega_\alpha)$ 的最小不动点, 即扩展 Buchholz 记号中的 $\psi(\Omega_\Omega)$; 这个标签是非形式估计, 未在 Agda 中证明.
 
 ```agda
   -- Brouwer tree barrier ordinal
   BTBO : Ord₀
-  BTBO = lim ψⁿ -- ψ(Ω_Ω)
+  BTBO = lim ψⁿ -- 估计 ψ(Ω_Ω)
 ```
 
 最后, 遵循传统, 我们写出大数.
@@ -1132,7 +1133,7 @@ $$
 \mathbf{f}_\mathsf{BTBO}(99)
 $$
 
-这是一个基于布劳威尔树壁垒序数的具体大数.
+这是一个基于布劳威尔树壁垒序数的具体大数 (其序数标签为估计, 见文首订正).
 
 ```agda
   _ : ℕ

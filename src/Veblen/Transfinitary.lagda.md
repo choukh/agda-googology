@@ -15,7 +15,7 @@ zhihu-url: https://zhuanlan.zhihu.com/p/707713300
 Agda 编程上, 我们开启了一些高级特性 (有损合一化, 自定义重写), 它们只是为了让代码更简洁 (比非形式写法还简洁), 而不影响目标函数的性质以及证明的可靠性.
 
 ```agda
-{-# OPTIONS --lossy-unification --rewriting --local-confluence-check #-}
+{-# OPTIONS --lossy-unification --rewriting #-}
 module Veblen.Transfinitary where
 open import Veblen.Base public
 ```

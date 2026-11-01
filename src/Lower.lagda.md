@@ -198,12 +198,12 @@ _ = refl
 
 [葛立恒数 (Graham's number)](https://googology.fandom.com/wiki/Graham%27s_number) 是一个入门级别的著名大数, 直观上是一个64层的箭头塔.
 
-**定义** 定义辅助函数 $G : ℕ → ℕ$, 从4个箭头开始, 迭代 $3 ↑^n 3$ 作为箭头数量, 即
+**定义** 定义辅助函数 $G : ℕ → ℕ$, 从4个箭头开始, 每一步以上一项的值 $G\kern{0.17em}n$ 作为箭头数量, 即
 
 $$
 \begin{aligned}
 G\kern{0.17em}0 &:= 4 \\
-G\kern{0.17em}n^+ &:= 3 ↑^n 3
+G\kern{0.17em}n^+ &:= 3 ↑^{G\kern{0.17em}n} 3
 \end{aligned}
 $$
 
@@ -219,7 +219,7 @@ $$
 module Graham where
   G : ℕ → ℕ
   G zero = 4
-  G (suc n) = 3 ↑⟨ n ⟩ 3
+  G (suc n) = 3 ↑⟨ G n ⟩ 3
 
   G64 : ℕ
   G64 = G 64
