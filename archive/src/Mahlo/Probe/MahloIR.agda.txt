@@ -1,0 +1,23 @@
+-- 故意不通过的探针：Setzer 的内部 Mahlo 宇宙。Agda 2.8.0 --safe 报：
+--   V is not strictly positive, because it occurs to the left of an arrow
+--   in the type of the constructor û in the definition of V.
+-- 存为 .txt 以免破坏构建。原文件：
+{-# OPTIONS --safe --cubical-compatible #-}
+module MahloIR where
+open import Agda.Primitive
+open import Agda.Builtin.Sigma
+data Nat′ : Set where z : Nat′
+
+-- Setzer 的 Mahlo 宇宙：V 对每个算子 (f,g) 含一个子宇宙代码。
+-- 算子的类型 (a : V) → (T a → V) → V 把 V 放在函数域里（负出现）。
+mutual
+  data V : Set where
+    nat : V
+    pi  : (a : V) → (T a → V) → V
+    û   : (f : (a : V) → (T a → V) → V)
+          (g : (a : V) (b : T a → V) → T (f a b) → V) → V
+  T : V → Set
+  T nat = Nat′
+  T (pi a b) = (x : T a) → T (b x)
+  T (û f g) = V       -- 占位：只为触发正性检查
+

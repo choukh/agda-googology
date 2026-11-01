@@ -1,0 +1,4 @@
+# 本目录的 PDF / 抽取文本 / 渲染图不入库；用 FETCH.sh 重取
+*.pdf
+*.txt
+renders/

@@ -1,0 +1,33 @@
+-- 故意不通过的探针：对全部 IR 代码封闭的单一宇宙 𝕌。Agda 2.8.0 --safe 报终止检查失败：
+--   Termination checking failed for 𝕋 (递归函数 𝕋 作为参数传给解码器 ⟦_⟧₁)。
+-- 这不阻碍路线 C：Setzer 的证明只用对给定 (f,g) 参数化的子宇宙（MahloParam 通过）。
+{-# OPTIONS --safe --cubical-compatible #-}
+module IRUniv where
+open import Agda.Primitive
+open import Agda.Builtin.Sigma
+record ⊤₁ : Set₁ where
+  constructor tt₁
+
+-- Dybjer–Setzer 的 IR 代码（D = E = Set 的特例：宇宙 (U , T : U → Set)）
+data DS : Set₁ where
+  ι : Set → DS
+  σ : (A : Set) → (A → DS) → DS
+  δ : (A : Set) → ((A → Set) → DS) → DS
+
+-- 代码在族 (U , T) 上的语义：载体与解码
+⟦_⟧₀ : DS → (U : Set₁) → (U → Set) → Set₁
+⟦ ι e   ⟧₀ U T = ⊤₁
+⟦ σ A f ⟧₀ U T = Σ A (λ a → ⟦ f a ⟧₀ U T)
+⟦ δ A F ⟧₀ U T = Σ (A → U) (λ g → ⟦ F (λ a → T (g a)) ⟧₀ U T)
+
+⟦_⟧₁ : (c : DS) (U : Set₁) (T : U → Set) → ⟦ c ⟧₀ U T → Set
+⟦ ι e   ⟧₁ U T _       = e
+⟦ σ A f ⟧₁ U T (a , x) = ⟦ f a ⟧₁ U T x
+⟦ δ A F ⟧₁ U T (g , x) = ⟦ F (λ a → T (g a)) ⟧₁ U T x
+
+-- 对**全部** IR 代码同时封闭的宇宙：每个代码 c 给一个构造子
+mutual
+  data 𝕌 : Set₁ where
+    intro : (c : DS) → ⟦ c ⟧₀ 𝕌 𝕋 → 𝕌
+  𝕋 : 𝕌 → Set
+  𝕋 (intro c x) = ⟦ c ⟧₁ 𝕌 𝕋 x
