@@ -1,3 +1,5 @@
+# The Lean side transliterates dom/fs from koteitan/googology-lean, Notation/ExBuchholz at 6da2de5,
+# Copyright (c) 2026 koteitan, MIT License. See probes/Survey/CodeGuide.md section 5.
 # Own transliteration of EBO.lagda.md (cof, pred, fsT, gammaT, fsn) and of the Lean ExBuchholz dom/fs,
 # compared under the bijection [] <-> nil, psi u a :: t <-> cons u a t. Exhaustive on small terms. Test, not proof.
 import sys, itertools, functools
