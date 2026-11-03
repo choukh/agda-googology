@@ -6,6 +6,8 @@
 - [探针](probes/README.md): 2026-11-01 起的新工作 (壁垒定理、交替路线、EBO 对齐), 及目录规则.
 - [归档](archive/README.md): 此前的全部研究材料 (Mahlo 研究、旧 OCF 探针、Lens), 冻结只读.
 
+总纲领与协作约定见 [AGENTS.md](AGENTS.md)。
+
 默认 `make` 只发布成品文章；研究和探针不列入发布目标。
 
 ## Requirements
