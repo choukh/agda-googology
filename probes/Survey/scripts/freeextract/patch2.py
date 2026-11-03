@@ -1,0 +1,5 @@
+PATCHF['Level']=[("ωᴵ ω′ : Ordᴵ\n","ωᴵ : Ordᴵ\n"),("ω′ = lim (λ n → natᴵ (n +ᴺ 0)) (λ n → natᴵ-step (n +ᴺ 0))\n",""),("open Ord-Ord using (iter; ordᴰ)","open Ord-Ord using (iter)")]
+PATCHF['Aux']=[("open Ord-Ord using (iter)\n",""),("open Restrˢ\n","")]
+PATCHF['Force']=[("open Ord-Ord using (iter)\n","")]
+PATCHB['Uniform3Rel']=[("open import OCF.Free.Lab.Uniform3Depth1 using (_≈₁_; GA1)\n","")]
+PATCHB['Uniform3Depth2Fold']=[("; GA1ʰ","")]

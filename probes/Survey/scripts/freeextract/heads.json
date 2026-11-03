@@ -1,0 +1,270 @@
+{
+ "Level": {
+  "title": "无记号主线 (一): 层号与值层树",
+  "quote": [
+   "**下标类型 `Ordᴵ`, 累积树族 `Ordᶜ`, 互模拟 $\\cong$, 结构序, `HS`, `toLevel`, `FGH`.** 主线的最底层; 从 `src` 的 `OCF.BTBO` 只取 `Trich`, `Ord-Ord.iter`, `injᵃ` 三件.",
+   "脚本从 [Level](../Align/Level.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "唯一改写的代码: 原文 `ωᴵ ω′ : Ordᴵ` 的 `ω′` 没有用处, 只有它需要 `_+ᴺ_`, 删掉. 不再导入 `OCF.Barrier`, `OCF.Align.Cumsum`.",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ],
+  "imports": [
+   "open import Data.Nat using (ℕ; zero; suc)",
+   "open import Data.Bool using (Bool; true; false)",
+   "open import Data.Empty using (⊥; ⊥-elim)",
+   "open import Data.Unit using (⊤; tt)",
+   "open import Data.Sum using (_⊎_; inj₁; inj₂)",
+   "open import Data.Product using (Σ; Σ-syntax; _,_; proj₁; proj₂; _×_)",
+   "open import Relation.Nullary using (¬_)",
+   "open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; subst₂; cong)",
+   "",
+   "open import OCF.BTBO using (module Trich; module Ord-Ord; injᵃ; injᵇ; injᶜ)"
+  ]
+ },
+ "Prefix": {
+  "title": "无记号主线 (三): 符号化的树 `Ordˢ` 与 `Z`",
+  "quote": [
+   "**`Ord₊ˢ` 多两个不带分支的构造子 `ŝ`, `ĉᴸ`; `Z` 是第 0 层的只读像.** `ĉᴸ` 的上标是历史名字, 与标签无关: 这个构造子不含 `T`.",
+   "脚本从 [Prefix](../Align/Prefix.lagda.md)、[UniformS](../Align/UniformS.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ],
+  "imports": [
+   "open import Data.Nat using (ℕ; zero; suc)",
+   "open import Data.Bool using (Bool; true; false)",
+   "open import Data.Empty using (⊥; ⊥-elim)",
+   "open import Data.Product using (Σ; _,_)",
+   "open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; subst₂; cong)",
+   "",
+   "open import OCF.BTBO using (module Ord-Ord; injᵃ; injᵇ; injᶜ)",
+   "open import OCF.Free.Level",
+   "open import OCF.Free.Aux"
+  ]
+ },
+ "Floor": {
+  "title": "无记号主线 (四): 地板, 上界, 外层闭包的算子",
+  "quote": [
+   "**`Flr`, `Ev`, `Run`, `bound`, `cloA`.** 原文件其余部分是带标签的闭包, 这里全部去掉.",
+   "脚本从 [Uniform3Base](../Align/Uniform3Base.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ],
+  "imports": [
+   "open import Data.Nat using (ℕ; zero; suc)",
+   "open import Data.Bool using (Bool; true; false)",
+   "open import Data.Empty using (⊥; ⊥-elim)",
+   "open import Data.Unit using (⊤; tt)",
+   "open import Data.Sum using (_⊎_; inj₁; inj₂)",
+   "open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)",
+   "open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; subst₂; cong)",
+   "",
+   "open import OCF.BTBO using (module Ord-Ord; injᵃ; injᵇ; injᶜ)",
+   "open import OCF.Free.Level",
+   "open import OCF.Free.Prefix",
+   "open import OCF.Free.Aux"
+  ]
+ },
+ "Eq": {
+  "title": "无记号主线 (五): `Ordˢ` 上的互模拟",
+  "quote": [
+   "**`_≅ˢ_`, `toZ-≅`, 与 `Run` 上的 `_≈ᴿ_`, 不用记号.**",
+   "脚本从 [UniformNF3Eq](../Align/UniformNF3Eq.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ],
+  "imports": [
+   "open import Data.Nat using (ℕ; zero; suc)",
+   "open import Data.Bool using (Bool; true; false)",
+   "open import Data.Empty using (⊥; ⊥-elim)",
+   "open import Data.Unit using (⊤; tt)",
+   "open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)",
+   "open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; subst₂; cong)",
+   "",
+   "open import OCF.BTBO using (module Ord-Ord; injᵃ; injᵇ; injᶜ)",
+   "open import OCF.Free.Level",
+   "open import OCF.Free.Prefix",
+   "open import OCF.Free.Floor",
+   "open import OCF.Free.Aux"
+  ],
+  "after": [
+   "open import OCF.Free.Prefix public using (_≅ᶻ_; zᶻ; sᶻ; lᶻ; ĉᶻ; ≅ᶻ-sym; ≅ᶻ-trans; 𝟎ˢ)",
+   "open import OCF.Free.Aux public using (kd; kd-≅; ≅ᴵ→⊑ᴵ; ⊑ᴵ-≅ˡ; ⊑ᴵ-≅ʳ; tf)"
+  ]
+ },
+ "Force": {
+  "title": "无记号主线 (六): 证书 `Goodᴺ` 与 `forceᴺ`",
+  "quote": [
+   "**`Goodᴺ`, `forceᴺ`, `forceᴺ-HS`, `forceᴺ-≅`, `Goodᴺ-tr`.** `gc` 行的链 `ys` 是树, 没有 `T`. 这是证书的全部. 原文件里 `ofL` (把带标签的证书化成它) 留在 [Lab/NotFree](Lab/NotFree.lagda.md), 主线不需要.",
+   "脚本从 [NotFree](../Align/NotFree.lagda.md)、[UniformNF3NBase](../Align/UniformNF3NBase.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ],
+  "imports": [
+   "open import Data.Nat using (ℕ; zero; suc)",
+   "open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)",
+   "open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; subst₂; cong)",
+   "",
+   "open import OCF.Free.Level",
+   "open import OCF.Free.Prefix",
+   "open import OCF.Free.Eq",
+   "open import OCF.Free.Aux"
+  ]
+ },
+ "Tree": {
+  "title": "无记号主线 (七): 数据树 `O`, `ψ̄`, `ψᵒ`, `_⊕_`, `Ω̇`, `TΩ·2`",
+  "quote": [
+   "**最终定义的主体.** `O α φ`: 数据树, 层号 $\\alpha$ 进入下标, 地板 $\\varphi$ 记录依赖. `ψ̄`: 对它递归的计值, 把它读成 `Run φ`. `TΩ·2`: $\\psi_0(\\Omega_{\\Omega\\cdot2})$ 的树.",
+   "脚本从 [Uniform4Base](../Align/Uniform4Base.lagda.md)、[Uniform4Two](../Align/Uniform4Two.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ],
+  "imports": [
+   "open import Data.Nat using (ℕ; zero; suc)",
+   "open import Data.Unit using (⊤; tt)",
+   "open import Data.Empty using (⊥)",
+   "open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)",
+   "open import Data.Sum using (_⊎_; inj₁; inj₂)",
+   "open import Relation.Binary.PropositionalEquality using (_≡_; refl)",
+   "",
+   "open import OCF.BTBO using (module Ord-Ord; injᵃ; injᵇ; injᶜ)",
+   "open import OCF.Free.Level",
+   "open import OCF.Free.Prefix using (Z; Ord₊ˢ; Ordˢ; intoˢ; toZ; Ωˢ; _+ˢ_)",
+   "open import OCF.Free.Floor using (Flr; fz; fk; fb; _⊔_; Ev; Run; A; wk; limA; limᵢA; ŝA; ĉA; cloA; flo; cvFlo; toFlo; ∅ᴿ; sucRun)"
+  ]
+ },
+ "Base": {
+  "title": "无记号主线 (八): 跨层互模拟与上下文",
+  "quote": [
+   "**`Rᵒ`, `R→≈`, `RΩ̇`, `Cx`, `≈ᶜ`.**",
+   "脚本从 [UniformNF5Base](../Align/UniformNF5Base.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "Rules": {
+  "title": "无记号主线 (九): 比较规则",
+  "quote": [
+   "**`⊑ᵀ`, `⊑ᴱ` 及其引入规则.**",
+   "脚本从 [UniformNF5Rules](../Align/UniformNF5Rules.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "Strict": {
+  "title": "无记号主线 (十): 严格比较",
+  "quote": [
+   "**`≺ᵀ`, `≺ᴱ`.**",
+   "脚本从 [UniformNF5Strict](../Align/UniformNF5Strict.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "Class": {
+  "title": "无记号主线 (十一): 闭包类",
+  "quote": [
+   "**`Good`, 类 `Cl`, 可见性 `Vis`, 判据 `Hon`, 外层 `bŝ`, 以及出口 `Good→N : Good s 𝓖 x → Goodᴺ (toZ x)`.**",
+   "脚本从 [UniformNF5Class](../Align/UniformNF5Class.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "ClassF": {
+  "title": "无记号主线 (十二): 闭包类 (续)",
+  "quote": [
+   "**地板行.**",
+   "脚本从 [UniformNF5ClassF](../Align/UniformNF5ClassF.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "Good": {
+  "title": "无记号主线 (十三): 证书 `Gᵀ`",
+  "quote": [
+   "**`Gᵀ c 𝓖 x`: 数据树上的闭包类, 与 `Good` 逐行对应.**",
+   "脚本从 [UniformNF5Good](../Align/UniformNF5Good.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "Tr": {
+  "title": "无记号主线 (十四): 沿层号搬运",
+  "quote": [
+   "**`Trᵀ`, `Tr⁻ᵀ`, `Bkᵀ`.**",
+   "脚本从 [UniformNF5Tr](../Align/UniformNF5Tr.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "Add": {
+  "title": "无记号主线 (十五): 加法的闭包",
+  "quote": [
+   "**`AddT.Add`.**",
+   "脚本从 [UniformNF5Add](../Align/UniformNF5Add.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "Psi": {
+  "title": "无记号主线 (十六): `ψᵒ` 的闭包",
+  "quote": [
+   "**`PsiM.Psi`: `ψᵒ` 保持 `Gᵀ`.**",
+   "脚本从 [UniformNF5Psi](../Align/UniformNF5Psi.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "Eval": {
+  "title": "无记号主线 (十七): 计值的闭包",
+  "quote": [
+   "**`EvalM.T̄`: 证书 `Gᵀ` 的计值落在 `Good` 里.** 这是闭包定理的出口.",
+   "脚本从 [UniformNF5Eval](../Align/UniformNF5Eval.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "Tail": {
+  "title": "无记号主线 (十八): 嵌入与尾部",
+  "quote": [
+   "**`Iota`: 嵌入保持 `Gᵀ`. `TL`: `tl` 把 `Good` 搬成 `Gᵀ`.**",
+   "脚本从 [UniformNF5Tail](../Align/UniformNF5Tail.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "Omega": {
+  "title": "无记号主线 (十九): `Ω̇G`",
+  "quote": [
+   "**`Ω̇G : ∀ α → Gᵀ α 𝓥 (Ω̇ α)`, 对一切层号, 一个定理.**",
+   "脚本从 [UniformNF5Omega](../Align/UniformNF5Omega.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "Main": {
+  "title": "无记号主线 (二十): 闭包定理",
+  "quote": [
+   "**`GᴺΩ̇ η`: $\\psi_0(\\Omega_{\\Omega+\\eta})$, 对一切 $\\eta:$ `Ordᴵ`. `GᴺTΩ·2`: $\\psi_0(\\Omega_{\\Omega\\cdot2})$.** 强度的说法是验收的结论 ([Bridge](Bridge.lagda.md)); 这里只说证书存在.",
+   "脚本从 [UniformNF5Main](../Align/UniformNF5Main.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "对一切 $\\psi$, $\\iota$, 后继, $\\oplus$ 的闭包: `good-ψ`, `good-ι`, `good-os`, `good-⊕`. 闭项在 [Closed](Closed.lagda.md).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ]
+ },
+ "Aux": {
+  "title": "无记号主线 (二): 层号上的小引理",
+  "quote": [
+   "**`Mlev`, `≅ᴵ→⊑ᴵ`, `⊑ᴵ-≅ˡ`, `σ⊥`, `one⁰` 等.** 这几个定义原来分散在带记号的文件里, 它们本身不读记号: 主线对这些文件的依赖只有这些字面定义.",
+   "脚本从 [Symbolic](../Align/Symbolic.lagda.md)、[UniformS](../Align/UniformS.lagda.md)、[OmegaExpBase](../Align/OmegaExpBase.lagda.md)、[Stage2Label](../Align/Stage2Label.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).",
+   "",
+   "全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号."
+  ],
+  "imports": [
+   "open import Data.Nat using (ℕ; zero; suc)",
+   "open import Data.Bool using (Bool; true; false)",
+   "open import Data.Empty using (⊥)",
+   "open import Relation.Binary.PropositionalEquality using (_≡_; refl)",
+   "",
+   "open import OCF.Free.Level"
+  ]
+ }
+}
