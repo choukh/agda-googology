@@ -1,0 +1,11 @@
+98a99
+> Sb-suc (sΩ² c) = sΩ² (Ctbl-suc c)
+105,110d105
+< 
+< dsp : ∀ {v w} → Sb v → Sb w → Dsp v w
+< dsp (sC cv)       (sC cw)        = dCC cv cw
+< dsp (sC cv)       (sΩ {c} cw)    = dCΩ (cmp-CΩ cv c)
+< dsp (sΩ {c} cv)   (sC cw)        = dΩC (cmp-ΩC cw c)
+< dsp (sΩ cv)       (sΩ cw)        = dΩΩ refl refl cv cw refl
+114a110
+> leafSb su sing²    = sC (c∷ c[])
