@@ -1,0 +1,113 @@
+66a67
+>   sΩ² : ∀ {c} → Ctbl c → Sb (Ω₁ ∷ Ω₁ ∷ c)
+129a131
+>   sing² : Leaf₁ (Ω₁ ∷ Ω₁ ∷ []) []
+137a140,141
+> leafInv₁ .(Ω₁ ∷ Ω₁ ∷ []) (sΩ² c[]) (cΩ .[]) refl refl = sing²
+> leafInv₁ .(Ω₁ ∷ Ω₁ ∷ ψᵗ [] _ ∷ _) (sΩ² (c∷ cc)) (cΩ μ) ue e = ⊥-elim (Ctbl-cof (c∷ cc) ue)
+142a147,148
+> Sb-pred (sΩ² c[])     = sΩ² c[]
+> Sb-pred (sΩ² (c∷ cc)) = sΩ² (Ctbl-pred (c∷ cc))
+147a154,155
+> Sb-fsn (sΩ² c[]) () n
+> Sb-fsn (sΩ² (c∷ cc)) e n = sΩ² (Ctbl-fsn (c∷ cc) e n)
+171a180
+> ... | sing²  = n[] , sC c[]
+210a220,228
+> singΩ² : ∀ {c} → c <ᵀ (ψᵗ (Ω₁ ∷ Ω₁ ∷ []) [] ∷ []) → ΩC (ψᵗ (Ω₁ ∷ Ω₁ ∷ []) [] ∷ []) [] c
+> singΩ² []< = ωc [] []< (λ _ → []<) hv[]
+> singΩ² {c = ψᵗ [] a ∷ cs} (hd< (lv< q)) = ωc [] []< (λ _ → hd< (lv< []<)) hv[]
+> singΩ² {c = ψᵗ (ψᵗ y b ∷ ys) a ∷ cs} (hd< (lv< (hd< p))) = ωc [] []< (λ _ → hd< (lv< (hd< p))) hv[]
+> singΩ² {c = ψᵗ (x₀ ∷ e) a ∷ cs} (hd< (lv< (tl< q))) =
+>   ωc e q (λ r → hd< (lv< (tl< r))) (λ {y} {ζ} {θs} eθ h → vs ([]≤ _) (vt (subst (Vis₁ [] ζ) (sym eθ) (vh h))))
+> singΩ² (hd< (ar< ()))
+> singΩ² (tl< ())
+> 
+224a243
+> ... | sing² = singΩ² p
+536a556,601
+> ```agda
+> 1<plug : ∀ C {η} → natT 1 <ᵀ plug C (Ωt (Ω₁ ∷ η))
+> 1<plug [] = hd< (lv< []<)
+> 1<plug (pre [] ∷ C) = 1<plug C
+> 1<plug (pre (ψᵗ [] [] ∷ s) ∷ C) {η} = tl< ([]<++ s C {η})
+>   where
+>   []<++ : ∀ s C {η} → [] <ᵀ s ++ plug C (Ωt (Ω₁ ∷ η))
+>   []<++ [] C {η} = []<plug C
+>   []<++ (_ ∷ _) C = []<
+> 1<plug (pre (ψᵗ [] (_ ∷ _) ∷ s) ∷ C) = hd< (ar< []<)
+> 1<plug (pre (ψᵗ (_ ∷ _) R ∷ s) ∷ C) = hd< (lv< []<)
+> 1<plug (nd [] ∷ C) {η} = hd< (ar< ([]<plug C))
+> 1<plug (nd (_ ∷ _) ∷ C) = hd< (lv< []<)
+> 1<plug (sb ∷ C) = hd< (lv< ([]<plug C))
+> 
+> swapΩ₂ : ∀ C {η} → Ωᵗ <ᵀ plug C (Ωt (Ω₁ ∷ Ω₁ ∷ [])) → η <ᵀ Ωᵗ → η <ᵀ plug C (Ωt (Ω₁ ∷ η))
+> swapΩ₂ [] p []< = []<
+> swapΩ₂ [] p (hd< (lv< q)) = hd< (lv< (<ᵀ-trans q (hd< (lv< []<))))
+> swapΩ₂ [] p (hd< (ar< ()))
+> swapΩ₂ [] p (tl< ())
+> swapΩ₂ (pre [] ∷ C) p η< = swapΩ₂ C p η<
+> swapΩ₂ (pre (ψᵗ y R ∷ s) ∷ C) (hd< (lv< q)) η< = η<Ω-hd η< (inj₁ q) R _
+> swapΩ₂ (pre (ψᵗ y R ∷ s) ∷ C) (hd< (ar< q)) η< = η<Ω-hd η< (inj₂ refl) R _
+> swapΩ₂ (pre (ψᵗ y R ∷ s) ∷ C) (tl< q) η< = η<Ω-hd η< (inj₂ refl) [] _
+> swapΩ₂ (nd y ∷ C) p η< with inv1 p
+> ... | vlv q = η<Ω-hd η< (inj₁ q) _ []
+> ... | var q = η<Ω-hd η< (inj₂ refl) _ []
+> swapΩ₂ (sb ∷ C) p []< = []<
+> swapΩ₂ (sb ∷ C) p (hd< (lv< q)) with <sucT [] q
+> ... | inj₁ ()
+> ... | inj₂ refl = hd< (lv< ([]<plug C))
+> swapΩ₂ (sb ∷ C) p (hd< (ar< ()))
+> swapΩ₂ (sb ∷ C) p (tl< ())
+> 
+> swapΩ² : ∀ C {η} → (Ω₁ ∷ Ω₁ ∷ []) <ᵀ plug C (Ωt (Ω₁ ∷ Ω₁ ∷ [])) → η <ᵀ Ωᵗ → (Ω₁ ∷ η) <ᵀ plug C (Ωt (Ω₁ ∷ η))
+> swapΩ² [] p η< = sub< _ [] []
+> swapΩ² (pre [] ∷ C) p η< = swapΩ² C p η<
+> swapΩ² (pre (ψᵗ y R ∷ s) ∷ C) (hd< (lv< q)) η< = hd< (lv< q)
+> swapΩ² (pre (ψᵗ y R ∷ s) ∷ C) (hd< (ar< q)) η< = hd< (ar< q)
+> swapΩ² (pre (ψᵗ y R ∷ s) ∷ C) (tl< q) η< = tl< (swapΩ₂ (pre s ∷ C) q η<)
+> swapΩ² (nd y ∷ C) p η< with inv1 p
+> ... | vlv q = hd< (lv< q)
+> ... | var q = hd< (ar< ([]<plug C))
+> swapΩ² (sb ∷ C) p η< = hd< (lv< (1<plug C))
+> ```
+> 
+659a725,726
+> ... | sing² = hd< (lv< (subst ((Ω₁ ∷ η) <ᵀ_) (plugKS Kr S (Ωt (Ω₁ ∷ η)))
+>                         (swapΩ² (Kr ++ rv S) (subst ((Ω₁ ∷ Ω₁ ∷ []) <ᵀ_) (sym (plugKS Kr S (Ωt (Ω₁ ∷ Ω₁ ∷ [])))) q) η<)))
+667a735
+> ... | sing² = hd< (lv< (tl< η<))
+810a879
+> ... | sing²  = hd< (lv< (tl< p))
+867a937,939
+> ... | sing² = ⊥-elim (noV′ v)
+>   where noV′ : ∀ {u ζ} → Vis₁ u ζ [] → ⊥
+>         noV′ ()
+889a962
+> ... | sing² = sz0< hz S
+998a1072,1084
+> singG² : ∀ u S {η} → (∀ {ζ} → Vis₁ u ζ η → ζ <ᵀ plugR S (ψᵗ (Ω₁ ∷ η) [] ∷ [])) →
+>          ∀ {ζ′} → Vis₁ u ζ′ (ψᵗ (Ω₁ ∷ η) [] ∷ []) → ζ′ <ᵀ plugR S (ψᵗ (Ω₁ ∷ η) [] ∷ [])
+> singG² u S Hη (vh h)   = []<plugR S
+> singG² u S Hη (vd h ())
+> singG² u S Hη (vs h (vh h′)) = []<plugR S
+> singG² u S Hη (vs h (vd h′ ()))
+> singG² u S Hη (vs h (vs h′ (vh h″))) = []<plugR S
+> singG² u S Hη (vs h (vs h′ (vd h″ ())))
+> singG² u S Hη (vs h (vs h′ (vs h″ ())))
+> singG² u S Hη (vs h (vs h′ (vt ())))
+> singG² u S Hη (vs h (vt v)) = Hη v
+> singG² u S Hη (vt ())
+> 
+1009a1096
+> ... | sing²  = singG² u S Hη v
+1039a1127,1133
+> nf1′ : NF₁ (natT 1)
+> nf1′ = n∷ (nψ n[] (sC c[]) n[] bnd[]) n[] tt
+> 
+> hdΩ : ∀ {θ} → Ctbl θ → Hd≤ θ Ω₁
+> hdΩ c[] = tt
+> hdΩ (c∷ ct) = inj₁ refl
+> 
+1048a1143
+> ... | sing²  = n∷ (nψ (n∷ (nψ nf1′ (sC (c∷ c[])) n[] bnd[]) nη (hdΩ (ctblΩ nη η<))) (sΩ (ctblΩ nη η<)) n[] bnd[]) n[] tt
