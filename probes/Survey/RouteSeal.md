@@ -10,7 +10,7 @@
 
 ## 1. 带高度的树: `LadderNF`, `LadderInf`, `LadderOrd`, `CrossM`, `CrossNext`, `TLOne`, `TLCode`
 
-**这一族是第 4 层的参照树, 封存但要保留可编译.** 其余路线的序数值验收都要拿它作尺子.
+**这一族封存但承重, 要保留可编译.** 作尺子的角色已由 `WfFsn.lab-NF` (或不要归档的 `EboLean.lab-NF′`) 接替 (2026-11-05 作者定, 见 `Survey/SealCheck.md`); 保持可编译的理由是: §2 到 §6 有 36 个模块导入这一族, 死路索引有 10 条否定在这一族.
 
 - **入口:** `OCF/Align/LadderOrd.lagda.md`; 跨段 `CrossM.lagda.md`, `CrossNext.lagda.md`; 原则版实验 `TLOne.lagda.md`; 去累加的码 `TLCode.lagda.md`.
 - **定理:** 闭包定理对一切高度结构 (`LadderOrdMain.GᴺTᵠ` 对一切 `HtB`; `HB` 对一切码); 上移与跨段 (`CrossMUp.up`, `CrossMUpTree.up-sim`, `CrossMNode.Gν`); 合法的最大闭项 `CrossMClosed.T⊤` (`HS⊤`, `fgh⊤`), 与 `CrossNextInst.T̂ᵀ` ≅; `TLOneThm.above-α`, `T⊤≺T̃ᴬ` (原则版严格过 `T⊤`).
@@ -66,3 +66,23 @@
 ## 7. 更早的方向
 
 `probes/README.md` 的 "已关闭方向" 一表 (Fable 5.1 审核过) 和 `archive/` 不变.
+
+## 8. 坐标写的层: `SumHt`, `SumClimb`, `SumVar` (2026-11-04 封存)
+
+作者 2026-11-04 定主线的层改用高度树 (`HtFeed`). 这一族保持可编译, 作对照.
+
+- **入口:** `OCF/Align/SumHt.lagda.md` ((p, a)), `SumClimb.lagda.md` ((r, p, a)), `SumVar.lagda.md` (位数任意的列表).
+- **定理:** 合法性由形状给出; `SumClimbGrow.Sup3`, `SumVarGrow.SupBlk` (闭包站高于前一族任意可数子族的上确界; 后者对一切位数一条); `SumVarGrow` 的 `Tω≤sup`, `sup≤Tω`.
+- **判断:** 读法分别到 ψ₀(Ω_{Ω²}), ψ₀(Ω_{Ω³}), ψ₀(Ω_{Ω^ω}).
+- **为什么封存:** 层的形状是 Ω 进制范式, 字典序照记号 (加深翻译); `SumVar` 的补零脚手架 99 行是翻译带来的. `HtFeed` 一个定义对一切高度, 行数更少.
+- **第一个障碍:** Ω^ω+1 要位置本身是序数 (嵌套范式), 未走通.
+- **可复用:** `SumVarTree` 的停机脚手架 (对层的可达性证明结构递归, `mapD`, `fw`, `bw`) 与层的形状无关.
+- **编译:** 都在 12G 内, 几秒到几分钟.
+
+## 维护政策 (2026-11-05 作者定, 依据 `Survey/SealCheck.md` §5)
+
+- **分三类.** (A) 名义封存、实为现役依赖的 23 个模块: §3 的 `CumReadBase`, `CumReadCF*`, `CumUpAcceptSim`, `BTBOFull*`, `BTBOVal` 的 Absorb, Base, Dn, Main, Neg, Up; §4 的 `NoCumLit`; §5 的 `LevelFixCore`, `LevelFixVal`. 归入现役, 随现役从头复核. (B) §1 全族: 封存但承重, 保持可编译. (C) 其余封存族: 只做接口检查.
+- **里程碑检查.** 每个里程碑 (作者提交前, 或共享上游改动时) 用 `Survey/scripts/sealcheck/run.sh` 对 (B), (C) 全部入口跑接口检查 (约 7 分钟, 6G 以内); 大堆入口 (`LadderOrd`, `CrossM`, `CrossNext`, `WorldTH`, `WeakBridge`) 放在别的路不编译时, 先 `-M12G`, 退出码 251 再按本文各条的堆.
+- **尺子.** 新的序数值验收统一用 `lab-NF` / `lab-NF′`; 新的验收文件不导入 §1.
+- **改共享类型前先查反向依赖.** 编不过的要么修, 要么在本文写明 "自 <日期> 起不可编译, 原因 …", 不静默放着.
+- **从头复核** (删接口) 只在作者要求时做, 或上游改动后对受影响的族做, 一次一族, 不与别的路并行.

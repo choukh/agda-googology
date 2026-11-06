@@ -1,5 +1,5 @@
 import re
-AL='/Users/alsg/Agentic/agda-googology/probes/OCF/Align/'
+import os; AL=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','..','OCF','Align')+'/'
 def rd(n): return open(AL+n+'.lagda.md',encoding='utf8').read()
 def wr(n,s): open(AL+n+'.lagda.md','w',encoding='utf8').write(s)
 PATHFN=['outL','inL','out-inL','addL','ψL','ELl','ELr','EqW','Ll→','→Ll','Lr→','→Lr','W→','→W','≈owS','≈ow⁻S','≈oeS','≈oe⁻S','≈oLS','≈oL⁻S','addLl','addLr','ψLl','ψLr','z⊴L','addL⊴','mRL','mLL','tRL','tLL','WFL','L→W','W→L','aL','ψWL']

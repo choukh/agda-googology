@@ -1,7 +1,7 @@
 # 社区 Cubical Agda 项目调研: CuST 与 CuST-DecZero
 
 > 调研日期 2026-11-01. 对象是两个本地快照目录 (无 `.git`, 只读, 未构建):
-> `/Users/alsg/Agentic/agda-cubical-set-theory-main` (下称 **CuST**) 与 `/Users/alsg/Agentic/agda-cubical-dec-zero-main` (下称 **DecZero**).
+> `<本地>/agda-cubical-set-theory-main` (下称 **CuST**) 与 `<本地>/agda-cubical-dec-zero-main` (下称 **DecZero**).
 > 下文凡说"它们的代码"的地方都给出 `文件:行号`, 路径相对于各自项目根目录; 涉及我方的文件用 `probes/...`/`src/...` 写明.
 > 标 **(推断)** 的句子是对意图或来源的推测, 不是从代码直接读出的事实.
 
