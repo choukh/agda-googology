@@ -1,0 +1,104 @@
+# 链从 0 起 (一): 第 1 层回灌的链从底起的折叠
+
+> 不含记号. 入口 [ChainZ](ChainZ.lagda.md). 审查 D2 的第一条引理: 在 [HtTowerFFold](HtTowerFFold.lagda.md) 的新种类闭包 (`RunM`) 里, 链从底起, 不读界.
+>
+> - 原折叠: 第 $n$ 格的世界是 $(a, v_n)$, $v_0=\mathrm{rd}(\beta, z_1)$ ($\beta$ 是世界的高度界, $z_1$ 是当前世界以来第 1 层的输出), $v_{n+1}=\mathrm{rd}(v_n,\Delta_n)$. 链的第 0 格**读界** $\beta$.
+> - 这里: 链 $x_0=\mathrm{hz}$, $x_{n+1}=\mathrm{rd}(x_n,\Delta_n)$ (`rd` 以链自己的上一格为底, 即 $x_n\boxplus$ 读回), **链的值从不读界**; 第 $n$ 格的世界是 $(a,\beta\boxplus x_n)$, 即 `step S₀` 上只增长的世界操作 "高度界接上 $x_n$" (`DiagK3Grow.growW` 在这一级的样子: 一个分量, 不判定). 格有界就是 `hself`; 世界变大由 `⊞-fst`, 相邻格由 `⊞-⊲` 加 `rd-fst`.
+> - 记录 `ClZ` 存链的值 $x_n$ 与它的合法; 格的界 $\beta\boxplus x_n$ 是算出来的 (`toCl`), 不存. 别的一切 (`Cl₁`, `KG`, 状态, 目标) 从 `HtTowerFFold` 以同样的模块参数导入.
+> - 第 0 格的值由模块参数 `sd` 从状态里的 `z₁` 算出 (`sd` 的两个实例都不看界). `sd = hz` 时链会停在底: 第 0 格的界就是当前世界, 若节点就在当前世界造的, 从节点的界走到它是空的, $\Delta_0$ 空, $x_1=\mathrm{rd}(\mathrm{hz},\Delta_0)=\mathrm{hz}$, 以后各格同理 (见 `ChainZTest`).
+>
+> **复制的说明.** `Run` 与 `RunM` 在同一个互递归块里, 换掉 `κc₁` 就要重写整块; 块里除 `κc₁` 的两条子句与它的类型、`RKμ` 里五处 `toCl` 外, 逐字取自 `HtTowerFFold` §5 (由脚本按行号抽取, 不手抄). 这是这一篇唯一的复制, 计入翻译账与行数.
+>
+> 全文 `--safe --without-K --lossy-unification`, 无公设, 无洞, 无停机或正性编译指示.
+
+```agda
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+open import OCF.Align.HtTowerTy using (HB; hs; hz; _⊲[_]_; LgB)
+open import OCF.Align.HtTowerFTree using (D₊; Ht; Wd₂; LgW₂; H₀)
+open import OCF.Align.HtTowerFRead using (D₁)
+module OCF.Align.ChainZFold
+  (S : ∀ {Kd : Wd₂ → Ht → Set} {V′ : ∀ {W k} → Kd W k → Wd₂ → Set} {Z₀ Z₁ : Set} {W} → D₊ Kd V′ Z₀ Z₁ W → D₊ Kd V′ Z₀ Z₁ W)
+  (Λ : Ht) (lΛ : LgB Λ) (one⊲ : ∀ {w} → hs hz ⊲[ w ] Λ)
+  (sd : ∀ {W} → LgW₂ W → D₁ W → H₀) (lsd : ∀ {W} (lW : LgW₂ W) t → LgB (sd lW t)) where
+
+open import Data.Nat using (ℕ; zero; suc; _+_)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import OCF.Align.CumReadCF using (A; azero; asuc; alim; _⊲_; Lg; ⊲-tr; lg⊲; z⊲)
+import OCF.Align.CumReadCF as C
+open import OCF.Align.HtTowerTy hiding (HB; hs; hz; _⊲[_]_; LgB)
+open import OCF.Align.HtTowerTy using (HB; hs; hz; _⊲[_]_; LgB)
+open import OCF.Align.HtTowerFTree
+open import OCF.Align.HtTowerFRead using (D₁; rd; rd-fst; Lg-rd; drp₁)
+open import OCF.Align.HtTowerFFold S Λ lΛ one⊲
+  hiding (Run; Rpt; RunNi; Ai; Chn; RKi; BNi; Walk₁; WRp₁; RunM; RKμ; RKμk; Kp₁; Kb₁; κc₁; κΔ₁)
+```
+
+## §1 链的一格
+
+```agda
+record ClZ (W W₀ : Wd₂) (ly : Ht) : Set where
+  constructor mkZ
+  field
+    xz   : H₀
+    lxz  : LgB xz
+    a₁z  : H₀
+    ap₁z : proj₂ W₀ ⊲[ proj₁ W ] a₁z
+    av₁z : a₁z ⊲[ proj₁ W ] proj₂ W ⊞ xz
+    Svz  : St (proj₁ W , proj₂ W ⊞ xz)
+    coz  : D ly (proj₁ W , proj₂ W ⊞ xz)
+open ClZ public
+
+-- 格的界是算出来的: 世界的高度界接上链的值
+toCl : ∀ {W W₀ ly} → LgW₂ W → ClZ W W₀ ly → Cl₁ W W₀ ly
+toCl {W} lW c =
+  mkCl₁ (proj₂ W ⊞ xz c) (Lg-⊞ (proj₂ W) (xz c) (proj₂ lW) (lxz c)) (⊞-fst (proj₂ W) (xz c))
+    (a₁z c) (ap₁z c) (av₁z c) (Svz c) (coz c)
+```
+
+## §2 折叠 (互递归块; 只有 `κc₁` 变了)
+
+```agda
+@@@
+
+```
+
+**沿高度坐标走** (`Walk₁`, 原样).
+
+```agda
+@@@
+
+```
+
+**新种类的闭包** (`RunM`, `RKμ`, `RKμk`, `Kp₁`, `Kb₁` 原样, 只把格经 `toCl` 取出).
+
+```agda
+@@@
+
+```
+
+**链从底起** (这一篇唯一的新子句). 第 0 格: $x_0=\mathrm{sd}(z_1)$, 由模块参数 `sd` 给出, 只看状态里第 1 层的输出 $z_1$; 两个实例 (`ChainZClosed`): `sd = hz` (审查 D2 的原文 $x_0=\mathrm{bot}$) 与 `sd = rd(hz, z₁)` (种子取输出, 不取界). 界是 $\beta\boxplus x_0$. 第 $n+1$ 格: $x_{n+1}=\mathrm{rd}(x_n,\Delta_n)$, 界 $\beta\boxplus x_{n+1}$; 相邻格的第一位置是 `⊞-⊲ β (rd-fst …)`. 链的值从不引用 $\beta$; $\beta$ 只经世界操作 "接上" 出现.
+
+```agda
+κc₁ {W₀ = W₀} {W} ac zy u q₀ lW ll A₀ w Y zero =
+  mkZ (sd lW (z₁ Y)) (lsd lW (z₁ Y)) (proj₂ W₀) hself (⊲ᴮ-tr (proj₂ q₀) (⊞-fst (proj₂ W) (sd lW (z₁ Y))))
+    (cv (C.self , ⊞-fst (proj₂ W) (sd lW (z₁ Y))) Y) (nw (C.self , ⊞-fst (proj₂ W) (sd lW (z₁ Y))) w)
+κc₁ {W₀ = W₀} {W} ac zy u q₀ lW ll A₀ w Y (suc n) =
+  mkZ x′ lx′ (v₁ c₀) (⊲ᴮ-tr (ap₁ c₀) (av₁ c₀)) stp
+    (cv (C.self , stp) (Sv₁ c₀ ⊕⟨ (proj₁ lW , lv₁ c₀) ⟩ κΔ₁ ac zy u q₀ lW ll A₀ c₀))
+    (nw (C.self , stp) (co₁ c₀ ⨾ Cut₁ zy u (v₁ c₀) (av₁ c₀) (ap₁ c₀) (lv₁ c₀) hself (proj₁ q₀) (proj₁ lW)))
+  where
+  z₀ : ClZ W W₀ _
+  z₀ = κc₁ ac zy u q₀ lW ll A₀ w Y n
+  c₀ : Cl₁ W W₀ _
+  c₀ = toCl lW z₀
+  Δ₁ : D₁ (proj₁ W , v₁ c₀)
+  Δ₁ = yc (κΔ₁ ac zy u q₀ lW ll A₀ c₀) (τ₁ (proj₁ lW , lv₁ c₀))
+  x′ : H₀
+  x′ = rd (proj₁ lW , lv₁ c₀) (xz z₀) Δ₁
+  lx′ : LgB x′
+  lx′ = Lg-rd (proj₁ lW , lv₁ c₀) (xz z₀) Δ₁ (lxz z₀)
+  stp : v₁ c₀ ⊲[ proj₁ W ] proj₂ W ⊞ x′
+  stp = ⊞-⊲ (proj₂ W) (rd-fst (proj₁ lW , lv₁ c₀) (xz z₀) Δ₁)
+

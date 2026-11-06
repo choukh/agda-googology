@@ -1,5 +1,5 @@
 # 从 LadderOrdCross 改写 CrossMSim: 左边也是 HtB. 只改模块头与链行.
-A='/Users/alsg/Agentic/agda-googology/probes/OCF/Align/'
+import os; A=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','..','OCF','Align')+'/'
 t=open(A+'LadderOrdCross.lagda.md',encoding='utf-8').read()
 body=t.split('```agda\n',1)[1]
 old_head=body.split('open import Data.Nat using (ℕ; zero; suc)',1)[0]

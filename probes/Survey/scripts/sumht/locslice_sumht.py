@@ -2,7 +2,7 @@
 # SumHt 的账, 口径同 probes/Survey/scripts/locslice_l12.py 与 sumone/locslice_sumone.py:
 # 定义级切片, 计 agda 非空非注释行, 记号模块除外. 用法: python3 locslice_sumht.py <H>
 import os,sys,io,collections
-here='/Users/alsg/Agentic/agda-googology/probes/Survey/scripts'
+import os; here=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..')
 s=io.open(os.path.join(here,'locslice.py'),encoding='utf-8').read().split("\nB4=")[0]
 __file__=os.path.join(here,'locslice.py')
 exec(s)

@@ -1,5 +1,5 @@
 import re
-A='/Users/alsg/Agentic/agda-googology/probes/OCF/Align/'
+import os; A=os.path.join(os.path.dirname(os.path.abspath(__file__)),'..','..','..','OCF','Align')+'/'
 def code(f):
     t=open(A+f,encoding='utf-8').read()
     return t.split('```agda\n')[-1] if False else t

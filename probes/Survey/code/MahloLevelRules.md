@@ -285,4 +285,4 @@ $c=0$ 时走 `index` 下钻 (`impl:881–890`): $\mathrm{index}(\chi^k_0(b))=\ma
 
 **没读:** `IPsi`, `inaccessiblePsiExperimental`, `strongInaccessiblePsiExperimental`, `weakKPsi`, `strongKPsi`; `RathjenK`、`Stegert1/2` 的 `fs`; koteitan `Evidence/`; `EBOI` §4 后半 (基础引理, 只浏览了前半). 博客原文这次没重读, 用的是调研里的转述; 所以 §1 "忠实度" 只到注释编号, §5、§7 涉及 KawamoYurase 处只来自调研的文字. `.claude/`、`CLAUDE.md`、`AGENTS.md` 按要求未读.
 
-**本次未执行任何东西**: 只有 `gh api` 元数据、`git clone --depth 1`, 以及本地用 `python3 -I` 读 JSON 做行数统计. 克隆在 `/private/tmp/claude-501/-Users-alsg-Agentic-agda-googology/047974d5-11ad-4b0c-a01d-76eb45cfb49f/scratchpad/codescan/mahlo/`.
+**本次未执行任何东西**: 只有 `gh api` 元数据、`git clone --depth 1`, 以及本地用 `python3 -I` 读 JSON 做行数统计. 克隆在 `<会话临时目录>`.

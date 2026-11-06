@@ -852,3 +852,1282 @@ EBO 列按最接近最终形态的路线统计, 不按最高处. 当前取 `Ladd
 
 - 定理: `Sub`, `Sub-S`, `Sub-mono`, `S-congʸ`, `S-congʸ≈`, `Cv⁰`, `Cv⁰→Cv`, `⨾-mono`, `nl-mono`, `unit-l`, `unit-r`, `assoc`, `TI`, `DEC`, `canon` (条件 `HA`), `StepV`, `Kn-CO`, `Pk-CO`, `Pk-round`, `A-CO`, `A-round`.
 - 结论: 值同余的片段第一次有了定理: 折叠在第 0 层坐标上对规范化值同余. `nκ` 段要折叠对第 ≥1 层输入值同余, 未走通; 带上下文的层单调与 Ω+1 上界暂停; 没有反例.
+
+
+## 2026-11-04 CvHigh: 第 0 层输入的一般值同余 (判决 PARTIAL)
+
+入口 `OCF/Align/CvHigh.lagda.md`, 3 个文件. 主审复核: 删接口文件后重新编译, 退出码 0; 代码块无禁用构造; 闭包干净.
+
+- 定理: `G`, `T`, `PI`, `PI′`, `pre-le`, `lim-leP`, `infl`, `M`, `cong0` (条件 `HA`), `cong0≈`, `cong-sum`, `Kn-mono`, `Kn-cong` (无前提).
+- 第 1 层输入暂停: `HA` 对读坐标的动作 `Ai` 不成立 (判断); 要换成带坐标的 `HAᶜ`, 对层归纳. Ω+1 的上界依赖它, 暂停. 没有反例.
+
+
+## 2026-11-04 HtGen: 一个下标就是一层 (判决 PARTIAL)
+
+入口 `OCF/Align/HtGen.lagda.md`, 3 个文件. 主审复核: 删接口文件后重新编译 `HtGen`, `HtGenTest`, 退出码 0; 代码块无禁用构造; 闭包干净.
+
+- 定理: `Ψ`, `Lg-Ψ`, `nx`, `Lg-nx`, `Op`, `Lim`, `Lg-Lim`, `Up`, `Upω`, `Lg-Upω`, `op-strict`, `lt-irr`, `s₀<s₂`..`s₄<s₅`, `lvl`, `dg-up`, `no-top`.
+- 结论: 层取一个 A 时, 生成原则一条对一切级, 不加维, 不要字典序; 但 `no-top` 说 A 装不下 Ω_Ω, 所以这一族只在 ψ₀(Ω_Ω) 以下. 判断: ψ₀(Ω_x) ≤ ψ₀(Ω_Ω) 对一切可数 x, 所以 s₁ 等读法不是更高的站; 这些树严格增长, 不是那些项的 EBO 值, 真实值没有估计.
+- 有限测试没有分辨力 (对照行深度 3 仍相同).
+- 判断: Ω_Ω 之上必有第二种下标, 两种下标之间的比较就是 `SumHt` 的字典序; 下一步让第二种下标也由回灌生成, 卡在 Ω-节点上比两个坐标要字面公共上界.
+
+
+## 2026-11-04 SumClimb: 和的树加第三位 (判决 PARTIAL, 加深翻译)
+
+入口 `OCF/Align/SumClimb.lagda.md`, 5 个文件, 脚本 `Survey/scripts/sumht/locslice_climb.py`. 主审复核: 删接口文件后重新编译, 退出码 0; 代码块无禁用构造, 无累加; 闭包干净.
+
+- 定理: `T`, `TNω`, `TRω`, `Tω`, `T³`, `TΩ`, `Lg-T`, `Lg-Tω`, `Lg-T³`, `Lg-TΩ`, `nz-κ`, `S1`..`S6`, `T≤TNω`, `T≤TRω`, `T≤Tω`, `SupN`, `SupR`, `Sup3`, `Ω²<Ω²+1`, `Ω²+1<Ω²·2`, `Ω²·2<Ω²·ω`, `Ω²·ω<Ω³`.
+- 分辨力: 闭包站高于前一族任意可数子族的上确界, 比 `SumHt` 强一档; 没有证高于前一族的闭包点 (要折叠对世界单调). 读法到 Ω³ 是判断.
+- 第一个障碍: Ω^ω 要位数可变的层, 停机检查看不见下降 (报错见入口文件). 判断与 "每级加一维" 是同一问题, 交给 `HtGen` 那条线.
+- 翻译账: 加深 (位数照 Ω 的幂, 字典序照记号的序).
+
+
+## 2026-11-04 WfScout: 记号良基的规模 (侦察)
+
+报告 `Survey/NotationWF.md`, 实验 `OCF/Align/WfScoutTau.lagda.md`, `WfScoutPull.lagda.md`. 主审复核: 从 `archive/src/Mahlo` 重新拷一份副本 (加只含 stdlib 依赖与 `--hidden-argument-puns -W noUnsupportedIndexedMatch` 的库文件), 删接口文件后编译 `WfScoutPull`, 退出码 0, 约 70 秒; 两个文件代码块无禁用构造; 归档 43 个文件都是 `--safe --cubical-compatible`.
+
+- 定理: `τ-mono` (对全部 EBO 项, 不要标准形), `τ≺I`, `τ-bd` (可数项在 `endpt 1` 之下), `Pull` (拉回到 `AccP`, `HC`, `Lab`, `fgh`), `nf-tower` (Ω-塔每项是标准形); 条件模块 `Std` 的 `ebo-lab`, `fgh-EBO`, 前提 `cl-pred`, `cl-fsn`, `τ-NF`.
+- 判断: `τ-NF` 400 到 800 行, `cl-pred` 不到 100 行, `cl-fsn` 3000 到 7000 行 (蓝本是 Lean `ExBuchholz` 的 `OTFS_thm`, 现有 `Standard` 的绝对不变量不能推广, 要换成相对不变量 `Trian`); 合计中位约 5000 行.
+- 意义: 记号侧第 3 层; 给 ψ₀(Ω_{Ω·ω²}) 以上每站带字面标签的参照树; 不替代主线树与参照树的互相比较.
+- 导入: 归档只读, 没有库文件; 每次用副本, 还是把 43 个文件拷进 probes, 由作者定.
+
+
+## 2026-11-04 CvLayer: 第 1 层输入的值同余 (判决 PARTIAL)
+
+入口 `OCF/Align/CvLayer.lagda.md`, 另有 `CvLayerRun`, `CvLayerInst`. 主审复核: 删接口文件后编译入口, 退出码 0; 代码块无禁用构造; 闭包干净.
+
+- 定理: `CvLayerRun` 把 `CvFoldRun` 的前提 `HA` 换成读坐标的 `HAᶜ` (底 ≼, 状态值 ≼, 坐标第 0 层值 ≤ ⇒ 动作 ≼), `canon`, `cong0` 照搬 (条件定理); `CvLayerInst.AiH` (坐标抬到第 1 层当分支的输入满足 `HAᶜ`), `KL-mono` (折叠产出的 ni 节点分支对坐标值单调, 无前提), `KL-ni`.
+- 第一个障碍: 一般的第 1 层输入. 第 1 层规范形读不回 nκ (`LayerTr`), 有 ni 时往返只在 `Cv` 下保值 (`no-round`); 要直接刻画 "第 1 层树上的折叠值只依赖输入值", 判断难点在第 1 层值前序跨世界.
+- 暂停: 回灌层的值单调 (要比较不同层类型的差树), 带上下文的层单调, ψ₀(Ω_{Ω+1}) 上界.
+- 翻译账: 提供信息 (`CvLayerInst` 用 `SumOneClosed` 的折叠, S = ·ω).
+
+作者 2026-11-04 定: 归档 OT_I 不拷进 probes, 每次编译临时拷副本 (配方见 `Survey/NotationWF.md` §1). 下一轮四路: 第 1 层值语义 (`L1Val`), τ 保标准形 (`WfTauNF`), 回灌高度过 ψ₀(Ω_Ω) (`HtFeed`, 摆脱侧), 位数可变到 Ω^ω (`SumVar`, 攀爬, 加深).
+
+
+## 2026-11-04 WfTauNF: τ 保标准形, 可数标准形上良基
+
+入口 `OCF/Align/WfTauNF.lagda.md` (193 行代码). 主审复核: 用主审自己的归档副本编译, 退出码 0, 约 25 秒, 无警告; 代码块无禁用构造; 序 `_<ᵀ_`, 标准形 `isOTᵉ`, 可数 `Ctbl` 都从 `OCF.Align.EBO`, `EBOI`, `Standard` 原样导入.
+
+- 定理 (无前提): `τ-NF` (对一切项), `Gnil` (报告里的 (G5)), `Gτ`, `cl-pred` (不要共尾前提, 比 `Std` 要的强), `wfNF : isOTᵉ t ≡ true → Ctbl t → AccNF t` (分支限于标准且可数的项). 这是记号 EBO 在可数标准形上的良基, 记号侧第 3 层的第一种陈述.
+- 条件定理: `StdFsn` (只剩前提 `cl-fsn`): `ebo-lab′`, `fgh-EBO′`, `lab-NF`.
+- 判断: `cl-fsn` 2500 到 5000 行 (原估 3000 到 7000; 依据只是 τ-NF 用了估计的约 1/4); 核心是 Buchholz 3.4 到 3.6 的相对 G 界 (Lean 的 `Trian`), `Gnil` 推广不过去.
+
+
+## 2026-11-04 L1Val: 第 1 层值语义 (判决 PARTIAL, 以否定为主)
+
+入口 `OCF/Align/L1Val.lagda.md`, 另有 `L1ValBase`, `L1ValShape`, `L1ValSup`, `L1ValKappa`. 主审复核: 删接口文件后编译入口, 退出码 0; 代码块无禁用构造; 闭包干净.
+
+- 否定 (真实场景: `SumOneClosed` 的折叠, 目标第 0 层): `¬Bis-mono` (`toB` 逐分支字面一致的两棵树, 折叠一个 ≥1 一个 =0; 值语义要看得见坐标), `¬toB-mono`, `¬mono-on-Mono` (分支对坐标单调也不够; ni 不能按上确界比), `¬toB-mono-κ` (nκ 也不能按上确界比; `LayerTr` §3 的 "极限世界读不回" 不是关键). 只否定 "以 `toB` 为值" 的单调; 不否定直接定义在差树上的关系, 带判据的输入类, 目标第 1 层以上.
+- 一步定理: `chain-stall`, `κ-stall` (链点没有 n1 则此后全零), 判据 `Pos`, `Kn-pos` (折叠产出的节点满足), `x₂-not-pos`.
+- 判断: 值语义要定义在差树上, ni, nκ 逐分支比 (同坐标, 同世界与路径), 第 0 层部分按值比; 两种比较在同一棵树里交替, 照 `CvLayerRun` 重证约 600 行.
+
+## 2026-11-04 SumVar: 层的位数可变, 读到 ψ₀(Ω_{Ω^ω}) (判决 HOLDS, 读法是判断)
+
+入口 `OCF/Align/SumVar.lagda.md`, 另有 `SumVarTree`, `SumVarFold`, `SumVarClosed`, `SumVarGrow`. 主审复核: 删接口文件后编译入口, 退出码 0; 代码块无禁用构造, 无累加; 闭包干净.
+
+- 停机: `D′ L ac` 对层的可达性证明结构递归, 搬运 `mapD`, `fw`, `bw`, `toD`, `ofD`.
+- 定理: `Lg-Tω` 等 (各是 `Lg-sum` 的一次调用), `Inside`, `Close`, `SupBlk` (对一切位数), `SupSt`, `SupD`, `SupTop`, `Tω≤sup`, `sup≤Tω`, `Ts<Tω`, 具体站 `Ω⁴<Ω^ω` 等. 分辨力同 `SumClimb` (可数族上确界之上非零, 不是高于前一族的闭包点).
+- 行数 (层 1/2/3/加增长): 132 / 733 / 757 / 1054; 比三位的 `SumClimb` 多 48 / 33 / 36 / 13.
+- 第一个障碍: Ω^ω+1, 层要第 ω 位, 嵌套范式; 未走通.
+- 翻译账: 加深 (层是 Ω 进制范式); 补零脚手架 99 行是翻译带来的; 但按维加的模式消掉了, 停机脚手架与层形状脱钩.
+
+
+## 2026-11-04 HtFeed: 高度是树, 回灌选坐标 (判决 PARTIAL, 摆脱侧)
+
+入口 `OCF/Align/HtFeed.lagda.md`, 另有 Tree, Fold, Ht, Closed, Grow, Neg, Test 七个文件. 主审复核: 删接口文件后编译入口与 `HtFeedTest`, 退出码都是 0; 代码块无禁用构造, 无累加; 入口闭包干净 (`HtFeedTest` 经比较器进 `CumRead`, `LevelFix`, 是验收文件, 同 `HtGenTest`).
+
+- 定义: 高度 `H = hz | hs | hl | hΩ` (第二数类布劳威尔树), 合法性 `LgH`, 比较 `cmpH`; 节点种类三种由 H 给出; 一个闭项定义 `TΛ` 对一切合法 Λ.
+- 定理: `Lg-TΛ`, `feed₀`, `feed` (回灌第 n 格的世界 = 前一格加输出的读回), `Sup`, `ΩSup` (对一切 Ω-高度一条), `Sup-ΩΩk`; 否定 `top-Ω`, `no-world-top`, `no-glob`, `no-weak`.
+- 测试: ψ₀(Ω_Ω) 一站与 `SumOne.T₀`, `SumHt.T 1 0` 到深度 6 相同.
+- 判断: 读法到 ψ₀(Ω_{Ω^{Ω^ω}}).
+- 第一个障碍: 跨高度比较 (每个 `TΛ` 在自己的实例里); 高度直接来自第 1 层输出 (`no-weak` 说差树读法的后继步进不够, 判断要 `BrwHigh` 的正规节点); 第 4 层.
+- 行数 (层 1/2/3/加增长): 51 / 661 / 665 / 892, 对一切高度; 少于只到 Ω³ 的 `SumClimb` (84 / 700 / 721 / 1005).
+- 翻译账: 提供信息, 摆脱一步 (部分): 每升一级加一维与字典序摆脱掉了; 折叠形状与 "高度是给定的数据" 没摆脱.
+
+
+## 2026-11-04 HtOut: 高度来自折叠输出 (判决 PARTIAL, 摆脱侧)
+
+入口 `OCF/Align/HtOut.lagda.md`, 另有 Read, Feed, Grow, Neg, Test. 主审复核: 删接口文件后编译入口与 `HtOutTest`, 退出码都是 0; 代码块无禁用构造, 无累加; 入口闭包干净 (`HtOutTest` 经比较器出闭包, 是测试文件).
+
+- 定理: `Cont` (极限处字面连续 + 后继处步进), `cont→LgH` (对一切 g), `nb-cont`, `rd`, `Lg-rd` (一切第 1 层差树读成合法高度), `Fb`, `fb-fst`, `Λ-st`, `Λ₁-Ω`, `Fb-Ω`, `Sup-fb`, `Sup-ω`; 闭项 `T-fbω` (高度从 0 只由回灌与 ℕ-对角生成, 不用 `HtFeedHt` 的生成规则).
+- 否定: `drop-lim`, `drop-suc` (Cont 两条字段各自去不掉), `no-loop`, `no-total` (连续且严格增的分支不能在一切坐标上都合法).
+- 测试: `T-fb 1` 与 `T-Ω`, `T-Ωk 2` 的形状比较; 对照说明比较器分不开 Ω² 与 Ω³, 所以对值无分辨力.
+- 判断: `T-fb 1` 读 ψ₀(Ω_{Ω²}); `T-fb 2` 起下标写不成 Ω 的算术, 读法高于 `HtFeed` 的顶; `T-fbω` 是 x_{n+1} = ψ₁(Ω_{x_n}) 的上确界.
+- 第一个障碍: 跨高度比较; 回灌的 Ω-迭代 (`Fb` 只在合法高度上有定义; 出路要么把 H 的 Ω-分支定义域改成合法坐标 (改 H, 作者定), 要么让折叠在不合法的最高层上也有定义); 值; x_ω 之上要第三数类的高度树 (判断).
+- 修正 `HtFeed` 障碍 2 的判断: 坐标仍用 A 就够了.
+- 行数 (层 1/2/3/加增长): 51 / 643 / 649 / 892; `HtFeedHt` 的 121 行由 `HtOutRead` 82 加 `HtOutFeed` 33 取代.
+
+
+作者 2026-11-05 定: 中间站给界, 终点对 EBO 验收 (先下界, 再争取互相 ≼); 写进 AGENTS 最佳实践. 已转告在跑的 DVal, HtCross.
+
+
+## 2026-11-05 HtCross: 跨高度换实例 (判决 PARTIAL)
+
+入口 `OCF/Align/HtCross.lagda.md`, 另有 Sim, Run, Inst, Neg. 主审复核: 删接口文件后编译入口, 退出码 0; 代码块无禁用构造; 闭包干净. `Funext` 是定义出的命题 (`HtCrossSim`), 作前提用, 没有公设.
+
+- 定理: `irr`, `rkT-rel` (不用 Funext), `Run-R` 等十六个 (两个实例的折叠在共有目标上相关), `inst0`, `change`, `lg-irr` (前提 Funext); `hs-strict`, `hl-strict` (无前提); `hs-reduce<`, `hl-reduce<` (前提 Funext 与实例内单调 `MonoStep`, `MonoL`); `hz<1`.
+- 否定: `path-real` (只换合法性证明, 输出树不相等, 所以换实例只能在不看路径的关系下), `no-in-2` (换进 Ω-极限的实例只够到坐标 ≤ 1).
+- 第一个障碍: 实例内单调 `MonoStep` (要折叠对高层输入树的值单调与对世界单调, 即 `CvLayer` 停下的地方, 也是 `DVal` 在做的); Ω-极限的换实例还要对世界单调.
+- 保留: 多数结论以 `Funext` 为前提; 成品若要无条件, 要把第 0 层的相等换成值上的 ≈ (判断).
+- 翻译账: 提供信息.
+
+
+## 2026-11-05 WfFsn: EBO 标准形对基本列封闭, EBO 的 FGH 成为定理
+
+入口 `OCF/Align/WfFsn.lagda.md`, 另有 Base, View, Trian, Omega, Bach, Closure 六段 (约 850 行非空代码). 主审复核: 用主审自己的归档副本, 删接口文件后编译入口, 退出码 0, 约 28 秒, 无警告; 七个文件代码块无禁用构造; `cl-fsn` 的类型与 `WfTauNF.StdFsn` 的参数原样一致, 入口 `module S = StdFsn cl-fsn` 无其他前提; `Lab` 来自 `Correspond`, `EBOψ` 来自 `EBO`.
+
+- 定理 (无前提): `cl-fsn`, `cl-fsnᵇ` (不要可数), `cl-fsT` (Ω-基本列), `trian-fsT`, `trian-fsn` (Buchholz 3.6), `Gtri` (3.4), `bach`, `tow`; `ebo-lab`, `lab-NF` (一切可数标准形有带标签的树), `EBO-tree`, `fgh-EBO` (EBO = ψ₀(Λ) 的 FGH).
+- 测试: `fsn (EBOψ 3) 2` 等是标准形 (refl).
+- 意义: 记号侧第 3 层完成 (借归档 OT_I); 终点验收的 EBO 参照树有了. 它读记号, 不进成品; 不让树更自足.
+- 行数 (切片, `locslice_four.py`): 记号侧到这里共 6473, 其中归档 4661.
+
+
+## 2026-11-05 DVal: 差树上直接的值关系 (判决 PARTIAL)
+
+入口 `OCF/Align/DVal.lagda.md`, 另有 Tree, Canon, Zero, Sound, Inst, Kn, Neg 七段 (1028 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 代码块无禁用构造; 闭包干净.
+
+- 定理: `_⊑ᵈ_` (定义), `Gen`/`cong0`/`canon` 对关系抽象 (条件), `chain`, `snd` (x ⊑ᵈ x′ 则折叠输出 ≤, 前提 `HA₁`), `StepV₀`, `HA-ai`, `mono-L1` (无前提), `cong↑`, `rf-Ω`, `rf-Step`, `rf-A`, `cong1`, `cvS`, `stepS`, `Kn-Rf` (前提 `Good Y`), `Pk-Rf`.
+- 否定: `¬rel-sup`, `¬rel-shape`, `¬rel-κ` (`L1Val` 的反例不在关系里), `¬assoc` (无条件结合律下折叠不单调), `¬κ-refl` (对 ⨾ 同余 + 一条比较 + nκ 无条件自比 ⇒ 不单调; 只否定这一类).
+- 第一个障碍: nκ. 分支要按层的值对齐; 单层判断可做, 嵌套时要同时 "包含" 与 "平移" 式对齐, 要在上下文记 `dif W q` 并做序数减法, 而此时 `nw` 的两条透明律不能同时成立 (判断). 即跨层值语义. ψ₀(Ω_{Ω+1}) 的粗上界也因此未给出.
+- 翻译账: 提供信息.
+
+
+作者 2026-11-05 定: 树侧到第 3 层的行数必须小于记号侧 `EBO-tree` 去水分后的行数 (标杆由 EboLean 一路给出); 先不改 H. 下一轮五路: KVal (nκ 跨层值语义), EndLow (终点下界), HtTower (高度的高度), HtTotal (解除 no-total), EboLean (标杆).
+作者 2026-11-05 补充: 标杆的记号侧第 3 层只算到 FGH 可算为止, 带标签的部分单列 (与树侧口径一致); 已转告 EboLean.
+
+
+作者 2026-11-05 定: 纲领第 1 条的解释, 中间层若不直接用布劳威尔树, 必须有内部 View (值上一致), 可以比布劳威尔树多, 不能少; 写进 AGENTS.
+
+
+## 2026-11-05 第二次路线审查 (Fable 5.1)
+
+报告 `Survey/RouteReview2.md`, 实验 `OCF/Align/Review2Blind.lagda.md`. 主审复核: 删接口文件后编译实验, 退出码 0, 无禁用构造. `blindᴬ` (定理): 两个字面合法的 `A` 在 `TLRuleSpec._≤_` 下互相 ≤, `FGH (ord ·) 2` 分别是 8 与 2048. 其余结论 (R1 到 R8, P1 到 P9) 是审查者的判断, 引用的在跑文件 (`EndLowH`, `EndLowAccept`, `KValTree`) 是中间状态.
+
+
+## 2026-11-05 HtTotal: 全函数的回灌 (判决 PARTIAL)
+
+入口 `OCF/Align/HtTotal.lagda.md`, 另有 Clamp, Iter, Neg. 主审复核: 删接口文件后编译入口, 退出码 0; 代码块无禁用构造, 不用 Funext; 闭包干净.
+
+- 定理: `cl`, `Lg-cl` (一切高度夹出来合法), `Fbᶜ`, `cl-fin`, `agree-fin` (有限高度上 `Fbᶜ ≡ Fb`), `Good-rd`, `Good-Fbᶜ`, 迭代高度的合法性, `ω⊲Ω`, `Ω⊲Λ²ω`, `Ω⊲ΛT`, `Sup-Ω₀`, `Sup-Ω`, `Sup-Tk`; 闭项 `T-Ω₀`, `T-Ω`, `T-Λ²ω`, `T-T`.
+- 否定: `no-clamp` (总合法且在合法处恒等的夹法 ⇒ LPO), `no-valid`, `no-valid-top⁺`, `no-valid-all`, `no-agree`, `no-agree-it`, `cl-moves`. 只否定 "在比较器能收到的一切路径上一致"; 不否定 "只在折叠实际发出的比较上一致", "判定不同、值相同".
+- 判断: 四个闭项都在 ψ₀(Ω_{ε_{Ω+1}}) 与 ψ₀(Ω_{Ω₂}) 之间.
+- 第一个障碍: `Fbᶜ` 与 `Fb` 在合法无穷高度上的差 (要第 4 层的值); 在合法处不变的全回灌要让迭代坐标进入折叠的世界 (读第 2 层输出).
+- 翻译账: 提供信息; `cl` 是累加 (两边账见入口).
+
+作者 2026-11-05 定 (第二次审查的措施): P1 先试否定单调 (已转告 KVal), P5 先做第一条值定理 `Acc₁` (已转告 EndLow), P9 View 写成记录, P3 `Funext` 只准在验收文件 (写进 AGENTS); 终点只管序数值, 大数不作验收目标 (写进 AGENTS).
+
+
+## 2026-11-05 EndLow: 终点下界 (判决 PARTIAL)
+
+入口 `OCF/Align/EndLow.lagda.md`, 另有 Accept (验收文件), H, Fb (树侧). 主审复核: 用主审的归档副本, 删接口文件后编译入口, 退出码 0, 约 32 秒; 无禁用构造; `Funext` 只在 `EndLowAccept`; 树侧闭包干净.
+
+- 定理: 桥 `⟪_⟫` 与 `≤→≼ᴬ`, `≼→≤ᴬ`; `treeE-mono`, `EBO≼`, `EBO≼⁻`, `EBO≼-from`, `step-shape`, `endpoint` (终点 ⟺ 逐级下界); `T₀≈E`, `Top≈E`, `low-T₀`, `low-Top`, `E<T₁` (无前提); `no-top`; `EndLowFb` 的形状定理.
+- 条件: `FbLow.low-fb1` (`Acc₁`), `ToLimit.low-fbω` (`Acc₁`, `Funext`, `MonoL`).
+- 暂停: `Acc₁ : BTBOᴵ ≼ ⟪T-fb 1⟫`. `T-fb 1` 的层都不可数, 值出自套在里面的 nκ 回灌; 审查者 "不依赖单调" 的判断没有编译结果确认. 建议 (判断) 第一条值定理改取 `T-Ω` (层全可数), 估计 600 到 900 行.
+- 第 3 级: 卡在高度类型.
+
+## 2026-11-05 HtTower: 下标塔的类型层 (判决 PARTIAL)
+
+入口 `OCF/Align/HtTower.lagda.md`, 另有 Ty, Cont, U, Strat, Neg. 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+
+- 定理: `KS`, `HB`, `cmpB` (一切 S), `step`, `sup`, `Lev`, `cont→Lg`, `Lg-θs`, `θ-st`, `Lg-Λᵁ`, `Lg-toB`, `Lg-old`, `KB-θs`, `below-θ`, `θ-indep`.
+- 否定: `no-self`, `no-retract`, `drop-Ω`, `no-naive-diag`, `naive-illegal`, `no-joinᴮ`, `no-joinA`.
+- 没写: 接受 `HB S` 层的折叠 (第一个障碍: 闭包 nκ 只认 A 的世界; 要世界改成 `Wd S`, 保留时沿高度坐标走, 回灌时读回读回层再丢掉升高的分量, `Lev` 内部种类与 U 的种类对应). 只做 `step S₀` 估计约千行 (判断).
+- 判断: `HtOut.T-fbω` 读 ψ₀(Ω_{Ω₂}); θ 1 以上的强度要等接受新层的折叠.
+
+
+## 2026-11-05 KVal: nκ 的值语义 (判决 PARTIAL)
+
+入口 `OCF/Align/KVal.lagda.md`, 另有 Tree, Sem, Zero, Sound, Cut, Inst, MonoTest (933 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+
+- P1 (先试否定): `MonoTarget₁ = MonoStep (hs hz) tt` 未否定也未证. 有限测试 `G 1 lhs ≡ 4`, `G 1 rhs ≡ 32`; 纸面判断两边链都是 ε₀ 型, 右边逐项不低, 这一站没有 nκ. 证明要把 `DValCanon.Gen` 搬到 `HtFeedTree.D hz`, 估计约 500 行 (判断).
+- 定理: `coh₀`, `coh₁` (条件), `cohCv`, `cv≤`, `≤cv`, `drp≤`, `cong0`, `chain` (条件), `snd` (条件, κ 一格交给参数 `kh`), `snd-lo`, `HA-Step`, `Coh-Step`, `mono-lo` (无前提), `CutX`, `CutM` 等; 否定 `uκ-not-KMono`, `no-10` (`¬κ-refl` 的反例不满足 κ⊑ 的判据, 所以 `¬κ-refl` 不否定 κ⊑).
+- 未完成: 单层 κ 一格 (`Walk` 与 `Run (Cut …)` 值相同; 回灌前 n 格拼成区间和), 估计 300 到 400 行, 判断无已知数学障碍; mid₁ 的 nκ 段自比; 嵌套 nκ (外层回灌层可比时, 同一层在右边可能落在更低的格世界里, 内层区间变短; 判断).
+- 翻译账: 提供信息.
+
+
+## 2026-11-05 HtCrossV: 换实例去掉 Funext (判决 PARTIAL)
+
+入口 `OCF/Align/HtCrossV.lagda.md`, 另有 Sim, Run, Inst, Neg, Bridge (对照). 主审复核: 删接口文件后编译入口与 Bridge, 退出码 0; 无禁用构造; 六个文件不含 `Funext`; 入口闭包干净.
+
+- 定理 (无 Funext): `Run-R` 等, `inst0′`, `change′`, `lg-irr′`, `lg-irr-emb`, `hs-in′`, `hl-in′`, `hΩ-in′`, `Ω-in′`, `X≈`, `hz≤1′`, `hz<1′`; 条件 (`MonoStep`, `MonoL`): `hs-reduce<′`, `hl-reduce<′`. 范围: 高度不含 Ω-极限 (`Free`), 只要较小的实例 `Free`.
+- 边界: `eq0↔ext` (旧的那一步等价于第 0 层序列外延性), `no-val-world`, `no-κ`, `fb1-not-free`.
+- 更正: P3 "把第 0 层的相等换成 ≈" 不可行, 世界是类型下标 (`no-val-world`).
+- 第一个障碍: 含 Ω-极限的高度要世界之间的互模拟与异质的路径、合法性、比较, 估计行数翻倍 (判断).
+2026-11-05 派 LFRe: 重开 LF (一次封闭的层号), 用差树的形状合法性补 ψ₀(Ω_Ω) 处的字面 Lgl, 并与 HtTower 对照. 封存记录 RouteSeal §5 不改.
+
+
+## 2026-11-05 BrwView: 布劳威尔树 View 的记录 (判决 PARTIAL)
+
+入口 `OCF/Align/BrwView.lagda.md`, 另有 Def, Zero, Ht, One, Kappa, Lift, Neg (500 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+
+- 定理: `view₀` (第 0 层差树, 无条件), `viewᴴ` (H, 无条件), `view₁` (第 1 层, 条件 `HW`), `JI`, `hw→ws`, `lift`, `HW-Ωx` (前提可满足), `CK`, `κseg`.
+- 否定: `strict→LPO`, `strict-D`, `strict-A` (严格递增的 ℕ-极限部分值推出 LPO); `lift-fails`, `not-HW`.
+- 与纲领第 1 条解释的差别: AGENTS 写 "ℕ-极限 (严格递增的 f)"; `strict→LPO` 说按值严格递增不可得, 记录改用目标树自己的合法性 (第一位置 `⊲`, 自反). 是否改 AGENTS 的措辞, 作者定.
+- 未做: 部分的良基 (沿 View 递归); `HW` 是否必要, 折叠输出是否满足 `HW`, 带 nκ 节点的 `HW` 的非平凡实例.
+- 判断: `HW` (世界稳定) 不是 KVal 的共同单调引理, 是同一族里的另一个实例 (对世界单调那一半在值层上的形状).
+作者 2026-11-05 定: AGENTS 纲领第 1 条解释里 "严格递增的 f" 改为 "相邻项按目标树自己的合法性步进 (第一位置)" (依据 `strict→LPO`); 派 BrwWf 证 View 部分的良基.
+
+
+## 2026-11-05 KValK: 单层 nκ 收尾 (判决: 单层走通)
+
+入口 `OCF/Align/KValK.lagda.md`, 另有 Walk, Iter, Hi, Inst (332 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+
+- 定理: `cohW`, `WCf`, `WCb`, `cl`, `PreCut` (条件 `KMono`, `Ok`), `vpt`, `ptv`, `kh`, `snd-hi` (条件 `Ok`, `Cx hi`), `mono-hi` (前提可满足), `mono-uΩ`, `rf-κΩ`, `rf-1κΩ`; 否定 `¬rel-κκ`.
+- 范围: 单层; ni 分支里的 nκ 与嵌套 nκ 不在内.
+- 第一个障碍: `mid₁` 的 nκ 段: 分支对层的值单调, 要折叠对第 c ≥ 1 层输入的值同余并对 c 一致 (判断: 量级同 `DValZero` 加 `DValCanon`).
+- 翻译账: 提供信息.
+
+
+作者 2026-11-05 定 (写进 AGENTS 最佳实践): 第 4 层不反过来改前 3 层; 非改不可时停下交作者定, 理由须来自树侧要求, 翻译账单列 "第 4 层逼出".
+
+## 2026-11-05 EndLowT: 高度树第一条值定理 (判决: 未走通, 暂停)
+
+入口 `OCF/Align/EndLowT.lagda.md`, 另有 Neg, Shape. 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+
+- 否定: `no-Rel`, `no-Relˡ` (精确对应 `TLRuleRel.Rel` 里, `n1 ⨾ ni r u` 在层 ≠ 0 时没有像), 实例 `no-Ω₂`, `no-Ωω+1`; 正对照 `pos`; `T-Ω≇T₀` (`T-Ω` 与 `SumOne.T₀` 不互模拟). 范围: 只否定这种精确对应与结构互模拟, 不否定值相等.
+- 测试 (不进仓库): 宽 2 到深度 16 同形, 宽 3 深度 12 内分开.
+- 两条出路 (判断): (a) 改 `HtFeedTree.Ωd` 的 `hs`, `hl` 两行回到 `n1 ⨾ Dif` 写法, 照 SumOneRel/Sim/Top 写约 600 到 900 行, 但这是第 4 层逼出的定义改动, 按新规则交作者定; (b) 不改定义, 做值层验收, 判断不比 nκ 的值语义省.
+
+
+作者 2026-11-05 定 (新规则的第一个案例): 不改 `HtFeedTree.Ωd`, 高度树一族的第一条值定理走值语义 (`MonoPort`, `KValC` 一线).
+
+## 2026-11-05 MonoPort: 共同单调目标的最低一站 (判决 PARTIAL)
+
+入口 `OCF/Align/MonoPort.lagda.md`, 另有 Bridge, Zero, One, Step (348 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+
+- 定理: `ofS-pre`, `sumT≤`, `sumT≥`, `toV`, `smono` (两种第 0 层差树互译); `cong0`, `chain` (对一切高度, 条件 `HAᶜ`); `HA-Step`; `mono₁ : MonoTarget₁` (无前提); `grow₁₂`, `grow₀₁₂` (无前提, 无 Funext, 用 `HtCrossVInst.HsS.hs-reduce<′`); `step≡` (一切后继高度的 `MonoStep` 化成 `ChainLe`).
+- 未走通: 高度 ≥ 2 的 `MonoStep` (链点是第 1 层差树, 要第 1 层值关系对折叠在第 1 层目标上的输出封闭, 即 `CvLayer` §2 停下的地方).
+- 翻译账: 提供信息; 互译 65 行是 "规范形写在 SumOne 上" 带来的脚手架, 把 `Gen` 对树类型抽象后可去.
+
+
+## 2026-11-05 KValC: 跨层值同余 (判决: 未走通)
+
+入口 `OCF/Align/KValC.lagda.md`, 另有 Mid, Test. 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+
+- 定理: `mid≡`, `rf-Aᵐ`; 条件定理 `rf-mid : PkRf → MidMono → Rfᵏ hi mid₁`.
+- 测试: `test-G0` (无分辨力; `G 1` 在 4G 内堆耗尽).
+- 第一个障碍 (判断): 一族按层编号的逻辑关系 R_{c,c′}, 对折叠输出封闭, 管住一切中间层且按层的值对齐. `MonoPort` 的 (b) 是 c = c′ = 1 的情形. 估计: 跨世界 `Kn-Rf` 约 350 行可行, 不单独推出 `mid₁` 自比.
+2026-11-05 续派 MonoPort2: 高度树折叠上的第 1 层值关系对折叠输出封闭 (跨层关系 c = c′ = 1), 目标 ChainLe (hs hz) 与高度 2 到 3 的严格增长.
+
+
+## 2026-11-05 KNest: 嵌套 nκ (判决 PARTIAL)
+
+入口 `OCF/Align/KNest.lagda.md`, 另有 Neg, Inv, Adm, Sound (361 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+
+- 定理: 不变量 `InvU`, `InvL` 与 `inv-κc` (条件), `hℓ-inv`, `toCx`; `Adm` 的 `adm-tr`, `adm-adv`, `split`, `adm-cont`, `adm→hℓ`; `nest-diag`, `nest-rel` (无条件); `sndᴬ`, `nest-mono`, `contain` (条件 `KStepᴬ`).
+- 否定: `anti`, `¬mono`, `¬KMonoˢ`, `¬crit` (以 KMono 形状为分支前提的可靠关系覆盖不了嵌套族; 不否定外层单调, 不否定带下标的判据); `¬adm-cex`, `lower-left`, `¬adm-end`.
+- 更正 KVal 判决 5: 格世界错位不是障碍 (`hℓ-inv`).
+- 第一个障碍: `KStepᴬ`. 单层证明的两步 (一个世界里走 `Pre n`, 尾对齐 `CutM`) 嵌套时都不保值; 要逐格的首对齐 (形状同 `KValZero.cong0`/`chain`), 估计 600 到 900 行 (判断).
+
+
+## 2026-11-05 HtTowerF: 塔的第一级上的折叠 (判决: step S₀ 成立, 一切级未走通)
+
+入口 `OCF/Align/HtTowerF.lagda.md`, 另有 Tree, Read, Fold, Closed, Grow, Need, Test (1187 行代码). 主审复核: 删接口文件后编译入口与 Test, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+
+- 定理: `accL`, `sum-fst`, `Lg-sum`, `Lg-rd`, `rd-fst`, `Lg-nbA`, `Lg-TΛ`, `Lg-T⁺`, `Lg-T-Ω₂²`, `Lg-Ω₂ω`, `Lg-Ω₂²`, `L2`, `L3`, `L4`, `Sup`, `L4₁`, `s<μ`, `Supμ`, `Supμ-Ω₂`, `Sup-Ω₂`, `Sup-Ω₂+Ω`, `need-1`.
+- 测试: 相邻各站形状在深度 4 到 10 处分开.
+- 判断: 读法 `T-Ω₂` = ψ₀(Ω_{Ω₂}) 到 `T-Ω₂²` = ψ₀(Ω_{Ω₂²}); `Cut₁` 在 `hLim` 处取前缀不取差, 值不忠实.
+- 第一个障碍: 一切级一个折叠要 `Need` (种类结构的对应, k ≥ 2 未造; `Lev` 内部种类与 U 的种类不定义相等); 新种类上的回灌算子; 值.
+- 翻译账: 攀爬, 提供信息. 行数 (层 1/2/3/加增长): 225 / 988 / 996 / 1347.
+
+## 2026-11-05 BrwWf: View 的部分良基 (判决: 三处都成立)
+
+入口 `OCF/Align/BrwWf.lagda.md`, 另有 Def, Rank, Read, Zero, Ht, OneRank, One, Neg (598 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+
+- 定理: `measure`, `<ₛ-wf`, `wf₀`, `view₀ᵂ`, `wfᴴ`, `viewᴴᵂ`, `Rv` (无条件), `Ksuf`, `Jle`, `CKs`, `wf₁`, `view₁ᵂ`, `rd≈`, `rd₀≈`, `rd₀≅`, `fgh₀≡`, `rd₁≈` (前提 `HW`).
+- 否定: `no-strict₀`, `no-wf-⊏ᵥ` (只否定这两种度量).
+- 测试: `test-ω`, `test-ω+1`.
+- 判断: 秩的比较 ⊑ 可作树侧合法性标准的候选; 值一致要 `HW`, 递归只要 `Rv`, 两件事分开了.
+2026-11-05 续派 HtTowerN (Need 对一切 k, 新种类上的回灌, 一切级一个折叠) 与 BrwHW (折叠输出是否满足 HW, 让第 1 层 View 无条件).
+
+
+## 2026-11-05 LFRe: 重开一次封闭的层号 (判决 PARTIAL)
+
+入口 `OCF/Align/LFRe.lagda.md`, 另有 Ty, Tower, Br, Neg (466 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext, 不开 K; 闭包干净 (没有导入旧 LevelFix/LevelNoK/NoKCert).
+
+- 定理: `LH`/`Lv` 编译通过 (正性、停机直接过); `E-rbl`, `E-lvl`; `Ω̂-suc`, `Ω̂-⊲`, `Lg-Ω̂`; `tw-st`, `Lg-Λ`, `fix-form`; `Lg-ΩΛ+1`, `Lg-fix`, `Lg-Λ₂`, `Lg-Λn`; `cp-Ω3-Ω2` (旧否定的反面, 世界取代守卫); `cmpL`; `Lg-ofA`, `Lg-toA`, `Lg-ofH`; `Lg-chain`, `Lg-chainω`; `toH-⊲`, `Lg-toH`; 闭项 `ψ₀ᴸ`, `ψ₀Ω₁`, `ψ₀Ω₁+1`, `ψ₀Ω₁·2`, `ψ₀-chainω`, `Lg-ψ₀ᴸ`, `fgh`.
+- 否定: `no-Fr-tw3`, `no-Fr-Λ`, `no-canon` (前提有见证 `Lg-Wn`; 对照 `Lg-dup`), `no-bare`, `no-retract-SL`.
+- 旧障碍: `Un` 不出现; `no-HS→Lgl` 绕过 (链点由和读回); `no-cp-Ω3-Ω2` 由世界取代守卫.
+- 第一个障碍: 接受第 1 层以上种类的折叠 (同 `HtTowerF`); 若折叠对一切 `S : KS` 写成, 在 `SL` 上实例化即得 ψ₀Λ 的闭项 (判断). 已把这一点转告 `HtTowerN`.
+- 没有 `HB U → HB SL` 的映射 (要定义相等或函数外延; 判断不便宜).
+
+
+## 2026-11-05 EboLean: 记号侧标杆的精简重写 (判决: 完成, 是上界)
+
+入口 `OCF/Align/EboLean.lagda.md`, 另有 Def, Base, View, Trian, Omega, Bach, Closure, Tau, Tree, Lab, Cmp 与 `EboLean/OT/` (归档 `Mahlo.Inacc` 的删节拷贝, 36 个文件). 主审复核: 删全部 EboLean 接口文件后编译 `EboLeanLab` (42 秒) 与入口, 退出码 0; `EboLeanCmp` (要归档副本) 退出码 0; 48 个文件代码块无禁用构造; 选项: 新写的十个文件 `--safe --without-K --lossy-unification`, OT 拷贝保留归档的 `--safe --cubical-compatible` (加 lossy 时 `Lex` 合一出错, 纯 without-K 时 `Facts3` 20 分钟检查不完; cubical-compatible 蕴含 without-K). 主审重跑切片, 数字一致.
+
+- 定理: `wfNF′`, `𝕎τ`, `τ-NF`, `τ-mono`, `cl-fsn-NF`, `trian-fsn`, `Ctbl-fsn`, `hc`, `EBO-tree′`, `fgh-EBO′`, `lab-NF′`, `ebo-lab′`; `fsn≡`, `tree≅`, `fgh≡` (与 `WfFsn` 版逐点相同).
+- 行数 (切片): 120 / 131 / 6524 / 加标签 6544. 分组: EBO 定义 156, Setzer 句法与序 1990, 句法事实 960, 突出集 2300, τ 与拉回 246, 封闭性 820, 树与 FGH 52.
+- 更正: 旧版切片看不见模块应用 `import WO.Main facts`, 漏了句法事实; 主审补根 `FactsImpl.facts` 重算, 旧版是 7941 (含标签). 先前记的 6473 作废.
+- 判断: 直接对 EBO 做突出集 (路线 ii) 估计第 3 层 3500 到 4800 行.
+
+## 2026-11-05 KNest2: 嵌套 nκ 归结为一格 (判决 PARTIAL)
+
+入口 `OCF/Align/KNest2.lagda.md`, 另有 Glue, Sound (180 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext.
+
+- 定理: `kstep : CellStep → KStep²`; `snd²`, `nest-mono²` (条件 `CellStep`); `nest-diag²`, `nest-rel²` (无条件).
+- 第一个障碍 (判断): 一格之内的首对齐; 尾对齐与经 `lim-leP` 的值比较都喂不进; 要两格坐标由不含左边极限截断的结构关系相关, 这正是 `MonoPort2` 在做的东西的一种 (已转告).
+
+
+## 2026-11-05 HtTowerN: 塔的有限级与第 2 层回灌 (判决 PARTIAL)
+
+入口 `OCF/Align/HtTowerN.lagda.md`, 另有 Stage, Read, Fb, Test. 主审复核: 删接口文件后编译入口与 Test, 退出码 0; 无禁用构造, 无 Funext; 闭包干净. (旧文件 `HtTowerNeg` 前缀碰巧相同, 本轮未动.)
+
+- 定理: `need′`, `wmatch′` (对一切 j < k, 一条递归), `same-kind`, `sat₀`, `sat₁`, `rd₂-fst`, `Lg-rd₂`, `Lg-nbAᵗ`, `fb₂-st`, `lΛω₂`, `Λ₁-ΩH`, `Lg-T-fb₂ω`, `Supμ-fb`, `Sup-fb`.
+- 否定: `no-wmatch` (逐分量的并 `U′` 上, 两个方向同时保界的世界对应不存在; 只否定这一对种类的这种形状).
+- 判断: 没有照主审建议在 `LFRe` 的 `SL` 上写 "对一切 S 的折叠", 因为 `SL` 的世界也是独立分量的积, 保界会落到 `no-wmatch` 的形状; 改走嵌套世界, 对角要 "一级一级扩张生成" 的相干世界. 读法 `T-fb₂ω` 为 ψ₀(Ω_{Ω₃}).
+- 第一个障碍: 相干的并 (对角); 一切级一个折叠; 第 k 层回灌.
+
+
+## 2026-11-05 MonoPort2: 第二站 (判决 PARTIAL)
+
+入口 `OCF/Align/MonoPort2.lagda.md` (820 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+- 定理: `cong0₂`, `chain₂`, `snd` (条件 `HA₁`), `HA-Step₁`, `chainLe₁`, `mono₂`, `grow₂₃`, `grow₀₃` (后四条无前提).
+- 范围: Λ = 2, 世界固定, 分支只在 self 上; 关系用到左边极限截断, 不能直接接 `KNest2.CellStep` (判断).
+- 未做: R_{c,c′} 的一步 (两边动作不同, 读数与状态对层数参数化).
+
+## 2026-11-05 BrwHW: 折叠输出的世界稳定 (判决 PARTIAL)
+
+入口 `OCF/Align/BrwHW.lagda.md` (256 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包加 `CvFold` 后干净.
+- 定理: `Sh-dif`, `Ic`, `R2-ni`, `R2→WSq`, `R2-Ω`, `HW-Ω`, `⊕R`, `StepR`, `cvR`, `RunR`, `HW-⊕`, `HW-Step`, `HW-cv`, `HW-Run`, `Good-*`, `HW-Kn`, `R2-Kn`, `HW-A`, `HW-Pk`, `view-A`, `view-Pk`; 化归 `HW-mid`.
+- 暂停: nκ 段 (节点的 `WSq` 反方向要分支对层的值单调; 分支的 `HW` 要把 `RunR` 推到整个折叠). 第 2 层的 `Rv` 未做; `HtFeedFold` 上还没有第 1 层 View.
+
+作者 2026-11-05 纠正: 标杆任务原话是 "参考现有代码重写一遍 EBO-tree", 主审派 EboLean 时放宽成 "可拷贝删减", 所以 EboLean 只是上界. 已派 EboLean2 (为 EBO 从头重写, 现有代码只作参考).
+2026-11-05 派 StrRel (只用结构规则又对折叠输出封闭的关系, 接 CellStep) 与 CohW (相干世界, 塔的对角, ψ₀Λ 闭项).
+2026-11-05 经验手册 Survey/EBOHandbook.md 已审核; 采纳提议 A1-A6 (AGENTS), B1-B8 (记忆), C1 (地图); C2 许可证待作者定.
+作者 2026-11-05 定: Bedrock 的性能手册不进本仓库; 拷贝已删 (正文与原文逐字节相同, 原文在 Bedrock), 引用改指 Bedrock 的 dev/cubical-agda-performance.md.
+
+## 2026-11-05 EboLean2: 路线 (ii) 暂停 (工作量, 不是否定)
+
+入口 `OCF/Align/EboLean2.lagda.md` (63 行代码, 全新写, 不导入归档或 Setzer 拷贝). 主审复核: 删接口文件后编译, 退出码 0; 无禁用构造, 无 Funext.
+- 定义: 按层号索引的 C 集 (Setzer Lemma 4.7(a) 变成定义), `M`, `τ`, `𝒲`, `Ag`, `𝕎`. 定理: `C-all`, `lt⇒GB`, `GB⇒lt` (Setzer Remark 2.15(c) 的 EBO 版, 25 行, 归档版 241 行).
+- 判断: 良基部分约 1650 到 1900 行, 第 3 层合计约 2700 到 3300 (中位约 3000), 对比 EboLean 的 6524; 基本列版的 W 卡在不动点的分层 (无编译否定). 接手顺序见入口 §3. 已续派 EboLean3.
+
+## 2026-11-05 SealCheck: 封存族可编译核查
+
+报告 `Survey/SealCheck.md`; 脚本 `Survey/scripts/sealcheck/` (主审已改成不含绝对路径). 主审复核: 抽查 `EmbVV`, `OrdLabAccept`, `NoCumNodeAccept` 重编, 退出码 0.
+- 结果 (接口检查, 不是从头复核): §1 到 §6 与 §8 的 41 个入口 (不含 5 个大堆入口) 退出码全 0, 合计 406 秒, 最大常驻 6.0G; `BTBOVal` 一族四个模块的接口重建. 参照侧 `EboLean`, `WfFsn`, `EboLeanCmp` 都是 0. 自封存提交以来被跟踪的源文件没改过.
+- 需单独时段: `LadderOrd`, `CrossM`, `CrossNext`, `WorldTH`, `WeakBridge`.
+- 判断: 作尺子, §1 已可交给 `lab-NF`; 但 §1 不能降为 "不必可编译" (36 个封存模块导入它, 死路索引 10 条否定在 §1); 23 个模块实为活集依赖. 建议的三类政策待作者定.
+作者 2026-11-05 定: 封存族维护政策照 SealCheck 建议采纳 (三类; 里程碑接口检查; 新验收用 lab-NF), 写进 RouteSeal 末节.
+
+
+## 2026-11-05 MonoPort3: 与关系无关的核 (判决 PARTIAL, 目标站未做)
+
+入口 `OCF/Align/MonoPort3.lagda.md` (436 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+- 定理: `OutLaws`, `PreLaw`, `LimLaw`, `CxLaws` (定义), `PreOut.O≡`, `rPre`, 和结构十四种情形 (条件: 律与动作前提), `OL`, `pre≼`, `lim≼`, `cl`, `branch`, `niS₂`, `snd₂` (条件: 三条 HA).
+- 接口: 只有 `limS` 用左边极限截断; 第 0 层坐标按值对齐时经 `Gen` 规范形要 `lim-leP` (判断). 要去掉, 第 0 层坐标也得按结构对齐 (正是 `StrRel` 的题目).
+- 未做: `ChainLe (hs (hs hz))`, `MonoStep 3`, TΛ 3 < TΛ 4 (缺两关系之积、按节点层对目标层分类的节点一步、三读数版第 0 层).
+- 技术: 匹配带下标的 `IsSelf` 要消去 `W ≡ W`, 不开 K 被拒; 改用世界与路径参数.
+
+
+## 2026-11-05 GenAbs: 规范形论证对树类型抽象 (判决 HOLDS)
+
+入口 `OCF/Align/GenAbs.lagda.md`, 九个文件. 主审复核: 删接口文件后编译入口与两个对照文件, 退出码 0; 无禁用构造, 无 Funext; `GenAbsCanon` 闭包只有 `CumReadCF`, `TLRuleSpec`, `TLRuleSum`, `BTBO`, `Free.Level` 与标准库.
+- 定理: `Ops.sum⊞`, `Ops.smono`; `Canon.Gen.One.canon`, `Two.cong0` (条件, 十四条结构律); `FromOld.cong0ᵒ`, `canonᵒ` (与原文同型); `σS`, `σH`, `σT`; `GenAbsHt.cong0`, `chain`; `GenAbsM2.cong0₂`, `chain₂`; 对照 `Rl≡`, `I≡` 与互为居民.
+- 行数: 两处合起来省 111 行; 只有一个实例时多 30 行. 去掉的是树与树之间的桥 (`toS`, `ofS`, `rt`, `rt′` 等), 不是记号到树的翻译.
+- 未做: SumOne 一侧的使用者未迁; `GenAbsM2` 闭包里仍经 `MonoPort2Rel` 取 `val`.
+2026-11-05 主审把 Survey/scripts 下切片与生成脚本里的绝对用户路径改成相对路径, CommunityCubical.md 的两处本地路径改成占位 (结论未改). 注意: 早先的提交历史里仍有这些路径 (未推送).
+2026-11-05 派 DiagK: 对角的另一条思路 (不造相干的并; 每个有限级各自折叠出可数闭项 t_k, 再在可数层取 ℕ-对角 alim t, 合法性由 t_k 作 t_{k+1} 的字面前缀给出), 与 CohW 并行.
+
+
+## 2026-11-05 CohW: 相干世界 (判决 PARTIAL)
+
+入口 `OCF/Align/CohW.lagda.md`, 另有 Ty, L, Tower, Neg, Gl, Upd (668 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+- 定理: `coh-pj`, `kmC`, `wmC`, `rcoh→`, `rcoh←`, `coh` (refl), `kmU`, `wmU`, `needU`, `wmatchU`, `tri`, `yes-wmatch`, `same-bd`, `Lg-θ⋆`, `Lg-Λ⋆`, `accΛ⋆`, `κL-layer`, `SL⋆`, `cmpL⋆`, `glob`, `globPr`, `cross`, `Lg-Ω̂`, `Lg-Λ`, `Lg-Λn`; 条件定理 `upd→wdec`.
+- 否定: `no-cross→/←`, `no-crossA→/←`, `no-route`, `no-route←` (只说 `U⋆` 里的两对种类; 前提可满足).
+- 第一个障碍: `SL⋆` 上的折叠要 "恰好换一层的界", 要判定层号相等 (`upd→wdec`); 按位置存界有 `no-wmatch`/`no-cross`, 按层号存要判定 (不能兼得是判断). 可试的出路 (判断): 分支只取一切更大的世界, 走法不造世界; 沿层号路径存元组, 用 `glob` 对齐; 统一升高一切层的界.
+
+
+## 2026-11-05 StrRel: 结构型且对折叠输出封闭的关系 (判决: 范围内成立; 接 CellStep 部分)
+
+入口 `OCF/Align/StrRel.lagda.md`, 七个文件 (1062 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext, 代码里无 `lim-leP`; Def, Zero, Sound, Head, Neg 的导入不含 `DValCanon`, `MonoPortZero`, `MonoPort2Zero` (主审查了导入行).
+- 先试否定: 逐句查 `HtFeedFold` 在 Λ = 2, 世界固定, 分支在 self 范围里的子句, 没有一句要左边极限截断.
+- 定理: `refl₀`, `val₀`, `snd₀`, `chainˢ`, `snd₁` (条件), `chainLeˢ`, `mono₂ˢ`, `grow₂₃ˢ` (无前提), `head`, `headAdm` (首对齐与领先量; `adm≡` 说明就是 `KNestAdm.Adm`).
+- 否定: `vhead→LPO` (只看值给出对应位置的过程推出 LPO).
+- 未走通: `CellStep`. 要 (1) 把 KNest 一族的语义 `OutLeᴬ` 改成给出结构关系的观测, 带领先量; (2) `SumOneFold.Walk` 沿 `sum-fst` 与 `Sp` 位置的桥; (3) 从 SumOne 折叠移到 HtFeed 折叠. 估计 600 到 900 行 (判断). 已续派 StrRel2.
+
+
+## 2026-11-05 MainView: View 落到主线类型 (判决 PARTIAL)
+
+入口 `OCF/Align/MainView.lagda.md`, 六个文件 (821 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+- 定理: `Skel.WithSeg.view`, `Dec.wf` (对一切 `D₊`); 主线第 0 层 `view₀ᴴ`, `wf₀ᴴ`, `view₀ᴴᵂ`, `rd₀≈ᴴ`, `rd₀≅ᴴ`, `fgh₀≡ᴴ`, `fgh-TΛ` (无条件); 第 1 层 `view₁ᴴ`, `rd₁≈ᴴ` (条件 `HWᴴ`), `wf₁ᴴ`, `view₁ᴴᵂ`, `HW-Ωᴴ`; 折叠输出 `RunR`, `HW-Run`, `Node.HW-RunNi` (条件), `N1.HW-RunNi₁`, `hA-Act`, `HW-ΔΩ₁`, `view-ΔΩ₁`; `HtTowerFTree` 第 0 层 `view₀ᵀ`, `wf₀ᵀ`, `fgh₀≡ᵀ`, `no-nμ₁`.
+- 测试: `test-ω`, `test-ω+1`.
+- 暂停: 下标塔第 1 层 View (成对的世界, 读法要给 `LgB`); nκ 段的 `HW`; 第 1 层输入在目标第 1 层上的 rise 链 (要结构的跨世界关系, 判断不含 nκ 约两三百行).
+
+
+## 2026-11-05 StrRel2: 桥与首对齐落到走法 (判决 PARTIAL)
+
+入口 `OCF/Align/StrRel2.lagda.md` (284 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+- 定理: `WP`, `lev`, `lg-tr`, `toW`, `fromW`, `toWᴼ`, `fromWᴼ`, `walkHead`, `walkHeadᴼ`.
+- 否定: `phead→LPO` (第 0 格任意字面路径加值对齐的过程推出 LPO).
+- 未走通: `CellStep` (格内语义换成结构观察: 动作的结构前提, SumOne 折叠上两边世界不同的结构关系, 上下文带状态 z 分量的结构关系, 走法沿 `⊲-tr` 的输出拆分), 估计 1200 到 1800 行.
+作者 2026-11-05 设目标: 写出 ψ₀Λ 的候选闭项.
+2026-11-05 为目标 "写出 ψ₀Λ 的候选闭项": DiagK 改为闭项优先; 续派 CohW2 (在 SL⋆ 上写折叠与对角闭项, 绕开 upd→wdec). 两路并行.
+2026-11-05 作者: 继续同步推进第 4 层. 派 StrRel3 (CellStep 的结构语义), MonoPort4 (结构关系接核, 高度 3 到 4 并推到一切有限高度), HtVal (高度树一族第一条序数值定理, T-Ω 对 BTBOᴵ, 下界优先).
+
+
+## 2026-11-05 EboLean3: 标杆定稿 (判决 HOLDS)
+
+入口 `OCF/Align/EboLean3.lagda.md`, 另有 Base, Close, Dist, Omega, Tree, Lab, Cmp. 主审复核: 删接口文件后编译入口, `EboLean3Lab`, `EboLean3Cmp`, 退出码都是 0; 无禁用构造, 无 Funext; 导入不含 `EboLean/OT`, `EboLeanTau`, 归档 (主审查了导入行; `EboLean3Tree` 闭包 25 个模块, 本地 14); 主审重跑切片, 数字一致.
+- 定理 (无前提): `𝕎-all`, `Ag𝕎`, `wf : NF t → Acc′ t` (一切标准形), `hc`, `EBO-tree″`, `fgh-EBO″`, `lab-NF″`, `ebo-lab″`; 对照 `fgh-irr`, `fgh≡` (与 τ 路线逐点相同).
+- 行数 (切片): 120 / 131 / 1513 / 加标签 1533. 良基部分 487 (新写 441 + EboLean2 §1 46); 复用占第 3 层三分之二 (封闭性 579 最大).
+- 估计与实际: EboLean2 估良基 1650 到 1900, 实际 487; 估第 3 层 2700 到 3300, 实际 1513.
+- 意义: 树侧到第 3 层的标杆是 1513 行.
+
+
+## 2026-11-05 DiagK: 可数层对角 (判决 PARTIAL; ψ₀Λ 闭项只有条件版)
+
+入口 `OCF/Align/DiagK.lagda.md`, 六个文件 (378 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+- 定理: `Lg-Dg`, `pre-st`, `pre-strict`, `Dg≈sup` (条件: 上确界加法封闭), `Top.Lg-Tᴰ` (对一切 `Tower`, `LevelFold`), `Lg-blind`, 有限级 `Sn` 上按位置存界的 `upd`, `decK`, `rl-inj`, `wmS`, `bnd-up`, `Lg-Tdg₁`, `Lg-Tdg₂`; 否定 `glitch`; 条件定理 `updL′→wdec` (对一切 k).
+- 关键发现: "改一层要判定" 的陷阱不在一切级的并上, 在 `L′` 的第 1 级内部 (函数世界 `Lev (Ωtop (L′ k))`) 就出现; 可数层对角绕不开.
+- 闭项: `Top.Tᴰ towerL′ Fd` 条件于每级折叠 `LevelFold`, 读法 (判断) ψ₀Λ; 无条件的没有.
+- 行数: 条件候选 (不含折叠) 385; `Tdg₂` 1086.
+
+
+## 2026-11-05 MonoPort4: 结构关系接核, 一族的底 (判决 PARTIAL)
+
+入口 `OCF/Align/MonoPort4.lagda.md` (149 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext, 不经 `Gen`; 闭包干净.
+- 定理: `cl₀`, `rO` (条件), `snd₀ᴳ`, `chain₀ᴳ` (条件: 三条 HA 与观测律; 对一切高度, 世界, 观测), `O₂`, `pre₂`, `snd₀²`.
+- 未做 (预算用尽, 不是否定): 第三站 (⊑₁ 加 nw, ⊑₂, 三层观测, 按节点层对目标层分类的节点一步, 外层链); 一步 c → c+1; 跨世界版. 估计约 600 行. 已另派 MonoPort5 接手.
+
+
+## 2026-11-05 StrRel3: 格内语义的结构版 (判决 PARTIAL)
+
+入口 `OCF/Align/StrRel3.lagda.md` (206 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext, 不经 `DValCanon`/`KValZero`; 闭包干净. (另核: `MonoPort4` 里的 `Gen` 是公共核 `MonoPort3Gen` 的别名, 不是规范形.)
+- 定理: `reflᴼ`, `toH`, `snd0`, `chainᴼ` (条件: 结构的 HA0), `ok↾`, `sndˡ` (条件 `Ok`).
+- 未走通: `CellStep` (缺件: 和相关引理 300 到 500 行, 路径对齐, 结构版 cv 与路径一致约 150 行). 已另派 StrRel4 接手 (新智能体).
+
+
+## 2026-11-05 DiagK2: 回灌不改单个分量 (判决: 暂停)
+
+入口 `OCF/Align/DiagK2.lagda.md`, `DiagK2Raise` (41 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext.
+- 定理: `mapA-≤`, `lg-mapA`, `mapA-at` (refl), `raiseLev-≤`, `raiseL′`.
+- 判断: 闭项目标的障碍收缩到一处, `Lev` 新种类的回灌; 三条路各卡在 `updL′→wdec`, 壁垒 (无字面公共上界), 反向搬运. 可试: (ii) Lev 新种类只在第 0 层目标上回灌, 更高目标保留; (iii) 单调分支族的大世界到小世界搬运. 整个第 1 级折叠约千行 (判断), 标杆 1513 下要单独立项.
+2026-11-05 派 DiagK3 (新智能体): 按 DiagK2 的出路 (ii), Lev 新种类只在第 0 层目标回灌, 写 L′ 1 的折叠, 再对 k 一致, 得无条件的 Top.Tᴰ (ψ₀Λ 候选闭项).
+
+
+## 2026-11-05 CohW2: 并上折叠的世界操作 (判决: 未写出闭项; 接口内否定)
+
+入口 `OCF/Align/CohW2.lagda.md`, 另有 Need, Lim, Grow (263 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造; 函数外延只作否定定理的前提 `FE` (`ℕ → LH`), 不进成品; 闭包干净.
+- 定理: `wf`, `irr`, `raiseFin`, `sel-at`, `sel-off`, `raise-nat`, `Lc-*`, `raise-Lc→wdec` (无 FE), `lim-layer`, `Lg-lim-layer`, `Lg-hα`, `⊞⁰-fst`, `growA`.
+- 否定 (条件 `FE`): `raise-Lc→WLPO`. 只否定 `RaiseAt` 这个接口; "折叠必须用 `RaiseAt`" 是判断, 所以不写单一并上的折叠已否定 (要 Fable 审核才能写).
+- 意义: 与 `DiagK` 的 `updL′→wdec` 同向; 分界在极限坐标, 已在 Ω_{Ω₁} 之下; `growA` 支持 `DiagK3` 的出路 (ii) (只在第 0 层回灌, 增量可数).
+
+
+## 2026-11-05 StrRel4: 对齐作为数据, 一格成立 (判决 PARTIAL)
+
+入口 `OCF/Align/StrRel4.lagda.md`, 另有 Walk, Gen, Pr (347 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 用扩展的 --only 表闭包干净 (`DValCanon` 等经 `KValSound` 的 `Sd`/`Ok` 进来, 与 `KNest2` 相同, 是继承的).
+- 定理: `Al`, `walk` (条件), `cellᴬˡ : CellStepᴬˡ` (无参数), `vs`, `adm-back`, `adm-comp`, `Tail`, `Al-map`, `Al-tr`, `lg-tr`, `lgsf`, `ext`, `cat`, `gen`, `alSucc`, `alZero`, `_⊑ᴾ_`, `fromᴼ`, `vsᴾ`, `genᴾ`, `alSuccᴾ`, `alZeroᴾ`.
+- 意义: 对齐从要判定的值问题变成推导里的数据 (`phead→LPO` 禁止由值求对齐); 一格之内去掉了 "树世界可比".
+- 未走通: 嵌套 nκ 无条件可靠; 缺: walk 的结构结论 (约 150 行), 分支与状态的结构版 OutLe, 结构版 cv (约 150), 外层剩下路径的对齐 (300 到 500).
+2026-11-05 续派 StrRel5: 结构版 walk/OutLe/cv 与外层剩余路径对齐, 目标嵌套 nκ 无条件可靠.
+
+
+## 2026-11-05 DiagK3: 出路 (ii) (判决: 第 0 级成立; 一切 k 暂停)
+
+入口 `OCF/Align/DiagK3.lagda.md`, 另有 Zero, Grow, One (283 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+- 定理: `true-below`, `noLev₀`, `bdBot`, `Lg-pr₀`, `fold₀`, `Lg-fold₀`, `pr₀-top`, `t₀`, `Lg-t₀`; `growL′`, `growL′-≤`, `lg-growL′`, `at-κH`, `at-lev`, `at-A`; `lev₁`, `lev₂`, `head₁`, `head₂`, `noNew-emb`, `⊞-noNew`; 条件 `Fold₊`, `mkFd`, `Lg-Tᴰ₊`, `t-zero`.
+- 判断: 出路 (ii) 写出的 `Fold₊` 读不到 ψ₀Λ (同一增量进不了坐标为更高高度的 `Lev` 种类); `t₀` 读 ψ₀(Ω_{Ω₂}). 行数: `t₀` 层 3 1081, `Tᴰ₊` 1138, 都低于 1513.
+- 下一步 (判断): 回灌坐标定义成 "旧界 ⊞ 翻译后的增量", 恰好位置是 refl, 忠实只差互模拟; 开放: 对不上的分量里翻译结果是否合法.
+
+
+## 2026-11-05 MonoPort5: 第三站 (判决: (A) 成立, (B) 暂停)
+
+入口 `OCF/Align/MonoPort5.lagda.md`, 七个文件 (607 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净 (`DValCanon` 经已有的 `MonoPort3Gen` 导入行带进, 未使用).
+- 定理: `mono₃` (MonoStep 3, 无前提), `grow₃₄`, `grow₀₄`; `RelM`, `O₃`, `pre₃`, `IntS`, `IntM` (条件), `chainG` (条件), `snd₁`, `snd₂` (条件: 三条 HA).
+- 未完成: (B) 一切有限高度的一步 c → c+1 (层号变量时 `rkT`/`cmpH`, 位置 `kk`, `accL` 不再定义性化简; 实例 ≥ 4 要对层对双重归纳的 `IntM`). 工程障碍, 不是数学障碍 (判断).
+- 估计与实际: 估约 600, 实际 607.
+
+
+## 2026-11-05 DiagK4: 翻译后的增量 (判决: 暂停)
+
+入口 `OCF/Align/DiagK4.lagda.md`, `DiagK4Neg` (36 行代码). 主审复核: 删接口文件后编译, 退出码 0; 无禁用构造, 无 Funext.
+- 否定: `¬Lg-Tr₀` (底分支倒译使翻译结果不合法; 只否定这种倒译). 定理: `src-legal`, `lw⋆`, `b₁`, `Lg-const`.
+- 判断: 忠实又单调的倒译要判定高度是否相等 (同 `updL′→wdec` 一族); 读法未到 ψ₀Λ.
+- 小结 (主审, 判断): ψ₀Λ 闭项的几条路 (CohW2 的 `raise-Lc→WLPO`, DiagK 的 `updL′→wdec`, DiagK3 的 `noNew-emb`, DiagK4 的 `¬Lg-Tr₀`) 都撞在同一处: 回灌进以高度为下标的种类时, 要么判定高度相等, 要么有损. 派 Fable 5.1 做针对这一处的设计审查.
+
+
+## 2026-11-05 StrRel5: 嵌套 nκ 结构可靠 (判决: 主线嵌套族上成立)
+
+入口 `OCF/Align/StrRel5.lagda.md`, 另有 Walk, Suf, All, Nest (386 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 用扩展的 --only 表闭包干净. 主审读了 `Sem k` 的陈述.
+- 定理: `walkˢ`, `walkᵠ`, `cellᵠ`, `walkᴬ`, `cellᴬ` (条件: `adv`, `br`), `rfx`, `fcs`, `fcl`, `advA`, `cvR`, `stepR`, `drpR`, `sem : ∀ k → Sem k` (无参数), `sem-val`, `top`.
+- 范围 (主审读陈述后注明): 两边都是同一族 `nest k`, 比较的是不同世界 (W ≤ W′), 对齐的路径, 结构相关的状态; 这是嵌套 nκ 对世界与状态的单调, 不是两棵不同树的比较. 一般分支族 (`KNest2Sound` 的带下标 κ 规则) 未做; 第一个障碍是一般分支族下 `ni` 的一切路径版 `chainᴼ`.
+- 意义: 值语义里 "树世界可比" 与 `CellStep` 两个前提都换成了推导携带的结构.
+
+
+## 2026-11-05 StrRel6: 两棵不同树 (判决 PARTIAL)
+
+入口 `OCF/Align/StrRel6.lagda.md` (106 行代码). 主审复核: 删接口文件后编译, 退出码 0; 无禁用构造, 无 Funext.
+- 定理: `_⊑ˢ_` (n0ˢ, n1ˢ, ⨾ˢ, nlˢ, nwʳˢ, prˢ, κˢ), `snd : x ⊑ˢ x′ → SemT x x′` (无参数, 两棵树可不同, 含嵌套 nκ), `sem′`, `diff`.
+- 范围补充 (子智能体更正主审记录): StrRel5 的 `sem` 两边动作都是 `Step`, 树世界 V, V′ 任意, 量化对齐的路径 q, q′.
+- 未做: 传递与 ni (要结构版 `coh₁`: 自洽的状态跑任意树输出也自洽), 左边 nw; 只在 `SumOneFold` 上, `HtCrossInst.MonoStep` 未解决 (要移植到 `HtFeedFold`).
+
+
+## 2026-11-05 HtVal: 高度树一族第一条值定理 (判决: 未走通, 暂停)
+
+入口 `OCF/Align/HtVal.lagda.md`, 另有 Split, Act, Neg, Test, Accept, AcceptE (264 行代码). 主审复核: 删接口文件后编译入口与 `HtValAccept`, 退出码 0; 无禁用构造, 无 Funext; 树侧闭包 (加 `EndLowT`) 干净. 子智能体报告一次把临时输出写进 `/tmp`, 已删.
+- 定理: `Split.Ψ≡`, `v-suc`, `a-suc`, `T-Ω≡`, `Ωd≡` (refl), `T≤lim`, `lim≤T`, `v-step`, `v0≤v0′`; 验收 `T-Ω≈lim`, `T-Ω′≈lim`, `swapLo₀`, `swapHi₀`; 条件 `lo`, `hi`, `T-Ω≈B`, `loᴱ`, `B≼ᴱ`, `hiᴱ`.
+- 否定: `no-pointwise`, `T-Ω≇T-Ω′`.
+- 测试: `T-Ω′` 与 `SumOne.T₀` 宽 3 深 12 同形.
+- 缺口 (判断): 一族在一切可数层上的差树关系, 对 HtFeedFold 输出封闭且世界可变 (与 MonoPort 第三站, KValC 同一缺口); `SwapHi` 约 1000 行, `SwapLo` 要链错位加重排, `Port` 800 到 1500 行.
+- 第 4 层逼出的定义改动: 无.
+
+
+## 2026-11-05 ψ₀Λ 闭项那道墙的设计审查 (Fable 5.1)
+
+报告 `Survey/ClosedTermReview.md`, 实验 `OCF/Align/ClosedReview1.lagda.md` (只导入标准库; 主审复核: 删接口文件后编译, 退出码 0, 无禁用构造). 实验定理: `decPos`, 位置处 `upd`/`at`/`off`, `push`/`wk`/`bnd-wk` (refl), `cmpK`; 反面 `find→dec` (按层号找位置推出层号相等可判定).
+- 审查结论 (判断): 是一堵墙, 落在 "积世界 + 选择性更新" 上; 第 0 层的回灌不选择、不读分量, 积与选择是 step/sup 之后才引进的; 不是壁垒的推论. 推荐 D1 (望远镜世界, 位置作种类), D2 (不读界, 链从 0 起, 世界只增长) 并行.
+- 已派 TelW (D1) 与 ChainZ (D2).
+
+
+## 2026-11-05 StrRel7: 第 1 层结构语义补全 (判决 PARTIAL)
+
+入口 `OCF/Align/StrRel7.lagda.md`, 另有 Coh, Walk, Zero, Snd (499 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+- 定理: `rfP`, `alR`, `coh₀`, `coh₁`, `cA-step`, `ch∅`, `reach`, `cohWlk`, `walkᶜ`, `cellᶜ`, `snd0` (八条规则), `snd⁺` (无参数), `emb`, `T→S`, `ex-ni`, `ex-tr`; 否定 `¬Al-lft`, `¬Al-nw` (只否定对齐方法).
+- 未走通: 左边 nw; 移植到 `HtFeedFold` 与 `MonoStep` (要逐层关系, 一切目标层读数的状态关系, 以及 cv 在高层读数两边包 nw, 即左边 nw 问题). 估计 (a)(b) 600 到 900 行, (c) 未知.
+
+
+## 2026-11-05 MonoPort6: 一切有限高度严格增长 (判决 HOLDS)
+
+入口 `OCF/Align/MonoPort6.lagda.md`, 七个文件 (907 行代码). 主审复核: 删接口文件后编译入口, 退出码 0, 12 秒; 无禁用构造, 无 Funext, 代码里不引用规范形与左边截断; 闭包干净. 主审读了 `grow` 的陈述: 对一切 n, `asuc (TΛ (N n)) ≤ TΛ (N (suc n))`, `N n = hsⁿ hz`.
+- 定理: `Rel`, `lowOut`, `lowIn`, `O`, `preO`, `HAK`, `B.snd₀`, `chain₀`, `CxS.*`, `IntMK`, `IntMS`, `chainK`, `brnK`, `Node.step` (条件), `sndS`, `sndArg` (前提 `Fin`), `Top.chainLe`, `Top.monoS` (前提 `FinH`), `grow`, `grow₀` (无前提), `mono₃′`, `grow₄₅`, `grow₁₀`.
+- 工程教训: 递归调用写进 `where` 会被提升, 终止检查拒绝; 写在子句体里.
+- 未做: 极限高度 `hl` (两边嵌入位置不同; 第 ≥1 层关系是单世界的).
+- 这是值上的增长定理, 不是强度的序数值验收.
+
+
+## 2026-11-05 StrRel8: 左边 nw (判决 PARTIAL, 否定为主)
+
+入口 `OCF/Align/StrRel8.lagda.md`, `StrRel8Neg` (86 行代码). 主审复核: 删接口文件后编译, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+- 否定: `¬nwˡ` (反例: 左 `nκ (λ _ _ → n1)` 在树世界 0, 右同形在树世界 1; 运行世界都是 1, 路径 self, 对齐 `aS`, 空状态; 左边读数非零, 右边全零). 也推翻两边 nw 而前段不对齐的版本. 不推翻同一棵树的 "nw p x ⊑ x".
+- 定理: `Nz`, `nzm`, `chk`, `chk-ok`, `IsSelf`, `wz`, `isS`, `q0`, `pt0`.
+- 未做: 树世界处也带领先量的语义与带前段对齐的 nw 规则; 之后逐层关系族, 一切目标层的状态关系, cv 的双边 nw, 移植到 `HtFeedFold` 与 `Ωᴴ` 处的 `MonoStep`.
+
+
+## 2026-11-05 TelW: 设计 D1 望远镜世界 (判决: 未走通, D1 未被否定)
+
+入口 `OCF/Align/TelW.lagda.md`, 另有 Ty, Om, Neg (312 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext.
+- 定理: `cmpT`, `rais-at`, `rais-≤`, `Lg-rais`, `wk-⊲`, `Lg-wk`, `push-old`, `Lg-push`, `Lg-ιT`, `Lg-Ωp`, `TopNewSL` (对照), `cmpF-Γ₀`.
+- 否定: `no-all-fin`, `no-fixed-Ω`, `raise→¬cmp`, `sel→¬cmp`, `¬cmpF-Γ₁`, `exists→¬cmp`; 条件 `occ-find→dec`. 只否定 "世界 + 可入性" 这两个接口在 `ST`/`HB S⊥` 上的实例; 带推入构造子的高度类型没有写.
+- 判断: 墙挪了地方 (积的下标从层号换成推入的出现); 下一条引理是由外层界决定的界族在当前分支忠实, 其余分支单调合法 (命题 W′ 的 D1 版), 与 D2 合流.
+
+
+## 2026-11-05 StrRel9: 带领先量的语义与 nw 规则 (判决 PARTIAL)
+
+入口 `OCF/Align/StrRel9.lagda.md`, 另有 Walk, Snd, Nw, Ex (369 行代码). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext; 闭包干净.
+- 定理: `GoD.walkᵈ`, `cellᵈ`, `sndᴸ` (无参数), `emb⁺`, `top`, `snd-nwA`, `nwΣ′`, `ctx-nw`, `cv-read`, `ex-nw`, `ex-run`; 否定 `¬nwˡᴸ`.
+- 事实 (子智能体读代码, 未写成定理): `HtFeedFold.cv` 不给读数包 nw, 只换目标下标; StrRel7 说的 "cv 给高层读数包 nw" 只是 `SumOneFold` 的情形.
+- 暂停: 对层递归的关系族与语义 (600 到 1000 行), 移植到 `HtFeedFold` (800 到 1200), Ωᴴ 处的 `MonoStep`.
+
+
+## 2026-11-05 StrRel10: 动作与 Kp 的 nw (判决 PARTIAL)
+
+入口 `OCF/Align/StrRel10.lagda.md`, `StrRel10Kp` (42 行代码). 主审复核: 删接口文件后编译, 退出码 0; 无禁用构造, 无 Funext.
+- 定理: `nw-self`, `hxL`; 否定 `¬nw-tgt`, `¬rule-tgt` (只否定前段只做值比较的规则).
+- 暂停 (预算): 对层递归的 `Le`/`SemL`, 推广 `snd0`/`coh`/`GoD` 到第 k 层坐标, `Kb` 的叠加路径, 移植到 `HtFeedFold`, Ωᴴ 处的 `MonoStep`. 交接清单见入口.
+
+
+## 2026-11-05 ChainZ: 设计 D2 (判决: 未走通; 撞上编译过的否定)
+
+入口 `OCF/Align/ChainZ.lagda.md`, 另有 Fold, Closed, Stall, Neg, Test (447 行代码; `ChainZFold` 有约 135 行由脚本从 `HtTowerFFold` 原样抽取, 生成脚本已收进 `Survey/scripts/chainz/`). 主审复核: 删接口文件后编译入口, 退出码 0; 无禁用构造, 无 Funext.
+- 定理: `Lg-Z-Ω₂²`, `Lg-Zs-Ω₂²`, `stall`, `stall-out`, `dich`, `no-world`, `noNew⊲`, `reach-noNew`, `reach-lg`, `no-cell`, `no-chain`, `no-Ω-cell`, `pos-ctl`, `pos-κ₂`, `lift₂`, `grow₂`, `sat`, `sat-stall`.
+- 否定范围: 世界由 `dW 1` 经 `growL′` 生成, 格在 κ₂ 处含新种类 Ω-节点; 不覆盖 D1, 不覆盖一致搬运 `HB S₁` 增量 (DiagK4 的一般 tr).
+- 小结 (主审, 判断): ψ₀Λ 候选闭项的五条路 (CohW2, DiagK, DiagK3, DiagK4, TelW, ChainZ) 都已暂停或被局部否定; 剩下的开放点只有 "一致搬运增量" 的一般形式. 按规则停下报告作者.
+
+
+## 2026-11-05 MonoPort7: 可数高度上的严格增长 (判决 HOLDS, 范围不含 Ω-极限)
+
+入口 `OCF/Align/MonoPort7.lagda.md`, 另有 Rel, Int, Lay, Snd (由 `Survey/scripts/monoport7/` 从 MonoPort6 按层生成), Node, Lim (1025 行代码, 生成 730, 手写 295). 主审复核: 删本组 `.agdai` 后冷编入口, 退出码 0, 11 秒, 峰值 1.3G; 七个文件选项都是 `--safe --without-K --lossy-unification`; 禁用构造只在讲解文字里出现.
+- 定理 (无前提): `grow≪ : a ≪ b → asuc (TE a la) ≤ TE b lb`, `growω`, `growω₀`, `growω1`, `growω2`; 带 `Free` 前提: `Lim.monoL`, `Lim.growL`, `Suc.monoS`, `Suc.growS`; 条件定理 `ΩdObs` (前提在 Suc/Lim 里填上).
+- 做法: MonoPort6 §3 写的出路; 动作在作用点丢掉上下文 (`HAKb`), 节点输出只经子层证明、位置、坐标动作 (`RKb`), 单世界关系就够, 外层链不需要.
+- 未做: 第一个 Ω-极限高度 `Ωᴴ`, 要跨世界含 nκ 的关系; 没有否定定理.
+- 范围: 严格增长是值的定理, 不是对参照树的序数值验收.
+
+
+## 2026-11-05 StrRel11: 对层递归的语义, 搬到主线折叠 (判决 PARTIAL)
+
+入口 `OCF/Align/StrRel11.lagda.md`, 另有 CvNeg, Tg, Rk, Le, Om (387 行代码). 主审复核: 删本组 `.agdai` 后冷编, 退出码 0, 4 秒, 0.7G; 禁用构造 0; `¬cv-al` 的前提 `Bot`, `Snd` 用平凡关系 "左边是 n0" 在 scratch 里编译满足.
+- 定理: `ap-self`, `ap-tr`, `cvR`, `advR`, `kpR`, `kp-nw`, `stack`, `irr`, `rk-agree`, 六条层无关规则 `sem-n0`..`sem-pr`; 否定 `¬cv-al` (SumOneFold 上), `¬rel-Ω` (只否定同层节点规则在 Ωᴴ 处).
+- 判断: 关系族要对层递归, 不能是带层下标的归纳族 (正性); 失败版本没有编译.
+- 暂停: 同层 `niᴸ` 可靠性 (估 400 到 700 行), `κᴸ` 可靠性 (估 500 到 900), 跨坐标层节点规则 (要实例内对一切可数 k ≤ k′ 的单调, 正是 MonoPort7 给出的那一类), 然后 Ωᴴ 处的 MonoStep 与 `Free` 前提.
+- 主审注: StrRel11 的第三项要的 "可数高度上的单调" 已由 MonoPort7 `grow≪` 给出值的形式; 能否直接接上要看 StrRel11 的关系形状, 判断.
+
+
+## 2026-11-05 MonoPort8: Ωᴴ 处的严格增长 (判决 PARTIAL)
+
+入口 `OCF/Align/MonoPort8.lagda.md`, 另有 Sim, Om, Fin (550 行代码, 全部手写). 主审复核: 删本组 `.agdai` 后冷编入口, 退出码 0, 8 秒, 峰值 1.3G; 四个文件选项都是 `--safe --without-K --lossy-unification`; 代码块里禁用构造 0; `TΛ` 取自主线 `HtFeedClosed`.
+- 定理 (无前提): `growΩᴴ₀`, `growΩᴴf`, `embf`, `growΩᴴN : ∀ n → asuc (TΛ (N n) (lgN n)) ≤ TΛ Ωᴴ Lg-Ωᴴ`; `changeW` (前提 `Free Λ`, 一切 `emb a` 满足); `reH`, `reS`, `strict`, `pfxRun`. 条件: `growΩ₀` (`Free (g 0)`), `growΩf` (`∀ c → Free (g c)`), 对 Ωᴴ 分别由 `tt`, `free-emb` 填上. 否定 `no-κE` (只否定互模拟 `Re` 覆盖 Ω-极限层的 Ω_L).
+- 判断: 下一步 `GoodUp` (单世界 `Good` 在目标世界抬升下封闭), 再对 `Walk` 路径归纳; 做完加 `grow≪` 可望得一切走过的 c 之下 a 有 T_a < T_Ω. 分支含 Ω-极限的嵌套 `hΩ g` 才真正需要 nκ 的跨世界关系 (StrRel12 的范围).
+- 范围: 值的严格增长, 不是序数值验收.
+
+
+## 2026-11-05 StrRel12: 结构关系蕴含两世界语义, 对一切层 (判决 PARTIAL)
+
+入口 `OCF/Align/StrRel12.lagda.md`, 另有 Al, Rel, Int, Sem, Ni, Kp, Om (868 行代码, 全部手写). 主审复核: 删本组 `.agdai` 后冷编入口, 退出码 0, 21 秒, 峰值 2.1G; 八个文件选项都是 `--safe --without-K --lossy-unification`; 代码块里禁用构造 0; StrRel11 各文件未改 (修改时间早于派发).
+- 定理: `sem : ∀ L → AccY L → Rel L … → SemW L …`, `sem∀` (无前提); `inst` (一切不含 Ω-极限的 Λ, 闭项顶层调用满足 `sem∀` 的一切前提); `sem-ni`, `sem-κ`, `IntM`, `walkR`, `cvRc`, `cohSum`, `genAl`, `out-inS`; 否定 `¬ΩR` (只否定本族在 Ωᴴ 处 Ω_L 两世界相关).
+- 相对 StrRel11Le 的两处加强 (运行世界有序, Lg 相干 `Coh`) 写在新文件里, 理由是判断, 没有编译反例.
+- 暂停: 跨坐标层的节点规则 (要语义的结论层: 第 0 层的值比较读法或跨层关系; 处理一边升一边留), Ωᴴ 处的动作前提与 MonoStep.
+- 与 MonoPort8/9 的接口 (判断): 目标世界抬升内含在 `R∀c` 里 (对一切对齐目标对量化), 经 `cvRc` 封闭; "同一状态" 还缺路径自对齐与 `R∀c` 的自反, 与 MonoPort8 的单世界 `Good` 是不同的关系, 没有互译.
+
+
+## 2026-11-05 UniTr: 开放点 "一致搬运增量" 证或否 (判决 PARTIAL)
+
+入口 `OCF/Align/UniTr.lagda.md`, 另有 Base, Neg, Tel (409 行代码). 主审复核: 删本组 `.agdai` 后冷编入口, 退出码 0, 3 秒, 0.56G; 四个文件选项都是 `--safe --without-K --lossy-unification`; 代码块里禁用构造 0; Hedberg 来自 stdlib, 是定理.
+- 陈述: `W′.UniTr` (tr 对一切分量, faith 在 i₀ 上互模拟, legal 处处合法); "单调" 由回灌取 旧界 ⊞ tr 自动给出; "不判定" 写成 "UniTr ⇒ 判定" 的否定形式.
+- 定理: `toNS`/`fromNS` (与非选择性回灌互推), `no-1⊞`, `no-faithful-back` (⇒ `¬Lg-Tr₀′`), `lossy-pred`, `lossy-Lev`, `off→wdec`, `generic→dec`, `sel→unitr`, `dec→sel`, `no-outer-lift`, `tel-no-lift`; 实例 `decU`, `constU`, `finU`, `upLift`, `faith-fin`.
+- 主审读 `no-outer-lift` 的陈述: `Faith` 要求对一切合法增量 δ′ (含新种类的 Ω-节点) 都有 b′ 使 F b ⊞ δ′ 落在 F b′ 之下; 杀手是对角增量 hΩ (λ x → 1 ⊞ F x). 所以它否定的是 "对一切合法增量忠实" 的 D1 界族. 只对折叠实际发出的增量忠实不在内; 判断: 爬升要发出的正是新种类 Ω-增量, 与 ChainZ `no-chain` 同形, 所以这条否定大概率覆盖 D1 的实际需求, 但这一步不是定理.
+- 积世界版: `Open-build` (槽族 c ↦ HB (Lev (up c)) 上的 UniTr) 与 `Open-taboo` 都未证; 经典下 Open-build 成立, 所以否定只能是禁忌形式. 判断: 已有的抽判定都靠布尔观察量, 合法性逼出的损失是无穷的不忠实, 布尔观察量看不到.
+- ψ₀Λ 候选闭项仍未写出, 状态 "未走通".
+
+
+## 2026-11-05 StallDiagnosis: Fable 5.1 诊断连续六路受阻
+
+报告 `Survey/StallDiagnosis.md`, 实验 `OCF/Align/StallDxBdec.lagda.md`. 主审复核: 删接口后编译实验, 退出码 0; 选项 `--safe --without-K --lossy-unification`; 代码块里禁用构造 0. 定理 `bdec : a ⊲[ w ] L → b ⊲[ w ] L → LgW S w → LgB L → (a ≡ b) ⊎ ¬ (a ≡ b)` (`cmpB` 加子项良基).
+- 诊断要点 (判断): 六条否定是同一件事在裸下标上的重证; 可入下标上的选择性更新没有被任何否定覆盖, 也没人试过. 主审自己的 LOG 小结 "剩下的开放点只有一致搬运增量" 是判断, 被下一路当成了前提, 本诊断推翻了这条穷尽判断.
+- 建议的方向 A/B/C 与方法改进待作者定.
+
+
+## 2026-11-05 StrRel13: 跨坐标层的节点规则 (判决 PARTIAL, 受阻, 未否定)
+
+入口 `OCF/Align/StrRel13.lagda.md`, 另有 Rk, Val, Kr, Later, Om (288 行代码, 手写). 主审复核: 删本组 `.agdai` 后冷编, 退出码 0, 4 秒, 0.64G; 六个文件选项都对; 代码块里禁用构造 0. 子智能体误在 `/tmp` 留下一个代码摘录文件 (`dummy_ignore`), 主审看过内容后删除.
+- 定理: `rk-mono` (三种情形, `rk-agree` 是特例), `rkInst`, `selfOk`; 否定 `¬valX`/`¬semX`, `¬krX`/`¬semKr`, `¬laterV`/`¬semLater`, `¬alLim0`, `¬cpTop`, `¬relTop`, `¬selfΩ`, `¬hawΩ`. 前提实例都已写出.
+- 范围: 只否定 StrRel12 族的形状 (同目标状态前提 `R∀c`, 结构结论层, 现有 Al, Ωᴴ 处的 CP 与 HAW); 不否定带状态不变量的语义, 不否定 Ωᴴ 处的 MonoStep.
+- 下一步 (判断): 合并 MonoPort7 的 `Good`/`SRel` 与 StrRel12 的 `SemW`; 异质关系 `Rel L L′`; 不经 CP 的顶层比较. 与 MonoPort9 (GoodUp) 有重叠, 等它回来再派.
+
+
+## 2026-11-05 TdPlus: 方向 C, 字面候选闭项 (判决: 交出, 不攀爬)
+
+入口 `OCF/Align/TdPlus.lagda.md`, 另有 Uni, Fold, Val, Grow, View (444 行代码, 闭项本身 176). 主审复核: 删本组 `.agdai` 后冷编, 退出码 0, 5 秒, 0.53G; 选项都对; 禁用构造 0; `Tᴰ₊ : A`, `Lg-Tᴰ₊`, `fgh-Tᴰ₊ : ℕ → ℕ` 都无参数.
+- 定理: `pr-top : ∀ k → prL (suc k) (λh k) ≈ Ω₂ᴴ`, `top-bd`, `reach-uni`, `grow-uni`, `t₀<T`, `pre<T`, `fgh-t`.
+- 判断: 读 ψ₀(Ω_{Ω₂})·ω; fold₊ 经投影交给 `T⁺`, 与直接写的 growL′ 折叠是否同值未证. 是目标字面的候选, 不是 ψ₀Λ.
+
+
+## 2026-11-05 MonoPort9: 回灌各格上的严格增长 (判决 PARTIAL)
+
+入口 `OCF/Align/MonoPort9.lagda.md`, 另有 Neg, Two (脚本生成), One, Walk, Inh, Cell (644 行, 生成 158). 主审复核: 删本组 `.agdai` 后冷编, 退出码 0, 7.7 秒, 1.2G; 选项都对; 禁用构造 0.
+- 定理: `growC` (条件 `fg`, 对 Ωᴴ 由 `free-emb` 满足), `growC∃`, `growΩᴴC`, `below≪`, `Vω≤T`, `T≤Vω`, `no-all`, `id≤T`, `Walk-E`, `cellE`, `cell≈`, `walked`, `nzCell`.
+- 判断: 路线 (a) GoodUp 要改关系的形状 (输入关系对一切路径比分支), 没动手; 本组绕开了 GoodUp.
+- 下一站: 分支含 Ω-极限, T_Ω < T_{Ω+1} (要能处理含 nκ 的 Ω_L 的关系), 与 StrRel13 的接手第 1 项汇合.
+
+
+## 2026-11-05 MonoPort9Cov: 覆盖引理 (判决 HOLDS)
+
+`OCF/Align/MonoPort9Cov.lagda.md` (86 行). 主审复核: 删接口后编译, 退出码 0; 选项对; 禁用构造 0. 定理 `cov`, `Cv.covCell`, `Cv.covω`, `allBelow : ∀ a (la : Lg a) → a ≪ VωΩ → asuc (TE a la) ≤ TΛ Ωᴴ Lg-Ωᴴ`, `ex-fin`, `allFin`, `ex-cell`. 范围: 字面 a ≪ V_ω (路径), 不是值上的序.
+
+
+## 2026-11-05 EvW: 方向 B 事件历史世界 (判决 PARTIAL)
+
+入口 `OCF/Align/EvW.lagda.md`, 另有 Base, Neg, Feed, Grow (534 行代码). 主审复核: 删本组 `.agdai` 后冷编, 退出码 0, 3.7 秒, 0.61G; 选项都对; 禁用构造 0.
+- 定理与否定见地图. 主审注: `evKS` 的世界合法性取 ⊤; `new-cell` 的 "有界" 来自事件表里正好有那个事件 (忠实性), 意义在于 growL′ 可达世界里这一格不有界 (`no-Ω-cell`), 不是同一世界的比较.
+- 第一个障碍 (判断): 种类依赖外层界; 外层长高后旧高度改贴新种类, Ω-节点要对新种类结构的一切世界给单调数据, 而新世界不都是旧世界的像. 备选: 事件步与长高步混排的日志.
+- 与 A 的差别 (子智能体只读了 A 的文件头, 未复核): A 的种类不带证据, 碰到拷贝墙; B 的种类带证据, 避开拷贝墙, 代价是外层长高后换一套种类. 等 AdmW/AdmWNeg 回来再比.
+
+
+## 2026-11-05 AdmW / AdmWNeg: 方向 A 配对 (判决 PARTIAL; 拷贝墙成定理)
+
+构造 `OCF/Align/AdmW.lagda.md` (If, Cmp, Raise, Coh, Uip; 426 代码行), 否定 `OCF/Align/AdmWNeg.lagda.md` (Copy, Laws, Draft; 544 代码行). 主审复核: 两个入口删本组 `.agdai` 后冷编, 退出码都是 0 (3.2 秒 0.53G, 3.4 秒 0.67G); 选项都对; 禁用构造 0, 只有 `AdmWUip` 以 Funext 为模块参数 (结论标条件, 不进成品; 不在验收文件里, 主审记为对规则的小偏离). `AdmWNeg` 入口导入定稿接口 `AdmWIf` (构造一路报告说没有导入, 与文件不符, 以文件为准).
+- 结论: 不带相干的 CmpK 为假 (⊥); 带相干的 CmpKᶜ 对一切 SupB 成立; 四条更新律推不出禁忌 (有反模型); 沿路径嵌入的更新不保相干 (`raise-splits`); 只升 c₀ 的更新保相干要高度上的 UIP (条件).
+- 两路的判断不一致处: AdmWNeg 的有限测试 `same-path` 说两份拷贝在一个闭项例子里拿到同一路径; AdmW 的 `raise-splits` 在另一个合法相干世界里给出两条不同路径. 不矛盾 (不同例子), 以定理为准.
+- 下一步待作者定: 有条件地沿 UIP 往下写回灌; 无条件地以路径作种类或把 Lev 改成并; 与方向 B (种类带证据) 合流.
+
+
+## 2026-11-05 StrRel14: 带状态不变量的两世界语义 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/StrRel14.lagda.md`, 接口 `StrRel14If` (定稿 10:18, 10:40 只增 §6 `NodeObl⁼`), 另有 SemJ/NiJ/KpJ (脚本生成), J, Rk, Bad, Top (711 行, 生成 323). 主审复核: 删构造一路九个 `.agdai` 后冷编入口, 退出码 0, 10 秒, 1.2G; 选项都对; 禁用构造 0.
+- 定理: `semJ`, `semJ∀`, `haw→J`, `ne⊕`, `necv`, `ne-pos`, `¬NEY₀`, `inst₁`, `inst₂`, `krDiag`, `κRk`, `cpBad`, `shiftV`; 条件 `node-red`; 否定 `¬alCell0`.
+- 事故: 构造一路用前缀通配删 `.agdai`, 误删否定一路的两个接口文件 (源文件未动); 主审已转告否定一路. 教训: 配对两路的前缀互为前缀时, 删接口文件用精确模块名.
+- 等 StrRel14Neg 回来一起判.
+
+
+## 2026-11-05 StrRel14Neg: 配对否定 (判决 部分)
+
+入口 `OCF/Align/StrRel14Neg.lagda.md`, 另有 Node, Inv, Lit (317 行). 主审复核: 删本组 `.agdai` 后冷编, 退出码 0, 4.8 秒, 0.89G; 选项都对; 禁用构造 0; 三个子文件都导入定稿接口 `StrRel14If`.
+- 合判 (主审, 判断): 构造一路的 `semJ` 与否定一路的 N1/N2 合起来说: 跨坐标层规则必须以排除零树读数的不变量 (如 I₁ 的 NE) 为前提, 且要跨目标层的状态关系; 同目标层的 R∀X 不够 (定理). κˣ 不能照 sem-κ 把分支关系喂给沿 Al 的走法 (判断).
+
+
+## 2026-11-05 LocUip: 两条小引理 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/LocUip.lagda.md`, 接口 `LocUipIf` (定稿 10:45), Hed, Fam, Feed (441 代码行). 主审复核: 删构造一路五个 `.agdai` 后冷编, 退出码 0, 3 秒, 0.49G; 选项都对; 禁用构造 0; Funext 只在 `LocUipHed` 的 `fe→*` 作前提 (条件).
+- 主审建议的 "局部 Hedberg" 被挑战并推翻成等价定理: 局部 UIP ⇔ 合法高度上的 K. 主审的判断有误, 记下.
+- 事故重演: 构造一路又用前缀通配误删否定一路的 `LocUipNegLoop.agdai` (这一路派发早于手册规则); 已转告.
+- 主审注: `κ₂-yes` 的有界来自读回作参数的更新本身, 与 EvW 的 `new-cell` 同类; 不是折叠给出的.
+
+
+## 2026-11-05 UipFb: UIP 条件下写回灌探路 (判决: 问题不在 UIP)
+
+入口 `OCF/Align/UipFb.lagda.md`, Chain, Closed, Top (303 行). 主审复核: 删本组 `.agdai` 后冷编, 退出码 0, 3.2 秒, 0.59G; 选项都对; 禁用构造 0; `UIPᴴ` 只作模块参数, 闭项 `Tᵁ` 不在它之下.
+- 合判 (主审, 判断): 与 LocUip 合起来, 拷贝墙不是 ψ₀Λ 的瓶颈: 世界侧在可入下标上攀爬 (κ₂, κ₃ 的新节点格有界), UIP 只在外层界含极限时进相干. 瓶颈回到折叠: 第二级以上要以 HB S₂ 为层的折叠, 或对一切级一个折叠 (`Need` 一族, HtTowerN 的 `no-wmatch` 那一线). `Tᵁ` 读法与 `T-fb₂ω` 相同, 不是新强度.
+
+
+## 2026-11-05 AdmEv: A 与 B 合流 (判决 PARTIAL)
+
+入口 `OCF/Align/AdmEv.lagda.md`, Base, Grow, GrowA, Neg, Feed (600 代码行). 主审复核: 删本组 `.agdai` 后冷编, 退出码 0, 6.8 秒, 1.05G; 选项都对; 禁用构造 0.
+- 定理: `new-gen₀`, `evKS₀`, `fac`, `diag-tr`, `cmp-wk`, `wk-⊞₀`, `rest-wm`, `sim`, `Lg-rl`, `lg⊲-tr`, `cmpF-tr`, `nat-ΩA`, `inst-A`, `cell-faith₀`, `cell-strict`, `Tower.Run.*`, `inst-new`; 条件 `cmp-↑`, `wk-A` ((C1) 世界合法证明的选择, (C2) `NatB` 自然性); 否定 `no-up-inv`, `no-indep₀`, `not-image`.
+- 判断: 下一处是塔的 ℕ-极限 (⊞ 结合律在 ℕ-极限处只逐点相等) 与 RunM 在 evKS₀ 上的真正折叠. 与 UipFb 的合判一致: 瓶颈在折叠.
+
+
+## 2026-11-05 LocUipNeg, StrRel15N, ColimW (三路复核)
+
+- `LocUipNeg` (入口 + Loop, Feed, Sec; 479 代码行): 冷编退出码 0, 3.2 秒, 0.56G; 选项对; 禁用构造 0; Funext 只作 `¬*→¬fe` 的前提. 合判 (主审, 判断): 局部 UIP 是外延原则, 不是壁垒禁忌; 回灌必须升 c₀ 之上的拷贝; 要的是对坐标一致的回灌 (`sec→coh`).
+- `StrRel15N` (入口 + Dead, Node, Kap, Kind; 204 行): 冷编退出码 0, 4 秒, 0.67G; 五个文件都导入 `StrRel15If`; 禁用构造 0. 已转告构造一路 StrRel15.
+- `ColimW` (入口 + If, KS, Copy, Raise; 442 代码行): 冷编退出码 0, 2.4 秒, 0.39G; 禁用构造 0. 拷贝在定义上消掉, 代价移到无限层号上的更新 (`raiseG→wdec`). 等 ColimWNeg.
+- 拷贝墙三侧合判 (主审, 判断): 可入下标 + 族增量 (LocUip/LocUipNeg) 与种类带证据 (AdmEv) 两条都让世界侧通过; 剩下的共同要求是 "对坐标一致的回灌读回" 与 "对一切级的折叠". 按层号认同 (ColimW) 把墙换成无限层号的判定, 回到 W 一族.
+
+
+## 2026-11-05 ColimWNeg: 配对否定 (判决 部分)
+
+`OCF/Align/ColimWNeg.lagda.md` (导入定稿 `ColimWIf`), 草稿 `ColimWNegDraft` (426 代码行). 主审复核: 两个文件删接口后编译, 退出码都是 0; 选项对; 禁用构造 0; 外延 `FE₀`/`FE₁` 只作前提 (结论标条件; 不在验收文件里, 同 AdmWUip 的小偏离).
+- 合判 (主审, 判断): 按层号认同把拷贝墙换成 "裸层号上的世界", 撞的是诊断 §3.1 第 1 条 (世界是裸下标上的积) 的同一形状; ColimW 方向若要继续, 世界只能对可入层号给分量 (未试).
+
+
+## 2026-11-05 StrRel15: 跨目标层状态关系 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/StrRel15.lagda.md`, If, Sem, Node, Fin, Bar (467 行). 主审复核: 删构造一路六个 `.agdai` (精确模块名) 后冷编, 退出码 0, 6.5 秒, 1.1G; 选项都对; 禁用构造 0.
+- 第一条第 4 层值定理在跨坐标层节点对上成立 (`valRR`), 但只在一个有限实例上.
+- 两路合判: 输出关系缺 (nl, ni), (ni, nl), (ni, nκ) 三种对; 下一步给 RelX 加这三条规则并证可靠 (判断). 构造一路判断出路 2 (不在跨节点坐标层的目标对上比) 与 `oblRR` 的证明冲突.
+
+
+## 2026-11-05 ColimA: 只对可入层号给分量 (构造一路, 判决 部分)
+
+入口 `OCF/Align/ColimA.lagda.md`, If, KS, Copy, Raise (507 代码行). 主审复核: 删本组 `.agdai` (精确名) 后冷编, 退出码 0, 2.7 秒, 0.43G; 选项都对; 禁用构造 0; UIP 只作 `uip→raiseA1` 的前提.
+- 合判 (主审, 判断): 第三条世界侧的路也走通了 (按层号认同 + 可入层号 + 族增量), 三条路 (LocUip 族增量, AdmEv 带证据, ColimA) 汇合到同一个要求: 回灌的读回是对坐标/层号一致的族. 等 NegColimA, FamFold/NegFam, EvFold.
+
+
+## 2026-11-05 NegColimA: 配对否定 (判决: 接口未被否定)
+
+入口 `OCF/Align/NegColimA.lagda.md`, Loop, Cross, Grow, Dom (358 代码行). 主审复核: 删本组 `.agdai` 后冷编, 退出码 0, 2.8 秒, 0.50G; 选项都对; 五个文件都引用 `ColimAIf`; 禁用构造 0; Funext, FE₀, UIP 只作前提.
+- 合判 (主审, 判断): ColimA 这一对是配对派发以来第一次 "否定一路写不出否定": 世界侧第三条路立住. 单个增量与族增量的差恰好是 "读回能否族化", 与 LocUipNegSec 同一处; 外层界长高时的可判定性 (`odec`) 把 ColimA 第一个障碍第 2 条变成定理.
+
+
+## 2026-11-05 NegFam: 族增量折叠的配对否定 (判决: 主律在一级成立, 一切级版本被否定)
+
+入口 `OCF/Align/NegFam.lagda.md`, Sec, Feed, Top (437 代码行). 主审复核: 删本组 `.agdai` 后冷编, 退出码 0, 3.2 秒, 0.59G; 选项都对; 四个文件都引用 `FamFoldIf`; 禁用构造 0; FE₀ 只作前提. 已把与构造一路相关的五条转告 FamFold.
+- 合判 (主审, 判断): "读回对坐标一致" 在有限坐标上免费 (孤立点上局部 Hedberg 成立), 到 ω 及一切级时等价于外延原则; 所以 FamFold 一级能交, 对一切级要外延或新思路. 构造一路用的更新在两步拷贝上不相干, 若对一切级的折叠要两步拷贝相干, 那是下一处.
+
+
+## 2026-11-05 NegSR16 与 FamFold (两路复核)
+
+- `NegSR16` (入口 + Kap, Sem, Law; 294 行): 冷编退出码 0, 6.5 秒, 1.28G; 选项对; 禁用构造 0. 已转告 StrRel16. 接口 `StrRel16If` 文件头定稿时间由 11:40 改为 11:28 (构造一路所改, 已请其说明).
+- `FamFold` (入口 + If, One, Two, Lift, Read, All, AllTest; 911 代码行): 删八个 `.agdai` 后冷编, 退出码 0, 5 秒, 0.67G; 选项对; 禁用构造 0; 闭项无参数.
+- 合判 (主审, 判断): FamFold 给出了不要 UIP、对一切级一条的闭项族, 但 `T∞` 读 ψ₀(Ω_{Ω_ω}), 与 D3 的对角同档 (每级独立世界, 对角在外); 到 Λ 要在一个外层界含极限的世界里做对角, 那里正是 NegFam 的 `uniformAll→fix`/`slotFam-sep`. 两路在同一处汇合.
+
+
+## 2026-11-05 StrRel16: 输出关系加三条规则 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/StrRel16.lagda.md`, If, Lem, Val, Sem, Fin, Kr, Node (653 行). 主审复核: 删八个 `.agdai` 后冷编 (`-M8G`), 退出码 0, 40 秒, 峰值 6.6G (`StrRel16Val` 是大头; 6G 上限不够, 记入手册); 选项都对; 禁用构造 0.
+- 接口定稿时间由预填的 11:40 改为首次编译通过的 11:28, 发生在其他改动之前 (构造一路说明); 否定一路对着 11:28 版写, 一致.
+- `StrRel16Node` 的 `Zero²` 一节由 StrRel15Node 文本按名替换得到, 替换脚本没有入库 (违反 "生成克隆的脚本必须入库"; 主审记下, 下次简报写明).
+- 两路合判: 三条规则一条可靠 (`in⁺`), 一条被否定 (`nκ⁺`, 值的反例), 一条未定 (`rk⁺`); 第 4 层下一步是带时间关系的语义.
+
+
+## 2026-11-05 CubX: --cubical 验证实验 (作者准许)
+
+`OCF/Align/CubXFe`, `CubXSet`, `CubXSetNeg`, `CubXComp` (315 代码行). 主审复核: 四个模块删接口后编译, 退出码都是 0; 选项 `--cubical --safe --lossy-unification` (实验准许的偏离); 禁用构造 0.
+- 结论: 外延型的条件定理在 cubical 下都无条件; 一般种类结构上 UIP 为假 (圆周), 仓库的种类结构上成立. 分离子障碍不受影响, 反而推到 WLPO.
+- 计算: 搬合法性数据能算; 搬 ⊲ 证明再交 cmpB 卡住 (构造子单射的匹配不生成搬运). 若采用 cubical, cmpB 一类按构造子单射匹配的函数要改写 (判断).
+- `--cubical` 传染 (`InfectiveImport`), 主线不能直接用; 采用与否待作者定.
+
+
+## 2026-11-05 EvFold: 事件世界上的真折叠 (判决 PARTIAL)
+
+入口 `OCF/Align/EvFold.lagda.md` + Tree, Read, Fold, Closed, New, Neg, Lim, Test (1249 代码行). 主审复核: 删九个 `.agdai` 后冷编入口, 退出码 0, 7.1 秒, 0.85G; `EvFoldTest` 退出码 0; 选项都对; 禁用构造 0; 闭项无参数.
+- 定理与否定见地图. 盲点: 有限测试分不开本折叠的 T-Ω₂ 与 T-Ω₃ (一次 25 分钟测试被 timeout 杀, 退出码 124, 未完成), "不被压回" 只到折叠内部的形状定理.
+- 合判 (主审, 判断): 塔的 ℕ-极限处有比 ⊞ 结合律更早的一道墙 (`no-coh-ev`), 是拷贝墙在外层界极限上重现; 已转告 A3 (LvFb), 它的 W1 要先对照这条. 世界侧与折叠侧现在共同的下一处都在 "外层界含极限".
+
+
+## 2026-11-05 LvFb: A3 提前探路, 保持 without-K 的三种写法 (判决 PARTIAL)
+
+入口 `OCF/Align/LvFb.lagda.md` + Set, Code, Fac, Fold (716 代码行). 主审复核: 删五个 `.agdai` 后冷编, 退出码 0, 5.4 秒, 0.72G; 选项都对; 禁用构造 0; Funext 只作 `LvFbSet` 模块 FE 的参数; 切片脚本 `Survey/scripts/lvfb/locslice_lvfb.py` 已入库, 无绝对路径.
+- 合判 (主审, 判断): W1 与 W2 在 without-K 下各自去掉了一处外延: W1 去掉 ℕ-极限的 ⊞ 结合律 (并绕开 no-coh-ev), W2 去掉坐标上的 UIP (改在码上判等). W3 对字面合法性等价于外延, 不能用. 剩下的是读回包对高度递归 (第 ω+1 级以上), 与外延无关; 世界侧在 W2 下已无障碍.
+- 标杆: LvFbFold 树侧前 3 层 1518 行, 超过 1513; FamFoldAll 同口径 1400. 需要瘦身 (码的机器).
+
+
+## 2026-11-05 NegTpMono: T⁺ 单调的配对否定 (判决: 接口未被否定)
+
+入口 `OCF/Align/NegTpMono.lagda.md` + World, Blind, Sim, Test (328 代码行). 主审复核: 删五个 `.agdai` 后冷编, 退出码 0, 32 秒 (几乎全在有限测试 `t12`), 0.58G; 选项都对; 禁用构造 0; Funext 只在 Sim 作前提. 已转告 TpMono.
+- 合判 (主审, 判断): T⁺ 的单调只能对一切世界的字面第一位置陈述; 单世界版与按值版都有否定. 合法性证明会被 T⁺ 读到, 是比较闭项的值时要先处理的一点 (证明无关性, 或在同一证明下比较).
+
+
+## 2026-11-05 TpMono: T⁺ 对输入单调 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/TpMono.lagda.md` + If, Step, Toy, Hs, Hl, One, Tab (541 代码行). 主审复核: 删八个 `.agdai` 后冷编, 退出码 0, 7.2 秒, 0.79G; 选项都对; 禁用构造 0.
+- 无条件: `T⁺0<T⁺1`, `hs-strict`, `hl-strict`, `steps→fst`/`fst→steps`, `Tlv0≡`. 条件 (`Laws⁺`, 对 T⁺ 无实例): 闭项值定理表 20 条.
+- 合判 (主审, 判断): A2 没有给出第一批无条件的闭项比较; 两种种类折叠上的单调, 卡在与单种类主线 HtCross/MonoPort 同一处 (两个实例的输出只逐点相关, 含 Ω-极限时世界只互模拟). 主线单种类上已有的 MonoPort6–9 是可搬的对照.
+
+
+## 2026-11-05 StrRel17: 带时间关系的语义 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/StrRel17.lagda.md` + If, Val, Time, Obs, Kap (458 行). 主审复核: 删六个 `.agdai` 后冷编 (`-M8G`), 退出码 0, 29 秒, 峰值 4.1G; 选项都对; 禁用构造 0. 工程记录: `obsT` 用 `with invNi` 时 8G 堆耗尽 (251), 改成辅助函数后 0.7G (手册 §4 的 with 爆炸).
+- 等 NegSR17 回来一起判.
+
+
+## 2026-11-05 NegSR17: 时间关系的配对否定 (判决: 否定成立)
+
+入口 `OCF/Align/NegSR17.lagda.md` + Rk, RkT, Time, Act (549 行). 主审复核: 删五个 `.agdai` 后冷编 (`-M8G`), 退出码 0, 6 秒, 1.1G; 四个子文件都导入 `StrRel17If`; 禁用构造 0.
+- 合判 (主审, 判断): NegSR16 与 NegSR17 两次撞到同一个机制: 折叠的换世界 (cv) 清零第 0 层累计, 保留差分量; 保留的节点分支在 cv 之后才运行. 第 4 层的修补有三条 (只允许不读累计的动作; 时间条件关联保留分支运行时的状态; 让保留分支在产生时带上累计). 第三条要改折叠, 是潜在的 "第 4 层逼出", 按规则须交作者定; 前两条还没试, 目前不算非改不可.
+
+
+## 2026-11-05 TpPort: MonoPort 手法搬到两种种类 (判决 PARTIAL)
+
+入口 `OCF/Align/TpPort.lagda.md`, 12 个生成文件 (脚本 `Survey/scripts/tpport/`, 1813 行) 与 Step, Tab, Neg (手写 347 行). 主审复核: 删十六个 `.agdai` 后冷编, 退出码 0, 24 秒, 1.1G, 16 个模块都重检; 选项都对; 禁用构造 0. (主审第一次复核时 zsh 未拆分变量, 删除没生效, 重做后才算数; 记下: 在 zsh 里循环要写字面列表.)
+- 合判 (主审, 判断): 第一批无条件的闭项值比较到手, 但只在不含 Ω-极限的输入上; 含 Ω-极限的那一半与单种类主线 MonoPort8/9 的情形同形, 是下一步.
+
+
+## 2026-11-05 NegLvRd: A3 的配对否定 (判决: 接口未被否定)
+
+入口 `OCF/Align/NegLvRd.lagda.md` + Wk, Lay (437 代码行). 主审复核: 删三个 `.agdai` 后冷编, 退出码 0, 3.6 秒, 0.69G; 两个子文件导入定稿 `LvRdIf`; 禁用构造 0; 外延 `FEA` 只作前提. 已转告 LvRd 五条相关结论 (规范码弱化, 不同步拷贝, Ω-极限处层证据不能与世界无关, 不存在两拷贝同时保界的世界映射, 忠实读法撞 no-retract).
+- 合判 (主审, 判断): 第二次 "否定一路写不出接口的否定" (前一次是 ColimA). 下一步的风险点从接口内移到接口外: Ω-极限坐标上的读回包 (`no-unifΩ`) 要读世界或带公共上界.
+
+
+## 2026-11-05 NegSR18: 修补 (a)(c) 的配对否定 (判决: 主要律被否定, RkSoundTᶻ 与 kZ 未否定)
+
+入口 `OCF/Align/NegSR18.lagda.md` + Walk, Ai, K, Up, Z (379 行). 主审复核: 删六个 `.agdai` 后冷编 (`-M8G`), 退出码 0, 5.6 秒, 1.0G; 选项都对; 禁用构造 0. 已转告 StrRel18.
+- 合判 (主审, 判断): (a) 单独不够 (Ai 读累计); 能挡住 cv 机制的只剩时间条件, 而它在 cv 之后不成立. 若 StrRel18 的 RkSoundTᶻ 或 kZ 也走不通, 修补 (b) 改折叠就成了第 4 层逼出的候选, 交作者定.
+
+
+## 2026-11-05 StrRel18: 修补 (a)(c) (构造一路, 判决 PARTIAL, 按简报停下)
+
+入口 `OCF/Align/StrRel18.lagda.md` + If, Az, Obs, KZ, Up, Tr (443 行). 主审复核: 删七个 `.agdai` 后冷编 (`-M8G`), 退出码 0, 16 秒, 峰值 2.9G; 选项都对; 禁用构造 0.
+- 修补 (b) 的位置: `HtFeedFold.BNi` 给保留分支的状态 `cv p Y ⊕ …`. 构造一路判断: 理由来自验收语义的可靠性否定, 不涉及合法性、壁垒或闭项的值, 按 AGENTS "第 4 层不反过来改前 3 层" 不够格, 不推荐 (b). 主审同意此判断; 记下, 交作者知悉, 不发起改动.
+- 下一步候选: Up 作为输出关系的新构造子 (正出现, 不撞严格正性); 动作前提换成正的证书 (只为折叠实际用到的动作写语法); kZ 下把时间条件的累计分量改成与读数比较.
+
+
+## 2026-11-05 LvRd: 读回包 + 第 ω+1 级折叠 (构造一路, 判决 HOLDS 构造部分)
+
+入口 `OCF/Align/LvRd.lagda.md` + If, Emb, Pkg, World, Fold, Shape, Wk, Val (807 代码行). 主审复核: 删九个 `.agdai` 后冷编, 退出码 0, 4.2 秒, 0.71G, 9 个模块重检; 选项都对; 禁用构造 0; 闭项无参数; 切片脚本 `Survey/scripts/lvrd/` 无绝对路径.
+- 新闭项 `T∞ω1`: 第一个越过 ψ₀(Ω_{Ω_ω}) 档的候选 (读法是判断, 粗界), 层号由此前各站回灌输出的部分和给出 (`lvShapeδ`). 前 3 层 1443 < 1513.
+- 主审注: `val-strict` 的前提 FstMono< T⁺ 由 TpPort 只在右边不含 Ω-极限时给出; `Λω1` 含 `Ωtop Gω` 的读回, 判断不在其内, 所以值比较仍是条件.
+- 下一步: 带世界的层证据, 在 B_s 坐标上折叠 (LvOm 在做, 已转告); 第 ω+2 级; 极限站用规范弱化.
+
+
+## 2026-11-05 LvTop: 塔与对角的骨架 (判决: 骨架成立; 全塔版读法低于 ψ₀Λ, 判断)
+
+入口 `OCF/Align/LvTop.lagda.md` + If, Tower, Inst, Val, Test (402 代码行). 主审复核: 删六个 `.agdai` 后冷编, 退出码 0, 4 秒, 0.85G; 选项都对; 禁用构造 0; 截断版闭项无参数.
+- 关键判断: 层号的类型是 HB S₀, 所以全塔版读法上界 ψ₀(Ω_{Ω₂}); 到 ψ₀Λ 要层号逐站换类型 (`Kt`, `KΛ`). 这与早期 HtTowerU 的 L/U/Λᵁ 是同一个想法 (主审注).
+- 下一步: 把码与塔推广到 HB K, 在 Kt 上折叠, 对角到 KΛ.
+
+
+## 2026-11-05 LvOm: Ω-极限坐标上的读回包 (主审提前探路, 判决: R1 成立)
+
+入口 `OCF/Align/LvOm.lagda.md` + Lev, Rd, W1, Fold, Closed, Neg, Test (571 代码行). 主审复核: 删八个 `.agdai` 后冷编, 退出码 0, 4.5 秒, 0.71G; 选项都对; 禁用构造 0; 闭项无参数.
+- 合判 (主审, 判断): no-unifΩ 用 "读世界, 公共上界之下判定" 绕过了; 读回包第一次对一切高度一条定义. 新障碍是外层世界 a 随折叠长高, 含极限时又是拷贝问题; 与 LvKt (层号换类型) 是两个独立的缺口, 都在 ψ₀Λ 的路上.
+- LvOm 补充 (判断, 读代码): 推广到 HB K 最大的一处是数据树的层类型 (D 固定在 HB S₁), 即 "对一般种类结构的折叠"; 已转告 LvKt.
+
+
+## 2026-11-05 NegLvKt: 层号换类型的配对否定 (判决: 接口未被否定)
+
+入口 `OCF/Align/NegLvKt.lagda.md` + Trap, Copy (259 代码行). 主审复核: 删三个 `.agdai` 后冷编, 退出码 0, 2 秒, 0.41G; 选项都对; 禁用构造 0. 已转告 LvKt.
+- 合判 (主审, 判断): 跨站增长只能 ⊞ 接后, 不能靠分量注入当第一位置 (树侧判据, 由 `trap` 一族给出); 对角 "越过每一站" 要值的定理; 塔若用基世界, Ω-结构进不了折叠 (`code-botK`), 外层世界必须长高 (LvOm 的第一个障碍再次出现).
+
+
+## 2026-11-05 LvKt: 层号换类型的塔 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/LvKt.lagda.md` + Code, If, Tower, Inst, Val, Test (663 代码行). 主审复核: 删七个 `.agdai` 后冷编, 退出码 0, 4.4 秒, 0.94G; 选项都对; 禁用构造 0; 截断版闭项无参数.
+- 合判 (主审, 判断): 第一次有了一个以 "每站一切码上的折叠" 为唯一前提的闭项族, 其读法上界是 ψ₀(Λ); 这是 ψ₀Λ 候选闭项的条件版, 不是 ψ₀Λ 已写出. 缺的那一条已定位: Kc s 上、码目标含高度坐标 Ω-结点的折叠 (数据树层类型推广或下降, 带世界的槽, 高度坐标的可入判定).
+
+
+## 2026-11-05 NegKcFold: 配对否定 (判决: 接口未被否定; 可入判定是定理)
+
+入口 `OCF/Align/NegKcFold.lagda.md` + Dec, Forget, Tower (340 代码行). 主审复核: 删四个 `.agdai` 后冷编, 退出码 0, 3 秒, 0.57G; 选项都对; 禁用构造 0; 外延只作两条条件定理的前提. 已转告 KcFold (直接用 `bdecTower`; 下降不能逐结点嵌入; 世界塔要显式构造并用定理说明看见非底分支).
+- 合判 (主审, 判断): 否定一路第四次写不出接口的否定, 反而交出了构造一路要的可入判定 (`bdecTower`). 剩下的风险在接口盲区: 世界塔的律太弱, 有内容的世界塔要 KcFold 自己构造.
+
+
+## 2026-11-05 KcFold: 换类型塔的回灌 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/KcFold.lagda.md` + If, Top, Tower, Test, Bdec (308 代码行). 主审复核: 删六个 `.agdai` 后冷编, 退出码 0, 4.3 秒, 0.87G; `KcFoldTest` 退出码 0; 选项都对; 禁用构造 0.
+- 合判 (主审, 判断): 层号塔已经真正由回灌给出 (读回含新种类 Ω-结点, 坐标原样嵌入), 但闭项还看不见它: 缺口精确到 "每站的下降", 即对一般种类结构的数据树或求值. 这是 ψ₀Λ 候选闭项在前三层上剩下的唯一一块 (判断).
+
+
+## 2026-11-05 TpPort2: Ω-极限输入上的最小坐标一步 (判决 PARTIAL)
+
+入口 `OCF/Align/TpPort2.lagda.md` + Sim (生成, 脚本 `Survey/scripts/tpport2/`), Cross, One, Om, Tab (手写 412 行, 生成 245). 主审复核: 删六个 `.agdai` 后冷编, 退出码 0, 10 秒, 1.4G; 选项都对; 禁用构造 0.
+- 合判 (主审, 判断): 值的一侧往前一站 (T⁺(0) < T-Ω₂); 但 LvRd/LvTop/LvKt 那些闭项的值结论仍是条件, 因为被折叠的层本身含 Ω-极限, 卡点与单种类 MonoPort 的 GoodUp/跨实例一步同形.
+
+
+## 2026-11-05 NegDnFold: 下降的配对否定 (判决: 接口未被否定, 忠实律是盲的)
+
+入口 `OCF/Align/NegDnFold.lagda.md` + Ret, Blind, Adm, Copy (308 代码行). 主审复核: 删五个 `.agdai` 后冷编, 退出码 0, 3.6 秒, 0.66G; 选项都对; 禁用构造 0; 外延 `FEA` 只作条件定理的前提. 已转告 DnFold.
+- 合判 (主审, 判断): 这是 "盲定理" 规则 (手册 §3.7) 的一次实际拦截: 接口的忠实律被常数下降满足, 不能作为 "读回进了闭项" 的证据; 要用逐站严格增长且无常数界、或只能来自读回的新种类结点的形状定理、或值的界.
+
+
+## 2026-11-05 StrRel19: up 构造子 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/StrRel19.lagda.md` + If, Act, Sem, Up, Val (580 行). 主审复核: 删六个 `.agdai` 后冷编 (`-M8G`), 退出码 0, 25 秒, 峰值 4.9G; 选项都对; 禁用构造 0.
+- 构造一路自报 "加深的迹象": "≤ 节点" 的规则第二次逐字取自折叠子句, 每条只覆盖一类再折叠目标对. 主审同意; 第 4 层这条线下一步要换写法 (统一的 "x ≤ 节点"), 不再按目标对逐条加规则. 等 NegSR19.
+
+
+## 2026-11-05 NegSR19: up 构造子的配对否定 (判决: 四条律否定, 三条主律未否定)
+
+入口 `OCF/Align/NegSR19.lagda.md` + 8 个子文件 (604 行). 主审复核: 删九个 `.agdai` 后冷编 (`-M8G`), 退出码 0; 选项都对; 禁用构造 0.
+- 合判 (主审, 判断): 动作限制单独不够 (读累计的动作来自 Ω-极限处分支里的回灌), 可靠性要靠时间条件; 正面的新东西是不变量 InvZ, 它使换世界之后只剩差分量要证. 第 4 层下一步: 统一的 "x ≤ 节点" 规则加 InvZ, 不再逐条加规则.
+
+
+## 2026-11-05 DnFold: 每站的下降 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/DnFold.lagda.md` + 8 个子文件 (846 代码行). 主审复核: 删九个 `.agdai` 后冷编, 退出码 0, 5.9 秒, 0.95G; 选项都对; 禁用构造 0. 前 3 层 TD 2580 行, 超过标杆 1513 (主要是 Run 与读回进了闭包).
+- 合判 (主审, 判断): 读回第一次在第 1 站进了闭项的计算; 第 2 站起要推广数据树 (对一般种类结构的折叠), 第 1 站要带外层世界的塔以去掉有损的桥. 行数已超标杆, 是后续要处理的代价.
+
+
+## 2026-11-05 NegGenFold: 配对否定 (判决: 接口未被否定; 回灌律与钩子是盲的)
+
+入口 `OCF/Align/NegGenFold.lagda.md` + Upd, Blind (306 代码行). 主审复核: 删三个 `.agdai` 后冷编, 退出码 0, 3.6 秒, 0.66G; 选项都对; 禁用构造 0; FE₀ 只作条件前提. 已转告 GenFold.
+- 合判 (主审, 判断): 接口头的 "只能有损回灌" 判断变成了点更新的分离子定理, 撞墙的是 "留" 不是 "升"; 盲定理第二次拦下了 "读回进了闭项" 的形状律.
+
+
+## 2026-11-05 GenFold: 对一般种类结构的数据树与折叠 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/GenFold.lagda.md` + 8 个子文件 (1123 代码行). 主审复核: 删九个 `.agdai` 后冷编, 退出码 0, 7 秒, 1.05G; 选项都对; 禁用构造 0; 闭项无参数.
+- 合判 (主审, 判断): 折叠第一次对一切种类结构一条定义, 读回第一次在每一站都进了闭项 (非盲形状定理). 但新的上限出在塔的骨架上: 下降的值域是 Ht, 最终坍缩是两种种类的 T⁺, 所以无论层号塔爬多高, 闭项读法封在 ψ₀(Ω_{Ω_{ω+1}}) 量级. 这是 LvTop "层号在 HB S₀" 之后的第二个类型上限, 位置在最终坍缩. 要到 ψ₀Λ, 最终坍缩要换成在一般种类结构上的折叠 (下降的值域随站变大), 需要新的塔接口.
+
+
+## 2026-11-05 SkeletonAudit: Fable 5.1 骨架总审 (读法更正)
+
+报告 `Survey/SkeletonAudit.md`, 实验 `OCF/Align/SkelDxGen.lagda.md`. 主审复核: 删接口后编译实验, 退出码 0, 5.3 秒; 选项对; 禁用构造 0; 看了 `fac-*`, `dnG-hl-const`, `W₀X-base`, `nc-old-drop`, `encH-bot`, `Gen0.ev₀`, `TX`, `TXs` 的陈述.
+- **更正 (主审):** 此前 LOG 与汇报把 `TG` 写成 "读回在每一站都进了闭项", 这是错的: `GenFoldK.dnG s (hs X) = constD (evB X)`, 下降不用参数, `Hs-head`/`not-dnC` 只说输出不是常数 2, 不说它依赖读回. 此前各闭项的读法 (ψ₀(Ω_{Ω_ω}) 到 ψ₀(Ω_{Ω_{ω+1}})) 依赖 "按来历读下标" 的约定, 总审判断应以树形为准, 公共上界约 ψ₀(Ω_{Ω₃}); 两者都是判断, 以总审为准记.
+- 已转告 NewTwr/NegNewTwr: 用 `Gen0.ev₀` 作最终坍缩, 接口里不出现 Ht, 剩 C6.
+
+
+## 2026-11-05 NegNewTwr: 新塔的配对否定 (判决: 接口未被否定; 接口头的类型说法是实例性质)
+
+入口 `OCF/Align/NegNewTwr.lagda.md` + Cum, Feed, Shape, Base, Bridge (448 代码行). 主审复核: 删六个 `.agdai` 后冷编, 退出码 0, 4.2 秒, 0.70G; 选项都对; 禁用构造 0. 已转告 NewTwr.
+- 合判 (主审, 判断): 骨架总审要求的 "封顶定理义务" 第一次执行: 固定类型值域在接口层面没被排除 (`viaHt`, `codC`), 只在构造实例上成立; 最终坍缩从基世界起步, 判断没有结点被回灌 — 这就是总审说的唯一剩下条件 C6.
+
+
+## 2026-11-05 NewTwr: 新塔 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/NewTwr.lagda.md` + If, Rd, Coll, Ev, K, Obs, Cmp (449 代码行). 主审复核: 删八个 `.agdai` 后冷编, 退出码 0, 4.7 秒, 0.78G; 选项都对; 禁用构造 0; 闭项无参数. 前 3 层 1268 行.
+- 合判 (主审, 判断): 骨架总审的类型条件全部做到, 但值更低; 问题的根回到最初那一处: 一般折叠的回灌固定在第 0、1 层, 只对底种类与新种类; 要的是每个种类按自己的级回灌, 并有 "一起升" 的升界算子 (R : A → A → A, a ⊲ R a v, 且 a ⊲ v 时 v ⊲ R a v; 存在与否未知, 形状接近 no-joinA). 这是 ψ₀Λ 候选闭项现在的核心问题.
+
+
+## 2026-11-05 RaiseC: 升界算子 R (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/RaiseC.lagda.md` + Base, Bd, Fba, B; 接口 `RaiseIf` (主审写, 未改). 主审复核: 删五个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `R-in→cmp`, `R-cmp→in`, `no-always`, `R⊵Rᵇ`, `Rᵇ-hi`, `no-fba-upAll`, `no-bounded-raise`, `fba₀` 的陈述.
+- 合判 (主审, 判断): 无界的 "一起升" 是壁垒的影子: R 必须恰在 a, v 可比时把 v 放进输出 (定理), 可判定时有 R 而可判定推出 LPO (定理); 无界 R 不存在只是判断 (MLTT 里 `¬ RaiseA` 不可证, 否定只能写成 RaiseA → 非构造原则, 已转告 NegRaise). 更要紧的是 `no-fba-upAll`: 逐分量一起升对任何 R 满足不了 `FBA` 的无条件 `tp-rs`. 出路是带字面公共上界的升界 (`Rᵇ`, `upAllᵇ`): 回灌值要带着与世界各分量的公共上界进来. 已转告 KindLv (它的 `KLv.rs≤` 本来就带公共上界).
+- 事故: 构造一路的 SendMessage 按名字发不到配对的一路, 由主审转告; 以后派配对时在说明里写对方的 agentId 或让主审转.
+
+
+## 2026-11-05 NegRaise: 升界算子的配对否定 (判决 PARTIAL: RaiseA 未被否定)
+
+入口 `OCF/Align/NegRaise.lagda.md` + Bnd, Fin, Sel, Fba, Check. 主审复核: 删六个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; FEA 只作条件前提; 看了 `no-mono0`, `no-cont0`, `no-flip`, `sel1→LPO`, `deq→at`, `raiseFin`, `deqω-sep`, `deqω→WLPO`, `wlpo→deq`, `wlpo→raise` 的陈述.
+- 合判 (主审, 判断): 两路合起来, 无界的升界算子停在 "存在与否在 WLPO 档之内" (FEA 下 `DecLgAt ω` ⇔ WLPO ⇔ 处处判等, 都推出 RaiseA; RaiseA 推出什么未知). 有限下界上无条件可造 (`raiseFin`), 到 ℕ-极限下界就要 WLPO 档. 对 ψ₀Λ 闭项而言, 无界版不可用 (需要 ℕ-极限下界), 可用的是 RaiseC 的有界版 `Rᵇ`/`upAllᵇ`: 回灌值带着字面公共上界进来.
+- 更正 (经 NegRaise): RaiseC 入口 "无界升界要判定 a ⊲ v" 的判断不准确; 构造只要半判定 a ⊲ v (在 v 里找 a 的字面出现) 加上对 a 判等. RaiseC 的定理不受影响.
+- 两路独立写出 "upAll 满足不了无条件 tp-rs" (`no-fba-upAll`, `no-tp-rs-upAll`), 以构造一路的为主.
+
+
+## 2026-11-05 NegKindLv: 按级回灌的配对否定 (判决: 接口未被否定; "按自己的级" 是盲的)
+
+入口 `OCF/Align/NegKindLv.lagda.md` + Lev, Upd, W, Blind, Raise, RdW, Inst. 对着 `KindLvIf` 18:48, `KindLvRd` 18:36, `KindLvTw` 18:49. 主审复核: 删八个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; FE₀ 只作条件前提; 看了 `no-desc`, `lv-not-self`, `relevel-blind`, `only-κ₁`, `head-lossy`, `no-klv-upAllR`, `updHΛ-sep`, `wr-no-ret` 的陈述.
+- 合判 (主审, 判断): 级是树侧的概念 (坐标的级是严格子项, 定理), 这是 "让树自足" 的一条判据. 但接口不保证按级回灌 (`relevel`), 构造一路的实例只在第 1 站的一个种类上按级回灌, 后面各站有损 (定理). 推广到含函数的下标就撞分离子 (定理); 用同一个 R 一起升也不行 (定理). 剩下 "精确置自己的分量, 别处只增且依赖分量" 一种 rs 形状, 未构造未否定; "只剩这一种" 是判断, 下一路先挑战它.
+
+
+## 2026-11-05 KindLv: 按种类的级回灌 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/KindLv.lagda.md` + If, Emb, Rd, Run, Ev, Tw, Cmp. 主审复核: 删八个 `.agdai` (精确路径, 连同否定一路依赖它的四个) 后冷编, 退出码 0, 7.3 秒, 0.90G; `NegKindLv` 对最新版重编退出码 0; 选项都对; 禁用构造 0; `TK` 在无参数模块里; 主审重跑 `--html` 与 `locslice_kindlv.py`: 34 / 1391 / **1479** / 1574, 前 3 层闭包无 `GenFoldRun` 块, 与汇报一致.
+- 合判 (主审, 判断): C6 的前半 (折叠不回灌) 在构造上解决了: 级读回让坐标是高度的种类有了回灌, 输出不只含底种类. 但闭项里只有一个种类按级回灌, 卡点从 "折叠" 移到塔的类型: 每站的级要既是对角的字面第一位置, 又读进 HB (Lev X_s), 要种类结构族与级互递归. 草稿 `Cs (suc s) = step (Lev (Ys s))`, `Ys s : HB (sup ℕ Cs)` 停机检查失败; 主审判断这不只是检查器的问题: Ys s 的类型含 Cs (suc s) 本身, 是循环. 可试分层: Ys s 只用分量 ≤ s (`HtTowerStrat` 的 KB, `θ-indep`).
+- 两路合起来 (判断): 级是树侧概念 (NegKindLv 定理), 按级回灌的读回写得出 (定理), 一般折叠能用它 (定理); 剩下塔的类型与升界形状两件.
+- 互动: 构造一路改 `KindLvTw` 后否定一路的模块编译失败, 构造一路加包装恢复, 未改对方文件.
+
+
+## 2026-11-05 KPOmega1Mahlo: 题外调研 (作者问 "Mahlo序数和KP+ω_1 哪个大")
+
+报告 `Survey/KPOmega1Mahlo.md` (子智能体, 只新建这一个文件). 结论: 按 "KPω + 存在不可数序数" 读, KP+ω₁ 远大于 |KPM| = ψ_Ω(ε_{M+1}); 中间隔着 Π₃ 到 Π_ω 反射、稳定性、Π¹₁-反射、Z₂. KP+ω₁ > |Z₂| 一步是纸面论证 (判断, 无文献出处); 文献无 KP+ω₁ 的序数值. googology wiki 与 Cantor's Attic 被 Cloudflare 拦下, 未绕开, 社区写法未核. 与主线无关.
+
+
+## 2026-11-05 ValTK: TK, TN, TK₀ 的 ord 比较 (单路, 判决 PARTIAL)
+
+入口 `OCF/Align/ValTK.lagda.md` + Base, Val. 主审复核: 删三个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `TK₀≤TK`, `node≤`, `Dom`, `BrMono`, `lv-off` 的陈述.
+- 合判 (主审, 判断): 无条件的值比较一条也没有. "按级回灌提高值" 归结到一条树侧单调性 (两份折叠在不同世界里的输出支配), 它与 GoodUp/HtCrossV 的异质世界是同一个障碍, 多了一维. 读法判断: TK, TK₀, TN 都低于 ψ₀(Ω_Ω), 按级回灌只多在 κ₁ 一个结点上, 不改档. 这与 KindLv 的读法一致: 要让值上去, 先要分层塔让每站都按级回灌 (StratTw 在做).
+
+
+## 2026-11-05 StratTw: 分层的塔 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/StratTw.lagda.md` + If, Rd, Tw, Cmp. 主审复核: 删五个 `.agdai` (精确路径) 后冷编, 退出码 0, 5.5 秒, 0.92G; 选项都对; 禁用构造 0; `TS` 在无参数模块; 主审重跑 `--html` 与 `locslice_strattw.py`: 9 / 1449 / **1453** / 1518, 与汇报一致; 看了 `all-heads`, `head-fed`, `lossy-inner`, `KT-top-lossy` 的陈述.
+- 合判 (主审, 判断): KindLv 卡住的类型条件解开了 (分层, 普通 ℕ 递归, 无停机指示), 每站头种类都按级回灌 (定理). 卡点从类型移到内容: 极限级的顶行有损 (`KT-top-lossy`), 级内部的种类有损 (`lossy-inner`), 站内求值不回灌. 值仍无定理 (ValTK 说明值比较卡在异质世界). "互递归是真循环" 仍是判断.
+
+
+## 2026-11-05 NegStratTw: 分层塔的配对否定 (判决: 接口未被否定)
+
+入口 `OCF/Align/NegStratTw.lagda.md` + Cyc, Blind, Inst, Deep. 主审复核: 删五个 `.agdai` (精确路径) 后冷编入口, 退出码 0; `NegStratTwInst` 单独编译退出码 0; 选项都对; 禁用构造 0; FE₀ 只作条件前提; 看了 `strat`, `hd-inj`, `no-total`, `fed-exactly`, `deep-lossy`, `updD-sep`, `no-wmatch-cp` 的陈述. 对 StratTwTw 19:22 版重编通过 (否定一路补记).
+- 合判 (主审, 判断): 主审的 "真循环" 判断被部分推翻: 草稿方程有解, 解只用分量 ≤ s (`solFin`, `strat`), 循环只在定义形式上. 分层的代价是把 "另一个类型里的拷贝" 放回来: 深种类以坐标为下标的拷贝上升一份留别份推出分离子 (定理). 墙从后面各站的头移到每站级里的深种类.
+
+
+## 2026-11-05 FabLFReGen: Fable 5.1 自选下一步 (一次封闭的层号接上一般折叠)
+
+作者要求: 不审核不评估, 让 Fable 自行判断最有价值的下一步并交成果. 文件 `OCF/Align/FabLFReGen.lagda.md` (127 代码行). 主审复核: 删 `.agdai` 后冷编, 退出码 0; 选项都对; 禁用构造 0 (本文件与 `LFReTy`); 看了 `stage-fst`, `coord-stage`, `fb-lossy`, `top-base`, `TΛ` 的陈述. 未切片行数.
+- Fable 的判断: "塔的类型" 在仓库里已有解 (`LFReTy` 的一次封闭 `SL`), 只是没和 `GenFoldRun` 接上; 接上后分层塔要解决的条件只是一行的类型事实, 去掉了逐站造塔的全部脚手架 (摆脱侧). 不提高强度, C6 一样未解: `SL` 的世界以层号为下标, 第 n ≥ 2 站的层号含函数, 升这一站的分量落在 `upd₁-sep` 一族 (判断). 出口: `Rᵇ` 式有界升界或 `ColimA` 式可入层号更新, 在 `SL` 上都未写.
+- 合判 (主审, 判断): StratTw 与 FabLFReGen 用两种写法解开同一个类型条件 (分层塔 / 一次封闭), 后者没有拷贝与同形证据. 两路合起来, ψ₀Λ 候选闭项只剩 C6 (回灌升坐标为下标的种类的界; 深种类有损) 这一件 (判断).
+
+
+## 2026-11-05 RsOwn: 挑战 "只剩一种升界" (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/RsOwn.lagda.md` + If, Sh, SW, Bd, Tm. 主审复核: 删五个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; `TS` 在无参数模块 `RsOwnTm`; 看了 `inv→RsK`, `Uf`, `lv-bot`, `rs-all`, `rs-least`, `w′-not-Uf`, `head-still-lossy` 的陈述.
+- 合判 (主审, 判断): "只剩一种" 被推翻: 难点不在 "依赖分量", 在 "别处的旧界与 v 没有字面关系"; 世界自己带上这份关系 (同界, 或公共上界) 时一起升可以构造. 代价: 同界世界里一份底拷贝回灌会一起抬高别的底拷贝 (语义代价, 对值的影响无定理). 坐标是高度的种类 (坐标类型随级变) 仍未找到升界, 这正是 StratTw/NegStratTw 的深种类与 FabLFReGen 的 C6.
+- 名字: `RsOwnTm.TS` 与 `StratTwTw.TS` 同名, 地图里以文件列区分.
+- 补记 (主审): FabLFReGen 的 `TΛ` 行数切片, 口径同 `newtwr/locslice_newtwr.py` (模块内定义手工列根, 脚本在 scratch, 未入库): 层 1 327 / 层 2 1040 / 层 3 **1042**, 记号 0; 其中 HtTowerTy 201, GenFoldRun 178, GenFoldTree 163, GenFoldIf 96, 本文件 77, GenFoldRd 72, LFReTy 58, LFReTower 32. 低于 StratTw `TS` 1453, KindLv `TK` 1479, NewTwr `TN` 1268 (同口径). 手工根可能有遗漏, 是近似.
+
+
+## 2026-11-05 Slot: 高度坐标的共享槽 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/Slot.lagda.md` + If, Gen, Cp, Tw, KH. 主审复核: 删五个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `rs-other`, `share-no-loss`, `cpSlot`, `famU`, `κd-rs`, `no-slotKH` 的陈述. `SlotKH` 导入否定一路的 `NegSlotPre` (耦合, 那边改动后要重编).
+- 合判 (主审, 判断): 同一级的拷贝族可经共享槽一起升 (定理), 这正好接住 NegStratTw 的深种类墙 (`κd` 族有升界; 那里只否定了升一份留别份). 含相邻两级成员的族不能经这种槽 (定理). 代价: 升一个就升全部 (同 RsOwn 的同界世界). 未接进折叠, 无闭项.
+
+
+## 2026-11-05 NegSlot: 共享槽的配对否定 (判决: 接口形状的共享槽装不下跨级的族)
+
+入口 `OCF/Align/NegSlot.lagda.md` + Pre, Wall, Inst. 主审复核: 删四个 `.agdai` 与 `Slot`, `SlotKH` 的 (精确路径) 后冷编两个入口, 都退出码 0; 选项都对; 禁用构造 0; 看了 `no-inflate`, `slot-ret`, `no-slot-adj`, `no-slot-κHc`, `tw-no-split`, `no-slot-step2` 的陈述.
+- 合判 (主审, 判断): 树侧判据 (定理): 共享槽等于成员坐标两两互为收缩, 所以只有坐标类型能无损互搬的成员 (同一种类的拷贝) 能同槽; 跨级永远不能 (高度树良基, 不经壁垒). C6 现在精确地落在跨级的种类族上: 同级拷贝已有升界工具 (Slot), 跨级既不能升一份留别份 (分离子), 也不能同槽 (`no-slot-κHc`), 也不能 "忘" 地一起升 (`no-forget`); 未否定的: 不经共享槽、不忘的升界, 每级一个槽而组间另行升界.
+
+
+## 2026-11-05 SLFb / NegSLFb / Fab2SLs: C6 在 SL 上 (三路同时回来)
+
+主审复核: 删十三个 `.agdai` (精确路径) 后冷编 `SLFb`, `NegSLFb`, `Fab2SLsNeg` 三个入口, 都退出码 0; 选项都对 (14 个文件); 禁用构造 0; `TF`, `TΛs` 在无参数模块; 看了 `headFb`, `rsJ-top`, `updP-sep`, `no-inv-keep`, `akConst`, `setH-top`, `setH-keep`, `updD₂-sep`, `all-heads` 的陈述.
+- SLFb (构造, PARTIAL): SL 本身的世界上带证据的回灌未找到 (两处编译卡点); 出口是站下标子结构 SNᵢ; 闭项 `TF` 每站头按回灌, 但级层 1, 读回只含一种结点; 前 3 层 1465.
+- NegSLFb (否定): 接口未被否定; 升 + 留撞分离子, 墙在律的定义域; 同界证据 = 截面; 盲 `akConst`.
+- Fab2SLs (Fable 第二轮自选): 与 SLFb 独立地走到同一出口 (站以 ℕ 为下标); 把 C6 写成一对定理: ℕ 下标升 + 留两半同时成立, 坐标下标推出分离子. 前 3 层 1346.
+- 合判 (主审, 判断): 三路一致: 站的一半已解 (ℕ 下标), C6 只剩层的一半: 每站级里以坐标为下标的深种类 (同级拷贝可用 Slot 的共享槽; 跨级不能同槽). 头种类按自己的级读回 (而非级层 1) 仍未做. 行数: 新闭项都在 1327–1465 (去假象判断), 离标杆不远; 本轮已按作者决定转向压缩 (LeanT) 与树的语言 (TreeLang).
+
+
+## 2026-11-05 ValNew: TΛ 一族的值 (单路, 判决: 对 TΛ 族成立)
+
+入口 `OCF/Align/ValNew.lagda.md` + Rel, Run, Tw, Str, Om. 主审复核: 删六个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `TΛn<`, `TΛ<TΛ₂`, `stage<`, `lg-irr` 的陈述.
+- 合判 (主审, 判断): 新闭项族的第一批无条件值定理 (严格递增, 塔每站低于对角, 与合法性证明无关). 关系的构造子读自折叠字面, 不读记号. 只对回灌全有损的折叠成立; 有回灌时又回到异质世界 (ValTK 同一处). 读法判断把 TΛ 定在约 ψ₀(Ω_2), 比 FabLFReGen 自己说的 "远低于 ψ₀Λ" 更具体.
+- 简报更正: 主审说 TΛ 与 TΛ₂ 是 "同一份折叠、同一世界", 不对: GenFoldRun 的模块参数 Λ, lΛ 不同, 是跨实例; 能证是因为回灌全有损.
+
+
+## 2026-11-05 NegRsOwn: 升界形状的配对否定 (判决: 未关闭路线)
+
+入口 `OCF/Align/NegRsOwn.lagda.md` + Pre, Shape, Fam, Inst. 汇报一度未送达 (运行记录 19:32 后停住), 主审唤醒后重交. 主审复核: 删五个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; FE₀ 只作条件前提; 看了 `ownB₁-sep`, `no-same-rs`, `all→own`, `no-sh-ι0`, `bd-merge` 的陈述.
+- 合判 (主审, 判断): RsOwn 推翻 "只剩一种" 的两种新形状本质都是 "一起升加世界证据", 不是精确置自己 (定理); 精确置自己加无条件只增撞分离子, 带前提只增未否定 (可能既构造不出也否定不了, 判断). 要注意 `bd-merge`: RsOwn 的闭项 TS 的世界把读回分量的底拷贝与第 0 站底种类绑成同界, 这可能让 TS 的回灌退化 (对值的影响无定理).
+
+
+## 2026-11-05 TreeLang: 判据推出定义 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/TreeLang.lagda.md` + If, Lv, Raise. 主审复核: 删三个 `.agdai` (精确路径; 接口的留给否定一路) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `LvCrit` 的字段与 `least`, `exact→`, `exact←`, `no-cof⁻`, `ev→wdec`, `unique`, `sup-bare→Sep` 的陈述.
+- 合判 (主审, 判断): 第一次有 "满足判据 ⇒ 定义落在某形状" 的定理. 但要如实看: feed 与 inherit 几乎就是 `Lev` 的 step 行与 sup 行改写成闭包条件, 所以 "最小的满足判据的规则就是 `Lev`" 接近于说 "`Lev` 是它自己的归纳闭包" (判断); 实质信息在三处: (1) feed 的位置 hs x 是最早的 (`no-self`, 由 `no-retract`, 树逼出); (2) 一次封闭版的 lΩ 行由 cof 逼出, 而 cof 本身受直觉启发; (3) 升界部分: 律的定义域决定键要弱可判定, 以字面位置为下标时升界存在且唯一 (这是对 C6 下标选择的正面指引, 定理). 正面判据仍是选择, 不是定理; 未达 "树自足".
+
+
+## 2026-11-05 NegTreeLang: 判据的配对否定 (判决: 构造一路定理未被否定, 读法收窄)
+
+入口 `OCF/Align/NegTreeLang.lagda.md` + Pre, Flat, Raise. 汇报经构造一路转来. 主审复核: 删四个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; FEL 只作条件前提; 看了 `null-crit`, `fl-const`, `contrast`, `diag-raise`, `any-lowers`, `raise-adj`, `pt-SL→WLPO` 的陈述. 耦合: 导入 `TreeLangLv`, `TreeLangRaise`.
+- 合判 (主审, 判断): 否定性判据给不出正面指引 (定理); 正面判据只定死级集合, 平的候选同级集合而高度退化 (定理). 还缺的正面判据 (否定一路列, 判断): 第一位置与坐标高度的 ⊲ 一致 (读自 step, 要记翻译账), 定义域含哪些异键对, 升界保世界的序, 读数类型随成员变的框架. 结论: 树的语言这一侧本轮得到的是 "缺什么" 的精确清单, 不是正面指引本身.
+
+
+## 2026-11-05 Fab3Typed: Fable 第三轮自选 (带类型的一层折叠)
+
+作者要求同前 (自主), 本轮主题 "压缩与自足". 文件 `OCF/Align/Fab3Typed.lagda.md`. 主审复核: 删 `.agdai` 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `Ψ`, `feed-id`, `feed-Ω`, `Ψ-mono`, `Ψ-lg`, `TΩω`, `LgB-TΩω` 的陈述. 行数 402 (Fable 的切片, 主审未重跑).
+- 合判 (主审, 判断): 一个干净的压缩下限数据点: 后继层的塔用带类型的折叠, 回灌是恒等, 单调与合法是一步定理, 402 行. 但强度只到 ψ₀(Ω_ω), 即 BTBO 的档: 同档对照 src BTBO 199 (累加), BTBOᴵ 523 (不累加), 所以它是 "不累加的 BTBO 在 KS 框架里的更短写法", 不是越过 BTBO 的压缩. Fable 的归因 (判断): 数据树 + 读回 + 升界的全部行数来自 sup 层的 "留还是坍缩" 决定; 下一步是 sup 层的带类型折叠, 会重新遇到 C6.
+
+
+## 2026-11-05 LeanT: 按 "重写" 压缩 TΛ 的前 3 层
+
+新目录 `OCF/Lean/` 七个文件. 主审复核: 删七个 `.agdai` (精确路径) 后冷编 `LeanT`, `LeanTFb`, `LeanTCmp`, 都退出码 0; 选项都对; 禁用构造 0; 导入 `OCF.Align` 的只有验收文件 `LeanTCmp`; `importclosure.py OCF.Lean.LeanT` OK, 禁用表 0. 行数 745 (LeanT 的切片, 主审未重跑).
+- 合判 (主审, 判断): 压缩 29%, 不是 "大幅"; 剩下的是一般折叠本身. 两条实质收获: (1) 折叠参数化成一份, C6 的机器只需给 `Fb` 实例, 估计全加后约 1100–1200 < 1513; (2) `TΛ` 的新种类回灌从不执行 (`old-target` 加读代码), Fable 闭项里 "唯一有回灌的那一行" 是闲置的: C6 之外, 还要让回灌那一行真的被执行.
+- 本轮 (压缩与自足) 合起来 (判断): 压缩给出两个数据点: 同一个一般折叠约 745; 带类型折叠 (Fab3Typed) 在后继层 402. 树的语言给出缺口清单 (四条正面判据), 不是正面指引. 按 1:1 交替, 下一轮可开一路攻击.
+
+
+## 2026-11-05 TL2: 补四条正面判据 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/TL2.lagda.md` + If, Ord, Raise. 主审复核: 删三个 `.agdai` (精确路径; 接口留给否定一路) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `no-ord-Fl`, `ord-dec`, `ord-antisym`, `cross-unique`, `no-lower`, `adj-free`, `dR`, `dGrow`, `sup-rt₁`, `copies-split` 的陈述.
+- 合判 (主审, 判断): 四条判据把上一对的盲候选全部排除 (定理), 并推出三条可用的性质; 对 C6: 读数类型随成员变时跨级族有合法升界 (定理, `dR`). 但判据的终点是现有积木 (refl 级定理), 而 (i), (iii) 读自 `step`, `RsK`: 本轮判据是 "验收现有树形的判据", 不是 "写出新定义的判据". 下一步把 `DPos` 接到种类结构上 (Ω 行取 sup (界下位置)), 正好与攻击侧会合.
+
+
+## 2026-11-05 NegTL2: 新判据的配对否定 (判决: 判据仍是验收不是写出)
+
+入口 `OCF/Align/NegTL2.lagda.md` + Pre, Ord, Raise, Bd. 主审复核: 删五个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `all4`, `blind-i`, `pz-noreach`, `blind-ii`, `blind-final`, `d-adj` 的陈述.
+- 合判 (主审, 判断): 两轮树的语言合起来: 判据能验收 (排除错误候选、推出可用性质), 不能写出 (`all4`: 框架判据不看候选; 重数与世界里的界不定). 否定一路给的下一步判据 ("框架由候选给出", 重数) 都读自 step/sup/RsK. 在作者的担心下, 这一侧的诚实结论是: 树的正面指引目前只到 "验收" 档.
+
+
+## 2026-11-05 TySup: 带类型折叠推广到 sup 层 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/TySup.lagda.md` + If, Fold, C. 主审复核: 删三个 `.agdai` (精确路径; 接口留给否定一路) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `Φ`, `Sh-Φ`, `feed-id`, `code-feed`, `TΩΩ`, `LgB-TΩΩ` 的陈述. 行数 504 (TySup 的切片, 主审未重跑).
+- 事故: 删 `.agdai` 时在 for 循环里用了 shell 变量 (违反规则), 只删到自己的四个文件 (自报).
+- 合判 (主审, 判断): 可数层号上 sup 层的 C6 不出现 (世界只剩一个界, 定义事实), 504 行读 ψ₀(Ω_Ω), 是同读法下目前最短的 (对照 HtFeed 主线 665, 判断口径不同). 但用了累加 (作者 11-04 指出累加会带来毛刺, 不能说更自然), 且 ψ₀Λ 要的 lΩ 层号没做: 接口的位置要带世界, 那正是 C6 的字面位置.
+- 补记 (主审): `TySupSum` 冷编退出码 0, 禁用构造 0; 起因是否定一路的 `¬LgB-topω` (原极限地板不合法, 闭项证书不受影响); 新地板 `topΣ` 对一切层号合法 (`Lg-topΣ`).
+
+
+## 2026-11-05 LeanFb / NegLeanFb: 在 OCF/Lean 上加回灌 (攻击一)
+
+主审复核: 删十三个 `.agdai` (精确路径) 后冷编 `LeanFb`, `LeanFbTest`, `NegLeanFb`, 都退出码 0; 选项都对 (13 个文件); 禁用构造 0; 不导入 `OCF.Align`; 看了 `heads-fed`, `exec-TF0`, `rz-top`, `cp1-moves`, `TF`, `wdec1`, `TF-old`, `rdX-one-kind`, `lossy-hl`, `rdConst` 的陈述. 行数 1052 (LeanFb 的切片, 主审未重跑).
+- 合判 (主审, 判断): 第一次有 "回灌行在闭项计算中被执行" 的定理, 数字层号上的同级拷贝 (含含函数下标的位置) 一起升, 前 3 层 1052 < 1300. 但离 ψ₀Λ 仍差: 第 n ≥ 2 站的头不在自己的级上读回 (读回只按一个种类增长), 级 ≥ 2 与含函数层号的拷贝有损, 值无定理 (有限测试分不出与全有损). 构造一路判断约一百行闲置的新种类回灌机器可去掉.
+
+
+## 2026-11-05 NegTySup: 带类型 sup 折叠的配对否定 (判决: 未关闭路线)
+
+入口 `OCF/Align/NegTySup.lagda.md` + Lg, Diag, Sel, If, Mono, C. 汇报一度停住 (21:48 后), 主审唤醒后交. 主审复核: 删七个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; FEᴴ 只作条件前提; 看了 `ok-ICd`, `kept-not-LgB-ICd`, `¬LgB-topω`, `blind-TC`, `Φ-not-mono`, `lg*⇏lgB`, `coinLv`, `Ψ-monoᴮ`, `pt-sep`, `lt→LPO` 的陈述.
+- 合判 (主审, 判断): TySup 的代价被写成定理: 合法性只在终点由形状给出, 中间层不是 `LgB` 合法; 证书分不出决定对错 (接口要补 Correct 一类的律); 累加版不单调. 一条正面: 两种合法性在一切 Lv x 上互推, 所以 Fab3Typed 的单调可以用标准合法性陈述. 带公共上界的留/坍缩律有构造, 裸下标上推出分离子或 LPO: 又一个 "律带公共上界" 的实例.
+
+
+## 2026-11-05 Fab4LOm: Fable 第四轮自选 (lΩ 层号上的留/坍缩)
+
+文件 `OCF/Align/Fab4LOm.lagda.md` (101 代码行). 主审复核: 删 `.agdai` 后冷编, 退出码 0; 选项对; 禁用构造 0; 看了 `anti`, `irr`, `Exact`, `Sep`, `exact→Sep`, `exact₂`, `om-step` 的陈述.
+- 合判 (主审, 判断): 两路攻击共同的墙在带类型折叠的语言里成了一对定理: 坐标裸的 lΩ 种类上精确决定推出分离子; 坐标带同一界下的路径时决定可归到子层. 这是对 `LFReTy.Lv` 定义本身的否定性判据 (AGENTS: "用否定定理划出不能有的字段"). Fable 提出的下一步 (lΩ 坐标带路径, 或在输出上记录路径) 是定义层面的改动, 理由来自树侧的编译否定, 属 "第 4 层逼出" 一类, 须作者定.
+
+
+## 2026-11-05 LeanLv / NegLeanLv: 头按自己的级读回 (攻击)
+
+主审复核: 删十八个 `.agdai` (精确路径) 后冷编 `LeanLv`, `LeanLvTest`, `NegLeanLv`, 都退出码 0; 选项都对 (18 个文件); 禁用构造 0; 不导入 `OCF.Align`; `importclosure.py --only OCF.Lean. OCF.Lean.NegLeanLv` OK (否定一路自己没跑, 主审补跑); 看了 `TVs`, `exec-TVs2`, `rd-ab0`, `lvl-cases`, `no-sim`, `no-top3-RLs`, `absorb-D`, `strict-cell` 的陈述. 行数 1295 (LeanLv 的切片, 主审未重跑).
+- 合判 (主审, 判断): 头 2 按自己的级读回并在闭项中执行; 头 n ≥ 3 在现有 ΛF 上不可能 (定理): 要改 Λ (让最高层含与各站层号同形的层). 值的一侧多了一条重要的否定: 逐格严格大推不出总和严格大 (`strict-cell`), 所以 "回灌提高值" 需要比逐格比较更强的论证. 行数 1295, 离标杆 1513 余 218.
+- 本轮 (Fab4 + LeanLv 对) 合起来 (判断): 两处都指向 "改定义": Fab4LOm 说 lΩ 的坐标要带路径; NegLeanLv 说 Λ 要含与站层号同形的层. 两者都是树侧编译否定逼出的定义改动, 按 AGENTS 交作者定.
+
+
+## 2026-11-05 LamIso / NegLamIso: 新最高层含同形层 (攻击, ②)
+
+主审复核: 删十五个 `.agdai` (精确路径) 后冷编 `LamIso`, `LamIsoTest`, `NegLamIso`, `NegLamIsoTest`, 都退出码 0; 选项都对 (15 个文件); 禁用构造 0; 不导入 `OCF.Align`; `importclosure.py --only OCF.Lean. OCF.Lean.LamIso` OK; 看了 `Λ′`, `prtL`, `own`, `own-reads`, `rd-top3`, `TI`, `L-no-head`, `Sg-gone`, `ΛF-no-own`, `pathcopy-illegal` 的陈述. 行数 1391 (LamIso 的切片, 主审未重跑).
+- 合判 (主审, 判断): 一般 n 上每站头按自己的级读回 (定理), 是这条线第一次把 "按级回灌" 对一切站做到; 选拷贝的规则 (按坐标在自己的站里选, 前缀逐项继承) 由两条不合法性定理逼出. 但: 无值定理, L n 内部深拷贝有损, ⊞ ΛF 是接缝, 层 L n 的骨架读自 tw (Lv 的形状本是记号引导). 行数 1391, 离标杆 122.
+
+
+## 2026-11-05 PathOut: 路径记在折叠输出上 (攻击, ①(b))
+
+入口 `OCF/Align/PathOut.lagda.md` + If, Fold, X1. 主审复核: 删三个 `.agdai` (精确路径; 接口留给否定一路) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `Ψ`, `PH`, `correct₁`, `topL`, `Lg-topL`, `TXL`, `LgB-TXL` 的陈述. 行数 743 (PathOut 的切片, 主审未重跑).
+- 合判 (主审, 判断): C 线第一次越过 "裸坐标" 那堵墙, 在 lΩ 层号 X₁ 上决定可证正确, 证书是标准 `LgB`. 但读法没有越过 ψ₀(Ω_Ω), 离 ψ₀Λ 还差三步 (X₁ 上叠层, 一般 lΩ k g, Λ); 行数从 504 涨到 743; 仍有累加. 构造一路判断 X₁⊕m 卡在留下的底种类沿嵌入搬运证据 (变量层号上不是 refl).
+
+
+## 2026-11-05 NegPathOut: 带路径输出的配对否定 (判决: 未关闭路线; 更正 Fab4LOm)
+
+入口 `OCF/Align/NegPathOut.lagda.md` + World, Cmp, Path, Lg, If, Inst. 主审复核: 删七个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; FEᴸ 只作条件前提; 看了 `fab4-premise-false`, `no-exact-c₁`, `exact→cmp`, `cmp-bound`, `cmpdec→Sep′`, `escape`, `no-grow`, `ph-lg-own`, `top′` 的陈述.
+- **更正 (主审)**: Fab4LOm 的 `exact→Sep` 前提在它自己的 X₁ 上不可满足 (`fab4-premise-false`), 那条定理在 X₁ 上是空的 (AGENTS "前提要可满足"; 主审复核 Fab4LOm 时漏查). 实际结论更强: 无公共上界的坐标对上精确决定根本不存在 (⊥). 地图 Fab4LOm 一行已加更正; Fab4LOm 文件未改.
+- 合判 (主审, 判断): lΩ 层号上可比与否只看有无合法公共上界 (定理), 这是 "律带公共上界" 在 C 线上的最终形态. PathOut 的 `TXL` 可信 (标准 LgB, 输入合法), 但读法与 TΩΩ 同档; 接口的 shift 是盲的 (常值也行), 所以 "回灌不再是恒等" 没有被接口约束.
+- 本轮 (② LamIso 对, ①(b) PathOut 对) 合起来 (判断): B 线 1391 行, 每站头按自己的级读回 (一般 n), 无值; C 线 743 行, 过了 lΩ 的第一层, 读法未越过 ψ₀(Ω_Ω). 两条线都还差多步, 都没有值定理.
+
+
+## 2026-11-05 NegValW: 值模拟的配对否定 (判决: 未否定 "回灌提高值")
+
+入口 `OCF/Lean/NegValW.lagda.md` + Reset, Inst, Blind. 主审复核: 删四个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 只导入接口 `ValWIf` 与已有文件, 不依赖构造一路的在写文件; 看了 `reset-z₁`, `no-cell-≤`, `anti`, `rk-split`, `blindSim`, `no-RunPres`, `Forced.mono` 的陈述.
+- 合判 (主审, 判断): 跨世界的值模拟必须穿过四处 (回灌清零状态, 数据对世界不单调, 结点跨层导致决定分裂, 跨世界值单调), 都是编译过的定理. 有限测试分不出 TF 与 TL 是因为回灌行比展开深度深, 不是值相等. 等构造一路 ValW.
+
+
+## 2026-11-05 ValW: 带世界证据的值模拟 (构造一路, 判决: 未走通)
+
+入口 `OCF/Lean/ValW.lagda.md` + If, Rk, Rel, Row. 主审复核: 删九个 `.agdai` (本路五个与 NegValW 四个, 精确路径) 后冷编 `ValW`, `NegValW`, 都退出码 0; 选项都对; 禁用构造 0; 看了 `rk-agree`, `rk-cross`, `kr-occurs`, `x-sum`, `Ωd-self`, `cell-≤`, `RKa-step` 的陈述.
+- 合判 (主审, 判断): 两路合起来, 值的一侧把 "回灌提高值" 的障碍从 "异质世界" 收窄到一处: 层依赖世界 (闭包分支在更大世界里走更高的层), 于是模拟必须跨层; 跨层时决定只会以 "左保留右上升" 一种方式分裂 (定理), 而现有关系连接不了结点与链. 这就是 TpMono 的 ChangeHs 与否定一路 `Forced.mono` 的边界. 回灌行本身不增加障碍 (条件定理). 至今仍无一条 "回灌提高值" 的定理.
+
+
+## 2026-11-06 X1Up: C 线在 X₁ 上叠层 (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/X1Up.lagda.md` + If, Fold. 主审复核: 删两个 `.agdai` (精确路径; 接口留给否定一路) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `PH-ΦU`, `PH-ΦX`, `TU`, `TU2`, `LgB-TU2`, `okU`, `naive-anti`, `nonflat1` 的陈述. 行数 1111 (X1Up 的切片, 主审未重跑). 接口定稿时间以 23:45 为准 (起草时占位写 00:21, NegX1Up 引用的是占位时间, 同一接口).
+- 合判 (主审, 判断): C 线第一次在标准 LgB 证书下读法越过 ψ₀(Ω_Ω) (`TU2`, ψ₀(Ω_{Ω·2}), 判断). 但行数从 743 涨到 1111, 路径机制是折叠的 2.7 倍 (脚手架变深); 两段折叠拼接, 对角仍走可数层号并用累加. 下一站要先把可数折叠推广到带底种类, 最好写成对层号递归的一个折叠.
+
+
+## 2026-11-06 NegX1Up: X₁ 叠层的配对否定 (判决: 未关闭路线)
+
+入口 `OCF/Align/NegX1Up.lagda.md` + Emb, Cmp, Flat, Pay, PH, If, Leg, Inst. 汇报一度停住, 主审唤醒后交. 主审复核: 删九个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `cmp-new`, `no-exact-up`, `flatTopOf`, `constPayOf`, `leg-not-mono`, `root-Ω₁`, `ΦU-not-mono`, `kept-not-LgB-U` 的陈述.
+- 合判 (主审, 判断): `root-Ω₁` 给 TU1/TU2 的读法一个字面依据 (留下了 Ω₁-结点, 不是可数层号的重写). 接口仍有三处盲区 (地板, 读回, 证据), 防塌缩靠实例选择. 叠层后需要世界与证据的比较只剩一种对, 这是树侧判据 (分类穷尽是判断).
+
+
+## 2026-11-06 X2: C 线攻 X₂ (构造一路, 判决 PARTIAL)
+
+入口 `OCF/Align/X2.lagda.md` + If, Fold, Inst. 主审复核: 删三个 `.agdai` (精确路径; 接口留给否定一路) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `Ψ₂`, `Sh-Ψ₂`, `TX2`, `LgB-TX2`, `head-lim`, `no-ΩΩ`, `shift-kept-not-PH` 的陈述. 行数 1389 (X2 的切片, 主审未重跑).
+- 合判 (主审, 判断): 闭项走到了 lΩ 层号 X₂, 但读法没有越过 TU2 (同为 ψ₀(Ω_{Ω·2})); 两条边界否定说明, 要越过就得让高种类分支含 X₂ 自己的 Ω₁-结点, 而旧的 X₁ 路径结构不允许 (要新的 X₁ 实例). 行数 1389, 离标杆 124: C 线照 "每站一层" 的走法已逼近标杆, 压缩 (CRw) 是继续往上的前提.
+
+
+## 2026-11-06 NegX2: X₂ 的配对否定 (判决: 未关闭路线)
+
+入口 `OCF/Align/NegX2.lagda.md` + Bd, Lv, If, Mono, Inst. 主审复核: 删六个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; FE₁ 只作条件前提; 看了 `cls-ok`, `up-not-below`, `κΩ₂-not-cv`, `no-fixed-m`, `no-exact-new-X₂`, `leg₁`, `allLoOf`, `Ψ₂-not-mono` 的陈述.
+- 合判 (主审, 判断): X2 实例的决定正确 (定理), 但接口对 "分类正确" 是盲的 (定理), 要只增一条 correct 一类的律. 往 tw n 的第一处 (共尾度 Ω₂ 的坐标层) 不是墙, 合法化是构造; 难点仍是 X₂ 上叠层时输出落在 Ψ₂ 定义域之外 (判断).
+
+
+## 2026-11-06 Fab5Val: Fable 第五轮自选 (C 线第一批值定理)
+
+文件 `OCF/Align/Fab5Val.lagda.md`, `Fab5ValRel.lagda.md` (370 代码行). 主审复核: 删两个 `.agdai` 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `Ψ-mono≤`, `Mo-Ψ`, `infl`, `grow`, `growᴬ`, `≤→≤ᴬ`, `lgB-not-mo` 的陈述.
+- 合判 (主审, 判断): 值的一侧的第一条 "折叠对层单调" 定理, 在带类型折叠的后继层上: Fable 判断之前卡住部分是用错了关系 (字面第一位置是前缀关系, 不是值关系). 新的值合法 `Mo` 是为值而设的树侧合法性, LgB 推不出它 (定理). 推到 sup 层要一条 "两种折法可比" 的路线引理; 做到了就有 TΩΩ, TU2 的值定理.
+
+
+## 2026-11-06 CRw: C 线按 "重写" 合成一个折叠 (压缩)
+
+`OCF/Lean/CRw*` 六个文件. 主审复核: 删五个 `.agdai` (精确路径; 接口留给否定一路) 后冷编 `CRw`, `CRwCmp`, 都退出码 0; 选项都对; 禁用构造 0; `importclosure.py --only OCF.Lean. OCF.Lean.CRw` OK; 看了 `Φ`, `pick`, `Sh-Φ`, `PH-ΦX`, `TU2`, `LgB-TU2` 的陈述; 主审重跑 `--html` 与 `locslice_crw.py`: 前 3 层 **696** (CRwFold 258, CRwPath 192, CRwBase 149, CRw 87, CRwIf 10), 与汇报一致.
+- 合判 (主审, 判断): 压缩成功, 读法不变. 四条判据: 编译与闭包 (是); 一个对层号递归的折叠 (部分是: 两种底共用一份, 还不是对 IR 层号 LH 的递归); 重现 TU2 (读法判断相同, 有限测试相同; 证书标准 LgB); 行数明显低于 1111 (是, 696, 但未含地板合法约 35 行). 路径脚手架 239 行是剩下最大的一块. 下一步: 底做成递归, 才能一次覆盖往 Λ 的各站.
+
+
+## 2026-11-06 NegCRw: 重写折叠的配对否定 (判决: 未关闭路线)
+
+入口 `OCF/Lean/NegCRw.lagda.md` + Acc, World, If, Inst. 汇报一度停住, 主审唤醒后交. 主审复核: 删五个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `acc-not-mono`, `shape-cocone→chain`, `fab3-no-shape`, `ph-free-cnt`, `wdep₁`, `stay-no-PH`, `kept-not-LgB-X`, `ok-dcl` 的陈述.
+- 主审跑了否定一路写好未运行的行数复核 `negcrw/audit_crw.py` (同一份 CRwCmp 的 html): X1Up 第 3 层 1111 里 "决定正确" 18 行, "地板合法" 28 行; 去掉这两项 1065. 同口径比较 CRw 696 对 1065, 仍少约 35%; CRw 补上地板合法 (约 35 行, 判断) 与决定正确 (否定一路已证, `ok-dcl`) 后约 750.
+- 合判 (主审, 判断): 压缩是真的, 不是靠去掉保证. 累加被 "证书只看形状" 逼出 (定理), 这是去掉毛刺的一条精确约束: 不累加就得让证书读输入的合法性. 往 lΩ k g (k ≥ 1) 走, 世界要做成塔 (由 `wdep₁` 推测, 判断).
+
+
+## 2026-11-06 NegValC: CRw 值定理的配对否定
+
+入口 `OCF/Lean/NegValC.lagda.md` + Inst, Bound, Route. 主审复核: 删四个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `l11≤one`, `one≤l11`, `rev`, `acc-not-mono≤`, `tx-not-mono`, `mo-not-pres`, `fab5-port-excluded`, `route-hself`, `no-z≤` 的陈述.
+- 合判 (主审, 判断): 一条要紧的事实 (定理): CRw 的累加折叠不是输入值的函数, 同值不同写法的两个合法输入 (lim(1,1,…) 与 1) 折出严格不同的值. 这正是作者 11-04 说的累加毛刺, 现在是定理. 它也说明 Fab5 的值关系不能原样搬到 CRw: 要么收窄 ℕ-极限 (值严格), 要么去掉累加 (NoAcc 在做). 对纲领 1 的 "值上一致" 是否构成问题, 待作者看 (判断: 闭项本身合法, 但折叠在值上不良定义).
+
+
+## 2026-11-06 NoAcc: 去累加 (构造一路, 判决: 未找到)
+
+入口 `OCF/Lean/NoAcc.lagda.md` + If, Fold, Stuck, Test. 主审复核: 删四个 `.agdai` (精确路径; 接口留给否定一路) 后冷编 `NoAcc`, `NoAccTest`, 都退出码 0; 选项都对; 禁用构造 0; 看了 `Φᴾ-pt`, `route-mismatch`, `Lg-inp`, `no-step`, `not-lg`, `no-cert`, `crw-lg` 的陈述.
+- 合判 (主审, 判断): 与 NegValC 合起来, 累加的两面都写成了定理: 留着累加, 折叠在值上不良定义 (同值不同写法折出不同值, `NegValCInst.acc-not-mono≤`); 只把 ℕ-极限改成逐点, 折叠在合法输入上不保合法 (`no-cert`). 所以在 CRw 的折叠形状里, "去掉毛刺" 不是换一个子句的事: 要改 "在上" 的两段折法本身 (每次只折一层, 或换值关系作证书). 这是作者 11-04 担心的毛刺第一次有了两侧的定理.
+
+
+## 2026-11-06 RecB / NegRecB: CRw 上底做成递归 (攻击)
+
+主审复核: 删四个 `.agdai` (精确路径) 后冷编 `RecB`, `RecBCmp`, 都退出码 0; NegRecB 三个文件冷编退出码 0 (先前); 选项都对; 禁用构造 0; 看了 `ΦX`, `PH-ΦX↓`, `desc`, `TD`, `Tω`, `LgB-Tω` 与 NegRecB 的 `wdep-low`, `bound-wdep`, `sup-diag-illegal`, `Lg-ΩA` 的陈述. 主审重跑 `--html` 与 `locslice_recb.py`: 245 / 810 / **817**; 脚本对 `OCF.Lean.CRw` 不跟随根上的 open (RecB 只用 CRw 的 `I₁`, `leg`, `FGH`, 主审判断它们不依赖那两个 open; 跟随时 1050).
+- 合判 (主审, 判断): 一个定义覆盖 Ω·n+m 各站, 往上一站不写新定义, 读法到 ψ₀(Ω_{Ω·ω}) (判断), 只多 121 行. 但底对 ℕ 递归, 不是作者选的 "对 LH 递归", 到不了 Λ; 构造一路列了四处卡点 (分量下标换成第 k 层的值, 世界塔一层换成 (界, 世界), 第 k 层回灌, 指标分量). 构造一路判断 "每个底要有自己的指标种类" 是路径搬运逼出的, 与 LFReTy.Lv 的 lΩ 行同形. NegRecB 因说明里 "直接交汇报" 早收尾, 未查实例.
+- 补记 (主审): NegRecB 续派补查实例 (`NegRecBInst`), 四个模块冷编退出码 0; 看了 `Sb-step`, `root-keep`, `kept-not-LgB₁`, `ΦX-acc`, `ok-dcI₀`, `out-fails`, `ΦX↓M-fails` 的陈述. 构造一路 "每个底须有自己的指标种类" 的判断成了定理 (`ΦX↓M-fails`: 指标分量按 I₁ 的规则移动下层世界时, 跨底路径定理在一个具体反例上失败); 读法升高的机制 (每过一个底留一层指标结点) 是形状定理, 读法本身仍是判断.
+
+
+## 2026-11-06 ValC: 值关系搬到 CRw (构造一路)
+
+入口 `OCF/Lean/ValC.lagda.md` + If, Rel, Base, Mono, Uip, Tm. 主审复核: 删六个 `.agdai` (精确路径; 接口留给否定一路) 后冷编, 退出码 0; 选项都对; 禁用构造 0; UIP 是模块参数, Funext 只作 `fe→uipC` 的前提 (第 4 层, 条件结论已标); 看了 `monoΦ`, `route`, `grow`, `growᴬ`, `fe→uipC`, `sound₀` 的陈述.
+- 合判 (主审, 判断): CRw 的累加 sup 层第一次有了值单调与路线引理, 但是条件定理 (Cd 上 UIP, 由 Funext 推出); 闭项值定理只到 "地板逐站多一个后继". 值关系的两条形状要求 (ℕ-极限只对严格增子列, Ω-结点按层比较) 是树侧逼出的, 与 NegValC 的定理一致. TX, TU, TU2 的值定理要先做跨底折叠的单调 (回灌不保值关系, NegValC `sh-not-mono≤`).
+
+
+## 2026-11-06 NegNoAcc: 去累加的配对否定 (判决: 未关闭路线)
+
+入口 `OCF/Lean/NegNoAcc.lagda.md` + Pt, Mo, If, X. 汇报一度停住, 主审唤醒后交. 主审复核: 删五个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `no-up`, `pt-no-total`, `Fᵗ-lg`, `thr-not-mono`, `mo⇏lgB`, `pt-blind`, `kept-world`, `kept-world-Φᴾ`, `kept-world-Φ` 的陈述.
+- 合判 (主审, 判断): 三种 ℕ-极限写法 (逐点, 部分和, 穿界) 各自的代价都成了定理: 逐点没有对一切输入的证书; 部分和不是值的函数 (NegValC); 穿界有证书但不保第一位置. 跨底留下的 Ω₁ 结点不合法是另一处独立的卡点, 与累加无关 (相邻坐标的分支在不同世界里折). "只有这三种写法" 是判断.
+- 本轮 (RecB, ValC, NoAcc 三对) 合起来 (判断): 攻击: 一个定义覆盖 Ω·n+m 各站, 读法到 ψ₀(Ω_{Ω·ω}) (判断), 817 行, 但未对 LH 递归; 值: CRw 同底折叠有条件的单调与闭项逐站增长; 摆脱: 去累加在 CRw 形状里写不出, 卡点精确. 累加问题 (毛刺) 有了两侧定理.
+
+
+## 2026-11-06 Fold1: 改 "在上" 的折法 (摆脱; 构造一路)
+
+入口 `OCF/Lean/Fold1.lagda.md` + If, Base, Fold. 主审复核: 删三个 `.agdai` (精确路径; 接口留给否定一路) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `Φ-mono`, `Φ-lg`, `Φ-l11`, `const-in`, `route-ok`, `TΩΩ`, `LgB-TΩΩ` 的陈述; 主审重跑 `--html` 与 `locslice_fold1.py`: 185 / 487 / **489**.
+- 合判 (主审, 判断): 第一次有一个读输入合法、对一切可数层号单调的折叠, 在 lim(1,1,…) 与 1 这一对上是值的函数 (对照 CRw 的反例), NoAccStuck 的卡点在这里不出现. 489 行读 ψ₀(Ω_Ω), 比同读法的 TySup 504 略少. 但: 含 Ω 输入上值的函数未证; 累加仍在后继、坍缩输出、对角; 没有跨底 (TU2); 在上规则受 Buchholz 基本列启发 (凭记忆), 翻译账如实记.
+
+## 2026-11-06 NegValX: 跨底值的配对否定 (先交; 构造一路的定理待查)
+
+入口 `OCF/Lean/NegValX.lagda.md` + Self, IfSelf, Uip, Sh, Copy. 主审复核: 删六个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `self≰copy`, `copy≤self`, `self≤copy-excl`, `loop→uip`, `uip→loop`, `canon→uipᴸ`, `sh-mono`, `copies-same` 的陈述. 又一次提前收尾 (构造一路未交); 待 ValX 交后续派补查.
+
+
+## 2026-11-06 NegFold1: 改 "在上" 折法的配对否定
+
+入口 `OCF/Lean/NegFold1.lagda.md` + Base, Sup, Fab3, If, Blind, X. 主审复核: 删七个 `.agdai` 与 `Fold1` 的 (精确路径) 后冷编 `Fold1`, `NegFold1`, 都退出码 0; 选项都对; 禁用构造 0; 看了 `sup-not-one`, `no-coh`, `no-val-ext`, `Ibl-Ω₁`, `col-acc`, `col-not-val`, `gl-TΩ1`, `blind-pair` 的陈述.
+- 更正 (经否定一路, 已复核): Fold1 入口原写 "含 Ω 输入上值的函数未证", 实际不是值的函数 (`col-acc`), 地图已改.
+- 合判 (主审, 判断): "在上" 的折法改了之后, ℕ-极限的毛刺去掉了, 但坍缩输出的部分和带来同类毛刺 (`col-acc`, `gl-TΩ1`); 每次只降一层在 sup 层没有目标 (`sup-not-one`). 三条摆脱路 (NoAcc, Fold1, 及 NegCRw 的约束) 合起来: 去掉毛刺要同时改 ℕ-极限与坍缩两处, 而坍缩的部分和由 "跨世界输出点没有字面第一位置" 逼出 (Fold1 判断).
+
+
+## 2026-11-06 LHRec: 底对 LH 递归 (攻击; 构造一路, 判决: 未走通)
+
+入口 `OCF/Lean/LHRec.lagda.md` + If, Ty, Leg, Lay, Fl. 主审复核: 删四个 `.agdai` (精确路径; 接口与类型留给否定一路) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `Lg-leg`, `Lg-θK`, `Lg-flL`, `ΛL`, `fixL`, `flΛ`, `Lg-flΛ` 的陈述.
+- 合判 (主审, 判断): Λ 层的输入 (地板 `flΛ`) 第一次写成合法的树, 合法化与地板对一切层号一条定义; 但折叠没写出, 卡在 "分量世界相容" 与 "共享世界撞 ΦX↓M-fails" 的两难. ψ₀Λ 候选闭项仍未写出. 构造一路建议的下一步把底的递归留在 ℕ 上、让第 n+1 个底的分量高度取第 n 个底的值, 以 Λ 为 sup (判断).
+
+
+## 2026-11-06 NegLHRec: LH 递归底的配对否定
+
+入口 `OCF/Lean/NegLHRec.lagda.md` + Pre, If, Inst. 主审复核: 删四个 `.agdai` (精确路径) 后冷编, 退出码 0; 选项都对; 禁用构造 0; 看了 `dilemma-a`, `shared-keep-fails`, `naive-adm↓-fails`, `fb-must-legalize`, `no-plain-sh`, `Λ-naive-flL`, `no-wfree-cmp`, `no-kind-emb` 的陈述.
+- 合判 (主审, 判断): 构造一路列的两难两头都成了定理, 构造一路的几处构造 (Kripke 式可入, 合法化回灌, 累加的 Λ 地板) 都是被定理逼出的. "世界只能按分量分开或按指标层共享" 是判断; 构造一路 §4 的第三种组织 (共享低层世界, 底对 ℕ, 分量高度取上一个底的值) 未被否定, 是下一步的候选.
+
+
+## 2026-11-06 ValX: 跨底值的构造一路
+
+入口 `OCF/Lean/ValX.lagda.md` + If, Rel, Obs, Base, Mono, Tm, Goal, P1 (汇报为英文). 主审复核: 删八个 `.agdai` (精确路径; 接口留给否定一路) 后冷编, 退出码 0; 选项都对 (9 个文件); 禁用构造 0; Funext 只作前提; 看了 `floor-block`, `¬MoX-topL`, `monoX`, `goal-if`, `goal-P2`, `P1`, `TU2-above`, `shLaw₁` 的陈述.
+- 合判 (主审, 判断): 跨底单调在值合法输入上有了 (条件 UIP); 但闭项的地板本身不值合法 (无条件定理), 卡在 "坐标同值不同结构时地板分支不可比", 即层号值单调 (ValC 接手第 4 条) 的跨结构版. 闭项值定理归结为 P2, 未证未否. 值的一侧连续几轮的瓶颈都是同一件: 同值不同写法的树在折叠下不保值序.
+- 补记 (主审): NegValX 续派补查 ValX (`NegValXInst`), 冷编退出码 0; 看了 `blind-ω`, `¬MoX-inU₁`, `P2-block`, `copies-blind`, `K-fin`, `K-hz` 的陈述. ValX 的严格只到 "多一个后继"; P2 经层反射关系被挡 (与 floor-block 同一处: 同值不同结构的坐标), P2 本身真假未知; UIP 只在带极限的层号上起作用.
+
+## 2026-11-06 SameV, NegSameV: 同值不同结构
+
+入口 `OCF/Lean/SameV.lagda.md`, `OCF/Lean/NegSameV.lagda.md`. 主审复核: 删 16 个 `.agdai` (精确路径) 后冷编, 两边退出码 0, 各重查 8 个模块; 选项都对; 禁用构造 0; Funext 只作前提; 看了 `P2`, `goal`, `goal2`, `shape-up`, `shape-bound`, `no-common`, `tu-block` 的陈述.
+- 合判 (主审, 判断): 值与摆脱两侧共同的墙在 CRw 闭项上过去了 (条件 Funext). 但严格只到 "多一个后继" 档, `shape-bound` 说这个形状分不开 TU 1 与 TX+ω, 所以不是强度证据. 读法不升.
+
+
+## 2026-11-06 Fab6, NegFab6: 外部种类
+
+入口 `OCF/Lean/Fab6.lagda.md`, `OCF/Lean/NegFab6.lagda.md`. 主审复核: 删 `.agdai` 后冷编, 退出码都是 0; 选项都对; 禁用构造 0. 主审读 `Φ` 的 `hE` 子句时发现疑点 (外部结点是原子, CRw 同一位置逐分支折叠), 补派 NegFab6; 定理档成立.
+- 更正: Fab6 入口 §5, §6, §7 的 "读法相同", "同读法压缩 40%", ψ₀(Ω_{Ω^Ω}) 不成立. 文件不改, 以 README 的行与 NegFab6 为准. 深度 4 的结点数相同不是机制相同, 这是有限测试的盲区.
+- 教训: 路径在 CRw 里是让前缀进分支的证据; 类型只随坐标变时放不下前缀. 外部种类的想法未被否定.
+
+## 2026-11-06 Third, NegThird: LHRec 的第三种组织
+
+入口 `OCF/Lean/Third.lagda.md`, `OCF/Lean/NegThird.lagda.md`. 主审复核: 删 `.agdai` (精确路径) 后冷编, 退出码都是 0; 选项都对; 禁用构造 0; FE 只作前提; 看了 `TΛ`, `TΛ-shape`, `no-wash`, `pos-dec→LPO`, `upd→WLPO`, `no-lower-rule`, `keep-req` 的陈述, 确认 `ThirdTm` 不引用 `flΛ`. `NegThirdTest` 未由主审冷编 (否定一路报退出码 0, 约 2.5 分钟, 有限测试). 导入闭包由 Third 报告干净, `depslice` 未跑.
+- 合判 (主审, 判断): 第三种组织给出 sup_n 形状的合法闭项, 但 Λ 层没有整层折下来, 读法没有确认提升. C 线读法连续两轮停在 ψ₀(Ω_{Ω·ω}) 附近. 卡点与此前同类: 留下结点的分支要对任意坐标有定义, 层号或坐标不可数时比较没有字面公共上界.
+- 流程记录: NegThird 22:06 已交汇报, 主会话没有收到, 到 22:18 查其记录才发现; 此间主审误报 "还在等".
