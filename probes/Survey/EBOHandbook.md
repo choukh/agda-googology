@@ -1,5 +1,7 @@
 # EBO 开发手册: 协作, 幽灵, 工程与方法
 
+> **2026-11-07 导航补记：** 当前状态见 [入口](../README.md)，转向原因见 [研究历程](ResearchHistory.md)，旧地图的成果、翻译账和否定范围现见 [RESULTS](../RESULTS.md)。本手册保留做事经验；会话提取脚本不保证覆盖当前会话，也不是作者决定的现行来源。
+
 > 2026-11-05 初版. 从主会话 (2026-10-31 到 2026-11-05) 与它派出的 156 路子智能体的对话记录蒸馏而来, 另读了 `AGENTS.md`, `probes/README.md`, `probes/LOG.md`, `Survey/RouteSeal.md`, `Survey/RouteReview.md`, `Survey/RouteReview2.md` 与统筹者的记忆目录. 提取脚本在 `Survey/scripts/handbook/` (见附录), 以后的子智能体对话可以增量地再蒸馏.
 >
 > **档.** 本文每条结论标一档: **[定理]** 编译过的定理, 写出文件与名字; **[事件]** 对话里实际发生的事, 写本地日期 (UTC+8, 与 `LOG.md` 一致) 与大致位置; **[判断]** 蒸馏者的判断. 作者原话只短引, 每处不超过两行. 路径用 `<repo>`, `<scratch>`, `<home>` 代替.
@@ -86,6 +88,8 @@
 ## 2 隐含规则与偏好
 
 每条: 规则; 依据; 现在记在哪里. "无处" 表示只在对话或简报里出现过.
+
+> **2026-11-07 适用范围补记：** 本表的“记在哪”是初版提取时的记录，不能用“无处”判断今天的 AGENTS 缺了哪些条款。协作、编译、前提可满足及措辞等主题后来已写进 [现行 AGENTS](../../AGENTS.md)；提议的采纳范围见 [提议状态补记](EBOHandbook-proposals.md#2026-11-07-状态核对)。模型名称是当时会话的配置记录，不是当前已实际使用某模型的证据；也不能用其他模型的复核冒称完成了指定 Fable 审核。对否定路线仍按现行 AGENTS。
 
 | # | 规则 | 依据 | 记在哪 |
 |---|---|---|---|
@@ -326,7 +330,7 @@
 
 ### 4.6 与 Bedrock 性能手册的对照
 
-Bedrock 项目的 *Cubical Agda Performance Handbook* 已逐字拷进本仓库: [Bedrock 项目的 `dev/cubical-agda-performance.md` (作者定不进本仓库)](Bedrock 项目的 `dev/cubical-agda-performance.md` (作者定不进本仓库)) (CC-BY-NC-SA-4.0, 版权 Bedrock Institute; 文首写了来源). 它的实测来自 `--cubical` 加 HIT 的集合论开发, 我们的设置不同:
+**文档位置更正（2026-11-07）：** 性能手册位于 Bedrock 项目的 `dev/cubical-agda-performance.md`，作者决定不放进本仓库（见 AGENTS）。原文“已逐字拷进本仓库”及其链接有误，不能据此在本仓库寻找。下述对照保留为当时对该手册的分析：它的实测来自 `--cubical` 加 HIT 的集合论开发, 我们的设置不同:
 
 - 我们: `--safe --without-K --lossy-unification`, 库选项另加 `--cubical-compatible --guardedness --hidden-argument-puns`; 不用 `--cubical`, 没有 HIT, 没有命题截断, 没有路径类型的原语; 不开 K (作者定, 实验文件也不开); 归档 OT_I 副本是 `--safe --cubical-compatible`; Agda 2.8.0.2, stdlib 2.4; 64G 机器上多路并行; 对象是归纳的布劳威尔树, 差树与它们上的折叠, 墙来自证书计值与具体闭项.
 - 标记: **印证** = 我们自己的实测与规则一致 (给出处); **不适用** = cubical, HIT, 截断或集合论专属; **未测** = 原则上适用, 我们没量过.
@@ -521,6 +525,21 @@ Bedrock 项目的 *Cubical Agda Performance Handbook* 已逐字拷进本仓库: 
 ## 8 待决与开放问题
 
 只列与做事方式有关的; 数学上的开放问题见地图的 "主线与下一步" 与 RouteReview2.
+
+> **2026-11-07 状态核对：下面八条是初版的历史待决清单，原文保留。** 不再从其“待定”“在跑”直接派发。后续如下；本表核对文档、声明和原复核日志，没有重新编译全部历史证明。
+
+| 初版项 | 后续状态与证据 |
+|---|---|
+| 1 部分和与累加 | [LOG](../LOG.md) 的“2026-11-04 累加的综合账”已记录作者有条件接受累加，看综合复杂度；没有据此认定所有部分和无代价或最终裁定这项术语。 |
+| 2 等 MonoPort2、KNest2 | 两者已经返回；MonoPort2 已有 mono₂，后继 [MonoPort6](../OCF/Align/MonoPort6.lagda.md) 有全有限高度增长，[MonoPort9Cov](../OCF/Align/MonoPort9Cov.lagda.md) 有字面覆盖域的严格界。不能再把“等这两路”写成现状，也不能把限定域结果外推成任意输入值单调。 |
+| 3 等 HtTowerN、LFRe | 已有后继，见 [机制继承图](ResearchHistory.md#23-机制继承与后继结果第二次接手核查)。终点统一结构仍开放；不是这两路仍在运行。 |
+| 4 封存维护待作者定 | 已由作者采纳三类政策，见 [RouteSeal 的维护政策末节](RouteSeal.md) 和 LOG 的 SealCheck 条目；封存、承重与现役依赖分开。 |
+| 5 并行系数与 profile | 现行 AGENTS 要求堆上限总和留余量；1.35 系数及未测性能参数仍是建议，不能当已采纳规则。 |
+| 6 Bedrock 文档与许可 | 作者已定性能文档不进本仓库，见 AGENTS；不再为本仓库一份并不存在的副本安排署名或许可处理。外部文档本身仍按其许可。 |
+| 7 中文选项待明确 | 已写入 AGENTS“与作者协作”。 |
+| 8 标杆待定 | [EboLean3](../OCF/Align/EboLean3.lagda.md) 与 LOG“标杆定稿”已定前三层 1513、加标签 1533。6524/7867 属旧口径；不能仍当现行待选预算。 |
+
+第 7 节的“在做 KNest2”同属初版快照。当前任务由 [入口](../README.md) 单点维护；下列原清单只供追溯。
 
 1. **部分和算不算累加**: 等 Ω+1 的毛刺有值层定理再由作者定 (地图主线第 4 条).
 2. **`MonoStep` 的真假**: 三路汇聚的单点 (RouteReview2 R2); 先否定后证的结果待 `MonoPort2`, `KNest2`.
