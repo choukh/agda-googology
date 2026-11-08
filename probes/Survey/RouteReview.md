@@ -1,5 +1,8 @@
 # 路线审查: 树有没有自己的语言, 怎样摆脱翻译, 下一步做什么
 
+<!-- historical-scope -->
+> **时间与用途（2026-11-07 导航补记）：本文记录 2026-11-04 的审查或决定。** 其中路线建议属于当时的判断；相关封存与维护决定见 [RouteSeal](RouteSeal.md)。 当前行动见 [probes 入口](../README.md)，历史关系与后续更正见 [研究历程](ResearchHistory.md)。以下原结论保留。
+
 > 2026-11-04. 独立统筹审查, 先读代码和定理陈述, 后读地图与日志的结论. 三档严格分开: **定理** = 编译过; **测试** = 有限样本; **判断** = 纸面. 本文附带的实验 `probes/OCF/Align/TreeLangFeed.lagda.md` 已编译 (退出码 0, `--safe --without-K --lossy-unification`, 不含记号).
 >
 > **读了什么.** `AGENTS.md`; `probes/README.md` 全文; `probes/LOG.md` 开头与 2026-11-04 全部条目; `OCF/Free/` 的 `Level`, `Prefix`, `Floor`, `Tree`, `Force`, `Good`, `Main`, `Closed` 全文; `src/OCF/BTBO.lagda.md` 的累加与折叠两节; `OCF/Barrier.lagda.md` 的定理陈述; `LadderOrd`, `LadderOrdBase`, `LadderOrdTree` 前 140 行, `LadderOrdCode`, `LadderOrdNeg` 的陈述; `CrossM`, `CrossMNode`, `CrossMTopTest`, `CrossMAccept` 的陈述; `NoCum`, `NoCumMain` 开头, `NoCumAcceptOmega`; `Cumsum` 开头; `TreeJudgeBase`, `TreeJudge2Base`; `ValueJudgeRow`, `ValueJudgeRowNeg`; `InaccModulusBase` 开头; `EBOTop` 头; `OCFSpec` 头; `AccTree`, `AccTreeLab` 的关键陈述; `WeakBridgeMain`, `WeakBridgeLabel`, `EmbVVInstO2`, `BTBOFull`, `OrdLabReadTop` 的关键陈述.

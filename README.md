@@ -3,7 +3,7 @@
 ## 阅读入口
 
 - [成品源码](src/README.md): `Veblen/`, `WellFormed/`, `Bridged/`, `Lower.lagda.md` 与 `OCF/BTBO.lagda.md`. 只收作者亲手写的成品文章.
-- [探针](probes/README.md): 2026-11-01 起的新工作 (壁垒定理、交替路线、EBO 对齐), 及目录规则.
+- [研究接手入口](probes/README.md): 当前任务、已有强基座和阅读顺序。接手先看 [研究历程与转向原因](probes/Survey/ResearchHistory.md)，具体成果查 [目录与研究账](probes/RESULTS.md)。
 - [归档](archive/README.md): 此前的全部研究材料 (Mahlo 研究、旧 OCF 探针、Lens), 冻结只读.
 
 总纲领与协作约定见 [AGENTS.md](AGENTS.md)。

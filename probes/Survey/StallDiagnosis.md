@@ -1,5 +1,8 @@
 # 六路受阻的诊断: 否定杀了什么, 墙在哪里, 为什么反复撞
 
+<!-- historical-scope -->
+> **时间与用途（2026-11-07 导航补记）：本文记录 2026-11-05 的审查或决定。** 文中否定只覆盖写明的接口与前提，后续路径与带类型路线仍需分别查陈述。 当前行动见 [probes 入口](../README.md)，历史关系与后续更正见 [研究历程](ResearchHistory.md)。以下原结论保留。
+
 > Fable 5.1 独立诊断, 2026-11-05. 先读代码与定理陈述 (各否定文件全文, `HtFeedTree`, `HtTowerTy`, `HtTowerU`, `HtTowerNStage`, `HtTowerFFold` 的 `RunM`/`κc₁`, `HtFeedFold` 的 `κc`, `LFReTy` 的层号块, `CohWGl` 的 `GW`/`glob`, `DiagK3Grow` 的 `growL′`, `Barrier` 的 `Stages`/`Ω-Extension`), 再读各入口的判决段, `README` 现状表, `ClosedTermReview`, `RouteReview2`, `LOG` 相关条目, 最后看了刚落地的 `UniTr` 入口. 档位: **[定理]** 已编译; **[实验]** 本次新编译 (`OCF/Align/StallDxBdec.lagda.md`, 退出码 0, 导入闭包只含 `CumReadCF`, `HtTowerTy`, `OCF.BTBO`, 禁用表 0); **[判断]** 纸面. 强度一律写 ψ₀(Ω_x). 按仓库规则, 本文不否定任何路线; 否定路线的地方都写 "未走通".
 >
 > **结论先行.**

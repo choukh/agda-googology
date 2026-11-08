@@ -1,4 +1,7 @@
-本文件是 `probes/` 工作的按时间记录, 由原 `probes/README.md` 逐字搬来, 每行原样、次序不变. 查方向和入口请看地图 [README.md](README.md); 这里只在需要某一项的细节时按文件名检索. 记录和 `.lagda.md` 里说的 "probes/README 的认证规则" 或 "本 README", 指的都是下面这份文字.
+<!-- historical-scope -->
+> **历史日志，保留当时说法及后续纠正，不是当前状态表。** 当前行动看 [README](README.md)，重大转向及已知勘误看 [研究历程](Survey/ResearchHistory.md)，具名成果查 [RESULTS](RESULTS.md)。早期 BTBO 偏低判断对应修正前版本；成品已有 BTBOFull 的 ψ₀(Ω_Ω) 值验收。旧“Fab3Typed 与 BTBO 同档”等说法不得脱离后续更正使用。旧验收口径、路线建议和编译命令也须放回成文时间。
+
+本文件是 `probes/` 工作的按时间记录, 由原 `probes/README.md` 逐字搬来, 每行原样、次序不变. 查方向和入口请看 [README.md](README.md); 这里只在需要某一项的细节时按文件名检索. 记录和 `.lagda.md` 里说的 "probes/README 的认证规则" 或 "本 README", 指的都是下面这份文字. 2026-11-07 原地图的成果表移到 RESULTS，接手补记移到 HANDOFF；下文旧路径提法按这次分工查阅。
 
 # 探针: 2026-11-01 起的新工作
 
@@ -2131,3 +2134,2913 @@ EBO 列按最接近最终形态的路线统计, 不按最高处. 当前取 `Ladd
 入口 `OCF/Lean/Third.lagda.md`, `OCF/Lean/NegThird.lagda.md`. 主审复核: 删 `.agdai` (精确路径) 后冷编, 退出码都是 0; 选项都对; 禁用构造 0; FE 只作前提; 看了 `TΛ`, `TΛ-shape`, `no-wash`, `pos-dec→LPO`, `upd→WLPO`, `no-lower-rule`, `keep-req` 的陈述, 确认 `ThirdTm` 不引用 `flΛ`. `NegThirdTest` 未由主审冷编 (否定一路报退出码 0, 约 2.5 分钟, 有限测试). 导入闭包由 Third 报告干净, `depslice` 未跑.
 - 合判 (主审, 判断): 第三种组织给出 sup_n 形状的合法闭项, 但 Λ 层没有整层折下来, 读法没有确认提升. C 线读法连续两轮停在 ψ₀(Ω_{Ω·ω}) 附近. 卡点与此前同类: 留下结点的分支要对任意坐标有定义, 层号或坐标不可数时比较没有字面公共上界.
 - 流程记录: NegThird 22:06 已交汇报, 主会话没有收到, 到 22:18 查其记录才发现; 此间主审误报 "还在等".
+
+## 2026-11-06 独立接手：WorldCompose
+
+先核对地图、阶段报告与 LHRec / Third / NegFab6Idx 的实际定义。
+判断：目前不能把读法表当成值上下界，也不能把世界精确更新的否定
+推广成所有世界组织的否定。先做世界索引树的组合实验，不增加攀爬节点。
+
+新增 `OCF/Lean/WorldCompose.lagda.md`：`assoc` 证明第一位置证据的
+复合结合；`lift-compose` 证明两次世界搬运与一次复合搬运逐支互模拟。
+不用 Funext 或 UIP。这里只是单种类玩具，不是序数值定理，没有新合法闭项。
+尚缺塔推广、内部 View、合法性与值验收；ψ₀Λ 目标未完成。
+翻译账在文件末尾：无新构造子，组合要求来自树的搬运。
+
+编译退出码 0，6G；原 ~/.agda/libraries 路径失效，临时库清单使用
+/opt/homebrew/share/agda 下的 stdlib 与 cubical。importclosure：本地
+3 模块，库 9，限定闭包之外 0，禁用表命中 0。没有修改 src 或提交。
+
+## 2026-11-06 World：前缀代数与稳定分支
+
+续上次世界索引玩具，新增四文件：
+- `WorldAlgebra`：互模拟的对称、传递、搬运同余、加法同余；
+  `lift-add` 搬运保加法，`add-assoc` 加法结合。
+- `WorldEvidence`：同源同目标的两条路径都显式存在，
+  `no-evidence-independence` 证明读路径的树经两次不同搬运不互模拟。
+  不是值不等，不否定世界索引路线。
+- `WorldStable`：稳定分支谓词 `Stable`，搬运封闭与证据无关性，
+  含 Ω 形节点的常值实例，反例不稳定。接口可满足，不声称有强度。
+- `WorldStableAdd`：稳定性对前缀加法封闭，对所有世界一条定理。
+
+四文件各以 6G 编译退出码 0。WorldStable 与 WorldAlgebra 的导入
+闭包限定检查通过（本地 5 / 4 模块，库均 9，禁用命中 0）。
+未新增合法闭项、View 或值定理；ψ₀Λ 目标未完成。
+下一项数学义务是稳定性之外的分支合法性及折叠；不能把稳定当作单调。
+
+## 2026-11-06 子代理配对：WorldFold / WorldObstruction / LambdaTarget
+
+作者明确要求派子代理完成 ψ₀Λ 目标；本轮三路构造、配对否定、独立终点
+验收。目标仍未完成，未把玩具结果替代终点。
+
+构造共享接口 `WorldFoldIf.CountableFold` 已定稿；`WorldFoldRun` 给出
+无前提可运行实例和输出合法性。`WorldFoldClosed` 给常值一节点的闭项 T，
+证明其值互相 ≼ 于 ω；非恒定坐标分支闭项 U 合法，但完整值未证。
+这是解释器不是 ψ：后继仍按后继读取，只有一种可数坐标节点。
+
+`WorldObstructionValue` 对同一接口所有实例证明稳定输入 low 在世界
+上抬前 ≥1，上抬后 ≤0；实际 run 实例在 Concrete 中代入。
+因此仅有路径证据无关不足以保证跨世界折叠值单调。low 不满足预期的
+跨坐标单调，故不能关闭加强合法分支的路线。结构反例在 Lift 配套文件。
+
+独立验收 `LambdaTargetCofinal`：lim(const ω) 与 lim(nat) 同值，
+却没有前者每一整支到后者某一整支的覆盖。只否定一般的必要性，
+不否定 EBO 阶段可覆盖。`LambdaTarget` 拟将 EBO 下界等价化成每站
+对整个候选的下界；导入 WfFsn 后 6G 堆耗尽，退出251，仍是未验证草案。
+
+主审逐个删除入口自身接口后重编 WorldFoldClosed、WorldObstructionValue、
+LambdaTargetCofinal，均6G退出0；读取陈述、检查前提实例与禁用构造。
+WorldFoldRun 定义闭包本地4、库9，限定外0。未做成品候选切片，因为
+没有成品候选。翻译账：新实验回灌规则是选择，未由树侧唯一性逼出；
+没有新增树节点。否定与验收只增关系定理，不改前3层。
+
+下一义务：必须检验跨坐标合法性和多种类折叠如何连接终点；不能继续
+只堆积 World 玩具代数，也不能用 T=ω 的定理替代 U 的值或 ψ₀Λ 的值。
+
+验收路补交 `LambdaTargetCore`：对任意参照族 R，把 lim R 的下界等价
+化成每站对整个候选的下界，并给覆盖充分条件与自身实例。主审读陈述、
+删自身接口冷编6G退出0。该核心用 OCFSpecBase 的值序；实际 EBO 草案
+用 Value 的值序，尚未连接，不能把通用核心编译通过算成终点实例通过。
+
+## 2026-11-06 续派：TowerWorld / TowerObstruction / LambdaBridge
+
+上一目标轮属于进展：新增经复核定理，不是仅状态重述。本轮仍按原目标
+派三路，未完成 ψ₀Λ。主审新增 LambdaOrderBridge：OCFSpecBase 与 Value
+值序双向逐推导转换，6G编译0，只在验收侧读记号。
+
+构造路交 TowerWorldIf/Stage/Prefix：节点量化未来世界，可同种类 lift；
+NextUp 支持前缀进入分支；Stage 对任意 KS 的 HB 坐标，保留坐标里的
+Ω 节点为旧种类节点。没有折叠、内部语义 View 或合法序数闭项。
+固定低层世界，不能把语法保留当作保值。跨 step 仍缺有意义的反变
+HB(step S)→HB S、可入反向搬运及 next 世界对应。
+
+配对 TowerObstructionKeep：Keep 字段不蕴含可入反向搬运，也不蕴含
+next 对齐。主审指出最初第二例不满足新增 NextUp；补例同时满足两边
+NextUp、Keep、可入搬运，仍需要不成立的 1≤0。只否定字段足够性，
+不否定扩充接口，不关闭世界索引路线。
+
+值路 LambdaBridgeFinite：对任意有限起点且有限坐标输出有限的回灌，
+值≤ω；每个输出≥1则≥ω。实际非恒定闭项 U 两边均成立，故 U≈ω。
+这替代上一轮 U 值未证的状态，不外推到其他回灌。
+LambdaBridgeOrbit：初态相关、相关状态输出有序、一步保持相关，推出
+整条回灌值有序；有恒等和实际 T≤U 两实例。State 携带的是 B⊲e 的
+下界路径，不是两个坐标的公共上界；定理只比较输出值，不判定裸坐标。
+不能把此关系已实例化到 Third 或 EBO；那里相关输出的下界仍缺。
+
+主审已读陈述并分别删自身接口冷编 TowerWorldStage、TowerWorldPrefix、
+TowerObstructionKeep、LambdaBridgeFinite、LambdaBridgeOrbit，全6G退出0。
+七文件代码块禁用构造扫描无命中。Stage/Prefix 定义导入闭包限定检查
+通过，本地3/2，库9/2，禁用命中0。未改 src/archive，未提交。
+
+翻译账：未来世界量化是设计选择，并未证明树侧唯一性；高层坐标借旧
+KS.step 的种类，但改变可入为尾部，不宣称原step语义；有限轨道值界
+来自运行器的实际运算。下轮必须针对具体跨step义务，不再把更多抽象
+容器或仅恒等实例的记录当成解决 Λ 折叠。
+
+## 2026-11-06 续派：实际一步折叠与方向纠偏
+
+上轮属于进展，本轮继续三路。主审先挑战上轮『跨step必需坐标回缩』：
+真正降层保留旧种类时坐标可以恒等，最高新种类应消去。构造路
+TowerCollapseClass 编译证明相邻 Stage 的该坐标类型定义相同。
+主审 TowerStageBoundary 进一步证明：实际源低世界(tt,0)固定时，目标
+坐标1可入，源不可入，对所有源外层世界成立；低世界本身合法。
+所以不能把可入问题误述成坐标类型问题。
+
+TowerCollapseIf/Run 是对任意S的一步总折叠：0↦1，后继↦ω重复，
+ℕ极限部分和，旧节点逐支保留，新节点回灌消去。最低层Closed合法，
+给 T=fold Ω。它是已有Fab3Typed/Fold1形状的简化实验，不是新主线。
+LambdaCollapseFirst 对实际T证明ω²≤T、ω+1≤T及T不≤ω；无上界，
+ε₀读法未证。这里ω²是ω有限正倍数的极限，非记号验收。
+
+配对 TowerCollapseNegLegal 对所有 Collapse(step S⊥) 否定普遍
+PreservesLegal。反例输入合法，比较坐标0与1有字面公共界1。
+只用zero/suc/lim/keep，不用remove，故换反馈链不能修这个反例。
+没有否定总折叠、加强输入谓词或Fab3Typed逐点带世界方案。
+
+LambdaCollapseNoTypeBound：固定类型W hz上的run嵌入支配任意可数树，
+所以没有统一可数值上界。仅否定『固定类型所以统一封顶』一般推理；
+不否定具体闭项生成过程的上界。SkeletonAudit等旧上界仍是判断。
+
+主审读实际代码后确认Fab3Typed已经有合法的一步Ψ（含世界，lim逐点）。
+新无世界累加版本不是改进。下一具体义务在sup：节点种类来自分量，
+但分支仍返回整棵HB(sup I T)，不能直接交给分量上的Ψ；需要公共界内
+分类与分支处理。不能继续重新构造后继层折叠，也不能把这个类型障碍
+升级成所有sup路线不可能的结论。
+
+主审冷编（删各入口自身接口）Class、Closed、NegLegal、
+LambdaCollapseFirst、LambdaCollapseNoTypeBound，均6G退出0；主审自写
+StageBoundary同6G退出0。代码块禁用构造扫描8文件无命中。
+Closed定义导入闭包本地4库9、禁用及限定外0。地图检查通过。
+翻译账：本轮未加树构造子；简化折叠沿用旧规则并改变lim处理，合法性
+反例由树的第一位置要求逼出。值验收不改前三级。ψ₀Λ仍未完成。
+
+## 2026-11-06 sup续派：合法性不要求单槽写回，值仍待证
+
+本轮先复查NegFold1Sup、Fold1Fold与AdmW/事件路线，避免重复可数sup
+或把路径相干失败泛化。发现真实Fold1 Vw.co仅要求upd保持世界合法，
+没有读回新界的律。因此不能把updAt认定为该合法性接口的必要条件。
+
+构造SupCollapseIf/Stay/Frozen/Closed：实际冻结穿过sup的分量更新，
+后继层自身更新保留。Frozen从Fold1Fold复制，仅改liftL co的upd及其
+合法性证据，完整Φ、Φ-mono、Φ-lg仍成立；代码diff主审已核对。
+已有地板/初始世界给T m lm与legal-T，实际sup闭项Tω合法并有FGH。
+代码行（非依赖切片）16/23/175/37；复制增加脚手架，不称压缩。
+尚无Ω-sup折叠、内部View或Tω完整值，也不声称保持原值。
+
+配对SupCollapseNegReceive：冻结stay不满足Readback（合法旧0、请求1）；
+任意下标的同质分量全覆盖有WeakUpdate及Readback实例，但不保旧信息。
+这不是新的sup壁垒，仅校准字段，不能从Readback推出终点强度。
+
+值SupValueLift：实际Fab3Typed的值合法x有限上移后再折，单向不降；
+有真实地板实例floor-raise，不要求已被否定的双向相容。
+SupValueFrozenSample：常列sup(1)内恒1分支的Ω节点，两版所有基本列项
+归纳地等于ω的正倍数，old≤new与new≤old；不是有限测试。
+该输入合法，但不覆盖Tω的up c递归读界；Tω仍缺轨道输出值比较。
+
+主审删除入口自身接口冷编Closed、NegReceive、SupValueLift、
+SupValueFrozenSample，全部6G退出0；读取陈述和前提，7文件禁用扫描
+无命中，Closed定义导入闭包本地5库10、限定外0与禁用0。
+未修改旧树/折叠/src/archive，未提交。
+翻译账：冻结是新实验选择，尚未由强度支持；地板沿用旧规则；值侧
+只加定理。下一义务是Tω实际轨道与原版的值比较，以及Ω层ext/可入
+如何处理；不能仅因合法就把冻结版报成ψ₀Λ候选。
+
+## 2026-11-06 实际冻结闭项的首分量与固定世界的界限
+
+FrozenValueFirst直接处理Tω的第1地板分量，其分支是实际up c，
+不是常值替身。对所有可数坐标建立纯构造子解释器的跨世界单调，
+分别处理坐标递归和输出递归的不同目标路径，再归纳整条回灌轨道。
+first-component与first-component-back证明该分量和原Fold1.TΩ1
+双向值比较；original-one≤frozen-omega给整棵冻结Tω的真实下界。
+不把TΩ1尚属判断的ψ₀(Ω₁)读法升级为强度定理；高分量仍待证明。
+
+构造FrozenOmegaIf/Run把Pos证据放进种类，保留原坐标，沿共享合法
+公共高度用ThirdTw.dcl分类。raw fold对任意合法高度（含Ω）总定义，
+但未证明其保合法。Closed给M=Ω的非恒定合法输入，base逐构造子
+读取含旧Ω的坐标，base-position/base-legal/legal-input均成立。
+该实例仅用固定可入分量1；不能把高度类型或坐标含Ω当强度提升。
+intermediate没有合法证书；最终可数T的legal-T只来自最低层total
+fold对所有原始输入的合法性，故不是成品候选，不另扩展FGH。
+
+配对FrozenOmegaNegEmbed直接针对共享SafeTw接口。先给零界的
+合法反例，再由主审要求推广任意合法固定界B：选hs B分量的新种类，
+合法坐标cB的Pos要求hs B⊲B，被已有良基性否定。no-fixed-floor排除
+对全部合法原坐标的结构无损up分支表示；不排除按值改写、动态世界
+或受限回灌族，不据此关闭路线。
+
+主审逐个删入口自身接口，6G冷编FrozenValueFirst、FrozenOmegaNegEmbed、
+FrozenOmegaClosed（连同Run），全部退出0；检查陈述、反例合法性与
+禁用构造。Closed导入闭包本地13/库9，NegEmbed本地15/库10，均限定
+OCF.Lean且禁用0；First本地8/库10，禁用0。地图检查通过。
+翻译账：新证据由可入要求提出；分类与反馈形状沿用已有构造，未加
+高度构造子。值侧只加定理，不改前三级。ψ₀Λ闭项及终点值仍未交付。
+
+值路追加FrozenValueSecond：实际第2分量规约为各自Col，全部外层
+轨道的原高界=新坐标、冻结高界=top1，两版低界=0；first-input
+证明实际首坐标分支已含旧Ω。writeLow的两个投影等式定位低界写入，
+未证明内层轨道的值模拟，也未证明第二分量同值或异值。主审删自身
+接口冷编6G退出0，导入闭包本地7/库10、禁用0。后续值义务由此明确为
+旧Ω内层回灌与累加前缀的关系，不再以常值分支或最高种类消失替代。
+
+## 2026-11-06 中间合法性补齐与实际值校准
+
+本轮延续三路，并独立检查冻结路线是否真实使用高层坐标。
+FrozenLegalIf定稿BaseAction，精确针对上一轮base；FrozenLegalBase
+证明act-position、act-legal，覆盖含旧Ω的全部坐标；Closed沿擦除、
+反馈链、部分和直接证明safe-intermediate-legal与intermediate-legal。
+不再由末层total-fold合法性反推。配对否定路检查了实际代码，未找到
+该接口反例；一般ext的缺失仍只标待证，未写伪否定或关闭路线。
+
+主审提出轨道是否实际上纯可数：输入类型宽不等于运行访问了Ω。
+FrozenLegalPure编译证明act/next保持OF，全部orbit及intermediate
+皆OF。仅此不构成大小上界。继续要求值校准，构造路在验收目录新增
+FrozenLegalPureValue：全轨道异类型结构关系Rel证明新坐标是原TΩ1
+轨道偏移1的尾部；旧输出联合单调给部分和错位共尾。最终得到
+up Fold1.TΩ1≤ᵛintermediate及反向，不引用记号，不认定ε₀读法。
+所以该实例中间树并未取得新值强度。最终T另经Low折叠，不在定理范围。
+
+值路FrozenInnerFirst先把手写writeLow接到实际旧oo0的Col展开，再
+对实际第一分量前缀与任意可数尾部作联合比较；第一分量低界不变的
+支持条件在实际内层轨道满足，全部内层坐标/输出/部分和比较成立。
+得第二分量首外层输出原≤冻结及其对Tω的下界；不冒充整分量比较。
+后续主审要求跳出逐首项惯性，FrozenInnerOuter对整个branch族任意
+两世界证明结构双模拟（目标1时两种Ω都保留），继而全部外层坐标
+同n双模拟、双向值比较。真正未解处是OT/NT折到0后的低界读取；
+是否需要共尾错位吸收尚是判断，坐标部分已不需要。
+
+主审自写FrozenWorldLift：同一高度下，外层世界增长搬运Pos和树，
+保持第一位置与合法性；擦除后逐构造子Same及双向≤ᵛ。有合法世界
+1→2实例，证明无判等/裸坐标比较/Funext；该Same被Outer复用。
+不推出折叠搬运相容，也未给无界地板。
+
+主审删入口自身接口后6G冷编LegalClosed（含If/Base）、LegalPure、
+InnerFirst、InnerOuter、LegalPureValue，全部退出0；WorldLift主审
+编译0。8文件禁用构造扫描无命中。闭包审计：WorldLift本地5/库9，
+LegalClosed本地16/库9；InnerFirst本地10/库10，InnerOuter本地11/库10，
+PureValue本地24/库10，均禁用0，前两者限定OCF.Lean之外0。
+值验收文件放Align；没有改旧定义、src或archive，没有提交。
+翻译账：世界搬运由Bd↑要求逼出；未增树构造子，值侧只加关系定理。
+下一步不继续给这个固定分量实例套高强度读法，而处理真实第二分量
+输出的旧Ω低界关系；动态世界仅有搬运定理，不能报ψ₀Λ闭项。
+
+## 2026-11-06 第二分量整族模型、Generated吸收否定与实际终点入口
+
+本轮不再逐个外层项取样。FrozenOutputIf定稿：Model A.run区分改变种子
+与冻结种子；Generated对首元、加法、真实OX/NX封闭，包含所有ce。
+FrozenOutputSim给两种Col的结构模拟，更新明确使用初始世界，与原定义
+一致。FrozenSupport/Ext/Value分别证明递归路径单调、Same同余、有公共
+合法界及两条位置证据时的值单调；全部实际坐标有实例。
+Same同余在固定HB类型上消费已有结构证据，不决定证据存在，不选择
+层/槽，未推广成裸下标分类律。值单调不能从≤反推字面位置。
+
+配对FrozenOutputNegPosition构造J(0)=0,J(s a)=s Ja,J(l f)=s(l Jf)，
+保第一位置与合法；a=l(const1)、b=1合法同值且在公共界a下，但Ja不≤Jb。
+这精确区分路径支持和值单调，不是否定实际生成族。NegInitial是已编译
+首生成元任意初界同值校准；与已有首输出机制重复，不计强度进展。
+
+FrozenOutputModel对满足Ext的实际值证明run同mode结构同余；
+FrozenOutputBridge对所有实际oo n证明Same到Model Original.TΩ1的
+对应模式/种子0输出。normalize还覆盖任意Ext坐标与明确世界读取关系；
+首分量低界为0、第二分量低界与模型种子Same，真实更新保持这个关系。
+这是全部轨道的无条件桥，不是把模型读法当定理。
+
+FrozenOutputReduce把Generated上的同点吸收归约成完整第二分量比较，
+但前提当时尚无实例，未计为强度定理。主审随即要求直接检验其加法步：
+changing递归会按新seed重新解释左前缀，不能把它当常量A替换。
+构造/否定两路共同得到精确反例，而非继续堆支撑接口：
+FrozenAbsorbSeed证正A时seed b的首元输出B(b)≥b+1；
+FrozenAbsorbPair对pair=initial⊞initial的真实首反馈ce1≈B0证明
+hs B0≤B(ce1)，故实际前缀不稳定，并得hs(B(B0))≤changing0(pair)。
+FrozenAbsorbNegUpper用纯解释器复合律和轨道模拟证frozen0(pair)≤B(B0)。
+NegFinal合成no-generated-absorption，实际A=Fold1.TΩ1有正性实例，
+pair生成证据为plus initial initial。至此Reduce采用的充分前提已被
+精确否定，不再作为待证目标；不否定实际ce域、允许更高项的OutputCover
+或整个冻结路线。下一策略是检验提高生成阶的错位覆盖，仍是判断。
+
+主审同时补实际终点连接：LambdaCountableBridge给Cd↔Ordᶜ zero的逐
+构造子转换，值序双向、往返结构关系及任意参照下界的双向转换。
+为实际EBO编译，临时归档拷贝中逐依赖分进程编译OrderProps、Linear、
+Trans、Lex、Subterm、Facts各段、WO各段及FGH/Theorem，均6G退出0；
+未修改归档或临时源代码。旧LambdaTarget仍6G退出251（不是类型错误
+或通过）。新LambdaCountableTarget以opaque保存实际WfFsn.EBO-tree的
+Cd参照，lower-sound/lower-reflect直接接Value.≼，6G退出0。
+它是读取记号的验收参照，绝不是成品候选；不需要旧入口的阶段展开。
+
+复核：主审读陈述与证明，删新模块自身接口后冷编Support/Ext/Value、
+NegFinal（连同Seed/Pair/Upper/If/Sim/Model）、Bridge、Reduce、NegInitial、
+NegPosition，全6G退出0；两个LambdaCountable新入口主审编译0。
+16文件代码块禁用扫描无命中。Bridge闭包本地18/库10，NegFinal本地30/
+库10，均禁用0；CountableBridge本地11/库13、禁用0，CountableTarget为
+明确的记号验收入口，不要求其闭包干净。地图与diff空白检查通过。
+翻译账：新模型是对真实折叠的验收抽取，桥已证明；支持由实际证明义务
+提出。没有改变树、折叠、合法性、src或archive，未提交。终点仍未完成。
+
+
+## 2026-11-07 显式种子修补与公共界混合
+
+FrozenCoverIf冻结D：Ω分支加入坐标前缀。Initial证任意种子初始元覆盖，
+SeedMono证修补种子值单调，Pair证真实pair=initial⊞initial的全部轨道
+覆盖并接Covers。NegLegal对实际合法initial，以1与lim(const1)为有
+合法公共界的坐标证明D initial不合法。值覆盖与合法性两结论不互相
+抵消；尚缺合法代表及实际ce族覆盖，不以此宣称第二分量比较。
+
+主审ContextPullback由共同Ctx目标世界投影分量，混合签名Ω分支返回
+整个混合类型；embed保位置与合法。ContextPullbackValue保同源值序。
+构造BoundedContextIf/Run/Tree/Closed由c⊲[w]B生成真实层族上下文，
+Ω坐标公共界下混合全部自然数分量，不再只固定一个分量。尚未折到
+可数树，无强度定理。配对路读实现未发现反例；不是普遍可扩世界定理。
+
+主审阅读11文件陈述证明，删除新模块自身接口冷编BoundedContextClosed、
+ContextPullbackValue、FrozenCoverPair、FrozenCoverNegLegal，依赖连带
+检查，全6G退出0。11文件代码禁用扫描无命中。导入闭包Closed本地11/
+库9，限定Lean之外0；Pair本地22/库10，NegLegal本地10/库10，Value
+本地7/库9，禁用命中均0。未改src/archive、旧定义或提交。
+翻译账：上下文由树路径逼出、世界投影由Ctx提供；沿用受记号启发的
+LHRec层族，不称树自足。ψ₀Λ闭项、合法完整折叠、EBO下界均仍未交。
+
+
+## 2026-11-07 动态累加公共界与静态混合的精确值
+
+前轮综述无新数学结果，本轮按动态扩界、配对审计、独立值三路续派。
+BoundedGrowthIf将未来世界/合法/旧世界增长显式化。Run旧分量标签
+采用compose上下文并证明pw-compose；move保位置/合法，实际旧W位置
+只有消费WorldGrowth.extends后才搬运。Closed给任意合法W的后继实例，
+并把此前实际全自然数混合树搬过后继界，加新界地板，闭项合法。
+
+配对路未泛化任意Ctx世界截面受阻，而直接构造BoundedGrowthNegAdd：
+对实际B⊞R逐R递归，把W放入所有带B前缀的分量，新增指标世界规范化；
+project证明沿指定旧路径投影精确等于W，任意高层、R可含Ω，无判等。
+AddClosed取实际Ω界的leg合法化作增量，给合法新界、精确保旧世界、
+搬运实际混合树及加新地板的合法闭项。R仍外给，不冒充折叠反馈。
+
+值路BoundedValueFloors给全部实际分量下界。BoundedValueUpper用
+sums-θ识别全部部分和，得output≤θω及θω≤output，再得
+output≤common-floor。静态混合精确落在已有公共目标地板θ(ω)分支；
+没有由有限最大分量推测，也没有据此推出可数折叠后的强度上界。
+
+主审因此不再开外给序列Orbit框架，集中下一局部read/fold缺口。
+Tw高度Ω只作分量sup；LHRec的node另加指标step层，故不能直接把
+FrozenOmegaRun接来。主审BoundedIndexContext证所有k,κ的
+Ctx(Lv(ΩL k))(step(Lv(lvl k κ)))，并给非空实际实例；指标种类
+已有前缀容纳位置，尚缺其世界/坐标律、局部折叠以及ΩL向k折叠。
+这一策略判断不关闭其他路线，也不冒充新的强度定理。
+
+主审读全部8文件陈述与代码，冷编GrowthClosed（含If/Run）、
+ValueFloors、ValueUpper、NegAdd、AddClosed，全6G退出0；IndexContext
+主审编译6G0。8文件禁用扫描无命中。定义闭包Closed14/9、NegAdd13/9、
+AddClosed15/9、IndexContext8/9（本地/库），均限定Lean之外0、禁用0；
+值闭包Floors15/10、Upper26/10禁用0。未改src/archive或提交。
+翻译账：世界扩张递归来自累加树结构；指标上下文来自局部分类所需字段，
+层族仍沿用LHRec而非树自足的新定义。值验收未逼改前三级。
+
+
+## 2026-11-07 局部直接折叠与实际非纯反馈值
+
+前轮属于进展，本轮构造、配对审计、值三路继续。BoundedFoldIf固定
+k=ls lz，P=ΩLk，源Safe β B坐标保持原始型；Local仅全函数类型，
+不以可满足性为成果。Class对真实kind给base/rank，rank全带同B路径；
+decide只cmpB合法共同B。Run具体0→1、s→重复和、lim逐点、keep及
+same/above真实回灌，源分支始终整个Safe β B，目标raw允许回灌原始坐标。
+
+主审BoundedFoldWorld从NegAdd节点组装推广：指标世界作为参数，
+Relative.ext对所有k，在0取目标世界、hs保源新增界、lim逐点、Ω指标
+取omega-context的目标投影。legal-ext及assemble-project编译通过。
+只处理目标前缀，不冒充一般t世界相容；首次编译42为局部参数遗漏，
+修正后6G退出0，无未解洞。
+
+Closed用B=hs0，branch c=j(flL P⊞c)，原地板Ω确实每轮进入反馈。
+act对全P树保位置/合法；全部chain和实际output合法。源仅后继，
+没有把搬到Ω一个固定分量的重复例子作新站。独立值ValueFeedback
+证inflate全P树、floor≤next全部输出，repeat-floor≤output；实际首项
+进一步给hs(flL P)≤output及output-not≤floor。未折到可数层，不报ψ₀界。
+
+配对审计读Class/Run/Closed，rank路径、唯一比较和坐标方向正确，
+未找到准确反例；指出一般合法性还需完整合法源世界使to c可入，
+LgB坐标本身不足以免费提供任意依赖上下文的世界截面。
+主审要求停止重复首底Go证书，回读RecBPath.PH-ΦX↓、ClP及LHRec§4。
+对照结果：新Ctx/Pullback补实际g=P⊕upL的跨分量上下文和匹配世界，
+Add补真实累加增长的精确投影；IndexContext/ext补内层指标选槽，
+仍未提供ClP需要的目标Ad到源Ad及源next≤目标next（显式共同未来界）。
+这才是下一可执行接口；策略判断，不否定其他路线，不重造PH-fl。
+
+主审读6文件陈述代码，删除构造/值入口及其本轮自身接口后冷编Closed、
+ValueFeedback，连同If/Class/Run全6G退出0；World主审编译6G0。
+禁用扫描6文件无命中，Closed定义闭包本地16/库9、World9/9，限定Lean
+之外0；Value闭包28/10禁用0。地图检查及diff空白检查在导航更新后运行。
+未修改src/archive、旧结论或提交。终点闭项、EBO下界仍未交付。
+
+
+## 2026-11-07 全混合输入、指标世界律与有限分量可入
+
+前轮有进展，本轮三路检验ClP必要性并推进真正Ω源。主审先指出
+PS接口只是raw合法性证明的充分手段，不继承旧架构约束。构造路
+BoundedPathIf冻结Keep，Run将Q投影到指标copy，hs用psStep、lim用
+psSup；Moving以Ad(V,c)=(V⊲c)×LgB c、nx=c给非恒定实例，真实Ω
+指标下1进入1/2分别到1/2。World区分Ad/Bd方向：world c指标界为c，
+其他槽规范世界；旧世界≤新世界，next后坐标真实可入且ext源世界合法。
+尚无一般fold PH闭包，不把PS接口当新强度或必须路线。
+
+主审BoundedFoldIndexKeep给一般k的node指标Ctx和精确index-project，
+通过Ctx往返在已有ext上证明source-bd（存在目标坐标且back≡原值）、
+target-bd及target-pr，无额外相干前提。配对路NegRaw正面证明真实
+B=Ω中rank0的任意合法raw坐标都有完整原Safe世界使其可入，继而
+raw-branch-legal；classified精确为rank0，常值合法输入验证前提非空。
+不再把原Safe全积世界的截面问题泛化为这一反馈族的障碍。
+
+主审BoundedFiniteWorld对指定有限num n作依赖槽替换，证明at与任意
+谓词preserves；Whole将任意给定有限组件world放入整个Ω源、精确
+投影并搬Bd。无任意Cd判等/序律，亦不自动产生组件内部坐标world或
+Pos。配对只读审计通过，确认字段范围与有限匹配不触裸下标壁垒。
+
+值路Mixed对全部n构造Pos、put、合法floor/sums/input，erase-input
+与旧真实混合树Same，未换成单分量。MixedBridge比较实际第1部分和
+全反馈坐标/输出/部分和，Same到先前合法Closed.output，继而给全混合
+raw输出hs(flL P)下界。MixedSteps按真实keep/same/above子句给所有
+目标prefix-position及全部folded-step。尚缺各fold(sums n)的合法性；
+外层步进与下界不能替代它，不能把整个raw输出称合法序数闭项。
+混合与θω的原同值也未被擅自传过fold。
+
+主审读十文件陈述与实现、删本轮自身接口冷编PathWorld（连If/Run/
+Moving/IndexKeep）、NegRaw、FiniteWorld、MixedBridge（连Mixed）、
+MixedSteps，均6G退出0。十文件禁用扫描无命中。定义闭包PathWorld
+18/9、NegRaw12/9、FiniteWorld13/9、IndexKeep10/9（本地/库），限定
+Lean之外与禁用均0；值Bridge46/10、Steps33/10禁用0。未改src/archive
+或提交。地图和空白检查在导航更新后运行。终点闭项及EBO下界未交付。
+翻译账：世界律由真实指标copy和ext逼出；有限槽由实际n族的形状逼出；
+PS复用ThirdPS而非新文法，没要求主线迁入。当前优先raw合法性是策略
+判断，不关闭其他路线，也不把高层raw值关系读成ψ₀强度。
+
+
+## 2026-11-07 全有限秩、实际第二层坐标与原生下降分类
+
+前轮属于进展。本轮原任务仍为全部fold(sums n)合法，不退为只第一项。
+配对路BoundedMixedNegWorld对每个有限组件的所有新增rank构造局部
+world、合法及Bd，再用FiniteWorld放进完整原Ω源；给含Ω坐标及合法
+输入实例。此入界环节已补，不能再以PS/ClP为必需阻挡直接LgB路线。
+
+构造路MixedLegalIf先复制纯Lean输入作Pointwise接口，Base给任意前缀
+基层动作全world保位置及条件合法，A=0有实例；Class.column精确归约
+同column的原cmpB，只用Nat等式可判定的≡-irrelevant，不用任意路径
+证明无关。随后实际refl测试发现副本sums n并不与原M.sums n定义相同，
+退出42；新MixedLegalActual明确更正，OriginalPointwise/finish直接指向
+原M输出，尚无全体实例。未把副本证明替代原任务。
+
+主审独立纠正t0输出动作与tn坐标动作混淆：最高坐标动作只保留较低
+rank，理应归约fixed-prefix affine。MixedAffine对任意KS、前缀给run、
+全world position、legal及chain闭包，前缀无需正性；配对只读审计通过。
+未声称一般Run桥已证。主审MixedSecondCoordinate直接原M，使用实际
+component2导出的pt，证明任意前缀的F1动作保全world位置、条件合法、
+全部坐标合法。再实证原sums1在target1合法，得actual-coordinate-legal
+的非零真实前缀实例。尚不证明at2折到0合法，更不声称全n完成。
+
+剩余动作的障碍精确化：目标0输出仍消去低rank，任意LgB c只在合法
+世界给Ω单调，不能在非法目标world直接用它证明所有ℕ步进。目标层
+索引证书、仅对将消去种类加强单调及低阶坐标闭包是下一候选（纸面，
+未写）。不把保留底层Ω全raw分支也要求Strong；中间证书不预设等于
+raw LgB。此处尚无否定，不关闭路线。
+
+值路NoMono对当前实际F给合法lower≤upper且折后不≤的精确反例，
+两边折后均有合法证明，说明不能靠下一fold合法传递高P严格值界。
+Path用合法极限c给1+c直接沿旧c+1进入界的路径失败，并给shift-position/
+legal作为独立坐标界与高度界移位修复。Bridge不做强制LH↔CRw全树转换，
+直接Native c=当前原生分量，classify-source带同B路径，to/fr双向字面
+往返及along坐标运输。Terminal实际Native0=stepS⊥，接Fold1到Cd，
+明确Lg*条件，有top1非恒定输入实例、actual-terminal=TΩ1和up下界。
+真正P→Native0动态跨底运行器尚未实现，其输出Lg*与真实降层值仍待证。
+
+主审读十一文件陈述代码，冷编NegWorld、NoMono、Path、LegalBase（含
+If）、LegalClass、LegalActual、BridgeTerminal（含Bridge）全6G退出0；
+主审Affine初编名称step冲突42，改chain-step后0；SecondCoordinate
+扩充时隐式层号未解42，显式P后0，最终均无洞。十一文件禁用扫描无命中。
+闭包NegWorld14/9、Base20/9、Class18/9、Affine5/9限定Lean之外0；
+SecondCoordinate35/10、Actual34/10、Terminal22/10、NoMono29/10、
+Path4/9均禁用0（本地/库）。未改src/archive、旧结论或提交。
+翻译账：世界、有限比较、实际坐标动作来自当前树需求；原生下降分类
+保留当前层族，没有第4层逼改。无新的ψ₀强度定理，目标尚未完成。
+
+
+## 2026-11-07 第2部分和合法与原生动态跨底闭项
+
+前轮属于进展。本轮以全n合法性与真正下降并行，未将at2替代目标。
+主审FirstLegal直接原M证明at0/at1合法，提供实际追加动作与非零前缀
+实例；未由Same传LgB。另修正SecondCoordinate文末多余Markdown围栏，
+未改代码定义或结论。
+
+构造共享RegIf把P底Ω的自身mono留原样，只给第1层新Ω增强固定seed1
+全底world的单调；全部raw分支递归Reg。配对NegSeed证明SeedMono等价
+于∀W,g0⊲[(W,1)]g1这一边，常值实例验证非空，并审实际生成族非零。
+Closure用实际SecondCoordinate、reg-add/partial/run给整个真实chain Reg，
+没有要求任意raw LgB c都有Reg。Action对任意前缀A、Reg c及LgB c证明
+原target0输出动作合法；位置证明只用(W,one)及Reg，co分支以(w0P,d)
+取得真实g d的合法，内部输出chain完整ℕ归纳。Second最终原式
+LgB(M.Fold.fold hz(z⊲B)(M.sums 2))编译0。全OriginalPointwise尚无实例。
+
+下一目标索引推广（纸面判断，未实现）：Reg0平凡、最终Legal0原LgB；
+新增kind的分支按相应低阶Reg/Legal坐标准入，不能继续∀raw坐标；
+保留底Ω的raw子树证书与其原合法分支条件分开。每个rank的world在将
+消去槽固定seed1，保留槽投影目标world。互归纳fold_t保Reg_t/Legal_t，
+中间Legal_t不预设⇒raw LgB。这些是后续待实例化字段，不算本轮定理。
+
+下降路NativeFoldIf源为原P树、路径沿指标分支更新界；NativeFoldRun
+实作结构递归和同一合法B下的比较，指标keep对每个raw目标e先sh B e，
+adm-sh后递归到nxt，未假设原e自动可入。分量policy poF使分支保持B，
+same/above直接原生坐标回灌。NativeFloor给原flL P合法输入及∀B的
+动态Path；θ分量c的证据直指进入后的hs e。native-output与实际接末段
+的countable-output闭项均无接口参数。尚无native-output的Lg*或最终
+LgB，也无值强度，不报ψ₀Λ候选。保留指标的sh重定向明确改变分支，
+值与基本列关系仍待验收，路径不是保值证明。
+
+主审读九文件陈述证明、删本轮入口自身接口冷编RegSecond（含FirstLegal/
+RegIf/Closure/Action）、NegSeed、NativeFloor（含NativeIf/Run）全6G退出0。
+九文件禁用扫描与围栏检查无问题。Second闭包本地40/库10、NativeFloor
+31/10，禁用0；NegSeed6/9、限定Lean外0。地图与diff检查在导航更新后跑。
+未改src/archive、旧树/折叠/证书定义或提交。ψ₀Λ闭项及EBO下界仍未交付。
+翻译账：证书字段由实际seed1下位置证明逼出，原生层分类与动态策略沿用
+树侧结构；没有新增记号规则，未发生第4层逼改。
+
+
+## 2026-11-07 统一有限Good、Bulk合法与值、末段采样证书
+
+前轮属于进展。本轮不把逐项校准当全n完成。构造FiniteRegIf定义按层
+Reg/Legal/RegWorld/LegalWorld/Coord；上层坐标按低阶Good准入，base P
+Reg不增强自身mono，最终Legal0原LgB。Sub统一全部n的reg-sub、
+legal-sub、坐标证书及world-reg；Closure统一加法、one、lim、sum和
+seed-map。Fold.down以seed1实作一步回灌，down-position/Reg/Legal/
+Good对全部n同一证明，无假设中间raw LgB。配对FiniteNegActual将原
+第二层实际chain的旧Reg+rawLgB映到新Good1，给rank2低阶坐标的非零
+整链实例；无反例，不宣称全有限输出保持性由此自动成立。
+
+主审FiniteRegUp直接原M.F n与flL给reg-up/legal-up/good-up全部n及
+floor-good。首次42为Legal n(hs a)在n未分解时不能归约，补按n分解
+的tail-legal后6G0，未加洞/公理。Descent迭代down，给collapse-good/
+legal与任意Good族部分和合法。Closed保留floor-only族合法性但尚无值
+定理；主审指出seed1下只有层数不保证使用P，未将这个判断升级成上界
+或路线否定。主族另开Bulk：bulk0=floor0，bulk(sucn)=up bulk n⊞floor
+(sucn)，Good与逐层下降后的全部分量、closed均合法，保留实际P前缀。
+主审BulkValue对该确切closed证hs(floor0)≤closed及closed≰floor0，使用
+真实component1首反馈及通用act膨胀，不用新构造与旧direct的等同性。
+所以本轮交付P侧(a)合法闭项和(b)严格值下界，无新ψ₀强度定理。
+OriginalPointwise仍未由新逐层构造填充，也未声称到EBO。
+
+下降路NativeLegalWorld沿任意Cd高度rank路径（不仅num n）用自然数
+sup的plug放入合法坐标，world-project精确并给完整坐标合法取枝；
+Source的不可判定Cd槽更新被避免，固定component局部LgB直接消费。
+LegalClass证明真实classify保留LegalCoordinate，LegalDecision证明
+真实decide所有keep/same/above的Allowed与component-branches。尚缺
+V(c,pc,t,pt,W)世界视图：保留秩界与目标along投影匹配，坍缩秩界seed1，
+以及原fold在此世界保位置。这是下一真实字段，没有编译否定关闭路线。
+
+主审NativeTerminalReady另给末段按当前界b的Ready：ℕ步进与Ωmono
+只在b；同时有界枝Ready b供位置证明、采样枝Ready c供回灌。实际
+Col.cw n=(tt,ce n)已核对，legal与position结构递归。root-ready将初界0
+根的mono退化，terminal-root-legal只需每个合法c的Ready c。top1非恒定
+实例证明前提非空；native-shape=refl核对原native-output根，
+native-countable-legal直接接原countable-output，但缺实际全采样实例。
+首次42为误用不存在Lg-mul，改局部raw mul-legal；追加根桥时隐式h未解
+42，明确Ωg后0。没有更改终点函数或用leg整个输出替代。
+
+主审读十四文件陈述证明，删本轮自身接口冷编BulkValue（含If/Sub/
+Closure/Fold/Up/Descent/Bulk）、Closed、NegActual、TerminalReady、
+NativeLegalDecision（含World/Class），全部6G退出0；禁用扫描与围栏
+检查十四文件无命中。闭包BulkValue53/10、NegActual39/10、Ready32/10、
+NativeDecision22/9（本地/库），禁用0，未作成品提取；它们为直接引用
+原M参数的研究入口。未改src/archive、旧结论或提交。地图和空白检查
+在导航更新后运行。最终ψ₀Λ闭项及EBO下界尚未交付。
+翻译账：新证书量词来自保第一位置/合法的实际缺口；新增down沿用
+zero1/srepeat/逐点lim/seed1规则，Bulk由保留真实前缀的要求选择；没有
+新增层号构造子或记号字段，原LH层族仍受记号启发。值侧未逼改前三级。
+
+
+## 2026-11-07 原生非零重复目标的真实反例与可数输出严格raw值界
+
+前轮属于进展。本轮三路集中原生输入世界，不让有限族合法替代最终
+可数下降。共享NativeViewIf以真实decide给keep双向Bd/带界Pr、co
+seed1上界律；每c,t都显式带同B路径及合法B。Base用base-kind选定的
+project给c0到任意target的实际View，并对原Source零分量的原fold直接
+证明全world保位置/raw合法。没有预先假设所有copy相干。
+
+配对路发现实际冲突后，主审要求严格区分View不存在、原fold输出非法、
+特定目标0及NativeFloor生成族，未改旧Run。NegCopies给B=t=lim const1、
+pc取第1项，目标copy0底界0、copy1底界1/高界D的合法实例，证明View
+矛盾。NegOutput独立把Native1地板放原component1，输入合法、Path、
+公共高度及目标world全实例化，原fold输出的copy1新Ω单调强迫
+repeat1⊲branchD；branchD的copy0只可入0，反演得repeat1⊲1不可能。
+编译结论no-legal-output，确实否定普遍raw preservation，不否定t0或
+所有受限证书路线。尚未证明旧定义对终点必须改，故无擅自变更或批准请求。
+
+主审ZeroWorld独立为target0构造seed c v：高rank界1、所有base投影v，
+任意c合法world由v合法导出；classify/raise下所有Bd/Pr均有Set等式。
+首编42为等式Set的Law需Set1，改宇宙标注后6G0。构造Zero将这些law
+逐个base/rank/pick接到完整zero-view；只用hs i⊲0不可能排除rankkeep，
+无路径证明无关。正面与负面互不冲突；above内部的非零coord target
+仍不能由zero-view免费解决。配对只读审计Zero运输方向正确。
+
+值路First精确核对原轨道ce1=0⊞ω（初g0=1经terminal变repeat1），在
+真实oo1的第0ℕ分量取原θ1。对该真实Ω分量G所有d证Sm到pure1 d，
+再将terminal的pure2与旧seed0/pure1比较全部coords/outputs/sums，得到
+原countable-output≥旧TΩ1。Strict以原外层后续项的terminal-positive
+给hs(TΩ1)≤原输出及原输出≰TΩ1。不使用任意Ω输入值单调，不把原
+闭项换成采样分量；它仍是raw值定理，合法性与记号强度没有随之成立。
+Bulk.strict-floor的Ω≤Ω并非第一位置，现有证明不能通过位置律传递。
+
+主审读八文件代码与陈述，删自身接口冷编ViewBase、ViewZero（含If/
+ZeroWorld）、NegOutput（含NegCopies）、ValueStrict（含First），全6G
+退出0。禁用扫描及围栏检查八文件无命中。闭包ViewZero22/9、NegOutput
+23/9、ValueStrict47/10（本地/库），禁用0；ViewBase23/9禁用0由构造路
+审计，主审冷编核对。地图与diff检查在导航更新后运行。未改src/archive
+或提交。ψ₀Λ合法闭项和EBO下界仍未完成，不能由辅助反例标目标blocked。
+翻译账：新View字段由原kind选择和世界合法性逼出，反例指向真实原定义
+的普遍合法性缺陷；没有第4层逼改，保留旧定义供数据。值证明只新增
+关系及模拟，没有把记号引入定义/证书。
+
+
+## 2026-11-07 同Ctx实验、相干Good与路径依赖的精确否定
+
+前轮属于进展。本轮先检验原反例与实际合法坐标分支的联系，不据泛例
+直接判整闭项失败。CtxIf冻结真实单分量HB Nativec的Retain结构方程，
+Run给同Ctx的zero1/srepeat/limpoint/Ω保持及位置/合法性。Repair用逐
+构造Component把完全原Old.input对应回原分量树，保留全部分支证据，
+Select以原共同B、源目标路径、输入/Path及实际cmpB选保留区域修复，
+证同一反例output合法、原branch路径恢复。c>t明确fallback旧Run，无
+一般Source混合枝修复声明。主审CtxValue统一比较纯Ctx搬运与实验输出，
+给实际Select.output一个确切树值下界；没有ψ₀读法或整体修复声明。
+旧Run未改，这仍是新实验而非未经作者确认接管主定义。
+
+配对ReachNegLeg以raw=limconst1合法、L=0⊞leg raw累加极限复现原非法
+输出，L前两项1/2。Call用合法e=hs(hs raw)及完全原Path证明
+native-branch e = diagonal coordinate point，coordinate目标精确为L。
+这里的“可达”仅原native-output在该指定合法坐标处的分支展开；未证
+该e=Outer.ce n，也未证coordinate带实际前缀后的输出非法。继续尝试
+遇不同PH证明使结果非defeq，未偷用Funext/路径证明无关，失败草稿已
+由子路移出probes。不能由此判当前countable-output非法。
+
+主审SeedProjection沿实际p:c⊲t证明seed-project/rank-project/base-project
+及seed-order，对所有Cd高度；无路径证明无关。SeedView据此给所有
+实际共同界、源/目标的seed域View，input-world=seed c v。Good定义
+相对世界域：高rank坐标按下阶Good，base接受原合法Cd，mono/step只
+要求共享底v生成的seed世界。Good模块统一add/up/inject及所有原生
+flL地板Good，ready把零层证书送末段；Coord给fr-along的Good运输与
+全部真实decide坐标准入；Fold只声明并证明repeat/chain/diagonal闭包。
+
+主审Mixed的全Source shared世界按每个c直接取seed c v，无Cd判等；
+Mixed B节点仍返回整个Source，禁止指标根，分量c带c⊲B且按Coord取
+混合分支。add/put/原theta-mixed实际实例均6G0。首次42缺suc作用域，
+补import后仍42为ι隐含结构元无法推断，明确原FXL参数及a/b类型后0。
+值路进一步NegPaths给同一源地板常列input，各项Path在pc0/pc1切换，
+在seed B(tt,0)输出没有第0到第1项位置，故no-good-output。所有正前提
+legal-input、input-path、legal-B、actual-mixed均实证。因此
+“Mixed(raw h)+任意Path ⇒ fold Good”被准确否定，而非仅纸面障碍；
+原theta-path尚未被反例覆盖。后续必须加实际路由相容或索引到路径的
+证书，不能再把hself下不同Path的fold结果当定义相等。
+
+主审读十四文件陈述证明，删十三个本轮自身接口冷编CtxSelect（含
+If/Run/Repair）、ReachCall（含Leg）、ReadySeedView（含Projection）、
+ReadyCoord（含Good）、ReadyFold、ReadyNegPaths（含Mixed），全6G退出0。
+CtxValue主审另6G编译0；十四文件禁用/围栏扫描无问题。闭包CtxSelect
+29/9、CtxValue32/10、ReachCall38/10、ReadyNegPaths39/10、ReadyCoord
+35/10（本地/库），禁用0。未改src/archive、旧树与Run，未提交。地图
+与diff检查在导航更新后运行。原闭项的可数合法性与EBO下界仍未交付。
+翻译账：Ctx修复理由为已有合法性否定、seed证书为实际world要求、
+路径否定暴露独立路由字段；没有新记号规则，没有第4层逼改已采用的定义。
+
+## 2026-11-07 真实θ的精确否定、路由证书与独立合法可数完成项
+
+原目标继续，作者本轮要求综合解读接手后的结果。先完成在跑三路的
+收取与复核，再区分构造进展和值验收进展，不以文件数表示强度。
+
+构造BoundedThetaRouteLimit对B=t=lim(const2)，使用原θ B与原θ-path，
+证明实际输出第0支不能步进到第1支，从而非法。配对NegActual对合法
+L=leg(lim(const1))、原累加前缀及原路径独立给非法输出；NegGood再把
+常2例强化到seed B(tt,0)世界，证明原输出不满足Good。三例都没有
+连接到最终Outer.ce采样，不判原countable-output非法，更不否定目标。
+
+值路BoundedRoutedIf将树与实际Path共同索引位置；self仅同(h,p)，不
+偷用路径证明无关。Run对原R.fold证明position与Good保持，Floor对
+全部Cd分量、实际flL地板与固定component-path给实例，覆盖所有目标。
+ThetaNeg证明该严格证书不能覆盖原θ(leg(lim(const1)))路径。同一旧
+前缀随相邻项改变Path，使证书自反不足；这本身不等于原输出失败。
+
+主审独立重审“不leg整个输出”的先前限制：那是研究选择，不是作者
+纲领。新增CountableCompletionIf/Run，通用inflation证明a≤ᵛleg a，
+已有Lg-leg提供无条件合法性。BoundedNativeCompletionClosed新定义
+tree=leg原countable-output，无接口参数；legal-tree、raw-lower、
+hs(Old.TΩ1)≤ᵛtree及tree≰Old.TΩ1均成立。构造侧在收到主审消息前
+也独立写BoundedThetaRouteLeg，候选相同，证明同档。保留两篇作为
+独立数据，不算两个强度进展。未修改原Run或原输出，未由值验收
+逼改前三层。leg可能增值，未证上界、EBO下界或原输出同值。
+
+主审读十一文件陈述与证明，删除本批自身agdai后按依赖顺序冷编，
+全部6G退出0；代码围栏禁用扫描无命中。导入闭包完成Run9/10、完成
+闭项50/10、Limit32/10、NegActual35/10、NegGood36/10、RoutedFloor48/10、
+RoutedThetaNeg37/10、构造Leg48/10（本地/库），禁用0。尚未成品提取。
+未改src/archive、既有定义或提交。翻译账：真实θ反例逼出路由要求，
+通用完成沿用树侧部分和；它解决终端合法性但增加值验收义务，不称
+树自足或ψ₀Λ已完成。地图与空白检查在导航更新后运行。
+
+## 2026-11-07 完成项整体值、旧参考ε₀验收与完成的非同余界限
+
+前轮属于进展，本轮不把合法完成视为ψ₀Λ值证明。派构造直接读取C的
+真实整族，配对检验完成操作的上界推理，独立验收校准旧A的值。主审
+复查实际Source、NativeFloor与ΛL：Source为twL2，但不能据固定类型
+给生成输出封顶（已有NoTypeBound）；当前缺EBO全Ω指标塔的下界。
+
+构造BoundedCompletionLowerFamily证明actual-first-output字面为hl sample，
+全部sample n≤C；其height-normal对全部n核对高度为三角数1、3、6、10……。
+对全部外层输出的正性作归纳先得A+ω下界，再利用完成层部分和得到
+hl(mul A)≤C。它不是EBO的twL全族，有限组件与规范有限塔下降的联合
+坐标/输出值模拟尚未完成，不把整族定位或算术加强当作Ω塔站验收。
+
+配对CountableCompletionNegThin定义thin，将后继换成常值极限，原值
+恒为1且保合法；recover证x≤leg(thin x)。对每个U，具体合法见证
+thin(leg(hs U))原值恰1而leg后不≤U，故no-uniform-upper精确否定仅凭
+合法性与raw值界1给这一完成操作统一可数上界。它不否定具体C的上界，
+不否定其它Completion实例，不关闭当前路线。
+
+验收BoundedCompletionCalibrateTower对原A的全部反馈轨道与纯P one
+迭代塔双向比较：下界逐项，上界每个累加步由两个塔步控制。主审
+BoundedCompletionPureAccept比较全部可数c的read(P one c)与Level.ψ⁰
+(read c)，先处理有限加法结合，再处理mul从1份而ψ⁰从0份的错位。
+首次42为Ord-Ord误作独立模块导入，改OCF.BTBO子模块后0；曾追加
+重复ψmono产生层号隐式元42，发现Value已有定理即撤回，不将失败扩充
+保留或计作结果；PureAccept最终原桥6G0冻结。
+
+CalibrateReference用refl核对OCFSpecAnchor.ε₀与NoCumsum.γ1相同，
+reference-label直接用Correspond.ε₀-label。CalibrateAccept将实际A经纯
+塔、Anchor γ与Fδ接该已Lab参照，A-value-label是实际read A的VLab，
+序数值ψ₀(Ω₁)=ε₀从判断升级为定理。再将hl(mul A)下界接标准
+lim(iter(reference+_)0)，证明明确ε₀·ω参照≼read C，另有ε₀+1；
+没有C上界、C同值/EBO下界或FGH相同结论。记号只在验收层。
+
+主审读六文件陈述证明，删除本批自身接口后顺序冷编NegThin、LowerFamily、
+CalibrateTower、CalibrateReference、PureAccept、CalibrateAccept，均6G退出0。
+六文件代码禁用扫描无命中。导入闭包NegThin15/10、LowerFamily51/10、
+Tower47/10、PureAccept27/13禁用0；Reference15/11命中2、Accept89/14命中18
+均为明确记号验收，不进入完成项/证书定义闭包。配对独立只读核对Pure与
+Accept错位、方向及参照资格通过。未改src/archive、旧定义或提交。
+翻译账：没有新树规则；现有构造的实际值桥与否定推进结构判据要求，
+仍未得到树自足或终点验收。地图与空白检查在本轮结束前运行。
+
+续攻有限族规范桥：主审指出不必用任意Cd路径证明无关，可以仅消去
+有限终点路径；同时提醒不能把反馈坐标Same直接喂给任意g。构造
+BoundedCompletionFiniteBridgePaths先直接双路径归纳遇without-K的
+反射索引消去42，随后用固定终点finite-equal?、recompute常值与局部
+UIP，再对路径code/decode证明finite-path-unique。只判任意a与固定
+num n相等，不判任意Cd相等；所有身份与位置的唯一性均限定有限终点。
+
+FiniteBridgeDecision定义跨两公共界的SameDecision，above仅允许pi
+不同、目标路径保同；pick-independent消费有限路径唯一与有限反对称，
+finite-classify对全部n的实际kind给有限rank，actual-component对所有
+有限源/目标和真实kind证明原decide的计算分支一致。每次比较仍带自己的
+合法字面公共界；实例可取源目标num n，两界num n、hs(num n)。
+未证明全fold同余：两条反馈链的坐标Same需要实际floor/θ的分支同余，
+任意g无此性质。没有以此补完全部样本的值模拟或报告新的C值界。
+
+主审读两文件、删自身接口后冷编均6G退出0，代码禁用扫描0；闭包
+Paths13/12、Decision28/12（本地/库），禁用0。加前提实例说明后
+再次编译Decision，最终状态以该次退出码为准。本轮共八个新模块。
+
+## 2026-11-07 原θ的全有限混合规范桥与实际EBO全阶段入口
+
+前轮属于进展。继续原ψ₀Λ目标，不把有限组件决策规范化当整fold同余。
+构造/配对先确认任意g保Same的缺失没有无条件反例：加Funext可将Same
+化等式，因此不能把未证一般同余写成路线否定。主审提出遗传坐标准入，
+构造指出高目标keep仍取raw坐标，故采用中间层逻辑关系、最终0才Same。
+
+FiniteRunIf参数化TreeRel的Ω字段为异坐标关系。Rel/Coord按实际Native
+层递归，base坐标用Cd Same、新rank用低层Rel。ComponentBridge只声明
+具体原at在全部finite源/目标和两套合法公共界下保持Rel。Closure对
+全部实际finite flL证floor-rel，并给up/add/repeat闭包及zero-same。
+Coord沿真实Ctx搬运二元关系，classified/decide-allowed不要求raw自相关。
+Run.coherent直接消费原decide及全chain，same/above使用主审新
+BoundedDiagonalRel；Floor.floor-independent实例化全部会坍缩的原地板，
+canonical仍原运行器。五文件全实现，无未填接口假设。
+
+主审BoundedDiagonalSame先显式比较原chain的异坐标Same回调；Rel版本
+允许不同坐标/输出关系，要求初始one相关、加法/极限保持和实际回调
+相容，均有identity/up实例。TerminalRel沿Rel0证明归纳，以原F.Col的
+坐标与当前world界共同Same模拟末段T.fold，未冻结初界。floor-terminal
+对所有finite地板跨公共界给实际Cd Same与双向值，不先把Rel0降普通
+Same后套任意回调。首次42为局部step名与KS.step冲突，改名并补_,_后0。
+
+接着FinitePlaceIf/Decision/Run实现原ι n a到原ι(n+1)(up b)的coherent-up，
+两次raise直接按Class展开，用actual-rank比较各自pi而非证明Path相等。
+Any允许placed树每个Ω事件读自己的Path，吸收原PH-⊞中的PH-mono。
+PER只从已有Rel取得自相关，不假定任意raw树Rel自反。Append沿后缀
+结构归纳；PrefixRel对所有finite目标的量词服务above内部递归，并由
+Theta归纳真实构造，没有预设整个和已相关。
+
+Theta.model0=0⊞floor0、model(n+1)=up(model n)⊞floor(n+1)，保原θ0
+前缀形状。theta-rel左边始终原N.θ(num(suc n))及任意其Path，右侧才
+原placed模型，覆盖全有限混合分量。Sample.height-positive用已有三角数
+等式，actual-normalized将全部真实L.sample n（原θ/路径/末段）Same到
+T.fold feedback(Theta.normal(stage n))，stage=0,2,5,9……。用Same反向值
+与原sample-below-tree得到normalized-below-C及whole-normalized-below-C。
+未比较Old.TΩ，未证规范raw输出合法，未把finite族称为Λ的Ω迭代族。
+
+验收StageCore给真实family n=forget(NoCumsum.γ(suc n))，sup有既有
+ψ₀(Ω_{Ω₁})标签；StageFamily把首项与已验收旧A及C连接，未填全族。
+StageHC对任意HC(EBOψ2)及实际HC-BTBO给同值桥。StageWf直接具体化
+2及分离轻核心后两次6G251；StageWfLabel将Lab连接单提仍251，均显著
+标草案、不算通过。空import Wf的实验6G0，排除“加载Wf必耗尽”的说法。
+主审建议只在变量k上封装，再在外取2；StageWfOpaque因此6G0，
+StageWfBridge以Lab-uniq连接实际第二站。StageWfEbo新opaque unfolding
+自有stage，在变量k上证所有stage≤实际EBO、stages-cover，最终
+whole-stages-lower/necessary将全stage-Cd覆盖与实际Target.reference
+下界互相推出。六个成功入口根冷编均0，实际Wf连接已不再未验证。
+失败草案只追加成功替代入口，不把历史251改写成0。仍无C全族/全站覆盖。
+
+复核：主审读22文件陈述与证明，删自身接口冷编16个构造/规范模块，
+及带-i /private/tmp/lambda-target-arch冷编6个验收入口，全部6G退出0。
+22文件代码禁用扫描0；配对先后审If/Coord/Run/Floor、Place/Terminal、
+Any/PER/Append/Theta/Sample，未发现假设偷换。闭包Sample67/12、Theta48/12、
+Terminal50/12、Floor43/12无记号；验收Ebo255/33含82个禁用表模块是
+明确的验收依赖，不进定义。C重新以agda --dependency-graph编译0，
+图181个模块标签含自身、禁用表0（临时图/private/tmp/bounded-completion-candidate.dot）。
+未改src/archive、原树/折叠/证书或提交。翻译账：无记号新规则，模型
+由原θ前缀与结构搬运逼出；增加验收关系，未换最终定义，未增加已验收
+强度档位。地图与diff检查在本轮结束前执行。
+
+## 2026-11-07 全层首反馈地板覆盖与实际动态双Ω的严格值界
+
+前轮属于进展。本轮直接分析规范族值，构造、配对、独立验收三路，
+不再只加路径脚手架。独立检查明确Old.Wi最高坐标是低层地板而非1，
+Native每次seed1靠前缀取得该种类；一般seed单调或旧Generated吸收
+不能代替本次真实轨道比较，没有编译反例关闭规范族。
+
+主审AlongSuccessor从一般Ctx compose归纳ek-step/fr-step，给所有实际
+沿后继的along-suc/fr-suc（点态subst运输），无Funext。构造ValueKeep
+要求原self decide保原kind及逐坐标fr=e；Rebuild用沿后继运输在全部
+finite classify重建key/back，填SelfKeep实例。Compute将实际up-run
+Same到已有Affine，覆盖所有raw输入但只在全keep情形；Affine统一任意
+KS的值膨胀。First实例化FirstFloor，全n floor≤真实chain coordinate 1，
+floor-in-tail覆盖所有后续项，normal-shape直接refl核对原Θ.normal。
+该高层裸值界未被送过任意fold；仍需Old动态世界的分支关系。
+
+主审TerminalValueIf定义Native0上的有向VRel。冻结前将vor明确收紧为
+同一个a低于所有g c，防止任意坐标规则；vo要求c≤d时异坐标分支相关。
+Run.eval由实际Orbit.current同时比较全部坐标、当前界、输出及部分和，
+实现TerminalComparison，零规则只用原fold恒正。Closure给prefix-rel、
+add-rel、up-mono、floor-self及seed/prefix下界，未假设超可加。Act直接
+对验收路实际Old.act证单调、膨胀及全部Old.Pure.ce自VRel，前提实例非空。
+Along首次42缺_,_，Closure首次42缺inj₁，补限定导入后各6G0；未保留失败证明。
+
+验收Model精确归约源Native2的低/中/高三种类，low/mid递归保原seed1
+和原diagonal，actual-input/actual-output直接接normalized1，不靠模型读法。
+Old对原Old.TΩ2全部坐标/输出/部分和给结构桥：坐标从floor0起，动作
+act保底Ω，输出原T.fold0(e)，没有先假定其ψ₀(Ω₂)读法。
+Pair在实际模型第0/0/0/1极限支选出small⊞small；floor≤small的VRel
+全Cd分支证明用纯P膨胀，eval及add-rel把完整动态双Ω输出
+T.fold0(floor0⊞floor0)接到normalized1≤C。不是有限自然数计算测试。
+
+PairStrength先将FrozenOutputIf.Model one的changing运行器与原terminal
+沿Rel0及动态world坐标Same全轨道连接，再用既有严格Pair定理得
+hs(Strict.BB₀)≤normalized1≤C。first-same核对Strict.B₀就是原旧A，
+Pure.Orbit全轨道比较又给hl(mul A)≤Strict.BB₀，最终
+hs(hl(mul A))≤normalized1≤C及normalized1≰hl(mul A)。BoundAccept把
+这个实际粗界接既有ε₀标准重复加法参照，证ε₀·ω+1≼read C。
+PairLegal通过原Lg*地板/加法闭包与Last.terminal-legal证明该动态双Ω
+下界自身LgB，未由大树C合法反推raw下界合法。
+
+尚未证明Old.TΩ2≤normalized1，缺旧top初界轨道与新前缀轨道之间的
+输出部分和共尾覆盖；坐标膨胀或点态输出比较不能跳过这一义务。
+没有新的ψ₀(Ω₂)标签下界、C上界或EBO全站覆盖。未以此关闭路线。
+
+复核：主审读本批17模块陈述证明，删除各自agdai后冷编前16模块均
+6G退出0；最后新增PairLegal首次6G0，另删自身接口冷编再核对。
+配对只读审FirstFloor、VRel、PairStrength及BoundAccept未发现隐藏前提，
+尤其Affine内部的裸≤Ω只作raw值膨胀，未跨任意fold。代码禁用扫描0。
+闭包First58/12、TerminalValueAct55/12、PairStrength75/12无记号；
+BoundAccept114/16含18个禁用表模块是明示的记号验收，未回流定义。
+未改src/archive、原树/Run/证书或提交。翻译账：新前提来自真实反馈
+初界/分支单调需求，未新增记号规则或按种类数命名强度。地图与空白
+检查在本轮结束前执行。
+
+## 2026-11-07 完整Old第二地板覆盖与双Ω参照的具名严格下界
+
+前轮属于进展。本轮直接解决旧输出部分和覆盖，不只推进坐标或
+ε₀ω+k。构造/配对/独立验收三路继续，总ψ₀Λ目标不变。
+
+主审OutputPadding补right-rel（不能把0⊞b与b视为定义相同），由两个
+VRel自证及初界u,v≤w推出fold u a⊞fold v b≤fold w(a⊞hs b)：两项
+先进入fold w(a⊞b)，再取原后继折叠repeat第1项。pad f0=f0、
+pad f(n+1)=pad fn⊞hs(f(n+1))，给通用sum≤pad及真实Old.Pure.oO全n
+实例。首次42为CRw.Σ₀与Col.oO在变量n处非defeq，改实际Old部分和
+两步归纳后6G0冻结；不是类型转换尚未连接的草案。
+
+OutputCoverIf固定原terminal(normal1)整输出目标，Coverage.sums要求
+全部旧部分和。Model保原model0前缀，H c=Old.act(prefix⊞c)，用原
+coordinate全Rel与normal-shape接实际normal1。Stride的两个归纳不变量
+为Old.Pure.ce n VRel chain H(stride n)、pad Old.Pure.ce n同样相关。
+stride0=1，随后每旧步用三个真实新步：第一步覆盖旧下一坐标；第二步
+并入旧pad与该坐标；第三步用H恒≥1吸收后继。没有hsΩ≤actΩ假设。
+padded-partial再送真实H输出部分和，而非仅比较坐标。
+
+OutputAcceptLift用原跨组件any-up和low模型Rel，把完整normal1末段
+输出放入实际normalized1（它使用normal2）的第0输出/repeat第0项。
+Run先old-padded-sums、eval(z≤feedback)、按stride选真实外层项，再
+反向Model.actual-output，实例化Coverage，最终无条件
+Old.TΩ(num2)tt≤terminal(normal1)≤normalized1≤C。这个旧第二地板的
+整输出共尾缺口已补，全部finite层及其标签仍未补，不能叫ψ₀(Ω₂)。
+
+独立验收OutputAcceptPair选Level.ψ⁰(Ω₁+Ω₁)为单向参照，没有预设双Ω
+同值。tail c=Ω₁+up c的折叠由P D(forget c)整树上界控制，参照Q链
+从1起，frozen纯P_D链从0起且累加，错一项坐标/输出比较给reference≤
+Frozen.value。既有Upper.upper-pure送changing B(B0)，再严格Pair定理
+得到hs(forget reference)≤真实合法Pair.pair-output≤C。
+OutputAcceptLabel用既有Label.GS(St0).lab及实际加法推导给该参照Lab，
+故具名下界为ψ₀(Ω₁+Ω₁)+1。no-pair-upper-reference精确否定
+Pair.pair-output≤forget reference，不能把该双Ω输出误读成参照同值；
+没有否定更高上界或当前路线。
+
+主审读八模块陈述证明，删自身agdai顺序冷编八模块全部6G退出0。
+代码禁用扫描0。导入闭包Padding56/12、Lift69/12、If62/12、Model73/12、
+Stride80/12、Run89/12无记号；AcceptPair114/16与Label115/16含18个
+禁用表模块，为明确记号验收，不进C定义。配对逐步只读审stride3、
+Coverage.sums、完整Lift及Label，未发现隐藏假设或normal索引混淆。
+未改src/archive、原树/折叠/证书/种子或提交。翻译账：新用到树侧
+有向关系与一次后继补偿，pad只在证明中，模型已桥到原运行器，没有
+用新模型替代目标。仍缺C的EBO全站下界和精确上界；下一轮应挑战
+Old2读法及整族推广，不把这个中间站视为终点。地图/空白检查在收尾执行。
+
+## 2026-11-07 阶段无关的全有限输出覆盖与Ω₁·ω具名下界
+
+前轮属于进展。本轮构造、配对、独立验收三路继续；根抽取统一
+三步延迟及输出补偿，直接检验Old第二地板的读法，不以名字定强度。
+
+Lean/BoundedStrideIf、BoundedStrideRun仅要求关系保持加法、前后追加、
+实际动作的单调/膨胀/正性及真实初界。old与pad数组的方程是接口字段，
+不假设任意raw树自相关或fold保持裸值序。BoundedStrideActual以原
+Old.Pure.ce及原pad全轨道实例化，重新给完整Old2≤C，故接口前提真实。
+
+UniformIf/Closure/Coord/Run定义按坐标层递归的有向Value并证明原at对
+全部有限源/目标保持它。vo只消费已给的坐标关系；vor要求全raw分支
+统一下界，不任选Ω左分支，不从Value a b取得Value b b。比较分别带
+合法字面公共界。UniformFirst给全部原model/chain自证与地板覆盖，
+Compute逐支核对原self-at和原coordinate的Affine计算，无Funext。
+UniformStage以全部有限层原动作实例化同一StrideRun，轨道从真实floor
+起步，pad同时覆盖原coordinate chain。没有声称orbit就是Old多槽世界。
+
+OutputRepeat用两个原repeat项吸收一次pad，得到完整ω重复的输出
+下界；UniformEvaluation包装原at到0再交原terminal，给全有限层关系
+求值、后继重复和输出部分和补偿。UniformEmit经原跨注入关系把
+read(model⊞c)接真实emit；没有误写为read(coordinate c)。UniformOutput
+以Stage.padded-coordinates n k（不是padded-partial）比较真实pad及
+chain(stride k)，经emit-terminal选原normal(suc n)分支，得到任意有限
+源层的stage-lower及真实采样整族whole-stages≤C。尚未得到Old全有限
+TΩ或EBO全站覆盖。
+
+UniformAcceptFamily在Native0实际stack n上给整族≤Old.Pure.ce n。
+Value对参照ψ⁰(high n)、high(n+1)=high n+Ω₁，逐n比较真实动态种子
+与原轨道，错位覆盖参照整链；不假设高层ψ⁰对值序单调。Label只用
+有限和的结构重结合与既有Generic.lab，给ψ₀(Ω₁·ω)≤Old.TΩ2≤C。
+这是具名下界，没有Old2=ψ₀(Ω₂)或任何新上界结论。
+
+UpperDepth在真实Old.Pure.ce2内选出任意有限Ω深度路径，证明不存在
+统一有限深度Bound；纯树Bound0及floor的Bound1给可满足实例。
+UpperRelation精确否定VRel(act0,floor)，并对所有种子证明对应实际
+terminal输出的值不等式成立。这说明现有关系不能直接承担该参照上界
+模拟，不说明值不等式为假；两个否定均不关闭序数上界或当前路线。
+
+所有路冻结后，主审读陈述与证明，删除本批19个模块各自agdai，顺序
+以6G从头编译，全部退出0。配对只读审计通过，代码禁用扫描0。
+导入闭包StrideRun14/9、StrideActual90/12、UniformOutput98/12、
+UniformEvaluation71/12、OutputRepeat57/12、Family57/12、Value67/15、
+UpperDepth45/12、UpperRelation56/12均无记号禁用命中；Label111/15的
+6命中只作验收，不回流定义。未改src/archive、原树/运行器/证书或提交。
+翻译账：新关系和补偿来自实际反馈求值，未添记号构造规则；层族仍受
+记号启发，阶段无关证明只是树自足的部分进展。总目标仍缺实际EBO
+全阶段下界及精确上界，不能用全有限层量词偷换Λ的Ω指标迭代族。
+
+## 2026-11-07 含Ω指标的分类与世界增长、双低槽输出及完成的精确代价
+
+前轮冷编并解释最新19模块，属于进展。本轮继续总ψ₀Λ目标：构造路
+攻完整Old有限多槽世界，配对路挑战擦世界并实例化下一Ω指标层，
+值路攻原Old2上界。根先做完成代价公式，再依据已编译的下一层真实
+分支结果，将分类直接提升到含Ω指标，不把已有有限层接口当最终限制。
+
+BoundedWorldCoverIf/Run/Floor以原Fold1.Col定义轨道，对所有合法Cd
+层号m、任意完整世界W，证明最高坐标动作Φ(hs m)→m在up输入上与
+affine动作Same、全部ce与纯轨道Same。低世界proj₁(cw n)=proj₁W，
+原TΩ(hs m)逐字等于Original.oO极限，entire-world给(Wi m,ce n)。
+这没有去掉原oo读取的低槽。WorldCoverNegErase在同一最高初坐标
+floor0、两个完整合法世界((tt,0),floor0)和((tt,A),floor0)上证明第零
+输出分别Same A及≥hs A，否定仅看最高坐标而擦低槽为0的字段。
+
+BoundedWorldValueIf/Run直接模拟原Col，worlds(suc n)用update初始世界
+而非上一步世界，与原定义一致。TwoSlot定义mid b a和low u b a两个
+直接结构递归函数：底Ω更新u保b，中Ω更新b保u。Bridge在原共同界3
+下以Rel1输入、Rel0中槽与Same底槽同时模拟Φ3到1/0，不用任意Same
+穿折叠。Whole.old-three将全部原Old.TΩ3输出及部分和Same到双低槽
+实际模型output，初值最高floor1、中槽floor0、底槽0均保留，双向值界
+已导出。仍未证明该output≤C或具名读法。
+
+ValueCoverIf/Reduce/Run进一步给中Ω实际Col全部oO n的错位覆盖，
+底槽u显式保留且u≤实际feedback；mid-up/low-up只对up输入消中槽，
+输出仍有底槽动态更新。pad/stride与原normal1连接完整输出≤C，非零
+u=feedback实例已填。u=0就是已覆盖Old2，不计新增强度。Old3后续输入
+带floor1前缀，进入中Ω时前缀仍读取中槽，故上述消槽不能直接应用；
+尚缺前缀依赖中槽的整输出覆盖，没有用函数形状代替它。
+
+UniformUpperIf/Run给增加实际base(1,floor)的采样关系及原terminal语义；
+Prefix在所有原旧坐标ce n上证明任意u≤v时fold u(hs ce n)≤
+fold v(ce n⊞floor)，用真实第1反馈点及动态seed。StableIf另开Core，
+context与through明确携目标/中间项VRel自证；Run在原Col证明语义，
+Add用有向结合律处理context的前缀重排，给带左端两侧自证的加法、
+有限/极限重复闭包。Boost定义仅作验收模型，零叶换floor，后继与Ω
+保原重复/keep。Good要求全raw枝的Good及有序坐标VRel，已证真实
+floor/up、add、act及全部Old.Pure.ce实例；actual得到全旧坐标、所有
+有序种子的act→boost值界。尚缺boost整轨道参照及输出部分和上界，
+未称Old2=ψ₀(Ω₂)或给新具名上界。
+
+根CountableCompletionUpperOmega给任意raw可数前缀a的精确公式：
+leg(a⊞ω)互≤hl(mul(hs(leg a)))。mul按n+1份计，gap n m合并两组份数，
+budget控制全部完成部分和；下界取错一项。原ω另用leg-num与实际
+部分和逐项校准，避免偷0⊞ω的函数定义相等。继而合法ω⊞ω的完成值
+互≤hl(mul ω)=ω²，且hs(ω⊞ω)≤其完成，精确否定该实例的值保持。
+首次42为rewrite leg-tail(suc n)被提前化简，改rewrite n；二次42为
+0⊞ω非defeq，改原num/部分和证明后6G0冻结。没有保留洞或失败结论。
+此结构上界公式并不覆盖C的全部极限形状，不冒充C上界。
+
+WorldCoverNegNext先给Source≡Lv(twL2)及twL3内实际分量，最低Ω地板
+作为新指标坐标，完整合法世界、可入证据与原θ分支合法均有实例，
+branch-shape显示保留指标旧Ω。这是正面先手，不是类型上界否定。
+根据此开HigherIndexClassIf/Run：k=ls lz，U=stepS⊥，前缀P=ΩL k，
+Native c=Lv(P⊕upL k c)，c取所有HB U而非Cd。Position在Ω组件e处
+携e⊲低界及递归证据；Class的rank i携hs i⊲[w]c。classify将指标
+旧种类经已有first-index双向坐标搬运归base，将组件Position.bd送入
+真实hLim后raise。pick/decide新增非荒谬hLim情形，仍仅用原cmpB
+比较同一合法B与同一合法w里的两条路径；没有全局判等/三歧。
+
+HigherIndexClassWorld对所有该类型高度证明Position与Class在低世界
+增长下搬运，实际β↦β⊞leg e有任意raw e的合法实例；不声称decide
+分支不变。配对HigherIndexNegPosition对固定(tt,β)证明组件hsβ不能
+自动填Position，前提有任意合法β的world实例；同world(tt,1)给坐标0、1
+可入、2不可入，真实hLim路径，以及rank指标本身为Ω的实例。只否定
+擦掉Admission字段，不否定带证接口或下降。完整高层回灌仍未实现。
+
+各路冻结后主审逐个读陈述证明，删除本批25个模块各自agdai，顺序
+6G冷编全部退出0；配对只读审查通过，代码禁用扫描0。导入闭包
+UpperOmega15/10、WorldCoverFloor50/12、WorldValueWhole47/12、
+ValueCoverRun94/12、NegNext10/9、NegErase79/12、UpperRun58/12、
+StableBoost62/12、HigherRun10/9、HigherWorld9/9、HigherNeg20/12
+均禁用表0。本轮无新记号标签模块、无原树/折叠/证书改动，无src/
+archive改动或提交。翻译账：高层Position由原树hLim可入要求和编译
+反例逼出，双槽字段由实际更新逼出，完成公式来自树侧累加；沿用层族
+仍受记号启发，不称树已自足。没有增加ψ₀具名强度档位；目标仍缺实际
+EBO全阶段下界与C精确上界，下一步须攻完整高层回灌和动态前缀覆盖。
+
+## 2026-11-07 高指标动态运行、同输入策略修复及双槽动态预算
+
+前轮25模块冷编通过并交局部高指标算法，属于进展。本轮继续ψ₀Λ，
+构造/否定配对直接攻完整运行与实际准入，独立值路攻读取中槽的非零
+前缀；根补联合有向比较与输出补偿。没有把更小的下界增量当终点。
+
+HigherIndexFoldIf区分低Cd界β与高HB U界B。Run对原高层Source树
+结构递归：指标旧Ω先β⊞leg raw，再进入hs e；高指标按原J₁将B改为
+hs(B⊞leg_k raw)，adm-sh见证可保持β；并非每次两界都严格增长。
+分量节点消费实际Position与公共B的分类。指标整个step U经同一Ctx
+放入目标prefix分量1，坐标类型无强转。Path.mono/add用J₁实际adm↓
+及世界单调性，未声称任意接口的定义相等。Closed的输入逐字原
+θ(flL U)，保留指标旧Ω全部Cd分支，input-legal与全β input-path已给，
+output是原结构递归全输出。尚未证明输出合法、值或全高floor路径。
+
+根独立提出并由配对HigherIndexFoldNegComponent编译确认：输入
+ι(inj₂ omega)(flL(g omega))、omega=flL U、公共B=hs omega皆合法，
+component有字面路径。但旧Path对内部指标仍固定β取全部raw支，
+选hs(hsβ)迫出hsβ⊲β。因此对这个真实输入无Path；不否定闭项θomega
+正例，也不把证书覆盖失败说成输出非法或值太低。
+
+构造另开HigherIndexFoldStrategyIf/Run/Path/Closed，按原kind位置
+计算fixed/changing策略，组件内部归base的低指标也动态更新β。
+新Run复用旧约75行结构脚手架，新changing分支将所选Cd合法化后
+进入hs e；没有改旧运行器或证书。StrategyClosed输入与上述否定逐字
+相同，完整原组件地板现有∀β input-path及可运行output，不是退回
+pureθ。变更依据来自树侧准入反例，并非方便记号验收；尚未采纳为
+替换主定义，也未证明新output合法或值。
+
+配对继续HigherIndexFoldNegRank：c=hs omega、B=hs c，原完整组件
+地板合法。最高rank的一个raw坐标可取含组件hsβ的常0分支Ω节点，
+该坐标自身也LgB；Path仍迫出hsβ⊲β。故当前全raw rank字段甚至缩为
+合法坐标仍不足，需要相对世界的支持或动态准入。没有证明该坐标在
+实际反馈链上，不能据此说输出非法，也不否定StrategyClosed的修复。
+
+根TwoSlotValueIf/Run同时比较Value1输入、Value0中槽与Cd底槽值序。
+两种Ω各自的ce/oo/oO完整归纳：底Ω只更新底槽，中Ω以mid生成坐标、
+low生成输出并只更新中槽；不作terminal∘mid复合。zero用实际恒正，
+vor只取真实初始坐标，vo只消费已有有序坐标证据。Closure给原act
+的正性、单调、膨胀及Whole.Model.ce全族自证，input-prefix/actual-lower
+实例不局限up输入。没有从单向关系取右端自证。
+
+BoundedWorldPrefixIf/Run直接在原Middle(u,b,p)上比较所有坐标、输出
+与部分和。Actual以Whole.Model.ce k→ce(k+1)、floor0→act floor0、
+非零feedback填全族；k1逐字是floor1⊞actfloor1。右侧仍是双槽语义，
+不是Uniform。Seed对这个真实前缀证明∀u c c≤low u(up c)prefix，且
+up c全族自证，精确否定对所有自证中槽冻结prefix的统一Cd常量界。
+它没有把所有这些槽说成Old3轨道采样，未否定轨道受控覆盖。
+
+根TwoSlotValuePadding给lower-add/middle-add，左右中槽不同但有
+显式共同d，输入a⊞hs b吸收输出相加；sum≤pad只对j≤n的已访问槽
+及底种子要求有界，共同d自证显式保留。PrefixPack用原ce n作共同
+中槽，证明j≤n时ce j≤ce n，sourcePad取所有真实p⊞up ce_j的补偿和。
+col-sum显式归纳连接原Col.oO与Σ₀，得∀n oO n≤low u(ce n)(sourcePad n)。
+实际prefix、floor0、feedback已实例化，中槽与输入两者都增长。尚未
+将它们同步覆盖进Uniform/normal，不能报Old3≤C。
+
+SeedIf另立两层树侧坐标膨胀与递归证书：每节点显式Value自证，
+最低Ω要求up c≤g c及全部Cd枝递归，中Ω只在带Seed0的坐标e上要求
+up e≤g e及递归，不预设全部raw e有证。Closure/Actual给floor、up、
+act、add、mul及原Whole全部ce真实实例。Compose仅对Value0合成，
+vo/vo取中间Cd坐标x的≤自反，vor/vo取目标Cd坐标，未声称Value1
+全局传递或Value0全部raw树自反。Middle.preserve在原mid上对全部
+Col坐标先取得Seed0再进入Seed1子枝，全部输出和也有证；最低Ω用
+recover-pure与trans0恢复坐标。Prefix将原Middle.ce与打包sourcePad
+的Seed证书接到全k/n真实轨道，branch-recovers直接给当前坐标的值
+下界。中Ω膨胀字段尚未实现跨Uniform吸收用途，不能把证书当最终值桥。
+
+本批25模块各路冻结后，主审读全部陈述证明、逐个删除自身agdai再
+顺序6G冷编，全部退出0；代码禁用扫描0。闭包TwoSlotPadding51/12、
+Closure58/12、PrefixPack84/12、PrefixActual83/12、SeedPrefix90/12、
+SeedMiddle62/12、HigherClosed24/9、StrategyClosed28/9、NegComponent
+21/12、NegRank22/12均禁用表0。主审Padding首次0带stdlib弃用名警告，
+冻结前改新名重编0。无src/archive或旧定义改动、无提交。翻译账：
+新策略来自真实Path否定，双槽预算与Seed来自实际运行要求，沿用LH
+层族仍受记号启发。本轮无新具名ψ₀强度档位；ψ₀Λ仍缺实际EBO全站
+下界和精确上界。下一硬义务为rank相对世界的坐标准入/生成闭包，以及
+动态中槽与补偿输入的同步吸收；不能继续自动填全raw或仅合法坐标。
+
+## 2026-11-07 重定位的完整跨运行器比较、合法Old3下界及全地板支持
+
+前轮25模块冷编及动态双预算是进展。本轮构造/否定配对处理未来支持
+与keep总定义，独立值路与主审直接攻世界到树的编码及实际运行模拟。
+总ψ₀Λ目标不缩为单站；本轮交付仍非终点。
+
+HigherIndexSupportIf按原高度c与树a分层定义Support/Event/Coord/next。
+新rank Coord携未来合法β′、β⊲β′和低阶Support c β′ e，不以raw合法
+代替相对支持，也不把同一全Source Path放负前提。Closure给next-up、
+coord-down、mono/add/up；Floor.floor-support对所有c:HB U原flL成立，
+包含任意Ω子句。Source.θ-supported按全部HB U结构递归，原完整
+flL(lΩ k g)输入合法且∀β B input-supported。NegBoundary核对旧合法
+障碍坐标当前界不能Support、后继界可以，并实际填新rank Coord和
+next=hsβ，非空零界实例已给。这个准入确实接纳旧障碍，而非只排除。
+尚无消费它的总fold：raw keep的g要接受全部raw坐标，而源支持只在
+Coord域递归；没有判定支持后补0，也没有假称旧Strategy可直接消费。
+
+为检验内部View，ViewIf另开固定合法world的Bounded KS：E携原Bd，
+比较只在同原world下，未以Bd真偷全raw三歧。Object存原树与LgB，
+value为restrict的新实验树，不宣称raw值保持。Run给同Object子部分、
+目标第一位置步进、逐字value-view及沿原子树结构的recursor；Coordinate
+对实际LH每kind提取低层合法树、世界与内部View。Closed取真实含Ω
+组件完整原floor，根界ω含全部num n，其余one-world，output合法且≥1。
+
+NegValue用合法零界常零Ω对象证明旧Fold1If高层≤ᵛ不能给node≤0。
+该关系没有Ω-left，不能把字面最大枝存在说成旧关系的sup值上界。
+ProjectIf/Run另明示有界Cd语义：所有LH kind有cap最大Bd坐标，project
+对0/s/ℕ逐构造，Ω取最大枝；合法右树上保第一位置与合法。branch-below
+与least-upper给合法Ω上确界性质，pure-value及cd-forward/backward
+在Cd上保守连接原≤ᵛ。ProjectClosed对同一ViewClosed.output给所有n
+component-one和all-branches，projection-omega逐枝Same ω，双向Cd
+值界及新≼ᴮ下与pureω等值。它校准新固定world实验，不关闭动态路线，
+不给原raw、C或动态fold封顶。
+
+编码侧先冻BoundedWorldEncodeIf，显式up b前缀与SourceRel仅为接口。
+根独立挑战后改试加法重定位，不因已写接口继续惯性铺路；原候选暂停
+扩展，没有否定定理关闭。RebaseIf的中Ω同时访问g(b⊞e)并递归编码
+到中槽b⊞e。RebaseRun按完整Value1证明mono/inflate，中Ωvor通过
+prefix-rel保存参数界，vo通过add-rel，不需SourceRel域或任意raw自证。
+Actual覆盖Whole.Model.ce全n及原Prefix.Middle全k,n中槽状态。
+
+根RebaseMiddleIf.read直接原at1→0，字面公共界num1；eval=read(enc)。
+Run联立native-seed与middle-bound：所有有证原动态mid输出≤实际
+固定种子Native编码输出，后者有Seed0。没有从Seed1.self反演vo；
+middle-bound接显式输入Value1推导，vo本身提供跨枝关系。新中Ω H e=
+eval(v⊞e)(g(v⊞e))，先用目标坐标膨胀与recover-up得到v⊞e≤H e，故
+旧初界u进入新chain1；旧ce/oo第n项进入新第n+1项，原oO全部进入
+partial(suc n)。native-seed在同一实际H链上递归，下一g子树有Seed1
+后才进入；互递归停机由检查器直接通过，没有修改原种子/分支/算法。
+
+根RebaseOutputChain仅需H保Seed0、膨胀、恒正，不要求H单调。budget
+从3起每步+2，samples(n+1)先入chain(n+3)，再入chain(budget n)；
+把两个输入项压在同一链点，用inflate及positive补两步，最后经当前
+H输出入原partial。实际act实例填三字段，前提非空。RebaseMiddleOrbit
+将上述原Col与Native链的Seed、captured、错位坐标和partial单独导出，
+参数仅单次分支关系与target膨胀，实际floor0/up例已给。首次OutputChain
+42是局部step名冲突，改chain-step后6G0。
+
+独立值路RebaseLowIf/Run完成原low到原terminal(eval)的完整值比较。
+底Ω保两条真实Cd动态轨道逐项比较；后继用原repeat补偿，未假设fold
+保加法；中Ω以Orbit的一步延迟给各低输出≤T.fold samples n，先用
+padded-add累积，再TV.eval消费Cover.padded-partial送budget n的实际
+分支。因两个Col的emit及输出类型不同，ce/cw不能直接defeq，显式
+按n以cong₂给等式，再subst运输原low；without-K下不滥用rewrite。
+Actual覆盖原Whole全部输出、部分和及上确界，不是首项模型。
+
+根RebaseCountableClosed交新无参数合法树D及树上FGH：levels0=floor1，
+levels(n+1)=levels n⊞act(levels n)，output n=T.fold0(eval floor0 levels n)，
+raw=hl(Σ₀ output)，tree=leg raw。Origin逐n证明levels≡原Whole.Model.ce；
+first-sums把Old3首输出接完整Old2，原第1部分和加下一low恒正得到
+hs Old2≤原Old3。Value按全部输出与原Σ归纳，经Whole.old-three得
+原Old3≤raw≤tree，继而hs Old2≤tree及tree≰Old2。本轮这一路已交
+(a)合法闭项/FGH与(b)实际大小下界，非只有raw模型/条件接口。D与C
+的比较、精确上界、Old3的ψ标签及EBO全阶段下界均未证明，不能把D
+命名ψ₀Λ或声称超过仓库全部既有成果。完成可能增值，未声称raw同值。
+
+本批27模块全部冻结后主审逐文件读陈述/证明，删除各自agdai顺序6G
+冷编全部退出0；配对只读审计通过，禁用代码扫描0。导入闭包Support
+Source12/9、SupportNeg24/12、ViewClosed16/10、ViewProjectClosed22/10、
+ViewNeg4/9、EncodeIf39/12、RebaseActual93/12、MiddleRun74/12、
+OutputChain87/12、MiddleOrbit88/12、LowActual102/12、D定义53/12、
+D值107/12均禁用表0。无记号验收新增、无原树/运行器/证书改动、无
+src/archive改动或提交。翻译账：加法重定位由真实初界及更新要求提出，
+按全部Seed1树/有向关系的一步定理验收；新D只取原生成族，未读记号
+节点/基本列。支持与内部View推进树侧标准，尚未成为全动态求值器。
+下一主攻重定位编译对多槽结构参数的统一推广，以及高层支持值域的
+可运行折叠与EBO全阶段覆盖；不能把单站或新固定world投影当终点。
+
+## 2026-11-07 全层重定位、递归Good的实际at保持与全Λ源实验闭项
+
+上一目标轮综合解读并核对已有结果，没有新增研究构造；本轮继续完整
+ψ₀Λ目标，三路配对与独立值路并行，主审补统一编码与实际参数预算。
+没有缩成单站或把先前大量代码当作必须保留的算法选择。
+
+GeneralRebaseIf/Run以任意KS S及其坐标关系Q给一步编码：旧kind逐枝
+保留，新kind同时访问g(b⊞e)并捕获b⊞e。完整TreeValue的mono/inflate
+只消费给定有向关系；统一右规则不反演端点自证。Actual对任意Cd c
+实例化原Native/Value，floor-self/inflate给全有限原地板实例；旧双槽
+编码逐全部分支Same新零基实例。最初Run的vli将证明误作函数，42后
+改直接递归该证明；Actual的Q函数η未defeq，以逐κ的关系运输解决；
+旧编码实例曾把Native基数偏一，改c=0后6G0。失败稿未算成果。
+
+值路先精确查明原TreeValue的传递证明不能直接升层：vo只取相关坐标，
+vor却取全raw，混合时没有右端覆盖。RebaseLayerIf新SampleValue同时
+把vor限到Admit，顶Coord携低层关系及两端自证；Closure.compose对
+任意Cd c成立，Actual全finite floor/Whole.ce/D.levels有自证，最低层
+新旧Value双向转换后接原Terminal。没有将新高层关系冒作原Value。
+RebaseLayerNativeIf保留仅self的原at期待接口，尚未实现且未否定。
+NativeCoord按真实classify/raise/decide给Coord/Admit运输，所有比较
+仍带各自字面合法公共界。仅顶self不自动给ℕ或Ω子树递归证书，这
+是当前证明方法的实际缺口，不是已编译的接口否定。
+
+GeneralRebaseSampleIf/Run/Actual对这套采样关系把捕获槽两端自证显式
+保留；访问u⊞x、v⊞y时同时用加法给关系及两端自证。全finite原地板
+真实实例齐全。GeneralRebaseBudget把旧最低层预算推广为任意c：H只
+保self/膨胀/恒正，pad samples n≤chain(budget n)≤原partial(budget n)，
+budget=2n+3，无Hmono；原act为每个c填三字段。尚不等于高层运行保持。
+
+主审独立要求把递归域一并按层定义，避免加了无法实例化floor的
+hereditary前提。RebaseLayerGoodIf联立Value/Admit/Coord/Good，顶Admit
+取低层Good，顶Coord携关系及两端Good；Good另存各准入子树的Good。
+GoodClosure给add/act/up、全部finite原floor及Whole/D整轨道实例；
+GoodDomain/Coord给域内对角、两端准入及真实decide坐标运输。
+GoodRun.preserve/compare按实际原at互证，对所有有限源层n、目标层m
+以及各自公共B/B′成立，未改分类器、初种子或原算法。same/above链
+先由小子树递归取得Good，Sim用(Value×Good×Good)维护坐标不变式，
+above由finite-raise识别i=num j；keep只消费运输后的Admit；所有输出
+和均处理。停止检查直接通过，无Funext或全raw自反。
+
+GeneralRebaseDomainIf/Run再把编码准入统一到任意加法封闭P，Actual
+取P=Good c，证任意c的mono/inflate及编码保持Good；floor-encoded-good
+全有限原地板实例。Actual首次42为hΩ与floor通过非单射enc求隐参，
+显式写原a/b后6G0。GoodActual消费此编码证书，给原at(suc n)n的全n
+输入实例，并将GoodRun.compare经原at n 0及原T.fold送入Cd值比较。
+GoodCompose与GoodBudget使用这一Good关系自己的传递，给全c真实链
+2n+3预算，原act为非空实例。不能把关系预算、编码保Good和at保Good
+自动合成旧任意多槽世界消去；该联合值桥仍是下一义务。
+
+配对HigherIndexConsumeNegFuture对冻结Support构造一个raw：changing
+分支e取组件hs²e，任意合法β读β即迫使hs²β⊲hsβ。因此原样读所有
+raw的Coord补证即使允许任意未来界仍不成立。raw未证LgB；零坐标有
+真实准入实例，原合法floor与公共B仍在。它不否定仅合法/有证域或
+变换坐标接口，不否定目标，也不适用于后面的全部Ω直坍缩算法。
+
+构造HigherIndexConsumeIf/Code/Run选择全部Ω同一Cd diagonal，回调Cd
+先leg再结构编码到原Coord；rank取原floor加pure反馈，根高指标真实
+包含flL U的Ω。所有递归落源子树，原完整Supported floor已消费。
+Closed交合法完成Cd及ΣCd LgB的内部View/结构recursor；新算法不继承
+旧typed fold值。Positive给任意含Ω前缀的纯后缀下界；Lowest给原最低
+Ω的完整Old.TΩ1覆盖，Diagonal抽出全旧轨道比较。Trace按真run三次
+首反馈得到原prefix组件2，保留动态低界变化；Root在第三节点对全部
+d证明动作界，再用全旧ce/oo/oO覆盖和三次advance-lower得完整原高
+floor新闭项≥Old.TΩ1。未把任意probe d当实际采样点，也未只验首项。
+
+主审再挑战新算法必须携旧Support的惯性：它已无keep，原g总能接收
+其原坐标类型，故可直接按实际lvl读出坐标，不用反向补证。
+GeneralOmegaConsumeIf的Consumer包括四个构造子方程；Run对任意LH x
+及a:HB(Lv x)用一条总算法，code=from xκ(flL(lvl xκ)⊞pure(leg d))，
+所有Ω共用diagonal，code不调用run，run只递归g(code)。Closed输入
+逐字原完整flL ΛL，无有限截断，tree=leg raw及FGH合法且无参数。
+这是新实验(a)，源名ΛL不证明其值ψ₀Λ。
+
+独立值路GeneralOmegaConsumeValuePure直接证明新run的任意前缀纯后缀
+动作界。ValueClosed从实际ΣF twL1取原编码，复用纯旧Col数值轨道的
+坐标/输出/部分和比较，得完整Old.TΩ1≤raw≤tree；不借旧Consumer
+语义。ValueSuffix给任意LH、任意含Ω前缀A的精确双向值公式：
+P(run x A)d与run x(A⊞a)在Pure d a下互≤，并用原ΣF twL1及encoded d
+给全d实际非零实例。后缀族没有冒充原第2阶段全部回灌。
+
+构造GeneralOmegaConsumeLayerIf/Run对全部LH x给同一后继层定理：
+A x=run(ls x)(up(flL x))；完整run(ls x)(flL(ls x))逐枝Same于
+closure(A x)，closure回调是Aff(A x)(leg d)。callback先对实际纯尾
+证明，再用leg-same/act-same与D.Compare处理两条真实链，未把Same
+喂给任意源Ω分支。strict-step得hs(A x)≤完整输出，且输出≤A x推出
+矛盾，前提由实际run正性满足。prefix-position对任意raw同层前缀
+保第一位置，limit-step覆盖原ll地板的部分和。未将A x偷换为低层
+run x(flL x)，所以跨层归并与EBO全阶段覆盖仍缺。
+
+所有41新模块冻结后主审读陈述/证明，删除各自agdai顺序6G冷编全0，
+代码禁用扫描0，配对独立只读审计通过。闭包本地/库：GeneralActual
+49/12、SampleBudget44/12、DomainActual71/12、GoodActual90/12、
+GoodBudget71/12、ConsumeRoot38/10、全Λ源闭项34/10、LayerRun43/10、
+ValueClosed40/10、ValueSuffix54/10、NegFuture24/12，均禁用0；全Λ
+源闭项Agda依赖图编译0、165标签禁用0。没有旧定义、src/archive或
+提交改动。翻译账：递归域来自实际采样所需字段，编码与预算按结构
+参数统一；全部Ω坍缩和低层floor种子是实验选择，未证树侧唯一性。
+仍沿用受记号启发的LH/ΛL源族，不能称树已自足。当前没有新增已验收
+ψ₀档位，没有全Λ源新闭项与C/D比较、EBO全阶段下界或完成后的上界。
+下一硬义务是实际生成族的跨嵌入/层归并值定理，以及统一动态世界消去；
+这些义务仍开放，没有被路线否定或“只剩几个办法”的判断替代。
+
+## 2026-11-07 原完整Λ源的完成保值、真实跨层嵌入与Ω结构闭包
+
+前轮41模块冷编与完整Λ源新闭项属于实质进展，但未证明ψ₀Λ。
+本轮继续完整目标：构造攻实际嵌入、配对查任意g同余陷阱，独立值路
+攻Ω指标层全部输出，主审直接控制最终完成增值。全程未改旧定义。
+
+GeneralOmegaEmbedIf的Coded在Ω处只量化实际code d/e，要求异Same
+反馈的源分支递归相关。Run.sound比较原全部chain、输出及部分和，
+不把同坐标Same视为函数同余；add/pure/partial闭包实证。Context另带
+字面Ctx与code-back，所有step/sup/Ω指标/分量基本注入均为refl实例。
+Generated以lz/ls/ll证书给原flL/ΣF全域闭包及floor-up，不能冒称包含
+一般lΩ。IndexZero对原twL2的family=1⊕upL0 c，由Same Cd按Shape
+结构给全部分量地板Coded，再递归原θ(code)取得整个twL2地板自证；
+second-up/lower/upper接完整原输出与up前缀。Index.floor统一处理
+两种任意Cd指标族，只要求实际相关编号对应地板Coded；当前真实
+family实例非空。不将原twL2叫作实际EBO阶段2，不据此报新ψ读法。
+
+配对GeneralOmegaEmbedNegClosure交正面边界：直接对原纯尾回调F证
+position/legal，leg反馈合法后原输出和自动步进，所以原ls输出合法
+只需实际同层up前缀A x合法。最低x=lz有无条件实例。最初纸面建议
+以Same运输LgB被配对自己纠正，没有进入代码；新定理不经此运输，
+也未由完成值保持反推raw合法或全部Λ raw合法。
+
+主审GeneralOmegaCompletionIf将回调条件限定实际chain：
+leg(C_n)≤H(C_n)。Run中ShapeBelow仅零任意、后继配对、ℕ逐枝配对；
+它有同右树的加法运输，不是一般值序。原输出和q_n逐形被C_(n+1)
+覆盖，complete-shape按leg真实Σ递归，故leg(q_n)≤H(C_(n+1))。
+完成的第n部分和≤错一项原输出和≤原q_(n+1)，得到完整
+leg(diagonal H H)≤diagonal H H，无H单调/合法/全raw同余前提。
+首次42是Σ₀与Ops.partial的不同递归头不defeq，改分别按n证明Σ-mono
+与Σ-partial后6G0，未把别名当等式。Actual纯Aff在正基a≥1时膨胀，
+因此H_a=Aff(a)∘leg捕获坐标；所有实际ls完整输出经whole与leg-same
+仅运输值后完成保值，不要求A合法，不据此外推FgH或raw合法。
+
+CompletionSeries控制最终外层：若stage n完成保值，且下一stage覆盖
+当前stage的ω重复，则Σ_{j≤n}leg(stage j)先入n+1份stage n，再入
+stage(n+1)，故leg(hl stage)≤hl stage。首次42是step与KS构造同名，
+改stage-step后0。Iterate用closure1及迭代closure的具体族，正性、
+stable/growth全n填入，前提可满足；明确不替代原Λ输出族。
+
+GeneralOmegaIndexIf/Run对原New.θ证明纯扩展前缀界、全部回调输出和
+下界，并记录原首反馈的完整θ(flL k)+分量，未删除前缀。独立值路
+发现k=lz时base只剩run A，不能把ω重复下界当塔强度推进。
+IndexRaise另给树形Raises：后继/Ω根或选定ℕ子枝。repeat-context
+按实际源结构对所有原输出和比较，不要求run保右加法/任意值单调。
+FloorShape给所有ΩL及其右加任意层的floor Raises，前提非空。
+IndexActual.Raised.affine对每个原分量floor有Raises的族，按纯d证明
+P(run(A+θa))d≤run(A+θ(a+pure d))；正基P膨胀给全部raw反馈leg d
+被实际branch捕获。Successor与Index准确实例化ΩL(ls k)与
+ΩL(lΩ k g)原两规则，不免费套任意g=0。
+
+IndexCtx将此推广到保code的Embedding.put及任意外前缀，捕获直接接
+Completion.Result.upper。主审与值路共同检查put和原ι的递归头差异：
+即使逐枝Same，也不能免费穿run。为保留原ΣF，新增
+IndexOperationalIf：Context.read无需read0=0，三个非零构造子的整项
+等式与back约束实际函数。identity、左加前缀、直接原ι均refl实例，
+复合只用cong/trans，不用函数外延或Same替换。OperationalRun的
+Mapped.prefix/repeated始终run(read原源树)，Raised只用back一次
+改真实code，Next处理原ls地板，Successor/Index处理ΩL两种规则。
+这些证明没有put-add拆分或run任意Same同余。
+
+OperationalActual.stage n逐字原run ΛL(ΣF twL n)。context n是原
+ΣF twL n左前缀与原ι(suc n)的复合。tower-root只证明实际twL根为
+lz/ls lz/lΩ lz g三种之一，ΩL在此实际族保持这三种根，未限制g
+内部层。stable0原值1，stable(suc n)分别以Next/Successor/Index
+及真实context填入；growth用下一完整原地板的Raises给ω重复覆盖。
+因此Stages全部前提已在原族填上，接Series得
+GeneralOmegaConsumeClosed.tree≤原raw；原inflation给反向。
+这是整个原完整Λ地板最后leg的值保留，不是替代族或只单站结果。
+该上界只是“完成树≤raw”，不说raw的具名上界、EBO下界或FgH一致。
+
+构造再挑战只按有限站补Shape的惯性：GeneralOmegaEmbedOmegaIf以
+安全归纳递归Layer/Tree/Kind/Coord同时记录层、实际kind与低层坐标
+关系；lo′仅在Tree p相关坐标上给分量Layer，Kind保留同一Tree证据，
+Coord沿它递归。IR初次42为lo′混合kind匹配归约，拆真实kind后6G0，
+无正性/停机指示。OmegaLayer的node/up/add/omega-layer统一对原
+node、upL、⊕L、ΩL证明闭包，tower-layer对全部n及lambda-layer
+给实际twL/ΛL实例。此接口导入闭包极小且非空，但尚缺原flL的Tree
+闭包与code的Coord保持，不能把Layer读成run值等价或EBO验收。
+
+全部21新模块冻结后主审逐文件读陈述/证明，删除各自agdai顺序6G
+冷编退出0；代码禁用扫描0，配对只读审计通过。闭包本地/库：
+EmbedIndexZero48/10、CompletionActual53/10、CompletionIterate55/10、
+IndexCtx57/10、OperationalActual59/10、NegClosure36/9、OmegaLayer5/11，
+均禁用0。无记号标签新增，无原树/算法/完成操作或src/archive改动，
+没有提交。翻译账：强逐形控制来自原chain的种子差与输出累加，
+上下文来自保原ι/累计前缀，Layer字段来自upL真实读取kind；不增加
+按阶段专属规则。原LH源族仍受记号启发，不称树自足。没有新增已
+验收ψ₀档位或C/D比较。当前候选的完成增值缺口已对完整原Λ树消除，
+下一硬义务是原地板/编码逻辑关系的值sound及实际EBO全阶段覆盖，
+再给EBO反向上界；目标仍未完成，未把任何开放路线关闭。
+
+补充编译器审计：OperationalActual的Agda依赖图生成退出0，190标签
+禁用表命中0；这是值证明模块的图，不与此前闭项定义图的口径混计。
+
+## 2026-11-07 全塔原地板与编码的完整值桥、原阶段闭包下界
+
+前轮完成完整Λ候选的最后leg保值，属于实质进展；目标仍缺EBO值界。
+本轮主审并行攻code，构造路填原地板关系，配对独立审证据依赖与值
+下界，值路直接核对实际EBO第二站并证明可用的原阶段强度定理。
+没有把继续增加纯闭包次数当EBOγ迭代已经接通。
+
+GeneralOmegaEmbedOmegaFloorIf冻结原flL关系接口。FloorRun先给tree-add/
+up/sup/component，再对原New.θ逐源Tree证据证明相关；后继使用同一
+r:Tree p a b取q r的分量floor，Ω分支使用原指标kind见证。floor按
+Layer递归，lo′分支只递归floor(q r)，没有更换同端点的证书或假定
+证明无关。原ΣF全族与tower-floor/lambda-floor均实际填入。
+
+主审GeneralOmegaEmbedOmegaCodeIf的low解码原坐标类型，lower沿同一
+p/r读取Layer(lvl x κ)(lvl y κ′)；Ω组件案沿原q r递归子kind。decode
+与encode准确在这一个返回Layer上运输，所有kind混合不可能案由
+冻结接口的空类型消去，不作裸kind判等。CodeRun用原低层floor及
+pure(leg反馈)的Tree关系，经tree-add/encode给code-related，再按
+Tree直接转Coded；sound消费既有原run整条chain/diagonal模拟。
+低层地板定理与编码保持没有使用运行器值结论作前提，依赖方向无环。
+
+CodeActual对全部原twL n及ΛL给跨up的完整Same，原lΩ分量及ll原ι
+注入也直接递归Coded，不用put与ι的函数外延。tower-in-lambda只
+比较原单分量完整运行，不删除原ΣF累计前缀。Actual首次42仅为
+Data.Sum.inj₂未导入，修全局import并显式ll后6G0；没有改源算法。
+CodeLayer把原完整后继公式中的A x经floor-up对称方向接回真实
+run x(flL x)，closure-same只用纯Aff与leg-same处理异坐标，得到
+Layer x x→run(ls x)(flL(ls x)) Same closure(run x(flL x))。
+successor-strict用s≤s的值单调与原strict-step，全部twL/Λ实例已填。
+结论是ls，不将它替换成ΩL，也不据此声称EBO层已覆盖。
+
+独立值路核对真实StageCore/NoCumsum：family下一步是
+ψ⁰(Ω(toLevel γ))，与固定Cd基值P的纯反馈不是同一个算子。
+GeneralOmegaStrengthIf/Run仍直接给原阶段的一条统一强度定理：
+Close(stage n)≤stage(n+1)，Close=diagonal(P a)(P a)，无leg。Cover
+逐坐标、输出、全部部分和比较，只用P对Cd值单调及目标action，
+target H不要求单调。目标action以d≤leg d再接原Operational.affine，
+没有把值关系送过leg。原Root三种形状与原ΣF context填全n stage-close；
+close-mono再归纳全部iterate n≤stage n，完整hl iterate≤原raw/closed。
+验收Actual将已有ψ₀(Ω₁)锚点Stage.family0接原stage1，再迭代Close
+得到整族anchored下界；其余项未验收记号，也不冒充原EBO family。
+
+配对GeneralOmegaEmbedOmegaNegLower给独立直接界：reference0为完整
+Old.TΩ1，reference(suc n)为原Ops.repeat reference n。利用原stage
+growth归纳全n reference n≤stage(n+1)，全部hl reference≤原raw≤tree。
+Old原首输出为1，故hs Old.TΩ1≤reference1≤tree，tree≤Old.TΩ1
+推出矛盾。没有将较粗下界写成精确值或未验收的ψ读法，也未将这条
+正面结果当作新算法的否定；Neg仅指配对路线文件前缀。
+
+全部10模块冻结后主审逐文件读陈述/证明，删各自agdai顺序6G冷编
+全部退出0，代码禁用扫描0，构造/配对只读审计通过。闭包本地/库：
+FloorRun10/11、CodeActual54/12、CodeLayer55/12、StrengthRun61/10、
+NegLower68/10均禁用0。StrengthActual为明确记号验收，120/14、
+禁用命中18（脚本退出1是此验收含标签，不是Agda类型错误）；不进入
+任何树、编码、成品证书定义闭包。没有改原树/算法/code/完成操作，
+没有src/archive或提交改动。翻译账：floor与code证书按结构参数
+统一，新增低层读取由实际kind坐标类型要求，原阶段Close界来自真实
+回调，不增加阶段专属规则；LH源族仍受记号启发，不称树自足。
+
+下一义务是有向值包含：真实γ的Ω(toLevel γ)整输出必须进入实际
+code采样可访问的θ分量、回调和部分和。普通第一位置不能免费当作
+已访问坐标；任意累计前缀不能因Coded单分量同形而删除。有公共合法
+界的实际采样访问证据是下一接口候选（判断，未当作穷尽或定理）。
+本轮接通全塔结构与完整运行，但没有实际EBO第2站或全阶段下界，
+也没有具名上界或与C/D比较；ψ₀Λ最终目标继续保留。
+
+## 2026-11-07 原采样共同世界、可入非覆盖反例与全输入树侧一步
+
+前轮全塔地板/code/Coded运行桥与原stage闭包下界是进展，未完成EBO
+强度验收。本轮直接检验实际采样访问与真实γ₂，构造/否定共用新
+SampleWorlds接口；主审补原chain的字面完成前缀，独立值路保留整个
+旧typed反馈义务，不拿纯Close迭代充当γ下一步。
+
+GeneralOmegaLegPrefixIf/Run对任意Cd a,b证明leg a⊲leg(a⊞b)。后继
+直接hsuc，ℕ极限只选完成后的第0部分和，所以原左前缀仍字面存在。
+sample-step直接实例化原C_(n+1)=C_n+H(C_n)，sample-indexed对全部
+j≤n在较后leg C_n这个合法字面界内传递，无H单调/合法性条件。
+If首次42为Nat.suc未导入，补Data.Nat后全0。Code给纯树第一位置/
+合法性运输及所有原kind的实际载荷路径；没有宣称leg保持任意第一
+位置或一般值序。
+
+GeneralOmegaSampleIf的World/legal/admitted/growth/pair全接口先冻结。
+World对任意LH结构递归，每个step新界统一取原floor+pure(leg d)，
+sup逐分量、lΩ指标与分量各递归；全部kind共享同一个World x d，
+不作裸kind判等、不需要按路径只改单槽。原code落其对应最大界，
+全部反馈d世界合法、code可入。growth仅从leg d⊲leg e运输，pair的
+两Bd和Pr逐字位于World x e，未把两个无界raw下标直接比较。
+Run.Node中的H/chain/sample/world直接取原Ω方程，sample-value把
+第n个真实输出送入原第n部分和再入整节点，全部n成立；源LgB给
+采样枝合法。Floor对任意原lΩ k g（含高Ω指标）实填原Lg-flL，
+不只测常值分支。Indexed消费LegPrefix，给全部j≤n的world-growth、
+earlier-accessed和源branches-ordered；世界随右样本变化，没有由
+源步进反推run单调，也没有声称任意源前驱被访问。
+
+配对GeneralOmegaSampleNegUnvisited在同一World实际最低floor上给
+精确边界。output=原run最低floor，feedback=hs output；coordinate
+逐字code feedback，World feedback合法，同时code0与coordinate
+两Bd及Pr全部给出。原source、coordinate、up coordinate合法且源
+枝hLim可入。pure动作膨胀与feedback≤leg feedback得
+hs output≤run(up coordinate)，所以该枝值≤整output推出矛盾。
+该feedback未假定在原chain中，因此不否定Node.sample-value、pair
+或实际采样枝包含，只否定“凡可编码/可入便被整输出覆盖”。首轮42
+是Bd↑隐式κ/c未解，显式写出后6G0，不作为路线否定之外的推断。
+
+独立值路GeneralOmegaGammaIf仅对指定t、HS证书给Comparison：左侧
+forget ψ⁰Ω(toLevel t)，右侧原source=1⊕upL0(forget t)的run floor。
+不是全称已成立接口，也不强制最终覆盖必须同站。GammaRun的t=1
+实例由完整旧TΩ1轨道、原第一floor、既有up桥与原严格后继界连接，
+全部链而非有限样本；只有该非零实例，没有推广到所有t。
+GammaActual定义input=原γ1，component n=原ψ⁰(G n)，reference-branch
+仍原ψ⁰Ω(toLevel component n)，candidate-branch逐字原源run ΣF。
+γ₂等于hl reference-branch、candidate等于hl原累计分量以及source/
+toLevel基本列的整族等式均refl。CallbackObligation只精确命名未完成
+的逐项值义务，未填全族，不导出γ₂下界。原typed高层ψ零叶输出
+Ω_j并回灌高层树，新run零叶1及floor+pure Cd反馈不能按读法等同。
+采用更高新ΩL层或错位覆盖是可选证明路径的判断，不是唯一性结论。
+
+主审要求从上述研究对象另抽无记号树侧变换，值路新增
+GeneralOmegaGammaTreeIf/Run：level c=ls lz⊕upL lz c，raw=原run floor，
+tree=leg raw，全部c均合法。Run对所有c及任意已证Operational
+Context j统一证stable与completed-input：leg c≤原run(read j floor)。
+零/后继用原Next稳定；后继输入界组合原up上下文，先选真实Ω首
+输出、再选repeat第1部分和，得到hs输入界。极限保原ΣF，component
+context为j∘prefix(原ΣF前缀)∘原ι；每项IH送原q_n，再用真实growth
+将Σleg(f k)送入下一q，绝不把leg施加于有向值关系。identity给
+tree c≤raw c≤tree c、leg c≤raw c以及c≤tree c。没有读取HS或标签，
+不把它命名为已验收的记号γ一步，也未连接完整Λ候选的EBO值界。
+
+冻结后主审逐文件读陈述/证明，删各自agdai顺序6G冷编13模块全0，
+代码禁用扫描0，配对独立只读审计通过。闭包本地/库：LegPrefixCode
+28/9、SampleIndexed37/10、NegUnvisited50/10、GammaTreeIf28/9、
+GammaTreeRun59/10均禁用0。GammaIf38/13禁用0；GammaRun118/14与
+GammaActual64/14均命中18，明确记号验收文件，未进入树/采样/成品
+证书定义闭包。没有改原tree/run/code或旧证书，没有src/archive或
+提交改动。翻译账：新World由实际code的全槽统一反馈给出，路径由
+chain真实左前缀给出；树侧一步全输入证明不加阶段字段，level形状
+受研究验收启发，未证树侧唯一性。没有新增已验收ψ₀强度档位。
+下一目标仍是原γ提升的实际有向覆盖，允许高层或共尾错位，不把
+CallbackObligation未填、Comparison t=2未走通判成路线关闭。当前
+全Λ闭项、完成保值及全塔嵌入仍保持；EBO全阶段上下界尚未完成。
+
+补充编译器审计：GammaTreeRun的Agda依赖图生成退出0，190标签
+禁用命中0；这是无记号树侧证明的图，不含Gamma验收文件。
+
+### 2026-11-07 访问包含闭包、typed重化与首个非有限回调校准
+
+新增GeneralOmegaVisitIf/Run/Actual：Object保留原LH及同层HB，Visit
+只使用真实sample、Coded完整模拟、原运行左前缀、自然数上确界等
+已证规则。sound给完整run输出值包含；Visit读作实际访问及已证值
+包含的闭包，all-natural不伪称单次访问。实例是原sample、原ΣF阶段
+及原ι单分量，后者不自动进入累计ΣF，未增加源第一位置单调规则。
+
+construct交GeneralOmegaReifyIf/Run：Typed是原floor为基的Affine，
+旧Ω保留，Orbit全n合法并有Tree/Reify层关系及完整run Same。Orbit
+逐字既有Action.chain，种子1、逐步累加，不是旧Level.ψ以Ω_j为种子
+的轨道。原ΩL(ls j)首实际回调恰为θ floor加Reify floor分量；整体
+合法且输出被整节点包含。未删除θ前缀，未证后续Orbit重化项被访问，
+亦未得到旧typed整输出的有向覆盖。
+
+value交GeneralOmegaGammaCoverIf/Finite/Run：Cover允许任意显式更高
+源层；one有t=1完整旧轨道实例。lift需Layer x x及已有Cover，只将
+同一界传播到ls x；one-shifted全n下界固定ψ₀(Ω₁)。Finite用任意原
+HS的count-toLevel全n等式，将原γ₂ reference-branch 0双向值校准为
+hl finite，其中finite n=forget(ψ⁰Ω(nat-level n))。这说明首回调已要求
+整族ψ₀(Ω_n)，非ε₀或有限尾项。未证该整族进入候选，未增具名强度。
+
+refute独立读审全部8件，核实种子差、真实首回调保前缀、Cover升层
+下界固定及Visit范围。有限同源Comparison t=2本轮仍未走通：既有
+纯P上界不能直接穿leg，没有新否定定理，因此不关闭此路线。
+冻结后主审逐件读码、删8件自身agdai顺序6G冷编，全部退出0；代码
+禁用扫描0。ReifyRun/VisitActual源码闭包各61本地12库、记号命中0；
+GammaCoverFinite闭包65本地14库命中18，为明示验收，不回流定义。
+翻译账：Visit来自真实运行及值关系规则，Reify借原层算术；未证树
+自足，未改原树、折叠、合法性或旧证书，没有src/archive或提交改动。
+
+### 2026-11-07 原种子typed轨道与新合法闭项的ψ₀(Ω₂)下界
+
+本轮确有新的具名下界：新单Ω闭项及新全有限闭项均有ψ₀(Ω₂)≤tree；
+前者raw、后者原stage2与参照互相≤ᵛ。未给完成树上界、候选之间的
+值比较，也不把结果加到旧GeneralOmegaConsumeClosed、C或D名下。
+
+construct先交GeneralOmegaSeededIf/Run/Actual。Prototype对任意KS及
+seed定义精确Typed：zero=seed、suc=hl(leftMul从0份起)、lim逐点、
+Ω保留；NoSum/Sum都从seed开始。Run证明Typed逐构造值单调、位置
+保持、合法性、NoSum全部步进及完整极限≤Sum。Actual填所有原LH
+floor，并对n≤m给同一合法World、较后合法NoSum m及两路径。全n
+高层值包含不能直接穿GeneralOmega.run或任何另一个观察器。
+
+value交GeneralOmegaFiniteTypedIf/Run/Actual：Read显式相关原低Ω
+坐标，tr⁻ z≅不删，只用原搬运相容定理。typed对应原目标1的K动作，
+orbit从原Ω1无累加覆盖全部iter，sound接原≅，whole验收完整ψ⁰Ω2
+为lim ψ⁰(read NoSum_n)。Actual先给记号观察值双向界，单独不作新
+闭项。以上先有编译树侧Seeded结果，再开验收。
+
+主审新增GeneralOmegaOneObserveIf，不导记号：唯一step Ω在原分支
+子树上递归observe，反馈从1无累加，后继从0份起。raw=observe原
+P.whole，tree=leg raw，合法、raw≤tree及FGH无参数。value新增
+GeneralOmegaFiniteTypedObserveRun/Actual，observe : Read a b→
+ψ⁰a≅readCd(observe b)。Ω处先联立原Q与新回调的全部坐标，再用
+原ψ⁰≅ψ与Read子树自相关接原内部ψ；不假设任意g保持Same。
+Actual得原raw与ψ₀Ω2参照双向≤，由inflation得新tree下界。
+
+construct继交GeneralOmegaFiniteObserveIf/Run/Closed/Top。F0=S⊥，
+F(sucn)=step(Fn)，Within n m给字面有限公共界；view沿路径分类，
+低kind保留，同/高kind读其原低层HB、floor seed及无累加反馈。
+Run只对源直接子树递归。floor0=1，故stage0是ω列。Closed原
+stage n=observe(zero-path n)(floor n)，raw=hl stage，tree=leg raw；
+全stage进入合法tree并有FGH。Top对所有n证明真实相邻层up回调
+与精确Seeded.Typed异Same，同步全部坐标/输出，完整输出为NoSum
+尾列；用Typed单调给两整树双向值界，不把它送过目标0观察。
+
+value再交GeneralOmegaFiniteTypedAllSecond/Actual。T、G分别原源2
+中up输入的目标1/0真实回调；Read分别保持原K及外ψ⁰。全外轨道从
+Ωtree出发，whole直接原ψ⁰Ω2≅readCd(Closed.stage2)。Actual给真实
+stage2与参照双向≤，再stage-lower接原全有限合法tree下界，未把
+别的模型代作stage。原全n的ψ₀Ω_n桥尚未完成。
+
+主审新增GeneralOmegaFiniteRank验收辅助：任意p:a<nat n给k<n和
+字面a≡nat k，递归只沿公共有限界；ambient将Within给原目标路径，
+top全n提供非空实例。construct新增GeneralOmegaFiniteRelIf/Run/Up/
+Actual：Trees的坐标关系Q先固定，Coord沿有限层下降；ro显式给
+异相关坐标的子树证书。floor全n自相关，原node/iterate保持Rel，
+up-observe保原目标及低层反馈关系；0层才转Same。stage-rise全n
+使用真实最高Ω首反馈floor n，证明原stage n≤stage(n+1)。未声称
+所有raw自相关；目标高于缩小source时仍不能误造Within。
+
+20模块全部冻结，主审读原陈述/证明、删各自agdai后顺序6G冷编
+退出全0；独立refute只读复核通过，禁用代码扫描0。新闭项导入闭包
+OneObserve13本地10库、FiniteClosed14本地10库、RelActual21本地10库
+均记号禁用命中0；前两者Agda依赖图144/145标签禁用命中0。
+翻译账：typed零点、后继0列、无累加规则受原ψ启发；finite分类由
+普通step/Within形状给出，规则按结构参数统一，无阶段专属新节点。
+定义闭包干净仍不等于树自足；未改旧定义、证书、src/archive或提交。
+下一硬义务是固定原ambient、同时携源嵌入和观察目标的Read统一
+全部finite n，继而原γ提升与EBO全阶段上下界。此Read设计目前是
+待实施判断，不据尚未填完全n判定路线关闭。ψ₀Λ目标保持未完成。
+
+补充定义级审计：OneObserve及FiniteClosed的HTML生成均6G退出0。
+从legal/fgh切片，前者到达147/145块，后者151/149块，记号模块及
+其它记号词均0；正对照Correspond.ε₀-label到达209块，其中记号99。
+该切片是语法级辅助，编译器依赖图的0命中另已核对。地图检查4210
+名字、317表格行、问题0；git diff --check通过。
+
+### 2026-11-07 全有限族验收与普通可数高度typed反馈
+
+本轮FiniteObserveClosed的实际全n阶段已与ψ₀(Ω_n)参照双向值
+比较，因此原raw与原γ₂首个完整回调互相≤，合法tree有ψ₀(Ω_ω)
+下界。没有γ₂余项、EBO全阶段或完成反向界，也不把新结果加到
+旧全Ω候选、C/D下界中。
+
+value先交GeneralOmegaFiniteAmbientIf：固定native公共界B，左Ordℓ
+携σ:Simℓ nat(sucB)，native端不随原up下降，target独立Within Bm。
+Bridge/Q与较低层Coord分开定义以过正性；ro携原node self及异坐标
+分支律。up-read真正增加ambient，ru-s/ru-l只更新原σ。floor-read
+全B实际填原Ω/floor，self由明确node字段或原同形取得，不假全raw
+高层自反。原辅助FiniteRank继续提供有限字面秩与ambient路径。
+主审交GeneralOmegaFiniteCompare：Match kept给rank等式、原<dec
+确切via结果及坐标逆送；cut给same/above真分派及原低层Read到源
+Coord。raise-match和new-collapse实填所有路径/kind。construct交
+GeneralOmegaFiniteAmbientCoord，源同形、self与原tr⁻保持原HB坐标。
+value交AmbientClosure/Run/Actual：原add保源嵌入及真实into/out，
+后继从0份起；Run保全部Within路径及有证输入。keep不rewrite
+rank函数，使用cast/tr⁻同形与coord-cong；cut只替换自由反馈层。
+两坍缩分支同步原floor初界的全部无累加轨道，跨ambient调用原
+ψ-≅时消费已取得子树self。Actual全n实填floor-read，目标0语义
+不再有Ω构造子，得到stage-sound及两向Cd值界，最终接原完整
+GammaActual.reference-branch0↔FiniteClosed.raw和首回调≤tree。
+
+construct另交GeneralOmegaFiniteStableIf/Run，以原低层Rel同步
+最高节点全部typed反馈与Seeded.NoSum，最后由up-observe到目标0
+取Same，得stage(sucn) Same hl(read-orbit n)。没有从高层Same或
+高层值序推任意observer同余。实际read-orbit的完成项/部分和预算
+仍缺；refute没有给否定，因此不关闭完成保值路线。
+
+主审独立提出普通Cd高度的typed推广，construct交
+GeneralOmegaCountableObserveIf/Class/Run/Closed。F沿hz/hs/hl取
+S⊥/step/supℕ，原cl/dcl只在同一合法B内比较t与种类秩r+1。
+新ℕfloor选择累计和并对所有Cd高度证明合法；不是不同sup组件
+逐点步进，也不等同原参照逐点Ω基本列。Class给ω高度same/keep与
+finite2 above的真实refl实例，接口不是空条件。Run递归只原f子树，
+above反馈目标r仍在原共同B内，输出目标t保持，没有先折树再折。
+Closed的rawΓ c用B=leg c、Lg-leg c、原floor和0路径；Γ完成输出。
+从1迭代Γ、原raw=hl stage、最终tree=leg raw，均总定义，有合法性、
+正性、全stage包含及FGH。没有Γ单调/阶段增长/ψ₀Λ强度断言。
+主审交GeneralOmegaCountableObservePrefix，右项结构递归保左前缀
+输出位置；keep取真实bot，same/above取原第0反馈，后继取leftMul
+第1项。limit-step只给原累计floor输出步进，未给右组件包含或
+一般源第一位置的fold单调。
+
+construct交GeneralOmegaCountableRelIf/Class/Run/Actual：Trees的Q
+先固定，Coord沿原Cd高度下降、并层保持组件编号；floor-related
+全高度覆盖真实ΣT。along-good逆送目标关系，cl-good正送原rank
+关系，pick-good消费原比较路径。完整observe保同一B/lB/t/pt的
+Rel，并在原floor相关初值上同步same/above全反馈；0层才转Same/
+双向值。所有Γ与stage实际输入均已填自相关，另有原运行器内部
+零前缀消除。没有跨不同高度或路径的默认相干性。
+
+value先交GeneralOmegaCountableFiniteSecond/Actual，直接用原
+num2公共源界中的目标1/0回调，完整原ψ₀Ω2与rawΓ(num2)结构
+对应，得两向值及参照≤Γ(num2)。该参数输入不自动进入Γ迭代。
+主审交GeneralOmegaCountableNumber的path-unique、leg-num、numF。
+直接split第二hself触without-K，实际修法是只判定是否等于给定
+num n，构造固定点的局部Hedberg UIP，再unroll路径并用无后继回边
+排除另一种构造。没有K公理、全Cd相等判定或一般路径证明无关。
+
+随后value交GeneralOmegaCountableFiniteRel/If/Run/Normalize/Whole/
+All，主审交CountableFiniteClass。两族关系由Kind逐low/high匹配，
+顶坐标Rel递归低层，不以KS类型等式或高层Same喂任意g。Class
+restore保原cl/along/frA/to，self-pick逐原cmpB实分支消去首hself
+重叠；lift-pick/lift-classify只提高原source，source新kind分same/
+above。matched在num n内规范实际目标路径，实填Classification。
+Run保原above反馈路径、原floor初值与全部iterate；Normalize对
+num输入的leg、合法证和0路径作真实规范；Whole保留分类参数，
+All实际导入instance-classification将其填满。无条件全n得到
+rawΓ(num n) Same Finite.stage n及双向值、ψ₀Ω_n≤Γ(num n)。原
+参数族hl(rawΓ∘num)与γ₂首回调互相≤，不改名为Γ迭代stage。
+仍无Γ迭代闭项覆盖此族或任意Cd高度参照一致性，ℕ累计地板桥
+仍需在原回调中证明。
+
+27件全部冻结，主审读码、逐件删自己对应接口后顺序6G冷编全0；
+refute逐接口/主模拟/实际实例独立只读复核通过，禁用代码扫描0。
+清单保存在/private/tmp/omega-finite-ambient-turn-modules.txt。
+源码闭包StableRun24本地10库、CountableClosed19本地10库、
+CountableRelActual26本地10库均记号禁用0。明示Align验收可读原
+记号，不进入树、fold、最终合法证书。未改旧定义、src/archive、
+未提交。翻译账：typed零点、后继0列与无累加规则受原ψ启发；
+可数共同界、累计floor合法性与遗传关系按树结构统一，不加阶段
+专属节点。定义干净不等于树自足；验收没有反过来改变新定义。
+下一目标是原Γ的非有限高度值桥及实际迭代覆盖、完成上界，最终
+仍对原EBO全阶段下界再反向上界验收ψ₀Λ；不把任何中间站改作终点。
+
+补充编译器/定义级审计：CountableClosed依赖图与HTML生成均6G
+退出0，原FiniteAmbientActual的同目录HTML也退出0以提供正对照。
+CountableClosed依赖图150标签、禁用0；从Γ-legal/legal/fgh切片
+到达146/149/152块，记号模块及其它记号词均0。正对照原ε₀-label
+209块中记号99。地图4237名字、317表格行、问题0，diff --check
+通过；src/archive无diff。
+
+### 2026-11-07 全可数后继公式与同界值单调反例
+
+主审新增GeneralOmegaCountableObserveUp，先在UpSimulation记录
+明确全B/lB/t/pt的原up模拟。lift-pick/classify-up只把共同source
+升为hs B，目标t保留；above的新反馈路径⊲tr(hsuchself)(hsuc pi)
+逐字归约hsuc(⊲tr(hsuchself)pi)。node-up从实际floor相关初值同步
+全部反馈，up-observe对原Rel证明递归，最后subst回原新分类结果。
+没有假一般源位置单调或路径无关，floor-related全B给实际非空域。
+
+construct交GeneralOmegaCountableTopIf/Class/Run。Back只重建原
+cl给出的nw路径；hs/hl保原kind与组件编号，沿frA/to证明逐点往返，
+不拼函数等式。pick-self对实际cmpB分支匹配，class-old的keep
+返回原κ及逐点恒等fr。keep-cross在同一实际坐标递归得原最高回调
+Same精确Seeded.Typed；typed-back另用异Rel给低层可消费证书。
+全部NoSum坐标及完整尾列Same，有完整Typed.whole双向值界。
+这些结论覆盖任意合法Cd B，包括真正ℕ极限，不只是所有num。
+
+value交GeneralOmegaCountableSuccessorIf/Run/Actual。If.root分别按
+B=0/hs/hl展开原same/above，回灌路径都是原hsuc hself，输出0路径
+原hsuc(z⊲B)。Run以Top.typed-back耦合NoSum全轨道，再用Up降到
+目标0 Same，gamma-whole全c逐字给rawΓ(hs c)完整观察列。Actual
+沿leg-same运输整个Same，第0完成项为Γc，第1完成项正性来自原
+observe及inflation，第1累计和给hsΓc≤Γ(hs c)；not-back用¬s≤。
+omega-whole保原累计floor及全部观察项。未用高层≤穿observe/leg，
+未据此推出Γ(stage n)与stage n的比较或新的具名强度下界。
+
+主审独立检验能否推广到值单调，新增冻结共享接口
+GeneralOmegaCountableGammaOrderIf。字段BoundedValueMonotone
+同时要求LgB B/a/b、两条字面a/b⊲B与a≤b；空极限与0是同时合法、
+同值且共界空极限的实际见证。refute交
+GeneralOmegaCountableGammaOrderNegEmpty，6G0：zero-shape把原
+rawΓ0与ω逐项Same，leg-same后接已证legω≤ω得Γ0≤ω。原空极限
+累计floor的第1部分和为两份1，其实际观察列第2项覆盖hsω，所以
+hsω≤rawΓ(empty-limit)≤Γ(empty-limit)。由¬s≤ω得Γempty≰Γ0，
+再用共享接口全部真实前提得no-bounded-value-monotone。construct
+另从原定义独立复核原因是累计floor读取零值极限的分支重数，未
+先套后继增长推全Mono。两路没有修改Γ，也不否定总构造或整个
+可数高度路线；否定的确切对象只有这个字段。
+
+9件全冻结，主审读原码/陈述，逐件删自身agdai后顺序6G冷编全0；
+独立refute审全部构造与主模拟，construct复核否定前提，禁用代码
+扫描0。清单/private/tmp/omega-countable-successor-turn-modules.txt。
+源码闭包Up11本地9库、TopRun32/10、SuccessorActual64/10、
+NegEmpty54/10均记号禁用0；后两证明生成Agda图退出0，195/185
+标签禁用命中0。原最终闭项及其合法性依赖未改变；src/archive
+无改动，无提交。翻译账：没有新增记号形状或定义规则，cl重建只
+给实际路径坐标往返，Up与后继式是阶段无关的树侧定理。否定迫使
+后续大小律保留真实输入结构或实填正则性，不能仅凭输入序数值
+合并高度，也不能把共同界当作充分条件。
+
+下一方案（纸面，未编译）：研究原目标0输出由1、从0份开始的
+重复列、逐点正列生成的性质，争取证明Γ的完成输出有遗传严格
+极限，从而为原迭代阶段实填树侧正则性。普通加法的正则闭包和
+完成有限重复的逐形结合律运输可能提供一步证明；这不是当前
+已证结论，也不把新前提代替真正的EBO值验收。原ψ₀Λ目标保持。
+
+### 2026-11-07 原Γ实际生成域的树侧正则性与综合复核
+
+主审冻结GeneralOmegaCountableRegularIf：Reg分别沿0/后继/ℕ极限
+递归，极限要求hs(f n)≤f(n+1)及全部分支Reg；它不替代LgB，不要求
+全部布劳威尔树具有严格View。Built只描述原目标0观察器的1、重复
+列和逐点极限三种实际输出。RestrictedValueMonotone继续携带字面
+合法公共上界、输入合法性及两输入Reg，没有偷去原共同界前提。
+
+construct交RegularClosure/Run：Reg保Same及普通加法；Reg a推出
+Reg(leg a)。complete-prefix对Built后缀及任意已完成正则前缀给闭包，
+重复列零项单独处理，内层有限重复以Same结合律及leg-same运输。
+complete-built随后得到完成正则性，不使用一般≤穿leg。built-observe
+沿原source直接子树递归，same/above同步实际全部反馈，最后完整
+实例化原Γ、全部stage及下轮leg(stage n)的Reg。refute独立读接口、
+闭包及实际实例未发现缺口；没有新增否定文件，也未证明受限值单调。
+
+作者本轮要求综合解读接手以来结果。主审停止新增攀爬，收取三路，
+读码后逐件删除本批自身接口，顺序6G冷编三文件全部退出0；代码
+禁用扫描0，RegularRun导入闭包55本地10库、记号禁用命中0。
+value确认本轮没有新定理；数值路径进入实际Γ迭代仍为建议。
+本轮Reg排除已知空极限反例，但不推出Γ受限单调、实际阶段增长、
+参数族被迭代捕获或任何新具名强度。全有限族的ψ₀(Ω_ω)下界只
+属于已验收有限闭项，不能移给CountableClosed或旧全Ω消费者。
+
+翻译账：只加原输出的树侧不变量与阶段无关闭包，不改原树、折叠、
+Γ、合法性或证书，没有第4层逼改定义。终点仍缺候选覆盖实际EBO
+全部阶段及反向上界；导入无记号依赖不等于树自足。未改src/archive，
+未提交。后续应优先实际迭代捕获与完整非有限回调的值桥，而非继续
+增加无相应值定理的候选；这是工作优先级判断，不是路线否定。
+
+### 2026-11-07 有限参数族的真实Γ迭代捕获与全部实际阶段弱增长
+
+前轮正则性冷编复核属于进展。原ψ₀Λ目标继续，三路分别构造、配对
+检验、实际值捕获；不把受限单调的未证接口当作已有前提。
+refute交GeneralOmegaCountableRegularNegOrder，正面证明Reg右端的
+位置要么字面相等、要么严格值低；同合法B内的Reg值方向遂给实际
+位置。zero-to-one实填非零共同界实例。该文件名有Neg，但结论不是
+否定，也没有得到Γ保序或关闭路线。
+
+主审交ObserveLimit，指定source分量n和hlim n路径，不比较不同拷贝。
+cmp-component只规范自然数编号等式证明；lift-decision/lift-pick对
+任意位置raise参数化后避开f n非单射头的Agda内部错误154，最终0。
+classify-lift直接递归原Cl，node-limit同步same/above的实际全轨道。
+再交ObserveZeroPath：只在目标0归一化node结果，rank0为same，非零
+rank为above；above的tr不读取，原pi派生反馈路径固定。normal-related
+在same分支使用跨零路径的Rel递归，在above内用原同路径Rel保持，
+subst₂恢复原分类器。输入Rel保留；refute曾建议无输入Rel的Same
+归纳，经主审指出same反馈异坐标问题后撤回，未留下无证结论。
+
+construct交RegularCompareIf/Class/Closure/Run，冻结Sim结构关系。
+没有任意ℕ左消去；有零、同步后继、右后继、逐点极限、右选项、
+同kind异坐标Ω及全raw枝统一Ω右规则。Coordinate沿原Cd层递归，
+floor-self、原classify运输、observe.compare及target0.complete均实填。
+right-add及add按Sim证书递归；complete.sl逐项累计，complete.sli以
+item-sum进入右树真实完成部分和，没有普通≤穿leg。
+
+Actual以floor-self先捕获右分量到其ΣT，再到整个原floor；Capture
+接主审limit-observe，经原Rel的zero-same和leg-same得到完整分量
+输出下界。Canonical消费主审zero-path，把hlim n改为规范hlim0；
+canonical-component对任意合法hl f及全部n给collapse(fn)≤collapse
+(hlf)。actual-Γ-component明确使用原Γ输入完成后的Σ₀(leg∘f)n，
+没有把它偷换为leg(fn)。一般Γ位置比较仍需输入高度加法吸收，
+同B Sim的右加法不能比较不同KS高度的新kind坐标。
+
+value交CapturePath/Inputs：原stage1及leg(stage1)均含全num实际
+位置；first/second-sum逐字计算内层数值预算，不从值反推位置。
+CaptureRun以H=leg(stage1)、I=其第0分量、g n=I第n分量，核对
+g n≡num(sum(sum id)n)。finite-completed只在num局部规范合法性
+与路径证据，两次component-capture加zero-path运输完整原输出。
+数字n≤预算仅经旧指定successor律迭代，得到全n Γ(num n)≤stage2
+及≤原tree。CaptureValue接原FiniteAll的reference≤Γ全n，用l≤得
+整族上确界及原γ₂首回调≤stage2≤tree，即ψ₀(Ω_ω)下界。这次下界
+属于原CountableObserveClosed，不再只是外部参数族；没有换闭项。
+
+主审随后指出canonical-component足以直接作高度膨胀归纳，不必先
+解一般Γ保序。construct交RegularCompareInflation：Successor.strict
+从原Whole B的完整输出Same及真实第1完成部分和得hs(collapse B)
+≤collapse(hs B)；高度0用z≤，后继用该律，limit逐项接完整分量。
+故所有合法B≤collapse B，所有c≤leg c≤Γ c，原stage全n弱增长。
+此处无需Reg、Γ值单调或leg单调。没有声称hs c≤Γ c或阶段严格增长。
+
+15件均冻结，主审读原码及陈述，删除各自新接口后顺序6G冷编，
+全部退出0；清单/private/tmp/omega-countable-capture-turn-modules.txt。
+配对独立审查所有主要模拟、完成运输、真实捕获及膨胀证明通过，
+代码禁用扫描0。源码闭包Limit/ZeroPath各11本地9库、SimRun15/10、
+Inflation73/10、CaptureRun77/11均记号禁用0；标签只在明示验收。
+原树/Γ/floor/leg/合法性及证书未改，src/archive无改动、未提交。
+翻译账：新关系由原构造及完成不能穿一般值序的反例约束，给结构
+参数统一闭包，不新增节点、阶段专属前提或记号规则；验收没有逼改
+前三级。仍不称树自足，Reg受限Γ单调未证未否。
+
+下一义务是完整非有限回调和EBO全阶段的实际覆盖，再给反向上界；
+不能由ψ₀(Ω_ω)或实际弱增长推终点。输入高度右加法吸收是可研究
+义务之一，不是已证必要条件或穷尽判断。原ψ₀Λ目标保持未完成。
+
+主审再将后继及并层的collapse包含统一到任意实际位置，新增
+GeneralOmegaCountableObservePosition：position-collapse沿p:a⊲B归纳，
+较小侧合法证据逐字为lgB⊲ p tt lB；actual-Γ-position捕获所有原
+完成高度内的位置。左端仍为collapse a而非Γ a，不偷换再次完成。
+zero-position对任意c给实际实例。首次6G0，refute独立只读复核
+通过，主审删自身接口后冷编0。本轮最终共16文件。
+
+补充审计：CaptureRun与Inflation的Agda依赖图生成均6G退出0，
+208/204标签的记号禁用命中均0；地图检查及git diff --check通过。
+
+### 2026-11-07 自动补界否定、完整逐点反馈模拟与原Γ全域同形保持
+
+前轮实际finite捕获和全阶段弱增长属于进展。继续原ψ₀Λ目标，构造
+路攻输入高度运输，配对路检验同一接口，独立验收核对完整非有限
+回调与真正EBO阶段。NoCumsum全γ链只对应第二站ψ₀(Ω_{Ω₁})，
+不能把它当EBO全Ω塔覆盖。本轮没有新增具名ψ₀强度下界。
+
+主审交SimCompletion：原Sim0在leg下仍为Sim0，原位置p:a⊲B给
+Sim0(leg a)(leg B)，全部a有Sim0 a(leg a)。sl同步部分和，sli只把
+实际第n完成项送进右Σ；不加入任意ℕ左消去，不提供共同界。
+construct交HeightIf/Leading/Actual，接口比较同一合法W内的两高度，
+合法证由原两路径诱导。Leading只允许hself/hsuc/hlim0，leg保留它
+及原Lg-leg诱导证。Γ-leading、全a,b的Γa≤Γ(a⊞b)、无限族首分量
+捕获、完成Σ全部相邻Γ弱增长均成立。Lead遗传前沿step对所有leg
+输出实填，path逐点等于原Lg-leg.step，不用Funext。一般Height.capture
+仍未实例化，左吸收不能代替一般累计右分量吸收。
+
+refute交HeightNegOrder的正面定理：H给每个hl再加hs；Sim保持H
+值序，而非平凡原位置令H严格增加。所以同一合法W内的Sim方向
+可还原为实际位置，不要求Reg。0/1与ω自实例满足前提。该文件不
+否定Height接口；还需两份路径诱导合法证的观察相容，完成高度
+也未自动有共同W。
+
+主审针对这项存在义务先冻结CompletionBoundIf，含原位置完成后
+补界字段及Leading部分构造；再交CompletionBoundNeg。取a=ω，B的
+分支为1、ω、ω+1、ω+2……，原Lg、Reg与a⊲B全部实填。FirstPositive
+要求每个内部ℕ节点首支正，沿原位置遗传；正前缀加legω的所有
+有限分支仍有该性质，故leg B满足；legω首支0故不满足。于是
+legω⊲leg B不可能。若给任何合法公共W，主审from-position的Sim
+与refute.sim-to-position推出该不可能位置，得no-completion-bounding
+和带原输入Reg的no-regular-completion-bounding。精确否定自动补界
+字段，不否定有界Height.capture、Γ右吸收或目标路线。初次因局部
+step名与KS.step冲突退出42，改名后最终0；失败轮未作审计依据。
+
+value先交NextCapturePoint：辅助pointFloor在ℕ高度逐点ι，原floor
+仍累计，point-floor全B给Sim；观察后完成可入原输出，含Γ及ω。
+主审要求继续处理内部种子，value交PointIf/Run/Actual：新辅助
+point-observe的零叶和所有反馈种子均用pointFloor，不换原runtime。
+simulate对原Sim证书递归；sz直接按原右source证明point-positive，
+不假Sim传递；same/above从真实point-floor初值耦合全部iterate。
+完整辅助输出完成后≤原输出，actual-Γ实填。这处理输入及内部
+种子差异，旧typed toLevel到实际完成高度的异层桥仍独立未证。
+
+主审与construct转向同形改名运输，以避免凭空要求两个完成source
+有公共W。ShapeIf固定原定义，异层HTrees/Coord按Same高度递归，
+保留原并层编号；Ω只消费给证异坐标关系，不假任意raw函数同余。
+主审ShapeBase给Paths/Moved、实际cl rank/path对应及LegalShape，
+后者明确包含两侧原step路径配对；same-add和原Σ递归实填
+canonical-leg-legal，不用合法证相等。ShapeCompare给compose/steps
+配对、原cmpB分派配对以及zero-paths/legal-on-paths；每次比较的
+一对下标仍在各自字面的合法source界内，跨分量明确消费step。
+
+construct的ShapeFloor/Coord/Node/Run完整消费这些证据：真实floor
+与Σ/up/ι全族异层相关，ClCoord只为实际cl证明to相容，along只逐点
+搬坐标；pick-node覆盖keep/same/above全部反馈，泛型HTrees归纳
+避免F非单射头的Agda内部154。原CanonicalObserverShape全部填满，
+GammaShape遂填满，得到所有Same a b→Same(Γa)(Γb)。没有函数外延、
+任意高层Same过g、任意lB证明无关或一般值同商保持。ShapeActual再
+配齐原零前缀Lg-⊞证，得collapse零前缀Same；原从0重复列第1
+完成高度恰为0⊞leg a，因此全a Γa≤Γ(hl(leftMul a))。没有消去
+非零前缀，不把该律套到原NoSum全族。
+
+value交NextValueOrbit：typed-sound与observe-sound只对纯Cd递归，
+coordinates以ψ⁰≅ψ及upʳ保原G初值1和全部内部轨道；forget-read
+只在零层，得到全n Same(forget(component n))(原At0.read-orbit n)。
+整forgetγ1与实际轨道极限Same。NextValueActual接原gamma-whole hz，
+得reference-raw-shape，再leg-same得Same(leg(forgetγ1))(原stage1)，
+Γ-same后为原stage2真实下一调用。辅助输出使用确切双重完成高度
+leg(leg(forgetγ1))，由Point.actual-Γ与该Same无条件送入stage2/tree。
+剩forgetγ2≤auxiliary尚未证明；没有把旧γ₂改名成原Γ输出。
+
+翻译账：Shape及规范合法证对应由原树/坐标/部分和形状逼出，无新
+节点、运行规则或阶段专属闭包前提；泛型递归是证明工程。pointwise
+辅助解释的规则来自旧参照启发，只作研究，不改原定义或另造FGH。
+仍不称树自足。自动补界否定给出不能要求的字段；它不关闭整体路线。
+ψ₀Λ仍缺实际EBO全阶段下界及反向上界，不能把同形相容或辅助输出
+已进stage2说成完整γ₂已进stage2。
+
+本批21文件全部冻结后主审逐件读码与陈述，删除各自新接口后依赖
+顺序6G冷编，全退出0；清单/private/tmp/omega-countable-shape-turn-modules.txt。
+refute独立只读审查全部主要域、构造、节点全反馈、规范证据及实际
+参照实例通过；构造侧未再编译或改动共享文件。代码禁用扫描21件
+命中0。源码闭包SimCompletion14本地10库、HeightActual77/10、
+HeightNegOrder26/10、PointActual27/10、CompletionBoundNeg84/10、
+ShapeRun58/10、ShapeActual75/10均记号禁用0；ShapeRun及补界否定
+生成Agda依赖图均6G0，189/215标签的记号禁用命中0。记号只在
+明示验收两文件，不进入原树、Γ、FGH或合法证书的定义依赖。
+地图4286名字、317表格行，问题0；git diff --check通过，src/archive
+无改动、未提交。ψ₀Λ目标保持未完成，下一步优先具体旧typed参照
+到双重完成高度辅助输出的异层桥，不把该方案余项写成全部路线
+的穷尽，也不把原NoCumsum BTBO链改作EBO终点。
+
+## 2026-11-07：原合法高度全部typed观察与实际包含捷径否定
+
+本轮完成一个不按阶段定制的验收定理：对所有原合法B，辅助逐点
+地板及完整逐点观察同旧层height B的ψ折叠相对应，内部结论保留
+所有实际后继准入和子反馈，根结论允许任意原零路径。最终节点
+接口已实例化，不再将未填Nodes/FullObservation当成已证结论。
+通过原两运行器模拟，所有c均有旧ψ⁰(Ω(height(leg c)))参照树的
+值不超过原Γ c。height仍是实际树参数，未换成Ω算术强度；主线
+具名下界仍为ψ₀(Ω_ω)，没有新增γ₂或EBO终点下界。
+
+本批模块逐件记录如下，均为新增literate Agda，不改已有结论：
+
+| 模块（均为GeneralOmegaCountable前缀） | 交付与边界 |
+|---|---|
+| TypedHeight | 原合法高度的同形旧层、原位置包含与后继准入严格界；不同合法证只得层同形 |
+| TypedIndex | 反射height B自己的全部严格索引，保留原位置及诱导合法证，不声称往返路径相等 |
+| AdmittedOrder | 同一合法B内、目标hs准入下将形状秩严格方向转成位置；任意零位置不在其域内 |
+| TypedDispatch | keep/same/above原分派同旧比较的标签匹配，不比较无共同界的裸下标 |
+| TypedValueIndexShape | 层同形反射树Same；字面树相等另带同一合法W及两位置，不给全局UIP或路径证明相等 |
+| TypedIf | 固定按原B/kind递归的异坐标Read/Coord、地板和根观察接口，旧环境就是height B |
+| TypedFloor | 所有合法B的真实逐点地板读回，含非有限ω实例 |
+| TypedClass | 原cl实际低层、秩的字面等式与坐标feed；runtime路径的合法证差异显式转换 |
+| TypedAlong | 原along的实际低层秩等式与反向坐标读回，不要求任意函数保持Same |
+| TypedProofIf | 同一B任意两份合法证的规范读回运输接口 |
+| TypedProofRestrict | 计算规范层同形上原Restrict的rep/bound/back完整记录 |
+| TypedProofRoute | 固定反向坐标BackMatch律，并向后继及实际极限分量下降；不是任意σ运输 |
+| TypedProofRun | 沿原Read证书互递归填满全部B、任意两份合法证的规范运输 |
+| TypedProofVia | 从规范运输转到指定的实际层同形，使用逐点tr⁻关系，不令两份同形证相等 |
+| TypedProofActual | 地板运输与非有限ω实例，完整接口实例在ProofRun中 |
+| TypedProofLift | 原位置层嵌入、合法证复合及后继/极限嵌入的逐点相容，无函数外延 |
+| TypedKeepCoord | keep下实际目标Coord经指定tr⁻回到源Coord，分别保留两份低层合法证 |
+| TypedKeepNode | 完整保留Ω节点读回，处理实际旧via代表元；借源自相关及ψ-≅对齐整节点 |
+| TypedCollapse | same的两份低层合法证用transport-via衔接，above用原pi的完整反馈链；仍消费子Result |
+| TypedZero | 零高度Read反射、构造及实际point/runtime对应，零高度根观察实例 |
+| TypedValueObserveIf | 固定完整内部及根观察记录，不在接口篇假定它已实现 |
+| TypedValueObserveClosure | 实际旧加法与任意有限重复的读回闭包 |
+| TypedValueObserveFeedback | 从实际逐点地板种子起耦合全部反馈迭代，保留原低层pi及原编码 |
+| TypedValueObserveZeroNode | 对任意原根零路径展开实际same/above节点，不把两条路径证相等 |
+| TypedValueObserveRootRank | 零秩及非零秩根反馈；零秩经Read.transport及tr⁻同余，不假tr⁻ refl字面恒等 |
+| TypedValueObserveRootNode | 自由层参数的秩等式只作显式refl转换，给完整Ω节点根输出 |
+| TypedValueObserveRecursor | 非Ω构造及原子Read证书的结构递归；Nodes是唯一显式整节点前提 |
+| TypedValueObserveNode | 实填原分类器全部keep/same/above情况与根节点，子Result来自严格子Read |
+| TypedValueObserveActual | Build instance-nodes实填FullObservation/RootObservation，全合法B任意pt地板观察及ω实例 |
+| TypedValueReference | 零层forget-read给实际整点观察Same，再经完成inflation及Point.actual-Γ得全c参照下界 |
+| TypedValueNegCompletion | 合法Reg的ω+1反例否定输入到完成的旧⊑⁰，不否定普通值膨胀 |
+| TypedNegOmegaCompletion | Reg输入的leg在每个内部hl第2项至少为3，遗传到原位置；标准ω第2项为2，故排除其位置同形物 |
+| TypedNegOmegaCompletionActual | 原γ₁有实际标准ω旧前驱，确切双完成height满足上述界，故无原γ₁⊑⁰read height |
+
+本轮两项否定区分一般反例与实际输入。ValueNegCompletion是一般
+输入完成包含的反例；NegOmegaCompletionActual逐字使用原
+NextValueActual.height，不把反例任取成另一个高度。它从stage1
+正则性和已证完整参照Same取得内层leg(forgetγ₁)的Reg，再证外层
+height的遗传第2项界；标准ω作为γ₁前驱的路径为原四个有限分量
+选择后接≺z。由此精确排除旧⊑⁰输入桥，不排除ψΩ值覆盖、γ₂
+下界、本轮完整typed观察或原Γ路线。所有前提有实际闭项实例。
+
+运输证明不要求合法性证明为命题，不要求两条位置证明相等。
+完整Nodes实例消费实际原分类和严格子Read的Result，没有先假设
+FullObservation再填它自身的循环。same和above的辅助定理原先
+带子Result前提，只有在最后Build实例中才被结构归纳实际填满。
+构造与配对审阅的结论均按此最终陈述验收，没有将中间接口当定理。
+
+翻译账：新层、Read、坐标及合法证运输属于第4层验收脚手架。
+原B的后继准入和字面共同界来自树合法性；遗传第2项界是树侧
+编译否定，指出不能要求的输入桥字段。逐点辅助解释受旧参照启发，
+仍不称树自足。原树/floor/fold/leg/Γ/FGH和闭项证书定义未改，
+没有第4层逼出改定义，也没有新增阶段专属闭包前提。
+
+工程：TypedIndex初次缺proj₂导入；TypedDispatch初次隐参未显式；
+TypedCollapse曾遇局部E命名冲突、点模式解析及自由参数宇宙推断；
+树侧否定初次构造子隐藏参数pun未显式。这些轮次退出42，修正后
+各自最终6G0；失败轮未作为定理、切片或依赖图依据。
+
+33文件全部冻结后，主审逐件查陈述和代码，再删除恰好这33个新
+模块的.agdai，依赖顺序逐件6G冷编，全部退出0。清单为
+/private/tmp/omega-countable-typed-turn-modules.txt，逐件退出码及
+日志在/private/tmp/omega-countable-typed-turn/。refute独立只读
+复核原接口、合法证运输、所有节点反馈和最终Reference通过；
+代码禁用扫描33件命中0。主审冷编期间各子代理不编译共享文件。
+
+源码导入闭包：AdmittedOrder为27本地/10库，树侧完成否定30/10，
+记号禁用均0；对应Agda依赖图再次6G0，158/161标签禁用均0。
+最终Reference为130本地/14库，实际输入否定125/14，均有18项
+记号禁用模块，是明示验收文件而非成品；Reference的编译图346
+标签也实际含相同18项，作为边界正对照，没有报告成干净闭包。
+原成品候选及其证书的定义依赖未改，不把验收模块导入原Γ。
+
+ψ₀Λ目标仍未完成。当前具体缺口为原γ₁旧层到实际双完成高度的
+ψΩ值比较；仅完成原高度的同形typed读取不足以填它，旧前驱包含
+捷径则已由确切实际反例否定。还要覆盖EBO全部Ω塔阶段并给反向
+上界，不能把NoCumsum的整γ链（第二站ψ₀(Ω_{Ω₁})）当作终点。
+这只是当前方案的剩余义务，不是全部可行研究路径的穷尽。
+
+最终地图检查4319名字、317表格行，问题0；git diff --check通过，
+src/archive无改动，未提交或推送。目标保持active，未将中间桥的
+封闭误记为ψ₀Λ目标完成。
+
+## 2026-11-07：外层完成捕获与canonical Ω完成折叠的共享接口
+
+上一轮为作者解读累计成果，没有新增数学结果；本轮恢复构造、
+配对检验、实际γ₂应用三路。先只读挑战旧输入包含失败之后的
+替代方案，未将旧⊑⁰否定扩大为ψ值否定，也未默认任意J值比较
+可提升后继。原树、Γ、fold、合法性及证书继续冻结。
+
+主审交Lean.GeneralOmegaCountableOuterCaptureIf，固定每个源极限
+分量到某个目标分量的实际位置证据；所有比较以目标极限为实际
+公共界。construct交Align.GeneralOmegaCountableOuterCaptureRun，
+用height-position及旧l⊑规则证明整层包含，再经Ψ⁰-mono与已证
+完整观察桥实填OuterPositionCapture。未对后继使用非法ss提升。
+
+construct交OuterCaptureActual：所有n均有num n到完成第n分量的
+真实位置，预算n≤0+⋯+n；whole-omega比较整个Pω与P(legω)。
+另给leg(P(legω))合法闭项和值链Pω≤该闭项≤Γω，后半使用原
+Point.actual-Γ，没有把whole-omega的值序穿过leg。该闭项作为
+验收实例写在Align，不宣称已成品提取或新的ψ₀Λ候选。
+
+主审交Align.GeneralOmegaCountableCompletionPsiIf：对任意旧零层
+t及HS证书，比较ψ⁰Ω(toLevel t h)与ψ⁰Ω(height(leg(forget t)))
+两个零层输出。源不额外要求forget t有原LgB，故实际γ₁可填
+cert 1；没有索引全比较或旧前驱包含的隐含义务。接口已冻结。
+value交CompletionPsiFinite：全部num n源及任意HS证书实际填结论，
+不冒充全接口。主审交CompletionPsiOmega：任意HS(readω)的完整
+非有限实例，source通过toLevel-≅转规范证书，target通过leg-same
+及height-shape逆向保留leg(forget(readω))；实消费whole-omega。
+
+value交CompletionPsiTarget：Conditional completion中实际应用两次
+lower，第二次取read c/native-HS，再以leg-same的往返关系转换
+到原NextValueActual.height。得到原完整γ₂≤auxiliary≤stage2/tree，
+前提仍为整个CompletionPsiLower，不因有限或ω实例而删除。refute
+独立读审全部七文件，确认两个reference-shape方向、双leg、目标
+合法证及条件作用域，无循环假设。
+
+全接口尚未证未否。首个未接通的压力点是ω+1的后继内部反馈。
+value按原定义确认该链是分别从Ωa与Ωb起步的真实Typed.NoSum；
+一个足够的续证方案是允许错位的全轨道输出覆盖。首项可用子高度
+的完成假设，后续闭包/吸收尚缺；固定同KS的typed-mono及同B的
+TypedRead不能代填跨低层义务。这里的覆盖只作充分条件，不称必需，
+已有LambdaTargetCofinal说明一般整枝覆盖非必要。未新增无实例的
+后继提升记录，也没有编出值反例而关闭完成路线。
+
+Γ右高度加法吸收也未证未否：construct核对原graft会将目标0送到
+目标a，跨注入自然性只给该目标观察，仍缺跨底回到零目标的值界。
+既有NegEmpty或实际γ₁旧⊑失败均不能替代这个字段的否定。
+
+翻译账：Outer字段来自原位置及原极限构造，按结构参数统一；
+完成接口受实际验收缺口引导，不称树自足。实现只新增验收关系
+与定理，不改前三层，不添加记号阶段专属构造子。
+
+本批七文件全部冻结后，主审精确删除这七个新agdai，依赖顺序
+6G冷编全退出0；清单/private/tmp/omega-countable-completion-psi-turn-modules.txt，
+日志与退出码在/private/tmp/omega-countable-completion-psi-turn/。
+禁用扫描初次复用了importclosure.code_of，它会将OPTIONS中的
+--safe按注释截断而误报七项缺OPTIONS；改为直接提取原Agda代码
+块后七文件safe/without-K齐全，禁用命中0。没有据该误报改源。
+Outer接口闭包26本地/10库，Completion接口20/13，记号禁用均0；
+编译器依赖图另6G0，157/165标签禁用均0。五个实现/实例/条件
+应用含18项验收记号模块，不报告成成品干净依赖。
+
+本轮没有新具名强度或无条件γ₂界。当前主线已证ψ₀(Ω_ω)下界
+保持，ψ₀Λ仍缺实际EBO全阶段下界与反向上界；条件应用的闭合
+只证明新接口足够，不证明它有全域实例。src/archive未改，未提交。
+
+## 2026-11-07 作者纠偏：既有BTBO作为起点
+
+作者明确指出原BTBO早已达到ψ₀(Ω_Ω)且完全满足纲领，要求从此
+开始，而不是把新可数路线ψ₀(Ω_ω)当主线进展。主审承认选路失当：
+过度优先新统一算法及其容易校准的低站，把合法性/运输脚手架扩建
+当成推进，未充分继承已验收基座。纲领不要求重新做低强度基线。
+
+立即停止Completion等低强度路线的新扩建，已证结果保持冻结作工具，
+不改旧结论。三路按作者这次明确要求改派：construct定位继承原
+BTBO的下一层对象/折叠，refute复核具体壁垒及已有吸收结论的域，
+value_target核对原BTBO→既有严格超BTBO对象→EBO后续阶段的值链。
+src/OCF/BTBO继续封存，扩展只能在probes新篇进行。
+
+主审重新读src原闭项及BTBOFull完整证明。BTBOFull.BTBO≈确实
+无条件证明tr₀(src BTBO)与带Label.BTBO-label的N.BTBOᴵ互值。
+旧文章中的“估计”不是当前仓库的最终证据；LOG 2026-11-04及
+README既有验收行已记录该定理。主审当前6G编译BTBOFull退出0，
+会话83769终端0。OCF.BTBO源码闭包1本地/6库，记号禁用0。
+
+只读重新评估：SumOneAccept.step-T₁给suc N.BTBOᴵ≤trA T₁，
+可由BTBO≈直接继承为原src BTBO以上的既有检查点。但严格一步
+不等于ψ₀(Ω_{Ω+1})精确验收，更不等于EBO第3级。下一完整站
+需要G₂(x)=ψ₀(Ω_{Ω_x})的反馈，不用旧F再迭代的名字替代。
+
+construct定位原LH的H B=ΩL(upL lz B)族，其H(1+c)是twL3的
+实际分量。源树/地板/合法性已有；新义务是在后继处接收含旧Ω的
+整个低层坐标并保留它、完成回灌，且与原BTBO低层全树折叠相容。
+这仍是代码依据上的路线建议，不是新强度或完整接口实例。
+
+refute核对Barrier的精确整包，只排精确Ordᴰ初始段、统一不可数
+顶点及有界三歧等同时成立的扩展，不排对象层扩展或额外世界证据。
+Stage2.seed/seed⁻确有Level/toLevel版BTBO一步不升值结果；不能
+将它经一般值同余搬到src的ordᴰ算子，因为该一般同余不成立。
+未找到逐字src F在BTBO上的现成固定点定理，不据此关闭该尝试。
+
+研究基准改为继承既有ψ₀(Ω_Ω)，总目标仍为布劳威尔树ψ₀Λ闭项
+及EBO全阶段下界、再反向上界。过去新候选的ψ₀(Ω_ω)下界仍是
+正确局部结果，不再描述为仓库主线的强度推进。未修改src/archive，
+未提交或推送。
+
+
+## 2026-11-07 作者要求先调查旧高结果并复盘能力缺口
+
+作者指出接手前还有更高成果，要求先调查；随后要求认真反思整夜
+新主线仍未恢复BTBO的原因。停止全部新数学构造，三路只读审计：
+旧高源/闭项/View、旧强度验收及去标签更新、独立路线根因。主审
+读取实际定义与证明，未按早期入口的过时状态否定更晚成果。
+本次旧族调查未运行Agda，不冒充全族重新冷编；此前BTBOFull的
+本轮6G0记录保持。value此前已完成BTBORestartAnchor，最终6G0并
+经refute/主审读码，内容只是旧定理串接，不计新强度。
+
+旧成果核对：Free.Closed/Bridge已有实际主线ψ₀(Ω_{Ω·2})树、
+干净证书与贴回主线的标签；OrdLabAccept.nf-main/mono-main已将
+LadderNF/Mono标签搬回实际主线，含ψ₀(Ω_{Ω·ω})；EmbVVInstO2
+的vv-ω²及vv-ω²-via所有前提实填，已有ψ₀(Ω_{Ω·ω²})无条件值
+验收。主审读取§5实际证明与EmbVVMain相关接口。调查中的一次
+ψ₁(2)转写曾误为Ω²，已在最终结论前按RouteSeal与定义纠正为
+Ω·ω²；不将码ω²误读成指标Ω²。
+
+更高LadderOrdClosed.Tω^ω/Tε₀/T-feed、CrossMClosed.T⊤、
+HtTowerNFb.T-fb₂ω及FabLFReGen闭项确有实际定义、部分合法性/
+FGH/统一增长，较高具名读法未验收。LFRe/LHRec的全高层源及
+坐标类型匹配可继承。FeedGood/LevelNoK中仍含待计值符号或
+高证书前提的部分应单列，不把数据闭项当序数。MainViewZero已
+给HtFeed全合法高度的第0层内部View、良基和值/FGH一致，
+MainViewTower也有第0层实例；第1层仍条件HW，高层回灌未闭。
+更高旧路线不能笼统判不合纲领；后来内部View要求须逐项核查，
+不抹去已有值定理。封存是作者停止投入的决定，不等于否定。
+
+根因复盘（判断，依据本夜派发与交付记录）：
+1. 调查不足。RouteSeal §1及README已明示高值验收，却未把它们
+   作为研究基线；无依据地从易校准的低站重新建设。
+2. 反馈数学理解不足。原BTBO区分目标层与节点反馈层，低Ω保持，
+   输出经ordᴰ作下一下标。Consume为取得全层总定义把所有Ω统送
+   Cd反馈，取消keep及分层反馈；未先证明替代算法保住基座。
+   Countable虽恢复分层，却改种子/地板/输入输出完成，仍无BTBO界。
+3. 没有继承比较不变量。St/SV、PEmb/Ψ-emb、V1/V2/V3，以及
+   EmbVV的Hd-lvl/force≃/V-≃已有实际机制，未先比较复用，转而
+   反复尝试裸值或位置穿leg，产生大量合法证与坐标运输工作。
+4. 局部可编译性代替路线检验。真实总定义、合法性、非空实例、
+   完整新记录、有限整族都不足以代替原目标不等式。虽然汇报
+   逐次注明未完成，却没有因此及时回溯路线和调整投入。
+5. 并行只在同一架构内配对，没有让一路持续挑战整个候选能否
+   继承BTBO。RouteReview2的先证实际候选BTBO下界、SkeletonAudit
+   的反查最终坍缩、StallDiagnosis的共用假设警告被再次忽略。
+
+应早回溯的三个点：取消keep并统一Ω反馈时；完整Λ源仍只有ε₀
+及纯闭包下界时；Countable完成全有限验收却仍只有ψ₀(Ω_ω)时。
+原BTBOValMain.x₂≈BO已把BTBO第2迭代项校准到后一站。没有编译
+上界说明新Γ严格更弱；问题在赋予它EBO主线地位超过已有证据。
+
+作者假设即便不知道BTBO，现有新算法也没有足够的数学证据被
+认定为通往EBO的主线；这是路线证据不足，不是EBO不可达定理。
+本轮先完成调查与诊断，不立即另开新路线或增加接口。所需补足
+是忠实反馈机制、全局序数层级分析、值不变量与既有成果继承、
+以及及时止损回溯的研究判断。不能把代码行数、模块数或审计
+通过次数当成这些能力已经补足的证据。原ψ₀Λ目标保持，未提交。
+
+
+## 2026-11-07：沿旧强证明核对反馈不变量并实编高起点继承
+
+上一轮为进展：调查、源码核对和复盘改变了研究依据，未新增强度。
+本轮继续原ψ₀Λ目标，先沿BTBOFull与EmbVV实际证明核对关键不变量，
+三路只读分别检查旧高构造、旧值桥和允许域，随后仅开一个实际
+继承验收叶，不恢复低强度Completion扩建。
+
+主审核读BTBOFullLe/PEmb、V1/V2/V3、EmbVVEq/Force/Main：
+PEmb不是裸层比较，它只映射a之下带证据的前驱，像有bnd；实际
+LeE.Laws由这样的E实例提供，不能照抄裸字段。V2只在双方St上
+把可数值界转成累计码的前驱嵌入；Hd-lvl保存的是具体去头结构
+关系和双方HS，所得≃ᴵ再被后续行定理消费，而不是任意互值即可
+改变坐标。V-≃固定同HtB，不能直接跨不同HB M。
+
+主审另查原cumsum：后续累计项加入suc(f n)，而新Cd leg的Σ₀
+只加f n。此前不得把这两个完成形状默认等同，也不能将V1直接
+搬作新leg的全域定理。这项核对只作数学依据，不另开低站构造。
+
+construct查更晚CrossNext：CrossM旧报告中的第0行Gbranch和链证书
+问题已由D-Ψ、branch≈、G-E和实际完整闭项桥补齐，不该重做。
+未闭的是真正嵌套tH的上下文折叠及跨码升降与完整fold的交换；
+LH已有Ω_(Ω_x)源和合法地板，CRwFold却仍只处理Cd高度/XS底，
+不能凭高源的存在宣称高强折叠已经有。上述定位仍是读码判断，
+不是EBO不可达或全部可行路线的穷尽。
+
+value与refute初读原T⊤时都发现缺ω²行到原ω起点C_n的跨码桥：
+Fix共尾只给高度值界，不给字面初始段或行值单调。根指出任务
+并未限定原ω起点T⊤；CrossMClosed已允许任意码起点，因此直接
+使用原T⊤ᶜ ω²ᶜ作高基座继承的验证，不凭原代码名字增加任务约束。
+这不修改算法、种子规则或证书，不在树上硬加BTBO常量。
+
+value交CrossMHighSeedAccept：泛型row-shape精确实例V-G′，将
+原forceᴺ(Gᵖ ω²ᶜ end zero)接回Rows.V；泛型transport-accept
+沿≅运输旧vv-ω²-via，得到原最高行的VV。再用原below-chain在
+M₀=ω²ᶜ,n=0,p=end实例化，得high-seed-strict。最后从VV取
+参照R及R≤原行方向，后继单调再接严格结构序到值序，得
+labelled-strict-lower：存在标为ψ₀(Ω_{Ω·ω²})的R，
+suc R≼T⊤ᶜ ω²ᶜ。没有未填模块参数、额外同余前提或替代参照。
+
+这是真实旧高构造与旧值定理的串接；作为研究，验证已有强工具
+可以被实际继承。它不是新EBO阶段，不能据严格多一宣称已达
+ψ₀(Ω_{Ω_Ω})。原ω起点与此起点之间的值关系仍未证明，但非
+该参数实例或用户总目标的额外必要前提。
+
+工程：首次6G退出251（33619），尚未出现类型诊断；改为opaque
+全变量行桥和泛型VV运输后，经协调单路12G退出0（38284）。
+没有删除旧接口或一路盲目扩到45G。新增叶冻结后refute与根读审
+陈述/方向，禁用代码扫描0。主审精确删除两个新叶自身接口，
+BTBORestartAnchor及CrossMHighSeedAccept顺序单路12G冷编均0，
+会话8185终端0，日志/private/tmp/high-seed-reuse-turn/。前者
+是此前作者纠偏时新增的旧BTBO验收入口，本次也完成主审冷编。
+
+原CrossMClosed源码闭包53本地/10库，LadderOrdClosed为47/10，
+记号禁用均0；两个新验收叶闭包含记号（69/12命中18，300/16
+命中8），不导入原树/证书，不作干净成品声明。未改src/archive，
+未提交。目标仍是布劳威尔树ψ₀Λ闭项及EBO全阶段下界与上界。
+
+
+本轮编译器依赖图复核均单路12G退出0：CrossMClosed为190标签、
+记号禁用0；新CrossMHighSeedAccept为516标签、禁用8，与源码闭包
+边界吻合。图和日志在/private/tmp/high-seed-reuse-turn/。最终地图
+4331名字、317表格行问题0，git diff --check通过，src/archive无改动。
+
+
+## 2026-11-07 历史调查与文档整理（作者要求，停止新构造）
+
+作者先指出已有 BTBO=ψ₀(Ω_Ω) 和更高结果被遗漏，又指出“找到更高结果就接着做”仍未理解为何旧路线主动退回 BTBO 附近。最新明确要求：先基于完整研究历程作全局评估，同时评估并整理 probes 的文档和成果组织，便于继任者接手。本轮没有选定新数学路线，没有启动新 Agda 编译。
+
+### 停下时的草稿状态
+
+前一轮串接旧强结果后，我又把 CrossNext 的 α=1 嵌套 tH 当作下一步。这重新进入 RouteReview 已要求暂停、作者 RouteSeal 已封存的规则专属推广；高种子下界并未解除封存的结构原因。
+
+- CrossNestedIf：首次具体实例 12G 退出 251；改成以码为参数的 First 后再试 12G，仍退出 251。接口未通过，不是类型否定，也不能引用作已编译结果。
+- CrossNestedBuildTerm：第一次退出 42（Fl 导入位置），改为从 Free.Tree 导入后，子代理报告 6G 退出 0；仅显式写出原 first 程序，没有合法证书和值定理，主审未在停止后重编，不计新成果。
+- CrossNestedBuildNecessary：未编译。requires-original-zero 和 original-zero-below 只是草稿，不能把声明当作定理。
+
+上述三个文件增加醒目状态说明，代码不继续修。CrossMHighSeedAccept 和 BTBORestartAnchor 的先前复核记录仍有效；它们是旧定理串接，不是新 EBO 站，不是重开封存主线的授权。
+
+### 历史核对所得（文献与代码陈述核对，非全仓库重编）
+
+主审与三路只读调查，按 BTBO/Uniform/Free/Ladder/CrossM、RouteReview/差树/高度塔、世界与骨架审查、EboLean 标杆、typed C 线追踪了动机、获得和转向。关键解释：回退不是丢失旧强度，而是要改变“读记号下一规则—增加树字段—补专属证书”的生成方式。可以继承回灌、共同界、参数化闭包、模拟和值工具；不能凭旧高结果自动继承整套架构。这是基于历史的设计判断，不是否定旧路线的定理。
+
+核对出几项导航必须覆盖的旧状态：
+
+1. 成品 BTBO 已由 BTBOFull.BTBO≈ 验收 ψ₀(Ω_Ω)，旧偏低分析针对修正前版本；Fab3Typed 与成品 BTBO“同档”的历史说法错误。
+2. OrdLabAccept.nf-main、mono-main 已把标签桥接到原 LadderNF/Mono 的证书计值；不能停在旧 Accept 的克隆状态。只读调查一路也再次漏了这个后继，主审读 124–130 行指出，代理复读并撤回误判。
+3. MainView 已补实际 HtFeed/HtTowerF 第 0 层内部 View；第 1 层和更高层的条件、暂停范围仍在。
+4. EmbVVInstO2.vv-ω² 是旧的无条件主线序数值验收 ψ₀(Ω_{Ω·ω²})；码 ω² 不能读成指标 Ω²。Stage 的活跃路线概括不能覆盖它。
+5. 1513 是 EboLean3 前三层完整定义级切片，含良基、基本列封闭、树和 FGH；1533 再加标签。不能省略必要 View、合法地板或依赖，用新文件长度对比。
+
+### 文档审计与实际整理
+
+整理前 README 1776 行（309253 字节），LOG 4467 行（519734 字节）。README 第 252–1562 行已成为第二份接手流水，而主线决定、封存和翻译账排在后面；“现状”混合不同时间的事实与建议。mapcheck 原来只查名字，无法发现状态过期和作者封存被遗漏。组织确实增加误读风险；主审仍应为未先调查历史负责。
+
+- probes/README 改为短入口，只维护当前任务、已有基座、阅读顺序和分工。
+- 原成果表及后部历史决策、翻译账、否定范围移入 probes/RESULTS；顶部给后继更正，历史分类入口不再冠“当前最好”。
+- 原接手补记按原顺序移入 probes/HANDOFF-2026-11-07；后续流水统一入 LOG。移动前按三个连续区间校验，拼接等于原 README；不丢段落。
+- 新增 Survey/ResearchHistory，按因果关系解释完整转向、可继承机制、重复陷阱、已知勘误与制定下一步所需问题；引用原始材料，不另作数学证明。
+- LOG、Stage、各次审查和手册只补时间/范围/后继导航，保留原结论；根 README 导向新入口。RouteSeal 原封存与维护政策不变。
+- 扩展既有 mapcheck 覆盖拆分后的目录及本地链接。工具只作导航完整性检查，不认证数学或路线选择。
+
+数学源码未搬移，src/archive 未改；没有清理或删除既有研究资产，没有提交或推送。整理的复核与检查结果续记于本节末。
+
+
+整理复核完成：三路只读审阅分别核对历史因果/封存范围、数学资产/后继桥/标杆口径、导航工具/判断档位，未发现未解决的必要修正。采纳工具审阅意见，将 HANDOFF 也纳入历史作用域检查，并明确名字匹配仍有末段/basename盲区。链接检查另发现 EBOHandbook 旧文“性能手册已拷入”与失效链接；按 AGENTS 的作者存放决定更正位置说明，不改数学结论。
+
+迁移校验：原 1311 行接手正文与新 HANDOFF 对应区间逐字相同，原地图表格行及围栏代码块无丢失。新首页 63 行。默认 mapcheck 检查入口/成果目录/纪要的名字、317 行成果表引用和维护文档本地链接，问题 0；只作导航完整性检查，不认证数学、编译或标题片段。git diff --check 通过，src/archive 无改动。未运行新的 Agda；本轮交付是历史认识与文档整理，ψ₀Λ 数学目标没有因此宣称完成。
+
+
+## 2026-11-07 按接手前提交核准实际起点（作者再次纠偏）
+
+作者指出：接手前在 BTBO 上方附近已有完整闭项，即使高度只是估计，实际起点也不能压回 BTBO；明确要求查看接手前几个提交。本轮因此先调查提交，没有恢复构造或 Agda 编译。
+
+直接核对 git log 与三个 Git 对象：8346f53（11-03 16:04，旧标签与闭项路线）、a5b202c（11-04 22:06，差树主线与封存决定）、0546568（11-06 22:24，接手前 HEAD）。后两个提交的说明已经明确区分：附近高闭项存在，终点 ψ₀Λ 尚未交付。其间不是研究清零。
+
+主审读 a5b202c 的 SumOneClosed/Fold/Accept、SumHtClosed；0546568 的 README/LOG、RecB、ThirdTm、SameV、HtFeedClosed、HtOutFeed、HtTowerFClosed、DiagKInst 等。独立三路分别核对差树/高度塔、C线闭项及值边界、作者主线决定。主要事实：
+
+- a5b202c：SumOne.T₁、Lg-T₁、fgh 完整且无参数；T₀≈ 给 BTBO 同值，T₀<T₁ 与 step-T₁ 已证严格超过 BTBO；ψ₀(Ω_{Ω+1}) 精确读法未验收。SumHt 的 Tω/T² 也合法、有 FGH，读到 ψ₀(Ω_{Ω²}) 是判断，坐标族后来封存。
+- 0546568：HtFeed 一个定义覆盖全部合法高度；HtOut.Fb 确读原第1层输出生成下一高度，T-fbω 及合法性、FGH 实填。HtTowerF/N 已有双种类闭项与原第2层输出回灌，DiagK.Tdg₂ 实填且合法、有 FGH；其全塔条件接口另列，不能混成所有闭项都带未填前提。
+- 同提交：CRw.TU2 有标准 LgB 与 fghU2；RecB 的全 TN/TD 族、Tω、LgB-Tω、fghω 无未填参数，Tω 读 ψ₀(Ω_{Ω·ω}) 是判断，没有值上下界；Third.TΛ、LgB-TΛ、fghΛ 也完整，Λ层并未整体折下来、三处损失与值缺口仍在。它们都是接手前实际成果。
+- SameV 后继已给 CRw 的 Funext 条件比较 TX+1≤TU1、TX+2≤TU2；不等于精确强度，也不能凭 RecBCmp 的有限测试传到 RecB。
+- 0546568 的作者主线是差树/高度树及后续发展，不是要求从BTBO重建；RouteSeal§8封存坐标SumHt/Climb/Var，不等于封存HtFeed/HtOut。旧Ladder/CrossM的封存理由依旧有效。
+
+主审用 git show 的字节内容逐一对照工作树：SumOneClosed、SumHtClosed、HtFeedClosed、HtOutFeed、HtTowerFClosed、DiagKInst、CRw、RecB、ThirdTm 九个文件全部与0546568相同。构造一路另查18个相关核心入口/Closed/Grow/Feed/MainView文件，报告亦相同。这些结果并未消失，不能作为需要重新造出的新成果。
+
+本轮修正的判断：此前历史整理虽补了更高资产，却又混淆“BTBO是结构范本”和“实际研究起点”。下一步必须消化接手前 BTBO 上方附近已完成闭项及生成机制，再决定继承、修正或重写；不能因为精确值尚缺而默认从最低验收站攀起，也不能自动选择最高读法。README 已将实际前沿独立置于旧强度参照之前，ResearchHistory§2.1补提交核准和直接声明，RESULTS顶部补勘误。数学目标仍是 ψ₀Λ 的树闭项、纲领、成本与终点值验收，不因盘点完成而宣称达到。
+
+
+## 2026-11-07 ThirdRichLeg：接续实际高前沿的全种类修复与世界准入
+
+上一轮提交核查改变了实际起点，属进展；本轮不再重建 BTBO 或有限 typed 低段，也不重开 CrossM。构造/配对否定/值分析围绕接手前 Third 的三个具体损失开工。首先处理 leg-const：原非指标种类被改成常值分支。单修它不能自动让原世界访问非零坐标，因此构造与否定同时交付。
+
+### 新构造与覆盖
+
+- ThirdRichLegIf 共享接口已冻结：θ hz=g hz；θ(hs d)=(θd⊞g d)⊞g(hs d)；ℕ极限逐支，Ω沿原Ctx嵌回低种类。position只在同一投影world中陈述，Lg-θ有实例。新增g d是预先提出的分支覆盖合同所选设计，并未证明唯一，不来自记号基本列。
+- ThirdRichLegBuild 对全部 Sb n、Tw(Sb n)m 的kind寻找其起源step；θS/θT及两条局部律互递归，n或m下降，停机自然通过。allS/allT全部实填，legS/legT对任意raw输入有标准LgB，无Pos判断、不洗坐标、不常值化非指标。没有修改原ThirdLeg/世界/折叠/闭项。
+- ThirdRichLegValueIf/Theta/Run 给raw共尾覆盖、实际bump与全输入覆盖；raw关系不等于原TreeValue的全对有序规则。随后独立写ThirdRichLegValueLegal：Ω左只量低层合法坐标、右选合法bump；统一下界显式带坐标域非空，botS/T全族实填。全n/m任意输入的inflateS/T没有从raw关系偷换量词；第0层接标准≤ᵛ。高层结论是新定义的合法低坐标分支覆盖，尚非原Φ/ΦX的输出模拟，更不是具名强度。
+
+### 配对边界与正面世界操作
+
+ThirdRichLegNegWorld.Defaults对任意合法指标界族（不是只取恒零合法化）证明：原wT组件政策在所有Sb(suc n)组件顶种类处只准入零坐标；合法高度和公共上界均给出。Actual代入新Build.legS(fl)真实界；合法输入hΩκ(const1)的分支0、1经新合法化分别为1、3，非constant，但可入域仍只能读前者。没有推出任何序数值上界，也没有关闭整条路线。moved同时抬全部组件顶槽到1，合法且原失败位置可入，不按组件编号判等。
+
+根进一步写ThirdRichWorldSections：给每个高度自己的typed输入族Q，feed(m)=B(m)⊞legT(n,m,Qm)，next(m)=hs(feed(m))。全部n/m的world/full-world合法、grow/full-grow、实际feed的Bd与合法坐标Cover分别实填；原全族floors实际实例，不留空记录。入口ThirdRichLeg又给normalised-floor及合法/覆盖、closed-world及合法性。from-default/default-world-extends证明固定u/i下默认组件政策到新组件世界的扩张。
+
+复核发现并修正一个措辞陷阱：闭合实例左端是NegWorld.Actual.D.world，指标界已由新rich合法化重算，不是历史ThirdLeg.W.wS。原old-world-extends改名default-world-extends并明确此范围；没有证明历史旧wS整体嵌入。full-grow也不改变底world u与指标界i，不能说已经完成所有低层同步回灌。
+
+仍缺的实质义务：原运行给某一目标的输出，如何由实际源/运行数据产生类型正确的全目标族，并在当前目标与真实输出相接；或改成有公共界的目标族并说明怎样满足世界操作的定义域。之后还要让保留分支、分类、路径与下一轮反馈在新world里继续，建立实际输出值模拟。预给floors不能替代这两件事。ColimA历史已指出类似族增量问题，本轮没有靠改名宣布它解决。旧Er洗坐标和完整Λ折叠仍未交付，不因局部world构造否定其他候选。
+
+### 编译、审计与成本
+
+各路单6G：If初42（导入笔误）修后0，Build0；ValueTheta一处隐式KS元42，显式d:HB U后Run/If/Legal均0；NegWorld初版及Actual版均0。主审只删除本轮9个新模块自己的.agdai，没有删旧依赖接口，单6G冷编入口ThirdRichLeg全部新件退出0（6682）。根WorldSections首编0（65992）；追加真实closed-world/from-default后0（59932）；澄清默认世界命名后0（56894）。均直接读取终端退出码，未经管道。HTML与图：/private/tmp/third-rich-review-20261107/，库文件/private/tmp/worldcompose-libraries。
+
+主审查全部代码块：safe/without-K，禁用构造与Funext/UIP命中0。源码导入闭包28模块（本地18），禁用记号0；编译器依赖图149模块，记号禁用0。构造、值与否定互审及主审读码完成，范围修正已采纳；没有把分支覆盖当作原折叠值序。
+
+切片脚本Survey/scripts/thirdrich/locslice_thirdrich.py，复用现成locslice，模块应用参数显式补根（Complete/allS/allT、Frames、Actual.bounds/Defaults.world等），不按模块名排除本地代码。根已读脚本并重跑0：全合法化/合法性294；加真实原floor实例340；closed-world/合法/默认组件扩张独立415；合并427；含整族world/反馈合法/扩张/准入440；加合法坐标Cover561；含0层标准值桥591；若raw覆盖一路也计则662。全部记号块0。均是局部操作的完整定义级切片，第三方库按既有口径不计；不是新完整Third的折叠/View/FGH总成本，不能据440<1513宣称满足成品预算，也不能拿1049简单相加。
+
+翻译账已补RESULTS，首页只更新当前任务与入口，不再追加过程。新内容均为新前缀，旧数学源码未改，src/archive未改，没有提交。此轮交付的是全族树侧操作、真实闭族实例、局部值覆盖与精确边界；ψ₀Λ闭项和EBO终点值验收仍未完成，没有新增ψ₀(Ω_x)强度结论。
+
+
+## 2026-11-07 再次接手审计：补查后继构造、条件与未经论证的合同
+
+作者指出不能等逐项提醒，要求自行查缺补漏、查看历史提交和实际代码，理清遗漏与隐含规则。主审暂停数学扩建；在跑的构造与否定先冻结，不续派数学任务，转做相互独立的只读核查，再由主审读原声明。当前任务入口同步改为审计，不再以 Third 某个缺项作为已经选定的最佳下一步。
+
+**发现并纠正：**
+
+1. 第一轮虽核对了 HtOut、RecB、Third 等完整闭项，仍漏掉 FamFold 的真实输出族读回、世界链以及无参数的全 n 闭项族，也漏掉 EvFold 的固定有限外界事件折叠。两项均在 0546568。FamFold 的有限目标族化不是任意目标 Φ 输出的全域延伸；这项差别须证明必要，不能把更强的全目标合同当纲领。新 ThirdRunFamily 的参数族抽取与局部反馈接线不构成首次实现此机制。
+2. EvFoldLim.no-coh-ev 只否定指定的相干证据族；LvFbFac 后继的增量式极限改贴已有 fac-tr/fac-lim、Lg-U/Lg-rlω，不落在该前提内。不能将旧停止点冻结成全方向的停止点。ColimARaise.raiseA′ 也早已有无限可入高度的族更新。
+3. TreeLang 的 least/exact、TL2 的有界异型族升界是正面定理；“未唯一决定完整折叠”不能抹掉它们。MonoPort9Cov 已绕开 GoodUp 停点，ValNewRun.cross 有限定域的跨实例值比较。TpPort2Tab.no-valmonoT⁺ 已给无条件的普通值单调反例，不能再当待补的一般单调引理。
+4. RESULTS 中 MainViewHW.HW-RunNi 的摘要漏写 HB、HBh、Good Y，已修正；实填 HW-ΔΩ₁ 固定 Λ＝hs hz。第 0 层 View/FGH 一致不能替整个高层轨道提供 View。
+5. “单增量要 UIP”写强了：uip→raiseA1 只证充分性。uniformAll→fix 是必要条件定理，不是矛盾；特定槽读回合同另带 FE₀ 才推出 WLPO。旧 LOG 过强标题不改写，由顶部勘误和 ResearchHistory 解释，不能覆盖后来的全 n 无 UIP 构造。
+6. ThirdRichLeg 的 Ctx 方法已有 LHRecLeg.New/θK 前例；本轮补的是 Third 明示未写的全 Tw 坐标递归，以及合法坐标覆盖。额外累加项是实现选择，未证唯一性。世界截面没有证明新的一般更新原理，未修复 Er 丢掉 Ω 分量种类的问题，也没有新强度。
+7. 再读成品 BTBO 的 ψ< 与 ψ₀，确认跨层链必须通过节点共尾层、极限层直接折叠的具体数据流；其压平事故已在作者文章记录，接手时本应先消化，后来加入高常量不能替代机制继承。
+
+**文档交付：** ResearchHistory §2.3 增加机制与后继关系表，§6 补精确勘误，§9 说明实际核查范围及方法修正；README 补 FamFold/EvFold/LvFb 资产并撤下未经综合评估的数学派发；RESULTS 顶部补后继更正，修复上述条件与充分性措辞。未新增另一套独立历史索引，未搬源码，未改任何旧数学陈述、AGENTS、src/archive，未提交或推送。
+
+**证据范围：** 主审读取关键提交正文、原作者决策及 LOG 前后继条目，再核对实际声明和模块参数。FamFold 六文件、ColimA/ColimARaise、TL2Raise、TreeLang/TreeLangLv、MainView/MainViewHW、TLRuleSpec、EvFold/EvFoldClosed、LvFbFac、EboLean3 共 18 个文件与 0546568 逐字节相同。本次没有重编全部历史文件，不宣称逐行读完数千个模块；具名定理的既有冷编记录见原 LOG。
+
+**暂停前的新草稿，单列而不计已验收成果：** ThirdRunFamilyIf、ThirdRunFamilyBuild、ThirdRunFamilyNegFill 均由子代理报告 6G 编译退出 0，已冻结；主审尚未冷编复核。前两篇精确包装原 Φ 并给带目标/路径/种子的局部 step 世界反馈，没有整个源世界上的迭代闭合；后一篇 ZeroFill⇒WLPO 只针对“界内精确、界外为零”的总填充合同，不否定所有 section，也不否定共享 RunFamily。当前不为它们续开新模块。
+
+复查的结论是接手方法仍需修正，不是 ψ₀Λ 已前进一站。恢复扩建前，须先用上述资产评估完整回路、字段必要性、精确障碍、闭项与值交付以及同口径成本；不能以局部可编译引理代替方案评估。
+
+导航复核：mapcheck 退出 0，188 个本地文件链接目标无缺失；git diff --check 退出 0。检查不认证标题片段、数学内容或路线判断。本轮没有 Agda 编译，也没有新增数学结论。
+
+
+## 2026-11-07 EventReturn：评估后接续实际事件回灌，检验统一读回与迁回
+
+上一目标轮为进展：历史补查补回实际回路并修复了错误的下一步判断。本轮先对照完整方案，不直接续补 Third.Gd。三路分别评估 FamFold/EvFold 真实回路、Third 未来世界分支、GenFold 一般运行器；主审复查实际数据流后选择事件返回的决定性实验。没有撤销封存决定，没有宣称三项分类穷尽，也没有新增记号基本列字段。
+
+**选择依据（判断）：** GenFold 已有未来世界 Run，但原 rd₁/rd₂ 旧闭包取当前支、encH 取 Ω 底支、无 FBA 时重复当前支；仅接 grow 不改变这些方程。Third 的输入 ∀future Gd 不能自动为 raw 输出坐标提供源 AdT，仍需改变分支域或生成坐标，并有 View 义务。EvFold 已把实际输出读回其自身种类的坐标后接事件，故先检验其 read/drop 是否可统一；不以更强的全 raw 目标输出族为前提。全种类出口仍须由结构递归产生，不许留空参数或最终统一压回 Ht。
+
+**已复核的新结果，入口 OCF/Align/EventReturn：**
+
+- EventReturnIf/Build：原两个 ReturnAt 的 read/event 逐字绑定 RB/evRB；读回层与目标都在同一合法 Λ 之内，move 按实际位置使用原 drp/drp₁/drp₂。仅校准已有构造，没有保值字段，不算新算法。
+- EventReturnCodeIf/Build：全部原 H₀ 输入，包含 Ω，原 drp₁(toD₁ x) 经 rd₁ 读回后与原编码的读回逐枝 Shape。不是高阶数据的命题等式，不用 Funext，也不向任意 continuation 免费传递。
+- EventReturnInt/IntRead：R 容纳 ni/nκ/nw。node-related 实填原 Int 生成的高阶节点，含 nw 前缀与真实低层 Int；whole 是原 Int(Ωd one)，whole-encoded-observed 覆盖所有 H₀ 编码。observe 给 R 的原 rd₁ Shape，migrate 仅双侧 drp₁。Plain 只有双侧 nw，不能把它扩读为单侧迁回已经封闭。任意 R 源的完整 Int 保持尚未写完，nκ/Cut₀/IW₀ 仍须处理。
+- EventReturnValueCell：原 κ₁ 首格、原 Y₀⊕StpY₀、含 κ₀ 零分支闭包的输出；共享合同 move 前后 rd₂ 对所有起始值字面相等，首事件含 σH。是原具体调用，不代表任意 κ₀ 分支。
+- EventReturnValueEvent：原 rd₂ 观察所创建的 evx 在任意两历史、全部 H₀ 坐标上同种类且 payload Shape。HistLow 允许忘掉高事件，及两端接相关低事件；真实首格及其每个观察坐标接一次 evx 的实例实填。没有要求任意两个历史上的任意闭包无条件相容。
+- 主审 EventReturnReplay：HistLow 确实保持原 rp 的低界 Shape，继而实填上述首格和全部观察坐标；positions 在同一世界下给对应右位置及 Shape，不证明固定原坐标仍可入右界。不把历史表配对当成原运行器已保持它。
+- EventReturnValueZero：原 EvFold 零层的基本列双模拟与双向值界，属于旧 SumOneAccept.sum-drp/HtValSplit 同机制的接口校准。
+- EventReturnValueStep：原 κ₀ 内枝 n1 的 κ₁ 首格输出定义已交。尝试 rd₂ 单侧迁回等式用 refl 时 6G 退出42，停在不同历史表不能统一；不是等式为假或值下降的证明。未证命题仅写在说明，代码只保留实际输出。
+
+**没有重新发明旧原理：** 查到 StrRel12Int.IntM 已处理两世界、不同 mk/StH、内外 Int 双递归，ValNewRel.Int-M 也已处理高阶节点且本身没有 NI 条件（NI 限制对应 Ωd-M 的实例）。新实验继承机制，新增域是原 EvFold 的 Hist、tp、事件配对及实际回调。nε/IWε/CutE 与原 Run 的完整单侧迁回仍未证明。没有新第三事件、全种类读回或 ψ₀(Ω_x) 强度。
+
+**成本证据：** 主审以单6G成功生成原 EvFoldClosed 的 HTML/编译器图；第一次因输出目录未建而 IO 退出42，没有使用该失败轮结果。随后成功轮退出0。新增脚本 Survey/scripts/eventreturn/locslice_eventreturn.py 复用 locslice，对可达本地模块全部别名补根到不动点，不排除本地模块，标准库按既有口径不计。原两读回/合法/迁回切片784；原 T-Ω₃²、合法性和 FGH 切片1423。这是语法近似，不含新增高层内部 View，不是全种类成品成本。故不能复制旧机器再逐事件叠文件，并把新增叶文件的行数当预算；当前没有可靠的完整1513成品估计。
+
+**主审验证：** 各路最终6G0后冻结。主审按12新模块精确名单删已有11份 .agdai，不删旧依赖、不用 ignore-interfaces，冷编 EventReturn 入口12件全部重新 Checking，退出0（66247）。Replay 初编42为非单射 rp 头隐参推断，显式写 H/H′ 后6G0（97159）；没有新增假设。代码块 safe/without-K，禁用构造、Funext/UIP命中0。源码导入闭包70模块（本地58），编译器图203模块（本地58），记号禁用表均0；原闭项图185模块（本地40）。定义切片 encoded-readback/whole-encoded-observed/extend-actual/low-replay/contract-read 的记号块与记号词均0（到达188/230/194/97/324块）。本轮未新跑切片正对照，独立性主要依成功编译的完整导入闭包，不夸大语法工具。HTML/图在 /private/tmp/eventreturn-review-20261107/。独立否定路读审指出‘全部后续观察’措辞过宽，已收紧为首格及每个H₀坐标接一次evx；没有新的否定定理。
+
+当前验收点仍是相关历史、相关坐标与前缀下的原 Int/Run 闭包；其结果须能统一替换原逐事件 read/drop，并接内部 View 和终点 EBO 下界。新关系是摆脱侧研究，不以这些局部结果宣布已获下一攀爬站。原树、折叠、合法性定义、src/archive及AGENTS未改；未提交或推送。
+
+## 2026-11-07 主动查缺补漏：历史决定的后继、条件与实际生成域
+
+作者指出接手缺乏全局把握，要求自行查未逐条指出的细节。本轮没有开启新的数学路线，主审亲自检查旧提交、后继决定、文档状态和当前研究的实际适用域；原三路均已返回，否定一路另对本轮冻结声明作只读复核。
+
+**历史与组织方面的新核查。** 直接读 610df60、a5b202c、0546568 的提交说明，向前追到 bdb3cab 的 Ord1D 审稿、92642b2 的记号实验及 September Mahlo 归档入口与更正指引。核对 Ord1D 的 Ω₁-partial/lim₁-collapse 原源码确仍将新分支归零，旗舰见证由 embedᴰ/lim₀ 构成；这只核实机制，未将审稿的高度估计当成值定理。归档 EBO-number 与 Mahlo-number 的实际类型都仍带 Acc 前提；它们与后来 WfFsn/EboLean3 填满良基的后继分开。归档中的“整个树范式不可达”不作为今日路线否定。
+
+手册 §8 仍列“等 MonoPort2/KNest2”“HtTowerN/LFRe 在跑”“封存维护待作者定”“标杆 6524/7867 待选”；原日志已有相应返回、作者采纳三类维护及 1513 标杆定稿。补逐项后继状态，原历史内容保留。手册 §2 的“无处”列与模型名称也明确为提取时快照；proposals 补主题已入现行 AGENTS、但非逐字全案采纳的范围，不将 1.35 内存系数变成规则、不核称仓库外记忆已执行。新增修改没有改变 AGENTS。
+
+ResearchHistory §2.2 补出 5 月比较实验、7 月记号/Fusion、9 月规则提取与 I 层良基的分别脉络；§10 记录本轮新遗漏、证据与覆盖边界。README 替换当前状态，RESULTS 补后继更正；mapcheck 将本次维护的 proposals 链接纳入检查。数学源文件原位保存，src/archive只读，没有以整理名义搬移或删去旧成果。
+
+### 同期已返回的迁回证明：复核后收束
+
+新增汇总入口 `OCF/Align/EventReturnCtx.lagda.md`，导入本轮10件冻结模块：CoordIf/CoordBuild、CtxIf/CtxBuild/CtxActual、History/HistoryCompose、CtxValueIf/CtxValueRun/CtxValueActual。
+
+- Coord 的 E₀ 容纳单侧 nw；drop-left/right、全部原 D₀ 自关系、sum/pt 保持和编码均实填。两轮42是非单射 drp/sum 隐参推断，显式 x/y 后0，没有新假设。
+- CtxBuild.actual 实填全部 Internal.preserve。相关源、外回调及前缀经原 D₁→D₁ Int 后保持 R₁，完整含 nκ/Cut₀/IW₀ 及 ni 内外递归；Walk.ih 是 preserve 对源子推导的实际递归调用，不是未填公设。mk-one 只消去有限 StH(ss hself)，不需一般路径唯一性或函数外延。CtxActual 的单侧 left/right、observe、encoded-return 实填全 H₀ 编码源及前缀含 Ω，identity 和原 Ωd one。
+- History 的同步 Suffix 保留每次新增事件，同种类且 payload Shape；transplant、observed-suffix覆盖全部实际 evx 坐标。HistLow 可以遗忘基底的高事件，但不能替换同步后缀而删掉 CutE 的回调执行。Compose 给历史关系自反、对称、传递和 future-left，前提有实际实例。
+- CtxValueRun 对显式 R₂ 给原 drp₂ 单侧保持、原 rd₂ Shape 与 returned，包含 ni 的两种坐标、nε κ₀ 和 nw；nw 不另要求旧子历史与外层历史相关。CtxValueActual 给任意合法最高层下 Act/Stp/Run n1 的第二层输出保持，以及回调真正调用 Run n1、输出含 ni 的 κ₀ 闭包实例。
+
+**主审与独立读审一致的限制：** R₁ 回调量任意两份未来历史后缀，共享 A 路径和合法证明；R₂ 只量同步 Suffix，但其第一层坐标仍消费 R₁。非空的编码和动作一步实例不证明全部实际反馈坐标满足关系。Run n1 归约 Act/Stp，不递归处理任意源高节点；没有完成原 κ₁ 首格的关系、全 Run/WalkE 的状态闭包、第三事件、全种类读回或任何新序数强度。接口冻结仅约束本实验协作，不能把更强关系当前提强加给未来设计。
+
+**主审验证。** 逐读新声明与实现，明确前提及非空实例。仅按精确11模块名单清其接口，保留全部旧依赖，不用 ignore-interfaces；单6G冷编 EventReturnCtx，11件全部重新 Checking，退出0（63665，完整输出 `/private/tmp/EventReturnCtx-cold-review.log`）。成功编译器依赖图211节点、本地66；源码闭包78模块（本地66、库12），本地集合与图一致、记号禁用表命中0。11件代码块 safe/without-K，禁用构造、洞、Funext/UIP扫描0；扫描初稿误将选项里的双连字符当注释，修正扫描器后再查，源码未因之修改。本轮未新做定义级切片及正对照，不声称获得额外树自足或成品认证。
+
+**方法结论（判断）。** 需要补的是历史基线、作者决定、真实生成机制、定理适用域与完整成本的联合评估，不能用再多局部0退出替代。原双事件1423只是语法切片且缺新增高层内部View；本轮关系不进入原闭项依赖，既不机械加总，也不许借此保证全种类终点预算。下一研究决策须先核实实际生成域，再判断统一实现能替换哪些重复。新文件作为数据保留，不当成下一架构不可更改的约束。
+
+收尾导航检查退出0：README 3个名字、RESULTS 3822个名字／320行表格、旧HANDOFF 568个名字，本地链接208个目标无缺失；git diff --check退出0。扩展检查提议文档时发现两个“断链”实为行内代码中的拟写记忆索引，修正检查器忽略行内代码后通过，没有删改原提议文字。这些检查仍不验证标题锚点、数学内容或路线判断。未改src/archive/AGENTS，未提交或推送。
+
+## 2026-11-07 EventGenerated：原高源的动态层与完整事件区间
+
+上一轮修正历史基线、过期决定与适用域，属进展。本轮继续完整ψ₀Λ目标，配对派发构造／否定，另一路检查实际高反馈生成；主审处理原常后继回调的全区间公式，不重新攀低站，不重开封存族。入口 `OCF/Align/EventGenerated`。
+
+**决定性区别。** 原Ωd事件句的节点属于动态层g(rp H κ)，RunNi经Ai/BNi/Chn确实在这个层里取坐标与递归。原D₁/D₂关系不自动承担这项异层生成。另一方面，原drp₂把未来新增后缀移植回闭包捕获的旧基底；迁回不等于在新历史重新生成原源。因此全历史同步与目标低层迁回分开；不将跨历史重跑或所有rawRun自然性定成新的必需目标。
+
+### 实际生成、数据转换与精确反例
+
+- EventGeneratedIf首编6G0后冻结。At.generated-exact逐字绑定原Ωd事件句；Pair携实际动态层的Shape及两侧在原同一source中的位置。Generated要求指定κ的ReplayAt与实际g保持，不要求任意g同余。
+- Build首编6G0（29396）：原nb₀、nbᴱ的实际两种step、Ω₃²以及完整top₃前缀全部实填。closed-square保留three⊞nbᴱ hz (λ _ h→h⊞Ω₃ᴱ)，没有删前缀或换成低层源。
+- Path给同世界Shape下的原第一位置、StH节点和给定AccY运输。Ω步保留同raw坐标/Bd；任意世界间Bd迁移不由此推出。首轮42只是局部名step冲突，修后6G0（30040）。路径部分继承此前positions的机制，新增StH与可达性接线，不当新原理。
+- Transport实际给全部原D构造子的两向函数。ni先逆搬outS低坐标再inS喂原u，返回数据正向搬。直接交换两个Acc、以及forward/back互递归的两种写法均被终止检查拒绝（42），不是数学否定；改为maps返回双向Maps，内go/back对D递归，跨层maps调用只取原f r/f′ r′，6G0（98368）。没有用accessible产生新Acc作停机依据，没有安全豁免。Zero首编6G0（71226）：全部D₀、任意base的sum逐形和正向转换双向值界，逆转换也有逐形；高层逆律及保值未证。
+- NegRank首编6G0（49030）：原合法Ω₃ᴱ，历史[κ₁合法增量1]与[]满足HistLow，而动态层为1/0，不相等且不Shape。只否定候选HistLow→同rank/Shape，不否定Generated（其前提为ReplayAt）。同文件captured-base给任意原κ₀闭包的drp₂实际方程：读回新事件仍接回旧H后调用原u。这是保留捕获环境的正面证据，不能把异层同步升级成所有迁回策略的必要条件。
+
+### 原高闭项接线与非零后继内枝
+
+- ValueReplay首编6G0（5673）：HistoryShape完整配对所有事件，不遗忘高事件；两个原rp槽均保Shape；event₀/₁以现有R₁/R₂原输出关系，经原RB产生相关事件。
+- ValueFirst首编6G0（47476）：任意合法Λ、源层、回调与相关状态，原κcε第0事件保持完整历史关系。entered=Y₀⊕StpY₀实填；entered-high继承原first-new。实际新高事件虽可在HistLow中遗忘，高槽却不能Shape底支。这是结构区别，不是值不等定理。first-related没有消费κΔε的后继输出，不能当作整链归纳已经完成。
+- ValueActual首编6G0（35580）：原最终top₃Ω₃²、原Source.node事件回调、azero→one、n0⨾nw q n1与entered接到真实首历史；actual-pair对所有完整相关历史实填动态层及同源位置。不是另造的Run n1测试。
+- 主审EventOneWalk首编6G0（89790）：对任意合法最高层、源层、事件区间、前缀及状态，原const n1回调的WalkE第二层输出恰为counted(length suffix,原累计值)。每次执行原Act/Stp，逐次保留累计；不是忽略新增事件。补length-pair与同步Suffix等长，6G0（15652）。counted-related对全部区间、相关原累计值成立。没有外推任意回调只看次数。
+- ValueStep最终6G0（46260）：kp-count/kb-count用OneWalk整区间公式；callback-related覆盖原κ₀保留回调的全部未来同步后缀。实际base是((n0⨾nl const(Ωd₂⨾n0))⨾n0)，prefix₀/state₀与零段逐字保留。output-shape/retained-shape的refl绑定旧EventReturnValueStep.output；output-related实填其R₂；output-returned证明原rd₂迁回前后Shape。**所需观察关系已有证明，旧Step里refl失败的更强命题等式仍未证**，不能将其报成已证≡或整个κ₁反馈链闭合。
+
+### 主审复核与目标边界
+
+所有路返回并冻结后，主审逐读本批12件陈述、实现及非空实例；独立否定路只读复核If/Build/Path、Value三件、Transport两件、OneWalk和ValueStep，确认上述范围。主审只按精确12模块名单删除本批接口、不动旧依赖、不用ignore-interfaces，单6G冷编入口12件全部Checking，退出0（58078，日志 `/private/tmp/EventGenerated-cold-review.log`）。最终源码禁用构造、洞、Funext/UIP命中0；源码闭包90模块（本地78、库12），成功编译器图223节点（本地78），两份本地集合一致、记号禁用命中0（图 `/private/tmp/EventGenerated-review.dot`）。没有把干净导入等同树自足；本轮未重新做定义切片及正对照，不当成成品认证。
+
+意义（判断）：本批把旧原高闭项的真实源、事件、动态层及坐标转换接起来，并补了原非零内枝所需的全未来后缀观察；提供统一实现可用的信息，不是新增序数强度。原T仍固定两种事件，同世界Maps还不是全种类read/drop。仍需实际生成的异层低坐标、跨世界公共界、Ai/BNi/Chn状态及后继κcε在同一关系下闭包，或更弱而足够的捕获环境证明；必要内部View、终点EBO下界及完整1513成本均未交付。不得继续按事件数复制专属关系并把它当通向Λ的实现。
+
+README与RESULTS替换当前摘要并指向新入口；旧数学文件及结论不改。导航检查0：README3名字、RESULTS3840名字／321行表格、旧HANDOFF568名字，本地链接209目标无缺失；git diff --check为0。src/archive/AGENTS无改动，未提交或推送。完整目标仍在进行，未缩成迁回实验。
+
+## 2026-11-07 UniformCore 冻结复核：结构参数尚未成为同一程序
+
+本批先于作者再次要求终局核查产生；原编译返回后，因暂停未立即入账，此处补齐主审记录，不将其写成新的强度站。
+
+- UniformGeneratedIf/Build：任意 KS/许可 Z 的原 DataG 异层关系，对两份原 Acc 递归；换证不要求 Acc 或路径相等。原 Ωd 族实填。同世界、同未来路径，不是跨历史自动自然性。
+- UniformGeneratedInt/Actual：原 step T/ZK T 上的全部 Int 保持，包括 nc 和 ni 内外递归；原 Ωd 源、非零 Ωd 前缀及 identity 回调实际使用它。零层 sum/partial 保完整 Same。没有补回旧 nc 当前枝损失。
+- BoundedShapeEquality/UniformGeneratedDispatch：同合法世界、同合法字面公共界内，Shape 相关高度相等；原 rkT 对相关节点给相同 keep/rise 分类，rise 证据取自实际比较程序。没有路径唯一性或完整 Run 状态保持。
+- UniformReaderStep/Reify：读回包的编码由泛目标 render 按原树结构生成；Successor.next 返回同类包，family 递归调用它。完整新种类坐标反馈方程与 round 合法性已证，不是 round 保值。
+- ReadLayerBoundary/Cofinal/Limit：合法常零极限精确否定旧 NdI 的无条件全高度推广；实际后继覆盖能给新种类嵌入。分支包加 step(F n)→sup F 覆盖，得到同类极限包；omega、其后继及任意起包的 Climb 实填。仍在旧 Wd₂，render 要全世界有效路径；不从一般极限合法性猜 coverage。
+
+UniformCore 入口明确区分：关系/Int 载体是 DataG，reader/Climb 是 HtTowerFTree.D/Wd₂；没有转换及回路保持，不能视为已统一实现。没有新 ψ₀(Ω_x) 值界、第三事件、全种类运行或完整成本预算。
+
+**主审复核：** 逐读全部12新模块后，精确删除已有11份本批接口，冷编 UniformCore，12件全部 Checking，6G退出0（25600，日志 `/private/tmp/UniformCore-cold-review.log`，暂停清理时会话已成功结束）。恢复后补完整审计与编译器图，6G退出0（33735）；源码闭包109（本地96、库13），成功图241节点、本地96，集合一致且记号禁用命中0（`/private/tmp/UniformCore-review.dot`）。12件代码 safe/without-K，禁用构造、洞、Funext/UIP扫描0。独立路已读审，未把干净导入升级为树自足；没有重新宣称定义切片或成品认证。
+
+## 2026-11-07 完整 EBO 终点核查与两个具体接线检验
+
+作者要求预想通向 EBO 的完整可能路径，提前识别虚假局部。本轮先复核原实际数据流，再以正反构造检验候选接口；没有继续增加攀爬站。完整方案及未知集中于 Survey/EBOEndgame.lagda.md，README 只维护摘要。
+
+**先纠正问题定位（源码事实与判断分别读）。** GenFoldRun 的 κΔ₁/κc₁ 已有真实输出→rd₁→升界→搬状态→再次 Run，EvFold 同样已把输出接入历史；不是缺一个循环框架。UniformReader 的输入与此实际输出不同载体，尚不能填 reader。ThirdTm 原来已有全底 desc/TN/yΛ/TΛ；其具体未解处包括 keep 的 san、tpS 的 Ω 底支和世界准入。富合法化或有更大世界不自动补齐整条值链。这两类候选并未穷尽架构，也没有被本轮否定。
+
+### 第4层：完整参照真正接到 Cd
+
+OCF/Align/TerminalFoldAccept：read 保 EboLean3Tree.Ord 的零、后继、ℕ-极限，reference 正是全部 referenceBranch 的极限。all-branches 从全 k 覆盖给完整 EBO 下界；sampled 允许对每个 k 选一个不同实际阶段，再由各阶段到终点的界合成。两者都有原参照自身实例。read-fgh/branch-fgh/reference-fgh 校准原 FGH，不把今后值下界升级为候选 FGH 下界。所用 Cd 值序及传递来自现有 Fold1If/NegFold1Base，未造新序关系。该文件导入记号，仅在第4层；没有任何树侧候选实填覆盖，故不是新强度。
+
+### 原 Gd 与未来 Stable：构造、否定配对
+
+OCF/Lean/CircuitBoundaryGd 冻结 GenericGdTransport，精确检验合法世界增长后任意旧 Gd 是否可原样搬运。no-generic-transport 已否定它：U=step S⊥，世界界0→1，m=Ω(const1)，公共高度界合法；新准入的编号1坐标激活返回编号2坏分量的分支。Old.Gd input、New.Gd activated、增长和合法高度均实填。**未证明 input 的 LgB**，所以只否定无额外输入条件的搬运合同，不否定实际合法生成域、值保持或候选B。
+
+构造路冻结 OCF/Lean/CircuitKernelStableIf 的遗传未来 Stable：Ω分支对合法未来世界的实际 AdT 输入给同一类子证书。Future.stay 只是新关系构造子，不偷加原 KS 世界序自反。Build 已编译 current/rebase/add/upward/base，全部原 Sb n 的高度1非零 topT 实填，故合同并非空域。
+
+随后 Boundary.no-floor 已在**同一合同**下证明：height=hs(hs m) 合法，原 topT U fb height 对任意 fb 都不满足该 Stable。原地板当前分支接收 Old.Gd input；若强Stable成立，再基址并投影、去up即导出已被否定的新 Gd。没有给坐标假造 LgB。它只否定这份强Stable覆盖原全地板，不能扩大为“所有未来证书均不可用”。本轮据此停止扩建该强合同，不再给它追加Φ专属字段。这是对一个具体充分策略的否定，不是候选B的关闭。
+
+**对终点的意义（判断）：** 两种容易继续局部扩建的假接线已被明确排除：直接搬原证书、强制整棵原地板满足本次Stable。下一构造须围绕实际生成的坐标域，交实际读回／更新／再运行／最终Cd观察的统一闭包；其覆盖要能进入全k参照合同。高层内部View及完整1513预算也仍欠缺。不能用本批否定数、模块数或新类型数当作距EBO的高度进展。
+
+**独立复核与主审：** 子路单6G首编：Accept0（61398）；Gd反例前两次42为legal-m显参个数，修正0（92908）；Stable If/Build/Boundary分别0（53108/28838/22533）。独立路逐读终稿并核准限定域。主审亲自读全部五件，精确删这五份接口、只编一条6G，Survey.EBOEndgame连同五件全部重新Checking，退出0（21656，日志 `/private/tmp/EBOEndgame-cold-review.log`）。六个新源码（含汇总）safe/without-K、禁用构造/洞/Funext/UIP扫描0。成功编译器图 `/private/tmp/EBOEndgame-review.dot` 与源码本地集合一致：总汇169节点/本地30；验收子闭包161/22，按职责含EBO；Stable Boundary子闭包139/8，源码18模块/本地8/库10，记号禁用0。没有对验收闭包伪报干净，也没有声称完成成品依赖切片。
+
+README、RESULTS新增入口，mapcheck纳入终点方案的本地链接。原数学结论、src/archive/AGENTS不改；未提交或推送。
+
+## 2026-11-07 实际生成域：原 Φ/ΦX 输出可在给定未来底世界重用
+
+本轮接续完整终点核查，未提升序数站。先检验上轮反例未覆盖的合法输入，再从原程序本身提取输出不变量。新入口 OCF/Lean/CircuitGenerated.lagda.md；这批只新增证明、关系与接线，原前三层定义不改。
+
+### 同一接口的正反结果
+
+CircuitLegalIf 冻结两项独立合同，均只取原 Sb n 底族：LegalTransport 补上合法源高度和源树 LgB 后要求迁移 Gd；NormalGd 要求原 Rich.legT 保当前 Gd。首次宇宙签名用 Set₁ 而实际全族在 Set，退出42；修成 Set 后主审6G0（39716），无变更合同量词，随后冻结。
+
+CircuitLegalNegGd 在原 Sb 1 实填全部 LegalTransport 前提，编译 no-legal-transport。世界来自原 ThirdLeg.W 的0/1参数，源高度合法，input也有全局LgB和旧Gd。触发坐标 activated 的ℕ列首项是新可入Ω分量、下一项零，因此它有新Gd但已证不合法；g仅在这种非法步进形状上触发坏位置。所有合法坐标上的g均零，故不妨碍input的LgB。该反例否定精确合法输入合同，**不是实际Φ输出反例**，不关闭路线。子路首次42为rewrite隐参c/d不显，显式后6G0（85525）。
+
+CircuitLegalBuildNormal 正面实填整个 NormalGd：全 n、全高度、全种类、全部旧Gd输入，原富合法化保持当前Gd；实证还不需lm，但共享合同保留它。Ctx中的Pos正搬、AdT逆搬，和θS/θT的结构递归均实际给出；没有洗成常值或增加Stable要求。6G0（76527）。CircuitLegalBuildActual消费ThirdRunFamily整个原输出族，取原结果proj₂证书，经normal-gd实际再调用同世界原Φ，全目标/全种子量化，不是给定地板；6G0（97108）。同世界重折自身不算完整反馈回路。
+
+### 主审从原输出提取的统一不变量
+
+主审独立查原nodeG、chainG及Sh-Φ发现：keep的转换对**全部裸目标坐标**给旧输入AdT；same链0是k b，后继输出是prev⊞k(b⊞prev)，种子b只被用作递归输入；above直接调用低Acc的Φ。种子没有原样进入输出。
+
+据此新增 CircuitGeneratedIf，共享Full定义为每个Ω根有原世界Pos，且全部raw枝递归Full。OutputClosure只要求**原Φ输出**Full，不要求源或种子Full。首编6G0（50965）后冻结。CircuitGeneratedBuild按原Acc/源树递归实填actual，任意U/w/San、全部合法公共高度、允许目标和GT种子，6G首编0（22651）。这是原程序已有结构的形式化，不是新折叠算法，也不恢复原San的值损失。
+
+CircuitGeneratedFuture：Full经原Pos的增长得到任意给定合法未来底世界的新Gd，新AdT证据无需用于寻找遗漏枝，因为Full已含全部枝。再在**新世界**调用normal-gd，得到同一原normal输出的新证书，然后真实调用新世界中的原Φ；again-full证明再次输出仍Full。全Sb n、整源、全目标与种子；6G首编0（39378）。整个证明不使用被否定的LegalTransport，也不要求normal自身Full。源高度合法来自旧原公共界，新目标路径及新种子显式提供。
+
+CircuitGeneratedX沿原ΦX全部子句实填相同Full：指标更新仍用原sh₀/B，低Acc下降用统一Build.outputs，旧指标种类仍取pk。原ThirdTm.Cn.stp全c₀/n/h/PH参数接入；6G0（72246，早轮42只为Leg.legS作用域，修正后0）。**零目标时Full对任意HB U可由结构给出，所以stp-full只是接线校准，不增加desc证书强度**；非平凡量词在任意非零目标上。原QL/PH并未被Full替换。
+
+CircuitGenerated.Example直接用合法域反例的原合法input：它本身没有新Gd，但经原Φ的真实输出在该实际0→1底世界正规化后，可再次运行，入口首编6G0（4860）。这是正反声明相容及非空参数的校准，未比较高序数信息或FGH，不能作为值测试。
+
+### 整链边界与继承的原机制
+
+独立整链读审核实：Run.At.after是Wd(step(Tw U t))，不等于本次future-gd消费的Wd U。未来底世界及增长证据仍须真正产生，不能由局部升界偷换；本轮未完成此构造。原desc用↓Gd保持QL全族PH，最终才Sh→LgB(Cd)，本来不需要逐层插Rich。NormalGd只保一份当前Gd，不给Rich对QL/PSL全族的保持。原ThirdPS.psStep.Ad已经用“存在未来世界及其PH”实现ad↓，与上轮强Stable的全未来量词不同；这是已有机制，不另算新结果。
+
+独立审核确认Φ输出Full无种子泄漏，未来重用顺序无误，并指出Full可能正因原san可处理所有raw输入而成立。故本轮只消去实际生成输出在**给定**未来底世界的证书缺口；世界生成、原洗法/取枝的值损失、QL/PH及最终Cd覆盖、内部View与完整成本仍在。完整EBO参照的全k覆盖尚未实填，没有新增ψ₀(Ω_x)强度。不能把本轮关系当成已经完成EBO回路。
+
+### 主审复核与文档
+
+主审亲自读9新件及前批ThirdRunFamily三件最终声明/实现；各路冻结并返回后，仅精确删除这12份.agdai，不动旧共享依赖、未用ignore-interfaces。单6G冷编CircuitGenerated，12件全部重新Checking，退出0（15795，`/private/tmp/CircuitGenerated-cold-review.log`）。代码块safe/without-K，禁用构造、洞、Funext/UIP扫描0。源码导入闭包58（本地44、库14），成功编译器图248节点、本地44，集合相等、记号禁用命中0（`/private/tmp/CircuitGenerated-review.dot`）。这是引用隔离，不宣称树自足或成品依赖切片。
+
+前批ThirdRunFamilyIf/Build/NegFill现补齐主审冷编。NegFill的零外补齐→WLPO仅针对所写合同，有零源高度的实例，也给不约束外域的总一扩张作正例；不否定任何总族或局部更新。
+
+Survey/EBOEndgame增加实际生成域后继，保留旧合同否定的精确范围；更新README/RESULTS当前状态，旧“3件尚未主审”的状态已更正。Survey汇总再编6G0（13700）。不改src/archive/AGENTS，无提交或推送。
+
+## 2026-11-07 作者指定两路：旧 TΛ 估值审计与输出驱动完整新闭项
+
+作者明确要求“一路优先审查旧文档并提高TΛ肉眼估值精度，甚至直接试证值；另一路继续输出驱动世界更新→完整下降→统一迭代，做更便于评估EBO的闭项”。本轮按两路执行，第三路只作共用独立审核，不另开研究方向。不能将本批交构造读成已经达到EBO。
+
+### 路一：旧估值具体缺失的整体模拟
+
+TLambdaAudit逐核Third/ThirdVal/ThirdCmp、RecB实际定义：原TN的c₀是世界参数，RecB.TN的m是附加塔高，不能按同名位置配对；原高底bnd(suc n)=legS(suc n)(fl(suc n))自身随n变，不是统一已知Cd界。Root.root-chain全c₀/n逐字给原stp(fl(suc n))的完整指标反馈列，初值fl n，每次原ΦX经legS回灌整HB(Sb n)，没有把所有底输入代成Cd。first-in-terminal给原第一站进入实际TΛ。子路6G0（76443）。尝试把首站对c₀的字面无关性用refl证明时42，声明已撤，不能把浅测试当等式。
+
+TLambdaAuditRank全c₀/lc₀/n/c证明branch-zero及floor-zero：Stage.rk投影下全部原gtX/地板的值为零。默认组件pkT=0使插入的后继组件在rank里归零，Ω子句递归代表枝，ℕ极限保零值。因此旧rk保序定理本身不能直接给collapse值界。actual-positive在原完整TN(one,0)取真实两层极限支给1≤TN；no-rank-upper精确否定TN≤rk(fl1)，6G0（30793）。它**不否定rk加额外闭包变换的上界，也没有证明旧ψ₀(Ω_{Ω·ω})猜测错误**。
+
+当前独立判断：旧“每底只加可数高度”的推断尚无处理原高类型same反馈和全部desc的桥。应先同时控制TN的n/c₀两参数，再审实际外层yΛ；不能据旧估计压低原TΛ可能达到Ω塔的程度。仍无已核准具名上下界，本批没有编造更精准的Ω数值区间。此为旧估值的证据精度提升，不是旧闭项已达到EBO的结论。
+
+### 路二：从完整原高源产生全部槽的输出
+
+OutputDrivenIf冻结WholeRun记录，字段source-path必须实填原整源；output逐字固定为原ΦX。实际算法把每raw m选择的V=Tw(Sb n)m当作底，源为hΩιK(gtX V fb)，比较界是V内合法1，目标零。所以不要求原m合法，也不补一个固定源的界外目标。If最小bot实例是校准；Build参数化pk/pk-bd重新证明源路径并实际运行，最终采用当前world的实际界。If/Build子路6G0（27269/93071）；曾尝试跨pk直接复用bot路径而42，改用同一pk泛型证明后0，没有公理。
+
+主审新增OutputDrivenTop，沿Sb/Tw互递归读取当前world的界，全部可入证书实填；reads-bound明确新kind读第二分量。6G首编0（34687）。这不是总取零；没有组件判等或额外三歧。
+
+OutputDrivenWorld.Driven.State带指标、全槽界和合法性。每槽output是上面的完整高源实际输出，Rich.legT只用于新界，全部槽一起组成真正Wd(Sb(suc n))；next/合法/grows/feedback-admitted及任意轮orbit均实填，6G0（17097）。State.index并不被同层output直接读，尤其Q0在固定低世界中不依当前bounds；不能把该指标的重复累加冒充高反馈。真实动态在非零塔槽、top读取更新后的界，以及随后整体下降。
+
+OutputDrivenFamily给任意更新轮数与真实上一Cd输出的全部worlds/legal，低底逐层保留，高槽运行结果逐底实填，6G0（77153）。没有外给世界族或常值输出填槽。
+
+主审新增OutputDrivenDown.With(worlds,legal)，继承原ThirdTm逐底算法，按这些实际合法世界重新建立own/liftE/QL/Gdn。源路径复用Build整源定理；PH-gtL逐结构给全部Q；原PH-ΦX↓保完整下降。各站用Rich.legS和Top.topS，原输入树未在下降中插入正规化。TN/其合法性完整，6G首编0（90342）。参数已由Family的真正世界实填，而非再交空记录。
+
+OutputDrivenClosed.Round第r阶段用r+1轮更新的全部世界，完整下降第r+1底，累计前项再作合法ℕ极限；closed/legal-closed/fgh无外参数，6G0（2162）。r+1仅是一个调度，不承诺充分传播全部高信息。
+
+为避免肉眼判断暗用depth/rounds单调，追加OutputDrivenGrid：每外阶段k在同一个上一Cd seed上实际运行全部(d,r)≤k的有限方格（含零轮），有限累计，再反馈外阶段。closedGrid/legal-closedGrid/fghGrid及cell-in-closed全实填，6G0（40517）。该定理保留真实阶段seed，不变成固定seed下的全族支配。方格有重复计算，不是新增数学机制或EBO证明。
+
+OutputDrivenValue的output-covered给原实际Q到下一合法feedback的限定Cover，stage-in-closed/whole-family给全部完整下降stage进入同一closed，6G0（83258）。没有把高层Cover穿过任意fold，也没有以阶段包含声称EBO下界。
+
+### 对终点的意义与仍在的风险
+
+此批已经交出作者所要的“输出驱动的整底世界→完整下降→统一迭代”实际闭项；旧CircuitGenerated的外给world参数没有残留在这两个闭项里。新算法通过各实际环境重证完整源的路径，没有强制旧原地板满足上轮Stable，也不需要搬用旧QL。这是把旧代码作为机制数据后改组织的结果。
+
+新world会实读更新后的高槽，但Er仍删穿Ω高度分量的坐标节点，原跨底运行仍在某类节点只读当前代表坐标；改读实际top不等于全枝值无损。因此肉眼可直接检查新运行链，仍不能诚实断言其值达到EBO，未建立它高于旧TΛ的值关系。下一实质值问题应审整源回灌和这些具体损失，不再停留在外给world或单份Gd的接线。
+
+### 成本与主审验证
+
+主审逐读上述12新数学模块（含OutputDriven入口）和独立审核反馈；各路冻结并返回后，精确删除已存在的11新接口及Survey汇总接口，未删除旧共享模块。单6G冷编Survey.EBOEndgame，12新件加汇总共13件全部重新Checking，退出0（72429，日志 `/private/tmp/OutputDriven-cold-review.log`）。safe/without-K、禁用构造、洞、Funext/UIP扫描0。源码闭包与成功图各本地集合相等：OutputDriven源码47模块/本地35，图238/本地35；TLambdaAudit图223/本地20、Rank图224/本地21，均记号禁用0。汇总图279/本地75按其验收职责含EBO，未报为产品干净闭包（图 `/private/tmp/OutputDriven-review.dot`）。
+
+随后单6G成功生成Grid的全高亮HTML，退出0（22589）；失败轮HTML没有用于切片。新增Survey/scripts/outputdriven/locslice_outputdriven.py继承原Third对CRw仅用FGH的处理，原参数化Φ/San/路径手工补根，本地模块别名补到不动点，标准库同既有口径不计。当前同步对角闭项、合法及FGH为1148，全方格1160，均20个定义切片本地模块；不排本地依赖。抽查Rich合法化的θS/θT、位置与合法证明全部在切片中。**未含新增内部View的验收，且仍有语法切片局限，不是完整1513成品认证。** HTML及报告材料在 `/private/tmp/outputdriven-review-20261107/`。
+
+README、RESULTS和EBOEndgame§8按两路结果更新，历史原数学结论不改；旧TΛ低估不再作为新路线的既定前提。无src/archive/AGENTS改动，无提交或推送。
+
+## 2026-11-07 暂停扩建：closedGrid 的实际值校准与完整模拟断点
+
+作者接受先分析现有闭项高度、以旧TΛ作对照的建议。本轮没有新增候选或修改原树／折叠／证书；分别核实际首底、全底保留片段与BTBO标尺桥，结果均返回后由主审读取最终代码、冷编及核导入闭包。本批没有提高仓库的已证前沿，也没有给closedGrid的BTBO／EBO下界或整体上界。
+
+### 同一实际零底：轮数不是重复高坍缩
+
+GridValueBase.all-zero-depth、GridBaseFirst.first-grid用refl证明全部实际外种子、合法证明和rounds上的零底完整下降相同；base-in-grid把它放入真实最终方格。GridBaseFirst.whole-root逐字展开原高源的整条chainG，未替换gtX为有限截断或单地板。两篇重叠的接线不算两项强度结果。子路6G0：GridValueBase（18572）、GridBaseFirst（70208）。
+
+GridValueIndex.zero-output对所有原Driven0状态证明零高度槽输出恒为first；index-step及all-states/initial-index覆盖全部实际更新轮数，指标仅反复追加delta=Rich.legS0(first)再取后继。因此这条指标更新不是c↦ψ₀(Ω_c)的迭代。非零槽、完整世界及全方格没有被证明常值；不能把该等式读成整体上界。子路6G0（7868）。
+
+源码审查另发现：首底H的Rich在原指标事件入口作用一次；gtX S⊥内部没有同一XSof的指标new事件，above的Φ也不再次调用Rich。下一次外chain回调才再正规化新坐标。这是源码分析，未另计值定理，尤其不能把世界下一轮delta的完成次数混入first。
+
+### 全部可数高度的洗法，与全部底的保留片段
+
+GridCheckCountableSan.sf-success覆盖任意fb:Cd、全部m:Cd及全部Tw S⊥ m原kind，原sf总成功。lower/upper用结构归纳给所有裸输入的san前后双向≤ᵛ，Actual实填原fb=hz。因此首底没有高底穿Ω高度的删根机制；这不把高层同值穿过折叠。子路6G0（66339）。
+
+GridBaseKeep.Kept.inflation覆盖任意合法底／世界、真实B公共界和原component0(up a)源，允许a含任意底Ω，不要求a合法或分支值单调。Actual.floor-kept对全部n实填原fl n。源走bas keep而不经Er；尚缺此片段在完整高源输出中的捕获及穿过全部后续desc。子路6G0（11025）。局部不缩不能当最终Cd值已不缩。
+
+### 具名校准：ε₀下界，只校准新候选，不是前沿推进
+
+GridBaseTowerCore.pure-cover对任意GT0种子和任意该纯源PH比较原ΦX与P one，不要求两份证明相等，不用ΦX一般值单调性。actual-inner用refl核对它就是原First.H(hz,tt)内的完整chain；coordinates覆盖全部n的纯ω幂塔，得到tower-in-first及tower-in-grid。GridBaseTowerAccept接既有CalibrateTower.A≤E和CalibrateAccept.epsilon≤A，得到原ε₀参照≤first≤closedGrid。子路分别6G0（86474／29748）。该具名下界远低于接手前基座，不是从ε₀重新攀爬，也不表示原闭项只有ε₀；没有新上界。
+
+### BTBO桥未填与条件诊断的纠偏
+
+直接逐项Read不能照搬：作者BTBO的ψ< p zero给目标Ω，而原Φ/ΦX的zero给1（包括非零目标）。需检查gtX在实际目标层的累计前缀能否补给相应地板，并保持完整same／above链。不能忽略前缀后套用只含底component0的GridBaseKeep，也不能凭原累加较多就假设任意fold加法单调。
+
+实际keep还在读分支前重建坐标san j e。早期分析据此建议新增生成域证书，主审随后追问是否只是内涵重建：GridCheckCountableSanExt在显式Funext前提下证明全部上述san等于恒等函数，branch让任意g消费此等式；Actual固定原fb=hz。子路6G0（89211）。前提在外延函数等式解释下成立；本文件不给无条件Agda实例。这是允许的第4层条件诊断，不进定义或证书，更不是无条件BTBO值桥。
+
+因此“必须另添生成证书”已降为一种可研究的无FE证明路径；不能把尚缺内涵相容证明说成数学缩水，也没有否定任意g相容。下一条完整模拟可先在条件诊断下检验其余结构，再寻找实际结构分支的无FE证明。零项、累计链及每次回灌Rich的整体比较仍未完成。旧TΛ对照没有新增值界，也未比较它与closedGrid。
+
+### 主审与导航
+
+主审逐读8新数学文件和陈述。第一批只精确删7新接口及Survey汇总接口，单6G冷编退出0（83028，`/private/tmp/GridValue-cold-review.log`）；日志7新件及汇总全部Checking，另因既有入口时间戳重查OutputDriven。补充Ext返回后只删Ext及汇总，单6G冷编退出0（9134，`/private/tmp/GridValue-ext-cold-review.log`）。无共享依赖ignore-interfaces，无洞、公设、停机／正性逃生、UIP。8件均safe/without-K；Funext只在Ext作显式条件，纯幂塔及ε₀下界无此条件。
+
+成功编译器图与源码本地集合逐根相等：Base／First均238节点／本地35，Index239／36，Keep150／19，TowerCore276／73，Check139／8，Ext140／9，均记号禁用0。ε₀Accept332／116，按验收职责含18记号模块；Survey最终374／158也按验收职责含18，不伪报成品干净。图在`/private/tmp/GridValue-review.dot`与`/private/tmp/GridValue-final-review.dot`。原OutputDriven仍238／35、源码47模块，未引入本轮验收或Funext。这是引用隔离检查，不是成品切片或内部View验收。
+
+README替换当前任务摘要，RESULTS分开登记无条件校准和Funext条件诊断，EBOEndgame§9记录完整模拟断点，ResearchHistory§11.2说明为何暂停扩建。原数学结论、src/archive/AGENTS不改；无提交或推送。
+
+最终mapcheck退出0：README3名字、RESULTS3931名字／330表行、HANDOFF568名字、244本地链接均无问题；首轮把数学式误当文件名的提示通过移除其代码引号修复，未改检查器。git diff --check退出0，src/archive/AGENTS差异为空。
+
+## 2026-11-07 作者授权定向简化：完整 EBO 保值改写与前缀证明规则
+
+作者先提出评估，再明确“开始执行此方法”：从旧翻译路线已有闭项作定向简化，建立定义改动与值证明改动的对应，给直接树路线提供值证明经验。主审先读BTBOFull/V1/V3/Emb、EmbVVMain/Force/Tree、EboLean3/Tree/View/Closure及封存政策。没有重开旧Ladder/Cross克隆，不修改旧数学文件或src/archive；完整EBO参照作主实验，前缀代数只作配套规则，不能代替主实验。
+
+### 完整 EBO：先融合，再去掉证书往返
+
+DirectedViewIf.cached沿原Acc′直接生成E.Ord：旧hcA→HC→tree两段合并，内部ω后继改为fω(vω t e)n，rule6用已有fΩ/γ的视图反馈。第一次主审编译42是将Trian记录当成<ᵀ使用，先取t<再subst后6G0（71754）。CacheContract固定全部程序、量词和任意旧HC的Same比较。构造支发现私有where无法在外部陈述泛c/e消去；主审仅将where命名为CachedStep，逐字保留go的全部方程，合同字段／前提不变，增加公开消去名字，6G0（79998）后再次冻结。这是工程可见性补充，不是发现数学否定或改变合同量词。
+
+DirectedViewBuild.sound覆盖任意NF、Ctbl、Acc′和任意旧HC，子证书在fω-eq下显式运输，再用cast-tree接回；不假设证书相等、UIP或函数外延。子路6G0（41322）。DirectedViewBuildClosed.branch直接normal-tower/countable-tower/wf→cached；旧hc-tower只出现在branch-sound里。closed-sound、完整Ω塔双向full-EBO、FGH逐点fgh-reference均实填，6G0（6159）。这一步仍逐项同形，后继改写不必被限制为同形。
+
+首次同口径执行切片原1500／cached1501，虽删掉HC中间树，未省行。主审继续查到三个证书往返：cl-fsn-NF、Ctbl-fsn、trian-fsn原本从View推到fsn，新cached又subst回来。Closure已有NFω/Ctbl-fω/Tω，因此新开DirectedViewDirectIf.direct，直接消费三者，运行算法不引用fω-eq；主审6G0（53384）冻结。新DirectBuild证明仍只在第4层用对应等式搬旧HC，6G0（76945）；DirectClosed仍wf→direct，无旧HC运行源，全Ω塔双向值与FGH逐点均过，6G0（56413）。这是真正删除定义层的表示往返，而非为证明方便改旧算法。
+
+独立读审核对：两版改变了所有内部ω递归目标，不是外层包旧tree；rule6在一次取项中的γ反馈持有同一个VΩ，但vω表达式仍在λn内，不能说全部n仅构造一次，也没有性能基准。View算法原本已在仓库，新增的是整树执行与证书组织。Direct仍依赖T/ψ/cof/cmp/NF/InG/GB/记号序良基性，不是最终记号无关成品或新强度。
+
+### 配套树侧规则：地板移入前缀，反馈用旧单调性
+
+主审冻结DirectedPrefixIf的两种算法和正反合同，6G0（88881）。pointη在zero给η、ℕ极限逐项；unary在zero给1、ℕ极限累计，全部底Ω根保留。DirectedPrefixBuild实填PrefixLower：η≤unary A则pointη a≤unary(A⊞a)，覆盖全S、全部rawΩ分支。inflation对所有A给实际可满足前提。Cd反馈old_{n+1}=pointη(old_n)、new_{n+1}=unary(A⊞new_n)的全部坐标及整个ℕ极限比较均证明，使用point-mono再接lower，不假设unary单调。子路首轮仅空模式42修后6G0（79473）。
+
+DirectedPrefixActual对任意原底／合法世界／合法公共B／允许目标路径／GT种子，将原GridBaseKeep component0的完整输出逐形等同unary；mulG/ΣG分别全n对齐，无证书相等或FE。prefix-lower已接回该真实程序，6G0（33910）。它没有覆盖完整gtX前缀、same/above或后续desc，不能把它冒称EBO改写。
+
+DirectedPrefixNegReverse在同一共享接口实填全部Lg及基值双向前提，用η1/A0/a=hl(const0)证明泛反向律不成立；6G0（46624）。DirectedPrefixNegMono进一步在合法同值a与0上证¬UnaryMono、¬UnaryCongruence，6G0（19766）。全无限常零列被证明，不是有限测试；只否定精确合同，不否定特定生成族的吸收、单向规则或路线。独立审核确认反馈证明没有偷用这个已否定的新算子单调性。
+
+### 主审冷编、依赖与同口径成本
+
+主审逐读11新数学文件及独立终审。第一批精确删8新接口及汇总，单6G冷编Survey.EBOEndgame，9件全部Checking，退出0（97499，`/private/tmp/DirectedSimplification-cold-review.log`）。第二批仅删3新Direct接口及汇总，4件全部Checking，单6G退出0（85112，`/private/tmp/DirectedSimplification-direct-cold-review.log`）。无共享ignore-interfaces，11件safe/without-K、禁用构造／洞／Funext／UIP扫描0。
+
+成功图与源码本地集合逐根相等：CachedClosed167节点／本地28；DirectIf165／26，DirectBuild168／29，DirectClosed169／30，按研究角色仅禁用表EBO命中1，不伪报干净。PrefixIf134／3，Build136／5，Actual155／24，NegReverse136／5，NegMono137／6，均禁用0。原OutputDriven仍238／35、禁用0，未导入本轮记号实验。图`/private/tmp/DirectedSimplification-review.dot`和`/private/tmp/DirectedSimplification-final-review.dot`。
+
+两次单6G成功HTML生成（33933／71108），材料`/private/tmp/directed-review-20261107/html`，失败轮HTML未用。新脚本Survey/scripts/directed/locslice_directed.py继承既有定义级切片与两条AgL别名补根。三侧同取E.Ord程序与E.FGH、库依赖不计：旧1500，cached1501，direct1420，净省80。Direct移除105行、增加25行；HC、fsn/fsn0/fsn₊/fsnc、fsT/fsT0/fsT₊/fsTc/γT、cl-fsn-NF/trian-fsn/Ctbl-fsn和fω-eq/fΩ-eq/γ-eq均不在其执行切片。原始逐块报告`/private/tmp/directed-review-20261107/slice.txt`。这些对应等式仍留在验收源文件／导入模块中；语法切片不是完整隐参审计或编译器隔离提取。这里只比较同一执行口径，不把1420与1513的全层全根标杆混为一谈，更不宣称符合成品的无记号／内部View要求。
+
+README替换当前行动并补翻译账，RESULTS登记完整EBO改写与前缀正反，EBOEndgame§10列定义／证明对应表，ResearchHistory§11.3补方法转向。旧闭项不改，旧封存结论不变；未提交或推送。
+
+最终汇总暖编单6G退出0（58344）。mapcheck退出0：README3名字、RESULTS3954名字／332表行、HANDOFF568名字、260本地链接均无问题。git diff --check退出0，src/archive/AGENTS差异为空。
+
+## 2026-11-07 转到真正树侧高闭项：TreeEmit 保值改写与成本诊断
+
+作者追问并明确区别“记号＋良基性生成EBO参照”与“旧树侧翻译闭项”。主审承认前轮是标杆程序改写，不能冒充后者；作者接受并要求以EmbVV已验ψ₀(Ω_{Ω·ω²})的真实树侧实例开始。此次原Ladder/EmbVV文件只读，在新模块保值改写实际HB ω²ᶜ端行；没有向封存族继续攀爬或生成克隆。
+
+### 先核定要删的东西是否已有依据
+
+主审和三路分别读EmbVVInstO2/Main/Force、ValLabLadder的V/IsF/ClosRow、原Q/ι↓/ψᵠ/Ψ/ψ̄定义及D-self。原D-val只覆盖η0；ι↓遇omk读取低字段z，三个折叠读取主体x。原Ω̇的构造虽给x=ιz，仍缺完整反馈下的相容证明；不能把Dn缺构造子判成数学否定，也不能直接把IsF rη替成V nη。
+
+Free.Force.gc本身已是实际轨道证书，不量化任意环境。原rowC经ψ̄本就落成同生成／观察分支的ŝ，故只把gc再包装成Orbit、或把rowC写成“单通道”都不是实质简化。选定真正可执行的一步：融合底目标的Run→Ordˢ zero→toZ，保留非零目标原反馈，不外包已算好的V或只改最外lim。
+
+### 冻结合同与实际轨道证明
+
+主审新增Free.OrbitRewriteIf：Pointwise在相同字面闭包界c、相同η/e处比较分支；OrbitTransport返回由原G运输得到的指定H及forceoldG≅forcenewH，不要求任意新H。Align.TreeEmitIf固定EmitContract，并配套更强RawDownErase的否定检验。两件主审单6G首次0（92777）后冻结，未改量词。
+
+Free.OrbitRewriteBuild.move对全部Pointwise/Goodᴺ实填，gl/gc搬相邻步进；gc字面保留原ys/hy/dy，所有G0/Gg/Go0/Go沿原实际坐标递归运输，l0/lE与输出步进经同形接回。子路前两次42只为out命名冲突与隐式类型未定，补显参后6G0（66054）。没有FE、任意函数跨同值层号相容、或证书相等假设。
+
+TreeEmitBuild.emit逐全部Q构造直接生成Z，qs用Z加法和迭代融合；qi的非零目标仍原ψ̄/ac ev和Ωˢ种子，Ω两类仍原chainᵠ/ψᵠ/Ψ、intoU/V、cap和世界增强。qcl原bound/upd-ok/upd-ev保留；qclo原界与evη更新保留；omk原解释读取x不改。sound对任意输入、当前世界和目标0参数给old→new Pointwise，非只Ω̇样本。子路命名冲突与隐藏φ作用域修后6G0（53338）。
+
+### 闭项与高值确实接到原端点
+
+TreeEmitBuildClosed.Rows对全部HtB/m/α给raw/good/tree/legal/old-new。raw=emit(Ω̇ mα)，good=move(sound)(原GᴺTᵠ)返回的H，tree=force raw good。实际closed逐字Rows(HB ω²ᶜ).tree end zero，closed-legal与fgh齐全；不是低首站，也不是投影原V作为新raw。首次Closed6G0（84483）；后来将good/tree/legal/old-new共同置opaque以控制展开，最终6G0（89152）。数学定义和陈述不变。
+
+独立TreeEmitBuildAccept只读旧值参照：All.new-old先取old-new对称，再接原V-G；FGH逐点同形继承。泛型transport-value将两向值界运输，不对具体vv-ω²作with展开。closed-value:VV closed tω²正式继承原ψ₀(Ω_{Ω·ω²})完整双向值。6G验收数轮251（83981/30563/56450/78468）无类型诊断，严格只记堆耗尽；其余路均无Agda时主审授权单12G，约65秒退出0（22872）。旧高值导入闭包本地291模块，未删旧接口或降低数学目标。
+
+两独立路最终逐字核准：qi未误用目标0的emit取代非零Run；Ω反馈与世界更新未丢；同一η/d的Pointwise未扩大；新good与old-new为同一次move的两投影，opaque不构成证明相等假设；高实例确接完整端行。新定义/证书不导入记号验收。
+
+### 正式反例限定通用下降删除
+
+TreeEmitNegRaw在HB(cs cz)的low end<end、同界2世界实填所有Ok/Eh/Ev，取omk zero q0(qs q0)，编译no-raw-down-erase，6G0（97658）。纸面初读误把两底输出称1/0；原ψ̄ q0其实给Ωˢ0=1，qs给重复极限，最终陈述已纠正。此处()只否定结构同形，不偷读成值不等。
+
+TreeEmitNegValue进一步实填两端Goodᴺ：自然数迭代完整归纳，gl/gs/gz与相邻≺s步进；two-below及no-value-upper证明直接输出含2，而下降输出1，故确实不保值。首次42误用未导出的≺→⊑，改为原≺s后6G0（62950）。反例两字段不满足原Ω̇的生成关联；它只否任意裸Q的合同，不否实际生成域或本方法。
+
+### 主审从头复核与依赖隔离
+
+各路返回冻结后，主审逐读8新数学件；只精确删除这8份.agdai，不碰旧共享接口。定义链5件全部重新Checking，单6G0（17770，`/private/tmp/TreeEmit-closed-cold-review.log`）；反例2件重新Checking，单6G0（90451，`/private/tmp/TreeEmit-negative-cold-review.log`）；独立验收重新Checking，单12G0（5276，`/private/tmp/TreeEmit-accept-cold-review.log`）。禁用构造、洞、Funext/UIP扫描0，全部safe/without-K。
+
+主审新增干净导航入口TreeEmit。首次using把模块名当普通名字产生警告，改为using(module Rows; module High; ...)后单6G0无警告（85841）。入口不导入验收或反例，不额外增加成品实际依赖。
+
+源码闭包与成功编译器图本地集合逐根相等：OrbitIf145节点/本地8，Build146/9；EmitIf150/13，Build151/14，Closed180/43（源码53模块），入口181/44（源码54模块）；NegRaw152/15，NegValue154/17，均记号禁用0。Accept507/291（源码307模块），按职责含8个禁用记号模块，不伪报干净。图分别`/private/tmp/TreeEmit-closed-review.dot`、`TreeEmit-negative-review.dot`、`TreeEmit-accept-review.dot`、`TreeEmit-entry-review.dot`。
+
+### 成本未下降：保值改写不是压缩成果
+
+单12G成功生成验收全依赖HTML（97853）；此前在HTML尚运行时的一次切片重定向因目录未建立而失败，没有产生或使用切片结果。最终只用成功HTML，材料`/private/tmp/treeemit-review-20261107/html`。
+
+新脚本Survey/scripts/treeemit/locslice_treeemit.py采用同一切块器，将opaque在计数视图等长识别为mutual（不改源码／HTML位置）；补可达模块别名至不动点，库依赖两侧均不计。旧根为ValLabLadder.V/GV、forceᴺ-HS、FGH，加实际HB和ω²码；新根closed/closed-legal/fgh。成对切片旧7351行/39本地模块，新7483行/42模块，增加132。两侧都仍到达原GᴺTᵠ、Goodᴺ、ψ̄ᵠ；新侧再到达sound与move。报告`/private/tmp/treeemit-review-20261107/slice.txt`。它是定义级语法近似，未含完整内部View审计，不与上一记号标杆或1513认证混同。
+
+本例保住高值并提供与阶段无关的实际轨道运输，但并未得到更小的完整树侧定义。原合法性证书生产仍整套继承，新增证明还进入第三层，因此不把它列压缩成果。下一优先诊断是新程序自身的结构证书生产及实际生成域闭包，不能只凭末端代码短就继续叠融合；这不否定定向改写或非零生成域路线。
+
+README更正当前对象与成本评价，RESULTS分列保值新闭项和精确值否定，EBOEndgame§11/ResearchHistory§11.4记录标杆与树侧之别及本例因果。原封存数学、src/archive/AGENTS不改；未提交或推送。
+
+最终Survey汇总单6G暖编退出0（95163）；mapcheck退出0：README3名字、RESULTS3981名字／334表行、HANDOFF568名字、272本地链接均无问题。git diff --check退出0，src/archive/AGENTS差异为空。
+
+## 2026-11-07 允许改值的大幅简化：TotalOrbit
+
+作者明确“可以不是保值的压缩，只要能证明值就行，请大刀阔斧尝试简化”。本轮不再要求同一轨道；原src/archive/封存数学只读。
+
+### 新闭项与值的分账
+
+Free.TotalOrbitIf先冻结接口。Build/Run直接对全部Z运行：lim部分和；反馈坐标ζ0=c+run t、ζnext=c+run(gζbound)，prefix保证可调用原界；真实观察输出再累计。递归通过原Z子树和函数分支，没有Goodᴺ、GNT或forceᴺ。Build首轮42仅out撞名，改outputs后6G0（1348）。Run从Build原样搬出，没有再次改算法。
+
+TotalOrbitClosed完整输入原HB ω²ᶜ/end/zero的toZ(ψ̄ Ω̇)，不是V投影或低首行，6G0（29045）。Source隔离同一raw。直接保留OrdI的Native表示及逐点FGH对应也过，但其⊑I不是字面第一位置；据独立审修正文档，不冒充成品View。
+
+RadicalValueNativeFinal改为ΣCd LgB：整个新输出忘到Cd后leg，子对象仍同类型，极限保留字面⊲，三条FGH方程refl。值证明分离到NativeAccept。original-lower仅证未完成TotalOrbit输出≤完成树，未继承旧ψ₀(Ω_{Ω·ω²})。一次42缺end导入修后0（64451）。
+
+切片发现原CRw.leg引入整塔Fold/Path实例；Free.LiteralCompletion只按原相同方程提供Σ/leg/Lg/FGH，不改旧CRw。Accept对新函数重新归纳right-add/item-sum/inflation，没有错套旧leg定理，6G0（48737）。最终生产导入闭包干净，不含旧Good或记号。
+
+### 配对反例与另外两路
+
+TotalOrbitCompareIf冻结SameValue/OldLower；RadicalNegTotal实填全部旧Good：常一极限旧值1、新值含2；bad旧轨道恒1、观察值1，新轨道恒2、观察全零。因此泛保值与泛旧值下界均否定，6G0（25465）。反例没有被证明来自Ω̇，不否定实际生成域。RadicalNegJoin另证指定递归join不保合法输入左右前驱包含，6G0（37035）；不否定值max或其他完成。
+
+RadicalBuildIf/Kernel/Generated/Syntax四件6G0（65833/56207/23895/77680）：单字段mark、全context精确读法、全Ω̇准入、ι/ι↓任意输入输出平衡、全部原Ω行编码。Balanced不递归低坐标及qĉ已有Z，Us/Vs仍旧Q，移位仍可能物化ι。没有整Program执行与自产高证书，不报净压缩。
+
+RadicalValueOrbit/Accept两件6G0（33941/5426）：丢掉Q/Flr/Env/cap，只用作者原J作闭包与对角；第一整轨道确为BTBO，named-lower接BTBOFull给ψ₀(Ω_Ω)下界。只是短定义校准，不算超过接手前沿，高函数层增值与高种类覆盖尚未证。
+
+### 主审复核与成本纠错
+
+三路冻结后主审逐读，只精确删19新数学接口及Survey接口，单6G全部重新Checking退出0（14049，`/private/tmp/TotalOrbit-cold-review.log`）。新增LiteralCompletion并分离验收后，再只删这三新接口及Survey，单6G冷编及HTML退出0（75834，`/private/tmp/TotalOrbit-completion-cold-review.log`）。无共享ignore-interfaces或删旧共享接口。两独立审核准全高源、坐标界、Balanced范围、ΣView和新leg的值归纳。
+
+本轮20新数学件safe/without-K，洞、禁用构造、Funext/UIP扫描0；源码与成功编译器图逐根本地集合一致。最终生产图153节点/本地16，记号禁用0，无Force与LadderOrdMain；单向验收图160/23，同样禁用0。短算子具名验收按职责含18个禁用模块，不进生产。图`/private/tmp/TotalOrbit-final-review.dot`。
+
+成功HTML在`/private/tmp/totalorbit-review-20261107/html`。初次auto只生成md，改all后才用于切片；缺少的旧侧HTML取上轮成功材料，旧源未变。初始1344漏record实例，补根后纠正1542，此1344作废。纯OrdI版本1323只有弱View，不作成品数。第一位置版本初1926，提取LiteralCompletion后最终旧7351/39模块，新1418/16模块，减少5933。两侧计闭项/合法性/FGH，新侧另计第一位置View；显补run与实例、别名根，库均不计。
+
+脚本`Survey/scripts/treeemit/locslice_totalorbit.py`、`locslice_totalnative.py`、`locslice_totalfinal.py`；报告`/private/tmp/totalorbit-review-20261107/{slice,native-slice,final-slice}.txt`。均为定义级语法近似，不将1418当1513完整认证或高值定理。
+
+README、RESULTS四行、EBOEndgame§12、ResearchHistory§11.5已更新。下一优先是实际Ωd/rowC更新世界的新旧反馈模拟，不盲叠高项。mapcheck0（4023名字/338表行，291链接），diff--check0；src/archive/AGENTS差异为空。未提交或推送。
+
+最终文档校正后Survey及全部HTML单6G暖编退出0（55559）；有效最终切片再次复算7351→1418。mapcheck再过，292链接无问题；diff--check及受保护目录差异仍为空。
+
+
+## 2026-11-07 冻结 TotalOrbit 后独立证明其值
+
+对象仍RadicalValueNativeFinal.closed的原HBω²端行；本轮生产定义未改。
+值主入口OCF.Align.TotalValue。严格下界HighStrict.strict-lower:
+suc NC.BTBOᴵ≼read Final；NegStrictAudit.no-reverse/not-btbo-upper
+用ValueJudgeBase全Ordᶜ良基反自返明确排除Final≼BTBO。不是
+ψ₀(Ω_{Ω+1})或旧ψ₀(Ω_{Ω·ω²})定理，终项准确值与具名上界未交。
+
+第一组59冻结数学件及Survey.TotalValueReview，由主审协调停编后仅
+精确删除本批新接口，从头单6G全部Checking，退出0（91551）；
+`/private/tmp/TotalValue-cold-review.log`、`TotalValue-proof-review.dot`。
+逐根源码/编译器本地闭包一致、安全扫描通过，记录
+`/private/tmp/TotalValue-audit.txt`。RecoverRun只在可判定的HtB高度
+等式上使用安全Decidable⇒UIP，不是加入UIP或裸OrdI判等。
+
+证明机制：ActualTrace通过检查器求解取得原private where反馈，
+TraceShape逐Nat部分和给整树同形，不改Run。EmbeddingValue/EmbeddingOps
+把有界前驱嵌入转值界并复合；Cumulative四件重建旧V1/V2/V3后，
+CumulativeLift用下一次ψΩ把值界提升为可回灌嵌入，代价为错一轨道。
+BaseConsumer/BaseWhole因此覆盖完整原rowB全部原反馈，不是有限样本。
+TailBaseWholeUpper以旧γ预算支配实际坐标/输出/累计，得到全rowB
+双向BTBO。HighActual/ClosingStrict/HighStrict从真实闭包站经原两层链
+把严格下界送入最高闭项。PureEmbedding/TailEmbedding处理跨极限
+分支相容；没有假一般值序可逆。
+
+Recover五件完成全部HtB、实际cap环境的非零参数1跨层回收；未推广
+任意η。GenIf旧强域、AdmittedGen五件与RelatedGen六件分别保留，
+不能改旧合同假装早已全填。Admitted qi只接结构自相关输入，marker
+仍是字面body=ιlow；Related改为低Gen+body Core+Rq body(ιlow)。
+后二域均全Ω̇、原ι/ι↓准入，RelatedOps还封原⊞/重复/原完整chain。
+这些是生成域闭包，不是全参数ψ/Ψ恢复。
+
+TransportSuccessor正反通勤单6G0（15002、87940）。Limit最初直接把
+f j作匹配索引触发Agda内部154，不当数学否定；Frame把四个索引
+显式泛化，保持最终陈述不变，正向41308/0、双向95145/0。qΩ
+显式逐点out/intoU相消，marker只在头部消去，不需Funext。
+额外TransportMarker独立首编41816/0。未改生产或旧接口。
+
+TailHighChain/Shape完整保留最高两层累计与真实首头（原𝟏L底读值
+不能按名字当1），首编1398/36024/0。HighExternal用固定外部参照
+通过累计V2+吸收V3控制末端leg（53009/0）；HighBaseFinal把全base
+前提真填，完成后仍双向BTBO（27232/0）。HighRegular/Generated
+逐原Q全构造、世界与完整反馈证明实际底输出SV（58754/60229/0），
+不要求raw seed/g严格；HighFinal最高源SV实填（5375/0），最终上界
+规则只余外部HS/St y及原高输出≼y，此具名高界尚缺。
+
+独立审查新入口NegAdmittedReview（57634/0）、NegStrictAudit
+（81724/0）、NegTailHighReview（83947/0）、NegGeneratedReview
+（99602/0）重陈述全量结论与真实实例。生产仍1418语法近似，不把
+验收证明接回成品。无新FGH比较，无旧高值继承，无EBO验收。
+
+
+本轮下界进一步加强：ClosureOmega 对原完整真实轨道逐n证明
+seed+n≼第n部分和，由全observer正性给seed+ω≼whole。
+HighOmega把此接同一真实clos、两层链与Final，得到
+ψ₀(Ω_Ω)+ω≼read Final。主审69417/83020/0，独立NegOmegaReview
+2959/0；不写成ψ₀(Ω_{Ω+1})。
+
+RelatedGenTransport/Psi/PsiHeight已各单6G0（29630/96256/55492），
+原ψᵠ、跨高度Ψ的获准生成保持现已完整实填，含实际upd/cap与全部
+keep/same/above反馈。局部UIP只用于既有可判定Ht高度，非OrdI。
+主审按独立审查仅修RelatedGenUp的过时文首，未改数学。
+
+TailRecoveryPair/Marker/Successor三件各6G0（92938/74437/97911）。
+Marker给全部原ψ/Ψ/ψ̄及新run的生成marker重写，原Ωdot参数全实例；
+Successor对任意m/a的真实FΩ(suc a)逐字全chain证明coordinates-gen，
+whole-clean只去当前marker，保整极限。全η恢复仍缺原ι与ι↓在
+两侧各自实际反馈中的观察耦合。不能只缩小Cross输入却返回旧Rq：
+keep的旧Rq回调量化所有raw，不附Gen。该量词核查是纸面缺口，
+不是编译否定定理，不据此关闭路线。
+
+所有研究路停止新增后，Survey.TotalValueReview汇总本轮98件已0
+模块。主审只删这98件新接口与该新汇总接口，不动生产或旧共享，
+开始单6G全量冷编。完整最终审计状态另记其后，不用途中日志认证。
+静态安全扫描98件通过；生产源码/编译器本地16集合一致、记号禁用0，
+新值证明不进入成品。静态记录`/private/tmp/TotalValue-final-static-audit.txt`。
+
+
+最终全量冷审退出0（95469），日志`/private/tmp/TotalValue-final-cold-review.log`，
+全部98件均有实际Checking，依赖图`TotalValue-final-proof-review.dot`。
+逐根源码/编译器本地集合一致、安全扫描通过，最终审计
+`/private/tmp/TotalValue-final-audit.txt`。没有Funext；两处安全
+Decidable⇒UIP均只用既有HtB高度判等。成品源码/编译器本地仍16件，
+记号禁用0，98件验收未接回生产。全组汇总Survey.TotalValueReview，
+后继阅读入口TotalValue已按三种Gen版本、实际结论与缺口整理。
+
+最终文档更新后EBOEndgame与TotalValue单6G暖编退出0（24548）；
+mapcheck通过（299个目标），diff--check0，src/archive/AGENTS差异为空。
+未提交或推送。准确值与高阶整反馈观察耦合仍未证明，任务未以高值完成。

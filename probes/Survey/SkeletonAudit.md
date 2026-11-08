@@ -1,5 +1,8 @@
 # ψ₀Λ 候选闭项骨架的总审: 一切在类型上封顶的地方
 
+<!-- historical-scope -->
+> **时间与用途（2026-11-07 导航补记）：本文记录 2026-11-05 的审查或决定。** 因子化陈述与类型事实是具名结果；读法封顶仍是判断，不能用它替代序数值上界定理。 当前行动见 [probes 入口](../README.md)，历史关系与后续更正见 [研究历程](ResearchHistory.md)。以下原结论保留。
+
 > Fable 5.1 独立审, 2026-11-05. 作者原话 "两个都派" 中的 "先做骨架总审" 一路. 读法: **先读代码与定理陈述** (`HtTowerTy`, `HtTowerFTree`, `HtTowerFClosed`, `HtTowerNRead`, `FamFoldOne/All`, `LvRdIf/Pkg/World/Fold/Val/Shape`, `LvTopIf/Tower/Inst/Val`, `LvKtIf/Tower/Inst/Val`, `KcFoldIf/Top/Tower`, `DnFoldIf/K/Ev/Rd/Br`, `GenFoldIf/Tree/Run/Rd/Ev/Inst/K`, `LvRdWk` 的 `σ₀`/`lvShapeδ`, 各 `Neg*` 的陈述, `HtTowerNeg.no-retract`, `HtTowerNStage.no-wmatch`, `Barrier`), 自己判断之后再读各入口的判决段, `README` 现状表, `LOG` 相关条目, `StallDiagnosis.md`, 手册 §3. 读法与入口不同的地方在 §0.3 与 §1.3 明确指出.
 >
 > 档位: **[定理]** 已编译 (写出文件与名字); **[实验]** 本次新编译 `probes/OCF/Align/SkelDxGen.lagda.md` (退出码 0, 4.9 秒, 峰值 0.93G; `importclosure.py OCF.Align.SkelDxGen` 禁用表命中 0; 无公设, 无洞, 无停机或正性编译指示, 无 `trustMe`, 无 `Funext`, 不开 K; 代码 103 行); **[判断]** 纸面. 强度一律写 ψ₀(Ω_x). 本文不否定任何路线; 没有定理支撑的地方都写 "未走通" 或 "判断". 不改任何已有文件.

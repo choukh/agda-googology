@@ -1,5 +1,8 @@
 # 路线审查 2: 是否在通向纲领目标的正确道路上, 风险, 预防
 
+<!-- historical-scope -->
+> **时间与用途（2026-11-07 导航补记）：本文记录 2026-11-05 的审查或决定。** 其中风险和后续措施须连同后来的闭项、受阻与骨架审查阅读。 当前行动见 [probes 入口](../README.md)，历史关系与后续更正见 [研究历程](ResearchHistory.md)。以下原结论保留。
+
 > 2026-11-05. Fable 5.1 独立审查, 不以统筹者的结论为锚: 先读代码与定理陈述, 再读地图与日志. 三档严格分开: **定理** = 编译过 (本次复核过的另注 "本次复核"); **测试** = 有限样本; **判断** = 纸面. 按项目规则, 没有编译过的否定定理就不说路线被否定, 只说 "未走通 / 暂停", 或明确标为判断.
 >
 > **读了什么.** `AGENTS.md`; `probes/README.md` 全文 (现状表, 主线与下一步, 翻译账, 死路索引); `Survey/RouteSeal.md`, `Survey/RouteReview.md`, `Survey/NotationWF.md` 全文; `LOG.md` 2026-11-04 下半与 11-05 全部条目及作者裁定各条; 主线代码: `HtFeed` 入口全文与 `HtFeedTree` 的类型、`LgH`、`cmpH`、`D₊`、`sum` 定义, `HtFeedFold` 的折叠签名与主体前半, `HtFeedClosed` 全部代码, `HtOut` 入口全文与 `HtOutFeed` 代码, `HtOutNeg.no-total`, `HtCross` 入口全文与 `HtCrossInst.MonoStep`, `HtCrossSim.Funext`, `HtFeedNeg` 的三条否定陈述, `HtFeedGrow.SupStmt`; `SumOne`, `TLRule`, `DVal`, `L1Val` 入口的结论段与 `DValNeg`, `SumOneAccept`, `TLRuleAccept` 的关键陈述; `CumReadCF` 的 `A`, `_⊲_`, `Lg`; `TLRuleSpec._≤_`; `Free/Level.FGH`; 验收侧 `WfFsn` 入口与 `EBO-tree`, `fgh-EBO`, `lab-NF` 的类型, `AccTreeLab.Lab≅tree`, `Correspond.Lab`, `EBO.ΩTower/EBOψ`; 在跑的 `EndLowH` 全文, `EndLowAccept` §2–§5 代码, `KValTree` 文件头, `EboLeanDef` 文件头; `OCF/Barrier` 的 `Ω-Extension` 与 `barrier`.
