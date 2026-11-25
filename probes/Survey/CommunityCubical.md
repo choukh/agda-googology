@@ -8,7 +8,7 @@
 ## 概要
 
 1. **CuST** (约 2991 个 `.agda` 文件, 约 30.6 万行) 是"在 Cubical Agda 里做 Cantor 式物质集合论"的项目. 它的序数是 HoTT 书式的**商序数**: 良序集按序同构做集合商 (`src/CST/Ordinal/Base.agda:18-45`). 一般的 Veblen、上确界、最小点都以"同层排中律判定器" `PropositionDecider5` 为参数, 并有机器证明说这些后端与该层 LEM 等价. 它的 "agda-googology 接入" (ψ、BTBO、FGH) 基本上是**契约记录**: 数据与证明都由调用者提供, 仓库里没有 FGH 的实现 (`docs/CuSTgoogology总结报告.md:13`). 真正的树型载体只有几种: 有限代码 (`B5Code`、`VeblenTerm5`、`BTBOTerm5`, 极限只能按编号引用)、退役目录里的 `{seed, succ, ω}` 三构造子类型, 以及**照抄我方 `Ordᴰ` 的 `OrdD`** (`src/CST.Old/Ordinal/BTBOCode.agda:16-29`).
-2. **DecZero** (约 1471 个文件, 约 15 万行, 依赖 CuST) 的主题是 Conway 博弈、超现实数、超复数的可判等 ("DecZero"). 序数部分约 2.5 万行, 用作选项来源. 其中有一套**严格单调的布劳威尔树** `BoundedTree` (`src/VeblenOrdinal/Controlled/BoundedTree.agda:18-31`). 注释写明它移植自我方 `OCF/BTBO.lagda.md` 的 `BoundedTrich`, 修订号 `9786181` (CC BY-NC-SA 4.0). 在此之上有 ω^α、ε₀, 以及我方**修补前**的 BTBO 程序的逐行移植 (`BTBOSource.agda`). 它还有一个不用判定器的语义解释: 把树映到 CuST 的商序数. 借助这个解释, 它证明了 ω^ε₀ = ε₀ 这一等式的语义版, 也证明了累积和 (cumsum) 会改变序数的值、不保持最小上界 (`BTBOSourceBoundary.agda:21-66`).
+2. **DecZero** (约 1471 个文件, 约 15 万行, 依赖 CuST) 的主题是 Conway 博弈、超现实数、超复数的可判等 ("DecZero"). 序数部分约 2.5 万行, 用作选项来源. 其中有一套**严格单调的布劳威尔树** `BoundedTree` (`src/VeblenOrdinal/Controlled/BoundedTree.agda:18-31`). 注释写明它移植自我方 `OCF/BTBO.lagda.md` 的 `BoundedTrich`, 修订号 `2a1dc04` (CC BY-NC-SA 4.0). 在此之上有 ω^α、ε₀, 以及我方**修补前**的 BTBO 程序的逐行移植 (`BTBOSource.agda`). 它还有一个不用判定器的语义解释: 把树映到 CuST 的商序数. 借助这个解释, 它证明了 ω^ε₀ = ε₀ 这一等式的语义版, 也证明了累积和 (cumsum) 会改变序数的值、不保持最小上界 (`BTBOSourceBoundary.agda:21-66`).
 3. 两个项目所有源文件都是 `--cubical --safe --guardedness` (部分另加 `--lossy-unification`). 没有 `postulate`、`TERMINATING`、`NO_POSITIVITY_CHECK`, 也没有洞 (全文 grep, 命中只在注释里). 两者的文档都含有 ChatGPT 会话的导出 (CuST `docs/CuST开发计划.md:1`, DecZero `docs/形式化Conway博弈.md:1`). 开发日志里有大量资源闸门与 "Gap/Boundary" 记录. **(推断)** 两个项目主要由 LLM 代理按计划文档推进.
 4. **对我方最有用的三点.** (a) DecZero 用另一种基础 (cubical 商序数) **独立复现**了我方 Cumsum 的结论: cumsum 改变值 (`TheoriesNoCumulativeStagewiseLUB`、`TheoriesCumulativeNotAdditive`). (b) DecZero 的 `TheoriesNoRawCommonBound` 与我方 Level §2 的 `lit→ext` 互为镜像. 在严格的 `Ordᴰ` 式下标里, 同值而表示不同的两个 ω 根本**没有公共上界**; 我方的 `Ordᴵ` 允许它们有公共上界, 代价是三歧性只能模 ≅. 这为 Ordᴵ 的设计提供了一个精确的对照理由. (c) CuST 把"外延的 (商) 序数上的比较、最小点、Veblen"都机器证明为等价于 LEM, 并因此把它们参数化. 这正是我方壁垒定理在外延一侧的对应物. 它说明 cubical 商**不能**换回三歧性, 代价是 LEM 加上失去 FGH. 它与我方结论一致, 没有反驳我方.
 5. **没有可以让我们跳过的阶段.** 两个项目都没有 Buchholz 式记号的标准形理论、Bachmann 性质、记号与树之间的序对应. 能无条件 (不靠判定器、不靠调用者证书) 到达的最高序数是 DecZero 的 ε₀. 我方的 ψ₀(Ω_Ω) 对角线、`Uniform`、`Bachmann.lagda.md` 的 `Generic` 在它们那里都没有对应物.
@@ -253,7 +253,7 @@ unboundedOrdDTrichotomy-impossible :
 ```agda
 -- src/VeblenOrdinal/Controlled/BoundedTree.agda:3-6 (注释)
 -- Algorithm reference: agda-googology, OCF/BTBO.lagda.md, BoundedTrich,
--- revision 9786181208115539beac8af28e2d59d7c76aa530 (CC BY-NC-SA 4.0).
+-- revision 2a1dc043e4871c877b90b0bb6ae8fc30003100cc (CC BY-NC-SA 4.0).
 -- This Cubical implementation raises both limit references to a later common
 -- stage. It does not transport code indices along an equality of naturals.
 
@@ -309,7 +309,7 @@ funTreeCumulativeLimit stages = treeLimit (funTreeCumulative stages) (TheoriesTr
 ```agda
 -- src/VeblenOrdinal/Controlled/BTBOSource.agda:4-8 (注释)
 -- Algorithm source: agda-googology, OCF/BTBO.lagda.md, Ord-Ord,
--- revision 9786181208115539beac8af28e2d59d7c76aa530 (CC BY-NC-SA 4.0).
+-- revision 2a1dc043e4871c877b90b0bb6ae8fc30003100cc (CC BY-NC-SA 4.0).
 -- Equality of level indices is handled by Cubical transport rather than
 -- matching on refl. The source's cumulative Ord-zero to Ord-D transform
 -- is retained as such; it is not assumed to preserve every ordinal value.
@@ -351,7 +351,7 @@ funSourcePsiZero {level = treeLimit stages strict} code = sourceLimit (λ n →
   funSourcePsiZero (funSourcePsiBelow (TheoriesTreeStageBelowLimit stages strict n) code))
 ```
 
-`treeGreater` 分支是 `lfp (ψ_p ∘ f ∘ ↑)`, `funSourcePsiZero` 是逐层复合加极限层对角. 这与我方 `src/OCF/BTBO.lagda.md` 在修订 `9786181` 时的写法逐行对应. 也就是说, 它正是我方 2026-11-01 四行补丁**之前**的版本 (`git diff 9786181 HEAD -- src/OCF/BTBO.lagda.md` 中被删除的 `lfp (ψ< p ∘ f ∘ coe₀ ∘ ↑ i<j)` 与 `ψ₀ (ψ< zero a)`). 按我方 `probes/OCF/Align/BTBOSemantics.lagda.md` 的分析 (`ψΩ-flat`, 第 208 行起), 这个版本的值**估计**是 ψ₀(Ω_ω) = Buchholz 序数, 不是 ψ(Ω_Ω). DecZero 自己也只声明它是"原始程序", 不声称语义等同 (`docs/CuSTDecZero开发计划A4.md:100-104`).
+`treeGreater` 分支是 `lfp (ψ_p ∘ f ∘ ↑)`, `funSourcePsiZero` 是逐层复合加极限层对角. 这与我方 `src/OCF/BTBO.lagda.md` 在修订 `2a1dc04` 时的写法逐行对应. 也就是说, 它正是我方 2026-11-01 四行补丁**之前**的版本 (`git diff 2a1dc04 HEAD -- src/OCF/BTBO.lagda.md` 中被删除的 `lfp (ψ< p ∘ f ∘ coe₀ ∘ ↑ i<j)` 与 `ψ₀ (ψ< zero a)`). 按我方 `probes/OCF/Align/BTBOSemantics.lagda.md` 的分析 (`ψΩ-flat`, 第 208 行起), 这个版本的值**估计**是 ψ₀(Ω_ω) = Buchholz 序数, 不是 ψ(Ω_Ω). DecZero 自己也只声明它是"原始程序", 不声称语义等同 (`docs/CuSTDecZero开发计划A4.md:100-104`).
 
 **(iv) 到商序数的语义解释 (不用判定器).**
 
@@ -535,7 +535,7 @@ TheoriesCumulativeNotAdditive : (ℓ : Level) → ¬
    - 不用 LEM/判定器参数.
    - 这三点是我方纲领的既有选择. 两个项目的经验 (FGH 只能做成契约; Veblen 需要 LEM) 正好是不这样做的后果, 可作反面佐证.
 4. **能否去掉假设或跳过阶段.** **不能.** 它们的结果都在 ε₀ 以下 (无条件), 或者以 LEM 为参数, 或者只是契约. 我方当前的缺口 (Buchholz 下标上的 NF、pred/fsn 保持 NF、共尾性 ⟹ γ₃ 起的遗传标签; 下一阶段的种子步与对角对象代表) 在它们那里没有对应物.
-5. **它们使用了我方代码.** 两个项目都以 `9786181` 修订的 `src/OCF/BTBO.lagda.md` 为参照. CuST 的 `OrdD` 实质上是我方 `Ordᴰ`; DecZero 的 `BTBOSource` 是我方修补前 `ψ<`/`ψ₀` 的逐行移植. 我方 2026-11-01 的订正 (BTBO 原标签不成立, 值估计 ψ₀(Ω_ω); 四行补丁) 直接影响它们对 `funSourceBTBO` 的标注.
+5. **它们使用了我方代码.** 两个项目都以 `2a1dc04` 修订的 `src/OCF/BTBO.lagda.md` 为参照. CuST 的 `OrdD` 实质上是我方 `Ordᴰ`; DecZero 的 `BTBOSource` 是我方修补前 `ψ<`/`ψ₀` 的逐行移植. 我方 2026-11-01 的订正 (BTBO 原标签不成立, 值估计 ψ₀(Ω_ω); 四行补丁) 直接影响它们对 `funSourceBTBO` 的标注.
 
 ## 建议
 

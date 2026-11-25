@@ -54,7 +54,7 @@
   - `public/` 下被跟踪的 3 个没动。
 
 ##### 二、死文件
-**删了 1 个（已核实）**：`probes/OCF/Align/BoundedCompletionStageWfImport.lagda.md`，317 字节，被跟踪，可从提交 5a5846e 恢复。
+**删了 1 个（已核实）**：`probes/OCF/Align/BoundedCompletionStageWfImport.lagda.md`，317 字节，被跟踪，可从提交 09edf10 恢复。
 - (a) 没有被引用：在全仓库（除 `.git` 和它自己）按全名、`WfImport`、`StageWfImp`、"空导入"、"WfFsn导入" 检索，0 命中。删完后复查，仍然没有指向它的引用。
 - (b) 代码只有 OPTIONS、模块头和一行 `import OCF.Align.WfFsn`，文首自述"没有数学或值验收结论"。
 

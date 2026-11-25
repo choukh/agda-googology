@@ -15,18 +15,18 @@
 
 ## 接手前实际起点（按提交核准）
 
-已直接读 Git 对象：11 月 3 日的 8346f53、11 月 4 日的 a5b202c、11 月 6 日的 0546568（接手前 HEAD）。下表各闭项都有实际定义、最终输出合法性证明和 FGH；**精确高度未验收不等于构造未完成**。这也不代表全部中间层 View 已完成。
+已直接读 Git 对象：11 月 3 日的 d900670、11 月 4 日的 309e29f、11 月 6 日的 a466ca9（接手前 HEAD）。下表各闭项都有实际定义、最终输出合法性证明和 FGH；**精确高度未验收不等于构造未完成**。这也不代表全部中间层 View 已完成。
 
 | 提交中的实际成果 | 已完成的构造 | 强度与续研边界 |
 |---|---|---|
-| a5b202c：[SumOne](OCF/Align/SumOneClosed.lagda.md) | T₀、T₁、Lg-T₁、fgh | [SumOneAccept](OCF/Align/SumOneAccept.lagda.md) 已证 T₀ 与 BTBO 同值、T₁ 严格超过 BTBO；ψ₀(Ω_{Ω+1}) 精确读法仍是判断。 |
-| a5b202c：[SumHt](OCF/Align/SumHtClosed.lagda.md) | Tω、T²、Lg-T²、fgh | 读到 ψ₀(Ω_{Ω²}) 是判断；坐标写法后来封存作对照，不能把它默认为现役架构。 |
-| 0546568：[HtFeed](OCF/Align/HtFeedClosed.lagda.md) → [HtOut](OCF/Align/HtOutFeed.lagda.md) | 对全部合法高度的闭项；高度由原折叠输出生成的 Fb、T-fbω、Lg-T-fbω、fgh | 已实际越过“只给定高度”的组织阶段；高读法与跨实例值关系未验收。HtFeed/HtOut 不属于旧坐标族的封存范围。 |
-| 0546568：[HtTowerF](OCF/Align/HtTowerFClosed.lagda.md) → [HtTowerN](OCF/Align/HtTowerNFb.lagda.md) → [DiagK](OCF/Align/DiagKInst.lagda.md) | 双种类闭项、第 2 层输出回灌、无条件 Tdg₂ 及合法性、FGH | Tdg₂ 读 ψ₀(Ω_{Ω₃}) 是判断；实际两族对角与条件于 LevelFold 的全塔接口必须分开。 |
-| 0546568：[FamFold](OCF/Align/FamFold.lagda.md) | 真实输出的族读回与世界链；全 n 的 pkg、towerDown、Tlv、T∞、合法性与 FGH | 有限目标的族化实填，不需 UIP；高层最终仍下降到固定 Ht 再由双种类 T⁺ 坍缩。旧高读法已被骨架审查质疑，尚无值界；不能抹去实际回路，也不能冒称任意目标均已解。 |
-| 0546568：[EvFold](OCF/Align/EvFold.lagda.md) → [LvFb](OCF/Align/LvFb.lagda.md) | 固定有限外界上的真实输出回灌、事件折叠闭项；后继的增量极限改贴、码上的更新与 T∞c | no-coh-ev 只否定指定证据族；LvFb 的增量极限已不在其前提内。码上更新已实现，ω 槽的运行使用和任意高度目标仍须分别查，不沿用旧障碍作总否定。 |
-| 0546568：[CRw](OCF/Lean/CRw.lagda.md) → [RecB](OCF/Lean/RecB.lagda.md) | CRw.TU2；RecB 全 TN/TD 族、Tω、LgB-Tω、fghω | 读法分别 ψ₀(Ω_{Ω·2})、ψ₀(Ω_{Ω·ω})，尚无精确值验收。[SameV](OCF/Lean/SameV.lagda.md) 已给 CRw 的条件值比较，不能凭有限测试传给 RecB。 |
-| 0546568：[Third](OCF/Lean/Third.lagda.md) | nodeG、折叠与路径合一、TΛ、LgB-TΛ、fghΛ | 是同期完整合法闭项，读法在 RecB 附近是判断；三处具体损失尚待处理，完整 Λ 折叠未交付。 |
+| 309e29f：[SumOne](OCF/Align/SumOneClosed.lagda.md) | T₀、T₁、Lg-T₁、fgh | [SumOneAccept](OCF/Align/SumOneAccept.lagda.md) 已证 T₀ 与 BTBO 同值、T₁ 严格超过 BTBO；ψ₀(Ω_{Ω+1}) 精确读法仍是判断。 |
+| 309e29f：[SumHt](OCF/Align/SumHtClosed.lagda.md) | Tω、T²、Lg-T²、fgh | 读到 ψ₀(Ω_{Ω²}) 是判断；坐标写法后来封存作对照，不能把它默认为现役架构。 |
+| a466ca9：[HtFeed](OCF/Align/HtFeedClosed.lagda.md) → [HtOut](OCF/Align/HtOutFeed.lagda.md) | 对全部合法高度的闭项；高度由原折叠输出生成的 Fb、T-fbω、Lg-T-fbω、fgh | 已实际越过“只给定高度”的组织阶段；高读法与跨实例值关系未验收。HtFeed/HtOut 不属于旧坐标族的封存范围。 |
+| a466ca9：[HtTowerF](OCF/Align/HtTowerFClosed.lagda.md) → [HtTowerN](OCF/Align/HtTowerNFb.lagda.md) → [DiagK](OCF/Align/DiagKInst.lagda.md) | 双种类闭项、第 2 层输出回灌、无条件 Tdg₂ 及合法性、FGH | Tdg₂ 读 ψ₀(Ω_{Ω₃}) 是判断；实际两族对角与条件于 LevelFold 的全塔接口必须分开。 |
+| a466ca9：[FamFold](OCF/Align/FamFold.lagda.md) | 真实输出的族读回与世界链；全 n 的 pkg、towerDown、Tlv、T∞、合法性与 FGH | 有限目标的族化实填，不需 UIP；高层最终仍下降到固定 Ht 再由双种类 T⁺ 坍缩。旧高读法已被骨架审查质疑，尚无值界；不能抹去实际回路，也不能冒称任意目标均已解。 |
+| a466ca9：[EvFold](OCF/Align/EvFold.lagda.md) → [LvFb](OCF/Align/LvFb.lagda.md) | 固定有限外界上的真实输出回灌、事件折叠闭项；后继的增量极限改贴、码上的更新与 T∞c | no-coh-ev 只否定指定证据族；LvFb 的增量极限已不在其前提内。码上更新已实现，ω 槽的运行使用和任意高度目标仍须分别查，不沿用旧障碍作总否定。 |
+| a466ca9：[CRw](OCF/Lean/CRw.lagda.md) → [RecB](OCF/Lean/RecB.lagda.md) | CRw.TU2；RecB 全 TN/TD 族、Tω、LgB-Tω、fghω | 读法分别 ψ₀(Ω_{Ω·2})、ψ₀(Ω_{Ω·ω})，尚无精确值验收。[SameV](OCF/Lean/SameV.lagda.md) 已给 CRw 的条件值比较，不能凭有限测试传给 RecB。 |
+| a466ca9：[Third](OCF/Lean/Third.lagda.md) | nodeG、折叠与路径合一、TΛ、LgB-TΛ、fghΛ | 是同期完整合法闭项，读法在 RecB 附近是判断；三处具体损失尚待处理，完整 Λ 折叠未交付。 |
 
 接手应先消化这些实际成果，再评估继承、修正或重写；不能因值定理较少，就重新从最低已验收站攀起，也不能只按最高估计挑路线。提交依据及声明核查见 [研究历程](Survey/ResearchHistory.md#21-接手时点的提交核准)。
 

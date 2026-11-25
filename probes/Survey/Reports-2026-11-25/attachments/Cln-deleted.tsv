@@ -881,5 +881,5 @@ probes/.DS_Store	6148	DS_Store-untracked
 probes/OCF/.DS_Store	6148	DS_Store-untracked
 # dirs removed: _build/ probes/_build/ probes/Survey/Reports-2026-11-18/__pycache__/ (and all subdirs)
 # phase1 totals: build files 5874, bytes 3025579733
-probes/OCF/Align/BoundedCompletionStageWfImport.lagda.md	     317	dead-file-tracked; (a) 全仓库(除 .git 与自身)按 BoundedCompletionStageWfImport / WfImport / StageWfImp / 空导入 / WfFsn导入 检索 0 命中 (grep -rn); (b) 代码只有 OPTIONS、模块头与一行 import OCF.Align.WfFsn, 文首自述'没有数学或值验收结论, 不计数学成果'; 被 git 跟踪(首见提交 5a5846e), 可由 git 恢复
+probes/OCF/Align/BoundedCompletionStageWfImport.lagda.md	     317	dead-file-tracked; (a) 全仓库(除 .git 与自身)按 BoundedCompletionStageWfImport / WfImport / StageWfImp / 空导入 / WfFsn导入 检索 0 命中 (grep -rn); (b) 代码只有 OPTIONS、模块头与一行 import OCF.Align.WfFsn, 文首自述'没有数学或值验收结论, 不计数学成果'; 被 git 跟踪(首见提交 09edf10), 可由 git 恢复
 # phase2 (验收编译之后的再清理): _build/ 与 probes/_build/ 下 126 个 *.agdai, 共 85328647 字节, 目录本身删除

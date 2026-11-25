@@ -8,7 +8,7 @@
 
 | 历史条目可能造成的误读 | 后续事实与直接入口 |
 |---|---|
-| 接手的实际起点仍是 BTBO，附近更高对象都还没完成 | a5b202c 已提交严格超过 BTBO 的 SumOne.T₁；0546568 已有 HtOut、HtTowerF/N、CRw、RecB.Tω、Third.TΛ 等完整合法闭项与 FGH。缺精确值验收不等于没有构造成果。见 [按提交核准的实际起点](README.md#接手前实际起点按提交核准) 与 [提交核查](Survey/ResearchHistory.md#21-接手时点的提交核准)。 |
+| 接手的实际起点仍是 BTBO，附近更高对象都还没完成 | 309e29f 已提交严格超过 BTBO 的 SumOne.T₁；a466ca9 已有 HtOut、HtTowerF/N、CRw、RecB.Tω、Third.TΛ 等完整合法闭项与 FGH。缺精确值验收不等于没有构造成果。见 [按提交核准的实际起点](README.md#接手前实际起点按提交核准) 与 [提交核查](Survey/ResearchHistory.md#21-接手时点的提交核准)。 |
 | BTBO 还只是估计，或只有 ψ₀(Ω_ω) | 修正前版本与成品要分开。成品已有 ψ₀(Ω_Ω) 的序数值验收：[BTBOFull](OCF/Align/BTBOFull.lagda.md)，主定理 BTBO≈。不是基本列一致。 |
 | LadderNF 的 ω 档仍缺跨高度单调 | [LadderMono](OCF/Align/LadderMono.lagda.md) 已补；[OrdLabAccept](OCF/Align/OrdLabAccept.lagda.md) 的 nf-main、mono-main 又把标签接到了原主线，早期克隆状态不再是全部结论。 |
 | 差树的第 0 层内部 View 还未写 | [MainView](OCF/Align/MainView.lagda.md) 已给实际 HtFeed/HtTowerF 的第 0 层无条件 View、值与 FGH 一致；第 1 层及更高层仍须按该篇的条件和暂停范围读。 |

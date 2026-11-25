@@ -4519,17 +4519,17 @@ BTBORestartAnchor及CrossMHighSeedAccept顺序单路12G冷编均0，
 
 作者指出：接手前在 BTBO 上方附近已有完整闭项，即使高度只是估计，实际起点也不能压回 BTBO；明确要求查看接手前几个提交。本轮因此先调查提交，没有恢复构造或 Agda 编译。
 
-直接核对 git log 与三个 Git 对象：8346f53（11-03 16:04，旧标签与闭项路线）、a5b202c（11-04 22:06，差树主线与封存决定）、0546568（11-06 22:24，接手前 HEAD）。后两个提交的说明已经明确区分：附近高闭项存在，终点 ψ₀Λ 尚未交付。其间不是研究清零。
+直接核对 git log 与三个 Git 对象：d900670（11-03 16:04，旧标签与闭项路线）、309e29f（11-04 22:06，差树主线与封存决定）、a466ca9（11-06 22:24，接手前 HEAD）。后两个提交的说明已经明确区分：附近高闭项存在，终点 ψ₀Λ 尚未交付。其间不是研究清零。
 
-主审读 a5b202c 的 SumOneClosed/Fold/Accept、SumHtClosed；0546568 的 README/LOG、RecB、ThirdTm、SameV、HtFeedClosed、HtOutFeed、HtTowerFClosed、DiagKInst 等。独立三路分别核对差树/高度塔、C线闭项及值边界、作者主线决定。主要事实：
+主审读 309e29f 的 SumOneClosed/Fold/Accept、SumHtClosed；a466ca9 的 README/LOG、RecB、ThirdTm、SameV、HtFeedClosed、HtOutFeed、HtTowerFClosed、DiagKInst 等。独立三路分别核对差树/高度塔、C线闭项及值边界、作者主线决定。主要事实：
 
-- a5b202c：SumOne.T₁、Lg-T₁、fgh 完整且无参数；T₀≈ 给 BTBO 同值，T₀<T₁ 与 step-T₁ 已证严格超过 BTBO；ψ₀(Ω_{Ω+1}) 精确读法未验收。SumHt 的 Tω/T² 也合法、有 FGH，读到 ψ₀(Ω_{Ω²}) 是判断，坐标族后来封存。
-- 0546568：HtFeed 一个定义覆盖全部合法高度；HtOut.Fb 确读原第1层输出生成下一高度，T-fbω 及合法性、FGH 实填。HtTowerF/N 已有双种类闭项与原第2层输出回灌，DiagK.Tdg₂ 实填且合法、有 FGH；其全塔条件接口另列，不能混成所有闭项都带未填前提。
+- 309e29f：SumOne.T₁、Lg-T₁、fgh 完整且无参数；T₀≈ 给 BTBO 同值，T₀<T₁ 与 step-T₁ 已证严格超过 BTBO；ψ₀(Ω_{Ω+1}) 精确读法未验收。SumHt 的 Tω/T² 也合法、有 FGH，读到 ψ₀(Ω_{Ω²}) 是判断，坐标族后来封存。
+- a466ca9：HtFeed 一个定义覆盖全部合法高度；HtOut.Fb 确读原第1层输出生成下一高度，T-fbω 及合法性、FGH 实填。HtTowerF/N 已有双种类闭项与原第2层输出回灌，DiagK.Tdg₂ 实填且合法、有 FGH；其全塔条件接口另列，不能混成所有闭项都带未填前提。
 - 同提交：CRw.TU2 有标准 LgB 与 fghU2；RecB 的全 TN/TD 族、Tω、LgB-Tω、fghω 无未填参数，Tω 读 ψ₀(Ω_{Ω·ω}) 是判断，没有值上下界；Third.TΛ、LgB-TΛ、fghΛ 也完整，Λ层并未整体折下来、三处损失与值缺口仍在。它们都是接手前实际成果。
 - SameV 后继已给 CRw 的 Funext 条件比较 TX+1≤TU1、TX+2≤TU2；不等于精确强度，也不能凭 RecBCmp 的有限测试传到 RecB。
-- 0546568 的作者主线是差树/高度树及后续发展，不是要求从BTBO重建；RouteSeal§8封存坐标SumHt/Climb/Var，不等于封存HtFeed/HtOut。旧Ladder/CrossM的封存理由依旧有效。
+- a466ca9 的作者主线是差树/高度树及后续发展，不是要求从BTBO重建；RouteSeal§8封存坐标SumHt/Climb/Var，不等于封存HtFeed/HtOut。旧Ladder/CrossM的封存理由依旧有效。
 
-主审用 git show 的字节内容逐一对照工作树：SumOneClosed、SumHtClosed、HtFeedClosed、HtOutFeed、HtTowerFClosed、DiagKInst、CRw、RecB、ThirdTm 九个文件全部与0546568相同。构造一路另查18个相关核心入口/Closed/Grow/Feed/MainView文件，报告亦相同。这些结果并未消失，不能作为需要重新造出的新成果。
+主审用 git show 的字节内容逐一对照工作树：SumOneClosed、SumHtClosed、HtFeedClosed、HtOutFeed、HtTowerFClosed、DiagKInst、CRw、RecB、ThirdTm 九个文件全部与a466ca9相同。构造一路另查18个相关核心入口/Closed/Grow/Feed/MainView文件，报告亦相同。这些结果并未消失，不能作为需要重新造出的新成果。
 
 本轮修正的判断：此前历史整理虽补了更高资产，却又混淆“BTBO是结构范本”和“实际研究起点”。下一步必须消化接手前 BTBO 上方附近已完成闭项及生成机制，再决定继承、修正或重写；不能因为精确值尚缺而默认从最低验收站攀起，也不能自动选择最高读法。README 已将实际前沿独立置于旧强度参照之前，ResearchHistory§2.1补提交核准和直接声明，RESULTS顶部补勘误。数学目标仍是 ψ₀Λ 的树闭项、纲领、成本与终点值验收，不因盘点完成而宣称达到。
 
@@ -4571,7 +4571,7 @@ ThirdRichLegNegWorld.Defaults对任意合法指标界族（不是只取恒零合
 
 **发现并纠正：**
 
-1. 第一轮虽核对了 HtOut、RecB、Third 等完整闭项，仍漏掉 FamFold 的真实输出族读回、世界链以及无参数的全 n 闭项族，也漏掉 EvFold 的固定有限外界事件折叠。两项均在 0546568。FamFold 的有限目标族化不是任意目标 Φ 输出的全域延伸；这项差别须证明必要，不能把更强的全目标合同当纲领。新 ThirdRunFamily 的参数族抽取与局部反馈接线不构成首次实现此机制。
+1. 第一轮虽核对了 HtOut、RecB、Third 等完整闭项，仍漏掉 FamFold 的真实输出族读回、世界链以及无参数的全 n 闭项族，也漏掉 EvFold 的固定有限外界事件折叠。两项均在 a466ca9。FamFold 的有限目标族化不是任意目标 Φ 输出的全域延伸；这项差别须证明必要，不能把更强的全目标合同当纲领。新 ThirdRunFamily 的参数族抽取与局部反馈接线不构成首次实现此机制。
 2. EvFoldLim.no-coh-ev 只否定指定的相干证据族；LvFbFac 后继的增量式极限改贴已有 fac-tr/fac-lim、Lg-U/Lg-rlω，不落在该前提内。不能将旧停止点冻结成全方向的停止点。ColimARaise.raiseA′ 也早已有无限可入高度的族更新。
 3. TreeLang 的 least/exact、TL2 的有界异型族升界是正面定理；“未唯一决定完整折叠”不能抹掉它们。MonoPort9Cov 已绕开 GoodUp 停点，ValNewRun.cross 有限定域的跨实例值比较。TpPort2Tab.no-valmonoT⁺ 已给无条件的普通值单调反例，不能再当待补的一般单调引理。
 4. RESULTS 中 MainViewHW.HW-RunNi 的摘要漏写 HB、HBh、Good Y，已修正；实填 HW-ΔΩ₁ 固定 Λ＝hs hz。第 0 层 View/FGH 一致不能替整个高层轨道提供 View。
@@ -4581,7 +4581,7 @@ ThirdRichLegNegWorld.Defaults对任意合法指标界族（不是只取恒零合
 
 **文档交付：** ResearchHistory §2.3 增加机制与后继关系表，§6 补精确勘误，§9 说明实际核查范围及方法修正；README 补 FamFold/EvFold/LvFb 资产并撤下未经综合评估的数学派发；RESULTS 顶部补后继更正，修复上述条件与充分性措辞。未新增另一套独立历史索引，未搬源码，未改任何旧数学陈述、AGENTS、src/archive，未提交或推送。
 
-**证据范围：** 主审读取关键提交正文、原作者决策及 LOG 前后继条目，再核对实际声明和模块参数。FamFold 六文件、ColimA/ColimARaise、TL2Raise、TreeLang/TreeLangLv、MainView/MainViewHW、TLRuleSpec、EvFold/EvFoldClosed、LvFbFac、EboLean3 共 18 个文件与 0546568 逐字节相同。本次没有重编全部历史文件，不宣称逐行读完数千个模块；具名定理的既有冷编记录见原 LOG。
+**证据范围：** 主审读取关键提交正文、原作者决策及 LOG 前后继条目，再核对实际声明和模块参数。FamFold 六文件、ColimA/ColimARaise、TL2Raise、TreeLang/TreeLangLv、MainView/MainViewHW、TLRuleSpec、EvFold/EvFoldClosed、LvFbFac、EboLean3 共 18 个文件与 a466ca9 逐字节相同。本次没有重编全部历史文件，不宣称逐行读完数千个模块；具名定理的既有冷编记录见原 LOG。
 
 **暂停前的新草稿，单列而不计已验收成果：** ThirdRunFamilyIf、ThirdRunFamilyBuild、ThirdRunFamilyNegFill 均由子代理报告 6G 编译退出 0，已冻结；主审尚未冷编复核。前两篇精确包装原 Φ 并给带目标/路径/种子的局部 step 世界反馈，没有整个源世界上的迭代闭合；后一篇 ZeroFill⇒WLPO 只针对“界内精确、界外为零”的总填充合同，不否定所有 section，也不否定共享 RunFamily。当前不为它们续开新模块。
 
@@ -4619,7 +4619,7 @@ ThirdRichLegNegWorld.Defaults对任意合法指标界族（不是只取恒零合
 
 作者指出接手缺乏全局把握，要求自行查未逐条指出的细节。本轮没有开启新的数学路线，主审亲自检查旧提交、后继决定、文档状态和当前研究的实际适用域；原三路均已返回，否定一路另对本轮冻结声明作只读复核。
 
-**历史与组织方面的新核查。** 直接读 610df60、a5b202c、0546568 的提交说明，向前追到 bdb3cab 的 Ord1D 审稿、92642b2 的记号实验及 September Mahlo 归档入口与更正指引。核对 Ord1D 的 Ω₁-partial/lim₁-collapse 原源码确仍将新分支归零，旗舰见证由 embedᴰ/lim₀ 构成；这只核实机制，未将审稿的高度估计当成值定理。归档 EBO-number 与 Mahlo-number 的实际类型都仍带 Acc 前提；它们与后来 WfFsn/EboLean3 填满良基的后继分开。归档中的“整个树范式不可达”不作为今日路线否定。
+**历史与组织方面的新核查。** 直接读 cdbc65e、309e29f、a466ca9 的提交说明，向前追到 bb792e5 的 Ord1D 审稿、94c412e 的记号实验及 September Mahlo 归档入口与更正指引。核对 Ord1D 的 Ω₁-partial/lim₁-collapse 原源码确仍将新分支归零，旗舰见证由 embedᴰ/lim₀ 构成；这只核实机制，未将审稿的高度估计当成值定理。归档 EBO-number 与 Mahlo-number 的实际类型都仍带 Acc 前提；它们与后来 WfFsn/EboLean3 填满良基的后继分开。归档中的“整个树范式不可达”不作为今日路线否定。
 
 手册 §8 仍列“等 MonoPort2/KNest2”“HtTowerN/LFRe 在跑”“封存维护待作者定”“标杆 6524/7867 待选”；原日志已有相应返回、作者采纳三类维护及 1513 标杆定稿。补逐项后继状态，原历史内容保留。手册 §2 的“无处”列与模型名称也明确为提取时快照；proposals 补主题已入现行 AGENTS、但非逐字全案采纳的范围，不将 1.35 内存系数变成规则、不核称仓库外记忆已执行。新增修改没有改变 AGENTS。
 
@@ -11180,7 +11180,7 @@ OG先把剥后继推到实际所需前缀，列明实际Base与β更新的保持
 
 ## 2026-11-16: Fable 审核 C 路回来; 主审先核可查事实; 一处更正 (Claude 主审)
 
-C 路 (整体延续) 回报已留档 [AuditC](Survey/Reports-2026-11-16/AuditC.md). 主审先核了可直接查的事实, 都属实: (1) `vv-ω²` 在 `OCF/Align/EmbVVInstO2`, 属 11-04 封存的带高度族 (`probes/Survey/RouteSeal.md` §1 "序数值验收到 ψ₀(Ω_{Ω·ω²})"), 不属差树; (2) `YiRCNeg` 文首写明否定的是不带项序封闭的关系 `YiCLFam.M 2` 下的判据, 不涉及序数值的上界; (3) `probes/Survey/IdeaLedger.md` 止于 V272, 第六十一到六十九批的 27 个前缀出现 0 次; (4) 最近一次提交 11-08 (5a5846e), 未跟踪文件 1457 个.
+C 路 (整体延续) 回报已留档 [AuditC](Survey/Reports-2026-11-16/AuditC.md). 主审先核了可直接查的事实, 都属实: (1) `vv-ω²` 在 `OCF/Align/EmbVVInstO2`, 属 11-04 封存的带高度族 (`probes/Survey/RouteSeal.md` §1 "序数值验收到 ψ₀(Ω_{Ω·ω²})"), 不属差树; (2) `YiRCNeg` 文首写明否定的是不带项序封闭的关系 `YiCLFam.M 2` 下的判据, 不涉及序数值的上界; (3) `probes/Survey/IdeaLedger.md` 止于 V272, 第六十一到六十九批的 27 个前缀出现 0 次; (4) 最近一次提交 11-08 (09edf10), 未跟踪文件 1457 个.
 
 **更正**: 主审在第六十一批起的简报, GoalOdds 第二十一份与局势图里写 "旧差树线 (主线) 验收到 ψ₀(Ω_{Ω·ω²})", 不准: 那是带高度族 (`EmbVV*`, 11-04 封存) 的序数值验收; 差树 `SumOne.T₁` 的下界是 ψ₀(Ω_Ω+Ω₁) (C 路转述, 未逐行核). 以后写 "带高度族的序数值验收到 ψ₀(Ω_{Ω·ω²})".
 
@@ -12679,7 +12679,7 @@ KQ 回来后，负责人按 "累加" 检索台账，才对上旧条目。
 规则：仓库里约 3500 个文件没有进 git，删了找不回来，所以不可再生又未跟踪的文件一律不删，只列候选；没有被导入的叶子定理模块不算死文件。
 
 **做了的（已按基线核对）。**
-- 删了 5882 个文件，约 3.03G：`_build/` 与 `probes/_build/` 下全部 5874 个（其中 `.agdai` 5001 个约 2.97G，其余是 html、dot、日志等），1 个 `.pyc`，3 个未跟踪的 `.DS_Store`，1 个被跟踪的死文件 `OCF/Align/BoundedCompletionStageWfImport.lagda.md`（只有一行导入，文首自述没有数学结论，全仓库没有引用；可从提交 5a5846e 恢复）。`probes/` 由 2.9G 减到 83M。[删除清单](Survey/Reports-2026-11-25/attachments/Cln-deleted.tsv)
+- 删了 5882 个文件，约 3.03G：`_build/` 与 `probes/_build/` 下全部 5874 个（其中 `.agdai` 5001 个约 2.97G，其余是 html、dot、日志等），1 个 `.pyc`，3 个未跟踪的 `.DS_Store`，1 个被跟踪的死文件 `OCF/Align/BoundedCompletionStageWfImport.lagda.md`（只有一行导入，文首自述没有数学结论，全仓库没有引用；可从提交 09edf10 恢复）。`probes/` 由 2.9G 减到 83M。[删除清单](Survey/Reports-2026-11-25/attachments/Cln-deleted.tsv)
 - 修了 79 个链接目标（17 个文件）：留档里早先脱敏写成 `<仓库>/…` 的换算成相对路径；`Reports-2026-11-16` 里按 `Lead/` 目录写的相对路径按原简报所在目录换算；`OCF/Align/EboLean/OT` 两个模块文字里的 5 个链接指到 `archive/src/Mahlo/`。负责人逐行核过：这 17 个文件与基线的差只在链接目标上，改后的目标都存在，代码围栏未变。
 - 4 个脚本里删了 6 个全仓库没有调用的函数（16 行），改后语法通过。[改动清单](Survey/Reports-2026-11-25/attachments/Cln-changes.tsv)
 - 三个定稿入口在接口全删之后冷编，都退出 0；之后又清了一次，结束时仓库里没有 `.agdai`。
@@ -12734,7 +12734,7 @@ KQ 回来后，负责人按 "累加" 检索台账，才对上旧条目。
 
 **终点与权限。** 到达终点的标准（下界即到达；同值是之后的争取项）。终点对哪个闭项（可以换，换前交作者定）。恢复派发（等作者明说再派）。用 Fable（审查与设计由负责人定并汇报理由与成本；其余 Opus，要升级先问）。
 
-**提交。** 分支（直接提交到 main）。范围（全部，一次提交）。`.claude/settings.json`（不带）。推送（推送到 origin/main）。执行：提交 `c50ead6`，3547 个文件，身份是 `choukh` 的 noreply 邮箱；推送被本会话沙箱的网络白名单拦下（不含 github.com），由作者自己运行。提交前扫过待提交的文件：没有个人邮箱、本机用户名与会话路径。
+**提交。** 分支（直接提交到 main）。范围（全部，一次提交）。`.claude/settings.json`（不带）。推送（推送到 origin/main）。执行：提交 `22a5892`，3547 个文件，身份是 `choukh` 的 noreply 邮箱；推送被本会话沙箱的网络白名单拦下（不含 github.com），由作者自己运行。提交前扫过待提交的文件：没有个人邮箱、本机用户名与会话路径。
 
 **规则与 AGENTS.md。** 负责人自设的止损规则（继续有效；不写进 AGENTS）。旧句四处都改：删去 "对外版" 一句；指现在这个角色的 "主审" 改称 "研究负责人"；"优先从 `probes/OCF/Free/` 导入" 标明说的是旧块；四组跨节重复各留一处。新增四条都加：终点的裁决（接在 "终点对 EBO 验收" 一条后）；研究负责人的权限（"与作者协作" 第一条）；派发前查重；同步不改定义（作者 11-14 原话）。外部模型（仍可用，不作主审）。改后纲领五条与目标两节与上一个提交逐字相同。
 
@@ -12746,7 +12746,7 @@ KQ 回来后，负责人按 "累加" 检索台账，才对上旧条目。
 
 ## 2026-11-25　重复附件去重；编译不过的草案移到 archive
 
-作者经选项定的两件清理，一路 Opus 5.5，[回报](Survey/Reports-2026-11-25/Arc-去重与移到archive.md)，[简报](Survey/Reports-2026-11-25/attachments/Arc-简报.md)，[清单](Survey/Reports-2026-11-25/attachments/Arc-changes.tsv)。派发前工作区是干净的（上一个提交 `389e446`），回来后用 git 逐项核对。
+作者经选项定的两件清理，一路 Opus 5.5，[回报](Survey/Reports-2026-11-25/Arc-去重与移到archive.md)，[简报](Survey/Reports-2026-11-25/attachments/Arc-简报.md)，[清单](Survey/Reports-2026-11-25/attachments/Arc-changes.tsv)。派发前工作区是干净的（上一个提交 `834fac7`），回来后用 git 逐项核对。
 
 **去重（已核对）。** 六组逐字节相同的文件各删一份，留被脚本读取的那份：`Reports-2026-11-24/attachments/` 留 `M4b-KOpPow`、`M2v2-KIface`；`B10Join`、`B11Join` 留 `Reports-2026-11-16/attachments/` 的那份，删 `Lead/attachments/` 的；两份 `*-Sb2.patch` 留 `scripts/scafladder/` 的，删 `scripts/uniform5/` 的（该目录随之为空，已不存在）。改引用 8 处，逐词核过都只是路径：两处链接目标，五处反引号里的文件路径，以及本文件早先一段里的目录路径 `Survey/scripts/uniform5/` 改成 `Survey/scripts/scafladder/`。全仓库另查重，没有别的重复。
 
@@ -12757,3 +12757,13 @@ KQ 回来后，负责人按 "累加" 检索台账，才对上旧条目。
 - 自称草案但编译通过的（`ColimWNegDraft`、`YiLglAllReport`）；自称草案但被别的模块导入的（`AdmWNegDraft`、`TopDown`、`TreeLevelsO1Chain`、`LadderLabZTopDown`、`ScafLadderZTopDown`）。
 
 回报里一条观察：`OCF.Align.ScafLadderQRel` 在 6G 冷编时四次堆耗尽，它是 `WfFsn` 一族的依赖。没有深究。
+
+## 2026-11-25　历史重写之后：提交哈希全部变了；记录里的旧哈希已换
+
+作者当日重写了仓库历史，把全部提交的作者与提交者邮箱统一成 noreply 地址，并强制推送。重写只改提交的元数据：675 个提交逐个对应，各提交的文件树不变（研究负责人核过最新提交的树与重写前逐字节相同）；**全部提交哈希都变了**。
+
+研究负责人随后做的（各项都经作者用选项确认）：
+- 本地工作目录对齐到新历史；本地标签 `seal-2026-11-04` 重指到对应的新提交（说明与日期不变）；两个更早的本地备份分支删去。
+- 记录里引用旧提交哈希的 68 处（15 个文件，含 `archive/` 下 7 处）换成对应的新哈希，只换哈希这几个字符；换后的 15 个哈希都解析得到提交，旧哈希在已跟踪的文件里不再出现。本文件上面各段里的哈希也在其中，所以它们现在写的是新哈希，不是当时终端里显示的。
+- 其中 `Survey/CommunityCubical.md` 的 6 处原是两个社区项目在其代码里注明的本仓库修订号。作者定一并换成新哈希，所以该文件里对对方文件头注释的摘录与对方实际所写不再逐字相同（对方写的是重写前的哈希）。
+- 重写用的克隆、备份镜像与邮箱映射文件用完后删去；`.claude/` 只在本机忽略（不进提交）。

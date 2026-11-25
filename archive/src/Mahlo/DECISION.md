@@ -59,7 +59,7 @@ data V : Set where
 
 **提议**：从良序证明得到启示，把序数记号重构为归纳递归定义的序数（如 Brouwer 序数），基本列编码进类型，良基性由停机检查自动保证；先做 I；再由通用算法扩展、折叠成大数。
 
-**与本仓库历史的关系**：这正是 `src/OCF` 五月份的纲领。实测（记忆索引、git 历史 `2ceec77…bf75701`）：不比较的树折叠止于 ψ(Ω_Ω)；有界三分到 ψ(Ω_{Ω₂})；再上撞**无界三分**——LPO 禁忌，四条独立路径共同闭合。I 在 ψ(Ω_{Ω₂}) 之上不知多少层。
+**与本仓库历史的关系**：这正是 `src/OCF` 五月份的纲领。实测（记忆索引、git 历史 `8df584f…fdd99a3`）：不比较的树折叠止于 ψ(Ω_Ω)；有界三分到 ψ(Ω_{Ω₂})；再上撞**无界三分**——LPO 禁忌，四条独立路径共同闭合。I 在 ψ(Ω_{Ω₂}) 之上不知多少层。
 
 **文献里的定理**（Setzer 1998，*An introduction to well-ordering proofs in MLTT*，`Sources/setzer1998-intro-wellordering.pdf`，摘要原话）：
 
@@ -137,5 +137,5 @@ A 就是 CONTRACT 的流水线在 \(\mathcal C\) 的成员 ML₁W 上**完整跑
 | 能与不能的地图、最小放宽 | §126 |
 | 方案 A vs B | §127；`Sources/setzer2000-ordinal-systems-2-inaccessible.pdf` |
 | 决定 | §128；本文件 |
-| OCF 的历史 | 记忆 `ocf-exploration-index` 等四条；git `2ceec77…bf75701` |
+| OCF 的历史 | 记忆 `ocf-exploration-index` 等四条；git `8df584f…fdd99a3` |
 | 文献 | [Sources/README.md](Sources/README.md) |
