@@ -332,7 +332,7 @@ MathAB 回来后主审交选项，作者在问题框里改为原话："总之现
 | B10A 内链归纳：`rows : (n : ℕ) → Row n`（前缀 `B10Local`） | [B10A](B10A.md) | Opus 5.5 | 已回；`rows` 对一切 n（编译，无前提；协调者私有目录冷编 0）；纸面原样编出；附件 `attachments/B10A-*` |
 | B10B 外层出口与反查：`assemble : ((n : ℕ) → Row n) → Result`（前缀 `B10Exit`） | [B10B](B10B.md) | Opus 5.5 | 已回；`assemble` 与单项出口、反查（编译；协调者私有目录冷编 0）；附件 `attachments/B10B-*` |
 
-第十批实接（协调者）：`B10Join.double : LV.ψ⁰ (Ω₂ᴸ LV.+ Ω₂ᴸ) ≼ read Ψ₃ = B.assemble A.rows`，无前提，私有目录从头冷编退出 0（33 个模块），入口源码 `attachments/B10Join-B10Join.agda.txt`（另存 `Lead/attachments/B10Join.agda.txt`）。
+第十批实接（协调者）：`B10Join.double : LV.ψ⁰ (Ω₂ᴸ LV.+ Ω₂ᴸ) ≼ read Ψ₃ = B.assemble A.rows`，无前提，私有目录从头冷编退出 0（33 个模块），入口源码 `attachments/B10Join-B10Join.agda.txt`（另存 `Reports-2026-11-16/attachments/B10Join-B10Join.agda.txt`）。
 
 第十一批（2026-11-18，外部主审 [指令-04](../Lead/指令-04.md)、[协调简报](../Lead/第十一批/00-协调简报.md)；Claude 协调，简报全文原样派发 19:07；公共目录按准备段恢复并冷编，B10Join、B10ExitMain、YiLAB11Target 退出 0）：
 
@@ -341,4 +341,4 @@ MathAB 回来后主审交选项，作者在问题框里改为原话："总之现
 | B11A 参照的前缀归纳：`stages : (m : ℕ) → Stage m`（前缀 `B11Prefix`） | [B11A](B11A.md) | Opus 5.5 | 已回；`stages` 对一切 m（编译，无前提；协调者私有目录冷编 0）；纸面原样；附件 `attachments/B11A-*` |
 | B11B 真实更新与外层验收：`run-stages : ((m : ℕ) → Stage m) → Goal`（前缀 `B11Outer`） | [B11B](B11B.md) | Opus 5.5 | 已回；`run-stages`、换站实例、反查（编译；协调者私有目录冷编 0）；附件 `attachments/B11B-*` |
 
-第十一批合成（协调者）：`B11Join.level : LV.ψ⁰ (LV.lim T.ll) ≼ read Ψ₃ = B.run-stages A.stages`，`B11Join.src : tr₀ (Ord-Ord.ψ₀ (Ord-Ord.lim T.ss)) ≼ read Ψ₃ = src-exit level`，无前提，私有目录从头冷编退出 0（40 个模块），入口源码 `attachments/B11Join-B11Join.agda.txt`（另存 `Lead/attachments/B11Join.agda.txt`）。
+第十一批合成（协调者）：`B11Join.level : LV.ψ⁰ (LV.lim T.ll) ≼ read Ψ₃ = B.run-stages A.stages`，`B11Join.src : tr₀ (Ord-Ord.ψ₀ (Ord-Ord.lim T.ss)) ≼ read Ψ₃ = src-exit level`，无前提，私有目录从头冷编退出 0（40 个模块），入口源码 `attachments/B11Join-B11Join.agda.txt`（另存 `Reports-2026-11-16/attachments/B11Join-B11Join.agda.txt`）。
