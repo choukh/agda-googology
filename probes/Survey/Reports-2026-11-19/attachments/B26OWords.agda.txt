@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意多个 ω 幂的和，其后继都可由最高指数后一层的幂支配；在 W4 中用零层折叠与加法实际生成。
+module B26OWords where
+
+open import Data.List.Base using (List; []; _∷_; map; length)
+open import Data.List.Relation.Unary.All using (All; []; _∷_)
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import WVOne using (T₀; read)
+import W4Block as W
+import W4Ops as O
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; ≅→≼; ψ⁰-mono⁰; 1≼ψ⁰; +-mono; s≼s; ≼l; z≼)
+open import OCF.Align.YiVmConExact using (ˣ→≼)
+import B16IndexBase as I
+import B19IdealArithmetic as A
+import B22MovingIndex as E
+import B22TowerCut as K
+import B20StandardInside as S
+import B21StandardShape as Rise
+import B25DExactFold as F
+
+value : List T₀ → T₀
+value [] = L.zero
+value (a ∷ as) = L.ψ⁰ a L.+ value as
+
+copies : ∀ {xs} (a : T₀) → All (_≼ a) xs → L.suc (value xs) ≼ A.word (L.ψ⁰ a) (suc (length xs))
+copies a [] = 1≼ψ⁰ a
+copies a (h ∷ t) = +-mono (ψ⁰-mono⁰ h) (copies a t)
+
+bound : ∀ {xs} (a : T₀) → All (_≼ a) xs → L.suc (value xs) ≼ L.ψ⁰ (L.suc a)
+bound {xs} a h = ≼l (suc (length xs)) (copies a h)
+
+by-epsilon : ∀ {xs} (a : T₀) → All (_≼ a) xs → L.suc (value xs) ≼ E.above a
+by-epsilon a h = ≼-trans (bound a h) (≼-trans (ψ⁰-mono⁰ (E.strict a))
+   (≼-trans (proj₂ (A.normal (E.above a))) (proj₁ (E.fix a))))
+
+Tree = W.Tr W.zero
+pack : List Tree → Tree
+pack [] = W.zero
+pack (x ∷ xs) = F.fold x O.+ pack xs
+
+exact : ∀ xs → read (pack xs) ≈ᵛ value (map read xs)
+exact [] = z≼ , z≼
+exact (x ∷ xs) = ≼-trans (≅→≼ (L.≅-sym (I.plus (F.fold x) (pack xs))))
+                   (+-mono (ˣ→≼ (proj₂ (F.paired x))) (proj₁ (exact xs))) ,
+                 ≼-trans (+-mono (ˣ→≼ (proj₁ (F.paired x))) (proj₂ (exact xs)))
+                   (≅→≼ (I.plus (F.fold x) (pack xs)))
+
+one-tower : ∀ i xs → All (_≼ S.std i) (map read xs) → L.suc (read (pack xs)) ≼ S.std (suc (suc (suc i)))
+one-tower i xs h = ≼-trans (s≼s (proj₁ (exact xs))) (≼-trans (by-epsilon (S.std i) h) (K.up i))

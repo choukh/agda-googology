@@ -1,0 +1,94 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25DUnit where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+import OCF.Align.Uniform as U
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; z≼; s≼s; ≼l; ≼-trans)
+open import OCF.Align.YiVmConExact using (_≼ˣ_; wˣ; lˣ; ≼lˣ; reflˣ; ≅→≼ˣ; ˣ→≼; ˣ→ᵖ; VMᵖ)
+open import OCF.Lean.YiChainBase using (transˣ; module Abs)
+open import OCF.Lean.YiChainBack using (module AbsR)
+import W4Block as W
+import W4Ops as O
+import W4Fold as Fold
+import WVOne as WV
+open WV using (read)
+import B8FreezeMain as Q
+import B12Strict as Strict
+import B14Floor as Floor
+import B16IndexBase as I
+open import B25DTrack using (χ; source; shift; unit-output)
+open import B25DExactFold using (fold; _≈ˣ_; paired; sum)
+open import B25DExactNames using (low; high)
+
+Tree = W.Tr W.zero
+_◃_ = W._⊢_◃_ W.zero
+
+below : ∀ n (x : Tree) → L.suc (L.natᶜ n) ≼ read x → Floor.num n ◃ x
+below n W.zero ()
+below n (W.suc x) (s≼s d) with Floor.split n x d
+... | inj₁ refl = W.◃s
+... | inj₂ p = W.◃t (below n x p) W.◃s
+below n (W.lim f a) (≼l j h) = W.◃t (below n (f j) h) (W.◃l j)
+below n (W.Ω () _)
+below n (W.up _ () _ _)
+below n (W.ex _ _ _ _ ())
+
+room : ∀ (f : ℕ → Tree) (p : ∀ n → f n ◃ f (suc n)) n → L.natᶜ n ≼ read (f n)
+room f p zero = z≼
+room f p (suc n) = ≼-trans (s≼s (room f p n)) (Strict.strict (p n))
+
+finite-in : ∀ x k → Floor.num k ◃ Q.Gt x
+finite-in x k = below k (Q.Gt x) (≼l (suc k) (room _ dom (suc k)))
+  where dom = O.nextA (fold x) (proj₂ (Fold.ψ W.zero _ (Fold.B₀ W.zero) W.zero W.self (O.Ωt W.zero) x))
+
+reserve : ∀ x k → (Q.Gt x O.+ Floor.num k) ◃ Q.Gt (W.suc x)
+reserve x k = W.◃t (O.+-mono (Q.Gt x) (finite-in x k)) (W.◃l 1)
+
+neutral : ∀ k → (W.zero O.+ Floor.num k) ≡ Floor.num k
+neutral zero = refl
+neutral (suc k) = cong W.suc (neutral k)
+
+rise : ∀ n k → (χ n O.+ Floor.num k) ◃ χ (suc n)
+rise zero k rewrite neutral k = finite-in W.zero k
+rise (suc n) k = W.◃t (reserve (χ n) k)
+  (Fold.mono W.zero _ (Fold.B₀ W.zero) W.zero W.self (O.Ωt W.zero) (W.◃t (rise n 2) W.◃s))
+
+c : ℕ → WV.T₀
+c n = L.suc (read (χ n))
+
+c-step : ∀ n → c n L.≺ c (suc n)
+c-step n = I.pred (W.◃t (rise n 1) W.◃s)
+
+part = O.cum Q.Fz
+
+packed : ∀ n → L.ψ⁰ (c n) ≈ˣ read (part n)
+packed zero = paired (W.suc W.zero)
+packed (suc n) = transˣ p (proj₁ align) , transˣ (proj₂ align) q
+  where
+  ih = packed n
+  f = proj₁ ih
+  b = proj₂ ih
+  H = L.hs (I.hs (χ (suc n)))
+  p = Abs.ABS {X = read (part n)} {c = c n} f (ˣ→≼ b) (c (suc n)) H (c-step n)
+  q = AbsR.ABSR {X = read (part n)} {c = c n} b (ˣ→≼ f) (c (suc n)) H (c-step n)
+  align = sum {read (part n)} {part n} (reflˣ _ , reflˣ _)
+    {L.ψ⁰ (c (suc n))} {χ (suc (suc n))} (paired (W.suc (χ (suc n))))
+
+z : Tree
+z = proj₁ (Fold.ψ WV.lvl1 WV.o₂ (Fold.B₀ WV.lvl1) W.zero
+    (W.inu (λ _ → W.self)) (O.Ωt W.zero) (proj₁ (O.Ωt WV.lvl1)))
+
+source-exact : N.γ 1 ≈ˣ read z
+source-exact = lˣ (λ n → ≼lˣ (suc n) (transˣ (≅→≼ˣ (shift n))
+    (transˣ (low (suc n)) (transˣ (proj₂ (paired (W.suc (χ (suc n))))) (proj₁ (packed (suc n)))))))
+  , lˣ λ n → ≼lˣ (suc n) (transˣ (proj₂ (packed n)) (transˣ (proj₁ (paired (W.suc (χ n))))
+    (transˣ (wˣ (wˣ (reflˣ (read (χ (suc n)))))) (transˣ (high (suc n)) (≅→≼ˣ (L.≅-sym (shift (suc n))))))))
+
+exact : L.ψ⁰ (L.Ω (I.κ z)) ≈ᵛ N.γ 2
+exact = VMᵖ (read z) (I.hs z) (N.γ 1) (N.cert 1) (ˣ→ᵖ (proj₂ source-exact))
+      , VMᵖ (N.γ 1) (N.cert 1) (read z) (I.hs z) (ˣ→ᵖ (proj₁ source-exact))

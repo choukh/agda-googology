@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25ASource where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValNeg using (tr₀-iter)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≅→≼; s≼s)
+open import WVOne using (T₀)
+import B16Closed as C
+import B19IdealArithmetic as A
+import B19IdealPowers as P
+import B20StandardInside as St
+import B22MovingIndex as E
+import B24ROrbit as O
+import B25ARank as X
+import B25ABounds as Seal
+
+-- These four operations have only the original src ordinal type in their definitions.
+exp : S.Ord₀ → S.Ord₀
+exp S.zero = S.suc S.zero
+exp (S.suc x) = S.lim (S.iter (exp x S.+_) S.zero)
+exp (S.lim f) = S.lim (λ n → exp (f n))
+above : S.Ord₀ → S.Ord₀
+above x = S.lim (S.iter exp (S.suc x))
+rank : ℕ → S.Ord₀ → S.Ord₀
+rank zero = above
+rank (suc n) x = S.lim (S.iter (rank n) x)
+height : ℕ → S.Ord₀ → S.Ord₀
+height zero x = x
+height (suc n) x = rank (suc n) (height n x)
+source : S.Ord₀
+source = S.lim (λ n → height n O.source)
+
+exact-exp : ∀ x → tr₀ (exp x) L.≅ L.ψ⁰ (tr₀ x)
+exact-exp S.zero = L.s≅ L.z≅
+exact-exp (S.suc x) = L.l≅ (tr₀-iter (exact-exp x))
+exact-exp (S.lim f) = L.l≅ (λ n → exact-exp (f n))
+norm : ∀ a b → tr₀ a ≈ᵛ b → tr₀ (exp a) ≈ᵛ A.norm b
+norm a b (ab , ba) = ≼-trans (≅→≼ (exact-exp a)) (≼-trans (proj₂ (A.normal _)) (P.expo P.omega-pos ab)) ,
+                     ≼-trans (P.expo P.omega-pos ba) (≼-trans (proj₁ (A.normal _)) (≅→≼ (L.≅-sym (exact-exp a))))
+convert : ∀ n a b → tr₀ a ≈ᵛ b → tr₀ (rank n a) ≈ᵛ X.rank n b
+convert zero a b (ab , ba) = C.limit (C.steps exp A.norm norm (S.suc a) (L.suc b) (s≼s ab , s≼s ba))
+convert (suc n) a b d = C.limit (C.steps (rank n) (X.rank n) (convert n) a b d)
+series : ∀ n → tr₀ (height n O.source) ≈ᵛ X.height n O.D
+series zero = O.both
+series (suc n) = convert (suc n) _ _ (series n)
+both : tr₀ source ≈ᵛ X.diagonal O.D
+both = C.limit series
+actual : tr₀ source ≼ St.std 2
+actual = ≼-trans (proj₁ both) X.in-second
+strict : L.suc (tr₀ O.source) ≼ tr₀ source
+strict = ≼-trans (s≼s (proj₁ O.both)) (≼-trans Seal.improves (proj₂ both))

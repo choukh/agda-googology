@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原 Ω₃ 第 2 行内一棵严格超过整个第 1 行的父子树，按纯 src 闭式验值，再进入 Λ 的实际第二塔。
+module B19OldSource where
+open import Data.Unit using (tt)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module S = Ord-Ord
+module B = BoundedTrich
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; s≼s)
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import WVOne using (read)
+open import W4Fold using (EBOᶜ)
+open import WSLevel using (Ω₁ᴸ)
+open import YiLAB10Src using (two; up-rel; dn-rel; regular)
+open import B15RefSource using (one)
+import B12LimitSrc as A
+import B12Omega3Ref as R
+import B12EboRows as Row
+import B13Target as P
+import B17RefAllSource as Source
+import B19RowSecond as Small
+import B19RowSecondParent as Parent
+
+src-prefix = Source.pass (S.Ω two)
+src-parent = S.ψ₀ (src-prefix S.+ S.↑ B.zero (S.Ω one))
+
+prefix : A.Aligned src-prefix Small.p
+prefix = A.aligned (Source.pass-up 1 (up-rel 0)) (Source.pass-down 1 (dn-rel 0)) (P.pass-pres (regular 0))
+
+omega-one : A.Aligned (S.↑ B.zero (S.Ω one)) (L.up L.zero Ω₁ᴸ)
+omega-one = A.aligned (U.Mur (U.M-↑ B.zero (U.M-Ω {a = one} tt (L.≅ᴵ-refl _))))
+  (D.Rul (D.Dn-↑ B.zero (D.Dn-Ω {a = one} (L.≅ᴵ-refl _))))
+  (L.upˡ (L.upʳ (L.Ω-refl _)))
+
+value : tr₀ src-parent ≈ᵛ Parent.piece
+value = A.fold (A.plus prefix omega-one)
+
+strict : L.suc (Source.branches 1) ≼ Parent.piece
+strict = ≼-trans Small.strict (R.at-below Parent.piece 0)
+
+from-notation : tr₀ (S.suc (S.ψ₀ src-prefix)) ≼ tr₀ src-parent
+from-notation = ≼-trans (s≼s (proj₁ (A.fold prefix))) (≼-trans strict (proj₂ value))
+
+at-tower : tr₀ src-parent ≼ Row.child 2
+at-tower = ≼-trans (proj₁ value) Parent.actual
+
+terminal : tr₀ src-parent ≼ read EBOᶜ
+terminal = ≼-trans (proj₁ value) Parent.terminal
+
+chain : (tr₀ (S.suc (Source.outer 1)) ≼ tr₀ src-parent) × (tr₀ src-parent ≼ Row.child 2)
+chain = ≼-trans (s≼s (proj₁ (Source.all-outer 1))) (≼-trans strict (proj₂ value)) , at-tower

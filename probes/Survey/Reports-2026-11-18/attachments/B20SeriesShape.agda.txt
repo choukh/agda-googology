@@ -1,0 +1,75 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 两棵树在零、后继及每个可数分支上逐点同形。Λ 中定义的 FGH 因而可以用独立塔列的闭项计算。
+module B20SeriesShape where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Maybe using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym; trans)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read)
+import OCF.Align.Level as L
+import B12Terminal as T
+import B17CellPrefix as C
+import B18CellState as D
+import B18TowerSlots as Old
+import B19PathShape as P
+import B19PathFold as F
+import B14PathHeight as A
+import B20Towers as J
+import B20TowerValues as V
+import B20Series as E
+open T.Run
+
+combine : ∀ {X : Set} {x : X} (keep : Keep zero X x) (children : X → Tr⁺ zero) (step : X → X)
+  (g : ℕ → Tr⁺ zero) → (∀ j → P.Shape (proj₁ (children (iter step x j))) (proj₁ (g j))) →
+  P.Shape (proj₁ (node⁺ keep children step)) (proj₁ (limc⁺ g))
+combine nothing children step g h = P.l sums where
+  sums : ∀ j → P.Shape (cum (λ i → proj₁ (children (iter step _ i))) j) (cum (λ i → proj₁ (g i)) j)
+  sums zero = h 0
+  sums (suc j) = P.append (sums j) (h (suc j))
+combine (just (() , _)) _ _ _ _
+
+r = T.limRun tw T.terminal
+before : ∀ n → proj₁ (β (r (suc n))) ≡ T.value (r n)
+before zero = refl
+before (suc n) = refl
+
+module One (n : ℕ) (v : Tr⁺ zero) (start : P.Shape (proj₁ (β (r (suc n)))) (proj₁ v)) where
+  module K = J.At n
+  module M = C.At n
+  module Vn = V.At n
+  t = r (suc n)
+  body : ∀ j → P.Shape (M.tree j) (proj₁ (E.At.child n v j))
+  body j = subst (λ y → P.Shape (M.tree j) (K.evaluate y (J.slots (K.ℓ y) (suc n)) v)) (Vn.index j)
+    (subst (λ b → P.Shape (M.tree j) (K.evaluate z b v))
+      (trans (Old.At.all n z) (V.slots (K.ℓ z) (suc n)))
+      (F.Check.fold P.law (K.ℓ z) (K.ok z) (bs sub) (A.standard _) (A.standard _)
+        (proj₁ (Ωt (K.ℓ z))) (β t) v start))
+    where z = Vn.actual j
+          sub = M.S.child j
+  done : P.Shape (T.value t) (proj₁ (E.At.run n v))
+  done = combine (kp _ (ok t) M.S.p (z≤ _)) (λ z → ψ _ (ok t) (bs t) zero (z≤ _) (β t) (M.S.b z)) M.S.step (E.At.child n v) body
+
+each : ∀ n → P.Shape (T.value (r n)) (proj₁ (E.term n))
+each zero = P.ident _
+each (suc n) = One.done n (E.term n) (subst (λ x → P.Shape x (proj₁ (E.term n))) (sym (before n)) (each n))
+
+terminal : P.Shape EBOᶜ (proj₁ E.series)
+terminal = P.l (λ { zero → each zero ; (suc n) → each (suc n) })
+
+same-value : read EBOᶜ L.≅ read (proj₁ E.series)
+same-value = P.read-shape terminal
+
+open import YiLAStatusFGH using (FGH)
+same-fgh : ∀ {x y} → P.Shape x y → ∀ a → FGH x a ≡ FGH y a
+same-fgh P.z n = refl
+same-fgh {suc x} {suc y} (P.s h) n = go n where
+  go : ∀ j → iter (FGH x) n j ≡ iter (FGH y) n j
+  go zero = refl
+  go (suc j) = trans (same-fgh h _) (cong (FGH y) (go j))
+same-fgh (P.l h) n = same-fgh (h n) n
+big : ∀ n → FGH EBOᶜ n ≡ FGH (proj₁ E.series) n
+big = same-fgh terminal

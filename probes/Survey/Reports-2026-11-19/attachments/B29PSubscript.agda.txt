@@ -1,0 +1,94 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 以逐孩子等形加强回灌乘积，原 Ω 下标的每个前驱嵌入下一实际选点。直接推出两次原父询问之间的值比较。
+module B29PSubscript where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+import W4Block as W
+import W4Path as P
+import W4Ops as O
+import WVOne as V
+import B14PathHeight as PH
+import B16IndexBase as I
+import B18Product as M
+import B18TowerSlots as S
+import B19PathRel as F
+import B29PReturn as T
+import B29PMove as R
+import OCF.Align.Level as L
+import OCF.Align.BTBOValNeg as Vn
+import OCF.Align.BTBOFullV3 as F₀
+open import OCF.Align.BTBOFullEmb using (PEmb; Ψ-emb)
+open import OCF.Align.YiVmNegBound using (forget-≺)
+open import OCF.Align.Value using (_≼_)
+
+module Shape (q : V.T₀) where
+  scale = q M.·_
+  assoc : ∀ (a b c : V.T₀) → ((a L.+ b) L.+ c) L.≅ (a L.+ (b L.+ c))
+  assoc a b L.zero = L.≅-refl⁰ _
+  assoc a b (L.suc c) = L.s≅ (assoc a b c)
+  assoc a b (L.lim f) = L.l≅ (λ n → assoc a b (f n))
+  same : ∀ {a b : V.T₀} → a L.≅ b → scale a L.≅ scale b
+  same L.z≅ = L.z≅
+  same (L.s≅ h) = L.add-≅ (same h) (L.≅-refl⁰ q)
+  same (L.l≅ g) = L.l≅ (λ j → same (g j))
+  same (L.lᵢ≅ {p = ()} _ _)
+  same (L.upˡ {r = ()} _)
+  same (L.upʳ {r = ()} _)
+  distribute : ∀ (a b : V.T₀) → scale (a L.+ b) L.≅ (scale a L.+ scale b)
+  distribute a L.zero = L.≅-refl⁰ _
+  distribute a (L.suc b) = L.≅-trans (L.add-≅ (distribute a b) (L.≅-refl⁰ q)) (assoc (scale a) (scale b) q)
+  distribute a (L.lim f) = L.l≅ (λ n → distribute a (f n))
+  unit : ∀ (x : V.T₀) → (L.zero L.+ x) L.≅ x
+  unit L.zero = L.z≅
+  unit (L.suc x) = L.s≅ (unit x)
+  unit (L.lim f) = L.l≅ (λ n → unit (f n))
+  law : F.Laws
+  F.Laws.R law a b = V.read a L.≅ scale (V.read b)
+  F.Laws.plus law {a} {b} {c} {d} x y =
+    L.≅-trans (L.≅-sym (I.plus a c)) (L.≅-trans (L.add-≅ x y) (L.≅-trans
+      (L.≅-sym (distribute (V.read b) (V.read d))) (same (I.plus b d))))
+  F.Laws.limit law f g p = L.l≅ p
+
+  module Positive (pos : L.zero L.≺ q) where
+    order : ∀ {u v : V.T₀} → u L.≺ v → scale u L.≺ scale v
+    order (L.≺z {b = z} e) = L.≺-respˡ (L.≅-sym (same e)) (Vn.add-≺ (scale z) pos)
+    order (L.≺s p) = F₀.add-left (order p) q
+    order (L.≺l n p) = L.≺l n (order p)
+    order (L.≺i {p = ()} _ _ _)
+    order (L.≺u {r = ()} _)
+
+    module Witness (y c : W.Tr W.zero) (sh : V.read c L.≅ scale (V.read y)) where
+      source = I.κ y
+      dest = I.κ c
+      under : ∀ {a} → a L.≺ᴵ source → scale (L.forget a) L.≺ V.read c
+      under t = L.≺-respʳ (order (L.≺-respʳ (forget-≺ t) (L.forget-toLevel (V.read y) (I.hs y)))) (L.≅-sym sh)
+      admissible : ∀ {a} → a L.≺ᴵ source → L.HS (scale (L.forget a))
+      admissible t = Vn.HS-≺ (under t) (I.hs c)
+      embed : PEmb source dest
+      PEmb.map embed {c = a} t = L.toLevel (scale (L.forget a)) (admissible t)
+      PEmb.bnd embed t = L.toLevel-≺ (admissible t) (I.hs c) (under t)
+      PEmb.mono embed t u p = L.toLevel-≺ (admissible t) (admissible u) (order (forget-≺ p))
+      PEmb.coh embed t u e = L.toLevel-≅ (admissible t) (admissible u) (same (Vn.forget-≅ᴵ e))
+
+open R using (module Z; module H; Q; D)
+module Sc = Shape Q
+positive = I.pred (proj₂ Z.start)
+module Lift = Sc.Positive positive
+raw = λ x → proj₁ (W4Fold.ψ (Z.lev x) (Z.cert x) (S.slots (Z.lev x) Z.depth) W.zero
+  (P.z≤ _) Z.β (proj₁ (O.Ωt (Z.lev x))))
+  where import W4Fold
+shape : ∀ x → V.read (D x) L.≅ Sc.scale (V.read (raw x))
+shape x = T.Check.fold Sc.law (Z.lev x) (Z.cert x) (S.slots (Z.lev x) Z.depth)
+  (T.lifted (W.↑ H.k x) (P.OkO↑ H.k H.k (P.Ok-tw 1) W.self x)) (PH.standard (Z.lev x))
+  (proj₁ (O.Ωt (Z.lev x))) Z.start Z.β (L.≅-sym (Sc.unit Q))
+module Actual (j u : ℕ) where
+  module X = R.Actual j
+  y = raw (X.x u)
+  c = X.c (suc u)
+  tracked : V.read c L.≅ Sc.scale (V.read y)
+  tracked = subst (λ z → V.read z L.≅ Sc.scale (V.read y)) (sym (X.next u)) (shape (X.x u))
+  module Predecessors = Lift.Witness y c tracked
+  embed = Predecessors.embed
+  parent : F₀.Fʸ (I.κ y) ≼ F₀.Fʸ (I.κ c)
+  parent = Ψ-emb embed

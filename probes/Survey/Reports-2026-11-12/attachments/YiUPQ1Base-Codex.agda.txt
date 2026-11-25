@@ -1,0 +1,20 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiUPQ1Base where
+open import Data.Nat using (ℕ)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiGIInst as GI
+import OCF.Lean.YiFRStep as FR
+
+-- 后到 PA 诊断所提的具体式，独立检查；原估计文件保持冻结。
+δ : ℕ → B.Tr B.zero
+δ n = MT.twᶻ n
+c₁ = FR.Step.chain 2 1
+base-form : ∀ i (u : i P.≤ FR.Step.child 2 c₁) →
+  proj₁ (GI.baseᴱ 3 i (P.inc c₁ u)) ≡
+  (((proj₁ (O.Ωt i) O.+ O.ι i (δ 0)) O.+ O.ι i (δ 1)) O.+ O.ι i (δ 2))
+base-form i u = refl

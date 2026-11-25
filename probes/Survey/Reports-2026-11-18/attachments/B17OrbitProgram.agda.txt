@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 带变化的系数变换本身作幂迭代的输入；闭包中的第一个一级系数是 Ω₁。
+module B17OrbitProgram where
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+open import WSShadow using (LeE; LeE-refl; LeE-trans)
+import WSLevel as W
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼)
+import B12LimitRef as A
+import B14RefDescribed as D
+import B15OrbitAction as P
+import B16OrbitAction
+open P using (s; f)
+import B17OrbitOperator as O
+open O using (Trans; app; Rel; Eq; phi; height₁)
+
+power = λ y → height₁ y phi
+iter-rel : (Rel′ : Trans → Trans → Set) (F G : Trans → Trans) → (∀ a b → Rel′ a b → Rel′ (F a) (G b)) →
+           ∀ a b → Rel′ a b → ∀ n → Rel′ (iter F a n) (iter G b n)
+iter-rel r F G t a b d zero = d
+iter-rel r F G t a b d (suc n) = t _ _ (iter-rel r F G t a b d n)
+floor : ∀ y b a e → LeE (s (app (phi b) a) e) (s (app (power y b) a) e)
+floor L.zero b a e = LeE-refl _
+floor (L.suc y) b a e = LeE-trans (floor y b a e) (W.lC-ub (λ n → s (app (iter (power y) b n) a) e) 1)
+floor (L.lim g) b a e = LeE-trans (floor (g 0) b a e) (W.lC-ub (λ n → s (app (power (g n) b) a) e) 0)
+
+mixed : ∀ {x y : T₀} → x ≼ y → ∀ a b → Rel a b → Rel (power x a) (power y b)
+mixed {y = y} z≼ a b r c d u {e = e} z = D.weaken (O.phi-rel a b r c d u z) (floor y b d e) (P.infl (app (power y b) d) e (A.Described.infl z))
+mixed {L.suc x} {L.suc y} (s≼s w) a b r c d u z = A.limit _ _ (λ n → iter-rel Rel (power x) (power y) (mixed w) a b r n c d u z)
+mixed {y = L.lim g} (≼l n w) a b r c d u {e = e} z = D.weaken (mixed w a b r c d u z) (W.lC-ub (λ n → s (app (power (g n) b) d) e) n)
+    (P.infl (app (power (L.lim g) b) d) e (A.Described.infl z))
+mixed {L.lim g} {y} (l≼ w) a b r c d u {e = e} z = D.weaken (A.limit _ (λ _ → s (app (power y b) d) e) (λ n → mixed (w n) a b r c d u z))
+    (W.lC-const (s (app (power y b) d) e)) (P.infl (app (power y b) d) e (A.Described.infl z))
+mixed (≼i {p = ()} _ _ _)
+mixed (i≼ {p = ()} _)
+mixed (≼u {r = ()} _)
+mixed (u≼ {r = ()} _)
+
+congruent : ∀ {x y : T₀} → x L.≅ y → ∀ a b → Eq a b → Eq (power x a) (power y b)
+congruent L.z≅ = O.phi-eq
+congruent {L.suc x} {L.suc y} (L.s≅ w) a b r c d u z = L.l≅ (λ n → iter-rel Eq (power x) (power y) (congruent w) a b r n c d u z)
+congruent (L.l≅ w) a b r c d u z = L.l≅ (λ n → congruent (w n) a b r c d u z)
+congruent (L.lᵢ≅ {p = ()} _ _)
+congruent (L.upˡ {r = ()} _)
+congruent (L.upʳ {r = ()} _)
+
+module From (U : Trans) (a : P.Act) where
+  h = λ y → app (power y U) a
+  r : ∀ {x y} → x ≼ y → B16OrbitAction.Bridge (h x) (h y)
+  r u = mixed u U U (O.monotone U) a a (P.rows a)
+  q : ∀ {x y} → x L.≅ y → B16OrbitAction.Same (h x) (h y)
+  q u = congruent u U U (O.congruent U) a a (P.pres a)
+  action = O.node h r q

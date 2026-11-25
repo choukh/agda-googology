@@ -1,0 +1,61 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在恒深假设下，同一个迟到 Λ 孩子对全部双调用零输出给出统一名字上界，真正能打破它的是输出名字的深度。
+module B27SFlat where
+
+open import Data.Nat.Base as Nat using (ℕ; zero; suc; _≤_; _≤′_; ≤′-refl; ≤′-step; _⊔_)
+open import Data.Nat.Properties using (≤⇒≤′; m≤m⊔n; m≤n⊔m; m≤n⇒m≤1+n; ≤-refl; ≤-trans)
+open import Data.Product using (Σ; _,_; _×_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; subst)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as W
+open import WVOne using (T₀)
+import B17CellPrefix
+import B26PActual as End
+import B26Names as A
+import B26Depth as D
+import B26Flat as F
+import B27SActual as Actual
+import B27SLevel as Raw
+
+weaken : ∀ {i j u} → i ≤′ j → Raw.Bounded i u → Raw.Bounded j u
+weaken ≤′-refl p = p
+weaken (≤′-step d) p = Raw.loosen (weaken d p)
+
+module Tested (m t : ℕ) where
+  module Site = Actual.Layer m
+  module H = Site.Real.History.Pass t
+  level = H.Pair.whole-level
+  positive = W.tw (suc m)
+  origin = proj₁ H.Pair.X.whole
+
+  physical : Raw.Bounded (suc m) level
+  physical = Raw.indexed (suc m) origin
+
+  minimal : Raw.Bounded m level → ⊥
+  minimal = Raw.exact m origin
+
+module Hypothesis (i k : ℕ) (names : ∀ n → i ≤ n → ∀ j → Σ (A.Named (B17CellPrefix.cell n j)) (λ u → D.height (proj₁ u) ≡ k)) where
+  module Case (extra : ℕ) where
+    m = i ⊔ (k ⊔ extra)
+    module Point = Actual.Layer m
+    late : i ≤ Actual.count m
+    late = m≤n⇒m≤1+n (m≤n⇒m≤1+n (m≤m⊔n i (k ⊔ extra)))
+    observed = names (Actual.count m) late 1
+    top = proj₁ (proj₁ observed)
+    upper : ∀ t j → Point.Real.value t j ≼ A.value top
+    upper t j = ≼-trans {a = Point.Real.value t j} {b = B17CellPrefix.cell (Actual.count m) 1} {c = A.value top}
+      (Point.actual t j) (proj₂ (proj₂ (proj₁ observed)))
+    all-low : ∀ t j (b : A.Name) → A.value b ≼ Point.Real.value t j → D.height b ≤ k
+    all-low t j b h = subst (D.height b ≤_) (proj₂ observed)
+      (D.ordered b top (≼-trans {b = Point.Real.value t j} h (upper t j)))
+
+    -- 即使一个原生层号允许的 Ω 下标嵌套超过任意预定 N，名字上界仍由同一条恒深假设给出。
+    sharp : ∀ t → Raw.Bounded extra (Tested.level m t) → ⊥
+    sharp t p = Tested.minimal m t (weaken (≤⇒≤′ (≤-trans (m≤n⊔m k extra) (m≤n⊔m i (k ⊔ extra)))) p)
+
+    module Classical (lem : LEM) where
+      named : ∀ t j → Σ (A.Named (Point.Real.value t j)) (λ b → D.height (proj₁ b) ≤ k)
+      named t j = b , all-low t j (proj₁ b) (proj₁ (proj₂ b))
+        where b = F.Classical.downward lem top (Point.Real.value t j) (upper t j)

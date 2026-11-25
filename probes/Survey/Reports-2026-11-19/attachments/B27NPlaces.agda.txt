@@ -1,0 +1,95 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每个有限裸 Ω 森林有一座实际塔，首与后缀共用该塔中的字面槽位。子树的标签来自槽位本身。
+module B27NPlaces where
+
+open import Data.Nat.Base as N using (ℕ; zero; suc; _⊔_; _≤′_; ≤′-refl; ≤′-step)
+open import Data.Nat.Properties using (≤⇒≤′; m≤m⊔n; m≤n⊔m)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Unit.Base using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import W4Block as W
+import W4Ops as O
+import W4Path as P
+import B15Spine as S
+import B26CForest as F
+
+record Place : Set where
+  constructor room
+  field
+    floor : ℕ
+    key : W.Tr (W.tw floor)
+open Place public
+
+level = λ q → S.branch (W.tw (floor q)) (key q)
+ok : ∀ q → P.Ok (level q)
+ok q = proj₂ (P.Ok-tw (suc (floor q))) (key q)
+inside : ∀ q → level q W.≤ W.tw (suc (floor q))
+inside q = W.inc (key q) W.self
+
+slot : ∀ q n → floor q ≤′ n → W.Pos (W.tw (suc n))
+slot q .(floor q) ≤′-refl = inj₂ (key q , inj₁ tt)
+slot q (suc n) (≤′-step w) = inj₁ (inj₂ (slot q n w))
+
+located : ∀ q n (p : floor q ≤′ n) → W.at (W.tw (suc n)) (slot q n p) ≡ level q
+located q .(floor q) ≤′-refl = refl
+located q (suc n) (≤′-step w) = located q n w
+
+mutual
+  get : ∀ k (p : W.Pos k) → W.Br k p → W.Tr (W.at k p)
+  get (W.nd s f) (inj₂ (c , t)) = get⁼ (f c) t
+  get (W.nd (W.sΩ k) _) (inj₁ t) = get⁼ k t
+
+  get⁼ : ∀ k (t : W.Pos⁼ k) → W.Br⁼ k t → W.Tr (proj₁ (W.sl⁼ k t))
+  get⁼ k (inj₁ _) z = z
+  get⁼ k (inj₂ p) z = get k p z
+
+mutual
+  returns : ∀ k p z → get k p (W.fromBr k p z) ≡ z
+  returns (W.nd s h) (inj₂ (c , t)) = returns⁼ (h c) t
+  returns (W.nd (W.sΩ k) h) (inj₁ t) = returns⁼ k t
+
+  returns⁼ : ∀ k t z → get⁼ k t (proj₂ (W.sl⁼ k t) z) ≡ z
+  returns⁼ k (inj₁ _) _ = refl
+  returns⁼ k (inj₂ p) = returns k p
+
+send : ∀ k (o : P.Ok k) (p : W.Pos k) → W.Br k p → W.Tr k
+send k o p z = proj₁ (P.emb k o (P.posW k p) (W.suc t , O.z◃ t W.◃s))
+  where t = get k p z
+
+module One (a : Place) where
+  n = suc (floor a)
+  k = W.tw n
+  p = slot a (floor a) ≤′-refl
+  tail = send k (P.Ok-tw n) p
+  result = room n (W.Ω p tail)
+  children = λ z → k W.⊕ W.↑ k (tail (W.fromBr k p z))
+  shape : level result ≡ W.nd (W.sΩ (level a)) children
+  shape = refl
+
+module Two (a b : Place) where
+  m = floor a ⊔ floor b
+  n = suc m
+  k = W.tw n
+  p = slot a m (≤⇒≤′ (m≤m⊔n (floor a) (floor b)))
+  q = slot b m (≤⇒≤′ (m≤n⊔m (floor a) (floor b)))
+  first : W.at k p ≡ level a
+  first = located a m _
+  suffix : W.at k q ≡ level b
+  suffix = located b m _
+  body = λ z u → send k (P.Ok-tw n) p z O.+ send k (P.Ok-tw n) q u
+  second = λ z → W.Ω q (body z)
+  result = room n (W.Ω p second)
+  children = λ z → k W.⊕ W.↑ k (second (W.fromBr k p z))
+  shape : level result ≡ W.nd (W.sΩ (W.at k p)) children
+  shape = refl
+  ends = λ z u → k W.⊕ W.↑ k (body (W.fromBr k p z) (W.fromBr k q u))
+  carry : ∀ z → children z ≡ W.nd (W.sΩ (W.at k q)) (ends z)
+  carry z = refl
+
+encode : ∀ {t} → F.Pure t → Place
+encode F.empty = room 0 W.zero
+encode (F.node a F.empty) = One.result (encode a)
+encode (F.node a b@(F.node _ _)) = Two.result (encode a) (encode b)
+

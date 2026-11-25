@@ -1,0 +1,182 @@
+[
+  {
+    "file": "probes/OCF/Lean/YiE4Base.lagda.md",
+    "module": "YiE4Base",
+    "physical_lines": 42,
+    "agda_lines": 37,
+    "nonblank_agda_lines": 37,
+    "cold_exit": 0,
+    "wall_seconds": 16.57121975,
+    "rts_elapsed_seconds": 16.479,
+    "maximum_residency_bytes": 1594250456.0,
+    "checking_lines": [
+      "Checking OCF.Lean.YiE4Base (<仓库>/probes/OCF/Lean/YiE4Base.lagda.md)."
+    ],
+    "sha256": "db27b766a7b489b786d547b88c4365c9ed802f8971635065940c5ceba2eabf43"
+  },
+  {
+    "file": "probes/OCF/Lean/YiE4Cut19.lagda.md",
+    "module": "YiE4Cut19",
+    "physical_lines": 98,
+    "agda_lines": 93,
+    "nonblank_agda_lines": 93,
+    "cold_exit": 0,
+    "wall_seconds": 15.762082792,
+    "rts_elapsed_seconds": 15.671,
+    "maximum_residency_bytes": 1594641000.0,
+    "checking_lines": [
+      "Checking OCF.Lean.YiE4Cut19 (<仓库>/probes/OCF/Lean/YiE4Cut19.lagda.md)."
+    ],
+    "sha256": "79229540e6fd8ff1edf4396565986802068087b94e3e044d509339d224d785b0"
+  },
+  {
+    "file": "probes/OCF/Lean/YiE4Cut20.lagda.md",
+    "module": "YiE4Cut20",
+    "physical_lines": 35,
+    "agda_lines": 30,
+    "nonblank_agda_lines": 29,
+    "cold_exit": 0,
+    "wall_seconds": 15.655939792,
+    "rts_elapsed_seconds": 15.566,
+    "maximum_residency_bytes": 1482308360.0,
+    "checking_lines": [
+      "Checking OCF.Lean.YiE4Cut20 (<仓库>/probes/OCF/Lean/YiE4Cut20.lagda.md)."
+    ],
+    "sha256": "d7a7a058ba48cb186968d69e929ab9f293eb63691aa9e7461848fc362461f9b7"
+  },
+  {
+    "file": "probes/OCF/Lean/YiE4Default.lagda.md",
+    "module": "YiE4Default",
+    "physical_lines": 77,
+    "agda_lines": 72,
+    "nonblank_agda_lines": 71,
+    "cold_exit": 0,
+    "wall_seconds": 16.551016708,
+    "rts_elapsed_seconds": 16.46,
+    "maximum_residency_bytes": 1494593528.0,
+    "checking_lines": [
+      "Checking OCF.Lean.YiE4Default (<仓库>/probes/OCF/Lean/YiE4Default.lagda.md)."
+    ],
+    "sha256": "4779b8ecd520480c4b7574ba66ebde294eefac65a946cc9f24bc46ccfbdd8269"
+  },
+  {
+    "file": "probes/OCF/Lean/YiE4Frame.lagda.md",
+    "module": "YiE4Frame",
+    "physical_lines": 42,
+    "agda_lines": 37,
+    "nonblank_agda_lines": 36,
+    "cold_exit": 0,
+    "wall_seconds": 16.594356083,
+    "rts_elapsed_seconds": 16.503,
+    "maximum_residency_bytes": 1594315376.0,
+    "checking_lines": [
+      "Checking OCF.Lean.YiE4Frame (<仓库>/probes/OCF/Lean/YiE4Frame.lagda.md)."
+    ],
+    "sha256": "8b7e820324cd44ce031ab20cbaca12bcbf373dede3b2ae42106e4bbb95b8b576"
+  },
+  {
+    "file": "probes/OCF/Lean/YiE4Inner.lagda.md",
+    "module": "YiE4Inner",
+    "physical_lines": 50,
+    "agda_lines": 45,
+    "nonblank_agda_lines": 45,
+    "cold_exit": 0,
+    "wall_seconds": 16.544022542,
+    "rts_elapsed_seconds": 16.452,
+    "maximum_residency_bytes": 1762457584.0,
+    "checking_lines": [
+      "Checking OCF.Lean.YiE4Inner (<仓库>/probes/OCF/Lean/YiE4Inner.lagda.md)."
+    ],
+    "sha256": "22193be0205dfdbe43721f8c3024074a10b712fef341d14c236f95b02fba0585"
+  },
+  {
+    "file": "probes/OCF/Lean/YiE4Instances.lagda.md",
+    "module": "YiE4Instances",
+    "physical_lines": 31,
+    "agda_lines": 26,
+    "nonblank_agda_lines": 26,
+    "cold_exit": 0,
+    "wall_seconds": 16.505538041999998,
+    "rts_elapsed_seconds": 16.415,
+    "maximum_residency_bytes": 1539702800.0,
+    "checking_lines": [
+      "Checking OCF.Lean.YiE4Instances (<仓库>/probes/OCF/Lean/YiE4Instances.lagda.md)."
+    ],
+    "sha256": "26b6cd4fa5b6eadd4099a76869103a933c201e687fc7838c2dd9d71964dae66f"
+  },
+  {
+    "file": "probes/OCF/Lean/YiE4Objects.lagda.md",
+    "module": "YiE4Objects",
+    "physical_lines": 53,
+    "agda_lines": 48,
+    "nonblank_agda_lines": 48,
+    "cold_exit": 0,
+    "wall_seconds": 16.704060458,
+    "rts_elapsed_seconds": 16.612,
+    "maximum_residency_bytes": 1646038664.0,
+    "checking_lines": [
+      "Checking OCF.Lean.YiE4Objects (<仓库>/probes/OCF/Lean/YiE4Objects.lagda.md)."
+    ],
+    "sha256": "40375d78e78141ae8895a427ff40d0c34b989645661c58aa207448da9c775331"
+  },
+  {
+    "file": "probes/OCF/Lean/YiE4Param.lagda.md",
+    "module": "YiE4Param",
+    "physical_lines": 100,
+    "agda_lines": 95,
+    "nonblank_agda_lines": 95,
+    "cold_exit": 0,
+    "wall_seconds": 16.667250208000002,
+    "rts_elapsed_seconds": 16.576,
+    "maximum_residency_bytes": 1707244888.0,
+    "checking_lines": [
+      "Checking OCF.Lean.YiE4Param (<仓库>/probes/OCF/Lean/YiE4Param.lagda.md)."
+    ],
+    "sha256": "f55b3c62201933de84834194c66f5da60fa1fbbb1764d3fdc2577c40263bbce4"
+  },
+  {
+    "file": "probes/OCF/Lean/YiE4ParamFrame.lagda.md",
+    "module": "YiE4ParamFrame",
+    "physical_lines": 61,
+    "agda_lines": 56,
+    "nonblank_agda_lines": 56,
+    "cold_exit": 0,
+    "wall_seconds": 16.546787959,
+    "rts_elapsed_seconds": 16.455,
+    "maximum_residency_bytes": 1491994992.0,
+    "checking_lines": [
+      "Checking OCF.Lean.YiE4ParamFrame (<仓库>/probes/OCF/Lean/YiE4ParamFrame.lagda.md)."
+    ],
+    "sha256": "4a8f0e82520adc09919020ea26d14edcc788323b71288c521ae4ca2ba19b3b47"
+  },
+  {
+    "file": "probes/OCF/Lean/YiE4ParamInner.lagda.md",
+    "module": "YiE4ParamInner",
+    "physical_lines": 62,
+    "agda_lines": 57,
+    "nonblank_agda_lines": 57,
+    "cold_exit": 0,
+    "wall_seconds": 16.617025917,
+    "rts_elapsed_seconds": 16.525,
+    "maximum_residency_bytes": 1663499760.0,
+    "checking_lines": [
+      "Checking OCF.Lean.YiE4ParamInner (<仓库>/probes/OCF/Lean/YiE4ParamInner.lagda.md)."
+    ],
+    "sha256": "685141f7321262cbd3a33b0246857dd2350900900aeeb3ed6ce486a1a8263813"
+  },
+  {
+    "file": "probes/OCF/Lean/YiE4Use.lagda.md",
+    "module": "YiE4Use",
+    "physical_lines": 46,
+    "agda_lines": 41,
+    "nonblank_agda_lines": 40,
+    "cold_exit": 0,
+    "wall_seconds": 16.608052291,
+    "rts_elapsed_seconds": 16.516,
+    "maximum_residency_bytes": 1531549608.0,
+    "checking_lines": [
+      "Checking OCF.Lean.YiE4Use (<仓库>/probes/OCF/Lean/YiE4Use.lagda.md)."
+    ],
+    "sha256": "f87b9e4567af018ac9a79e79a2b02cdbb82ad3dbaf60b2ef3e155b957045862c"
+  }
+]

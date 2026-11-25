@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23RCut where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import WVOne using (T₀; 𝟏; read)
+open import W4Fold using (EBOᶜ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-suc; ≼-trans; ≼l; l≼; s≼s; z≼; ≅→≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import B12Omega3Ref as R
+import B13Target as P
+import B14Goal as Goal
+import B14RefAllRows as Rows
+import B17RefAllSource as Source
+import B20StandardInside as Tower
+import B21StandardShape as Rise
+import B22TowerCut as Cut
+import B22RowBoundary as Exact
+import B23RKernel as Kernel
+import B23RFixed as Fixed
+
+seed : 𝟏 ≼ Cut.cut
+seed = ≼l 1 (≼-trans (s≼s z≼) (Rise.rise 0))
+
+module At (m n : ℕ) where
+  open Fixed.At m n
+  open Kernel.At m n using (F; monotone)
+  module T = Fixed.At.Cut m n Tower.std
+  Inside = ∀ {x : T₀} → L.suc x ≼ Cut.cut → F x ≼ Cut.cut
+
+  at-towers : Inside → T.Cover
+  at-towers h j = h (≼l (suc j) (Rise.rise j))
+
+  on-interior : T.Cover → Inside
+  on-interior h (≼l j d) = ≼-trans (monotone (≼-trans (≼-suc (≼-refl _)) d)) (h j)
+
+  in-cut : T.Cover → Rows.node m n ≼ Cut.cut
+  in-cut h = T.enough seed h
+
+  in-terminal : T.Cover → Rows.node m n ≼ read EBOᶜ
+  in-terminal h = ≼-trans (in-cut h) Cut.terminal
+
+  original : T.Cover → tr₀ (Source.closed m n) ≼ read EBOᶜ
+  original h = ≼-trans (proj₁ (Source.row m n)) (in-terminal h)
+
+first-child : (∀ j → L.ψ⁰ (P.pass (P.co₀ (Tower.std j))) ≼ Cut.cut)
+            → L.ψ⁰ (P.pass Exact.needed) ≼ read EBOᶜ
+first-child h = ≼-trans (≅→≼ (L.≅-sym Exact.first-child)) (At.in-terminal 1 0 h)
+
+whole : (∀ m n j → Rows.gain m n (Tower.std j) ≼ Cut.cut) → L.ψ⁰ R.Ω₃ ≼ read EBOᶜ
+whole h = proj₁ Goal.omega3 λ m n →
+  ≼-trans (≅→≼ (L.≅-sym (Rows.as-chain m n))) (At.in-terminal m n (h m n))

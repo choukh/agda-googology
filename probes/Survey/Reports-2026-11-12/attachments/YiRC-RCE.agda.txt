@@ -1,0 +1,88 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- (E) 放宽第一位置 (台账 B7) 的块改动原型: 一层的树与序, 多一条模拟式的子句 ◃σ. 只查类型与停机.
+module RCE where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+
+-- 签名多三项: 槽位之间的结构等价 E, 分支的换算 cv, 第一分支到第一分支 cv₀
+record Sg : Set₁ where
+  constructor sg
+  field
+    P   : Set
+    B   : P → Set
+    C   : Set
+    D   : C → Set
+    b₀  : (p : P) → B p
+    z₀  : (c : C) → D c
+    R   : (c : C) → D c → D c → Set
+    E   : P → P → Set
+    cv  : ∀ {p p′} → E p p′ → B p′ → B p
+    cv₀ : ∀ {p p′} (e : E p p′) → cv e (b₀ p′) ≡ b₀ p
+open Sg public
+
+mutual
+  data T (S : Sg) : Set where
+    zero : T S
+    suc  : T S → T S
+    lim  : (f : ℕ → T S) → ((n : ℕ) → Lt S (f n) (f (suc n))) → T S
+    Ω    : (p : P S) → (B S p → T S) → T S
+    up   : T S → (c : C S) (y : D S c) → R S c (z₀ S c) y → T S
+
+  data Lt (S : Sg) : T S → T S → Set where
+    ◃s : ∀ {x} → Lt S x (suc x)
+    ◃l : ∀ {f a} (n : ℕ) → Lt S (f n) (lim f a)
+    ◃w : ∀ {p g} → Lt S (g (b₀ S p)) (Ω p g)
+    ◃u : (x : T S) (c : C S) (y : D S c) (e : R S c (z₀ S c) y) → Lt S x (up x c y e)
+    ◃c : (x : T S) (c : C S) {y′ y : D S c} {e′ : R S c (z₀ S c) y′} {e : R S c (z₀ S c) y}
+       → R S c y′ y → Lt S (up x c y′ e′) (up x c y e)
+    ◃t : ∀ {x y z} → Lt S x y → Lt S y z → Lt S x z
+    -- 新子句: 同层号不同槽位的两个结点, 分支在结构等价下逐点是第一位置
+    ◃σ : ∀ {p p′ g g′} (e : E S p p′) → ((z : B S p′) → Lt S (g (cv S e z)) (g′ z)) → Lt S (Ω p g) (Ω p′ g′)
+
+-- 一层之内的运算照旧可写, 各多一个子句
+module _ {S : Sg} where
+  infixl 6 _+_
+  mutual
+    _+_ : T S → T S → T S
+    x + zero       = x
+    x + suc y      = suc (x + y)
+    x + lim f a    = lim (λ n → x + f n) (λ n → +-mono x (a n))
+    x + Ω p g      = Ω p (λ z → x + g z)
+    x + up y c w e = up (x + y) c w e
+
+    +-mono : (c : T S) {a b : T S} → Lt S a b → Lt S (c + a) (c + b)
+    +-mono c ◃s           = ◃s
+    +-mono c (◃l n)       = ◃l n
+    +-mono c ◃w           = ◃w
+    +-mono c (◃u x k y e) = ◃u (c + x) k y e
+    +-mono c (◃c x k d)   = ◃c (c + x) k d
+    +-mono c (◃t d e)     = ◃t (+-mono c d) (+-mono c e)
+    +-mono c (◃σ e h)     = ◃σ e (λ z → +-mono c (h z))
+
+  -- 新子句不破坏 "之下有零": 结点的第一分支仍在结点之下
+  σ-first : ∀ {p p′} (g : B S p → T S) (g′ : B S p′ → T S) (e : E S p p′) → ((z : B S p′) → Lt S (g (cv S e z)) (g′ z)) → Lt S (g (b₀ S p)) (Ω p′ g′)
+  σ-first {p} {p′} g g′ e h = ◃t (subst (λ t → Lt S (g t) (g′ (b₀ S p′))) (cv₀ S e) (h (b₀ S p′))) ◃w
+
+-- 折叠的结点一行 (保留则逐分支, 否则取链的部分和极限) 在新子句下要的单调, 逐字写出它的类型.
+-- Keep 是折叠对槽位的判定结果 (YiRWFold.Keep 的形状).
+module Need {S S′ : Sg} where
+  Keep : (X : Set) → X → Set
+  Keep X x₀ = Maybe (Σ (P S′) λ q → Σ (B S′ q → X) λ c → c (b₀ S′ q) ≡ x₀)
+
+  -- 两边都保留时可写: 要目标层两个槽位之间的结构等价, 以及换算与 cv 交换
+  both : ∀ {p p′} (e : E S p p′) {q q′ : P S′} (e′ : E S′ q q′)
+       (c : B S′ q → B S p) (c′ : B S′ q′ → B S p′)
+       → ((z : B S′ q′) → c (cv S′ e′ z) ≡ cv S e (c′ z))
+       → (G G′ : (x : T S) → T S′) {g : B S p → T S} {g′ : B S p′ → T S}
+       → ((z : B S p′) → Lt S′ (G (g (cv S e z))) (G′ (g′ z)))
+       → Lt S′ (Ω q (λ z → G (g (c z)))) (Ω q′ (λ z → G′ (g′ (c′ z))))
+  both e e′ c c′ comm G G′ {g} {g′} h =
+    ◃σ e′ (λ z → subst (λ t → Lt S′ (G (g t)) (G′ (g′ (c′ z)))) (comm′ z) (h (c′ z)))
+    where
+    comm′ : ∀ z → cv S e (c′ z) ≡ c (cv S′ e′ z)
+    comm′ z with c (cv S′ e′ z) | comm z
+    ... | _ | refl = refl

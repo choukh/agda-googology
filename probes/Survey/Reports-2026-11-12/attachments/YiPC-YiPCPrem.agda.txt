@@ -1,0 +1,35 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiPCPrem where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiCDCanon using (idx)
+
+-- 来源 YiKVRel._⊴_，在不读记号的导入闭包里重置相同的两构造子。
+infix 4 _⊴_
+data _⊴_ (x : Tr zero) : Tr zero → Set where
+  ⊴r : x ⊴ x
+  ⊴◃ : ∀ {y} → zero ⊢ x ◃ y → x ⊴ y
+
+Pre : Tr zero → Set
+Pre x = Σ ℕ λ k → x ⊴ idx k
+
+idx-in : ∀ k → Pre (idx k)
+idx-in k = k , ⊴r
+
+idx0 : Pre (idx 0)
+idx0 = idx-in 0
+idx1 : Pre (idx 1)
+idx1 = idx-in 1
+idx2 : Pre (idx 2)
+idx2 = idx-in 2
+
+below : ∀ {x y} → Pre y → zero ⊢ x ◃ y → Pre x
+below (k , ⊴r) d = k , ⊴◃ d
+below (k , ⊴◃ e) d = k , ⊴◃ (◃t d e)
+
+suc-inv : ∀ {x} → Pre (suc x) → Pre x
+suc-inv p = below p ◃s
+
+lim-inv : ∀ {f a} → Pre (lim f a) → ∀ n → Pre (f n)
+lim-inv p n = below p (◃l n)

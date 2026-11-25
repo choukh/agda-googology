@@ -1,0 +1,112 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module R16A where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold
+open import OCF.Lean.YiDropRW using (twoᴿ; Witᴿ; Vᴿ)
+
+L1 L2 : L
+L1 = nd sS (λ _ → zero)
+L2 = nd sS (λ _ → L1)
+
+h1 : Tr zero → L
+h1 c = tw 0 ⊕ ↑ (tw 0) c
+
+lvl2 : h1 twoᴿ ≡ L2
+lvl2 = refl
+
+o1 : Ok (tw 1)
+o1 = Ok-tw 1
+
+β : Tr (tw 1)
+β = proj₁ (Ωt (tw 1))
+
+β′ : Tr⁺ zero
+β′ = ψ₀ (tw 1) o1 β
+
+o2 : Ok L2
+o2 = proj₂ o1 twoᴿ
+
+oL1 : Ok L1
+oL1 = proj₂ o2 tt
+
+BW : Base L2
+BW i u = ψ (tw 1) o1 (B₀ (tw 1)) i (inc twoᴿ u) (Ωt i) β
+
+B1 : Base L1
+B1 i u = BW i (inc tt u)
+
+G : Tr zero → Tr⁺ zero
+G c = ψ₀ (h1 c) (proj₂ o1 c) (proj₁ (Ωt (h1 c)))
+
+β₁⁺ : Tr⁺ L1
+β₁⁺ = B1 L1 self
+
+β₁ : Tr L1
+β₁ = proj₁ β₁⁺
+
+g₁ : Tr zero → Tr L1
+g₁ c = proj₁ (Ωt L1 ⊞ G c)
+
+q₁ : Pos L1
+q₁ = inj₂ (tt , inj₁ tt)
+
+-- (A) 第 1 层的底是结点, 分支 c 上是 Ω₁ + ι (G c)
+β₁-form : β₁ ≡ Ω q₁ g₁
+β₁-form = refl
+
+-- (B) 链 zz: 每步是第 1 层自身路径的折叠再 next
+step : Tr L1 → Tr L1
+step z = proj₁ (ψ L2 o2 BW L1 (inc tt self) (BW L1 (inc tt self)) (up zero tt (suc z) (z◃ z ◃s)))
+
+zz : ℕ → Tr L1
+zz = iter step zero
+
+zz-step : ∀ z → step z ≡ proj₁ (next⁺ (ψ L1 oL1 B1 L1 self β₁⁺ z))
+zz-step z = refl
+
+-- (C) 见证值的形状
+V-form : Vᴿ ≡ proj₁ (limc⁺ (λ n → next⁺ (ψ L1 oL1 B1 zero (z≤ L1) β′ (zz n))))
+V-form = refl
+
+-- (D) β₁ 在第 1 层自身路径上被保留, 分支上是 g₁ c 的自身折叠
+D-form : proj₁ (ψ L1 oL1 B1 L1 self β₁⁺ β₁) ≡ Ω q₁ (λ c → proj₁ (ψ L1 oL1 B1 L1 self β₁⁺ (g₁ c)))
+D-form = refl
+
+-- (E) β₁ 折到第 0 层: 链 ch 上各行的部分和极限; 链的回灌用底的第 0 层分量
+ch : ℕ → Tr zero
+ch = iter (λ z → proj₁ (ψ L1 oL1 B1 zero (inc tt self) (B1 zero (inc tt self)) (g₁ z))) zero
+
+ch′ : Tr L1 → ℕ → Tr zero
+ch′ x = iter (λ z → proj₁ (ψ L1 oL1 B1 zero (inc tt self) (B1 zero (inc tt self)) (x + g₁ z))) zero
+
+E-form : (b : Tr⁺ zero) (x : Tr L1) → proj₁ (ψ L1 oL1 B1 zero (z≤ L1) b (x + β₁))
+       ≡ proj₁ (limc⁺ (λ n → ψ L1 oL1 B1 zero (z≤ L1) b (x + g₁ (ch′ x n))))
+E-form b x = refl
+
+-- (F) Ω₁ 叶在自身路径上: 保留, 分支 d 上是 next (Up b d)
+F-form : (b : Tr⁺ L1) → proj₁ (ψ L1 oL1 B1 L1 self b (proj₁ (Ωt L1)))
+       ≡ Ω q₁ (λ d → proj₁ (next⁺ (Up zero (down stop tt) b d)))
+F-form b = refl
+
+-- (G) 可数尾在自身路径上是 next 的迭代, 在第 0 层路径上也是
+tail1 : (b : Tr⁺ L1) (x : Tr L1) (y : Tr zero)
+      → ψ L1 oL1 B1 L1 self b (x + ι L1 (suc y)) ≡ next⁺ (ψ L1 oL1 B1 L1 self b (x + ι L1 y))
+tail1 b x y = refl
+
+tail0 : (b : Tr⁺ zero) (x : Tr L1) (y : Tr zero)
+      → ψ L1 oL1 B1 zero (z≤ L1) b (x + ι L1 (suc y)) ≡ next⁺ (ψ L1 oL1 B1 zero (z≤ L1) b (x + ι L1 y))
+tail0 b x y = refl
+
+-- (H) next 的折叠是倍数的极限, 不是折叠的 next
+nextfold : (b : Tr⁺ zero) (t : Tr⁺ L1)
+         → proj₁ (ψ L1 oL1 B1 zero (z≤ L1) b (proj₁ (next⁺ t)))
+         ≡ lim (λ n → proj₁ (ψ L1 oL1 B1 zero (z≤ L1) b (iter (proj₁ t +_) (proj₁ t) n))) _
+nextfold b t = refl

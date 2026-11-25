@@ -1,0 +1,101 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 把 ψ₁(p + 提升 t) 化作以 ψ₁(p) 为零行的树运算。右加 Ω₂、取可数高度遂可在一级原地解释。
+module B15RefAlgebra where
+open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; cong; sym)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B13Target as P
+import B14RefFixed as F
+
+power : T₁ → T₁
+power a = L.lim (S.iter (a L.+_) L.zero)
+
+pow-pres : ∀ {a b} → a L.≅ b → power a L.≅ power b
+pow-pres r = L.l≅ (L.iter-R L._≅_ (L.add-≅ {σ = λ q → q} {σ′ = λ q → q} r) L.z≅)
+
+E₀ : T₁ → T₀ → T₁
+E₀ u L.zero = u
+E₀ u (L.suc y) = power (E₀ u y)
+E₀ u (L.lim f) = L.lim (λ j → E₀ u (f j))
+
+E : T₁ → T₁ → T₁
+E u L.zero = u
+E u (L.suc y) = power (E u y)
+E u (L.lim f) = L.lim (λ j → E u (f j))
+E u (L.up L.zero y) = E₀ u y
+E u (L.limᵢ L.zero g) = L.limᵢ L.zero (λ y → E u (g y))
+
+small : ∀ {p u} → F.collapse p L.≅ u → ∀ {x y : T₀} → x L.≅ y →
+  F.collapse (L.add p (λ q → L.suc (L.suc q)) x) L.≅ E₀ u y
+small h L.z≅ = h
+small h (L.s≅ d) = pow-pres (small h d)
+small h (L.l≅ d) = L.l≅ λ n → small h (d n)
+small h (L.upˡ {r = ()} _)
+small h (L.upʳ {r = ()} _)
+small h (L.lᵢ≅ {p = ()} _ _)
+
+-- 容许 up 左右不同步，特别是一级树与零层树具有相同的结构读法。
+open import Data.Product using (_,_)
+lift₀ : ∀ (p : Lev₂) {u} → F.collapse p L.≅ u → {x : T₀} {y : T₁} → x L.≅ y →
+  F.collapse (L.add p (λ q → L.suc (L.suc q)) x) L.≅ E u y
+lift₀ p h L.z≅ = h
+lift₀ p h (L.s≅ d) = pow-pres (lift₀ p h d)
+lift₀ p h (L.l≅ d) = L.l≅ (λ j → lift₀ p h (d j))
+lift₀ p h (L.upˡ {r = ()} d)
+lift₀ p h (L.upʳ {r = L.zero} d) = small h d
+lift₀ p h (L.lᵢ≅ {p = ()} _ _)
+
+drop₀ : ∀ (p : Lev₂) {u} → F.collapse p L.≅ u → {x : T₁} {y : T₀} → x L.≅ y →
+  F.collapse (p L.+ L.up L.zero x) L.≅ E₀ u y
+drop₀ p h L.z≅ = h
+drop₀ p h (L.s≅ d) = pow-pres (drop₀ p h d)
+drop₀ p h (L.l≅ d) = L.l≅ (λ j → drop₀ p h (d j))
+drop₀ p h (L.upˡ {r = L.zero} d) = small h d
+drop₀ p h (L.upʳ {r = ()} d)
+drop₀ p h (L.lᵢ≅ {q = ()} _ _)
+
+explain : ∀ (p : Lev₂) {u} → F.collapse p L.≅ u → {x y : T₁} → x L.≅ y →
+  F.collapse (p L.+ L.up L.zero x) L.≅ E u y
+explain p h L.z≅ = h
+explain p h (L.s≅ d) = pow-pres (explain p h d)
+explain p h (L.l≅ d) = L.l≅ (λ j → explain p h (d j))
+explain p h (L.upˡ {r = L.zero} d) = lift₀ p h d
+explain p h (L.upʳ {r = L.zero} d) = drop₀ p h d
+explain p h (L.lᵢ≅ {p = L.zero} {q = L.zero} L.z≅ g) =
+  L.lᵢ≅ L.z≅ (λ x y d → explain p h (g (L.tr⁻ L.z≅ x) y (L.tr⁻-≅ L.z≅ d)))
+
+Γ : T₁ → T₁
+Γ u = L.lim (λ k → S.iter (E u) Ω₁ᴸ (suc k))
+
+add-Ω : ∀ {p u} → F.collapse p L.≅ u → F.collapse (p L.+ Ω₂ᴸ) L.≅ Γ u
+add-Ω {p} {u} d = L.l≅ (λ k → step (suc k)) where
+  step : ∀ n → S.iter (λ x → F.collapse (p L.+ L.up L.zero x)) Ω₁ᴸ n L.≅ S.iter (E u) Ω₁ᴸ n
+  step = L.iter-R L._≅_ {G = λ x → F.collapse (p L.+ L.up L.zero x)} {G′ = E u} (explain p d) (L.Ω-refl _)
+
+H : T₀ → T₁ → T₁
+H L.zero u = Γ u
+H (L.suc x) u = L.lim (S.iter (H x) u)
+H (L.lim f) u = L.lim (λ n → H (f n) u)
+
+inside : ∀ x {p u} → F.collapse p L.≅ u → F.collapse (P.height x p) L.≅ H x u
+inside L.zero d = add-Ω d
+inside (L.suc x) {p} {u} d = L.l≅ (λ n → it n) where
+  it : ∀ n → F.collapse (S.iter (P.height x) p n) L.≅ S.iter (H x) u n
+  it zero = d
+  it (suc n) = inside x (it n)
+inside (L.lim f) d = L.l≅ (λ n → inside (f n) d)
+
+raw : ∀ x → P.height x L.zero L.≅ P.co₀ x
+raw x = L.≅-trans (P.shift₀ x L.z≅) (U.left-unit R.idσ (P.regular₀ x))
+
+true-coeff : ∀ x → F.collapse (P.co₀ x) L.≅ H x Ω₁ᴸ
+true-coeff x = L.≅-trans (F.pres (L.≅-sym (raw x))) (inside x (L.Ω-refl _))

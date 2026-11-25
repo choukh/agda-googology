@@ -1,0 +1,53 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18RefHeight where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiKVRel as KV
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; ≼-refl; ≼-trans; ≼l; l≼; s≼s; ≅→≼)
+import W4Block as B
+import W4Ops as W
+open import WVOne using (T₀; read; cum-≥)
+import B8FreezeMain as N
+import B17SharpHeight as H
+import B17SharpSeed as S
+import B17SharpSelected as Q
+
+◃s≼ : ∀ {x y : R.Tr R.zero} → R.zero R.⊢ x ◃ y → L.suc (KV.readRW x) ≼ KV.readRW y
+◃s≼ R.◃s = ≼-refl _
+◃s≼ (R.◃l {a = a} n) = ≼l (suc n) (◃s≼ (a n))
+◃s≼ (R.◃w {p = ()})
+◃s≼ (R.◃u x () y d)
+◃s≼ (R.◃c x () d)
+◃s≼ (R.◃t p q) = ≼-trans (◃s≼ p) (KV.◃→≼ q)
+
+inflate : T₀ → W.Tr⁺ B.zero
+inflate L.zero = B.suc B.zero , B.◃s
+inflate (L.suc x) = B.suc (proj₁ (inflate x)) , W.z◃ _ B.◃s
+inflate (L.lim f) = W.limc⁺ (λ j → inflate (f j))
+
+ceiling : ∀ x → x ≼ read (proj₁ (inflate x))
+ceiling L.zero = z≼
+ceiling (L.suc x) = s≼s (ceiling x)
+ceiling (L.lim g) = l≼ (λ j → ≼l j (≼-trans (ceiling (g j)) (cum-≥ (λ k → proj₁ (inflate (g k))) j)))
+
+module Generic (f : H.Pos → H.Pos) (e : H.Grows f) where
+  F = λ z a → H.see (H.hierarchy z f e a)
+  base : ∀ z a → L.suc (H.see a) ≼ F z a
+  base z a = ◃s≼ (H.rises z f e a)
+  height : ∀ z a → read z ≼ F z a
+  height B.zero a = z≼
+  height (B.suc z) a = ≼-trans (s≼s (height z a)) (◃s≼ (H.edges {z = z} B.◃s f e a))
+  height (B.lim g d) a = l≼ (λ j → ≼l j (height (g j) a))
+
+  varying-index : ∀ a t → (∀ z → F z a ≼ t) → ⊥
+  varying-index a t h = N.irr t (≼-trans (ceiling (L.suc t)) (≼-trans (height z a) (h z)))
+    where z = proj₁ (inflate (L.suc t))
+  varying-base : ∀ z t → (∀ a → F z a ≼ t) → ⊥
+  varying-base z t h = N.irr t (≼-trans (s≼s (≼-trans (ceiling t) (≅→≼ (L.≅-sym (Q.same _))))) (≼-trans (base z a) (h a)))
+    where a = Q.start (inflate t)
+
+module Sharp (lem : LEM) = Generic (S.Seed.act lem) (S.Seed.gain lem)

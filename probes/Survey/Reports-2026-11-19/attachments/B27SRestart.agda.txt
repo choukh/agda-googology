@@ -1,0 +1,92 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 清去双调用零观测的外部起点。第一轮每个真实正下标的独立重启值仍经第二轮定向零槽同时进入该观测。
+module B27SRestart where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+import Data.Unit
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; read; 𝟏)
+open import WVTwo using (◃→≼)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; s≼s; ≼l; l≼)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B14Tower as W
+import B15ReadPaths as R
+import B15Spine as Spine
+import B18Scale as Scale
+import B20Room as Room
+import B20StandardInside as St
+import B21TowerPorts as Port
+import B27STrace as Trace
+import B27SPasses as Passes
+open T.Run
+
+module Direct (m : ℕ) (B : Base (tw (suc (suc m)))) where
+  k = tw (suc m)
+  top = tw (suc (suc m))
+  h = Spine.branch k
+  module I = Port.At (suc m) B (Ωt zero)
+  sample : ℕ → T₀
+  sample q = read (proj₁ (I.independent (I.index q)))
+  budget : T₀
+  budget = L.lim sample
+  first : St.std (suc m) ≼ budget
+  first = ≼l 0 (≼-refl (St.std (suc m)))
+
+  low : ∀ (o : Ok top) → o ≡ Ok-tw (suc (suc m)) → ∀ v c (w : zero ≤ h c) q →
+    sample q ≼ read (proj₁ (ψ top o B zero (inc c w) v (proj₁ (Ωt top))))
+  low .(Ok-tw (suc (suc m))) refl v c w q = Port.At.directed (suc m) B v c w q
+
+  actual-index : ∀ (r : T.Run top) → ok r ≡ Ok-tw (suc (suc m)) → bs r ≡ B →
+    ∀ n → Spine.Cardinal.ix k h r n ≡ I.index n
+  actual-index (T.makeRun .(Ok-tw (suc (suc m))) .B _ _ _ _) refl refl n = refl
+
+to-value : ∀ {x y : Tr zero} → A._⊴_ x y → read x ≼ read y
+to-value (inj₁ refl) = ≼-refl _
+to-value (inj₂ p) = ◃→≼ p
+
+module At (m : ℕ) (r : T.Run (U.sc (tw (suc (suc m)))))
+          (eq : proj₂ (ok r) Data.Unit.tt ≡ Ok-tw (suc (suc m))) (cr : A.Covered r) where
+  private module D = Passes.At m r eq cr
+  open D using (module M; snap; k; top; h)
+  module Pass (t : ℕ) where
+    module Second = D.Pass t
+    module P = Second.Pair
+    module Q = Direct m (M.S t)
+    q = Q.budget
+    zero-slot : ∀ z w → q ≼ read (proj₁ (bs Second.b zero (inc z w)))
+    zero-slot z w = l≼ λ n → ≼-trans {a = Q.sample n}
+      {b = read (proj₁ (ψ top (ok M.r₀) (M.S t) zero (inc z w) v (proj₁ (Ωt top))))}
+      {c = read (proj₁ (bs Second.b zero (inc z w)))} (Q.low (ok M.r₀) eq v z w n)
+      (to-value (Trace.fold-in top (ok M.r₀) (M.S t) zero (inc z w) v {proj₁ (Ωt top)} {M.c} (cr top (inc Data.Unit.tt self))))
+      where v = M.S t zero (inc z w)
+    module AtIndex (j : ℕ) where
+      site = P.whole-site j
+      v = W.reset site (Ωt zero) (≼-refl 𝟏)
+      unit = read (T.value v)
+      cv : A.Covered v
+      cv = P.whole-cover j
+      high : Room.Room v q
+      high = Room.room (P.whole-path j) (P.Y.C.child (suc j)) (zero-slot (P.Y.C.ix (suc j)))
+      route = R.via (St.tower m) (R.base k (↑ k (proj₁ P.X.whole)))
+      first = Room.sub route v
+      cf = Room.cover route v cv
+      hf : Room.Room first q
+      hf = Room.room route v high
+      start : L.suc q ≼ read (W.At.idx first 1)
+      start = St.Capture.start first cf q hf
+      strict : L.suc q ≼ unit
+      strict = ≼-trans {a = L.suc q} {b = read (T.value first)} {c = unit}
+        (St.Capture.result first cf q hf) (Room.below route v cv)
+      floor : L.suc (St.std (suc m)) ≼ unit
+      floor = ≼-trans {a = L.suc (St.std (suc m))} {b = L.suc q} {c = unit} (s≼s Q.first) strict
+      reset-below : unit ≼ read (T.value site)
+      reset-below = Scale.At.lower P.whole-level (ok site) (bs site) (z≤ _) (proj₁ (Ωt P.whole-level)) (β site) (oneβ site)

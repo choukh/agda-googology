@@ -1,0 +1,59 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B12Orbit where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import YiLAB7Orbit using (lvl2; ok₂; F)
+
+import YiLAB11Orbit as O
+open O using (m; pull; push)
+
+block : Op {lvl2} nil → Op {lvl2} nil
+block K = op (E ok₂ tdNil O.Ω₂t K) (Einf ok₂ tdNil O.Ω₂t K)
+
+J : Op {lvl2} nil
+J = block F
+
+module Window (K : Op {lvl2} nil) where
+  project-state : (n : ℕ) (S : Base lvl2) → pull (itS (enterO m K) n (push S)) ≡ itS K n S
+  project-state zero S = refl
+  project-state (suc n) S = cong (stepS K) (project-state n S)
+
+  project-value : (n : ℕ) (S : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i)
+    → itV (enterO m K) n (push S) i (σ m t) v ≡ itV K n S i t v
+  project-value zero S i t v = refl
+  project-value (suc n) S i t v rewrite project-state n S | project-value n S i t v = refl
+
+  -- 这棵真实极限的第 n 支等于 K 的第 n+1 次运行；直接使用归纳的投影等式。
+  child : (S : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i) → Tr⁺ i
+  child S i t v = E ok₂ tdNil (up zero tt (suc zero) ◃s) K S i t v
+
+  kid : (n : ℕ) (S : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i) → Tr⁺ i
+  kid n S i t v = itV (enterO m K) (suc n) (push S) i (σ m t) v
+
+  in-child : (n : ℕ) (S : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i)
+     → i ⊢ proj₁ (kid n S i t v) ◃ proj₁ (child S i t v)
+  in-child n S i t v = ◃l n
+
+  child-in-block : (S : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i)
+     → i ⊢ proj₁ (child S i t v) ◃ proj₁ (run (block K) S i t v)
+  child-in-block S i t v = Emono ok₂ tdNil K S i t v {x = up zero tt (suc zero) ◃s} {y = O.Ω₂t} ◃w
+
+  self-value : (n : ℕ) (S : Base lvl2) (i : L) (t : i ≤ lvl2) → itV K n S i t (S i t) ≡ itS K n S i t
+  self-value zero S i t = refl
+  self-value (suc n) S i t = cong (run K (itS K n S) i t) (self-value n S i t)
+
+block-in-G : (S : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i)
+   → i ⊢ proj₁ (run (block J) S i t v) ◃ proj₁ (run O.G S i t v)
+block-in-G S i t v = ◃l zero
+
+window-in-G : (S : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i)
+   → i ⊢ proj₁ (Window.child J S i t v) ◃ proj₁ (run O.G S i t v)
+window-in-G S i t v = ◃t (Window.child-in-block J S i t v) (block-in-G S i t v)

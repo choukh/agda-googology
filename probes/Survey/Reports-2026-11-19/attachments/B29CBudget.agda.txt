@@ -1,0 +1,34 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真孙返回的共同上确界 Γ 夹出整个内返回族。所有塔、外步、内步使用同一个上方 ε 不动点。
+module B29CBudget where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst; cong)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; z≼; ≼-refl; s≼s; ≼l; l≼)
+import WVOne as V
+import B18Product as M
+import B19IdealProduct as Pow
+import B19IdealArithmetic as Ar
+import B22MovingIndex as E
+import B27UEpsilon as Env
+import B27EpsilonCut as ERow
+import B27CutArithmetic as C
+import B28BCut as Old
+import B28Sparse as S
+import B29CLimitValue as Nat
+import B29CValue as Pos
+
+open import B29CArithmetic using (module Levels)
+
+value : ℕ → ℕ → ℕ → ℕ → V.T₀
+value zero = Nat.Real.factor
+value (suc m) = Pos.At.Real.leaves m
+low : ∀ m j u v → value m j u v ≼ Old.Physical.inner m j u
+low zero = Nat.Real.into
+low (suc m) = Pos.At.Real.into m
+module Actual = Levels value Old.Physical.inner low Nat.genuine Pos.At.Real.direct
+
+bound : S.Actual.I ≼ B29CArithmetic.hull Actual.Γ
+bound = Actual.bounded

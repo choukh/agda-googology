@@ -1,0 +1,99 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B15SharpLift where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Maybe using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM; z≼)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (read; lvl1)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; s≼s) renaming (z≼ to vz)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack
+open import B14SharpBound
+open import B15SharpAction
+
+module Lift (lem : LEM) where
+  open I.Sharp lem
+  open Action lem
+  open Sim lem using (fold; after; append)
+
+  ch = path slot
+
+  cv : R.Tr R.zero → R.Tr R.zero
+  cv = τ R.zero R.zero tt tt (I.wfL R.zero) z≼
+
+  cv≤ : ∀ z → readRW (cv z) ≼ readRW z
+  cv≤ R.zero = vz
+  cv≤ (R.suc z) = s≼s (cv≤ z)
+  cv≤ (R.lim g d) = l≼ (λ n → ≼l n (cv≤ (g n)))
+
+  node : ∀ D a A (g : R.Tr R.zero → R.Tr r₁) (out step : B.Tr B.zero → B.Tr B.zero) →
+    (∀ z w → data≤ z w → data≤ (res D a A (g z)) (out w)) →
+    (∀ z w → data≤ z w → data≤ (res D (D R.zero tt) A (g z)) (step w)) →
+    ∀ {y} → (∀ n → read (W.cum (λ j → out (B.iter step B.zero j)) n) ≼ read y) →
+    data≤ (res D a A (R.Ω p g)) y
+  node D a (addL A x) g out step out≤ step≤ hy = node D a A (λ z → x V.+ g z) out step out≤ step≤ hy
+  node D a id g out step out≤ step≤ hy rewrite empty-slot (kp♯ r₁ oR p R.zero tt) =
+    l≼ λ n → ≼-trans (sum≤ _ _ (λ j → out≤ _ _ (chain j)) n) (hy n)
+    where
+    chain : ∀ j → data≤ (V.iter (λ z → res D (D R.zero tt) id (g z)) R.zero j) (B.iter step B.zero j)
+    chain zero = vz
+    chain (suc j) = step≤ _ _ (chain j)
+
+  canon : Model {F.nil} ch Ωi K
+  canon D a A S t v hv hc = subst (λ x → data≤ (proj₁ (fold D a x)) (proj₁ (F.run K S B.zero t v)))
+    (sym (block-plug A R.zero))
+    (subst (λ x → data≤ x (proj₁ (F.run K S B.zero t v))) (sym (append D a (plug A R.zero))) result)
+    where
+    move : ∀ t → proj₁ (F.run K S B.zero (path base) v) ≡ proj₁ (F.run K S B.zero t v)
+    move (B.inc tt B.self) = refl
+    move (B.inu f) = cong (λ u → proj₁ (F.run K S B.zero (B.inu (λ _ → u)) v)) (unique (f tt))
+      where
+      unique : (w : B.zero B.≤ B.zero) → B.self ≡ w
+      unique B.self = refl
+    result = subst (data≤ _) (move t) (Low.One.bound lem (after D (plug A R.zero)) S (fold D a (plug A R.zero)) v hv hc)
+
+  selfFold : Base♯ → V.Tr⁺ r₁ → R.Tr r₁ → V.Tr⁺ r₁
+  selfFold D a x = ψ♯ r₁ oR D r₁ oR a x
+
+  lift-block : ∀ D′ a′ x (G : F.Op {lvl1} F.nil) →
+    Model ch (proj₁ (selfFold D′ a′ x)) G →
+    Model ch (proj₁ (selfFold D′ a′ (block x))) (eop F.tdNil Ωw G)
+  lift-block D′ a′ x G h D a A S t v hv hc =
+    node D a A (λ z → proj₁ (ψ♯ R.zero tt (after D′ x) r₁ oR (selfFold D′ a′ x) (R.suc (cv z))))
+      (λ w → proj₁ (right w t v)) (λ w → proj₁ (right w ch (S B.zero ch)))
+      (at a t v hv) (at (D R.zero tt) ch (S B.zero ch) hc) (sup (F.kp lvl1 oB (inj₂ (tt , inj₁ tt)) t))
+    where
+    T = F.chTD F.tdNil tt
+    m = F.chMT F.tdNil tt
+    subG = F.enterO m (eop F.tdNil B.zero G)
+    large : F.St (F.cons (W.down W.stop tt) F.nil)
+    large i p = S i (proj₂ p)
+
+    entered : Model (F.σ m ch) (proj₁ (selfFold D′ a′ x)) subG
+    entered D a A S′ t′ v′ h′ c′ = h D a A (λ i q → S′ i (F.σ m q)) (proj₂ t′) v′ h′ c′
+
+    right : B.Tr B.zero → B.zero B.≤ lvl1 → W.Tr⁺ B.zero → W.Tr⁺ B.zero
+    right w t v = F.E oB T (B.suc w) subG large B.zero (F.σ m t) v
+
+    at : ∀ a t v → data≤ (res D a A R.zero) (proj₁ v) → ∀ z w → data≤ z w →
+      data≤ (res D a A (proj₁ (ψ♯ R.zero tt (after D′ x) r₁ oR (selfFold D′ a′ x) (R.suc (cv z))))) (proj₁ (right w t v))
+    at a t v ha z w e = count T (after D′ x) (selfFold D′ a′ x) (R.suc (cv z)) (B.suc w) subG entered
+      (s≼s (≼-trans (cv≤ z) e)) D a A large (F.σ m t) v ha hc
+
+    sup : ∀ (q : F.Keep B.zero (B.Tr B.zero) B.zero) n →
+      read (W.cum (λ j → proj₁ (right (B.iter (λ w → proj₁ (right w ch (S B.zero ch))) B.zero j) t v)) n) ≼
+      read (proj₁ (F.node⁺ q (λ w → right w t v) (λ w → proj₁ (right w ch (S B.zero ch)))))
+    sup nothing n = ≼l n (≼-refl _)
+    sup (just (() , _)) n
+

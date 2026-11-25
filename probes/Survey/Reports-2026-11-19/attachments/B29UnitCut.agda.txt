@@ -1,0 +1,38 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在一座指定塔及指定原行取得的严格预算，界住整座塔的单位折叠。
+module B29UnitCut where
+open import Data.Nat.Base using (ℕ; suc; _≤_)
+open import Data.Product using (Σ; _×_; _,_)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l)
+import WVOne as V
+import B18Reset as T
+import B18ResetCell as U
+import B26Depth as D
+import B27Threshold as R
+import B27RunCut as G
+import B28BCut as B
+import B29Floor as Floor
+import B29Channels as Ch
+
+module Join (Q x y z : V.T₀) (choose : L.suc x ≼ Q → L.suc y ≼ Q → Σ V.T₀ (λ q → L.suc q ≼ Q × x ≼ q × y ≼ q))
+  (use : ∀ (q : V.T₀) → L.suc q ≼ Q → x ≼ q → y ≼ q → L.suc z ≼ Q) where
+  both : L.suc x ≼ Q → L.suc y ≼ Q → L.suc z ≼ Q
+  both a b with choose a b
+  ... | q , s , l , r = use q s l r
+
+module Row (k : ℕ) (two : 2 ≤ k) where
+  Q = R.row k
+  first : L.suc Ch.first ≼ Q → L.suc (T.fresh 1) ≼ Q
+  first a = G.At.unit k two 0 (Ch.first , a , λ j → ≼l {f = U.At.fresh 0} j (≼-refl _))
+  module Point (m : ℕ) (q : V.T₀) (inside : L.suc q ≼ Q) (x : Ch.second m ≼ q) (y : Ch.each m ≼ q) where
+    leaf : ∀ j u → B.Physical.inner m j u ≼ q
+    leaf j u = ≼-trans {a = B.Physical.inner m j u} {b = Ch.each m} {c = q}
+      (≼l {f = Ch.one m} j (≼l {f = B.Physical.inner m j} u (≼-refl _))) y
+    zero : U.At.fresh (suc m) 0 ≼ q
+    zero = ≼-trans {a = U.At.fresh (suc m) 0} {b = B.Physical.inner m 0 0} {c = q} (Floor.At.selected m 0 0) (leaf 0 0)
+    get : L.suc (T.fresh (suc (suc m))) ≼ Q
+    get = G.At.unit k two (suc m) (B.At.upward k two m (q , inside , zero , x , leaf))
+  next : ∀ m → L.suc (Ch.second m) ≼ Q → L.suc (Ch.each m) ≼ Q → L.suc (T.fresh (suc (suc m))) ≼ Q
+  next m = Join.both Q (Ch.second m) (Ch.each m) (T.fresh (suc (suc m)))
+    (Ch.Join.merge (D.tower k) (Ch.second m) (Ch.each m)) (Point.get m)

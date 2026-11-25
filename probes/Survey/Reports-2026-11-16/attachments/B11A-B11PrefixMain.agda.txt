@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B11A 入口: stages : (m : ℕ) → Stage m. 内部不变量 Inv m (前缀影子膨胀 + q m 0 的两个描述) 沿 m 归纳,
+-- 每站由 B11PrefixGen.Desc 生成整条链的描述, 再由 base-d/base-x 给下一站基例. sem 对 P 无前提. 编译定理, 无前提.
+module B11PrefixMain where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Align.Level as L
+open import WSShadow using (ES; Ω̂; _⨾_; sh; lC; sE; InflE; Infl-lC; Infl-⨾; Infl-Ω̂)
+open import WVThree using (Nx)
+import WSLevel as W
+open import B8PairLevel using (inflΩ₂; Ld-base; Lx-base)
+import YiLAB10Src as T
+open import YiLAB11Target using (q; y; track; prefix; Stage; base-d; base-x; first-new-x; stage0)
+open import B11PrefixGen using (module Desc; module Sem)
+
+record Inv (m : ℕ) : Set where
+  field
+    infl : InflE (prefix m)
+    bd   : W.Ld (q m L.zero) (sE (prefix m) Nx)
+    bx   : W.Lx (q m L.zero) (sh (prefix m))
+open Inv
+
+-- 固定 m: 整条链 y m n 的指数描述, 与后继号的被加项描述.
+chain : (m : ℕ) → Inv m → (n : ℕ) → W.Lx (y m n) (track (prefix m) n)
+chain m I zero    = W.Lx-Ω₁
+chain m I (suc n) = Desc.LxQ (T.ll m) (prefix m) (infl I) (bd I) (bx I) (chain m I n)
+
+lowerI : (m : ℕ) → Inv m → (n : ℕ) → W.Ld (y m (suc n)) (sE (prefix m ⨾ track (prefix m) n) Nx)
+lowerI m I n = Desc.LdQ (T.ll m) (prefix m) (infl I) (bd I) (bx I) (chain m I n)
+
+stage-of : (m : ℕ) → Inv m → Stage m
+Stage.lower (stage-of m I) = lowerI m I
+Stage.sem   (stage-of m I) = Sem.sem (T.ll m)
+
+-- 升一站: 新前缀影子的膨胀取零号分支, 两个基例取上一站整条链.
+inv : (m : ℕ) → Inv m
+inv zero = record { infl = inflΩ₂ ; bd = Ld-base ; bx = Lx-base }
+inv (suc m) = record
+  { infl = Infl-lC (λ n → prefix m ⨾ track (prefix m) n) (Infl-⨾ (prefix m) Ω̂ (infl (inv m)) Infl-Ω̂)
+  ; bd   = base-d m (stage-of m (inv m))
+  ; bx   = base-x m (λ n → chain m (inv m) (suc n))
+  }
+
+stages : (m : ℕ) → Stage m
+stages m = stage-of m (inv m)
+
+-- 闭实例与核对.
+stage1 : Stage 1
+stage1 = stages 1
+
+new-x₁ : W.Lx (q 1 L.zero) (sh (prefix 1))
+new-x₁ = bx (inv 1)
+
+-- 第一个新指数: 与公共模块的 first-new-x 同型 (此处只核对类型一致, 不比较证明项).
+check-first : W.Lx (q 1 L.zero) (sh (prefix 1))
+check-first = first-new-x
+
+stage2 : Stage 2
+stage2 = stages 2

@@ -1,0 +1,111 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiMSBranchS where
+open import Data.Nat using (ℕ)
+open import Data.Unit using (tt)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiRWFold as F
+import OCF.Lean.YiTBRow as TB
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiFRStep as S
+import OCF.Lean.YiMSShape as Shape
+import OCF.Lean.YiGIBlock as GI
+import OCF.Lean.YiGIInst as Inst
+import OCF.Lean.YiTBFam as TF
+import OCF.Lean.YiKVRel as K
+import OCF.Lean.YiKCSem as CS
+import OCF.Lean.YiAbsSimInst as SI
+import OCF.Align.EboLeanDef as E
+import OCF.Align.EboLeanTree as ET
+open import OCF.Align.EboLeanBase using (NF; GB; n[]; nf-ψ; c∷; c[]; gp; gtl; gh; gw; gc)
+open import OCF.Align.EboLean3Base using (nf-suc)
+open import OCF.Lean.YiExInst using (back; tree-back)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import YiMSValue0 using (ℓ; c₂; β; out; depth; follow; follow≤)
+open import YiMSNextRef using (tNext; mNext; hNext)
+Fr = Σ B.L (λ i → (i P.≤ ℓ) × GI.Bsᵍ i)
+peel : Fr → Fr
+peel f@(B.zero , v , bs) = f
+peel f@(B.nd B.sS h , v , bs) = f
+peel (B.nd B.sL h , v , o , r , b) = h 0 , (P.inc 0 P.self P.∙ v) , proj₂ o 0 , proj₂ r 0 , (λ i u → b i (P.inc 0 u))
+peel (B.nd (B.sΩ k) h , v , o , r , b) = h B.zero , (P.inc B.zero P.self P.∙ v) , proj₂ o B.zero , proj₂ r B.zero , (λ i u → b i (P.inc B.zero u))
+root : Fr
+root = ℓ , P.self , proj₂ (P.Ok-tw 3) c₂ , proj₂ (MT.rbᶻ (B.tw 3)) c₂ , Shape.CB c₂
+last = O.iter peel root 21
+kid : B.L → B.L
+kid B.zero = B.zero
+kid (B.nd B.sS h) = h tt
+kid (B.nd B.sL h) = h 0
+kid (B.nd (B.sΩ k) h) = h B.zero
+W = kid (proj₁ last)
+world = B.nd B.sS (λ _ → W)
+last-level : proj₁ last ≡ world
+last-level = refl
+p₁ : world P.≤ ℓ
+p₁ = proj₁ (proj₂ last)
+o₁ : P.Ok world
+o₁ = proj₁ (proj₂ (proj₂ last))
+r₁ : TB.Rb world
+r₁ = proj₁ (proj₂ (proj₂ (proj₂ last)))
+B₁ : F.Base world
+B₁ = proj₂ (proj₂ (proj₂ (proj₂ last)))
+bc : F.Base W
+bc i u = B₁ i (P.inc tt u)
+βW = B₁ W (P.inc tt P.self)
+omegaW : proj₁ (O.Ωt W) K.⊴ proj₁ βW
+omegaW = TF.ψ-⊵ B.Λ P.Ok-Λ (MT.rbᶻ B.Λ) (F.B₀ B.Λ) W
+  (P.inc 3 (P.inc c₂ (P.inc tt P.self P.∙ p₁))) (O.Ωt W) (Inst.pre 3)
+G : B.Tr W → B.Tr world
+G c = proj₁ (O.upz {s = B.sS} {h = λ _ → W} tt (B.suc c , O.z◃ c B.◃s))
+feed : B.Tr W → B.Tr W
+feed c = proj₁ (TB.ψ world o₁ r₁ B₁ W (P.inc tt P.self) βW (G c))
+chain : ℕ → B.Tr W
+chain = O.iter feed B.zero
+row : B.Tr W → O.Tr⁺ B.zero
+row c = TB.ψ world o₁ r₁ B₁ B.zero (P.z≤ world) β (G c)
+node = proj₁ (O.limc⁺ (λ n → row (chain n)))
+node-form : follow 21 out ≡ node
+node-form = refl
+chain1-form : chain 1 ≡ proj₁ (O.next⁺ βW)
+chain1-form = refl
+Z = TB.ψ W (proj₂ o₁ tt) (proj₂ r₁ tt) bc B.zero (P.z≤ W) β (chain 1)
+row1-form : proj₁ (row (chain 1)) ≡ proj₁ (O.next⁺ Z)
+row1-form = refl
+childOut = TB.ψ W (proj₂ o₁ tt) (proj₂ r₁ tt) bc B.zero (P.z≤ W) β (proj₁ (O.Ωt W))
+child-point : follow (depth W) (proj₁ childOut) ≡ proj₁ (O.next⁺ β)
+child-point = refl
+child-value : K.readRW (proj₁ (O.next⁺ β)) ≼ K.readRW (proj₁ childOut)
+child-value = subst (λ x → K.readRW x ≼ K.readRW (proj₁ childOut)) child-point (follow≤ (depth W) (proj₁ childOut))
+Z-value : K.readRW (proj₁ (O.next⁺ β)) ≼ K.readRW (proj₁ Z)
+Z-value = ≼-trans child-value (K.◃→≼ (TB.mono W (proj₂ o₁ tt) (proj₂ r₁ tt) bc B.zero (P.z≤ W) β (K.⊴-◃ omegaW (B.◃l 0))))
+mZ : K.M⁰ tNext (proj₁ Z)
+mZ = CS.sem→M⁰ (back hNext) (proj₁ Z) (≼-trans (K.lower⁰ mNext (back hNext)) Z-value)
+t2 = E.ψ [] (E.sucT (E.sucT (E.ΩTower 2))) ∷ []
+mrow1 : K.M⁰ t2 (proj₁ (row (chain 1)))
+mrow1 = K.G⁰.m-next {t = t2} {p = E.ψ [] (E.sucT (E.ΩTower 2))} Z refl (λ n → refl) mZ
+mnode : K.M⁰ t2 node
+mnode = K.G⁰.m-cum (λ n → row (chain n)) 1 mrow1
+node-value : K.readRW node ≼ K.readRW out
+node-value = subst (λ x → K.readRW x ≼ K.readRW out) node-form (follow≤ 21 out)
+bound : (h : SI.E.HC t2) → SI.E.tree h ≼ K.readRW out
+bound h = ≼-trans (tree-back h) (≼-trans (K.lower⁰ mnode (back h)) node-value)
+G2 : GB [] (E.sucT (E.sucT (E.ΩTower 2))) (E.sucT (E.sucT (E.ΩTower 2)))
+G2 (gp (gh _)) = E.[]<
+G2 (gp (gw _ i)) = subst (λ z → z E.<ᵀ E.sucT (E.sucT (E.ΩTower 2))) (sym (ET.G0-tower 1 i)) E.[]<
+G2 (gp (gc _ ()))
+G2 (gtl (gp (gh _))) = E.[]<
+G2 (gtl (gp (gw _ ())))
+G2 (gtl (gp (gc _ ())))
+G2 (gtl (gtl (gp (gh _)))) = E.[]<
+G2 (gtl (gtl (gp (gw _ ()))))
+G2 (gtl (gtl (gp (gc _ ()))))
+G2 (gtl (gtl (gtl ())))
+nf2 : NF t2
+nf2 = nf-ψ n[] (nf-suc (nf-suc (ET.nf-ΩT 2))) G2
+opaque
+  h2 : SI.E.HC t2
+  h2 = SI.conv (ET.hc nf2 (c∷ c[]))

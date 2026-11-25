@@ -1,0 +1,44 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- Ω₁ 的一级保留行在显式输入 b 上求值，允许 b 与 S 的默认一级值不同。
+module B16OrbitWideEnv where
+open import Data.Nat using (zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block hiding (Sh; D)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+open import YiLAB7Replay using (o₁)
+open import WSW4 using (module Lem)
+open Lem o₁ using (Real)
+open import WKGen using (Ω₁t)
+open import OCF.Align.Value using (_≼_; ≼-suc)
+import B13OrbitFeed as O
+import B14OrbitReal as W
+import B15OrbitAction as P
+import B15OrbitModel as M
+import B16OrbitEnv as Env
+import B16OrbitNode as N
+import B16OrbitWide as V
+
+module Frame {X : Cx lvl2} (m : Mor M.X₁ X) (ret : N.Left m) where
+  module Node = N.Frame m ret
+  module Outer = V.At m
+  module Old = M.At m
+  D = Node.D
+  φ = chMT D tt
+  module Inner = V.At (φ ⊙ m)
+  enter-law : ∀ K a → Outer.Wide K a → Inner.Wide (enterO φ K) a
+  enter-law K a h e S ie hs = h e (λ j t → S j (σ φ t)) ie hs
+  module Rule (K : Op X) (a : P.Act) (law : Outer.Wide K a) where
+    module Ev = Inner.Frame (chTD D tt) a
+    Q = λ z → op (E ok₂ D (O.g₁ z) K) (Einf ok₂ D (O.g₁ z) K)
+    branch : ∀ y z → y ≼ read (suc z) → Outer.Wide (Q z) (Env.count a y)
+    branch y z h e S ie hs = Ev.eval (suc z) h (enterO φ K) (enter-law K a law) e (λ j u → S j (proj₂ u)) ie hs
+    Fold = λ u → op (E ok₂ D u K) (Einf ok₂ D u K)
+    exact : Outer.Wide (Fold Ω₁t) (P.raise a)
+    exact e S ie hs v re ro rewrite Node.kept = W.real-node _ (λ y → P.he a y e) (λ y z low → branch y z (≼-suc low) e S ie hs v re ro)
+    covers : ∀ b → lvl1 ⊢ Ω₁t ◃ b → Outer.Wide (Fold b) (P.raise a)
+    covers b h = Outer.lift {Q = Fold Ω₁t} {Q′ = Fold b} (λ S i t v → Emono ok₂ D K S i t v h) exact

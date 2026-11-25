@@ -1,0 +1,71 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实有限一级的反馈所用零层折叠，与参照 ω 的幂保值地互嵌。
+module B25DExactFold where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_; _×_)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.BTBO using (module Ord-Ord)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; ≼-trans; ≼-refl)
+open import OCF.Align.YiVmConExact using (_≼ˣ_; zˣ; sˣ; wˣ; lˣ; ≼lˣ; reflˣ; ≅→≼ˣ; ˣ→≼)
+open import OCF.Lean.YiZeroAccP using (+ˣ)
+open import OCF.Lean.YiChainBase using (transˣ)
+import W4Block as W
+import W4Ops as O
+open import W4Fold using (ψ; B₀)
+open import WVOne using (T₀; read)
+import B12Strict as Strict
+import B14Floor as Floor
+import B16IndexBase as I
+import B8FreezeMain as Q
+
+_≈ˣ_ : T₀ → T₀ → Set
+x ≈ˣ y = x ≼ˣ y × y ≼ˣ x
+
+sum : ∀ {x : T₀} {a : W.Tr W.zero} → x ≈ˣ read a → ∀ {y : T₀} {b : W.Tr W.zero}
+    → y ≈ˣ read b → (x L.+ y) ≈ˣ read (a O.+ b)
+sum {x} {a} (p , q) {y} {b} (r , s) =
+  transˣ (+ˣ p (ˣ→≼ q) r) (≅→≼ˣ (I.plus a b)) ,
+  transˣ (≅→≼ˣ (L.≅-sym (I.plus a b))) (+ˣ q (ˣ→≼ p) s)
+
+copies : ∀ {x : T₀} {a : W.Tr W.zero} → x ≈ˣ read a → ∀ n
+       → Ord-Ord.iter (x L.+_) L.zero (suc n) ≈ˣ read (W.iter (a O.+_) a n)
+copies p zero = p
+copies {x} {a} p (suc n) = sum {x} {a} p {Ord-Ord.iter (x L.+_) L.zero (suc n)} {W.iter (a O.+_) a n} (copies {x} {a} p n)
+
+fold : W.Tr W.zero → W.Tr W.zero
+fold z = proj₁ (ψ W.zero _ (B₀ W.zero) W.zero W.self (O.Ωt W.zero) z)
+
+paired : ∀ z → L.ψ⁰ (read z) ≈ˣ read (fold z)
+paired W.zero = reflˣ _ , reflˣ _
+paired (W.suc z) = lˣ (λ { zero → zˣ ; (suc n) → ≼lˣ n (proj₁ (h n)) }) , lˣ λ n → ≼lˣ (suc n) (proj₂ (h n))
+  where h = copies {x = L.ψ⁰ (read z)} {a = fold z} (paired z)
+paired (W.lim f d) = lˣ (λ n → ≼lˣ n (proj₁ (paired (f n)))) , lˣ (λ n → ≼lˣ n (proj₂ (paired (f n))))
+paired (W.Ω () _)
+paired (W.up _ () _ _)
+paired (W.ex _ _ _ _ ())
+
+num : ∀ n → read (Floor.num n) L.≅ L.natᶜ n
+num zero = L.z≅
+num (suc n) = L.s≅ (num n)
+
+finite : ∀ n (z : W.Tr W.zero) → L.natᶜ n ≼ read z → L.natᶜ n ≼ˣ read z
+finite zero z _ = zˣ
+finite (suc n) W.zero ()
+finite (suc n) (W.suc z) (s≼s d) with Floor.split n z d
+... | inj₁ refl = ≅→≼ˣ (L.s≅ (L.≅-sym (num n)))
+... | inj₂ p = wˣ (finite (suc n) z p)
+finite (suc n) (W.lim f p) (≼l j h) = ≼lˣ j (finite (suc n) (f j) h)
+finite (suc n) (W.Ω () _)
+finite (suc n) (W.up _ () _ _)
+finite (suc n) (W.ex _ _ _ _ ())
+
+two : ∀ (f : ℕ → W.Tr W.zero) (p : ∀ n → W._⊢_◃_ W.zero (f n) (f (suc n))) → L.natᶜ 2 ≼ read (W.lim f p)
+two f p = ≼l 2 (≼-trans (s≼s (≼-trans (s≼s z≼) (Strict.strict (p 0)))) (Strict.strict (p 1)))
+
+boost : ∀ z → L.suc (L.suc (read (Q.Gt z))) ≼ˣ L.ψ⁰ (L.suc (L.suc (read z)))
+boost z = ≼lˣ 2 (+ˣ (proj₂ pair) (ˣ→≼ (proj₁ pair)) (transˣ (finite 2 (Q.Gt z) (two _ dom)) (proj₂ pair)))
+  where
+  pair = paired (W.suc z)
+  dom = O.nextA (fold z) (proj₂ (ψ W.zero _ (B₀ W.zero) W.zero W.self (O.Ωt W.zero) z))

@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- Ω₁、Ω₂ 与 Ω₃ 第一回灌节点分别要求真实层号读回至少为 1、2、3。路径均允许逐层进入全部孩子。
+module B14FloorRows where
+
+open import Data.Nat using (ℕ)
+open import Data.Unit using (tt)
+open import W4Block
+open import W4Path
+open import WVOne using (lvl1; read; eps₀)
+open import WVTwo using (lvl2)
+import WKGen
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13Feedback as F
+import B13LiveRow as R
+import B14Tower as W
+open import B14Floor
+open T.Run
+
+one-at : Finite 1 (L.ψ⁰ (L.Ω (L.suc L.zero)))
+one-at r hr = eps₀ (ok r) (bs r) (β r) (oneβ r) (oneB r (inc tt self))
+
+one : ∀ z → L.natᶜ 1 ≼ read z → BoundAt (L.ψ⁰ (L.Ω (L.suc L.zero))) z
+one = Above.lower 0 _ one-at
+
+-- 第二层基站的 WKGen 证明还允许任给路径。
+two-path : (w : zero ≤ lvl2) (r : T.Run lvl2) → A.Covered r → T.Ω₂ref ≼ W.valueAt r w
+two-path w r h = WKGen.Main.main (ok r) (bs r) w (β r) (omegaB r (inc tt self))
+  (oneβ r) (oneB r (inc tt (inc tt self)))
+
+two : ∀ z → L.natᶜ 2 ≼ read z → BoundAt T.Ω₂ref z
+two = Above.lower 1 _ (two-path (z≤ lvl2))
+
+first-node : ∀ z → L.natᶜ 3 ≼ read z → BoundAt F.first-node z
+first-node = Above.lower 2 F.first-node R.Compare.at-run

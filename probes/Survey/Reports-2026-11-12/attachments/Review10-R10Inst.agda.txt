@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module R10Inst where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit.Base using (tt)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product.Base using (_,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Align.Level as L
+import OCF.Lean.YiLeanCore as M
+import OCF.Lean.YiLeanFold as MF
+import OCF.Lean.YiLeanTw3 as MT
+open import R10Rel using (Corr; cz; cs; cl; RelF; RelP; START; pz; ps; AgW; dgr)
+open import R10Fold using (FOLD)
+
+-- 目标层 2 的派发: 层号字面为 0, 1 才保留 (照 YiStepMain2.d₂ 抄写, 因为 Corr/AgW 是本实验的新类型).
+d₂ : (J : M.LF) → MF.Way (M.suc (M.suc M.zero)) J
+d₂ M.zero = MF.keep (inj₂ (inj₁ tt)) refl
+d₂ (M.suc M.zero) = MF.keep (inj₁ tt) refl
+d₂ (M.suc (M.suc k)) = MF.fold
+d₂ (M.suc (M.lim f)) = MF.fold
+d₂ (M.suc (M.lc k g)) = MF.fold
+d₂ (M.lim f) = MF.fold
+d₂ (M.lc k g) = MF.fold
+
+ag₂ : ∀ J → AgW (d₂ J) (L.suc (L.suc L.zero))
+ag₂ M.zero cz = L.via L.z≅ (L.suc L.zero)
+ag₂ (M.suc M.zero) (cs cz) = L.via (L.s≅ L.z≅) L.zero
+ag₂ (M.suc (M.suc k)) (cs (cs c)) (L.via (L.s≅ ()) L.zero)
+ag₂ (M.suc (M.suc k)) (cs (cs c)) (L.via (L.s≅ e) (L.suc (L.suc ())))
+ag₂ (M.suc (M.lim f)) (cs (cl c)) (L.via (L.s≅ ()) L.zero)
+ag₂ (M.suc (M.lim f)) (cs (cl c)) (L.via (L.s≅ e) (L.suc (L.suc ())))
+ag₂ (M.suc (M.lc k g)) (cs ())
+ag₂ (M.lim f) (cl c) (L.via () L.zero)
+ag₂ (M.lim f) (cl c) (L.via () (L.suc L.zero))
+ag₂ (M.lc k g) ()
+
+x₂ : ∀ K → MF.Ext (M.suc (M.suc M.zero)) K
+x₂ K r = d₂ (MF.lev K r)
+
+Z₂ : L.zero L.≺ᴵ L.suc (L.suc L.zero)
+Z₂ = L.via L.z≅ (L.suc L.zero)
+
+-- 结论的关系族在层号 1 的槽位上就是带对角规则的 RelF 1, 不需要任何换族.
+foldM₂ᵈ : ∀ (a : MT.R) (l : M.Lgl M.zero a) {κ} → Corr κ MT.⌜ a ⌝ →
+  ∀ {ℓ} (p : L.suc (L.suc L.zero) L.<ᴵ ℓ) (σ : L.Simᴵ κ ℓ) →
+  RelF (M.suc (M.suc M.zero)) (L.ψ p σ (L.Ω κ)) (MF.Ψ (M.suc (M.suc M.zero)) (MT.lv a l) (x₂ MT.⌜ a ⌝) M.G.top)
+foldM₂ᵈ a l c p σ = FOLD (MT.lv a l) (M.suc (M.suc M.zero)) (ps (ps pz)) (x₂ MT.⌜ a ⌝) p (cs (cs cz))
+  (λ r → ag₂ (MF.lev MT.⌜ a ⌝ r)) Z₂ σ (START MT.⌜ a ⌝ c)
+
+-- 槽位的关系定义性地是带 dgr 的那一族.
+slot₁ : ∀ {j} (y : L.Ordᶜ j) (a : M.Raw (M.suc M.zero)) →
+  RelP (M.suc (M.suc M.zero)) (inj₁ tt) y a ≡ RelF (M.suc M.zero) y a
+slot₁ y a = refl
+
+-- 第 1 层上对角规则的一个实例: 参照的 ℕ 极限对保留结点 (门槛取 top).
+dg-inst : ∀ (F : ℕ → L.Ordᶜ L.zero) (g : M.Raw M.zero → M.Raw (M.suc M.zero)) →
+  (∀ n a → M.Le (M.layer M.zero) M.G.top a → RelF (M.suc M.zero) (F n) (g a)) →
+  RelF (M.suc M.zero) (L.lim F) (M.G.lc (inj₁ tt) g)
+dg-inst F g h = dgr M.G.top cz h

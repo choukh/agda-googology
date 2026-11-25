@@ -1,0 +1,59 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23NFirst where
+
+open import Data.Nat.Base using (zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.List.Base using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼l; ≼-refl; ≼-trans; s≼s; ≅→≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import WVOne using (𝟏)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import B12Omega3Ref as O
+import B13Target as P
+import B14RefGain as Path
+import B14RefAllRows as F
+import B17RefAllSource as Orig
+import B19RowSecond as X
+import B12EboRows as EB
+import B22RowBoundary as C
+import B22RowSource as B
+import B23NDomain as D
+
+two = Ω₂ᴸ L.+ Ω₂ᴸ
+q = P.pass two
+regular = P.pass-pres (L.add-≅ {σ = O.idσ} {σ′ = O.idσ} (L.Ω-refl _) (L.Ω-refl _))
+
+-- 在右边第二份 q 的两个 Ω 结点先各走初始分支，再取一份原 X₁。
+path : L.ψ⁰ (q L.+ O.X 1) ≼ L.ψ⁰ (q L.+ q)
+path = ≼l 0 (≼l 0 (≼l 1 (≼-refl _)))
+
+gain : L.suc (L.ψ⁰ q) ≼ L.ψ⁰ (P.pass (L.suc two))
+gain = ≼-trans (B.Tail.one q regular) (≼l 2 path)
+
+three : L.ψ⁰ (P.pass (L.suc two)) ≼ L.ψ⁰ (P.pass (two L.+ Ω₂ᴸ))
+three = ≼l 0 (≼l 0 (≼-refl _))
+
+strict : L.suc (tr₀ B.source) ≼ D.G 𝟏
+strict = ≼-trans (s≼s (≼-trans (proj₁ C.src) (D.Growth.sub L.zero)))
+  (≼-trans gain (≼-trans three (≼l 3 (≅→≼ (L.ψ⁰-≅ (P.pass-pres (L.≅-sym (O.split 1))))))))
+
+previous-address : Path.along (2 ∷ 0 ∷ 0 ∷ []) (D.G 𝟏) ≡ L.ψ⁰ (P.pass (L.suc Ω₂ᴸ))
+previous-address = refl
+
+previous-exact : tr₀ B.source ≈ᵛ Path.along (2 ∷ 0 ∷ 0 ∷ []) (D.G 𝟏)
+previous-exact = C.src
+
+-- 首整孩子的第零个自然数孩子就是第一笔实际问价 G 1。
+asked : O.at D.child 0 L.≅ D.G 𝟏
+asked = Orig.part (F.as-chain 1 0) 0
+
+strict-original : L.suc (tr₀ B.source) ≼ O.at D.child 0
+strict-original = ≼-trans strict (≅→≼ (L.≅-sym asked))
+
+-- 同属这个原树的前两个份数已在真实 Λ 内定位。
+zero-in : EB.InChild (O.at (D.G 𝟏) 0)
+zero-in = 1 , EB.omega₂-in-child
+one-in : EB.InChild (O.at (D.G 𝟏) 1)
+one-in = 1 , X.prior

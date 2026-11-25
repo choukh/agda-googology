@@ -1,0 +1,78 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21IdealLinked where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; subst₂; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B14SharpBound using (data≤)
+open import OCF.Align.Value using (≼-refl; ≼-trans; l≼; ≼l)
+import B12ActualSlots as C
+import B17SharpFeed as Link
+import B17SharpUpdate as U
+import B17SharpTwo as T
+import B18SharpMacro as M
+import B13Orbit as Orb
+import B12Orbit as Win
+
+import B21IdealRepeat as Reps
+import B15SharpAction as P1
+import B16SharpModel as H1
+import B16SharpOmega as O1
+import B15SharpLift as L1
+import B21IdealContext as Context
+open Context using (Pref; plug; empty; push)
+
+open import B14SharpStack using (oB; path; slot; p)
+open import WVOne using (p₁)
+import B14SharpLive as Live
+
+module Joined (lem : LEM) where
+  open I.Sharp lem
+  open Link.Feed lem
+  open P1.Action lem using (res; eop)
+  open H1.Graded lem using (nd; val-nd; val; Rel)
+  open O1.Omega lem using (GoodIndex)
+  open L1.Lift lem using (node; cv; cv≤)
+  module Node (f : R.Tr R.zero → R.Tr r₁) (g : B.Tr B.zero → B.Tr lvl1)
+    (h : ∀ z w → data≤ z w → Linked (g w) (f z)) where
+    low : ∀ D a A S t b → data≤ (res D a A R.zero) (proj₁ b) → data≤ (res D (D R.zero tt) A R.zero) (proj₁ (S B.zero (path slot))) →
+        data≤ (res D a A (R.Ω p f)) (proj₁ (F.node⁺ (F.kp lvl1 oB p₁ t) (λ w → F.ψ lvl1 oB S B.zero t b (g w)) (λ w → proj₁ (F.ψ lvl1 oB S B.zero (path slot) (S B.zero (path slot)) (g w)))))
+    low D a A S t b hv hc = node D a A f _ _
+      (λ z w e → proj₂ (h z w e) D a A S t b hv hc)
+      (λ z w e → proj₂ (h z w e) D (D R.zero tt) A S (path slot) (S B.zero (path slot)) hc hc)
+      (Live.cumulative (F.kp lvl1 oB p₁ t) (λ w → F.ψ lvl1 oB S B.zero t b (g w))
+        (λ w → proj₁ (F.ψ lvl1 oB S B.zero (path slot) (S B.zero (path slot)) (g w))))
+    lo : Output (B.Ω p₁ g) (R.Ω p f)
+    lo D a A S t@(B.inc _ _) b hv hc = low D a A S t b hv hc
+    lo D a A S t@(B.inu _) b hv hc = low D a A S t b hv hc
+    deep : ∀ n {X} (ch : F.⟦ X ⟧ B.zero) (jd : ∀ {i} → F.⟦ X ⟧ i → F.Keep i (B.Tr B.zero) B.zero)
+      D a A D′ a′ P (g′ : B.Tr B.zero → F.Ca n X) (f′ : R.Tr R.zero → R.Tr r₁) →
+      (∀ z w → data≤ z w → Rel n ch (val D′ a′ P (val D a A (f′ z))) (g′ w)) →
+      Rel n ch (val D′ a′ P (val D a A (R.Ω p f′))) (F.nodeC n {mu = lvl1} p₁ jd ch g′)
+    deep n ch jd D a P1.id D′ a′ P g′ f′ hs = val-nd n ch jd D′ a′ P _ g′
+      (λ z w e → hs (cv z) w (≼-trans (cv≤ z) e))
+    deep n ch jd D a (P1.addL A x) D′ a′ P g′ f′ hs = deep n ch jd D a A D′ a′ P g′ (λ z → x V.+ f′ z) hs
+    hi : GoodIndex (B.Ω p₁ g) (R.Ω p f)
+    hi zero tv mk D a A G hg = val-nd 0 (mk (path slot)) (λ t → F.kp lvl1 oB p₁ (tv t)) D a A f (λ w → eop (F.td W.stop tv mk) (g w) G)
+      (λ z w e → proj₁ (h z w e) 0 tv mk D a A G hg)
+    hi (suc n) tv mk D a A K hk m gm D′ a′ P G hg =
+      deep n (F.σ m (mk (path slot))) (λ t → F.kp lvl1 oB p₁ (tv (F.π m t))) D a A D′ a′ P
+        (λ w → F.It n oB (F.trTD m (F.td W.stop tv mk)) (g w) (F.enter (suc n) m K) G) f
+        (λ z w e → proj₁ (h z w e) (suc n) tv mk D a A K hk m gm D′ a′ P G hg)
+    both : Linked (B.Ω p₁ g) (R.Ω p f)
+    both = hi , lo
+

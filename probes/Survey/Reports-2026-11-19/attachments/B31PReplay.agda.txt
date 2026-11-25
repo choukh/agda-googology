@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第一正塔每个真内返回在其任一正槽继承地址上，完整有限前缀可一步步移回较早原源层；精确给出该处的全槽环境。
+module B31PReplay where
+open import Data.Nat.Base as N using (ℕ)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import W4Path
+import B12Terminal as T
+import B18TowerEmb as E
+import B28BHead as Head
+import B29CLimit as Shape
+import B31PPrefix as F
+import B31POrigin as O
+
+module Parent (k : L) (b : ℕ → L) (r : T.Run (nd sL (λ i → k ⊕ b i))) where
+  g = λ n → k ⊕ b n
+  o = T.Run.ok r
+  spine = proj₁ o
+  module H = F.At g r
+  module Graded (adjacent : ∀ i → O.Over k (b i) (b (N.suc i)) (spine i)) where
+    path : ∀ m n (d : m N.< n) → O.Over k (b m) (b n) (H.picked m n d)
+    path m n d = O.walk k b spine adjacent (proj₂ (proj₂ (E.choose g spine m n d)))
+    old-ok = λ m n d → O.pull-ok k (path m n d) (H.ok n)
+    old = λ m n d → O.pull k (path m n d) (F.apply (H.rest n) (H.fix n m))
+    step : ∀ m n (d : m N.< n) j (w : j ≤ k) β →
+      H.fix n (N.suc m) j (w ∙ lift k (b n)) β ≡
+      ψ (g m) (old-ok m n d) (old m n d) j (w ∙ lift k (b m))
+        (H.fix n m j (w ∙ lift k (b n)) β) (proj₁ (Ωt (g m)))
+    step m n d j w β = trans (cong (λ a → a j (w ∙ lift k (b n)) β) (H.step m n d))
+      (O.peel k (path m n d) (H.ok n) (F.apply (H.rest n) (H.fix n m)) j w
+        (H.fix n m j (w ∙ lift k (b n)) β) (Ωt (g m)))
+
+module Physical (t : ℕ) (f : ℕ → Tr (Head.At.k t)) (d : ∀ n → Head.At.k t ⊢ f n ◃ f (N.suc n)) where
+  k = Head.At.k t
+  b = λ n → ↑ k (f n)
+  r = Head.At.restart t (lim f d)
+  module P = Parent k b r
+  adjacent : ∀ i → O.Over k (b i) (b (N.suc i)) (P.spine i)
+  adjacent i = O.from k (◃→⊑ k (d i))
+  module True = P.Graded adjacent
+
+At : ∀ (x : Tr Shape.k) → Shape.Limit x → Set
+At = λ { ._ (Shape.hit f d) → ∀ m n (p : m N.< n) j (w : j ≤ Shape.k) β →
+  let module Act = Physical 0 f d in
+  Act.P.H.fix n (N.suc m) j (w ∙ lift Shape.k (Act.b n)) β ≡
+  ψ (Act.P.g m) (Act.True.old-ok m n p) (Act.True.old m n p) j (w ∙ lift Shape.k (Act.b m))
+    (Act.P.H.fix n m j (w ∙ lift Shape.k (Act.b n)) β) (proj₁ (Ωt (Act.P.g m))) }
+
+follows : ∀ (x : Tr Shape.k) (d : Shape.Limit x) → At x d
+follows ._ (Shape.hit f d) = Physical.True.step 0 f d
+actual : ∀ j u → At (Shape.At.x j u) (Shape.At.actual j u)
+actual j u = follows _ (Shape.At.actual j u)

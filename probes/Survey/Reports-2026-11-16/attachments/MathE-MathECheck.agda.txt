@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module MathECheck where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Maybe using (nothing; just)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiRWBlock
+import OCF.Lean.YiRWOps as O
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (kp; B₀)
+open import OCF.Lean.YiBSBase
+import OCF.Lean.YiBSFold as BS
+open import OCF.Lean.YiWREnd using (twcᴮ; betaᴮ; baseᴮ; rbΛ; ψ-⊵ᴮ)
+open import OCF.Lean.YiKVRel using (_⊴_)
+
+-- (1) 第 n+1 项的底值逐字是第 n 项的闭项
+beta-is-prev : ∀ n → proj₁ (betaᴮ (suc n)) ≡ twcᴮ n
+beta-is-prev zero    = refl
+beta-is-prev (suc n) = refl
+
+-- (2) 第 n+1 项不低于它的底值 (第一位置序), 所以塔逐项不降
+step-up : ∀ n → proj₁ (betaᴮ (suc n)) ⊴ twcᴮ (suc n)
+step-up n = ψ-⊵ᴮ (tw (suc n)) (Ok-tw (suc n)) (rb-tw (suc n)) (baseᴮ (suc n)) zero (z≤ (tw (suc n))) (betaᴮ (suc n)) (proj₁ (O.Ωt (tw (suc n))))
+
+-- (3) 塔顶结点朝第 0 层走链
+top-chain : ∀ n → kp (tw (suc n)) (Ok-tw (suc n)) (inj₁ (inj₁ tt)) (z≤ (tw (suc n))) ≡ nothing
+top-chain zero    = refl
+top-chain (suc n) = refl
+
+-- (4) 最小的亏损格: tw 1 上, 槽位是孩子 2 里的第 0 层, 目标是孩子 2 里的第 1 层 (槽位低于目标), 判定给 nothing
+two : Tr zero
+two = suc (suc zero)
+slot0 : Pos (tw 1)
+slot0 = inj₂ (two , inj₂ (inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))))
+tgt1 : (zero ⊕ ↑ zero (suc zero)) ≤ tw 1
+tgt1 = inc two (inc tt self)
+lossy-cell : kp (tw 1) (Ok-tw 1) slot0 tgt1 ≡ nothing
+lossy-cell = refl
+
+-- (5) 对照: 同一槽位, 目标是第 0 层经 inu (一致路径) 时进孩子比较; 目标是孩子 2 自身时也是 nothing
+tgt2 : (zero ⊕ ↑ zero two) ≤ tw 1
+tgt2 = inc two self
+lossy-cell2 : kp (tw 1) (Ok-tw 1) slot0 tgt2 ≡ nothing
+lossy-cell2 = refl
+
+-- (6) 下标层侧的槽位 (第 0 层, 字面), 目标在孩子 2 里的第 1 层: 保留 (不是 nothing 的形状由 just 的首分量给出)
+idx-kept : Pos (zero ⊕ ↑ zero (suc zero))
+idx-kept with kp (tw 1) (Ok-tw 1) (inj₁ (inj₁ tt)) tgt1
+... | just (q , _) = q
+... | nothing      = inj₂ (tt , inj₁ tt)
+idx-kept-eq : kp (tw 1) (Ok-tw 1) (inj₁ (inj₁ tt)) tgt1 ≡ just (inj₂ (tt , inj₁ tt) , (λ z → z) , refl)
+idx-kept-eq = refl

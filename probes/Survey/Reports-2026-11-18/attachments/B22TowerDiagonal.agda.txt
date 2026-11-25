@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每个标准塔上的一个实际下标允许先由旧折叠承接；若其命名值各自回到某座真实塔，整条 BTBO 对角线随之进入 Λ。
+module B22TowerDiagonal where
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import WVOne using (read; T₀)
+open import W4Block using (tw)
+open import W4Path using (Ok-tw)
+open import W4Fold using (EBOᶜ)
+open import OCF.BTBO using (module Ord-Ord)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; l≼; ≅→≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOFull using (BTBO≈)
+open import OCF.Align.BTBOFullLv using (SV-L)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+import B12Terminal as T
+import B12ActualSlots as A
+import B12EboRows as B
+import B12BtboCut as Cut
+import B15TowerSeed as Seed
+import B18OldBridge as Old
+import B20StandardInside as S
+import B20StandardGoal as G
+import B22SourceSlots as Slot
+open T.Run
+opaque
+  target : ℕ → T₀
+  target m = Slot.Level.Std.target m
+  send : ∀ m k → N.γ k ≼ S.std (suc m) → N.γ (suc k) ≼ target m
+  send m k h = Slot.Level.Std.named m {a = N.L k} (SV-L k) (≼-suc (≼-trans (≅→≼ (L.forget-toLevel (N.γ k) (N.cert k))) h))
+  enters-old : ∀ m → target m ≼ Slot.Level.Std.legacy m
+  enters-old m = Slot.Level.Std.old m
+first : N.γ 1 ≼ S.std 1
+first = ≼-trans {a = N.γ 1} {b = T.Ω₂ref} {c = S.std 1} B.epsilon-in-Ω₂ (Seed.initial-bound 1 {Q = T.Ω₂ref} (λ r cv → T.anchor₂ r)
+  (T.initial (tw 1) (Ok-tw 1)) (A.initial (tw 1) (Ok-tw 1)))
+second : N.γ 2 ≼ target 0
+second = send 0 1 first
+finite : ∀ k → Cut.finite k ≼ target 0
+finite = Old.finite-from (target 0) second
+Home : Set
+Home = ∀ m → Σ ℕ (λ j → target m ≼ S.std (suc j))
+OldHome : Set
+OldHome = ∀ m → Σ ℕ (λ j → Slot.Level.Std.legacy m ≼ S.std (suc j))
+weaken : OldHome → Home
+weaken h m = let j , d = h m in j , ≼-trans {a = target m} {b = Slot.Level.Std.legacy m} {c = S.std (suc j)} (enters-old m) d
+module From (home : Home) where
+  walk : ∀ k → Σ ℕ (λ m → N.γ (suc k) ≼ S.std (suc m))
+  walk zero = 0 , first
+  walk (suc k) with walk k
+  ... | m , d = let j , h = home m in j , ≼-trans {a = N.γ (suc (suc k))} {b = target m} {c = S.std (suc j)} (send m (suc k) d) h
+  child : ∀ k → N.γ (suc k) ≼ read EBOᶜ
+  child k = let m , h = walk k in ≼-trans {a = N.γ (suc k)} {b = L.suc (S.std (suc m))} {c = read EBOᶜ} (≼-suc h) (G.bound (suc m))
+  btbo : tr₀ Ord-Ord.BTBO ≼ read EBOᶜ
+  btbo = ≼-trans {a = tr₀ Ord-Ord.BTBO} {b = N.BTBOᴵ} {c = read EBOᶜ} (proj₁ BTBO≈) (l≼ child)

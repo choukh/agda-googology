@@ -1,0 +1,112 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18SharpEffect where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWPath as Q
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import OCF.Align.Value using (≼-trans; l≼; ≼l)
+open import B13SharpOne using (r₁)
+open import B14SharpStack using (oR)
+open import B14SharpBound using (data≤)
+open import B14SharpTwo using (r₂; o₂)
+import B12ActualSlots as A
+import B12Orbit as Window
+import B13Orbit as Physical
+import B17SharpFeed
+import B17SharpUpdate
+import B17SharpTwo
+import B18SharpMacro
+
+module Effects (lem : LEM) where
+  open I.Sharp lem
+  open B17SharpFeed.Feed lem
+  open B17SharpUpdate.Update lem
+  open B17SharpTwo.Two lem
+  open B18SharpMacro.Macro lem
+
+  record Action : Set where
+    constructor action
+    field
+      run : (D : Base♯) → (j : R.L) (o : Q.Ok j) → V.Tr⁺ j → V.Tr⁺ j
+      gain : ∀ D j o a → j R.⊢ proj₁ a ◃ proj₁ (run D j o a)
+
+  module Orbit (e : Action) where
+    open Action e
+    advance : Base♯ → Base♯
+    advance D j o = run D j o (D j o)
+    states = V.iter advance
+    vals : (D : Base♯) (j : R.L) (o : Q.Ok j) → V.Tr⁺ j → ℕ → V.Tr⁺ j
+    vals D j o a zero = a
+    vals D j o a (suc n) = run (states D n) j o (vals D j o a n)
+    self : ∀ D j o n → vals D j o (D j o) n ≡ states D n j o
+    self D j o zero = refl
+    self D j o (suc n) = cong (run (states D n) j o) (self D j o n)
+    nonempty : ∀ D j o a n → j R.⊢ proj₁ (vals D j o a n) ◃ proj₁ (vals D j o a (suc n))
+    nonempty D j o a n = gain (states D n) j o _
+    limit : (D : Base♯) (j : R.L) (o : Q.Ok j) → V.Tr⁺ j → V.Tr⁺ j
+    limit D j o a = V.lim⁺ (λ n → vals D j o a (suc n)) (λ n → nonempty D j o a (suc n))
+    star : Action
+    star = action limit (λ D j o a → R.◃t (nonempty D j o a zero) (R.◃l zero))
+
+  record Models (K : F.Op {lvl2} F.nil) (e : Action) : Set where
+    constructor models
+    field
+      change : ∀ D S → State D S → State (Orbit.advance e D) (F.stepS K S)
+      output : ∀ D S → State D S → ∀ a t b → data≤ (proj₁ a) (proj₁ b) →
+        data≤ (proj₁ (Action.run e D R.zero tt a)) (proj₁ (F.run K S B.zero t b))
+
+  module Iter {K e} (m : Models K e) (D : Base♯) (S : F.Base lvl2) (h : State D S) where
+    open Orbit e
+    state : ∀ n → State (states D n) (F.itS K n S)
+    state zero = h
+    state (suc n) = Models.change m _ _ (state n)
+    value : ∀ a t b → data≤ (proj₁ a) (proj₁ b) → ∀ n →
+       data≤ (proj₁ (vals D R.zero tt a n)) (proj₁ (F.itV K n S B.zero t b))
+    value a t b hb zero = hb
+    value a t b hb (suc n) = Models.output m _ _ (state n) _ t _ (value a t b hb n)
+
+  module Raise (c : W.Tr⁺ lvl2) (big : A._⊴_ wΩ₂ (proj₁ c)) (K : F.Op {lvl2} F.nil) (e : Action) (m : Models K e) where
+    open Orbit e
+    module Win = Window.Window K
+    J = Physical.block c K
+    inside = Physical.contains c big K
+    module At (D : Base♯) (S : F.Base lvl2) (h : State D S) where
+      module Steps = Iter m D S h
+      branch : ∀ n → Linked (proj₁ (Win.kid n S lvl1 w₁ (S lvl1 w₁))) (proj₁ (vals D r₁ oR (D r₁ oR) (suc n)))
+      branch n = subst₂ (λ v a → Linked (proj₁ v) (proj₁ a))
+        (sym (trans (Win.project-value (suc n) S lvl1 w₁ (S lvl1 w₁)) (Win.self-value (suc n) S lvl1 w₁)))
+        (sym (self D r₁ oR (suc n))) (State.one (Steps.state (suc n)))
+        where open import Relation.Binary.PropositionalEquality using (trans; subst₂)
+      feed : Linked (proj₁ (F.stepS J S lvl1 w₁)) (proj₁ (limit D r₁ oR (D r₁ oR)))
+      feed = matched _ _ _ (lim-gen _ _ branch) (inj₂ (inside S lvl1 w₁ (S lvl1 w₁)))
+      value : ∀ a t b → data≤ (proj₁ a) (proj₁ b) →
+        data≤ (proj₁ (limit D R.zero tt a)) (proj₁ (F.run J S B.zero t b))
+      value a t b hv = l≼ (λ n → ≼-trans (Steps.value a t b hv (suc n))
+        (◃→≼ (edge n)))
+        where
+        edge : ∀ n → B.zero B.⊢ proj₁ (F.itV K (suc n) S B.zero t b) ◃ proj₁ (F.run J S B.zero t b)
+        edge n = subst (λ v → B.zero B.⊢ proj₁ v ◃ proj₁ (F.run J S B.zero t b)) (Win.project-value (suc n) S B.zero t b)
+          (B.◃t (Win.in-child n S B.zero t b) (inside S B.zero t b))
+      state : State (Orbit.advance star D) (F.stepS J S)
+      state = pair feed (value (D R.zero tt) w₀ (S B.zero w₀) (State.bot h))
+    raised : Models J star
+    raised = models At.state At.value
+
+  weak : ∀ {K J e} → F.Rl K J → Models K e → Models J e
+  weak {K} {J} d m = models (λ D S h → pair
+    (matched _ _ _ (State.one (Models.change m D S h)) (inj₂ (d S lvl1 w₁ (S lvl1 w₁))))
+    (≼-trans (State.bot (Models.change m D S h)) (◃→≼ (d S B.zero w₀ (S B.zero w₀)))))
+    (λ D S h a t b hv → ≼-trans (Models.output m D S h a t b hv) (◃→≼ (d S B.zero t b)))
+

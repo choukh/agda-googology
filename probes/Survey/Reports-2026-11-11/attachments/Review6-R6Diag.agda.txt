@@ -1,0 +1,52 @@
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+-- 临时试验 (第六次独立审查), 不是成果.
+-- 固定对角的写法在现在的块里今天就写得出: 把 T₃ᵐ (tw 3 的闭项) 读回成层号 K₁ = read0 T₃ᵐ,
+-- 它是 Plain 的 ℕ 极限 (各项是链点上的输出), 再折叠 Ω̂ (suc K₁) 的 top. 合法性由已有的一般定理给出.
+-- 派发都在 Plain 层号上 (YiRawFold 的 complete-*). 没有值定理, 不带读法.
+module R6Diag where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit.Base using (tt)
+open import Data.Product.Base using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Align.RR5IrrCore
+open import OCF.Align.RR5IrrCheck
+open import OCF.Align.YiIrrIf
+open import OCF.Align.YiLvIf
+open import OCF.Align.YiRawFoldInst using (closedᵐ; closedᵐ-legal)
+open import OCF.Align.YiRawFoldTw3 using (T₃ᵐ; T₃ᵐ-legal; rplain)
+
+-- 回灌一步: 输出读回成层号, 取后继层的 top 折到第 0 层.
+feed : (a : R) → Lgl zero a → R
+feed a l = closedᵐ (suc (read0 a)) (rplain a) (read0-legal a l)
+
+feed-legal : ∀ a l → Lgl zero (feed a l)
+feed-legal a l = closedᵐ-legal (suc (read0 a)) (rplain a) (read0-legal a l)
+
+-- 层号 K₁ 是 ℕ 极限 (对象层的对角), 不含 Ω 结点.
+K₁ : LF
+K₁ = read0 T₃ᵐ
+
+K₁-plain : Plain K₁
+K₁-plain = rplain T₃ᵐ
+
+K₁-legal : Legal K₁
+K₁-legal = read0-legal T₃ᵐ T₃ᵐ-legal
+
+-- 被折叠的树是层号 K₁ 的结点, 下界 top, 分支是 Raw K₁ 的读回.
+node-form : Ω̂ (suc K₁) ≡
+  lc K₁ G.top tt tt (Ω̂ K₁) (λ ξ e → up K₁ ξ (proj₂ (proj₂ e)))
+node-form = refl
+
+T⁺ᵈ : R
+T⁺ᵈ = feed T₃ᵐ T₃ᵐ-legal
+
+T⁺ᵈ-legal : Lgl zero T⁺ᵈ
+T⁺ᵈ-legal = feed-legal T₃ᵐ T₃ᵐ-legal
+
+-- 再回灌一次也合法 (同一条一般定理).
+T⁺ᵈ₂ : R
+T⁺ᵈ₂ = feed T⁺ᵈ T⁺ᵈ-legal
+
+T⁺ᵈ₂-legal : Lgl zero T⁺ᵈ₂
+T⁺ᵈ₂-legal = feed-legal T⁺ᵈ T⁺ᵈ-legal

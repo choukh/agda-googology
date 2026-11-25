@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19IdealGamma where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _,_)
+open import Data.Sum using (inj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; trans; subst)
+open import OCF.Align.EboLeanDef using (T; ψ; Ωt; _<ᵀ_; []<; hd<; ar<; lv<; tl<; cof; cω; fsn; HC; h0; h1; hω)
+open import OCF.Align.EboLeanBase using (NF; n∷; n[]; nf-ψ; nf-hd; nfp-a; nfp-g; GB; gp; gtl; gh; gw; gc; c∷; c[]; <ᵀ-trans)
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Align.EboLeanClosure using (cl-fsn-NF; trian-fsn)
+open import OCF.Align.EboLeanTrian using (t<)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼; hω-inv)
+open import OCF.Lean.YiMENote using (fsnψω)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; s≼s; ≅→≼; ≼-suc; ψ⁰-mono⁰)
+open import WVOne using (𝟏; T₀)
+import B18RefExponent as E
+
+first = ψ [] (Ωt (ψ [] [] ∷ [])) ∷ []
+second = ψ [] (Ωt first) ∷ []
+
+v = fsn first
+
+pick : ∀ {t} (h : HC t) (e : cof t ≡ cω) {x : T₀} → L.suc x ≼ Rt h →
+  Σ ℕ (λ n → x ≼ Rt (hω-inv h e n))
+pick (h0 e) p with trans (sym e) p
+... | ()
+pick (h1 e _) p with trans (sym e) p
+... | ()
+pick (hω _ f) p (≼l n q) = n , ≼-trans (≼-suc (≼-refl _)) q
+
+module Reference (n₁ : NF first) (n₂ : NF second) (root : HC second) where
+  Γ = Rt root
+  module Child (n : ℕ) where
+    p = ψ (v n) []
+    t = ψ [] (p ∷ []) ∷ []
+    tag = ψ [] (p ∷ t) ∷ []
+    eq : fsn second n ≡ t
+    eq = refl
+    nt : NF t
+    nt = subst NF eq (cl-fsn-NF n₂ refl n)
+    h = hc nt (c∷ c[])
+    pos : ∀ k → [] <ᵀ v k
+    pos zero = []<
+    pos (suc k) = []<
+    raised : p ∷ [] <ᵀ p ∷ t
+    raised = tl< []<
+    guard : GB [] (p ∷ t) (p ∷ t)
+    guard (gp w) = <ᵀ-trans (nfp-g (nf-hd nt) (gp w)) raised
+    guard (gtl (gp (gh _))) = raised
+    guard (gtl (gp (gw _ ())))
+    guard (gtl (gp (gc _ w))) = <ᵀ-trans (nfp-g (nf-hd nt) w) raised
+    guard (gtl (gtl ()))
+    nt′ : NF tag
+    nt′ = nf-ψ n[] (n∷ (nf-hd (nfp-a (nf-hd nt))) (inj₁ (lv< (pos n))) nt) guard
+    h′ = hc nt′ (c∷ c[])
+    ub : tag <ᵀ second
+    ub = hd< (ar< (hd< (lv< (t< (trian-fsn n₁ refl n)))))
+    pred-cap : ∀ (d : HC (fsn second n)) → L.suc (L.suc (Rt d)) ≼ Γ
+    pred-cap d = ≼-trans (s≼s (≼-trans (s≼s (tree-≼ eq d h))
+      (mono<ⁿ nt nt′ (c∷ c[]) h h′ (hd< (ar< raised)))))
+      (mono<ⁿ nt′ n₂ (c∷ c[]) h′ root ub)
+    base : (d : HC t) → 𝟏 ≼ Rt d
+    base d = mono<ⁿ n[] nt (c∷ c[]) (h0 refl) d []<
+    capped : ∀ (d : HC (fsn second n)) → L.suc (L.ψ⁰ (Rt d)) ≼ Γ
+    capped d = ≼-trans (s≼s (≼-trans (ψ⁰-mono⁰ (tree-≼ eq d h)) (E.Prefix.bound p base t h h′)))
+      (mono<ⁿ nt′ n₂ (c∷ c[]) h′ root ub)
+
+  succ-closed : ∀ {x} → L.suc x ≼ Γ → L.suc (L.suc x) ≼ Γ
+  succ-closed q with pick root refl q
+  ... | n , b = ≼-trans (s≼s (s≼s b)) (Child.pred-cap n (hω-inv root refl n))
+
+  closed : ∀ {x} → L.suc x ≼ Γ → L.suc (L.ψ⁰ x) ≼ Γ
+  closed q with pick root refl q
+  ... | n , b = ≼-trans (s≼s (ψ⁰-mono⁰ b)) (Child.capped n (hω-inv (root) refl n))

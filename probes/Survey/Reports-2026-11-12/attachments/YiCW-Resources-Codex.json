@@ -1,0 +1,52 @@
+[
+  {
+    "name": "YiCWTable",
+    "exit": 0,
+    "wall_seconds": 1.780084125,
+    "checking": [
+      "OCF.Lean.YiCWTable"
+    ],
+    "max_residency_bytes": 136288104,
+    "total_memory_MiB": 265
+  },
+  {
+    "name": "YiCWActual",
+    "exit": 0,
+    "wall_seconds": 1.8016471250000001,
+    "checking": [
+      "OCF.Lean.YiCWActual"
+    ],
+    "max_residency_bytes": 152293328,
+    "total_memory_MiB": 258
+  },
+  {
+    "name": "YiCWCheck",
+    "exit": 0,
+    "wall_seconds": 1.759314667,
+    "checking": [
+      "OCF.Lean.YiCWCheck"
+    ],
+    "max_residency_bytes": 161868344,
+    "total_memory_MiB": 273
+  },
+  {
+    "name": "YiCWBTBO",
+    "exit": 0,
+    "wall_seconds": 15.622933417,
+    "checking": [
+      "OCF.Lean.YiCWBTBO"
+    ],
+    "max_residency_bytes": 1446559528,
+    "total_memory_MiB": 2435
+  },
+  {
+    "name": "YiCWStations",
+    "exit": 0,
+    "wall_seconds": 18.268571750000003,
+    "checking": [
+      "OCF.Lean.YiCWStations"
+    ],
+    "max_residency_bytes": 1597321256,
+    "total_memory_MiB": 2712
+  }
+]

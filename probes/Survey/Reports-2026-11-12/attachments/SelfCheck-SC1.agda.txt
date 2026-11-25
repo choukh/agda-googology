@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module SC1 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; _,_)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.List using ([]; _∷_; _++_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiLegBlock
+open import OCF.Lean.YiLegOps
+import OCF.Align.EboLeanDef as E
+open E using (_<ᵀ_; []<; hd<; tl<; lv<; ar<; natT)
+open import OCF.Align.Standard using (++-mono)
+open import OCF.Lean.YiANFam using (M; Mβ; Ωᴺ; ψᴺ; fin)
+
+-- 关系对参照按语法项序向下封闭
+_≤ᵀ_ : E.T → E.T → Set
+s ≤ᵀ t = (s <ᵀ t) ⊎ (s ≡ t)
+
+M̃ : (n : ℕ) → E.T → Tr (fin n) → Set
+M̃ n s x = Σ E.T λ t → (s ≤ᵀ t) × M n t x
+
+-- 自然数下标的项序
+nat<3 : natT 1 <ᵀ natT 3
+nat<3 = tl< []<
+
+Ω1<Ω3 : Ωᴺ 1 <ᵀ Ωᴺ 3
+Ω1<Ω3 = hd< (lv< nat<3)
+
+-- 松弛的叶：Ω₁ 对着第 3 层 Ω 树，在封闭后的关系里成立
+leaf₁ : M̃ 3 (Ωᴺ 1) (Ωt (fin 3))
+leaf₁ = Ωᴺ 3 , inj₁ Ω1<Ω3 , Mβ 2
+
+-- 折叠项 ψ_j(t₀ + a) 沿 a 的项序单调（语法）
+app-mono : ∀ j t₀ {a b} → a <ᵀ b → ψᴺ j (t₀ ++ a) <ᵀ ψᴺ j (t₀ ++ b)
+app-mono j t₀ a<b = hd< (ar< (++-mono t₀ a<b))

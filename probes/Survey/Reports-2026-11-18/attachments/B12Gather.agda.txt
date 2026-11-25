@@ -1,0 +1,76 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 在同一棵可达子极限上同时合并一层 Real 和零层两界。
+module B12Gather where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; cong; subst; sym; trans)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼-trans)
+open import WVOne using (read)
+open import WVTwo using (◃→≼)
+open import WSShadow using (ES; lC)
+open import WSW4 using (module Lem)
+import WKSum
+open import YiLAB7Orbit using (lvl1; lvl2; c₁)
+open import YiLAB7Replay using (o₁)
+open import B8PairW4 using (Real-up; SumR-up; Real-lim)
+open import B9InnerOuter using (w2)
+open import B11PrefixGen using (T₂)
+open import B11OuterCore using (zpath; slot; Str; str; rP; rΩ; sN; st)
+open import B12Update using (Seeds; seeds; value-bound; slot-bound; structure)
+import B12Orbit as U
+open Lem o₁
+open WKSum.Sum o₁
+
+module Gather (Q K : Op {lvl2} nil)
+              (contain : (R : Base lvl2) (i : W4Block.L) (t : i ≤ lvl2) (v : Tr⁺ i)
+                      → i ⊢ proj₁ (U.Window.child Q R i t v) ◃ proj₁ (run K R i t v))
+              (R : Base lvl2) (v : Tr⁺ zero) (f : ℕ → T₂) (h : ℕ → ES)
+              (I : (n : ℕ) → Seeds (f n) (h n) (itS Q n R) (itV Q n R zero w2 v)) where
+  module W = U.Window Q
+
+  actual-slot : (n : ℕ) (i : W4Block.L) (t : i ≤ lvl2)
+              → proj₁ (W.kid n R i t (R i t)) ≡ proj₁ (itS Q (suc n) R i t)
+  actual-slot n i t = cong proj₁ (trans (W.project-value (suc n) R i t (R i t)) (W.self-value (suc n) R i t))
+
+  kid-real : (n : ℕ) → Real (proj₁ (W.kid n R lvl1 slot (R lvl1 slot))) (h n)
+  kid-real n = subst (λ X → Real X (h n)) (sym (actual-slot n lvl1 slot))
+                     (Real-up (inf Q (itS Q n R) lvl1 slot (itS Q n R lvl1 slot)) (rP (structure (I n))))
+
+  child-real : Real (proj₁ (W.child R lvl1 slot (R lvl1 slot))) (lC h)
+  child-real = Real-lim kid-real
+
+  rise : lvl1 ⊢ c₁ R ◃ c₁ (stepS K R)
+  rise = inf K R lvl1 slot (R lvl1 slot)
+
+  end-str : Str (lC h) (stepS K R)
+  end-str = str (Real-up (contain R lvl1 slot (R lvl1 slot)) child-real)
+                (Real-up rise (rΩ (structure (I 0)))) (SumR-up rise (sN (structure (I 0))))
+                (◃t (st (structure (I 0))) rise)
+
+  kid-path : (n : ℕ) (t : zero ≤ lvl2) (b : Tr⁺ zero)
+           → read (proj₁ (W.kid n R zero t b)) ≼ read (proj₁ (run K R zero t b))
+  kid-path n t b = ◃→≼ (◃t (W.in-child n R zero t b) (contain R zero t b))
+
+  value-at : (n : ℕ) → L.ψ⁰ (f n) ≼ read (proj₁ (run K R zero w2 v))
+  value-at n = ≼-trans (value-bound (I n))
+    (≼-trans (◃→≼ (inf Q (itS Q n R) zero w2 (itV Q n R zero w2 v)))
+    (subst (λ X → read (proj₁ X) ≼ read (proj₁ (run K R zero w2 v)))
+           (W.project-value (suc n) R zero w2 v) (kid-path n w2 v)))
+
+  slot-at : (n : ℕ) → L.ψ⁰ (f n) ≼ read (proj₁ (stepS K R zero zpath))
+  slot-at n = ≼-trans (slot-bound (I n))
+    (≼-trans (◃→≼ (inf Q (itS Q n R) zero zpath (itS Q n R zero zpath)))
+    (subst (λ X → read X ≼ read (proj₁ (stepS K R zero zpath)))
+           (actual-slot n zero zpath) (kid-path n zpath (R zero zpath))))
+
+  merged : Seeds (L.lim f) (lC h) (stepS K R) (run K R zero w2 v)
+  merged = seeds (l≼ value-at) (l≼ slot-at) end-str
+
+gather = Gather.merged

@@ -1,0 +1,25 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 出口: 已发表的 BTBO 闭项不高于 W4 的闭项 EBOᶜ, 无模块参数. 可数层号定理 (KLow.lowerW) 填上装配 (KAsTw) 的唯一前提.
+module KBtbo where
+
+open import W4Fold using (EBOᶜ; twᶜ)
+open import WVOne using (read)
+open import OCF.Align.Value using (_≼_)
+open import OCF.BTBO using (module Ord-Ord)
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.NoCumsum as NC
+open import KLow using (lowerW)
+import KAsTw
+
+module As = KAsTw lowerW
+
+-- 参照链的极限 (NoCumsum 的 BTBOᴵ) 不高于塔第 1 项的闭项, 也不高于 EBOᶜ.
+tw1-lower : NC.BTBOᴵ ≼ read (twᶜ 1)
+tw1-lower = As.tw1-low
+
+ebo-lower : NC.BTBOᴵ ≼ read EBOᶜ
+ebo-lower = As.EBO-low
+
+-- 作者已发表的 BTBO 闭项 (src/OCF/BTBO) 不高于 EBOᶜ.
+btbo-lower : tr₀ Ord-Ord.BTBO ≼ read EBOᶜ
+btbo-lower = As.src-EBO-low

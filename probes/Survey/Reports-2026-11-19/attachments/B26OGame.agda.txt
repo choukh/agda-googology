@@ -1,0 +1,123 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第四层的游戏由实际零树递归计算。每次挑战一个更小的合格参数，必须在当前实际树上进一个直接孩子。
+module B26OGame where
+
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Nat.Base using (ℕ)
+open import Data.Maybe.Base using (Maybe; nothing; just)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import OCF.Align.EboLeanDef using (_<ᵀ_; HC; h0; h1; hω; hd<; ar<)
+open import OCF.Align.EboLeanClosure using (trian-fsn)
+open import OCF.Align.EboLeanTrian using (t<; T-pred)
+open import OCF.Align.EboLeanTree using (EBO-tree′; hc-tower)
+open import OCF.Lean.YiMonoExit using (toL)
+open import OCF.Lean.YiRefTw2 using (Rt; endpoint)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-suc; ≼-trans; ≼-refl; s≼s; s≼s⁻; s≼0; z≼; l≼; ≼lim⁻; ≺→s≼)
+import W4Block as W
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read; T₀)
+import B16IndexBase as I
+import B26ORank as R
+import B26OSparse as U
+open import B26OArgument as A using (Argument; raw; index)
+
+Tree = W.Tr W.zero
+
+Choice : Tree → Set
+Choice W.zero = ⊥
+Choice (W.suc _) = ⊤
+Choice (W.lim _ _) = ℕ
+Choice (W.Ω () _)
+Choice (W.up _ () _ _)
+Choice (W.ex _ _ _ _ ())
+
+child : (z : Tree) → Choice z → Tree
+child W.zero ()
+child (W.suc z) _ = z
+child (W.lim f _) n = f n
+child (W.Ω () _)
+child (W.up _ () _ _)
+child (W.ex _ _ _ _ ())
+
+edge : (z : Tree) (i : Choice z) → W._⊢_◃_ W.zero (child z i) z
+edge W.zero ()
+edge (W.suc _) _ = W.◃s
+edge (W.lim _ _) n = W.◃l n
+edge (W.Ω () _)
+edge (W.up _ () _ _)
+edge (W.ex _ _ _ _ ())
+
+strict : (z : Tree) (i : Choice z) → L.suc (read (child z i)) ≼ read z
+strict z i = ≺→s≼ (I.pred (edge z i))
+
+-- 单步允许所选孩子比要求的值更大。
+take : ∀ (x : T₀) z → L.suc x ≼ read z → Σ (Choice z) (λ i → x ≼ read (child z i))
+take x W.zero p = ⊥-elim (s≼0 p)
+take x (W.suc z) p = tt , s≼s⁻ p
+take x (W.lim f d) p with ≼lim⁻ {f = λ n → read (f n)} p
+... | n , h = n , ≼-trans (≼-suc (≼-refl x)) h
+take x (W.Ω () _)
+take x (W.up _ () _ _)
+take x (W.ex _ _ _ _ ())
+
+Below : Argument → Maybe Argument → Set
+Below b nothing = ⊤
+Below b (just a) = raw b <ᵀ raw a
+
+Play : Tree → Maybe Argument → Set
+Play W.zero u = ∀ b → Below b u → ⊥
+Play (W.suc z) u = ∀ b → Below b u → Σ ⊤ (λ _ → Play z (just b))
+Play (W.lim f _) u = ∀ b → Below b u → Σ ℕ (λ n → Play (f n) (just b))
+Play (W.Ω () _)
+Play (W.up _ () _ _)
+Play (W.ex _ _ _ _ ())
+
+answer : ∀ z u → Play z u → ∀ b → Below b u → Σ (Choice z) (λ i → Play (child z i) (just b))
+answer W.zero u h b p = ⊥-elim (h b p)
+answer (W.suc z) u h = h
+answer (W.lim f d) u h = h
+answer (W.Ω () _)
+answer (W.up _ () _ _)
+answer (W.ex _ _ _ _ ())
+
+module Build (r : Argument → T₀) (step : A.Strict r) where
+  Room = λ z u → ∀ b → Below b u → L.suc (r b) ≼ read z
+
+  narrower : ∀ b {z} → r b ≼ read z → Room z (just b)
+  narrower b h c lt = ≼-trans (step c b lt) h
+
+  play : ∀ z u → Room z u → Play z u
+  play W.zero u h b p = s≼0 (h b p)
+  play (W.suc z) u h b p = tt , play z (just b) (narrower b (s≼s⁻ (h b p)))
+  play (W.lim f d) u h b p with take (r b) (W.lim f d) (h b p)
+  ... | n , q = n , play (f n) (just b) (narrower b q)
+  play (W.Ω () _)
+  play (W.up _ () _ _)
+  play (W.ex _ _ _ _ ())
+
+source : ∀ {a b} → R._≪_ a b → raw (index a) <ᵀ raw (index b)
+source {a} {b} = U.preserve (R.countable a) (R.countable b)
+
+interpret : ∀ a (hc : HC (R.term a)) z → Play z (just (index a)) → Rt hc ≼ read z
+interpret a (h0 _) z g = z≼
+interpret a (h1 eq h) z g with answer z (just (index a)) g (index (R.P a eq))
+  (source {R.P a eq} {a} (t< (T-pred (R.term a) eq)))
+... | i , rest = ≼-trans (s≼s (interpret (R.P a eq) h (child z i) rest)) (strict z i)
+interpret a (hω eq h) z g = l≼ λ n →
+  let b = R.B a eq n
+      i , rest = answer z (just (index a)) g (index b) (source {b} {a} (t< (trian-fsn (R.normal a) eq n)))
+  in ≼-trans (interpret b (h n) (child z i) rest) (≼-trans (≼-suc (≼-refl _)) (strict z i))
+
+enough : ∀ z → Play z nothing → toL EBO-tree′ ≼ read z
+enough z g = endpoint _ λ n →
+  let a = R.row n
+      i , rest = answer z nothing g (index a) tt
+  in ≼-trans (interpret a (hc-tower n) (child z i) rest) (≼-trans (≼-suc (≼-refl _)) (strict z i))
+
+necessary : ∀ z → toL EBO-tree′ ≼ read z → Play z nothing
+necessary z h = let r , st , small = A.reverse h
+                in Build.play r st z nothing (λ a _ → small a)
+
+actual = enough EBOᶜ

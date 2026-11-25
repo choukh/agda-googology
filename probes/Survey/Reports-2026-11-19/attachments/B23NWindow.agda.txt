@@ -1,0 +1,97 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23NWindow where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (subst)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (◃→≼)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl2)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import YiLAB11Orbit using (Ω₂t)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼-trans; ≅→≼)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B12Orbit as O
+import B13Target as Src
+import B13Orbit as Orb
+import B22RowRule as Rule
+import B22RowPrefix as P
+import B22RowLive as V
+import B22RowWhole as Live
+import B23AFinite as F
+import B23ABlocks as Blocks
+import B13SeedOuter as Seed
+
+module Window (c : Tr⁺ lvl2) (cp : Cov._⊴_ Ω₂t (proj₁ c))
+              (Q : Op {lvl2} nil) (x : Lev₂) (h : Rule.Rule Q x) where
+  Q′ = Orb.block c Q
+  module W = O.Window Q
+  under : ∀ n R i t v → i ⊢ proj₁ (itV Q n R i t v) ◃ proj₁ (run Q′ R i t v)
+  under zero R i t v = inf Q′ R i t v
+  under (suc n) R i t v = subst (λ w → i ⊢ proj₁ w ◃ proj₁ (run Q′ R i t v))
+    (W.project-value (suc n) R i t v) (◃t (W.in-child n R i t v) (Orb.contains c cp Q R i t v))
+  rg = Src.pass-pres (Rule.reg h)
+  module Sum = U.Sum (Src.pass x) rg
+  module Along = Sum.Prefix (λ p → p L.+ Src.pass x) (λ pq → L.add-≅ {σ = R.idσ} {σ′ = R.idσ} pq rg)
+  module For {p : Lev₂} (l : P.Label p) where
+    seq : ∀ n → P.Label (R.S.iter (λ t → t L.+ Src.pass x) p n)
+    seq zero = l
+    seq (suc n) = Rule.advance h (seq n)
+    import B22RowLimit as Lim
+    module All = Lim.Collect _ seq (p L.+ Src.pass (L.suc x)) (L.l≅ (Along.along (P.rp l)))
+    module At (S : Base lvl2) (initial : V.Present l S) where
+      st = λ n → itS Q n S
+      hs : ∀ n → V.Present (seq n) (st n)
+      hs zero = initial
+      hs (suc n) = Rule.state h (seq n) (st n) (hs n)
+      weak : ∀ n i t → i ⊢ proj₁ (st n i t) ◃ proj₁ (stepS Q′ S i t)
+      weak n i t = subst (λ w → i ⊢ proj₁ w ◃ proj₁ (stepS Q′ S i t))
+        (W.self-value n S i t) (under n S i t (S i t))
+      state = All.At.all st (stepS Q′ S) hs weak
+      module Emit (t : zero ≤ lvl2) (b : Tr⁺ zero) (hb : L.ψ⁰ (P.q l) ≼ read (proj₁ b)) where
+        part : ∀ n → L.ψ⁰ (P.q (seq n)) ≼ read (proj₁ (itV Q n S zero t b))
+        part zero = hb
+        part (suc n) = Rule.value h (seq n) (st n) (hs n) t _ (part n)
+        value = l≼ (λ n → ≼-trans (part n) (◃→≼ (under n S zero t b)))
+  opaque
+    lift-rule : Rule.Rule Q′ (L.suc x)
+    Rule.reg lift-rule = L.s≅ (Rule.reg h)
+    Rule.advance lift-rule = For.All.label
+    Rule.state lift-rule = For.At.state
+    Rule.value lift-rule = For.At.Emit.value
+
+module Chain (c : Tr⁺ lvl2) (cp : Cov._⊴_ Ω₂t (proj₁ c)) (J : Op {lvl2} nil) (x : Lev₂)
+             (base : Rule.Rule (Orb.block c J) x) where
+  Q = iter (Orb.block c) J
+  height : ℕ → Lev₂
+  height zero = x
+  height (suc n) = L.suc (height n)
+  opaque
+    laws : ∀ n → Rule.Rule (Q (suc n)) (height n)
+    laws zero = base
+    laws (suc n) = Window.lift-rule c cp (Q (suc n)) (height n) (laws n)
+
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  open F.At r cv using (Q; out; inside)
+  open Seed.At r using (c⁺; st1; w2; v₁; outer)
+  open Blocks.Site r cv using (J; cp; once)
+  open Chain c⁺ cp J Ω₂ᴸ once public using (height; laws)
+  scalar = λ n → L.ψ⁰ (Src.pass (height n))
+  extract : ∀ (E₀ : Op {lvl2} nil) (x : Lev₂) (h : Rule.Rule E₀ x) →
+    L.ψ⁰ (Src.pass x) ≼ read (proj₁ (run E₀ st1 zero w2 v₁))
+  extract E₀ x h = ≼-trans (≅→≼ (L.ψ⁰-≅ (L.≅-sym (U.left-unit R.idσ (Src.pass-pres (Rule.reg h))))))
+    (≼-trans (≅→≼ (L.≅-sym (proj₁ (P.link (Rule.advance h P.empty)))))
+      (Rule.value h P.empty st1 (Live.At.initial r cv) w2 v₁ (Live.At.run-bound r cv 0)))
+  in-Q : ∀ n → scalar n ≼ out (suc n)
+  in-Q n = extract (Q (suc n)) (height n) (laws n)
+  whole : L.lim scalar ≼ read (Tm.value r)
+  whole = ≼-trans (l≼ (λ n → ≼-trans (in-Q n) (◃→≼ (inside (suc n) st1 zero w2 v₁)))) (outer 0)

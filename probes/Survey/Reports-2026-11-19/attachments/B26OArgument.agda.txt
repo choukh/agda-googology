@@ -1,0 +1,57 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意零层目标只须为合格的高层参数提供严格秩；无须先验校准秩到原 ψ 的值，或要求目标对算术封闭。
+module B26OArgument where
+
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import OCF.Align.EboLeanDef using (T; ψ; _<ᵀ_; hd<; ar<)
+open import OCF.Align.EboLeanBase using (NF; GB; n[]; nf-ψ; c[]; c∷)
+open import OCF.Align.EboLeanTree using (EBO-tree′)
+open import OCF.Lean.YiMonoExit using (toL)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import WVOne using (T₀; read)
+open import W4Fold using (EBOᶜ)
+open import B26ORank as R using (Name; name; term; normal; countable; _≪_)
+import B26OSparse as U
+
+record Argument : Set where
+  constructor argument
+  field
+    raw : T
+    valid : NF raw
+    admissible : GB [] raw raw
+open Argument public
+
+principal : Argument → Name
+principal (argument a n g) = name (ψ [] a ∷ []) (nf-ψ n[] n g) (c∷ c[])
+
+index : Name → Argument
+index a = argument (U.raise (term a)) (U.normalized (normal a) (countable a)) (U.guard (normal a) (countable a))
+
+Strict = λ (r : Argument → T₀) → ∀ a b → raw a <ᵀ raw b → L.suc (r a) ≼ r b
+Model = λ (Y : T₀) → Σ (Argument → T₀) (λ r → Strict r × (∀ a → L.suc (r a) ≼ Y))
+
+forward : ∀ {Y} → Model Y → toL EBO-tree′ ≼ Y
+forward (r , grow , bounded) = R.universal ((λ t → r (index t)) ,
+  (λ t u lt → grow (index t) (index u) (U.preserve (countable t) (countable u) lt)) ,
+  (λ t → bounded (index t)))
+
+reverse : ∀ {Y} → toL EBO-tree′ ≼ Y → Model Y
+reverse h = (λ a → R.ref (principal a)) ,
+  (λ a b p → R.ref-strict (principal a) (principal b) (hd< (ar< p))) ,
+  (λ a → ≼-trans (R.inside (principal a)) h)
+
+-- 更窄地只取折叠裸 Ω 的格式；仍保留整个标准形序型。
+SparseModel = λ (Y : T₀) → Σ (Name → T₀)
+  (λ r → (∀ t u → U.tag t ≪ U.tag u → L.suc (r t) ≼ r u) × (∀ t → L.suc (r t) ≼ Y))
+
+sparse : ∀ {Y} → SparseModel Y → toL EBO-tree′ ≼ Y
+sparse (r , step , bd) = R.universal (r , (λ t u p → step t u (U.tag-mono {t} {u} p)) , bd)
+
+canonical : ∀ {Y} → toL EBO-tree′ ≼ Y → SparseModel Y
+canonical h = (λ t → R.ref (U.tag t)) , (λ t u → R.ref-strict (U.tag t) (U.tag u)) ,
+  (λ t → ≼-trans (R.inside (U.tag t)) h)
+
+actual : Model (read EBOᶜ) → toL EBO-tree′ ≼ read EBOᶜ
+actual = forward

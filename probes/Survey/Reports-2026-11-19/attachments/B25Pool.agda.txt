@@ -1,0 +1,66 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在所有标准塔的上确界 K 上，原 src 算子的一次比较等价于 K 的严格初段对 F 封闭。
+module B25Pool where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (_,_; _×_; proj₁; proj₂)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module S = Ord-Ord
+module B = BoundedTrich
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≅→≼; ≼-refl; ≼-trans; ≼-suc; s≼s; ≼l; l≼; ≺→s≼; ψ⁰-mono⁰)
+open import OCF.Align.BTBOFullLv using (SV; svs)
+open import OCF.Align.BTBOFullV3 using (Fʸ; Fstep)
+open import OCF.Align.BTBOValBase using (tr₀; fd)
+open import OCF.Align.BTBOValDn using (τ)
+open import OCF.Align.BTBOValAbsorb using (cum-C)
+open import OCF.Align.BTBOValMain using (ψ₀≈)
+open import OCF.Align.CumUpAcceptVal using (τ-SV)
+import B16IndexBase as I
+import B18TowerEmb as E
+import B19IdealArithmetic as A
+import B19IdealPowers as P
+import B20StandardInside as S₀
+import B21StandardShape as H
+import B22MovingIndex as M
+import B22TowerCut as K
+import B25PhysicalFold as V
+import B25OneFold as J
+import B25Least as C
+
+folded = tr₀ (J.J V.pool)
+fold→closed : folded ≼ K.cut → C.Closed K.cut
+fold→closed p a va h = ≼-trans (≺→s≼ (Fstep a))
+  (≼-trans (J.majorant (L.suc a) (svs va) V.pool V.regular
+    (≼-trans h (≅→≼ (L.≅-sym V.exact)))) p)
+
+family = λ n → I.cp (proj₁ (E.standard n))
+part = B.cumsum (λ n → S.ordᴰ (family n))
+
+erases : ∀ d → L.forget (τ d) L.≅ fd d
+erases B.zero = L.z≅
+erases (B.suc d) = L.s≅ (erases d)
+erases (B.lim f _) = L.l≅ (λ n → erases (f n))
+
+power-inside : ∀ n → L.suc (L.ψ⁰ (S₀.std n)) ≼ K.cut
+power-inside n = ≼-trans (s≼s below) (K.inside {S₀.std n} (≼l (suc n) (H.rise n)))
+  where
+  x = S₀.std n
+  below : L.ψ⁰ x ≼ M.above x
+  below = ≼-trans (proj₂ (A.normal x)) (≼l 1 (P.expo P.omega-pos (≼-suc (≼-refl x))))
+
+input : ∀ n → L.suc (L.forget (τ (part n))) ≼ K.cut
+input n = ≼-trans (s≼s lower) (power-inside (suc (suc n)))
+  where
+  room : L.suc (L.suc (tr₀ (family n))) ≼ S₀.std (suc (suc n))
+  room = ≼-trans (s≼s (s≼s (≅→≼ (I.same (proj₁ (E.standard n))))))
+    (≼-trans (s≼s (H.rise n)) (H.rise (suc n)))
+  lower : L.forget (τ (part n)) ≼ L.ψ⁰ (S₀.std (suc (suc n)))
+  lower = ≼-trans (≅→≼ (erases (part n))) (≼-trans (cum-C family V.regular n) (ψ⁰-mono⁰ room))
+
+closed→fold : C.Closed K.cut → folded ≼ K.cut
+closed→fold close = ≼-trans (proj₁ (ψ₀≈ (S.ordᴰ V.pool)))
+  (l≼ (λ n → ≼-trans (≼-suc (≼-refl (Fʸ (τ (part n))))) (close (τ (part n)) (τ-SV (part n)) (input n))))
+
+characterize : (folded ≼ K.cut → C.Closed K.cut) × (C.Closed K.cut → folded ≼ K.cut)
+characterize = fold→closed , closed→fold

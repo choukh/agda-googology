@@ -1,0 +1,107 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- Ω₂ 的第一个变化链点折向零层：理想点的分支从一次更新开始，W4 从两次开始，共尾给出双向值界。
+module B14SharpTwo where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+import W4Path as P
+open import WVOne using (read; read-+; lvl1)
+open import WVTwo using (◃→≼; lvl2; ok₂; g₂; p₂; s₂)
+open import B8FreezeMain using (read-+′)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼l; l≼; ≼-refl; ≼-trans; ≅→≼; ≅→≈ᵛ; ≈ᵛ-trans; +-mono)
+open import B13SharpOne using (r₁; Match; shape; module Compare)
+open import B14SharpStack
+
+r₂ = R.nd R.sS (λ _ → r₁)
+o₂ = tt , (λ (_ : Data.Unit.⊤) → oR)
+p₂i : R.Pos r₂
+p₂i = inj₂ (tt , inj₁ tt)
+g₂i : R.Tr r₁ → R.Tr r₂
+g₂i x = R.up R.zero tt (R.suc x) (V.z◃ x R.◃s)
+
+StateShift : ∀ n S → F.itS K n (F.stepS K S) ≡ F.itS K (suc n) S
+StateShift zero S = refl
+StateShift (suc n) S = cong (F.stepS K) (StateShift n S)
+
+shift : ∀ n S t b → F.itV K n (F.stepS K S) B.zero (path t) (F.run K S B.zero (path t) b)
+       ≡ F.itV K (suc n) S B.zero (path t) b
+shift zero S t b = refl
+shift (suc n) S t b rewrite StateShift n S | shift n S t b = refl
+
+i-add : ∀ a b → readRW (a V.+ b) L.≅ (readRW a L.+ readRW b)
+i-add a R.zero = L.≅-refl⁰ _
+i-add a (R.suc b) = L.s≅ (i-add a b)
+i-add a (R.lim f _) = L.l≅ (λ n → i-add a (f n))
+
+_~_ : R.Tr R.zero → B.Tr B.zero → Set
+a ~ b = readRW a ≈ᵛ read b
+
+add-value : ∀ {a b x y} → a ~ b → x ~ y → (a V.+ x) ~ (b W.+ y)
+add-value {a} {b} {x} {y} (p , q) (e , e′) =
+  ≈ᵛ-trans (≅→≈ᵛ (i-add a x)) (≈ᵛ-trans (+-mono p e , +-mono q e′) (read-+ b y , read-+′ b y))
+
+next-value : ∀ a b → proj₁ a ~ proj₁ b → proj₁ (V.next⁺ a) ~ proj₁ (W.next⁺ b)
+next-value a b h = l≼ (λ n → ≼l n (proj₁ (go n))) , l≼ (λ n → ≼l n (proj₂ (go n)))
+  where
+  go : ∀ n → V.iter (proj₁ a V.+_) (proj₁ a) n ~ B.iter (proj₁ b W.+_) (proj₁ b) n
+  go zero = h
+  go (suc n) = add-value h (go n)
+
+module CompareTwo (lem : LEM) where
+  open I.Sharp lem
+  open Sim lem
+  zi : R.Tr r₁
+  zi = R.fromBr r₂ p₂i (proj₁ (ψ♯ r₂ o₂ B♯ r₁ oR (V.Ωt r₁) (g₂i R.zero)))
+
+  zw : B.Tr lvl1
+  zw = s₂ B.zero
+
+  module First (D : Base♯) (S : F.Base lvl1) (a : V.Tr⁺ R.zero) (b : W.Tr⁺ B.zero)
+               (ha : Match (proj₁ a) (proj₁ b)) (hc : Match (proj₁ (D R.zero tt)) (proj₁ (S B.zero (path slot)))) where
+    Ival = fold D a zi
+    Wval = F.ψ lvl1 oB S B.zero (path base) b zw
+
+    i : ℕ → R.Tr R.zero
+    i n = proj₁ (fold D a (sums n))
+    w : ℕ → B.Tr B.zero
+    w n = proj₁ (F.itV K (suc n) (F.stepS K S) B.zero (path base) (F.run K S B.zero (path base) b))
+
+    initial : Match (i 0) (proj₁ (F.run K S B.zero (path base) b))
+    initial = Run.compare D S hc (finite 0) base a b ha
+
+    common : ∀ n → Match (i (suc n)) (w n)
+    common n = subst (Match (i (suc n))) (sym (cong proj₁ (shift (suc n) S base b)))
+                  (Run.compare D S hc (finite (suc n)) base a b ha)
+
+    initial-lower : readRW (i 0) ≼ read (w 0)
+    initial-lower = ≼-trans (≅→≼ (shape initial)) (◃→≼ (F.inf K (F.stepS K S) B.zero (path base) (F.run K S B.zero (path base) b)))
+
+    same : proj₁ Ival ~ proj₁ Wval
+    same = l≼ (λ where
+             zero → ≼l 0 initial-lower
+             (suc n) → ≼l n (≅→≼ (shape (common n)))) ,
+           l≼ (λ n → ≼l (suc n) (≅→≼ (L.≅-sym (shape (common n)))))
+
+    branch : proj₁ (fold D a (R.suc zi)) ~ proj₁ (F.ψ lvl1 oB S B.zero (path base) b (B.suc zw))
+    branch = next-value Ival Wval same
+
+  standard : proj₁ (ψ♯ r₂ o₂ B♯ R.zero tt (V.Ωt R.zero) (g₂i zi)) ~
+             proj₁ (F.ψ₀ lvl2 ok₂ (g₂ zw))
+  standard = First.branch B♯ (F.B₀ lvl1) (V.Ωt R.zero) (W.Ωt B.zero) (Match.s Match.z) (Match.s Match.z)
+
+  prefix : V.cum (λ n → proj₁ (ψ♯ r₂ o₂ B♯ R.zero tt (V.Ωt R.zero)
+               (g₂i (V.iter (λ z → R.fromBr r₂ p₂i (proj₁ (ψ♯ r₂ o₂ B♯ r₁ oR (V.Ωt r₁) (g₂i z)))) R.zero n)))) 1 ~
+           W.cum (λ n → proj₁ (F.ψ₀ lvl2 ok₂ (g₂ (B.iter s₂ B.zero n)))) 1
+  prefix = add-value (≅→≈ᵛ (shape (B13SharpOne.next _ _ (Match.s Match.z)))) standard

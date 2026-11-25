@@ -1,0 +1,98 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19RowSecondParent where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; l≼; ≼l; s≼s; ≼-suc)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; 𝟏; read; Mv; Mv-mono; Mv-infl; ≼-+ˡ; read-+)
+open import WSLevel using (Ω₁ᴸ)
+open import B12LimitSrc using (Lev₂)
+import B9InnerLevel2 as Low
+import B11PrefixGen as Prefix
+import B12Omega3Ref as Ref
+import B12EboRows as E
+import B12Terminal as T
+import B12ActualSlots as Cover
+import B14Height as H
+import B14PathHeight as P
+import B14Tower as W
+open import B14RefGain using (along)
+import B15TowerSeed as Seed
+import B17RefAllSource as Src
+import B17CellPrefix as Cell
+import B18CellState as C
+import B18TowerSlots as Slots
+import B18TowerEmb as Emb
+import B19RowSecond as S
+open T.Run
+
+module Raw (p : Lev₂) where
+  a = L.ψ⁰ p
+  body = L.add p (λ q → L.suc (L.suc q))
+  step = λ x → L.ψ (L.suc L.zero) Ref.idσ (body x)
+  ix = S.O.iter step 𝟏
+  point = λ j → L.ψ⁰ (body (ix j))
+  branch : L.ψ⁰ (p L.+ L.up L.zero Ω₁ᴸ) ≡ L.lim point
+  branch = refl
+  right : ∀ x → L.ψ⁰ (body x) ≼ Mv a x
+  right = Prefix.Sem.Pu p a (≼-refl a)
+  feeds : ∀ x → step x ≼ Mv a x
+  feeds x = ≼-trans (Low.ψ≼ψ⁰ {p = L.suc L.zero} {σ = Ref.idσ} (body x)) (right x)
+
+scale : ∀ x a → Mv a x ≼ H.act x a
+scale L.zero a = Mv-infl a 𝟏
+scale (L.suc x) a = ≼l 2 (≼-trans (Mv-mono {y = 𝟏} {y′ = 𝟏} (scale x a) (≼-refl 𝟏)) (H.seed x (H.act x a)))
+scale (L.lim g) a = l≼ (λ j → ≼l j (scale (g j) a))
+
+module Orbit (p : Lev₂) (r : T.Run (tw 1)) (cv : Cover.Covered r)
+  (valid : ∀ z → P.All (W.At.path r z))
+  (highB : L.ψ⁰ p ≼ read (proj₁ (W.At.slot r)))
+  (highβ : L.ψ⁰ p ≼ read (proj₁ (β r))) where
+  module X = W.At r
+  module A = Raw p
+  higher : ∀ j → A.ix j ≼ read (X.idx (suc j))
+  higher zero = X.start
+  higher (suc j) = ≼-trans (A.feeds _) (≼-trans (scale _ A.a)
+    (P.compare z (valid z) (higher j) (X.chain z) (W.chain-covered r cv z) A.a highB))
+    where z = X.idx (suc j)
+  emit : ∀ j → A.point j ≼ read (T.value r)
+  emit j = ≼-trans (A.right _) (≼-trans (scale _ A.a) (≼-trans
+    (P.compare z (P.standard _) (higher j) (X.point (suc j)) (Cover.enter (sΩ zero) WVOne.h₁ r z zero cv) A.a highβ)
+    (X.out (suc j)))) where z = X.idx (suc j)
+  full : L.ψ⁰ (p L.+ L.up L.zero Ω₁ᴸ) ≼ read (T.value r)
+  full = l≼ emit
+
+copy : ∀ x → read x ≼ read (ι zero x)
+copy zero = ≼-refl _
+copy (suc x) = s≼s (copy x)
+copy (lim f p) = l≼ (λ j → ≼l j (copy (f j)))
+append : ∀ a b → read (proj₁ b) ≼ read (proj₁ (_⊞_ {zero} a b))
+append a b = ≼-trans (copy (proj₁ b)) (≼-trans (≼-+ˡ (read (proj₁ a)) (read (ι zero (proj₁ b)))) (read-+ (proj₁ a) (ι zero (proj₁ b))))
+
+r = C.At.r 1 0
+std = T.initial (tw 1) (Ok-tw 1)
+hb : S.previous ≼ read (proj₁ (Emb.standard 1))
+hb = Seed.initial-bound 2 S.finite std (Cover.initial (tw 1) (Ok-tw 1))
+hw : S.previous ≼ read (proj₁ (W.At.slot r))
+hw = subst (λ b → S.previous ≼ read (proj₁ (b zero (ink self)))) (sym (Slots.At.all 1 zero))
+  (≼-trans hb (append (Slots.slots (tw 1) 1 zero (ink self)) (Emb.standard 1)))
+hv : S.previous ≼ read (proj₁ (β r))
+hv = subst (S.previous ≼_) (sym (C.At.input 1 0)) S.prior
+cr : Cover.Covered r
+cr = Cell.At.S.cover 1 (Cover.enter sL tw T.terminal 2 (T.prefix tw 2) (Cover.initial Λ Ok-Λ)) 0
+module Physical = Orbit S.p r cr (λ z → P.through (↑ zero z)) hw hv
+
+address = 0 ∷ 0 ∷ 2 ∷ 0 ∷ 0 ∷ 2 ∷ 0 ∷ 0 ∷ 1 ∷ 0 ∷ []
+piece = along address (Src.branches 2)
+shape : piece ≡ L.ψ⁰ (S.p L.+ L.up L.zero Ω₁ᴸ)
+shape = refl
+actual : piece ≼ E.child 2
+actual = ≼-trans Physical.full (Cell.At.S.lift-value 1 0)
+terminal : piece ≼ read EBOᶜ
+terminal = E.into (2 , actual)

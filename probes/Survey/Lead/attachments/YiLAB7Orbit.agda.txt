@@ -1,0 +1,61 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiLAB7Orbit where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+lvl1 lvl2 : L
+lvl1 = nd sS (λ _ → zero)
+lvl2 = nd sS (λ _ → lvl1)
+
+ok₂ : Ok lvl2
+ok₂ = tt , λ _ → tt , λ _ → tt
+
+p₁ : Pos lvl1
+p₁ = inj₂ (tt , inj₁ tt)
+
+-- 只生成本次迭代用到的树。Ω 行的零层分支仍遍历所有 z。
+branch : Tr lvl1 → Tr zero → Tr lvl1
+branch a z = up a tt (suc z) (z◃ z ◃s)
+
+data Gen : Tr lvl1 → Set where
+  gz : Gen zero
+  gs : ∀ {x} → Gen x → Gen (suc x)
+  gl : ∀ {f s} → (∀ n → Gen (f n)) → Gen (lim f s)
+  go : ∀ {a} → Gen a → Gen (Ω p₁ (branch a))
+  gx : ∀ {a b x} {nb : lvl1 ⊢ zero ◃ b} → Gen a → Gen b → Gen x → Gen (ex a b nb x tt)
+
+addG : ∀ {a b} → Gen a → Gen b → Gen (a + b)
+addG a gz         = a
+addG a (gs b)     = gs (addG a b)
+addG a (gl f)     = gl (λ n → addG a (f n))
+addG a (go b)     = go (addG a b)
+addG a (gx b c x) = gx (addG a b) c x
+
+cumG : (f : ℕ → Tr lvl1) → (∀ n → Gen (f n)) → ∀ n → Gen (cum f n)
+cumG f g zero    = g zero
+cumG f g (suc n) = addG (cumG f g n) (g (suc n))
+
+F : Op {lvl2} nil
+F = opB lvl2 ok₂ (proj₁ (Ωt lvl2)) (proj₂ (Ωt lvl2))
+
+c₁ : St {lvl2} nil → Tr lvl1
+c₁ S = proj₁ (S lvl1 (inc tt self))
+
+stepG : (S : St {lvl2} nil) → Gen (c₁ S) → Gen (c₁ (stepS F S))
+stepG S g = gl (cumG (λ n → z (suc n)) (λ n → term (suc n)))
+  where
+  b = c₁ S
+  z = iter (λ x → ex b b (proj₂ (S lvl1 (inc tt self))) (suc x) tt) zero
+  term : ∀ n → Gen (z n)
+  term zero    = gz
+  term (suc n) = gx g g (gs (term n))
+
+actual : ∀ n → Gen (c₁ (itS F n (B₀ lvl2)))
+actual zero    = go gz
+actual (suc n) = stepG (itS F n (B₀ lvl2)) (actual n)

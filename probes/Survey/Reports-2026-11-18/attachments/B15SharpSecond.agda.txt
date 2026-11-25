@@ -1,0 +1,112 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B15SharpSecond where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+import W4Path as P
+open import WVOne using (read; lvl1)
+open import WVTwo using (◃→≼; lvl2; p₂; g₂)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼)
+open import B13SharpOne using (r₁)
+open import B14SharpStack
+open import B14SharpBound
+open import B15SharpAction
+open import B15SharpLift
+import B14SharpNext as N
+import B14SharpLive as Live
+import B14SharpStation as Station
+import B12ActualSlots as A
+import B12Terminal as T
+
+module Second (lem : LEM) where
+  open I.Sharp lem
+  open Action lem
+  open Lift lem
+  open Live.Live lem using (item; module Actual)
+  open T.Run
+
+  module Stage (c⁺ : W.Tr⁺ lvl1) (above : A._⊴_ Ωw (proj₁ c⁺)) where
+    C = proj₁ c⁺
+    nc = proj₂ c⁺
+    O = F.opB lvl1 oB C nc
+    liftC = eop F.tdNil C
+    zw = B.ex C C nc (B.suc B.zero) tt
+    G = eop F.tdNil zw O
+
+    start≤ : Model ch Ωi O
+    start≤ D a A S t v hv hc = ≼-trans (canon D a A S t v hv hc) (go above)
+      where
+      go : ∀ {c} → A._⊴_ Ωw c → read (proj₁ (F.run K S B.zero t v)) ≼ read (proj₁ (F.ψ lvl1 oB S B.zero t v c))
+      go (inj₁ refl) = ≼-refl _
+      go (inj₂ d) = ◃→≼ (F.mono lvl1 oB S B.zero t v d)
+
+    strengthen : ∀ {x} (H : F.Op {lvl1} F.nil) → Model ch x (eop F.tdNil Ωw H) → Model ch x (liftC H)
+    strengthen H h D a A S t v hv hc = ≼-trans (h D a A S t v hv hc) (go above)
+      where
+      go : ∀ {c} → A._⊴_ Ωw c → read (proj₁ (F.E oB F.tdNil Ωw H S B.zero t v)) ≼ read (proj₁ (F.E oB F.tdNil c H S B.zero t v))
+      go (inj₁ refl) = ≼-refl _
+      go (inj₂ d) = ◃→≼ (F.Emono oB F.tdNil H S B.zero t v d)
+
+    self-blocks : ∀ {n x} → Blocks n x →
+      Model ch (proj₁ (selfFold B♯ (V.Ωt r₁) x)) (B.iter liftC O n)
+    self-blocks emp = start≤
+    self-blocks {suc n} (add {x = x} d) = strengthen _ (lift-block B♯ (V.Ωt r₁) x (B.iter liftC O n) (self-blocks d))
+
+    raise : ∀ n → F.Rl (B.iter liftC O n) (B.iter liftC O (suc n))
+    raise n S i t v = F.Emono oB F.tdNil (B.iter liftC O n) S i t v nc
+
+    shift : ∀ n → B.iter liftC (liftC O) n ≡ B.iter liftC O (suc n)
+    shift zero = refl
+    shift (suc n) = Relation.Binary.PropositionalEquality.cong liftC (shift n)
+
+    internal = ψ♯ r₁ oR B♯ r₁ oR (V.Ωt r₁) (V.iter (N.Next.step lem) R.zero 1)
+
+    internal-model : Model ch (proj₁ internal) G
+    internal-model D a A S t v hv hc = lim-out D a A _ _ λ n → ≼l n (at n)
+      where
+      at : ∀ n → data≤ (res D a A (proj₁ (selfFold B♯ (V.Ωt r₁) (sums n))))
+        (proj₁ (F.run (B.iter liftC (liftC O) (suc n)) S B.zero t v))
+      at n = Relation.Binary.PropositionalEquality.subst
+        (λ u → data≤ (res D a A (proj₁ (selfFold B♯ (V.Ωt r₁) (sums n)))) (proj₁ (F.run u S B.zero t v)))
+        (Relation.Binary.PropositionalEquality.sym (shift (suc n)))
+        (≼-trans (self-blocks (finite n) D a A S t v hv hc) (◃→≼ (raise (suc n) S B.zero t v)))
+
+    second-model : Model ch (N.Next.next-index lem) (eop F.tdNil (B.suc zw) O)
+    second-model D a A S t v hv hc =
+      lim-out D a A _ _ λ n → ≼l n (power internal-model n D a A S t v hv hc)
+
+  module Run (r : T.Run lvl2) where
+    open Actual r hiding (lower)
+    module Rel = Stage c⁺ (omegaB r (B.inc tt B.self))
+
+    actual = F.ψ lvl1 oB S B.zero (path base) b (step (step B.zero))
+
+    head : data≤ (proj₁ (Sim.fold lem B♯ (V.Ωt R.zero) (N.Next.next-index lem))) (proj₁ actual)
+    head = Rel.second-model B♯ (V.Ωt R.zero) id S₁ (path base) v₁
+      (≼-trans (oneβ r) (◃→≼ (F.inf op S B.zero (path base) b)))
+      (≼-trans (oneB r (B.inc tt (path slot))) (◃→≼ (F.inf op S B.zero (path slot) (S B.zero (path slot)))))
+
+    branch : data≤ (item 2) (proj₁ (output 2))
+    branch = next≤ _ actual head
+
+    second-prefix : data≤ (V.cum item 2) (W.cum (λ n → proj₁ (output n)) 2)
+    second-prefix = add≤ prefix branch
+
+    lower : readRW (V.cum item 2) ≼ read (T.value r)
+    lower = ≼-trans second-prefix (Live.cumulative (F.kp lvl2 (ok r) p₂ (P.z≤ lvl2))
+      (λ z → F.ψ lvl2 (ok r) (bs r) B.zero (P.z≤ lvl2) b (g₂ z)) step 2)
+
+  terminal : Station.Station.part lem 2 ≼ read F.EBOᶜ
+  terminal = ≼-trans (Run.lower (T.finiteRun 1)) (T.finite-ge 1)
+

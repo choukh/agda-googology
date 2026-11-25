@@ -1,0 +1,69 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对任意合格的原可数层号，同一个真实反馈下标可收其全部前驱；不要求原层号恰好在 BTBO 的对角列上。
+module B22SourceSlots where
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_)
+open import W4Block using (Tr; zero; suc; lim; Ω; up; ex; tw)
+open import W4Path using (Ok-tw)
+open import WVOne using (read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≅→≼)
+open import OCF.Align.BTBOFullEmb using (PEmb; Ψ-emb)
+open import OCF.Align.BTBOFullV1 using (V1; PW₁; PW₂; PW₃)
+open import OCF.Align.BTBOFullV3 using (bkᴵ)
+open import OCF.Align.BTBOFullLv using (SV; SV-toLevel; SV-L)
+open import OCF.Align.BTBOFull using (St-bk; tr₀-bk)
+open import OCF.Align.BTBOValAbsorb using (St; stz; sts; stl)
+open import OCF.Align.YiMonoEmb using (PEmb-∘)
+open import OCF.Lean.YiBtboV2 using (V2′)
+import OCF.Align.NoCumsum as N
+import OCF.Lean.YiLSRead as Old
+import OCF.Lean.YiLSTw1 as OldFold
+import B12Terminal as T
+import B12ActualSlots as A
+import B12Strict as Strict
+import B14Btbo as B
+import B14PathHeight as P
+import B14Tower as W
+import B16IndexBase as I
+import B16IndexEmbed as E
+import B17Legacy as O
+import B20StandardInside as Sts
+import B22MovingIndex as Idx
+import B22ResetBridge as Bridge
+open T.Run
+strict : ∀ (x : Tr zero) → St (read x)
+strict zero = stz
+strict (suc x) = sts (strict x)
+strict (lim f d) = stl (λ n → strict (f n)) (λ n → Strict.strict (d n))
+strict (Ω () _)
+strict (up _ () _ _)
+strict (ex _ _ _ _ ())
+valid : ∀ x → SV (I.κ x)
+valid x = SV-toLevel (read x) (I.hs x) (strict x)
+
+module First (r : T.Run (tw 1)) (eq : ok r ≡ Ok-tw 1) (cv : A.Covered r) where
+  module F = Idx.First r eq cv
+  open W.At r
+  maps : ∀ {a} → SV a → ∀ j → L.forget a ≼ read (idx j) → PEmb a (I.κ (idx (suc j)))
+  maps {a} va j h = PEmb-∘ (PW₃ (V1 va)) (PEmb-∘ (PW₁ (V2′ (bkᴵ a) (I.cp z) (St-bk va) (I.increasing z)
+    (≼-trans (≅→≼ (tr₀-bk a)) (≼-trans h (≅→≼ (L.≅-sym (I.same z)))))))
+    (PW₂ (I.hs (idx (suc j))) (proj₁ (E.embed z (chain z) (W.chain-covered r cv z) (F.checked z)))))
+    where z = idx j
+
+module Level (m : ℕ) where
+  open Bridge.Level m using (n; upper)
+  module At (r : T.Run (tw upper)) (eq : ok r ≡ Ok-tw upper) (cv : A.Covered r) where
+    module X = Bridge.Level.At m r eq cv
+    module J = First X.first X.checked X.cv
+    z = X.Run.idx 2
+    target = B.α (I.κ z)
+    legacy = Old.read (OldFold.K (O.copy z))
+    all : ∀ {a} → SV a → L.forget a ≼ L.suc (Sts.std n) → PEmb a (I.κ z)
+    all va h = J.maps va 1 (≼-trans h X.start)
+    named : ∀ {a} → SV a → L.forget a ≼ L.suc (Sts.std n) → B.α a ≼ target
+    named va h = Ψ-emb (all va h)
+    old : target ≼ legacy
+    old = O.named z
+  module Std = At (T.initial (tw upper) (Ok-tw upper)) Relation.Binary.PropositionalEquality.refl (A.initial (tw upper) (Ok-tw upper))

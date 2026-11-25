@@ -1,0 +1,281 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 一次性实验: Λ 之上的层号, 不改折叠 (YiLamFold 的 Ψ / Ψ-lgl 原样使用).
+module LangNext where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Product.Base using (Σ; _,_; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong)
+open import OCF.Lean.YiNextCore
+open import OCF.Lean.YiNextBase using (R; fold; iter; psum; psum-lgl)
+open import OCF.Lean.YiLamFold using (Lw; w0; ws; wl; wΩ; none; Lw-Ω̂; VΛ; cps; Ψ; Ψ-lgl; dfin)
+open import OCF.Lean.YiNextBase using (Ext; Way)
+import OCF.Lean.YiNextTower as T
+import OCF.Lean.YiDlFold as D
+
+------------------------------------------------------------------------
+-- E1: 层号 Λ+1, Ω_{Λ+1}: 现成的构造子与闭包定理.
+
+T⁺Λ : R
+T⁺Λ = Ψ zero (ws VΛ) (λ _ → fold) G.top
+
+T⁺Λ-legal : Lgl zero T⁺Λ
+T⁺Λ-legal = Ψ-lgl zero (ws VΛ) (λ _ → fold) G.top tt
+
+TΩΛ⁺ : R
+TΩΛ⁺ = Ψ zero (Lw-Ω̂ (suc Λ) T.Legal-Λ (ws VΛ)) (λ _ → fold) G.top
+
+TΩΛ⁺-legal : Lgl zero TΩΛ⁺
+TΩΛ⁺-legal = Ψ-lgl zero (Lw-Ω̂ (suc Λ) T.Legal-Λ (ws VΛ)) (λ _ → fold) G.top tt
+
+------------------------------------------------------------------------
+-- E3 (否定): 从 Λ+1 起的朴素 Ω̂ 塔不是第一位置递增, 所以不合法.
+
+back : ∀ x → T.CP (suc Λ) (upT x) → T.CP (suc Λ) x
+back zero (T.suc ())
+back (suc k) (T.fst p) = T.suc (back k p)
+back (lim f) (T.lim n p) = T.lim n (back (f n) p)
+back (lc k g) (T.fst p) = T.fst (back (g G.top) p)
+
+not-tw : ∀ m → T.CP (suc Λ) (tw m) → ⊥
+not-tw zero ()
+not-tw (suc m) p = not-tw m (back (tw m) p)
+
+not-Λ : T.CP (suc Λ) Λ → ⊥
+not-Λ (T.lim n p) = not-tw n p
+
+no-step : T.CP (suc Λ) (upT (suc Λ)) → ⊥
+no-step (T.fst p) = not-Λ (back Λ p)
+
+naive : ℕ → LF
+naive zero = suc Λ
+naive (suc n) = upT (naive n)
+
+no-naive : T.Legal (lim naive) → ⊥
+no-naive (st , _) = no-step (st 0)
+
+------------------------------------------------------------------------
+-- E2: 层号的加法 (逐构造子, Ω 结点处逐支), 弱化, 单调, 合法与公共上界的闭包.
+
+infixl 6 _⊕_
+_⊕_ : LF → LF → LF
+a ⊕ zero = a
+a ⊕ suc b = suc (a ⊕ b)
+a ⊕ lim f = lim (λ n → a ⊕ f n)
+a ⊕ lc k g = lc k (λ η → a ⊕ g η)
+
+⊕-weak : ∀ a b → T.CP a (a ⊕ b)
+⊕-weak a zero = T.self
+⊕-weak a (suc b) = T.suc (⊕-weak a b)
+⊕-weak a (lim f) = T.lim 0 (⊕-weak a (f 0))
+⊕-weak a (lc k g) = T.fst (⊕-weak a (g G.top))
+
+⊕-mono : ∀ a {b c} → T.CP b c → T.CP (a ⊕ b) (a ⊕ c)
+⊕-mono a T.self = T.self
+⊕-mono a (T.suc p) = T.suc (⊕-mono a p)
+⊕-mono a (T.lim n p) = T.lim n (⊕-mono a p)
+⊕-mono a (T.fst p) = T.fst (⊕-mono a p)
+
+Legal-⊕ : ∀ a b → T.Legal a → T.Legal b → T.Legal (a ⊕ b)
+Legal-⊕ a zero La Lb = La
+Legal-⊕ a (suc b) La Lb = Legal-⊕ a b La Lb
+Legal-⊕ a (lim f) La (st , Lf) = (λ n → ⊕-mono a (st n)) , (λ n → Legal-⊕ a (f n) La (Lf n))
+Legal-⊕ a (lc k g) La (Lk , lg , mo) =
+  Lk , (λ η l → Legal-⊕ a (g η) La (lg η l)) , (λ η η′ l e l′ → ⊕-mono a (mo η η′ l e l′))
+
+Lw-⊕ : ∀ a b → Lw a → T.Legal b → Lw b → Lw (a ⊕ b)
+Lw-⊕ a zero Wa Lb Wb = Wa
+Lw-⊕ a (suc b) Wa Lb (ws Wb) = ws (Lw-⊕ a b Wa Lb Wb)
+Lw-⊕ a (lim f) Wa (st , Lf) (wl Wf s) =
+  wl (λ n → Lw-⊕ a (f n) Wa (Lf n) (Wf n)) (λ n → cps (⊕-mono a (st n)))
+Lw-⊕ a (lc k g) Wa (Lk , lg , mo) (wΩ Wg w) = wΩ (λ η l → Lw-⊕ a (g η) Wa (lg η l) (Wg η l)) none
+
+------------------------------------------------------------------------
+-- 一般的正规算子与它的导数 (下一个不动点用层号上的累加).
+
+-- 算子只要保合法与公共上界; 不要求对第一位置单调 (导数自己证单调, 见 Dv-mono).
+record Op : Set where
+  field
+    G    : LF → LF
+    lgl  : ∀ x → T.Legal x → T.Legal (G x)
+    lw   : ∀ x → T.Legal x → Lw x → Lw (G x)
+open Op
+
+module _ (O : Op) where
+  nx : LF → ℕ → LF
+  nx a zero = suc a
+  nx a (suc n) = nx a n ⊕ G O (nx a n)
+
+  Fx : LF → LF
+  Fx a = lim (nx a)
+
+  nx-lgl : ∀ a → T.Legal a → ∀ n → T.Legal (nx a n)
+  nx-lgl a L zero = L
+  nx-lgl a L (suc n) = Legal-⊕ (nx a n) (G O (nx a n)) (nx-lgl a L n) (lgl O _ (nx-lgl a L n))
+
+  nx-lw : ∀ a → T.Legal a → Lw a → ∀ n → Lw (nx a n)
+  nx-lw a L W zero = ws W
+  nx-lw a L W (suc n) =
+    Lw-⊕ (nx a n) (G O (nx a n)) (nx-lw a L W n) (lgl O _ (nx-lgl a L n)) (lw O _ (nx-lgl a L n) (nx-lw a L W n))
+
+  Fx-lgl : ∀ a → T.Legal a → T.Legal (Fx a)
+  Fx-lgl a L = (λ n → ⊕-weak (nx a n) (G O (nx a n))) , nx-lgl a L
+
+  Fx-lw : ∀ a → T.Legal a → Lw a → Lw (Fx a)
+  Fx-lw a L W = wl (nx-lw a L W) (λ n → cps (⊕-weak (nx a n) (G O (nx a n))))
+
+  -- 导数: 第 x 个不动点, 对层号 x 结构递归 (Ω 结点处逐支).
+  Dv : LF → LF
+  Dv zero = Fx zero
+  Dv (suc x) = Fx (Dv x)
+  Dv (lim f) = lim (λ n → Dv (f n))
+  Dv (lc k g) = lc k (λ η → Dv (g η))
+
+  Dv-mono : ∀ {a b} → T.CP a b → T.CP (Dv a) (Dv b)
+  Dv-mono T.self = T.self
+  Dv-mono (T.suc p) = T.lim 0 (T.suc (Dv-mono p))
+  Dv-mono (T.lim n p) = T.lim n (Dv-mono p)
+  Dv-mono (T.fst p) = T.fst (Dv-mono p)
+
+  Dv-lgl : ∀ x → T.Legal x → T.Legal (Dv x)
+  Dv-lgl zero L = Fx-lgl zero tt
+  Dv-lgl (suc x) L = Fx-lgl (Dv x) (Dv-lgl x L)
+  Dv-lgl (lim f) (st , L) = (λ n → Dv-mono (st n)) , (λ n → Dv-lgl (f n) (L n))
+  Dv-lgl (lc k g) (Lk , lg , mo) =
+    Lk , (λ η l → Dv-lgl (g η) (lg η l)) , (λ η η′ l e l′ → Dv-mono (mo η η′ l e l′))
+
+  Dv-lw : ∀ x → T.Legal x → Lw (Dv x)
+  Dv-lw zero L = Fx-lw zero tt w0
+  Dv-lw (suc x) L = Fx-lw (Dv x) (Dv-lgl x L) (Dv-lw x L)
+  Dv-lw (lim f) (st , L) = wl (λ n → Dv-lw (f n) (L n)) (λ n → cps (Dv-mono (st n)))
+  Dv-lw (lc k g) (Lk , lg , mo) = wΩ (λ η l → Dv-lw (g η) (lg η l)) none
+
+Der : Op → Op
+Der O = record { G = Dv O ; lgl = Dv-lgl O ; lw = λ x L _ → Dv-lw O x L }
+
+Ω̂op : Op
+Ω̂op = record { G = upT ; lgl = T.Legal-Ω̂ ; lw = Lw-Ω̂ }
+
+-- 算子序号的 ℕ 极限: 逐点累加 (d 0 = G₀ x, d (n+1) = d n ⊕ G_{n+1} x).
+module _ (O : ℕ → Op) where
+  dg : LF → ℕ → LF
+  dg x zero = G (O 0) x
+  dg x (suc n) = dg x n ⊕ G (O (suc n)) x
+
+  dg-lgl : ∀ x → T.Legal x → ∀ n → T.Legal (dg x n)
+  dg-lgl x L zero = lgl (O 0) x L
+  dg-lgl x L (suc n) = Legal-⊕ (dg x n) _ (dg-lgl x L n) (lgl (O (suc n)) x L)
+
+  dg-lw : ∀ x → T.Legal x → Lw x → ∀ n → Lw (dg x n)
+  dg-lw x L W zero = lw (O 0) x L W
+  dg-lw x L W (suc n) = Lw-⊕ (dg x n) _ (dg-lw x L W n) (lgl (O (suc n)) x L) (lw (O (suc n)) x L W)
+
+Diag : (ℕ → Op) → Op
+Diag O = record
+  { G = λ x → lim (dg O x)
+  ; lgl = λ x L → (λ n → ⊕-weak (dg O x n) _) , dg-lgl O x L
+  ; lw = λ x L W → wl (dg-lw O x L W) (λ n → cps (⊕-weak (dg O x n) _)) }
+
+-- ⊕ 对左边不保第一位置: 所以记录里不能要求单调 (否则 Diag 填不上).
+hd : LF → LF
+hd zero = zero
+hd (suc x) = zero
+hd (lim f) = zero
+hd (lc k g) = g G.top
+
+noeq : _≡_ {A = LF} (suc zero) (suc (suc zero)) → ⊥
+noeq ()
+
+no-left′ : ∀ {a b} → T.CP a b → a ≡ zero ⊕ tw 2 → b ≡ suc zero ⊕ tw 2 → ⊥
+no-left′ T.self e₁ e₂ = noeq (cong hd (trans (sym e₁) e₂))
+no-left′ (T.fst p) refl refl = go p
+  where
+  go : T.CP (zero ⊕ tw 2) (suc (suc zero)) → ⊥
+  go (T.suc (T.suc ()))
+
+no-left : T.CP (zero ⊕ tw 2) (suc zero ⊕ tw 2) → ⊥
+no-left p = no-left′ p refl refl
+
+-- φ n: 层号上的第 n 个 Veblen 式算子, φ 0 = Ω̂, φ 1 x = 第 x 个 Ω-不动点.
+φ : ℕ → Op
+φ zero = Ω̂op
+φ (suc n) = Der (φ n)
+
+------------------------------------------------------------------------
+-- 闭项 (读法照形状读, 是判断): 都用 YiLamFold 的 Ψ 原样, 合法性都是 Ψ-lgl 的一次应用.
+
+-- Λ₂: Λ 之上的下一个 Ω-不动点.
+Λ₂ : LF
+Λ₂ = Fx Ω̂op Λ
+
+VΛ₂ : Lw Λ₂
+VΛ₂ = Fx-lw Ω̂op Λ T.Legal-Λ VΛ
+
+TΛ₂ : R
+TΛ₂ = Ψ zero VΛ₂ (λ _ → fold) G.top
+
+TΛ₂-legal : Lgl zero TΛ₂
+TΛ₂-legal = Ψ-lgl zero VΛ₂ (λ _ → fold) G.top tt
+
+-- Λ_x 对一切合法层号 x (例如 x = Ω 的层号 tw 2, x = Λ).
+TΛx : ∀ x → T.Legal x → R
+TΛx x L = Ψ zero (Dv-lw Ω̂op x L) (λ _ → fold) G.top
+
+TΛx-legal : ∀ x L → Lgl zero (TΛx x L)
+TΛx-legal x L = Ψ-lgl zero (Dv-lw Ω̂op x L) (λ _ → fold) G.top tt
+
+TΛΩ-legal : Lgl zero (TΛx (tw 2) (T.Legal-tw 2))
+TΛΩ-legal = TΛx-legal (tw 2) (T.Legal-tw 2)
+
+TΛΛ-legal : Lgl zero (TΛx Λ T.Legal-Λ)
+TΛΛ-legal = TΛx-legal Λ T.Legal-Λ
+
+-- α ↦ Λ_α 的第一个不动点 = φ 2 在 0 处.
+Φ₂ : LF
+Φ₂ = G (φ 2) zero
+
+TΦ₂-legal : Lgl zero (Ψ zero (lw (φ 2) zero tt w0) (λ _ → fold) G.top)
+TΦ₂-legal = Ψ-lgl zero (lw (φ 2) zero tt w0) (λ _ → fold) G.top tt
+
+-- 对一切有限 n, ψ₀(φ_n(0)) 一类的闭项合法; 对角 (项层的部分和) 也合法.
+Tφ : ℕ → R
+Tφ n = Ψ zero (lw (φ n) zero tt w0) (λ _ → fold) G.top
+
+Tφ-legal : ∀ n → Lgl zero (Tφ n)
+Tφ-legal n = Ψ-lgl zero (lw (φ n) zero tt w0) (λ _ → fold) G.top tt
+
+Tφω : R
+Tφω = G.lim (psum zero Tφ)
+
+Tφω-legal : Lgl zero Tφω
+Tφω-legal = psum-lgl zero Tφ Tφ-legal
+
+-- 层号一侧的对角: 算子 Diag φ, 再取导数; 闭项仍是 Ψ-lgl 的一次应用.
+φω φω⁺ : Op
+φω = Diag φ
+φω⁺ = Der φω
+
+Tφω⁺-legal : Lgl zero (Ψ zero (lw φω⁺ zero tt w0) (λ _ → fold) G.top)
+Tφω⁺-legal = Ψ-lgl zero (lw φω⁺ zero tt w0) (λ _ → fold) G.top tt
+
+-- 同样的闭项在燃料搜索派发的折叠 (YiDlFold) 里也合法.
+TΛ₂-legalᴰ : Lgl zero (D.Ψ zero VΛ₂ (λ _ → fold) G.top)
+TΛ₂-legalᴰ = D.Ψ-lgl zero VΛ₂ (λ _ → fold) G.top tt
+
+Tφ-legalᴰ : ∀ n → Lgl zero (D.Ψ zero (lw (φ n) zero tt w0) (λ _ → fold) G.top)
+Tφ-legalᴰ n = D.Ψ-lgl zero (lw (φ n) zero tt w0) (λ _ → fold) G.top tt
+
+------------------------------------------------------------------------
+-- 有限测试与定义性事实: 塔上 Ω 结点层号的结点层都是 0; Λ 之上的 Ω 结点层号的结点层是 Λ, 而以 Λ 为目标时 dfin 一律折叠.
+
+tw-node0 : ∀ n → Σ (Raw zero → LF) λ g → tw (suc (suc n)) ≡ lc zero g
+tw-node0 zero = up zero , refl
+tw-node0 (suc n) with tw-node0 n
+... | g , e = (λ η → upT (g η)) , cong upT e
+
+nx1-form : nx Ω̂op Λ 1 ≡ lc Λ (λ η → suc Λ ⊕ up Λ η)
+nx1-form = refl
+
+dfin-Λ : ∀ K r → dfin Λ K r ≡ fold
+dfin-Λ K r = refl

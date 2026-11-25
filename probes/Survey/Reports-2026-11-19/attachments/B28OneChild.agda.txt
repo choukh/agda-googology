@@ -1,0 +1,43 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任选每个真实正 χ 直接孩子中的一个，用这些孩子的恢复值即可直接验收整个 EBO。
+module B28OneChild where
+
+open import Data.Nat.Base using (ℕ; suc)
+import Data.Nat.Properties as N
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+open import OCF.Align.EboLeanBase using (c∷; c[])
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; s≼s; ≼-trans; ≼-suc; ≼-refl; ≼l; l≼)
+import OCF.Align.Level as L
+import B26Names as A
+import B26Depth as D
+import B27Joint as J
+import B28FHead as F
+import B28Branches as B
+import B28Orbit as O
+import B28Acceptance as G
+import B28OrbitValue as V
+import B27UEnvelope as Env
+import B14Goal as Goal
+
+module At (n j : ℕ) where
+  module X = B.At n
+  a = O.target n
+  pf = F.pure-copies (O.pure n) (suc j)
+  nrm = X.Head.normal (suc j)
+  b = A.named _ (F.normal-response pf nrm) (c∷ c[]) (X.Head.at j)
+  strict : L.suc (O.value n) ≼ X.Head.point j
+  strict = mono<ⁿ (A.nt a) (A.nt b) (A.ct b) (A.hcN a) (A.hcN b) (D.tall a b N.≤-refl)
+  before : L.suc (X.Head.point j) ≼ O.value (suc n)
+  before = ≼-trans {b = L.suc (L.lim X.Head.point)} (OCF.Align.Value.s≼s (≼l j (≼-refl _))) X.gap
+
+module Choice (j : ℕ → ℕ) where
+  v = λ n → B.At.Head.point n (j n)
+  cofinal : A.E ≈ᵛ L.lim v
+  cofinal = G.whole (L.lim v) (λ n → ≼l n (≼-trans {b = L.suc (O.value n)} (≼-suc (≼-refl _)) (At.strict n (j n)))) ,
+    l≼ (λ n → ≼-trans {b = L.suc (v n)} (≼-suc (≼-refl _)) (A.strict (At.b n (j n))))
+  weak : (∀ n → Σ ℕ (λ tower → Σ ℕ (λ cell → v n ≼ J.f tower cell))) → G.Units
+  weak h n = let t , c , d = h n in t , c , ≼-trans {b = v n} (At.strict n (j n)) d
+  enough : (∀ n → Σ ℕ (λ tower → Σ ℕ (λ cell → v n ≼ J.f tower cell))) → Goal.Goal
+  enough h = G.enough (weak h)

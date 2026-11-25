@@ -1,0 +1,114 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22IdealGrowth where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; subst₂; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B14SharpBound using (data≤)
+open import OCF.Align.Value using (≼-refl; ≼-trans; l≼; ≼l)
+import B12ActualSlots as C
+import B17SharpFeed as Link
+import B17SharpUpdate as U
+import B17SharpTwo as T
+import B18SharpMacro as M
+import B13Orbit as Orb
+import B12Orbit as Win
+
+import B21IdealRepeat as B21Rep
+import B15SharpAction as P1
+import B16SharpModel as H1
+import B16SharpOmega as O1
+import B15SharpLift as L1
+import B21IdealContext as Context
+open Context using (Pref; plug; empty; push)
+
+import B22IdealIndex as Ix
+open Ix using (Match)
+open import B14SharpStack using (Ωw; Ωi; p)
+open import B15SharpAction using () renaming (Pref to Pref₁; id to nil; addL to add; plug to plug₁)
+open import WVOne using (p₁)
+open import WVTwo using (g₂; p₂)
+open import OCF.Align.Value using (s≼s)
+open import Data.Sum using (inj₁)
+open import B13Orbit using (K)
+
+head-s : ∀ p {x y} → Match (plug₁ p x) y → Match (plug₁ p (R.suc x)) (B.suc y)
+head-s nil d = Match.s d
+head-s (add p a) d = head-s p d
+head-l : ∀ p f d g e → (∀ n → Match (plug₁ p (f n)) (g n)) → Match (plug₁ p (R.lim f d)) (B.lim g e)
+head-l nil f d g e h = Match.l h
+head-l (add p a) f d g e = head-l p (λ n → a V.+ f n) _ g e
+head-n : ∀ q f g → (∀ x y → data≤ x y → Match (plug₁ q (f x)) (g y)) → Match (plug₁ q (R.Ω p f)) (B.Ω p₁ g)
+head-n nil f g hs = Match.n hs
+head-n (add q a) f g = head-n q (λ x → a V.+ f x) g
+head-u : ∀ p {x y z w} d e → Match (plug₁ p x) z → data≤ y w → Match (plug₁ p (R.up x tt y d)) (B.up z tt w e)
+head-u nil d e h k = Match.u h k
+head-u (add p a) d e h k = head-u p d e h k
+
+append : ∀ p {c x w} → Match (plug₁ p R.zero) c → Match x w → Match (plug₁ p x) (c W.+ w)
+append p h Match.z = h
+append p h (Match.s d) = head-s p (append p h d)
+append p h (Match.l d) = head-l p _ _ _ _ (λ n → append p h (d n))
+append p h (Match.n d) = head-n p _ _ (λ x y e → append p h (d x y e))
+append p h (Match.u {d = d} {e = e} q k) = head-u p d e (append p h q) k
+append p {c} h (Match.slack d e) = Match.slack (append p h d) (W.+-mono c e)
+
+module Reps (x : V.Tr⁺ r₁) where
+  a = proj₁ x
+  pr : ℕ → Pref₁
+  pr zero = nil
+  pr (suc n) = add (pr n) a
+  shift : ∀ n z → V.iter (a V.+_) (a V.+ z) n ≡ a V.+ V.iter (a V.+_) z n
+  shift zero z = refl
+  shift (suc n) z = cong (a V.+_) (shift n z)
+  rep : ∀ n z → plug₁ (pr n) z ≡ V.iter (a V.+_) z n
+  rep zero z = refl
+  rep (suc n) z = trans (rep n (a V.+ z)) (shift n z)
+  words = V.iter (a V.+_) a
+  count : ∀ n → plug₁ (pr (suc n)) R.zero ≡ words n
+  count n = rep n a
+  module At (c : W.Tr⁺ lvl1) (rel : Match a (proj₁ c)) (w : ℕ → B.Tr lvl1) where
+    item = λ n → B.ex (proj₁ c) (proj₁ c) (proj₂ c) (B.suc (w n)) tt
+    parts : ∀ n → Match (words n) (W.cum item n)
+    parts zero = Match.slack rel B.◃e
+    parts (suc n) = Match.slack (subst (λ z → Match z _) (rep (suc n) a)
+      (append (pr (suc n)) (subst (λ z → Match z _) (sym (count n)) (parts n)) rel)) B.◃e
+
+w₁ : lvl1 B.≤ lvl2
+w₁ = B.inc tt B.self
+origin : Match Ωi Ωw
+origin = Match.n (λ z w d → Match.u Match.z (s≼s d))
+cover : ∀ {x z w} → Match x z → C._⊴_ z w → Match x w
+cover h (inj₁ refl) = h
+cover h (inj₂ e) = Match.slack h e
+
+module Actual (c : W.Tr⁺ lvl2) (hc : C._⊴_ (proj₁ (W.Ωt lvl2)) (proj₁ c)) where
+  operator = K c
+  step : ∀ (a : V.Tr⁺ r₁) (S : F.Base lvl2) → Match (proj₁ a) (proj₁ (S lvl1 w₁)) →
+     Match (proj₁ (V.next⁺ a)) (proj₁ (F.stepS operator S lvl1 w₁))
+  step a S h = promote _ hc
+    where
+    k = S lvl1 w₁
+    clock = B.iter (λ w → B.ex (proj₁ k) (proj₁ k) (proj₂ k) (B.suc w) tt) B.zero
+    start : Match (proj₁ (V.next⁺ a)) (proj₁ (F.ψ lvl2 ok₂ S lvl1 w₁ k (proj₁ (W.Ωt lvl2))))
+    start = Match.l (Reps.At.parts a k h clock)
+    promote : ∀ y → C._⊴_ (proj₁ (W.Ωt lvl2)) y → Match (proj₁ (V.next⁺ a)) (proj₁ (F.ψ lvl2 ok₂ S lvl1 w₁ k y))
+    promote _ (inj₁ refl) = start
+    promote y (inj₂ e) = Match.slack start (F.mono lvl2 ok₂ S lvl1 w₁ k e)
+  orbit : ∀ a S → Match (proj₁ a) (proj₁ (S lvl1 w₁)) → ∀ n → Match (proj₁ (V.iter V.next⁺ a n)) (proj₁ (F.itS operator n S lvl1 w₁))
+  orbit a S h zero = h
+  orbit a S h (suc n) = step _ _ (orbit a S h n)

@@ -1,0 +1,87 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module R17kv where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiKVPath
+open import OCF.Lean.YiKVFold
+open import OCF.Lean.YiCertFold using (Base; B₀; Keep)
+
+isJ : {A : Set} → Maybe A → Set
+isJ (just _) = ⊤
+isJ nothing  = ⊥
+
+isΩ isLim : {ℓ : L} → Tr ℓ → Set
+isΩ (Ω _ _) = ⊤
+isΩ _       = ⊥
+isLim (lim _ _) = ⊤
+isLim _         = ⊥
+
+o¹ : Ok (tw 1)
+o¹ = Ok-tw 1
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+n1 n2 n3 n4 : Tr zero
+n1 = suc zero
+n2 = suc n1
+n3 = suc n2
+n4 = suc n3
+
+one two three : L
+one = nd sS (λ _ → zero)
+two = nd sS (λ _ → one)
+three = nd sS (λ _ → two)
+
+_ : h₁ n3 ≡ three
+_ = refl
+
+-- 候选 A 的 g₁: 孩子 c 的 Ω 树朝 "经孩子 2 的第 1 层"
+g₁ : Tr zero → Tr⁺ one
+g₁ c = ψ (tw 1) o¹ (B₀ (tw 1)) one (inc n2 (inc tt self)) (Ωt one) (up zero c (proj₁ (Ωt (h₁ c))) (proj₂ (Ωt (h₁ c))))
+
+a1 : isΩ (proj₁ (g₁ n1))
+a1 = tt
+a3 : isLim (proj₁ (g₁ n3))
+a3 = tt
+
+-- η = 3 的输出: 链在第 2 层回灌 (源层的折叠, 底 Ωt two), 行是 next (φ 在源层 two 上)
+zz : ℕ → Tr two
+zz = iter (λ z → proj₁ (next⁺ (ψ two (proj₂ o¹ n2) (B₀ two) two self (Ωt two) z))) zero
+
+row : Tr two → Tr⁺ one
+row z = next⁺ (φ two (proj₂ o¹ n2) (B₀ two) (ab→≤ (crt o¹ n2)) one (inc tt self)
+                 two (proj₂ (proj₂ o¹ n3) tt) (ab (λ _ → ab (λ _ → here))) (B₀ two) (Ωt one) z)
+
+a3-form : proj₁ (g₁ n3) ≡ proj₁ (limc⁺ (λ n → row (zz n)))
+a3-form = refl
+
+-- 同一条线, 目标换成 "经孩子 3 的第 2 层": 孩子 2 的 Ω 树 (Ω₂) 成 ℕ 极限; 孩子 1 的仍是 Ω 结点
+g₂ : Tr zero → Tr⁺ two
+g₂ c = ψ (tw 1) o¹ (B₀ (tw 1)) two (inc n3 (inc tt self)) (Ωt two) (up zero c (proj₁ (Ωt (h₁ c))) (proj₂ (Ωt (h₁ c))))
+
+b1 : isΩ (proj₁ (g₂ n1))
+b1 = tt
+b2 : isLim (proj₁ (g₂ n2))
+b2 = tt
+b3 : isLim (proj₁ (g₂ n3))
+b3 = tt
+
+p13 : Pos (tw 1)
+p13 = inj₂ (n3 , inj₂ (inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))))
+
+k1 : kp (tw 1) o¹ p13 {two} (inc n3 (inc tt self)) ≡ nothing
+k1 = refl
+
+-- 对照: 目标第 2 层经孩子 3 时, 第 3 层自己朝第 2 层保留同一槽位
+k2 : isJ (kp three (proj₂ o¹ n3) (inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))) {two} (inc tt self))
+k2 = tt

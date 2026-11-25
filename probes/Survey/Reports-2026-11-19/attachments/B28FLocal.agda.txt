@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 固定原 Λ 的同一实际塔 n，任意正规尾的付款域恰由各有限份首项决定；只改变反馈点 j。
+module B28FLocal where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+open import OCF.Lean.YiRefTw2 using (Rt)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≼l; l≼; ≼lim⁻)
+import B26Names as A
+import B26CForest as F
+import B26OSparse as S
+import B25DTrack as D
+import B27Joint as J
+import B28FHead as H
+import B28FFinite as Fin
+
+units : ℕ → A.T₀
+units n = L.lim (J.f n)
+
+module Row {a : T} (pa : F.Pure a) (na : NF a) (n : ℕ) where
+  module R = H.Head pa na
+  Repeated = ∀ m → Σ ℕ (λ j → R.point m ≼ J.f n j)
+  Tails = ∀ {ts} (p : F.Pure ts) (nt : NF (ψ a [] ∷ ts)) (d : HC (S.collapse (ψ a [] ∷ ts))) →
+              Σ ℕ (λ j → L.suc (Rt d) ≼ J.f n j)
+
+  pay : Repeated → Tails
+  pay each {ts} pt nt d with R.inside {ts} pt nt d
+  ... | k , less with each k
+  ... | j , w = j , ≼-trans {a = L.suc (Rt d)} {b = R.point k} {c = J.f n j} less w
+
+  collect : Tails → R.limit ≼ units n
+  collect all = l≼ {f = R.point} (λ m →
+    let j , w = all {ts = H.copies a m} (H.pure-copies pa m) (R.normal (suc m)) (R.at m)
+    in ≼l {f = J.f n} j (≼-trans {a = R.point m} {b = L.suc (R.point m)} {c = J.f n j}
+       (≼-suc (≼-refl (R.point m))) w))
+
+  unpack : R.limit ≼ units n → Tails
+  unpack bound {ts} pt nt d = ≼lim⁻ {a = Rt d} {f = J.f n}
+     (≼-trans {a = L.suc (Rt d)} {b = R.limit} {c = units n} (R.cover {ts} pt nt d) bound)
+
+  repeat : Tails → Repeated
+  repeat all m with all {ts = H.copies a m} (H.pure-copies pa m) (R.normal (suc m)) (R.at m)
+  ... | j , p = j , ≼-trans {b = L.suc (R.point m)} (≼-suc (≼-refl (R.point m))) p
+
+module First (n : ℕ) where
+  module Z = Row F.empty n[] n
+  missing : Z.Tails → D.name 1 ≼ units n
+  missing all = ≼-trans {b = Fin.R.limit} (proj₂ Fin.old) (Z.collect all)
+  enough : D.name 1 ≼ units n → Z.Tails
+  enough p = Z.unpack (≼-trans {b = D.name 1} (proj₁ Fin.old) p)
+

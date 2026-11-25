@@ -1,0 +1,58 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23AReach where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl2; ok₂)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+import B12LimitSrc as Src
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B12Omega3Ref as Ref
+import B12Omega3Cuts as U
+import B13Target as P
+import B13Orbit as O
+import B22RowRule as Ru
+import B23ABlocks
+import B23AHeight as H
+
+module Site (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  module S = B23ABlocks.Site r cv
+  module Ph = H.Raised S.A.c⁺
+  -- Only operations obtained from this actual J by the countable It grammar
+  -- can occur in the preservation hypothesis below.
+  data Reach : Op {lvl2} nil → Src.Lev₂ → Set where
+    root : Reach S.J L.zero
+    clock : ∀ z {Q u} → Reach Q u → Reach (Ph.act z Q) (P.height (read z) u)
+
+  Generate : Set
+  Generate = ∀ {Q u} → Reach Q u → Ru.Rule Q u →
+    Ru.Rule (O.block S.A.c⁺ Q) (u L.+ Ω₂ᴸ)
+
+  module Powers (h : Generate) where
+    module Sq (z : Tr zero) {Q : Op {lvl2} nil} {u : Src.Lev₂} (path : Reach Q u)
+              (rh : ∀ {G v} → Reach G v → Ru.Rule G v → Ru.Rule (Ph.act z G) (P.height (read z) v))
+              (hq : Ru.Rule Q u) where
+      qs = iter (Ph.act z) Q
+      us = Ref.S.iter (P.height (read z)) u
+      paths : ∀ n → Reach (qs n) (us n)
+      paths zero = path
+      paths (suc n) = clock z (paths n)
+      parts : ∀ n → Ru.Rule (qs n) (us n)
+      parts zero = hq
+      parts (suc n) = rh (paths n) (parts n)
+      larger : ∀ n → Rl (qs n) (Ph.act (suc z) Q)
+      larger zero = Itinf 0 ok₂ tdNil (ι lvl2 (suc z)) Ph.F Q
+      larger (suc n) R i t b = ◃l n
+      result = H.Gather.joined (Ph.act (suc z) Q) qs us parts larger
+    go : ∀ z {Q u} → Reach Q u → Ru.Rule Q u → Ru.Rule (Ph.act z Q) (P.height (read z) u)
+    go zero path hq = h path hq
+    go (suc z) path hq = Sq.result z path (go z) hq
+    go (lim f d) {Q} {u} path hq = H.Gather.joined (Ph.act (lim f d) Q) (λ n → Ph.act (f n) Q)
+      (λ n → P.height (read (f n)) u) (λ n → go (f n) path hq) (λ n R i t b → ◃l n)
+    whole-step : ∀ z → Ru.Rule (Ph.act z S.J) (P.co₀ (read z))
+    whole-step z = H.relabel (L.≅-trans (P.shift₀ (read z) L.z≅) (U.left-unit Ref.idσ (P.regular₀ (read z)))) (go z root S.base)

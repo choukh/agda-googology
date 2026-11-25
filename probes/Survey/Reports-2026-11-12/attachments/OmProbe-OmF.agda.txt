@@ -1,0 +1,74 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 形状测试 (有限测试): (A) 与 (C) 在 tw 2 一站链第一步第 0 支上折到第 0 层; (A) 的 omD 在深一层重现; tw 1 上两个折叠的对照.
+module OmF where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiFreshBlock
+open import OCF.Lean.YiFreshFold using (_+_; iter; next; cum; Ωt)
+open import OCF.Lean.YiPhiBlock
+open import OCF.Lean.YiUpBlock using (Dn; stop; down; Up; Upc)
+import OCF.Lean.YiUpFold as A
+import OmCFold as C
+open import OmCLegal using (dW)
+
+IsLim : ∀ {P B C D} → T P B C D → Set
+IsLim (lim _) = ⊤
+IsLim _       = ⊥
+
+one two : L
+one = suc zero
+two = suc one
+
+c₂ : Tr zero
+c₂ = suc (suc zero)
+
+ε₁ : Ev (tw 1)
+ε₁ = Ev-tw 1
+
+β₁ : Tr (tw 1)
+β₁ = Ωt (tw 1)
+
+-- 第 0 支折到第 0 层. (A): 对 β, β+β, … 逐项折叠的极限
+f-A : (B : Base (tw 1)) →
+  A.ψ⊥ (tw 1) ε₁ B (next β₁) ≡ lim (λ n → A.ψ⊥ (tw 1) ε₁ B (iter (β₁ +_) β₁ n))
+f-A B = refl
+
+-- (C): 以 β 的折叠为底, 在孩子层 (第 0 层) 里对 1, 2, … 折叠的极限; 第 n 项是 n+1 次 next
+f-C : (B : Base (tw 1)) →
+  C.ψ⊥ (tw 1) ε₁ B (up β₁ zero (next (suc zero)))
+  ≡ lim (λ n → C.ψ⊥ zero tt (dW zero (λ c → zero ⊕ ↑ zero c) ε₁ B zero β₁) (iter (suc zero +_) (suc zero) n))
+f-C B = refl
+
+f-C₀ : (B : Base (tw 1)) →
+  C.ψ⊥ zero tt (dW zero (λ c → zero ⊕ ↑ zero c) ε₁ B zero β₁) (iter (suc zero +_) (suc zero) 0)
+  ≡ next (C.ψ⊥ (tw 1) ε₁ B β₁)
+f-C₀ B = refl
+
+f-C₁ : (B : Base (tw 1)) →
+  C.ψ⊥ zero tt (dW zero (λ c → zero ⊕ ↑ zero c) ε₁ B zero β₁) (iter (suc zero +_) (suc zero) 1)
+  ≡ next (next (C.ψ⊥ (tw 1) ε₁ B β₁))
+f-C₁ B = refl
+
+-- (A) 的 omD 在深一层 (层号 suc (tw 1), 孙辈住在 tw 1 的第 c₂ 支) 重现
+nodeC : (Tr zero → Tr two) → Tr two
+nodeC G = Ω (inj₂ (inj₁ tt)) G
+
+omD2-A : (B : Base (suc (tw 1))) (β : Tr one) (X : Tr (suc (tw 1))) (x : Tr (tw 1)) (G : Tr zero → Tr two) →
+  IsLim (A.ψs (suc (tw 1)) ε₁ B one (ins (inb c₂ (ins self))) β
+          (Upc (suc (tw 1)) tt X (up x c₂ (nodeC G))))
+omD2-A B β X x G = tt
+
+-- tw 1 上的对照: 第 0 层目标的链步, 两个折叠在具体输入上
+stepA stepC : Tr zero → Tr zero
+stepA c = A.ψs (tw 1) ε₁ (B₀ (tw 1)) zero (ink self) (Ωt zero) (up zero c (Ωt (zero ⊕ ↑ zero c)))
+stepC c = C.ψs (tw 1) ε₁ (B₀ (tw 1)) zero (ink self) (Ωt zero) (up zero c (Ωt (zero ⊕ ↑ zero c)))
+
+same0 : stepA zero ≡ stepC zero
+same0 = refl
+-- c = 1, 2 时 refl 不过: 两边的底记录里各带自己的折叠闭包 (A.ψs 与 C.ψs), 语法上不同; 不是值不同的证据.

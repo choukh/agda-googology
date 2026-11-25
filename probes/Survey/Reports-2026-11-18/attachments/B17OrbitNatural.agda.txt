@@ -1,0 +1,68 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 所有有限阶的实现关系。深框架可通过字面保留和逐点可收回的路径移动原有的三个槽。
+module B17OrbitNatural where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (refl; cong; sym)
+open import W4Block hiding (D; R)
+open import W4Ops
+open import W4Fold hiding (ψ)
+open import WVOne using (read)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+open import OCF.Align.Value using (_≼_)
+import OCF.Align.Level as L
+import B15OrbitModel as M
+import B16OrbitNode as N
+import B17OrbitModel as B
+import B17OrbitTower as T
+import B17OrbitChange as C
+
+R : (n : ℕ) {X : Cx lvl2} (m : Mor M.X₁ X) → Ca n X → T.Carrier (T.Twr n) → Set
+R zero m = B.Both m
+R (suc n) {X} m K F = ∀ {Y : Cx lvl2} (u : Mor X Y) → N.Left u → ∀ G a → R n (u ⊙ m) G a → R n (u ⊙ m) (proj₁ K u G) (T.run F a)
+
+closed : ∀ n {X : Cx lvl2} (m : Mor M.X₁ X) G G′ → Rn n G G′ → ∀ a → R n m G a → R n m G′ a
+closed zero m = B.At.lift₀ m
+closed (suc n) m K K′ p F h u ru G a t = closed n (u ⊙ m) _ _ (p u G) _ (h u ru G a t)
+
+sup : ∀ n {X : Cx lvl2} (m : Mor M.X₁ X) G f → (∀ j → R n m G (f j)) → R n m G (T.sup (T.Twr n) f)
+sup zero m = B.At.sup₀ m
+sup (suc n) m K f h u ru G a rg = sup n (u ⊙ m) (proj₁ K u G) (λ j → T.run (f j) a) (λ j → h j u ru G a rg)
+
+enterR : ∀ n {X Y : Cx lvl2} (m : Mor M.X₁ X) (u : Mor X Y) → N.Left u → ∀ G a → R n m G a → R n (u ⊙ m) (enter n u G) a
+enterR zero m u ru = C.Relative.enter₀ m u ru
+enterR (suc n) m u ru K F h v rv = h (v ⊙ u) (B.good u v ru rv)
+
+cast : ∀ n {X : Cx lvl2} (m m′ : Mor M.X₁ X) → C.Forward m m′ → ∀ G a → R n m G a → R n m′ G a
+cast zero m m′ = C.change m m′
+cast (suc n) m m′ q K F h u ru G a t = cast n (u ⊙ m) (u ⊙ m′) uq _ _
+  (h u ru G a (cast n (u ⊙ m′) (u ⊙ m) (λ z → sym (uq z)) G a t))
+  where uq : C.Forward (u ⊙ m) (u ⊙ m′)
+        uq z = cong (σ u) (q z)
+
+leave : ∀ n {X : Cx lvl2} (m : Mor M.X₁ X) {mw : L} (w : Dn lvl2 mw) (ι : ∀ {i} → ⟦ X ⟧ i → Tg w i)
+        A₀ G a → R n (chM w ι ⊙ m) G a → R n m (upC n w ι A₀ G) a
+leave zero m w ι = C.Leave.leave₀ m w ι
+leave (suc n) m w ι A₀ G a h {Y} u ru Q b rq =
+  leave n (u ⊙ m) w j (proj₁ A₀ u Q) (proj₁ G v (enter n ψ Q)) _
+        (cast n (v ⊙ φ ⊙ m) (ψ ⊙ u ⊙ m) same _ _ (h v rv (enter n ψ Q) b input))
+  where
+  φ = chM w ι
+  v = liftM w u
+  rv : N.Left v
+  rv t = cong (λ z → proj₁ t , z) (ru (proj₂ t))
+  j : ∀ {i} → ⟦ Y ⟧ i → Tg w i
+  j = λ t → ι (π u t)
+  ψ = chM w j
+  same : C.Forward (v ⊙ φ ⊙ m) (ψ ⊙ u ⊙ m)
+  same t = cong (λ z → ι z , σ u (σ m t)) (sym (ru (σ m t)))
+  input : R n (v ⊙ φ ⊙ m) (enter n ψ Q) b
+  input = cast n (ψ ⊙ u ⊙ m) (v ⊙ φ ⊙ m) (λ t → sym (same t)) _ _ (enterR n (u ⊙ m) ψ (λ _ → refl) Q b rq)
+
+node : ∀ n {X : Cx lvl2} (m : Mor M.X₁ X) (ret : N.Left m) G h
+  (rh : ∀ {x y} → x ≼ y → T.Rel (T.Twr n) (h x) (h y)) (eh : ∀ {x y} → x L.≅ y → T.Eq (T.Twr n) (h x) (h y)) →
+  (∀ y z → y ≼ read (suc z) → R n m (G z) (h y)) →
+  R n m (nodeC n p₁ (N.Frame.jd m ret) (N.Frame.ch m ret) G) (T.node (T.Twr n) h rh eh)
+node zero m ret = B.Frame.node m ret
+node (suc n) m ret G h rh eh parts u ru Q a qa = node n (u ⊙ m) (B.good m u ret ru) (λ z → proj₁ (G z) u Q) (λ y → T.run (h y) a)
+  (λ d → rh d a a (T.rr (T.Twr n) a)) (λ d → eh d a a (T.ee (T.Twr n) a)) (λ y z low → parts y z low u ru Q a qa)

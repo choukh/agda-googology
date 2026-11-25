@@ -1,0 +1,34 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- Λ 中的实际孩子，槽族可换成由独立标准塔算出的族，外部起点是前一整塔。
+module B18CellState where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; read)
+import B12Terminal as T
+import B12EboRows as B
+import B15Spine as P
+import B17CellPrefix as C
+import B18TowerSlots as S
+open T.Run
+
+prior : ∀ n j → read (proj₁ (β (C.At.S.child n j))) ≡ B.child n
+prior zero j = refl
+prior (suc n) j = refl
+
+module At (n j : ℕ) where
+  r = C.At.S.child n j
+  c = C.At.S.ix n j
+  l = P.branch (tw n) c
+  slots = S.slots l (suc n)
+  with-base : Base l → Tr⁺ zero → T₀
+  with-base b v = read (proj₁ (ψ l (ok r) b zero (z≤ l) v (proj₁ (Ωt l))))
+  actual : C.cell n j ≡ with-base slots (β r)
+  actual = cong (λ b → with-base b (β r)) (S.At.all n c)
+  input : read (proj₁ (β r)) ≡ B.child n
+  input = prior n j
+  fresh = with-base slots (Ωt zero)

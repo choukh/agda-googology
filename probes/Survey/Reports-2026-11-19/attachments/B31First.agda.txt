@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 全首塔所有自然前缀的预算可由所选非极限源层的单位预算给出；一份共同原行界即足够。
+module B31First where
+open import Data.Nat.Base using (ℕ; suc; _≤_)
+open import Data.Product using (_,_; _×_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (sym; subst)
+open import WVOne using (T₀; 𝟏; read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼; s≼s)
+import B18ResetCellGoal as Init
+import B19IdealPowers as Pow
+import B19IdealProduct as A
+import B19IdealArithmetic as Ar
+import B22MovingIndex as E
+import B27UArbitrary as U
+import B27Threshold as Row
+import B27EpsilonCut as Cut
+import B29SFirst as T
+import B31Front as F
+import B31Compression as Law
+
+pieces = λ j → F.front (U.index j) (U.run (U.index j))
+Γ : T₀
+Γ = L.lim pieces
+here : ∀ j → pieces j ≼ Γ
+here j = ≼l {f = pieces} j (≼-refl _)
+below : Γ ≼ T.S
+below = l≼ {f = pieces} λ j → ≼l {f = T.f} j
+  (subst (pieces j ≼_) (U.real j) (F.inside (U.index j) (U.run (U.index j))))
+seed : L.ωᶜ ≼ Γ
+seed = ≼-trans {b = pieces 0} (subst (L.ωᶜ ≼_) (sym (U.real 0)) (proj₂ Init.First.omega)) (here 0)
+
+module Test (q : T₀) (large : L.ωᶜ ≼ q) (fits : ∀ j → pieces j ≼ q) where
+  pos = ≼-trans {a = 𝟏} {b = L.ωᶜ} {c = q} Pow.omega-pos large
+  bound : ∀ j → T.f j ≼ A.power q (Ar.norm (T.x j))
+  bound j = subst (_≼ size) (U.real j) (≼-trans {b = B18Product._·_ 𝟏 size}
+    (F.Bound.run q pos (U.index j) (U.run (U.index j)) (fits j)) (proj₁ (A.left-one size)))
+    where
+    import B18Product
+    size = A.power q (Ar.norm (T.x j))
+  module Steps = Law.Orbit q large T.x T.f (≼-refl L.zero) (λ j → proj₁ (T.factor j)) bound
+
+module Actual = Test Γ seed here
+
+module Gate (a b : T₀) (low : a ≼ b) (up : b ≼ E.above a) where
+  small : ∀ k → 2 ≤ k → (L.suc a ≼ Row.row k → L.suc b ≼ Row.row k) ×
+    (L.suc b ≼ Row.row k → L.suc a ≼ Row.row k)
+  small k d = (λ p → ≼-trans {b = L.suc (E.above a)} (s≼s up) (Cut.At.closed k d a p)) ,
+              (λ p → ≼-trans {b = L.suc b} (s≼s low) p)
+
+module Original = Gate Γ T.S below Actual.Steps.cap

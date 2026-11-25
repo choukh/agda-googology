@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对每一变正层，在同一真实 Λ 孩子中可同时取得任意相邻快照的完整反馈后续零运行。
+module B27SActual where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Path
+open import W4Fold using (EBOᶜ)
+open import WVOne using (T₀; read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; s≼s; ≼-trans; ≼l)
+import B12Terminal as T
+import B12EboRows as Rows
+import B12ActualSlots as A
+import B17CellPrefix as Cells
+import B17CellNext as Next
+import B20StandardInside as St
+import B20Room as Room
+import B21TowerSeed as Seed
+import B21StandardShape as Shape
+import B26PActual as End
+import B27SPasses as Passes
+
+count : ℕ → ℕ
+count = λ m → suc (suc m)
+
+module Host (m : ℕ) (r : T.Run (tw (suc (count m)))) (eq : T.Run.ok r ≡ Ok-tw (suc (count m))) (cr : A.Covered r) where
+  module X = Seed.Layer.At (suc m) r eq cr
+  rc = Room.cover X.path X.one X.oc
+  module History = Passes.At m X.found X.cert rc
+  witness = X.one
+  entry : read (T.value X.found) ≼ read (T.value witness)
+  entry = Room.below X.path X.one X.oc
+  value : ℕ → ℕ → T₀
+  value t j = read (T.value (History.Pass.Pair.whole-site t j))
+  paid : ∀ t j → value t j ≼ read (T.value witness)
+  paid t j = ≼-trans {a = value t j} {b = read (T.value X.found)} {c = read (T.value witness)}
+    (History.Pass.paid t j) entry
+
+module Layer (m : ℕ) where
+  n = count m
+  upper : ℕ
+  upper = suc n
+  run = T.limRun tw T.terminal upper
+  module Real = Host m run refl (A.enter sL tw T.terminal upper (T.prefix tw upper) (A.initial Λ Ok-Λ))
+  module Std = Host m (T.initial (tw upper) (Ok-tw upper)) refl (A.initial (tw upper) (Ok-tw upper))
+
+  actual : ∀ t j → Real.value t j ≼ Cells.cell n 1
+  actual = Real.paid
+  below : ∀ t j → L.suc (Real.value t j) ≼ End.Y
+  below t j = ≼-trans {a = L.suc (Real.value t j)} {b = L.suc (Cells.cell n 1)} {c = End.Y} (s≼s (actual t j))
+    (≼-trans {b = Cells.cell (suc n) 1} (≼-trans {a = L.suc (Cells.cell n 1)} {b = L.suc (Rows.child upper)} {c = Cells.cell upper 1}
+      (s≼s (Cells.At.S.lift-value n 1)) (Next.strict upper 1)) (Next.actual (suc n) 1))
+
+  standard : ∀ t j → Std.value t j ≼ St.std upper
+  standard t j = ≼-trans {a = Std.value t j} {b = read (T.value Std.witness)} {c = St.std upper}
+    (Std.paid t j) (Std.X.D.C.lift-value 1)
+  below-K : ∀ t j → L.suc (Std.value t j) ≼ End.K
+  below-K t j = ≼-trans {a = L.suc (Std.value t j)} {b = L.suc (St.std upper)} {c = End.K}
+    (s≼s (standard t j)) (≼l (suc upper) (Shape.rise upper))

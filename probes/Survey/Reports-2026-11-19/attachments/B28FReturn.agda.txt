@@ -1,0 +1,74 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 以所有正塔单位值已实付的两份首标起算，只需同一条一元 Ω 返回律。固定有名字的付款点不能无限自付。
+module B28FReturn where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+open import OCF.Lean.YiRefTw2 using (Rt)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; s≼s)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import B26Names as A
+import B26CForest as F
+import B26CLift as Code
+import B26CCardinal as Card
+import B17Cofinal as C
+import B26OSparse as S
+import B28FHead as H
+import B28FSpine as V
+import B28FFinite as Fin
+import B26PActual as End
+import B27Joint as J
+import B20StandardGoal as Physical
+
+h : ∀ k → HC (S.collapse (V.ladder k 1))
+h k = H.response (V.pure k 1) (V.normal k 1)
+rank : ℕ → A.T₀
+rank k = Rt (h k)
+
+interior : ∀ {u} (pu : F.Pure u) (nu : NF u) (d : HC (S.collapse u)) →
+  Σ ℕ (λ k → L.suc (Rt d) ≼ rank k)
+interior F.empty nu d = 0 , H.step F.empty nu (V.pure 0 1) (V.normal 0 1) d (h 0) []<
+interior (F.node {u = a} {t = ts} pa pt) nu d with V.major pa nu
+... | m , r = k , H.step (F.node pa pt) nu (V.pure k 1) (V.normal k 1) d (h k)
+                         (<ᵀ-trans r (V.promote (C.depth a) m))
+  where k = suc (C.depth a)
+
+all : ∀ y → (∀ k → rank k ≼ y) → A.E ≼ y
+all y pay = Card.sufficient {Y = y} (λ {t} nt ct hi w d →
+   let k , p = interior (F.pure-restore t) (nfp-a (nf-hd (Code.output-normal nt ct hi w))) d
+   in ≼-trans {a = Rt d} {b = L.suc (Rt d)} {c = y} (≼-suc (≼-refl (Rt d)))
+              (≼-trans {b = rank k} p (pay k)))
+
+Paid : ℕ → Set
+Paid k = Σ ℕ (λ n → Σ ℕ (λ j → rank k ≼ J.f n j))
+
+initial : ∀ n j → L.suc (rank 0) ≼ J.f (suc n) j
+initial n j = Fin.paid n j (h 0)
+
+-- 只有一个高层动作，且它只需接受已经付款的输入。已有坐标可作输入，结果可换址。
+module Across (next : ∀ k n j → rank k ≼ J.f n j → Paid (suc k)) where
+  run : ∀ k → Paid k
+  run zero = 1 , 0 , ≼-trans {b = L.suc (rank 0)} (≼-suc (≼-refl (rank 0))) (initial 0 0)
+  run (suc k) with run k
+  ... | n , j , found = next k n j found
+  terminal : A.E ≼ End.Y
+  terminal = all End.Y (λ k → let n , j , d = run k in ≼-trans {b = J.f n j} d (Physical.into n j))
+
+stuck : ∀ q → A.Named q → rank 0 ≼ q → (∀ k → rank k ≼ q → rank (suc k) ≼ q) → ⊥
+stuck q (b , same) base advance = s≼-irrefl q
+    (≼-trans {a = L.suc q} {b = L.suc (A.value b)} {c = q} (s≼s (proj₂ same))
+       (≼-trans {b = A.E} (A.strict b) (all q completed)))
+  where
+  completed : ∀ k → rank k ≼ q
+  completed zero = base
+  completed (suc k) = advance k (completed k)
+
+same-site : ∀ n j → A.Named (J.f (suc n) j) →
+  (∀ k → rank k ≼ J.f (suc n) j → rank (suc k) ≼ J.f (suc n) j) → ⊥
+same-site n j named = stuck (J.f (suc n) j) named
+  (≼-trans {b = L.suc (rank 0)} (≼-suc (≼-refl (rank 0))) (initial n j))
+

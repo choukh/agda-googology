@@ -1,0 +1,38 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第一次反馈的第二份内，一个固定可数节点的所有孩子问 Ω₂ 的 n 次后继。
+module B23LOriginal where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_)
+open import Data.List.Base using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; trans; subst)
+open import WVOne using (T₀)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-refl; ≼-trans; _≈ᵛ_)
+import B12LimitSrc as Src
+import B12Omega3Ref as R
+import B13Target as P
+import B14RefGain as Path
+import B23RShare as G
+
+route = 2 ∷ 0 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 0 ∷ 0 ∷ []
+point = Path.along route G.oneStep
+height : ℕ → Src.Lev₂
+height zero = Ω₂ᴸ
+height (suc n) = L.suc (height n)
+part : ℕ → T₀
+part n = L.ψ⁰ (P.pass (height n))
+add-num : ∀ n → L.add Ω₂ᴸ (λ q → L.suc (L.suc q)) (R.numeral n) ≡ height n
+add-num zero = refl
+add-num (suc n) = cong L.suc (add-num n)
+
+shape : ∀ n → R.at point n ≡ part n
+shape n rewrite R.index n | R.strip n | add-num n = refl
+cut : T₀
+cut = L.lim part
+both : point ≈ᵛ cut
+both = l≼ (λ n → ≼l n (subst (_≼ part n) (sym (shape n)) (≼-refl _))) ,
+       l≼ (λ n → ≼l n (subst (part n ≼_) (sym (shape n)) (≼-refl _)))
+before : cut ≼ G.oneStep
+before = ≼-trans (Data.Product.proj₂ both) (Path.path-bound route G.oneStep)

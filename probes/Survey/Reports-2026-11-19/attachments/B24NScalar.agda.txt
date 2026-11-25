@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24NScalar where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; 𝟏; read)
+open import WKShape using (lvl3; Ψ₃; ok₃)
+open import WKGen using (node-ge)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼-suc; ≼-refl; ≼-trans; ≅→≼)
+import B11OuterCore as C
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B12Omega3Ref as Ref
+import B12Omega3Cuts as U
+import B12Update as Seed
+import B13OrbitFeed as O
+import B13SeedOuter as Outer
+import B13Target as P
+import B15OrbitAction as A
+import B15OrbitModel as M
+import B17OrbitModel as Model
+import B17OrbitTower as T
+import B18RefDepth as H
+import B18OrbitRows as Old
+import B18OrbitWorld as W
+import B22RowPrefix as B
+import B22RowLive as V
+import B22RowVariable as Var
+import B22RowWhole as Init
+import B24NProduct as Prod
+import B24NKid as K
+import B24NStore as Store
+import B24NBridge as Bridge
+import B21RowDynamics as Dy
+
+weak : T₀ → T₀
+weak x = L.ψ⁰ (P.co₁ (K.Native.kid 1 x))
+orbit = Ref.S.iter weak 𝟏
+bound : T₀
+bound = L.lim (λ j → weak (orbit j))
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  open Store.At r cv using (kids; tree; observed; entry; cover; S; b)
+  open K.At r cv using (K₁′; queried)
+  open Old.At.I r cv using (K₁; J)
+  open Outer.At r using (c⁺; st1; v₁; w2)
+  seed : Dy.Index b H.initial
+  seed = W.start Prod.world b cover
+  increase : Rl K₁ K₁′
+  increase s i t u = Emono ok₂ tdNil J (M.pull s) i (π O.m₁ t) u (proj₂ c⁺)
+  base : Model.Both Old.m K₁′ A.base
+  base = Model.At.lift₀ Old.m K₁ K₁′ increase A.base (Old.At.OldRow.K₁-law r cv)
+  op′ = λ z → op (E ok₂ O.D₁ (proj₁ (kids z)) K₁′) (Einf ok₂ O.D₁ (proj₁ (kids z)) K₁′)
+  opaque
+    init : V.Present B.empty (M.pull S)
+    init = Init.At.initial r cv
+  module Use (x : T₀) (z : Tr zero) (low : x ≼ read (suc z)) where
+    opaque
+      index : Dy.Index (kids z) (K.coef x H.initial)
+      index = queried x z low S H.initial cover seed b seed
+      part : ∀ t u → 𝟏 ≼ read (proj₁ u) → weak x ≼ read (proj₁ (run (op′ z) S zero t u))
+      part = Bridge.At.part K₁′ base S init (V.lower init (proj₂ Old.Out.ip)) (kids z) (K.Native.kid 1 x) (K.Native.regular 1 (L.≅-refl⁰ x))
+        (K.coef x H.initial) (K.kid x) index
+  step = λ z → proj₁ (run (op′ z) S zero Old.Out.ip (S zero Old.Out.ip))
+  ix = iter step zero
+  track : ∀ j → orbit j ≼ read (suc (ix j))
+  track zero = ≼-refl _
+  track (suc j) = ≼-suc (Use.part (orbit j) (ix j) (track j) Old.Out.ip (S zero Old.Out.ip)
+    (V.lower init (proj₂ Old.Out.ip)))
+  internal : bound ≼ read (proj₁ observed)
+  internal = l≼ λ j → ≼-trans (Use.part (orbit j) (ix j) (track j) (σ O.m₁ w2) v₁ (Init.At.run-bound r cv 0))
+    (node-ge (kpT (fr O.D₁) ok₂ p₁ (tv O.D₁ (σ O.m₁ w2))) (λ z → run (op′ z) S zero (σ O.m₁ w2) v₁) step j)
+  value : bound ≼ read (Tm.value r)
+  value = ≼-trans internal entry
+standard : bound ≼ read Ψ₃
+standard = At.value (Tm.initial lvl3 ok₃) (Cov.initial lvl3 ok₃)
+terminal : bound ≼ read EBOᶜ
+terminal = ≼-trans (At.value (Tm.finiteRun 2) (Cov.all-finite 2)) (Tm.finite-ge 2)

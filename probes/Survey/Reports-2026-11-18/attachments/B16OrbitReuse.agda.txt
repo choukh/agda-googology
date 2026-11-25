@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 零目标和任意一级显式底都通过同一 Ω₁ 的变指数 It；默认一级种子也更新为对可数输入的完整保留节点。
+module B16OrbitReuse where
+open import Data.Nat using (zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block hiding (Sh; D)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import YiLAB7Orbit using (lvl1; ok₂)
+open import WKGen using (Ω₁t)
+open import OCF.Align.Value using (_≼_; ≼-suc)
+open import WSShadow using (nC)
+open import B8PairW4 using (Real-up)
+import B12LimitRef
+import B12Update as U
+import B13OrbitFeed as O
+import B14OrbitReal as W
+import B15OrbitAction as P
+import B15OrbitModel as M
+import B16OrbitNode as N
+import B16OrbitLive as S
+import B16OrbitWide as V
+import B16OrbitWideIt as I
+import B16OrbitWideEnv as E
+import B16OrbitTransform as H
+
+module Outer = M.At (idM {X = M.X₁})
+module Vout = V.At (idM {X = M.X₁})
+module Vin = V.At O.m₂
+module Down = E.Frame (idM {X = M.X₁}) (λ _ → refl)
+module Deep = E.Frame O.m₂ (λ _ → refl)
+module Cnt = I.Frame O.m₂ O.D₀
+module Node = N.Frame (idM {X = M.X₁}) (λ _ → refl)
+
+module Rule (b : Tr lvl1) (nb : lvl1 ⊢ zero ◃ b) (cover : lvl1 ⊢ Ω₁t ◃ b) (G : Op M.X₁) (a : P.Act)
+            (usual : Outer.Models G a) (extra : Vout.Wide G a) where
+  module Live = S.At b nb cover G a usual
+  open Live using (Exp; K; KG; inG; inK)
+  h = λ y → H.height y P.raise a
+  child = λ z → Exp (O.g₁ z)
+  wide-G : Vout.Wide KG a
+  wide-G = Vout.lift {Q = G} {Q′ = KG} (proj₂ K idM G) extra
+  wide-in : Vin.Wide inG a
+  wide-in = Down.enter-law KG a wide-G
+  wide-transform : Cnt.contract inK P.raise
+  wide-transform Q op′ law = Deep.Rule.covers Q op′ law b cover
+  wide-child : ∀ y z → y ≼ read (suc z) → Vout.Wide (child z) (h y)
+  wide-child y z low e S ie hs v re ro = Cnt.eval (suc z) low inK P.raise wide-transform inG a wide-in e
+    (λ j t → S j (proj₂ t)) ie hs (run KG S lvl1 Outer.slot v) (Real-up part re) (Real-up part ro)
+    where part = inf KG S lvl1 Outer.slot v
+
+  law-child : ∀ y z → y ≼ read (suc z) → Outer.Models (child z) (h y)
+  law-child y z low t p e d rr S v i = Outer.packed (U.seeds (val t v (U.value-bound seed)) (val Outer.zp (S zero Outer.zp) (U.slot-bound seed))
+      (Vout.canonical (child z) (P.s (h y)) (wide-child y z low) e S (B12LimitRef.Described.infl d) (U.structure seed)))
+      (val Outer.ip (S zero Outer.ip) (Outer.inner i))
+    where
+    seed = Outer.seed i
+    module X = Live.Start S p e d rr (U.structure seed) (U.slot-bound seed) (Outer.inner i)
+    val = λ u w hw → X.scalar u w hw y z low
+
+  module Acc = Node.Rule child h law-child
+  whole : Outer.Law (Exp Ω₁t) (S.tree a) (λ e → nC (λ y → P.s (h y) e))
+  whole = Acc.aggregate
+  wide-whole : Vout.Law (Exp Ω₁t) (λ e → nC (λ y → P.s (h y) e))
+  wide-whole e S ie hs v re ro = W.real-node _ _ (λ y z low → wide-child y z (≼-suc low) e S ie hs v re ro)

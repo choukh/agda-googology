@@ -1,0 +1,40 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任何已进 Λ 的前缀均可接值低于 K 的可数尾。对 W4 实际零树输入，在任意正层、任意环境上的一次真实返回也有同一保证。
+module B26Transport where
+
+open import Data.Product using (proj₁)
+open import Data.List.Base using (_++_)
+open import OCF.Align.EboLeanDef using (HC)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import OCF.Align.Value using (_≼_; s≼s; ≼-trans; ≼-suc; ≼-refl; ≼l)
+open import WVOne using (T₀; read)
+import OCF.Align.Level as L
+import W4Block as W
+import W4Ops as O
+import W4Fold as F
+import W4Path as P
+import B19IdealArithmetic as Ar
+import B19IdealPowers as Pow
+import B22MovingIndex as Move
+import B22TowerCut as K
+import B26PActual as Run
+import B26PSuffix as S
+import B26CScalar as V
+import B17CellNext as Cells
+
+exponent : ∀ (x : T₀) → L.suc x ≼ Run.K → L.suc (Ar.norm x) ≼ Run.K
+exponent x hi = ≼-trans {b = L.suc (Move.above x)}
+  (s≼s (≼l 1 (Pow.expo Pow.omega-pos (≼-suc (≼-refl x))))) (K.inside {x} hi)
+
+suffix : ∀ p (ph : HC (S.φ p)) → L.suc (Rt ph) ≼ Run.Y →
+         ∀ t (th : HC t) → L.suc (Rt th) ≼ Run.K → (d : HC (S.φ (p ++ t))) → L.suc (Rt d) ≼ Run.Y
+suffix p ph low t th hi d = ≼-trans (s≼s (proj₁ (S.Low.val p ph t th d)))
+                             (Run.interior {Rt ph} {Ar.norm (Rt th)} low (exponent (Rt th) hi))
+
+module Actual (s : W.Sh) (f : W.Ch s → W.L) (o : P.Ok (W.nd s f))
+              (B : F.Base (W.nd s f)) (β : O.Tr⁺ W.zero) where
+  module Pos = V.Positive s f o B β
+  located : L.suc (read (proj₁ β)) ≼ Run.Y → ∀ x → L.suc (read x) ≼ Run.K →
+            Cells.Eventually (L.suc (read (proj₁ (Pos.run x))))
+  located low x hi = Cells.eventual {x = read (proj₁ (Pos.run x))} (≼-trans (s≼s (proj₁ (Pos.exact x)))
+    (Run.interior {read (proj₁ β)} {Ar.norm (read x)} low (exponent (read x) hi)))

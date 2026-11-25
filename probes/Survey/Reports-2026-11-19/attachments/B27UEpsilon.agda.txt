@@ -1,0 +1,74 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同一个上方 ε 不动点的严格初段容下任意有限次加、乘、ω 幂。数量与组合深度无需预先固定。
+module B27UEpsilon where
+
+open import Data.Nat.Base as N using (ℕ; zero; suc; _≤′_; ≤′-refl; ≤′-step; _⊔_)
+open import Data.Nat.Properties using (m≤m⊔n; m≤n⊔m; ≤⇒≤′)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≼l; s≼s; +-mono)
+open import B18Product using (_·_; mono)
+import B19IdealPowers as Pow
+import B19IdealProduct as Prod
+import B19IdealArithmetic as Ar
+import B22MovingIndex as E
+
+two : ∀ x → L.suc (L.suc x) ≼ Ar.norm (L.suc x)
+two x = ≼-trans (s≼s (s≼s (Ar.up x)))
+  (≼l 3 (+-mono (+-mono (proj₂ (Prod.one a)) nz) nz))
+  where
+  a = Ar.norm x
+  nz = Pow.positive Pow.omega-pos x
+
+norm-strict : ∀ x → L.suc (Ar.norm x) ≼ Ar.norm (L.suc x)
+norm-strict x = ≼l 2 (+-mono (proj₂ (Prod.one (Ar.norm x))) (Pow.positive Pow.omega-pos x))
+
+module At (s : T₀) where
+  e = E.steps s
+  growth : ∀ n → L.suc (e n) ≼ e (suc n)
+  growth zero = two s
+  growth (suc n) = ≼-trans (norm-strict (e n)) (Pow.expo Pow.omega-pos (growth n))
+
+  walk : ∀ {m n} → m ≤′ n → e m ≼ e n
+  walk ≤′-refl = ≼-refl _
+  walk (≤′-step d) = ≼-trans (walk d) (Ar.up _)
+
+  In : T₀ → Set
+  In x = Σ ℕ (λ n → L.suc x ≼ e n)
+
+  down : ∀ {x y} → x ≼ y → In y → In x
+  down p (n , h) = n , ≼-trans (s≼s p) h
+
+  seed : In s
+  seed = 0 , ≼-refl _
+
+  finite : ∀ {x} → In x → L.suc x ≼ E.above s
+  finite (n , p) = ≼l n p
+
+  sucC : ∀ {x} → In x → In (L.suc x)
+  sucC (n , p) = suc n , ≼-trans (s≼s p) (growth n)
+
+  expC : ∀ {x} → In x → In (Ar.norm x)
+  expC {x} (n , p) = suc n , ≼-trans (norm-strict x) (Pow.expo Pow.omega-pos p)
+
+  point : ∀ n → In (e n)
+  point n = suc n , growth n
+
+  together : ∀ {x y} → In x → In y → Σ ℕ (λ n → Data.Product._×_ (x ≼ e n) (y ≼ e n))
+  together {x} {y} (i , h) (j , p) = i ⊔ j ,
+    ≼-trans (≼-suc (≼-refl x)) (≼-trans h (walk (≤⇒≤′ (m≤m⊔n i j)))) ,
+    ≼-trans (≼-suc (≼-refl y)) (≼-trans p (walk (≤⇒≤′ (m≤n⊔m i j))))
+
+  sumC : ∀ {x y} → In x → In y → In (x L.+ y)
+  sumC p q with together p q
+  ... | n , x , y = down (≼-trans (+-mono x y) (Ar.plusBound (e n))) (expC (sucC (point n)))
+
+  mulC : ∀ {x y} → In x → In y → In (x · y)
+  mulC p q with together p q
+  ... | n , x , y = down (≼-trans (mono x y) (Ar.mulBound (e n))) (expC (expC (sucC (point n))))
+
+  powC : ∀ {x y} → 𝟏 ≼ x → In x → In y → In (Prod.power x y)
+  powC {x} {y} nz p q with together p q
+  ... | n , a , b = down (≼-trans (Pow.base a y) (≼-trans (Pow.expo (≼-trans nz a) b) (Ar.powerBound (e n))))
+    (expC (expC (expC (sucC (point n)))))

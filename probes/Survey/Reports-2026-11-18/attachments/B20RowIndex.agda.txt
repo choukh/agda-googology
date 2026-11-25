@@ -1,0 +1,71 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20RowIndex where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import W4Block
+open import W4Ops
+open import WVOne using (T₀; read)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+open import YiLAB7Orbit using (lvl1; p₁)
+open import WKShape using (lvl3)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_)
+import B12Terminal as Tm
+import B12ActualSlots as C
+import B14RefFixed as K
+import B17OrbitTower as T
+import B18OrbitLevels as All
+import B18OrbitWorld as W
+import B18OrbitRows as Old
+import B18RefDepth as H
+import B18RefRows as Rows
+import B18RefModel as M
+import B18RefDelta as D
+import B18RefCong as G
+import B19RowAction as A
+import B19RowSecond as S
+open import OCF.BTBO using (module Ord-Ord)
+module O = Ord-Ord
+
+coeff-reg : ∀ k {x y} → x L.≅ y → D.coeff k x L.≅ D.coeff k y
+coeff-reg zero q = L.upˡ (L.upʳ q)
+coeff-reg (suc k) q = G.δ-pres (coeff-reg k q) (L.Ω-refl _)
+
+u = O.iter (λ t → D.δ t Ω₁ᴸ) Ω₁ᴸ
+shape : ∀ k → u k L.≅ L.limᵢ L.zero (D.coeff k)
+shape zero = L.Ω-refl _
+shape (suc k) = G.δ-pres (shape k) (L.Ω-refl _)
+
+collapse : K.collapse S.p L.≅ L.lim (λ k → u (suc k))
+collapse = A.at-zero (L.Ω-refl (L.suc (L.suc L.zero)))
+
+rel : ∀ d k {x y} → x ≼ y → T.Rel (H.S d) (H.value d k x) (H.value d k y)
+rel d zero = T.Diag.r (H.S d) (H.grad d) (H.initial d)
+rel d (suc k) q = rel (suc d) k q 0 (H.grad d) (H.grad d) (T.rm (H.grad d)) (H.initial d) (H.initial d) (T.rr (H.S d) (H.initial d))
+eqv : ∀ d k {x y} → x L.≅ y → T.Eq (H.S d) (H.value d k x) (H.value d k y)
+eqv d zero = T.Diag.q (H.S d) (H.grad d) (H.initial d)
+eqv d (suc k) q = eqv (suc d) k q 0 (H.grad d) (H.grad d) (T.em (H.grad d)) (H.initial d) (H.initial d) (T.ee (H.S d) (H.initial d))
+
+node : ∀ d → ℕ → T.Carrier (H.S d)
+node d k = T.node (H.S d) (H.value d k) (rel d k) (eqv d k)
+fits : ∀ d k → M.fit (Rows.meaning d) (node d k) (u (suc k))
+fits d k = M.conv (Rows.meaning d)
+   (M.node (Rows.meaning d) (H.value d k) (rel d k) (eqv d k) (D.coeff (suc k)) (coeff-reg (suc k)) (Rows.compute d k))
+   (L.≅-sym (shape (suc k)))
+
+whole = λ d → T.sup (H.S d) (node d)
+valid : ∀ d → M.fit (Rows.meaning d) (whole d) (K.collapse S.p)
+valid d = M.conv (Rows.meaning d) (M.sup (Rows.meaning d) (node d) (λ j → u (suc j)) (λ j → L.≅-trans (shape (suc j)) (L.≅-sym (shape (suc j)))) (fits d)) (L.≅-sym collapse)
+
+module At (r : Tm.Run lvl3) (cv : C.Covered r) where
+  module P = Old.At r cv
+  tree = λ k → Ω⁺ p₁ (P.curve k)
+  retained : ∀ d k → W.Index (All.world d) (tree k) (node d k)
+  retained d k = W.retain (All.world d) (P.curve k) (proj₂ (tree k)) (H.value d k) (rel d k) (eqv d k) (P.indexed d k)
+  clock : ∀ k → Tr⁺ lvl1
+  clock k = P.seq (suc (suc k)) , ◃t (proj₂ (tree k)) (P.stored k)
+  next-index : ∀ d k → W.Index (All.world d) (clock k) (node d k)
+  next-index d k = W.rise (All.world d) (tree k) (clock k) (P.stored k) _ (retained d k)
+

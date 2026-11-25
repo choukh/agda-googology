@@ -1,0 +1,1097 @@
+# YiDD 只读候选清单与消费者
+
+这是只读语法候选清单，不是已核公开 API。已过滤可识别的 where/private 局部名，但未用 Agda 逐名验证导出与陈述；第一个旧陈述兼容检查已失败，按简报停止。
+
+## YiVTLSTw1
+
+- 参数化对应：`YiPMLSTw1.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANEnd.lagda.md`、`probes/OCF/Lean/YiVTEBBtbo.lagda.md`、`probes/OCF/Lean/YiVTEBShape.lagda.md`、`probes/OCF/Lean/YiVTEVEnd.lagda.md`、`probes/OCF/Lean/YiVTEVTw2.lagda.md`、`probes/OCF/Lean/YiVTEmb.lagda.md`、`probes/OCF/Lean/YiVTHi.lagda.md`、`probes/OCF/Lean/YiVTLSBtbo.lagda.md`、`probes/OCF/Lean/YiVTPHEnd.lagda.md`、`probes/OCF/Lean/YiVTT2Frame.lagda.md`、`probes/OCF/Lean/YiVTTWEnd.lagda.md`、`probes/OCF/Lean/YiVTTw2Hi.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTLSTw1.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `h₁` | `YiPMLSTw1.F tbᶠ.h₁` |
+| `εh` | `YiPMLSTw1.F tbᶠ.εh` |
+| `ρh` | `YiPMLSTw1.F tbᶠ.ρh` |
+| `wh` | `YiPMLSTw1.F tbᶠ.wh` |
+| `G` | `YiPMLSTw1.F tbᶠ.G` |
+| `G-nz` | `YiPMLSTw1.F tbᶠ.G-nz` |
+| `K` | `YiPMLSTw1.F tbᶠ.K` |
+| `pt` | `YiPMLSTw1.F tbᶠ.pt` |
+| `tw1-form` | `YiPMLSTw1.F tbᶠ.tw1-form` |
+| `nl-↑` | `YiPMLSTw1.F tbᶠ.nl-↑` |
+| `corr-↑` | `YiPMLSTw1.F tbᶠ.corr-↑` |
+| `lvl` | `YiPMLSTw1.F tbᶠ.lvl` |
+| `lower-↑` | `YiPMLSTw1.F tbᶠ.lower-↑` |
+| `κ` | `YiPMLSTw1.F tbᶠ.κ` |
+| `LOWER` | `YiPMLSTw1.F tbᶠ.LOWER` |
+| `ω-tw1` | `YiPMLSTw1.F tbᶠ.ω-tw1` |
+| `E` | `YiPMLSTw1.F tbᶠ.E` |
+| `ez` | `YiPMLSTw1.F tbᶠ.ez` |
+| `es` | `YiPMLSTw1.F tbᶠ.es` |
+| `el` | `YiPMLSTw1.F tbᶠ.el` |
+| `E-+` | `YiPMLSTw1.F tbᶠ.E-+` |
+| `E-next` | `YiPMLSTw1.F tbᶠ.E-next` |
+| `E-cum` | `YiPMLSTw1.F tbᶠ.E-cum` |
+| `LiftP` | `YiPMLSTw1.F tbᶠ.LiftP` |
+| `LiftP-∙` | `YiPMLSTw1.F tbᶠ.LiftP-∙` |
+| `eq0` | `YiPMLSTw1.F tbᶠ.eq0` |
+| `KG` | `YiPMLSTw1.F tbᶠ.KG` |
+
+## YiVTEBShape
+
+- 参数化对应：`YiPMEBShape.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANEnd.lagda.md`、`probes/OCF/Lean/YiVTEBBtbo.lagda.md`、`probes/OCF/Lean/YiVTEVEnd.lagda.md`、`probes/OCF/Lean/YiVTPHEnd.lagda.md`、`probes/OCF/Lean/YiVTTWEnd.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTEBShape.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `pre` | `YiPMEBShape.F tbᶠ.pre` |
+| `dB` | `YiPMEBShape.F tbᶠ.dB` |
+| `Fn` | `YiPMEBShape.F tbᶠ.Fn` |
+| `br` | `YiPMEBShape.F tbᶠ.br` |
+| `EBO-lim` | `YiPMEBShape.F tbᶠ.EBO-lim` |
+| `branch-eq` | `YiPMEBShape.F tbᶠ.branch-eq` |
+| `br≼` | `YiPMEBShape.F tbᶠ.br≼` |
+| `sup≼` | `YiPMEBShape.F tbᶠ.sup≼` |
+| `EBO≅sup` | `YiPMEBShape.F tbᶠ.EBO≅sup` |
+| `ok-dB` | `YiPMEBShape.F tbᶠ.ok-dB` |
+| `b⊥-dB` | `YiPMEBShape.F tbᶠ.b⊥-dB` |
+| `transfer` | `YiPMEBShape.F tbᶠ.transfer` |
+| `transferP` | `YiPMEBShape.F tbᶠ.transferP` |
+| `start-dB2` | `YiPMEBShape.F tbᶠ.start-dB2` |
+| `start-B₀2` | `YiPMEBShape.F tbᶠ.start-B₀2` |
+
+## YiVTLSBtbo
+
+- 参数化对应：`YiPMLSBtbo.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTEBBtbo.lagda.md`、`probes/OCF/Lean/YiVTEVEnd.lagda.md`、`probes/OCF/Lean/YiVTEVTw2.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTLSBtbo.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `S` | `YiPMLSBtbo.F tbᶠ.S` |
+| `B` | `YiPMLSBtbo.F tbᶠ.B` |
+| `WT` | `YiPMLSBtbo.F tbᶠ.WT` |
+| `cp` | `YiPMLSBtbo.F tbᶠ.cp` |
+| `cp≅` | `YiPMLSBtbo.F tbᶠ.cp≅` |
+| `Mono-cp` | `YiPMLSBtbo.F tbᶠ.Mono-cp` |
+| `lift≺` | `YiPMLSBtbo.F tbᶠ.lift≺` |
+| `OKs` | `YiPMLSBtbo.F tbᶠ.OKs` |
+| `mono⊥⊑` | `YiPMLSBtbo.F tbᶠ.mono⊥⊑` |
+| `b◃next` | `YiPMLSBtbo.F tbᶠ.b◃next` |
+| `V3` | `YiPMLSBtbo.F tbᶠ.V3` |
+| `V3F` | `YiPMLSBtbo.F tbᶠ.V3F` |
+| `shift` | `YiPMLSBtbo.F tbᶠ.shift` |
+| `emb` | `YiPMLSBtbo.F tbᶠ.emb` |
+| `lowc` | `YiPMLSBtbo.F tbᶠ.lowc` |
+| `chainV` | `YiPMLSBtbo.F tbᶠ.chainV` |
+| `btbo-tw1` | `YiPMLSBtbo.F tbᶠ.btbo-tw1` |
+
+## YiVTEBBtbo
+
+- 参数化对应：`YiPMEBBtbo.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTEVEnd.lagda.md`、`probes/OCF/Lean/YiVTEXRow.lagda.md`、`probes/OCF/Lean/YiVTHi.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTEBBtbo.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `S` | `YiPMEBBtbo.F tbᶠ.S` |
+| `B` | `YiPMEBBtbo.F tbᶠ.B` |
+| `WT` | `YiPMEBBtbo.F tbᶠ.WT` |
+| `Start` | `YiPMEBBtbo.F tbᶠ.Start` |
+| `Chain` | `YiPMEBBtbo.F tbᶠ.Chain` |
+| `Chain.β` | `YiPMEBBtbo.F tbᶠ.Chain.β` |
+| `Chain.nβ` | `YiPMEBBtbo.F tbᶠ.Chain.nβ` |
+| `Chain.Bc` | `YiPMEBBtbo.F tbᶠ.Chain.Bc` |
+| `Chain.G` | `YiPMEBBtbo.F tbᶠ.Chain.G` |
+| `Chain.G-nz` | `YiPMEBBtbo.F tbᶠ.Chain.G-nz` |
+| `Chain.K` | `YiPMEBBtbo.F tbᶠ.Chain.K` |
+| `Chain.pt` | `YiPMEBBtbo.F tbᶠ.Chain.pt` |
+| `Chain.form` | `YiPMEBBtbo.F tbᶠ.Chain.form` |
+| `Lemmas` | `YiPMEBBtbo.F tbᶠ.Lemmas` |
+| `Lemmas.okc` | `YiPMEBBtbo.F tbᶠ.Lemmas.okc` |
+| `Lemmas.κ` | `YiPMEBBtbo.F tbᶠ.Lemmas.κ` |
+| `Lemmas.LOWER` | `YiPMEBBtbo.F tbᶠ.Lemmas.LOWER` |
+| `Lemmas.V3F` | `YiPMEBBtbo.F tbᶠ.Lemmas.V3F` |
+| `Lemmas.pt1` | `YiPMEBBtbo.F tbᶠ.Lemmas.pt1` |
+| `Btbo` | `YiPMEBBtbo.F tbᶠ.Btbo` |
+| `Btbo.KG` | `YiPMEBBtbo.F tbᶠ.Btbo.KG` |
+| `Btbo.shift` | `YiPMEBBtbo.F tbᶠ.Btbo.shift` |
+| `Btbo.emb` | `YiPMEBBtbo.F tbᶠ.Btbo.emb` |
+| `Btbo.lowc` | `YiPMEBBtbo.F tbᶠ.Btbo.lowc` |
+| `Btbo.chainV` | `YiPMEBBtbo.F tbᶠ.Btbo.chainV` |
+| `Btbo.btbo-B` | `YiPMEBBtbo.F tbᶠ.Btbo.btbo-B` |
+| `start-dB1` | `YiPMEBBtbo.F tbᶠ.start-dB1` |
+| `start-dB1≡` | `YiPMEBBtbo.F tbᶠ.start-dB1≡` |
+| `btbo-dB1` | `YiPMEBBtbo.F tbᶠ.btbo-dB1` |
+| `btbo-EBO` | `YiPMEBBtbo.F tbᶠ.btbo-EBO` |
+| `btbo-EBO′` | `YiPMEBBtbo.F tbᶠ.btbo-EBO′` |
+| `btbo-B₀` | `YiPMEBBtbo.F tbᶠ.btbo-B₀` |
+
+## YiVTMEAnchor
+
+- 参数化对应：`YiPMMEAnchor.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANFam.lagda.md`、`probes/OCF/Lean/YiVTANKp.lagda.md`、`probes/OCF/Lean/YiVTANLv.lagda.md`、`probes/OCF/Lean/YiVTANReach.lagda.md`、`probes/OCF/Lean/YiVTEVEnd.lagda.md`、`probes/OCF/Lean/YiVTEVReach.lagda.md`、`probes/OCF/Lean/YiVTEVTw2.lagda.md`、`probes/OCF/Lean/YiVTMEStep.lagda.md`、`probes/OCF/Lean/YiVTMWPre.lagda.md`、`probes/OCF/Lean/YiVTPHBase.lagda.md`、`probes/OCF/Lean/YiVTPHCtx.lagda.md`、`probes/OCF/Lean/YiVTPHEnd.lagda.md`、`probes/OCF/Lean/YiVTT2Desc.lagda.md`、`probes/OCF/Lean/YiVTT2Frame.lagda.md`、`probes/OCF/Lean/YiVTTWEnd.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTMEAnchor.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `one` | `YiPMMEAnchor.F tbᶠ.one` |
+| `two` | `YiPMMEAnchor.F tbᶠ.two` |
+| `Low¹` | `YiPMMEAnchor.F tbᶠ.Low¹` |
+| `Nu¹` | `YiPMMEAnchor.F tbᶠ.Nu¹` |
+| `M¹` | `YiPMMEAnchor.F tbᶠ.M¹` |
+| `G⁰` | `YiPMMEAnchor.F tbᶠ.G⁰` |
+| `G¹` | `YiPMMEAnchor.F tbᶠ.G¹` |
+| `u₀` | `YiPMMEAnchor.F tbᶠ.u₀` |
+| `u₁` | `YiPMMEAnchor.F tbᶠ.u₁` |
+| `ψ₀ᵗ` | `YiPMMEAnchor.F tbᶠ.ψ₀ᵗ` |
+| `ψ₁ᵗ` | `YiPMMEAnchor.F tbᶠ.ψ₁ᵗ` |
+| `++[]` | `YiPMMEAnchor.F tbᶠ.++[]` |
+| `Pu` | `YiPMMEAnchor.F tbᶠ.Pu` |
+| `Qu` | `YiPMMEAnchor.F tbᶠ.Qu` |
+| `Vu` | `YiPMMEAnchor.F tbᶠ.Vu` |
+| `Ω₁ᵗ` | `YiPMMEAnchor.F tbᶠ.Ω₁ᵗ` |
+| `Ω₂ᵗ` | `YiPMMEAnchor.F tbᶠ.Ω₂ᵗ` |
+| `t₂` | `YiPMMEAnchor.F tbᶠ.t₂` |
+| `At` | `YiPMMEAnchor.F tbᶠ.At` |
+| `At.Bᵃ` | `YiPMMEAnchor.F tbᶠ.At.Bᵃ` |
+| `At.β₁` | `YiPMMEAnchor.F tbᶠ.At.β₁` |
+| `At.nβ₁` | `YiPMMEAnchor.F tbᶠ.At.nβ₁` |
+| `At.β₀` | `YiPMMEAnchor.F tbᶠ.At.β₀` |
+| `At.nβ₀` | `YiPMMEAnchor.F tbᶠ.At.nβ₀` |
+| `At.F` | `YiPMMEAnchor.F tbᶠ.At.F` |
+| `At.nzF` | `YiPMMEAnchor.F tbᶠ.At.nzF` |
+| `At.H` | `YiPMMEAnchor.F tbᶠ.At.H` |
+| `At.nzH` | `YiPMMEAnchor.F tbᶠ.At.nzH` |
+| `At.W` | `YiPMMEAnchor.F tbᶠ.At.W` |
+| `At.nzW` | `YiPMMEAnchor.F tbᶠ.At.nzW` |
+| `At.PF` | `YiPMMEAnchor.F tbᶠ.At.PF` |
+| `At.vch` | `YiPMMEAnchor.F tbᶠ.At.vch` |
+| `At.QH` | `YiPMMEAnchor.F tbᶠ.At.QH` |
+| `At.chain` | `YiPMMEAnchor.F tbᶠ.At.chain` |
+| `At.VW` | `YiPMMEAnchor.F tbᶠ.At.VW` |
+| `At.γ` | `YiPMMEAnchor.F tbᶠ.At.γ` |
+| `At.z` | `YiPMMEAnchor.F tbᶠ.At.z` |
+| `At.form` | `YiPMMEAnchor.F tbᶠ.At.form` |
+| `At.sγ` | `YiPMMEAnchor.F tbᶠ.At.sγ` |
+| `At.lowerM` | `YiPMMEAnchor.F tbᶠ.At.lowerM` |
+| `Mβ₀` | `YiPMMEAnchor.F tbᶠ.Mβ₀` |
+| `bho-M` | `YiPMMEAnchor.F tbᶠ.bho-M` |
+| `bho-lowerᴹ` | `YiPMMEAnchor.F tbᶠ.bho-lowerᴹ` |
+| `nf₂` | `YiPMMEAnchor.F tbᶠ.nf₂` |
+| `h₂` | `YiPMMEAnchor.F tbᶠ.h₂` |
+
+## YiVTMEStep
+
+- 参数化对应：`YiPMMEStep.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTT2Desc.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTMEStep.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `Lev` | `YiPMMEStep.F tbᶠ.Lev` |
+| `Lev.Mᴸ` | `YiPMMEStep.F tbᶠ.Lev.Mᴸ` |
+| `Lev.Lowᴸ` | `YiPMMEStep.F tbᶠ.Lev.Lowᴸ` |
+| `Lev.Low⁼` | `YiPMMEStep.F tbᶠ.Lev.Low⁼` |
+| `Lev.Chdᴸ` | `YiPMMEStep.F tbᶠ.Lev.Chdᴸ` |
+| `t₊` | `YiPMMEStep.F tbᶠ.t₊` |
+| `Step₂⁺ᴸ` | `YiPMMEStep.F tbᶠ.Step₂⁺ᴸ` |
+| `h₂` | `YiPMMEStep.F tbᶠ.h₂` |
+| `G₂` | `YiPMMEStep.F tbᶠ.G₂` |
+| `c₂` | `YiPMMEStep.F tbᶠ.c₂` |
+| `row` | `YiPMMEStep.F tbᶠ.row` |
+| `nzrow` | `YiPMMEStep.F tbᶠ.nzrow` |
+| `form₂` | `YiPMMEStep.F tbᶠ.form₂` |
+| `γ₊` | `YiPMMEStep.F tbᶠ.γ₊` |
+| `step⁺-red` | `YiPMMEStep.F tbᶠ.step⁺-red` |
+| `row-form` | `YiPMMEStep.F tbᶠ.row-form` |
+| `row₀-btbo` | `YiPMMEStep.F tbᶠ.row₀-btbo` |
+| `h₁` | `YiPMMEStep.F tbᶠ.h₁` |
+| `c₁-form` | `YiPMMEStep.F tbᶠ.c₁-form` |
+| `lev₁-form` | `YiPMMEStep.F tbᶠ.lev₁-form` |
+| `drop-same` | `YiPMMEStep.F tbᶠ.drop-same` |
+
+## YiVTT2Desc
+
+- 参数化对应：`YiPMT2Desc.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTT2Frame.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTT2Desc.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `_⊑¹_` | `YiPMT2Desc.F tbᶠ._⊑¹_` |
+| `r¹` | `YiPMT2Desc.F tbᶠ.r¹` |
+| `s¹` | `YiPMT2Desc.F tbᶠ.s¹` |
+| `l¹` | `YiPMT2Desc.F tbᶠ.l¹` |
+| `w¹` | `YiPMT2Desc.F tbᶠ.w¹` |
+| `ev¹` | `YiPMT2Desc.F tbᶠ.ev¹` |
+| `rt¹` | `YiPMT2Desc.F tbᶠ.rt¹` |
+| `lift¹` | `YiPMT2Desc.F tbᶠ.lift¹` |
+| `cS` | `YiPMT2Desc.F tbᶠ.cS` |
+| `FS` | `YiPMT2Desc.F tbᶠ.FS` |
+| `nzS` | `YiPMT2Desc.F tbᶠ.nzS` |
+| `S-form` | `YiPMT2Desc.F tbᶠ.S-form` |
+| `cS-step` | `YiPMT2Desc.F tbᶠ.cS-step` |
+| `FS-step` | `YiPMT2Desc.F tbᶠ.FS-step` |
+| `suc-first` | `YiPMT2Desc.F tbᶠ.suc-first` |
+| `suc-step` | `YiPMT2Desc.F tbᶠ.suc-step` |
+| `lim-step` | `YiPMT2Desc.F tbᶠ.lim-step` |
+| `Ω-step` | `YiPMT2Desc.F tbᶠ.Ω-step` |
+| `desc` | `YiPMT2Desc.F tbᶠ.desc` |
+| `ε₁` | `YiPMT2Desc.F tbᶠ.ε₁` |
+| `ρ₁` | `YiPMT2Desc.F tbᶠ.ρ₁` |
+| `row1-form` | `YiPMT2Desc.F tbᶠ.row1-form` |
+| `path⁺` | `YiPMT2Desc.F tbᶠ.path⁺` |
+| `ev-form` | `YiPMT2Desc.F tbᶠ.ev-form` |
+| `rt-form` | `YiPMT2Desc.F tbᶠ.rt-form` |
+| `T⁺` | `YiPMT2Desc.F tbᶠ.T⁺` |
+| `sucΩ≼tw2` | `YiPMT2Desc.F tbᶠ.sucΩ≼tw2` |
+| `d⁺` | `YiPMT2Desc.F tbᶠ.d⁺` |
+| `R⁺` | `YiPMT2Desc.F tbᶠ.R⁺` |
+| `nzR⁺` | `YiPMT2Desc.F tbᶠ.nzR⁺` |
+| `T⁺-form` | `YiPMT2Desc.F tbᶠ.T⁺-form` |
+| `d⁺1` | `YiPMT2Desc.F tbᶠ.d⁺1` |
+| `rdLM` | `YiPMT2Desc.F tbᶠ.rdLM` |
+| `rdML` | `YiPMT2Desc.F tbᶠ.rdML` |
+| `step⁺-suc` | `YiPMT2Desc.F tbᶠ.step⁺-suc` |
+
+## YiVTEXRow
+
+- 参数化对应：`YiPMEXRow.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTEVEnd.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTEXRow.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `fsn≡` | `YiPMEXRow.F tbᶠ.fsn≡` |
+| `fsn≡ˣ` | `YiPMEXRow.F tbᶠ.fsn≡ˣ` |
+| `fsn≡0` | `YiPMEXRow.F tbᶠ.fsn≡0` |
+| `fsn≡₊` | `YiPMEXRow.F tbᶠ.fsn≡₊` |
+| `fsn≡c` | `YiPMEXRow.F tbᶠ.fsn≡c` |
+| `labR` | `YiPMEXRow.F tbᶠ.labR` |
+| `Rt≼Lab` | `YiPMEXRow.F tbᶠ.Rt≼Lab` |
+| `row₂-btbo` | `YiPMEXRow.F tbᶠ.row₂-btbo` |
+| `row₂` | `YiPMEXRow.F tbᶠ.row₂` |
+| `down₁` | `YiPMEXRow.F tbᶠ.down₁` |
+| `down₀` | `YiPMEXRow.F tbᶠ.down₀` |
+| `row₁` | `YiPMEXRow.F tbᶠ.row₁` |
+| `row₀` | `YiPMEXRow.F tbᶠ.row₀` |
+| `rows` | `YiPMEXRow.F tbᶠ.rows` |
+| `endpoint-at` | `YiPMEXRow.F tbᶠ.endpoint-at` |
+| `endpoint-from` | `YiPMEXRow.F tbᶠ.endpoint-from` |
+
+## YiVTMWPre
+
+- 参数化对应：`YiPMMWPre.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANFam.lagda.md`、`probes/OCF/Lean/YiVTANKp.lagda.md`、`probes/OCF/Lean/YiVTANLv.lagda.md`、`probes/OCF/Lean/YiVTEVReach.lagda.md`、`probes/OCF/Lean/YiVTPHBase.lagda.md`、`probes/OCF/Lean/YiVTPHCtx.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTMWPre.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `inv-suc` | `YiPMMWPre.F tbᶠ.inv-suc` |
+| `M⁰-≼` | `YiPMMWPre.F tbᶠ.M⁰-≼` |
+| `cof++Ω` | `YiPMMWPre.F tbᶠ.cof++Ω` |
+| `fsT++′` | `YiPMMWPre.F tbᶠ.fsT++′` |
+| `fsT++` | `YiPMMWPre.F tbᶠ.fsT++` |
+| `Pre` | `YiPMMWPre.F tbᶠ.Pre` |
+| `open At B₂ hβ (pos⁰ (bs B₂ zero (ins (ins self))) (ns B₂ zero (ins (ins self)))) (pos⁰ (b⊥ B₂) (n⊥ B₂)) public` | 保持该公开重导出范围 |
+| `Pre.QHp` | `YiPMMWPre.F tbᶠ.Pre.QHp` |
+| `Pre.chainp` | `YiPMMWPre.F tbᶠ.Pre.chainp` |
+| `Pre.VWp` | `YiPMMWPre.F tbᶠ.Pre.VWp` |
+| `Pre.rowp` | `YiPMMWPre.F tbᶠ.Pre.rowp` |
+
+## YiVTEVReach
+
+- 参数化对应：`YiPMEVReach.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANEnd.lagda.md`、`probes/OCF/Lean/YiVTANKp.lagda.md`、`probes/OCF/Lean/YiVTANLv.lagda.md`、`probes/OCF/Lean/YiVTANReach.lagda.md`、`probes/OCF/Lean/YiVTEVEnd.lagda.md`、`probes/OCF/Lean/YiVTEVTw2.lagda.md`、`probes/OCF/Lean/YiVTPHCtx.lagda.md`、`probes/OCF/Lean/YiVTPHEnd.lagda.md`、`probes/OCF/Lean/YiVTTWEnd.lagda.md`、`probes/OCF/Lean/YiVTTw2Hi.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTEVReach.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `Hi` | `YiPMEVReach.F tbᶠ.Hi` |
+| `hi-dS` | `YiPMEVReach.F tbᶠ.hi-dS` |
+| `hi-dL` | `YiPMEVReach.F tbᶠ.hi-dL` |
+| `hi-dW` | `YiPMEVReach.F tbᶠ.hi-dW` |
+| `preΩ` | `YiPMEVReach.F tbᶠ.preΩ` |
+| `lim≽` | `YiPMEVReach.F tbᶠ.lim≽` |
+| `Ω≽0` | `YiPMEVReach.F tbᶠ.Ω≽0` |
+| `c1Ω` | `YiPMEVReach.F tbᶠ.c1Ω` |
+| `Ω≽1` | `YiPMEVReach.F tbᶠ.Ω≽1` |
+| `suc≽` | `YiPMEVReach.F tbᶠ.suc≽` |
+| `cv⊴` | `YiPMEVReach.F tbᶠ.cv⊴` |
+| `Lo` | `YiPMEVReach.F tbᶠ.Lo` |
+| `AtTwo` | `YiPMEVReach.F tbᶠ.AtTwo` |
+| `AtTwo.hβ` | `YiPMEVReach.F tbᶠ.AtTwo.hβ` |
+| `AtTwo.P` | `YiPMEVReach.F tbᶠ.AtTwo.P` |
+| `AtTwo.atTwo` | `YiPMEVReach.F tbᶠ.AtTwo.atTwo` |
+| `_⇐_` | `YiPMEVReach.F tbᶠ._⇐_` |
+| `⇐r` | `YiPMEVReach.F tbᶠ.⇐r` |
+| `⇐s` | `YiPMEVReach.F tbᶠ.⇐s` |
+| `⇐l` | `YiPMEVReach.F tbᶠ.⇐l` |
+| `⇐w` | `YiPMEVReach.F tbᶠ.⇐w` |
+| `reach` | `YiPMEVReach.F tbᶠ.reach` |
+
+## YiVTPHBase
+
+- 参数化对应：`YiPMPHBase.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANReach.lagda.md`、`probes/OCF/Lean/YiVTPHCtx.lagda.md`、`probes/OCF/Lean/YiVTPHEnd.lagda.md`、`probes/OCF/Lean/YiVTTw2Hi.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTPHBase.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `three` | `YiPMPHBase.F tbᶠ.three` |
+| `u₂` | `YiPMPHBase.F tbᶠ.u₂` |
+| `ψ₂ᵗ` | `YiPMPHBase.F tbᶠ.ψ₂ᵗ` |
+| `Low²` | `YiPMPHBase.F tbᶠ.Low²` |
+| `Nu²` | `YiPMPHBase.F tbᶠ.Nu²` |
+| `M²` | `YiPMPHBase.F tbᶠ.M²` |
+| `G²` | `YiPMPHBase.F tbᶠ.G²` |
+| `Mβ₂` | `YiPMPHBase.F tbᶠ.Mβ₂` |
+| `Pu⁰` | `YiPMPHBase.F tbᶠ.Pu⁰` |
+| `Pu¹` | `YiPMPHBase.F tbᶠ.Pu¹` |
+| `P2` | `YiPMPHBase.F tbᶠ.P2` |
+| `P2.Bᵃ` | `YiPMPHBase.F tbᶠ.P2.Bᵃ` |
+| `P2.β₂` | `YiPMPHBase.F tbᶠ.P2.β₂` |
+| `P2.nβ₂` | `YiPMPHBase.F tbᶠ.P2.nβ₂` |
+| `P2.F²` | `YiPMPHBase.F tbᶠ.P2.F²` |
+| `P2.nzF²` | `YiPMPHBase.F tbᶠ.P2.nzF²` |
+| `P2.monoF²` | `YiPMPHBase.F tbᶠ.P2.monoF²` |
+| `P2.P²` | `YiPMPHBase.F tbᶠ.P2.P²` |
+| `P2.z` | `YiPMPHBase.F tbᶠ.P2.z` |
+| `P2.γ³` | `YiPMPHBase.F tbᶠ.P2.γ³` |
+| `P2.sγ³` | `YiPMPHBase.F tbᶠ.P2.sγ³` |
+
+## YiVTPHCtx
+
+- 参数化对应：`YiPMPHCtx.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANKp.lagda.md`、`probes/OCF/Lean/YiVTANLv.lagda.md`、`probes/OCF/Lean/YiVTPHEnd.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTPHCtx.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `Ctx` | `YiPMPHCtx.F tbᶠ.Ctx` |
+| `ε` | `YiPMPHCtx.F tbᶠ.ε` |
+| `_▸_` | `YiPMPHCtx.F tbᶠ._▸_` |
+| `⟦_⟧` | `YiPMPHCtx.F tbᶠ.⟦_⟧` |
+| `cm` | `YiPMPHCtx.F tbᶠ.cm` |
+| `c⊴` | `YiPMPHCtx.F tbᶠ.c⊴` |
+| `eΩ` | `YiPMPHCtx.F tbᶠ.eΩ` |
+| `eΩt` | `YiPMPHCtx.F tbᶠ.eΩt` |
+| `up⊵` | `YiPMPHCtx.F tbᶠ.up⊵` |
+| `L1` | `YiPMPHCtx.F tbᶠ.L1` |
+| `L1.F¹` | `YiPMPHCtx.F tbᶠ.L1.F¹` |
+| `L1.nzF¹` | `YiPMPHCtx.F tbᶠ.L1.nzF¹` |
+| `L1.monoF¹` | `YiPMPHCtx.F tbᶠ.L1.monoF¹` |
+| `L1.PFp` | `YiPMPHCtx.F tbᶠ.L1.PFp` |
+| `L1.lbs` | `YiPMPHCtx.F tbᶠ.L1.lbs` |
+| `L1.lns` | `YiPMPHCtx.F tbᶠ.L1.lns` |
+| `L1.lift` | `YiPMPHCtx.F tbᶠ.L1.lift` |
+| `Ctx3` | `YiPMPHCtx.F tbᶠ.Ctx3` |
+| `open P2 B₃ hβ₂ public` | 保持该公开重导出范围 |
+| `Ctx3.β₁` | `YiPMPHCtx.F tbᶠ.Ctx3.β₁` |
+| `Ctx3.nβ₁` | `YiPMPHCtx.F tbᶠ.Ctx3.nβ₁` |
+| `Ctx3.β₀` | `YiPMPHCtx.F tbᶠ.Ctx3.β₀` |
+| `Ctx3.nβ₀` | `YiPMPHCtx.F tbᶠ.Ctx3.nβ₀` |
+| `Ctx3.F₁` | `YiPMPHCtx.F tbᶠ.Ctx3.F₁` |
+| `Ctx3.nzF₁` | `YiPMPHCtx.F tbᶠ.Ctx3.nzF₁` |
+| `Ctx3.H` | `YiPMPHCtx.F tbᶠ.Ctx3.H` |
+| `Ctx3.nzH` | `YiPMPHCtx.F tbᶠ.Ctx3.nzH` |
+| `Ctx3.W` | `YiPMPHCtx.F tbᶠ.Ctx3.W` |
+| `Ctx3.nzW` | `YiPMPHCtx.F tbᶠ.Ctx3.nzW` |
+| `Ctx3.F²⊵` | `YiPMPHCtx.F tbᶠ.Ctx3.F²⊵` |
+| `Ctx3.m1F` | `YiPMPHCtx.F tbᶠ.Ctx3.m1F` |
+| `Ctx3.m0H` | `YiPMPHCtx.F tbᶠ.Ctx3.m0H` |
+| `Ctx3.m0W` | `YiPMPHCtx.F tbᶠ.Ctx3.m0W` |
+| `Ctx3.Cl` | `YiPMPHCtx.F tbᶠ.Ctx3.Cl` |
+| `Ctx3.Cl.cF` | `YiPMPHCtx.F tbᶠ.Ctx3.Cl.cF` |
+| `Ctx3.Cl.cH` | `YiPMPHCtx.F tbᶠ.Ctx3.Cl.cH` |
+| `Ctx3.Cl.cW` | `YiPMPHCtx.F tbᶠ.Ctx3.Cl.cW` |
+| `Ctx3.Cl-up◃` | `YiPMPHCtx.F tbᶠ.Ctx3.Cl-up◃` |
+| `Ctx3.Cl-up⊴` | `YiPMPHCtx.F tbᶠ.Ctx3.Cl-up⊴` |
+| `Ctx3.Cl-lim` | `YiPMPHCtx.F tbᶠ.Ctx3.Cl-lim` |
+| `Ctx3.Nd1` | `YiPMPHCtx.F tbᶠ.Ctx3.Nd1` |
+| `Ctx3.Nd1.vch` | `YiPMPHCtx.F tbᶠ.Ctx3.Nd1.vch` |
+| `Ctx3.Nd1.nodeF` | `YiPMPHCtx.F tbᶠ.Ctx3.Nd1.nodeF` |
+| `Ctx3.Nd1.nodeH` | `YiPMPHCtx.F tbᶠ.Ctx3.Nd1.nodeH` |
+| `Ctx3.Nd1.nodeW` | `YiPMPHCtx.F tbᶠ.Ctx3.Nd1.nodeW` |
+| `Ctx3.Nd1.nodeCl` | `YiPMPHCtx.F tbᶠ.Ctx3.Nd1.nodeCl` |
+| `Ctx3.Nd0` | `YiPMPHCtx.F tbᶠ.Ctx3.Nd0` |
+| `Ctx3.Nd0.wch` | `YiPMPHCtx.F tbᶠ.Ctx3.Nd0.wch` |
+| `Ctx3.Nd0.nodeH` | `YiPMPHCtx.F tbᶠ.Ctx3.Nd0.nodeH` |
+| `Ctx3.Nd0.nodeW` | `YiPMPHCtx.F tbᶠ.Ctx3.Nd0.nodeW` |
+| `Ctx3.Leaf` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf` |
+| `Ctx3.Leaf.X₀` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.X₀` |
+| `Ctx3.Leaf.D₁` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.D₁` |
+| `Ctx3.Leaf.PL` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.PL` |
+| `Ctx3.Leaf.gL` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.gL` |
+| `Ctx3.Leaf.Q` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.Q` |
+| `Ctx3.Leaf.cQ` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.cQ` |
+| `Ctx3.Leaf.fQ` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.fQ` |
+| `Ctx3.Leaf.γ` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.γ` |
+| `Ctx3.Leaf.sγ` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.sγ` |
+| `Ctx3.Leaf.lfH` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.lfH` |
+| `Ctx3.Leaf.lfW` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.lfW` |
+| `Ctx3.Leaf.leafΩ₁` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.leafΩ₁` |
+| `Ctx3.Leaf.leafCl` | `YiPMPHCtx.F tbᶠ.Ctx3.Leaf.leafCl` |
+| `Ctx3.Kn` | `YiPMPHCtx.F tbᶠ.Ctx3.Kn` |
+| `Ctx3.Kn.k1` | `YiPMPHCtx.F tbᶠ.Ctx3.Kn.k1` |
+| `Ctx3.Kn.k0` | `YiPMPHCtx.F tbᶠ.Ctx3.Kn.k0` |
+| `Ctx3.kn₀` | `YiPMPHCtx.F tbᶠ.Ctx3.kn₀` |
+| `Ctx3.TC` | `YiPMPHCtx.F tbᶠ.Ctx3.TC` |
+| `Ctx3.ext` | `YiPMPHCtx.F tbᶠ.Ctx3.ext` |
+| `Ctx3.TC-up◃` | `YiPMPHCtx.F tbᶠ.Ctx3.TC-up◃` |
+| `Ctx3.TC-up⊴` | `YiPMPHCtx.F tbᶠ.Ctx3.TC-up⊴` |
+| `Ctx3.leafTC` | `YiPMPHCtx.F tbᶠ.Ctx3.leafTC` |
+| `Ctx3.limTC` | `YiPMPHCtx.F tbᶠ.Ctx3.limTC` |
+| `Ctx3.Next` | `YiPMPHCtx.F tbᶠ.Ctx3.Next` |
+| `Ctx3.Next.p′` | `YiPMPHCtx.F tbᶠ.Ctx3.Next.p′` |
+| `Ctx3.Next.stepN` | `YiPMPHCtx.F tbᶠ.Ctx3.Next.stepN` |
+| `Ctx3.Next.nextL` | `YiPMPHCtx.F tbᶠ.Ctx3.Next.nextL` |
+| `Ctx3.Node0` | `YiPMPHCtx.F tbᶠ.Ctx3.Node0` |
+| `Ctx3.Node0.G` | `YiPMPHCtx.F tbᶠ.Ctx3.Node0.G` |
+| `Ctx3.Node0.Q` | `YiPMPHCtx.F tbᶠ.Ctx3.Node0.Q` |
+| `Ctx3.Node0.cQ` | `YiPMPHCtx.F tbᶠ.Ctx3.Node0.cQ` |
+| `Ctx3.Node0.fQ` | `YiPMPHCtx.F tbᶠ.Ctx3.Node0.fQ` |
+| `Ctx3.Node0.B′` | `YiPMPHCtx.F tbᶠ.Ctx3.Node0.B′` |
+| `Ctx3.Node0.cB` | `YiPMPHCtx.F tbᶠ.Ctx3.Node0.cB` |
+| `Ctx3.Node0.fB` | `YiPMPHCtx.F tbᶠ.Ctx3.Node0.fB` |
+| `Ctx3.Node0.atη` | `YiPMPHCtx.F tbᶠ.Ctx3.Node0.atη` |
+| `Ctx3.Node0.chain` | `YiPMPHCtx.F tbᶠ.Ctx3.Node0.chain` |
+| `Ctx3.Node0.node` | `YiPMPHCtx.F tbᶠ.Ctx3.Node0.node` |
+| `Ctx3.Node1` | `YiPMPHCtx.F tbᶠ.Ctx3.Node1` |
+| `Ctx3.Node1.G` | `YiPMPHCtx.F tbᶠ.Ctx3.Node1.G` |
+| `Ctx3.Node1.Q` | `YiPMPHCtx.F tbᶠ.Ctx3.Node1.Q` |
+| `Ctx3.Node1.cQ` | `YiPMPHCtx.F tbᶠ.Ctx3.Node1.cQ` |
+| `Ctx3.Node1.fQ` | `YiPMPHCtx.F tbᶠ.Ctx3.Node1.fQ` |
+| `Ctx3.Node1.γ` | `YiPMPHCtx.F tbᶠ.Ctx3.Node1.γ` |
+| `Ctx3.Node1.atη` | `YiPMPHCtx.F tbᶠ.Ctx3.Node1.atη` |
+| `Ctx3.Node1.chain` | `YiPMPHCtx.F tbᶠ.Ctx3.Node1.chain` |
+| `Ctx3.Node1.node` | `YiPMPHCtx.F tbᶠ.Ctx3.Node1.node` |
+| `Ctx3.Tu⁰` | `YiPMPHCtx.F tbᶠ.Ctx3.Tu⁰` |
+| `Ctx3.Tu¹` | `YiPMPHCtx.F tbᶠ.Ctx3.Tu¹` |
+| `Ctx3.T²` | `YiPMPHCtx.F tbᶠ.Ctx3.T²` |
+| `Ctx3.Ω₃ᵗ` | `YiPMPHCtx.F tbᶠ.Ctx3.Ω₃ᵗ` |
+| `Ctx3.form³` | `YiPMPHCtx.F tbᶠ.Ctx3.form³` |
+| `Ctx3.rowW` | `YiPMPHCtx.F tbᶠ.Ctx3.rowW` |
+| `Ctx3.row³` | `YiPMPHCtx.F tbᶠ.Ctx3.row³` |
+| `Ctx3.cΩ₃` | `YiPMPHCtx.F tbᶠ.Ctx3.cΩ₃` |
+| `Ctx3.anchor³` | `YiPMPHCtx.F tbᶠ.Ctx3.anchor³` |
+
+## YiVTANFam
+
+- 参数化对应：`YiPMANFam.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANEnd.lagda.md`、`probes/OCF/Lean/YiVTANKp.lagda.md`、`probes/OCF/Lean/YiVTANLv.lagda.md`、`probes/OCF/Lean/YiVTTw2Hi.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTANFam.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `fin` | `YiPMANFam.F tbᶠ.fin` |
+| `slot` | `YiPMANFam.F tbᶠ.slot` |
+| `slot≤` | `YiPMANFam.F tbᶠ.slot≤` |
+| `Nw` | `YiPMANFam.F tbᶠ.Nw` |
+| `M` | `YiPMANFam.F tbᶠ.M` |
+| `Lw` | `YiPMANFam.F tbᶠ.Lw` |
+| `GM` | `YiPMANFam.F tbᶠ.GM` |
+| `mwN` | `YiPMANFam.F tbᶠ.mwN` |
+| `m⊴N` | `YiPMANFam.F tbᶠ.m⊴N` |
+| `mzN` | `YiPMANFam.F tbᶠ.mzN` |
+| `mLN` | `YiPMANFam.F tbᶠ.mLN` |
+| `cumN` | `YiPMANFam.F tbᶠ.cumN` |
+| `to¹` | `YiPMANFam.F tbᶠ.to¹` |
+| `ψᴺ` | `YiPMANFam.F tbᶠ.ψᴺ` |
+| `Ωᴺ` | `YiPMANFam.F tbᶠ.Ωᴺ` |
+| `cof-nat` | `YiPMANFam.F tbᶠ.cof-nat` |
+| `pred-nat` | `YiPMANFam.F tbᶠ.pred-nat` |
+| `cofΩ` | `YiPMANFam.F tbᶠ.cofΩ` |
+| `fsTΩ` | `YiPMANFam.F tbᶠ.fsTΩ` |
+| `Pen` | `YiPMANFam.F tbᶠ.Pen` |
+| `cmp-gt` | `YiPMANFam.F tbᶠ.cmp-gt` |
+| `cmp-pen` | `YiPMANFam.F tbᶠ.cmp-pen` |
+| `cofK` | `YiPMANFam.F tbᶠ.cofK` |
+| `fsTK` | `YiPMANFam.F tbᶠ.fsTK` |
+| `cofG` | `YiPMANFam.F tbᶠ.cofG` |
+| `fsnG` | `YiPMANFam.F tbᶠ.fsnG` |
+| `penN` | `YiPMANFam.F tbᶠ.penN` |
+| `Mβ` | `YiPMANFam.F tbᶠ.Mβ` |
+| `FD` | `YiPMANFam.F tbᶠ.FD` |
+| `fd0` | `YiPMANFam.F tbᶠ.fd0` |
+| `fds` | `YiPMANFam.F tbᶠ.fds` |
+| `dn` | `YiPMANFam.F tbᶠ.dn` |
+| `mvS` | `YiPMANFam.F tbᶠ.mvS` |
+| `mvN` | `YiPMANFam.F tbᶠ.mvN` |
+| `mvL` | `YiPMANFam.F tbᶠ.mvL` |
+| `Pu⁰` | `YiPMANFam.F tbᶠ.Pu⁰` |
+| `Pu` | `YiPMANFam.F tbᶠ.Pu` |
+| `Puˢ` | `YiPMANFam.F tbᶠ.Puˢ` |
+| `Self` | `YiPMANFam.F tbᶠ.Self` |
+| `Self.F` | `YiPMANFam.F tbᶠ.Self.F` |
+| `Self.nzF` | `YiPMANFam.F tbᶠ.Self.nzF` |
+| `Self.monoF` | `YiPMANFam.F tbᶠ.Self.monoF` |
+| `Self.PF` | `YiPMANFam.F tbᶠ.Self.PF` |
+| `Self.z` | `YiPMANFam.F tbᶠ.Self.z` |
+| `Self.gch` | `YiPMANFam.F tbᶠ.Self.gch` |
+| `Self.sγ` | `YiPMANFam.F tbᶠ.Self.sγ` |
+
+## YiVTANKp
+
+- 参数化对应：`YiPMANKp.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANLv.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTANKp.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `≤ⁿ-refl` | `YiPMANKp.F tbᶠ.≤ⁿ-refl` |
+| `≤ⁿ-trans` | `YiPMANKp.F tbᶠ.≤ⁿ-trans` |
+| `≤ⁿ-step` | `YiPMANKp.F tbᶠ.≤ⁿ-step` |
+| `≤ⁿ-pred` | `YiPMANKp.F tbᶠ.≤ⁿ-pred` |
+| `¬s≤` | `YiPMANKp.F tbᶠ.¬s≤` |
+| `cmpℕ` | `YiPMANKp.F tbᶠ.cmpℕ` |
+| `Ctx` | `YiPMANKp.F tbᶠ.Ctx` |
+| `•` | `YiPMANKp.F tbᶠ.•` |
+| `_▸_` | `YiPMANKp.F tbᶠ._▸_` |
+| `⟦_⟧` | `YiPMANKp.F tbᶠ.⟦_⟧` |
+| `cm` | `YiPMANKp.F tbᶠ.cm` |
+| `c⊴` | `YiPMANKp.F tbᶠ.c⊴` |
+| `eΩ` | `YiPMANKp.F tbᶠ.eΩ` |
+| `eΩt` | `YiPMANKp.F tbᶠ.eΩt` |
+| `z⊴` | `YiPMANKp.F tbᶠ.z⊴` |
+| `atP` | `YiPMANKp.F tbᶠ.atP` |
+| `atP-map` | `YiPMANKp.F tbᶠ.atP-map` |
+| `atP-up` | `YiPMANKp.F tbᶠ.atP-up` |
+| `atP-cum` | `YiPMANKp.F tbᶠ.atP-cum` |
+| `toLw` | `YiPMANKp.F tbᶠ.toLw` |
+| `fo` | `YiPMANKp.F tbᶠ.fo` |
+| `fo-nz` | `YiPMANKp.F tbᶠ.fo-nz` |
+| `fo-mono` | `YiPMANKp.F tbᶠ.fo-mono` |
+| `fo-⊴` | `YiPMANKp.F tbᶠ.fo-⊴` |
+| `fo⊵` | `YiPMANKp.F tbᶠ.fo⊵` |
+| `vch` | `YiPMANKp.F tbᶠ.vch` |
+| `⊥-⊴` | `YiPMANKp.F tbᶠ.⊥-⊴` |
+| `kpDrop` | `YiPMANKp.F tbᶠ.kpDrop` |
+| `kpKeep` | `YiPMANKp.F tbᶠ.kpKeep` |
+| `Tm` | `YiPMANKp.F tbᶠ.Tm` |
+| `Tm.trmS` | `YiPMANKp.F tbᶠ.Tm.trmS` |
+| `Tm.trmKS` | `YiPMANKp.F tbᶠ.Tm.trmKS` |
+| `Tm.ĉ` | `YiPMANKp.F tbᶠ.Tm.ĉ` |
+| `Tm.lCof` | `YiPMANKp.F tbᶠ.Tm.lCof` |
+| `Tm.lFsn` | `YiPMANKp.F tbᶠ.Tm.lFsn` |
+| `Tm.γ≡ĉ` | `YiPMANKp.F tbᶠ.Tm.γ≡ĉ` |
+| `Tm.gCof` | `YiPMANKp.F tbᶠ.Tm.gCof` |
+| `Tm.gFsn` | `YiPMANKp.F tbᶠ.Tm.gFsn` |
+| `Tm.Gd` | `YiPMANKp.F tbᶠ.Tm.Gd` |
+| `Tm.Gd.gok` | `YiPMANKp.F tbᶠ.Tm.Gd.gok` |
+| `Tm.Gd.g⊥` | `YiPMANKp.F tbᶠ.Tm.Gd.g⊥` |
+| `Tm.Gd.g0` | `YiPMANKp.F tbᶠ.Tm.Gd.g0` |
+| `open Gd public` | 保持该公开重导出范围 |
+| `Tm.gd-dS` | `YiPMANKp.F tbᶠ.Tm.gd-dS` |
+| `Tm.GF` | `YiPMANKp.F tbᶠ.Tm.GF` |
+| `Tm.gB′` | `YiPMANKp.F tbᶠ.Tm.gB′` |
+| `Tm.gBs` | `YiPMANKp.F tbᶠ.Tm.gBs` |
+| `Tm.ΩR` | `YiPMANKp.F tbᶠ.Tm.ΩR` |
+| `Tm.One` | `YiPMANKp.F tbᶠ.Tm.One` |
+| `Tm.One.QH1` | `YiPMANKp.F tbᶠ.Tm.One.QH1` |
+| `Tm.One.VW1` | `YiPMANKp.F tbᶠ.Tm.One.VW1` |
+| `MβC` | `YiPMANKp.F tbᶠ.MβC` |
+
+## YiVTANLv
+
+- 参数化对应：`YiPMANLv.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANEnd.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTANLv.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `split≤` | `YiPMANLv.F tbᶠ.split≤` |
+| `Lv` | `YiPMANLv.F tbᶠ.Lv` |
+| `Lv.Bot` | `YiPMANLv.F tbᶠ.Lv.Bot` |
+| `Lv.bot-up` | `YiPMANLv.F tbᶠ.Lv.bot-up` |
+| `Lv.bot-cum` | `YiPMANLv.F tbᶠ.Lv.bot-cum` |
+| `Lv.B0` | `YiPMANLv.F tbᶠ.Lv.B0` |
+| `Lv.B0-up` | `YiPMANLv.F tbᶠ.Lv.B0-up` |
+| `Lv.rootΩ` | `YiPMANLv.F tbᶠ.Lv.rootΩ` |
+| `Lv.Her` | `YiPMANLv.F tbᶠ.Lv.Her` |
+| `Lv.RelP` | `YiPMANLv.F tbᶠ.Lv.RelP` |
+| `Lv.Cl` | `YiPMANLv.F tbᶠ.Lv.Cl` |
+| `Lv.Kn` | `YiPMANLv.F tbᶠ.Lv.Kn` |
+| `Lv.TC` | `YiPMANLv.F tbᶠ.Lv.TC` |
+| `Lv.toAt` | `YiPMANLv.F tbᶠ.Lv.toAt` |
+| `Lv.fromAt` | `YiPMANLv.F tbᶠ.Lv.fromAt` |
+| `Lv.relM` | `YiPMANLv.F tbᶠ.Lv.relM` |
+| `Lv.relBot` | `YiPMANLv.F tbᶠ.Lv.relBot` |
+| `Lv.Th` | `YiPMANLv.F tbᶠ.Lv.Th` |
+| `Lv.Th.tcUp` | `YiPMANLv.F tbᶠ.Lv.Th.tcUp` |
+| `Lv.Th.tcLim` | `YiPMANLv.F tbᶠ.Lv.Th.tcLim` |
+| `Lv.Th.tcLimc` | `YiPMANLv.F tbᶠ.Lv.Th.tcLimc` |
+| `Lv.Th.tcNode` | `YiPMANLv.F tbᶠ.Lv.Th.tcNode` |
+| `Lv.Th.tcLeaf` | `YiPMANLv.F tbᶠ.Lv.Th.tcLeaf` |
+| `Lv.Th.tcMain` | `YiPMANLv.F tbᶠ.Lv.Th.tcMain` |
+| `Lv.Low` | `YiPMANLv.F tbᶠ.Lv.Low` |
+| `Lv.SubRow` | `YiPMANLv.F tbᶠ.Lv.SubRow` |
+| `Lv.subOf` | `YiPMANLv.F tbᶠ.Lv.subOf` |
+| `Lv.Level` | `YiPMANLv.F tbᶠ.Lv.Level` |
+| `Lv.Level.herUp` | `YiPMANLv.F tbᶠ.Lv.Level.herUp` |
+| `Lv.Level.herLim` | `YiPMANLv.F tbᶠ.Lv.Level.herLim` |
+| `Lv.Level.herLimc` | `YiPMANLv.F tbᶠ.Lv.Level.herLimc` |
+| `Lv.Level.herNode` | `YiPMANLv.F tbᶠ.Lv.Level.herNode` |
+| `Lv.Level.relUp` | `YiPMANLv.F tbᶠ.Lv.Level.relUp` |
+| `Lv.Level.relUp⊴` | `YiPMANLv.F tbᶠ.Lv.Level.relUp⊴` |
+| `Lv.Level.relLim` | `YiPMANLv.F tbᶠ.Lv.Level.relLim` |
+| `Lv.Level.relLimc` | `YiPMANLv.F tbᶠ.Lv.Level.relLimc` |
+| `Lv.Level.rootRel` | `YiPMANLv.F tbᶠ.Lv.Level.rootRel` |
+| `Lv.Level.Bs` | `YiPMANLv.F tbᶠ.Lv.Level.Bs` |
+| `Lv.Level.Bs.ClD` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.ClD` |
+| `Lv.Level.Bs.KnD` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.KnD` |
+| `Lv.Level.Bs.TCD` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.TCD` |
+| `Lv.Level.Bs.fo′` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.fo′` |
+| `Lv.Level.Bs.Cl-up◃` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Cl-up◃` |
+| `Lv.Level.Bs.Cl-up⊴` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Cl-up⊴` |
+| `Lv.Level.Bs.Cl-lim` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Cl-lim` |
+| `Lv.Level.Bs.tcUp◃` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.tcUp◃` |
+| `Lv.Level.Bs.tcUp⊴` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.tcUp⊴` |
+| `Lv.Level.Bs.tcLim` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.tcLim` |
+| `Lv.Level.Bs.knRoot` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.knRoot` |
+| `Lv.Level.Bs.ext` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.ext` |
+| `Lv.Level.Bs.knJunk` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.knJunk` |
+| `Lv.Level.Bs.knCl` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.knCl` |
+| `Lv.Level.Bs.tcLimc` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.tcLimc` |
+| `Lv.Level.Bs.Nd` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Nd` |
+| `Lv.Level.Bs.Nd.i₀` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Nd.i₀` |
+| `Lv.Level.Bs.Nd.vc` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Nd.vc` |
+| `Lv.Level.Bs.Nd.sk` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Nd.sk` |
+| `Lv.Level.Bs.Nd.dropP` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Nd.dropP` |
+| `Lv.Level.Bs.Nd.bot⊥` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Nd.bot⊥` |
+| `Lv.Level.Bs.nodeCl` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.nodeCl` |
+| `Lv.Level.Bs.tcNode` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.tcNode` |
+| `Lv.Level.Bs.Leaf` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf` |
+| `Lv.Level.Bs.Leaf.X₀` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.X₀` |
+| `Lv.Level.Bs.Leaf.gL` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.gL` |
+| `Lv.Level.Bs.Leaf.D₀` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.D₀` |
+| `Lv.Level.Bs.Leaf.g₀` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.g₀` |
+| `Lv.Level.Bs.Leaf.βX` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.βX` |
+| `Lv.Level.Bs.Leaf.nβX` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.nβX` |
+| `Lv.Level.Bs.Leaf.s` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.s` |
+| `Lv.Level.Bs.Leaf.e` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.e` |
+| `Lv.Level.Bs.Leaf.fs` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.fs` |
+| `Lv.Level.Bs.Leaf.hΩ` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.hΩ` |
+| `Lv.Level.Bs.Leaf.hΩM` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.hΩM` |
+| `Lv.Level.Bs.Leaf.hP` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.hP` |
+| `Lv.Level.Bs.Leaf.kb₀` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.kb₀` |
+| `Lv.Level.Bs.Leaf.kn₀` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.kn₀` |
+| `Lv.Level.Bs.Leaf.sub` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.sub` |
+| `Lv.Level.Bs.Leaf.ĉ≡` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.ĉ≡` |
+| `Lv.Level.Bs.Leaf.skq` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.skq` |
+| `Lv.Level.Bs.Leaf.κ` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.κ` |
+| `Lv.Level.Bs.Leaf.rows` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.rows` |
+| `Lv.Level.Bs.Leaf.rows⊥` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.rows⊥` |
+| `Lv.Level.Bs.Leaf.leafCl` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Leaf.leafCl` |
+| `Lv.Level.Bs.tcLeaf` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.tcLeaf` |
+| `Lv.Level.Bs.Nx` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Nx` |
+| `Lv.Level.Bs.Nx.p′` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Nx.p′` |
+| `Lv.Level.Bs.Nx.stepN` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Nx.stepN` |
+| `Lv.Level.Bs.Nx.nextL` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Nx.nextL` |
+| `Lv.Level.Bs.Tu⁰` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Tu⁰` |
+| `Lv.Level.Bs.Tu` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Tu` |
+| `Lv.Level.Bs.Tuˢ` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Tuˢ` |
+| `Lv.Level.Bs.Mn` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Mn` |
+| `Lv.Level.Bs.Mn.F⊵` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Mn.F⊵` |
+| `Lv.Level.Bs.Mn.main` | `YiPMANLv.F tbᶠ.Lv.Level.Bs.Mn.main` |
+| `Lv.Level.mk` | `YiPMANLv.F tbᶠ.Lv.Level.mk` |
+| `Lv.thB` | `YiPMANLv.F tbᶠ.Lv.thB` |
+| `Lv.th` | `YiPMANLv.F tbᶠ.Lv.th` |
+| `Lv.Anchor` | `YiPMANLv.F tbᶠ.Lv.Anchor` |
+| `Lv.Anchor.Dᵃ` | `YiPMANLv.F tbᶠ.Lv.Anchor.Dᵃ` |
+| `Lv.Anchor.gᵃ` | `YiPMANLv.F tbᶠ.Lv.Anchor.gᵃ` |
+| `Lv.Anchor.β` | `YiPMANLv.F tbᶠ.Lv.Anchor.β` |
+| `Lv.Anchor.nβ` | `YiPMANLv.F tbᶠ.Lv.Anchor.nβ` |
+| `Lv.Anchor.hβ` | `YiPMANLv.F tbᶠ.Lv.Anchor.hβ` |
+| `open Self (suc m) ε ρ Dᵃ β nβ public` | 保持该公开重导出范围 |
+| `Lv.Anchor.W` | `YiPMANLv.F tbᶠ.Lv.Anchor.W` |
+| `Lv.Anchor.nzW` | `YiPMANLv.F tbᶠ.Lv.Anchor.nzW` |
+| `Lv.Anchor.tcβ` | `YiPMANLv.F tbᶠ.Lv.Anchor.tcβ` |
+| `Lv.Anchor.hΩM` | `YiPMANLv.F tbᶠ.Lv.Anchor.hΩM` |
+| `Lv.Anchor.rowW` | `YiPMANLv.F tbᶠ.Lv.Anchor.rowW` |
+| `Lv.Anchor.form` | `YiPMANLv.F tbᶠ.Lv.Anchor.form` |
+| `Lv.Anchor.row` | `YiPMANLv.F tbᶠ.Lv.Anchor.row` |
+| `Lv.Anchor.γ≡` | `YiPMANLv.F tbᶠ.Lv.Anchor.γ≡` |
+| `Lv.Anchor.cΩ₁` | `YiPMANLv.F tbᶠ.Lv.Anchor.cΩ₁` |
+| `Lv.Anchor.fΩ₁` | `YiPMANLv.F tbᶠ.Lv.Anchor.fΩ₁` |
+| `Lv.Anchor.anchor` | `YiPMANLv.F tbᶠ.Lv.Anchor.anchor` |
+
+## YiVTANReach
+
+- 参数化对应：`YiPMANReach.F tbᶠ`。
+- 类别：import-only-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANEnd.lagda.md`、`probes/OCF/Lean/YiVTTw2Hi.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTANReach.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `Reach` | `YiPMANReach.F tbᶠ.Reach` |
+| `Reach.LoG` | `YiPMANReach.F tbᶠ.Reach.LoG` |
+| `Reach.Anchor` | `YiPMANReach.F tbᶠ.Reach.Anchor` |
+| `Reach.reachG` | `YiPMANReach.F tbᶠ.Reach.reachG` |
+| `reach₂` | `YiPMANReach.F tbᶠ.reach₂` |
+| `reach₃` | `YiPMANReach.F tbᶠ.reach₃` |
+
+## YiVTLSFold
+
+- 参数化对应：`YiPMLSFold.F tbᶠ`。
+- 类别：hand-edited-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANEnd.lagda.md`、`probes/OCF/Lean/YiVTANKp.lagda.md`、`probes/OCF/Lean/YiVTANLv.lagda.md`、`probes/OCF/Lean/YiVTANReach.lagda.md`、`probes/OCF/Lean/YiVTEBBtbo.lagda.md`、`probes/OCF/Lean/YiVTEBShape.lagda.md`、`probes/OCF/Lean/YiVTEVEnd.lagda.md`、`probes/OCF/Lean/YiVTEVReach.lagda.md`、`probes/OCF/Lean/YiVTEVTw2.lagda.md`、`probes/OCF/Lean/YiVTEmb.lagda.md`、`probes/OCF/Lean/YiVTHi.lagda.md`、`probes/OCF/Lean/YiVTLSBtbo.lagda.md`、`probes/OCF/Lean/YiVTLSTw1.lagda.md`、`probes/OCF/Lean/YiVTPHCtx.lagda.md`、`probes/OCF/Lean/YiVTPHEnd.lagda.md`、`probes/OCF/Lean/YiVTT2Frame.lagda.md`、`probes/OCF/Lean/YiVTTWEnd.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTLSFold.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `+ι⊴` | `YiPMLSFold.F tbᶠ.+ι⊴` |
+| `Up-⊵` | `YiPMLSFold.F tbᶠ.Up-⊵` |
+| `Upc-⊵` | `YiPMLSFold.F tbᶠ.Upc-⊵` |
+| `ψ⊥-⊵` | `YiPMLSFold.F tbᶠ.ψ⊥-⊵` |
+| `ψs-⊵` | `YiPMLSFold.F tbᶠ.ψs-⊵` |
+| `OKB` | `YiPMLSFold.F tbᶠ.OKB` |
+| `ok-B₀` | `YiPMLSFold.F tbᶠ.ok-B₀` |
+| `ok-dS` | `YiPMLSFold.F tbᶠ.ok-dS` |
+| `ok-dL` | `YiPMLSFold.F tbᶠ.ok-dL` |
+| `NL` | `YiPMLSFold.F tbᶠ.NL` |
+| `n0` | `YiPMLSFold.F tbᶠ.n0` |
+| `n+` | `YiPMLSFold.F tbᶠ.n+` |
+| `nω` | `YiPMLSFold.F tbᶠ.nω` |
+| `nlW` | `YiPMLSFold.F tbᶠ.nlW` |
+| `nl-at` | `YiPMLSFold.F tbᶠ.nl-at` |
+| `nl-at⁼` | `YiPMLSFold.F tbᶠ.nl-at⁼` |
+| `POS` | `YiPMLSFold.F tbᶠ.POS` |
+| `notBelow` | `YiPMLSFold.F tbᶠ.notBelow` |
+| `psh-at` | `YiPMLSFold.F tbᶠ.psh-at` |
+| `psh-rel` | `YiPMLSFold.F tbᶠ.psh-rel` |
+| `Keep` | `YiPMLSFold.F tbᶠ.Keep` |
+| `Keep.lev` | `YiPMLSFold.F tbᶠ.Keep.lev` |
+| `Keep.conv` | `YiPMLSFold.F tbᶠ.Keep.conv` |
+| `Keep.below` | `YiPMLSFold.F tbᶠ.Keep.below` |
+| `Dflt` | `YiPMLSFold.F tbᶠ.Dflt` |
+| `keep-psh` | `YiPMLSFold.F tbᶠ.keep-psh` |
+| `dflt-psh` | `YiPMLSFold.F tbᶠ.dflt-psh` |
+| `kpF` | `YiPMLSFold.F tbᶠ.kpF` |
+| `kpF⁼` | `YiPMLSFold.F tbᶠ.kpF⁼` |
+| `at-chP` | `YiPMLSFold.F tbᶠ.at-chP` |
+| `at-mv` | `YiPMLSFold.F tbᶠ.at-mv` |
+| `chRel` | `YiPMLSFold.F tbᶠ.chRel` |
+| `mvRel` | `YiPMLSFold.F tbᶠ.mvRel` |
+| `toSl` | `YiPMLSFold.F tbᶠ.toSl` |
+| `relFrom` | `YiPMLSFold.F tbᶠ.relFrom` |
+| `relFrom⁼` | `YiPMLSFold.F tbᶠ.relFrom⁼` |
+| `Rel-⊴` | `YiPMLSFold.F tbᶠ.Rel-⊴` |
+| `START` | `YiPMLSFold.F tbᶠ.START` |
+| `Cfg` | `YiPMLSFold.F tbᶠ.Cfg` |
+| `St` | `YiPMLSFold.F tbᶠ.St` |
+| `fo` | `YiPMLSFold.F tbᶠ.fo` |
+| `uf` | `YiPMLSFold.F tbᶠ.uf` |
+| `run` | `YiPMLSFold.F tbᶠ.run` |
+| `run-nz` | `YiPMLSFold.F tbᶠ.run-nz` |
+| `run-mono` | `YiPMLSFold.F tbᶠ.run-mono` |
+| `stβ` | `YiPMLSFold.F tbᶠ.stβ` |
+| `run-⊵` | `YiPMLSFold.F tbᶠ.run-⊵` |
+| `can` | `YiPMLSFold.F tbᶠ.can` |
+| `nxt` | `YiPMLSFold.F tbᶠ.nxt` |
+| `nxtW` | `YiPMLSFold.F tbᶠ.nxtW` |
+| `thru` | `YiPMLSFold.F tbᶠ.thru` |
+| `run-up` | `YiPMLSFold.F tbᶠ.run-up` |
+| `run-upW` | `YiPMLSFold.F tbᶠ.run-upW` |
+| `run-thru` | `YiPMLSFold.F tbᶠ.run-thru` |
+| `nxtβ` | `YiPMLSFold.F tbᶠ.nxtβ` |
+| `nxtWβ` | `YiPMLSFold.F tbᶠ.nxtWβ` |
+| `thruβ` | `YiPMLSFold.F tbᶠ.thruβ` |
+| `nxt-⊵` | `YiPMLSFold.F tbᶠ.nxt-⊵` |
+| `OKst` | `YiPMLSFold.F tbᶠ.OKst` |
+| `ok-nxt` | `YiPMLSFold.F tbᶠ.ok-nxt` |
+| `ok-nxtW` | `YiPMLSFold.F tbᶠ.ok-nxtW` |
+| `ok-thru` | `YiPMLSFold.F tbᶠ.ok-thru` |
+| `cfgOf` | `YiPMLSFold.F tbᶠ.cfgOf` |
+| `no-nj` | `YiPMLSFold.F tbᶠ.no-nj` |
+| `Gd` | `YiPMLSFold.F tbᶠ.Gd` |
+| `Gd.g-uf` | `YiPMLSFold.F tbᶠ.Gd.g-uf` |
+| `Gd.g-fo` | `YiPMLSFold.F tbᶠ.Gd.g-fo` |
+| `good-id` | `YiPMLSFold.F tbᶠ.good-id` |
+| `good-∘` | `YiPMLSFold.F tbᶠ.good-∘` |
+| `nxt-same` | `YiPMLSFold.F tbᶠ.nxt-same` |
+| `good-nxt` | `YiPMLSFold.F tbᶠ.good-nxt` |
+| `goodW` | `YiPMLSFold.F tbᶠ.goodW` |
+| `good-thru` | `YiPMLSFold.F tbᶠ.good-thru` |
+| `stOf` | `YiPMLSFold.F tbᶠ.stOf` |
+| `finD` | `YiPMLSFold.F tbᶠ.finD` |
+| `stOf-▹` | `YiPMLSFold.F tbᶠ.stOf-▹` |
+| `good-stOf` | `YiPMLSFold.F tbᶠ.good-stOf` |
+| `ok-stOf` | `YiPMLSFold.F tbᶠ.ok-stOf` |
+| `stepD` | `YiPMLSFold.F tbᶠ.stepD` |
+| `ψ⊥c` | `YiPMLSFold.F tbᶠ.ψ⊥c` |
+| `ψ⊥-up` | `YiPMLSFold.F tbᶠ.ψ⊥-up` |
+| `stepD-⊵` | `YiPMLSFold.F tbᶠ.stepD-⊵` |
+| `deepOf` | `YiPMLSFold.F tbᶠ.deepOf` |
+| `deepOf-▹` | `YiPMLSFold.F tbᶠ.deepOf-▹` |
+| `ok-step` | `YiPMLSFold.F tbᶠ.ok-step` |
+| `ok-deep` | `YiPMLSFold.F tbᶠ.ok-deep` |
+| `liftW` | `YiPMLSFold.F tbᶠ.liftW` |
+| `stOf-can` | `YiPMLSFold.F tbᶠ.stOf-can` |
+| `J′` | `YiPMLSFold.F tbᶠ.J′` |
+| `Wch` | `YiPMLSFold.F tbᶠ.Wch` |
+| `Dref` | `YiPMLSFold.F tbᶠ.Dref` |
+| `Vch` | `YiPMLSFold.F tbᶠ.Vch` |
+| `run-ss` | `YiPMLSFold.F tbᶠ.run-ss` |
+| `ok-cfg` | `YiPMLSFold.F tbᶠ.ok-cfg` |
+| `M` | `YiPMLSFold.F tbᶠ.M` |
+| `M.top` | `YiPMLSFold.F tbᶠ.M.top` |
+| `M.ReC` | `YiPMLSFold.F tbᶠ.M.ReC` |
+| `M.top-zr` | `YiPMLSFold.F tbᶠ.M.top-zr` |
+| `M.MS` | `YiPMLSFold.F tbᶠ.M.MS` |
+| `M.Mdef` | `YiPMLSFold.F tbᶠ.M.Mdef` |
+| `M.chainS` | `YiPMLSFold.F tbᶠ.M.chainS` |
+| `M.okD` | `YiPMLSFold.F tbᶠ.M.okD` |
+| `M.rcD` | `YiPMLSFold.F tbᶠ.M.rcD` |
+| `M.VS` | `YiPMLSFold.F tbᶠ.M.VS` |
+| `lower` | `YiPMLSFold.F tbᶠ.lower` |
+
+## YiVTT2Frame
+
+- 参数化对应：`YiPMT2Frame.F tbᶠ`。
+- 类别：hand-edited-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANEnd.lagda.md`、`probes/OCF/Lean/YiVTANReach.lagda.md`、`probes/OCF/Lean/YiVTEVEnd.lagda.md`、`probes/OCF/Lean/YiVTEVReach.lagda.md`、`probes/OCF/Lean/YiVTEVTw2.lagda.md`、`probes/OCF/Lean/YiVTEmb.lagda.md`、`probes/OCF/Lean/YiVTHi.lagda.md`、`probes/OCF/Lean/YiVTPHEnd.lagda.md`、`probes/OCF/Lean/YiVTTWEnd.lagda.md`、`probes/OCF/Lean/YiVTTw2Hi.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTT2Frame.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `ok-dW` | `YiPMT2Frame.F tbᶠ.ok-dW` |
+| `up-lower` | `YiPMT2Frame.F tbᶠ.up-lower` |
+| `fallback` | `YiPMT2Frame.F tbᶠ.fallback` |
+| `inner-base` | `YiPMT2Frame.F tbᶠ.inner-base` |
+| `eqk` | `YiPMT2Frame.F tbᶠ.eqk` |
+| `ε¹` | `YiPMT2Frame.F tbᶠ.ε¹` |
+| `ρ¹` | `YiPMT2Frame.F tbᶠ.ρ¹` |
+| `β` | `YiPMT2Frame.F tbᶠ.β` |
+| `gβ` | `YiPMT2Frame.F tbᶠ.gβ` |
+| `zc` | `YiPMT2Frame.F tbᶠ.zc` |
+| `rowβ` | `YiPMT2Frame.F tbᶠ.rowβ` |
+| `nzβ` | `YiPMT2Frame.F tbᶠ.nzβ` |
+| `ββ-form` | `YiPMT2Frame.F tbᶠ.ββ-form` |
+| `row-lower` | `YiPMT2Frame.F tbᶠ.row-lower` |
+| `lw¹` | `YiPMT2Frame.F tbᶠ.lw¹` |
+| `zc-row` | `YiPMT2Frame.F tbᶠ.zc-row` |
+| `row0-form` | `YiPMT2Frame.F tbᶠ.row0-form` |
+| `tw1◃row0` | `YiPMT2Frame.F tbᶠ.tw1◃row0` |
+| `chain-closed` | `YiPMT2Frame.F tbᶠ.chain-closed` |
+| `ββ◃R1` | `YiPMT2Frame.F tbᶠ.ββ◃R1` |
+| `ββ≼tw2` | `YiPMT2Frame.F tbᶠ.ββ≼tw2` |
+| `named` | `YiPMT2Frame.F tbᶠ.named` |
+| `one` | `YiPMT2Frame.F tbᶠ.one` |
+| `two` | `YiPMT2Frame.F tbᶠ.two` |
+| `self-slot` | `YiPMT2Frame.F tbᶠ.self-slot` |
+| `IsLim` | `YiPMT2Frame.F tbᶠ.IsLim` |
+| `IsΩ` | `YiPMT2Frame.F tbᶠ.IsΩ` |
+| `flat-in` | `YiPMT2Frame.F tbᶠ.flat-in` |
+| `flat-lim` | `YiPMT2Frame.F tbᶠ.flat-lim` |
+| `note-cof` | `YiPMT2Frame.F tbᶠ.note-cof` |
+
+## YiVTEVTw2
+
+- 参数化对应：`YiPMMinEVTw2`。
+- 类别：hand-edited-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTTw2Hi.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTEVTw2.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `Kβ` | `YiPMMinEVTw2.Kβ` |
+| `compβ` | `YiPMMinEVTw2.compβ` |
+| `BWc` | `YiPMMinEVTw2.BWc` |
+| `row1-form` | `YiPMMinEVTw2.row1-form` |
+| `okW` | `YiPMMinEVTw2.okW` |
+| `hiW` | `YiPMMinEVTw2.hiW` |
+| `path₁` | `YiPMMinEVTw2.path₁` |
+| `low1` | `YiPMMinEVTw2.low1` |
+| `tA≼tw2` | `YiPMMinEVTw2.tA≼tw2` |
+| `tA≼tw2ᴿ` | `YiPMMinEVTw2.tA≼tw2ᴿ` |
+| `inst-tw2` | `YiPMMinEVTw2.inst-tw2` |
+
+## YiVTEVEnd
+
+- 参数化对应：`YiPMMinEVEnd`。
+- 类别：hand-edited-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANEnd.lagda.md`、`probes/OCF/Lean/YiVTPHEnd.lagda.md`、`probes/OCF/Lean/YiVTTWEnd.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTEVEnd.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `h₂` | `YiPMMinEVEnd.h₂` |
+| `Br0` | `YiPMMinEVEnd.Br0` |
+| `ε′` | `YiPMMinEVEnd.ε′` |
+| `ρ′` | `YiPMMinEVEnd.ρ′` |
+| `ok0` | `YiPMMinEVEnd.ok0` |
+| `c₁` | `YiPMMinEVEnd.c₁` |
+| `c₁-form` | `YiPMMinEVEnd.c₁-form` |
+| `B₁` | `YiPMMinEVEnd.B₁` |
+| `B′` | `YiPMMinEVEnd.B′` |
+| `okB′` | `YiPMMinEVEnd.okB′` |
+| `stB′` | `YiPMMinEVEnd.stB′` |
+| `hi1` | `YiPMMinEVEnd.hi1` |
+| `path₂` | `YiPMMinEVEnd.path₂` |
+| `low2` | `YiPMMinEVEnd.low2` |
+| `tA≼br2` | `YiPMMinEVEnd.tA≼br2` |
+| `tA≼EBO` | `YiPMMinEVEnd.tA≼EBO` |
+| `tA≼EBOᴿ` | `YiPMMinEVEnd.tA≼EBOᴿ` |
+| `btbo≼row₂` | `YiPMMinEVEnd.btbo≼row₂` |
+| `btbo≺EBOᴿ` | `YiPMMinEVEnd.btbo≺EBOᴿ` |
+
+## YiVTPHEnd
+
+- 参数化对应：`YiPMMinPHEnd`。
+- 类别：hand-edited-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANEnd.lagda.md`、`probes/OCF/Lean/YiVTANReach.lagda.md`、`probes/OCF/Lean/YiVTTw2Hi.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTPHEnd.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `Ω₃` | `YiPMMinPHEnd.Ω₃` |
+| `ψ₁Ω₃` | `YiPMMinPHEnd.ψ₁Ω₃` |
+| `arg₃` | `YiPMMinPHEnd.arg₃` |
+| `t₃` | `YiPMMinPHEnd.t₃` |
+| `f3` | `YiPMMinPHEnd.f3` |
+| `fΩ₃` | `YiPMMinPHEnd.fΩ₃` |
+| `nf3₁` | `YiPMMinPHEnd.nf3₁` |
+| `nΩ₃₁` | `YiPMMinPHEnd.nΩ₃₁` |
+| `bnd₃` | `YiPMMinPHEnd.bnd₃` |
+| `n₃₁` | `YiPMMinPHEnd.n₃₁` |
+| `n3ᴮ` | `YiPMMinPHEnd.n3ᴮ` |
+| `nΩ₃ᴮ` | `YiPMMinPHEnd.nΩ₃ᴮ` |
+| `g₃` | `YiPMMinPHEnd.g₃` |
+| `n₃ᴮ` | `YiPMMinPHEnd.n₃ᴮ` |
+| `h₃` | `YiPMMinPHEnd.h₃` |
+| `A<3` | `YiPMMinPHEnd.A<3` |
+| `3<B1` | `YiPMMinPHEnd.3<B1` |
+| `A≺3` | `YiPMMinPHEnd.A≺3` |
+| `3≺B1` | `YiPMMinPHEnd.3≺B1` |
+| `Lo³` | `YiPMMinPHEnd.Lo³` |
+| `AtThree` | `YiPMMinPHEnd.AtThree` |
+| `AtThree.C` | `YiPMMinPHEnd.AtThree.C` |
+| `AtThree.atThree` | `YiPMMinPHEnd.AtThree.atThree` |
+| `reach³` | `YiPMMinPHEnd.reach³` |
+| `path₃` | `YiPMMinPHEnd.path₃` |
+| `low3` | `YiPMMinPHEnd.low3` |
+| `t₃≼br2` | `YiPMMinPHEnd.t₃≼br2` |
+| `t₃≼EBO` | `YiPMMinPHEnd.t₃≼EBO` |
+| `t₃≼EBOᴿ` | `YiPMMinPHEnd.t₃≼EBOᴿ` |
+| `inst₃` | `YiPMMinPHEnd.inst₃` |
+| `tA≺EBOᴿ′` | `YiPMMinPHEnd.tA≺EBOᴿ′` |
+
+## YiVTANEnd
+
+- 参数化对应：`YiPMMinANEnd`。
+- 类别：hand-edited-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTANLim.lagda.md`、`probes/OCF/Lean/YiVTTw2Hi.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTANEnd.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `ΩN` | `YiPMMinANEnd.ΩN` |
+| `argN` | `YiPMMinANEnd.argN` |
+| `tN` | `YiPMMinANEnd.tN` |
+| `flatN` | `YiPMMinANEnd.flatN` |
+| `fΩN` | `YiPMMinANEnd.fΩN` |
+| `natNF₁` | `YiPMMinANEnd.natNF₁` |
+| `ctblN` | `YiPMMinANEnd.ctblN` |
+| `nΩN₁` | `YiPMMinANEnd.nΩN₁` |
+| `bndN` | `YiPMMinANEnd.bndN` |
+| `nN₁` | `YiPMMinANEnd.nN₁` |
+| `natB` | `YiPMMinANEnd.natB` |
+| `nΩNᴮ` | `YiPMMinANEnd.nΩNᴮ` |
+| `gN` | `YiPMMinANEnd.gN` |
+| `nNᴮ` | `YiPMMinANEnd.nNᴮ` |
+| `hN` | `YiPMMinANEnd.hN` |
+| `nat<` | `YiPMMinANEnd.nat<` |
+| `A<N` | `YiPMMinANEnd.A<N` |
+| `N<N` | `YiPMMinANEnd.N<N` |
+| `A≺N` | `YiPMMinANEnd.A≺N` |
+| `N≺N` | `YiPMMinANEnd.N≺N` |
+| `AtN` | `YiPMMinANEnd.AtN` |
+| `AtN.A` | `YiPMMinANEnd.AtN.A` |
+| `AtN.atN` | `YiPMMinANEnd.AtN.atN` |
+| `kid` | `YiPMMinANEnd.kid` |
+| `pre` | `YiPMMinANEnd.pre` |
+| `G` | `YiPMMinANEnd.G` |
+| `one` | `YiPMMinANEnd.one` |
+| `num` | `YiPMMinANEnd.num` |
+| `shape` | `YiPMMinANEnd.shape` |
+| `one+` | `YiPMMinANEnd.one+` |
+| `I≡` | `YiPMMinANEnd.I≡` |
+| `ι-num` | `YiPMMinANEnd.ι-num` |
+| `↑num` | `YiPMMinANEnd.↑num` |
+| `0⊕` | `YiPMMinANEnd.0⊕` |
+| `gk` | `YiPMMinANEnd.gk` |
+| `pathN` | `YiPMMinANEnd.pathN` |
+| `lowN` | `YiPMMinANEnd.lowN` |
+| `tN≼br2` | `YiPMMinANEnd.tN≼br2` |
+| `tN≼EBO` | `YiPMMinANEnd.tN≼EBO` |
+| `tN≼EBOᴿ` | `YiPMMinANEnd.tN≼EBOᴿ` |
+| `instN` | `YiPMMinANEnd.instN` |
+
+## YiVTANLim
+
+- 参数化对应：`YiPMMinANLim`。
+- 类别：hand-edited-copy。
+- 直接导入者：`probes/OCF/Lean/YiVTTw2Hi.lagda.md`。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTANLim.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `ω′` | `YiPMMinANLim.ω′` |
+| `Ωω` | `YiPMMinANLim.Ωω` |
+| `argω` | `YiPMMinANLim.argω` |
+| `tω` | `YiPMMinANLim.tω` |
+| `rep<` | `YiPMMinANLim.rep<` |
+| `lt` | `YiPMMinANLim.lt` |
+| `N<ω` | `YiPMMinANLim.N<ω` |
+| `nfω′` | `YiPMMinANLim.nfω′` |
+| `nΩω₁` | `YiPMMinANLim.nΩω₁` |
+| `bndΩω` | `YiPMMinANLim.bndΩω` |
+| `bndω` | `YiPMMinANLim.bndω` |
+| `nω₁` | `YiPMMinANLim.nω₁` |
+| `nfω` | `YiPMMinANLim.nfω` |
+| `nω′ᴮ` | `YiPMMinANLim.nω′ᴮ` |
+| `nΩωᴮ` | `YiPMMinANLim.nΩωᴮ` |
+| `gΩω` | `YiPMMinANLim.gΩω` |
+| `gω` | `YiPMMinANLim.gω` |
+| `nωᴮ` | `YiPMMinANLim.nωᴮ` |
+| `hΩω` | `YiPMMinANLim.hΩω` |
+| `N≺ω` | `YiPMMinANLim.N≺ω` |
+| `tω≼EBOᴿ` | `YiPMMinANLim.tω≼EBOᴿ` |
+| `instω` | `YiPMMinANLim.instω` |
+
+## YiVTTWEnd
+
+- 参数化对应：`YiPMMinTWEnd`。
+- 类别：hand-edited-copy。
+- 直接导入者：无。
+- rg 命中但非导入语句：`probes/OCF/Lean/YiVTTWEnd.lagda.md`。
+
+| 源码语法候选声明/模块 | 待核参数化对应名 |
+|---|---|
+| `kid0` | `YiPMMinTWEnd.kid0` |
+| `strictL` | `YiPMMinTWEnd.strictL` |
+| `path₁` | `YiPMMinTWEnd.path₁` |
+| `tA≺br2` | `YiPMMinTWEnd.tA≺br2` |
+| `tA≺EBO` | `YiPMMinTWEnd.tA≺EBO` |
+| `tA≺EBOᴿ` | `YiPMMinTWEnd.tA≺EBOᴿ` |
+| `inst` | `YiPMMinTWEnd.inst` |

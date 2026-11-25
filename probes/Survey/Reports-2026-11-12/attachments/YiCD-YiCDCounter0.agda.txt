@@ -1,0 +1,8 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiCDCounter0 where
+open import Data.Nat using (zero)
+open import Data.Empty using (⊥)
+open import OCF.Lean.YiCDCanon
+not-idx2 : Canon (idx 2) → ⊥
+not-idx2 (cl q) with q 0
+... | ()

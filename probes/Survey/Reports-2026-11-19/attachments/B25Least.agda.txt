@@ -1,0 +1,65 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- BTBO 是其严格初段对原单次塌缩封闭且含种子 1 的最小零层树（按值序）。
+module B25Least where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import OCF.BTBO using (module Ord-Ord)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≼l; ≼lim⁻; s≼s; l≼; ≅→≼; ≺→s≼; s≼s⁻)
+open import OCF.Align.BTBOFullLv using (SV; SV-L)
+open import OCF.Align.BTBOFullV1 using (V1; PW₁; PW₂; PW₃)
+open import OCF.Align.BTBOFullEb using (V2)
+open import OCF.Align.BTBOFullEmb using (Ψ-emb)
+open import OCF.Align.BTBOFullV3 using (V3; Fstep; bkᴵ; Fʸ)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValMain using (nat≺γ₁)
+open import OCF.Align.BTBOFull using (tr₀-bk; St-bk; bk≅γ; BTBO≈)
+
+T₀ = L.Ordᶜ L.zero
+
+raises : ∀ {a b} → a L.≺ᴵ b → Fʸ a L.≺ Fʸ b
+raises {a} d = L.Ψ⁰-mono (L.s⊑′ d) (Fstep a)
+
+strict-step : ∀ n → N.γ n L.≺ N.γ (suc n)
+strict-step zero = nat≺γ₁ 1
+strict-step (suc n) = raises {N.L n} {N.L (suc n)}
+  (L.toLevel-≺ (N.cert n) (N.cert (suc n)) (strict-step n))
+
+interior : ∀ n → L.suc (N.γ n) ≼ N.BTBOᴵ
+interior n = ≼l {f = λ i → N.γ (suc i)} n (≺→s≼ (strict-step n))
+
+-- 源层号的遗忘值落进某对角项时，两次参照塌缩足以容纳它的一次塌缩。
+lag : ∀ {a} → SV a → ∀ n → L.forget a ≼ N.γ n → Fʸ a ≼ N.γ (suc (suc n))
+lag {a} va n h =
+  ≼-trans (Ψ-emb (PW₃ (V1 va))) (≼-trans
+    (Ψ-emb (PW₁ (V2 (bkᴵ a) (bkᴵ (N.L n)) (St-bk va) (St-bk (SV-L n))
+      (≼-trans (≅→≼ (tr₀-bk a)) (≼-trans h (≅→≼ (L.≅-sym (bk≅γ n))))))))
+    (Ψ-emb (PW₂ (N.cert (suc n)) (V3 (SV-L n)))))
+
+Closed : T₀ → Set
+Closed C = ∀ a → SV a → L.suc (L.forget a) ≼ C → L.suc (Fʸ a) ≼ C
+
+closed : Closed N.BTBOᴵ
+closed a va p with ≼lim⁻ {f = λ n → N.γ (suc n)} p
+... | j , d = ≼-trans (s≼s (lag va (suc j) (≼-trans (≼-suc (≼-refl (L.forget a))) d)))
+    (interior (suc (suc (suc j))))
+
+module From (C : T₀) (seed : L.suc (N.γ 0) ≼ C) (step : Closed C) where
+  walk : ∀ n → L.suc (N.γ n) ≼ C
+  walk zero = seed
+  walk (suc n) = step (N.L n) (SV-L n)
+    (≼-trans (s≼s (≅→≼ (L.forget-toLevel (N.γ n) (N.cert n)))) (walk n))
+
+  least : N.BTBOᴵ ≼ C
+  least = l≼ (λ n → ≼-trans (≼-suc (≼-refl (N.γ (suc n)))) (walk (suc n)))
+
+Witness : T₀ → Set
+Witness Y = Σ T₀ (λ C → L.suc (N.γ 0) ≼ C × Closed C × C ≼ Y)
+
+sufficient : ∀ {Y} → Witness Y → tr₀ Ord-Ord.BTBO ≼ Y
+sufficient (C , seed , step , bound) = ≼-trans (proj₁ BTBO≈) (≼-trans (From.least C seed step) bound)
+
+necessary : ∀ {Y} → tr₀ Ord-Ord.BTBO ≼ Y → Witness Y
+necessary h = N.BTBOᴵ , interior 0 , closed , ≼-trans (proj₂ BTBO≈) h

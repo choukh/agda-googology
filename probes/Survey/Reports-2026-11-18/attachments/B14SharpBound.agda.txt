@@ -1,0 +1,111 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 把匹配放宽为零层值支配。任意状态中，理想的 Ω₁ 有限和可由覆盖 Ω₁ 的真实右操作迭代消费。
+module B14SharpBound where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (T₀; 𝟏; read; lvl1; Mv; Mv-mono; P-read; read-+)
+open import WVTwo using (◃→≼)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼; z≼; s≼s; ≅→≼; +-mono)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack
+open import B14SharpTwo using (i-add)
+import B12ActualSlots as A
+
+data≤ : R.Tr R.zero → B.Tr B.zero → Set
+data≤ a b = readRW a ≼ read b
+
+add≤ : ∀ {a b x y} → data≤ a b → data≤ x y → data≤ (a V.+ x) (b W.+ y)
+add≤ {a} {b} {x} {y} e d = ≼-trans (≅→≼ (i-add a x)) (≼-trans (+-mono e d) (read-+ b y))
+
+next≤ : (a : V.Tr⁺ R.zero) (b : W.Tr⁺ B.zero) → data≤ (proj₁ a) (proj₁ b) → data≤ (proj₁ (V.next⁺ a)) (proj₁ (W.next⁺ b))
+next≤ a b e = l≼ (λ n → ≼l n (go n)) where
+  go : (n : ℕ) → data≤ (V.iter (proj₁ a V.+_) (proj₁ a) n) (B.iter (proj₁ b W.+_) (proj₁ b) n)
+  go zero = e
+  go (suc n) = add≤ e (go n)
+
+sum≤ : (f : ℕ → R.Tr R.zero) (g : ℕ → B.Tr B.zero) → (∀ n → data≤ (f n) (g n)) →
+       ∀ n → data≤ (V.cum f n) (W.cum g n)
+sum≤ f g d zero = d zero
+sum≤ f g d (suc n) = add≤ (sum≤ f g d n) (d (suc n))
+
+module Low (lem : LEM) where
+  open I.Sharp lem
+  open Sim lem using (fold; after; append; same-seat)
+
+  iter-upper : (a : R.Tr R.zero) (x : T₀) → readRW a ≼ x → ∀ n → readRW (V.iter (a V.+_) a n) ≼ B.iter (x L.+_) x n
+  iter-upper a x e zero = e
+  iter-upper a x e (suc n) = ≼-trans (≅→≼ (i-add a _)) (+-mono e (iter-upper a x e n))
+
+  upper : (D : Base♯) (a : V.Tr⁺ R.zero) (x : R.Tr R.zero) → readRW (proj₁ (ψ♯ R.zero tt D R.zero tt a x)) ≼ Mv (readRW (proj₁ a)) (readRW x)
+  upper D a R.zero = ≼-refl _
+  upper D a (R.suc x) = l≼ (λ n → ≼l n (iter-upper _ _ (upper D a x) n))
+  upper D a (R.lim f _) = l≼ (λ n → ≼l n (upper D a (f n)))
+
+  leaf≤ : (D : Base♯) (S : F.Base B.zero) (a : V.Tr⁺ R.zero) (b : W.Tr⁺ B.zero) (x : R.Tr R.zero) (y : B.Tr B.zero) →
+    data≤ (proj₁ a) (proj₁ b) → data≤ x y → data≤ (proj₁ (ψ♯ R.zero tt D R.zero tt a x)) (proj₁ (F.ψ B.zero tt S B.zero B.self b y))
+  leaf≤ D S a b x y h d = ≼-trans (upper D a x) (≼-trans (Mv-mono h d) (P-read {Bs = S} b y))
+
+  module One (D : Base♯) (S : F.Base lvl1) (a : V.Tr⁺ R.zero) (b : W.Tr⁺ B.zero)
+             (ha : data≤ (proj₁ a) (proj₁ b)) (hc : data≤ (proj₁ (D R.zero tt)) (proj₁ (S B.zero (path slot)))) where
+    Ss : F.Base B.zero
+    Ss i v = S i (B.inc tt v)
+
+    actI : V.Tr⁺ R.zero → R.Tr R.zero → R.Tr R.zero
+    actI v x = proj₁ (ψ♯ R.zero tt D R.zero tt v (R.suc x))
+
+    actW : W.Tr⁺ B.zero → B.Tr B.zero → B.Tr B.zero
+    actW v x = proj₁ (F.ψ B.zero tt Ss B.zero B.self v (B.suc x))
+
+    xs = V.iter (actI (D R.zero tt)) R.zero
+    ys = B.iter (actW (S B.zero (path slot))) B.zero
+
+    chain : ∀ n → data≤ (xs n) (ys n)
+    chain zero = z≼
+    chain (suc n) = leaf≤ D Ss _ _ _ _ hc (s≼s (chain n))
+
+    items : ∀ n → data≤ (actI a (xs n)) (actW b (ys n))
+    items n = leaf≤ D Ss a b _ _ ha (s≼s (chain n))
+
+    bound : data≤ (proj₁ (fold D a Ωi)) (proj₁ (F.run K S B.zero (path base) b))
+    bound rewrite empty-slot (kp♯ r₁ oR p R.zero tt) = l≼ (λ n → ≼l n (sum≤ _ _ items n))
+
+  module Vary (c⁺ : W.Tr⁺ lvl1) (above : A._⊴_ Ωw (proj₁ c⁺)) where
+    op = F.opB lvl1 oB (proj₁ c⁺) (proj₂ c⁺)
+
+    advance : ∀ S t b → read (proj₁ (F.run K S B.zero (path t) b)) ≼ read (proj₁ (F.run op S B.zero (path t) b))
+    advance S t b = go above where
+      go : ∀ {c} → A._⊴_ Ωw c → read (proj₁ (F.run K S B.zero (path t) b)) ≼ read (proj₁ (F.ψ lvl1 oB S B.zero (path t) b c))
+      go (inj₁ refl) = ≼-refl _
+      go (inj₂ d) = ◃→≼ (F.mono lvl1 oB S B.zero (path t) b d)
+
+    own : ∀ n S → F.itV op n S B.zero (path slot) (S B.zero (path slot)) ≡ F.itS op n S B.zero (path slot)
+    own zero S = refl
+    own (suc n) S = cong (F.run op (F.itS op n S) B.zero (path slot)) (own n S)
+
+    module Sequence (D : Base♯) (S : F.Base lvl1) (hc : data≤ (proj₁ (D R.zero tt)) (proj₁ (S B.zero (path slot)))) where
+      run : ∀ {n x} → Blocks n x → (t : Seat) (a : V.Tr⁺ R.zero) (b : W.Tr⁺ B.zero) →
+        data≤ (proj₁ a) (proj₁ b) → data≤ (proj₁ (fold D a x)) (proj₁ (F.itV op n S B.zero (path t) b))
+      run emp t a b h = h
+      run {suc n} (add {x = x} d) t a b h =
+        subst (λ y → data≤ y (proj₁ (F.run op Sn B.zero (path t) vn))) (sym (append D a x))
+         (≼-trans (subst (data≤ (proj₁ (fold (after D x) (fold D a x) Ωi))) (same-seat Sn vn t)
+          (One.bound (after D x) Sn (fold D a x) vn (run d t a b h) coord)) (advance Sn t vn))
+        where
+        Sn = F.itS op n S
+        vn = F.itV op n S B.zero (path t) b
+        coord : data≤ (proj₁ (after D x R.zero tt)) (proj₁ (Sn B.zero (path slot)))
+        coord = subst (data≤ (proj₁ (after D x R.zero tt))) (cong proj₁ (own n S))
+                  (run d slot (D R.zero tt) (S B.zero (path slot)) hc)

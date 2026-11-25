@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- KKp 的形状事实 (refl): 在 tw 1 上, 孩子 2 里槽位层为第 1 层的结点, 朝孩子 3 里的第 2 层保留 (位置是第 2 层里槽位层为第 1 层的那个),
+-- 朝孩子 3 里的第 1 层走链.
+module K5KpShape where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W5Path
+open import W5Fold
+open import W5VOne using (lvl1; h₁)
+
+K : L
+K = tw 1
+oK : Ok K
+oK = Ok-tw 1
+
+c₂ c₃ : Tr zero
+c₂ = suc (suc zero)
+c₃ = suc (suc (suc zero))
+
+-- 孩子 c₂ 里的结点位置: 孩子层号 (第 2 层) 里槽位层为第 1 层的位置.
+p₂ : Pos K
+p₂ = inj₂ (c₂ , inj₂ (inj₂ (tt , inj₁ tt)))
+
+slot-p₂ : at K p₂ ≡ lvl1
+slot-p₂ = refl
+
+-- 保留时取出的位置.
+posK : ∀ {j X x₀} → Keep j X x₀ → Maybe (Pos j)
+posK (just (q , _ , _)) = just q
+posK nothing            = nothing
+
+-- 朝孩子 c₃ 里的第 2 层: 保留, 位置是第 2 层里槽位层为第 1 层的那个.
+w₂ : h₁ c₂ ≤ K
+w₂ = inc c₃ (inc tt self)
+
+kp-keep : posK (kp K oK p₂ w₂) ≡ just (inj₂ (tt , inj₁ tt))
+kp-keep = refl
+
+-- 保留的位置的槽位层就是原槽位层.
+kp-keep-slot : at (h₁ c₂) (inj₂ (tt , inj₁ tt)) ≡ at K p₂
+kp-keep-slot = refl
+
+-- 朝孩子 c₃ 里的第 1 层: 槽位层不严格更低, 走链.
+w₁ : lvl1 ≤ K
+w₁ = inc c₃ (inc tt (inc tt self))
+
+kp-chain : kp K oK p₂ w₁ ≡ nothing
+kp-chain = refl

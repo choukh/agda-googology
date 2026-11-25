@@ -1,0 +1,109 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每个从公共前缀可定址的正槽都随回灌返回；在该返回节点上，原类型的所有分支均可从正树取回。
+module B28PRoute where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Data.Maybe.Base using (just)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym; trans)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import B18TowerEmb as Emb
+import B20Towers as J
+import B28PPull as Pull
+import B28POrbit as Orbit
+
+mutual
+  position : ∀ k (p : Pos k) → psh (posW k p) (inj₁ tt) ≡ inj₂ p
+  position (nd s h) (inj₂ (c , t)) = cong (λ u → inj₂ (inj₂ (c , u))) (position⁼ (h c) t)
+  position (nd (sΩ j) h) (inj₁ t) = cong (λ u → inj₂ (inj₁ u)) (position⁼ j t)
+
+  position⁼ : ∀ k (t : Pos⁼ k) → psh (posW⁼ k t) (inj₁ tt) ≡ t
+  position⁼ k (inj₁ tt) = refl
+  position⁼ k (inj₂ p) = position k p
+
+send : ∀ {i k} (w : i ≤ k) (t : Pos⁼ i) → Br⁼ i t → Br⁼ k (psh w t)
+send self t z = z
+send (inc c w) t z = send w t z
+send {k = nd s h} (inu f) t z = send (f (c₀ s)) t z
+send (ink w) t z = send w t z
+
+onto : ∀ {i k} (w : i ≤ k) t z → pshBr w t (send w t z) ≡ z
+onto self t z = refl
+onto (inc c w) t z = onto w t z
+onto {k = nd s h} (inu f) t z = onto (f (c₀ s)) t z
+onto (ink w) t z = onto w t z
+
+backward : ∀ {i k} (w : i ≤ k) t z → send w t (pshBr w t z) ≡ z
+backward self t z = refl
+backward (inc c w) t z = backward w t z
+backward {k = nd s h} (inu f) t z = backward (f (c₀ s)) t z
+backward (ink w) t z = backward w t z
+
+record Route {k i} (p : Pos k) (x : Tr k) (below : Tr i → Tr k) : Set where
+  field
+    branch : Br k p → Tr k
+    root : x ≡ Ω p branch
+    select : Tr i → Br k p
+    observe : Br k p → Tr i
+    section : ∀ z → observe (select z) ≡ z
+    retract : ∀ y → select (observe y) ≡ y
+    follows : ∀ y → branch y ≡ below (observe y)
+    requested : ∀ z → branch (select z) ≡ below z
+
+data Choice {k i : L} (p : Pos k) : Keep k (Tr i) zero → Set where
+  keep : ∀ (cv : Br k p → Tr i) (first : cv (fromBr k p zero) ≡ zero) (back : Tr i → Br k p)
+    → (∀ z → cv (back z) ≡ z) → (∀ y → back (cv y) ≡ y) → Choice p (just (p , cv , first))
+
+choose : ∀ k (o : Ok k) i (t : Pos⁼ k) p (cv : Br⁼ k t → Tr i) (first : cv (bz⁼ k t) ≡ zero)
+  (back : Tr i → Br⁼ k t) → (∀ z → cv (back z) ≡ z) → (∀ y → back (cv y) ≡ y) → t ≡ inj₂ p →
+  Choice p (mapK cv first (kp⁼ k o t self))
+choose k o i .(inj₂ p) p cv e back sec ret refl = keep cv (trans (cong cv refl) e) back sec ret
+
+route : ∀ {k i} (p : Pos k) (mode : Keep k (Tr i) zero) (G : Tr i → Tr⁺ k) (step : Tr i → Tr i)
+  (below : Tr i → Tr k) (point : ∀ z → proj₁ (G z) ≡ below z) → Choice p mode → Route p (proj₁ (node⁺ mode G step)) below
+route p .(just (p , cv , e)) G step below point (keep cv e back s r) = record
+  { branch = λ z → proj₁ (G (cv z)) ; root = refl ; select = back ; observe = cv
+  ; section = s ; retract = r ; follows = λ y → point (cv y)
+  ; requested = λ z → trans (cong (λ u → proj₁ (G u)) (s z)) (point z) }
+
+module Call (n : ℕ) where
+  open Orbit.At n using (module K; head)
+  k = tw (suc n)
+  o = Ok-tw (suc n)
+  fold : ∀ b → OkO k b → Tr k
+  fold b e = proj₁ (ψ (k ⊕ b) (Ok⊕ k b o e) (J.slots (k ⊕ b) (suc (suc n))) k
+    (self ∙ lift k b) head (proj₁ (Ωt (k ⊕ b))))
+
+  module Node {i} (b : Tr i → L) (w : i ≤ k) (oi : Ok i) (e : ∀ c → OkO k (b c)) where
+    l = nd (sΩ i) b
+    source = k ⊕ l
+    right : OkO k l
+    right = (w , oi) , e
+    cert = Ok⊕ k l o right
+    env = J.slots source (suc (suc n))
+    family = λ c → proj₁ (ψ (k ⊕ b c) (Ok⊕ k (b c) o (e c)) (λ j v → env j (inc c v))
+                  k (self ∙ lift k (b c)) head (proj₁ (Ωt (k ⊕ b c))))
+    point : ∀ c → family c ≡ fold (b c) (e c)
+    point c = cong (λ B → proj₁ (ψ (k ⊕ b c) (Ok⊕ k (b c) o (e c)) B k (self ∙ lift k (b c)) head
+                      (proj₁ (Ωt (k ⊕ b c))))) (Orbit.restrict {sΩ i} (λ z → k ⊕ b z) c (suc (suc n)))
+    simple = mapK (pshBr w (inj₁ tt)) (pshFirst w (inj₁ tt)) (kp⁼ k o (psh w (inj₁ tt)) self)
+    kept : kp source cert (inj₁ (inj₁ tt)) (self ∙ lift k l) ≡ simple
+    kept = Pull.pull k o w (inj₁ tt) (b zero) (e zero)
+
+    Q = λ c → ψ (k ⊕ b c) (Ok⊕ k (b c) o (e c)) (λ j v → env j (inc c v))
+                  k (self ∙ lift k (b c)) head (proj₁ (Ωt (k ⊕ b c)))
+    step = λ z → proj₁ (ψ source cert env i (ink self) (env i (ink self)) (proj₁ (upz {h = λ c → k ⊕ b c} z (Ωt (k ⊕ b z)))))
+    track : ∀ p → psh w (inj₁ tt) ≡ inj₂ p → Route p (fold l right) (λ z → fold (b z) (e z))
+    track p eq = route p (kp source cert (inj₁ (inj₁ tt)) (self ∙ lift k l)) Q step (λ z → fold (b z) (e z)) point
+      (subst (Choice p) (sym kept) (choose k o i (psh w (inj₁ tt)) p (pshBr w (inj₁ tt)) (pshFirst w (inj₁ tt))
+        (send w (inj₁ tt)) (onto w (inj₁ tt)) (backward w (inj₁ tt)) eq))
+
+  relay : ∀ p (g : Br k p → Tr k) → Route p (K.next (Ω p g)) (λ z → K.next (g (fromBr k p z)))
+  relay p g = Node.track b (posW k p) (Ok-at k o p) e p (position k p)
+    where
+    b = λ z → ↑ k (g (fromBr k p z))
+    e = λ z → OkO↑ k k o self (g (fromBr k p z))

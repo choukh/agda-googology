@@ -1,0 +1,64 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原反馈 G(1) 的一个完整可数子树、纯 src 闭式及其在原树内的双向定位。
+module B23RExit where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼l; l≼; s≼s; ≅→≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read)
+open import WKShape using (Ψ₃; lvl3; ok₃)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Src as Y
+import B12LimitSrc as A
+import B12ActualSlots as C
+import B12Terminal as T
+import B12Omega3Ref as R
+import B13Target as P
+import B14RefGain as Path
+import B17RefAllSource as Ref
+import B22RowSource as Prev
+import B23LOriginal as Orig
+import B23RShare as G
+import B23NFirst as First
+
+power-stage : ∀ n → P.pass (Orig.height n) ≡ S.iter R.power (R.X 1) n
+power-stage zero = refl
+power-stage (suc n) = cong R.power (power-stage n)
+
+src-height = S.iter S.suc Y.a
+align : ∀ n → A.Aligned (src-height n) (Orig.height n)
+align zero = A.omega2
+align (suc n) = A.aligned (U.Ms (A.Aligned.up b)) (D.Rs (A.Aligned.dn b)) (L.s≅ (A.Aligned.regular b))
+  where b = align n
+src-part = λ n → Ref.pass (src-height n)
+arg = S.lim src-part
+source = S.ψ₀ arg
+towers : ∀ n → A.Aligned (src-part n) (P.pass (Orig.height n))
+towers n = A.aligned (Ref.pass-up 1 (A.Aligned.up b)) (Ref.pass-down 1 (A.Aligned.dn b)) (P.pass-pres (A.Aligned.regular b))
+  where b = align n
+same : tr₀ source ≈ᵛ Orig.cut
+same = A.fold (A.lim src-part (λ n → P.pass (Orig.height n)) towers)
+
+original : tr₀ source ≈ᵛ Orig.point
+original = (≼-trans (proj₁ same) (proj₂ Orig.both)) Data.Product., (≼-trans (proj₁ Orig.both) (proj₂ same))
+strict : L.suc (tr₀ Prev.source) ≼ tr₀ source
+strict = ≼-trans G.strict (≼-trans (Path.path-bound G.after (Path.along G.two-at G.oneStep)) (≼-trans (≼l 2 (≼-refl _)) (proj₂ same)))
+two : Orig.point ≼ L.ψ⁰ (P.pass First.two)
+two = Path.path-bound (0 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 0 ∷ 0 ∷ []) (R.at G.oneStep 2)
+  where open import Data.List.Base using (_∷_; [])
+strict-before : L.suc (tr₀ source) ≼ G.oneStep
+strict-before = ≼-trans (s≼s (≼-trans (proj₁ original) two)) (≼-trans First.gain
+  (≼-trans First.three (≼l 3 (≅→≼ (L.ψ⁰-≅ (P.pass-pres (L.≅-sym (R.split 1))))))))
+module From (inside : (r : T.Run lvl3) → C.Covered r → Orig.cut ≼ read (T.value r)) where
+  standard : tr₀ source ≼ read Ψ₃
+  standard = ≼-trans (proj₁ same) (inside (T.initial lvl3 ok₃) (C.initial lvl3 ok₃))
+  terminal : tr₀ source ≼ read EBOᶜ
+  terminal = ≼-trans (proj₁ same) (≼-trans (inside (T.finiteRun 2) (C.all-finite 2)) (T.finite-ge 2))

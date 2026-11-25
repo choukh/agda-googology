@@ -1,0 +1,53 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 加法相容: D₁ ⊴ t₁, D₂ ⊴ t₂ 推出 add D₁ τ D₂ ⊴ t₁ + t₂. 对 D₂ 的推导归纳; 除 r≅ 外各行编译.
+-- r≅ 一行是模块参数 AddR≅ (A′ 的层与左项的层无字面联系, 归纳假设要的 Sim 拿不到); A′ 的层能 Sim 进 A 的层时成立 (addR≅-sim).
+module KBAdd where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+
+open import W4Block
+open import W4Ops
+import OCF.Align.Level as I
+open I using (Ordᴵ; Ordᶜ; Simᴵ; _<ᴵ_; _≅_; add; into; <→◃; out-into; ≅-trans; ≅-sym; add-≅)
+open import KPow
+open import KRel
+open import KBBase
+
+AddFor : ∀ {j k₂} → Ordᶜ k₂ → Tr j → Set
+AddFor {j} {k₂} D₂ t₂ = ∀ {k₁} {D₁ : Ordᶜ k₁} {t₁ : Tr j} (τ : Simᴵ k₂ k₁) → Dom j D₁ t₁ → Dom j (add D₁ τ D₂) (t₁ + t₂)
+
+-- 没证出的一行 (确切陈述).
+AddR≅ : Set
+AddR≅ = ∀ {j k₂ k′} {D₂ : Ordᶜ k₂} {D₂′ : Ordᶜ k′} {t₂ : Tr j} → D₂ ≅ D₂′ → Dom j D₂′ t₂ → AddFor D₂′ t₂ → AddFor D₂ t₂
+
+-- 有 Sim 时这一行成立.
+addR≅-sim : ∀ {j k₂ k′} {D₂ : Ordᶜ k₂} {D₂′ : Ordᶜ k′} {t₂ : Tr j} → Simᴵ k′ k₂ → D₂ ≅ D₂′ → AddFor D₂′ t₂ → AddFor D₂ t₂
+addR≅-sim s e ih τ d₁ = r≅ (add-≅ (Dom→refl d₁) e) (ih (λ q → τ (s q)) d₁)
+
+module AddM (ar≅ : AddR≅) where
+  addC : ∀ {j k₂} {D₂ : Ordᶜ k₂} {t₂ : Tr j} → Dom j D₂ t₂ → AddFor D₂ t₂
+  addC rz τ d₁ = rinfl _ d₁
+  addC (rs d) τ d₁ = rs (addC d τ d₁)
+  addC (rl h) τ d₁ = rl (λ n → addC (h n) τ d₁)
+  addC {j} (rΩ {q = q} {F = F} {g = g} mr e h) {D₁ = D₁} {t₁ = t₁} τ d₁ =
+    rΩ mr (add-≅ (Dom→refl d₁) e) (λ Y z s →
+      subst (λ w → Dom j (add D₁ τ (F (into (<→◃ q) w))) (t₁ + g z)) (sym (out-into (<→◃ (τ q)) Y)) (addC (h Y z s) τ d₁))
+  addC {j} (ru {A₀ = A₀} {Y = Y} {c = c} d₀ kd σ e) {D₁ = D₁} τ d₁ =
+    ru (addC d₀ τ d₁) kd (λ q → τ (σ q))
+       (≅-trans (add-≅ (Dom→refl d₁) e) (add-assoc D₁ τ A₀ σ Y (Dom→refl d₁) (Dom→refl d₀) (Kid→refl j c kd)))
+  addC (re {A₀ = A₀} {V = V} {X = X} d₀ dv dx e) {D₁ = D₁} τ d₁ =
+    re (addC d₀ τ d₁) (r≅ eV′ dv) (r≅ eX′ dx)
+       (≅-trans (add-≅ eD e) (≅-trans (add-assoc D₁ τ A₀ (λ q → q) (pwb V (λ q → q) X) eD (Dom→refl d₀) (pwb-≅ eV eX))
+                (add-≅ (add-≅ eD (Dom→refl d₀)) (pwb-≅ (≅-sym eV′) (≅-sym eX′)))))
+    where
+    eD = Dom→refl d₁
+    eV = Dom→refl dv
+    eX = Dom→refl dx
+    eV′ : add I.zero τ V ≅ V
+    eV′ = add-zeroˡ τ V eV
+    eX′ : add I.zero τ X ≅ X
+    eX′ = add-zeroˡ τ X eX
+  addC (r≅ e d) τ d₁ = ar≅ e d (addC d) τ d₁
+  addC (r◃ d lt) {t₁ = t₁} τ d₁ = r◃ (addC d τ d₁) (+-mono t₁ lt)

@@ -44,11 +44,6 @@ for m in MODS:
     s2=re.sub(r'(open import OCF\.Align\.ScafLadderZSystemOmega using \(Occ; oh; od; os; ot)',r'\1; oτ; TailOf; th; ts',s)
     if s2!=s: open(p,'w').write(s2)
 # ------ ob: 紧地板的记号 (ι↓ 用, 其余函数忘掉) ------
-def subre(m,pat_,rep_,cnt=0):
-    p=OUT+P+m+'.lagda.md'; s=open(p).read()
-    s2,n=re.subn(pat_,rep_,s,count=cnt,flags=re.M)
-    assert n>0,(m,pat_)
-    open(p,'w').write(s2)
 U2='Uniform4Two'
 sub(U2,"    oΩ   : ∀ {φ k} → (∀ {ℓ} → Ev ℓ φ → Ev ℓ Fl) → (q : k <ᴵ α) → (∀ ξ → U k (<→◃ q) ξ → O₊ (ξ ⊔ φ)) → O₊ φ\n",
 "    oΩ   : ∀ {φ k} → (∀ {ℓ} → Ev ℓ φ → Ev ℓ Fl) → (q : k <ᴵ α) → (∀ ξ → U k (<→◃ q) ξ → O₊ (ξ ⊔ φ)) → O₊ φ\n    omk  : ∀ {φ k} → (r : k ◃₁ α) → U k (◃₁→◃ r) φ → O₊ φ → O₊ φ\n")

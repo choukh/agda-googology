@@ -1,0 +1,126 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 首下标深度至少二时，可在相同深度显式构造一个名字，支配原值的平方与以 ω 为底的幂。
+module B27Arithmetic where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_; s≤s; z≤n)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.List.Base using ([]; _∷_; length; replicate; _++_)
+open import Data.Empty using (⊥-elim)
+open import Data.Unit.Base using (tt)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+open import OCF.Align.EboLeanDef using (T; PT; ψ; _<ᵀ_; _<ᴾ_; hd<; tl<; []<; lv<; ar<; h0)
+open import OCF.Align.EboLeanBase
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Align.Value using (_≼_; ≼-suc; ≼-refl; ≼-trans)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import WVOne using (𝟏)
+import B26Names as A
+import B26Depth as D
+import B26OUContext as U
+import B26PSuffix as S
+import B18Product as P
+import B19IdealProduct as IP
+import B19IdealArithmetic as Ar
+
+cover : ∀ x t → NF t → HdLe x t → t <ᵀ replicate (suc (length t)) x
+cover x [] _ h = []<
+cover x (y ∷ t) n (inj₁ lt) = hd< lt
+cover x (.x ∷ t) n (inj₂ refl) = tl< (cover x t (nf-tl n) (nf-le n))
+
+prefix : ∀ x y → x ≤ᵀ (x ++ y)
+prefix [] [] = inj₂ refl
+prefix [] (q ∷ qs) = inj₁ []<
+prefix (p ∷ x) y with prefix x y
+... | inj₁ lt = inj₁ (tl< lt)
+... | inj₂ eq = inj₂ (Relation.Binary.PropositionalEquality.cong (p ∷_) eq)
+
+word-nf : ∀ x n t → NFP x → NF t → HdLe x t → NF (replicate n x ++ t)
+word-nf x zero t ok nt le = nt
+word-nf x (suc zero) t ok nt le = n∷ ok le nt
+word-nf x (suc (suc n)) t ok nt le = n∷ ok (inj₂ refl) (word-nf x (suc n) t ok nt le)
+
+word-g : ∀ {x t z} n → (∀ {q} → InGP [] q x → q <ᵀ z) → GB [] t z → GB [] (replicate n x ++ t) z
+word-g zero head tail e = tail e
+word-g (suc n) head tail (gp e) = head e
+word-g (suc n) head tail (gtl e) = word-g n head tail e
+
+record Roof (a : A.Name) : Set where
+  constructor roof
+  field
+    b : A.Name
+    same : D.height b ≡ D.height a
+    exp : Ar.norm (A.value a) ≼ A.value b
+    square : (A.value a P.· A.value a) ≼ A.value b
+open Roof public
+
+module High (v : PT) (vs q : T) (qs xs : T)
+  (nt : NF (ψ [] (ψ (v ∷ vs) q ∷ qs) ∷ xs))
+  (ctx : Ctbl xs) (h : OCF.Align.EboLeanDef.HC (ψ [] (ψ (v ∷ vs) q ∷ qs) ∷ xs)) where
+  x = ψ (v ∷ vs) q
+  u = x ∷ qs
+  t = ψ [] u ∷ xs
+  ct : Ctbl t
+  ct = c∷ ctx
+  a = A.named t nt ct h
+  nu : NF u
+  nu = nfp-a (nf-hd nt)
+  d = suc (length u)
+  p = replicate d x
+  wider : u <ᵀ p
+  wider = cover x u nu (inj₂ refl)
+  smaller : t <ᵀ S.φ p
+  smaller = hd< (ar< wider)
+  member : ∀ {z} → InGP [] z x → z <ᵀ p
+  member g = <ᵀ-trans (nfp-g (nf-hd nt) (gp g)) wider
+
+  nf-p : NF p
+  nf-p = go d
+    where
+    go : ∀ n → NF (replicate n x)
+    go zero = n[]
+    go (suc zero) = n∷ (nf-hd nu) tt n[]
+    go (suc (suc n)) = n∷ (nf-hd nu) (inj₂ refl) (go (suc n))
+
+  guards : GB [] p p
+  guards = go d
+    where
+    go : ∀ n → GB [] (replicate n x) p
+    go zero ()
+    go (suc n) (gp g) = member g
+    go (suc n) (gtl g) = go n g
+  np : NF (S.φ p)
+  np = nf-ψ n[] nf-p guards
+  opaque
+    ph : OCF.Align.EboLeanDef.HC (S.φ p)
+    ph = hc np (c∷ c[])
+  nout : NF (p ++ t)
+  nout = word-nf x d t (nf-hd nu) nt (inj₁ (lv< []<))
+  gap : p ≤ᵀ (p ++ t)
+  gap = prefix p t
+  guard-out : GB [] (p ++ t) (p ++ t)
+  guard-out = word-g d (λ h → <-≤ (member h) gap) (λ h → <-≤ (U.under nt ct smaller h) gap)
+  nb : NF (S.φ (p ++ t))
+  nb = nf-ψ n[] nout guard-out
+  opaque
+    bh : OCF.Align.EboLeanDef.HC (S.φ (p ++ t))
+    bh = hc nb (c∷ c[])
+  b′ = A.named (S.φ (p ++ t)) nb (c∷ c[]) bh
+  e = Ar.norm (A.value a)
+  result : (Rt ph P.· e) ≼ A.value b′
+  result = proj₂ (S.Low.val p ph t h bh)
+  one : 𝟏 ≼ Rt ph
+  one = mono<ⁿ {s = []} n[] np (c∷ c[]) (h0 refl) ph []<
+  a≤p : A.value a ≼ Rt ph
+  a≤p = ≼-trans (≼-suc (≼-refl (A.value a))) (mono<ⁿ nt np (c∷ c[]) h ph smaller)
+  made : Roof a
+  made = roof b′ refl
+    (≼-trans {b = Rt ph P.· e} (P.pad one e) result)
+    (≼-trans {b = Rt ph P.· e} (P.mono a≤p (Ar.up (A.value a))) result)
+
+build : ∀ a → 2 ≤ D.height a → Roof a
+build (A.named [] _ c[] h) ()
+build (A.named (ψ [] [] ∷ xs) _ (c∷ _) h) ()
+build (A.named (ψ [] (ψ [] q ∷ qs) ∷ xs) _ (c∷ _) h) (s≤s ())
+build (A.named (ψ [] (ψ (v ∷ vs) q ∷ qs) ∷ xs) n (c∷ ct) h) _ = High.made v vs q qs xs n ct h

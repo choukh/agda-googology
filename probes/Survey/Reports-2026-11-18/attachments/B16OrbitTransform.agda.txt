@@ -1,0 +1,22 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- It 所迭代的变换作用于前缀作用。任意可数指数经后继和极限决定迭代次数。
+module B16OrbitTransform where
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+open import WSShadow using (lC; Infl-lC)
+import OCF.Align.Level as L
+import B12LimitRef as A
+open import B15OrbitAction public using (Act; action; f; s; rows; infl; pres; base; raise)
+
+sup : (ℕ → Act) → Act
+f (sup h) p = L.lim (λ n → f (h n) p)
+s (sup h) e = lC (λ n → s (h n) e)
+rows (sup h) {p} {e} d = A.limit (λ n → f (h n) p) (λ n → s (h n) e) (λ n → rows (h n) d)
+infl (sup h) e ie = Infl-lC _ (infl (h 0) e ie)
+pres (sup h) d = L.l≅ (λ n → pres (h n) d)
+
+height : T₀ → (Act → Act) → Act → Act
+height L.zero F = F
+height (L.suc y) F a = sup (iter (height y F) a)
+height (L.lim g) F a = sup (λ n → height (g n) F a)

@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 同一真实 Q 中的所有有限阶 It(Ω₁)。先证明树侧路径，再留出各阶的统一语义解释。
+module B17OrbitLadder where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block hiding (D)
+open import W4Ops
+open import W4Fold
+open import WKGen using (Ω₁t)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; c₁; F)
+open import WKShape using (lvl3)
+import B11OuterCore as C
+import B12Terminal as T
+import B12ActualSlots as Cover
+import B13Orbit as V
+import B13SeedOuter as S
+import B13OrbitFeed as O
+import B15OrbitEx as E
+import B16OrbitExit as X
+
+module Ladder {Y : Cx lvl2} (D : TD Y lvl1) (b : Tr lvl1) (nb : lvl1 ⊢ zero ◃ b) (cover : lvl1 ⊢ Ω₁t ◃ b) (pre : Op Y) where
+  z = iter (λ q → ex b b nb (suc q) tt) zero
+  opK : (n : ℕ) → Ca (suc n) Y
+  opK zero = Kb ok₂ D b nb
+  opK (suc n) = Kₑ n ok₂ D b nb
+  basis : (n : ℕ) → Ca n Y
+  basis zero = pre
+  basis (suc n) = Itᴺ n ok₂ D b (opK n)
+  program : (n k : ℕ) → Ca n Y
+  program n zero = It n ok₂ D Ω₁t (opK n) (basis n)
+  program n (suc k) = proj₁ (program (suc n) k) idM (basis n)
+  path : ∀ n k → Rn n (program n k) (It n ok₂ D (suc (z (suc k))) (opK n) (basis n))
+  path n zero = Itmono n ok₂ D (opK n) (basis n) {x = Ω₁t} {y = suc (z 1)} (◃t cover (◃t ◃e ◃s))
+  path n (suc k) = trC n (path (suc n) k idM (basis n)) (Itmono n ok₂ D (opK n) (basis n) {x = z (suc (suc k))} {y = suc (z (suc (suc k)))} ◃s)
+
+module At (r : T.Run lvl3) (cv : Cover.Covered r) where
+  module Old = E.At r cv
+  module Prev = X.At r cv
+  open Old using (module Inn; module Previous; module E₀; K₁)
+  open Prev using (b; nb; cover)
+  open S.At r using (st1; c⁺)
+  module Stage (k : ℕ) where
+    front = Inn.U 0 k + b
+    pre = op (E ok₂ O.D₁ front K₁) (Einf ok₂ O.D₁ front K₁)
+    module Action = Ladder O.D₁ b nb cover pre
+    real = Action.program 0 k
+    found : lvl1 ⊢ Inn.U 0 (suc k) ◃ Previous.y
+    found = ◃t nth (◃t (Emono ok₂ tdNil (V.K c⁺) st1 lvl1 C.slot (st1 lvl1 C.slot) (proj₂ c⁺)) (◃l 0))
+      where
+      nth : lvl1 ⊢ Inn.U 0 (suc k) ◃ Inn.cn 1
+      nth = V.push-path {y = c₁ (stepS F st1)} (◃l (suc k)) (V.standard≤K c⁺ E₀.cp st1 lvl1 C.slot (st1 lvl1 C.slot))
+    into : Rl real Previous.Q
+    into S i t v = ◃t (Action.path 0 k S i t v) (Emono ok₂ O.D₁ K₁ S i t v found)

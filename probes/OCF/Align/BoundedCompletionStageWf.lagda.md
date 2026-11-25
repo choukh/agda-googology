@@ -3,7 +3,7 @@
 > 本文件的直接具体化第 2 站版本为草案：原闭包与分离轻核心后两次 6G 均退出 251（堆耗尽），本文件不计为定理。后来通过变量 k 的 opaque 封装，实际 Wf 第二站的值桥已在 BoundedCompletionStageWfOpaque / BoundedCompletionStageWfBridge 以 6G 编译通过；这里的失败不涉及那两个新模块。实际第二站包含于 EBO-tree 的证明仍未完成。
 
 验收专用。复用既有HC/Lab唯一性比较参照，不展开记号良基证明计算分支。
-编译使用/private/tmp/lambda-target-arch临时只读归档副本，不改archive。
+编译使用<实验目录>/lambda-target-arch临时只读归档副本，不改archive。
 
 ```agda
 {-# OPTIONS --safe --without-K --lossy-unification #-}

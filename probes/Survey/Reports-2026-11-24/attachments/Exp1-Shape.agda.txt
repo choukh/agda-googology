@@ -1,0 +1,32 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 试验 (只在实验目录): 回退行的尾巴改成 "带着左项的语境折到第 0 层" 之后的形状.
+module Exp1Shape where
+
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+module Gen (k : L) (h : Tr k → L) (o : Ok (nd (sΩ k) h)) where
+  Pk : L
+  Pk = nd (sΩ k) h
+
+  -- 尾巴: y 在孩子 c 里折到第 0 层, 状态是左项 x 经孩子 c 朝各层的折叠, 底是 x 朝第 0 层的折叠 (与一致路径上的嵌入行交给孩子的相同).
+  fallback′ : (B : Base Pk) {i : L} (c′ : Tr k) (u : i ≤ h c′) (β : Tr⁺ i)
+              (x : Tr Pk) (c : Tr k) (y : Tr (h c)) (e : h c ⊢ zero ◃ y)
+            → ψ Pk o B i (inc c′ u) β (up x c y e)
+            ≡ ψ Pk o B i (inc c′ u) β x
+              ⊞ ψ (h c) (proj₂ o c) (λ i′ u′ → ψ Pk o B i′ (inc c u′) (B i′ (inc c u′)) x) zero (z≤ (h c))
+                  (ψ Pk o B zero (z≤ Pk) (B zero (z≤ Pk)) x) y
+  fallback′ B c′ u β x c y e = refl
+
+  -- 与朝第 0 层 (一致路径) 的嵌入行比较: 尾巴逐字就是 "同一棵树从标准底朝第 0 层的折叠".
+  tail-is-fold : (B : Base Pk) (x : Tr Pk) (c : Tr k) (y : Tr (h c)) (e : h c ⊢ zero ◃ y)
+               → ψ (h c) (proj₂ o c) (λ i′ u′ → ψ Pk o B i′ (inc c u′) (B i′ (inc c u′)) x) zero (z≤ (h c))
+                   (ψ Pk o B zero (z≤ Pk) (B zero (z≤ Pk)) x) y
+               ≡ ψ Pk o B zero (z≤ Pk) (B zero (z≤ Pk)) (up x c y e)
+  tail-is-fold B x c y e = refl

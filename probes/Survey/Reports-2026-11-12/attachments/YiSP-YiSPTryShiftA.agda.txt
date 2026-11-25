@@ -1,0 +1,12 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiSPTryShiftA where
+open import OCF.Lean.YiSPInst
+open import OCF.Lean.YiLTKid using (ℓ¹)
+open import OCF.Lean.YiMTTab using (rbᶻ)
+open import OCF.Lean.YiRWFold using (Base)
+import OCF.Align.EboLeanDef as E
+module F = Fin (rbᶻ ℓ¹)
+
+-- 初始方案: 使用原 gb⊴/ψ-⊵ 得到的同前缀底闭包。
+try-shift : (B : Base ℓ¹) (t : E.T) → F.GB¹ B t → F.Shift B t
+try-shift B t gb {a} {x} m c = F.gbx-same B t gb x c

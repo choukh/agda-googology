@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25FZero where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼l; ≼-trans; ≼-suc; ≼-refl; ⊑→≼; ≼lim⁻)
+open import OCF.Align.BTBOFullEmb using (PEmb; Ψ-emb)
+open import OCF.Align.BTBOFullLv using (SV; svl)
+import B14Btbo as B
+import B20StandardInside as S
+import B22TowerCut as K
+open import B25FFront using (margin)
+open import B25FEmbedded using (Port; stop; down; Contained; locate; valid)
+open import WVOne using (T₀)
+
+include : ∀ {a b} → Contained a b → PEmb a b
+PEmb.map (include {a} {b} h) {c} r = c
+PEmb.bnd (include h) p = h p
+PEmb.mono (include h) p q d = d
+PEmb.coh (include h) p q d = d
+
+strict : ∀ {b a} → Port b a → SV b → L.suc (B.α a) ≼ B.α b
+strict stop sa = ≼l 1 (margin (valid stop sa) 0)
+strict (down n p) (svl vf st) = ≼l n (strict p (vf n))
+
+module Cofinal {f : ℕ → L.Ordᴵ} {s}
+  (vf : ∀ n → SV (f n))
+  (st : ∀ n → Σ L.Ordᴵ (λ e → e L.≺ᴵ f (suc n) × f n L.⊑ᴵ e)) where
+
+  chosen : ∀ n → Σ L.Ordᴵ (λ a → Port (f (suc n)) a × Contained (proj₁ (st n)) a)
+  chosen n = locate (proj₁ (proj₂ (st n)))
+  floor : ℕ → L.Ordᴵ
+  floor n = proj₁ (chosen n)
+  port : ∀ n → Port (L.lim f s) (floor n)
+  port n = down (suc n) (proj₁ (proj₂ (chosen n)))
+
+  covers : ∀ n → B.α (f n) ≼ B.α (floor n)
+  covers n = ≼-trans {a = B.α (f n)} {b = B.α (proj₁ (st n))} {c = B.α (floor n)}
+    (⊑→≼ (B.α (f n)) (L.Ψ⁰-mono (proj₂ (proj₂ (st n)))))
+    (Ψ-emb (include (proj₂ (proj₂ (chosen n)))))
+
+  piece : ∀ n → L.suc (B.α (floor n)) ≼ B.α (L.lim f s)
+  piece n = strict (port n) (svl vf st)
+
+  obverse : ∀ {y : T₀} → (∀ n → B.α (floor n) ≼ y) → B.α (L.lim f s) ≼ y
+  obverse h = l≼ (λ n → ≼-trans (covers n) (h n))
+
+  hits = ∀ n → Σ ℕ (λ j → L.suc (B.α (floor n)) ≼ S.std j)
+  take : B.α (L.lim f s) ≼ K.cut → hits
+  take h n = ≼lim⁻ (≼-trans (piece n) h)
+  enough : hits → B.α (L.lim f s) ≼ K.cut
+  enough h = obverse λ n → let j , d = h n in ≼l j (≼-trans (≼-suc (≼-refl _)) d)
+
+data IsLim : L.Ordᴵ → Set where
+  islim : ∀ {f s} → IsLim (L.lim f s)
+
+record Chart (b : L.Ordᴵ) : Set where
+  field
+    index : ℕ → L.Ordᴵ
+    address : ∀ n → Port b (index n)
+    bound : ∀ n → L.suc (B.α (index n)) ≼ B.α b
+    assemble : ∀ {y : T₀} → (∀ n → B.α (index n) ≼ y) → B.α b ≼ y
+
+chart : ∀ {b} → IsLim b → SV b → Chart b
+chart islim (svl {s = s} vf st) = record { index = C.floor ; address = C.port ; bound = C.piece ; assemble = C.obverse }
+  where module C = Cofinal {s = s} vf st

@@ -1,0 +1,48 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 二阶真实 It 在 Ω₁ 处对所有实际反馈的可数程序求值。其底是系数变换，末端才作用于具体前缀。
+module B17OrbitSecond where
+open import Data.Nat using (zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block hiding (D)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import WKGen using (Ω₁t)
+open import OCF.Align.Value using (_≼_)
+import B13OrbitFeed as O
+import B15OrbitModel as M
+import B15OrbitAction as P
+import B16OrbitNode as N
+import B17OrbitModel as B
+import B17OrbitOperator as T
+import B17OrbitOmega as Z
+import B17OrbitProgram as H
+open B using (Both; One; Two)
+
+module At {X : Cx lvl2} (m : Mor M.X₁ X) (ret : N.Left m)
+          (K : Ca 2 X) (tk : Two m K T.phi)
+          (G : Ca 1 X) (U : T.Trans) (tg : One m G U)
+          (Q : Op X) (a : P.Act) (qa : Both m Q a) where
+  module O₁ = Z.Frame m ret
+  module Out = B.Frame m ret
+  module Code = H.From U a
+  open O₁ using (D)
+  open Out using (φ; dm)
+  A₁ = proj₁ K idM G
+  floor = B.At.lift₁ m G A₁ (proj₂ K idM G) U tg
+  G′ = enter 1 φ A₁
+  tG : One dm G′ U
+  tG = B.At.enter₁ m φ (λ _ → refl) A₁ U floor
+  K′ = enter 2 φ (Itᴺ 1 ok₂ D zero K)
+  ds : O₁.C₁.contract K′ T.phi
+  ds J b u = tk φ (λ _ → refl) J b u
+  child = λ z → proj₁ (It 1 ok₂ D (O.g₁ z) K G) idM Q
+  pieces : ∀ y z → y ≼ read (suc z) → Both m (child z) (Code.h y)
+  pieces y z d = Out.leave (proj₁ A₁ idM Q)
+    (proj₁ (It 1 ok₂ (chTD D tt) (suc z) K′ G′) (liftM Out.w idM) (enterO φ Q)) (Code.h y)
+    (O₁.C₁.eval (suc z) d K′ T.phi ds G′ U tG (liftM Out.w idM) (λ _ → refl) (enterO φ Q) a (Out.upward Q a qa))
+  full : Both m (proj₁ (It 1 ok₂ D Ω₁t K G) idM Q) Code.action
+  full = Out.node child Code.h Code.r Code.q pieces

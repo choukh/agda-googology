@@ -1,0 +1,72 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 正塔的第一次正下标是 ex；自第二次起，根保留同一个前塔主 Ω 槽，其每条分支又迭代同一个 next。
+module B28POrbit where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import B15Spine as Sp
+import B18TowerEmb as Emb
+import B20Head as H
+import B20Towers as J
+import B28PPull as Pull
+
+restrict : ∀ {s} (h : Ch s → L) c m →
+  (λ j w → J.slots (nd s h) m j (inc c w)) ≡ J.slots (h c) m
+restrict h c zero = refl
+restrict h c (suc m) = cong (λ b → J.extend b (Emb.standard m)) (restrict h c m)
+
+module At (n : ℕ) where
+  open Pull.Positive n using (i; k; p; o)
+  module K = J.At (suc n)
+  head = H.head (suc n)
+  z₁ = ex (proj₁ head) (proj₁ head) (proj₂ head) (proj₁ (Ωt k)) tt
+  first : K.index 1 ≡ z₁
+  first = refl
+
+  module Direct (b : Tr i → L) (e : ∀ c → OkO k (b c)) where
+    l = nd (sΩ i) b
+    source = k ⊕ l
+    right : OkO k l
+    right = (ink self , Ok-tw n) , e
+    cert : Ok source
+    cert = Ok⊕ k l o right
+    env = J.slots source (suc (suc n))
+    fold = proj₁ (ψ source cert env k (self ∙ lift k l) head (proj₁ (Ωt source)))
+    sub = λ c → proj₁ (ψ (k ⊕ b c) (Ok⊕ k (b c) o (e c)) (λ j w → env j (inc c w))
+                  k (self ∙ lift k (b c)) head (proj₁ (Ωt (k ⊕ b c))))
+    shape : fold ≡ Ω p sub
+    shape rewrite Pull.Positive.label n b e = refl
+    point : ∀ c → sub c ≡ proj₁ (ψ (k ⊕ b c) (Ok⊕ k (b c) o (e c)) (J.slots (k ⊕ b c) (suc (suc n)))
+                    k (self ∙ lift k (b c)) head (proj₁ (Ωt (k ⊕ b c))))
+    point c = cong (λ B → proj₁ (ψ (k ⊕ b c) (Ok⊕ k (b c) o (e c)) B k (self ∙ lift k (b c)) head
+                      (proj₁ (Ωt (k ⊕ b c))))) (restrict {sΩ i} (λ z → k ⊕ b z) c (suc (suc n)))
+
+  a = ↑ k (proj₁ head)
+  inner = λ c → proj₁ (Eh AL tt (proj₁ (Ωt (Sp.branch i c))) (opR a)) a
+  shape₁ : ↑ k (K.index 1) ≡ nd (sΩ i) inner
+  shape₁ = refl
+  module Seed = Direct inner (proj₂ (OkO↑ k k o self z₁))
+  module Step (g : Tr i → Tr k) = Direct (λ c → ↑ k (g c)) (λ c → OkO↑ k k o self (g c))
+
+  branch : ℕ → Tr i → Tr k
+  branch zero = Seed.sub
+  branch (suc j) = Step.sub (branch j)
+  same : ∀ j → K.index (suc (suc j)) ≡ Ω p (branch j)
+  same zero = Seed.shape
+  same (suc j) = trans (cong K.next (same j)) (Step.shape (branch j))
+  root : ∀ j → Σ (Tr i → Tr k) (λ g → K.index (suc (suc j)) ≡ Ω p g)
+  root j = branch j , same j
+  commute : ∀ j c → branch j c ≡ iter K.next (branch 0 c) j
+  commute zero c = refl
+  commute (suc j) c = trans (Step.point (branch j) c) (cong K.next (commute j c))
+
+  child = λ j c → k ⊕ ↑ k (branch j c)
+  card : ∀ j → Σ (Tr i → L) (λ f → K.ℓ (K.index (suc j)) ≡ nd (sΩ i) f)
+  card zero = (λ c → k ⊕ inner c) , refl
+  card (suc j) = child j , cong K.ℓ (same j)

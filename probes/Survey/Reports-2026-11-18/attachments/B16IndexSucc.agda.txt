@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 后继层的真实第二链项把子层的全部前驱放在同一左前缀后，并在上面留一个实际前驱。
+module B16IndexSucc where
+
+open import Data.Unit using (tt)
+open import Data.Product using (Σ; proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import W4Path
+open import WVOne using (T₀; read)
+import OCF.Align.Level as L
+open import OCF.Align.BTBOValNeg using (add-≺)
+open import OCF.Align.BTBOFullV3 using (≺→⊑₀; add-left)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B14Tower as W
+open import B16IndexBlocks using (module WT; module B; Marked)
+open import B16IndexBase using (pred; plus)
+open T.Run
+
+module Step (j : W4Block.L) (r : T.Run (U.sc j)) (hr : A.Covered r) (ws : (c : Ch sS) → zero ≤ j) where
+  child = T.enterRun sS (λ _ → j) r tt zero
+  w = ws tt
+  c⁺ = bs r j (inc tt self)
+  c = proj₁ c⁺
+  b = β r
+  fold = ψ j (ok child) (bs child) zero w b
+  right = proj₁ (fold c)
+  left = proj₁ (fold (suc zero))
+  top = left + right
+  out = ψ (U.sc j) (ok r) (bs r) zero (inu ws) b
+  target = proj₁ (out (proj₁ (Ωt (U.sc j))))
+  upper = W.valueAt r (inu ws)
+  self-change : j ⊢ c ◃ suc (proj₁ (ψ j (ok child) (bs child) j self c⁺ (suc zero)))
+  self-change = ◃t (mono j (ok child) (bs child) j self c⁺ ◃s) ◃s
+  into : zero ⊢ top ◃ target
+  into = ◃t (+-mono left (mono j (ok child) (bs child) zero w b self-change)) (◃l 1)
+  lower : read (proj₁ b) L.≺ read left
+  lower = pred (mono j (ok child) (bs child) zero w b ◃s)
+
+  prefix : W.valueAt child w L.⊑ read right
+  prefix with hr j (inc tt self)
+  ... | inj₁ e = subst (λ x → W.valueAt child w L.⊑ read (proj₁ (fold x))) e (λ p → p)
+  ... | inj₂ d = ≺→⊑₀ (pred (mono j (ok child) (bs child) zero w b d))
+
+  new : ∀ {i} → Marked i (read (proj₁ b)) (W.valueAt child w) → Marked (B.suc i) (read (proj₁ b)) upper
+  new {i} (e , above) = WT.Eb-suc shifted (read top) (λ p → p) (pred into) , nz
+    where
+    shifted : WT.Eb i (read top)
+    WT.map shifted p = read left L.+ WT.map e p
+    WT.below shifted p = L.≺-respʳ (add-≺ (read left) (prefix (WT.below e p))) (plus left right)
+    WT.mono shifted p q d = add-≺ (read left) (WT.mono e p q d)
+    WT.coh shifted p q d = L.add-≅ (L.≅-refl⁰ _) (WT.coh e p q d)
+    nz : ∀ {z} (p : z B.< B.suc i) → read (proj₁ b) L.≺ WT.map (WT.Eb-suc shifted (read top) (λ a → a) (pred into)) p
+    nz B.zero = L.≺-respʳ (add-left lower (read right)) (plus left right)
+    nz (B.suc p) = add-left lower (WT.map e p)

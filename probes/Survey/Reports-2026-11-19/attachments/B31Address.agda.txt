@@ -1,0 +1,41 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 首塔中每个待赋名的询问由一条有限极限地址及一个反馈轮数指定。
+module B31Address where
+open import Data.Nat.Base using (ℕ)
+open import Data.Product using (Σ; _,_)
+open import Data.Unit.Base using (⊤; tt)
+import W4Block as W
+open import WVOne using (T₀; h₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼)
+import B12Terminal as T
+import B27UArbitrary as U
+import B31Cost as C
+import B31Head as H
+import B31UProduct as P
+import B31OrbitRank as K
+
+Addr : W.Tr W.zero → Set
+Addr W.zero = ⊤
+Addr (W.suc z) = ℕ
+Addr (W.lim g _) = Σ ℕ (λ n → Addr (g n))
+readAt : ∀ z → T.Run (h₁ z) → Addr z → T₀
+readAt W.zero r _ = P.fold₁ r
+readAt (W.suc z) r n = H.Cell.leaf (h₁ z) r n
+readAt (W.lim g _) r (n , p) = readAt (g n) (T.limRun (λ i → h₁ (g i)) r n) p
+in-cost : ∀ z r p → readAt z r p ≼ C.cost z r
+in-cost W.zero r _ = ≼-refl _
+in-cost (W.suc z) r n = ≼l n (≼-refl _)
+in-cost (W.lim g _) r (n , p) = ≼l n (in-cost (g n) (T.limRun (λ i → h₁ (g i)) r n) p)
+least : ∀ z r (q : T₀) → (∀ p → readAt z r p ≼ q) → C.cost z r ≼ q
+least W.zero r q cap = cap tt
+least (W.suc z) r q cap = l≼ cap
+least (W.lim g _) r q cap = l≼ (λ n → least (g n) (T.limRun (λ i → h₁ (g i)) r n) q (λ p → cap (n , p)))
+
+At = λ j → Addr (U.index j)
+ask : ∀ j → At j → T₀
+ask j = readAt (U.index j) (U.run (U.index j))
+occurs : ∀ j p → ask j p ≼ K.D
+occurs j p = ≼-trans {b = K.pieces j} (in-cost (U.index j) (U.run (U.index j)) p) (K.part j)
+collect : ∀ (q : T₀) → (∀ j p → ask j p ≼ q) → K.D ≼ q
+collect q h = l≼ {f = K.pieces} λ j → least (U.index j) (U.run (U.index j)) q (h j)

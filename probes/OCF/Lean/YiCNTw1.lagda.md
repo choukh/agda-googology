@@ -1,0 +1,122 @@
+# 塔第 1 层号上的完整 Leaf
+验收文件；编译定理：无 Ω 形状层号的读法低于 Ω₁，`tw 1` 的读法不高于 Ω₁，故其完整 Leaf 成立。
+来源：引用 `YiLLCheck.leafΩ`，零与共尾度视图的界调用 `YiLLLeafNeg` 的已证句法引理；未调用 `noLeaf`。
+这里界的是验收读法；未实填一般规范域的 Leaf、塔后续 Lift 或低层保持。
+
+```agda
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+module OCF.Lean.YiCNTw1 where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym; trans)
+open import OCF.Lean.YiRWBlock
+import OCF.Lean.YiGIRel as GR
+import OCF.Lean.YiLLCheck as LL
+import OCF.Lean.YiLLLeafNeg as N
+import OCF.Lean.YiRWOps as O
+open import OCF.Lean.YiVRRel using (NoΩ; NoΩ↑)
+import OCF.Align.EboLeanDef as E
+open import OCF.Align.EboLeanBase using (_≤ᵀ_; ≤-<; <ᵀ-trans)
+open import OCF.Align.EBO using (pred-suc)
+open import OCF.Align.EboLeanView using (cof0; ne; Vω; ws; wl; w4; w5; w6; vω; fω; fω-eq; VΩ; ωs; ωr; ωl; ωp; vΩ; fΩ; fΩ-eq; fΩ-pos; γ)
+open import OCF.Align.EboLean3Base using (Ωt-mono)
+
+Ω₁ : E.T
+Ω₁ = E.Ωt (E.natT 1)
+
+no-emptyω : ∀ {t} (v : Vω t) → fω v 2 ≡ [] → ⊥
+no-emptyω v e = bad (subst (E.natT 1 E.<ᵀ_) e (N.fω-big v))
+  where
+  bad : E.natT 1 E.<ᵀ [] → ⊥
+  bad ()
+
+tail : E.T → E.T
+tail [] = []
+tail (_ ∷ xs) = xs
+arg : E.T → E.T
+arg [] = []
+arg (E.ψ u b ∷ _) = b
+
+Ω-inv : ∀ {u v} → E.Ωt u ≤ᵀ E.Ωt v → u ≤ᵀ v
+Ω-inv (inj₁ (E.hd< (E.lv< p))) = inj₁ p
+Ω-inv (inj₁ (E.hd< (E.ar< ())))
+Ω-inv (inj₁ (E.tl< ()))
+Ω-inv (inj₂ refl) = inj₂ refl
+
+small-head : ∀ {u b xs} → (E.ψ u b ∷ xs) E.<ᵀ Ω₁ → u E.<ᵀ E.natT 1
+small-head (E.hd< (E.lv< p)) = p
+small-head (E.hd< (E.ar< ()))
+small-head (E.tl< ())
+
+nonempty : ∀ {x : E.PT} {xs : E.T} → (x ∷ xs) ≡ [] → ⊥
+nonempty ()
+
+fω-below : ∀ {t} (v : Vω t) → fω v 2 ≤ᵀ Ω₁ → t E.<ᵀ Ω₁
+fω-below (ws {x = E.ψ u b} v) (inj₁ p) = E.hd< (E.lv< (small-head p))
+fω-below (ws v) (inj₂ e) = ⊥-elim (no-emptyω v (cong tail e))
+fω-below (wl e v) le = ⊥-elim (N.conflict (N.fω-big v) (Ω-inv le))
+fω-below (w4 {u = u} {b = b} e) (inj₁ p) = E.hd< (E.lv< (small-head p))
+fω-below (w4 {u = u} {b = b} e) (inj₂ eq) = ⊥-elim (nonempty (cong tail eq))
+fω-below (w5 {u = u} {b = b} e v) (inj₁ p) = E.hd< (E.lv< (small-head p))
+fω-below (w5 {u = u} {b = b} e v) (inj₂ eq) = ⊥-elim (no-emptyω v (cong arg eq))
+fω-below (w6 {u = u} {b = b} e cmp v) (inj₁ p) = E.hd< (E.lv< (small-head p))
+fω-below (w6 {u = u} {b = b} e cmp v) (inj₂ eq) = ⊥-elim (bad (subst ([] E.<ᵀ_) (cong arg eq) (fΩ-pos v E.[]<)))
+  where
+  bad : [] E.<ᵀ [] → ⊥
+  bad ()
+
+suc-below : ∀ {t} → t E.<ᵀ Ω₁ → E.sucT t E.<ᵀ Ω₁
+suc-below {t = []} _ = E.hd< (E.lv< E.[]<)
+suc-below {t = _ ∷ _} (E.hd< (E.lv< p)) = E.hd< (E.lv< p)
+suc-below (E.hd< (E.ar< ()))
+suc-below (E.tl< ())
+
+rdC-bound : (ℓ : L) → NoΩ ℓ → ∀ {ν} → GR.Rd ℓ ν → ν E.<ᵀ Ω₁
+rdC-bound ℓ ct {ν = []} (GR.c0 e) = E.[]<
+rdC-bound ℓ ct {ν = _ ∷ _} (GR.c0 e) = ⊥-elim (cof0 _ ne e)
+rdC-bound zero ct (GR.ca ())
+rdC-bound (nd sS h) ct (GR.ca (inj₁ (tt , q))) = rdC-bound (h tt) ct q
+rdC-bound (nd sS h) ct {ν} (GR.ca (inj₂ (e , q))) = subst (E._<ᵀ Ω₁) (pred-suc ν e) (suc-below (rdC-bound (h tt) ct q))
+rdC-bound (nd sL h) ct (GR.ca (inj₁ (n , q))) = rdC-bound (h n) (ct n) q
+rdC-bound (nd sL h) ct (GR.ca (inj₂ ()))
+rdC-bound (nd (sΩ k) h) () q
+rdC-bound ℓ ct {ν} (GR.cL e h) = fω-below (vω ν e) (inj₁ (subst (E._<ᵀ Ω₁) (fω-eq (vω ν e) 2) (rdC-bound ℓ ct (h 2))))
+rdC-bound ℓ ct (GR.cc le q) = ≤-< le (rdC-bound ℓ ct q)
+
+rd-zero : ∀ {ν} → GR.Rd zero ν → ν ≡ []
+rd-zero {ν = []} (GR.c0 e) = refl
+rd-zero {ν = _ ∷ _} (GR.c0 e) = ⊥-elim (cof0 _ ne e)
+rd-zero (GR.ca ())
+rd-zero (GR.cL e h) = ⊥-elim (bad (subst (E.natT 1 E.<ᵀ_) (rd-zero (h 2)) (N.fsn-big e)))
+  where
+  bad : E.natT 1 E.<ᵀ [] → ⊥
+  bad ()
+rd-zero (GR.cc le q) with rd-zero q
+... | refl with le
+... | inj₂ refl = refl
+
+regular-zero : ∀ {ν κ} (v : VΩ ν κ) → κ ≡ [] → fΩ v [] ≡ [] → ν ≡ Ω₁
+regular-zero (ωs v) e ()
+regular-zero (ωr {u = u} e) ek eq = cong E.Ωt (trans (sym (pred-suc u e)) (cong E.sucT ek))
+regular-zero (ωl e v) ek ()
+regular-zero (ωp e pen v) ek ()
+
+rd1-bound : ∀ {ν} → GR.Rd (tw 1) ν → ν ≤ᵀ Ω₁
+rd1-bound {ν = []} (GR.c0 e) = inj₁ E.[]<
+rd1-bound {ν = _ ∷ _} (GR.c0 e) = ⊥-elim (cof0 _ ne e)
+rd1-bound (GR.ca (inj₁ (c , q))) = inj₁ (rdC-bound (zero ⊕ ↑ zero c) (NoΩ↑ c) q)
+rd1-bound {ν} (GR.ca (inj₂ (κ , e , qk , qh))) = inj₂ (regular-zero (vΩ ν e) (rd-zero qk)
+  (trans (sym (fΩ-eq (vΩ ν e) [])) (rd-zero (qh [] zero H.mz))))
+  where import OCF.Lean.YiHCRel as H
+rd1-bound {ν} (GR.cL e h) = inj₁ (fω-below (vω ν e)
+  (subst (_≤ᵀ Ω₁) (fω-eq (vω ν e) 2) (rd1-bound (h 2))))
+rd1-bound (GR.cc le q) = ≤-trans′ le (rd1-bound q)
+  where open import OCF.Align.EboLeanBase using (≤-trans′)
+
+leaf-tw1 : ∀ {ν} → GR.Rd (tw 1) ν → GR.R (tw 1) (E.Ωt ν) (proj₁ (O.Ωt (tw 1)))
+leaf-tw1 q = LL.rdown (tw 1) (Ωt-mono (rd1-bound q)) LL.leafΩ
+```

@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23RShare where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using (List; []; _∷_)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+open import WVOne using (𝟏; T₀; Mv; read)
+open import W4Fold using (EBOᶜ)
+import W4Block as W
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; s≼s; l≼; z≼; ≅→≼; +-mono; 1≼ψ⁰)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import B12Omega3Ref as R
+import B12EboRows as End
+import B12Terminal as T
+import B12TerminalTail as Tail
+import B13Target as P
+import B14RefGain as Path
+import B14RefAllRows as A
+import B22RowBoundary as Bound
+import B22RowWhole as Whole
+import B22RowSource as Src
+import B14Floor as Floor
+import B15TowerSeed as Seed
+import B12ActualSlots as Cover
+open import W4Path using (Ok-Λ)
+
+oneStep = A.gain 1 0 𝟏
+parts = λ n → L.ψ⁰ (P.pass (R.left n))
+full-shape : oneStep ≡ L.lim parts
+full-shape = refl
+parts-equivalent : ∀ {v : T₀} → (oneStep ≼ v → ∀ n → parts n ≼ v) Data.Product.× ((∀ n → parts n ≼ v) → oneStep ≼ v)
+parts-equivalent = (λ h n → ≼-trans (≼l n (≼-refl _)) h) , l≼
+
+q = P.pass (L.suc Ω₂ᴸ)
+old = L.ψ⁰ q
+two-at = 2 ∷ 0 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 0 ∷ 0 ∷ 2 ∷ []
+second : Path.along two-at oneStep ≡ L.ψ⁰ (P.pass (L.suc (L.suc Ω₂ᴸ)))
+second = refl
+after = 2 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 0 ∷ 0 ∷ []
+piece = Path.along after (Path.along two-at oneStep)
+literal : piece ≡ L.ψ⁰ (L.suc q)
+literal = refl
+
+strict : L.suc (tr₀ Src.source) ≼ piece
+strict = ≼-trans (s≼s (proj₁ Bound.src)) (≼l 2 (+-mono (≼-refl old) (1≼ψ⁰ q)))
+
+old-in : old ≼ End.child 1
+old-in = ≼-trans (≅→≼ (L.≅-sym Bound.successor)) (Seed.initial-bound 2 Whole.At.full T.tower1 (Cover.enter W.sL W.tw T.terminal 1 (T.prefix W.tw 1) (Cover.initial W.Λ Ok-Λ)))
+to-product : ∀ n → R.S.iter (old L.+_) L.zero n ≼ W.iter (old L.+_) old n
+to-product zero = z≼
+to-product (suc n) = +-mono (≼-refl old) (to-product n)
+placed : piece ≼ End.child 2
+placed = ≼-trans (l≼ (λ j → ≼l j (to-product j))) (Tail.raise W.tw T.terminal 1 old-in)
+below-first : piece ≼ oneStep
+below-first = ≼-trans (Path.path-bound after (Path.along two-at oneStep)) (Path.path-bound two-at oneStep)
+
+open import OCF.Align.Value using (_≈ᵛ_; ψ⁰-suc-≼)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+import B12LimitSrc as Sync
+
+module Native where
+  base = Sync.lim Src.src Src.lev Src.aligned
+  argument = Src.S.suc (Src.S.lim Src.src)
+  source = Src.S.ψ₀ argument
+  align : Sync.Aligned argument (L.suc (L.lim Src.lev))
+  align = Sync.aligned (U.Ms (Sync.Aligned.up base)) (D.Rs (Sync.Aligned.dn base)) (L.s≅ (Sync.Aligned.regular base))
+  before : L.ψ⁰ (L.lim Src.lev) ≈ᵛ old
+  before = ≼-trans (proj₂ Src.lim-both) (proj₁ Bound.src) , ≼-trans (proj₂ Bound.src) (proj₁ Src.lim-both)
+  both : tr₀ source ≈ᵛ piece
+  both = ≼-trans (proj₁ (Sync.fold align)) (ψ⁰-suc-≼ {a = L.lim Src.lev} {b = q} (proj₁ before)) ,
+         ≼-trans (ψ⁰-suc-≼ {a = q} {b = L.lim Src.lev} (proj₂ before)) (proj₂ (Sync.fold align))
+  above : L.suc (tr₀ Src.source) ≼ tr₀ source
+  above = ≼-trans strict (proj₂ both)
+  terminal : tr₀ source ≼ read EBOᶜ
+  terminal = ≼-trans (proj₁ both) (End.into (2 , placed))

@@ -1,0 +1,61 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第一正塔实际步 u 将任一起点下界 q 至少提升 u 次；每次可取右乘 ω 的任意有限迭代的极限。
+module B30PValue where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym; subst)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; l≼; ≼l; s≼s; +-mono)
+import W4Block as W
+import WVOne as V
+import B12Terminal as T
+import B12TerminalTail as Tail
+import B28BBranch as Z
+import B28BCut as Cut
+import B30PFirst as F
+import B30PStart as S
+import B30PActual as A
+
+free = A.C.A.free
+k = A.k
+raw = A.Raw.run
+front : V.T₀ → V.T₀
+front (L.lim f) = f 0
+front _ = L.zero
+edge : ∀ {x y : W.Tr W.zero} → S.NatEdge x y → front (V.read y) ≡ V.read x
+edge (S.edge f d) = refl
+one : ∀ {x y : W.Tr W.zero} → S.NatEdge x y → V.read x ≼ V.read y
+one (S.edge f d) = ≼l 0 (≼-refl _)
+move : ∀ {x y : W.Tr k} → F.First x y → free x ≼ free y
+move {x} {y} p = subst (λ z → free x ≼ z) (sym (Z.At.canon 0 y))
+  (subst (_≼ V.read (raw y)) (sym (Z.At.canon 0 x)) (one (A.Raw.keep p)))
+path : ∀ {a b : W.Tr k} → F.Walk a b → free a ≼ free b
+path F.stay = ≼-refl _
+path (F.step {y} p h) = ≼-trans {b = free y} (path p) (move h)
+
+climb : V.T₀ → V.T₀
+climb q = L.lim (W.iter Tail.mulω q)
+
+module Child (f : ℕ → W.Tr k) (d : ∀ n → W._⊢_◃_ k (f n) (f (suc n))) where
+  x = W.lim f d
+  h = λ i → A.C.lev (f i)
+  r = A.C.A.restart x
+  site = T.limRun h r 0
+  anchor : free (f 0) ≡ V.read (T.value site)
+  anchor = trans (Z.At.canon 0 (f 0)) (trans (sym (edge (A.Raw.keep (F.nat f d)))) (cong front (sym (Z.At.canon 0 x))))
+  apply : ∀ q → q ≼ free (f 0) → climb q ≼ free x
+  apply q p = Tail.close-tail h r 0 {a = q} (subst (q ≼_) anchor p)
+
+raise : ∀ {x y : W.Tr k} → S.NatEdge x y → ∀ q → q ≼ free x → climb q ≼ free y
+raise (S.edge f d) = Child.apply f d
+
+value : ∀ {a n x} → S.Layers a n x → ∀ q → q ≼ free a → W.iter climb q n ≼ free x
+value (S.bottom p) q h = ≼-trans h (path p)
+value (S.layer {d} p e) q h = raise e (W.iter climb q d) (value p q h)
+
+actual : ∀ j u q → q ≼ Cut.Physical.inner 0 j 0 → W.iter climb q u ≼ Cut.Physical.inner 0 j u
+actual j u = value (A.Actual.layers j u)
+
+all : ∀ j q → q ≼ Cut.Physical.inner 0 j 0 → L.lim (W.iter climb q) ≼ Cut.Physical.f 0 j
+all j q h = l≼ λ u → ≼-trans {a = W.iter climb q u} {b = Cut.Physical.inner 0 j u} {c = Cut.Physical.f 0 j} (actual j u q h) (Cut.Physical.into 0 j u)
+

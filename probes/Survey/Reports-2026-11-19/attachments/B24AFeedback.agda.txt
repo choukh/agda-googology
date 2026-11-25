@@ -1,0 +1,77 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24AFeedback where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (subst)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; 𝟏; read)
+open import WVTwo using (g₂; p₂; ◃→≼)
+open import WKGen using (Ω₁t; node-ge)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+open import YiLAB11Orbit using (push)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; l≼; ≅→≼)
+import B11OuterCore as C
+import B12LimitSrc as Src
+import B12ActualSlots as Cov
+import B12Omega3Ref as Ref
+import B13Orbit as Orb
+import B13Target as P
+import B13OrbitFeed as O
+import B15OrbitModel as M
+import B22RowPrefix as B
+import B22RowLive as V
+import B22RowRule as Ru
+import B22RowCountable as T
+import B24AFrame as F
+
+module Site (Q : Op {lvl2} nil) (x : Src.Lev₂) (law : Ru.Rule Q x) where
+  K₁ = enterO O.m₁ Q
+  K₀ = enterO O.m₂ K₁
+  module Count = F.Deep.Count K₀ x (F.enter-rule {Q = Q} {x = x} law)
+  module Run {p : Src.Lev₂} (l : B.Label p) (R : Base lvl2) (h : V.Present l R) where
+    S₁ = push R
+    S₀ : St M.X₀
+    S₀ i t = S₁ i (proj₂ t)
+    dz = M.down-t
+    step₁ : Tr zero → Tr zero
+    step₁ z = proj₁ (E ok₂ O.D₁ (O.g₁ z) K₁ S₁ zero dz (S₁ zero dz))
+    step₂ : Tr lvl1 → Tr lvl1
+    step₂ z = proj₁ (E ok₂ tdNil (g₂ z) Q R lvl1 C.slot (R lvl1 C.slot))
+    source = λ y → p L.+ P.pass (T.append x y)
+
+    module Branch (y : T₀) (z : Tr zero) (le : y ≼ read (suc z)) where
+      law′ = Count.eval (suc z) {y} le
+      l′ = F.Deep.advance law′ l
+      state = F.Deep.pull (stepS (F.Deep.E′ (suc z) K₀) S₀)
+      live : V.Present l′ state
+      live = F.Deep.state law′ l S₀ h
+      value : ∀ (t : ⟦ M.X₁ ⟧ zero) b → L.ψ⁰ (B.q l) ≼ read (proj₁ b) →
+        L.ψ⁰ (source y) ≼ read (proj₁ (E ok₂ O.D₁ (O.g₁ z) K₁ S₁ zero t b))
+      value t b hb = ≼-trans (≅→≼ (L.≅-sym (proj₁ (B.link l′)))) (F.Deep.value law′ l S₀ h (σ O.m₂ t) b hb)
+
+    module Chain (G : T₀ → T₀) (lower : ∀ y → G y ≼ L.ψ⁰ (source y)) where
+      src = Ref.S.iter G 𝟏
+      clock = iter step₁ zero
+      track : ∀ n → src n ≼ read (suc (clock n))
+      track zero = ≼-refl _
+      track (suc n) = ≼-suc (≼-trans (lower (src n)) (Branch.value (src n) (clock n) (track n) dz (S₁ zero dz) (V.lower h (proj₂ dz))))
+      hull : T₀
+      hull = L.lim (λ n → src (suc n))
+      module At (t : zero ≤ lvl2) (b : Tr⁺ zero) (hb : L.ψ⁰ (B.q l) ≼ read (proj₁ b)) where
+        own = σ O.m₁ t
+        inner : hull ≼ read (proj₁ (E ok₂ O.D₁ Ω₁t K₁ S₁ zero own b))
+        inner = l≼ (λ n → ≼-trans (lower (src n)) (≼-trans (Branch.value (src n) (clock n) (track n) own b hb)
+          (node-ge (kpT (fr O.D₁) ok₂ p₁ (tv O.D₁ own)) (λ z → E ok₂ O.D₁ (O.g₁ z) K₁ S₁ zero own b) step₁ n)))
+        outer : hull ≼ read (proj₁ (run (Orb.block (Ωt lvl2) Q) R zero t b))
+        outer = ≼-trans inner (≼-trans (◃→≼ (Emono ok₂ tdNil Q R zero t b
+          {x = up zero tt Ω₁t (proj₂ (Ωt lvl1))} {y = g₂ (step₂ zero)}
+          (◃c zero tt (◃t (C.st (V.struct h)) (◃t (Einf ok₂ tdNil (g₂ zero) Q R lvl1 C.slot (R lvl1 C.slot)) ◃s)))))
+          (node-ge (kp lvl2 ok₂ p₂ t) (λ z → E ok₂ tdNil (g₂ z) Q R zero t b) step₂ 1))
+        to-block : ∀ c → Cov._⊴_ (proj₁ (Ωt lvl2)) (proj₁ c) → hull ≼ read (proj₁ (run (Orb.block c Q) R zero t b))
+        to-block c (inj₁ eq) = subst (λ a → hull ≼ read (proj₁ (E ok₂ tdNil a Q R zero t b))) eq outer
+        to-block c (inj₂ ge) = ≼-trans outer (◃→≼ (Emono ok₂ tdNil Q R zero t b ge))

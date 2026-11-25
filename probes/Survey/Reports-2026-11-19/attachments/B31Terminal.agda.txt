@@ -1,0 +1,20 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 整棵 W4 的严格 EBO 上界使用三份预算，首塔只需界住所有较低层实际自反馈询问。
+module B31Terminal where
+open import Data.Product using (proj₁)
+open import OCF.Align.Value using (≼-trans)
+import B26Names as A
+import B26Depth as Depth
+import B26PActual as Y
+import B27Threshold as R
+import B29CBudget as G
+import B29End as E
+import B29Three as T
+import B29Channels as C
+import B30Terminal as Old
+import B30MStart as H
+import B31OrbitRank as Run
+
+module Actual = T.Three A.E R.row E.Common.row-for (λ k → A.strict (Depth.tower k))
+  Run.D H.leaves G.Actual.Γ Y.Y (≼-trans {b = C.first} Run.low E.first-in) Old.strict-start Old.strict-leaf
+  (λ k two d → Old.close k two (proj₁ (Run.Original.small k two) d))

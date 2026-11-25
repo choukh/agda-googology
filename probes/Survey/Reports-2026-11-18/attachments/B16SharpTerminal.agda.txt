@@ -1,0 +1,47 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B16SharpTerminal where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (sym; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Fold as F
+open import WVOne using (read)
+open import WVTwo using (lvl2)
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼)
+open import B13SharpOne using (r₁)
+open import B14SharpStack
+open import B15SharpAction using (id)
+import B14SharpLive as Live
+import B14SharpStation as S
+import B15SharpSecond as Sec
+import B15SharpTail as Tail
+import B12Terminal as T
+open import B16SharpOrbit
+
+module Terminal (lem : LEM) where
+  open I.Sharp lem
+
+  module Run (r : T.Run lvl2) where
+    open Live.Live.Actual lem r using (c⁺)
+    h = T.Run.omegaB r (B.inc tt B.self)
+    module Pair = Orbit.Vary lem c⁺ h
+    module Base = Sec.Second.Stage lem c⁺ h
+    module Old = Tail.Tail.Run lem r
+
+    every : ∀ n → Old.Compare n
+    every n = Pair.all n zero (λ x → x) (λ x → x) B♯ (V.Ωt r₁) id Base.O Base.start≤
+
+    module Prefix = Old.From (λ n _ → every (suc (suc n)))
+
+    whole : S.Station.whole lem ≼ read (T.value r)
+    whole = subst (λ x → x ≼ read (T.value r)) (sym (S.Station.actual-shape lem)) (l≼ Prefix.prefix)
+
+  Λ-lower : S.Station.whole lem ≼ read F.EBOᶜ
+  Λ-lower = ≼-trans (Run.whole (T.finiteRun 1)) (T.finite-ge 1)
+

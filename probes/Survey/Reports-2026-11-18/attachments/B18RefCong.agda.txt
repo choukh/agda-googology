@@ -1,0 +1,32 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18RefCong where
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+import OCF.Align.Level as L
+import B15RefAlgebra as A
+import B17RefVector as V
+open import B18RefDelta using (δ)
+small : ∀ {x y : T₀} → x L.≅ y → ∀ {u v} → u L.≅ v → A.H x u L.≅ A.H y v
+small L.z≅ d = V.regularΓ d
+small (L.s≅ {a = x} {b = y} r) d = L.l≅ (L.iter-R L._≅_ {G = A.H x} {G′ = A.H y} (small r) d)
+small (L.l≅ r) d = L.l≅ (λ j → small (r j) d)
+small (L.lᵢ≅ {p = ()} _ _)
+small (L.upˡ {r = ()} _)
+small (L.upʳ {r = ()} _)
+
+lift : ∀ {x : T₀} {y : T₁} → x L.≅ y → ∀ {u v} → u L.≅ v → A.H x u L.≅ δ y v
+lift L.z≅ d = V.regularΓ d
+lift (L.s≅ {a = x} {b = y} r) d = L.l≅ (L.iter-R L._≅_ {G = A.H x} {G′ = δ y} (lift r) d)
+lift (L.l≅ r) d = L.l≅ (λ j → lift (r j) d)
+lift (L.lᵢ≅ {p = ()} _ _)
+lift (L.upˡ {r = ()} _)
+lift (L.upʳ {r = L.zero} r) d = small r d
+drop : ∀ {x : T₁} {y : T₀} → x L.≅ y → ∀ {u v} → u L.≅ v → δ x u L.≅ A.H y v
+drop r d = L.≅-sym (lift (L.≅-sym r) (L.≅-sym d))
+δ-pres : ∀ {x y u v} → x L.≅ y → u L.≅ v → δ x u L.≅ δ y v
+δ-pres L.z≅ d = V.regularΓ d
+δ-pres (L.s≅ {a = x} {b = y} r) d = L.l≅ (L.iter-R L._≅_ {G = δ x} {G′ = δ y} (δ-pres r) d)
+δ-pres (L.l≅ p) d = L.l≅ λ j → δ-pres (p j) d
+δ-pres (L.lᵢ≅ {p = L.zero} {q = L.zero} L.z≅ p) d = L.lᵢ≅ L.z≅ λ x y r → δ-pres (p x y r) d
+δ-pres (L.upˡ {r = L.zero} r) d = lift r d
+δ-pres (L.upʳ {r = L.zero} r) d = drop r d

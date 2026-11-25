@@ -1,0 +1,120 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- (B) 冻结式的指数模式, 只做折叠一层的原型 (不加构造子, 不进互递归):
+-- Ex 计算 "上折 Up i d b y" 对目标 (j, w) 的折叠而不把它摊平; 底 b 只经它的折叠族 Φ 出现 (高阶).
+-- 结点的链步改在结点所在的层 i 里做 (根换成 i), 所以同一孩子里的结点按孩子层的 kp 比路径.
+-- 没有做: ex 构造子, 第 0 层目标 (ψ⊥) 的一半, 合法性.
+module OmBProto where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiFreshBlock
+open import OCF.Lean.YiFreshFold using (_+_; iter; next; cum; Ωt)
+open import OCF.Lean.YiPhiBlock
+open import OCF.Lean.YiPhiFold using (kp; kp⁼)
+open import OCF.Lean.YiUpBlock using (chP; chBr; Dn; stop; down; mv; mvBr; Up; Upc)
+import OCF.Lean.YiUpFold as A
+
+chW : (j : L) (c : Ch j) → chL j c ≤ j
+chW (suc a)  _ = ins self
+chW (lim g)  n = inl n self
+chW (Ωₗ k h) c = inb c self
+
+dnW : ∀ {r i} → Dn r i → i ≤ r
+dnW stop           = self
+dnW (down {j} d c) = chW j c ∙ dnW d
+
+evCh : (j : L) (c : Ch j) → Ev j → Ev (chL j c)
+evCh (suc a)  _ ε = ε
+evCh (lim g)  n ε = ε n
+evCh (Ωₗ k h) c ε = proj₂ (proj₂ ε c)
+
+evD : ∀ {r i} → Dn r i → Ev r → Ev i
+evD stop           ε = ε
+evD (down {j} d c) ε = evCh j c (evD d ε)
+
+-- 底的折叠族: 对根 r 里的每个目标, 给 "β ↦ 底以 β 起步的折叠"
+Fam : L → Set
+Fam r = (j′ : L) → j′ ≤ r → Tr j′ → Tr j′
+
+Ex : (r : L) (εr : Ev r) (Bs : Base r) (Φ : Fam r) (i : L) (d : Dn r i) (j : L) (w : j ≤ r) (β : Tr j)
+   → Tr i → Tr j
+Ex r εr Bs Φ i d j w β zero    = Φ j w β
+Ex r εr Bs Φ i d j w β (suc y) =
+  lim (cum (λ n → iter (λ β″ → Ex r εr Bs Φ i d j w β″ y) (Ex r εr Bs Φ i d j w β y) n))
+Ex r εr Bs Φ i d j w β (lim f) = lim (λ n → Ex r εr Bs Φ i d j w β (f n))
+Ex r εr Bs Φ i d j w β (Ω p g) =
+  kp r εr (mv d p) w (λ q cv → Ω q (λ z → Ex r εr Bs Φ i d j w β (g (mvBr d p (cv z)))))
+                     (lim (cum (λ n → Ex r εr Bs Φ i d j w β (g (iter step (fromBr i p zero) n)))))
+  where
+  step : Br i p → Br i p
+  step z = fromBr i p
+    (Ex i (evD d εr) (base (b⊥ Bs) (λ j′ v → bs Bs j′ (v ∙ dnW d))) (λ j′ v β″ → Φ j′ (v ∙ dnW d) β″)
+        i stop (at i p) (posW i p) (bs Bs (at i p) (posW i p ∙ dnW d)) (g z))
+Ex r εr Bs Φ (suc a)  d j w β (up y _ y′) =
+  Ex r εr Bs (λ j′ v β″ → Ex r εr Bs Φ (suc a) d j′ v β″ y) a (down d tt) j w β y′
+Ex r εr Bs Φ (lim g)  d j w β (up y n y′) =
+  Ex r εr Bs (λ j′ v β″ → Ex r εr Bs Φ (lim g) d j′ v β″ y) (g n) (down d n) j w β y′
+Ex r εr Bs Φ (Ωₗ k h) d j w β (up y c y′) =
+  Ex r εr Bs (λ j′ v β″ → Ex r εr Bs Φ (Ωₗ k h) d j′ v β″ y) (h c) (down d c) j w β y′
+Ex r εr Bs Φ zero     d j w β (up y () _)
+
+-- 冻结项 ex b c y 的折叠行会是这个 (b 的折叠取 YiUp 的 ψs)
+exRow : (ℓ : L) (ε : Ev ℓ) (B : Base ℓ) (j : L) (w : j ≤ ℓ) (β : Tr j) (b : Tr ℓ) (c : Ch ℓ) → ChT ℓ c → Tr j
+exRow ℓ ε B j w β b c y =
+  Ex ℓ ε B (λ j′ v β″ → A.ψs ℓ ε B j′ v β″ b) (chL ℓ c) (down stop c) j w β (chT ℓ c y)
+
+IsΩ IsLim : ∀ {P B C D} → T P B C D → Set
+IsΩ (Ω _ _) = ⊤
+IsΩ _       = ⊥
+IsLim (lim _) = ⊤
+IsLim _       = ⊥
+
+one two : L
+one = suc zero
+two = suc one
+
+c₂ : Tr zero
+c₂ = suc (suc zero)
+
+ε₁ : Ev (tw 1)
+ε₁ = Ev-tw 1
+
+nodeC : (Tr zero → Tr two) → Tr two
+nodeC G = Ω (inj₂ (inj₁ tt)) G
+
+P : (Tr one → Tr zero → Tr two) → Tr two
+P G = Ω (inj₁ tt) (λ z → nodeC (G z))
+
+-- (a) 链步在孩子 two 里做: nodeC 保留
+scope-keeps : (Bs : Base two) (Φ : Fam two) (β₀ : Tr one) (G : Tr zero → Tr two) →
+  IsΩ (Ex two tt Bs Φ two stop one (ins self) β₀ (nodeC G))
+scope-keeps Bs Φ β₀ G = tt
+
+-- 外部目标是第 0 层侧 (ink self): P 走默认 (取链)
+P-default : (B : Base (tw 1)) (β : Tr zero) (b : Tr (tw 1)) (G : Tr one → Tr zero → Tr two) →
+  IsLim (exRow (tw 1) ε₁ B zero (ink self) β b c₂ (P G))
+P-default B β b G = tt
+
+-- 自身目标: 指数模式的输出是父层的结点, 即第二遍自身折叠时摊平
+self-flat : (B : Base (tw 1)) (β b : Tr (tw 1)) (G : Tr one → Tr zero → Tr two) →
+  exRow (tw 1) ε₁ B (tw 1) self β b c₂ (P G)
+  ≡ Ω (inj₂ (c₂ , inj₂ (inj₁ tt)))
+      (λ z → Ω (inj₂ (c₂ , inj₂ (inj₂ (inj₁ tt))))
+        (λ z′ → Ex (tw 1) ε₁ B (λ j′ v β″ → A.ψs (tw 1) ε₁ B j′ v β″ b) two (down stop c₂) (tw 1) self β (G z z′)))
+self-flat B β b G = refl
+
+-- (f) 后继一行: 指数模式是底的折叠的迭代; (A) 是对 b, b+b, … 逐项折叠
+suc-B : (B : Base (tw 1)) (j : L) (w : j ≤ tw 1) (β : Tr j) (b : Tr (tw 1)) →
+  exRow (tw 1) ε₁ B j w β b zero (suc zero)
+  ≡ lim (cum (λ n → iter (λ β″ → A.ψs (tw 1) ε₁ B j w β″ b) (A.ψs (tw 1) ε₁ B j w β b) n))
+suc-B B j w β b = refl
+
+suc-A : (B : Base (tw 1)) (j : L) (w : j ≤ tw 1) (β : Tr j) (b : Tr (tw 1)) →
+  A.ψs (tw 1) ε₁ B j w β (Upc (tw 1) zero b (suc zero))
+  ≡ lim (λ n → A.ψs (tw 1) ε₁ B j w β (iter (b +_) b n))
+suc-A B j w β b = refl

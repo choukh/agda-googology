@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任一接收树：原 EBO 的下界恰好要求对真实零运行的整个严格已命名初段换一次 Ω 解释。
+module B26CLift where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; trans; subst)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+open import OCF.Align.EboLeanTree using (EBO-tree′; nf-ΩT; nf-tower; hc)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import OCF.Lean.YiMonoExit using (toL)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc)
+import B12XRef as R
+import B12EboRows as End
+import B14Goal as G
+import B17Cofinal as C
+import B25DTrack as Tr
+open import B26CForest
+open import B26CDecode using (physical-image)
+
+principal : T → T
+principal a = ψ [] a ∷ []
+
+Φ : T → T
+Φ t = principal (restore t)
+
+gzero : ∀ {a q} → Pure a → InG [] q a → q ≡ []
+gzero (node pu px) (gp (gh _)) = refl
+gzero (node pu px) (gp (gw _ i)) = gzero pu i
+gzero (node pu px) (gp (gc _ ()))
+gzero (node pu px) (gtl i) = gzero px i
+
+fit : ∀ {a} → Pure a → GB [] a a
+fit empty ()
+fit {a} p@(node _ _) i = subst (_<ᵀ a) (sym (gzero p i)) []<
+
+pure-tower : ∀ n → Pure (ΩTower n)
+pure-tower zero = node empty empty
+pure-tower (suc n) = node (pure-tower n) empty
+
+output-normal : ∀ {t} (nt : NF t) (ct : Ctbl t) (h : HC t) → L.suc (Rt h) ≼ Tr.unit-output → NF (Φ t)
+output-normal {t} nt ct h d with physical-image nt ct h d
+... | u , pu , nu , e = nf-ψ n[] (subst NF (trans (sym (undo pu)) (cong restore e)) nu) (fit (pure-restore t))
+
+Inside : (T → Set) → Set
+Inside P = ∀ {t} (nt : NF t) (ct : Ctbl t) (h : HC t) → L.suc (Rt h) ≼ Tr.unit-output → P t
+
+Bound : L.Ordᶜ L.zero → Set
+Bound Y = Inside (λ t → (d : HC (Φ t)) → Rt d ≼ Y)
+
+row-as-input : ∀ n → Φ (small (ΩTower n)) ≡ EBOψ n
+row-as-input n = cong principal (undo (pure-tower n))
+
+input-h : ∀ n → HC (small (ΩTower n))
+input-h n = hc (normal (pure-tower n) (nf-ΩT n)) (count _)
+
+applied : ∀ {P : T → Set} → Inside P → ∀ n → P (small (ΩTower n))
+applied f n = f (normal (pure-tower n) (nf-ΩT n)) (count (ΩTower n)) (input-h n) (entry (pure-tower n) (nf-ΩT n) (input-h n))
+
+upper : ∀ {Y} → Bound Y → toL EBO-tree′ ≼ Y
+upper {Y} f = R.assemble λ n → ≼-trans (tree-≼ (sym (row-as-input n)) (R.H n) (d n))
+  (applied {P = λ t → (h : HC (Φ t)) → Rt h ≼ Y} f n (d n))
+  where d = λ n → subst HC (sym (row-as-input n)) (R.H n)
+
+lower : ∀ {Y} → toL EBO-tree′ ≼ Y → Bound Y
+lower p nt ct h b d = ≼-trans (≼-suc (≼-refl _))
+  (≼-trans (mono<ⁿ (output-normal nt ct h b) (nf-tower _) (c∷ c[]) d (R.H _) (C.below (c∷ c[])))
+  (≼-trans (G.row-in _) p))
+
+Lift = Inside (λ t → (d : HC (Φ t)) → End.InChild (L.suc (Rt d)))
+
+necessary : G.Goal → Lift
+necessary g nt ct h b d = C.necessary g (output-normal nt ct h b) (c∷ c[]) d
+
+enough : Lift → G.Goal
+enough f = upper (λ nt ct h b d → ≼-trans (≼-suc (≼-refl _)) (End.into (f nt ct h b d)))
+

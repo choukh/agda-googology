@@ -1,0 +1,68 @@
+# 塔第 1 项只在前驱域内调用孩子保持
+
+验收文件；编译条件定理：Lift₁ᴾ 推出实际塔第 1 项的 M⁰ 下界，StepSᴾ 可代入。
+来源：YiLTKid.Top.Fold.LF¹ 的根 Ω 行与 chain 专用于实际 G；嵌入行调用原 LF¹，链等式与反例复用 YiCDKeel。
+值下界 k1-value 复用 YiMTValue.k1ᶻ 的无条件定理，不声称已填新推导的出口条件或提高强度。
+
+```agda
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+module OCF.Lean.YiPCKeel where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (inj₁)
+open import Data.Product using (proj₁; proj₂)
+open import Data.List using ([])
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (B₀; kp)
+open import OCF.Lean.YiTBRow using (h₁)
+open import OCF.Lean.YiMTTab using (rbᶻ; twᶻ)
+open import OCF.Lean.YiLTKid using (ℓ¹; o¹; ΩΩ; module Sem)
+open import OCF.Lean.YiHCRel using (M⁰; mz; m1; mL; mU; pos⁰; module G⁰)
+open import OCF.Lean.YiANFam using (ψᴺ; cofG; fsnG)
+open import OCF.Lean.YiPCDom
+open import OCF.Lean.YiPCLift using (StepSᴾ; module Restricted)
+import OCF.Align.EboLeanDef as E
+import OCF.Lean.YiCDCanon as C
+open import OCF.Lean.YiCDKeel using (not-idx2; actual-chain) public
+open import OCF.Lean.YiMTValue using (k1ᶻ)
+open import OCF.Lean.YiBRValue using (readRW)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import OCF.Align.Value using (_≼_)
+
+module M = Sem (rbᶻ ℓ¹)
+module F = M.Fold (B₀ ℓ¹) M.gb₀ˢ
+open Restricted (rbᶻ ℓ¹)
+
+branch : (lf : Lift₁ᴾ) → ∀ {η c} → Pre c → M⁰ η c → M.M¹ (E.fsT ΩΩ η) (G c)
+branch lf pc m = mU mz (lf pc m)
+
+chain : Lift₁ᴾ → ∀ k → M⁰ (E.γT ΩΩ [] k) (idx (suc k))
+chain lf zero = pos⁰ _ (proj₂ (F.F (ink self) (Ωt zero) (G zero)))
+chain lf (suc k) = F.LF¹ M.wi (Ωt zero) (m1 refl mz)
+  (branch lf (idx-in (suc k)) (chain lf k)) tt
+
+k1ᴾ : Lift₁ᴾ → M⁰ (E.EBOψ 2) (twᶻ 1)
+k1ᴾ lf = M.nodeZ (kp ℓ¹ o¹ (inj₁ (inj₁ tt)) (inu (λ c → z≤ (h₁ c))))
+  (λ Z → M⁰ (E.EBOψ 2) (proj₁ Z))
+  (λ c → F.F (inu (λ c → z≤ (h₁ c))) (Ωt zero) (G c)) (F.feed G)
+  (mL (cofG [] ΩΩ refl refl)
+    (λ k → subst (λ z → M⁰ z (proj₁ (limc⁺ (λ k′ → F.F (inu (λ c → z≤ (h₁ c))) (Ωt zero) (G (idx k′))))))
+      (sym (fsnG [] ΩΩ k refl refl))
+      (G⁰.m-cum (λ k′ → F.F (inu (λ c → z≤ (h₁ c))) (Ωt zero) (G (idx k′))) (suc k)
+        (F.LF¹ M.wu (Ωt zero) (m1 refl mz)
+          (branch lf (idx-in (suc k)) (chain lf k)) tt))))
+
+k1-redᴾ : StepSᴾ → M⁰ (E.EBOψ 2) (twᶻ 1)
+k1-redᴾ st = k1ᴾ (lift-redᴾ st)
+
+not-Canon-cover : (∀ {c} → Pre c → C.Canon c) → ⊥
+not-Canon-cover cover = not-idx2 (cover idx2)
+
+-- 值结论直接复用已有的无条件定理；不声称给上面的 M⁰ 推导实填了 Exᴴ。
+k1-value : (h : E.HC (E.EBOψ 2)) → Rt h ≼ readRW (twᶻ 1)
+k1-value = k1ᶻ
+```

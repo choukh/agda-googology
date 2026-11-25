@@ -1,0 +1,152 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 只取原 Λ 的单位重置实际选中的回灌点。有限次沿连续 Ω 结点选择，仍可在同一原系数里核对返回值与源层的分支归属。
+module B28PVisits where
+open import Data.Nat.Base using (ℕ; zero; suc; s≤s; z≤n)
+open import Data.List.Base using (List; []; _∷_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; trans; subst)
+import W4Block as W
+import W4Ops as O
+import W4Fold as F
+import W4Path as P
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; s≼s)
+import OCF.Align.EboLeanDef as Not
+open import OCF.Lean.YiRefTw2 using (Rt)
+import WVOne as WV
+import B12Terminal as T
+import B15Spine as Sp
+import B20StandardInside as St
+import B20TowerValues as V
+import B20Towers as J
+import B27Joint as Goal
+import B28BHead as A
+import B28BBranch as B
+import B28BSlot as Slot
+import B28PProgram as Prog
+import B28PReference as Ref
+import B28POrbit as Orbit
+import B28PPull as P₀
+
+module At (m : ℕ) where
+  open A.At m using (k; i; top; free; module Walk)
+  module X = Orbit.At m
+  module Flow = Prog.At m
+  Key = W.Tr k
+  data Visit : Key → Key → Set where
+    stay : ∀ {x} → Visit x x
+    take : ∀ p g t {z} → Visit (Slot.At.Node.selected m p g t) z → Visit (W.Ω p g) z
+
+  paid : ∀ {x y} → Visit x y → free y ≼ free x
+  paid {x} stay = ≼-refl (free x)
+  paid (take p g t {z} d) = ≼-trans {a = free z} {b = free (N.selected t)} {c = free N.key} (paid d) here
+    where
+    module N = Slot.At.Node m p g
+    here : free (N.selected t) ≼ free N.key
+    here = subst (_≼ free N.key) (N.values t) (N.Run.lift-value t)
+
+  follow : ∀ l x → Prog.Places l x → List ℕ → Σ W.L (λ h → Σ Key (λ y → Prog.Places h y × Visit x y))
+  follow l x a [] = l , x , a , stay
+  follow W.zero x a (_ ∷ ts) = W.zero , x , a , stay
+  follow (W.nd W.sS h) x a (_ ∷ ts) = W.nd W.sS h , x , a , stay
+  follow (W.nd W.sL h) x a (_ ∷ ts) = W.nd W.sL h , x , a , stay
+  follow (W.nd (W.sΩ v) h) .(W.Ω p g) (p , tag , g , refl , get , see , sect , retr , kids) (t ∷ ts) =
+    proj₁ rest , proj₁ (proj₂ rest) , proj₁ (proj₂ (proj₂ rest)) , take p g t (proj₂ (proj₂ (proj₂ rest)))
+    where
+    module N = Slot.At.Node m p g
+    u = W.fromBr k p (N.stage t)
+    rest = follow (h (see u)) (g u) (kids u) ts
+
+  lower : ∀ x → L.suc (St.std 1) ≼ free x
+  lower x = subst (L.suc (St.std 1) ≼_) (sym e) (St.At.canonical m x 1 (s≤s z≤n))
+    where
+    e : free x ≡ St.At.value m x
+    e = trans (B.At.canon m x) (cong (λ b → WV.read (X.K.evaluate x b (O.Ωt W.zero)))
+      (V.slots (X.K.ℓ x) (suc (suc m))))
+
+  module Actual (j t : ℕ) where
+    g = X.branch j
+    module N = Slot.At.Node m top g
+    c = N.stage t
+    x = g c
+    source = Sp.branch i c
+    fits : Prog.Places source x
+    fits = Flow.inside j c
+    upper : free N.key ≡ Goal.f (suc m) (suc (suc j))
+    upper = trans (cong free (sym (trans (V.At.index (suc m) (suc (suc j))) (X.same j))))
+      (A.At.real m (suc (suc j)))
+    origin = take top g t {x} stay
+    module Along (ts : List ℕ) where
+      here = follow source x fits ts
+      l = proj₁ here
+      y = proj₁ (proj₂ here)
+      trace = take top g t (proj₂ (proj₂ (proj₂ here)))
+      subscript = proj₁ (proj₂ (proj₂ here))
+      bounded : free y ≼ Goal.f (suc m) (suc (suc j))
+      bounded = subst (free y ≼_) upper (paid trace)
+      original : (d : Not.HC (Ref.parent (Not.natT 2))) → L.suc (Rt d) ≼ free y
+      original d = ≼-trans {a = L.suc (Rt d)} {b = L.suc (St.std 1)} {c = free y} (s≼s (Ref.two d)) (lower y)
+
+-- 所选终点的每个零槽都实际含有标准第一塔。在其中取 χ 的指定枝后，
+-- 可把同一条森林零代码路径走到底；累加及零层复制只留下以下字面上下文。
+import B28CodePath as Input
+import B28Located as Named
+import B25DTrack as χ
+import B18TowerEmb as Emb
+import B18TowerSlots as Slots
+import Data.Nat.Properties as Nat
+
+Z = W.Tr W.zero
+data Frame : Set where
+  bare : Frame
+  pre : Z → Frame → Frame
+  copy : Frame → Frame
+plug : Frame → Z → Z
+plug bare z = z
+plug (pre a f) z = a O.+ plug f z
+plug (copy f) z = O.ι W.zero (plug f z)
+
+copied : ∀ {x y} → Input.Path x y → Input.Path (O.ι W.zero x) (O.ι W.zero y)
+copied Input.stop = Input.stop
+copied (Input.prev p) = Input.prev (copied p)
+copied (Input.take i p) = Input.take i (copied p)
+
+hoist : ∀ f {x y} → Input.Path x y → Input.Path (plug f x) (plug f y)
+hoist bare p = p
+hoist (pre a f) p = Input.prefix a (hoist f p)
+hoist (copy f) p = copied (hoist f p)
+
+subtotal : ℕ → Frame
+subtotal zero = bare
+subtotal (suc n) = pre (O.cum (λ j → χ.χ (suc j)) n) bare
+unit-tree = proj₁ (F.ψ WV.lvl1 WV.o₂ (F.B₀ WV.lvl1) W.zero (W.inu (λ _ → W.self))
+                    (O.Ωt W.zero) (proj₁ (O.Ωt WV.lvl1)))
+in-unit : ∀ n → Input.Path (plug (subtotal n) (χ.χ (suc n))) unit-tree
+in-unit zero = Input.take 0 Input.stop
+in-unit (suc n) = Input.take (suc n) Input.stop
+in-first : ∀ n → Input.Path (plug (pre (WV.Ftw 0) (subtotal n)) (χ.χ (suc n))) (proj₁ (Emb.standard 1))
+in-first n = Input.take 1 (Input.prefix (WV.Ftw 0) (Input.take 0 (in-unit n)))
+
+module Stored (l : W.L) (w : W.zero W.≤ l) (n : ℕ) where
+  val = λ j → proj₁ (J.slots l j W.zero w)
+  frame = pre (val 1) (copy (pre (WV.Ftw 0) (subtotal n)))
+  literal : ∀ m → Input.Path (plug frame (χ.χ (suc n))) (val (suc (suc m)))
+  literal zero = Input.prefix (val 1) (copied (in-first n))
+  literal (suc m) = Input.join (literal m)
+    (Input.prefix (val (suc (suc m))) (Input.bottom (O.ι W.zero (proj₁ (Emb.standard (suc (suc m)))))))
+
+module Inputs (m : ℕ) (x : W.Tr (W.tw (suc m))) where
+  module R = A.At m
+  node = R.restart x
+  l = Sp.branch R.k x
+  module Any (w : W.zero W.≤ l) where
+    slot = proj₁ (T.Run.bs node W.zero w)
+    same : slot ≡ proj₁ (J.slots l (suc (suc m)) W.zero w)
+    same = cong (λ b → proj₁ (b W.zero w)) (trans (Slots.At.all (suc m) x) (V.slots l (suc (suc m))))
+    forest : ∀ a → Σ Frame (λ f → Input.Path (plug f (Named.Code.tree a)) slot)
+    forest a = f , subst (Input.Path (plug f (Named.Code.tree a))) (sym same)
+      (Input.join (hoist f (proj₂ win (suc n) (Nat.n≤1+n n))) (Stored.literal l w n m))
+      where
+      win = Named.At.all-later a
+      n = proj₁ win
+      f = Stored.frame l w n

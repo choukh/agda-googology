@@ -1,0 +1,103 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19RowWorld where
+open import Data.Nat using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module O = Ord-Ord
+import OCF.Align.Level as L
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B13Target as P
+
+Reg : ∀ {i} → L.Ordᶜ i → Set
+Reg a = a L.≅ a
+Natural : ∀ {i j} → (L.Ordᶜ i → L.Ordᶜ j) → Set
+Natural f = ∀ {x y} → x L.≅ y → f x L.≅ f y
+
+record World : Set₁ where
+  field
+    C : Set
+    fit : C → Lev₂ → Set
+    conv : ∀ {a p q} → fit a p → p L.≅ q → fit a q
+    z : C
+    rz : fit z L.zero
+    next : C → C
+    rn : ∀ {a p} → Reg p → fit a p → fit (next a) (L.suc p)
+    sup : (ℕ → C) → C
+    rs : ∀ a p → (∀ j → Reg (p j)) → (∀ j → fit (a j) (p j)) → fit (sup a) (L.lim p)
+    node₀ : (T₀ → C) → C
+    n₀ : ∀ a p → Natural p → (∀ x → fit (a x) (p x)) → fit (node₀ a) (L.limᵢ (L.suc L.zero) p)
+    node₁ : (T₁ → C) → C
+    n₁ : ∀ a p → Natural p → (∀ x → Reg x → fit (a x) (p x)) → fit (node₁ a) (L.limᵢ L.zero p)
+open World public
+
+module Low (W : World) where
+  small : T₀ → C W → C W
+  small L.zero a = a
+  small (L.suc x) a = next W (small x a)
+  small (L.lim f) a = sup W (λ j → small (f j) a)
+  one : T₁ → C W → C W
+  one L.zero a = a
+  one (L.suc x) a = next W (one x a)
+  one (L.lim f) a = sup W (λ j → one (f j) a)
+  one (L.up L.zero x) a = small x a
+  one (L.limᵢ L.zero g) a = node₀ W (λ x → one (g x) a)
+
+  using-small : ∀ x {a p} → Reg p → fit W a p → fit W (small x a) (L.add p (λ q → L.suc (L.suc q)) x)
+  using-small L.zero rp v = v
+  using-small (L.suc x) rp v = rn W (L.add-≅ {σ = λ q → L.suc (L.suc q)} {σ′ = λ q → L.suc (L.suc q)} rp (L.≅-refl⁰ x)) (using-small x rp v)
+  using-small (L.lim f) {p = p} rp v = rs W _ _ (λ j → L.add-≅ {σ = λ q → L.suc (L.suc q)} {σ′ = λ q → L.suc (L.suc q)} rp (L.≅-refl⁰ (f j))) (λ j → using-small (f j) rp v)
+  using-one : ∀ x → Reg x → ∀ {a p} → Reg p → fit W a p → fit W (one x a) (L.add p L.suc x)
+  using-one L.zero rx rp v = v
+  using-one (L.suc x) (L.s≅ rx) rp v = rn W (L.add-≅ {σ = L.suc} {σ′ = L.suc} rp rx) (using-one x rx rp v)
+  using-one (L.lim f) (L.l≅ rx) rp v = rs W _ _ (λ j → L.add-≅ {σ = L.suc} {σ′ = L.suc} rp (rx j)) (λ j → using-one (f j) (rx j) rp v)
+  using-one (L.up L.zero x) rx rp v = using-small x rp v
+  using-one (L.limᵢ L.zero g) (L.lᵢ≅ L.z≅ r) rp v = n₀ W _ _
+    (λ d → L.add-≅ {σ = L.suc} {σ′ = L.suc} rp (r _ _ d))
+    (λ x → using-one (g x) (r x x (L.≅-refl⁰ x)) rp v)
+
+module Higher (W : World) where
+  Apply : (C W → C W) → Lev₂ → Set
+  Apply f u = ∀ {a p} → Reg p → fit W a p → fit W (f a) (p L.+ P.pass u)
+  Start : C W → C W
+  Start a = node₁ W (λ x → Low.one W x a)
+  start : Apply Start L.zero
+  start {p = p} rp v = n₁ W _ _ (λ d → L.add-≅ {σ = L.suc} {σ′ = L.suc} rp d) (λ x rx → Low.using-one W x rx rp v)
+  Succ : (C W → C W) → C W → C W
+  Succ f a = sup W (O.iter f a)
+  successor : ∀ {f u} → Reg u → Apply f u → Apply (Succ f) (L.suc u)
+  successor {f} {u} ru h {a} {p} rp v = rs W _ _ rp′ points where
+    q = P.pass u
+    rq = P.pass-pres ru
+    module N = U.Sum q rq
+    rp′ : ∀ j → Reg (p L.+ N.left j)
+    rp′ j = L.add-≅ {σ = R.idσ} {σ′ = R.idσ} rp (N.reg j)
+    points : ∀ j → fit W (O.iter f a j) (p L.+ N.left j)
+    points zero = v
+    points (suc j) = conv W (h (rp′ j) (points j)) (L.≅-trans
+      (R.assoc {A = p} {B = N.left j} {C = p L.+ N.left j} R.idσ R.idσ (rp′ j) rq)
+      (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} rp (N.rotate j)))
+
+  end : World
+  C end = C W → C W
+  fit end = Apply
+  conv end h d rp v = conv W (h rp v) (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} rp (P.pass-pres d))
+  z end = Start
+  rz end = start
+  next end = Succ
+  rn end = successor
+  sup end g a = sup W (λ j → g j a)
+  rs end g f rf h {a} {p} rp v = rs W _ _ (λ j → L.add-≅ {σ = R.idσ} {σ′ = R.idσ} rp (P.pass-pres (rf j))) (λ j → h j rp v)
+  node₀ end g a = node₀ W (λ x → g x a)
+  n₀ end g f rf h {a} {p} rp v = n₀ W _ _ 
+    (λ d → L.add-≅ {σ = R.idσ} {σ′ = R.idσ} rp (P.pass-pres (rf (P.tr-both L.z≅ d))))
+    (λ x → conv W (h x rp v) (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} rp (P.pass-pres (rf (L.≅-sym (L.tr⁻-≅ L.z≅ (L.≅-refl⁰ x)))))))
+  node₁ end g a = node₁ W (λ x → g x a)
+  n₁ end g f rf h {a} {p} rp v = n₁ W _ _
+    (λ d → L.add-≅ {σ = R.idσ} {σ′ = R.idσ} rp (P.pass-pres (rf (P.tr-both (L.≅ᴵ-refl _) d))))
+    (λ x rx → conv W (h x rx rp v) (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} rp (P.pass-pres (rf (L.≅-sym (L.tr⁻-≅ (L.≅ᴵ-refl _) rx))))))
+
+  apply : ∀ {h p} → Reg p → fit end h p → fit W (h (z W)) (P.pass p)
+  apply rp h = conv W (h L.z≅ (rz W)) (U.left-unit R.idσ (P.pass-pres rp))

@@ -1,0 +1,34 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 沿第一孩子保存同一读回证书。右加及任意挂起幂都能取回左操作数。
+module B30Spine where
+open import Data.Nat.Base using (ℕ)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit.Base using (tt)
+open import W4Block
+open import W4Ops using (c₀)
+open import W4Path
+import B30Invariant as Inv
+import B15ReadPaths as P
+
+data Mark (k a : L) (e : OkO k a) : (b : L) → OkO k b → Set where
+  here : Mark k a e a e
+  down : ∀ {s h} {o : OkO k (nd s h)} → Mark k a e (h (c₀ s)) (proj₂ o (c₀ s)) → Mark k a e (nd s h) o
+
+more : ∀ k a e → Inv.Extra (PSL k)
+Inv.Prop (more k a e) = Mark k a e
+Inv.at-lim (more k a e) f r q p = down (p 0)
+Inv.at-node (more k a e) {m} ctx slot f g q p = down (p (fromBr m slot zero))
+
+extend : ∀ k a e b → (p : OkO k b) → Mark k a e b p → ∀ c (q : OkO k c) → Mark k a e (b ⊕ c) (OkO⊕ k b c p q)
+extend k a e b p d zero q = d
+extend k a e b p d (nd sS h) q = down (extend k a e b p d (h tt) (proj₂ q tt))
+extend k a e b p d (nd sL h) q = down (extend k a e b p d (h 0) (proj₂ q 0))
+extend k a e b p d (nd (sΩ i) h) q = down (extend k a e b p d (h zero) (proj₂ q zero))
+
+recorded : ∀ k (ok : Ok k) (x y : Tr k) → Set
+recorded k ok x y = Mark k (↑ k x) (OkO↑ k k ok self x) (↑ k y) (OkO↑ k k ok self y)
+
+left-exp : ∀ k (ok : Ok k) (z a b : Tr k) nb x ε → recorded k ok z a → recorded k ok z (ex a b nb x ε)
+left-exp k ok z a b nb x ε m = Inv.keep (more k (↑ k z) (OkO↑ k k ok self z)) tt (self , ok) x
+  (opR (↑ k b)) _ (λ u q p → extend k _ _ u q p (↑ k b) (OkO↑ k k ok self b)) _ _ m
+  where open import Data.Product using (_,_)

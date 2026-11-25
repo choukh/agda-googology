@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 六位地址的整支与纯 src 闭项等值。从这一实测基站起迭代整座实际塔，得到 Λ 的纯 src 下界。
+module B15Join where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import OCF.BTBO using (module BoundedTrich; module Ord-Ord)
+module B = BoundedTrich
+module S = Ord-Ord
+import OCF.Align.Level as L
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≅→≼; l≼; ≼l)
+open import Data.List.Base using ([]; _∷_)
+open import WVOne using (read)
+open import W4Fold using (EBOᶜ)
+open import B13FiniteSrc using (out)
+import B12LimitSrc as Z
+import B12Omega3Ref as Ref
+import B13Target as P
+import B14Source as Prev
+import B14RefGain as Cut
+import B14RefBlock as Old
+import B14Join as J
+import B15RefChildren as R
+import B15OrbitExit as O
+import B15SourceTower as H
+import YiLAB10Src as X
+
+one = Prev.one
+coeff : ℕ → S.Ord one
+coeff = S.iter (S.Ω one S.+_) (S.Ω one)
+term : ℕ → Z.Src₂
+term zero = X.a
+term (suc n) = S.ψ< {i = X.two} {ℓ = B.suc X.two} B.zero (S.↑ {ℓ₁ = one} (B.suc B.zero) (coeff n))
+source = S.lim term
+
+up : ∀ n → U.Mh (coeff n) (R.left (suc n))
+up zero = U.M-Ω {a = one} tt (L.≅ᴵ-refl _)
+up (suc n) = U.M-add {σ = λ q → q} (U.M-Ω {a = one} tt (L.≅ᴵ-refl _)) (up n)
+dn : ∀ n → D.Dn (R.left (suc n)) (coeff n)
+dn zero = D.Dn-Ω {a = one} (L.≅ᴵ-refl _)
+dn (suc n) = D.Dn-add {σ = λ q → q} (D.Dn-Ω {a = one} (L.≅ᴵ-refl _)) (dn n)
+match : ∀ n → Z.Aligned (term n) (P.co₁ (R.left n))
+match zero = Z.omega2
+match (suc n) = Z.aligned
+  (U.M-ψ {i = X.two} (L.≅ᴵ-refl _) L.zero (λ q → L.suc (L.suc q)) B.zero (U.M-↑ (B.suc B.zero) (up n)))
+  (D.Dn-ψ {i = X.two} (L.≅ᴵ-refl _) L.zero (λ q → L.suc (L.suc q)) B.zero (D.Dn-↑ (B.suc B.zero) (dn n)))
+  (P.co-pres (R.reg (suc n)))
+same : ∀ n → L.ψ⁰ (P.co₁ (R.left n)) L.≅ Ref.at R.parent n
+same n = L.ψ⁰-≅ (P.co-pres (L.≅-sym (L.tr⁻-≅ (L.≅ᴵ-refl _) (R.reg n))))
+precise : out source ≈ᵛ R.parent
+precise = l≼ (λ n → ≼l n (≼-trans (proj₁ (Z.fold (match n))) (≅→≼ (same n)))) ,
+          l≼ (λ n → ≼l n (≼-trans (≅→≼ (L.≅-sym (same n))) (proj₂ (Z.fold (match n)))))
+
+module Boost = H.From 2 source (λ r hr → ≼-trans (proj₁ precise) (O.bound r hr))
+terminal : out Boost.source ≼ read EBOᶜ
+terminal = Boost.terminal
+-- 给出本批旧地址也在整支内的字面路径。
+previous : Old.piece ≼ R.parent
+previous = Cut.path-bound (2 ∷ 0 ∷ 2 ∷ 0 ∷ []) R.parent

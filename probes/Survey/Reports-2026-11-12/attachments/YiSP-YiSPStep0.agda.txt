@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiSPStep0 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.List using ([]; _++_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀)
+open import OCF.Lean.YiTBRow using (ψ)
+open import OCF.Lean.YiMTTab using (rbᶻ)
+open import OCF.Lean.YiHCRel using (Mᴴ; M⁰; mz; m1; mL; mΩ; mU; mw; mc)
+open import OCF.Lean.YiLTFold using (Qu)
+open import OCF.Lean.YiLTKid using (ℓ¹; o¹; module Sem)
+import OCF.Align.EboLeanDef as E
+open import OCF.Lean.YiANFam using (ψᴺ)
+
+module S = Sem (rbᶻ ℓ¹)
+
+-- 此最小域允许两个第 0 层槽位: 原下标槽位与孩子 zero 本身。
+Low : (p : Pos ℓ¹) → E.T → Br ℓ¹ p → Set
+Low (inj₁ (inj₁ tt)) = M⁰
+Low (inj₁ (inj₂ ()))
+Low (inj₂ (zero , inj₁ tt)) = M⁰
+Low (inj₂ (zero , inj₂ ()))
+Low (inj₂ (suc _ , _)) = λ _ _ → ⊥
+Low (inj₂ (lim _ _ , _)) = λ _ _ → ⊥
+
+Nu : Pos ℓ¹ → E.T → Set
+Nu (inj₁ (inj₁ tt)) ν = ν ≡ []
+Nu (inj₁ (inj₂ ()))
+Nu (inj₂ (zero , inj₁ tt)) ν = ν ≡ []
+Nu (inj₂ (zero , inj₂ ()))
+Nu (inj₂ (suc _ , _)) ν = ⊥
+Nu (inj₂ (lim _ _ , _)) ν = ⊥
+
+M¹ : E.T → Tr ℓ¹ → Set
+M¹ = Mᴴ (Sig ℓ¹) Low S.Kdˢ Nu
+
+lift0 : ∀ {a c} → M⁰ a c → M¹ a (ι ℓ¹ c)
+lift0 mz = mz
+lift0 (m1 e h) = m1 e (lift0 h)
+lift0 (mL e h) = mL e (λ n → lift0 (h n))
+lift0 (mw h d) = mw (lift0 h) (ι-mono ℓ¹ d)
+lift0 (mc le h) = mc le (lift0 h)
+
+child1 : S.Kdˢ zero (E.natT 1) (suc zero)
+child1 v _ B _ β hβ = Qu tt tt B v β hβ (m1 refl mz)
+
+nonzeroUp : Tr ℓ¹
+nonzeroUp = up (suc zero) zero (suc zero) ◃s
+
+nonzeroUp-m : M¹ (E.natT 1 ++ E.natT 1) nonzeroUp
+nonzeroUp-m = mU (m1 refl mz) child1
+
+childSlot : Tr ℓ¹
+childSlot = Ω (inj₂ (zero , inj₁ tt)) (λ c → suc (ι ℓ¹ c))
+
+childSlot-m : M¹ (E.Ωt (E.natT 1)) childSlot
+childSlot-m = mΩ refl refl (λ η c h → mw (lift0 h) ◃s)
+
+-- 两个目标都是 LF¹ 的逐字形状; 输入推导、底、路径、起点均有实例。
+LF¹-at : ∀ {a} (x : Tr ℓ¹) → M¹ a x → Set
+LF¹-at {a} x m = M⁰ (ψᴺ 0 ([] ++ a))
+  (proj₁ (ψ ℓ¹ o¹ (rbᶻ ℓ¹) (B₀ ℓ¹) zero (z≤ ℓ¹) (Ωt zero) x))
+
+up-statement : Set
+up-statement = LF¹-at nonzeroUp nonzeroUp-m
+
+slot-statement : Set
+slot-statement = LF¹-at childSlot childSlot-m
+
+premises : S.GB¹ (B₀ ℓ¹) × S.Pw (z≤ ℓ¹) × M⁰ (ψᴺ 0 []) (proj₁ (Ωt zero))
+premises = S.gb₀ˢ , S.wu , m1 refl mz

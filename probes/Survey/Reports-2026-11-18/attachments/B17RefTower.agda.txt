@@ -1,0 +1,118 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B17RefTower where
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+import WSLevel as W
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B13Target as P
+import B15RefRaise as Q
+import B15RefAlgebra as A
+import B15OrbitAction as B
+import B16RefRaise as Old
+import B17RefExp as E
+import B17RefGamma as G
+import B17OrbitTower as T
+
+op : ℕ → T₁ → T₁ → T₁
+op zero = L._+_
+op (suc n) = A.E
+pres : ∀ n {u v x y} → u L.≅ v → x L.≅ y → op n u x L.≅ op n v y
+pres zero = L.add-≅ {σ = λ t → t} {σ′ = λ t → t}
+pres (suc n) = E.wide
+
+Fit : (n : ℕ) → T.Carrier (T.Twr n) → T₁ → Set
+Fit zero = Q.Fit
+Fit (suc n) h d = ∀ a u → u L.≅ u → Fit n a u → Fit n (T.run h a) (op n u d)
+
+conv : ∀ n {a d e} → Fit n a d → d L.≅ e → Fit n a e
+conv zero v d r = L.≅-trans (v r) (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (P.refl-left (L.≅-sym r)) (P.co-pres d))
+conv (suc n) v d a u ru given = conv n (v a u ru given) (pres n ru d)
+
+lim-op : ∀ n (u : T₁) (d : ℕ → T₁) → (∀ j → d j L.≅ d j) → u L.≅ u →
+  L.lim (λ j → op n u (d j)) L.≅ op n u (L.lim d)
+lim-op zero u d rd ru = L.l≅ λ j → pres 0 ru (rd j)
+lim-op (suc n) u d rd ru = L.l≅ λ j → pres 1 ru (rd j)
+sup : ∀ n (a : ℕ → T.Carrier (T.Twr n)) d → (∀ j → d j L.≅ d j) → (∀ j → Fit n (a j) (d j)) → Fit n (T.sup (T.Twr n) a) (L.lim d)
+sup zero a d rd h r = L.l≅ (λ j → h j r)
+sup (suc n) a d rd h b u ru v = conv n
+  (sup n (λ j → T.run (a j) b) (λ j → op n u (d j)) (λ j → pres n ru (rd j)) (λ j → h j b u ru v))
+  (lim-op n u d rd ru)
+
+Regular : (T₀ → T₁) → Set
+Regular d = ∀ {x y} → x L.≅ y → d x L.≅ d y
+node-op : ∀ n (u : T₁) (d : T₀ → T₁) → Regular d → u L.≅ u →
+  L.limᵢ L.zero (λ y → op n u (d y)) L.≅ op n u (L.limᵢ L.zero d)
+node-op zero u d rd ru = L.lᵢ≅ L.z≅ (λ x y r → pres 0 ru (rd r))
+node-op (suc n) u d rd ru = L.lᵢ≅ L.z≅ (λ x y r → pres 1 ru (rd r))
+node : ∀ n (a : T₀ → T.Carrier (T.Twr n)) (ra : ∀ {x y} → x ≼ y → T.Rel (T.Twr n) (a x) (a y)) (ea : ∀ {x y} → x L.≅ y → T.Eq (T.Twr n) (a x) (a y)) (d : T₀ → T₁) → Regular d →
+  (∀ x → Fit n (a x) (d x)) → Fit n (T.node (T.Twr n) a ra ea) (L.limᵢ L.zero d)
+node zero a ra ea d rd h r = L.lᵢ≅ L.z≅ λ x y xy → L.≅-trans (h x r)
+  (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (P.refl-left (L.≅-sym r)) (P.co-pres
+    (rd (L.≅-trans xy (L.≅-sym (L.tr⁻-≅ L.z≅ (L.≅-refl⁰ y)))))))
+node (suc n) a ra ea d rd h b u ru v = conv n (node n (λ x → T.run (a x) b)
+  (λ r → ra r b b (T.rr (T.Twr n) b)) (λ r → ea r b b (T.ee (T.Twr n) b))
+  (λ x → op n u (d x)) (λ r → pres n ru (rd r)) (λ x → h x b u ru v)) (node-op n u d rd ru)
+
+unit : ∀ n (u : T₁) → u L.≅ u → u L.≅ op n u L.zero
+unit zero u ru = ru
+unit (suc n) u ru = ru
+compose : ∀ n (u a b : T₁) → u L.≅ u → a L.≅ a → b L.≅ b → op n (op n u a) b L.≅ op n u (a L.+ b)
+compose zero u a b ru ra rb = R.assoc {A = u} {B = a} {C = u L.+ a} (λ t → t) (λ t → t) (pres 0 ru ra) rb
+compose (suc n) u a b ru ra rb = E.Shift.compose u a _ (E.wide ru ra) rb
+
+module Height (n : ℕ) (h : T.Arr (T.Twr n)) (d : T₁) (rd : d L.≅ d) (given : Fit (suc n) h d) where
+  good = E.small rd
+  step : ∀ y a u → u L.≅ u → Fit n a u → Fit n (T.height (T.Twr n) y (T.run h) a) (op n u (A.E₀ d y))
+  step L.zero = given
+  step (L.suc y) a u ru v = conv n (sup n _ _ (λ j → pres n ru (M.reg j)) term)
+    (lim-op n u M.left M.reg ru) where
+    g = A.E₀ d y
+    rg = good (L.≅-refl⁰ y)
+    module M = Old.Sum g rg L.zero L.z≅
+    term : ∀ j → Fit n (iter (T.height (T.Twr n) y (T.run h)) a j) (op n u (M.left j))
+    term zero = conv n v (unit n u ru)
+    term (suc j) = conv n (step y _ _ (pres n ru (M.reg j)) (term j))
+      (L.≅-trans (compose n u (M.left j) g ru (M.reg j) rg) (pres n ru (M.rotate j)))
+  step (L.lim f) a u ru v = conv n (sup n _ _ (λ j → pres n ru (good (L.≅-refl⁰ (f j)))) (λ j → step (f j) a u ru v))
+    (lim-op n u (λ j → A.E₀ d (f j)) (λ j → good (L.≅-refl⁰ (f j))) ru)
+
+phi : ∀ n → Fit (suc (suc n)) (T.Φ (T.Twr n)) W.Ω₁ᴸ
+phi n h d rd given a u ru v = conv n (node n (T.Diag.f (T.Twr n) h a) (T.Diag.r (T.Twr n) h a) (T.Diag.q (T.Twr n) h a)
+  (λ x → op n u (A.E₀ d x)) (λ r → pres n ru (E.small rd r)) (λ x → Height.step n h d rd given x a u ru v))
+  (node-op n u (A.E₀ d) (E.small rd) ru)
+
+sem : ∀ n → Fit (suc n) (T.semK n) W.Ω₁ᴸ
+sem zero = Q.raise
+sem (suc n) = phi n
+
+Γ : ℕ → T₁
+Γ zero = W.Ω₁ᴸ
+Γ (suc n) = A.E W.Ω₁ᴸ (Γ n)
+reg-Γ : ∀ n → Γ n L.≅ Γ n
+reg-Γ zero = L.Ω-refl _
+reg-Γ (suc n) = E.wide (L.Ω-refl _) (reg-Γ n)
+same-Γ : ∀ n → W.γ n L.≅ Γ n
+same-Γ zero = L.Ω-refl _
+same-Γ (suc n) = E.psi (same-Γ n)
+β : ℕ → T₁
+β zero = L.zero
+β (suc n) = W.Ω₁ᴸ
+reg-β : ∀ n → β n L.≅ β n
+reg-β zero = L.z≅
+reg-β (suc n) = L.Ω-refl _
+basis : ∀ n → Fit n (T.basis n) (β n)
+basis zero = Q.arithmetic 0
+basis (suc n) = sem n
+value : ∀ n k → Fit n (T.value n k) (op n (β n) (Γ (suc k)))
+value n zero = phi n (T.semK n) W.Ω₁ᴸ (L.Ω-refl _) (sem n) (T.basis n) (β n) (reg-β n) (basis n)
+value n (suc k) = value (suc n) k (T.basis n) (β n) (reg-β n) (basis n)
+target : ∀ k → B.f (T.value 0 k) L.zero L.≅ P.co₁ (P.back (W.γ (suc k)))
+target k = L.≅-trans (value 0 k L.z≅) (U.left-unit R.idσ (P.co-pres
+  (U.left-unit (λ t → t) (L.≅-sym (L.tr⁻-≅ (L.≅ᴵ-refl _) (same-Γ (suc k)))))))
+every : ∀ k → G.node k L.≅ L.ψ⁰ (B.f (T.value 0 k) L.zero)
+every k = L.ψ⁰-≅ (L.≅-sym (target k))

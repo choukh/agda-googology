@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- K 的状态照常演变，一级显式输入可以与状态槽不同；两个序列由各自的初值独立迭代。
+module B16OrbitExplicit where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (cong; sym; subst)
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WSShadow using (ES; Ω̂; _⨾_)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F)
+open import YiLAB7Replay using (o₁)
+open import YiLAB11Target using (track)
+open import WSW4 using (module Lem)
+open Lem o₁ using (Real)
+open import B9InnerReal using (module RX)
+open RX o₁ using (RealX; Real-pos)
+open import B8PairW4 using (Real-up; Real-lim)
+import B11OuterCore as C
+import B12Update as U
+import B12Orbit as W
+import B12LimitRef as A
+import B13Orbit as V
+import B13Update as B
+
+module Step (K J : Op {lvl2} nil) (leFK : V.WeakOp F K) (contains : V.Contains K J)
+            (e : ES) (R : Base lvl2) (str : C.Str e R) (v : Tr⁺ lvl1)
+            (prefix : Real (proj₁ v) e) (omega : Real (proj₁ v) Ω̂) where
+  module N = B.Inner K leFK e R
+  module Win = W.Window K
+  vv = λ n → itV K n R lvl1 C.slot v
+  b = λ n → proj₁ (vv n)
+  nb = λ n → proj₂ (vv n)
+  first = λ n → ex (b n) (b n) (nb n) (suc zero) tt
+  second = λ n → ex (first n + b n) (b n) (nb n) (suc (N.zz n 1)) tt
+  rz : ∀ n → Real (suc (N.zz n 1)) (e ⨾ track e n)
+  rz n = N.Step.Real-sz1 n (N.inner str n)
+  keep : ∀ n → lvl1 ⊢ b n ◃ b (suc n)
+  keep n = inf K (N.Rs n) lvl1 C.slot (vv n)
+  re : ∀ n → Real (b n) e
+  re zero = prefix
+  re (suc n) = Real-up (keep n) (re n)
+  ro : ∀ n → Real (b n) Ω̂
+  ro zero = omega
+  ro (suc n) = Real-up (keep n) (ro n)
+  in0 : ∀ n → lvl1 ⊢ first n ◃ b (suc n)
+  in0 n = V.push-path {y = proj₁ (run F (N.Rs n) lvl1 C.slot (vv n))} (◃l 0) (leFK (N.Rs n) lvl1 C.slot (vv n))
+  in1 : ∀ n → lvl1 ⊢ second n ◃ b (suc n)
+  in1 n = V.push-path {y = proj₁ (run F (N.Rs n) lvl1 C.slot (vv n))} (◃l 1) (leFK (N.Rs n) lvl1 C.slot (vv n))
+  rt : ∀ n → Real (b n) (track e n)
+  rt zero = omega
+  rt (suc n) = Real-up (in1 n) (RealX (nb n) (Real-pos (first n + b n) (z◃ (first n) (+-mono (first n) (nb n)))) (ro n) (rz n))
+  head : ∀ n → Real (b (suc n)) (e ⨾ track e n)
+  head n = Real-up (in0 n) (RealX (nb n) (re n) (rt n) (Real-pos (suc zero) ◃s))
+  child : Real (proj₁ (Win.child R lvl1 C.slot v)) (A.next e)
+  child = Real-lim (λ n → subst (λ z → Real z (e ⨾ track e n)) (sym (cong proj₁ (Win.project-value (suc n) R lvl1 C.slot v))) (head n))
+  result : Real (proj₁ (run J R lvl1 C.slot v)) (A.next e)
+  result = Real-up (contains R lvl1 C.slot v) child

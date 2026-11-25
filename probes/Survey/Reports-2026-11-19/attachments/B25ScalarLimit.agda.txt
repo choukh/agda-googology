@@ -1,0 +1,49 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- G(ω) 严格含 D，对全部严格内部值的 Δ 封闭，且严格低于 ψ₀(Ω₃)。这给这条封闭律的证明能力一个反例。
+module B25ScalarLimit where
+
+open import Data.Nat.Base using (suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Empty using (⊥)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; ≼lim⁻; s≼s; ≼l; ≺→s≼)
+open import OCF.Align.BTBOFullV3 using (Fstep)
+open import OCF.Align.BTBOFullLv using (svz; svs; ps; St-F)
+open import OCF.Align.BTBOValAbsorb using (st-l₂)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import B12BtboCut as Bt
+import B12Omega3Ref as R
+import B23NDomain as G
+import B23RKernel as Rows
+import B24ROrbit as O
+import B25ARank as X
+import B25AOrbit as Orbit
+import B25ABounds as A
+open import WVOne using (T₀; 𝟏)
+
+bound = G.G O.omega
+Interior : T₀ → Set
+Interior b = ∀ x → L.suc x ≼ b → L.suc (X.diagonal x) ≼ b
+
+seed : L.suc O.D ≼ bound
+seed = ≼l 2 (≼-trans (s≼s A.starts) (G.Growth.next 𝟏))
+
+closed : Interior bound
+closed x h with ≼lim⁻ {a = x} {f = λ n → G.G (R.numeral n)} h
+... | n , hx = ≼l (suc (suc n)) (≼-trans (s≼s (A.Step.nextG (R.numeral n) x (≼-trans (≼-suc (≼-refl x)) hx)))
+    (G.Growth.next (R.numeral (suc n))))
+
+at-two : bound ≼ R.at (L.ψ⁰ R.Ω₃) 2
+at-two = ≼-trans (Rows.At.monotone 1 0 {O.omega} {G.G 𝟏}
+       (≼-trans O.w₀ (≼-trans (≼-suc (≼-refl _)) (G.Growth.next L.zero))))
+  (≼-trans (G.in-child 1) (R.at-below (R.at (L.ψ⁰ R.Ω₃) 2) 0))
+
+strict : L.suc bound ≼ Bt.finite 3
+strict = ≼l 3 (≼-trans (s≼s at-two) (st-l₂ (St-F {a = R.three} (svs (svs (svs svz))) ps) 2))
+
+orbit-upper : L.suc Orbit.whole ≼ Bt.finite 3
+orbit-upper = ≼-trans (s≼s Orbit.omega) strict
+
+insufficient : (∀ b → L.suc O.D ≼ b → Interior b → Bt.finite 3 ≼ b) → ⊥
+insufficient claim = s≼-irrefl bound (≼-trans strict (claim bound seed closed))
+

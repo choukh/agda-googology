@@ -22,6 +22,7 @@ BASES = ('probes', 'src')
 DENY = [
     r'OCF\.Notation(\..*)?',
     r'OCF\.Align\.(EBO|Translate)',
+    r'OCF\.Align\.(EboLean\w*|EBOI\w*)',  # 2026-11-17 补: 记号侧的重写与 I 片段, 原表只认名字恰为 EBO 的模块
     r'OCF\.Align\.(Correspond|Label|Standard|StandardOmega|SystemOmega|Stage2|Stage2Label)',
     r'OCF\.Align\.(GoodL|GoodLBase|Decouple|DecoupleBase|Omega2|Omega2Base|OmegaK|OmegaKBase)',
     r'OCF\.Align\.(OmegaExp|OmegaExpBase|OmegaSq|OmegaSqBase|NonTight|NonTightBase|TopDown)',

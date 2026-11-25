@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 启动轨用 w，后继轨在同一输入上用 next ∘ w。以实际两条选键递推给出二元归纳的充分条件。
+module B30MStartTrace where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; sym; cong; subst; subst₂)
+import W4Block as W
+import WVOne
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; l≼; ≼l)
+import B28BFirst as D
+import B28BBranch as Z
+import B28BCut as C
+import B28Sparse as S
+import B30MStart as Start
+
+module Sync {T : Set} (a b : ℕ → T) (l r : T → T)
+    (left-step : ∀ u → a (suc u) ≡ l (a u)) (right-step : ∀ u → b (suc u) ≡ r (b u)) where
+  Paired : T → T → Set
+  Paired c d = Σ ℕ (λ u → a u ≡ c × b u ≡ d)
+  initial : Paired (a 0) (b 0)
+  initial = 0 , refl , refl
+  advance : ∀ c d → Paired c d → Paired (l c) (r d)
+  advance ._ ._ (u , refl , refl) = suc u , left-step u , right-step u
+  both : ∀ (R : T → T → Set) → R (a 0) (b 0) → (∀ c d → R c d → R (l c) (r d)) → ∀ u → R (a u) (b u)
+  both R h f zero = h
+  both R h f (suc u) = subst₂ R (sym (left-step u)) (sym (right-step u)) (f (a u) (b u) (both R h f u))
+
+module At (m : ℕ) where
+  open Start.At m
+  open A using (i)
+  module Pos = C.Physical m 0
+  g = K.branch 0
+  old = A.Walk.Run.ix w
+  new = A.Walk.Run.ix g
+  left-step : ∀ u → old (suc u) ≡ D.At.decode₁ m (w (old u))
+  left-step u = Z.At.step m w (old u)
+  right-step : ∀ u → new (suc u) ≡ D.At.decode₁ m (K.K.next (w (new u)))
+  right-step u = trans (Z.At.step m g (new u)) (cong (D.At.decode₁ m) (lifted (new u)))
+
+  left = λ c → D.At.decode₁ m (w c)
+  right = λ d → D.At.decode₁ m (K.K.next (w d))
+  module Pair = Sync old new left right left-step right-step
+  module Sim (R : W.Tr i → W.Tr i → Set) (begin : R W.zero W.zero)
+    (progress : ∀ c d → R c d → R (left c) (right d))
+    (read : ∀ c d → R c d → A.free (w c) ≼ A.free (K.K.next (w d))) where
+    value : ∀ u → leaf u ≼ Pos.inner u
+    value u = subst (leaf u ≼_) (cong A.free (sym (lifted (new u))))
+      (read (old u) (new u) (Pair.both R begin progress u))
+
+pack : ∀ (l : ℕ → ℕ → WVOne.T₀) (i : WVOne.T₀) → (∀ m u → l m u ≼ i) → L.lim (λ m → L.lim (l m)) ≼ i
+pack l i h = l≼ {f = λ m → L.lim (l m)} (λ m → l≼ {f = l m} (h m))
+into-I : (∀ m u → Start.At.leaf m u ≼ C.Physical.inner m 0 u) → Start.leaves ≼ S.Actual.I
+into-I h = pack Start.At.leaf S.Actual.I (λ m u →
+  ≼-trans {a = Start.At.leaf m u} {b = C.Physical.inner m 0 u} {c = S.Actual.I} (h m u) (S.Actual.place m 0 u))

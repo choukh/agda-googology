@@ -1,0 +1,73 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意层来源的后继参数，在 ψ₀ 的零层出口精确变成右乘 ω。真实 Λ 对这个运算有严格余量。
+module B26CSuccessor where
+
+open import Data.List.Base using ([]; _∷_; _++_; replicate)
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; trans; sym; cong)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+open import OCF.Align.EboLeanTrian using (Gtri; T-pred; t<)
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiMENote using (cofψ1; fsnψ1)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼; hω-inv)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; s≼s; ≼l; l≼; +-mono; z≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import B18Product as P
+import B26PAppend as A
+import B26PActual as W
+
+principal : T → T
+principal a = ψ [] a ∷ []
+
+snoc : ∀ n (p : PT) → replicate (suc n) p ≡ replicate n p ++ (p ∷ [])
+snoc zero p = refl
+snoc (suc n) p = cong (p ∷_) (snoc n p)
+
+module At (a : T) (e : cof a ≡ c1) (h : HC (principal a)) (old : HC (principal (pred a))) where
+  p = ψ [] (pred a)
+  rep : ∀ n → HC (replicate n p)
+  rep n = subst HC (fsnψ1 [] a n e) (hω-inv h (cofψ1 [] a e) n)
+
+  finite : ∀ n (d : HC (replicate n p)) → Rt d ≈ᵛ (Rt old P.· L.natᶜ n)
+  finite zero d = tree-≼ refl d (h0 refl) , z≼
+  finite (suc n) d = ≼-trans (proj₁ row) (+-mono (proj₁ prev) (≼-refl _)) ,
+    ≼-trans (+-mono (proj₂ prev) (≼-refl _)) (proj₂ row)
+    where
+    row = A.both (rep n) old (snoc n p) d
+    prev = finite n (rep n)
+
+  branch : ∀ n → Rt (hω-inv h (cofψ1 [] a e) n) ≈ᵛ (Rt old P.· L.natᶜ n)
+  branch n = ≼-trans (tree-≼ (fsnψ1 [] a n e) _ (rep n)) (proj₁ (finite n (rep n))) ,
+             ≼-trans (proj₂ (finite n (rep n))) (tree-≼ (sym (fsnψ1 [] a n e)) (rep n) _)
+
+gather : ∀ {a} → (h : HC a) (e : cof a ≡ cω) → Rt h ≈ᵛ L.lim (λ n → Rt (hω-inv h e n))
+gather (h0 p) e with trans (sym p) e
+... | ()
+gather (h1 p h) e with trans (sym p) e
+... | ()
+gather (hω p h) e = ≼-refl _ , ≼-refl _
+
+times : ∀ {a} (e : cof a ≡ c1) (h : HC (principal a)) (old : HC (principal (pred a))) →
+    Rt h ≈ᵛ (Rt old P.· L.ωᶜ)
+times {a} e h old = ≼-trans (proj₁ whole) (l≼ (λ n → ≼l n (proj₁ (At.branch a e h old n)))) ,
+    ≼-trans (l≼ (λ n → ≼l n (proj₂ (At.branch a e h old n)))) (proj₂ whole)
+  where whole = gather h (cofψ1 [] a e)
+
+normal-pred : ∀ {a} → NF (principal a) → cof a ≡ c1 → NF (principal (pred a))
+normal-pred {a} na e = nf-ψ n[] (nf-pred (nfp-a (nf-hd na))) (Gtri (T-pred a e) (nfp-g (nf-hd na)) GB[])
+
+advance : ∀ {a} (e : cof a ≡ c1) (h : HC (principal a)) (old : HC (principal (pred a))) →
+    L.suc (Rt old) ≼ W.Y → L.suc (Rt h) ≼ W.Y
+advance e h old before = ≼-trans (s≼s (proj₁ (times e h old))) (W.times-omega before)
+
+exclude : ∀ {a} (na : NF (principal a)) (e : cof a ≡ c1) (h : HC (principal a)) →
+    Rt h ≈ᵛ W.Y → ⊥
+exclude {a} na e h (low , hi) = s≼-irrefl (Rt h) (≼-trans (advance e h old (≼-trans below low)) hi)
+  where
+  old = hc (normal-pred na e) (c∷ c[])
+  below = mono<ⁿ (normal-pred na e) na (c∷ c[]) old h (hd< (ar< (t< (T-pred a e))))

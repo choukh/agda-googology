@@ -1,0 +1,8 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiFNBridgeCheck where
+import OCF.Lean.YiRWBlock as B
+open import OCF.Lean.YiNRHit using (NoΩ)
+open import Data.Empty using (⊥)
+-- YiMTRel.A/S 的这一前提在实际 out0 的输入层 tw 2 不可满足。
+no-NoΩ-tw2 : NoΩ (B.tw 2) → ⊥
+no-NoΩ-tw2 ()

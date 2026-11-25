@@ -1,0 +1,78 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意实际一级槽值 c≥1 时，一级单位返回恰是超过 c 的最小 ε 数。保留所有有限回灌与累加。
+module B30UOne where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+import W4Block as W
+import W4Ops as O
+import W4Path as Path
+import W4Fold as F
+import WVOne as V
+open V using (T₀; 𝟏; read; Mv; lvl1; g₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; z≼; s≼s; l≼; ≼l)
+import B8FreezeMain as Bound
+import B19IdealArithmetic as A
+import B19IdealPowers as P
+import B16ReadIndex as Index
+import B22MovingIndex as E
+import B30UCut as Cut
+
+module Run (o : Path.Ok lvl1) (B : F.Base lvl1) where
+  slot = B W.zero (W.inc tt W.self)
+  c : T₀
+  c = read (proj₁ slot)
+  ζ = W.iter (V.s₁ o B) W.zero
+  x : ℕ → T₀
+  x n = read (ζ n)
+  β₀ = O.Ωt W.zero
+  branch : O.Tr⁺ W.zero → W.Tr W.zero → W.Tr W.zero
+  branch β z = proj₁ (F.ψ lvl1 o B W.zero (Path.z≤ lvl1) β (g₁ z))
+  F₀ : O.Tr⁺ W.zero → ℕ → W.Tr W.zero
+  F₀ β n = branch β (ζ n)
+  pre : O.Tr⁺ W.zero → ℕ → T₀
+  pre β n = read (O.cum (F₀ β) n)
+  result : O.Tr⁺ W.zero → T₀
+  result β = read (proj₁ (F.ψ lvl1 o B W.zero (Path.z≤ lvl1) β (proj₁ (O.Ωt lvl1))))
+  term = result β₀
+  lowB : F.Base W.zero
+  lowB j w = B j (W.inc tt w)
+  ↑row : ∀ β z → read (branch β z) ≼ Mv (read (proj₁ β)) (L.suc (read z))
+  ↑row β z = Bound.P-up {o₀ = proj₂ o tt} {Bs = lowB} W.self β (W.suc z)
+  ↑next : ∀ n → x (suc n) ≼ Mv c (L.suc (x n))
+  ↑next n = Bound.P-up {o₀ = proj₂ o tt} {Bs = lowB} W.self slot (W.suc (ζ n))
+
+  module Cap (d : T₀) (hc : Cut.At.Small d c) where
+    module K = Cut.At d
+    inputs : ∀ n → K.Small (x n)
+    inputs zero = K.down {L.zero} {c} z≼ hc
+    inputs (suc n) = K.down {x (suc n)} {Mv c (L.suc (x n))} (↑next n)
+      (K.fold {c} {L.suc (x n)} hc (K.successor {x n} (inputs n)))
+    terms : ∀ β → K.Small (read (proj₁ β)) → ∀ n → K.Small (read (F₀ β n))
+    terms β p n = K.down {read (F₀ β n)} {Mv (read (proj₁ β)) (L.suc (x n))} (↑row β (ζ n))
+      (K.fold {read (proj₁ β)} {L.suc (x n)} p (K.successor {x n} (inputs n)))
+    finite : ∀ β → K.Small (read (proj₁ β)) → ∀ n → K.Small (pre β n)
+    finite β p zero = terms β p zero
+    finite β p (suc n) = K.down {pre β (suc n)} {pre β n L.+ read (F₀ β (suc n))}
+      (Bound.read-+′ (O.cum (F₀ β) n) (F₀ β (suc n)))
+      (K.sum {pre β n} {read (F₀ β (suc n))} (finite β p n) (terms β p (suc n)))
+    all : ∀ β → K.Small (read (proj₁ β)) → result β ≼ E.above d
+    all β p = l≼ {f = pre β} λ n → ≼-trans {b = L.suc (pre β n)} (≼-suc (≼-refl (pre β n))) (finite β p n)
+
+  module Positive (pos : 𝟏 ≼ c) where
+    ↑ω : ∀ a b → a ≼ b → A.norm a ≼ Mv c (L.suc b)
+    ↑ω a b h = ≼-trans {b = L.ψ⁰ a} (proj₁ (A.normal a)) (≼-trans {b = Mv 𝟏 a}
+      (V.ψ⁰-lvl0 a) (V.Mv-mono pos (≼-trans {b = b} h (≼-suc (≼-refl b)))))
+    rise : ∀ n → E.steps c n ≼ x (suc n)
+    rise zero = ≼-trans {b = Mv c 𝟏} (Index.grow c pos) (V.G-row o B V.wc slot W.zero)
+    rise (suc n) = ≼-trans {b = Mv c (L.suc (x (suc n)))} (↑ω (E.steps c n) (x (suc n)) (rise n))
+      (V.G-row o B V.wc slot (ζ (suc n)))
+    into : ∀ n → x n ≼ term
+    into n = ≼-trans {b = A.norm (x n)} (A.up (x n)) (≼-trans {b = L.ψ⁰ (x n)} (proj₁ (A.normal (x n)))
+      (≼-trans {b = Mv 𝟏 (x n)} (V.ψ⁰-lvl0 (x n)) (≼-trans {b = Mv 𝟏 (L.suc (x n))}
+        (V.Mv-mono (≼-refl 𝟏) (≼-suc (≼-refl (x n)))) (≼-trans {b = read (F₀ β₀ n)}
+          (V.G-row o B V.wu β₀ (ζ n)) (V.Φ-cum o B V.wu β₀ n)))))
+    exact : term ≈ᵛ E.above c
+    exact = Cap.all c (E.strict c) β₀ (Cut.At.down c {𝟏} {c} pos (E.strict c)) ,
+      l≼ (λ n → ≼-trans {b = x (suc n)} (rise n) (into (suc n)))

@@ -1,0 +1,73 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23NDomain where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼-refl; ≼-trans; ≅→≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import WVOne using (T₀; read)
+open import W4Fold using (EBOᶜ)
+import W4Block as W
+open import W4Ops using (Tr⁺; z◃)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import B12Omega3Ref as O
+import B12EboRows as B
+import B13Target as P
+import B14RefFixed as K
+import B14RefAllRows as F
+import B19RowSecond as X
+import B22RowSource as Cap
+
+G : T₀ → T₀
+G x = L.ψ⁰ (P.pass (P.co₀ x))
+
+original : ∀ x → F.gain 1 0 x ≡ G x
+original x = refl
+
+module Growth (x : T₀) where
+  p = P.co₀ x
+  q = P.pass p
+  q-regular = P.pass-pres (P.regular₀ x)
+  in-p : K.Select Ω₂ᴸ p
+  in-p = K.omega-in x
+  in-q : K.Select X.p q
+  in-q = K.map-select P.pass (λ _ → refl) in-p
+  first : L.suc (G x) ≼ L.ψ⁰ (P.pass (L.suc p))
+  first = ≼-trans (Cap.Tail.one q q-regular) (≼l 2
+    (K.value (K.map-select L.ψ⁰ (λ _ → refl) (K.map-select (q L.+_) (λ _ → refl) in-q))))
+  sub : L.ψ⁰ (P.pass (L.suc p)) ≼ L.ψ⁰ (P.pass (p L.+ Ω₂ᴸ))
+  sub = ≼l 0 (≼l 0 (≼-refl _))
+  next : L.suc (G x) ≼ G (L.suc x)
+  next = ≼-trans first (≼-trans sub (≼l 2 (K.value
+    (K.map-select (λ z → L.ψ⁰ (P.pass z)) (λ _ → refl) (K.map-select (p L.+_) (λ _ → refl) in-p)))))
+
+inflation : ∀ x → x ≼ G x
+inflation L.zero = z≼
+inflation (L.suc x) = ≼-trans (s≼s (inflation x)) (Growth.next x)
+inflation (L.lim f) = l≼ (λ n → ≼l n (inflation (f n)))
+
+no-fixed-bound : ∀ (cap : T₀) → (∀ x → G x ≼ cap) → ⊥
+no-fixed-bound cap all = s≼-irrefl cap (≼-trans (inflation (L.suc cap)) (all (L.suc cap)))
+
+no-all-children : (∀ x → B.InChild (G x)) → ⊥
+no-all-children h = no-fixed-bound (read EBOᶜ) (λ x → B.into (h x))
+
+orbit = F.chain 1 0
+child = F.node 1 0
+in-child : ∀ n → G (orbit n) ≼ child
+in-child n = ≼-trans (≼l n (≼-refl _)) (≅→≼ (L.≅-sym (F.as-chain 1 0)))
+
+suffices : ∀ {cap : T₀} → (∀ n → G (orbit n) ≼ cap) → child ≼ cap
+suffices h = ≼-trans (≅→≼ (F.as-chain 1 0)) (l≼ h)
+
+-- 一个终点内即便可以随实际输入自由选塔，也不能承接全部非零合法输入。
+no-actual-all : ((z : Tr⁺ W.zero) → B.InChild (G (read (proj₁ z)))) → ⊥
+no-actual-all h = s≼-irrefl (read EBOᶜ)
+  (≼-trans (inflation (L.suc (read EBOᶜ))) (B.into (h (W.suc EBOᶜ , z◃ EBOᶜ W.◃s))))
+
+-- 即使另选任意一列输出、允许每个参数自选编号，同一对角仍存在。
+no-countable-pool : (pool : ℕ → T₀) → (∀ x → Σ ℕ (λ n → G x ≼ pool n)) → ⊥
+no-countable-pool pool locate = no-fixed-bound (L.lim pool) (λ x → let n , h = locate x in ≼l n h)

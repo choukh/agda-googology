@@ -1,0 +1,22 @@
+{
+  "modules": 243,
+  "code_nonblank": 12833,
+  "code_physical": 13650,
+  "all_cold_exit_zero": true,
+  "only_self_checking": true,
+  "all_source_sha_unchanged": true,
+  "forbidden_count": 0,
+  "hole_count": 0,
+  "local_path_count": 0,
+  "maximum_residency_bytes": 1528777544,
+  "agda_elapsed_seconds_sum": 2322.3500000000013,
+  "first_log_start_utc": "2026-11-15T07:41:08.415521+00:00",
+  "last_log_finish_utc": "2026-11-15T08:20:12.679429+00:00",
+  "heap_cap": "5G",
+  "concurrency": 1,
+  "checkpoint_received_record_utc": "2026-11-15T07:40:27+00:00",
+  "current_private_item": "YiXVReadSeedInputCheck.agda",
+  "private_current_item_cold_exit": 0,
+  "private_current_item_kept_outside_repository": true,
+  "status_after_report": "paused by author checkpoint; Goal and Goalᶻ remain unproved"
+}

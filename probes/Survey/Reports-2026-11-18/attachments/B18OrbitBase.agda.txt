@@ -1,0 +1,104 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18OrbitBase where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst)
+open import W4Block hiding (D; R; opE)
+open import W4Ops
+open import W4Fold hiding (ψ)
+open import WKGen using (Ω₁t)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+open import WVOne using (read; T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; l≼; ≼l; i≼; u≼)
+import B11OuterCore
+import B13OrbitFeed as O
+import B15OrbitModel as M
+import B16OrbitNode as N
+import B17OrbitChange as C
+import B17OrbitTower as T
+import B18OrbitWorld as W
+
+module For (world : W.World) where
+  open W.World world
+  Law : ∀ {X : Cx lvl2} (m : Mor M.X₁ X) → Op X → (T.Carrier space → T.Carrier space) → Set
+  Law m Q f = ∀ S v → lvl1 ⊢ Ω₁t ◃ proj₁ (S lvl1 s) → Index (S lvl1 s) v → ∀ b → Index b v → Index (run Q S lvl1 s b) (f v)
+    where s = M.At.slot m
+  R : ∀ {X : Cx lvl2} (m : Mor M.X₁ X) → Op X → T.Arr space → Set
+  R m Q a = Law m Q (T.run a)
+  cl : ∀ {X : Cx lvl2} (m : Mor M.X₁ X) Q Q′ → Rl Q Q′ → ∀ f → Law m Q f → Law m Q′ f
+  cl m Q Q′ p f h S v cv ci b bi = rise _ _ (p S lvl1 (M.At.slot m) b) (f v) (h S v cv ci b bi)
+  sup : ∀ {X : Cx lvl2} (m : Mor M.X₁ X) Q (f : ℕ → T.Carrier space → T.Carrier space) → (∀ n → Law m Q (f n)) →
+        Law m Q (λ v → T.sup space (λ n → f n v))
+  sup m Q f h S v cv ci b bi = gather _ (λ n → f n v) (λ n → h n S v cv ci b bi)
+  enter₀ : ∀ {X Y : Cx lvl2} (m : Mor M.X₁ X) (u : Mor X Y) → N.Left u → ∀ Q a → R m Q a → R (u ⊙ m) (enterO u Q) a
+  enter₀ m u ru Q a h S v cv ci b bi = subst (λ s → Index (run Q (λ j w → S j (σ u w)) lvl1 s b) (T.run a v))
+    (sym (ru (M.At.slot m))) (h (λ j w → S j (σ u w)) v cv ci b bi)
+  cast₀ : ∀ {X : Cx lvl2} (m m′ : Mor M.X₁ X) → C.Forward m m′ → ∀ Q a → R m Q a → R m′ Q a
+  cast₀ m m′ p Q a h S v cv ci b bi = subst (λ s → Index (run Q S lvl1 s b) (T.run a v)) slot-eq
+    (h S v (subst (λ s → lvl1 ⊢ Ω₁t ◃ proj₁ (S lvl1 s)) (sym slot-eq) cv) (subst (λ s → Index (S lvl1 s) v) (sym slot-eq) ci) b bi)
+    where slot-eq = p (σ O.m₁ B11OuterCore.slot)
+  leave₀ : ∀ {X : Cx lvl2} (m : Mor M.X₁ X) {mw : L} (w : Dn lvl2 mw) (ι : ∀ {i} → ⟦ X ⟧ i → Tg w i) A G a →
+          R (chM w ι ⊙ m) G a → R m (upC 0 w ι A G) a
+  leave₀ m w ι A G a h S v cv ci b bi = h (λ j u → S j (proj₂ u)) v cv ci (run A S lvl1 s b) (rise _ _ (inf A S lvl1 s b) v bi)
+    where s = M.At.slot m
+
+  module Frame {X : Cx lvl2} (m : Mor M.X₁ X) (ret : N.Left m) where
+    module Old = N.Frame m ret
+    D = Old.D
+    φ = chMT D tt
+    dm = φ ⊙ m
+    node : ∀ G h (rh : ∀ {x y} → x ≼ y → T.Rel (T.End space) (h x) (h y)) (eh : ∀ {x y} → x L.≅ y → T.Eq (T.End space) (h x) (h y)) →
+           (∀ y z → y ≼ read (suc z) → R m (G z) (h y)) → R m (nodeC 0 p₁ Old.jd Old.ch G) (T.node (T.End space) h rh eh)
+    node G h rh eh children S v cv ci b bi rewrite Old.kept = retain (λ z → run (G z) S lvl1 (M.At.slot m) b) _ (λ y → T.run (h y) v)
+      (λ p → rh p v v (T.rr space v)) (λ p → eh p v v (T.ee space v)) (λ y z d → children y z d S v cv ci b bi)
+
+  module Count {X : Cx lvl2} (m : Mor M.X₁ X) (D : TD X zero) (A : T.Arr space) where
+    s = M.At.slot m
+    opE = λ z K → op (E ok₂ D z K) (Einf ok₂ D z K)
+    F = λ y → T.height space y (T.run A)
+    module Power (z : Tr zero) (y : T₀) (K : Op X) (law : Law m (opE z K) (F y)) (S : St X) (v : T.Carrier space)
+              (cv : lvl1 ⊢ Ω₁t ◃ proj₁ (S lvl1 s)) (cs : Index (S lvl1 s) v) (b : Tr⁺ lvl1) (bi : Index b v) where
+      Q = opE z K
+      Sₙ = λ n → itS Q n S
+      bₙ = λ n → itV Q n S lvl1 s b
+      vₙ = iter (F y) v
+      cover : ∀ n → lvl1 ⊢ Ω₁t ◃ proj₁ (Sₙ n lvl1 s)
+      cover zero = cv
+      cover (suc n) = ◃t (cover n) (inf Q (Sₙ n) lvl1 s (Sₙ n lvl1 s))
+      state : ∀ n → Index (Sₙ n lvl1 s) (vₙ n)
+      state zero = cs
+      state (suc n) = law (Sₙ n) (vₙ n) (cover n) (state n) _ (state n)
+      point : ∀ n → Index (bₙ n) (vₙ n)
+      point zero = bi
+      point (suc n) = law (Sₙ n) (vₙ n) (cover n) (state n) _ (point n)
+      path : ∀ n → lvl1 ⊢ proj₁ (bₙ n) ◃ proj₁ (run (opE (suc z) K) S lvl1 s b)
+      path zero = inf (opE (suc z) K) S lvl1 s b
+      path (suc n) = ◃l n
+      full : Index (run (opE (suc z) K) S lvl1 s b) (F (L.suc y) v)
+      full = gather _ vₙ (λ n → rise (bₙ n) _ (path n) (vₙ n) (point n))
+    eval : ∀ z {y} → y ≼ read z → ∀ K → R m K A → Law m (opE z K) (F y)
+    eval (Ω () g)
+    eval (up p () b d)
+    eval (ex p b nb z ())
+    eval zero z≼ K h = h
+    eval (suc z) z≼ K h = cl m K (opE (suc z) K) (λ S i t v → Emono ok₂ D K S i t v (z◃ z ◃s)) _ h
+    eval (lim g d) z≼ K h = cl m K (opE (lim g d) K) (λ S i t v → Emono ok₂ D K S i t v (z◃ (g 0) (◃l 0))) _ h
+    eval (suc z) (s≼s {a = y} d) K h = Power.full z y K (eval z d K h)
+    eval (lim g d) (≼l n q) K h = cl m (opE (g n) K) (opE (lim g d) K) (λ S i t v → Emono ok₂ D K S i t v (◃l n)) _ (eval (g n) q K h)
+    eval zero (l≼ {f = g} h) K q = sup m (opE zero K) (λ n → F (g n)) (λ n → eval zero (h n) K q)
+    eval (suc z) (l≼ {f = g} h) K q = sup m (opE (suc z) K) (λ n → F (g n)) (λ n → eval (suc z) (h n) K q)
+    eval (lim g d) (l≼ {f = g′} h) K q = sup m (opE (lim g d) K) (λ n → F (g′ n)) (λ n → eval (lim g d) (h n) K q)
+    eval z (i≼ {p = ()} _) K h
+    eval z (u≼ {r = ()} _) K h
+
+  module Raise {X : Cx lvl2} (m : Mor M.X₁ X) (rm : N.Left m) (K : Op X) (g : T.Arr space) (rg : R m K g) where
+    module B = Frame m rm
+    module Cnt = Count B.dm (chTD B.D tt) g
+    child = λ z → op (E ok₂ B.D (O.g₁ z) K) (Einf ok₂ B.D (O.g₁ z) K)
+    module Dg = T.Diag space g
+    law : ∀ y z → y ≼ read (suc z) → Law m (child z) (T.height space y (T.run g))
+    law y z d S v cv ci b bi = Cnt.eval (suc z) d (enterO B.φ K) (enter₀ m B.φ (λ _ → refl) K g rg) (λ j u → S j (proj₂ u)) v cv ci b bi
+    full : R m (op (E ok₂ B.D Ω₁t K) (Einf ok₂ B.D Ω₁t K)) (T.run (T.Φ space) g)
+    full S v cv ci b bi rewrite B.Old.kept = retain (λ z → run (child z) S lvl1 (M.At.slot m) b) _ (Dg.f v) (Dg.r v) (Dg.q v) (λ y z d → law y z d S v cv ci b bi)

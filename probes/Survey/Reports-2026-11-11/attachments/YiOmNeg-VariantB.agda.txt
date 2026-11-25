@@ -1,0 +1,373 @@
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+-- 变体乙的最小骨架 (临时试验, 不是成果): ℕ 极限自带相邻第一位置的路径,
+-- 位置与孩子的守卫无关 (同变体甲). 结点的合法性 (Lgl 的 lc 子句) 没有放进来.
+module VariantB where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Product.Base using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+
+record ΣI (A : Set) (B : .A → Set) : Set where
+  constructor _,ᵢ_
+  field
+    .fst : A
+    snd : B fst
+
+record Sq (A : Set) : Set where
+  constructor sq
+  field .un : A
+
+module G (P : Set) (L : P → Set)
+  (Gl : (r : P) → L r → L r → Set)
+  (K : Set) (B : K → Set)
+  (DK : (i i′ : K) → B i → B i′ → Set) (DT : (i : K) → B i → Set) where
+  data R : Set
+  Cpᴿ : R → R → Set
+  Dnᴿ : R → R → Set
+  data R where
+    zero : R
+    suc  : R → R
+    lim  : (f : ℕ → R) → ((n : ℕ) → Cpᴿ (f n) (f (suc n))) → R
+    lc   : (r : P) (c : L r) (t : R)
+           (g : (η : L r) → .(Gl r c η) → R) → R
+    em   : (i : K) → B i → R
+    top  : R
+  Cpᴿ a d = (a ≡ d) ⊎ Dnᴿ a d
+  Dnᴿ a zero = ⊥
+  Dnᴿ a (suc d) = Cpᴿ a d
+  Dnᴿ a (lim f p) = Σ ℕ λ n → Cpᴿ a (f n)
+  Dnᴿ a (lc r c t g) = Cpᴿ a t
+  Dnᴿ (em i′ a) (em i T) = DK i′ i a T
+  Dnᴿ zero (em i T) = ⊥
+  Dnᴿ (suc _) (em i T) = ⊥
+  Dnᴿ (lim _ _) (em i T) = ⊥
+  Dnᴿ (lc _ _ _ _) (em i T) = ⊥
+  Dnᴿ top (em i T) = ⊥
+  Dnᴿ (em i a) top = DT i a
+  Dnᴿ zero top = ⊥
+  Dnᴿ (suc _) top = ⊥
+  Dnᴿ (lim _ _) top = ⊥
+  Dnᴿ (lc _ _ _ _) top = ⊥
+  Dnᴿ top top = ⊥
+
+data LF : Set
+Pre : LF → Set
+Low : (x : LF) → Pre x → Set
+GdL : (x : LF) (r : Pre x) → Low x r → Low x r → Set
+Kid : LF → Set
+KidR : (x : LF) → Kid x → Set
+DnK : (y : LF) (i i′ : Kid y) → KidR y i → KidR y i′ → Set
+DnT : (y : LF) (i : Kid y) → KidR y i → Set
+Raw : LF → Set
+Cp : (y : LF) → Raw y → Raw y → Set
+Dn : (y : LF) → Raw y → Raw y → Set
+Gd : (k : LF) → Raw k → Raw k → Set
+CpL : LF → LF → Set
+DnL : LF → LF → Set
+DnLm : (f : ℕ → LF) (n m : ℕ) → n ≡ m → Raw (f n) → Raw (f m) → Set
+DnBr : (k : LF) (c : Raw k) (g : (η : Raw k) → .(Gd k c η) → LF)
+  (η η′ : Raw k) → η ≡ η′ → .(e : Gd k c η) .(e′ : Gd k c η′) →
+  Raw (g η e) → Raw (g η′ e′) → Set
+
+data LF where
+  zero : LF
+  suc  : LF → LF
+  lim  : (f : ℕ → LF) → ((n : ℕ) → CpL (f n) (f (suc n))) → LF
+  lc   : (k : LF) (c : Raw k) (t : LF) (g : (η : Raw k) → .(Gd k c η) → LF) → LF
+
+Raw x = G.R (Pre x) (Low x) (GdL x) (Kid x) (KidR x) (DnK x) (DnT x)
+Cp x = G.Cpᴿ (Pre x) (Low x) (GdL x) (Kid x) (KidR x) (DnK x) (DnT x)
+Dn x = G.Dnᴿ (Pre x) (Low x) (GdL x) (Kid x) (KidR x) (DnK x) (DnT x)
+Gd k c η = Cp k c η
+
+CpL a b = (a ≡ b) ⊎ DnL a b
+DnL a zero = ⊥
+DnL a (suc b) = CpL a b
+DnL a (lim f p) = Σ ℕ λ n → CpL a (f n)
+DnL a (lc k c t g) = CpL a t
+
+Pre zero = ⊥
+Pre (suc k) = ⊤ ⊎ Pre k
+Pre (lim f p) = Σ ℕ λ n → Pre (f n)
+Pre (lc k c t g) = (⊤ ⊎ Pre k) ⊎
+  (Pre t ⊎ Σ (Raw k) λ η → ΣI (Gd k c η) λ e → Pre (g η e))
+
+Low (suc k) (inj₁ _) = Raw k
+Low (suc k) (inj₂ r) = Low k r
+Low (lim f p) (n , r) = Low (f n) r
+Low (lc k c t g) (inj₁ (inj₁ _)) = Raw k
+Low (lc k c t g) (inj₁ (inj₂ r)) = Low k r
+Low (lc k c t g) (inj₂ (inj₁ r)) = Low t r
+Low (lc k c t g) (inj₂ (inj₂ (η , (e ,ᵢ r)))) = Low (g η e) r
+
+GdL (suc k) (inj₁ _) a d = Gd k a d
+GdL (suc k) (inj₂ r) a d = GdL k r a d
+GdL (lim f p) (n , r) a d = GdL (f n) r a d
+GdL (lc k c t g) (inj₁ (inj₁ _)) a d = Gd k a d
+GdL (lc k c t g) (inj₁ (inj₂ r)) a d = GdL k r a d
+GdL (lc k c t g) (inj₂ (inj₁ r)) a d = GdL t r a d
+GdL (lc k c t g) (inj₂ (inj₂ (η , (e ,ᵢ r)))) a d = GdL (g η e) r a d
+
+Kid zero = ⊥
+Kid (suc k) = ⊤
+Kid (lim f p) = ℕ
+Kid (lc k c t g) = ⊤ ⊎ (⊤ ⊎ Σ (Raw k) λ η → Sq (Gd k c η))
+
+KidR (suc k) _ = Raw k
+KidR (lim f p) n = Raw (f n)
+KidR (lc k c t g) (inj₁ _) = Raw k
+KidR (lc k c t g) (inj₂ (inj₁ _)) = Raw t
+KidR (lc k c t g) (inj₂ (inj₂ (η , sq e))) = Raw (g η e)
+
+DnK (suc k) _ _ a d = Dn k a d
+DnK (lim f p) n m a d = Σ (n ≡ m) λ q → DnLm f n m q a d
+DnK (lc k c t g) (inj₁ _) (inj₁ _) a d = Dn k a d
+DnK (lc k c t g) (inj₂ (inj₁ _)) (inj₂ (inj₁ _)) a d = Dn t a d
+DnK (lc k c t g) (inj₂ (inj₂ (η , sq e))) (inj₂ (inj₂ (η′ , sq e′))) a d =
+  Σ (η ≡ η′) λ q → DnBr k c g η η′ q e e′ a d
+DnK (lc k c t g) (inj₁ _) (inj₂ _) a d = ⊥
+DnK (lc k c t g) (inj₂ _) (inj₁ _) a d = ⊥
+DnK (lc k c t g) (inj₂ (inj₁ _)) (inj₂ (inj₂ _)) a d = ⊥
+DnK (lc k c t g) (inj₂ (inj₂ _)) (inj₂ (inj₁ _)) a d = ⊥
+
+DnLm f n .n refl a d = Dn (f n) a d
+DnBr k c g η .η refl e e′ a d = Dn (g η e) a d
+
+DnT (suc k) _ a = Cp k a G.top
+DnT (lim f p) n a = ⊥
+DnT (lc k c t g) (inj₂ (inj₁ _)) a = Cp t a G.top
+DnT (lc k c t g) (inj₁ _) a = ⊥
+DnT (lc k c t g) (inj₂ (inj₂ _)) a = ⊥
+
+-- 读回与 Ω: 极限的路径由读回的单调性给出, 与读回互递归.
+cO : (k : LF) → Raw k
+cO zero = G.suc G.zero
+cO (suc k) = G.top
+cO (lim f p) = G.top
+cO (lc k c t g) = G.top
+
+upN : (y : LF) (r : Pre y) (c : Low y r) (t : LF) →
+  ((η : Low y r) → .(GdL y r c η) → LF) → LF
+upN (suc k) (inj₁ _) c t g = lc k c t g
+upN (suc k) (inj₂ r) c t g = upN k r c t g
+upN (lim f p) (n , r) c t g = upN (f n) r c t g
+upN (lc k c₀ t₀ g₀) (inj₁ (inj₁ _)) c t g = lc k c t g
+upN (lc k c₀ t₀ g₀) (inj₁ (inj₂ r)) c t g = upN k r c t g
+upN (lc k c₀ t₀ g₀) (inj₂ (inj₁ r)) c t g = upN t₀ r c t g
+upN (lc k c₀ t₀ g₀) (inj₂ (inj₂ (η , (e ,ᵢ r)))) c t g = upN (g₀ η e) r c t g
+
+upN-dn : ∀ y r c t g {x} → CpL x t → DnL x (upN y r c t g)
+upN-dn (suc k) (inj₁ _) c t g q = q
+upN-dn (suc k) (inj₂ r) c t g q = upN-dn k r c t g q
+upN-dn (lim f p) (n , r) c t g q = upN-dn (f n) r c t g q
+upN-dn (lc k c₀ t₀ g₀) (inj₁ (inj₁ _)) c t g q = q
+upN-dn (lc k c₀ t₀ g₀) (inj₁ (inj₂ r)) c t g q = upN-dn k r c t g q
+upN-dn (lc k c₀ t₀ g₀) (inj₂ (inj₁ r)) c t g q = upN-dn t₀ r c t g q
+upN-dn (lc k c₀ t₀ g₀) (inj₂ (inj₂ (η , (e ,ᵢ r)))) c t g q = upN-dn (g₀ η e) r c t g q
+
+up : (y : LF) (a : Raw y) → LF
+upT : LF → LF
+upK : (y : LF) (i : Kid y) (T : KidR y i) → LF
+up-cp : ∀ y {a} b → Cp y a b → CpL (up y a) (up y b)
+up-dn : ∀ y {a} b → Dn y a b → DnL (up y a) (up y b)
+upK-dn : ∀ y i′ i a T → DnK y i′ i a T → DnL (upK y i′ a) (upK y i T)
+upT-dnK : ∀ y i a → DnT y i a → DnL (upK y i a) (upT y)
+upT-cp : ∀ {a} b → CpL a b → CpL (upT a) (upT b)
+upT-dn : ∀ {a} b → DnL a b → DnL (upT a) (upT b)
+
+up y G.zero = zero
+up y (G.suc a) = suc (up y a)
+up y (G.lim f p) = lim (λ n → up y (f n)) (λ n → up-cp y (f (suc n)) (p n))
+up y (G.lc r c t g) = upN y r c (up y t) (λ η e → up y (g η e))
+up y (G.em i T) = upK y i T
+up y G.top = upT y
+
+upK (suc k) _ T = up k T
+upK (lim f p) n T = up (f n) T
+upK (lc k c t g) (inj₁ _) T = up k T
+upK (lc k c t g) (inj₂ (inj₁ _)) T = up t T
+upK (lc k c t g) (inj₂ (inj₂ (η , sq e))) T = up (g η e) T
+
+upT zero = suc zero
+upT (suc k) = lc k (cO k) (upT k) (λ η e → up k η)
+upT (lim f p) = lim (λ n → upT (f n)) (λ n → upT-cp (f (suc n)) (p n))
+upT (lc k c t g) = lc k c (upT t) (λ η e → upT (g η e))
+
+up-cp y b (inj₁ refl) = inj₁ refl
+up-cp y b (inj₂ d) = inj₂ (up-dn y b d)
+
+up-dn y (G.suc b) d = up-cp y b d
+up-dn y (G.lim f p) (n , d) = n , up-cp y (f n) d
+up-dn y (G.lc r c t g) d =
+  upN-dn y r c (up y t) (λ η e → up y (g η e)) (up-cp y t d)
+up-dn y {G.em i′ a} (G.em i T) d = upK-dn y i′ i a T d
+up-dn y {G.em i a} G.top d = upT-dnK y i a d
+
+upK-dn (suc k) _ _ a T d = up-dn k T d
+upK-dn (lim f p) n .n a T (refl , d) = up-dn (f n) T d
+upK-dn (lc k c t g) (inj₁ _) (inj₁ _) a T d = up-dn k T d
+upK-dn (lc k c t g) (inj₂ (inj₁ _)) (inj₂ (inj₁ _)) a T d = up-dn t T d
+upK-dn (lc k c t g) (inj₂ (inj₂ (η , sq e))) (inj₂ (inj₂ (.η , sq e′))) a T (refl , d) =
+  up-dn (g η e) T d
+
+upT-dnK (suc k) _ a d = up-cp k G.top d
+upT-dnK (lc k c t g) (inj₂ (inj₁ _)) a d = up-cp t G.top d
+
+upT-cp b (inj₁ refl) = inj₁ refl
+upT-cp b (inj₂ d) = inj₂ (upT-dn b d)
+
+upT-dn (suc b) d = upT-cp b d
+upT-dn (lim f p) (n , d) = n , upT-cp (f n) d
+upT-dn (lc k c t g) d = upT-cp t d
+
+Ω̂ : LF → LF
+Ω̂ = upT
+
+tw : ℕ → LF
+tw zero = zero
+tw (suc n) = Ω̂ (tw n)
+
+-- 核对 1: 守卫仍无关, 分支不依赖守卫证明 (YiIntrCheck.tw₃-not-root-irr 不重现).
+RootIrr : LF → Set
+RootIrr zero = ⊤
+RootIrr (suc x) = ⊤
+RootIrr (lim f p) = ⊤
+RootIrr (lc k c t g) = ∀ η (e e′ : Gd k c η) → g η e ≡ g η e′
+
+all-root-irr : ∀ x → RootIrr x
+all-root-irr zero = tt
+all-root-irr (suc x) = tt
+all-root-irr (lim f p) = tt
+all-root-irr (lc k c t g) = λ η e e′ → refl
+
+raw1 : Raw zero
+raw1 = G.suc G.zero
+
+tw₃-form : tw 3 ≡ lc zero raw1 (tw 2) (λ η e → Ω̂ (up zero η))
+tw₃-form = refl
+
+-- 核对 2: 同一个序列, 两份路径, 两棵不同的树.
+ones : Raw zero
+ones = G.lim (λ _ → raw1) (λ _ → inj₁ refl)
+
+seq : ℕ → Raw zero
+seq zero = raw1
+seq (suc n) = ones
+
+path : ℕ → ∀ n → Cp zero (seq n) (seq (suc n))
+path m zero = inj₂ (m , inj₁ refl)
+path m (suc n) = inj₁ refl
+
+two : ℕ → Raw zero
+two m = G.lim seq (path m)
+
+pick : ∀ {a b : Raw zero} → Cp zero a b → ℕ
+pick {b = G.lim f p} (inj₂ (n , q)) = n
+pick _ = zero
+
+mark : Raw zero → ℕ
+mark (G.lim f p) = pick (p zero)
+mark _ = zero
+
+mark-two : ∀ m → mark (two m) ≡ m
+mark-two m = refl
+
+zero≢one : _≡_ {A = ℕ} 0 1 → ⊥
+zero≢one ()
+
+two-differ : two 0 ≡ two 1 → ⊥
+two-differ e = zero≢one (cong mark e)
+
+-- 核对 3: 槽位与孩子从无关的守卫写出 (同变体甲).
+lev : (K : LF) → Pre K → LF
+lev (suc k) (inj₁ _) = k
+lev (suc k) (inj₂ r) = lev k r
+lev (lim f p) (n , r) = lev (f n) r
+lev (lc k c t g) (inj₁ (inj₁ _)) = k
+lev (lc k c t g) (inj₁ (inj₂ r)) = lev k r
+lev (lc k c t g) (inj₂ (inj₁ r)) = lev t r
+lev (lc k c t g) (inj₂ (inj₂ (η , (e ,ᵢ r)))) = lev (g η e) r
+
+slot-irr : ∀ η → .(Gd zero raw1 η) → (r : Pre (up zero η)) →
+  Σ (Pre (tw 2)) λ q → lev (tw 2) q ≡ lev (up zero η) r
+slot-irr η e r = inj₂ (inj₂ (η , (e ,ᵢ r))) , refl
+
+-- 核对 4: 合法性在树里: 极限层号交出相邻项的路径, 不要外部的 Legal.
+steps : (x : LF) → LF → Set
+steps (lim f p) _ = (n : ℕ) → CpL (f n) (f (suc n))
+steps _ _ = ⊤
+
+read-steps : ∀ x → steps x x
+read-steps (lim f p) = p
+read-steps zero = tt
+read-steps (suc x) = tt
+read-steps (lc k c t g) = tt
+
+-- 核对 5: Plain 层号里两个位置的三路, 不要外部的合法性 (对照 YiLvIf.compare 读 Legal K).
+open import Data.Nat.Base using (_<′_; ≤′-refl; ≤′-step)
+open import Data.Nat.Properties using (<-cmp; <⇒<′)
+open import Relation.Binary.Definitions using (tri<; tri≈; tri>)
+open import Relation.Binary.PropositionalEquality using (subst)
+
+Plain : LF → Set
+Plain zero = ⊤
+Plain (suc k) = Plain k
+Plain (lim f p) = ∀ n → Plain (f n)
+Plain (lc k c t g) = ⊥
+
+shift : ∀ {a} b → CpL a b → (p : Pre a) → Σ (Pre b) λ p′ → lev b p′ ≡ lev a p
+shiftD : ∀ {a} b → DnL a b → (p : Pre a) → Σ (Pre b) λ p′ → lev b p′ ≡ lev a p
+shift b (inj₁ refl) p = p , refl
+shift b (inj₂ d) p = shiftD b d p
+shiftD (suc b) d p = inj₂ (proj₁ (shift b d p)) , proj₂ (shift b d p)
+shiftD (lim f q) (n , d) p = (n , proj₁ (shift (f n) d p)) , proj₂ (shift (f n) d p)
+shiftD (lc k c t g) d p = inj₂ (inj₁ (proj₁ (shift t d p))) , proj₂ (shift t d p)
+
+tr : ∀ {a b} d → CpL a b → CpL b d → CpL a d
+trD : ∀ {a b} d → CpL a b → DnL b d → DnL a d
+tr d p (inj₁ refl) = p
+tr d p (inj₂ q) = inj₂ (trD d p q)
+trD (suc d) p q = tr d p q
+trD (lim f _) p (n , q) = n , tr (f n) p q
+trD (lc k c t g) p q = tr t p q
+
+stepsL : (f : ℕ → LF) → (∀ n → CpL (f n) (f (suc n))) → ∀ {n m} → n <′ m → CpL (f n) (f m)
+stepsL f st {n} ≤′-refl = st n
+stepsL f st (≤′-step {n = m} p) = tr (f (suc m)) (stepsL f st p) (st m)
+
+data Tri (i j : LF) : Set where
+  below : (s : Pre i) → lev i s ≡ j → Tri i j
+  above : (s : Pre j) → lev j s ≡ i → Tri i j
+  same  : i ≡ j → Tri i j
+
+compare : ∀ K → Plain K → (q q′ : Pre K) → Tri (lev K q) (lev K q′)
+compare (suc k) pl (inj₁ _) (inj₁ _) = same refl
+compare (suc k) pl (inj₁ _) (inj₂ r′) = below r′ refl
+compare (suc k) pl (inj₂ r) (inj₁ _) = above r refl
+compare (suc k) pl (inj₂ r) (inj₂ r′) = compare k pl r r′
+compare (lim f st) pl (n , r) (m , r′) with <-cmp n m
+... | tri< n<m _ _ =
+  subst (λ z → Tri z (lev (f m) r′))
+    (proj₂ (shift (f m) (stepsL f st (<⇒<′ n<m)) r))
+    (compare (f m) (pl m) (proj₁ (shift (f m) (stepsL f st (<⇒<′ n<m)) r)) r′)
+... | tri≈ _ refl _ = compare (f n) (pl n) r r′
+... | tri> _ _ m<n =
+  subst (λ z → Tri (lev (f n) r) z)
+    (proj₂ (shift (f n) (stepsL f st (<⇒<′ m<n)) r′))
+    (compare (f n) (pl n) r (proj₁ (shift (f n) (stepsL f st (<⇒<′ m<n)) r′)))
+
+up0-plain : ∀ a → Plain (up zero a)
+up0-plain G.zero = tt
+up0-plain (G.suc a) = up0-plain a
+up0-plain (G.lim f p) = λ n → up0-plain (f n)
+up0-plain (G.lc () c t g)
+up0-plain (G.em () a)
+up0-plain G.top = tt
+
+-- 同一支里的两个位置: 守卫无关, 也不要守卫.
+branch-compare : ∀ (η : Raw zero) (r r′ : Pre (up zero η)) →
+  Tri (lev (up zero η) r) (lev (up zero η) r′)
+branch-compare η = compare (up zero η) (up0-plain η)

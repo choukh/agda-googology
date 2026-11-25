@@ -1,0 +1,64 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 有限阶程序族自身也构成可保留零槽的空间。
+module B18OrbitSpace where
+open import Data.Nat using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module O = Ord-Ord
+import B17OrbitTower as T
+open T using (Space; Carrier; End; Arr; arrow; Rel; Eq; run)
+import B17RefVector as Old
+
+Product : (ℕ → Space) → Space
+Carrier (Product S) = ∀ n → Carrier (S n)
+Rel (Product S) a b = ∀ n → Rel (S n) (a n) (b n)
+Eq (Product S) a b = ∀ n → Eq (S n) (a n) (b n)
+T.rr (Product S) a n = T.rr (S n) (a n)
+T.ee (Product S) a n = T.ee (S n) (a n)
+T.sup (Product S) h n = T.sup (S n) (λ j → h j n)
+T.sl (Product S) h g t n = T.sl (S n) _ _ (λ j → t j n)
+T.sr (Product S) a h j t n = T.sr (S n) _ _ j (t n)
+T.ss (Product S) h g t n = T.ss (S n) _ _ (λ j → t j n)
+T.node (Product S) h rh qh n = T.node (S n) (λ y → h y n) (λ d → rh d n) (λ d → qh d n)
+T.nr (Product S) f g rf ef rg eg h n = T.nr (S n) _ _ _ _ _ _ (λ d → h d n)
+T.ne (Product S) f g rf ef rg eg h n = T.ne (S n) _ _ _ _ _ _ (λ d → h d n)
+
+old = Product (λ n → End (T.Twr n))
+old-push-r : ∀ a b → Rel old a b → ∀ c d → Rel old c d → Rel old (Old.push a c) (Old.push b d)
+old-push-r a b ab c d cd n = cd (suc n) _ _ (ab n)
+old-push-q : ∀ a b → Eq old a b → ∀ c d → Eq old c d → Eq old (Old.push a c) (Old.push b d)
+old-push-q a b ab c d cd n = cd (suc n) _ _ (ab n)
+old-step : Arr old
+run old-step = Old.step
+T.rm old-step a b h = T.sl old _ _ (λ j → T.sr old _ _ j (points (suc j)))
+  where
+  points : ∀ j → Rel old (O.iter (Old.push a) T.semK j) (O.iter (Old.push b) T.semK j)
+  points zero = T.rr old _
+  points (suc j) = old-push-r a b h _ _ (points j)
+T.em old-step a b h = T.ss old _ _ (λ j → points (suc j))
+  where
+  points : ∀ j → Eq old (O.iter (Old.push a) T.semK j) (O.iter (Old.push b) T.semK j)
+  points zero = T.ee old _
+  points (suc j) = old-push-q a b h _ _ (points j)
+
+module Next (S : Space) where
+  tower : ℕ → Space
+  tower zero = End S
+  tower (suc n) = End (tower n)
+  vectors = Product (λ n → End (tower n))
+  seed : Carrier vectors
+  seed zero = T.Φ S
+  seed (suc n) = T.Φ (tower n)
+  push : Carrier vectors → Carrier vectors → Carrier vectors
+  push a b n = run (b (suc n)) (a n)
+  step : Arr vectors
+  run step v = T.sup vectors (λ j → O.iter (push v) seed (suc j))
+  T.rm step a b h = T.sl vectors _ _ (λ j → T.sr vectors _ _ j (points (suc j)))
+    where
+    points : ∀ j → Rel vectors (O.iter (push a) seed j) (O.iter (push b) seed j)
+    points zero = T.rr vectors _
+    points (suc j) n = points j (suc n) _ _ (h n)
+  T.em step a b h = T.ss vectors _ _ (λ j → points (suc j))
+    where
+    points : ∀ j → Eq vectors (O.iter (push a) seed j) (O.iter (push b) seed j)
+    points zero = T.ee vectors _
+    points (suc j) n = points j (suc n) _ _ (h n)

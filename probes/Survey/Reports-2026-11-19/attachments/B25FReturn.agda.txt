@@ -1,0 +1,71 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25FReturn where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_)
+open import Data.Nat.Properties using (≤-refl)
+open import Data.Product using (Σ; _×_; _,_; proj₁)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; s≼s; ≺→s≼; ≼l; ≅→≼)
+open import OCF.Align.BTBOFullV3 using (Fʸ; Fstep)
+open import OCF.Align.BTBOFullLv using (SV; svs; svl; SV-L; St-F; pl)
+open import OCF.Align.BTBOValAbsorb using (st-l₂)
+open import W4Block using (tw)
+open import W4Path using (Ok-tw)
+import B12Terminal as T
+import B12ActualSlots as A
+import B15TowerSeed as Seed
+import B18OldBridge as Old
+import B12BtboCut as Cut
+import B20StandardInside as S
+import B21StandardShape as H
+import B22SourceSlots as Src
+import B22TowerCut as K
+import B22TowerDiagonal as D
+import B25Return as R
+import QBtboCofinal as Q
+import B25FFirst as First
+import B25FActual as Act
+import B25FShortcut as Shortcut
+open import B25FZero using (IsLim; islim)
+
+child = First.Selected.target
+excess : ∀ {a} → IsLim a → (v : SV a) → L.suc (Fʸ (a L.[ 0 ]ᴵ)) ≼ Fʸ a
+excess islim v = ≼l 1 (st-l₂ (St-F v pl) 0)
+
+opaque
+  unfolding D.target
+  smaller : ∀ m → L.suc (child m) ≼ D.target m
+  smaller m = excess {a = R.Source.a m} (Shortcut.limit-index (Act.Actual.shape m)) (Src.valid (R.Source.z m))
+
+  strong : ∀ m a → SV a → L.suc (L.forget a) ≼ S.std (suc m) → L.suc (Fʸ a) ≼ child m
+  strong m a va low = ≼-trans {a = L.suc (Fʸ a)} {b = Fʸ (L.suc a)} {c = child m} (≺→s≼ (Fstep a))
+    (First.Selected.named m (L.suc a) (svs va) low)
+
+  later : ∀ i m → R.Source.upper i ≤ m → L.suc (D.target i) ≼ child m
+  later i m large = strong m (R.Source.a i) (Src.valid (R.Source.z i))
+    (≼-trans {a = L.suc (L.forget (R.Source.a i))} {b = L.suc (S.std m)} {c = S.std (suc m)}
+      (s≼s (≼-trans {b = S.std (R.Source.upper i)} (R.Source.low i) (R.up large))) (H.rise m))
+
+  first : L.suc (N.γ 2) ≼ child 0
+  first = strong 0 (N.L 1) (SV-L 1) (≼-trans {a = L.suc (L.forget (N.L 1))} {b = L.suc (N.γ 1)} {c = S.std 1}
+    (s≼s (≅→≼ (L.forget-toLevel (N.γ 1) (N.cert 1))))
+    (≼-trans {a = L.suc (N.γ 1)} {b = T.Ω₂ref} {c = S.std 1} (≺→s≼ (Fstep (L.suc L.zero)))
+      (Seed.initial-bound 1 {Q = T.Ω₂ref} (λ r cv → T.anchor₂ r)
+        (T.initial (tw 1) (Ok-tw 1)) (A.initial (tw 1) (Ok-tw 1)))))
+
+  first-hit : child 0 ≼ K.cut → Q.Hit (N.γ 2)
+  first-hit h = Q.Use.extract {x = N.γ 2} (≼-trans {a = L.suc (N.γ 2)} {b = child 0} {c = K.cut} first h)
+
+  all-finite : child 0 ≼ K.cut → Σ ℕ (λ j → ∀ n → Cut.finite n ≼ S.std (suc j))
+  all-finite h = let j , g = first-hit h in j , Old.finite-from (S.std (suc j)) g
+
+Cofinal = ∀ i → Σ ℕ (λ m → (i ≤ m) × child m ≼ K.cut)
+
+home : Cofinal → D.Home
+home co i = let m , big , h = co (R.Source.upper i)
+            in Q.Use.extract {x = D.target i} (≼-trans {a = L.suc (D.target i)} {b = child m} {c = K.cut} (later i m big) h)
+
+enough : D.Home → Cofinal
+enough h i = let j , d = h i in i , ≤-refl , ≼l (suc j)
+  (≼-trans {a = child i} {b = D.target i} {c = S.std (suc j)} (≼-trans (≼-suc (≼-refl (child i))) (smaller i)) d)

@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在同一真实第一塔的变下标上迭代 ω 的幂。由任一独立标准塔出发可得越过它的最小 ε 不动点。
+module B22MovingIndex where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+open import W4Block using (tw; iter; zero)
+open import W4Path using (Ok; Ok-tw)
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read; 𝟏; T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; l≼; ≼l; s≼s)
+import B12Terminal as T
+import B12ActualSlots as A
+import B14PathHeight as P
+import B14Tower as W
+import B16ReadIndex as R
+import B19IdealArithmetic as F
+import B19IdealPowers as Pow
+import B20StandardInside as St
+import B20StandardGoal as G
+import B22HeightValue as Height
+import B22ResetBridge as Bridge
+open T.Run
+
+step = F.norm
+steps : T₀ → ℕ → T₀
+steps x = iter step (L.suc x)
+above : T₀ → T₀
+above x = L.lim (steps x)
+strict : ∀ x → L.suc x ≼ above x
+strict x = ≼l 0 (≼-refl _)
+fix : ∀ x → step (above x) ≈ᵛ above x
+fix x = l≼ (λ n → ≼l (suc n) (≼-refl _)) , F.up _
+least : ∀ x y → L.suc x ≼ y → step y ≼ y → above x ≼ y
+least x y low closed = l≼ go where
+  go : ∀ n → steps x n ≼ y
+  go zero = low
+  go (suc n) = ≼-trans (Pow.expo Pow.omega-pos (go n)) closed
+
+module First (r : T.Run (tw 1)) (eq : ok r ≡ Ok-tw 1) (cv : A.Covered r) where
+  module X = W.At r
+  checked : ∀ z → P.All (X.path z)
+  checked z = subst (λ o → P.All (W4Block.self W4Block.∙ proj₂ (proj₁ o) z)) (sym eq) (P.through _)
+  next : ∀ z → step (read z) ≼ read (X.next z)
+  next z = ≼-trans (Height.normal (read z) 𝟏 (≼-refl _))
+    (P.compare z (checked z) (≼-refl _) (X.chain z) (W.chain-covered r cv z) 𝟏 (oneB r _))
+  module From (x : T₀) (low : L.suc x ≼ read (X.idx 1)) where
+    follows : ∀ i → steps x i ≼ read (X.idx (suc i))
+    follows zero = low
+    follows (suc i) = ≼-trans (Pow.expo Pow.omega-pos (follows i)) (next (X.idx (suc i)))
+    all : above x ≼ read (T.value r)
+    all = l≼ (λ n → ≼-trans (follows n) (R.FirstTower.indices r cv (suc n)))
+
+module Level (m : ℕ) where
+  open Bridge.Level m using (n; upper)
+  module At (r : T.Run (tw upper)) (eq : ok r ≡ Ok-tw upper) (cv : A.Covered r) where
+    module X = Bridge.Level.At m r eq cv
+    module Fst = First X.first X.checked X.cv
+    actual : above (St.std n) ≼ read (T.value r)
+    actual = ≼-trans (Fst.From.all (St.std n) X.start) X.outer
+  module Std = At (T.initial (tw upper) (Ok-tw upper)) refl (A.initial (tw upper) (Ok-tw upper))

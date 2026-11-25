@@ -1,0 +1,34 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22IdealTest where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (_,_; proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiPhiBlock as P
+import OCF.Lean.YiFreshFold as O
+import OCF.Lean.YiFreshLegal as J
+import OCF.Lean.YiFreshValRead as V
+import OCF.Lean.YiUpLegal as K
+import OCF.Lean.YiUpFold as F
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_)
+open import B22IdealOld using (higher)
+import B21OldSuccessor as S
+import B21FirstDiagonal as D
+import OCF.Lean.YiPhiCheck as H
+
+module At (a : Y.L) (o : P.Ev a) where
+  module St = S.At a o
+  sums = O.iter (O.Ωt a O.+_) (O.Ωt a)
+  formula : St.raw 1 ≡ L.lim (λ n → V.read (F.ψ₀ a o (sums n)))
+  formula = refl
+  strict : L.suc St.old ≼ St.raw 1
+  strict = higher (F.ψ₀ a o (O.next (O.Ωt a))) (K.ψ₀-leg a o (O.next (O.Ωt a))
+    (proj₁ (J.nextLN (O.Ωt a) (J.Ωt-leg a , J.Ωt-nz a)))) (K.mono⊥ a o (P.B₀ a) (J.◃l 0))
+
+finite : ∀ n → L.suc (D.Stage.old n) ≼ D.test n
+finite n = At.strict (H.fin n) (H.Ev-fin n)
+
+next-row : ∀ n → L.suc (D.test n) ≼ D.Stage.old (suc n)
+next-row n = D.Stage.margin n 1
+

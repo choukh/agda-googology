@@ -1,0 +1,94 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在任意正塔中，任意合法位置的常枝 Ω 全部只作一次右乘 ω。深度不限的整族精确共尾于 seed·ω^ω；若初值低于原 EBO，全族有同一原行界。
+module B28BConstant where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_)
+open import Data.List.Base using (List; []; _∷_; length; replicate)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst)
+import W4Block as W
+import WVOne as V
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; ≼-trans; ≼-refl; s≼s; z≼; l≼; ≼l)
+import B18Product as P
+open import B19IdealProduct using (id; _∙_; flip; one; add; mul; assoc; power; lim)
+import B19IdealPowers as Pow
+import B19IdealArithmetic as Ar
+import B26Names as N
+import B27CutArithmetic as C
+import B27Endpoint as End
+import B27Threshold as H
+import B28BHead as X
+import B28BSlot as S
+import B28BValues
+
+sums : V.T₀ → ℕ → V.T₀
+sums q zero = q
+sums q (suc n) = sums q n L.+ q
+copies : ∀ q n → sums q n ≈ᵛ (q P.· L.natᶜ (suc n))
+copies q zero = flip (one q)
+copies q (suc n) = add (copies q n) (id q)
+
+sup : ∀ q → L.lim (sums q) ≈ᵛ (q P.· L.ωᶜ)
+sup q = l≼ (λ n → ≼l (suc n) (proj₁ (copies q n))) ,
+        l≼ λ { zero → z≼ ; (suc n) → ≼l n (proj₂ (copies q n)) }
+
+program : ∀ {k : W.L} → W.Pos k → W.Tr k → W.Tr k
+program p t = W.Ω p (λ _ → t)
+
+module Dynamics (k : W.L) (free : W.Tr k → V.T₀) (single : ∀ p t → free (program p t) ≈ᵛ (free t P.· L.ωᶜ)) where
+  nest : List (W.Pos k) → W.Tr k → W.Tr k
+  nest [] t = t
+  nest (p ∷ ps) t = program p (nest ps t)
+
+  exact : ∀ ps t → free (nest ps t) ≈ᵛ (free t P.· power L.ωᶜ (L.natᶜ (length ps)))
+  exact [] t = flip (one (free t))
+  exact (p ∷ ps) t = single p (nest ps t) ∙ mul (exact ps t) (id L.ωᶜ) ∙
+    assoc (free t) (power L.ωᶜ (L.natᶜ (length ps))) L.ωᶜ
+
+  roof = λ t → free t P.· Ar.norm L.ωᶜ
+  ceiling : ∀ ps t → free (nest ps t) ≼ roof t
+  ceiling ps t = ≼-trans {b = free t P.· Ar.norm (L.natᶜ (length ps))} (proj₁ (exact ps t))
+    (P.mono (≼-refl (free t)) (Pow.expo Pow.omega-pos (≼l (length ps) (≼-refl _))))
+
+  repeats : ∀ n (p : W.Pos k) → length (replicate n p) ≡ n
+  repeats zero p = refl
+  repeats (suc n) p = cong suc (repeats n p)
+
+  whole : ∀ p t → L.lim (λ n → free (nest (replicate n p) t)) ≈ᵛ roof t
+  whole p t = lim (λ n → subst (λ i → free (nest (replicate n p) t) ≈ᵛ (free t P.· Ar.norm (L.natᶜ i)))
+    (repeats n p) (exact (replicate n p) t))
+
+
+module At (m : ℕ) where
+  module A = X.At m
+  open A using (k; free)
+  single : ∀ p t → free (program p t) ≈ᵛ (free t P.· L.ωᶜ)
+  single p t = Node.exact ∙ lim partial ∙ sup (free t)
+    where
+    module Node = S.At.Node m p (λ _ → t)
+    partial : ∀ u → Node.Seq.sum u ≈ᵛ sums (free t) u
+    partial zero = id (free t)
+    partial (suc u) = add (partial u) (id (free t))
+
+  open Dynamics k free single public
+
+module Cut (r : ℕ → V.T₀) (e : V.T₀)
+  (index : ∀ q → L.suc q ≼ e → Σ ℕ (λ i → q ≼ r (suc (suc i))))
+  (gap : ∀ i → L.suc (r i) ≼ r (suc (suc i)))
+  (close : ∀ d → 2 ≤ d → ∀ q → L.suc q ≼ r d → L.suc (q P.· Ar.norm L.ωᶜ) ≼ r d) where
+  bound : ∀ q → L.suc q ≼ e → Σ ℕ (λ d → 2 ≤ d × L.suc (q P.· Ar.norm L.ωᶜ) ≼ r d)
+  bound q below = found (index q below) where
+    found : Σ ℕ (λ j → q ≼ r (suc (suc j))) → Σ ℕ (λ d → 2 ≤ d × L.suc (q P.· Ar.norm L.ωᶜ) ≼ r d)
+    found (j , p) = b , End.two a , close b (End.two a) q
+      (≼-trans {a = L.suc q} {b = L.suc (r a)} {c = r b} (s≼s p) (gap a))
+      where
+      a = suc (suc j)
+      b = suc (suc a)
+
+named-step : ∀ d → 2 ≤ d → ∀ q → L.suc q ≼ H.row d → L.suc (q P.· Ar.norm L.ωᶜ) ≼ H.row d
+named-step d two q small = C.At.product d two q (Ar.norm L.ωᶜ) small
+  (C.At.powω d two L.ωᶜ (C.At.omega d two))
+
+named : ∀ q → L.suc q ≼ N.E → Σ ℕ (λ d → 2 ≤ d × L.suc (q P.· Ar.norm L.ωᶜ) ≼ H.row d)
+named = Cut.bound H.row N.E End.small-index End.room named-step

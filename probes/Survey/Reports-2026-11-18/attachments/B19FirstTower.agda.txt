@@ -1,0 +1,39 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在第一座正塔上，下一下标与本次零输出逐枝相同；整塔可由独立迭代的正项累加读出。
+module B19FirstTower where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+open import W4Block hiding (_∙_)
+open import W4Ops
+open import WVOne using (read; T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; ≅→≈ᵛ; ≅→≼; ≼-trans)
+open import B18Product using (_·_)
+open import B19IdealProduct using (id; _∙_; mul)
+import B12EboRows as B
+import B17CellPrefix as C
+import B18CellState as D
+import B19IdealRow as Row
+import B18ResetCellGoal as F
+import B19PathShape as P
+import B19Canonical as K
+import B19Coefficient as E
+
+term = λ n → K.seq (suc n)
+same : ∀ n → P.Shape (term n) (C.At.tree 0 n)
+same n = subst (λ x → P.Shape x (C.At.tree 0 n)) (K.indices (suc n)) (P.Actual.twin n)
+
+sums : ∀ n → P.Shape (cum term n) (cum (C.At.tree 0) n)
+sums zero = same zero
+sums (suc n) = P.append (sums n) (same (suc n))
+
+value : L.lim (λ n → read (cum term n)) L.≅ B.child 1
+value = subst (λ t → L.lim (λ n → read (cum term n)) L.≅ t) (sym (C.At.shape 0))
+  (L.l≅ (λ n → P.read-shape (sums n)))
+
+index-factor : ∀ n → read (term n) ≈ᵛ (L.ωᶜ · D.At.fresh 0 n)
+index-factor n = ≅→≈ᵛ (P.read-shape (same n)) ∙ E.Cell.exact-cell 0 n ∙ mul F.First.omega (id _)
+
+first-positive : L.suc Row.row ≼ read (K.seq 2)
+first-positive = subst (λ x → L.suc Row.row ≼ read x) (K.indices 2) Row.row-seed

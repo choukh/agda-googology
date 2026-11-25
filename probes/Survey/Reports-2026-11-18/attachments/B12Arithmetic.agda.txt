@@ -1,0 +1,75 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 零层值出口。参照单独用 src 的 Ω₂、加法、自然数迭代与极限写出。
+module B12Arithmetic where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; ≼-trans; ≅→≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import W4Block using (iter)
+open import WVOne using (read)
+open import WKShape using (Ψ₃)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Src as T
+import YiLAB11Target as Y
+import B12Hierarchy as H
+import B12LimitSrc as Z
+open H.Prefix using (val)
+
+-- h₀(x) = x + Ω₂；hₖ₊₁(x) = sup_n hₖⁿ(x)。
+hS : ℕ → Z.Src₂ → Z.Src₂
+hS zero x = x S.+ T.a
+hS (suc k) x = S.lim (S.iter (hS k) x)
+
+hL : ℕ → Z.Lev₂ → Z.Lev₂
+hL zero x = x L.+ Ω₂ᴸ
+hL (suc k) x = L.lim (S.iter (hL k) x)
+
+hr : (k : ℕ) → ∀ {s p} → Z.Aligned s p → Z.Aligned (hS k s) (hL k p)
+hr zero a = Z.plus a Z.omega2
+hr (suc k) = Z.Closure.sup (hS k) (hL k) (hr k)
+
+dS : Z.Src₂ → Z.Src₂
+dS s = S.lim (λ k → hS (suc k) s)
+dL : Z.Lev₂ → Z.Lev₂
+dL p = L.lim (λ k → hL (suc k) p)
+
+dr : ∀ {s p} → Z.Aligned s p → Z.Aligned (dS s) (dL p)
+dr a = Z.lim _ _ (λ k → hr (suc k) a)
+
+-- 与携带种子的前缀按步配对，树上各极限只用逐分支的 ≅。
+StepRel : (Z.Lev₂ → Z.Lev₂) → (H.Prefix → H.Prefix) → Set
+StepRel f g = ∀ {p} x → p L.≅ val x → f p L.≅ val (g x)
+
+pointwise : ∀ {f g} → StepRel f g → (n : ℕ) → ∀ {p} x → p L.≅ val x →
+            S.iter f p n L.≅ val (iter g x n)
+pointwise rel zero x e = e
+pointwise rel (suc n) x e = rel _ (pointwise rel n x e)
+
+agree : (k : ℕ) → StepRel (hL k) (H.height k)
+agree zero x e = L.add-≅ {σ = λ r → r} {σ′ = λ r → r} e (T.regular 0)
+agree (suc k) x e = L.l≅ (λ n → pointwise (agree k) n x e)
+
+diag-agree : StepRel dL H.diagonal
+diag-agree x e = L.l≅ (λ k → agree (suc k) x e)
+
+source : Z.Src₂
+source = S.lim (S.iter dS T.a)
+reference : Z.Lev₂
+reference = L.lim (S.iter dL Ω₂ᴸ)
+
+level : L.ψ⁰ reference ≼ read Ψ₃
+level = ≼-trans (≅→≼ (L.ψ⁰-≅ (L.l≅ (λ n → pointwise diag-agree n H.first (T.regular 0))))) H.level-bound
+
+src : tr₀ (S.ψ₀ source) ≼ read Ψ₃
+src = ≼-trans (proj₁ (Z.fold (Z.Closure.sup dS dL dr Z.omega2))) level
+
+-- h₂ 的输入与输出单独给出，便于与以右加 Ω₂ 定义的 ω² 标尺对接。
+square : tr₀ (S.ψ₀ Z.squareS) ≼ read Ψ₃
+square = ≼-trans (proj₁ Z.square-bridge)
+  (≼-trans (≅→≼ (L.ψ⁰-≅ (agree 2 H.first (T.regular 0))))
+  (≼-trans (≼l 1 (OCF.Align.Value.≼-refl _))
+           (≼-trans (≼l 1 (OCF.Align.Value.≼-refl _)) H.level-bound)))

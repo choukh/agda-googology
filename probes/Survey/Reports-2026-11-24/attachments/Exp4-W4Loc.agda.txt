@@ -1,0 +1,61 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 试验: 在层号 a 里找有限层 lvl n 的一个出现 (可靠由类型保证; 完全性不在这里证).
+module W4Loc where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Product using (Σ; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import W4Block
+
+lvl : ℕ → L
+lvl zero    = zero
+lvl (suc n) = nd sS (λ _ → lvl n)
+
+mapM : ∀ {A B : Set} → (A → B) → Maybe A → Maybe B
+mapM f (just a) = just (f a)
+mapM f nothing  = nothing
+
+orElse : ∀ {A : Set} → Maybe A → Maybe A → Maybe A
+orElse (just a) _ = just a
+orElse nothing  m = m
+
+-- j 是不是有限层.
+fin? : (j : L) → Maybe (Σ ℕ λ n → j ≡ lvl n)
+fin? zero          = just (0 , refl)
+fin? (nd sS h)     = mapM (λ { (n , e) → suc n , cong (λ a → nd sS (λ _ → a)) e }) (fin? (h tt))
+fin? (nd sL g)     = nothing
+fin? (nd (sΩ k) h) = nothing
+
+-- a 是不是就是 lvl n.
+eqL : (n : ℕ) (a : L) → Maybe (lvl n ≡ a)
+eqL zero    zero      = just refl
+eqL (suc n) (nd sS h) = mapM (cong (λ x → nd sS (λ _ → x))) (eqL n (h tt))
+eqL zero    (nd _ _)  = nothing
+eqL (suc n) zero      = nothing
+eqL (suc n) (nd sL _) = nothing
+eqL (suc n) (nd (sΩ _) _) = nothing
+
+sn : ℕ → Tr zero
+sn zero    = zero
+sn (suc n) = suc (sn n)
+
+mutual
+  find : (n : ℕ) (a : L) → Maybe (lvl n ≤ a)
+  find n a = orElse (mapM (λ e → subst (λ x → lvl n ≤ x) e self) (eqL n a)) (down n a)
+
+  down : (n : ℕ) (a : L) → Maybe (lvl n ≤ a)
+  down n zero          = nothing
+  down n (nd sS h)     = mapM (inc tt) (find n (h tt))
+  down n (nd sL g)     = mapM (inc (suc n)) (find n (g (suc n)))
+  -- Ω 形层号: 下标层是第 0 层时先看孩子 sucⁿ zero (塔第 1 项上它的层号就是 lvl n), 再看孩子 zero.
+  down n (nd (sΩ zero) h)     = orElse (mapM (inc (sn n)) (find n (h (sn n)))) (mapM (inc zero) (find n (h zero)))
+  down n (nd (sΩ (nd s g)) h) = mapM (inc zero) (find n (h zero))
+
+loc : (j a : L) → Maybe (j ≤ a)
+loc j a = go (fin? j)
+  where
+  go : Maybe (Σ ℕ λ n → j ≡ lvl n) → Maybe (j ≤ a)
+  go (just (n , e)) = mapM (subst (λ x → x ≤ a) (sym e)) (find n a)
+  go nothing        = nothing

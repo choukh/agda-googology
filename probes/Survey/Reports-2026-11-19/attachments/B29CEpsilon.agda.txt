@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真孙返回的共同上确界 Γ 夹出整个内返回族。所有塔、外步、内步使用同一个上方 ε 不动点。
+module B29CEpsilon where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst; cong)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; z≼; ≼-refl; s≼s; ≼l; l≼)
+import WVOne as V
+import B18Product as M
+import B19IdealProduct as Pow
+import B19IdealArithmetic as Ar
+import B22MovingIndex as E
+import B27UEpsilon as Env
+
+
+open import B29CArithmetic using (cost; hull)
+module Scalar (q : V.T₀) where
+  module X = Env.At q
+  positive : X.In V.𝟏
+  positive = X.sucC {x = L.zero} (X.down {x = L.zero} {y = q} z≼ X.seed)
+  omega : X.In L.ωᶜ
+  omega = X.down {y = Ar.norm V.𝟏} (M.one-left L.ωᶜ) (X.expC {x = V.𝟏} positive)
+  qω : V.T₀
+  qω = Pow.power (L.suc q) L.ωᶜ
+  in-lim : X.In qω
+  in-lim = X.powC {x = L.suc q} {y = L.ωᶜ} (s≼s {a = L.zero} {b = q} z≼) (X.sucC {x = q} X.seed) omega
+  in-card : X.In (q M.· L.ωᶜ)
+  in-card = X.mulC {x = q} {y = L.ωᶜ} X.seed omega
+  compare : ∀ n → M.powers q n ≼ Pow.power (L.suc q) (L.natᶜ n)
+  compare zero = ≼-refl V.𝟏
+  compare (suc n) = M.mono {a = M.powers q n} {b = Pow.power (L.suc q) (L.natᶜ n)} {x = q} {y = L.suc q} (compare n) (≼-suc (≼-refl q))
+
+  limit : L.lim (M.powers q) ≼ qω
+  limit = l≼ {f = M.powers q} (λ n → ≼l {f = λ t → Pow.power (L.suc q) (L.natᶜ t)} n (compare n))
+  opaque
+    ceiling : L.suc (hull q) ≼ E.above q
+    ceiling with X.together {x = qω} {y = q M.· L.ωᶜ} in-lim in-card
+    ... | t , l , r = X.finite {x = hull q} (X.down {x = hull q} {y = X.e t} (l≼ {f = cost q} bound) (X.point t))
+      where
+      bound : ∀ m → cost q m ≼ X.e t
+      bound zero = ≼-trans {a = L.lim (M.powers q)} {b = qω} {c = X.e t} limit l
+      bound (suc _) = r
+
+
+module Combined (q i : V.T₀) (lo : q ≼ i) (hi : i ≼ hull q) where
+  ceiling : L.suc i ≼ E.above q
+  ceiling = ≼-trans {a = L.suc i} {b = L.suc (hull q)} {c = E.above q} (s≼s {a = i} {b = hull q} hi) (Scalar.ceiling q)
+  same-cut : ∀ (Q : V.T₀) → (L.suc q ≼ Q → L.suc (E.above q) ≼ Q) → (L.suc q ≼ Q → L.suc i ≼ Q) × (L.suc i ≼ Q → L.suc q ≼ Q)
+  same-cut Q closed = (λ h → ≼-trans {a = L.suc i} {b = E.above q} {c = Q} ceiling
+     (≼-trans {a = E.above q} {b = L.suc (E.above q)} {c = Q} (≼-suc (≼-refl (E.above q))) (closed h))) ,
+    (λ p → ≼-trans {a = L.suc q} {b = L.suc i} {c = Q} (s≼s {a = q} {b = i} lo) p)
+
+import B29CBudget as Genuine
+import B27EpsilonCut as ERow
+import B27CutArithmetic as C
+module B = Genuine.Actual
+module Actual = Combined B.Γ B.I B.lower B.bounded
+
+fixed : ∀ k (two : 2 ≤ k) → (C.At.Small k two B.Γ → C.At.Small k two B.I) × (C.At.Small k two B.I → C.At.Small k two B.Γ)
+fixed k two = Actual.same-cut (C.At.Q k two) (ERow.At.closed k two B.Γ)

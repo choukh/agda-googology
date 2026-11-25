@@ -1,0 +1,83 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24NStore where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (g₂; p₂; ◃→≼)
+open import WKShape using (lvl3)
+open import WKGen using (Ω₁t; node-ge)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+open import YiLAB11Orbit using (push)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans)
+import B11OuterCore as C
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B13Orbit as Orb
+import B13OrbitFeed as O
+import B13SeedOuter as Seed
+import B17OrbitTower as T
+import B18RefModel as M
+import B18RefRows as Rows
+import B18RefDepth as H
+import B18OrbitWorld as W
+import B18OrbitRows as Old
+import B21RowTheta as Th
+import B21RowDynamics as Dy
+import B22RowLive as Live
+import B22RowWhole as Previous
+import B23ABlocks as B
+import B23AFinite as F
+import B24NProduct as Product
+import B24NKid as K
+
+module Sem = T.Diag Product.space Product.theta H.initial
+positive : Th.Fits Sem.target (K.Native.y 1)
+positive d = M.conv (Rows.meaning d) (M.node (Rows.meaning d) (λ x → Sem.f x d)
+  (λ p → Sem.r p d) (λ p → Sem.q p d) (K.Native.kid 1) (K.Native.regular 1) (λ x → K.kid x d))
+  (L.≅-sym (K.Native.feed 1))
+
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  open B.Site r cv using (Q′; cp)
+  open K.At r cv using (K₁′; queried; curve)
+  open Seed.At r using (c⁺; st1; w2; v₁; outer)
+  open F.At r cv using (inside)
+  S = push st1
+  b = st1 lvl1 C.slot
+  cover : lvl1 ⊢ Ω₁t ◃ proj₁ b
+  cover = C.st (Live.struct (Previous.At.initial r cv))
+  kids = λ z → run (curve z) S lvl1 Old.Out.slot b
+  tree = Ω⁺ p₁ kids
+  sem : Dy.Index tree Sem.target
+  sem = W.retain Product.world kids (proj₂ tree) Sem.f Sem.r Sem.q (λ x z low →
+    queried x z low S H.initial cover seed b seed)
+    where seed = W.start Product.world b cover
+  line = iter (λ z → proj₁ (E ok₂ tdNil (g₂ z) Q′ st1 lvl1 C.slot b)) zero
+  safe : lvl1 ⊢ Ω₁t ◃ line 1
+  safe = ◃t cover (Einf ok₂ tdNil (g₂ zero) Q′ st1 lvl1 C.slot b)
+  stored : lvl1 ⊢ proj₁ tree ◃ line 2
+  stored = Emono ok₂ O.D₁ K₁′ S lvl1 Old.Out.slot b {x = Ω₁t} {y = suc (line 1)} (◃t safe ◃s)
+  index₂ : Tr⁺ lvl1
+  index₂ = line 2 , ◃t (proj₂ b) (Einf ok₂ tdNil (g₂ (line 1)) Q′ st1 lvl1 C.slot b)
+  carried : Dy.Index index₂ Sem.target
+  carried = W.rise Product.world tree index₂ stored Sem.target sem
+  observed = E ok₂ O.D₁ (proj₁ tree) K₁′ S zero (σ O.m₁ w2) v₁
+  stage = E ok₂ tdNil (g₂ (line 2)) Q′ st1 zero w2 v₁
+  gate : zero ⊢ proj₁ observed ◃ proj₁ stage
+  gate = Emono ok₂ O.D₁ K₁′ S zero (σ O.m₁ w2) v₁ {x = proj₁ tree} {y = suc (line 2)} (◃t stored ◃s)
+  standard = run (Orb.block (Ωt lvl2) Q′) st1 zero w2 v₁
+  to-standard : read (proj₁ stage) ≼ read (proj₁ standard)
+  to-standard = node-ge (kp lvl2 ok₂ p₂ w2) (λ z → E ok₂ tdNil (g₂ z) Q′ st1 zero w2 v₁)
+    (λ z → proj₁ (E ok₂ tdNil (g₂ z) Q′ st1 lvl1 C.slot b)) 2
+  open import Data.Sum.Base using (inj₁; inj₂)
+  open import Relation.Binary.PropositionalEquality using (refl)
+  lift-standard : ∀ c → Cov._⊴_ (proj₁ (Ωt lvl2)) (proj₁ c) →
+    read (proj₁ standard) ≼ read (proj₁ (run (Orb.block c Q′) st1 zero w2 v₁))
+  lift-standard c (inj₁ refl) = OCF.Align.Value.≼-refl _
+  lift-standard c (inj₂ p) = ◃→≼ (Emono ok₂ tdNil Q′ st1 zero w2 v₁ p)
+  entry : read (proj₁ observed) ≼ read (Tm.value r)
+  entry = ≼-trans (◃→≼ gate) (≼-trans to-standard (≼-trans (lift-standard c⁺ cp)
+    (≼-trans (◃→≼ (inside 2 st1 zero w2 v₁)) (outer 0))))

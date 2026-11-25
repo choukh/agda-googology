@@ -1,0 +1,91 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- Ω 树的镜像 (无前提, 只要 IsN; 构造的 Level 树都在各层的码上), 顶层的镜像下界 (以 BStmt 为前提; 经 KBMain 即只以 OpStmt 为前提).
+module KBTop where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as I
+open I using (Ordᴵ; Ordᶜ; Simᴵ; _<ᴵ_; _≅_; add; upˡ; ≅-sym; z≅)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼; s≼0; ≼lim⁻)
+open import KPow
+open import KMir
+open import KRel
+open import KIface
+open import KBBase
+open import WVOne using (read)
+
+------------------------------------------------------------------------
+-- 5. Ω 树的镜像.
+ΩMir : (m : L) (i : IsN m) (o : Ok m) → Dom m (I.Ω (code m i o)) (proj₁ (Ωt m))
+ΩMir zero          i o = rs (rz (λ _ _ → I.z≅))
+ΩMir (nd sS h)     i o = rΩ mS (λ i′ o′ → code-irr (h tt) i i′ (proj₂ o tt) o′) (I.Ω-refl _) br
+  where
+  br : (Y : Ordᶜ (code (h tt) i (proj₂ o tt))) (z : Tr (h tt)) → Dom (h tt) Y z
+     → Dom (nd sS h) (I.up I.zero Y) (up zero tt (suc z) (z◃ z ◃s))
+  mS : Mirror (code (nd sS h) i o) (nd sS h)
+  mS i′ o′ = code-irr (nd sS h) i i′ o o′
+  br Y z dY = ru (rz mS) (r◃ dY ◃s) (λ q → I.suc q) (upˡ (≅-sym (add-zeroˡ (λ q → I.suc q) Y (Dom→refl dY))))
+ΩMir (nd sL g)     i o = rl λ n →
+  r◃ (cumInfl Fs n (ru (rz (λ i′ o′ → code-irr (nd sL g) i i′ o o′)) (ΩMir (g n) (i n) (proj₂ o n)) (λ q → I.lim n q)
+                       (upˡ (≅-sym (add-zeroˡ (λ q → I.lim n q) _ (I.Ω-refl _))))))
+     (◃l n)
+  where
+  Fs : ℕ → Tr (nd sL g)
+  Fs n = proj₁ (upz {s = sL} {h = g} n (Ωt (g n)))
+ΩMir (nd (sΩ _) _) () o
+
+------------------------------------------------------------------------
+-- 6. 顶层. 目标层 0 的字面证明 zero <ᴵ suc (code m).
+mutual
+  zlt : (m : L) → IsS m → (i : IsN m) (o : Ok m) → I.zero <ᴵ I.suc (code m i o)
+  zlt zero          _  _ _ = I.zero
+  zlt (nd sS h)     st i o = I.suc (zlt (h tt) st i (proj₂ o tt))
+  zlt (nd sL g)     st i o = I.suc (zpos (nd sL g) {g zero} (zero , self) st i o)
+  zlt (nd (sΩ _) _) ()
+
+  zpos : (m : L) {j : L} → j <ₙ m → IsS m → (i : IsN m) (o : Ok m) → I.zero <ᴵ code m i o
+  zpos zero          ()
+  zpos (nd sS h)     _ st i o = zlt (h tt) st i (proj₂ o tt)
+  zpos (nd sL g)     _ st i o =
+    I.lim (proj₁ (proj₂ st zero)) (zpos (g (proj₁ (proj₂ st zero))) (proj₂ (proj₂ st zero)) (proj₁ st _) (i _) (proj₂ o _))
+  zpos (nd (sΩ _) _) _ ()
+
+𝟏₀ : Ordᶜ I.zero
+𝟏₀ = I.suc I.zero
+
+module Top (bS : (m : L) → BStmt m) where
+  lower : (m : L) (st : IsS m) (i : IsN m) (o : Ok m) (S : Base m) → CovS S
+        → (β : Tr⁺ zero) → Dom zero 𝟏₀ (proj₁ β) → (w : zero ≤ m)
+        → I.ψ⁰ (I.Ω (code m i o)) ≼ read (proj₁ (ψ m o S zero w β (proj₁ (Ωt m))))
+  lower m st i o S cv β dβ w =
+    ≼-trans (≅→≼ (I.ψ⁰≅ψ (≅-sym (add-zeroˡ (λ q → q) (I.Ω c) (I.Ω-refl c))))) (dom0 d)
+    where
+    c : Ordᴵ
+    c = code m i o
+    r : I.zero <ᴵ I.suc c
+    r = zlt m st i o
+    pre : Pre S β {kP = c} I.zero r
+    pre = record { mj = λ _ _ → I.z≅ ; reP = z≅ ; real = λ u r′ mi → cv u mi ; cov = cv ; base = dβ }
+    d : Dom zero (ψ̂ r (add I.zero (λ q → q) (I.Ω c))) (proj₁ (ψ m o S zero w β (proj₁ (Ωt m))))
+    d = bS m st o S w β (proj₁ (Ωt m)) I.zero (λ q → q) (I.Ω c) r (λ i′ o′ → code-irr m i i′ o o′) pre (ΩMir m i o)
+
+  -- 底的条件写成值序.
+  one : (t : Tr zero) → 𝟏₀ ≼ read t → Dom zero 𝟏₀ t
+  one zero      h with () ← s≼0 h
+  one (suc t)   h = rs (rz (λ _ _ → I.z≅))
+  one (lim f a) h with ≼lim⁻ h
+  ... | n , h′ = r◃ (one (f n) h′) (◃l n)
+  one (Ω () _)      h
+  one (up _ () _ _) h
+  one (ex _ _ _ _ ()) h
+
+  lower′ : (m : L) (st : IsS m) (i : IsN m) (o : Ok m) (S : Base m) → CovS S
+         → (β : Tr⁺ zero) → 𝟏₀ ≼ read (proj₁ β) → (w : zero ≤ m)
+         → I.ψ⁰ (I.Ω (code m i o)) ≼ read (proj₁ (ψ m o S zero w β (proj₁ (Ωt m))))
+  lower′ m st i o S cv β h w = lower m st i o S cv β (one (proj₁ β) h) w

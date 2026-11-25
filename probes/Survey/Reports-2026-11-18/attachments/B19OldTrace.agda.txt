@@ -1,0 +1,40 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19OldTrace where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+import B19OldChart as M
+import B19OldSlots as Q
+import B14Height as H
+import B14Tower as W
+open import WVOne using (read)
+
+data Descent (a : L.Ordᴵ) : L.Ordᴵ → Set where
+  root : Descent a a
+  move : ∀ {b c} → b L.≺ᴵ a → (ℕ → ℕ) → Descent b c → Descent a c
+
+location : ∀ {a b} (r : M.Chart a) → Descent a b → Σ (M.Chart b) λ v → Q.Inside (M.frame r) (M.frame v)
+location r root = r , Q.inside (≼-refl _) (≼-refl _)
+location r (move p t ds) = let module C = M.Here.Lower r p t in
+  proj₁ (location C.result ds) , Q.join C.stays (proj₂ (location C.result ds))
+
+module Point {a b} (r : M.Chart a) (d : Descent a b) where
+  child = proj₁ (location r d)
+  actual = M.frame child
+  room = proj₂ (location r d)
+  at-child : ∀ u → u ≼ Q.seed actual → H.act (L.forget b) u ≼ Q.value actual
+  at-child = M.Here.act child
+  visible : ∀ u → u ≼ Q.seed actual → H.act (L.forget b) u ≼ Q.value (M.frame r)
+  visible u h = ≼-trans (at-child u h) (Q.bound room)
+
+module Source (n m : ℕ) (prem : N.γ n ≼ read (W.Actual.idx m)) where
+  module Site = M.Actual n m prem
+  module Walk {b} (d : Descent (N.L n) b) where
+    module Here = Point Site.original d
+    real : ∀ u → u ≼ Q.seed Here.actual → H.act (L.forget b) u ≼ read (W.Actual.idx (suc (suc m)))
+    real u h = ≼-trans (Here.visible u h) Site.main
+  module Branch {x} (e : x L.≺ᴵ N.L n) (t : ℕ → ℕ) = Walk (move e t root)
+import B14Btbo as Rt
+module Gamma₂ = Source 1 2 Rt.first-in

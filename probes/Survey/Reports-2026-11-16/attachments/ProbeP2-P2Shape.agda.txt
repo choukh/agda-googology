@@ -1,0 +1,119 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 探针 P2 (临时试验, 不进仓库): 逐层闭合的陈述族 (主线独立塔 twᶻ) 与最后一步的组装.
+-- 结构形已编译 (keelᶻ, keelᴮ); 值形 Ht / GrowV / GrowLag / KLᶻ 只是类型.
+-- 组装: GrowV 或 GrowLag 加 "塔每项不高于 Y" 推出 EBO 参照树不高于 Y; 最后一步用的比较是 YiRefTw2.endpoint (已编译).
+module P2Shape where
+
+open import Data.Nat using (ℕ; zero; suc; _+_; _≤′_; ≤′-refl; ≤′-step)
+open import Data.Nat.Properties using (m≤′m+n)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWPath using (Ok)
+open import OCF.Lean.YiMTTab using (twᶻ)
+open import OCF.Lean.YiMTKeel using (F₀ᶻ; keelᶻ; tw≼ᶻ)
+open import OCF.Lean.YiMTValue using (Kᶻ; k1ᶻ)
+open import OCF.Lean.YiKSDesc using (kl; okl)
+open import OCF.Lean.YiBRValue using (readRW)
+open import OCF.Lean.YiRefTw2 using (Rt; endpoint)
+open import OCF.Lean.YiEXRow using (down₀; down₁)
+import OCF.Align.EboLeanDef as E
+open E using (HC; ΩTower; EBOψ)
+open import OCF.Align.EboLeanTree using (hc-tower; EBO-tree′)
+open import OCF.Lean.YiMonoExit using (toL)
+import OCF.Align.Level as O
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import P2Keel using (F₀ᴮ; twᴮ; rbkl; keelᴮ)
+
+T₀ : Set
+T₀ = O.Ordᶜ O.zero
+
+------------------------------------------------------------------------
+-- 结构形 (树侧, 不读记号): 龙骨层号 kl n = tw n ⊕ "Ω_{tw n}" 上的标准折叠在下一站之下
+
+GrowS : ℕ → Set
+GrowS n = readRW (F₀ᶻ (kl n) (okl n)) ≼ readRW (twᶻ (suc n))
+
+growS : ∀ n → GrowS n
+growS = keelᶻ
+
+GrowSᴮ : ℕ → Set
+GrowSᴮ n = readRW (F₀ᴮ (kl n) (okl n) (rbkl n)) ≼ readRW (twᴮ (suc n))
+
+growSᴮ : ∀ n → GrowSᴮ n
+growSᴮ = keelᴮ
+
+------------------------------------------------------------------------
+-- 值形 (读记号): "第 n 站不低于 ψ₀(Ω_{ΩTower h})"
+
+Ht : ℕ → ℕ → Set
+Ht n h = (c : HC (EBOψ (suc h))) → Rt c ≼ readRW (twᶻ n)
+
+-- Kᶻ n 就是对角线
+diag : ∀ n → Kᶻ n → Ht n n
+diag n k = k
+
+-- 无滞后: 每多一项塔, 精确外层多一层 Ω 下标
+GrowV : Set
+GrowV = ∀ n h → Ht n h → Ht (suc n) (suc h)
+
+-- 带滞后: 外层终会多一层
+GrowLag : Set
+GrowLag = ∀ n h → Ht n h → Σ ℕ λ d → Ht (suc (d + n)) (suc h)
+
+-- 龙骨层号上的值形 (YiKSRead.KL 的主线版) 与一步
+KLᶻ : ℕ → Set
+KLᶻ n = (c : HC (EBOψ (suc (suc n)))) → Rt c ≼ readRW (F₀ᶻ (kl n) (okl n))
+
+kl→Kᶻ : ∀ n → KLᶻ n → Kᶻ (suc n)
+kl→Kᶻ n q c = ≼-trans (q c) (keelᶻ n)
+
+Stepᶻ : ℕ → Set
+Stepᶻ n = Kᶻ n → KLᶻ n
+
+------------------------------------------------------------------------
+-- 组装
+
+grow→K : GrowV → ∀ m → Kᶻ (suc m)
+grow→K g zero    = k1ᶻ
+grow→K g (suc m) = g (suc m) (suc m) (grow→K g m)
+
+-- GrowV 的第一个实例就是 K(2): 下一个必经缺口
+grow→K2 : GrowV → Kᶻ 2
+grow→K2 g = grow→K g 1
+
+step→K : (∀ n → Stepᶻ (suc n)) → ∀ m → Kᶻ (suc m)
+step→K s zero    = k1ᶻ
+step→K s (suc m) = kl→Kᶻ (suc m) (s m (step→K s m))
+
+lag→all : GrowLag → ∀ m → Σ ℕ λ n → Ht n (suc m)
+lag→all g zero    = 1 , k1ᶻ
+lag→all g (suc m) with lag→all g m
+... | n , q with g n (suc m) q
+...   | d , q′ = suc (d + n) , q′
+
+-- 最后一步: 只要塔每项不高于 Y, 一切站的下界推出 EBO 参照树不高于 Y (比较由 YiRefTw2.endpoint 给出)
+all→ebo : (Y : T₀) → (∀ n → readRW (twᶻ n) ≼ Y) → (∀ m → Σ ℕ λ n → Ht n (suc m)) → toL EBO-tree′ ≼ Y
+all→ebo Y ub st = endpoint Y go
+  where
+  r : ∀ m → Rt (hc-tower (suc (suc m))) ≼ Y
+  r m = ≼-trans (proj₂ (st m) (hc-tower (suc (suc m)))) (ub (proj₁ (st m)))
+  go : ∀ k → Rt (hc-tower k) ≼ Y
+  go zero          = ≼-trans down₀ (≼-trans down₁ (r 0))
+  go (suc zero)    = ≼-trans down₁ (r 0)
+  go (suc (suc m)) = r m
+
+lag→ebo : (Y : T₀) → (∀ n → readRW (twᶻ n) ≼ Y) → GrowLag → toL EBO-tree′ ≼ Y
+lag→ebo Y ub g = all→ebo Y ub (lag→all g)
+
+grow→ebo : (Y : T₀) → (∀ n → readRW (twᶻ n) ≼ Y) → GrowV → toL EBO-tree′ ≼ Y
+grow→ebo Y ub g = all→ebo Y ub (λ m → suc m , grow→K g m)
+
+-- 反过来: "一切站都被某项塔支配" 推出带滞后的形, 所以带滞后的形与目标本身等价, 不是归约
+ht-mono : ∀ {a b h} → a ≤′ b → Ht a h → Ht b h
+ht-mono ≤′-refl     q = q
+ht-mono (≤′-step p) q c = ≼-trans (ht-mono p q c) (tw≼ᶻ _)
+
+all→lag : (∀ m → Σ ℕ λ n → Ht n (suc m)) → GrowLag
+all→lag st n h _ = proj₁ (st h) , ht-mono (≤′-step (m≤′m+n (proj₁ (st h)) n)) (proj₂ (st h))

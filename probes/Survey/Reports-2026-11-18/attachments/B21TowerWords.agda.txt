@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意次混用两个前缀操作，各次只需升两座独立标准塔。同一族的 src 闭式及可数极限进入原 Λ。
+module B21TowerWords where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import W4Block using (iter)
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module S = Ord-Ord
+module B = BoundedTrich
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; l≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import B15RefSource using (one)
+import B12LimitSrc as A
+import B19OldSource as Old
+import B19RowSecond as Row
+import B19RowSecondParent as Prev
+import B20OldTail as Tail
+import B20OldSource as Src
+import B20RowBound as P
+import B20StandardInside as St
+import B20StandardGoal as Goal
+import B21TowerGrowth as G
+import B21StandardShape as Shape
+
+data Word : Set where
+  start : Word
+  block coefficient : Word → Word
+index : Word → ℕ
+index start = 0
+index (block w) = suc (suc (index w))
+index (coefficient w) = suc (suc (index w))
+term : Word → A.Lev₂
+term start = Row.p
+term (block w) = Tail.block (term w)
+term (coefficient w) = G.add (term w)
+source : Word → A.Src₂
+source start = Old.src-prefix
+source (block w) = S.lim (iter Src.source-step (source w))
+source (coefficient w) = source w S.+ S.↑ B.zero (S.ψ< {i = one} B.zero Old.src-prefix)
+aligned : ∀ w → A.Aligned (source w) (term w)
+aligned start = Old.prefix
+aligned (block w) = A.lim _ _ (Src.Src.terms (source w) (term w) (aligned w))
+aligned (coefficient w) = A.plus (aligned w) P.co
+bound : ∀ w → L.ψ⁰ (term w) ≼ St.std (suc (suc (index w)))
+bound start = ≼-trans Prev.hb (≼-trans (≼-suc (≼-refl _)) (Shape.rise 1))
+bound (block w) = G.At.Standard.block (index w) (term w) (bound w)
+bound (coefficient w) = G.At.Standard.coefficient (index w) (term w) (A.Aligned.regular (aligned w)) (bound w)
+actual : ∀ w → tr₀ (S.ψ₀ (source w)) ≼ read EBOᶜ
+actual w = ≼-trans (proj₁ (A.fold (aligned w))) (≼-trans (≼-suc (bound w)) (Goal.bound _))
+all : ∀ (f : ℕ → Word) → L.lim (λ n → tr₀ (S.ψ₀ (source (f n)))) ≼ read EBOᶜ
+all f = l≼ (λ n → actual (f n))

@@ -1,0 +1,125 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B8A 入口. 编译定理, 无前提: first₀ : Match X₀ (chainW 1), X₀ = ψ (Ω₂) 是 Y 1 的第 0 个分支, 两个消费者的闭不等式;
+-- Match 沿 W4 的 ◃ 向上封闭 (故 Frozen → First); First 推出两个闭不等式 Goal-add / Goal-exp.
+-- First 本身未得到: 以 chainW 1 的描述 d₁ 为公共描述时, Y 1 的规范描述放不进去 (no-merge, 编译否定, 只否定这一条描述路线).
+module B8PairMain where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥)
+open import Data.Product using (_,_; proj₁; proj₂)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+import OCF.Align.Value as V
+open V using (_≼_; z≼; s≼s; ≼l; l≼; ≼-refl; ≼-trans)
+open import WVOne using (T₀; 𝟏; read)
+open import WVThree using (Nx; Nx-infl)
+open import WSShadow
+import WSLevel as WL
+open WL using (ε; ε-infl; Lw; Ew)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import YiLAB7Replay using (Match; together; seed; First; Frozen; consume; consume-exp; chainW; Y; o₁; Ω₁op)
+open import B8PairLevel using (X₀; eΩ₂; dΩ₂; Ld-base; Lx-base; dY1; eY1; Ld-Y1; Lx-Y1)
+open import B8PairW4 using (Real-up; SumR-up; chain-step; Real-c1; SumR-c1; d₁; dW)
+
+------------------------------------------------------------------------
+-- 第一个非初始的配对: Level 的 ψ (Ω₂) 与 W4 更新一次后的实际分量, 同一对描述 (d₁, lC ε).
+shift-d : Le 0 dΩ₂ d₁
+shift-d a c = l≼ (λ k → ≼l (suc k) (≼-refl _))
+
+shift-e : LeE (lC (λ k → ε (suc k))) (lC ε)
+shift-e = (λ f a c → l≼ (λ j → ≼l (suc j) (≼-refl _)))
+        , (λ n k g → limS-lub n _ _ (λ j → limS-ub n (λ i → sI (ε i) n k g) (suc j)))
+
+first₀ : Match X₀ (chainW 1)
+first₀ = together d₁ (lC ε) SumR-c1 Real-c1 (Lw Ld-base shift-d)
+                  (Ew (WL.El (λ k → WL.shiftH (WL.Lx-γ k))) shift-e)
+
+-- 两个消费者, 左右端逐字写出: 左边是 Level 参照的实际计算, 右边是 W4 的实际计算.
+c-add₀ : LV.ψ⁰ X₀ ≼ read (proj₁ (ψ lvl1 (proj₂ ok₂ tt) (B₀ lvl1) zero (inc tt self) (Ωt zero) (chainW 1)))
+c-add₀ = consume first₀
+
+c-exp₀ : LV.ψ⁰ (WL.ψ₁ X₀) ≼ read (proj₁ (E o₁ tdNil (chainW 1) Ω₁op (B₀ lvl1) zero (inc tt self) (Ωt zero)))
+c-exp₀ = consume-exp first₀
+
+------------------------------------------------------------------------
+-- Match 沿 W4 的结构序向上封闭; 实际状态逐次步进.
+Match-up : ∀ {x y y′} → lvl1 ⊢ y ◃ y′ → Match x y → Match x y′
+Match-up d (together d₀ e₀ aw ew al el) = together d₀ e₀ (SumR-up d aw) (Real-up d ew) al el
+
+frozen→first : Frozen → First
+frozen→first = Match-up (chain-step 0)
+
+seed-up : (n : ℕ) → Match (Y 0) (chainW n)
+seed-up zero    = seed
+seed-up (suc n) = Match-up (chain-step n) (seed-up n)
+
+first₀-up : (n : ℕ) → Match X₀ (chainW (suc n))
+first₀-up zero    = first₀
+first₀-up (suc n) = Match-up (chain-step (suc n)) (first₀-up n)
+
+------------------------------------------------------------------------
+-- First 的两个出口 (闭不等式, 逐字).
+Goal-add : Set
+Goal-add = LV.ψ⁰ (Y 1) ≼ read (proj₁ (ψ lvl1 (proj₂ ok₂ tt) (B₀ lvl1) zero (inc tt self) (Ωt zero) (chainW 1)))
+
+Goal-exp : Set
+Goal-exp = LV.ψ⁰ (WL.ψ₁ (Y 1)) ≼ read (proj₁ (E o₁ tdNil (chainW 1) Ω₁op (B₀ lvl1) zero (inc tt self) (Ωt zero)))
+
+first→add : First → Goal-add
+first→add = consume
+
+first→exp : First → Goal-exp
+first→exp = consume-exp
+
+-- 若 Y 1 的规范描述能放宽进 chainW 1 的描述, 就有 First. 下面 no-merge 否定第一个前提.
+first-if : Le 0 dY1 d₁ → LeE eY1 (lC ε) → First
+first-if p q = together d₁ (lC ε) SumR-c1 Real-c1 (Lw Ld-Y1 p) (Ew Lx-Y1 q)
+
+------------------------------------------------------------------------
+-- no-merge: 在 (1, 1) 处 dY1 已经高于 dΩ₂ (Y 1 的第 1 个分支 Ω₂ + 1 迭代 dΩ₂), 而 d₁ 不高于 dΩ₂.
+s≰ : (x : T₀) → LV.suc x ≼ x → ⊥
+s≰ LV.zero ()
+s≰ (LV.suc x) (s≼s p) = s≰ x p
+s≰ (LV.lim f) (≼l n p) = s≰ (f n) (≼-trans (s≼s (≼l n (≼-refl (f n)))) p)
+s≰ (LV.limᵢ () f) p
+s≰ (LV.up () x) p
+
+Nx≼dΩ₂ : (x y : T₀) → Nx x y ≼ dΩ₂ x y
+Nx≼dΩ₂ x y = ≼l 0 (proj₁ (ε-infl 0) Nx x y)
+
+suc≼Nx : (x y : T₀) → 𝟏 ≼ x → LV.suc x ≼ Nx x y
+suc≼Nx x y h = ≼l 0 (≼l 1 (V.+-mono (≼-refl x) h))
+
+dW≼dΩ₂ : (a c : T₀) (n : ℕ) → dW n a c ≼ dΩ₂ a c
+dW≼dΩ₂ a c zero    = Nx≼dΩ₂ a c
+dW≼dΩ₂ a c (suc m) = ≼l m (≼-refl _)
+
+d₁≼dΩ₂ : (a c : T₀) → d₁ a c ≼ dΩ₂ a c
+d₁≼dΩ₂ a c = l≼ (dW≼dΩ₂ a c)
+
+dΩ₂²≼dY1 : (a c : T₀) → dΩ₂ (dΩ₂ a c) (dΩ₂ c c) ≼ dY1 a c
+dΩ₂²≼dY1 a c = ≼l 0 (≼l 1 (≼-refl _))
+
+no-merge : Le 0 dY1 d₁ → ⊥
+no-merge p = s≰ D₁ (≼-trans (suc≼Nx D₁ D₁ h1) (≼-trans (Nx≼dΩ₂ D₁ D₁)
+               (≼-trans (dΩ₂²≼dY1 𝟏 𝟏) (≼-trans (p 𝟏 𝟏) (d₁≼dΩ₂ 𝟏 𝟏)))))
+  where
+  D₁ : T₀
+  D₁ = dΩ₂ 𝟏 𝟏
+  h1 : 𝟏 ≼ D₁
+  h1 = ≼-trans (Nx-infl 𝟏 𝟏) (Nx≼dΩ₂ 𝟏 𝟏)
+
+------------------------------------------------------------------------
+-- 参照一侧的严格性 (只用 Level 的定义展开): Goal-add 的左端严格高于 c-add₀ 的左端.
+-- 路径: Y 1 的链首分支 Ω₂ + 1 → X₀ + X₀ → X₀ + ψ₁ Ω₁ → X₀ + Ω₁ → X₀ + 1.
+one≼ψ⁰X₀ : 𝟏 ≼ LV.ψ⁰ X₀
+one≼ψ⁰X₀ = ≼l 0 (≼l 0 (≼l 1 (≼l 0 (≼l 1 (≼-refl 𝟏)))))
+
+X₀≺Y1 : LV.suc (LV.ψ⁰ X₀) ≼ LV.ψ⁰ (Y 1)
+X₀≺Y1 = ≼l 0 (≼l 2 (≼l 0 (≼l 0 (≼l 1 (≼l 0 (≼l 2 (V.+-mono (≼-refl (LV.ψ⁰ X₀)) one≼ψ⁰X₀)))))))

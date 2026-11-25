@@ -1,0 +1,268 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B6A: Level 一侧 (纸面 §3). 被加项关系 Ld 与其语义 (ψ⁰ D ≼ d a c), 指数关系 Lx;
+-- 两者的加法只在关系层面做; 第 0 阶移位 shift0 与层号移位 shiftH; Lx (γ n) (ε n). 编译定理, 无前提.
+module WSLevel where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst)
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-refl; ≼-trans; iter-≼)
+open import WVOne using (T₀; 𝟏; Mv; Mv-mono; iterS; ψ⁰-lvl0)
+open import WVTwo using (T₁; ψz)
+open import WVThree using (Nx; Nx-infl)
+open import WSShadow
+
+------------------------------------------------------------------------
+-- ψz ≼ ψ⁰ (第 1 层树).
+ψ0≼ : ∀ {ℓ} {p : LV.zero LV.<ᴵ ℓ} {σ : LV.Simᴵ LV.zero ℓ} (x : T₀) → LV.ψ p σ x ≼ LV.ψ⁰ x
+ψ0≼ LV.zero         = ≼-refl _
+ψ0≼ (LV.suc x)      = l≼ (λ n → ≼l n (iter-≼ (ψ0≼ x) n))
+ψ0≼ (LV.lim f)      = l≼ (λ n → ≼l n (ψ0≼ (f n)))
+ψ0≼ (LV.limᵢ () f)
+ψ0≼ (LV.up () x)
+
+ψz≼ψ⁰ : (T : T₁) → ψz T ≼ LV.ψ⁰ T
+ψz≼ψ⁰ LV.zero                = ≼-refl _
+ψz≼ψ⁰ (LV.suc a)             = l≼ (λ n → ≼l n (iter-≼ (ψz≼ψ⁰ a) n))
+ψz≼ψ⁰ (LV.lim f)             = l≼ (λ n → ≼l n (ψz≼ψ⁰ (f n)))
+ψz≼ψ⁰ (LV.limᵢ LV.zero f)    = l≼ (λ n → ≼l n (ψz≼ψ⁰ _))
+ψz≼ψ⁰ (LV.limᵢ (LV.suc ()) f)
+ψz≼ψ⁰ (LV.up LV.zero x)      = ψ0≼ x
+
+------------------------------------------------------------------------
+-- 被加项的关系.
+data Ld : T₁ → Sh 0 → Set where
+  Lz : Ld LV.zero (λ a c → a)
+  Ls : {D : T₁} {d : Sh 0} → Ld D d → Ld (LV.suc D) (λ a c → Mv (d a c) 𝟏)
+  Ll : {f : ℕ → T₁} {d : ℕ → Sh 0} → (∀ k → Ld (f k) (d k)) → Ld (LV.lim f) (λ a c → LV.lim (λ k → d k a c))
+  Li : {g : T₀ → T₁} {h : T₀ → Sh 0} → (∀ y y′ → y ≼ y′ → Ld (g y) (h y′)) → Ld (LV.limᵢ LV.zero g) (nodeS 0 h)
+  Lu : (y y′ : T₀) → y ≼ y′ → Ld (LV.up LV.zero y) (λ a c → Mv a y′)
+  Lw : {D : T₁} {d d′ : Sh 0} → Ld D d → Le 0 d d′ → Ld D d′
+
+mutual
+  Ld-sem : ∀ {D d} → Ld D d → (a c : T₀) → 𝟏 ≼ a → 𝟏 ≼ c → LV.ψ⁰ D ≼ d a c
+  Ld-sem Lz a c ha hc = ha
+  Ld-sem (Ls {d = d} r) a c ha hc = l≼ (λ n → ≼l n (iterS (Ld-sem r a c ha hc) n))
+  Ld-sem (Ll {d = d} h) a c ha hc = l≼ (λ k → ≼l k (Ld-sem (h k) a c ha hc))
+  Ld-sem (Li {g = g} {h = h} hh) a c ha hc = l≼ (λ k → ≼l k (Ld-sem (hh _ _ (ch-le g h hh c hc k)) a c ha hc))
+  Ld-sem (Lu y y′ d) a c ha hc = ≼-trans (ψ⁰-lvl0 y) (Mv-mono ha d)
+  Ld-sem (Lw {d = d} r p) a c ha hc = ≼-trans (Ld-sem r a c ha hc) (p a c)
+
+  ch-le : (g : T₀ → T₁) (h : T₀ → Sh 0) → (∀ y y′ → y ≼ y′ → Ld (g y) (h y′)) → (c : T₀) → 𝟏 ≼ c
+        → (k : ℕ) → S.iter (λ x → ψz (g x)) 𝟏 k ≼ chS h c k
+  ch-le g h hh c hc zero    = ≼-refl 𝟏
+  ch-le g h hh c hc (suc k) = ≼-trans (ψz≼ψ⁰ _) (Ld-sem (hh _ _ (ch-le g h hh c hc k)) c c hc hc)
+
+-- 加法 (第 0 层的尾巴摊平).
+Ld-add0 : ∀ {A dA} → Ld A dA → (y : T₀) → Ld (LV.add A (λ q → LV.suc q) y) (λ a c → Mv (dA a c) y)
+Ld-add0 rA LV.zero        = rA
+Ld-add0 rA (LV.suc y)     = Ls (Ld-add0 rA y)
+Ld-add0 rA (LV.lim f)     = Ll (λ k → Ld-add0 rA (f k))
+Ld-add0 rA (LV.limᵢ () f)
+Ld-add0 rA (LV.up () x)
+
+Ld-sum : ∀ {A dA B dB} → Ld A dA → Ld B dB → Ld (A LV.+ B) (λ a c → dB (dA a c) (dA c c))
+Ld-sum rA Lz          = rA
+Ld-sum rA (Ls {d = d} r)      = Ls (Ld-sum rA r)
+Ld-sum rA (Ll {d = d} h)      = Ll (λ k → Ld-sum rA (h k))
+Ld-sum rA (Li {h = h} hh)     = Li (λ y y′ d → Ld-sum rA (hh y y′ d))
+Ld-sum {dA = dA} rA (Lu y y′ d) = Lw (Ld-add0 rA y) (λ a c → Mv-mono (≼-refl (dA a c)) d)
+Ld-sum {dA = dA} rA (Lw {d = d} r p) = Lw (Ld-sum rA r) (λ a c → p (dA a c) (dA c c))
+
+-- 同一被加项的 j 个拷贝之和 (右结合) 与同步迭代.
+σd : Sh 0 → ℕ → Sh 0
+σd d zero    = λ a c → a
+σd d (suc j) = λ a c → σd d j (d a c) (d c c)
+
+Ld-iter : ∀ {X d} → Ld X d → (j : ℕ) → Ld (S.iter (X LV.+_) LV.zero j) (σd d j)
+Ld-iter rX zero    = Lz
+Ld-iter rX (suc j) = Ld-sum rX (Ld-iter rX j)
+
+σd-le : (d : Sh 0) (j : ℕ) (a c : T₀) → σd d j a c ≼ proj₁ (S.iter (pr d) (a , c) j)
+σd-le d zero    a c = ≼-refl a
+σd-le d (suc j) a c =
+  subst (λ q → σd d j (d a c) (d c c) ≼ proj₁ q) (iter-comm (pr d) (a , c) j) (σd-le d j (d a c) (d c c))
+
+sumLim : ∀ {X d} → Ld X d → (∀ a c → a ≼ d a c)
+       → Ld (LV.lim (S.iter (X LV.+_) LV.zero)) (λ a c → LV.lim (λ j → proj₁ (S.iter (pr d) (a , c) (suc j))))
+sumLim {d = d} rX inf = Lw (Ll (Ld-iter rX)) (λ a c → l≼ (λ j → ≼l j (≼-trans (σd-le d j a c) (inf _ _))))
+
+------------------------------------------------------------------------
+-- 指数的关系.
+data Lx : T₁ → ES → Set where
+  Ez : Lx LV.zero zC
+  Es : {a : T₁} {e : ES} → Lx a e → Lx (LV.suc a) (sC e)
+  El : {f : ℕ → T₁} {h : ℕ → ES} → (∀ k → Lx (f k) (h k)) → Lx (LV.lim f) (lC h)
+  Ei : {g : T₀ → T₁} {h : T₀ → ES} → (∀ y y′ → y ≼ y′ → Lx (g y) (h y′)) → Lx (LV.limᵢ LV.zero g) (nC h)
+  Eu : (y y′ : T₀) → y ≼ y′ → Lx (LV.up LV.zero y) (lv y′)
+  Ew : {T : T₁} {e e′ : ES} → Lx T e → LeE e e′ → Lx T e′
+
+Lx-infl : ∀ {T e} → Lx T e → InflE e
+Lx-infl Ez          = Infl-zC
+Lx-infl (Es {e = e} r) = Infl-sC e (Lx-infl r)
+Lx-infl (El {h = h} hh) = Infl-lC h (Lx-infl (hh 0))
+Lx-infl (Ei {h = h} hh) = Infl-nC h (Lx-infl (hh 𝟏 𝟏 (≼-refl 𝟏)))
+Lx-infl (Eu y y′ d) = Infl-lv y′
+Lx-infl (Ew {e = e₀} r p)    = Infl-LeE (Lx-infl r) p
+
+-- 常值族的 lim 不高于该值; 首位置.
+lC-const : (e : ES) → LeE (lC (λ _ → e)) e
+lC-const e = (λ f a c → l≼ (λ j → ≼-refl _)) , (λ n k g → limS-lub n _ _ (λ j → Le-refl n _))
+
+lC-ub : (h : ℕ → ES) (j : ℕ) → LeE (h j) (lC h)
+lC-ub h j = (λ f a c → ≼l j (≼-refl _)) , (λ n k g → limS-ub n (λ i → sI (h i) n k g) j)
+
+⨾-mono : (a : ES) {e e′ : ES} → LeE e e′ → LeE (a ⨾ e) (a ⨾ e′)
+⨾-mono a p = (λ f → proj₁ p (sE a f)) , (λ n k g → proj₂ p n (λ g′ → sI a n k g′) g)
+
+Lx-add0 : ∀ {A eA} → Lx A eA → (y y′ : T₀) → y ≼ y′ → Lx (LV.add A (λ q → LV.suc q) y) (eA ⨾ lv y′)
+Lx-add0 {eA = eA} rA _ y′ z≼ =
+  Ew rA ((λ f → proj₁ (Infl-lv y′) (sE eA f)) , (λ n k g → proj₂ (Infl-lv y′) n (λ g′ → sI eA n k g′) g))
+Lx-add0 rA (LV.suc y) (LV.suc y′) (s≼s d) = Es (Lx-add0 rA y y′ d)
+Lx-add0 {eA = eA} rA y (LV.lim f′) (≼l n d) = Ew (Lx-add0 rA y (f′ n) d) (⨾-mono eA (lC-ub (λ j → lv (f′ j)) n))
+Lx-add0 {eA = eA} rA (LV.lim f) y′ (l≼ h) = Ew (El (λ k → Lx-add0 rA (f k) y′ (h k))) (lC-const (eA ⨾ lv y′))
+Lx-add0 rA _ _ (≼i {p = ()} x e d)
+Lx-add0 rA _ _ (i≼ {p = ()} h)
+Lx-add0 rA _ _ (≼u {r = ()} d)
+Lx-add0 rA _ _ (u≼ {r = ()} d)
+
+Lx-sum : ∀ {A eA B eB} → Lx A eA → Lx B eB → Lx (A LV.+ B) (eA ⨾ eB)
+Lx-sum rA Ez          = rA
+Lx-sum rA (Es {e = e} r)      = Es (Lx-sum rA r)
+Lx-sum rA (El {h = h₀} h)      = El (λ k → Lx-sum rA (h k))
+Lx-sum rA (Ei {h = h} hh)     = Ei (λ y y′ d → Lx-sum rA (hh y y′ d))
+Lx-sum rA (Eu y y′ d) = Lx-add0 rA y y′ d
+Lx-sum {eA = eA} rA (Ew {e = e₀} r p) = Ew (Lx-sum rA r) (⨾-mono eA p)
+
+------------------------------------------------------------------------
+-- Ω₁.
+Ω₁ᴸ : T₁
+Ω₁ᴸ = LV.Ω (LV.suc LV.zero)
+
+Ld-Ω₁ : Ld Ω₁ᴸ Nx
+Ld-Ω₁ = Li (λ y y′ d → Lu y y′ d)
+
+Lx-Ω₁ : Lx Ω₁ᴸ Ω̂
+Lx-Ω₁ = Ei (λ y y′ d → Eu y y′ d)
+
+Lx-Ω₁sh : Lx Ω₁ᴸ (sh zC)
+Lx-Ω₁sh = Ew Lx-Ω₁ ((λ f → Le-refl 0 _) , (λ n k g → Le-refl n _))
+
+tr⁻≼ : (y : T₀) → LV.tr⁻ LV.z≅ y ≼ y
+tr⁻≼ LV.zero         = z≼
+tr⁻≼ (LV.suc y)      = s≼s (tr⁻≼ y)
+tr⁻≼ (LV.lim f)      = l≼ (λ n → ≼l n (tr⁻≼ (f n)))
+tr⁻≼ (LV.limᵢ () f)
+tr⁻≼ (LV.up () x)
+
+-- ψ₁ (第 1 层折到第 1 层, 上界第 2 层) 与它在第 0 层树上的部分.
+ψ₁ : T₁ → T₁
+ψ₁ = LV.ψ {i = LV.suc LV.zero} {k = LV.suc LV.zero} {ℓ = LV.suc (LV.suc LV.zero)} LV.zero (λ q → LV.suc q)
+
+ψ₁⁰ : T₀ → T₁
+ψ₁⁰ = LV.ψ {i = LV.suc LV.zero} {k = LV.zero} {ℓ = LV.suc (LV.suc LV.zero)} LV.zero (λ q → LV.suc (LV.suc q))
+
+------------------------------------------------------------------------
+-- 第 0 阶移位.
+infl-d : ∀ {T e} → Lx T e → (a c : T₀) → a ≼ sE e Nx a c
+infl-d r a c = ≼-trans (Nx-infl a c) (proj₁ (Lx-infl r) Nx a c)
+
+shift0u : (y y′ : T₀) → y ≼ y′ → Ld (ψ₁⁰ y) (sE (lv y′) Nx)
+shift0u _ y′ z≼ = Lw Ld-Ω₁ (proj₁ (Infl-lv y′) Nx)
+shift0u (LV.suc y) (LV.suc y′) (s≼s d) =
+  sumLim (shift0u y y′ d) (λ a c → ≼-trans (Nx-infl a c) (proj₁ (Infl-lv y′) Nx a c))
+shift0u y (LV.lim f′) (≼l n d) = Lw (shift0u y (f′ n) d) (λ a c → ≼l n (≼-refl _))
+shift0u (LV.lim f) y′ (l≼ h) = Lw (Ll (λ k → shift0u (f k) y′ (h k))) (λ a c → l≼ (λ j → ≼-refl _))
+shift0u _ _ (≼i {p = ()} x e d)
+shift0u _ _ (i≼ {p = ()} h)
+shift0u _ _ (≼u {r = ()} d)
+shift0u _ _ (u≼ {r = ()} d)
+
+shift0 : ∀ {T e} → Lx T e → Ld (ψ₁ T) (sE e Nx)
+shift0 Ez = Ld-Ω₁
+shift0 (Es {e = e} r) = sumLim (shift0 r) (infl-d r)
+shift0 (El {h = h₀} h) = Ll (λ k → shift0 (h k))
+shift0 (Ei {h = h} hh) = Li (λ y y′ d → shift0 (hh (LV.tr⁻ LV.z≅ y) y′ (≼-trans (tr⁻≼ y) d)))
+shift0 (Eu y y′ d) = shift0u y y′ d
+shift0 (Ew {e = e₀} r p) = Lw (shift0 r) (proj₁ p Nx)
+
+------------------------------------------------------------------------
+-- 层号移位.
+τx : ES → ℕ → ES
+τx X zero    = zC
+τx X (suc j) = X ⨾ τx X j
+
+Lx-iter : ∀ {X eX} → Lx X eX → (j : ℕ) → Lx (S.iter (X LV.+_) LV.zero j) (τx eX j)
+Lx-iter rX zero    = Ez
+Lx-iter rX (suc j) = Lx-sum rX (Lx-iter rX j)
+
+τE : (e : ES) (j : ℕ) (f : Sh 0) → Le 0 (sE (τx (sh e) j) f) (S.iter (sI e 0 kb) f j)
+τE e zero    f = Le-refl 0 f
+τE e (suc j) f =
+  subst (λ q → Le 0 (sE (τx (sh e) j) (sI e 0 kb f)) q) (iter-comm (sI e 0 kb) f j) (τE e j (sI e 0 kb f))
+
+τI : (e : ES) (n j : ℕ) (k : Sh (suc n)) → Le (suc n) (λ g → sI (τx (sh e) j) n k g) (S.iter (sI e (suc n) (kₑ n)) k j)
+τI e n zero    k = Le-refl (suc n) k
+τI e n (suc j) k =
+  subst (λ q → Le (suc n) (λ g → sI (τx (sh e) j) n (sI e (suc n) (kₑ n) k) g) q)
+        (iter-comm (sI e (suc n) (kₑ n)) k j) (τI e n j (sI e (suc n) (kₑ n) k))
+
+sumLimH : ∀ {X e} → Lx X (sh e) → InflE e → Lx (LV.lim (S.iter (X LV.+_) LV.zero)) (sh (sC e))
+sumLimH {e = e} rX ie = Ew (El (Lx-iter rX)) (pE , pI)
+  where
+  infF : (f : Sh 0) → Le 0 f (sI e 0 kb f)
+  infF f = Le-trans 0 (proj₁ Infl-Ω̂ f) (proj₂ ie 0 kb f)
+  pE : ∀ f → Le 0 (sE (lC (τx (sh e))) f) (sE (sh (sC e)) f)
+  pE f a c = l≼ (λ j → ≼l j (≼-trans (τE e j f a c) (infF (S.iter (sI e 0 kb) f j) a c)))
+  infG : ∀ n (k : Sh (suc n)) → Le (suc n) k (sI e (suc n) (kₑ n) k)
+  infG n k g = Le-trans n (proj₂ Infl-Ω̂ n k g) (proj₂ ie (suc n) (kₑ n) k g)
+  pI : ∀ n k g → Le n (sI (lC (τx (sh e))) n k g) (sI (sh (sC e)) n k g)
+  pI n k g = limS-mono n (λ j → Le-trans n (τI e n j k g) (infG n (S.iter (sI e (suc n) (kₑ n)) k j) g))
+
+shZ-le : (e : ES) → InflE e → LeE (sh zC) (sh e)
+shZ-le e ie = (λ f → proj₂ ie 0 kb f) , (λ n k g → proj₂ ie (suc n) (kₑ n) (λ g′ → k g′) g)
+
+sh-mono : {e e′ : ES} → LeE e e′ → LeE (sh e) (sh e′)
+sh-mono p = (λ f → proj₂ p 0 kb f) , (λ n k g → proj₂ p (suc n) (kₑ n) (λ g′ → k g′) g)
+
+shiftHu : (y y′ : T₀) → y ≼ y′ → Lx (ψ₁⁰ y) (sh (lv y′))
+shiftHu _ y′ z≼ = Ew Lx-Ω₁sh (shZ-le (lv y′) (Infl-lv y′))
+shiftHu (LV.suc y) (LV.suc y′) (s≼s d) = sumLimH (shiftHu y y′ d) (Infl-lv y′)
+shiftHu y (LV.lim f′) (≼l n d) = Ew (shiftHu y (f′ n) d) (sh-mono (lC-ub (λ j → lv (f′ j)) n))
+shiftHu (LV.lim f) y′ (l≼ h) = Ew (El (λ k → shiftHu (f k) y′ (h k))) (lC-const (sh (lv y′)))
+shiftHu _ _ (≼i {p = ()} x e d)
+shiftHu _ _ (i≼ {p = ()} h)
+shiftHu _ _ (≼u {r = ()} d)
+shiftHu _ _ (u≼ {r = ()} d)
+
+shiftH : ∀ {T e} → Lx T e → Lx (ψ₁ T) (sh e)
+shiftH Ez = Lx-Ω₁sh
+shiftH (Es {e = e} r) = sumLimH (shiftH r) (Lx-infl r)
+shiftH (El {h = h₀} h) = El (λ k → shiftH (h k))
+shiftH (Ei {h = h} hh) = Ei (λ y y′ d → shiftH (hh (LV.tr⁻ LV.z≅ y) y′ (≼-trans (tr⁻≼ y) d)))
+shiftH (Eu y y′ d) = shiftHu y y′ d
+shiftH (Ew {e = e₀} r p) = Ew (shiftH r) (sh-mono p)
+
+------------------------------------------------------------------------
+-- 参照的链 γ (ψ⁰(Ω₂) = lim ψ⁰ γ) 与影子 ε.
+γ : ℕ → T₁
+γ = S.iter ψ₁ Ω₁ᴸ
+
+ε : ℕ → ES
+ε zero    = sh zC
+ε (suc n) = sh (ε n)
+
+Lx-γ : (n : ℕ) → Lx (γ n) (ε n)
+Lx-γ zero    = Lx-Ω₁sh
+Lx-γ (suc n) = shiftH (Lx-γ n)
+
+lvl-γ0 : LV.ψ⁰ (γ 0) ≼ Nx 𝟏 𝟏
+lvl-γ0 = Ld-sem Ld-Ω₁ 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏)
+
+lvl-γS : (n : ℕ) → LV.ψ⁰ (γ (suc n)) ≼ sE (ε n) Nx 𝟏 𝟏
+lvl-γS n = Ld-sem (shift0 (Lx-γ n)) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏)
+
+ε-infl : (n : ℕ) → InflE (ε n)
+ε-infl n = Lx-infl (Lx-γ n)

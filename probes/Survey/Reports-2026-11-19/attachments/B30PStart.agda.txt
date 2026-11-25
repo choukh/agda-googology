@@ -1,0 +1,73 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 不论可数键从哪一个许可槽进入，连续的首自然分支均保留，终止处仍可走到同一启动程序。
+module B30PStart where
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Unit.Base using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong)
+open import W4Block
+open import W4Ops
+open import W4Path
+import B28POrbit as O
+import B28PProgram as G
+import B15Spine as S
+import B30PFirst as F
+
+data NatEdge {k : L} : Tr k → Tr k → Set where
+  edge : ∀ f d → NatEdge (f zero) (lim f d)
+
+real : ∀ {k} {x : Tr k} {f d} → F.First x (lim f d) → NatEdge x (lim f d)
+real (F.nat f d) = edge f d
+
+data Deep {k : L} : ℕ → Tr k → Set where
+  all : ∀ x → Deep 0 x
+  deeper : ∀ {n x y} → Deep n x → NatEdge x y → Deep (suc n) y
+
+data Layers {k : L} (base : Tr k) : ℕ → Tr k → Set where
+  bottom : ∀ {x} → F.Walk base x → Layers base 0 x
+  layer : ∀ {d x y} → Layers base d x → NatEdge x y → Layers base (suc d) y
+
+module X = O.At 0
+module P = F.At 0
+module B = G.At 0
+base = B.program zero tt (z≤ X.K.k)
+left = S.branch zero
+kids : L → ℕ → L
+kids (nd sL h) n = h n
+kids _ n = zero
+
+module N (h : ℕ → L) (o : Ok (nd sL h)) (u : nd sL h ≤ X.K.k) where
+  source = B.tree (nd sL h)
+  os = B.certificate (nd sL h) o u
+  child : NatEdge (B.program (h 0) (proj₂ o 0) (inc 0 self ∙ u)) (B.program (nd sL h) o u)
+  child = real (P.Nat.points (kids source) (proj₁ os) (proj₂ os))
+
+module Suc (h : L) (o : Ok (nd sS (λ _ → h))) (u : nd sS (λ _ → h) ≤ X.K.k) where
+  source = nd sS (λ _ → h)
+  os = B.certificate source o u
+  child : F.First base (B.program source o u)
+  child = P.Card.points (λ z → proj₁ (Eh AL tt (suc z) (opR X.a)) X.a) (proj₁ (proj₁ os)) (proj₂ (proj₁ os)) (proj₂ os)
+
+start : ∀ (c : Tr zero) (o : Ok (left c)) (u : left c ≤ X.K.k) → F.Walk base (B.program (left c) o u)
+start zero o u = F.stay
+start (suc c) o u = F.step F.stay (Suc.child (left c) o u)
+start (lim f d) o u = F.step (start (f 0) (proj₂ o 0) (inc 0 self ∙ u)) (weaken (N.child (λ i → left (f i)) o u))
+  where
+  weaken : ∀ {k} {a b : Tr k} → NatEdge a b → F.First a b
+  weaken (edge g e) = F.nat g e
+
+seed : ∀ {n} (c : Tr zero) (o : Ok (left c)) (u : left c ≤ X.K.k) → Deep n c → Layers base n (B.program (left c) o u)
+seed c o u (all _) = bottom (start c o u)
+seed ._ o u (deeper q (edge f d)) = layer (seed (f 0) (proj₂ o 0) (inc 0 self ∙ u) q) (N.child (λ i → left (f i)) o u)
+
+preserve : ∀ {a n x} → Layers a n x → Layers (X.K.next a) n (X.K.next x)
+preserve (bottom w) = bottom (P.lift-path w)
+preserve (layer s (edge f d)) = layer (preserve s) (real (P.keep (F.nat f d)))
+
+actual : ∀ j {n} c → Deep n c → Layers (X.branch j zero) n (X.branch j c)
+actual zero {n} c q = subst (Layers (X.branch 0 zero) n) (sym (X.Seed.point c))
+  (subst (λ b → Layers b n (B.program (left c) (proj₂ (Ok-tw 1) c) (inc c self))) (sym (X.Seed.point zero))
+    (seed c (proj₂ (Ok-tw 1) c) (inc c self) q))
+actual (suc j) {n} c q = subst (Layers (X.branch (suc j) zero) n) (sym (X.Step.point (X.branch j) c))
+  (subst (λ b → Layers b n (X.K.next (X.branch j c))) (sym (X.Step.point (X.branch j) zero)) (preserve (actual j c q)))
+

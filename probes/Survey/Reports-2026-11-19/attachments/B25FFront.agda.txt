@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25FFront where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.BTBO using (module Ord-Ord)
+open Ord-Ord using (iter)
+open import OCF.Align.BTBOValMain using (T; T-nat)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼l; ≼-refl; ≼-trans; ≼-suc; ≼lim⁻)
+open import OCF.Align.BTBOFullLv using (SV; svz; svs; svl; St-F; ps)
+open import OCF.Align.BTBOValAbsorb using (st-l₂)
+open import WVOne using (T₀)
+import B14Btbo as B
+import B20StandardInside as S
+import B22TowerCut as K
+
+orbit : (a : L.Ordᴵ) → ℕ → L.Ordᶜ a
+orbit a = iter (λ x → L.ψ L.zero (λ r → r) (L.up L.zero x)) (L.Ω a)
+
+ask : L.Ordᴵ → ℕ → T₀
+ask a n = L.ψ⁰ (orbit a n)
+
+shape : ∀ a → B.α (L.suc a) ≡ L.lim (ask a)
+shape a = refl
+
+margin : ∀ {a} → SV a → ∀ n → L.suc (ask a n) ≼ ask a (suc n)
+margin {a} sa = st-l₂ (St-F (svs sa) ps)
+
+data Query : L.Ordᴵ → Set where
+  base : (n : ℕ) → Query L.zero
+  feedback : ∀ {a} → ℕ → Query (L.suc a)
+  child : ∀ {f s} (n : ℕ) → Query (f n) → Query (L.lim f s)
+
+eval : ∀ {a} → Query a → T₀
+eval (base n) = iter (L.suc L.zero L.+_) L.zero n
+eval (feedback {a} n) = ask a n
+eval (child n q) = eval q
+
+lower : ∀ {a} (q : Query a) → SV a → L.suc (eval q) ≼ B.α a
+lower (base n) svz = ≼l (suc n) (seed n) where
+  seed : ∀ n → L.suc (T n) ≼ T (suc n)
+  seed n rewrite T-nat n | OCF.Align.BTBOValMain.1+nat n = ≼-refl _
+lower (feedback {a} n) (svs va) = ≼l (suc n) (margin va n)
+lower (child n q) (svl vf st) = ≼l n (lower q (vf n))
+
+collect : ∀ {a} {u : T₀} → (∀ (q : Query a) → eval q ≼ u) → B.α a ≼ u
+collect {L.zero} h = l≼ λ n → h (base n)
+collect {L.suc a} h = l≼ λ n → h (feedback n)
+collect {L.lim f s} h = l≼ λ n → collect {f n} (λ q → h (child n q))
+
+Located : ∀ a → Set
+Located a = ∀ (q : Query a) → Σ ℕ (λ j → L.suc (eval q) ≼ S.std j)
+
+take : ∀ {a} → SV a → B.α a ≼ K.cut → Located a
+take sa h q = ≼lim⁻ (≼-trans (lower q sa) h)
+
+enough : ∀ {a} → Located a → B.α a ≼ K.cut
+enough {a} h = collect {a} λ q → let j , d = h q in ≼l j (≼-trans (≼-suc (≼-refl (eval q))) d)

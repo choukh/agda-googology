@@ -1,0 +1,61 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19IdealLinear where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; ≅→≈ᵛ)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as S
+open import OCF.Lean.YiRWPath using (Ok; Ok-at)
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+open import B13SharpOne using (empty-slot)
+open import B14SharpTwo using (i-add)
+open import WVOne using (T₀)
+open import B18Product using (_·_)
+open import B19IdealProduct using (flip; _∙_; lim; add; mul; one; distrib; id)
+
+module Left (q : T₀) where
+  Match : R.Tr R.zero → R.Tr R.zero → Set
+  Match a b = readRW a ≈ᵛ (q · readRW b)
+
+  plus : ∀ {a b x y} → Match a b → Match x y → Match (a S.+ x) (b S.+ y)
+  plus {a} {b} {x} {y} h k = ≅→≈ᵛ (i-add a x) ∙ add h k ∙ flip (distrib q (readRW b) (readRW y)) ∙ mul (id q) (flip (≅→≈ᵛ (i-add b y)))
+
+  next : ∀ a b → Match (proj₁ a) (proj₁ b) → Match (proj₁ (S.next⁺ a)) (proj₁ (S.next⁺ b))
+  next a b h = lim (each h)
+    where
+    each : ∀ {u v} → Match u v → ∀ n → Match (S.iter (proj₁ a S.+_) u n) (S.iter (proj₁ b S.+_) v n)
+    each h′ zero = h′
+    each h′ (suc n) = plus h (each h′ n)
+
+  sums : ∀ f g → (∀ n → Match (f n) (g n)) → ∀ n → Match (S.cum f n) (S.cum g n)
+  sums f g h zero = h 0
+  sums f g h (suc n) = plus (sums f g h n) (h (suc n))
+
+module Check (lem : LEM) where
+  open I.Sharp lem
+
+  bot = λ l o D a x → ψ♯ l o D R.zero tt a x
+
+  module With (q : T₀) where
+    open Left q
+    fold : (l : R.L) (o : Ok l) (D : Base♯) (x : R.Tr l) (a b : S.Tr⁺ R.zero) →
+      Match (proj₁ a) (proj₁ b) → Match (proj₁ (bot l o D a x)) (proj₁ (bot l o D b x))
+    fold l o D R.zero a b h = h
+    fold l o D (R.suc x) a b h = next _ _ (fold l o D x a b h)
+    fold l o D (R.lim f d) a b h = lim (λ n → fold l o D (f n) a b h)
+    fold l o D (R.Ω p g) a b h rewrite empty-slot (kp♯ l o p R.zero tt) = lim (sums _ _ (λ n → fold l o D (g (S.iter step (R.fromBr l p R.zero) n)) a b h))
+      where
+      step = λ z → R.fromBr l p (proj₁ (ψ♯ l o D (R.at l p) (Ok-at l o p) (D (R.at l p) (Ok-at l o p)) (g z)))
+    fold (R.nd s k) o D (R.up x c y d) a b h = fold (k c) (proj₂ o c)
+      (λ j oj → ψ♯ (R.nd s k) o D j oj (D j oj) x) y (bot _ o D a x) (bot _ o D b x) (fold (R.nd s k) o D x a b h)
+
+  unit = S.Ωt R.zero
+  linear : ∀ l o D (a : S.Tr⁺ R.zero) (x : R.Tr l) →
+    readRW (proj₁ (bot l o D a x)) ≈ᵛ (readRW (proj₁ a) · readRW (proj₁ (bot l o D unit x)))
+  linear l o D a x = With.fold (readRW (proj₁ a)) l o D x a unit (flip (one (readRW (proj₁ a))))
+

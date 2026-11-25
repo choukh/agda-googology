@@ -1,0 +1,25 @@
+Checking YiE4ABSealed (<实验目录>/YiE4ABSealed.agda).
+  37,526,969,752 bytes allocated in the heap
+  15,156,801,872 bytes copied during GC
+   1,494,526,184 bytes maximum residency (32 sample(s))
+       1,996,752 bytes maximum slop
+            2612 MiB total memory in use (0 MiB lost due to fragmentation)
+
+                                     Tot time (elapsed)  Avg pause  Max pause
+  Gen  0      8207 colls,     0 par    6.049s   6.124s     0.0007s    0.0045s
+  Gen  1        32 colls,     0 par    0.268s   0.291s     0.0091s    0.0434s
+
+  TASKS: 4 (1 bound, 3 peak workers (3 total), using -N1)
+
+  SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
+
+  INIT    time    0.001s  (  0.001s elapsed)
+  MUT     time    9.993s  (  9.896s elapsed)
+  GC      time    6.317s  (  6.415s elapsed)
+  EXIT    time    0.010s  (  0.011s elapsed)
+  Total   time   16.321s  ( 16.324s elapsed)
+
+  Alloc rate    3,755,205,452 bytes per MUT second
+
+  Productivity  61.2% of total user, 60.6% of total elapsed
+

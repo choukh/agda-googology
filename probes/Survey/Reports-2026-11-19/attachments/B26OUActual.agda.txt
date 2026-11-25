@@ -1,0 +1,52 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 将前缀余量代入原参照和真实 W4 加法。每个固定低于 EBO 的后缀程序都有高首反例。
+module B26OUActual where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym)
+open import OCF.Align.EboLeanDef using (ψ; _<ᵀ_; hd<; lv<; ar<; HC; ΩTower; EBOψ; natT)
+open import OCF.Align.EboLeanBase using (_≤ᵀ_; nf-hd; nfp-a; nfp-g; c∷; c[])
+open import OCF.Align.EboLeanTree using (nf-tower; hc; hc-tower; EBO-tree′; pos-tower)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiMonoExit using (toL)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; s≼s; ≅→≼; +-mono; ≼lim⁻)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import WVOne using (T₀; read)
+import W4Ops as O
+import B12XRef as Base
+import B16IndexBase as I
+import B17Cofinal as Cof
+import B26ORank as R
+open import B26OArgument as A using (Argument; argument; raw)
+import B26OGame as G
+import B26OUContext as C
+
+open import B26OUValue
+
+index : ℕ → Argument
+index n = argument (ΩTower (suc n)) (nfp-a (nf-hd (nf-tower (suc n)))) (nfp-g (nf-hd (nf-tower (suc n))))
+
+large : ∀ n → natT 1 ≤ᵀ raw (index n)
+large n = inj₁ (hd< (lv< (pos-tower n)))
+
+module Family (n : ℕ) where
+  module M = At (index n) (large n)
+  contains : Base.row n ≼ M.B
+  contains = ≼-trans (≼-suc (≼-refl (Base.row n))) (≼-trans (Cof.strict-row n)
+    (≼-trans (≼-suc (≼-refl (Base.row (suc n)))) (≼-trans (Cof.strict-row (suc n))
+      (from-tree M.H.H (Base.H (suc (suc n)))))))
+
+-- 固定任意严格低于原 EBO 的实际后缀；对手从证据算出高首。
+-- 对算出的同一个高首，所有付到正确首值以内的 W4 前缀都失败。
+counterexample : ∀ z → L.suc (read z) ≼ toL EBO-tree′ → Σ ℕ (λ n →
+  ∀ x → read x ≼ Family.M.B n → ref (Family.M.H.roof n) ≼ read (x O.+ z) → ⊥)
+counterexample z d = let n , h = ≼lim⁻ {a = read z} {f = λ k → Rt (hc-tower k)} d
+  in n , λ x hx → Family.M.fail n x z hx
+    (≼-trans (≼-suc (≼-refl (read z))) (≼-trans h
+      (≼-trans (Base.original n) (Family.contains n))))
+

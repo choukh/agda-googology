@@ -1,0 +1,49 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21CrossFront where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Data.Maybe.Base using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (h₁; read; 𝟏)
+import B13FiniteLift as U
+import B12Strict as Strict
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼l; s≼s; z≼)
+k = tw 1
+data First (P : Tr zero → Set) : Tr zero → Set where
+  point : ∀ {f d} → P (f 0) → First P (lim f d)
+Head : Tr zero → Set
+Head = First (First (_≡ suc zero))
+node : ∀ {X : Set} {z} (m : Keep zero X z) (f : X → Tr⁺ zero) s →
+   ∀ {P} → P (proj₁ (f z)) → First P (proj₁ (node⁺ m f s))
+node nothing f s d = point d
+node (just (() , _)) f s d
+inner : ∀ o b (q : zero ≤ k) → First (_≡ suc zero) (proj₁ (ψ k o b zero q (Ωt zero) (suc zero)))
+inner o b (inc _ q) = point refl
+inner o b (ink q) = point refl
+inner o b (inu q) = point refl
+
+module At (o : Ok (U.sc k)) (b : Base (U.sc k)) where
+  ℓ = U.sc k
+  pos : Pos ℓ
+  pos = inj₂ (tt , inj₁ tt)
+  body = λ (z : Tr k) → proj₁ (upz {s = sS} {h = λ _ → k} tt (suc z , z◃ z ◃s))
+  step = λ z → fromBr ℓ pos (proj₁ (ψ ℓ o b k (posW ℓ pos) (b k (posW ℓ pos)) (body z)))
+  family = λ (w : zero ≤ ℓ) z → ψ ℓ o b zero w (Ωt zero) (body z)
+  own : ∀ (w : zero ≤ ℓ) → Head (proj₁ (ψ ℓ o b zero w (Ωt zero) (proj₁ (Ωt ℓ))))
+  own w@(inc tt v) = node (kp ℓ o pos w) (family w) step (inner _ _ v)
+  own w@(inu vs) = node (kp ℓ o pos w) (family w) step (inner _ _ (vs tt))
+
+span : ∀ z → Head z → ∀ n → L.natᶜ n ≼ read z
+span (lim f d) (point _) zero = z≼
+span (lim f d) (point a) (suc n) = ≼l (suc n) (≼-trans (s≼s (term n)) (Strict.strict (d n)))
+  where
+  term : ∀ n → L.natᶜ n ≼ read (f n)
+  term zero = z≼
+  term (suc n) = ≼-trans (s≼s (term n)) (Strict.strict (d n))

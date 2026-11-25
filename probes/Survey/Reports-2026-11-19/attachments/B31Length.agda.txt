@@ -1,0 +1,47 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 把任意严格递增的可数层级内的全部前缀乘积压在一个由父层高度计算的界下。
+module B31Length where
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Product using (proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; +-mono; z≼)
+open import WVOne using (T₀; 𝟏)
+import B18Product as M
+import B19IdealProduct as I
+import B19IdealPowers as P
+import B19IdealArithmetic as A
+open M using (_·_)
+
+twice : ∀ x → (x L.+ x) ≼ (x · L.ωᶜ)
+twice x = ≼l {f = λ n → x · L.natᶜ n} 2 (+-mono (M.one-right x) (≼-refl x))
+
+module Budget (q : T₀) (pos : 𝟏 ≼ q) where
+  size : T₀ → T₀
+  size a = I.power q (A.norm a)
+  grow : ∀ a b → a ≼ b → size a ≼ size b
+  grow a b h = P.expo {b = q} pos (P.expo {b = L.ωᶜ} {x = a} {y = b} P.omega-pos h)
+  one : ∀ a → q ≼ size a
+  one a = ≼-trans {b = I.power q 𝟏} (M.one-left q)
+    (P.expo {b = q} {x = 𝟏} {y = A.norm a} pos (P.positive P.omega-pos a))
+  duplicate : ∀ a → (size a · size a) ≼ size (L.suc a)
+  duplicate a = ≼-trans {b = I.power q (A.norm a L.+ A.norm a)}
+    (proj₂ (I.power-sum q (A.norm a) (A.norm a))) (P.expo {b = q} pos (twice (A.norm a)))
+  chain : ∀ b a → ((b · size a) · size a) ≼ (b · size (L.suc a))
+  chain b a = ≼-trans {b = b · (size a · size a)} (proj₁ (I.assoc b (size a) (size a)))
+    (M.mono (≼-refl b) (duplicate a))
+
+  module Series (g v : ℕ → T₀) (b : T₀) (rise : ∀ n → L.suc (g n) ≼ g (suc n))
+    (start : v 0 ≼ (b · size (g 0))) (step : ∀ n → v (suc n) ≼ (v n · size (g (suc n)))) where
+    part : ∀ n → v n ≼ (b · size (L.suc (g n)))
+    part zero = ≼-trans {b = b · size (g 0)} start
+      (M.mono (≼-refl b) (grow (g 0) (L.suc (g 0)) (OCF.Align.Value.≼-suc (≼-refl _))))
+    part (suc n) = ≼-trans {b = v n · size a} (step n)
+      (≼-trans {b = (b · size a) · size a} (M.mono previous (≼-refl (size a))) (chain b a))
+      where
+      a = g (suc n)
+      previous : v n ≼ (b · size a)
+      previous = ≼-trans {b = b · size (L.suc (g n))} (part n)
+        (M.mono (≼-refl b) (grow (L.suc (g n)) a (rise n)))
+    cover : ∀ n → v n ≼ (b · size (L.lim g))
+    cover n = ≼-trans {b = b · size (L.suc (g n))} (part n)
+      (M.mono (≼-refl b) (grow (L.suc (g n)) (L.lim g) (≼l {f = g} (suc n) (rise n))))

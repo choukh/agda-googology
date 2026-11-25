@@ -1,0 +1,93 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22CrossRead where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₂)
+open import W4Block
+open import W4Ops
+import B22CrossEager as N
+
+infix 4 _≈_
+data _≈_ : L → L → Set where
+  zz : zero ≈ zero
+  nn : ∀ {s} {f g : Ch s → L} → (∀ c → f c ≈ g c) → nd s f ≈ nd s g
+
+idem : ∀ k → k ≈ k
+idem zero = zz
+idem (nd s h) = nn λ c → idem (h c)
+
+then≈ : ∀ {a b c} → a ≈ b → b ≈ c → a ≈ c
+then≈ zz zz = zz
+then≈ (nn p) (nn q) = nn λ i → then≈ (p i) (q i)
+
+pair⊕ : ∀ {a b x y} → a ≈ b → x ≈ y → (a ⊕ x) ≈ (b ⊕ y)
+pair⊕ p zz = p
+pair⊕ p (nn q) = nn λ i → pair⊕ p (q i)
+
+assoc : ∀ a b c → ((a ⊕ b) ⊕ c) ≈ (a ⊕ (b ⊕ c))
+assoc a b zero = idem (a ⊕ b)
+assoc a b (nd s h) = nn λ i → assoc a b (h i)
+
+sum : ∀ k (a b : Tr k) → N.Plain k b → ↑ k (a + b) ≈ ((↑ k a) ⊕ (↑ k b))
+sum k a zero q = idem (↑ k a)
+sum k a (suc b) q = nn λ _ → sum k a b q
+sum k a (lim f e) q = nn λ n → sum k a (f n) (q n)
+sum k a (Ω p g) q = nn λ z → sum k a (g (fromBr k p z)) (q (fromBr k p z))
+sum (nd s h) a (up x c y e) (qx , qy) = then≈ (pair⊕ (sum (nd s h) a x qx) (idem (↑ (h c) y))) (assoc (↑ (nd s h) a) (↑ (nd s h) x) (↑ (h c) y))
+sum k a (ex x b nb y ε) ()
+
+record Simulation (A B : RA) : Set₁ where
+  field
+    R : Car A → Car B → Set
+    Frame : ∀ {m} → Ctx A m → Ctx B m → Set
+    lower : ∀ {s h} {u : Ctx A (nd s h)} {v : Ctx B (nd s h)} c → Frame u v → Frame (dn A u c) (dn B v c)
+    at-lim : ∀ f g e b → (∀ n → R (f n) (g n)) → R (limA A f e) (limA B g b)
+    at-node : ∀ {m} (u : Ctx A m) (v : Ctx B m) p f g → Frame u v → (∀ z → R (f z) (g z)) → R (nodeA A u p f) (nodeA B v p g)
+open Simulation
+
+liftSim : ∀ {A B} → Simulation A B → Simulation (pt A) (pt B)
+R (liftSim S) F G = ∀ u v → R S u v → R S (proj₁ F u) (proj₁ G v)
+Frame (liftSim S) = Frame S
+lower (liftSim S) = lower S
+at-lim (liftSim S) f g e b h u v p = at-lim S _ _ _ _ (λ n → h n u v p)
+at-node (liftSim S) u v p f g q h x y a = at-node S u v p _ _ q (λ z → h z x y a)
+
+iters : ∀ {A B : Set} (R : A → B → Set) (F : A → A) (G : B → B) → (∀ u v → R u v → R (F u) (G v)) →
+        ∀ u v → R u v → ∀ n → R (iter F u n) (iter G v n)
+iters R F G h u v p zero = p
+iters R F G h u v p (suc n) = h _ _ (iters R F G h u v p n)
+
+compare : ∀ {A B} (S : Simulation A B) {m} (u : Ctx A m) (v : Ctx B m) → Frame S u v →
+          (x : Tr m) (F : OpA A) (G : OpA B) → R (liftSim S) F G → R (liftSim S) (Eh A u x F) (Eh B v x G)
+compare S u v q zero F G d = d
+compare S u v q (suc x) F G d a b e = at-lim S _ _ _ _ (λ n → iters (R S) _ _ (compare S u v q x F G d) a b e (suc n))
+compare S u v q (lim f a) F G d h i e = at-lim S _ _ _ _ (λ n → compare S u v q (f n) F G d h i e)
+compare S u v q (Ω p g) F G d h i e = at-node S u v p _ _ q (λ z → compare S u v q (g z) F G d h i e)
+compare {A} {B} S {nd s h} u v q (up x c y e) F G d = compare S (dn A u c) (dn B v c) (lower S c q) y (Eh A u x F) (Eh B v x G) (compare S u v q x F G d)
+compare {A} {B} S u v q (ex a b nb x ε) F G d = compare (liftSim S) u v q x (opE A u b nb) (opE B v b nb)
+  (λ I J ij → compare S u v q b I J ij) (Eh A u a F) (Eh B v a G) (compare S u v q a F G d)
+
+at-slot : ∀ {k m} (d : Dn k m) (p : Pos m) (f : Br m p → Tr k) (g : Br m p → L) →
+          (∀ z → ↑ k (f z) ≈ g z) → ↑ k (N.node d p f) ≈ nodeA AL tt p g
+at-slot stop p f g h = nn λ z → h (fromBr _ p z)
+at-slot (down d c) p f g h = at-slot d (inj₂ (c , inj₂ p)) f g h
+
+model : ∀ k → Simulation (N.tree k) AL
+R (model k) a b = ↑ k a ≈ b
+Frame (model k) _ _ = ⊤
+lower (model k) _ _ = tt
+at-lim (model k) f g e b = nn
+at-node (model k) u v p f g q = at-slot u p f g
+
+exact : ∀ k (x : Tr k) → ↑ k (N.expand k x) ≈ ↑ k x
+exact k zero = zz
+exact k (suc x) = nn λ z → exact k x
+exact k (lim f e) = nn λ n → exact k (f n)
+exact k (Ω p g) = nn λ z → exact k (g (fromBr k p z))
+exact (nd s h) (up x c y e) = pair⊕ (exact (nd s h) x) (exact (h c) y)
+exact k (ex a b nb x ε) = compare (model k) stop tt tt x (N.right (N.expand k b) (N.advance k nb)) (opR (↑ k b))
+    (λ u v uv → then≈ (sum k u (N.expand k b) (N.explicit k b)) (pair⊕ uv (exact k b)))
+    (N.expand k a) (↑ k a) (exact k a)
+

@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实格点 (0,1) 的一级槽是 ex δ δ Ω₁；δ 是 Ω₁ 右接独立第零塔。其下次一级求值的零槽恰为原 ε₀。
+module B31PCell where
+open import Data.Unit.Base using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym; subst)
+import W4Block as W
+import W4Ops as O
+import W4Path as Path
+import W4Fold as F
+import WVOne as V
+import WKGen as K
+import WKTower as T₁
+import B12Terminal as T
+import B12XRef as Ref
+import B18Product as M
+import B18TowerSlots as S
+import B18TowerEmb as Emb
+import B19IdealProduct as A
+import B26CDecode as Name
+import B27UArbitrary as Z
+import B30UOrbit as U
+import B31UFirst as First
+import B31UPositive as Pos
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; ≼-trans; ≼-refl)
+open V using (𝟏; read; lvl1)
+module P = Pos.At Pos.actual
+open P.Run using (B′; c)
+in-root = Z.run (Z.index 1)
+l = V.h₁ (Z.index 1)
+B = T.Run.bs in-root
+canonical : B ≡ S.slots l 1
+canonical = S.At.all 0 (Z.index 1)
+δ = O.Ωt lvl1 O.⊞ Emb.standard 0
+make : O.Tr⁺ lvl1 → W.Tr lvl1
+make a = W.ex (proj₁ a) (proj₁ a) (proj₂ a) (proj₁ (O.Ωt lvl1)) tt
+route : lvl1 W.≤ l
+route = W.inc 0 (W.inc 1 (W.inc tt W.self))
+stage : c ≡ make (B lvl1 route)
+stage = refl
+positive : c ≡ make δ
+positive = trans stage (cong (λ b → make (b lvl1 route)) canonical)
+
+-- 将两个自然层的调用先保留整族输入作变量，再代入已经证明的首次真实槽族。
+module Replay (b : F.Base l) where
+  ground = λ i t → b i (W.inc 0 (W.inc 1 (W.inc tt t)))
+  start : O.Tr⁺ W.zero
+  start = ground W.zero (W.inc tt W.self)
+  state : F.Base lvl1
+  state i t = b i (W.inc 0 (W.inc 1 (W.inc tt t)))
+  computed = F.ψ lvl1 U.o state W.zero (Path.z≤ lvl1) start (proj₁ (O.Ωt lvl1))
+
+zero-slot = B′ W.zero (W.inc tt W.self)
+physical : zero-slot ≡ Replay.computed B
+physical = refl
+zero-tree : zero-slot ≡ F.ψ lvl1 U.o U.B W.zero (Path.z≤ lvl1) U.Actual.slot (proj₁ (O.Ωt lvl1))
+zero-tree = trans physical (cong Replay.computed canonical)
+
+exact : read (proj₁ zero-slot) ≈ᵛ Ref.row 1
+exact = subst (_≈ᵛ Ref.row 1) (sym (cong (λ z → read (proj₁ z)) zero-tree)) (upper , lower)
+  where
+  upper : U.Actual.result U.Actual.slot ≼ Ref.row 1
+  upper = ≼-trans {b = B22MovingIndex.above 𝟏} (U.Budget.all U.Actual.slot U.slot-small)
+    (≼-trans {b = U.Std.term} (proj₂ (U.Std.Positive.exact U.std-pos)) Name.read-bound)
+    where import B22MovingIndex
+  lower : Ref.row 1 ≼ U.Actual.result U.Actual.slot
+  lower = ≼-trans {b = U.Actual.c M.· Ref.row 1} (M.pad U.positive (Ref.row 1)) (proj₂ (U.general U.Actual.slot))

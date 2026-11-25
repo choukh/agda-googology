@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- N1 检查件 (二): Ω 树 Ωt ℓ 的值不由层号的值决定.
+-- 退化层号 D = nd (sΩ zero) (常值 zero) 与 one 同值, 但 Ωt D 的值不超过 1, Ωt one 的值至少是 2.
+-- 所以 "只依赖层号的值" 只对保留判定成立; 底族 B♯ 还要层号是正规的 (读回域的条件).
+module N1Shape where
+
+open import Data.Empty using (⊥)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+import OCF.Lean.YiVWVal as W
+open import S1Sharp
+
+one Dg : L
+one = nd sS (λ _ → zero)
+Dg  = nd (sΩ zero) (λ _ → zero)
+
+D≼one : Dg ≼ᴸ one
+D≼one = n≼ (λ _ → tt , z≼)
+
+one≼D : one ≼ᴸ Dg
+one≼D = n≼ (λ _ → zero , z≼)
+
+ΩtD-low : W.val Dg (proj₁ (Ωt Dg)) W.≼ W.suc {Dg} W.zero
+ΩtD-low = W.Ω≼ (λ z → W.s≼s W.z≼)
+
+Ωt-one-high : W.suc (W.suc {one} W.zero) W.≼ W.val one (proj₁ (Ωt one))
+Ωt-one-high = W.≼Ω (suc zero) (W.s≼s (W.s≼s W.z≼))
+
+two≰one : ∀ {ℓ₁ ℓ₂} → W.suc (W.suc {ℓ₁} W.zero) W.≼ W.suc {ℓ₂} W.zero → ⊥
+two≰one (W.s≼s ())
+
+shape-matters : (W.val one (proj₁ (Ωt one)) W.≼ W.val Dg (proj₁ (Ωt Dg))) → ⊥
+shape-matters d = two≰one (W.≼-trans Ωt-one-high (W.≼-trans d ΩtD-low))

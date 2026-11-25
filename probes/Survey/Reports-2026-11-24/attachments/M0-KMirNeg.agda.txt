@@ -1,0 +1,234 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- M0 的否定: (a) 只用简报的 IsN 时第 3, 4, 5 条都不成立, 反例是常值零的极限层 m₀ = nd sL (λ _ → zero) (refl 级);
+-- (b) 在严格层号 (IsS) 上, 第 3 条的字面 <ᴵ 也不成立, 即使子层号的证明取自父层号 (Ok-at), 所以只能到 ≺ᴵ.
+module KMirNeg where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Relation.Nullary using (¬_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as I
+open I using (Ordᴵ; _<ᴵ_; _≅ᴵ_; _⊑ᴵ_; _≺ᴵ_; via)
+open import OCF.BTBO using (injᵃ; injᵇ; injᶜ)
+open import KMir
+
+------------------------------------------------------------------------
+-- (a) 退化极限层.
+m₀ : L
+m₀ = nd sL (λ _ → zero)
+
+o₀ : Ok m₀
+o₀ = (λ _ → self) , (λ _ → tt)
+
+i₀ : IsN m₀
+i₀ = λ _ → tt
+
+p₀ : Pos m₀
+p₀ = inj₂ (zero , inj₁ tt)
+
+at₀ : at m₀ p₀ ≡ zero
+at₀ = refl
+
+-- W4 保留 (目标就是 m₀ 本身).
+kp₀ : kp m₀ o₀ p₀ self ≡ just (p₀ , (λ z → z) , refl)
+kp₀ = refl
+
+-- 但码 zero 不 ≺ᴵ 码 lim (λ _ → zero), 对一切证明.
+no-≺₀ : (ia : IsN (at m₀ p₀)) (oa : Ok (at m₀ p₀)) (im : IsN m₀) (om : Ok m₀) → ¬ (code (at m₀ p₀) ia oa ≺ᴵ code m₀ im om)
+no-≺₀ ia oa im om (via I.z≅ (I.lim n ()))
+
+-- 路径 zero ≤ m₀ 不给 ≅ᴵ 也不给 ≺ᴵ.
+no-path₀ : (im : IsN m₀) (om : Ok m₀) → ¬ ((code zero tt tt ≅ᴵ code m₀ im om) ⊎ (code zero tt tt ≺ᴵ code m₀ im om))
+no-path₀ im om (inj₁ ())
+no-path₀ im om (inj₂ (via I.z≅ (I.lim n ())))
+
+-- 两个码没有公共上界, Level 的 <ᴵ-dec 根本无从比较.
+no-bound₀ : (im : IsN m₀) (om : Ok m₀) {c : Ordᴵ} → I.zero <ᴵ c → code m₀ im om <ᴵ c → ⊥
+no-bound₀ im om pa pj with I.<ᴵ-dec pa pj
+... | injᵃ r          = no-≺₀ tt tt im om r
+... | injᵇ (via e ())
+... | injᶜ ()
+
+-- nothing 一侧的反例: m₁ = nd sS (λ _ → m₀), 槽位取 m₀ 本身, 目标 zero (路径 inc tt (inc 0 self)).
+m₁ : L
+m₁ = nd sS (λ _ → m₀)
+
+o₁ : Ok m₁
+o₁ = tt , (λ _ → o₀)
+
+p₁ : Pos m₁
+p₁ = inj₂ (tt , inj₁ tt)
+
+w₁ : zero ≤ m₁
+w₁ = inc tt (inc zero self)
+
+kp₁ : kp m₁ o₁ p₁ w₁ ≡ nothing
+kp₁ = refl
+
+no-≤₁ : (ia : IsN (at m₁ p₁)) (oa : Ok (at m₁ p₁)) → ¬ ((code zero tt tt ≅ᴵ code (at m₁ p₁) ia oa) ⊎ (code zero tt tt ≺ᴵ code (at m₁ p₁) ia oa))
+no-≤₁ ia oa = no-path₀ ia oa
+
+-- 于是简报原样的第 3, 4 条与引理 K 的两半 (只假设 IsN) 都被否定.
+slotN-false : ¬ ((m : L) (i : IsN m) (o : Ok m) (p : Pos m) (ia : IsN (at m p)) (oa : Ok (at m p)) → code (at m p) ia oa ≺ᴵ code m i o)
+slotN-false H = no-≺₀ tt tt i₀ o₀ (H m₀ i₀ o₀ p₀ tt tt)
+
+pathN-false : ¬ ((j m : L) → j ≤ m → (ij : IsN j) (oj : Ok j) (im : IsN m) (om : Ok m)
+                 → (code j ij oj ≅ᴵ code m im om) ⊎ (code j ij oj ≺ᴵ code m im om))
+pathN-false H = no-path₀ i₀ o₀ (H zero m₀ (inc zero self) tt tt i₀ o₀)
+
+KN-just-false : ¬ ((m : L) (i : IsN m) (o : Ok m) (p : Pos m) {j : L} (w : j ≤ m) {x : _} → kp m o p w ≡ just x
+                   → (ia : IsN (at m p)) (oa : Ok (at m p)) (ij : IsN j) (oj : Ok j) → code (at m p) ia oa ≺ᴵ code j ij oj)
+KN-just-false H = no-≺₀ tt tt i₀ o₀ (H m₀ i₀ o₀ p₀ self refl tt tt i₀ o₀)
+
+KN-nothing-false : ¬ ((m : L) (i : IsN m) (o : Ok m) (p : Pos m) {j : L} (w : j ≤ m) → kp m o p w ≡ nothing
+                      → (ia : IsN (at m p)) (oa : Ok (at m p)) (ij : IsN j) (oj : Ok j)
+                      → (code j ij oj ≅ᴵ code (at m p) ia oa) ⊎ (code j ij oj ≺ᴵ code (at m p) ia oa))
+KN-nothing-false H = no-≤₁ i₀ o₀ (H m₁ i₀ o₁ p₁ w₁ refl i₀ o₀ tt tt)
+
+------------------------------------------------------------------------
+-- (b) 严格层号上第 3 条的字面 <ᴵ 不成立.
+natL : ℕ → L
+natL zero    = zero
+natL (suc n) = nd sS (λ _ → natL n)
+
+okN : (n : ℕ) → Ok (natL n)
+okN zero    = tt
+okN (suc n) = tt , (λ _ → okN n)
+
+isN : (n : ℕ) → IsS (natL n)
+isN zero    = tt
+isN (suc n) = isN n
+
+W : L
+W = nd sL natL
+
+okW : Ok W
+okW = (λ n → inc tt self) , okN
+
+isW : IsS W
+isW = isN , (λ n → suc n , (tt , self))
+
+sS^ : ℕ → L → L
+sS^ zero    a = a
+sS^ (suc k) a = nd sS (λ _ → sS^ k a)
+
+okS^ : (k : ℕ) {a : L} → Ok a → Ok (sS^ k a)
+okS^ zero    o = o
+okS^ (suc k) o = tt , (λ _ → okS^ k o)
+
+isS^ : (k : ℕ) {a : L} → IsS a → IsS (sS^ k a)
+isS^ zero    s = s
+isS^ (suc k) s = isS^ k s
+
+-- W′ 的第 0 项是 1, 其后是 W, W+1, …; 第 0 步有两条不同的路径 rA, rB (1 ≤ W 经 W 的第 1 项或第 2 项).
+g′ : ℕ → L
+g′ zero    = natL 1
+g′ (suc k) = sS^ k W
+
+W′ : L
+W′ = nd sL g′
+
+rA rB : (n : ℕ) → g′ n ≤ g′ (suc n)
+rA zero    = inc 1 self
+rA (suc k) = inc tt self
+rB zero    = inc 2 (inc tt self)
+rB (suc k) = inc tt self
+
+ocW′ : (n : ℕ) → Ok (g′ n)
+ocW′ zero    = okN 1
+ocW′ (suc k) = okS^ k okW
+
+OkA OkB : Ok W′
+OkA = rA , ocW′
+OkB = rB , ocW′
+
+isW′ : IsS W′
+isW′ = ch , cof where
+  ch : (n : ℕ) → IsS (g′ n)
+  ch zero    = isN 1
+  ch (suc k) = isS^ k isW
+  cof : (n : ℕ) → Σ ℕ λ k → g′ n <ₙ g′ k
+  cof zero    = 1 , (1 , self)
+  cof (suc k) = suc (suc k) , (tt , self)
+
+-- 两个码的第 0 步证据不同 (s⊑ z≅ (lim 1 zero) 对 s⊑ z≅ (lim 2 (suc zero))).
+tag : ∀ {a b} → a ⊑ᴵ b → ℕ
+tag (I.s⊑ e (I.lim k q)) = k
+tag _                    = 0
+
+tagL : Ordᴵ → ℕ
+tagL (I.lim f s) = tag (s zero)
+tagL _           = 0
+
+tagA : (i : IsN W′) → tagL (code W′ i OkA) ≡ 1
+tagA i = refl
+
+tagB : (i : IsN W′) → tagL (code W′ i OkB) ≡ 2
+tagB i = refl
+
+neAB : (i i′ : IsN W′) → ¬ (code W′ i OkA ≡ code W′ i′ OkB)
+neAB i i′ e with cong tagL e
+... | ()
+
+-- 外层 M: 第 0 项是 W′ (证明 OkA), 其后是 W′+1, W′+2, … (内部证明 OkB).
+G : ℕ → L
+G zero    = W′
+G (suc k) = sS^ (suc k) W′
+
+M : L
+M = nd sL G
+
+rM : (n : ℕ) → G n ≤ G (suc n)
+rM zero    = inc tt self
+rM (suc k) = inc tt self
+
+ocM : (n : ℕ) → Ok (G n)
+ocM zero    = OkA
+ocM (suc k) = okS^ (suc k) OkB
+
+oM : Ok M
+oM = rM , ocM
+
+isM : IsS M
+isM = ch , cof where
+  ch : (n : ℕ) → IsS (G n)
+  ch zero    = isW′
+  ch (suc k) = isS^ (suc k) isW′
+  cof : (n : ℕ) → Σ ℕ λ k → G n <ₙ G k
+  cof zero    = 1 , (tt , self)
+  cof (suc k) = suc (suc k) , (tt , self)
+
+iM : IsN M
+iM = IsS→IsN M isM
+
+pM : Pos M
+pM = inj₂ (zero , inj₁ tt)
+
+mutual
+  up-no : (k : ℕ) (i : IsN (sS^ k W′)) (iA : IsN W′) → ¬ (code W′ iA OkA <ᴵ code (sS^ k W′) i (okS^ k OkB))
+  up-no zero    i iA q = I.≺ᴵ-irrefl (I.<-≅ q (code-irr W′ i iA OkB OkA))
+  up-no (suc k) i iA q = up-step k i iA (I.<suc q)
+
+  up-step : (k : ℕ) (i : IsN (sS^ k W′)) (iA : IsN W′)
+          → (code W′ iA OkA ≡ code (sS^ k W′) i (okS^ k OkB)) ⊎ (code W′ iA OkA <ᴵ code (sS^ k W′) i (okS^ k OkB)) → ⊥
+  up-step zero    i iA (inj₁ e)  = neAB iA i e
+  up-step (suc k) i iA (inj₁ ())
+  up-step k       i iA (inj₂ q′) = up-no k i iA q′
+
+-- 严格层号 M, 槽位 pM (第 0 项 W′), 子层号的证明取 IsN-at/Ok-at: 字面 <ᴵ 不成立.
+slot-literal-false : ¬ (code (at M pM) (IsN-at M iM pM) (Ok-at M oM pM) <ᴵ code M iM oM)
+slot-literal-false (I.lim zero q)    = I.≺ᴵ-irrefl (I.<-≅ q (code-irr W′ (iM zero) (IsN-at M iM pM) OkA OkA))
+slot-literal-false (I.lim (suc k) q) = up-no (suc k) (iM (suc k)) (IsN-at M iM pM) q
+
+-- 对照: 同一处 ≺ᴵ 成立 (KMir.slot).
+slot-M : code (at M pM) (IsN-at M iM pM) (Ok-at M oM pM) ≺ᴵ code M iM oM
+slot-M = slot M isM pM (IsN-at M iM pM) (Ok-at M oM pM) iM oM

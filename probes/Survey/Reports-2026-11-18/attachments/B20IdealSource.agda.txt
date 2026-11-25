@@ -1,0 +1,34 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20IdealSource where
+open import Data.Product using (proj₁; proj₂)
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiUpSimTw1 using (lower-nat)
+open import OCF.Lean.YiUpSimFold using (ok-B₀)
+import OCF.Lean.YiPhiBlock as P
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValMain using (ψ₀≈)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module B = BoundedTrich
+import B12Omega3Ref as Ref
+import B17SharpThree as S
+import B20IdealThree as A
+open import WVOne using (T₀)
+index : B.Ordᴰ
+index = B.suc (B.suc (B.suc B.zero))
+src = tr₀ (Ord-Ord.ψ₀ (Ord-Ord.Ω index))
+
+old-lower : L.ψ⁰ Ref.Ω₃ ≼ A.old
+old-lower = lower-nat 3 (P.B₀ A.three) (ok-B₀ A.three)
+
+module At (lem : LEM) where
+  whole = S.Three.whole lem A.unit
+  lower : L.ψ⁰ Ref.Ω₃ ≼ whole
+  lower = ≼-trans {a = L.ψ⁰ Ref.Ω₃} {b = A.old} {c = whole} old-lower (≅→≼ (A.At.exact lem))
+  original : src ≼ whole
+  original = ≼-trans {a = src} {b = L.ψ⁰ Ref.Ω₃} {c = whole} (proj₁ (ψ₀≈ index)) lower
+  transfer : ∀ {x : T₀} → A.old ≼ x → whole ≼ x
+  transfer {x} = ≼-trans {a = whole} {b = A.old} {c = x} (≅→≼ (L.≅-sym (A.At.exact lem)))
+  reverse : ∀ {x : T₀} → whole ≼ x → A.old ≼ x
+  reverse {x} = ≼-trans {a = A.old} {b = whole} {c = x} (≅→≼ (A.At.exact lem))

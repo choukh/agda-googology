@@ -1,0 +1,98 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每个 k≥2 的原行严格初段对乘法及 ω 幂封闭；可直接从任意树的严格比较取命名上界，没有排中律。
+module B27CutArithmetic where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_; s≤s; z≤n)
+import Data.Nat.Properties as N
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥-elim)
+open import Data.List.Base using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (sym; subst; refl)
+open import OCF.Align.EboLeanDef using (HC; h0; h1; hω; ψ; fsn; []<)
+open import OCF.Align.EboLeanBase using (NF; Ctbl; nf-ψ; GB[]; tri; c[]; c∷; n[]; nf-pred; Ctbl-pred)
+open import OCF.Align.EboLeanTrian using (T-pred; t<)
+open import OCF.Align.EboLeanClosure using (cl-fsn-NF; Ctbl-fsn; trian-fsn)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl; ≼lim⁻; s≼0; s≼s; s≼s⁻)
+import OCF.Align.Level as L
+open import WVOne using (𝟏)
+import B26Names as A
+import B26Depth as D
+import B27Arithmetic as F
+import B27Threshold as T
+import B18Product as P
+import B19IdealArithmetic as Ar
+import B19IdealPowers as Pow
+
+opaque
+  approx : ∀ (b : A.Name) (x : A.T₀) → L.suc x ≼ A.value b →
+           Σ A.Name (λ a → x ≼ A.value a × L.suc (A.value a) ≼ A.value b)
+  approx (A.named t n c (h0 e)) x p = ⊥-elim (s≼0 p)
+  approx (A.named t n c (h1 e h)) x p = A.named _ (nf-pred n) (Ctbl-pred c) h , s≼s⁻ p , ≼-refl _
+  approx b@(A.named t n c (hω e h)) x p with ≼lim⁻ {a = x} {f = λ j → Rt (h j)} p
+  ... | j , d = A.named _ nj cj (h j) , ≼-trans {b = L.suc x} (≼-suc (≼-refl x)) d ,
+                mono<ⁿ nj n c (h j) (A.hcN b) (t< (trian-fsn n e j))
+    where
+    nj : NF (fsn t j)
+    nj = cl-fsn-NF n e j
+    cj : Ctbl (fsn t j)
+    cj = Ctbl-fsn c e j
+
+SmallAt : A.T₀ → A.T₀ → Set
+SmallAt q x = L.suc x ≼ q
+
+module Generic (Q : A.T₀) (pad : A.Name) (two-pad : 2 ≤ D.height pad) (pad-in : SmallAt Q (A.value pad))
+  (near : ∀ x → SmallAt Q x → Σ A.Name (λ a → x ≼ A.value a × SmallAt Q (A.value a)))
+  (bound : ∀ a (d : 2 ≤ D.height a) → SmallAt Q (A.value a) → SmallAt Q (A.value (F.b (F.build a d)))) where
+  Small = SmallAt Q
+  Inside : A.T₀ → Set
+  Inside x = Σ A.Name (λ a → x ≼ A.value a × 2 ≤ D.height a × Small (A.value a))
+  select : ∀ (x : A.T₀) (a b : A.Name) → x ≼ A.value a → Small (A.value a) → 2 ≤ D.height b → Small (A.value b) → Inside x
+  select x a b xa sm high sb with tri (A.name a) (A.name b)
+  ... | inj₁ p = b , ≼-trans {b = A.value a} xa (T.weak-value a b (inj₁ p)) , high , sb
+  ... | inj₂ (inj₁ eq) = b , ≼-trans {b = A.value a} xa (T.weak-value a b (inj₂ eq)) , high , sb
+  ... | inj₂ (inj₂ p) = a , xa , N.≤-trans high (D.ordered b a (T.weak-value b a (inj₁ p))) , sm
+
+  padded : ∀ x → Small x → Inside x
+  padded x h with near x h
+  ... | a , xa , sm = select x a pad xa sm two-pad pad-in
+
+  powω : ∀ x → Small x → Small (Ar.norm x)
+  powω x p with padded x p
+  ... | a , h , d , sm = ≼-trans {b = L.suc (A.value (F.b (F.build a d)))}
+    (s≼s (≼-trans {b = Ar.norm (A.value a)} (Pow.expo Pow.omega-pos h) (F.exp (F.build a d)))) (bound a d sm)
+
+  self-product : ∀ x → Small x → Small (x P.· x)
+  self-product x p with padded x p
+  ... | a , h , d , sm = ≼-trans {b = L.suc (A.value (F.b (F.build a d)))}
+    (s≼s (≼-trans {b = A.value a P.· A.value a} (P.mono h h) (F.square (F.build a d)))) (bound a d sm)
+
+  pair : ∀ (x y : A.T₀) (a b : A.Name) → x ≼ A.value a → y ≼ A.value b →
+         Small (A.value a) → Small (A.value b) → Small (x P.· y)
+  pair x y a b xa yb sa sb with tri (A.name a) (A.name b)
+  ... | inj₁ p = ≼-trans {b = L.suc (A.value b P.· A.value b)} (s≼s (P.mono (≼-trans {b = A.value a} xa (T.weak-value a b (inj₁ p))) yb)) (self-product (A.value b) sb)
+  ... | inj₂ (inj₁ eq) = ≼-trans {b = L.suc (A.value b P.· A.value b)} (s≼s (P.mono (≼-trans {b = A.value a} xa (T.weak-value a b (inj₂ eq))) yb)) (self-product (A.value b) sb)
+  ... | inj₂ (inj₂ p) = ≼-trans {b = L.suc (A.value a P.· A.value a)} (s≼s (P.mono xa (≼-trans {b = A.value b} yb (T.weak-value b a (inj₁ p))))) (self-product (A.value a) sa)
+
+  product : ∀ x y → Small x → Small y → Small (x P.· y)
+  product x y px py with near x px | near y py
+  ... | a , xa , sa | b , yb , sb = pair x y a b xa yb sa sb
+
+module At (k : ℕ) (two : 2 ≤ k) where
+  Q = T.row k
+  Small = SmallAt Q
+  pad = D.tower 1
+  pad-in : Small (A.value pad)
+  pad-in = T.below k pad two
+  bound : ∀ a (d : 2 ≤ D.height a) → Small (A.value a) → Small (A.value (F.b (F.build a d)))
+  bound a d p = T.below k (F.b (F.build a d))
+    (subst (_≤ k) (sym (F.same (F.build a d))) (T.small k a p))
+  open Generic Q pad (N.≤-refl {2}) pad-in (approx (D.tower k)) bound public using (powω; product)
+  one-name = A.named (ψ [] [] ∷ []) (nf-ψ n[] n[] GB[]) (c∷ c[]) (h1 refl (h0 refl))
+  one : Small 𝟏
+  one = T.below k one-name z≤n
+  omega : Small L.ωᶜ
+  omega = ≼-trans {a = L.suc L.ωᶜ} {b = L.suc (Ar.norm 𝟏)} {c = Q}
+    (s≼s (P.one-left L.ωᶜ)) (powω 𝟏 one)

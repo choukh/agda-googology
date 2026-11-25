@@ -1,0 +1,36 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiGTBridge where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁)
+open import Data.List using ([]; _∷_; _++_)
+open import Relation.Binary.PropositionalEquality using (_≡_; subst; sym; cong)
+open import OCF.Lean.YiRWBlock hiding (R)
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base)
+open import OCF.Lean.YiTBRow using (Rb; ψ)
+open import OCF.Lean.YiLKIface using (OK; PresU)
+open import OCF.Lean.YiMWPre using (fsT++)
+open import YiGTMin using (PresJ)
+import OCF.Lean.YiGIRel as GR
+import OCF.Align.EboLeanDef as E
+
+SlotBase : ∀ k h → Base (nd (sΩ k) h) → E.T → E.T → Set
+SlotBase k h B ν t = GR.R k (E.ψ ν t ∷ []) (proj₁ (B k (ink self)))
+
+OmegaStepB : (k : L) → (Tr k → L) → Set
+OmegaStepB k h = (o : Ok (nd (sΩ k) h)) (r : Rb (nd (sΩ k) h)) (B : Base (nd (sΩ k) h)) → OK B
+  → (t a ν : E.T) → GR.Rd k ν → E.cof a ≡ E.cΩ ν → SlotBase k h B ν t
+  → (g : Tr k → Tr (nd (sΩ k) h)) (n : ℕ) (c : Tr k)
+  → GR.R k (E.γT (t ++ a) ν n) c
+  → GR.R (nd (sΩ k) h) (E.fsT a (E.γT (t ++ a) ν n)) (g c)
+  → GR.R k (E.γT (t ++ a) ν (suc n))
+      (proj₁ (ψ (nd (sΩ k) h) o r B k (ink self) (B k (ink self)) (g c)))
+
+pres→omega : ∀ k h → PresJ (nd (sΩ k) h) k (ink self) → OmegaStepB k h
+pres→omega k h pr o r B gb t a ν rd e base g n c lc m =
+  subst (λ z → GR.R k (E.ψ ν z ∷ [])
+    (proj₁ (ψ (nd (sΩ k) h) o r B k (ink self) (B k (ink self)) (g c))))
+    (sym (fsT++ t a (E.γT (t ++ a) ν n) e))
+    (pr o r B gb ν t rd (B k (ink self)) base m)

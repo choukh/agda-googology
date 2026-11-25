@@ -1,0 +1,49 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiATSource where
+open import Data.Nat using (ℕ)
+open import Data.List using ([]; _∷_)
+open import Data.Sum using (inj₁)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong)
+import OCF.Lean.YiATStart as S
+open S using (module D; module I; ρ)
+import OCF.Align.EboLeanDef as E
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiRWFold as F
+import OCF.Lean.YiTBRow as TB
+import OCF.Lean.YiTBFam as TF
+import OCF.Lean.YiKVRel as K
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiGIRel as GR
+import OCF.Lean.YiNLTop2 as N
+import OCF.Lean.YiNLRaise as NR
+import OCF.Lean.YiNLCtx as NC
+import OCF.Lean.YiLLCheck as LL
+import OCF.Lean.YiCWTable as CW
+open import OCF.Lean.YiKCStep using (⊴-trans)
+ρ₁ = ρ (E.natT 1)
+rd-ρ₁ : GR.Rd (B.tw 2) ρ₁
+rd-ρ₁ = GR.cc (inj₁ (E.hd< (E.lv< E.[]<)))
+  (GR.rd-child (B.sΩ (B.tw 1)) (D.Step.child 1) B.zero LL.rdΩ)
+leaf-ρ₁ : GR.R (B.tw 2) (E.Ωt ρ₁) (proj₁ (O.Ωt (B.tw 2)))
+leaf-ρ₁ = N.leaf-tw2 rd-ρ₁
+opaque
+  unfolding D.baseᴱ D.restricted I.base₀ I.branch
+  branch-above : ∀ d → proj₁ (O.Ωt (B.tw 2)) K.⊴ I.branch d
+  branch-above d = ⊴-trans
+    (TF.ψ-⊵ B.Λ P.Ok-Λ CW.rbΛ (F.B₀ B.Λ) (B.tw 2) (P.inc 3 (P.inc B.zero P.self)) (O.Ωt (B.tw 2)) (D.pre 3))
+    (TF.ψ-⊵ (B.tw 2) (P.Ok-tw 2) (D.Step.child-table 2 B.zero) (D.restricted B.zero) (B.tw 2) P.self
+      (D.baseᴱ 3 (B.tw 2) (P.ink P.self)) (D.Step.g 1 d))
+branch-ρ₁ : ∀ d → GR.R (B.tw 2) (E.Ωt ρ₁) (I.branch d)
+branch-ρ₁ d = H.Gen.m⊴ leaf-ρ₁ (branch-above d)
+child-ρ₁ : ∀ d → GR.R (I.a d) (E.Ωt (E.Ωt ρ₁)) (proj₁ (O.Ωt (I.a d)))
+child-ρ₁ d = NR.raiseR (B.tw 2) (NC.prefix (B.tw 2)) [] (GR.c0 refl)
+  (N.leaf-tw2 (GR.c0 refl)) (branch-ρ₁ d)
+opaque
+  unfolding I.Inner.g
+  source-ρ₁ : ∀ d → GR.R I.h (E.Ωt (E.Ωt ρ₁)) (I.Inner.g d)
+  source-ρ₁ d = H.mU H.mz (child-ρ₁ d)
+source-at-one : GR.R I.h (E.Ωt (E.Ωt ρ₁)) (I.Inner.g (I.Inner.chain 1))
+source-at-one = source-ρ₁ (I.Inner.chain 1)

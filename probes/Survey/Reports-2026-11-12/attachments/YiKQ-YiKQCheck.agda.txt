@@ -1,0 +1,86 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiKQCheck where
+open import Data.Nat using (zero; suc)
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.List using ([])
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀)
+open import OCF.Lean.YiTBRow using (Rb; ψ)
+open import OCF.Lean.YiMTTab using (rbᶻ)
+open import OCF.Lean.YiHCRel using (Mᴴ; M⁰; mz; m1; mL; mΩ; mU; mw; mc; module G⁰)
+open import OCF.Lean.YiRBFam using (OKB)
+import OCF.Lean.YiLTKid as One
+import OCF.Align.EboLeanDef as E
+open import OCF.Lean.YiANFam using (ψᴺ)
+ℓ² : L
+ℓ² = tw 2
+h₂ : Tr (tw 1) → L
+h₂ c = tw 1 ⊕ ↑ (tw 1) c
+module A = One.Sem (rbᶻ (tw 1))
+data Dst : Set where
+  d0 d1 : Dst
+j : Dst → L
+j d0 = zero
+j d1 = tw 1
+Rel : (d : Dst) → E.T → Tr (j d) → Set
+Rel d0 = M⁰
+Rel d1 = A.M¹
+app : Dst → E.T → E.T
+app d0 s = ψᴺ 0 s
+app d1 s = E.ψ (E.ΩTower 1) s Data.List.∷ []
+Pc : (d : Dst) (c : Tr (tw 1)) → j d ≤ h₂ c → Set
+Pc d0 c v = (v ≡ z≤ (h₂ c)) ⊎ (v ≡ z≤ (tw 1) ∙ proj₂ (proj₁ (Ok-tw 2)) c)
+Pc d1 c v = v ≡ self ∙ proj₂ (proj₁ (Ok-tw 2)) c
+record Kid₂ : Set₁ where
+  field
+    Kd : (c : Tr (tw 1)) → E.T → Tr (h₂ c) → Set
+    foldᶜ : ∀ d c v → Pc d c v → (B : Base (h₂ c)) → OKB B
+      → (β : Tr⁺ (j d)) → Rel d (app d []) (proj₁ β)
+      → ∀ {s y} → Kd c s y
+      → Rel d (app d s) (proj₁ (ψ (h₂ c) (proj₂ (Ok-tw 2) c) (rbᶻ (h₂ c)) B (j d) v β y))
+Kdˢ : (c : Tr (tw 1)) → E.T → Tr (h₂ c) → Set
+Kdˢ c s y = ∀ d v → Pc d c v → (B : Base (h₂ c)) → OKB B
+  → (β : Tr⁺ (j d)) → Rel d (app d []) (proj₁ β)
+  → Rel d (app d s) (proj₁ (ψ (h₂ c) (proj₂ (Ok-tw 2) c) (rbᶻ (h₂ c)) B (j d) v β y))
+kid : Kid₂
+kid = record { Kd = Kdˢ ; foldᶜ = λ d c v pc B ok β hβ k → k d v pc B ok β hβ }
+Low² : (p : Pos ℓ²) → E.T → Br ℓ² p → Set
+Low² (inj₁ (inj₁ tt)) = A.M¹
+Low² (inj₁ (inj₂ p)) = λ _ _ → ⊥
+Low² (inj₂ _) = λ _ _ → ⊥
+Nu² : Pos ℓ² → E.T → Set
+Nu² (inj₁ (inj₁ tt)) ν = ν ≡ E.ΩTower 1
+Nu² (inj₁ (inj₂ p)) ν = ⊥
+Nu² (inj₂ _) ν = ⊥
+M² : E.T → Tr ℓ² → Set
+M² = Mᴴ (Sig ℓ²) Low² (Kid₂.Kd kid) Nu²
+IsZ : ∀ {a x} → M² a x → Set
+IsZ mz = Data.Unit.⊤
+IsZ _ = ⊥
+Sp : ∀ {a x} → M² a x → Set
+Sp mz = Data.Unit.⊤
+Sp (m1 _ m) = Sp m
+Sp (mL _ h) = ∀ n → Sp (h n)
+Sp (mΩ _ _ h) = ∀ η c l → Sp (h η c l)
+Sp (mU m _) = IsZ m
+Sp (mw m _) = Sp m
+Sp (mc _ m) = Sp m
+P0 : zero ≤ ℓ² → Set
+P0 w = (w ≡ z≤ ℓ²) ⊎ (w ≡ ink (z≤ (tw 1)))
+Pres : Set
+Pres = ∀ {w} → P0 w → (B : Base ℓ²) → OKB B
+  → (β : Tr⁺ zero) → M⁰ (app d0 []) (proj₁ β)
+  → ∀ {s x} (m : M² s x) → Sp m → M⁰ (app d0 s) (proj₁ (ψ ℓ² (Ok-tw 2) (rbᶻ ℓ²) B zero w β x))
+nonempty : M² (E.natT 1) (suc zero)
+nonempty = m1 refl mz
+child-zero : ∀ c → Kid₂.Kd kid c [] zero
+child-zero c d v pc B ok β hβ = hβ
+sample : M⁰ (app d0 (E.natT 1))
+  (proj₁ (ψ ℓ² (Ok-tw 2) (rbᶻ ℓ²) (B₀ ℓ²) zero (z≤ ℓ²) (Ωt zero) (suc zero)))
+sample = G⁰.m-next (Ωt zero) refl (λ n → refl) (m1 refl mz)

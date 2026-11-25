@@ -1,0 +1,72 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21CrossPath where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; proj₁; proj₂; _,_)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst)
+open import W4Block hiding (at)
+open import W4Ops
+open import W4Path
+open import WVOne using (read; h₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l)
+open import Data.Sum.Base using (inj₁; inj₂)
+import B12Terminal as T
+import B13FiniteLift as U
+import B14Floor as F
+import B15ReadPaths as R
+import B20Room as Room
+import B21CrossFront as Fr
+open T.Run
+
+data Clean : ∀ {a b} → R.Reach a b → Set where
+  at : ∀ {a} → Clean (R.here {a})
+  parent : ∀ {h} → Clean (R.succ {h = h})
+  count : ∀ {h} → Clean (R.limit {h = h} 0)
+  card : ∀ {k h} → Clean (R.omega {k} {h})
+  join : ∀ {a b c} {p : R.Reach a b} {q : R.Reach b c} → Clean p → Clean q → Clean (R.via p q)
+left : (a : W4Block.L) {b c : W4Block.L} {p : R.Reach b c} → Clean p → Clean (R.left a p)
+left a at = at
+left a parent = parent
+left a count = count
+left a card = card
+left a (join p q) = join (left a p) (left a q)
+base : ∀ a b → Clean (R.base a b)
+base a zero = at
+base a (nd sS h) = join (base a (h tt)) parent
+base a (nd sL h) = join (base a (h 0)) count
+base a (nd (sΩ j) h) = join (base a (h zero)) card
+Ones : ∀ {a} → T.Run a → Set
+Ones r = ∀ w → bs r zero w ≡ Ωt zero
+pres : ∀ {a b} {p : R.Reach a b} → Clean p → ∀ r → Ones r → Ones (Room.sub p r)
+pres at r h = h
+pres parent r h w = h (inc tt w)
+pres count r h w = h (inc 0 w)
+pres card r h w = h (inc zero w)
+pres (join p q) r h = pres p _ (pres q r h)
+
+unit : Tr zero
+unit = suc zero
+by = λ z → ↑ (h₁ z) (proj₁ (Ωt (h₁ z)))
+inner = zero ⊕ (zero ⊕ by unit)
+Way : W4Block.L → W4Block.L → Set
+Way a b = Σ (R.Reach a b) Clean
+lower : ∀ z → Fr.First (_≡ unit) z → Way (zero ⊕ by unit) (by z)
+lower (lim g e) (Fr.point h) = subst (λ t → Way (zero ⊕ by t) (by (lim g e))) h (R.limit 0 , count)
+peel : ∀ z → Fr.Head z → Way inner (by z)
+peel (lim f d) (Fr.point a) = R.via (R.left zero p) (R.limit 0) , join (left zero h) count
+  where
+  p = proj₁ (lower (f 0) a)
+  h = proj₂ (lower (f 0) a)
+
+finite : (n : ℕ) → W4Block.L
+finite n = ↑ zero (F.num n)
+seek : ∀ n z → L.natᶜ n ≼ read z → R.Reach (finite n) (↑ zero z)
+seek zero zero h = R.here
+seek zero (suc z) h = R.via (seek zero z z≼) R.succ
+seek zero (lim g d) h = R.via (seek zero (g 0) z≼) (R.limit 0)
+seek (suc n) zero ()
+seek (suc n) (suc z) (s≼s h) with F.split n z h
+... | inj₁ refl = R.here
+... | inj₂ e = R.via (seek (suc n) z e) R.succ
+seek (suc n) (lim f d) (≼l j e) = R.via (seek (suc n) (f j) e) (R.limit j)

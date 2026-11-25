@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 标准折叠在任何层的主 Ω 树上都有一个合法可数极限作为根。所有标准塔逐级严格增加。
+module B21StandardShape where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Empty using (⊥)
+open import Data.Sum using (inj₁)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; read; 𝟏)
+import OCF.Align.Level as O
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; s≼s; ≼l; l≼; z≼)
+open import WVTwo using (◃→≼)
+import B12Strict as D
+import B19PathShape as H
+import B19RowSecondParent as R
+import B18TowerEmb as E
+import B21TowerPorts as P
+open import Data.Maybe.Base using (nothing; just)
+
+data Limit {i : L} : Tr i → Set where
+  root : ∀ {f d} → Limit (lim f d)
+erase : ∀ {X : Set} {x : X} (m : Keep zero X x) → m ≡ nothing
+erase nothing = refl
+erase (just (() , _))
+
+standard : ∀ l (o : Ok l) → Limit (proj₁ (ψ₀ l o (proj₁ (Ωt l))))
+standard zero o = root
+standard (nd sS h) o = root
+standard (nd sL h) o = root
+standard (nd (sΩ k) h) o rewrite erase (kp (nd (sΩ k) h) o (inj₁ (inj₁ tt)) (z≤ _)) = root
+
+finite-pad : ∀ (x : Tr zero) → 𝟏 O.+ read x ≼ O.suc (read x)
+finite-pad zero = ≼-refl _
+finite-pad (suc x) = s≼s (finite-pad x)
+finite-pad (lim f d) = l≼ (λ j → ≼-trans (finite-pad (f j)) (s≼s (≼l j (≼-refl _))))
+
+absorb : ∀ {x : Tr zero} → Limit x → 𝟏 O.+ read x ≼ read x
+absorb {lim f d} root = l≼ (λ j → ≼-trans (finite-pad (f j)) (D.strict (◃l j)))
+
+copy : ∀ x → H.Shape (ι zero x) x
+copy zero = H.z
+copy (suc x) = H.s (copy x)
+copy (lim f d) = H.l (λ j → copy (f j))
+trim : ∀ (x : Tr⁺ zero) → Limit (proj₁ x) → read (proj₁ (Ωt zero ⊞ x)) ≼ read (proj₁ x)
+trim x d = ≼-trans (B8FreezeMain.read-+′ _ _) (≼-trans (OCF.Align.Value.+-mono (≼-refl 𝟏)
+          (OCF.Align.Value.≅→≼ (H.read-shape (copy (proj₁ x))))) (absorb d))
+  where import B8FreezeMain
+
+rise : ∀ n → O.suc (read (proj₁ (E.standard n))) ≼ read (proj₁ (E.standard (suc n)))
+rise n = D.strict (mono (tw (suc n)) (Ok-tw (suc n)) (B₀ _) zero (z≤ _) (Ωt zero) {y = proj₁ (Ωt (tw (suc n)))} ◃w)

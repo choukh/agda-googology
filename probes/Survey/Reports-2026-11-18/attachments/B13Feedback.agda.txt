@@ -1,0 +1,83 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：在首次一级回灌中逐项使用同一个零层系数；任一实际 W4 读回只要支配该系数，即可替换。
+module B13Feedback where
+open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-refl; ≅→≼; ≼-trans)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import W4Block using (Tr; zero)
+open import WVOne using (T₀; read)
+open import B12LimitSrc using (Lev₂; Src₂)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Src as T
+import B12Hierarchy as H
+import B12Arithmetic as A
+import B12StrictExit as V
+import B12Omega3Ref as R
+import B12Omega3Cuts as C
+import B13Target as P
+
+heightS : T₀ → Src₂ → Src₂
+heightS L.zero a = a S.+ T.a
+heightS (L.suc x) a = S.lim (S.iter (heightS x) a)
+heightS (L.lim f) a = S.lim (λ n → heightS (f n) a)
+
+down : ∀ x {p s} → D.Dn p s → D.Dn (P.height x p) (heightS x s)
+down L.zero d = D.Dn-add {σ = R.idσ} d (T.dn-rel 0)
+down (L.suc x) d = D.Rll (λ n → D.Rlr n (L.iter-R D.Dn {G = P.height x} {G′ = heightS x} (down x) d n))
+down (L.lim f) d = D.Rll (λ n → D.Rlr n (down (f n) d))
+
+bottom : ∀ y {s p} → U.Mh s p → U.Mh (s S.+ T.a) (P.height y p)
+bottom L.zero d = U.M-add {σ = R.idσ} d (T.up-rel 0)
+bottom (L.suc y) d = U.Mlr 1 (bottom y d)
+bottom (L.lim f) d = U.Mlr 0 (bottom (f 0) d)
+
+up : ∀ {x y : T₀} → x ≼ y → ∀ {s p} → U.Mh s p → U.Mh (heightS x s) (P.height y p)
+up {y = y} z≼ e = bottom y e
+up {L.suc x} {L.suc y} (s≼s d) e = U.Mll (λ n → U.Mlr n (L.iter-R U.Mh {G = heightS x} {G′ = P.height y} (up d) e n))
+up (≼l n d) e = U.Mlr n (up d e)
+up (l≼ h) e = U.Mll (λ n → up (h n) e)
+up (≼i {p = ()} _ _ _)
+up (i≼ {p = ()} _)
+up (≼u {r = ()} _)
+up (u≼ {r = ()} _)
+
+shift-bound : ∀ {x y : T₀} → x ≼ y → L.ψ⁰ (P.co₀ x) ≼ L.ψ⁰ (P.height y Ω₂ᴸ)
+shift-bound {x} {y} d = ≼-trans (≅→≼ (L.ψ⁰-≅ (L.≅-sym q)))
+  (C.sandwich {s = heightS x S.zero} (down x D.Rz) (up d (U.Mz (U.NZ-Ω _)))
+      (P.refl-left q) (P.refl-left (P.shift₀ y (L.Ω-refl _))))
+  where
+  q = L.≅-trans (P.shift₀ x L.z≅) (C.left-unit R.idσ (P.regular₀ x))
+
+-- [1][0] 的整条回灌。下一编号所用系数正是前一支上的带路径 ψ，而不是任选的上界。
+first-node : T₀
+first-node = R.at (R.at (L.ψ⁰ R.Ω₃) 1) 0
+
+feedback : ℕ → T₀
+feedback = S.iter (λ x → L.ψ (L.suc L.zero) R.idσ (P.co₀ (R.transports x))) (L.suc L.zero)
+
+all-children : first-node ≡ L.lim (λ n → L.ψ⁰ (P.co₀ (R.transports (feedback n))))
+all-children = refl
+
+-- 三次类型搬运保持零层系数的 ≅。
+transport≅ : ∀ x → R.transports x L.≅ x
+transport≅ x = L.tr⁻-≅ L.z≅ (L.tr-≅ L.z≅ (L.tr⁻-≅ L.z≅ (L.≅-refl⁰ x)))
+
+feedback-matches : ∀ n → R.at first-node n L.≅ feedback (suc n)
+feedback-matches n = L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (P.regular₀ (R.transports (feedback n)))
+
+transfer : ∀ n {z : Tr zero} → feedback n ≼ read z → R.at first-node n ≼ L.ψ⁰ (P.height (read z) Ω₂ᴸ)
+transfer n h = shift-bound (≼-trans (≅→≼ (transport≅ (feedback n))) h)
+
+actual₂ : feedback 1 ≼ read (V.raw 2)
+actual₂ = ≼-trans (≅→≼ (L.≅-sym (feedback-matches 0)))
+  (≼-trans (C.as-started 1)
+  (≼-trans (≅→≼ (L.ψ⁰-≅ (A.agree 1 H.first (T.regular 0))))
+  (≼-trans (≼l 1 (≼l 0 (≼-refl _))) V.inside)))
+
+next-entire : R.at first-node 1 ≼ L.ψ⁰ (P.height (read (V.raw 2)) Ω₂ᴸ)
+next-entire = transfer 1 actual₂

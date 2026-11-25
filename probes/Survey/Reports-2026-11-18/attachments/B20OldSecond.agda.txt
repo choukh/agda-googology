@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 独立标准第二塔的首个正反馈点中已含整个 Ω₁ 尾迭代，并给出 Λ 实际第二塔的同一闭界。
+module B20OldSecond where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; ≼-trans; ≼-refl)
+open import B12LimitSrc using (Lev₂)
+import B12Terminal as T
+import B12ActualSlots as A
+import B12EboRows as Old
+import B13FiniteLift as U
+import B15TowerSeed as Seed
+import B15Spine as Sp
+import B15ReadPaths as R
+import B15FixedWitness as H
+import B15TowerIteration as I
+import B18TowerEmb as E
+import B19RowSecond as Row
+import B20OldTail as Z
+open T.Run
+
+module Tower = I.Tower 0 (λ a → a) L.zero
+module At (r : T.Run (tw 2)) (eq : ok r ≡ Ok-tw 2) (cr : A.Covered r) where
+  module D = Tower.State r eq cr
+  trail : R.Reach (U.sc zero) (↑ (tw 1) (D.C.ix 1))
+  trail = R.via D.root (R.via (R.base D.w D.w) (D.at-index 0))
+  module From (p : Lev₂) (h : Z.type p) where
+    target = L.ψ⁰ (Z.block p)
+    base : Tower.P.Law (U.sc zero) (λ _ → target)
+    base o keep s refl cs a d = Z.At.complete s cs (keep tt) p h
+    child : target ≼ read (T.value (D.C.child 1))
+    child = Tower.P.send trail base _ D.certified (D.C.child 1) refl (D.C.cover cr 1) L.zero z≼
+    value : target ≼ read (T.value r)
+    value = ≼-trans child (D.C.lift-value 1)
+
+initial : Z.type Row.p
+initial s eq cs _ _ = Seed.initial-bound 2 Row.finite s cs
+standard : L.ψ⁰ (Z.block Row.p) ≼ read (proj₁ (E.standard 2))
+standard = At.From.value (T.initial (tw 2) (Ok-tw 2)) refl (A.initial (tw 2) (Ok-tw 2)) Row.p initial
+actual : L.ψ⁰ (Z.block Row.p) ≼ Old.child 2
+actual = At.From.value (T.limRun tw T.terminal 2) refl (A.enter sL tw T.terminal 2 (T.prefix tw 2) (A.initial Λ Ok-Λ)) Row.p initial
+terminal : L.ψ⁰ (Z.block Row.p) ≼ read EBOᶜ
+terminal = ≼-trans actual (T.lim-child tw T.terminal 2)

@@ -1,0 +1,108 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 从任意已输入的坐标出发，每条连续 Ω 分支都进入实际正树；后续任意次回灌仍提供同样的分支与下标。
+module B28PProgram where
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Bool using (true)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Unit using (⊤; tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold hiding (run)
+import B20Towers as J
+import B15Spine as Sp
+import B27NPlaces as V
+import B28PPull as P
+import B28POrbit as O
+import B28PRoute as R
+
+Places : ∀ {k} → L → Tr k → Set
+Places zero x = ⊤
+Places (nd sS h) x = ⊤
+Places (nd sL h) x = ⊤
+Places {k} (nd (sΩ i) h) x = Σ (Pos k) λ p → at k p ≡ i ×
+  Σ (Br k p → Tr k) λ g → x ≡ Ω p g ×
+  Σ (Tr i → Br k p) λ get → Σ (Br k p → Tr i) λ see →
+    ((∀ z → see (get z) ≡ z) × (∀ y → get (see y) ≡ y) × (∀ y → Places (h (see y)) (g y)))
+
+mutual
+  round : ∀ k p u → fromBr k p (V.get k p u) ≡ u
+  round (nd s h) (inj₂ (c , t)) u = round⁼ (h c) t u
+  round (nd (sΩ i) h) (inj₁ t) u = round⁼ i t u
+  round⁼ : ∀ k t u → proj₂ (sl⁼ k t) (V.get⁼ k t u) ≡ u
+  round⁼ k (inj₁ _) u = refl
+  round⁼ k (inj₂ p) u = round k p u
+
+kept-level : ∀ {i k} (w : i ≤ k) (t : Pos⁼ i) → proj₁ (sl⁼ k (psh w t)) ≡ proj₁ (sl⁼ i t)
+kept-level self t = refl
+kept-level (inc c w) t = kept-level w t
+kept-level {k = nd s h} (inu f) t = kept-level (f (c₀ s)) t
+kept-level (ink w) t = kept-level w t
+
+Proper : ∀ {i k} → i ≤ k → Set
+Proper {k = k} w = Σ (Pos k) λ p → psh w (inj₁ tt) ≡ inj₂ p
+forward : ∀ {i l k} (w : i ≤ l) (u : l ≤ k) → Proper w → Proper (w ∙ u)
+forward w self h = h
+forward w (inc c v) h = inj₂ (c , psh (w ∙ v) (inj₁ tt)) , refl
+forward {k = nd s h} w (inu v) a = inj₂ (c₀ s , psh (w ∙ v (c₀ s)) (inj₁ tt)) , refl
+forward w (ink v) h = inj₁ (psh (w ∙ v) (inj₁ tt)) , refl
+
+module At (n : ℕ) where
+  module X = O.At n
+  module C = R.Call n
+  open P.Positive n using (i; k; o)
+  a = X.a
+  good = OkO↑ k k o self (proj₁ X.head)
+  right : Opp (PSL k) (opR a)
+  right = λ u q → OkO⊕ k u a q good
+  tree = λ l → proj₁ (Eh AL tt (proj₁ (Ωt l)) (opR a)) a
+  certificate = λ l (ol : Ok l) (u : l ≤ k) → EP AL (PSL k) tt (u , ol) (proj₁ (Ωt l)) (opR a) right a good
+  program = λ l ol u → C.fold (tree l) (certificate l ol u)
+
+  builds : ∀ l (ol : Ok l) (u : l ≤ k) → Places l (program l ol u)
+  builds zero ol u = tt
+  builds (nd sS h) ol u = tt
+  builds (nd sL h) ol u = tt
+  builds (nd (sΩ v) h) ol u = p , same , R.Route.branch run , R.Route.root run ,
+    R.Route.select run , R.Route.observe run , R.Route.section run , R.Route.retract run , next
+    where
+    w : v ≤ k
+    w = ink self ∙ u
+    p = proj₁ (forward (ink self) u (inj₁ (inj₁ tt) , refl))
+    eq = proj₂ (forward (ink self) u (inj₁ (inj₁ tt) , refl))
+    same : at k p ≡ v
+    same = trans (sym (cong (λ t → proj₁ (sl⁼ k t)) eq)) (kept-level w (inj₁ tt))
+    e = λ z → certificate (h z) (proj₂ ol z) (inc z self ∙ u)
+    run = C.Node.track (λ z → tree (h z)) w (proj₁ (proj₁ ol)) e p eq
+    next : ∀ y → Places (h (R.Route.observe run y)) (R.Route.branch run y)
+    next y = subst (Places (h z)) (sym (R.Route.follows run y)) (builds (h z) (proj₂ ol z) (inc z self ∙ u))
+      where z = R.Route.observe run y
+
+  stays : ∀ l {x} → Places l x → Places l (X.K.next x)
+  stays zero s = tt
+  stays (nd sS h) s = tt
+  stays (nd sL h) s = tt
+  stays (nd (sΩ v) h) (p , tag , g , refl , get , see , sect , retr , kids) = p , tag , R.Route.branch run , R.Route.root run ,
+    get′ , see′ , sect′ , retr′ , next
+    where
+    run = C.relay p g
+    raw = fromBr k p
+    key = V.get k p
+    get′ = λ z → R.Route.select run (key (get z))
+    see′ = λ y → see (raw (R.Route.observe run y))
+    sect′ : ∀ z → see′ (get′ z) ≡ z
+    sect′ z = trans (cong (λ t → see (raw t)) (R.Route.section run (key (get z)))) (trans (cong see (round k p (get z))) (sect z))
+    retr′ : ∀ y → get′ (see′ y) ≡ y
+    retr′ y = trans (cong (λ t → R.Route.select run (key t)) (retr (raw z)))
+      (trans (cong (R.Route.select run) (V.returns k p z)) (R.Route.retract run y))
+      where z = R.Route.observe run y
+    next : ∀ y → Places (h (see′ y)) (R.Route.branch run y)
+    next y = subst (Places (h (see′ y))) (sym (R.Route.follows run y)) (stays (h (see′ y)) (kids (raw (R.Route.observe run y))))
+
+  inside : ∀ j c → Places (Sp.branch i c) (X.branch j c)
+  inside zero c = subst (Places (Sp.branch i c)) (sym (X.Seed.point c))
+    (builds (Sp.branch i c) (proj₂ o c) (inc c self))
+  inside (suc j) c = subst (Places (Sp.branch i c)) (sym (X.Step.point (X.branch j) c))
+    (stays (Sp.branch i c) (inside j c))

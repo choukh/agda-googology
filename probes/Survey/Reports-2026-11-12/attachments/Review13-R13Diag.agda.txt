@@ -1,0 +1,66 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第十三次审查的临时试验: 空白页的块上, 分支侧 "交给孩子" 要的证据若由两个下标算出, 且在对角上给出, 就判定字面相等.
+-- (旧块上的同一条: YiCtxNeg.diag1→dec.) 这里把它接到 ψs 的类型上: 交接函数 Hand 就是把目标路径从 h c′ 搬到 h c.
+module R13Diag where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Bool using (Bool; true; false)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; cong)
+open import OCF.Lean.YiFreshBlock
+open import OCF.Lean.YiFreshFold
+
+IsJust : ∀ {A : Set} → Maybe A → Set
+IsJust (just _) = ⊤
+IsJust nothing  = ⊥
+
+-- 由两个分支下标算出的同支证据.
+Ev : L → Set
+Ev k = (c c′ : Tr k) → Maybe (c ≡ c′)
+
+diag→dec : ∀ {k} (E : Ev k) (c₀ : Tr k) → IsJust (E c₀ c₀) → ∀ c′ → (c₀ ≡ c′) ⊎ (c₀ ≡ c′ → ⊥)
+diag→dec E c₀ j c′ = go (E c₀ c′) refl
+  where
+  back : ∀ {y} → c₀ ≡ y → E c₀ y ≡ nothing → ⊥
+  back refl h = subst IsJust h j
+  go : (u : Maybe (c₀ ≡ c′)) → E c₀ c′ ≡ u → (c₀ ≡ c′) ⊎ (c₀ ≡ c′ → ⊥)
+  go (just e) h = inj₁ e
+  go nothing  h = inj₂ (λ e → back e h)
+
+-- 探针: 第 0 层的两条序列, c₀ = lim (λ _ → 0), cα 在 α n 为真处是 1.
+bit : Bool → Tr zero
+bit true  = suc zero
+bit false = zero
+
+cα : (ℕ → Bool) → Tr zero
+cα α = lim (λ n → bit (α n))
+
+c₀ : Tr zero
+c₀ = lim (λ _ → zero)
+
+seqOf : Tr zero → ℕ → Tr zero
+seqOf (lim f) = f
+seqOf _       = λ _ → zero
+
+isZ : Tr zero → Set
+isZ zero = ⊤
+isZ _    = ⊥
+
+bit-z : ∀ b → isZ (bit b) → b ≡ false
+bit-z false _ = refl
+
+eq→allF : ∀ α → c₀ ≡ cα α → ∀ n → α n ≡ false
+eq→allF α e n = bit-z (α n) (subst isZ (cong (λ t → seqOf t n) e) tt)
+
+-- 对角上有证据 ⟹ 对每个 α: 处处为假, 或 c₀ 与 cα 字面不等 (反方向要函数外延, 不陈述).
+diag→decα : (E : Ev zero) → IsJust (E c₀ c₀) → ∀ α → (∀ n → α n ≡ false) ⊎ (c₀ ≡ cα α → ⊥)
+diag→decα E j α with diag→dec E c₀ j (cα α)
+... | inj₁ e = inj₁ (eq→allF α e)
+... | inj₂ q = inj₂ q
+
+-- 接到 ψs 的类型上: 把分支 c′ 里的目标路径搬到分支 c 里, 需要的正是这样的证据.
+hand : ∀ {k} {h : Tr k → L} {j} {c c′ : Tr k} → c ≡ c′ → j ≤ h c′ → j ≤ h c
+hand refl w = w

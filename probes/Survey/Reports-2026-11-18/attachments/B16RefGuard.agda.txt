@@ -1,0 +1,75 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B16RefGuard where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst; cong)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼-refl; ≼-trans; 1≼ψ⁰; ≅→≼; +-mono)
+open import WVOne using (T₀; 𝟏)
+open import WVTwo using (T₁)
+import WSLevel as W
+import B12Omega3Ref as R
+import B13Target as T
+import B14RefSuffix as U
+import B14RefGain as G
+import B15RefAlgebra as A
+import B15RefChildren as C
+import B15TowerIteration as I
+import B12TerminalTail as TT
+open import W4Block using (iter)
+import B15Join as J
+import B15SourceTower
+import B16RefTails as B
+import B16RefCap as Cap
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B12LimitSrc using (Lev₂)
+open import B13FiniteSrc using (out)
+
+c : T₁
+c = A.E₀ W.Ω₁ᴸ 𝟏
+P : Lev₂
+P = T.co₁ c
+Π : T₀ → T₀
+Π x = L.ψ⁰ (T.co₁ (A.E₀ W.Ω₁ᴸ x))
+
+regular : P L.≅ P
+regular = L.l≅ (λ n → T.co-pres (C.reg n))
+
+seed : out J.source ≼ L.ψ⁰ P
+seed = l≼ (λ n → ≼l n (proj₁ (B12LimitSrc.fold (J.match n)))) where import B12LimitSrc
+
+module Bound = B.Prefix P
+
+-- 下界只用已公布的 floor 数值表达式。真实 W4 折叠的其他分支未参与此上界。
+floors : ∀ n → out (B15SourceTower.levels J.source n) ≼ Bound.floors (out J.source) n
+floors n = subst (out (B15SourceTower.levels J.source n) ≼_) (same n) (J.Boost.floors n) where
+  same : ∀ j → J.Boost.Z.All.floor j ≡ Bound.floors (out J.source) j
+  same zero = refl
+  same (suc j) = cong (I.jumpQ (iter I.jump TT.mulω j)) (same j)
+
+reserve : ∀ {k} (a : L.Ordᶜ k) → L.suc (L.ψ⁰ a) ≼ L.ψ⁰ (L.suc a)
+reserve a = ≼l 2 (+-mono (≼-refl (L.ψ⁰ a)) (1≼ψ⁰ a))
+
+cap-in : B.cap ≼ L.ψ⁰ P
+cap-in = ≼-trans Cap.epsilon (≼l 0 (≼l 0 (≼-refl (L.ψ⁰ W.Ω₁ᴸ))))
+
+-- P+Ω₁ 的第二个真实链点已经看见 cap 的后继。
+usable : L.suc B.cap ≼ U.asked P 1
+usable = ≼-trans (s≼s cap-in) (≼-trans (reserve P) (≅→≼ (U.coincide regular 𝟏)))
+
+block : L.suc (Bound.v B.cap) ≼ L.ψ⁰ (U.extend P)
+block = ≼-trans (reserve (U.suffix P B.cap)) (≼l 1 (Bound.mono usable))
+
+beyond : L.suc (out J.Boost.source) ≼ L.ψ⁰ (P L.+ Ω₂ᴸ)
+beyond = ≼-trans (s≼s (≼-trans (l≼ (λ n → ≼l n (floors n))) (Bound.upper _ seed)))
+  (≼-trans block (≼l 0 (≼-refl _)))
+
+path = 2 ∷ 1 ∷ 0 ∷ 2 ∷ 0 ∷ []
+station : G.along path (Π (L.suc 𝟏)) ≡ L.ψ⁰ (P L.+ Ω₂ᴸ)
+station = refl
+
+into-two : L.suc (out J.Boost.source) ≼ Π (L.suc 𝟏)
+into-two = ≼-trans beyond (G.path-bound path (Π (L.suc 𝟏)))

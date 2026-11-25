@@ -1,0 +1,64 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- Level 一侧的层号搬运 (与 W4 无关): 弱嵌入 SimW 与沿它搬树的 embW (取自 M4 的 KOpBaseW), 以及字面嵌入沿 ≅ᴵ 的搬运 simTr.
+module KEmb where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; cong; sym; trans)
+
+import OCF.Align.Level as I
+open I using (Ordᴵ; Ordᶜ; Simᴵ; _<ᴵ_; _≅ᴵ_; _≺ᴵ_; _⊑ᴵ_; via; _≅_; U; into; out; out-into; <→◃; limᵢ; up;
+              R→≅; ≅→R; z≅; s≅; l≅; lᵢ≅; upˡ; upʳ; tr⁻; tr⁻-≅; ≅-sym; ≅-trans)
+
+SimW : Ordᴵ → Ordᴵ → Set
+SimW a b = ∀ {c} → c <ᴵ a → c ≺ᴵ b
+
+≺r : ∀ {a b} → a ≺ᴵ b → Ordᴵ
+≺r (via {a′} _ _) = a′
+
+≺e : ∀ {a b} (w : a ≺ᴵ b) → a ≅ᴵ ≺r w
+≺e (via e _) = e
+
+≺l : ∀ {a b} (w : a ≺ᴵ b) → ≺r w <ᴵ b
+≺l (via _ l) = l
+
+litW : ∀ {a b} → Simᴵ a b → SimW a b
+litW σ q = via (I.≅ᴵ-refl _) (σ q)
+
+⊑W : ∀ {a b} → a ⊑ᴵ b → SimW a b
+⊑W le q = I.sim le q
+
+∘W : ∀ {a b c} → SimW b c → SimW a b → SimW a c
+∘W ρ₂ ρ₁ q = I.≺ᴵ-respˡ (≺e (ρ₁ q)) (ρ₂ (≺l (ρ₁ q)))
+
+embW : ∀ {a b} → SimW a b → Ordᶜ a → Ordᶜ b
+embW ρ I.zero            = I.zero
+embW ρ (I.suc x)         = I.suc (embW ρ x)
+embW ρ (I.lim f)         = I.lim (λ n → embW ρ (f n))
+embW ρ (limᵢ q f)        =
+  limᵢ (≺l (ρ q)) (λ y → embW ρ (f (into (<→◃ q) (tr⁻ (≺e (ρ q)) (out (<→◃ (≺l (ρ q))) y)))))
+embW ρ (up I.zero x)     = embW (λ q → ρ (I.suc q)) x
+embW ρ (up (I.self n) x) = embW (λ q → ρ (I.lim n q)) x
+
+embW-≅ : ∀ {a b ℓ′} (ρ : SimW a b) {x : Ordᶜ a} {y : Ordᶜ ℓ′} → x ≅ y → embW ρ x ≅ y
+embW-≅ ρ z≅     = z≅
+embW-≅ ρ (s≅ d) = s≅ (embW-≅ ρ d)
+embW-≅ ρ (l≅ h) = l≅ (λ n → embW-≅ ρ (h n))
+embW-≅ ρ (lᵢ≅ {p = q} {q = q₂} {f = f} {g = g} ej h) =
+  lᵢ≅ (I.≅ᴵ-trans (I.≅ᴵ-sym (≺e (ρ q))) ej) λ u v d →
+    subst (λ w → embW ρ (f (into (<→◃ q) (tr⁻ (≺e (ρ q)) w))) ≅ g (into (<→◃ q₂) v))
+          (sym (out-into (<→◃ (≺l (ρ q))) u))
+          (embW-≅ ρ (h (tr⁻ (≺e (ρ q)) u) v (≅→R (<→◃ q) (tr⁻-≅ (≺e (ρ q)) (R→≅ (<→◃ (≺l (ρ q))) d)))))
+embW-≅ ρ (upˡ {r = I.zero} d)   = embW-≅ (λ q → ρ (I.suc q)) d
+embW-≅ ρ (upˡ {r = I.self n} d) = embW-≅ (λ q → ρ (I.lim n q)) d
+embW-≅ ρ (upʳ d) = upʳ (embW-≅ ρ d)
+
+embW-refl : ∀ {a b} (ρ : SimW a b) {x : Ordᶜ a} → x ≅ x → embW ρ x ≅ embW ρ x
+embW-refl ρ e = ≅-trans (embW-≅ ρ e) (≅-sym (embW-≅ ρ e))
+
+-- ≅ᴵ 的两个层互相弱嵌入.
+≅W : ∀ {a b} → a ≅ᴵ b → SimW a b
+≅W e q = I.<-≅ q e
+
+idW : ∀ {a} → SimW a a
+idW q = via (I.≅ᴵ-refl _) q

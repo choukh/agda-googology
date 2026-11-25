@@ -1,0 +1,75 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 对原 EBO 的精确判据：实际 Λ 孩子能支配的可数标准形中，首项参数沿首个下标向内的深度无界。
+module B17Depth where
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_; z≤n; s≤s)
+open import Data.Nat.Properties using (≤-refl; ≤⇒≤′)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import OCF.Align.EboLeanDef using (T; ψ; _<ᵀ_; []<; hd<; ar<; lv<; ΩTower; EBOψ; HC)
+open import OCF.Align.EboLeanBase using (NF; Ctbl; c[]; c∷)
+open import OCF.Align.EboLeanTree using (nf-tower; hc-tower; EBO-tree′)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import OCF.Lean.YiMonoExit using (toL)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; l≼)
+open import WVOne using (T₀; read)
+open import W4Fold using (EBOᶜ)
+import B8FreezeMain as Ir
+import B12XRef as R
+import B12EboRows as B
+import B14Goal as G
+import B15OriginalTail as Tail
+import B17Cofinal as C
+
+tall : ∀ k a → suc (suc k) ≤ C.depth a → ΩTower k <ᵀ a
+tall zero (ψ [] a ∷ xs) (s≤s ())
+
+tall zero (ψ (ψ _ _ ∷ _) a ∷ xs) d = hd< (lv< []<)
+tall (suc k) (ψ u a ∷ xs) (s≤s d) = hd< (lv< (tall k u d))
+
+deep : ∀ {t} k (ct : Ctbl t) → suc (suc k) ≤ C.cap ct → EBOψ k <ᵀ t
+deep k (c∷ {a = a} _) d = hd< (ar< (tall k a d))
+
+size : ∀ k → C.depth (ΩTower k) ≡ suc k
+size zero = refl
+size (suc k) = cong suc (size k)
+
+record Certified (k : ℕ) : Set where
+  field
+    term : T
+    normal : NF term
+    countable : Ctbl term
+    tree : HC term
+    depth : suc (suc k) ≤ C.cap countable
+    in-child : B.InChild (Rt tree)
+
+any : G.Goal → ∀ k → Certified k
+any goal k = record { term = EBOψ (suc k) ; normal = nf-tower (suc k) ; countable = c∷ c[]
+  ; tree = R.H (suc k) ; depth = subst (suc (suc k) ≤_) (sym (size (suc k))) ≤-refl
+  ; in-child = proj₁ point , ≼-trans (≼-suc (≼-refl _)) (proj₂ point) }
+  where point = C.necessary goal (nf-tower (suc k)) (c∷ c[]) (R.H (suc k))
+
+cover : (∀ k → Certified k) → G.Goal
+cover f = R.assemble λ k → let open Certified (f k) in ≼-trans (≼-suc (≼-refl _))
+  (≼-trans (mono<ⁿ (nf-tower k) normal countable (R.H k) tree (deep k countable depth)) (B.into in-child))
+
+open import Data.Nat.Base using (_≤′_; ≤′-refl; ≤′-step)
+row-mono : ∀ {n m} → n ≤ m → R.row n ≼ R.row m
+row-mono h = apply (≤⇒≤′ h) where
+  apply : ∀ {n m} → n ≤′ m → R.row n ≼ R.row m
+  apply ≤′-refl = ≼-refl _
+  apply (≤′-step d) = ≼-trans (apply d) (Tail.rise _)
+
+module Bounded (t : ℕ → T) (nt : ∀ n → NF (t n)) (ct : ∀ n → Ctbl (t n)) (h : ∀ n → HC (t n))
+               (k : ℕ) (bound : ∀ n → C.cap (ct n) ≤ k) where
+  family : T₀
+
+  family = L.lim (λ n → Rt (h n))
+  upper : family ≼ R.row k
+  upper = l≼ (λ n → ≼-trans (≼-suc (≼-refl _))
+    (≼-trans (mono<ⁿ (nt n) (nf-tower _) (c∷ c[]) (h n) (R.H _) (C.below (ct n))) (row-mono (bound n))))
+  bounded : toL EBO-tree′ ≼ family → ⊥
+  bounded e = Ir.irr (R.row k) (≼-trans (C.strict-row k) (≼-trans (G.row-in (suc k)) (≼-trans e upper)))

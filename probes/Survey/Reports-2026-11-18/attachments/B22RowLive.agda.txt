@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22RowLive where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import W4Block hiding (b₀)
+open import W4Fold
+open import W4Ops
+open import WVOne using (read)
+open import WVTwo using (p₂; g₂; ◃→≼)
+open import WKShape using (lvl3)
+open import WKGen using (Ω₁t; node-ge)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import YiLAB7Replay using (o₁)
+open import WSW4 using (module Lem)
+open Lem o₁ using (Real)
+open import B8PairW4 using (Real-up)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; l≼; ≼l; ≼-trans)
+import B11OuterCore as C
+import B12ActualSlots as Cov
+import B12Terminal as Tm
+import B12LimitSrc as Src
+import B12Update as U
+import B13OrbitFeed as O
+import B13Orbit as K
+import B14OrbitReal as RS
+import B15OrbitAction as Act
+import B17OrbitModel as Model
+import B18OrbitRows as Old
+import B21RowCopy as Cp
+import B21RowDynamics as Dy
+import B22RowPrefix as Ref
+open Ref.Label
+
+record Present {p : Src.Lev₂} (l : Ref.Label p) (R : Base lvl2) : Set where
+  constructor present
+  field
+    lower : ∀ w → L.ψ⁰ (q l) ≼ read (proj₁ (R zero w))
+    struct : C.Str (e l) R
+    index : Dy.Index (R lvl1 C.slot) (v l)
+open Present public
+
+module Update (r : Tm.Run lvl3) (cv : Cov.Covered r)
+  {p : Src.Lev₂} (l : Ref.Label p) (R : Base lvl2) (h : Present l R) where
+  module X = Ref.Step l
+  module Y = Dy.At r cv R (v l) (C.st (struct h)) (index h)
+  open Y using (S₁; b₀; Q; b; st; fp; j; branch; module Orig)
+  open Y.StdPool.V.A using (c⁺; G)
+  open Orig.I using (J; K₁; module E₀)
+  laws : ∀ n → Model.Both Old.m (Q n) (X.op n)
+  laws n = Y.current 0 n Old.m (λ _ → refl) 0 idM (λ _ → refl) K₁ Act.base Orig.OldRow.K₁-law
+  pack : ∀ b → L.ψ⁰ (q l) ≼ read (proj₁ b) → Old.Out.Pack (q l) (e l) S₁ b
+  pack b hb = Old.Out.packed (U.seeds hb (lower h C.zpath) (struct h)) (lower h (proj₂ Old.Out.ip))
+  module Emit (w : zero ≤ lvl2) (t : Tr⁺ zero) (ht : L.ψ⁰ (q l) ≼ read (proj₁ t)) where
+    test = λ n → proj₁ (laws n) (σ O.m₁ w) (q l) (e l) (rows l) (rq l) S₁ t (pack t ht)
+    a : ∀ n → L.ψ⁰ (X.stage n) ≼ read (proj₁ (run (Q n) S₁ zero (σ O.m₁ w) t))
+    a n = U.value-bound (Old.Out.seed (test n))
+    ck = λ z → proj₁ (E ok₂ tdNil (g₂ z) J R lvl1 C.slot b₀)
+    each : ∀ n → L.ψ⁰ (X.stage n) ≼ read (proj₁ (run G R zero w t))
+    each n = ≼-trans (a n) (≼-trans (≼l 0 (≼-refl _)) (≼-trans
+      (node-ge (kp lvl2 ok₂ p₂ w) (λ z → E ok₂ tdNil (g₂ z) J R zero w t) ck (suc (j n)))
+      (E₀.inG R w t)))
+    all : L.ψ⁰ X.q′ ≼ read (proj₁ (run G R zero w t))
+    all = l≼ each
+  hh : ∀ n → Real (proj₁ (b n)) (X.sh n)
+  hh n = C.rP (U.structure (Old.Out.seed (Emit.test C.zpath (R zero C.zpath) (lower h C.zpath) n)))
+  module Col = Cp.Collect fp j b X.sh branch hh
+  raise′ : ∀ d → Cov._⊴_ (proj₁ (Ωt lvl2)) (proj₁ d) → Real (proj₁ (Y.larger d)) X.e′
+  raise′ d (inj₁ eq) = subst (λ x → Real (proj₁ (E ok₂ tdNil x J R lvl1 C.slot b₀)) X.e′) eq Col.all
+  raise′ d (inj₂ d′) = Real-up (Emono ok₂ tdNil J R lvl1 C.slot b₀ d′) Col.all
+  base′ : C.Str (e l) (stepS G R)
+  base′ = RS.carry {e = e l} {R = R} {S = stepS G R} (inf G R lvl1 C.slot b₀) (struct h)
+  structure′ : C.Str X.e′ (stepS G R)
+  structure′ = C.str (Real-up (◃l 0) (raise′ c⁺ E₀.cp)) (C.rΩ base′) (C.sN base′) (C.st base′)
+  next : Present X.next (stepS G R)
+  next = present (λ w → Emit.all w (R zero w) (lower h w)) structure′ Y.next
+

@@ -1,0 +1,19 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiSSPath where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiCLFam using (fn)
+
+data CP : ∀ n j → fn j ≤ fn n → Set where
+  cs : ∀ {n} → CP n n self
+  ci : ∀ {n j} {u : fn j ≤ fn n} → CP n j u → CP (suc n) j (inc tt u)
+  cu : ∀ {n j} {us : ⊤ → fn j ≤ fn n} → CP n j (us tt) → CP (suc n) j (inu us)
+
+canon : ∀ n j (u : fn j ≤ fn n) → CP n j u
+canon n .n self = cs
+canon (suc n) j (inc tt u) = ci (canon n j u)
+canon (suc n) j (inu us) = cu (canon n j (us tt))

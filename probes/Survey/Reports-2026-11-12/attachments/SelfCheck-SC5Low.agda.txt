@@ -1,0 +1,15 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module SC5Low where
+open import Data.Nat using (ℕ; zero; suc)
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiKVRel as K
+import OCF.Align.EboLeanTree as ET
+open import OCF.Align.Value using (_≼_)
+open import OCF.Lean.YiMonoExit using (toL)
+import OCF.Lean.YiCNKeel as C
+open import OCF.Lean.YiNLKeel using (ebo-from-low)
+open import OCF.Lean.YiS1Low using (low1)
+
+-- 终点只差从第 2 站起的保持连出口
+ebo-from-low2 : (∀ n → C.LowAt (suc (suc n))) → toL ET.EBO-tree′ ≼ K.readRW MT.EBOᶻ
+ebo-from-low2 lo = ebo-from-low λ { zero → low1 ; (suc n) → lo n }

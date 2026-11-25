@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B16SharpCount where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1; read)
+open import OCF.Align.Value using (s≼s; ≼l; ≼-refl; ≼-trans)
+open import B13SharpOne using (r₁)
+open import B14SharpStack
+open import B14SharpBound
+open import B15SharpAction using (Pref; id; addL; plug)
+open import B16SharpModel
+
+module Count (lem : LEM) where
+  open I.Sharp lem
+  open Graded lem
+
+  Acts : ∀ n {X : F.Cx lvl1} → F.⟦ X ⟧ B.zero → R.Tr r₁ → (F.Ca n X → F.Ca n X) → Set
+  Acts n ch x f = ∀ D a A G → Rel n ch (val D a A R.zero) G → Rel n ch (val D a A x) (f G)
+
+  iterated : ∀ n {X ch x} (f : F.Ca n X → F.Ca n X) → Acts n ch x f → ∀ k → Acts n ch (V.iter (x V.+_) x k) (λ G → B.iter f G (suc k))
+  iterated n f h zero D a A G g = h D a A G g
+  iterated n {ch = ch} {x = x} f h (suc k) D a A G g = subst (Rel n ch (val D a (addL A x) (V.iter (x V.+_) x k))) (shift (suc k) G)
+    (iterated n f h k D a (addL A x) (f G) (h D a A G g))
+    where
+    shift : ∀ l G → B.iter f (f G) l ≡ B.iter f G (suc l)
+    shift zero G = refl
+    shift (suc l) G = cong f (shift l G)
+
+  countI : ∀ n {X ch} (T : F.TD {lvl1} X B.zero) (D′ : Base♯) (a′ : V.Tr⁺ r₁) (u : R.Tr R.zero) (y : B.Tr B.zero) (K : F.Ca (suc n) X) →
+    Rel (suc n) ch (proj₁ a′) K → data≤ u y → Acts n ch (proj₁ (ψ♯ R.zero tt D′ r₁ oR a′ u)) (F.It n oB T y K)
+  countI n T D′ a′ R.zero y K h e D a A G g with W.zl y
+  ... | inj₁ refl = h F.idM refl D a A G g
+  ... | inj₂ d = close n _ _ (h F.idM refl D a A G g) (F.Itmono n oB T K G d)
+  countI n T D′ a′ (R.suc u) (B.suc y) K h (s≼s e) D a A G g =
+    val-lim n D a A _ _ _ _ (λ j → iterated n (F.It n oB T y K) (countI n T D′ a′ u y K h e) j D a A G g)
+  countI n T D′ a′ (R.suc u) (B.lim f d) K h (≼l j e) D a A G g = close n _ _ (countI n T D′ a′ (R.suc u) (f j) K h e D a A G g)
+    (F.limCUB n _ _ j)
+  countI n T D′ a′ (R.lim f d) y K h e D a A G g = val-sup n D a A _ _ _ (λ j →
+    countI n T D′ a′ (f j) y K h (≼-trans (≼l j (≼-refl _)) e) D a A G g)
+

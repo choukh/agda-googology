@@ -1,0 +1,99 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- review9 试验 1: YiDlLost 的 lostP 那一对 (rN, pN) 在同一支 nrmk ξa 里;
+-- 用这一支自己的公共上界 (V2 的 wΩ 字段在 nrmk ξa 处的值), 结构比较保留它, 给出两个 ℕ 极限层号的字面相等.
+-- 另一对在 LN 的不同分量里, 比较经 Shift (来自合法性的 CP) 搬到同一分量后保留.
+module R9Same where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product.Base using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiNextCore
+open import OCF.Lean.YiNextBase using (lev; Way; keep; fold; Shift; R; ⌜_⌝)
+open import OCF.Lean.YiLamFold using (Lw; ws; wl; wΩ; nrmk; nrmk-lgl)
+open import OCF.Lean.YiDlFold using (cmpw)
+open import OCF.Lean.YiDlInst using (V2; ξa; rN)
+open import OCF.Lean.YiDlLost using (s; pN; LN; LimL; limP; lostP; Vw)
+open import OCF.Lean.YiUniIf using (IsKeep)
+
+-- V2 的 wΩ 字段: 每一支的公共上界
+brV : ∀ {k g} → Lw (lc k g) → (η : Raw k) → Lgl k η → Lw (g η)
+brV (wΩ V w) = V
+
+η₀ : R
+η₀ = nrmk zero ξa
+
+l₀ : Lgl zero η₀
+l₀ = nrmk-lgl zero ξa
+
+-- 目标位置与源位置的支字面相同
+same-branch-rN : proj₁ rN ≡ η₀
+same-branch-rN = refl
+
+same-branch-pN : proj₁ pN ≡ η₀
+same-branch-pN = refl
+
+-- 目标层号与源层号都是 ℕ 极限
+LN-lim : LimL LN
+LN-lim = _ , refl
+
+-- 这一支的公共上界就是 YiDlLost 的 Vw
+brV≡Vw : brV V2 η₀ l₀ ≡ Vw η₀ l₀
+brV≡Vw = refl
+
+-- 关键: 用这一支的公共上界比较, (rN, pN) 保留, 证明是字面的 refl
+kept-in-branch : cmpw (brV V2 η₀ l₀) (inj₁ tt) (inj₂ s) ≡ keep s refl
+kept-in-branch = refl
+
+-- 对照: 外层派发 (只拿目标层号与裸位置) 折叠
+lost-outside : cmpw V2 rN pN ≡ fold
+lost-outside = lostP
+
+-- 不同分量: LN 是 ℕ 极限, Shift 由合法性 (CP) 给出
+unws : ∀ {k} → Lw (suc k) → Lw k
+unws (ws V) = V
+
+stOf : ∀ {f : ℕ → LF} → Lw (lim f) → ∀ n → Shift (f n) (f (suc n))
+stOf (wl V st) = st
+
+VLN : Lw LN
+VLN = unws (Vw η₀ l₀)
+
+comp : LF → ℕ → LF
+comp (lim f) n = f n
+comp _ n = zero
+
+compLw : ∀ {f : ℕ → LF} → Lw (lim f) → ∀ n → Lw (f n)
+compLw (wl V st) = V
+
+s₀ : Pre (comp LN 0)
+s₀ = proj₂ s
+
+-- s 在第 0 分量里的父位置 (同一个 suc 的根)
+par : Pre (comp LN 0)
+par = 1 , 0 , 0 , 0 , inj₁ tt
+
+-- 两者都搬到第 1 分量
+par₁ s₁ : Pre (comp LN 1)
+par₁ = proj₁ (stOf VLN 0 par)
+s₁ = proj₁ (stOf VLN 0 s₀)
+
+-- 搬过去后在第 1 分量里比较: 保留
+kept-shifted₁ : IsKeep (cmpw (compLw VLN 1) par₁ s₁)
+kept-shifted₁ = tt
+
+-- 搬运给出的层号相等 (两边都是 ℕ 极限层号, 由合法性的 CP 算出)
+shift-eq : lev (comp LN 1) s₁ ≡ lev (comp LN 0) s₀
+shift-eq = proj₂ (stOf VLN 0 s₀)
+
+-- 源层号仍是 ℕ 极限 (同 limP)
+src-lim : LimL (lev LN s)
+src-lim = limP
+
+-- 外层 (LN 的公共上界) 直接比较不同分量的一对, 经 subst₂ 搬运
+q₁ : Pre LN
+q₁ = 1 , par₁
+
+kept-shifted : IsKeep (cmpw VLN q₁ s)
+kept-shifted = tt

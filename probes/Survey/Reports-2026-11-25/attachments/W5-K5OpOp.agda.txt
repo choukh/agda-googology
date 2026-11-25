@@ -1,0 +1,10 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 出口: (Op) 在接口第二版上, K5Iface.OpStmt 原文, 无额外前提, 无模块参数.
+module K5OpOp where
+
+open import W4Block using (L)
+open import K5Iface using (OpStmt)
+open import K5OpMain using (opThm)
+
+op : (m : L) → OpStmt m
+op = opThm

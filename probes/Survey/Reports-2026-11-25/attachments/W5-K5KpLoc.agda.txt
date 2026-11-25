@@ -1,0 +1,70 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- KKp: W5Loc 的定位器 loc 在有限层上完全 (K5Loc.CompleteFin loc), 编译定理, 无前提; find 的搜索次序不改.
+-- 完全性靠: sL 结点看第 n+1 个孩子, 合法极限的第 n+1 项字面地含 sucⁿ zero (K5LpFin.limN).
+module K5KpLoc where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Product using (Σ; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
+
+open import W4Block
+import W5Loc as W
+import K5Loc as KL
+open KL using (CompleteFin; PosStmt)
+open import K5LpFin using (nat; Sb; sb-r; sb-s; sb-trans; limN; sb→pth; h₁-nat)
+open import W5VOne using (h₁)
+open import OCF.Lean.YiAbsObs using (IsJust)
+
+ijm : ∀ {A B : Set} {f : A → B} (m : Maybe A) → IsJust m → IsJust (W.mapM f m)
+ijm (just _) _ = tt
+
+ijOl : ∀ {A : Set} (m m′ : Maybe A) → IsJust m → IsJust (W.orElse m m′)
+ijOl (just _) _ _ = tt
+
+ijOr : ∀ {A : Set} (m m′ : Maybe A) → IsJust m′ → IsJust (W.orElse m m′)
+ijOr (just _) _ _ = tt
+ijOr nothing  _ h = h
+
+-- 两份 lvl 一致.
+lvl≡ : (n : ℕ) → KL.lvl n ≡ W.lvl n
+lvl≡ zero    = refl
+lvl≡ (suc n) = cong (λ a → nd sS (λ _ → a)) (lvl≡ n)
+
+fin?-lvl : (n : ℕ) → W.fin? (KL.lvl n) ≡ just (n , lvl≡ n)
+fin?-lvl zero = refl
+fin?-lvl (suc n) with W.fin? (KL.lvl n) | fin?-lvl n
+... | .(just (n , lvl≡ n)) | refl = refl
+
+eqL-lvl : (n : ℕ) → IsJust (W.eqL n (W.lvl n))
+eqL-lvl zero    = tt
+eqL-lvl (suc n) = ijm (W.eqL n (W.lvl n)) (eqL-lvl n)
+
+selfOk : (n : ℕ) (a : L) → a ≡ W.lvl n → IsJust (W.eqL n a)
+selfOk n .(W.lvl n) refl = eqL-lvl n
+
+-- find 在第 0 层树的读回里完全.
+compl : (n : ℕ) (t : Tr zero) {j : L} → j ≡ W.lvl n → j ≤ h₁ t → IsJust (W.find n (h₁ t))
+compl n zero      e self      = ijOl _ (W.down n zero) (ijm (W.eqL n zero) (selfOk n zero e))
+compl n (suc x)   e self      = ijOl _ (W.down n (h₁ (suc x))) (ijm (W.eqL n (h₁ (suc x))) (selfOk n (h₁ (suc x)) e))
+compl n (suc x)   e (inc c p) = ijOr (W.mapM _ (W.eqL n (h₁ (suc x)))) _ (ijm (W.find n (h₁ x)) (compl n x e p))
+compl n (suc x)   e (inu ps)  = ijOr (W.mapM _ (W.eqL n (h₁ (suc x)))) _ (ijm (W.find n (h₁ x)) (compl n x e (ps tt)))
+compl n (lim f a) _ _         =
+  ijOr (W.mapM _ (W.eqL n (h₁ (lim f a)))) _
+    (ijm (W.find n (h₁ (f (suc n))))
+         (compl n (f (suc n)) (trans (h₁-nat n) (lvl≡ n)) (sb→pth (sb-trans (sb-s sb-r) (limN f a (suc n))))))
+compl n (Ω () _) _ _
+compl n (up _ () _ _) _ _
+compl n (ex _ _ _ _ ()) _ _
+
+-- loc 认出有限层后就是 find.
+viaFind : (j a : L) (n : ℕ) (e : j ≡ W.lvl n) → W.fin? j ≡ just (n , e) → IsJust (W.find n a) → IsJust (W.loc j a)
+viaFind j a n e eq h with W.fin? j
+viaFind j a n e refl h | .(just (n , e)) = ijm (W.find n a) h
+
+cFin : CompleteFin W.loc
+cFin n z p = viaFind (KL.lvl n) (h₁ z) n (lvl≡ n) (fin?-lvl n) (compl n z (lvl≡ n) p)
+
+pos : PosStmt
+pos = W.loc , cFin

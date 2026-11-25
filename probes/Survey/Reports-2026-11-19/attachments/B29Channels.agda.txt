@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对固定原行，首塔整轨、每座正塔的第二个启动点、及该塔全部已选内返回分别严格留在行内，构造性等价于整个 Λ 在该行以下或相等。
+module B29Channels where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import OCF.Align.EboLeanBase using (tri)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; s≼s; ≼-trans; ≼-refl; l≼; ≼l)
+import B26Names as A
+import B26Depth as D
+import B26PActual as End
+import B27Threshold as R
+import B27CutArithmetic as C
+import B28BCut as B
+import B18CellState as Cell
+import B29Floor as F
+
+-- 同一原名的任意两个严格前驱总有一个共同的有名前驱；比较的是正规名字。
+module Join (r : A.Name) where
+  Q = A.value r
+  merge : ∀ (a b : A.T₀) → L.suc a ≼ Q → L.suc b ≼ Q →
+    Σ A.T₀ (λ v → L.suc v ≼ Q × a ≼ v × b ≼ v)
+  merge a b pa pb with C.approx r a pa | C.approx r b pb
+  ... | x , ax , lx | y , by , ly with tri (A.name x) (A.name y)
+  ... | inj₁ lt = A.value y , ly , ≼-trans {b = A.value x} ax (R.weak-value x y (inj₁ lt)) , by
+  ... | inj₂ (inj₁ eq) = A.value y , ly , ≼-trans {b = A.value x} ax (R.weak-value x y (inj₂ eq)) , by
+  ... | inj₂ (inj₂ gt) = A.value x , lx , ax , ≼-trans {b = A.value y} by (R.weak-value y x (inj₁ gt))
+
+module Parts (f : ℕ → ℕ → A.T₀) (inner : ℕ → ℕ → ℕ → A.T₀) where
+  first : A.T₀
+  first = L.lim (f 0)
+  second : ℕ → A.T₀
+  second m = f (suc m) 1
+  starts : A.T₀
+  starts = L.lim second
+  one : ℕ → ℕ → A.T₀
+  one m j = L.lim (inner m j)
+  each : ℕ → A.T₀
+  each m = L.lim (one m)
+  total : A.T₀
+  total = L.lim each
+  module At (r : A.Name) where
+    Q = A.value r
+    Small = C.SmallAt Q
+    Cap = Σ A.T₀ (λ q → Small q × (∀ j → f 0 j ≼ q))
+    Pieces = λ m → Σ A.T₀ (λ q → Small q × f (suc m) 0 ≼ q × second m ≼ q × (∀ j u → inner m j u ≼ q))
+    Conditions = Small first × (∀ m → Small (second m) × Small (each m))
+    read : Cap × (∀ m → Pieces m) → Conditions
+    read ((q , sq , h) , deeper) = ≼-trans {a = L.suc first} {b = L.suc q} {c = Q} (s≼s (l≼ {f = f 0} h)) sq ,
+      λ m → rest m (deeper m)
+      where
+      rest : ∀ m → Pieces m → Small (second m) × Small (each m)
+      rest m (q , sq , start , x , leaves) = ≼-trans {a = L.suc (second m)} {b = L.suc q} {c = Q} (s≼s x) sq ,
+        ≼-trans {a = L.suc (each m)} {b = L.suc q} {c = Q}
+          (s≼s (l≼ {f = one m} (λ j → l≼ {f = inner m j} (leaves j)))) sq
+
+    fill : (∀ m → f (suc m) 0 ≼ inner m 0 0) → Conditions → Cap × (∀ m → Pieces m)
+    fill floor (a , b) = (first , a , λ j → ≼l {f = f 0} j (≼-refl _)) , λ m → close m (b m)
+      where
+      close : ∀ m → Small (second m) × Small (each m) → Pieces m
+      close m (x , y) with Join.merge r (second m) (each m) x y
+      ... | q , sq , left , right = q , sq , ≼-trans {a = f (suc m) 0} {b = inner m 0 0} {c = q} (floor m) (leaves 0 0) , left , leaves
+        where
+        leaves : ∀ j u → inner m j u ≼ q
+        leaves j u = ≼-trans {a = inner m j u} {b = each m} {c = q}
+          (≼l {f = one m} j (≼l {f = inner m j} u (≼-refl _))) right
+
+module Actual = Parts Cell.At.fresh B.Physical.inner
+open Actual public using (first; second; starts; one; each; total)
+module Row (k : ℕ) (two : 2 ≤ k) where
+  module X = Actual.At (D.tower k)
+  module Old = B.At k two
+  Conditions = X.Conditions
+  necessary : End.Y ≼ R.row k → Conditions
+  necessary p = X.read (Old.necessary p)
+  sufficient : Conditions → End.Y ≼ R.row k
+  sufficient p = Old.sufficient (X.fill (λ m → F.At.selected m 0 0) p)

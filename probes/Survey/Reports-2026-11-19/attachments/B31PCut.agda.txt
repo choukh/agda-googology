@@ -1,0 +1,76 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实操作数 δ 的完整零观察严格低于原 BTBO。用 BTBO 第二个基本列名的严格初段封闭控制 ε₁。
+module B31PCut where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Nat.Properties using (≤-refl)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Align.EboLeanDef using (EBOψ; _<ᵀ_; hd<; lv<; ar<; []<)
+open import OCF.Align.EboLeanTree using (nf-tower)
+open import OCF.Align.EboLeanBase using (c∷; c[])
+open import OCF.Align.EboLeanClosure using (trian-fsn)
+open import OCF.Align.EboLeanTrian using (t<)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; s≼s; l≼; ≅→≼)
+open import WVOne using (T₀; read)
+import B12XRef as R
+import B17Calibration as B
+import B19IdealGamma as G
+import B19IdealArithmetic as A
+import B18Product as M
+import B22MovingIndex as E
+import B26Depth as D
+import B27CutArithmetic as Cut
+import B27Threshold as T
+import B30OutputRank as Rank
+import OCF.Align.NoCumsum as Diag
+import W4Block as W
+
+module Stage (x g : T₀) (start : L.suc x ≼ g)
+  (next : ∀ {v} → L.suc v ≼ g → L.suc (L.suc v) ≼ g)
+  (pow : ∀ {v} → L.suc v ≼ g → L.suc (L.ψ⁰ v) ≼ g) where
+  finite : ∀ n → L.suc (E.steps x n) ≼ g
+  finite zero = next start
+  finite (suc n) = ≼-trans {b = L.suc (L.ψ⁰ (E.steps x n))} (s≼s (proj₁ (A.normal (E.steps x n)))) (pow (finite n))
+  cap : E.above x ≼ g
+  cap = l≼ λ n → ≼-trans {b = L.suc (E.steps x n)} (≼-suc (≼-refl (E.steps x n))) (finite n)
+
+module Row (x g r v : T₀) (large : E.above x ≼ g) (room : L.suc g ≼ r)
+  (w : L.suc L.ωᶜ ≼ r) (pow : ∀ a → L.suc a ≼ r → L.suc (A.norm a) ≼ r)
+  (times : ∀ a b → L.suc a ≼ r → L.suc b ≼ r → L.suc (a M.· b) ≼ r)
+  (val : v ≼ E.above x M.· A.norm L.ωᶜ) where
+  strict : L.suc v ≼ r
+  strict = ≼-trans {b = L.suc (E.above x M.· A.norm L.ωᶜ)} (s≼s val)
+    (times (E.above x) (A.norm L.ωᶜ) (≼-trans {b = L.suc g} (s≼s large) room) (pow L.ωᶜ w))
+
+module Γ = G.Reference (B.normal 0) (B.normal 1) (B.h 1)
+below : EBOψ 1 <ᵀ B.term 1
+below = hd< (ar< (hd< (lv< (hd< (ar< []<)))))
+start : L.suc (R.row 1) ≼ Γ.Γ
+start = mono<ⁿ (nf-tower 1) (B.normal 1) (B.countable 1) (R.H 1) (B.h 1) below
+room : L.suc Γ.Γ ≼ T.row 2
+room = ≼-trans {a = L.suc Γ.Γ} {b = L.suc (Diag.γ 2)} {c = T.row 2}
+  (s≼s {a = Γ.Γ} {b = Diag.γ 2} (≅→≼ (L.≅-sym (B.same 1))))
+  (≼-trans {a = L.suc (Diag.γ 2)} {b = R.row 2} {c = T.row 2} (B.strict-child 1) (convert 2))
+  where
+  convert : ∀ k → R.row k ≼ T.row k
+  convert k = tree-≼ refl (R.H k) (OCF.Align.EboLeanTree.hc-tower k)
+module Steps = Stage (R.row 1) Γ.Γ start (λ {v} → Γ.succ-closed {v}) (λ {v} → Γ.closed {v})
+
+module Filter (k : ℕ) (d : 2 Data.Nat.Base.≤ k) (x g : T₀)
+  (cap : E.above x ≼ g) (in-row : L.suc g ≼ T.row k) where
+  module C = Cut.At k d
+  strict : L.suc (E.above x M.· A.norm L.ωᶜ) ≼ T.row k
+  strict = Row.strict x g (T.row k) (E.above x M.· A.norm L.ωᶜ) cap in-row C.omega C.powω C.product (≼-refl (E.above x M.· A.norm L.ωᶜ))
+
+floor = E.above (R.row 1) M.· A.norm L.ωᶜ
+bound : L.suc floor ≼ T.row 2
+bound = Filter.strict 2 ≤-refl (R.row 1) Γ.Γ Steps.cap room
+module Mark (k : ℕ) (v : T₀) (inside : L.suc v ≼ T.row k) (x : W.Tr W.zero) (val : read x ≼ v) where
+  strict : L.suc (read x) ≼ T.row k
+  strict = ≼-trans {a = L.suc (read x)} {b = L.suc v} {c = T.row k} (s≼s val) inside
+  label : Rank.Label x (D.tower k)
+  label = Rank.chart x (D.tower k) (≼-trans {a = read x} {b = L.suc (read x)} {c = T.row k} (≼-suc (≼-refl (read x))) strict)
+module At = Mark 2 floor bound

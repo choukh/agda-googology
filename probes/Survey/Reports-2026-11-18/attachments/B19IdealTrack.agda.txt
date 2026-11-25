@@ -1,0 +1,52 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19IdealTrack where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥-elim)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; s≼s)
+import W4Block as B
+import W4Ops as W
+open import WVOne using (read; h₁; T₀)
+import B12Terminal as T
+import B14Tower as Tw
+import B14Btbo as D
+import B14PathHeight as PH
+import B16ReadIndex as Ret
+import B16GammaRows as G
+import B17SharpSelected as Q
+import B17ValueDich as Dich
+import B18RefHeight as RH
+import B8FreezeMain as Ir
+import B19IdealSelected as S
+
+
+i = λ (n : ℕ) → read (Tw.Actual.idx n)
+Γ = N.γ 2
+later : ∀ n → i n ≼ i (suc n)
+later n = Ret.retained z r {w = Tw.Actual.path z} (Tw.chain-covered T.tower1 D.hR z) (PH.through (B.↑ B.zero z))
+  where
+  z = Tw.Actual.idx n
+  r = Tw.Actual.chain z
+
+initial : S.β ≼ i 3
+initial = T.inflate0 (h₁ z) (T.Run.ok r) (T.Run.bs r) (Tw.Actual.path z) Tw.Actual.slot (proj₁ (W.Ωt (h₁ z)))
+  where
+  z = Tw.Actual.idx 2
+  r = Tw.Actual.chain z
+
+module At (lem : LEM) where
+  candidate = Q.Actual.candidate lem 0
+  module V = S.Verify lem
+  formula = V.formula 0
+
+  height : i 3 ≼ candidate
+  height = RH.Sharp.height lem (S.z 0) (Q.start Tw.Actual.slot)
+
+  coeff : S.δ₀ ≼ i 3
+  coeff = ≼-trans {a = S.δ₀} {b = i 2} {c = i 3} V.δ-small (later 2)
+

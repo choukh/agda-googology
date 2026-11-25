@@ -1,0 +1,424 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W4 判据: 在 W4 的块与折叠上重跑 E1 的 (a)(b)(c), E2 的 (d)(f)(g)(e′), D1 的 (e)(h) 与端到端; (e)(h) 改述为对一切 n 的 It n;
+-- 新增 (j) 三阶端到端: 第二次回灌时孩子树里的 q 结点在三阶里保留 (D1 在同一处给 ℕ 极限, 见 W4Contrast);
+-- (i) 改为保留: 一阶树在更深的语境里跑, 自己走链的目标保留树框架写法, 下一层 q 结点的判定是 just.
+-- 只是形状 (refl) 与有限测试 (头部), 不是值. 排中律只作 ψ♯ 一侧的参数.
+module W4Check where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Lean.YiRWBlock as RB
+import OCF.Lean.YiRWOps as RO
+import OCF.Lean.YiRWPath as RP
+import OCF.Lean.YiRWFold as RF
+open import S1Sharp using (LEM; module Sharp)
+
+IsJust : ∀ {A : Set} → Maybe A → Set
+IsJust (just _) = ⊤
+IsJust nothing  = ⊥
+
+n1 n2 : Tr zero
+n1 = suc zero
+n2 = suc n1
+
+lvl1 lvl2 : L
+lvl1 = zero ⊕ ↑ zero n1
+lvl2 = zero ⊕ ↑ zero n2
+
+o₁ : Ok (tw 1)
+o₁ = Ok-tw 1
+
+b⁺ : Tr⁺ (tw 1)                     -- b = Ωt (tw 1)
+b⁺ = Ωt (tw 1)
+
+y⁺ : Tr⁺ lvl2                       -- 孩子 2 里的 Ω₂
+y⁺ = Ωt lvl2
+
+-- 判据 (a) 的项: ex zero b (up zero 2 (Ωt lvl2)).
+tm : Tr (tw 1)
+tm = ex zero (proj₁ b⁺) (proj₂ b⁺) (proj₁ (upz {s = sΩ zero} {h = λ c → zero ⊕ ↑ zero c} n2 y⁺)) tt
+
+d₁ : Dn (tw 1) lvl2                 -- 孩子 2 的框架
+d₁ = down stop n2
+
+d₂ : Dn (tw 1) lvl1                 -- 再进 lvl2 的孩子 tt 的框架
+d₂ = down d₁ tt
+
+p : Pos lvl2                        -- Ωt lvl2 的顶槽位 (层 lvl1)
+p = inj₂ (tt , inj₁ tt)
+
+q : Pos lvl1                        -- lvl1 里层号为第 0 层的槽位
+q = inj₂ (tt , inj₁ tt)
+
+τ : lvl1 ≤ lvl2                     -- 走链的框架写法目标 posW lvl2 p
+τ = inc tt self
+
+T₀ : TD {tw 1} nil (tw 1)           -- 环境语境里的树数据
+T₀ = tdNil
+
+X₁ : Cx (tw 1)                      -- 加上孩子 2 的框架分量
+X₁ = cons d₁ nil
+
+T₁ : TD X₁ lvl2
+T₁ = chTD T₀ n2
+
+X₂ : Cx (tw 1)
+X₂ = cons d₂ X₁
+
+T₂ : TD X₂ lvl1
+T₂ = chTD T₁ tt
+
+ch₁ : ⟦ X₁ ⟧ lvl1                   -- 孩子顶结点走链的目标: 树框架写法 inj₁ τ, 环境写法 inc 2 τ
+ch₁ = inj₁ τ , inc n2 τ
+
+F₀ : Op {tw 1} nil                  -- "右边接上 b"
+F₀ = opB (tw 1) o₁ (proj₁ b⁺) (proj₂ b⁺)
+
+F₁ : Op X₁
+F₁ = enterO (chMT T₀ n2) (op (E o₁ T₀ zero F₀) (Einf o₁ T₀ zero F₀))
+
+S₀ : St {tw 1} nil
+S₀ = λ i u → ψ (tw 1) o₁ (B₀ (tw 1)) i u (B₀ (tw 1) i u) zero
+
+S₁ : St X₁
+S₁ = λ i′ y → S₀ i′ (proj₂ y)
+
+gT : Tr lvl1 → Tr lvl2              -- Ωt lvl2 的分支
+gT z = up zero tt (suc z) (z◃ z ◃s)
+
+sTop : Tr lvl1 → Tr lvl1
+sTop z = proj₁ (E o₁ T₁ (gT z) F₁ S₁ lvl1 ch₁ (S₁ lvl1 ch₁))
+
+Gtop : Tr lvl1 → Tr⁺ zero
+Gtop z = E o₁ T₁ (gT z) F₁ S₁ zero (inj₂ (z≤ (tw 1)) , z≤ (tw 1)) (Ωt zero)
+
+-- (a1) 朝第 0 层折: 顶结点走链, 回灌一步就是 sTop.
+top-chain : ψ (tw 1) o₁ (B₀ (tw 1)) zero (z≤ (tw 1)) (Ωt zero) tm ≡ node⁺ {X = Tr lvl1} {x₀ = zero} nothing Gtop sTop
+top-chain = refl
+
+-- (a2) 孩子树的结点 (框架 d₂ 里第 0 层的槽位 q) 对树框架写法 inj₂ (inj₁ τ) 保留.
+child-keep : (F : Op X₂) (S : St X₂) (v : Tr⁺ lvl1) (r : ⟦ X₁ ⟧ lvl1) (G : Tr zero → Tr lvl1)
+  → Σ (Tr zero → Tr lvl1) λ G′ → proj₁ (E o₁ T₂ (Ω q G) F S lvl1 (inj₂ (inj₁ τ) , r) v) ≡ Ω q G′
+child-keep F S v r G = _ , refl
+
+-- (a3) 回灌一步作用在 "顶上是 q 结点的孩子树" 上: 输出的第 0 项是 q 上的 Ω 结点.
+step-node : (G : Tr zero → Tr lvl1)
+  → Σ (ℕ → Tr lvl1) λ H → Σ _ λ a → Σ (Tr zero → Tr lvl1) λ G′ → (sTop (Ω q G) ≡ lim H a) × (H zero ≡ Ω q G′)
+step-node G = _ , _ , _ , refl , refl
+
+-- (a4) 第一次回灌.
+first-feed : Σ (ℕ → Tr lvl1) λ H → Σ _ λ a → Σ (Tr zero → Tr lvl1) λ G′ → (sTop zero ≡ lim H a) × (H zero ≡ Ω q G′)
+first-feed = _ , _ , _ , refl , refl
+
+-- (a5) 第二次回灌: q 结点仍是 Ω 结点.
+second-feed : Σ (ℕ → Tr lvl1) λ H → Σ _ λ a → Σ (ℕ → Tr lvl1) λ H′ → Σ _ λ a′ → Σ (Tr zero → Tr lvl1) λ G′
+  → (sTop (sTop zero) ≡ lim H a) × (H zero ≡ lim H′ a′) × (H′ zero ≡ Ω q G′)
+second-feed = _ , _ , _ , _ , _ , refl , refl , refl
+
+-- (a0) 对照: 现块 (仓库 YiRWFold) 上同一格是 ℕ 极限.
+n1ᴿ n2ᴿ : RB.Tr RB.zero
+n1ᴿ = RB.suc RB.zero
+n2ᴿ = RB.suc n1ᴿ
+
+lvl1ᴿ : RB.L
+lvl1ᴿ = RB.zero RB.⊕ RB.↑ RB.zero n1ᴿ
+
+slotᴿ : RB.Pos (RB.tw 1)
+slotᴿ = inj₂ (n2ᴿ , inj₂ (inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))))
+
+old-k6 : (B : RF.Base (RB.tw 1)) (β : RO.Tr⁺ lvl1ᴿ) (g : RB.Br (RB.tw 1) slotᴿ → RB.Tr (RB.tw 1))
+  → Σ (ℕ → RB.Tr lvl1ᴿ) λ H → Σ _ λ a
+  → proj₁ (RF.ψ (RB.tw 1) (RP.Ok-tw 1) B lvl1ᴿ (RP.inc n2ᴿ (RP.inc tt RP.self)) β (RB.Ω slotᴿ g)) ≡ RB.lim H a
+old-k6 B β g = _ , _ , refl
+
+-- (b) 格律 (K): ψ♯ 的 kp♯ 与框架判定都给 just; 裸写法仍是 nothing.
+slotN : Pos (tw 1)
+slotN = inj₂ (n2 , inj₂ (inj₂ (tt , inj₂ q)))
+
+k-both : (lem : LEM)
+  → IsJust (Sharp.kp♯ lem (RB.tw 1) (RP.Ok-tw 1) slotᴿ lvl1ᴿ (proj₂ (RP.Ok-tw 1) n1ᴿ))
+  × IsJust (kpT d₂ o₁ q (inj₂ (inj₁ τ)))
+k-both lem = tt , tt
+
+k-bare : kpT d₂ o₁ q (inj₂ (inj₂ (inc n2 τ))) ≡ nothing
+k-bare = refl
+
+k-bare-flat : kp (tw 1) o₁ slotN (inc n2 τ) ≡ nothing
+k-bare-flat = refl
+
+-- (c) 格律 (E) 的形状 (ψ 的 up 行, 与 D1 相同).
+B′ : Base (tw 1) → Base lvl2
+B′ B = λ i u → ψ (tw 1) o₁ B i (inc n2 u) (B i (inc n2 u)) (proj₁ b⁺)
+
+c-base : (B : Base (tw 1)) (β : Tr⁺ zero)
+  → ψ (tw 1) o₁ B zero (z≤ (tw 1)) β (proj₁ b⁺ + proj₁ (upz {s = sΩ zero} {h = λ c → zero ⊕ ↑ zero c} n2 y⁺))
+  ≡ ψ lvl2 (proj₂ o₁ n2) (B′ B) zero (z≤ lvl2) (ψ (tw 1) o₁ B zero (z≤ (tw 1)) β (proj₁ b⁺)) (proj₁ y⁺)
+c-base B β = refl
+
+c-chain : (B : Base (tw 1)) (β : Tr⁺ zero)
+  → ψ lvl2 (proj₂ o₁ n2) (B′ B) zero (z≤ lvl2) β (proj₁ y⁺)
+  ≡ node⁺ {X = Tr lvl1} {x₀ = zero} nothing
+      (λ z → ψ lvl2 (proj₂ o₁ n2) (B′ B) zero (z≤ lvl2) β (up zero tt (suc z) (z◃ z ◃s)))
+      (λ z → proj₁ (ψ lvl2 (proj₂ o₁ n2) (B′ B) lvl1 τ
+                       (ψ (tw 1) o₁ B lvl1 (inc n2 τ) (B lvl1 (inc n2 τ)) (proj₁ b⁺))
+                       (up zero tt (suc z) (z◃ z ◃s))))
+c-chain B β = refl
+
+c-sharp : (lem : LEM) (B : Sharp.Base♯ lem) (β : RO.Tr⁺ RB.zero) → _
+c-sharp lem B β = Sharp.up-row lem _ _ (RP.Ok-tw 1) B RB.zero tt β (proj₁ (RO.Ωt (RB.tw 1))) n2ᴿ
+  (proj₁ (RO.Ωt (RB.zero RB.⊕ RB.↑ RB.zero n2ᴿ))) (proj₂ (RO.Ωt (RB.zero RB.⊕ RB.↑ RB.zero n2ᴿ)))
+
+-- (d) 读回的 ex 行.
+rd-zero : ∀ {s h} (a b : Tr (nd s h)) (nb : nd s h ⊢ zero ◃ b)
+  → ↑ (nd s h) (ex a b nb zero tt) ≡ ↑ (nd s h) a ⊕ ↑ (nd s h) b
+rd-zero a b nb = refl
+
+rd-suc : ∀ {s h} (a b : Tr (nd s h)) (nb : nd s h ⊢ zero ◃ b) (x : Tr (nd s h))
+  → ↑ (nd s h) (ex a b nb (suc x) tt)
+  ≡ nd sL (λ n → iter (proj₁ (Eh AL tt x (opR (↑ (nd s h) b)))) (↑ (nd s h) a) (suc n))
+rd-suc a b nb x = refl
+
+c-ex : Tr (tw 1)                    -- ex 0 b 1
+c-ex = ex zero (proj₁ b⁺) (proj₂ b⁺) (suc zero) tt
+
+ok-child : Ok (tw 1 ⊕ ↑ (tw 1) c-ex)
+ok-child = proj₂ (Ok-tw 2) c-ex
+
+-- (e) 行的形状. 一阶 E 的 ex 行转到 It zero; It n 的 ex 行转到 It (suc n), up 行加孩子框架分量 (对一切 n 同一条).
+e-row : ∀ {ℓ mu} (o : Ok ℓ) {X : Cx ℓ} (T : TD X mu) (a b : Tr mu) (nb : mu ⊢ zero ◃ b) (x : Tr mu) (ε : Ex (Sig mu))
+  (F : Op X) (S : St X) (i : L) (t : ⟦ X ⟧ i) (v : Tr⁺ i)
+  → E o T (ex a b nb x ε) F S i t v ≡ run (It zero o T x (Kb o T b nb) (op (E o T a F) (Einf o T a F))) S i t v
+e-row o T a b nb x ε F S i t v = refl
+
+e-nest : ∀ {ℓ mu} (n : ℕ) (o : Ok ℓ) {X : Cx ℓ} (T : TD X mu) (a b : Tr mu) (nb : mu ⊢ zero ◃ b) (x : Tr mu)
+  (ε : Ex (Sig mu)) (K : Ca (suc n) X) (G : Ca n X)
+  → It n o T (ex a b nb x ε) K G ≡ proj₁ (It (suc n) o T x (Kₑ n o T b nb) (Itᴺ n o T a K)) idM G
+e-nest n o T a b nb x ε K G = refl
+
+e-up : ∀ {ℓ s h} (n : ℕ) (o : Ok ℓ) {X : Cx ℓ} (T : TD X (nd s h)) (x : Tr (nd s h)) (c : Ch s) (y : Tr (h c))
+  (r : h c ⊢ zero ◃ y) (K : Ca (suc n) X) (G : Ca n X)
+  → It n o T (up x c y r) K G
+  ≡ upC n (down (fr T) c) (λ t → inj₂ (tv T t)) (It n o T x K G)
+      (It n o (chTD T c) y (enter (suc n) (chMT T c) (Itᴺ n o T x K)) (enter n (chMT T c) (It n o T x K G)))
+e-up n o T x c y r K G = refl
+
+-- 自然 op 在恒等延伸上的分量就是本身 (由 η, 不需要分派).
+e-at : ∀ {ℓ mu} (n : ℕ) (o : Ok ℓ) {X : Cx ℓ} (T : TD X mu) (x : Tr mu) (K : Ca (suc n) X) (G : Ca n X)
+  → proj₁ (Itᴺ n o T x K) idM G ≡ It n o T x K G
+e-at n o T x K G = refl
+
+e-kb : ∀ {ℓ mu} (o : Ok ℓ) {X : Cx ℓ} (T : TD X mu) (b : Tr mu) (nb : mu ⊢ zero ◃ b) (G : Op X)
+  → proj₁ (Kb o T b nb) idM G ≡ op (E o T b G) (Einf o T b G)
+e-kb o T b nb G = refl
+
+e-ke : ∀ {ℓ mu} (n : ℕ) (o : Ok ℓ) {X : Cx ℓ} (T : TD X mu) (b : Tr mu) (nb : mu ⊢ zero ◃ b) (K₁ : Ca (suc n) X)
+  → proj₁ (Kₑ n o T b nb) idM K₁ ≡ Itᴺ n o T b K₁
+e-ke n o T b nb K₁ = refl
+
+-- (f) 第 0 层没有 ex.
+f-zero : (B : Base zero) (β : Tr⁺ zero) (x : Tr zero)
+  → ψ zero tt B zero self β (suc x) ≡ next⁺ (ψ zero tt B zero self β x)
+f-zero B β x = refl
+
+-- (g) tw 2 上的合法闭项, 头部是 ℕ 极限 (有限测试).
+IsLim : Tr zero → Set
+IsLim (lim _ _) = ⊤
+IsLim _         = ⊥
+
+tw2-ok : Ok (tw 2)
+tw2-ok = Ok-tw 2
+
+tw2ᶜ : Tr zero
+tw2ᶜ = twᶜ 2
+
+tw2-head : IsLim tw2ᶜ
+tw2-head = tt
+
+-- (e′) 有限测试: ex 0 b (ex 0 b 1) 朝第 0 层折, 头部是 ℕ 极限.
+IsLim⁺ : Tr⁺ zero → Set
+IsLim⁺ y = IsLim (proj₁ y)
+
+e-fold-head : IsLim⁺ (ψ (tw 1) o₁ (B₀ (tw 1)) zero (z≤ (tw 1)) (Ωt zero) (ex zero (proj₁ b⁺) (proj₂ b⁺) c-ex tt))
+e-fold-head = tt
+
+-- (h) 对一切阶: It n 在孩子语境 X₁ 里的 Ω 行, 走链目标的树框架分量是 inj₁ τ.
+ho-chain : (n : ℕ) (K : Ca (suc n) X₁) (G : Ca n X₁) (g : Tr lvl1 → Tr lvl2)
+  → It n o₁ T₁ (Ω p g) K G ≡ nodeC n p (λ t → kpT d₁ o₁ p (proj₁ t)) ch₁ (λ z → It n o₁ T₁ (g z) K G)
+ho-chain n K G g = refl
+
+-- 再下一层 (语境 X₂) 的 q 结点, 在树框架写法 inj₂ (inj₁ τ) 上: 二阶, 三阶, 四阶的输出都是 q 上的 Ω 结点.
+ho-keep₀ : (K : Ca 1 X₂) (G : Ca 0 X₂) (Gq : Tr zero → Tr lvl1) (S : St X₂) (v : Tr⁺ lvl1) (r : ⟦ X₁ ⟧ lvl1)
+  → Σ (Tr zero → Tr lvl1) λ G′ → proj₁ (run (It 0 o₁ T₂ (Ω q Gq) K G) S lvl1 (inj₂ (inj₁ τ) , r) v) ≡ Ω q G′
+ho-keep₀ K G Gq S v r = _ , refl
+
+ho-keep₁ : (K : Ca 2 X₂) (G : Ca 1 X₂) (G₀ : Ca 0 X₂) (Gq : Tr zero → Tr lvl1) (S : St X₂) (v : Tr⁺ lvl1) (r : ⟦ X₁ ⟧ lvl1)
+  → Σ (Tr zero → Tr lvl1) λ G′ → proj₁ (run (proj₁ (It 1 o₁ T₂ (Ω q Gq) K G) idM G₀) S lvl1 (inj₂ (inj₁ τ) , r) v) ≡ Ω q G′
+ho-keep₁ K G G₀ Gq S v r = _ , refl
+
+ho-keep₂ : (K : Ca 3 X₂) (G : Ca 2 X₂) (G₁ : Ca 1 X₂) (G₀ : Ca 0 X₂) (Gq : Tr zero → Tr lvl1) (S : St X₂) (v : Tr⁺ lvl1)
+  (r : ⟦ X₁ ⟧ lvl1)
+  → Σ (Tr zero → Tr lvl1) λ G′
+  → proj₁ (run (proj₁ (proj₁ (It 2 o₁ T₂ (Ω q Gq) K G) idM G₁) idM G₀) S lvl1 (inj₂ (inj₁ τ) , r) v) ≡ Ω q G′
+ho-keep₂ K G G₁ G₀ Gq S v r = _ , refl
+
+ho-both : (lem : LEM)
+  → IsJust (Sharp.kp♯ lem (RB.tw 1) (RP.Ok-tw 1) slotᴿ lvl1ᴿ (proj₂ (RP.Ok-tw 1) n1ᴿ))
+  × IsJust (kpT d₂ o₁ q (tv T₂ (σ (chMT T₁ tt) ch₁)))
+ho-both lem = tt , tt
+
+-- 端到端 (二阶, 有限测试): ex 0 b (ex 0 b (up 0 2 (Ωt lvl2))).
+tm₃ : Tr (tw 1)
+tm₃ = ex zero (proj₁ b⁺) (proj₂ b⁺)
+        (ex zero (proj₁ b⁺) (proj₂ b⁺) (proj₁ (upz {s = sΩ zero} {h = λ c → zero ⊕ ↑ zero c} n2 y⁺)) tt) tt
+
+K₂ : Ca {tw 1} 1 nil
+K₂ = Kb o₁ T₀ (proj₁ b⁺) (proj₂ b⁺)
+
+G₂ : Op {tw 1} nil
+G₂ = op (E o₁ T₀ zero F₀) (Einf o₁ T₀ zero F₀)
+
+A₂ : Op {tw 1} nil
+A₂ = It 0 o₁ T₀ zero K₂ G₂
+
+sTop₂ : Tr lvl1 → Tr lvl1
+sTop₂ z = proj₁ (run (It 0 o₁ T₁ (gT z) (enter 1 (chMT T₀ n2) (Itᴺ 0 o₁ T₀ zero K₂)) (enter 0 (chMT T₀ n2) A₂))
+                     S₁ lvl1 ch₁ (S₁ lvl1 ch₁))
+
+Gtop₂ : Tr lvl1 → Tr⁺ zero
+Gtop₂ z = run (It 0 o₁ T₁ (gT z) (enter 1 (chMT T₀ n2) (Itᴺ 0 o₁ T₀ zero K₂)) (enter 0 (chMT T₀ n2) A₂))
+              S₁ zero (inj₂ (z≤ (tw 1)) , z≤ (tw 1)) (run A₂ S₀ zero (z≤ (tw 1)) (Ωt zero))
+
+top-chain₂ : ψ (tw 1) o₁ (B₀ (tw 1)) zero (z≤ (tw 1)) (Ωt zero) tm₃ ≡ node⁺ {X = Tr lvl1} {x₀ = zero} nothing Gtop₂ sTop₂
+top-chain₂ = refl
+
+first-feed₂ : Σ (ℕ → Tr lvl1) λ H → Σ _ λ a → Σ (Tr zero → Tr lvl1) λ G′ → (sTop₂ zero ≡ lim H a) × (H zero ≡ Ω q G′)
+first-feed₂ = _ , _ , _ , refl , refl
+
+second-feed₂ : Σ (ℕ → Tr lvl1) λ H → Σ _ λ a → Σ (ℕ → Tr lvl1) λ H′ → Σ _ λ a′ → Σ (Tr zero → Tr lvl1) λ G′
+  → (sTop₂ (sTop₂ zero) ≡ lim H a) × (H zero ≡ lim H′ a′) × (H′ zero ≡ Ω q G′)
+second-feed₂ = _ , _ , _ , _ , _ , refl , refl , refl
+
+-- (j) 端到端 (三阶, 有限测试): ex 0 b (ex 0 b (ex 0 b (up 0 2 (Ωt lvl2)))). 三阶指数是 up 0 2 (Ωt lvl2);
+-- 第二次回灌时孩子树里的 q 结点由三阶的判定保留 (D1 的 Eh / A₃ 在同一处给 ℕ 极限, 见 W4Contrast).
+tm₄ : Tr (tw 1)
+tm₄ = ex zero (proj₁ b⁺) (proj₂ b⁺)
+        (ex zero (proj₁ b⁺) (proj₂ b⁺)
+          (ex zero (proj₁ b⁺) (proj₂ b⁺) (proj₁ (upz {s = sΩ zero} {h = λ c → zero ⊕ ↑ zero c} n2 y⁺)) tt) tt) tt
+
+K₃ : Ca {tw 1} 2 nil
+K₃ = Kₑ 0 o₁ T₀ (proj₁ b⁺) (proj₂ b⁺)
+
+K₁ : Ca {tw 1} 1 nil
+K₁ = Itᴺ 0 o₁ T₀ zero K₂
+
+A₃ : Ca {tw 1} 1 nil
+A₃ = It 1 o₁ T₀ zero K₃ K₁
+
+G₃ : Op X₁
+G₃ = enter 0 (chM d₁ (λ y → inj₂ y)) G₂
+
+R₃ : Tr lvl1 → Ca 1 X₁
+R₃ z = It 1 o₁ T₁ (gT z) (enter 2 (chMT T₀ n2) (Itᴺ 1 o₁ T₀ zero K₃)) (enter 1 (chMT T₀ n2) A₃)
+
+sTop₃ : Tr lvl1 → Tr lvl1
+sTop₃ z = proj₁ (run (proj₁ (R₃ z) (liftM d₁ idM) G₃) S₁ lvl1 ch₁ (S₁ lvl1 ch₁))
+
+Gtop₃ : Tr lvl1 → Tr⁺ zero
+Gtop₃ z = run (proj₁ (R₃ z) (liftM d₁ idM) G₃) S₁ zero (inj₂ (z≤ (tw 1)) , z≤ (tw 1))
+              (run (proj₁ A₃ idM G₂) S₀ zero (z≤ (tw 1)) (Ωt zero))
+
+top-chain₃ : ψ (tw 1) o₁ (B₀ (tw 1)) zero (z≤ (tw 1)) (Ωt zero) tm₄ ≡ node⁺ {X = Tr lvl1} {x₀ = zero} nothing Gtop₃ sTop₃
+top-chain₃ = refl
+
+first-feed₃ : Σ (ℕ → Tr lvl1) λ H → Σ _ λ a → Σ (Tr zero → Tr lvl1) λ G′ → (sTop₃ zero ≡ lim H a) × (H zero ≡ Ω q G′)
+first-feed₃ = _ , _ , _ , refl , refl
+
+second-feed₃ : Σ (ℕ → Tr lvl1) λ H → Σ _ λ a → Σ (ℕ → Tr lvl1) λ H′ → Σ _ λ a′ → Σ (Tr zero → Tr lvl1) λ G′
+  → (sTop₃ (sTop₃ zero) ≡ lim H a) × (H zero ≡ lim H′ a′) × (H′ zero ≡ Ω q G′)
+second-feed₃ = _ , _ , _ , _ , _ , refl , refl , refl
+
+-- 三阶那一格的判定与 ψ♯ 一致: 走链目标经孩子 tt 的延伸后, 树框架分量是 inj₂ (inj₁ τ); kp♯ 与它都给 just.
+ho-both₃ : (lem : LEM)
+  → IsJust (Sharp.kp♯ lem (RB.tw 1) (RP.Ok-tw 1) slotᴿ lvl1ᴿ (proj₂ (RP.Ok-tw 1) n1ᴿ))
+  × IsJust (kpT d₂ o₁ q (tv T₂ (σ (chMT T₁ tt) (σ (liftM d₁ idM) ch₁))))
+ho-both₃ lem = tt , tt
+
+-- 四阶端到端 (有限测试): 再套一层 ex 0 b; 同一格仍保留 (同一个 It 的定义, n = 2).
+tm₅ : Tr (tw 1)
+tm₅ = ex zero (proj₁ b⁺) (proj₂ b⁺) tm₄ tt
+
+K₄ : Ca {tw 1} 3 nil
+K₄ = Kₑ 1 o₁ T₀ (proj₁ b⁺) (proj₂ b⁺)
+
+A₄ : Ca {tw 1} 2 nil
+A₄ = It 2 o₁ T₀ zero K₄ (Itᴺ 1 o₁ T₀ zero K₃)
+
+K₁′ : Ca 1 X₁
+K₁′ = enter 1 (chM d₁ (λ y → inj₂ y)) K₁
+
+R₄ : Tr lvl1 → Ca 2 X₁
+R₄ z = It 2 o₁ T₁ (gT z) (enter 3 (chMT T₀ n2) (Itᴺ 2 o₁ T₀ zero K₄)) (enter 2 (chMT T₀ n2) A₄)
+
+sTop₄ : Tr lvl1 → Tr lvl1
+sTop₄ z = proj₁ (run (proj₁ (proj₁ (R₄ z) (liftM d₁ idM) K₁′) (liftM d₁ idM) G₃) S₁ lvl1 ch₁ (S₁ lvl1 ch₁))
+
+Gtop₄ : Tr lvl1 → Tr⁺ zero
+Gtop₄ z = run (proj₁ (proj₁ (R₄ z) (liftM d₁ idM) K₁′) (liftM d₁ idM) G₃) S₁ zero (inj₂ (z≤ (tw 1)) , z≤ (tw 1))
+              (run (proj₁ (proj₁ A₄ idM K₁) idM G₂) S₀ zero (z≤ (tw 1)) (Ωt zero))
+
+top-chain₄ : ψ (tw 1) o₁ (B₀ (tw 1)) zero (z≤ (tw 1)) (Ωt zero) tm₅ ≡ node⁺ {X = Tr lvl1} {x₀ = zero} nothing Gtop₄ sTop₄
+top-chain₄ = refl
+
+second-feed₄ : Σ (ℕ → Tr lvl1) λ H → Σ _ λ a → Σ (ℕ → Tr lvl1) λ H′ → Σ _ λ a′ → Σ (Tr zero → Tr lvl1) λ G′
+  → (sTop₄ (sTop₄ zero) ≡ lim H a) × (H zero ≡ lim H′ a′) × (H′ zero ≡ Ω q G′)
+second-feed₄ = _ , _ , _ , _ , _ , refl , refl , refl
+
+-- (i) 原 fg-bare 那一格: 一阶树 b 在更深的语境 Y₀ = [孩子 2] 里跑 (Kb 在 chMT T₀ 2 上的分量), b 自己的 up 行再进孩子 2.
+--     它自己走链的目标在语境里是 (inj₁ τ , 旧写法); 再下一层的 q 结点对它的判定是 just, 输出是 q 上的 Ω 结点.
+--     D1 的 EF 在这里给 inj₂ (inc 2 τ) 与 nothing (D1 的 fg-chain, fg-bare).
+Y₀ : Cx (tw 1)
+Y₀ = cons d₁ nil
+
+Tb : TD Y₀ (tw 1)
+Tb = trTD (chMT T₀ n2) T₀
+
+Tb′ : TD (cons d₁ Y₀) lvl2
+Tb′ = chTD Tb n2
+
+chb : ⟦ cons d₁ Y₀ ⟧ lvl1
+chb = inj₁ τ , inj₂ (inc n2 τ) , inc n2 τ
+
+fg-chain : (F : Op (cons d₁ Y₀)) (g : Tr lvl1 → Tr lvl2) (S : St (cons d₁ Y₀)) (i : L) (t : ⟦ cons d₁ Y₀ ⟧ i) (v : Tr⁺ i)
+  → E o₁ Tb′ (Ω p g) F S i t v
+  ≡ node⁺ (kpT d₁ o₁ p (proj₁ t)) (λ z → E o₁ Tb′ (g z) F S i t v)
+      (λ z → proj₁ (E o₁ Tb′ (g z) F S lvl1 chb (S lvl1 chb)))
+fg-chain F g S i t v = refl
+
+fg-keep : kpT d₂ o₁ q (tv (chTD Tb′ tt) (σ (chMT Tb′ tt) chb)) ≡ kpT d₂ o₁ q (inj₂ (inj₁ τ))
+fg-keep = refl
+
+fg-just : IsJust (kpT d₂ o₁ q (tv (chTD Tb′ tt) (σ (chMT Tb′ tt) chb)))
+fg-just = tt
+
+fg-run : (F : Op (cons d₂ (cons d₁ Y₀))) (S : St (cons d₂ (cons d₁ Y₀))) (v : Tr⁺ lvl1) (G : Tr zero → Tr lvl1)
+  → Σ (Tr zero → Tr lvl1) λ G′ → proj₁ (E o₁ (chTD Tb′ tt) (Ω q G) F S lvl1 (σ (chMT Tb′ tt) chb) v) ≡ Ω q G′
+fg-run F S v G = _ , refl
+
+-- 余项 (形状, 与 D1 相同): 外来目标 (别的树在框架 d₁ 里走链的目标) 进 b 的视图时忘回 (tv ∘ π); b 自己再进孩子 2 后,
+-- 它的 q 结点对这个目标仍是裸判定 nothing. 树自己走链的目标不受影响 (fg-just).
+t-ext : ⟦ Y₀ ⟧ lvl1
+t-ext = inj₁ τ , inc n2 τ
+
+ext-bare : kpT d₂ o₁ q (tv (chTD Tb′ tt) (σ (chMT Tb′ tt) (σ (chMT Tb n2) t-ext))) ≡ nothing
+ext-bare = refl

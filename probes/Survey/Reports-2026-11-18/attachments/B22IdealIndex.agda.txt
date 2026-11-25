@@ -1,0 +1,93 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22IdealIndex where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; subst₂; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B14SharpBound using (data≤)
+open import OCF.Align.Value using (≼-refl; ≼-trans; l≼; ≼l)
+import B12ActualSlots as C
+import B17SharpFeed as Link
+import B17SharpUpdate as U
+import B17SharpTwo as T
+import B18SharpMacro as M
+import B13Orbit as Orb
+import B12Orbit as Win
+
+import B21IdealRepeat as Reps
+import B15SharpAction as P1
+import B16SharpModel as H1
+import B16SharpOmega as O1
+import B15SharpLift as L1
+import B21IdealContext as Context
+open Context using (Pref; plug; empty; push)
+
+import B22IdealState as State
+import B22IdealPower as Power
+import B20IdealRel as Rel
+open import B14SharpStack using (oB; p; block; Ωw; Ωi)
+open import B15SharpLift using (module Lift)
+open import Data.Maybe.Base using (just)
+open import WVOne using (p₁)
+open import W4Path as Path using (Ok)
+open import Data.Sum using (inj₁)
+open import OCF.Align.Value using (s≼s)
+import B14SharpBound as Bound
+
+data Match : R.Tr r₁ → B.Tr lvl1 → Set where
+  z : Match R.zero B.zero
+  s : ∀ {x y} → Match x y → Match (R.suc x) (B.suc y)
+  l : ∀ {f g d e} → (∀ n → Match (f n) (g n)) → Match (R.lim f d) (B.lim g e)
+  n : ∀ {f g} → (∀ u v → data≤ u v → Match (f u) (g v)) → Match (R.Ω p f) (B.Ω p₁ g)
+  u : ∀ {x w y v d e} → Match x w → data≤ y v → Match (R.up x tt y d) (B.up w tt v e)
+  slack : ∀ {x w v} → Match x w → lvl1 B.⊢ w ◃ v → Match x v
+
+module At (lem : LEM) where
+  open I.Sharp lem
+  open State.At lem
+  open Power.At lem
+  open Lift lem using (cv; cv≤)
+  high = ψ♯ r₁ oR
+  given = λ {X} (T : F.TD {lvl2} X lvl1) → λ {i} (t : F.⟦ X ⟧ i) → F.kpT (F.fr T) ok₂ p₁ (F.tv T t)
+  apply = λ {X mu} (T : F.TD {lvl2} X mu) y (K : F.Op X) → F.op (F.E ok₂ T y K) (F.Einf ok₂ T y K)
+  module With {X : F.Cx lvl2} (mid : F.⟦ X ⟧ lvl1) (T : F.TD X lvl1) (keep : Middle mid (given T)) where
+    lo = F.mk T (F.hereT (F.fr T) (Path.posW lvl1 p₁))
+    Kt = F.chTD T tt
+    kt = F.chMT T tt
+    ext : ∀ K (x : V.Tr⁺ r₂) → Model mid (proj₁ x) K → ∀ D {u w} → Match u w →
+      Model mid (proj₁ (high D r₂ o₂ x u)) (apply T w K)
+    ext K a h D z = h
+    ext K a h D (s h′) = Rep.Take.raised mid _ _ (ext K a h D h′) T (proj₂ (high D r₂ o₂ a _))
+    ext K a h D (l h′) = limits _ _ _ _ (λ j → ext K a h D (h′ j))
+    ext K a h D (n {f = f} {g = g} ps) = node (given T) keep lo
+      (λ z → proj₁ (high D r₂ o₂ a (f (cv z)))) (λ w → apply T (g w) K)
+      (λ z w e → ext K a h D (ps (cv z) w (≼-trans (cv≤ z) e)))
+    ext K a h D (u {x = x} {w = w} {y = y} {v = v} d e) = unwrap
+      where
+      P = apply T w K
+      sub = F.enterO kt P
+      subh = shift kt refl P (ext K a h D d)
+      after = λ j oj → high D j oj (D j oj) x
+      b = high D r₂ o₂ a x
+      module Count₀ = Count (F.σ kt mid) Kt after b sub subh
+      inner = Count₀.result y v e
+      back : ∀ {D S} → Fit mid D S → Fit (F.σ kt mid) D (λ i q → S i (proj₂ q))
+      back f = fit (Fit.one f) (λ q → Fit.lows f (proj₂ q))
+      unwrap : Model mid (proj₁ (high D r₂ o₂ a (R.up x tt y _))) (apply T (B.up w tt v _) K)
+      unwrap = model (λ D p S h → Model.feed inner D p _ (back {D = Context.At.nextState lem D p R.zero} {S = S} h))
+        (λ D a p S h t b hv → Model.value inner D a p _ (back {D = Context.At.nextState lem D p R.zero} {S = S} h) (F.σ kt t) b hv)
+    ext K a h D (slack {w = w} {v} q rise) = lower (apply T w K) (apply T v K) (λ S i t b → F.Emono ok₂ T K S i t b rise) (ext K a h D q)

@@ -1,0 +1,35 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25AReal where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; Σ; _,_)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block using (tw)
+open import W4Path using (Ok-tw)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-suc; ≼-refl; ≼-trans; ≼l; s≼s)
+open import WVOne using (T₀; read)
+import B12Terminal as T
+import B20Room as Room
+import B20OldBlocks as Place
+import B20StandardInside as S
+import B21TowerGrowth as Tower
+import B21StandardShape as Shape
+import B22TowerCut as Cut
+import B25AEpsilon as H
+
+module Stage (m : ℕ) where
+  open Tower.At m using (k; top; module Standard)
+  open Standard using (s; cert; cv; high; below)
+  module P = Place.Second s cert cv
+  r = P.s
+  module Next = H.Next r P.keep P.cs
+  up : ∀ x → x ≼ S.std k → H.hull x ≼ S.std top
+  up x h = ≼-trans (Next.From.bound x (≼-trans h (Room.room P.trail P.child (λ w → high (W4Block.inc (P.P.D.C.ix 1) w)) Next.b)))
+    (≼-trans (Room.below P.trail P.child P.cc) (≼-trans (P.P.D.C.lift-value 1) below))
+
+hit : ∀ {x} → L.suc x ≼ Cut.cut → Σ ℕ (λ j → H.hull x ≼ S.std j)
+hit {x} (≼l m p) = Tower.At.top m , Stage.up m x (≼-trans (≼-suc (≼-refl _))
+   (≼-trans p (≼-trans (≼-suc (≼-refl _)) (≼-trans (Shape.rise m)
+       (≼-trans (≼-suc (≼-refl _)) (Shape.rise (suc m)))))))
+inside : ∀ {x} → L.suc x ≼ Cut.cut → L.suc (H.hull x) ≼ Cut.cut
+inside {x} h = let j , p = hit {x} h in ≼l (suc j) (≼-trans (s≼s p) (Shape.rise j))

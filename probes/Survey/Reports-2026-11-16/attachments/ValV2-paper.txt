@@ -1,0 +1,21 @@
+V2 纸面草稿 (2026-11-18). 全文见回报.
+
+1. 反例 (N1 形式的吸收引理, 走链一支).
+   E = psi#_0(Omega_1) 的输出 (第 0 层的树, 值 eps_0). E' = up zero tt E (one 层). T* = E' + Omegat one = 结点 c |-> eps_0 + (c+1).
+   严格值: |T*| = |Omegat one| (编译 absorbed). 朝第 0 层折 T*: 走链, 第 0 项 = (朝 0 折 eps_0)*omega, 严格高于 eps_0 (编译 absorb-fails).
+   名字: 结点一行取 kappa = 0, F(eta) = eps_0 (+) (eta+1), 夹逼 eta <= F(eta) < Omega_1 成立; 分支 up E' tt (suc z) 由嵌入一行名为 eps_0 (+) (eta+1).
+   所以 T* 名为 Omega_1 (纸面), B 的结论说输出名为 psi_0(Omega_1), 值矛盾 (编译 B-false, 以 "T* 名为 Omega_1" 为前提).
+   机制: 链的第一步名字 psi_0(eps_0 + 1) 不是标准形 (G_0 里有 Omega_1 > eps_0+1), 归纳假设用不上.
+
+2. 修正版走链行 (纸面, 相对于 IH-B, A, Bach).
+   前提: (a) NF psi_u(K(+)a); (b) NF psi_u(K); (c) 结点的 F 满足 Trian eta (F eta) a (代替 F eta < a); (d) a[eta] <= F eta.
+   记 K(+)a = K' ++ a, gamma'_0 = 0, gamma'_{n+1} = psi_kappa(c_n), c_n = K (+) F(gamma'_n) = K' ++ Q_n ++ F(gamma'_n).
+   C(n): G_u(gamma'_n) < K' ++ F(gamma'_n). 由 C(n): T-cons 提升 Trian, Gtri 给 GB u (K'++F gamma'_n), 加 (b) 得 NF psi_u(c_n), NF psi_kappa(c_n).
+   C(n+1): G_u(psi_kappa(c_n)) = {c_n} + G_u(kappa) + G_u(c_n).
+     c_n < K' ++ F(gamma'_{n+1}): alpha = Q_n ++ F gamma'_n < a, kappa-成分的参数在 G_u(c_n) < c_n, 由 EboBach.below 得 alpha < a[gamma'_{n+1}] <= F(gamma'_{n+1}).
+     G_u(kappa) < K' ++ a[Omega_kappa] (EboLeanClosure.hZ0 / EboLeanBach.bach), 而 Omega_kappa <= gamma'_{n+1}.
+   共尾: gamma_n <= gamma'_{n+1} (归纳, fOmega-mono 与 d), 所以 psi_u(K(+)a)[n] <= p_{n+1}.
+   上界: p_n < psi_u(K(+)a) (ar<).
+   未核: 部分和的命名 (树加法封闭), 输出各项对 psi_u(K(+)a) 的 Trian.
+
+3. Lambda 行: K = Omega_{nu_{n-1}}, a = Omega_{nu_n}, F(eta) = Omega_{nu_{n-1} (+) eta}; nu_m 的 G 集只有 0, 所以 (b)(c) 成立; 链名 0, psi_k(Omega_k*2), psi_k(Omega_{gamma'_m}).

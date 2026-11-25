@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意深的零下标语法可在同一个真实目标上连续下降；抹去非零下标的解释有首个显式碰撞。
+module B26OSection where
+
+open import Data.List.Base using ([]; _∷_)
+open import Data.Empty using (⊥)
+open import Data.Unit.Base using (tt)
+open import Data.Maybe.Base using (just)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Align.EboLeanDef using (ψ; _<ᵀ_; Ωs; hd<; lv<; []<)
+open import OCF.Align.EboLeanBase using (_≤ᵀ_; <-≤; <ᵀ-trans; n[]; nf-Ω; GB[])
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; ≼-suc; ≼-refl; ≼-trans; s≼s; s≼s⁻; s≼0)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import WVOne using (T₀; read)
+open import W4Fold using (EBOᶜ)
+import W4Block as W
+import B20StandardInside as S
+import B20StandardGoal as Final
+import B22MovingIndex as E
+import B22TowerCut as K
+import B26OSparse as U
+open import B26OArgument as A using (Argument; argument; raw; valid)
+import B26OGame as G
+import B26OCountable as C
+
+module Interval (top : Argument) (r : Argument → T₀)
+  (growth : ∀ b a → raw b <ᵀ raw a → raw a <ᵀ raw top → L.suc (r b) ≼ r a) where
+
+  Room = λ a z → ∀ b → raw b <ᵀ raw a → L.suc (r b) ≼ read z
+
+  narrower : ∀ a {z} → raw a <ᵀ raw top → r a ≼ read z → Room a z
+  narrower a p h b q = ≼-trans (growth b a q p) h
+
+  play : ∀ z a → raw a ≤ᵀ raw top → Room a z → G.Play z (just a)
+  play W.zero a m h b p = s≼0 (h b p)
+  play (W.suc z) a m h b p = tt , play z b (inj₁ (<-≤ p m))
+    (narrower b (<-≤ p m) (s≼s⁻ (h b p)))
+  play (W.lim f e) a m h b p with G.take (r b) (W.lim f e) (h b p)
+  ... | n , q = n , play (f n) b (inj₁ (<-≤ p m)) (narrower b (<-≤ p m) q)
+  play (W.Ω () _)
+  play (W.up _ () _ _)
+  play (W.ex _ _ _ _ ())
+
+one : Argument
+one = argument (U.card []) (nf-Ω n[]) (U.admissible GB[])
+
+top : Argument
+top = argument (Ωs []) (nf-Ω (valid one)) (U.admissible (A.admissible one))
+
+r : Argument → T₀
+r b = read (C.exec (raw b))
+
+grow : ∀ b a → raw b <ᵀ raw a → raw a <ᵀ raw top → L.suc (r b) ≼ r a
+grow b a p q = ≼-trans (s≼s (proj₁ (C.aligned (raw b))))
+  (≼-trans (C.below (valid b) (C.pure b (<ᵀ-trans p q)) (valid a) (C.pure a q) p) (proj₂ (C.aligned (raw a))))
+
+fits : ∀ b → raw b <ᵀ raw top → L.suc (r b) ≼ E.above L.zero
+fits b p = ≼-trans (s≼s (proj₁ (C.aligned (raw b)))) (C.inside (valid b) (C.pure b p))
+
+module Strategy = Interval top r grow
+
+win : ∀ z → E.above L.zero ≼ read z → G.Play z (just top)
+win z h = Strategy.play z top (inj₂ refl) (λ b p → ≼-trans (fits b p) h)
+
+opaque
+  budget : E.above L.zero ≼ S.std 3
+  budget = ≼-trans (K.advance {L.zero} {S.std 0} z≼) (K.up 0)
+  initial : E.above L.zero ≼ read EBOᶜ
+  initial = ≼-trans budget (≼-trans (≼-suc (≼-refl (S.std 3))) (Final.bound 3))
+
+in-terminal : G.Play EBOᶜ (just top)
+in-terminal = win EBOᶜ initial
+
+collides : A.Strict r → ⊥
+collides all = s≼-irrefl (r one) (all one top (hd< (lv< []<)))
+

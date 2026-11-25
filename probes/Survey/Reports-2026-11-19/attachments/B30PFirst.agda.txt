@@ -1,0 +1,58 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对自然极限的首项和任意 Ω 槽的零枝，正回灌精确保留该条边。
+module B30PFirst where
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Unit.Base using (tt)
+open import Data.Maybe.Base using (nothing; just)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst; cong)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import B28PRoute as R
+import B28POrbit as Orbit
+
+data First {k : L} : Tr k → Tr k → Set where
+  nat : ∀ f d → First (f zero) (lim f d)
+  card : ∀ p g → First (g (fromBr k p zero)) (Ω p g)
+
+node : ∀ {k X x} (μ : Keep k X x) (g : X → Tr⁺ k) (s : X → X) →
+       First (proj₁ (g x)) (proj₁ (node⁺ μ g s))
+node nothing g s = nat _ _
+node (just (p , cv , e)) g s = subst (λ z → First (proj₁ (g z)) _) e (card p _)
+
+data Walk {k : L} (x : Tr k) : Tr k → Set where
+  stay : Walk x x
+  step : ∀ {y z} → Walk x y → First y z → Walk x z
+
+module At (m : ℕ) where
+  module X = Orbit.At m
+  module C = R.Call m
+  k = tw (suc m)
+  n : ℕ
+  n = suc (suc m)
+  module Nat (b : ℕ → L) (p : OkOS k sL b) (e : ∀ i → OkO k (b i)) where
+    l = nd sL b
+    source = k ⊕ l
+    child = λ i → k ⊕ b i
+    env = B20Towers.slots source n
+      where import B20Towers
+    cert = Ok⊕ k l (Ok-tw (suc m)) (p , e)
+    call = λ B → proj₁ (ψ (child 0) (proj₂ cert 0) B k (self ∙ lift k (b 0)) X.head (proj₁ (Ωt (child 0))))
+    points : First (C.fold (b 0) (e 0)) (C.fold l (p , e))
+    points = subst (λ y → First y (C.fold l (p , e))) (cong call (Orbit.restrict {sL} child 0 n)) (nat _ _)
+  module Card {i : L} (b : Tr i → L) (w : i ≤ k) (oi : Ok i) (e : ∀ c → OkO k (b c)) where
+    module N = C.Node b w oi e
+    μ = kp N.source N.cert (Data.Sum.Base.inj₁ (Data.Sum.Base.inj₁ tt)) (self ∙ lift k N.l)
+      where import Data.Sum.Base
+    points : First (C.fold (b zero) (e zero)) (C.fold N.l N.right)
+    points = subst (λ y → First y (C.fold N.l N.right)) (N.point zero) (node μ N.Q N.step)
+  keep : ∀ {x y : Tr k} → First x y → First (X.K.next x) (X.K.next y)
+  keep (nat f d) = Nat.points (λ i → ↑ k (f i)) (λ i → ◃→⊑ k (d i)) (λ i → OkO↑ k k (Ok-tw (suc m)) self (f i))
+  keep (card p g) = Card.points (λ z → ↑ k (g (fromBr k p z))) (posW k p) (Ok-at k (Ok-tw (suc m)) p)
+    (λ z → OkO↑ k k (Ok-tw (suc m)) self (g (fromBr k p z)))
+  lift-path : ∀ {x y : Tr k} → Walk x y → Walk (X.K.next x) (X.K.next y)
+  lift-path stay = stay
+  lift-path (step p h) = step (lift-path p) (keep h)
+

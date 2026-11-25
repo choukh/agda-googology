@@ -1,0 +1,41 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每个真正内步的所选坐标，下一次仍回到前前塔 Ω；两个槽位可能位于不同的实际孩子中。
+module B29CKeys where
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Unit.Base using (tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Maybe.Base using (just)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold hiding (run)
+import B28PPull as P
+import B28BBranch as Direct
+import B29CRelay as Relay
+
+import B29CMode as Mode
+
+module At (n : ℕ) where
+  open Relay.At n
+  open Mode.At n using (yes; first; follow)
+
+  contract : ∀ (μ : Keep i (Tr d) zero) G next → μ ≡ yes → Key (proj₁ (node⁺ μ G next))
+  contract .yes G next refl = again _
+
+  keeps : ∀ c (q : Key c) x → Root (node c q) x → Key (D.decode₁ x)
+  keeps ._ start ._ (read-head g) = contract _ _ _ (first g)
+  keeps ._ (again h) ._ (read-head g) = contract _ _ _ (follow h g)
+
+  module Real (j : ℕ) where
+    g = X.branch j
+    module Walk = H.Walk g
+    c = Walk.Run.ix
+    x = λ u → g (c u)
+    actual : ∀ u → Key (c u)
+    actual zero = start
+    actual (suc u) = subst Key (sym (Direct.At.step m g (c u)))
+      (keeps (c u) (actual u) (x u) (branches (c u) (actual u) j))
+    positive : ∀ u → Root (node (c u) (actual u)) (x u)
+    positive u = branches (c u) (actual u) j

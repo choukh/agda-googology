@@ -1,0 +1,118 @@
+[
+  {
+    "name": "YiNDTower",
+    "source": "<repository>/probes/OCF/Lean/YiNDTower.lagda.md",
+    "log": "<experiment>/YiNDTower-cold.log",
+    "code_lines": 16,
+    "physical_lines": 22,
+    "exit": 0,
+    "external_wall_seconds": 14.6851095,
+    "rts_elapsed_seconds": 14.593,
+    "rts_maximum_residency_bytes": 1409592768,
+    "checking": [
+      "Checking OCF.Lean.YiNDTower (<repository>/probes/OCF/Lean/YiNDTower.lagda.md)."
+    ],
+    "source_sha256": "f6ebcd98a2fbb3c30bb60864e763aabb9778d50bc7f81aad591e1a600ae0b422",
+    "log_sha256": "eaa5711c469dd3537386c6ea5e954247b762e7ef8d633e0e922afefd70802cdd",
+    "command": [
+      "agda",
+      "+RTS",
+      "-M8G",
+      "-s",
+      "-RTS",
+      "--library-file=<experiment>/libraries",
+      "-i",
+      "src",
+      "-i",
+      "probes",
+      "probes/OCF/Lean/YiNDTower.lagda.md"
+    ]
+  },
+  {
+    "name": "YiNDTop",
+    "source": "<repository>/probes/OCF/Lean/YiNDTop.lagda.md",
+    "log": "<experiment>/YiNDTop-cold.log",
+    "code_lines": 81,
+    "physical_lines": 87,
+    "exit": 0,
+    "external_wall_seconds": 4.786699499999997,
+    "rts_elapsed_seconds": 4.704,
+    "rts_maximum_residency_bytes": 342042664,
+    "checking": [
+      "Checking OCF.Lean.YiNDTop (<repository>/probes/OCF/Lean/YiNDTop.lagda.md)."
+    ],
+    "source_sha256": "35816f177a47f68478e6f0a5c13822cbb76e5ec5bc7eb2deb20f973285c802d9",
+    "log_sha256": "c1a82a36da4ee4d9c71474438b4209a7bf9ed9a386441f0326d380006eec039a",
+    "command": [
+      "agda",
+      "+RTS",
+      "-M8G",
+      "-s",
+      "-RTS",
+      "--library-file=<experiment>/libraries",
+      "-i",
+      "src",
+      "-i",
+      "probes",
+      "probes/OCF/Lean/YiNDTop.lagda.md"
+    ]
+  },
+  {
+    "name": "YiNDBridge",
+    "source": "<repository>/probes/OCF/Lean/YiNDBridge.lagda.md",
+    "log": "<experiment>/YiNDBridge-cold.log",
+    "code_lines": 45,
+    "physical_lines": 51,
+    "exit": 0,
+    "external_wall_seconds": 17.192636958,
+    "rts_elapsed_seconds": 17.095,
+    "rts_maximum_residency_bytes": 1583998096,
+    "checking": [
+      "Checking OCF.Lean.YiNDBridge (<repository>/probes/OCF/Lean/YiNDBridge.lagda.md)."
+    ],
+    "source_sha256": "5583d7b50b86ed19ff55b33124918cd6600be22e608385b7ca51db69bd3b9fd0",
+    "log_sha256": "d09aaf57d3f549d5bb0cc023d5098c869e80f2cefb7c107d274500530680a603",
+    "command": [
+      "agda",
+      "+RTS",
+      "-M8G",
+      "-s",
+      "-RTS",
+      "--library-file=<experiment>/libraries",
+      "-i",
+      "src",
+      "-i",
+      "probes",
+      "probes/OCF/Lean/YiNDBridge.lagda.md"
+    ]
+  },
+  {
+    "name": "YiNDAccept",
+    "source": "<repository>/probes/OCF/Lean/YiNDAccept.lagda.md",
+    "log": "<experiment>/YiNDAccept-cold.log",
+    "code_lines": 67,
+    "physical_lines": 73,
+    "exit": 0,
+    "external_wall_seconds": 19.672467499999996,
+    "rts_elapsed_seconds": 19.569,
+    "rts_maximum_residency_bytes": 1665592752,
+    "checking": [
+      "Checking OCF.Lean.YiNDAccept (<repository>/probes/OCF/Lean/YiNDAccept.lagda.md)."
+    ],
+    "source_sha256": "9ba115e333baeafdea400f4e5bc73b1f96f6d96b78104a295ffb94dc9f4ac5d8",
+    "log_sha256": "45fa16cd938cdb7321bcdd44996a44860b5839a1dc54b9a16e60d62397abe468",
+    "command": [
+      "agda",
+      "+RTS",
+      "-M8G",
+      "-s",
+      "-RTS",
+      "--library-file=<experiment>/libraries",
+      "-i",
+      "src",
+      "-i",
+      "probes",
+      "probes/OCF/Lean/YiNDAccept.lagda.md"
+    ]
+  }
+]

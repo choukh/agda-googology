@@ -1,0 +1,57 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 新的 Ω₁ 系数有纯 src 参照：先把 Ω₁ 嵌入第三层，折到第二层，再取零层的值。
+module B14Source where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import OCF.BTBO using (module BoundedTrich; module Ord-Ord)
+module B = BoundedTrich
+module S = Ord-Ord
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≅→≼)
+open import WVOne using (T₀)
+open import WSLevel using (Ω₁ᴸ)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Src as Src
+import B12LimitSrc as Z
+import B13Target as T
+import B13Feedback as F
+open import B12Omega3Ref using (idσ)
+
+one : B.Ordᴰ
+one = B.suc B.zero
+C : Z.Src₂
+C = S.ψ< {i = Src.two} {ℓ = B.suc Src.two} B.zero (S.↑ {ℓ₁ = one} (B.suc B.zero) (S.Ω one))
+
+raw : Z.Lev₂
+raw = T.co₁ Ω₁ᴸ
+
+base : Z.Aligned C raw
+base = Z.aligned
+  (U.M-ψ {i = Src.two} (L.≅ᴵ-refl _) L.zero (λ q → L.suc (L.suc q)) B.zero
+    (U.M-↑ (B.suc B.zero) (U.M-Ω {a = one} tt (L.≅ᴵ-refl _))))
+  (D.Dn-ψ {i = Src.two} (L.≅ᴵ-refl _) L.zero (λ q → L.suc (L.suc q)) B.zero
+    (D.Dn-↑ (B.suc B.zero) (D.Dn-Ω {a = one} (L.≅ᴵ-refl _))))
+  (T.co-pres (L.Ω-refl _))
+
+transport : raw L.≅ T.co₁ (T.back Ω₁ᴸ)
+transport = T.co-pres (L.≅-sym (L.tr⁻-≅ (L.≅ᴵ-refl _) (L.Ω-refl _)))
+
+first : tr₀ (S.ψ₀ C) ≈ᵛ F.first-node
+first = ≼-trans (proj₁ (Z.fold base)) (≅→≼ (L.ψ⁰-≅ transport)) ,
+        ≼-trans (≅→≼ (L.ψ⁰-≅ (L.≅-sym transport))) (proj₂ (Z.fold base))
+
+stage : ℕ → Z.Src₂
+stage = S.iter (λ t → t S.+ Src.a) C
+
+matching : ∀ n → Z.Aligned (stage n) (S.iter (λ t → t L.+ Ω₂ᴸ) raw n)
+matching zero = base
+matching (suc n) = Z.plus (matching n) Z.omega2
+
+reindex : ∀ {u v : Z.Lev₂} → u L.≅ v → ∀ n → S.iter (λ t → t L.+ Ω₂ᴸ) u n L.≅ S.iter (λ t → t L.+ Ω₂ᴸ) v n
+reindex d zero = d
+reindex d (suc n) = L.add-≅ {σ = idσ} {σ′ = idσ} (reindex d n) (L.Ω-refl _)

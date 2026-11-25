@@ -1,0 +1,65 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对每个塔号，独立标准后一正塔的第 1 个正反馈孩子含前一正塔的一切有限后继层的实际运行。
+module B21CrossAll where
+open import Data.Nat.Base as N using (ℕ; zero; suc)
+open import Data.Nat.Properties using (≤-refl)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold using (EBOᶜ)
+open import WVOne using (T₀; read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼; s≼s)
+import B12Terminal as T
+import B12ActualSlots as A
+import B15ReadPaths as R
+import B15Spine as S
+import B15TowerIteration as I
+import B15TowerFeedback as W
+import B18TowerEmb as E
+import B18ResetCell as C
+import B20StandardGoal as Goal
+import B21CrossPath as Z
+import B21CrossPlace as P
+import B21CrossLocate as J
+open T.Run
+
+w : ℕ → W4Block.L
+w n = ↑ (tw (suc n)) (proj₁ (Ωt (tw (suc n))))
+from : ∀ n → Z.Way (P.wrap n J.w) (w n)
+from zero = R.here , Z.at
+from (suc n) = R.via (R.left zero (proj₁ (from n))) R.omega , Z.join (Z.left zero (proj₂ (from n))) Z.card
+
+first : ∀ j F u → Z.Clean (W.through j F u 0)
+first zero F u = Z.count
+first (nd sS h) F u = Z.join Z.count Z.card
+first (nd sL h) F u = Z.join (first (h 0) F u) Z.count
+first (nd (sΩ j) h) F u = Z.join (first (h zero) F u) Z.card
+
+module Tower (m : ℕ) where
+  n = suc m
+  k = tw n
+  high = tw (suc n)
+  r = T.initial high (Ok-tw (suc n))
+  cv = A.initial high (Ok-tw (suc n))
+  module D = I.Tower.State m (λ x → x) L.zero r refl cv
+  module Jn = J.At (sΩ (tw m)) (S.branch (tw m)) (Ok-tw n)
+  c = D.C.child 1
+  path = R.via (proj₁ (from m)) (R.via (R.base (w m) (w m)) (D.at-index 0))
+  clean = Z.join (proj₂ (from m)) (Z.join (Z.base (w m) (w m)) (first k (opR (w m)) (w m)))
+  located : ∀ j → Jn.Found (Z.finite j) {↑ k (D.C.ix 1)} c
+  located j = Jn.follow path clean (Jn.locate m j) c D.certified (D.C.cover cv 1) (λ _ → refl)
+  module Using (Q : ℕ → T₀) (branch : ∀ j (s : T.Run (k ⊕ Z.finite j)) →
+       Jn.P.Kept (Z.finite j) (ok s) → A.Covered s → Q j ≼ read (T.value s)) where
+    one : ∀ j → Q j ≼ read (T.value c)
+    one j = ≼-trans (branch j (Jn.Found.run e) (Jn.Found.cert e) (Jn.Found.covered e)) (Jn.Found.value e)
+      where e = located j
+    physical : L.lim Q ≼ read (proj₁ (E.standard (suc n)))
+    physical = ≼-trans (l≼ one) (D.C.lift-value 1)
+    next : ∀ j → L.suc (L.lim Q) ≼ C.At.fresh (suc n) j
+    next j = ≼-trans (s≼s physical) (Goal.At.child n j (suc n) ≤-refl)
+    terminal : L.suc (L.lim Q) ≼ read EBOᶜ
+    terminal = ≼-trans (next 0) (Goal.into (suc n) 0)

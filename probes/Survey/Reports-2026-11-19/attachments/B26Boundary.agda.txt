@@ -1,0 +1,99 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 若真实 Λ 未达 EBO，它有一个精确的主项名字，其参数只能为 ω 共尾或 Ω 共尾。小于该名的任意有限组标尺都能在同一实际反馈现场兑现。
+module B26Boundary where
+
+open import Data.Nat.Base as N using (ℕ; zero; suc; _≤_; _⊔_)
+open import Data.Nat.Properties using (≤-refl; ≤-trans; m≤m⊔n; m≤n⊔m)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.List.Base using (List; []; _∷_)
+open import Data.List.Relation.Unary.All using (All; []; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Align.EboLeanDef using (T; ψ; cof; c0; c1; cω; cΩ; HC; h0; h1; _<ᵀ_)
+open import OCF.Align.EboLeanBase using (Ctbl; c[]; c∷; NF)
+open import OCF.Align.EboLeanView using (NE; ne; cof0)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; s≼0; s≼s⁻; ≼lim⁻)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import OCF.Align.Level as L
+import B12EboRows as B
+import B17Cofinal as C
+import B17CellNext as Cells
+import B17CellPrefix as P
+import B26Names as A
+import B26CSuccessor as S
+import B26PSums as Sum
+import B26PActual as Run
+
+Y = Run.Y
+child-strict : ∀ n → L.suc (B.child n) ≼ Y
+child-strict n = ≼-trans {b = P.cell n 0} (Cells.strict n 0) (Cells.actual n 0)
+nonzero : Y ≼ (L.zero {L.zero}) → ⊥
+nonzero u = s≼0 (≼-trans {b = Y} (child-strict 0) u)
+nonstep : ∀ x → L.suc x ≈ᵛ Y → ⊥
+nonstep x (l , r) = consume (C.witness {x = x} l)
+  where
+  consume : B.InChild (L.suc x) → ⊥
+  consume (n , q) = s≼-irrefl x (≼-trans {b = B.child n} q (s≼s⁻ (≼-trans {b = Y} (child-strict n) r)))
+
+LimitArg : T → Set
+LimitArg a = (cof a ≡ cω) ⊎ Σ T (λ u → cof a ≡ cΩ u)
+
+record Candidate : Set where
+  constructor candidate
+  field
+    arg : T
+    limit : LimitArg arg
+    nf : NF (S.principal arg)
+    tree : HC (S.principal arg)
+    exact : Rt tree ≈ᵛ Y
+open Candidate public
+
+vis : Candidate → A.Name
+vis b = A.named (S.principal (arg b)) (nf b) (c∷ c[]) (tree b)
+
+zero-fails : ∀ (h : HC []) → Y ≼ Rt h → ⊥
+zero-fails h r = nonzero (≼-trans {b = Rt h} r (tree-≼ refl h (h0 refl)))
+
+base-fails : ∀ (h : HC (S.principal [])) → Rt h ≈ᵛ Y → ⊥
+base-fails h (l , r) = nonstep L.zero (≼-trans {b = Rt h} (tree-≼ refl one h) l ,
+                                        ≼-trans {b = Rt h} r (tree-≼ refl h one))
+  where
+  one : HC (S.principal [])
+  one = h1 refl (h0 refl)
+
+classify : A.Named Y → Candidate
+classify (A.named [] _ _ h , l , r) = ⊥-elim (zero-fails h r)
+classify (A.named (ψ [] a ∷ p ∷ t) n (c∷ ct′) h , e) = ⊥-elim (Sum.not-sum n (c∷ ct′) h e)
+classify (A.named (ψ [] [] ∷ []) n (c∷ c[]) h , e) = ⊥-elim (base-fails h e)
+classify (A.named (ψ [] a@(p ∷ t) ∷ []) n (c∷ c[]) h , e) with cof a in eq
+... | c0 = ⊥-elim (cof0 a ne eq)
+... | c1 = ⊥-elim (S.exclude n eq h e)
+... | cω = candidate a (inj₁ eq) n h e
+... | cΩ u = candidate a (inj₂ (u , eq)) n h e
+
+smaller : ∀ b a → A.name a <ᵀ A.name (vis b) → Cells.Eventually (L.suc (A.value a))
+smaller b a lt = Cells.eventual {x = A.value a} (≼-trans {a = L.suc (A.value a)} {b = Rt (tree b)} {c = Y}
+  (mono<ⁿ (A.nt a) (nf b) (c∷ c[]) (A.hcN a) (tree b) lt) (proj₁ (exact b)))
+
+Together : List A.Name → Set
+Together xs = Σ ℕ (λ k → ∀ n → k ≤ n → ∀ j → All (λ a → L.suc (A.value a) ≼ P.cell n j) xs)
+
+support : ∀ b xs → All (λ a → A.name a <ᵀ A.name (vis b)) xs → Together xs
+support b [] [] = 0 , λ _ _ _ → []
+support b (x ∷ xs) (h ∷ rest) = join (smaller b x h) (support b xs rest)
+  where
+  join : Cells.Eventually (L.suc (A.value x)) → Together xs → Together (x ∷ xs)
+  join (i , first) (k , others) = i ⊔ k , λ n d j →
+    first n (≤-trans (m≤m⊔n i k) d) j ∷ others n (≤-trans (m≤n⊔m i k) d) j
+
+module Classical (lem : LEM) where
+  module AC = A.Classical lem
+  alternative : (A.E ≼ Y) ⊎ Candidate
+  alternative = Data.Sum.Base.map (λ p → p) classify (AC.split Y)
+
+  sufficient : (Candidate → ⊥) → A.E ≼ Y
+  sufficient no = AC.exclude {Y} (λ n → no (classify n))

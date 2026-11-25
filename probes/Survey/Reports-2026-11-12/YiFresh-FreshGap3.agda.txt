@@ -1,0 +1,38 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module FreshGap3 where
+
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_)
+open import OCF.Lean.YiFreshBlock
+open import OCF.Lean.YiFreshFold
+open import OCF.Lean.YiFreshCheck using (c₃; p₃)
+
+isLim : ∀ {P B C D} → T P B C D → Set
+isLim (lim _) = ⊤
+isLim _       = ⊥
+
+isΩ : ∀ {P B C D} → T P B C D → Set
+isΩ (Ω _ _) = ⊤
+isΩ _       = ⊥
+
+-- 目标是 tw 3 的分支 c₃ 那一层 h c₃ 自身; 结点的槽位 p₃ 在 h c₃ 里, 源层号是 ℕ 极限.
+h₃ : L
+h₃ = tw 2 ⊕ ↑ (tw 2) c₃
+
+-- 同一结点, 目标取 tw 3 自身: 保留 (对照)
+kept : isΩ (ψs (tw 3) (B₀ _) (tw 3) self (Ω p₃ (λ _ → zero)))
+kept = tt
+
+-- 目标取分支层 h₃ (路径 inb c₃ self): 折掉, 成了 ℕ 极限
+folded : isLim (ψs (tw 3) (B₀ _) h₃ (inb c₃ self) (Ω p₃ (λ _ → zero)))
+folded = tt
+
+-- 塔的第 2 项的 Ω 树做对角链时, 链的一步 (目标是 k 侧的 tw 1, 嵌入在分支 c 里):
+-- 走回退 "偏移的折叠 + 孩子的 ψ⊥ 抬上来", 不是孩子在 tw 1 里的折叠.
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+step₂ : (c : Tr (tw 1))
+  → ψs (tw 2) (B₀ _) (tw 1) (ink self) (up zero c (Ωt (tw 1 ⊕ ↑ (tw 1) c)))
+  ≡ Ωt (tw 1) + ι (tw 1) (ψ₀ (tw 1 ⊕ ↑ (tw 1) c) (Ωt (tw 1 ⊕ ↑ (tw 1) c)))
+step₂ c = refl

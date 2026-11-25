@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21RowWorldPool where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import WKShape using (lvl3)
+open import WSLevel using (Ω₁ᴸ)
+open import WKGen using (Ω₁t)
+import OCF.Align.Level as L
+import B11OuterCore as C
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B12Omega3Cuts as U
+import B12Orbit as Std
+import B13Orbit as K
+import B13OrbitFeed as O
+import B13Target as Src
+import B14RefFixed as Fix
+import B17OrbitTower as T
+import B18OrbitRows as Rw
+import B18OrbitWorld as W
+import B18OrbitLevels as All
+import B18RefModel as M
+import B18RefDepth as H
+import B18RefRows as Rows
+import B18RefCong as G
+import B19RowSecond as Orig
+import B20RowIndex as I
+import B20RowPrefix as P
+import B21RowPool as Pool
+import B21RowWorldCopy as Cp
+
+v : ∀ d → ℕ → T.Carrier (H.S d)
+v d zero = H.initial d
+v d (suc k) = I.node d k
+fit : ∀ d n → M.fit (Rows.meaning d) (v d n) (I.u n)
+fit d zero = Rows.seed d
+fit d (suc n) = I.fits d n
+next = λ d n → T.run (T.run (v (suc d) n 0) (H.grad d)) (H.initial d)
+next-fit : ∀ d n → M.fit (Rows.meaning d) (next d n) (I.u (suc n))
+next-fit d n = M.conv (Rows.meaning d) (fit (suc d) n 0 (H.grad d) L.zero L.z≅ (Rows.step d)
+  (H.initial d) Ω₁ᴸ (L.Ω-refl _) (Rows.seed d)) (G.δ-pres (U.left-unit (λ x → x) (P.reg n)) (L.Ω-refl _))
+program = λ d → T.sup (H.S d) (next d)
+meaning : ∀ d → M.fit (Rows.meaning d) (program d) (Fix.collapse Orig.p)
+meaning d = M.conv (Rows.meaning d) (M.sup (Rows.meaning d) (next d) (λ n → I.u (suc n)) (λ n → P.reg (suc n)) (next-fit d)) (L.≅-sym I.collapse)
+
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  module P′ = Pool.At r cv
+  open P′ using (b; fp; branch; module V)
+  open V using (module R; module A; module Clock; clock; k-of)
+  open R.I using (module E₀; J; K₁)
+  open A using (st1; G; c⁺)
+  open R.I.Previous.Proof.Core.Run using (S₁)
+  cover-clock : lvl1 ⊢ Ω₁t ◃ proj₁ (clock 0)
+  cover-clock = ◃t R.X.Prev.cover (Einf ok₂ O.D₁ (suc (R.seq 1)) K₁ S₁ lvl1 Rw.Out.slot (S₁ lvl1 Rw.Out.slot))
+  each-clock : ∀ d n → W.Index (All.world d) (clock n) (v d n)
+  each-clock d zero = W.start (All.world d) (clock 0) cover-clock
+  each-clock d (suc k) = Clock.next-index d k
+  each : ∀ d n → W.Index (All.world d) (b n) (next d n)
+  each d n = each-clock (suc d) n Rw.m (λ _ → refl) 0 idM (λ _ → refl) K₁ (H.grad d) (R.Laws.model d)
+      S₁ (H.initial d) R.X.Prev.cover base (S₁ lvl1 Rw.Out.slot) base
+    where base = W.start (All.world d) (S₁ lvl1 Rw.Out.slot) R.X.Prev.cover
+  middle = run (Std.block J) st1 lvl1 C.slot (st1 lvl1 C.slot)
+  pool : ∀ d → W.Index (All.world d) middle (program d)
+  pool d = W.gather (All.world d) middle (next d) gather
+    where
+    gather : ∀ n → W.Index (All.world d) middle (next d n)
+    gather n = W.rise (All.world d) (Cp.shell pref (b n)) middle (◃t (+-mono pref (branch n)) (◃l (suc (suc (k-of n))))) (next d n) (Cp.copy d pref (b n) _ (each d n))
+      where pref = cum (λ i → proj₁ (fp i)) (suc (k-of n))
+  larger = λ b → run (K.block b J) st1 lvl1 C.slot (st1 lvl1 C.slot)
+  move : ∀ d b → Cov._⊴_ (proj₁ (Ωt lvl2)) (proj₁ b) → W.Index (All.world d) (larger b) (program d)
+  move d b (inj₁ e) = subst (λ x → W.Index (All.world d) (E ok₂ tdNil x J st1 lvl1 C.slot (st1 lvl1 C.slot)) (program d)) e (pool d)
+  move d b (inj₂ p) = W.rise (All.world d) middle (larger b) (Emono ok₂ tdNil J st1 lvl1 C.slot (st1 lvl1 C.slot) p) (program d) (pool d)
+  slot = E₀.state 1 lvl1 C.slot
+  ready : ∀ d → W.Index (All.world d) slot (program d)
+  ready d = W.rise (All.world d) (larger c⁺) slot (◃l 0) (program d) (move d c⁺ E₀.cp)
+

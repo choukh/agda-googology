@@ -1,0 +1,32 @@
+[
+  {
+    "path": "probes/OCF/Lean/YiATStart.lagda.md",
+    "file_physical_lines": 51,
+    "code_physical_lines": 45,
+    "code_nonempty_non_full_line_comment": 44,
+    "scan": {
+      "axiom_or_unsafe": [],
+      "local_path": []
+    }
+  },
+  {
+    "path": "probes/OCF/Lean/YiATWire.lagda.md",
+    "file_physical_lines": 66,
+    "code_physical_lines": 60,
+    "code_nonempty_non_full_line_comment": 60,
+    "scan": {
+      "axiom_or_unsafe": [],
+      "local_path": []
+    }
+  },
+  {
+    "path": "<experiment>/YiATSource.agda",
+    "file_physical_lines": 49,
+    "code_physical_lines": 49,
+    "code_nonempty_non_full_line_comment": 49,
+    "scan": {
+      "axiom_or_unsafe": [],
+      "local_path": []
+    }
+  }
+]

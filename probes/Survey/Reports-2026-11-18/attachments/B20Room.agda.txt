@@ -1,0 +1,73 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实折叠沿后继、可数孩子与 Ω 的零号孩子逐层定位。受测层的所有零槽原有的共同下界传给所选的子运行。
+module B20Room where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; T₀)
+open import WVTwo using (◃→≼)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; z≼)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B15Spine as S
+import B15ReadPaths as R
+import B15FixedWitness as H
+open T.Run
+
+Room : ∀ {l} → T.Run l → T₀ → Set
+Room r q = ∀ w → q ≼ read (proj₁ (bs r zero w))
+
+sub : ∀ {a b} → R.Reach a b → T.Run b → T.Run a
+sub R.here r = r
+sub (R.succ {h}) r = T.enterRun sS h r tt zero
+sub (R.limit {h} n) r = T.limRun h r n
+sub (R.omega {k} {h}) r = S.Cardinal.child k h r 0
+sub (R.via p q) r = sub p (sub q r)
+
+cover : ∀ {a b} (p : R.Reach a b) r → A.Covered r → A.Covered (sub p r)
+cover R.here r cr = cr
+cover (R.succ {h}) r cr = A.enter sS h r tt zero cr
+cover (R.limit {h} n) r cr = A.enter sL h r n (T.prefix h n) cr
+cover (R.omega {k} {h}) r cr = S.Cardinal.cover k h r cr 0
+cover (R.via p q) r cr = cover p (sub q r) (cover q r cr)
+
+room : ∀ {a b} (p : R.Reach a b) r {v} → Room r v → Room (sub p r) v
+room R.here r high = high
+room (R.succ {h}) r high w = high (inc tt w)
+room (R.limit {h} j) r high w = ≼-trans (high (inc j w))
+  (T.inflate0 _ (ok r) (bs r) (inc j w) (bs r zero (inc j w)) (T.prefix h j))
+room (R.omega {h = h}) r high w = high (inc zero w)
+room (R.via p q) r high = room p (sub q r) (room q r high)
+
+cert : ∀ {a b} (p : R.Reach a b) r → ok (sub p r) ≡ H.pull p (ok r)
+cert R.here r = refl
+cert R.succ r = refl
+cert (R.limit n) r = refl
+cert R.omega r = refl
+cert (R.via p q) r rewrite cert p (sub q r) | cert q r = refl
+
+successor : ∀ j (r : T.Run (U.sc j)) → A.Covered r →
+  read (T.value (T.enterRun sS (λ _ → j) r tt zero)) ≼ read (T.value r)
+successor zero r cr = ◃→≼ (mono _ (ok r) (bs r) zero (z≤ _) (β r) {y = proj₁ (Ωt (U.sc zero))} ◃w)
+successor (nd s h) r cr = ≼-trans start (≼-trans (◃→≼ (inf M.K (M.S 0) zero M.w (M.v 0))) (M.outer 0))
+  where
+  module M = U.Lift s h (λ _ → L.zero) (λ _ _ _ _ → z≼) r cr
+  local : ∀ c → A._⊴_ (proj₁ (Ωt M.j)) c → read (T.value M.r₀) ≼ read (proj₁ (ψ M.j (ok M.r₀) (bs M.r₀) zero M.w (β M.r₀) c))
+  local _ (inj₁ refl) = ≼-refl _
+  local _ (inj₂ d) = ◃→≼ (mono M.j (ok M.r₀) (bs M.r₀) zero M.w (β M.r₀) d)
+  start = local M.c (cr M.j (inc tt self))
+
+below : ∀ {a b} (p : R.Reach a b) r → A.Covered r → read (T.value (sub p r)) ≼ read (T.value r)
+below R.here r cr = ≼-refl _
+below (R.succ {h}) r cr = successor (h tt) r cr
+below (R.limit {h} n) r cr = T.lim-child h r n
+below (R.omega {k} {h}) r cr = S.Cardinal.lift-value k h r 0
+below (R.via p q) r cr = ≼-trans (below p (sub q r) (cover q r cr)) (below q r cr)

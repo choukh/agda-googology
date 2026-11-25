@@ -1,0 +1,100 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 深度至少二的原标准名，其上第一个 ε 不动点仍可由同深度的一个原名覆盖。
+module B27Epsilon where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_; s≤s)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.List.Base using ([]; _∷_; _++_)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Unit.Base using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Align.EboLeanDef using (T; PT; ψ; _<ᵀ_; hd<; tl<; ar<; lv<; []<; HC)
+open import OCF.Align.EboLeanBase
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl; l≼)
+import OCF.Align.Level as L
+import OCF.Lean.YiRefTw2
+import B26Names as A
+import B26Depth as D
+import B26OUContext as U
+import B26PSuffix as S
+import B27Arithmetic as F
+import B18Product as P
+import B19IdealArithmetic as Ar
+import B19IdealPowers as Pow
+import B22MovingIndex as E
+
+prepend : ∀ (p : T) {s t} → s <ᵀ t → (p ++ s) <ᵀ (p ++ t)
+prepend [] h = h
+prepend (x ∷ p) h = tl< (prepend p h)
+
+module Build (v : PT) (vs q qs xs : T)
+  (nt : NF (ψ [] (ψ (v ∷ vs) q ∷ qs) ∷ xs))
+  (ctx : Ctbl xs) (h : HC (ψ [] (ψ (v ∷ vs) q ∷ qs) ∷ xs)) where
+  open F.High v vs q qs xs nt ctx h
+  Uppers = Σ A.Name (λ b → D.height b ≡ D.height a × E.above (A.value a) ≼ A.value b)
+  more = x ∷ []
+  qmax = p ++ more
+  qnf : NF qmax
+  qnf = F.word-nf x d more (nf-hd nu) (n∷ (nf-hd nu) tt n[]) (inj₂ refl)
+  qguard : GB [] qmax qmax
+  qguard = F.word-g d head (F.word-g 1 head GB[])
+    where
+    head : ∀ {y} → InGP [] y x → y <ᵀ qmax
+    head g = <-≤ (member g) (F.prefix p more)
+  qname-nf = nf-ψ n[] qnf qguard
+  opaque
+    qh : HC (S.φ qmax)
+    qh = hc qname-nf (c∷ c[])
+  roof = A.named (S.φ qmax) qname-nf (c∷ c[]) qh
+
+  grow = λ t → S.φ (p ++ t)
+  inv : ∀ (b : A.Name) → Set
+  inv b = A.name b <ᵀ grow (A.name b)
+  below-high : ∀ {t} → Ctbl t → t <ᵀ more
+  below-high c[] = []<
+  below-high (c∷ _) = hd< (lv< []<)
+  fits : ∀ {t} → Ctbl t → HdLe x t
+  fits c[] = tt
+  fits (c∷ _) = inj₁ (lv< []<)
+  module Next (b : A.Name) (i : inv b) where
+    s = A.name b
+    pp = p ++ s
+    nn = F.word-nf x d s (nf-hd nu) (A.nt b) (fits (A.ct b))
+    gd : GB [] pp pp
+    gd = F.word-g d (λ g → <-≤ (member g) (F.prefix p s)) (U.under (A.nt b) (A.ct b) i)
+    nf = nf-ψ n[] nn gd
+    opaque
+      ch : HC (grow s)
+      ch = hc nf (c∷ c[])
+    next = A.named (grow s) nf (c∷ c[]) ch
+    again : inv next
+    again = hd< (ar< (prepend p i))
+    higher : L.suc (A.value b) ≼ A.value next
+    higher = mono<ⁿ (A.nt b) nf (c∷ c[]) (A.hcN b) ch i
+    exp : Ar.norm (A.value b) ≼ A.value next
+    exp = ≼-trans {b = OCF.Lean.YiRefTw2.Rt ph P.· Ar.norm (A.value b)}
+      (P.pad one (Ar.norm (A.value b))) (proj₂ (S.Low.val p ph s (A.hcN b) ch))
+    below : A.value next ≼ A.value roof
+    below = ≼-trans {b = L.suc (A.value next)} (≼-suc (≼-refl _))
+      (mono<ⁿ nf qname-nf (c∷ c[]) ch qh (hd< (ar< (prepend p (below-high (A.ct b))))))
+  i₀ : inv a
+  i₀ = hd< (ar< (<-≤ wider (F.prefix p t)))
+  module Start = Next a i₀
+  stages : ∀ n → Σ A.Name (λ b → inv b × E.steps (A.value a) n ≼ A.value b × A.value b ≼ A.value roof)
+  stages zero = Start.next , Start.again , Start.higher , Start.below
+  stages (suc n) with stages n
+  ... | b , i , h , lo = M.next , M.again , ≼-trans {b = Ar.norm (A.value b)} (Pow.expo Pow.omega-pos h) M.exp , M.below
+    where module M = Next b i
+  below-stage : ∀ n → E.steps (A.value a) n ≼ A.value roof
+  below-stage n with stages n
+  ... | b , i , lo , hi = ≼-trans {b = A.value b} lo hi
+  answer : Uppers
+  answer = roof , refl , l≼ below-stage
+
+cover : ∀ a → 2 ≤ D.height a → Σ A.Name (λ b → D.height b ≡ D.height a × E.above (A.value a) ≼ A.value b)
+cover (A.named [] _ c[] h) ()
+cover (A.named (ψ [] [] ∷ xs) _ (c∷ _) h) ()
+cover (A.named (ψ [] (ψ [] q ∷ qs) ∷ xs) _ (c∷ _) h) (s≤s ())
+cover (A.named (ψ [] (ψ (v ∷ vs) q ∷ qs) ∷ xs) n (c∷ ct) h) _ = Build.answer v vs q qs xs n ct h

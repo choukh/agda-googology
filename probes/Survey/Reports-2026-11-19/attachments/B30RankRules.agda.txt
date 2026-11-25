@@ -1,0 +1,47 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在原 W4 零层输出树上，严格的原行上界等价于可沿输出逐步检查的原名标号；只在第四层使用。
+module B30RankRules where
+open import Data.Nat.Base as N using (ℕ)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit.Base using (⊤; tt)
+open import Relation.Binary.PropositionalEquality using (refl)
+import W4Block as W
+open import WVOne using (read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; z≼; s≼s)
+
+module Rules (Name : Set) (value : Name → WVOne.T₀) (lt le : Name → Name → Set)
+  (ident : ∀ a → le a a)
+  (weak : ∀ a b → le a b → value a ≼ value b)
+  (strict : ∀ a b → lt a b → L.suc (value a) ≼ value b)
+  (approx : ∀ b x → L.suc x ≼ value b → Σ Name (λ a → x ≼ value a × lt a b)) where
+  Label : W.Tr W.zero → Name → Set
+  Label W.zero b = ⊤
+  Label (W.suc x) b = Σ Name (λ a → lt a b × Label x a)
+  Label (W.lim f _) b = ∀ n → Σ Name (λ a → le a b × Label (f n) a)
+  Label (W.Ω () _) b
+  Label (W.up _ () _ _) b
+  Label (W.ex _ _ _ _ ()) b
+  
+  sound : ∀ x b → Label x b → read x ≼ value b
+  sound W.zero b _ = z≼
+  sound (W.suc x) b (a , d , lab) = ≼-trans {b = L.suc (value a)} (s≼s (sound x a lab))
+    (strict a b d)
+  sound (W.lim f _) b lab = l≼ {f = λ n → read (f n)} λ n →
+    let a , le , sub = lab n in ≼-trans {b = value a} (sound (f n) a sub) (weak a b le)
+  sound (W.Ω () _) b
+  sound (W.up _ () _ _) b
+  sound (W.ex _ _ _ _ ()) b
+  
+  chart : ∀ x b → read x ≼ value b → Label x b
+  chart W.zero b h = tt
+  chart (W.suc x) b h with approx b (read x) h
+  ... | a , p , d = a , d , chart x a p
+  chart (W.lim f _) b h n = b , ident b , chart (f n) b
+    (≼-trans {b = L.lim (λ j → read (f j))} (≼l {f = λ j → read (f j)} n (≼-refl _)) h)
+  chart (W.Ω () _) b
+  chart (W.up _ () _ _) b
+  chart (W.ex _ _ _ _ ()) b
+  

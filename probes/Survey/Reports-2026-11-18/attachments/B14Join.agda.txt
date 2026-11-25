@@ -1,0 +1,91 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第一个 Ω₁ 系数交到下一次真实 W4 更新。有限右加 Ω₂ 的整族在实际第 3 层、Λ 和后续塔层产出 src 下界。
+module B14Join where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block using (tw; zero; Λ; sL; sΩ)
+open import W4Fold using (twᶜ; EBOᶜ)
+open import W4Path using (Ok-Λ; Ok-tw)
+open import WKShape using (lvl3; Ψ₃; ok₃)
+open import WVTwo using (lvl2)
+open import WVOne using (T₀; read; h₁)
+open import B9InnerOuter using (w2)
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≅→≼; ≼l; l≼)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+open import YiLAB7Replay using (Ω₂ᴸ)
+import B12Terminal as T
+import B12TerminalSrc as Tail
+import B12ActualSlots as Cover
+import B12LimitSrc as Z
+import B13Feedback as Old
+import B13SeedOuter as Start
+import B13FiniteClosed as FC
+import B13FiniteSrc as Fin
+import B14Source as X
+import B14OrbitPrefix as P
+import B14OrbitRise as Rise
+import B14RefDescribed as R
+import B14RefGain as G
+import B14RefBlock as Block
+open import Data.List using ([]; _∷_)
+open import Data.Empty using (⊥)
+open import B8FreezeMain using (irr)
+
+terms = Block.terms
+whole = L.ψ⁰ (L.lim terms)
+source = S.lim X.stage
+
+src-lower : tr₀ (S.ψ₀ source) ≼ whole
+src-lower = l≼ (λ n → ≼l n (≼-trans (proj₁ (Z.fold (X.matching n))) (≅→≼ (L.ψ⁰-≅
+  (L.≅-trans (X.reindex (L.≅-trans X.transport (L.≅-sym R.same)) n) (L.≅-sym (Block.rec n)))))))
+
+module Calibrate (r : T.Run lvl3) (cv : Cover.Covered r) where
+  open Start.At r hiding (w2)
+  module A = Rise.Compare r cv
+  module Proof = P.At c⁺ A.cp st1 v₁ (A.seeds 0)
+  module M = Proof.For R.C′ R.C′-rows (≅→≼ (L.ψ⁰-≅ R.same))
+  upper : whole ≼ read (T.value r)
+  upper = ≼-trans M.collect (≼-trans (A.inG st1 w2 v₁) (outer 0))
+  actual-cut : R.piece ≼ read (T.value r)
+  actual-cut = ≼-trans R.into-model (≼-trans (M.to-block 1) (≼-trans (A.inG st1 w2 v₁) (outer 0)))
+  src : tr₀ (S.ψ₀ source) ≼ read (T.value r)
+  src = ≼-trans src-lower upper
+
+module Standard = Calibrate (T.initial lvl3 ok₃) (Cover.initial lvl3 ok₃)
+module Actual = Calibrate (T.finiteRun 2) (Cover.all-finite 2)
+
+terminal : whole ≼ read EBOᶜ
+terminal = ≼-trans Actual.upper (T.finite-ge 2)
+standard-piece : R.piece ≼ read Ψ₃
+standard-piece = Standard.actual-cut
+terminal-piece : R.piece ≼ read EBOᶜ
+terminal-piece = ≼-trans Actual.actual-cut (T.finite-ge 2)
+
+strict-cut : L.suc Old.first-node ≼ Block.piece
+strict-cut = ≼-trans G.strict (G.path-bound (1 ∷ 0 ∷ 0 ∷ []) Block.piece)
+
+no-reverse : Block.piece ≼ Old.first-node → ⊥
+no-reverse d = irr Old.first-node (≼-trans strict-cut d)
+
+standard-block : Block.piece ≼ read Ψ₃
+standard-block = ≼-trans Block.into-model Standard.upper
+
+terminal-block : Block.piece ≼ read EBOᶜ
+terminal-block = ≼-trans Block.into-model terminal
+
+module Amplify = Fin.Calibrated lvl2 2 refl source Calibrate.src
+
+tower-src : Fin.out (Fin.omegaω source) ≼ read (twᶜ 1)
+tower-src = ≼-trans (Amplify.omega-level tc
+  (Cover.enter (sΩ zero) h₁ Tail.standard (T.index1 Tail.standard 1) zero (Cover.initial (tw 1) (Ok-tw 1)))) (T.tower-ge Tail.standard 1)
+  where tc = T.tower-child Tail.standard 1
+
+terminal-src : Fin.out (Tail.plusω (Tail.plusω (Fin.omegaω source))) ≼ read EBOᶜ
+terminal-src = Tail.seal tw T.terminal 1 (Tail.plusω (Fin.omegaω source)) (≼-trans
+  (Tail.seal _ (T.tower-child T.tower1 1) 0 (Fin.omegaω source) (Amplify.omega-level Tail.middle FC.middle-covered))
+  (T.tower-ge T.tower1 1))

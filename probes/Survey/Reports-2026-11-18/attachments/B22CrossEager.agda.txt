@@ -1,0 +1,90 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22CrossEager where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Sum using (inj₂)
+open import W4Block
+open import W4Ops
+
+node : ∀ {k m} → Dn k m → (p : Pos m) → (Br m p → Tr k) → Tr k
+node stop p g = Ω p g
+node (down d c) p g = node d (inj₂ (c , inj₂ p)) g
+
+node-step : ∀ {k m} (d : Dn k m) (p : Pos m) (g : Br m p → Tr k)
+          → k ⊢ g (fromBr m p zero) ◃ node d p g
+node-step stop p g = ◃w
+node-step (down d c) p g = node-step d (inj₂ (c , inj₂ p)) g
+
+tree : (k : L) → RA
+Ctx (tree k) = Dn k
+dn (tree k) = down
+Car (tree k) = Tr k
+Rel (tree k) = Lt (Sig k)
+trn (tree k) = ◃t
+limA (tree k) = lim
+limUB (tree k) _ _ = ◃l
+nodeA (tree k) = node
+nodeUB (tree k) = node-step
+
+right : ∀ {k} (b : Tr k) → k ⊢ zero ◃ b → OpA (tree k)
+right b e = (_+ b) , λ u → +-mono u e
+
+-- Explicit trees with ex eliminated, including the components of up.
+Plain : (k : L) → Tr k → Set
+Plain k zero = ⊤
+Plain k (suc x) = Plain k x
+Plain k (lim f e) = ∀ n → Plain k (f n)
+Plain k (Ω p g) = ∀ z → Plain k (g z)
+Plain (nd s h) (up x c y e) = Plain (nd s h) x × Plain (h c) y
+Plain k (ex a b nb x ε) = ⊥
+
+plus-plain : ∀ k (a b : Tr k) → Plain k a → Plain k b → Plain k (a + b)
+plus-plain k a zero pa pb = pa
+plus-plain k a (suc b) pa pb = plus-plain k a b pa pb
+plus-plain k a (lim f e) pa pb n = plus-plain k a (f n) pa (pb n)
+plus-plain k a (Ω p g) pa pb z = plus-plain k a (g z) pa (pb z)
+plus-plain (nd s h) a (up x c y e) pa (px , py) = plus-plain (nd s h) a x pa px , py
+plus-plain k a (ex x b nb y ε) pa ()
+
+node-plain : ∀ {k m} (d : Dn k m) p (g : Br m p → Tr k) → (∀ z → Plain k (g z)) → Plain k (node d p g)
+node-plain stop p g h = h
+node-plain (down d c) p g h = node-plain d (inj₂ (c , inj₂ p)) g h
+
+plain : (k : L) → PS (tree k)
+Pr (plain k) = Plain k
+Gd (plain k) _ = ⊤
+Gd-dn (plain k) _ _ = tt
+limP (plain k) _ _ h = h
+nodeP (plain k) d p g _ = node-plain d p g
+
+mutual
+  expand : ∀ k → Tr k → Tr k
+  expand k zero = zero
+  expand k (suc x) = suc (expand k x)
+  expand k (lim f e) = lim (λ n → expand k (f n)) (λ n → advance k (e n))
+  expand k (Ω p g) = Ω p (λ z → expand k (g z))
+  expand (nd s h) (up x c y e) = up (expand (nd s h) x) c (expand (h c) y) (advance (h c) e)
+  expand k (ex a b nb x ε) = proj₁ (Eh (tree k) stop x (right (expand k b) (advance k nb))) (expand k a)
+
+  advance : ∀ k {x y : Tr k} → k ⊢ x ◃ y → k ⊢ expand k x ◃ expand k y
+  advance k ◃s = ◃s
+  advance k (◃l n) = ◃l n
+  advance k ◃w = ◃w
+  advance (nd s h) (◃u x c y e) = ◃u (expand (nd s h) x) c (expand (h c) y) (advance (h c) e)
+  advance (nd s h) (◃c x c d) = ◃c (expand (nd s h) x) c (advance (h c) d)
+  advance k (◃e {a} {b} {nb} {x}) = proj₂ (Eh (tree k) stop x (right (expand k b) (advance k nb))) (expand k a)
+  advance k (◃x {a} {b} {nb} d) = Emh (tree k) stop (right (expand k b) (advance k nb)) (expand k a) d
+  advance k (◃t d e) = ◃t (advance k d) (advance k e)
+
+explicit : ∀ k (x : Tr k) → Plain k (expand k x)
+explicit k zero = tt
+explicit k (suc x) = explicit k x
+explicit k (lim f e) n = explicit k (f n)
+explicit k (Ω p g) z = explicit k (g z)
+explicit (nd s h) (up x c y e) = explicit (nd s h) x , explicit (h c) y
+explicit k (ex a b nb x ε) = EP (tree k) (plain k) stop tt x (right (expand k b) (advance k nb))
+  (λ u pu → plus-plain k u (expand k b) pu (explicit k b)) (expand k a) (explicit k a)
+

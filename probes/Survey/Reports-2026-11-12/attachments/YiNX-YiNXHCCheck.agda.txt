@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiNXHCCheck where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Data.List using ([])
+open import Relation.Binary.PropositionalEquality using (refl; sym; subst)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀)
+open import OCF.Lean.YiRBSib using (Rb; rb-no; ψ)
+open import OCF.Lean.YiRBFam using (Tp; tc; tp; LF; OKB; mkGB)
+open import OCF.Lean.YiRBCrit using (gˢ)
+open import OCF.Lean.YiRLCrit using (Can; canω; ω̃ˢ)
+open import OCF.Lean.YiKVRel using (M⁰; mz; m1; mL; mΩ; mU; mw; ⊴r)
+open import OCF.Lean.YiCLFam using (fn; okf)
+open import OCF.Lean.YiCLLow using (pth; ΩJ; ss; s0)
+open import OCF.Lean.YiCLPhi using (ωᵀ)
+open import OCF.Lean.YiCLCrit using (ωᶜ; ωᶜ-M)
+open import OCF.Lean.YiANFam using (Ωᴺ)
+open import OCF.Align.EboLeanDef using (HC; h0; h1; hω)
+import OCF.Align.EboLeanDef as E
+open import OCF.Lean.YiNXLow using (A; Wit)
+
+fromM : ∀ {t x} → M⁰ t x → HC t
+fromM mz = h0 refl
+fromM (m1 e m) = h1 e (fromM m)
+fromM (mL e f) = hω e (λ n → fromM (f n))
+fromM (mΩ {p = ()} _ _ _)
+fromM (mU {c = ()} _ _)
+fromM (mw m _) = fromM m
+
+module Leaves (o : Ok (fn 2)) (r : Rb (fn 2)) (s : Tp 1 0) (b : Base (fn 2)) (ok : OKB b)
+              (β : Tr⁺ (fn 0)) (hβ : M⁰ (Ωᴺ 0) (proj₁ β)) {c : Tr zero} (cc : Can c) (l : M⁰ ωᵀ c) where
+  opaque
+    leaf-base : ∀ n → M⁰ (Wit n) (proj₁ (ψ (fn 2) o r b (fn 0) (tp s) β (proj₁ (gˢ c))))
+    leaf-base n = LF o r s [] b
+      (mkGB (λ {i} si → ok (fn i) (inc tt (pth si)))
+            (λ {i} si → ΩJ i (b (fn i) (inc tt (pth si))) (ok (fn i) (inc tt (pth si)))))
+      β hβ (proj₂ (proj₂ (ω̃ˢ cc l n)))
+
+  hWit : ∀ n → HC (Wit n)
+  hWit n = fromM (leaf-base n)
+
+module Closed = Leaves (okf 2) (rb-no (fn 2)) (tc (ss s0)) (B₀ (fn 2)) (λ i u → ⊴r)
+                       (Ωt (fn 0)) (ΩJ 0 (Ωt (fn 0)) ⊴r) canω ωᶜ-M
+
+hWit-all : ∀ n → HC (Wit n)
+hWit-all = Closed.hWit

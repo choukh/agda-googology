@@ -1,0 +1,108 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B9N: 一次更新的零层读回 out 1 的具体上界 (编译定理, 无前提). chainW 1 = lim (cum Fz), Fz n = zW (n+1);
+-- 累加的第 n 项是 ex (a + Ω₁) Ω₁ (suc (zW n)) (n = 0 时 a + Ω₁ 换成 Ω₁), 折到第 0 层时经 ex 行 (E, opB Ω₁),
+-- 指数 suc (zW n) 由 B9UpperRel 的 RealU 给出 sC (eU n), 前缀 a + Ω₁ 的折叠由 preΩ 给出 fΩ.
+module B9UpperTop where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (_,_; proj₁; proj₂)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; s≼s; ≼l; l≼; ≼-refl; ≼-trans)
+open import WVOne using (T₀; 𝟏; read; Mv; Mv-mono; lvl1; p₁)
+open import WSShadow
+open import B8FreezeMain using (P-up)
+open import YiLAB7Orbit using (ok₂)
+open import YiLAB8Split using (out)
+open import B8PairW4 using (zW; Fz)
+open import B9UpperRel
+
+o : Ok lvl1
+o = proj₂ ok₂ tt
+
+open Lem o
+
+------------------------------------------------------------------------
+-- 第 1 层 Ω₁ 结点的一个分支 a + up 0 (suc z): 经 up 行 (inc 或 inu) 落到第 0 层的 β·ω^(z+1).
+brA : (B : Base lvl1) (t : zero ≤ lvl1) (β : Tr⁺ zero) (a : Tr lvl1) (z : Tr zero)
+    → read (proj₁ (ψ lvl1 o B zero t β (up a tt (suc z) (z◃ z ◃s))))
+      ≼ Mv (read (proj₁ (ψ lvl1 o B zero t β a))) (LV.suc (read z))
+brA B (inc tt w′) β a z = P-up w′ (ψ lvl1 o B zero (inc tt w′) β a) (suc z)
+brA B (inu ws) β a z    = P-up (ws tt) (ψ lvl1 o B zero (inu ws) β a) (suc z)
+
+-- 被加项 Ω₁ 的上界影子: 链从 0 起, 链点 c·ω^(ζ+1), 输出逐项累加 a·ω^(ζ+1).
+fΩ : Sh 0
+fΩ = nodeU 0 (λ y a c → Mv a (LV.suc y))
+
+g₁ : Tr zero → Tr lvl1
+g₁ z = up zero tt (suc z) (z◃ z ◃s)
+
+coreΩ : (B : Base lvl1) (t : zero ≤ lvl1) (β : Tr⁺ zero) (a : Tr lvl1) (A A′ : T₀)
+      → read (proj₁ (ψ lvl1 o B zero t β a)) ≼ A
+      → read (proj₁ (ψ lvl1 o B zero (inc tt self) (B zero (inc tt self)) a)) ≼ A′
+      → read (proj₁ (node⁺ (kp lvl1 o p₁ t) (λ z → ψ lvl1 o B zero t β (a + g₁ z))
+                          (λ z → proj₁ (ψ lvl1 o B zero (inc tt self) (B zero (inc tt self)) (a + g₁ z)))))
+        ≼ fΩ A A′
+coreΩ B t β a A A′ hA hA′ =
+  NodeU.upb (λ z → ψ lvl1 o B zero t β (a + g₁ z))
+            (λ z → ψ lvl1 o B zero (inc tt self) (B zero (inc tt self)) (a + g₁ z))
+            (λ y a c → Mv a (LV.suc y)) A A′
+            (λ y z d → ≼-trans (brA B t β a z) (Mv-mono hA (s≼s d)))
+            (λ y z d → ≼-trans (brA B (inc tt self) (B zero (inc tt self)) a z) (Mv-mono hA′ (s≼s d)))
+            (kp lvl1 o p₁ t)
+
+preΩ : (B : Base lvl1) (t : zero ≤ lvl1) (β : Tr⁺ zero) (a : Tr lvl1) (A A′ : T₀)
+     → read (proj₁ (ψ lvl1 o B zero t β a)) ≼ A
+     → read (proj₁ (ψ lvl1 o B zero (inc tt self) (B zero (inc tt self)) a)) ≼ A′
+     → read (proj₁ (ψ lvl1 o B zero t β (a + Ω₁t))) ≼ fΩ A A′
+preΩ B t@(inc tt w′) β a A A′ hA hA′ = coreΩ B t β a A A′ hA hA′
+preΩ B t@(inu ws) β a A A′ hA hA′    = coreΩ B t β a A A′ hA hA′
+
+-- "右边接上 Ω₁" 作为环境语境上的 op.
+opΩ : 𝓤 0 {nil} (inc tt self) (opB lvl1 o Ω₁t nbΩ) fΩ
+opΩ S t v a c ha hc = preΩ S t v zero a c ha hc
+
+------------------------------------------------------------------------
+-- ex 行: ψ (ex a Ω₁ x) = E x (opB Ω₁) 从 a 的折叠起.
+topB : (x a : Tr lvl1) (e : ES) → RealE x e → (A : T₀)
+     → read (proj₁ (ψ lvl1 o (B₀ lvl1) zero (inc tt self) (Ωt zero) a)) ≼ A
+     → read (proj₁ (ψ lvl1 o (B₀ lvl1) zero (inc tt self) (Ωt zero) (ex a Ω₁t nbΩ x tt))) ≼ sE e fΩ A A
+topB x a e rE A hA =
+  rE {nil} (λ t → t) (λ t → t) (opB lvl1 o Ω₁t nbΩ) fΩ opΩ
+     (λ i u → ψ lvl1 o (B₀ lvl1) i u (B₀ lvl1 i u) a) (inc tt self)
+     (ψ lvl1 o (B₀ lvl1) zero (inc tt self) (Ωt zero) a) A A hA hA
+
+-- 链点 zW m 的上界指数.
+eU : ℕ → ES
+eU zero    = zC
+eU (suc m) = shU (eU m)
+
+RzW : (m : ℕ) → Real (zW m) (eU m)
+RzW zero    = Real-zero
+RzW (suc m) = U2 (zW m) (eU m) (RzW m)
+
+-- 逐项的上界.
+Bnd : ℕ → T₀
+Bnd zero    = sE (sC (eU zero)) fΩ (fΩ 𝟏 𝟏) (fΩ 𝟏 𝟏)
+Bnd (suc n) = sE (sC (eU (suc n))) fΩ (fΩ (Bnd n) (Bnd n)) (fΩ (Bnd n) (Bnd n))
+
+Bok : (n : ℕ) → read (proj₁ (ψ lvl1 o (B₀ lvl1) zero (inc tt self) (Ωt zero) (cum Fz n))) ≼ Bnd n
+Bok zero =
+  topB (suc zero) Ω₁t (sC zC) (RsucE zero zC (proj₁ Real-zero)) (fΩ 𝟏 𝟏)
+       (opΩ (B₀ lvl1) (inc tt self) (Ωt zero) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏))
+Bok (suc n) =
+  topB (suc (zW (suc n))) (cum Fz n + Ω₁t) (sC (eU (suc n))) (RsucE (zW (suc n)) (eU (suc n)) (proj₁ (RzW (suc n))))
+       (fΩ (Bnd n) (Bnd n))
+       (preΩ (B₀ lvl1) (inc tt self) (Ωt zero) (cum Fz n) (Bnd n) (Bnd n) (Bok n) (Bok n))
+
+Ŝ : T₀
+Ŝ = LV.lim Bnd
+
+out1-up : out 1 ≼ Ŝ
+out1-up = l≼ (λ n → ≼l n (Bok n))

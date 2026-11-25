@@ -1,0 +1,16 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B10ExitTwo where
+
+open import Data.Empty using (⊥)
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼l; ≼-refl; ≼-trans)
+open import WVOne using (𝟏)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B8FreezeMain using (irr)
+
+two : LV.suc 𝟏 ≼ LV.ψ⁰ Ω₂ᴸ
+two = ≼l 0 (≼l 0 (≼l 2 (≼-refl _)))
+
+-- 第 0 层的初态底读回是 1; ψ⁰(Ω₂) 不低于它是假的.
+no-Ω₂≼1 : LV.ψ⁰ Ω₂ᴸ ≼ 𝟏 → ⊥
+no-Ω₂≼1 h = irr 𝟏 (≼-trans two h)

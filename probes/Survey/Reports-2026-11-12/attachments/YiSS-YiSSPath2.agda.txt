@@ -1,0 +1,27 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiSSPath2 where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiCLFam using (fn)
+
+data FP : ∀ {a b} → a ≤ b → Set where
+  fs : ∀ {a} → FP (self {ℓ = a})
+  fi : ∀ {a} {h : ⊤ → L} {u : a ≤ h tt} → FP u → FP (inc tt u)
+  fu : ∀ {a} {h : ⊤ → L} {us : (c : ⊤) → a ≤ h c} → FP (us tt) → FP (inu us)
+
+finite : (n : ℕ) (a : L) (u : a ≤ fn n) → FP u
+finite zero a self = fs
+finite (suc n) a self = fs
+finite (suc n) a (inc tt u) = fi (finite n a u)
+finite (suc n) a (inu us) = fu (finite n a (us tt))
+
+module Elim (P : ∀ n j → fn j ≤ fn n → Set)
+  (same : ∀ n → P n n self)
+  (one : ∀ n j {u : fn j ≤ fn n} → P n j u → P (suc n) j (inc tt u))
+  (all : ∀ n j {us : ⊤ → fn j ≤ fn n} → P n j (us tt) → P (suc n) j (inu us)) where
+  run : ∀ n j (u : fn j ≤ fn n) → FP u → P n j u
+  run n .n self fs = same n
+  run (suc n) j (inc tt u) (fi p) = one n j (run n j u p)
+  run (suc n) j (inu us) (fu p) = all n j (run n j (us tt) p)

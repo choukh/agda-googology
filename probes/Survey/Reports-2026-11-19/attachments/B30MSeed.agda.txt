@@ -1,0 +1,47 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原 ψ₀(Ω₃) 的基本列第 1 项不超过 ψ₀(Ω_ω)，后者严格小于原 BTBO。
+module B30MSeed where
+open import Data.Nat.Base using (ℕ; zero; suc)
+import Data.Nat.Properties as N
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; s≼s; ≼l; l≼; z≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRefTw2 using (tree-≼; endpoint)
+import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanTree using (hc-tower)
+import OCF.Align.Level as L
+open import WVOne using (T₀; 𝟏)
+import B18Product as M
+import B19IdealArithmetic as Ar
+import B22MovingIndex as Eps
+import B12Omega3Ref as Three
+import B19IdealRow as Old
+import B12BtboCut as Fin
+import B17Calibration as Orig
+import B12XRef as Ref
+import B26Names as A
+import B26Depth as D
+import B27Threshold as T
+import B27CutArithmetic as Row
+import B27EpsilonCut as ER
+import B27UEpsilon as Env
+import B27Endpoint as End
+import B29LimitCut as Lim
+
+
+opaque
+  q : T₀
+  q = Fin.omega-cut
+r = Old.row
+base = L.suc r
+opaque
+  unfolding q
+  rq : r ≼ q
+  rq = ≼-trans {b = L.ψ⁰ Three.Ω₃} (Three.at-below (L.ψ⁰ Three.Ω₃) 1) (≼l {f = Fin.finite} 3 (≼-refl _))
+  shift : ∀ k (a : T₀) → L.suc a ≼ Ref.row k → L.suc a ≼ T.row k
+  shift k a h = ≼-trans {a = L.suc a} {b = Ref.row k} {c = T.row k} h
+    (tree-≼ {t = OCF.Align.EboLeanDef.EBOψ k} refl (Ref.H k) (hc-tower k))
+  small-q : L.suc q ≼ T.row 2
+  small-q = shift 2 q Orig.finite-cut

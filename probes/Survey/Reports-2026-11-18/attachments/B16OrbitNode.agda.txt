@@ -1,0 +1,95 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 在任意保留原槽的延伸中，真实 Ω₁ 节点自身的零层输出给下一次下标；指数与相邻状态保持在同一运行。
+module B16OrbitNode where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Unit using (tt)
+open import Data.Maybe using (just)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block hiding (Sh; D)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; read)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+open import WKGen using (node-ge)
+open import B8PairW4 using (Real-up; SumR-up)
+open import WSShadow using (nC; ES)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≅→≼; ≼-trans; ≼-suc; l≼)
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+import B13Countable
+import WSW4
+import YiLAB7Replay
+import B11OuterCore as C
+import B12Update as U
+import B12Omega3Ref as R
+import B12LimitRef as A
+import B12LimitSrc as Z
+import B13OrbitFeed as O
+import B14OrbitReal as Real
+import B15OrbitModel as M
+import B15OrbitAction as Act
+open Act using (Act; f; s)
+
+Left : ∀ {X Y : Cx lvl2} → Mor X Y → Set
+Left {X} m = ∀ {i} (t : ⟦ X ⟧ i) → π m (σ m t) ≡ t
+
+module Frame {X : Cx lvl2} (m : Mor M.X₁ X) (ret : Left m) where
+  module N = M.At m
+  D = trTD m O.D₁
+  ch = σ m M.down-t
+  jd : ∀ {i} → ⟦ X ⟧ i → Keep i (Tr zero) zero
+  jd t = kpT (fr D) ok₂ p₁ (tv D t)
+  kept : jd N.slot ≡ just (p₁ , (λ z → z) , refl)
+  kept rewrite ret (σ O.m₁ C.slot) = refl
+
+  module Rule (G : Tr zero → Op X) (h : T₀ → Act)
+              (law : ∀ y z → y ≼ read (suc z) → N.Models (G z) (h y)) where
+    Xnode = nodeC 0 {mu = lvl1} p₁ jd ch G
+    node-p : Z.Lev₂ → Z.Lev₂
+    node-p p = L.limᵢ (L.suc L.zero) (λ y → f (h y) p)
+    node-e : ES → ES
+    node-e e = nC (λ y → s (h y) e)
+
+    module Start (S : St X) p e (d : A.Described p e) (rr : p L.≅ p)
+      (str : C.Str e (B13Countable.pull N.r S)) (ho : L.ψ⁰ p ≼ read (proj₁ (S zero N.zp)))
+       (hi : L.ψ⁰ p ≼ read (proj₁ (S zero ch))) where
+      step = λ z → proj₁ (run (G z) S zero ch (S zero ch))
+      idx = iter step zero
+      args = Ord.iter (λ y → L.ψ (L.suc L.zero) R.idσ (f (h y) p)) (L.suc L.zero)
+
+      initial : ∀ v → L.ψ⁰ p ≼ read (proj₁ v) → N.Pack p e S v
+      initial v hv = N.packed (U.seeds hv ho str) hi
+
+      tracked : ∀ n → args n ≼ read (suc (idx n))
+      tracked zero = ≼-refl _
+      tracked (suc n) = ≼-suc (≼-trans (≅→≼ (L.≅-sym (L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (Act.pres (h (args n)) rr))))
+              (U.value-bound (N.seed (law (args n) (idx n) (tracked n) ch p e d rr S (S zero ch) (initial _ hi)))))
+
+      value : ∀ t v → L.ψ⁰ p ≼ read (proj₁ v) → L.ψ⁰ (node-p p) ≼ read (proj₁ (run Xnode S zero t v))
+      value t v hv = l≼ λ n → ≼-trans (U.value-bound (N.seed (law (args n) (idx n) (tracked n) t p e d rr S v (initial v hv))))
+              (node-ge (jd t) (λ z → run (G z) S zero t v) step n)
+
+      curve = λ z → proj₁ (run (G z) S lvl1 N.slot (S lvl1 N.slot))
+      target = proj₁ (run Xnode S lvl1 N.slot (S lvl1 N.slot))
+
+      -- 这里仅在一级目标使用保留等式；任一零路径仍用自身链。
+      retained : target ≡ Ω p₁ curve
+      retained rewrite kept = refl
+
+      match : WSW4.Lem.Real YiLAB7Replay.o₁ target (node-e e)
+      match rewrite retained = Real.real-node curve (λ y → s (h y) e)
+        (λ y z low → C.rP (U.structure (N.seed (law y z (≼-suc low) ch p e d rr S (S zero ch) (initial _ hi)))))
+
+      structure : C.Str (node-e e) (B13Countable.pull N.r (stepS Xnode S))
+      structure = C.str match (Real-up rise (C.rΩ str)) (SumR-up rise (C.sN str)) (◃t (C.st str) rise)
+        where rise = inf Xnode S lvl1 N.slot (S lvl1 N.slot)
+
+    aggregate : N.Law Xnode node-p node-e
+    aggregate t p e d rr S v i = N.packed (U.seeds (V.value t v (U.value-bound seed)) (V.value N.zp (S zero N.zp) (U.slot-bound seed)) V.structure)
+                                               (V.value ch (S zero ch) (N.inner i))
+      where
+      seed = N.seed i
+      module V = Start S p e d rr (U.structure seed) (U.slot-bound seed) (N.inner i)

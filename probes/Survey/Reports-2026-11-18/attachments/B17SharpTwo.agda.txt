@@ -1,0 +1,118 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B17SharpTwo where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Maybe using (nothing; just)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Path as P
+import W4Fold as F
+open import WVOne using (read; lvl1)
+open import WVTwo using (lvl2; g₂; p₂; ◃→≼)
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼; ≼l)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack hiding (K; sums; prepend; emp; add)
+open import B14SharpBound
+open import B14SharpTwo using (r₂; o₂; p₂i; g₂i)
+open import B15SharpAction
+open import B17SharpFeed
+open import B17SharpUpdate
+import B12ActualSlots as A
+
+module Two (lem : LEM) where
+  open I.Sharp lem
+  open Feed lem
+  open Update lem
+  w₀ = B.inc tt (path slot)
+  block₂ : R.Tr r₂ → R.Tr r₂
+  block₂ x = R.Ω p₂i (λ z → R.up x tt (R.suc z) (V.z◃ z R.◃s))
+
+  module Zero (D : Base♯) (o : P.Ok lvl2) (S : F.Base lvl2)
+    (h₁ : Linked (proj₁ (S lvl1 w₁)) (proj₁ (D r₁ oR)))
+    (h₀ : data≤ (proj₁ (D R.zero tt)) (proj₁ (S B.zero w₀))) where
+    module G = Pair D (D r₁ oR) (S lvl1 w₁) h₁
+    subS : F.Base lvl1
+    subS i q = S i (B.inc tt q)
+
+    module At (a : V.Tr⁺ R.zero) (v : W.Tr⁺ B.zero) (hv : data≤ (proj₁ a) (proj₁ v)) where
+      istr = λ n → proj₁ (ψ♯ r₂ o₂ D R.zero tt a (g₂i (G.ui n)))
+      wstr = λ (t : B.zero B.≤ lvl2) n → proj₁ (F.ψ lvl2 o S B.zero t v (g₂ (G.wi n)))
+
+      all-out : ∀ n → Output (G.wi n) (G.ui n)
+      all-out zero D a A S t v hv hc = hv
+      all-out (suc n) = G.Step.out no _ _ (G.indices n)
+
+      child : ∀ w n → data≤ (istr n) (proj₁ (F.ψ lvl1 oB subS B.zero w v (B.suc (G.wi n))))
+      child w@(B.inc _ _) n = next≤ _ _ (all-out n D a id subS w v hv h₀)
+      child w@(B.inu _) n = next≤ _ _ (all-out n D a id subS w v hv h₀)
+
+      each : ∀ t n → data≤ (istr n) (wstr t n)
+      each (B.inc _ w) n = child w n
+      each (B.inu f) n = child (f tt) n
+
+      emptyW : ∀ {X x} (m : F.Keep B.zero X x) → m ≡ nothing
+      emptyW nothing = refl
+      emptyW (just (() , _))
+
+      fold : ∀ t → data≤ (proj₁ (ψ♯ r₂ o₂ D R.zero tt a iΩ₂)) (proj₁ (F.ψ lvl2 o S B.zero t v wΩ₂))
+      fold t@(B.inc _ _) rewrite empty-slot (kp♯ r₂ o₂ p₂i R.zero tt) | emptyW (F.kp lvl2 o p₂ t) =
+        l≼ (λ n → ≼l n (sum≤ istr (wstr t) (each t) n))
+      fold t@(B.inu f) rewrite empty-slot (kp♯ r₂ o₂ p₂i R.zero tt) | emptyW (F.kp lvl2 o p₂ t) =
+        l≼ (λ n → ≼l n (sum≤ istr (wstr t) (each t) n))
+
+  data Word : ℕ → R.Tr r₂ → Set where
+    emp : Word 0 R.zero
+    add : ∀ {n x} → Word n x → Word (suc n) (block₂ x)
+
+  prepend : ∀ {n x} → Word n x → Word (suc n) (iΩ₂ V.+ x)
+  prepend emp = add emp
+  prepend (add d) = add (prepend d)
+
+  all-words : ∀ n → Word (suc n) (V.iter (iΩ₂ V.+_) iΩ₂ n)
+  all-words zero = add emp
+  all-words (suc n) = prepend (all-words n)
+
+  module Seq (D : Base♯) (o : P.Ok lvl2) (S : F.Base lvl2) (c⁺ : W.Tr⁺ lvl2) (above : A._⊴_ wΩ₂ (proj₁ c⁺))
+    (h₁ : Linked (proj₁ (S lvl1 w₁)) (proj₁ (D r₁ oR)))
+    (h₀ : data≤ (proj₁ (D R.zero tt)) (proj₁ (S B.zero w₀))) where
+    op = F.opB lvl2 o (proj₁ c⁺) (proj₂ c⁺)
+    advance : Base♯ → R.Tr r₂ → Base♯
+    advance D x i oi = ψ♯ r₂ o₂ D i oi (D i oi) x
+
+    append₁ : ∀ x → proj₁ (advance D (block₂ x) r₁ oR) ≡ proj₁ (ψ♯ r₂ o₂ (advance D x) r₁ oR (advance D x r₁ oR) iΩ₂)
+    append₁ x rewrite vacant = refl
+
+    append₀ : ∀ a x → proj₁ (ψ♯ r₂ o₂ D R.zero tt a (block₂ x)) ≡ proj₁ (ψ♯ r₂ o₂ (advance D x) R.zero tt (ψ♯ r₂ o₂ D R.zero tt a x) iΩ₂)
+    append₀ a x rewrite empty-slot (kp♯ r₂ o₂ p₂i R.zero tt) = refl
+
+    feed : ∀ {n x} → Word n x → Linked (proj₁ (F.itS op n S lvl1 w₁)) (proj₁ (advance D x r₁ oR))
+    feed emp = h₁
+    feed {suc n} (add {x = x} d) = subst (Linked (proj₁ (F.itS op (suc n) S lvl1 w₁))) (sym (append₁ x)) (Level.change (advance D x) o (F.itS op n S) c⁺ above (feed d))
+
+    module Point {n} (x : R.Tr r₂) (d : Word n x)
+      (hc : data≤ (proj₁ (advance D x R.zero tt)) (proj₁ (F.itS op n S B.zero w₀))) where
+      go : ∀ a t v → data≤ (proj₁ a) (proj₁ v) → data≤ (proj₁ (ψ♯ r₂ o₂ (advance D x) R.zero tt a iΩ₂))
+        (proj₁ (F.run op (F.itS op n S) B.zero t v))
+      go a t v h = ≼-trans (Zero.At.fold (advance D x) o (F.itS op n S) (feed d) hc a v h t) (inc-t _ above)
+        where
+        inc-t : ∀ c → A._⊴_ wΩ₂ c → read (proj₁ (F.ψ lvl2 o (F.itS op n S) B.zero t v wΩ₂)) ≼ read (proj₁ (F.ψ lvl2 o (F.itS op n S) B.zero t v c))
+        inc-t .wΩ₂ (inj₁ refl) = OCF.Align.Value.≼-refl _
+        inc-t c (inj₂ e) = ◃→≼ (F.mono lvl2 o (F.itS op n S) B.zero t v e)
+
+    coord : ∀ {n x} → Word n x → data≤ (proj₁ (advance D x R.zero tt)) (proj₁ (F.itS op n S B.zero w₀))
+    coord emp = h₀
+    coord {suc n} (add {x = x} d) = subst (λ t → data≤ t (proj₁ (F.itS op (suc n) S B.zero w₀))) (sym (append₀ (D R.zero tt) x)) (Point.go x d (coord d) (advance D x R.zero tt) w₀ _ (coord d))
+
+    output : ∀ {n x} → Word n x → ∀ a t v → data≤ (proj₁ a) (proj₁ v) →
+      data≤ (proj₁ (ψ♯ r₂ o₂ D R.zero tt a x)) (proj₁ (F.itV op n S B.zero t v))
+    output emp a t v h = h
+    output {suc n} (add {x = x} d) a t v h = subst (λ y → data≤ y (proj₁ (F.itV op (suc n) S B.zero t v))) (sym (append₀ a x)) (Point.go x d (coord d) (ψ♯ r₂ o₂ D R.zero tt a x) t _ (output d a t v h))
+

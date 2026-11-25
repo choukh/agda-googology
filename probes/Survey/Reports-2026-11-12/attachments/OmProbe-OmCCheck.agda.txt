@@ -1,0 +1,177 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- (C) 的检查: J2 各律与 kstep (YiPhiIface.Iface 实填), kall, 自身行律, omD 配置的有限测试, 形状测试.
+module OmCCheck where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+
+open import OCF.Lean.YiFreshBlock
+open import OCF.Lean.YiFreshFold using (_+_; iter; next; cum; Ωt; ι; eqℕ-refl)
+open import OCF.Lean.YiFreshLegal using (_⊢_◃_; Leg; LN)
+open import OCF.Lean.YiPhiBlock
+open import OCF.Lean.YiPhiNegK using (InB; prE; brE; lemB; evc; Kept; kept-self; KAll)
+open import OCF.Lean.YiUpBlock using (Dn; stop; down; Up; Upc)
+import OCF.Lean.YiPhiIface as PI
+import OCF.Lean.YiUpFold as A
+open import OmCFold
+open import OmCLegal
+
+IsΩ IsLim IsUp : ∀ {P B C D} → T P B C D → Set
+IsΩ (Ω _ _) = ⊤
+IsΩ _       = ⊥
+IsLim (lim _) = ⊤
+IsLim _       = ⊥
+IsUp (up _ _ _) = ⊤
+IsUp _          = ⊥
+
+-- (b) J2 各律, kstep; (c) 单调与保持合法; (d) 闭项
+J2-lim : (g : ℕ → L) (ε : Ev (lim g)) (B : Base (lim g)) (n : ℕ) (j : L) (w : j ≤ g n) (β : Tr j)
+  (x : Tr (lim g)) (y : Tr (g n))
+  → ψs (lim g) ε B j (inl n w) β (up x n y)
+  ≡ ψs (g n) (ε n) (dL g ε B n x) j w (ψs (lim g) ε B j (inl n w) β x) y
+J2-lim g ε B n j w β x y rewrite eqℕ-refl n = refl
+
+cI : PI.Iface
+cI = record
+  { ψ⊥ = ψ⊥
+  ; ψs = ψs
+  ; J2-suc  = λ a ε B j w β x y → refl
+  ; J2-lim  = J2-lim
+  ; J2-limu = λ g ε B j ws β x n y → refl
+  ; J2-Ωk   = λ k h ε B j w β x c y → refl
+  ; J2-Ωu   = λ k h ε B j ws β x c y → refl
+  ; J2⊥-suc = λ a ε B x y → refl
+  ; J2⊥-lim = λ g ε B x n y → refl
+  ; J2⊥-Ω   = λ k h ε B x c y → refl
+  ; mono⊥ = mono⊥
+  ; monos = monos
+  ; pres⊥ = pres⊥
+  ; press = press
+  ; tw-leg = twᶜ-leg
+  ; EBO-leg = EBOᶜ-leg
+  ; kstep = λ n B β x p g → refl
+  }
+
+child-kept : (a b : L) (ea : Ev a) (eb : EvO a b) (B : Base (a ⊕ b)) (β : Tr a)
+  {t : Pos (a ⊕ b)} (G : Br (a ⊕ b) t → Tr (a ⊕ b)) (i : InB a b t) (p : Pos a) → prE i eb ≡ inj₂ p
+  → Kept p (ψs (a ⊕ b) (Ev⊕ a b ea eb) B a (self ∙ lift a b) β (Ω t G))
+child-kept a b ea eb B β G i p e =
+  subst (Kept p)
+    (sym (lemB a b ea i eb self (λ q cv → Ω q (λ z → ψs (a ⊕ b) (Ev⊕ a b ea eb) B a (self ∙ lift a b) β (G (cv z)))) _))
+    (kept-self a ea (prE i eb) p e (λ q cv z → ψs (a ⊕ b) (Ev⊕ a b ea eb) B a (self ∙ lift a b) β (G (brE i eb (cv z)))) _)
+
+kall-C : KAll cI
+kall-C n B β x c G i p e = child-kept (tw n) (↑ (tw n) c) (Ev-tw n) (evc n c) _ _ G i p e
+
+-- 自身行律 (三种层号各一条)
+self-suc : (a : L) (ε : Ev (suc a)) (B : Base (suc a)) (β x : Tr (suc a)) (y : Tr a)
+  → ψs (suc a) ε B (suc a) self β (up x tt y) ≡ Up′ a ε (down stop tt) (ψs (suc a) ε B (suc a) self β x) y
+self-suc a ε B β x y = refl
+
+self-lim : (g : ℕ → L) (ε : Ev (lim g)) (B : Base (lim g)) (β x : Tr (lim g)) (n : ℕ) (y : Tr (g n))
+  → ψs (lim g) ε B (lim g) self β (up x n y) ≡ Up′ (g n) (ε n) (down stop n) (ψs (lim g) ε B (lim g) self β x) y
+self-lim g ε B β x n y = refl
+
+self-Ωₗ : (k : L) (h : Tr k → L) (ε : Ev (Ωₗ k h)) (B : Base (Ωₗ k h)) (β x : Tr (Ωₗ k h)) (c : Tr k) (y : Tr (h c))
+  → ψs (Ωₗ k h) ε B (Ωₗ k h) self β (up x c y)
+  ≡ up (ψs (Ωₗ k h) ε B (Ωₗ k h) self β x) c (ψs (h c) (proj₂ (proj₂ ε c)) (B₀ (h c)) (h c) self (Ωt (h c)) y)
+self-Ωₗ k h ε B β x c y = refl
+
+-- (a) omD 配置
+one two : L
+one = suc zero
+two = suc one
+
+c₂ : Tr zero
+c₂ = suc (suc zero)
+
+ε₁ : Ev (tw 1)
+ε₁ = Ev-tw 1
+
+nodeC : (Tr zero → Tr two) → Tr two
+nodeC G = Ω (inj₂ (inj₁ tt)) G
+
+P : (Tr one → Tr zero → Tr two) → Tr two
+P G = Ω (inj₁ tt) (λ z → nodeC (G z))
+
+-- 自身行之后 P 与 nodeC 都还在孩子 two 里, 槽位不变
+P-kept : (B : Base (tw 1)) (β x : Tr (tw 1)) (G : Tr one → Tr zero → Tr two) →
+  ψs (tw 1) ε₁ B (tw 1) self β (up x c₂ (P G))
+  ≡ up (ψs (tw 1) ε₁ B (tw 1) self β x) c₂
+       (Ω (inj₁ tt) (λ z → Ω (inj₂ (inj₁ tt)) (λ z′ → selfC two tt (G z z′))))
+P-kept B β x G = refl
+
+-- 以后折到第 0 层: 交给孩子 two 的折叠 (J2⊥-Ω), P 的链步在孩子里做
+P-down : (B : Base (tw 1)) (β x : Tr (tw 1)) (G : Tr one → Tr zero → Tr two) →
+  ψ⊥ (tw 1) ε₁ B (ψs (tw 1) ε₁ B (tw 1) self β (up x c₂ (P G)))
+  ≡ ψ⊥ two tt (dW zero (λ c → zero ⊕ ↑ zero c) ε₁ B c₂ (ψs (tw 1) ε₁ B (tw 1) self β x))
+       (selfC two tt (P G))
+P-down B β x G = refl
+
+-- P 的链步 (目标 one, 路径 ins self, 在孩子 two 里): nodeC 保留
+omD-C : (B′ : Base two) (β′ : Tr one) (G : Tr zero → Tr two) →
+  IsΩ (ψs two tt B′ one (ins self) β′ (selfC two tt (nodeC G)))
+omD-C B′ β′ G = tt
+
+-- 自身行再做一遍: 仍在孩子里
+P-kept² : (B : Base (tw 1)) (β β′ x : Tr (tw 1)) (G : Tr one → Tr zero → Tr two) →
+  ψs (tw 1) ε₁ B (tw 1) self β′ (ψs (tw 1) ε₁ B (tw 1) self β (up x c₂ (P G)))
+  ≡ up (ψs (tw 1) ε₁ B (tw 1) self β′ (ψs (tw 1) ε₁ B (tw 1) self β x)) c₂
+       (selfC two tt (selfC two tt (P G)))
+P-kept² B β β′ x G = refl
+
+omD-C² : (B′ : Base two) (β′ : Tr one) (G : Tr zero → Tr two) →
+  IsΩ (ψs two tt B′ one (ins self) β′ (selfC two tt (selfC two tt (nodeC G))))
+omD-C² B′ β′ G = tt
+
+-- 界限: 在 tw 1 层直接以分支侧目标折嵌入分支, 仍回退 (与 YiUp 同一行, 没有改)
+fallback : (B : Base (tw 1)) (β : Tr one) (X : Tr (tw 1)) (G : Tr zero → Tr two) →
+  ψs (tw 1) ε₁ B one (inb c₂ (ins self)) β (up X c₂ (nodeC G))
+  ≡ ψs (tw 1) ε₁ B one (inb c₂ (ins self)) β X + ι one (ψ⊥ two tt (B₀ two) (nodeC G))
+fallback B β X G = refl
+
+-- 深一层: suc (tw 1) 的自身行上折孩子 tw 1 的树, 走到 up 处停下, 孙辈留在原处
+deep : (B : Base (suc (tw 1))) (β X : Tr (suc (tw 1))) (x : Tr (tw 1)) (G : Tr one → Tr zero → Tr two) →
+  ψs (suc (tw 1)) ε₁ B (suc (tw 1)) self β (up X tt (up x c₂ (P G)))
+  ≡ up (Up′ (tw 1) ε₁ (down stop tt) (ψs (suc (tw 1)) ε₁ B (suc (tw 1)) self β X) x) tt
+       (up zero c₂ (selfC two tt (P G)))
+deep B β X x G = refl
+
+-- (f) 形状: tw 2 的 Ω 树到第 0 层, 链的第一步 (目标 tw 1, 路径 ink self)
+ε₂ : Ev (tw 2)
+ε₂ = Ev-tw 2
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+stepC : Tr (tw 1) → Tr (tw 1)
+stepC c = ψs (tw 2) ε₂ (B₀ (tw 2)) (tw 1) (ink self) (Ωt (tw 1)) (up zero c (Ωt (tw 1 ⊕ ↑ (tw 1) c)))
+
+stepA : Tr (tw 1) → Tr (tw 1)
+stepA c = A.ψs (tw 2) ε₂ (B₀ (tw 2)) (tw 1) (ink self) (Ωt (tw 1)) (up zero c (Ωt (tw 1 ⊕ ↑ (tw 1) c)))
+
+step1-C : stepC zero ≡ Ω (inj₁ (inj₁ tt)) (λ c → up (Ωt (tw 1)) c (selfC (h₁ c) (proj₂ (proj₂ ε₁ c)) (Ωt (h₁ c))))
+step1-C = refl
+
+step1-A : stepA zero ≡ Ω (inj₁ (inj₁ tt)) (λ c → Up (h₁ c) (down stop c) (Ωt (tw 1)) (Ωt (h₁ c)))
+step1-A = refl
+
+-- 第 0 支: (A) 是 next β, (C) 是 β 加上孩子层里的 next 1
+br0-A : Up (h₁ zero) (down stop zero) (Ωt (tw 1)) (Ωt (h₁ zero)) ≡ next (Ωt (tw 1))
+br0-A = refl
+
+br0-C : up (Ωt (tw 1)) zero (selfC (h₁ zero) (proj₂ (proj₂ ε₁ zero)) (Ωt (h₁ zero)))
+      ≡ up (Ωt (tw 1)) zero (next (suc zero))
+br0-C = refl
+
+-- 第 1 支 (孩子层 one): (A) 的结点进了 tw 1 的槽位, (C) 的留在孩子里
+br1-A : IsΩ (Up (h₁ (suc zero)) (down stop (suc zero)) (Ωt (tw 1)) (Ωt (h₁ (suc zero))))
+br1-A = tt
+
+br1-C : selfC (h₁ (suc zero)) (proj₂ (proj₂ ε₁ (suc zero))) (Ωt (h₁ (suc zero)))
+      ≡ Ω (inj₁ tt) (λ c → next (Up′ zero tt (down stop tt) (Ωt one) c))
+br1-C = refl

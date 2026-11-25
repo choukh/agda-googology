@@ -1,0 +1,247 @@
+# YiLeanVal 加法：关系对加法、ω 倍与部分和封闭
+
+**验收文件，档位：编译定理 (引理)。** 目标层 `M` 是后继或极限层号 (`RK M` 给出那里的通用规则)，造结点的办法 `B` 与关系相容 (`Compat`) 时：
+右边的加数不降 (`RIGHT`)，左边的加数吸收 (`LEFT`)，参照的加法对应树的加法 (`ADDB`)；由此得到对一切 `Pl` 层号的 ω 倍 (`SUCC`)、吸收 (`ABSORB`)、部分和 (`PSUM`)。
+不否定别的写法。底座在 [YiLeanValRel](YiLeanValRel.lagda.md)。
+
+```agda
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+module OCF.Lean.YiLeanValAdd where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product.Base using (_,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+open import OCF.Lean.YiLeanCore
+open import OCF.Lean.YiLeanFold
+open import OCF.Lean.YiLeanAccFin using (read; plus≽; read-copies)
+open import OCF.Lean.YiLeanValRel
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼)
+open import OCF.BTBO using (module Ord-Ord)
+open Ord-Ord using () renaming (iter to iterᴸ)
+open L using (_<ᴵ_)
+```
+
+## 1 目标层的通用规则与相容的造结点办法
+
+```agda
+record RK (M : LF) : Set where
+  field
+    zrK : ∀ {j} {η : Raw M} → RelF M {j} L.zero η
+    ssrK : ∀ {j} {x : L.Ordᶜ j} {η} → RelF M x η → RelF M (L.suc x) (G.suc η)
+    srK : ∀ {j} {x : L.Ordᶜ j} {η} → RelF M x η → RelF M x (G.suc η)
+    lrK : ∀ {j} {x : L.Ordᶜ j} {F : ℕ → Raw M} n → RelF M x (F n) → RelF M x (G.lim F)
+    llrK : ∀ {j} {F : ℕ → L.Ordᶜ j} {η} → (∀ n → RelF M (F n) η) → RelF M (L.lim F) η
+    urK : ∀ {j} {y : L.Ordᶜ j} {η} → RelF M y η → RelF M (L.up {k = j} L.zero y) η
+    usK : ∀ {f : ℕ → L.Ordᴵ} {s′ : ∀ n → f n L.⊑ᴵ f (suc n)} {n} {y : L.Ordᶜ (f n)} {η} →
+      RelF M y η → RelF M (L.up (L.self {f = f} {s = s′} n) y) η
+
+rkS : ∀ k → RK (suc k)
+rkS k = record { zrK = zr ; ssrK = ssr ; srK = sr ; lrK = lr ; llrK = llr ; urK = ur ; usK = us }
+
+rkL : ∀ f → RK (lim f)
+rkL f = record { zrK = zr ; ssrK = ssr ; srK = sr ; lrK = lr ; llrK = llr ; urK = ur ; usK = us }
+
+record Compat (M k : LF) (B : Bld M k) : Set where
+  field
+    cb : ∀ r g {j} {x : L.Ordᶜ j} → RelF M x (g (Lay.tp (Lo k r))) → RelF M x (B r g)
+    cn : ∀ r g {j K′} {q : j <ᴵ K′} {f : L.U j (L.<→◃ q) → L.Ordᶜ K′} →
+      Corr j (lev k r) → (∀ (y : L.Ordᶜ j) a → RelP k r y a → RelF M (f (L.into (L.<→◃ q) y)) (g a)) →
+      RelF M (L.limᵢ q f) (B r g)
+
+Compat-lc : ∀ M → Compat M M G.lc
+Compat-lc zero = record { cb = λ () ; cn = λ () }
+Compat-lc (suc k) = record { cb = λ r g d → br d ; cn = λ r g c h → ndr c h }
+Compat-lc (lim f) = record { cb = λ r g d → br d ; cn = λ r g c h → ndr c h }
+Compat-lc (lc k g) = record { cb = λ _ _ _ → tt ; cn = λ _ _ _ _ → tt }
+
+Compat-s : ∀ {M k} {B : Bld M (suc k)} → Compat M (suc k) B → Compat M k (λ r → B (inj₂ r))
+Compat-s C = record { cb = λ r → cb (inj₂ r) ; cn = λ r → cn (inj₂ r) } where open Compat C
+
+Compat-l : ∀ {M f} {B : Bld M (lim f)} → Compat M (lim f) B → ∀ n → Compat M (f n) (λ r → B (n , r))
+Compat-l C n = record { cb = λ r → cb (n , r) ; cn = λ r → cn (n , r) } where open Compat C
+
+Compat-c : ∀ {M j g} {B : Bld M (lc j g)} → Compat M (lc j g) B → ∀ η l → Compat M (g η) (λ r → B (η , l , r))
+Compat-c C η l = record { cb = λ r → cb (η , l , r) ; cn = λ r → cn (η , l , r) } where open Compat C
+```
+
+## 2 右边的加数不降
+
+```agda
+module _ {M : LF} (K : RK M) where
+  open RK K
+
+  RIGHT : ∀ {k} → Pl k → (B : Bld M k) → Compat M k B → ∀ {j} {x : L.Ordᶜ j} {θ} →
+    RelF M x θ → ∀ a → RelF M x (add k B θ a)
+  RIGHT P B C d G.zero = d
+  RIGHT P B C d (G.suc a) = srK (RIGHT P B C d a)
+  RIGHT P B C d (G.lim F) = lrK 0 (RIGHT P B C d (F 0))
+  RIGHT {k} P B C d (G.lc r g) = Compat.cb C r _ (RIGHT P B C d (g (Lay.tp (Lo k r))))
+  RIGHT (ps P) B C d (G.em _ a) = RIGHT P _ (Compat-s C) d a
+  RIGHT (pl P) B C d (G.em n a) = RIGHT (P n) _ (Compat-l C n) d a
+  RIGHT pz B C d G.top = srK d
+  RIGHT (ps P) B C d G.top = Compat.cb C (inj₁ tt) _ (RIGHT P _ (Compat-s C) d G.top)
+  RIGHT (pl P) B C d G.top = lrK 0 (RIGHT (P 0) _ (Compat-l C 0) d G.top)
+
+  RIGHT-acc : ∀ {f : ℕ → LF} (P : ∀ n → Pl (f n)) (B : Bld M (lim f)) → Compat M (lim f) B →
+    ∀ {j} {x : L.Ordᶜ j} {θ} → RelF M x θ → ∀ n →
+    RelF M x (acc (λ i y → add (f i) (λ r → B (i , r)) y G.top) θ n)
+  RIGHT-acc P B C d zero = d
+  RIGHT-acc P B C d (suc n) = RIGHT (P n) _ (Compat-l C n) (RIGHT-acc P B C d n) G.top
+```
+
+## 3 左边的加数吸收
+
+第 0 层的关系是值，对值的推导归纳 (同 `YiLeanAccFin.em-shift`)。
+
+```agda
+  LEFT0 : ∀ (B : Bld M zero) θ {y b : L.Ordᶜ L.zero} → y ≼ b → ∀ a → b ≡ read a → RelF M y (add zero B θ a)
+  LEFT0 B θ z≼ a q = zrK
+  LEFT0 B θ (s≼s p) (G.suc a) refl = ssrK (LEFT0 B θ p a refl)
+  LEFT0 B θ (s≼s p) G.top refl = ssrK (LEFT0 B θ p G.zero refl)
+  LEFT0 B θ (≼l n p) (G.lim f) refl = lrK n (LEFT0 B θ p (f n) refl)
+  LEFT0 B θ (l≼ h) a q = llrK (λ n → LEFT0 B θ (h n) a q)
+  LEFT0 B θ (≼i {p = ()} x ex p) a q
+  LEFT0 B θ (i≼ {p = ()} h) a q
+  LEFT0 B θ (≼u {r = ()} p) a q
+  LEFT0 B θ (u≼ {r = ()} p) a q
+
+  LEFT : ∀ {k} → Pl k → (B : Bld M k) → Compat M k B → ∀ θ {j} {x : L.Ordᶜ j} {b} →
+    RelF k x b → RelF M x (add k B θ b)
+  LEFTs : ∀ {k} → Pl k → (B : Bld M (suc k)) → Compat M (suc k) B → ∀ θ {j} {x : L.Ordᶜ j} {b} →
+    RelF (suc k) x b → RelF M x (add (suc k) B θ b)
+  LEFTl : ∀ {f} → (∀ n → Pl (f n)) → (B : Bld M (lim f)) → Compat M (lim f) B → ∀ θ {j} {x : L.Ordᶜ j} {b} →
+    RelF (lim f) x b → RelF M x (add (lim f) B θ b)
+
+  LEFT pz B C θ {L.zero} {b = b} d = LEFT0 B θ d b refl
+  LEFT pz B C θ {L.suc _} ()
+  LEFT pz B C θ {L.lim _ _} ()
+  LEFT (ps P) = LEFTs P
+  LEFT (pl P) = LEFTl P
+
+  LEFTs P B C θ zr = zrK
+  LEFTs P B C θ (ssr d) = ssrK (LEFTs P B C θ d)
+  LEFTs P B C θ (sr d) = srK (LEFTs P B C θ d)
+  LEFTs P B C θ (lr n d) = lrK n (LEFTs P B C θ d)
+  LEFTs P B C θ (llr h) = llrK (λ n → LEFTs P B C θ (h n))
+  LEFTs P B C θ (br {r = r} d) = Compat.cb C r _ (LEFTs P B C θ d)
+  LEFTs P B C θ (ndr {r = r} c h) = Compat.cn C r _ c (λ y a p → LEFTs P B C θ (h y a p))
+  LEFTs P B C θ (emr d) = LEFT P _ (Compat-s C) θ d
+  LEFTs P B C θ (tnr tt d) = LEFTs P B C θ d
+  LEFTs P B C θ (tlr i () d)
+  LEFTs P B C θ (ur d) = urK (LEFTs P B C θ d)
+  LEFTs P B C θ (us d) = usK (LEFTs P B C θ d)
+
+  LEFTl P B C θ zr = zrK
+  LEFTl P B C θ (ssr d) = ssrK (LEFTl P B C θ d)
+  LEFTl P B C θ (sr d) = srK (LEFTl P B C θ d)
+  LEFTl P B C θ (lr n d) = lrK n (LEFTl P B C θ d)
+  LEFTl P B C θ (llr h) = llrK (λ n → LEFTl P B C θ (h n))
+  LEFTl P B C θ (br {r = r} d) = Compat.cb C r _ (LEFTl P B C θ d)
+  LEFTl P B C θ (ndr {r = r} c h) = Compat.cn C r _ c (λ y a p → LEFTl P B C θ (h y a p))
+  LEFTl P B C θ (emr {i = n} d) = LEFT (P n) _ (Compat-l C n) θ d
+  LEFTl P B C θ (tnr () d)
+  LEFTl {f} P B C θ (tlr n tt d) =
+    lrK n (LEFT (P n) _ (Compat-l C n) (acc (λ i y → add (f i) (λ r → B (i , r)) y G.top) θ n) d)
+  LEFTl P B C θ (ur d) = urK (LEFTl P B C θ d)
+  LEFTl P B C θ (us d) = usK (LEFTl P B C θ d)
+```
+
+## 4 参照的加法对应树的加法
+
+参照的 `add x σ y` 对右加数 `y` 递归；`y` 的结点 `limᵢ q f` 变成 `limᵢ (σ q) …`，层号不变，所以槽位上的对应不变。
+
+```agda
+  ADD0 : ∀ (B : Bld M zero) {ℓ} {x : L.Ordᶜ ℓ} {θ} → RelF M x θ → (σ : L.Simᴵ L.zero ℓ) →
+    ∀ {y b : L.Ordᶜ L.zero} → y ≼ b → ∀ a → b ≡ read a → RelF M (L.add x σ y) (add zero B θ a)
+  ADD0 B d σ z≼ a q = RIGHT pz B (record { cb = λ () ; cn = λ () }) d a
+  ADD0 B d σ (s≼s p) (G.suc a) refl = ssrK (ADD0 B d σ p a refl)
+  ADD0 B d σ (s≼s p) G.top refl = ssrK (ADD0 B d σ p G.zero refl)
+  ADD0 B d σ (≼l n p) (G.lim f) refl = lrK n (ADD0 B d σ p (f n) refl)
+  ADD0 B d σ (l≼ h) a q = llrK (λ n → ADD0 B d σ (h n) a q)
+  ADD0 B d σ (≼i {p = ()} x ex p) a q
+  ADD0 B d σ (i≼ {p = ()} h) a q
+  ADD0 B d σ (≼u {r = ()} p) a q
+  ADD0 B d σ (u≼ {r = ()} p) a q
+
+  ADDB : ∀ {k} → Pl k → (B : Bld M k) → Compat M k B → ∀ {ℓ} {x : L.Ordᶜ ℓ} {θ} → RelF M x θ →
+    ∀ {κ} (σ : L.Simᴵ κ ℓ) {y : L.Ordᶜ κ} {a} → RelF k y a → RelF M (L.add x σ y) (add k B θ a)
+  ADDs : ∀ {k} → Pl k → (B : Bld M (suc k)) → Compat M (suc k) B → ∀ {ℓ} {x : L.Ordᶜ ℓ} {θ} → RelF M x θ →
+    ∀ {κ} (σ : L.Simᴵ κ ℓ) {y : L.Ordᶜ κ} {a} → RelF (suc k) y a → RelF M (L.add x σ y) (add (suc k) B θ a)
+  ADDl : ∀ {f} → (∀ n → Pl (f n)) → (B : Bld M (lim f)) → Compat M (lim f) B → ∀ {ℓ} {x : L.Ordᶜ ℓ} {θ} →
+    RelF M x θ → ∀ {κ} (σ : L.Simᴵ κ ℓ) {y : L.Ordᶜ κ} {a} → RelF (lim f) y a →
+    RelF M (L.add x σ y) (add (lim f) B θ a)
+
+  ADDB pz B C dx {L.zero} σ {a = a} dy = ADD0 B dx σ dy a refl
+  ADDB pz B C dx {L.suc _} σ ()
+  ADDB pz B C dx {L.lim _ _} σ ()
+  ADDB (ps P) = ADDs P
+  ADDB (pl P) = ADDl P
+
+  ADDs P B C dx σ zr = RIGHT (ps P) B C dx _
+  ADDs P B C dx σ (ssr d) = ssrK (ADDs P B C dx σ d)
+  ADDs P B C dx σ (sr d) = srK (ADDs P B C dx σ d)
+  ADDs P B C dx σ (lr n d) = lrK n (ADDs P B C dx σ d)
+  ADDs P B C dx σ (llr h) = llrK (λ n → ADDs P B C dx σ (h n))
+  ADDs P B C dx σ (br {r = r} d) = Compat.cb C r _ (ADDs P B C dx σ d)
+  ADDs P B C {x = x} dx σ (ndr {r = r} {g = g} {q = q} {f = f} c h) = Compat.cn C r _ c (λ y a p →
+    subst (λ w → RelF M (L.add x σ (f (L.into (L.<→◃ q) w))) (add _ B _ (g a)))
+      (sym (L.out-into (L.<→◃ (σ q)) y)) (ADDs P B C dx σ (h y a p)))
+  ADDs P B C dx σ (emr d) = ADDB P _ (Compat-s C) dx σ d
+  ADDs P B C dx σ (tnr tt d) = ADDs P B C dx σ d
+  ADDs P B C dx σ (tlr i () d)
+  ADDs P B C dx σ (ur d) = ADDs P B C dx (λ q → σ (L.suc q)) d
+  ADDs P B C dx σ (us {n = n} d) = ADDs P B C dx (λ q → σ (L.lim n q)) d
+
+  ADDl P B C dx σ zr = RIGHT (pl P) B C dx _
+  ADDl P B C dx σ (ssr d) = ssrK (ADDl P B C dx σ d)
+  ADDl P B C dx σ (sr d) = srK (ADDl P B C dx σ d)
+  ADDl P B C dx σ (lr n d) = lrK n (ADDl P B C dx σ d)
+  ADDl P B C dx σ (llr h) = llrK (λ n → ADDl P B C dx σ (h n))
+  ADDl P B C dx σ (br {r = r} d) = Compat.cb C r _ (ADDl P B C dx σ d)
+  ADDl P B C {x = x} dx σ (ndr {r = r} {g = g} {q = q} {f = f} c h) = Compat.cn C r _ c (λ y a p →
+    subst (λ w → RelF M (L.add x σ (f (L.into (L.<→◃ q) w))) (add _ B _ (g a)))
+      (sym (L.out-into (L.<→◃ (σ q)) y)) (ADDl P B C dx σ (h y a p)))
+  ADDl P B C dx σ (emr {i = n} d) = ADDB (P n) _ (Compat-l C n) dx σ d
+  ADDl P B C dx σ (tnr () d)
+  ADDl P B C dx σ (tlr n tt d) = lrK n (ADDB (P n) _ (Compat-l C n) (RIGHT-acc P B C dx n) σ d)
+  ADDl P B C dx σ (ur d) = ADDl P B C dx (λ q → σ (L.suc q)) d
+  ADDl P B C dx σ (us {n = n} d) = ADDl P B C dx (λ q → σ (L.lim n q)) d
+```
+
+## 5 对一切 `Pl` 层号：ω 倍、吸收、部分和
+
+```agda
+COPIES : ∀ {m} (K : RK m) → Pl m → ∀ {i} {A : L.Ordᶜ i} {y} → RelF m A y → ∀ n →
+  RelF m (iterᴸ (A L.+_) L.zero (suc n)) (acc (λ _ z → plus m y z) y n)
+COPIES K P p zero = p
+COPIES {m} K P p (suc n) = ADDB K P G.lc (Compat-lc m) p (λ q → q) (COPIES K P p n)
+
+SUCC : ∀ {m} → Pl m → ∀ {i} {A : L.Ordᶜ i} {y} → RelF m A y →
+  RelF m (L.lim (iterᴸ (A L.+_) L.zero)) (succ m y)
+SUCC pz {L.zero} {y = y} p = l≼ λ where
+  zero → z≼
+  (suc n) → ≼l n (read-copies y p n)
+SUCC pz {L.suc _} ()
+SUCC pz {L.lim _ _} ()
+SUCC {suc k} (ps P) p = llr λ where
+  zero → zr
+  (suc n) → lr n (COPIES (rkS k) (ps P) p n)
+SUCC {lim f} (pl P) p = llr λ where
+  zero → zr
+  (suc n) → lr n (COPIES (rkL f) (pl P) p n)
+
+ABSORB : ∀ {m} → Pl m → ∀ θ {j} {x : L.Ordᶜ j} {b} → RelF m x b → RelF m x (plus m θ b)
+ABSORB pz θ {L.zero} {b = b} p = plus≽ θ b p
+ABSORB pz θ {L.suc _} ()
+ABSORB pz θ {L.lim _ _} ()
+ABSORB {suc k} (ps P) θ p = LEFT (rkS k) (ps P) G.lc (Compat-lc (suc k)) θ p
+ABSORB {lim f} (pl P) θ p = LEFT (rkL f) (pl P) G.lc (Compat-lc (lim f)) θ p
+
+PSUM : ∀ {m} → Pl m → ∀ (h : ℕ → Raw m) n {j} {x : L.Ordᶜ j} → RelF m x (h n) → RelF m x (psum m h n)
+PSUM P h zero p = p
+PSUM P h (suc n) p = ABSORB P (psum _ h n) p
+```

@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19RowAction where
+open import Data.Nat using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+import OCF.Align.Level as L
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B13Target as P
+import B14RefFixed as K
+import B15RefAlgebra as A
+import B18RefDelta as Z
+
+D₂ : Lev₂ → T₁ → T₁
+D₂ L.zero u = A.Γ u
+D₂ (L.suc x) u = L.lim (S.iter (D₂ x) u)
+D₂ (L.lim f) u = L.lim (λ j → D₂ (f j) u)
+D₂ (L.up L.zero y) u = Z.δ y u
+D₂ (L.limᵢ (L.suc L.zero) g) u = L.limᵢ L.zero (λ z → D₂ (g z) u)
+D₂ (L.limᵢ L.zero g) u = L.lim (λ j → S.iter (λ t → D₂ (g t) u) Ω₁ᴸ (suc j))
+
+mutual
+  small-wide : ∀ {x : T₀} {y : Lev₂} → x L.≅ y → ∀ {p u} → Z.Rₚ p u → Z.Rₚ (P.height x p) (D₂ y u)
+  small-wide L.z≅ h = A.add-Ω h
+  small-wide (L.s≅ {a = x} {b = y} d) h = L.l≅ (L.iter-R Z.Rₚ {G = P.height x} {G′ = D₂ y} (small-wide d) h)
+  small-wide (L.l≅ d) h = L.l≅ (λ j → small-wide (d j) h)
+  small-wide (L.upˡ {r = ()} _)
+  small-wide (L.upʳ {r = L.zero} d) h = Z.lift d h
+  small-wide (L.lᵢ≅ {p = ()} _ _)
+
+  one-wide : ∀ {x : T₁} {y : Lev₂} → x L.≅ y → ∀ {p u} → Z.Rₚ p u → Z.Rₚ (P.height₁ x p) (D₂ y u)
+  one-wide L.z≅ h = A.add-Ω h
+  one-wide (L.s≅ {a = x} {b = y} d) h = L.l≅ (L.iter-R Z.Rₚ {G = P.height₁ x} {G′ = D₂ y} (one-wide d) h)
+  one-wide (L.l≅ d) h = L.l≅ (λ j → one-wide (d j) h)
+  one-wide (L.upˡ {r = L.zero} d) h = small-wide d h
+  one-wide (L.upʳ {r = L.zero} d) h = Z.inside d h
+  one-wide (L.lᵢ≅ {p = L.zero} {q = L.suc L.zero} L.z≅ ds) h = L.lᵢ≅ L.z≅ (λ x y d →
+    one-wide (ds (L.tr⁻ L.z≅ (L.tr⁻ L.z≅ x)) y (L.tr⁻-≅ L.z≅ (L.tr⁻-≅ L.z≅ d))) h)
+
+  wide-small : ∀ {x : Lev₂} {y : T₀} → x L.≅ y → ∀ {p u} → Z.Rₚ p u → Z.Rₚ (P.height₂ x p) (A.H y u)
+  wide-small L.z≅ h = A.add-Ω h
+  wide-small (L.s≅ {a = x} {b = y} d) h = L.l≅ (L.iter-R Z.Rₚ {G = P.height₂ x} {G′ = A.H y} (wide-small d) h)
+  wide-small (L.l≅ d) h = L.l≅ (λ j → wide-small (d j) h)
+  wide-small (L.upˡ {r = L.zero} d) h = Z.drop d h
+  wide-small (L.upʳ {r = ()} _)
+  wide-small (L.lᵢ≅ {q = ()} _ _)
+
+  wide-one : ∀ {x : Lev₂} {y : T₁} → x L.≅ y → ∀ {p u} → Z.Rₚ p u → Z.Rₚ (P.height₂ x p) (Z.δ y u)
+  wide-one L.z≅ h = A.add-Ω h
+  wide-one (L.s≅ {a = x} {b = y} d) h = L.l≅ (L.iter-R Z.Rₚ {G = P.height₂ x} {G′ = Z.δ y} (wide-one d) h)
+  wide-one (L.l≅ d) h = L.l≅ (λ j → wide-one (d j) h)
+  wide-one (L.upˡ {r = L.zero} d) h = Z.inside d h
+  wide-one (L.upʳ {r = L.zero} d) h = wide-small d h
+  wide-one (L.lᵢ≅ {p = L.suc L.zero} {q = L.zero} L.z≅ ds) h = L.lᵢ≅ L.z≅ (λ x y d →
+    wide-one (ds (L.tr⁻ L.z≅ (L.tr⁻ L.z≅ x)) y (L.tr⁻-≅ L.z≅ (L.tr⁻-≅ L.z≅ d))) h)
+
+  inside : ∀ {x : Lev₂} {y : Lev₂} → x L.≅ y → ∀ {p u} → Z.Rₚ p u → Z.Rₚ (P.height₂ x p) (D₂ y u)
+  inside L.z≅ h = A.add-Ω h
+  inside (L.s≅ {a = x} {b = y} d) h = L.l≅ (L.iter-R Z.Rₚ {G = P.height₂ x} {G′ = D₂ y} (inside d) h)
+  inside (L.l≅ d) h = L.l≅ (λ j → inside (d j) h)
+  inside (L.upˡ {r = L.zero} d) h = one-wide d h
+  inside (L.upʳ {r = L.zero} d) h = wide-one d h
+  inside (L.lᵢ≅ {p = L.suc L.zero} {q = L.suc L.zero} L.z≅ ds) h = L.lᵢ≅ L.z≅ (λ x y d →
+    inside (ds (L.tr⁻ L.z≅ (L.tr⁻ L.z≅ x)) y (L.tr⁻-≅ L.z≅ (L.tr⁻-≅ L.z≅ d))) h)
+  inside (L.lᵢ≅ {p = L.zero} {q = L.zero} {f = f} {g} e ds) {p} {u} h = L.l≅ (λ j → run (suc j)) where
+    run = L.iter-R L._≅_ {G = λ t → K.collapse (P.height₂ (f (P.back t)) p)} {G′ = λ t → D₂ (g t) u}
+      (λ {x} {y} d → inside (ds (P.back x) y (L.tr⁻-≅ (L.≅ᴵ-refl _) d)) h) (L.Ω-refl _)
+  inside (L.lᵢ≅ {p = L.suc (L.suc ())} e ds) h
+  inside (L.lᵢ≅ {q = L.suc (L.suc ())} e ds) h
+
+increment : ∀ {p u x y} → p L.≅ p → x L.≅ y → Z.Rₚ p u → Z.Rₚ (p L.+ P.pass x) (D₂ y u)
+increment {p} {u} {x} rp xy h = L.≅-trans (K.pres (L.≅-sym (P.shift₂ x (P.refl-left xy) rp))) (inside xy h)
+
+at-zero : ∀ {x y} → x L.≅ y → Z.Rₚ (P.pass x) (D₂ y Ω₁ᴸ)
+at-zero {x} d = L.≅-trans (K.pres (L.≅-sym (U.left-unit R.idσ (P.pass-pres (P.refl-left d))))) (increment {p = L.zero} L.z≅ d (L.Ω-refl _))

@@ -1,0 +1,42 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 每个实际链下标的值都能在同号的外层输出取回。只需路径逐层进入所有孩子，无须等同选层路径与输出路径。
+module B16ReadIndex where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block
+open import W4Path
+open import WVOne using (𝟏; T₀; read; h₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼; s≼s; z≼; ≼-suc) renaming (+-mono to plus-mono)
+import B12Terminal as T
+import B12ActualSlots as A
+open import B12TerminalTail using (mulω)
+import B14Height as H
+import B14PathHeight as P
+import B14Tower as W
+
+grow : ∀ a → 𝟏 ≼ a → L.suc a ≼ mulω a
+grow a e = ≼l 1 (plus-mono {a = a} (≼-refl a) e)
+
+strict : ∀ x a → 𝟏 ≼ a → L.suc (H.act x a) ≼ H.act (L.suc x) a
+strict x a e = ≼l 2 (≼-trans (grow (H.act x a)
+  (≼-trans e (≼-trans (≼l 0 (≼-refl a)) (H.seed x a)))) (H.seed x (H.act x a)))
+
+index : ∀ x → x ≼ H.act x 𝟏
+index L.zero = z≼
+index (L.suc x) = ≼-trans (s≼s (index x)) (strict x 𝟏 (≼-refl _))
+index (L.lim f) = l≼ (λ n → ≼l n (index (f n)))
+
+retained : ∀ (z : Tr zero) (r : T.Run (h₁ z)) {w : zero ≤ h₁ z} →
+  A.Covered r → P.All w → read z ≼ W.valueAt r w
+retained z r h p = ≼-trans (index (read z)) (P.compare z p (≼-refl _) r h 𝟏 (T.Run.oneβ r))
+
+module FirstTower (r : T.Run (tw 1)) (hr : A.Covered r) where
+  open W.At r
+  point-value : ∀ n → read (idx n) ≼ read (T.value (point n))
+  point-value n = retained (idx n) (point n) (A.enter (sΩ zero) h₁ r (idx n) zero hr) (P.standard _)
+  indices : ∀ n → read (idx n) ≼ read (T.value r)
+  indices n = ≼-trans (point-value n) (out n)
+  whole : L.lim (λ n → read (idx n)) ≼ read (T.value r)
+  whole = l≼ indices

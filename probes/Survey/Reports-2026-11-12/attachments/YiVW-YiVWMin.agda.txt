@@ -1,0 +1,80 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiVWMin where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₂)
+open import Data.Product using (_×_; _,_)
+open import OCF.Lean.YiRWBlock
+open import OCF.Align.BrwViewDef using (View; vz; BrwView) renaming (Sig to BSig)
+
+data V (ℓ : L) : Set where
+  zero : V ℓ
+  suc : V ℓ → V ℓ
+  lim : (ℕ → V ℓ) → V ℓ
+  Ω : (p : Pos ℓ) → (Br ℓ p → V ℓ) → V ℓ
+
+chL : (ℓ : L) → CH ℓ → L
+chL (nd s h) c = h c
+
+emb : (ℓ : L) (c : CH ℓ) → V (chL ℓ c) → V ℓ
+emb ℓ c zero = zero
+emb ℓ c (suc v) = suc (emb ℓ c v)
+emb ℓ c (lim f) = lim (λ n → emb ℓ c (f n))
+emb (nd s h) c (Ω p g) = Ω (inj₂ (c , inj₂ p)) (λ z → emb (nd s h) c (g z))
+
+mutual
+  val : (ℓ : L) → Tr ℓ → V ℓ
+  val ℓ zero = zero
+  val ℓ (suc x) = suc (val ℓ x)
+  val ℓ (lim f _) = lim (λ n → val ℓ (f n))
+  val ℓ (Ω p g) = Ω p (λ z → val ℓ (g z))
+  val ℓ (up x c y _) = val ℓ x ⊹ valCh ℓ c y
+
+  valCh : (ℓ : L) (c : CH ℓ) → ChT ℓ c → V ℓ
+  valCh (nd s h) c y = emb (nd s h) c (val (h c) y)
+
+  _⊹_ : ∀ {ℓ} → V ℓ → V ℓ → V ℓ
+  a ⊹ zero = a
+  a ⊹ suc b = suc (a ⊹ b)
+  a ⊹ lim f = lim (λ n → a ⊹ f n)
+  a ⊹ Ω p g = Ω p (λ z → a ⊹ g z)
+
+infix 4 _≼_ _≈_
+data _≼_ : {ℓ₁ ℓ₂ : L} → V ℓ₁ → V ℓ₂ → Set where
+  z≼  : ∀ {ℓ₁ ℓ₂} {b : V ℓ₂} → zero {ℓ₁} ≼ b
+  s≼s : ∀ {ℓ₁ ℓ₂} {a : V ℓ₁} {b : V ℓ₂} → a ≼ b → suc a ≼ suc b
+  ≼l  : ∀ {ℓ₁ ℓ₂} {a : V ℓ₁} {f : ℕ → V ℓ₂} (n : ℕ) → a ≼ f n → a ≼ lim f
+  l≼  : ∀ {ℓ₁ ℓ₂} {f : ℕ → V ℓ₁} {b : V ℓ₂} → ((n : ℕ) → f n ≼ b) → lim f ≼ b
+  ≼Ω  : ∀ {ℓ₁ ℓ₂} {a : V ℓ₁} {p : Pos ℓ₂} {g : Br ℓ₂ p → V ℓ₂} (z : Br ℓ₂ p) → a ≼ g z → a ≼ Ω p g
+  Ω≼  : ∀ {ℓ₁ ℓ₂} {p : Pos ℓ₁} {g : Br ℓ₁ p → V ℓ₁} {b : V ℓ₂} → ((z : Br ℓ₁ p) → g z ≼ b) → Ω p g ≼ b
+
+_≈_ : ∀ {ℓ₁ ℓ₂} → V ℓ₁ → V ℓ₂ → Set
+a ≈ b = (a ≼ b) × (b ≼ a)
+
+≼-refl : ∀ {ℓ} (a : V ℓ) → a ≼ a
+≼-refl zero    = z≼
+≼-refl (suc a) = s≼s (≼-refl a)
+≼-refl (lim f) = l≼ (λ n → ≼l n (≼-refl (f n)))
+≼-refl (Ω p g) = Ω≼ (λ z → ≼Ω z (≼-refl (g z)))
+
+
+data _◁_ {ℓ : L} : V ℓ → V ℓ → Set where
+  ◁s : ∀ {x} → x ◁ suc x
+  ◁l : ∀ {f} (n : ℕ) → f n ◁ lim f
+  ◁w : ∀ {p g} → g (fromBr ℓ p zero) ◁ Ω p g
+  ◁t : ∀ {x y z} → x ◁ y → y ◁ z → x ◁ z
+
+SigY : BSig
+SigY = record
+  { Ix = L ; B = V ; _≼_ = λ a b → a ≼ b ; Stp = λ a b → a ◁ b
+  ; Kd = Pos ; Cd = λ {i} p → Br i p ; LgC = λ _ → ⊤ ; tg = λ {i} _ → i
+  ; bz = zero ; bs = suc ; bl = lim ; bΩ = Ω }
+
+VW : (ℓ : L) → V ℓ → Set
+VW ℓ v = View SigY Tr (λ {i} x → val i x) (λ _ → ⊤) ℓ v
+
+Accept : Set
+Accept = BrwView SigY Tr (λ {i} x → val i x) (λ _ → ⊤)
+
+zeroView : (ℓ : L) → VW ℓ (val ℓ zero)
+zeroView ℓ = vz (z≼ , z≼)

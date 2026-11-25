@@ -1,0 +1,63 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B9A: 指数实现 Real 的两条一般行. (1) 正的树至少实现零影子 zC (只用 W4 的 Emono / Itmono);
+-- (2) ex 行: a, b, x 分别实现 ea, eb, ex 时, ex a b x 实现 exE ea eb ex ("先 ea, 再把 eb 迭代 ex 次").
+-- sh e 是 exE zC Ω̂ e 的特例, ea ⨾ eb 是 exE ea eb zC 的特例 (定义上). 编译定理, 无前提.
+module B9InnerReal where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+open import WVOne using (lvl1)
+open import WSShadow
+open import WSW4
+
+-- "先 ea, 再把 eb 迭代 ex 次" (与 W4 的 E / It 的 ex 行同形).
+exE : ES → ES → ES → ES
+sE (exE ea eb ex′) f = sI ex′ 0 (λ g → sE eb g) (sE ea f)
+sI (exE ea eb ex′) n k g = sI ex′ (suc n) (λ k₁ g′ → sI eb n k₁ g′) (λ g′ → sI ea n k g′) g
+
+module RX (o : Ok lvl1) where
+  open Lem o
+
+  Real-pos : (a : Tr lvl1) → lvl1 ⊢ zero ◃ a → Real a zC
+  Real-pos a na =
+      (λ tv mk F f hF → R-cl 0 F (op (E o (td stop tv mk) a F) (Einf o (td stop tv mk) a F)) hF
+                                 (λ S i t v → Emono o (td stop tv mk) F S i t v na))
+    , (λ n tv mk K k G g hK hG → R-cl n (proj₁ K idM G) (It n o (td stop tv mk) a K G) (hK idM refl G g hG)
+                                       (Itmono n o (td stop tv mk) K G na))
+
+  Real-w : ∀ {x e e′} → Real x e → LeE e′ e → Real x e′
+  Real-w {x} (rE , rI) p =
+      (λ tv mk F f hF → R-sh 0 {G = op (E o (td stop tv mk) x F) (Einf o (td stop tv mk) x F)} (rE tv mk F f hF) (proj₁ p f))
+    , (λ n tv mk K k G g hK hG → R-sh n {G = It n o (td stop tv mk) x K G} (rI n tv mk K k G g hK hG) (proj₂ p n k g))
+
+  RealX : ∀ {a b x ea eb ex′} (nb : lvl1 ⊢ zero ◃ b) → Real a ea → Real b eb → Real x ex′
+        → Real (ex a b nb x tt) (exE ea eb ex′)
+  RealX {a} {b} {x} {ea} {eb} {ex′} nb (raE , raI) (rbE , rbI) (rxE , rxI) = XE , XI
+    where
+    XE : RealE (ex a b nb x tt) (exE ea eb ex′)
+    XE {X} tv mk F f hF =
+      rxI 0 tv mk (Kb o (td stop tv mk) b nb) (λ g → sE eb g) (op (E o (td stop tv mk) a F) (Einf o (td stop tv mk) a F)) (sE ea f)
+          (λ m gm G g rg → rbE (λ y → tv (π m y)) (λ τ → σ m (mk τ)) G g rg)
+          (raE tv mk F f hF)
+    XI : RealI (ex a b nb x tt) (exE ea eb ex′)
+    XI n {X} tv mk K k G g hK hG =
+      rxI (suc n) tv mk (Kₑ n o Tᵈ b nb) (λ k₁ g′ → sI eb n k₁ g′) (Itᴺ n o Tᵈ a K) (λ g′ → sI ea n k g′) hKₑ hIa
+          idM refl G g hG
+      where
+      Tᵈ : TD X lvl1
+      Tᵈ = td stop tv mk
+      hKₑ : 𝓡 (suc (suc n)) (mk (inc tt self)) (Kₑ n o Tᵈ b nb) (λ k₁ g′ → sI eb n k₁ g′)
+      hKₑ m gm K₁ k₁ r₁ m′ gm′ G₁ g₁ rg₁ =
+        rbI n (λ y → tv (π m (π m′ y))) (λ τ → σ m′ (σ m (mk τ))) (enter (suc n) m′ K₁) k₁ G₁ g₁
+            (R-enter (suc n) m′ gm′ K₁ r₁) rg₁
+      hIa : 𝓡 (suc n) (mk (inc tt self)) (Itᴺ n o Tᵈ a K) (λ g′ → sI ea n k g′)
+      hIa m gm G₁ g₁ r₁ =
+        raI n (λ y → tv (π m y)) (λ τ → σ m (mk τ)) (enter (suc n) m K) k G₁ g₁ (R-enter (suc n) m gm K hK) r₁

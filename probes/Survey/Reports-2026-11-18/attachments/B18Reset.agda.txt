@@ -1,0 +1,47 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 清去每座塔显式继承的零层值，保留真实槽族与反馈。全部全塔输出被从一开始的独立值之有限乘积支配。
+module B18Reset where
+open import Data.Nat.Base as N using (ℕ; zero; suc)
+open import Data.Nat.Properties as NP using (≤-refl; m≤n⇒m≤1+n)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; 𝟏; read)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans)
+import B12Terminal as T
+import B12EboRows as B
+import B18Scale as S
+import B18Product as P
+open T.Run
+
+r = T.limRun tw T.terminal
+module At (n : ℕ) where
+  l = tw n
+  module Step = S.At l (ok (r n)) (bs (r n)) (z≤ l) (proj₁ (Ωt l)) (β (r n)) (oneβ (r n))
+  fresh = Step.fresh
+  lower : fresh ≼ B.child n
+  lower = Step.lower
+  upper : B.child n ≼ read (proj₁ (β (r n))) P.· fresh
+  upper = Step.upper
+open At public using (fresh; lower; upper)
+
+previous : ∀ n → read (proj₁ (β (r (suc n)))) ≡ B.child n
+previous zero = refl
+previous (suc n) = refl
+
+product : ℕ → T₀
+product zero = 𝟏
+product (suc n) = product n P.· fresh n
+
+factor : ∀ n → B.child n ≼ product (suc n)
+factor zero = upper 0
+factor (suc n) = ≼-trans (upper (suc n)) (P.mono
+  (subst (λ y → y ≼ product (suc n)) (Relation.Binary.PropositionalEquality.sym (previous n)) (factor n))
+  (≼-refl (fresh (suc n))))
+
+bound : ∀ q n → (∀ j → j N.≤ n → fresh j ≼ q) → product (suc n) ≼ P.powers q (suc n)
+bound q zero h = P.mono (≼-refl 𝟏) (h 0 ≤-refl)
+bound q (suc n) h = P.mono (bound q n (λ j d → h j (m≤n⇒m≤1+n d))) (h (suc n) ≤-refl)

@@ -1,0 +1,42 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiUDAtVariables where
+open import Data.Nat using (ℕ)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; sym; cong; subst)
+open import Data.Empty using (⊥-elim)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiKVRel as K
+import OCF.Lean.YiRefTw2 as R
+import OCF.Align.EboLeanDef as E
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼l; l≼)
+import YiUDShapeFloor as S
+
+-- 原 q0 的部分和仍逐字取自新 TBRow；不经过旧折叠。
+module Prefix (A : O.Tr⁺ B.zero) (F : ℕ → O.Tr⁺ B.zero)
+  (eq : proj₁ A ≡ proj₁ (O.limc⁺ F)) where
+  sums : ℕ → L.Ordᶜ L.zero
+  sums n = K.readRW (O.cum (λ j → proj₁ (F j)) n)
+  close : (Y : L.Ordᶜ L.zero) → (∀ n → sums n ≼ Y) → K.readRW (proj₁ A) ≼ Y
+  close Y h = subst (λ x → K.readRW x ≼ Y) (sym eq) (l≼ h)
+
+module Reference {t : E.T} (h : E.HC t) (w : E.cof t ≡ E.cω) where
+  at : ℕ → L.Ordᶜ L.zero
+  at m = R.Rt (R.hω-inv h w m)
+  into : ∀ (X : L.Ordᶜ L.zero) → (Σ ℕ λ m → X ≼ at m) → X ≼ R.Rt h
+  into X (m , q) = ≼-trans q (R.fs≼ h w m)
+
+module Solve (A : O.Tr⁺ B.zero) (F : ℕ → O.Tr⁺ B.zero)
+  (eq : proj₁ A ≡ proj₁ (O.limc⁺ F)) (h : E.HC R.t₊) where
+  module P = Prefix A F eq
+  module V = Reference h refl
+  Match : Set
+  Match = ∀ n → Σ ℕ λ m → P.sums n ≼ V.at m
+  solve : Match → K.readRW (proj₁ A) ≼ R.Rt h
+  solve mt = P.close (R.Rt h) (λ n → V.into (P.sums n) (mt n))
+
+-- 先让输入与参照均为变量，再把原对象实参化一次；未填 Match 不计值上界。
+module Actual = Solve S.Actual.raw S.Actual.row S.Actual.raw-form R.h₊
+match₀ : Actual.Match
+match₀ n = {!!}

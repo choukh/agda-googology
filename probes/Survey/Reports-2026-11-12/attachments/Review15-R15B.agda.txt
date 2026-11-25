@@ -1,0 +1,40 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- R15B: YiAlt 的 lv = true 在 tw 1 (k = zero) 上, 同孩子, 目标是孩子自己的层号时, 分支侧一行的形状.
+module R15B where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Bool using (Bool; true; false)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀)
+open import OCF.Lean.YiAltCmp
+open import OCF.Lean.YiAltFold
+open import OCF.Lean.YiAltTest using (module V; module N; h₁; o¹; c1; c2; β; p1; isΩ; isLim)
+
+-- 同孩子 c2, 目标就是孩子 c2 的层号 (第 2 层): y 仍被折到第 0 层再嵌回
+same-lev : (B : Base (tw 1)) (b : Tr⁺ (h₁ c2)) (x : Tr (tw 1)) (y : Tr (h₁ c2)) (e : h₁ c2 ⊢ zero ◃ y)
+  → V.ψ (tw 1) o¹ B (h₁ c2) (inc c2 self) b (up x c2 y e)
+  ≡ V.ψ (tw 1) o¹ B (h₁ c2) (inc c2 self) b x
+    ⊹ emb (h₁ c2) (Ok-≤ (h₁ c2) (proj₂ o¹ c2) self) (proj₂ (proj₁ o¹) c2)
+        (V.ψ (h₁ c2) (proj₂ o¹ c2) (λ i u → V.ψ (tw 1) o¹ B i (inc c2 u) (B i (inc c2 u)) x) zero
+             (proj₂ (proj₁ o¹) c2) (B zero (ink self)) y)
+same-lev B b x y e = refl
+
+-- 孩子 c2 里第 1 层的底 (x = β 之后): 顶槽位保留成结点
+gV : Tr⁺ (h₁ c1)
+gV = V.ψ (tw 1) o¹ (B₀ (tw 1)) (h₁ c1) (inc c2 p1) (Ωt (h₁ c1)) (proj₁ β)
+
+gV-Ω : isΩ (proj₁ gV)
+gV-Ω = tt
+
+gN : Tr⁺ (h₁ c1)
+gN = N.ψ (tw 1) o¹ (B₀ (tw 1)) (h₁ c1) (inc c2 p1) (Ωt (h₁ c1)) (proj₁ β)
+
+gN-Ω : isΩ (proj₁ gN)
+gN-Ω = tt

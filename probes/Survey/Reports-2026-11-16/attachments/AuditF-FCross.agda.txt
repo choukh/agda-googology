@@ -1,0 +1,72 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- F 路判定件 (形状档): LowSlot 的量化域里有分叉出口.
+-- 塔第 2 项, 目标是孩子 0 一侧的槽位 (层号 tw 1), 结点的槽位是孩子 0 里 tw 1 的下标槽位 (第 0 层):
+-- 对一切状态, 树一侧是 ℕ 极限; 参照一侧 ψ_{Ω₁}(X + Ω₁) 的余尾是 Ω₁, 且 Ω₁ 是目标槽位允许的下标.
+-- 只是形状, 不是值的否定.
+module FCross where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_; _++_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock hiding (R)
+open import OCF.Lean.YiRWOps using (_⊢_◃_)
+import OCF.Align.EboLeanDef as E
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiGIRel as GR
+open import OCF.Lean.YiBALemma using (keepψ)
+open import OCF.Lean.YiWRZero using (Stᶻ; slotFold)
+
+a₂ : L
+a₂ = tw 2
+
+-- 目标槽位: 孩子 0 的层号本身 (tw 1).
+p₂ : Pos a₂
+p₂ = inj₂ (zero , inj₁ tt)
+
+-- 结点槽位: 孩子 0 (层号 tw 1) 里的下标槽位 (第 0 层).
+q₂ : Pos a₂
+q₂ = inj₂ (zero , inj₂ (inj₁ (inj₁ tt)))
+
+at-p : at a₂ p₂ ≡ tw 1
+at-p = refl
+
+at-q : at a₂ q₂ ≡ zero
+at-q = refl
+
+-- 树一侧: 对一切状态与一切分支函数, 朝目标槽位层的折叠在这个结点上是 ℕ 极限.
+tree-lim : (s : Stᶻ a₂) (g : Br a₂ q₂ → Tr a₂)
+  → Σ (ℕ → Tr (tw 1)) λ f → Σ ((n : ℕ) → Lt (Sig (tw 1)) (f n) (f (suc n))) λ m → slotFold s p₂ (Ω q₂ g) ≡ lim f m
+tree-lim (o , r , B , β) g = _ , _ , refl
+
+-- 参照一侧: 结点的余尾下标只能是 0 (槽位在第 0 层); ψ_{Ω₁}(X + Ω₁) 保持余尾 Ω₁.
+Ω₁ : E.T
+Ω₁ = E.Ωt (E.𝟏 ∷ [])
+
+ref-cof : ∀ X → E.cof (E.ψ Ω₁ (X ++ Ω₁) ∷ []) ≡ E.cΩ []
+ref-cof X = proj₁ (keepψ Ω₁ X Ω₁ {κ = []} refl tt)
+
+-- Ω₁ 是目标槽位允许的下标: 第 0 层的关系读成层号 (Lift 在第 0 层).
+rd-mono : ∀ {x y : Tr zero} {η} → Lt (Sig zero) x y → GR.Rd (↑ zero x) η → GR.Rd (↑ zero y) η
+rd-mono ◃s        q = GR.rd-child sS _ tt q
+rd-mono (◃l n)    q = GR.rd-child sL _ n q
+rd-mono (◃t d d′) q = rd-mono d′ (rd-mono d q)
+
+lift⁰ : ∀ {η c} → GR.R zero η c → GR.Rd (↑ zero c) η
+lift⁰ H.mz               = GR.c0 refl
+lift⁰ (H.m1 e r)         = GR.ca (inj₂ (e , lift⁰ r))
+lift⁰ (H.mL e h)         = GR.cL e (λ n → lift⁰ (h n))
+lift⁰ (H.mw m d)         = rd-mono d (lift⁰ m)
+lift⁰ (H.mc le m)        = GR.cc le (lift⁰ m)
+
+rd-Ω₁ : GR.Rd (tw 1) Ω₁
+rd-Ω₁ = GR.ca (inj₂ ([] , refl , GR.c0 refl , λ η c r → GR.rd-add zero (↑ zero c) (lift⁰ r)))
+
+nu-p : GR.Nu a₂ p₂ Ω₁
+nu-p = rd-Ω₁
+
+nu-q : ∀ {κ} → GR.Nu a₂ q₂ κ → GR.Rd zero κ
+nu-q n = n

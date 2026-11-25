@@ -1,0 +1,87 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 经典四层验收：原 EBO 是第一个没有本地可数标准形名字的零层值。
+module B26Names where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Align.EboLeanDef using (T; HC; h0; h1; hω; _<ᵀ_; pred; fsn)
+open import OCF.Align.EboLeanBase using (NF; Ctbl; c[]; c∷; nf-pred; Ctbl-pred; tri)
+open import OCF.Align.EboLeanClosure using (cl-fsn-NF; Ctbl-fsn)
+open import OCF.Align.EboLeanTree using (hc-tower; nf-tower; EBO-tree′)
+open import OCF.Lean.YiMonoExit using (toL)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼; endpoint-sat)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; s≼s⁻; ≼lim⁻; s≼0; s≼s)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import OCF.Align.Level as L
+import B17Cofinal as C
+import B17ValueDich as V
+
+T₀ = L.Ordᶜ L.zero
+E = toL EBO-tree′
+record Name : Set where
+  constructor named
+  field
+    name : T
+    nt : NF name
+    ct : Ctbl name
+    hcN : HC name
+open Name public
+
+value : Name → T₀
+value a = Rt (hcN a)
+
+Named : T₀ → Set
+Named x = Σ Name (λ a → value a ≈ᵛ x)
+
+strict : ∀ a → L.suc (value a) ≼ E
+strict a = ≼-trans {a = L.suc (value a)} {b = Rt (hc-tower k)} {c = E}
+  (mono<ⁿ {s = name a} (nt a) (nf-tower k) (c∷ c[]) (hcN a) (hc-tower k) (C.below (ct a))) (endpoint-sat k)
+  where k = C.cap (ct a)
+
+incompatible : ∀ {x} → E ≼ x → Named x → ⊥
+incompatible {x} ge (a , low , high) = s≼-irrefl x (≼-trans {a = L.suc x} {b = L.suc (value a)} {c = x} (s≼s high)
+  (≼-trans {a = L.suc (value a)} {b = E} {c = x} (strict a) ge))
+
+reflect : ∀ a b → value a ≼ value b → (name a <ᵀ name b) ⊎ (name a ≡ name b)
+reflect a b h with tri (name a) (name b)
+... | inj₁ p = inj₁ p
+... | inj₂ (inj₁ p) = inj₂ p
+... | inj₂ (inj₂ p) = ⊥-elim (s≼-irrefl (value b) (≼-trans (mono<ⁿ (nt b) (nt a) (ct a) (hcN b) (hcN a) p) h))
+
+unique : ∀ a b → value a ≈ᵛ value b → name a ≡ name b
+unique a b (ab , ba) with reflect a b ab
+... | inj₂ p = p
+... | inj₁ p = ⊥-elim (s≼-irrefl (value a) (≼-trans (mono<ⁿ (nt a) (nt b) (ct b) (hcN a) (hcN b) p) ba))
+
+module Classical (lem : LEM) where
+  open V.Classical lem using (compare)
+
+  descend : ∀ {t} (n : NF t) (c : Ctbl t) (h : HC t) x → L.suc x ≼ Rt h → Named x
+  descend n c (h0 _) x d = ⊥-elim (s≼0 d)
+  descend n c (h1 _ h) x d with compare (Rt h) x
+  ... | inj₁ e = named _ (nf-pred n) (Ctbl-pred c) h , e , s≼s⁻ d
+  ... | inj₂ e = descend (nf-pred n) (Ctbl-pred c) h x e
+  descend n c (hω e h) x d with ≼lim⁻ {f = λ i → Rt (h i)} d
+  ... | i , hi = descend (cl-fsn-NF n e i) (Ctbl-fsn c e i) (h i) x hi
+
+  from-family : (f : ℕ → Name) (x : T₀) → L.suc x ≼ L.lim (λ n → value (f n)) → Named x
+  from-family f x p with ≼lim⁻ {a = x} {f = λ n → value (f n)} p
+  ... | n , d = descend {name (f n)} (nt (f n)) (ct (f n)) (hcN (f n)) x d
+
+  decode : ∀ {x} → L.suc x ≼ E → Named x
+  decode {x} = from-family (λ n → named _ (nf-tower n) (c∷ c[]) (hc-tower n)) x
+
+  split : ∀ x → (E ≼ x) ⊎ Named x
+  split x = Data.Sum.Base.map (λ d → d) (decode {x}) (compare E x)
+
+  exclude : ∀ {x} → (Named x → ⊥) → E ≼ x
+  exclude {x} no = choose (split x) where
+    choose : (E ≼ x) ⊎ Named x → E ≼ x
+    choose (inj₁ ge) = ge
+    choose (inj₂ a) = ⊥-elim (no a)

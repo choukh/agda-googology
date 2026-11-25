@@ -1,0 +1,226 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B5D 第 1 步: W4 的塔第 1 项 twᶜ 1 上两个非零闭近似项的下界 (编译定理, 无前提).
+-- (a) BTBO 基本列第 1 项 ψⁿ 1 = ω; (b) ψ₀(Ω₁) (Level 参照 ψ⁰ (Ω 1), 经 ψ₀≈ 即 src 的 ψ₀(Ω_1)).
+-- 经过的行: Ω 行 (kp 给 nothing, 走 ℕ 极限链), up 行 (inu, ink, inc), 第 0 层的 suc/lim 行 (next⁺), limc⁺ 的累加. 不经过 ex, E, It, upC, 自身行.
+module W5VOne where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+
+open import W4Block
+open import W4Ops
+open import W5Path
+open import W5Fold
+
+import OCF.Align.Level as LV
+open LV using (Ordᶜ; _<ᴵ_; Simᴵ)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-refl; ≼-trans; ≼-suc; ≼-+ʳ) renaming (+-mono to +ᵛ-mono)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module S = Ord-Ord
+module B = BoundedTrich
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValMain using (ω≈; ψ₀≈)
+
+T₀ : Set
+T₀ = Ordᶜ LV.zero
+
+𝟏 : T₀
+𝟏 = LV.suc LV.zero
+
+------------------------------------------------------------------------
+-- 读回: 第 0 层是纯布劳威尔树.
+read : Tr zero → T₀
+read zero          = LV.zero
+read (suc x)       = LV.suc (read x)
+read (lim f _)     = LV.lim (λ n → read (f n))
+read (Ω () _)
+read (up _ () _ _)
+read (ex _ _ _ _ ())
+
+read-+ : (a b : Tr zero) → read a LV.+ read b ≼ read (a + b)
+read-+ a zero          = ≼-refl _
+read-+ a (suc b)       = s≼s (read-+ a b)
+read-+ a (lim f _)     = l≼ (λ n → ≼l n (read-+ a (f n)))
+read-+ a (Ω () _)
+read-+ a (up _ () _ _)
+read-+ a (ex _ _ _ _ ())
+
+≼-+ˡ : (a b : T₀) → b ≼ a LV.+ b
+≼-+ˡ a LV.zero        = z≼
+≼-+ˡ a (LV.suc b)     = s≼s (≼-+ˡ a b)
+≼-+ˡ a (LV.lim f)     = l≼ (λ n → ≼l n (≼-+ˡ a (f n)))
+≼-+ˡ a (LV.limᵢ () f)
+≼-+ˡ a (LV.up () x)
+
+cum-≥ : (F : ℕ → Tr zero) (n : ℕ) → read (F n) ≼ read (cum F n)
+cum-≥ F zero    = ≼-refl _
+cum-≥ F (suc n) = ≼-trans (≼-+ˡ (read (cum F n)) (read (F (suc n)))) (read-+ (cum F n) (F (suc n)))
+
+cumL : (F : ℕ → Tr zero) (a : (n : ℕ) → zero ⊢ cum F n ◃ cum F (suc n)) (n : ℕ) → read (F n) ≼ read (lim (cum F) a)
+cumL F a n = ≼l n (cum-≥ F n)
+
+------------------------------------------------------------------------
+-- 参照一侧的 b·ω^y (第 0 层), 及其单调.
+Mv : T₀ → T₀ → T₀
+Mv b LV.zero        = b
+Mv b (LV.suc y)     = LV.lim (iter (Mv b y LV.+_) (Mv b y))
+Mv b (LV.lim f)     = LV.lim (λ n → Mv b (f n))
+Mv b (LV.limᵢ () f)
+Mv b (LV.up () x)
+
+iterW : {A A′ : T₀} → A ≼ A′ → (n : ℕ) → iter (A LV.+_) A n ≼ iter (A′ LV.+_) A′ n
+iterW e zero    = e
+iterW e (suc n) = +ᵛ-mono e (iterW e n)
+
+Mv-infl : (b y : T₀) → b ≼ Mv b y
+Mv-infl b LV.zero        = ≼-refl b
+Mv-infl b (LV.suc y)     = ≼l 0 (Mv-infl b y)
+Mv-infl b (LV.lim f)     = ≼l 0 (Mv-infl b (f 0))
+Mv-infl b (LV.limᵢ () f)
+Mv-infl b (LV.up () x)
+
+Mv-mono : {b b′ y y′ : T₀} → b ≼ b′ → y ≼ y′ → Mv b y ≼ Mv b′ y′
+Mv-mono {y′ = y′} hb z≼ = ≼-trans hb (Mv-infl _ y′)
+Mv-mono hb (s≼s d)  = l≼ (λ n → ≼l n (iterW (Mv-mono hb d) n))
+Mv-mono hb (≼l n d) = ≼l n (Mv-mono hb d)
+Mv-mono hb (l≼ h)   = l≼ (λ n → Mv-mono hb (h n))
+Mv-mono hb (≼i {p = ()} x e′ d)
+Mv-mono hb (i≼ {p = ()} h)
+Mv-mono hb (≼u {r = ()} d)
+Mv-mono hb (u≼ {r = ()} d)
+
+iterS : {A B : T₀} → A ≼ B → (n : ℕ) → S.iter (A LV.+_) LV.zero n ≼ iter (B LV.+_) B n
+iterS e zero    = z≼
+iterS e (suc n) = +ᵛ-mono e (iterS e n)
+
+-- Level 的 ψ⁰ 与 ψ 作用在第 0 层的树上: 不高于 1·ω^x.
+ψ⁰-lvl0 : (x : T₀) → LV.ψ⁰ x ≼ Mv 𝟏 x
+ψ⁰-lvl0 LV.zero        = ≼-refl 𝟏
+ψ⁰-lvl0 (LV.suc x)     = l≼ (λ n → ≼l n (iterS (ψ⁰-lvl0 x) n))
+ψ⁰-lvl0 (LV.lim f)     = l≼ (λ n → ≼l n (ψ⁰-lvl0 (f n)))
+ψ⁰-lvl0 (LV.limᵢ () f)
+ψ⁰-lvl0 (LV.up () x)
+
+ψ-lvl0 : ∀ {ℓ} {p : LV.zero <ᴵ ℓ} {σ : Simᴵ LV.zero ℓ} (x : T₀) → LV.ψ p σ x ≼ Mv 𝟏 x
+ψ-lvl0 LV.zero        = ≼-refl 𝟏
+ψ-lvl0 (LV.suc x)     = l≼ (λ n → ≼l n (iterS (ψ-lvl0 x) n))
+ψ-lvl0 (LV.lim f)     = l≼ (λ n → ≼l n (ψ-lvl0 (f n)))
+ψ-lvl0 (LV.limᵢ () f)
+ψ-lvl0 (LV.up () x)
+
+------------------------------------------------------------------------
+-- W4 第 0 层的折叠 (目标是自身, 第 0 层没有自身行): 不低于 β·ω^x.
+iterR : {A : T₀} {b : Tr zero} → A ≼ read b → (n : ℕ) → iter (A LV.+_) A n ≼ read (iter (b +_) b n)
+iterR {b = b} e zero    = e
+iterR {b = b} e (suc n) = ≼-trans (+ᵛ-mono e (iterR e n)) (read-+ b (iter (b +_) b n))
+
+P-read : ∀ {o : Ok zero} {Bs : Base zero} (β : Tr⁺ zero) (x : Tr zero)
+       → Mv (read (proj₁ β)) (read x) ≼ read (proj₁ (ψ zero o Bs zero self β x))
+P-read β zero          = ≼-refl _
+P-read {o} {Bs} β (suc x) = l≼ (λ n → ≼l n (iterR (P-read {o} {Bs} β x) n))
+P-read {o} {Bs} β (lim f _) = l≼ (λ n → ≼l n (P-read {o} {Bs} β (f n)))
+P-read β (Ω () _)
+P-read β (up _ () _ _)
+P-read β (ex _ _ _ _ ())
+
+------------------------------------------------------------------------
+-- (b) 第 1 层的 Ω 树折到第 0 层: 链与 Level 的 ψ⁰(Ω 1) 的链逐项对上.
+lvl1 : L
+lvl1 = nd sS (λ _ → zero)
+
+p₁ : Pos lvl1
+p₁ = inj₂ (tt , inj₁ tt)
+
+-- 目标第 0 层的两种路径 (inu 与 inc tt): 结点行都给 nothing, up 行都交给孩子层.
+data W1 : zero ≤ lvl1 → Set where
+  wu : W1 (inu (λ _ → self))
+  wc : W1 (inc tt self)
+
+g₁ : Tr zero → Tr lvl1
+g₁ z = up zero tt (suc z) (z◃ z ◃s)
+
+s₁ : Ok lvl1 → Base lvl1 → Tr zero → Tr zero
+s₁ o Bs z = proj₁ (ψ lvl1 o Bs zero (inc tt self) (Bs zero (inc tt self)) (g₁ z))
+
+G-row : (o : Ok lvl1) (Bs : Base lvl1) {w : zero ≤ lvl1} → W1 w → (β : Tr⁺ zero) (z : Tr zero)
+      → Mv (read (proj₁ β)) (LV.suc (read z)) ≼ read (proj₁ (ψ lvl1 o Bs zero w β (g₁ z)))
+G-row o Bs wu β z = P-read β (suc z)
+G-row o Bs wc β z = P-read β (suc z)
+
+Φ-cum : (o : Ok lvl1) (Bs : Base lvl1) {w : zero ≤ lvl1} → W1 w → (β : Tr⁺ zero) (n : ℕ)
+      → read (proj₁ (ψ lvl1 o Bs zero w β (g₁ (iter (s₁ o Bs) zero n)))) ≼ read (proj₁ (ψ lvl1 o Bs zero w β (proj₁ (Ωt lvl1))))
+Φ-cum o Bs wu β n = ≼l n (cum-≥ (λ k → proj₁ (ψ lvl1 o Bs zero (inu (λ _ → self)) β (g₁ (iter (s₁ o Bs) zero k)))) n)
+Φ-cum o Bs wc β n = ≼l n (cum-≥ (λ k → proj₁ (ψ lvl1 o Bs zero (inc tt self) β (g₁ (iter (s₁ o Bs) zero k)))) n)
+
+-- 通用的一步: 以 β 为底, 以 Bs 在链目标上的分量为链底, 折第 1 层的 Ω 树.
+-- 参照一侧给任意链 H (一步不高于 Y·ω^y) 与任意各项 Q (不高于 X·ω^{H 链}), 则 lim Q 不高于折叠值.
+module L1g (o : Ok lvl1) (Bs : Base lvl1) {w : zero ≤ lvl1} (ww : W1 w) (β : Tr⁺ zero)
+           (X Y : T₀) (hX : X ≼ read (proj₁ β)) (hY : Y ≼ read (proj₁ (Bs zero (inc tt self))))
+           (h1 : 𝟏 ≼ read (proj₁ (Bs zero (inc tt self))))
+           (H : T₀ → T₀) (hH : (y : T₀) → H y ≼ Mv Y y)
+           (Q : ℕ → T₀) (hQ : (k : ℕ) → Q k ≼ Mv X (S.iter H 𝟏 k)) where
+
+  bc : Tr⁺ zero
+  bc = Bs zero (inc tt self)
+
+  cs : ℕ → Tr zero
+  cs = iter (s₁ o Bs) zero
+
+  Φ : Tr zero
+  Φ = proj₁ (ψ lvl1 o Bs zero w β (proj₁ (Ωt lvl1)))
+
+  chain : (k : ℕ) → S.iter H 𝟏 k ≼ read (cs (suc k))
+  chain zero    = ≼-trans h1 (≼-trans (Mv-infl _ (LV.suc LV.zero)) (P-read bc (suc zero)))
+  chain (suc k) = ≼-trans (hH _) (≼-trans (Mv-mono hY (≼-suc (chain k))) (P-read bc (suc (cs (suc k)))))
+
+  low : LV.lim Q ≼ read Φ
+  low = l≼ (λ k → ≼-trans (hQ k) (≼-trans (Mv-mono hX (≼-suc (chain k)))
+                     (≼-trans (G-row o Bs ww β (cs (suc k))) (Φ-cum o Bs ww β (suc k)))))
+
+-- 实例: Level 的 ψ⁰(Ω 1); 链 γ 0 = Ω 0 = 1, γ (n+1) = ψ_0 (↑ γ n).
+H₀ : T₀ → T₀
+H₀ x = LV.ψ {k = LV.suc LV.zero} LV.zero (λ r → r) (LV.up LV.zero x)
+
+eps₀ : (o : Ok lvl1) (Bs : Base lvl1) (β : Tr⁺ zero) → 𝟏 ≼ read (proj₁ β) → 𝟏 ≼ read (proj₁ (Bs zero (inc tt self)))
+     → LV.ψ⁰ (LV.Ω (LV.suc LV.zero)) ≼ read (proj₁ (ψ lvl1 o Bs zero (inu (λ _ → self)) β (proj₁ (Ωt lvl1))))
+eps₀ o Bs β hβ hB = L1g.low o Bs wu β 𝟏 𝟏 hβ hB hB H₀ ψ-lvl0 (λ k → LV.ψ⁰ (S.iter H₀ 𝟏 k)) (λ k → ψ⁰-lvl0 _)
+
+------------------------------------------------------------------------
+-- 落到 twᶜ 1. 塔第 1 项是 G (z n) 的累加, z 0 = 0, z 1 = ω; G (z 1) 是层号 ω 的 Ω 树的折叠, 它的第 0 个累加项是 L1g.Φ.
+tw1-ω : LV.ψ⁰ (LV.Ω LV.zero) ≼ read (twᶜ 1)
+tw1-ω = ≼l 0 (l≼ (λ n → ≼l n (≼-trans (iterS (≼-refl 𝟏) n) (iterR (≼-refl 𝟏) n))))
+
+-- 塔第 1 项的结点一行, 逐字照 node⁺ nothing 的展开写.
+p₀ : Pos (tw 1)
+p₀ = inj₁ (inj₁ tt)
+
+h₁ : Tr zero → L
+h₁ c = tw 0 ⊕ ↑ (tw 0) c
+
+gt : Tr zero → Tr (tw 1)
+gt z = proj₁ (upz {s = sΩ (tw 0)} {h = h₁} z (Ωt (h₁ z)))
+
+st : Tr zero → Tr zero
+st z = fromBr (tw 1) p₀ (proj₁ (ψ (tw 1) (Ok-tw 1) (B₀ (tw 1)) (at (tw 1) p₀) (posW (tw 1) p₀)
+                                  (B₀ (tw 1) (at (tw 1) p₀) (posW (tw 1) p₀)) (gt z)))
+
+zt : ℕ → Tr zero
+zt = iter st (fromBr (tw 1) p₀ zero)
+
+Ftw : ℕ → Tr zero
+Ftw n = proj₁ (ψ (tw 1) (Ok-tw 1) (B₀ (tw 1)) zero (z≤ (tw 1)) (Ωt zero) (gt (zt n)))
+
+o₂ : Ok lvl1
+o₂ = proj₂ (proj₂ (Ok-tw 1) (zt 1)) 0
+
+tw1-ψΩ₁ : LV.ψ⁰ (LV.Ω (LV.suc LV.zero)) ≼ read (twᶜ 1)
+tw1-ψΩ₁ = ≼-trans (≼l 0 (eps₀ o₂ (B₀ lvl1) (Ωt zero) (≼-refl 𝟏) (≼-refl 𝟏))) (cumL Ftw _ 1)
+
+-- BTBO 基本列 (src 的 ψⁿ) 第 1 项; src 的 ψ₀(Ω_1).
+btbo₁ : tr₀ (S.ψⁿ 1) ≼ read (twᶜ 1)
+btbo₁ = ≼-trans (proj₁ ω≈) tw1-ω
+
+srcΩ₁ : tr₀ (S.ψ₀ (S.Ω (B.suc B.zero))) ≼ read (twᶜ 1)
+srcΩ₁ = ≼-trans (proj₁ (ψ₀≈ (B.suc B.zero))) tw1-ψΩ₁

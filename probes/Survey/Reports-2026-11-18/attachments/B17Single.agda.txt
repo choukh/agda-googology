@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 若原 EBO 下界成立，每行对应的一个有限实际前缀不可能全被该行封顶。对前缀内的值作二分即可明确选出其中一支。
+module B17Single where
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_; z≤n; s≤s)
+open import Data.Nat.Properties using (≤-refl; m≤n⇒m≤1+n)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; ≼-trans; ≼-suc; ≼-refl)
+open import W4Fold using (EBOᶜ)
+open import WVOne using (T₀; read)
+import B8FreezeMain as I
+import B12XRef as R
+import B12TerminalTail as Tail
+import B12EboRows as B
+import B14Goal as G
+import B17CellPrefix as P
+import B17CapFirst as Cap
+import B17ValueDich as D
+
+search : (m : ℕ) (A B : ℕ → Set) → (∀ j → j ≤ m → A j ⊎ B j) →
+  (∀ j → j ≤ m → A j) ⊎ Σ ℕ (λ j → (j ≤ m) × B j)
+search zero A B dec with dec 0 z≤n
+... | inj₁ a = inj₁ (λ { zero _ → a })
+... | inj₂ b = inj₂ (0 , z≤n , b)
+search (suc m) A B dec with dec 0 z≤n
+... | inj₂ b = inj₂ (0 , z≤n , b)
+... | inj₁ a with search m (λ j → A (suc j)) (λ j → B (suc j)) (λ j d → dec (suc j) (s≤s d))
+...   | inj₂ (j , d , b) = inj₂ (suc j , s≤s d , b)
+...   | inj₁ tail = inj₁ (λ { zero _ → a ; (suc j) (s≤s d) → tail j d })
+
+module At (i : ℕ) where
+  Q = R.row i
+  scale = P.Bound.scale Q
+  high : G.Goal → P.InPrefix (L.suc (Tail.mulω Q))
+  high g = P.extract (≼-trans (Cap.mul-strict i) (≼-trans (G.row-in (suc i)) g))
+  conflict : ∀ k m → L.suc (Tail.mulω Q) ≼ P.prefix k m →
+    (∀ j → j ≤ m → P.cell k j ≼ Q) → ⊥
+  conflict k m d h = I.irr _ (≼-trans d (≼-trans (P.Bound.through Q k m h) (≼l m (≼-refl _))))
+
+  Hit : ℕ → ℕ → Set
+  Hit k m = Σ ℕ (λ j → (j ≤ m) × (L.suc Q ≼ P.cell k j))
+  pick : ∀ k m → L.suc (Tail.mulω Q) ≼ P.prefix k m →
+    (∀ j → j ≤ m → (P.cell k j ≼ Q) ⊎ (L.suc Q ≼ P.cell k j)) → Hit k m
+  pick k m d dec with search m (λ j → P.cell k j ≼ Q) (λ j → L.suc Q ≼ P.cell k j) dec
+  ... | inj₂ h = h
+  ... | inj₁ e = ⊥-elim (conflict k m d e)
+
+InCell : T₀ → Set
+InCell x = Σ ℕ (λ k → Σ ℕ (λ j → x ≼ P.cell k j))
+enough : (∀ i → InCell (R.row i)) → G.Goal
+enough f = R.assemble λ i → let k , j , d = f i in B.into (suc k , ≼-trans d (P.At.S.lift-value k j))
+
+module Classical (lem : LEM) where
+  necessary : G.Goal → ∀ i → InCell (L.suc (R.row i))
+  necessary g i = k , proj₁ hit , proj₂ (proj₂ hit) where
+    p = At.high i g
+    k = proj₁ p
+    m = proj₁ (proj₂ p)
+    hit = At.pick i k m (proj₂ (proj₂ p)) (λ j _ → D.Classical.compare lem (P.cell k j) (R.row i))

@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25FEmbedded where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; s≼s; ≅→≼)
+open import OCF.Align.BTBOFullEmb using (PEmb; Ψ-emb)
+open import OCF.Align.BTBOFullLv using (SV; svs; svl; SV-L)
+open import B25FFront using (Query; feedback; child; ask; eval; margin)
+import B14Btbo as B
+
+data Port : L.Ordᴵ → L.Ordᴵ → Set where
+  stop : ∀ {a} → Port (L.suc a) a
+  down : ∀ {f s a} n → Port (f n) a → Port (L.lim f s) a
+
+query : ∀ {b a} → Port b a → ℕ → Query b
+query stop k = feedback k
+query (down n p) k = child n (query p k)
+
+same : ∀ {b a} (p : Port b a) n → eval (query p n) ≡ ask a n
+same stop n = refl
+same (down i p) n = same p n
+
+valid : ∀ {b a} → Port b a → SV b → SV a
+valid stop (svs va) = va
+valid (down n p) (svl vf _) = valid p (vf n)
+
+Contained : L.Ordᴵ → L.Ordᴵ → Set
+Contained x a = ∀ {y} → y L.≺ᴵ x → y L.≺ᴵ a
+
+locate : ∀ {x b} → x L.≺ᴵ b → Σ L.Ordᴵ (λ a → Port b a × Contained x a)
+locate (L.via e L.zero) = _ , stop , λ r → L.≺ᴵ-respʳ r e
+locate (L.via e (L.suc d)) = _ , stop , λ r → L.≺ᴵ-trans r (L.via e d)
+locate (L.via e (L.lim n d)) with locate (L.via e d)
+... | a , p , h = a , down n p , h
+
+module Image {i b} (emb : PEmb (L.suc i) b) where
+  top : i L.≺ᴵ L.suc i
+  top = L.via (L.≅ᴵ-refl i) L.zero
+  img = PEmb.map emb top
+  site = locate (PEmb.bnd emb top)
+  floor = proj₁ site
+  port = proj₁ (proj₂ site)
+
+  rest : PEmb i floor
+  PEmb.map rest q = PEmb.map emb (L.≺-suc q)
+  PEmb.bnd rest q = proj₂ (proj₂ site) (PEmb.mono emb (L.≺-suc q) top q)
+  PEmb.mono rest q r = PEmb.mono emb (L.≺-suc q) (L.≺-suc r)
+  PEmb.coh rest q r = PEmb.coh emb (L.≺-suc q) (L.≺-suc r)
+  at-zero : B.α i ≼ ask floor 0
+  at-zero = Ψ-emb rest
+

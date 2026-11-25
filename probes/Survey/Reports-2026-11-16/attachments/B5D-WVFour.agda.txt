@@ -1,0 +1,103 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B5D: 把 WVThree 的界落到塔第 1 项. twᶜ 1 的第 1 个 G 项 (层号 ω) 的第 1 个累加项是层号 2 的 Ω 树, 以累加底 β₁ 与底族 B* 折到第 0 层;
+-- 它的链底 B* lvl1 (inc tt self) 字面上就是 ex Ω₁ Ω₁ Ω₁ (经 sL 层号的 inc 行 m < n 一支, emb, 第 1 层自身行), 链点 1 是 ex b* b* (suc 0).
+-- 编译定理, 无前提: Level 参照 ψ⁰ X* ≼ read (twᶜ 1) (X* 的值是 Ω₁·Ω₁; 读作 ψ₀(Ω₁²) 是判断).
+module WVFour where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-refl; ≼-trans)
+open import WVOne
+open import WVTwo using (◃→≼; w₀; lvl2; p₂; g₂)
+open import WVThree using (X*; module XS)
+
+cumR : (F : ℕ → Tr zero) (n : ℕ) → read (F n) ≼ LV.lim (λ k → read (cum F k))
+cumR F n = ≼l n (cum-≥ F n)
+
+limF : Tr zero → ℕ → Tr zero
+limF (lim f _) = f
+limF _         = λ _ → zero
+
+z₁ : Tr zero
+z₁ = zt 1
+
+gL : ℕ → L
+gL n = h₁ (limF z₁ n)
+
+hz : L
+hz = h₁ z₁
+
+oz : Ok hz
+oz = proj₂ (Ok-tw 1) z₁
+
+B₁ : Base hz
+B₁ i u = ψ (tw 1) (Ok-tw 1) (B₀ (tw 1)) i (inc z₁ u) (B₀ (tw 1) i (inc z₁ u)) zero
+
+cumz : ℕ → Tr hz
+cumz = cum (λ n → proj₁ (upz {s = sL} {h = gL} n (Ωt (gL n))))
+
+Fz : ℕ → Tr zero
+Fz n = proj₁ (ψ hz oz B₁ zero (z≤ hz) (Ωt zero) (cumz n))
+
+-- 第 1 个累加项: 层号 2 的 Ω 树, 底 β₁, 底族 B*.
+o₂′ : Ok lvl2
+o₂′ = proj₂ oz 1
+
+B* : Base lvl2
+B* i u = ψ hz oz B₁ i (inc 1 u) (B₁ i (inc 1 u)) (cumz 0)
+
+β₁ : Tr⁺ zero
+β₁ = ψ hz oz B₁ zero (z≤ hz) (Ωt zero) (cumz 0)
+
+s′ : Tr lvl1 → Tr lvl1
+s′ z = fromBr lvl2 p₂ (proj₁ (ψ lvl2 o₂′ B* (at lvl2 p₂) (posW lvl2 p₂) (B* (at lvl2 p₂) (posW lvl2 p₂)) (g₂ z)))
+
+Fl2 : ℕ → Tr zero
+Fl2 k = proj₁ (ψ lvl2 o₂′ B* zero (z≤ lvl2) β₁ (g₂ (iter s′ (fromBr lvl2 p₂ zero) k)))
+
+-- 第 1 层上的底族与链点 1 的折叠.
+o′ : Ok lvl1
+o′ = proj₂ o₂′ tt
+
+B′ : Base lvl1
+B′ i u = ψ lvl2 o₂′ B* i (inc tt u) (B* i (inc tt u)) zero
+
+bs : Tr⁺ lvl1
+bs = B* lvl1 (inc tt self)
+
+Sb : St {lvl1} nil
+Sb i u = ψ lvl1 o′ B′ i u (B′ i u) (proj₁ bs)
+
+vb : Tr⁺ zero
+vb = ψ lvl1 o′ B′ zero w₀ β₁ (proj₁ bs)
+
+hβ : 𝟏 ≼ read (proj₁ β₁)
+hβ = ◃→≼ (mono hz oz B₁ zero (z≤ hz) (Ωt zero) (◃u zero 0 (proj₁ (Ωt (gL 0))) (proj₂ (Ωt (gL 0)))))
+
+h1 : 𝟏 ≼ read (proj₁ (B′ zero (inc tt self)))
+h1 = ◃→≼ (mono hz oz B₁ zero (inc 1 (inc tt (inc tt self))) (B₁ zero (inc 1 (inc tt (inc tt self)))) (◃u zero 0 (proj₁ (Ωt (gL 0))) (proj₂ (Ωt (gL 0)))))
+
+-- 链底的形状 (refl): b* 就是 ex Ω₁ Ω₁ Ω₁.
+b*-shape : proj₁ bs ≡ XS.xs o′ B′ β₁ hβ h1
+b*-shape = refl
+
+low-vb : LV.ψ⁰ X* ≼ read (proj₁ vb)
+low-vb = XS.low* o′ B′ β₁ hβ h1
+
+-- 链点 1 = ex b* b* (suc 0); 它的折叠是 E (suc 0) (opB b*) …, 由 Einf 不低于 vb.
+step-E : read (proj₁ vb) ≼ read (proj₁ (E o′ tdNil (suc zero) (opB lvl1 o′ (proj₁ bs) (proj₂ bs)) Sb zero w₀ vb))
+step-E = ◃→≼ (Einf o′ tdNil (suc zero) (opB lvl1 o′ (proj₁ bs) (proj₂ bs)) Sb zero w₀ vb)
+
+tw1-X* : LV.ψ⁰ X* ≼ read (twᶜ 1)
+tw1-X* = ≼-trans low-vb (≼-trans step-E (≼-trans (≼l 0 (≼-refl _))
+           (≼-trans (cumR Fl2 1) (≼-trans (≼l 1 (≼-refl _)) (cumL Ftw _ 1)))))

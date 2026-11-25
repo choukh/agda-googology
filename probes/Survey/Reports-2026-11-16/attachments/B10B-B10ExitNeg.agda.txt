@@ -1,0 +1,102 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B10B 反查. (a) 所取内链项换成冻结初态的分量 chainW 0: 出口的被加项前提对一切 d 不可满足 (无前提).
+-- (b) 首个非零项的状态换成冻结初态 B₀ (链项变成 zW 2): 只有条件否定, 前提是 Level 与影子间的一个闭不等式.
+-- (c) 零层底 / 零层链底错用初态: WKGen.Main 与 SumR 的前提都还在, 首先丢失的是 L2-sem 的 ψ⁰(Ω₂) ≼ 1 (编译否定).
+module B10ExitNeg where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans)
+open import WVOne using (T₀; 𝟏; read)
+open import WSShadow using (Sh; sE; sC)
+import WSLevel as L
+import WKSum
+import WKGen
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import YiLAB7Replay using (Match; Y; Ω₂ᴸ; chainW; o₁)
+open import B8FreezeMain using (irr; no-add)
+open import B8PairW4 using (zW)
+open import B9InnerOuter using (w2)
+import B9InnerOuter as Outer
+import B9UpperRel as UR
+open import B9UpperTop using (topB; fΩ; opΩ; eU; RzW)
+import YiLAB9Paths as P
+import YiLAB10Branches as B
+import YiLAB10Rows as R
+open import B10ExitTwo using (two; no-Ω₂≼1)
+open import B10ExitCore using (Ω₁◃c; one-v; one-cz)
+
+open WKSum.Sum o₁ using (SumR)
+open UR.Lem o₁ using (RsucE)
+
+------------------------------------------------------------------------
+-- (a) 冻结的所取项. 出口 exit-add 的前提 (Ld (Y 1) d, SumR y d) 在 y = chainW 0 上对一切 d 都不成立.
+frozen-row : Match (Y 1) (chainW 0) → ⊥
+frozen-row = R.frozen₀
+
+frozen-add : (d : Sh 0) → L.Ld (Y 1) d → SumR (chainW 0) d → ⊥
+frozen-add d al aw = no-add d aw al
+
+-- 对照: 冻结项在实际链项之下 (所以冻结项上的证据会上传; 否定只说冻结项本身不够).
+frozen-below : lvl1 ⊢ chainW 0 ◃ B.z 0 2
+frozen-below = ◃t (Ω₁◃c 0) ◃e
+
+------------------------------------------------------------------------
+-- (b) 冻结的状态. 以初态 B₀ 作底族, 同一 WKGen.Main 的第 2 个链点是 zW 2, 不是 chainW 0.
+zs-frozen : Outer.M0.zs 2 ≡ zW 2
+zs-frozen = refl
+
+-- zW 2 在消费者参数下的上界 (B9N 的 topB, 与 Bok 0 同形, 指数换成 suc (zW 1)).
+H₂ : T₀
+H₂ = sE (sC (eU 1)) fΩ (fΩ 𝟏 𝟏) (fΩ 𝟏 𝟏)
+
+zW2-up : read (proj₁ (ψ lvl1 o₁ (B₀ lvl1) zero (inc tt self) (Ωt zero) (zW 2))) ≼ H₂
+zW2-up = topB (suc (zW 1)) (proj₁ (Ωt lvl1)) (sC (eU 1)) (RsucE (zW 1) (eU 1) (proj₁ (RzW 1))) (fΩ 𝟏 𝟏)
+              (opΩ (B₀ lvl1) (inc tt self) (Ωt zero) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏))
+
+-- 条件否定: 若 H₂ ≼ H 且 suc H ≼ ψ⁰ (Y 1), 冻结状态的首项没有被加项证据.
+no-frozen-state-if : (H : T₀) → H₂ ≼ H → LV.suc H ≼ LV.ψ⁰ (Y 1)
+                   → (d : Sh 0) → L.Ld (Y 1) d → SumR (zW 2) d → ⊥
+no-frozen-state-if H hu hl d al aw =
+  irr H (≼-trans hl (≼-trans (L.Ld-sem al 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏))
+        (≼-trans (aw (B₀ lvl1) (inc tt self) (Ωt zero) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏) (≼-refl 𝟏))
+                 (≼-trans zW2-up hu))))
+
+------------------------------------------------------------------------
+-- (c) 零层底或零层链底错用初态 Ωt zero (读回 1).
+read-init : read (proj₁ (Ωt zero)) ≡ 𝟏
+read-init = refl
+
+-- WKGen.Main 照样实例化 (三个前提都在): 零层底换成初态.
+module Mβ (k : ℕ) = WKGen.Main ok₂ (B.states k) w2 (Ωt zero) (inj₂ (Ω₁◃c k)) (≼-refl 𝟏) (one-cz k)
+
+-- 零层链底换成初态: 只改第 0 层的槽, 第 1 层分量 (链) 不变.
+Bh : ℕ → Base lvl2
+Bh k zero     u = Ωt zero
+Bh k (nd s h) u = B.states k (nd s h) u
+
+module Mc (k : ℕ) = WKGen.Main ok₂ (Bh k) w2 (P.v k) (inj₂ (Ω₁◃c k)) (one-v k) (≼-refl 𝟏)
+
+chain-same : (k j : ℕ) → Mc.zs k j ≡ B.z k j
+chain-same k j = refl
+
+chainbase-init : (k : ℕ) → proj₁ (Mc.B′ k zero (inc tt self)) ≡ proj₁ (Ωt zero)
+chainbase-init k = refl
+
+-- SumR 的三个前提在 a = c = 1 时也成立; 首先丢失的是 L2-sem 的两条 ψ⁰(Ω₂) 正性, 它们在 1 处为假.
+lost-β : (k : ℕ) → LV.ψ⁰ Ω₂ᴸ ≼ read (proj₁ (Ωt zero)) → ⊥
+lost-β k = no-Ω₂≼1
+
+lost-c : (k : ℕ) → LV.ψ⁰ Ω₂ᴸ ≼ read (proj₁ (Mc.B′ k zero (inc tt self))) → ⊥
+lost-c k = no-Ω₂≼1

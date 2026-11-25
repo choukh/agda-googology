@@ -1,0 +1,73 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每个反馈点的 ink 调用均把所读的正槽带进新下标；从随后的真实零层孩子可抽出由该正槽决定层号的子运行。
+module B27SRelay where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Path
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl)
+import B12Terminal as T
+import B12ActualSlots as A
+import B15ReadPaths as R
+import B15Spine as S
+import B15TowerIteration as Tower
+import B20Room as Room
+open T.Run
+
+module At (m : ℕ) (r : T.Run (tw (suc (suc m)))) (eq : ok r ≡ Ok-tw (suc (suc m))) (cv : A.Covered r) where
+  k = tw (suc m)
+  root = tw (suc (suc m))
+  branch = S.branch k
+  module C = S.Cardinal k branch r
+  slot = bs r k (ink self)
+  s = proj₁ slot
+  module D = Tower.Tower.State m (λ x → x) L.zero r eq cv
+
+  first : C.ix 1 ≡ ex s s (proj₂ slot) (proj₁ (Ωt k)) tt
+  first rewrite eq = refl
+
+  put : ∀ z → k ⊢ s ◃ C.step z
+  put z = mono root (ok r) (bs r) k (ink self) slot {x = zero} {y = C.b z} (proj₂ (upz {h = branch} z (Ωt (branch z))))
+
+  -- 当 z 来自第一次真实反馈，第二次正层计算的起点仍是该槽，源层由第一次下标决定。
+  next-call : ∀ z → C.step z ≡ proj₁ (ψ (branch z) (proj₂ (ok r) z) (λ j u → bs r j (inc z u))
+    k (self ∙ proj₂ (proj₁ (ok r)) z) slot (proj₁ (Ωt (branch z))))
+  next-call z = refl
+
+  module Point (z : Tr k) (p : k ⊢ z ◃ s) where
+    level = k ⊕ ↑ k z
+    path : ∀ j → R.Reach level (branch (C.ix (suc j)))
+    path j = R.left k (R.read-step k (◃t p (put (C.ix j))))
+
+    site : ∀ j → T.Run level
+    site j = Room.sub (path j) (C.child (suc j))
+
+    covered : ∀ j → A.Covered (site j)
+    covered j = Room.cover (path j) (C.child (suc j)) (C.cover cv (suc j))
+
+    inside : ∀ j → read (T.value (site j)) ≼ read (T.value (C.child (suc j)))
+    inside j = Room.below (path j) (C.child (suc j)) (C.cover cv (suc j))
+
+    output : ∀ j → read (T.value (site j)) ≼ read (T.value r)
+    output j = ≼-trans (inside j) (C.lift-value (suc j))
+
+    -- 第一反馈的更细轨道包含任意多份已写入槽读回，末份可取给定真子树。
+    w = ↑ k s
+    pre = iter (_⊕ w) w
+    repeated-level = λ i → k ⊕ (pre i ⊕ ↑ k z)
+
+    repeated-path : ∀ i → R.Reach (repeated-level i) (branch (C.ix 1))
+    repeated-path i = R.left k (R.via (R.left (pre i) (R.read-step k p)) (D.at-index i))
+
+    repeated : ∀ i → T.Run (repeated-level i)
+    repeated i = Room.sub (repeated-path i) (C.child 1)
+
+    paid : ∀ i → read (T.value (repeated i)) ≼ read (T.value (C.child 1))
+    paid i = Room.below (repeated-path i) (C.child 1) (C.cover cv 1)

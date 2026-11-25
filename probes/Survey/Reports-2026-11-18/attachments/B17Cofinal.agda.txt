@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 原 EBO 的全称验收等价于对每个可数标准形实际给出一个 W4 的 Λ 孩子。两向构造，无排中律或选择。
+module B17Cofinal where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Align.EboLeanDef using (T; ψ; _<ᵀ_; []<; hd<; ar<; lv<; ΩTower; EBOψ; HC)
+open import OCF.Align.EboLeanBase using (NF; Ctbl; c[]; c∷)
+open import OCF.Align.EboLeanTree using (nf-tower; hc-tower; hc)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; ≼-trans; ≼-refl; ≼-suc)
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read; T₀)
+import B12XRef as R
+import B12EboRows as B
+import B14Goal as G
+import B15OriginalTail as Tail
+
+-- ΩTower 沿记号首项的下标向内读。尾项与首项参数的长度无需设上界。
+depth : T → ℕ
+depth [] = 0
+depth (ψ u a ∷ xs) = suc (depth u)
+tower-bound : ∀ t → t <ᵀ ΩTower (depth t)
+tower-bound [] = []<
+tower-bound (ψ u a ∷ xs) = hd< (lv< (tower-bound u))
+
+cap : ∀ {t} → Ctbl t → ℕ
+cap c[] = 0
+cap (c∷ {a = a} c) = depth a
+below : ∀ {t} (ct : Ctbl t) → t <ᵀ EBOψ (cap ct)
+below c[] = []<
+below (c∷ {a = a} c) = hd< (ar< (tower-bound a))
+
+rise : ∀ k → ΩTower k <ᵀ ΩTower (suc k)
+rise zero = hd< (lv< []<)
+rise (suc k) = hd< (lv< (rise k))
+strict-row : ∀ k → L.suc (R.row k) ≼ R.row (suc k)
+strict-row k = mono<ⁿ (nf-tower k) (nf-tower (suc k)) (c∷ c[])
+  (R.H k) (R.H (suc k)) (hd< (ar< (rise k)))
+
+-- 有后继余量的值进入终点时，可从比较证明本身读出实际选中的 ℕ 孩子。
+witness : ∀ {x : T₀} → L.suc x ≼ read EBOᶜ → B.InChild (L.suc x)
+witness (≼l zero d) = 0 , d
+witness (≼l (suc n) d) = suc n , d
+
+AllNF = ∀ {t} (nt : NF t) (ct : Ctbl t) (h : HC t) → B.InChild (L.suc (Rt h))
+necessary : G.Goal → AllNF
+necessary g nt ct h = witness (≼-trans (mono<ⁿ nt (nf-tower (cap ct)) (c∷ c[]) h (R.H (cap ct)) (below ct))
+                                     (≼-trans (G.row-in (cap ct)) g))
+enough : AllNF → G.Goal
+enough f = R.assemble (λ n → ≼-trans (≼-suc (≼-refl _)) (B.into (f (nf-tower n) (c∷ c[]) (R.H n))))
+
+-- 可为每行选择不同的真实塔项，且每个所选塔项能容下该行的后继。
+localized : ∀ K → (G.Goal → ∀ n → B.InChild (L.suc (R.row (Tail.shift K n)))) ×
+  ((∀ n → B.InChild (L.suc (R.row (Tail.shift K n)))) → G.Goal)
+localized K = (λ g n → witness (≼-trans (strict-row _) (≼-trans (G.row-in _) g))) ,
+  (λ f → proj₁ (Tail.cofinal K) (λ n → ≼-trans (≼-suc (≼-refl _)) (B.into (f n))))

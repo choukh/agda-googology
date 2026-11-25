@@ -1,0 +1,71 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 穿过第二次正反馈与任一较早正子树，零运行仍持有标准首塔证书；重置显式零起点也保留。
+module B27SSeal where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; trans; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl)
+open import WVOne using (read; 𝟏)
+import B12Terminal as T
+import B12ActualSlots as A
+import B14Tower as W
+import B15ReadPaths as R
+import B15FixedWitness as H
+import B15Spine as Sp
+import B15TowerIteration as I
+import B20Room as Room
+import B20StandardInside as St
+import B22MovingIndex as E
+import B20SlotTail as Tail
+import WSLevel
+import OCF.Align.Level as L
+import B27STrace as Trace
+import B27SRestart as Restart
+open T.Run
+
+module Seal (m : ℕ) where
+  k = tw (suc m)
+  top = tw (suc (suc m))
+  module K = I.Prefix (sΩ (tw m)) (Sp.branch (tw m)) (Ok-tw (suc m))
+  base : ∀ b {o} → K.Kept b o → H.pull (R.base k b) o ≡ Ok-tw (suc m)
+  base zero p = p
+  base (nd sS a) p = base (a tt) (p tt)
+  base (nd sL a) p = base (a 0) (p 0)
+  base (nd (sΩ j) a) p = base (a zero) (p zero)
+
+  child : ∀ (r : T.Run top) → ok r ≡ Ok-tw (suc (suc m)) → ∀ z →
+    K.Kept (↑ k z) (ok (T.enterRun (sΩ k) (Sp.branch k) r z zero))
+  child r eq z rewrite eq = K.kept _ (OkO↑ k k (Ok-tw (suc m)) self z)
+
+  module At (r : T.Run top) (eq : ok r ≡ Ok-tw (suc (suc m))) (z : Tr k) {x : Tr k}
+          (d : R.Reach (↑ k x) (↑ k z)) where
+    c = T.enterRun (sΩ k) (Sp.branch k) r z zero
+    path = R.left k d
+    site = Room.sub path c
+    v = W.reset site (Ωt zero) (≼-refl 𝟏)
+    right = ↑ k x
+    route = R.via (St.tower m) (R.base k right)
+    first = Room.sub route v
+    kept : K.Kept right (ok site)
+    kept = subst (K.Kept right) (sym (Room.cert path c)) (K.descend d (child r eq z))
+    cert : ok first ≡ Ok-tw 1
+    cert = trans (Room.cert route v) (trans (cong (H.pull (St.tower m)) (base right kept)) (St.tower-ok m))
+
+module At (m : ℕ) r eq cr (t j : ℕ) where
+  module Run = Restart.At m r eq cr
+  module X = Run.Pass t
+  module Z = X.AtIndex j
+  module P = X.Second.Pair
+  k = tw (suc m)
+  d = R.read-step k (Trace.through X.Second.link (P.Y.put (P.Y.C.ix j)))
+  module C = Seal.At m X.Second.b eq (P.Y.C.ix (suc j)) {proj₁ P.X.whole} d
+  cert = C.cert
+  epsilon : E.above X.q ≼ Z.unit
+  epsilon = ≼-trans {b = read (T.value Z.first)} (E.First.From.all Z.first cert Z.cf X.q Z.start) (Room.below Z.route Z.v Z.cv)
+  successor-row : ∀ p → L.ψ⁰ p ≼ X.q → L.ψ⁰ (p L.+ L.up L.zero WSLevel.Ω₁ᴸ) ≼ Z.unit
+  successor-row p low = ≼-trans {b = read (T.value Z.first)}
+    (Tail.apply p Z.first cert Z.cf (λ w → ≼-trans {b = X.q} low (Z.hf w))) (Room.below Z.route Z.v Z.cv)

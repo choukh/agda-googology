@@ -1,0 +1,50 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第一个未闭的命名询问已严格越过产生它的整个有限一级运行。
+module B25DLimit where
+open import Data.Empty using (⊥)
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; s≼s; ≼-refl; ≼-trans; ≼l; l≼; ≅→≼; z≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import WVOne as W
+open W using (read; T₀)
+import W4Ops as O
+import W4Fold as F
+import W4Block as Tr
+import B8FreezeMain as Q
+import B12BtboCut as C
+import B25DOld as Old
+open import B25DTrack
+open import B25DFirst using (first; numeral; legacy)
+open import B25DSize as Over using (between)
+import B22TowerDiagonal as D
+import B25DExactNames as Names
+
+input-one : read (χ 1) ≈ᵛ L.ωᶜ
+input-one = (l≼ λ n → ≼l (suc n) (≅→≼ (numeral n))) ,
+  l≼ (λ n → ≼l n (≼-trans {a = L.natᶜ n} {b = L.natᶜ (suc n)} {c = read (B25DFirst.nth n)}
+    (OCF.Align.Value.≼-suc (≼-refl (L.natᶜ n))) (≅→≼ (L.≅-sym (numeral n)))))
+
+out-value : unit-output ≈ᵛ N.γ 1
+out-value = Q.fold-up , W.eps₀ W.o₂ (F.B₀ W.lvl1) (O.Ωt Tr.zero) (≼-refl W.𝟏) (≼-refl W.𝟏)
+
+first-past : L.suc unit-output ≼ name 1
+first-past = ≼-trans {a = L.suc unit-output} {b = L.suc (N.γ 1)} {c = name 1} (s≼s (proj₁ out-value))
+  (≼-trans {a = L.suc (N.γ 1)} {b = Old.point 2} {c = name 1} Old.first (proj₂ legacy))
+
+no-local : name 1 ≼ unit-output → ⊥
+no-local h = s≼-irrefl unit-output (≼-trans {a = L.suc unit-output} {b = name 1} {c = unit-output} first-past h)
+
+no-index : ∀ n → name 1 ≼ read (χ n) → ⊥
+no-index zero h = no-local (≼-trans {a = name 1} {b = L.zero} {c = unit-output} h z≼)
+no-index (suc n) h = no-local (≼-trans {a = name 1} {b = read (χ (suc n))} {c = unit-output} h (in-fold n))
+
+charge : L.suc (L.lim name) ≼ between
+charge = ≼-trans {a = L.suc (L.lim name)} {b = L.suc (N.γ 2)} {c = between} (s≼s (proj₂ Names.exact)) Over.lower
+
+no-whole : D.target 0 ≼ L.lim name → ⊥
+no-whole h = s≼-irrefl between (≼-trans {a = L.suc between} {b = D.target 0} {c = between} Over.charged
+  (≼-trans {a = D.target 0} {b = L.lim name} {c = between} h
+    (≼-trans {a = L.lim name} {b = L.suc (L.lim name)} {c = between} (OCF.Align.Value.≼-suc (≼-refl (L.lim name))) charge)))

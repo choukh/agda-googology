@@ -1,0 +1,45 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23ARepeat where
+open import Data.Nat.Base using (zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl1; lvl2)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_)
+import B11OuterCore as C
+import B12LimitSrc as Src
+import B12ActualSlots as Cov
+import B12Terminal as Tm
+import B13Target as T
+import B14RefFixed as K
+import B22RowPrefix as P
+import B22RowLive as V
+import B22RowVariable as N
+import B23ACoeff as A
+
+module Next {p : Src.Lev₂} (l : P.Label p) (r : Tm.Run lvl3) (cv : Cov.Covered r) (R : Base lvl2) (h : V.Present l R) where
+  u = K.collapse (P.q l)
+  module X = N.Append {p = p} l u (K.pres (P.rq l)) (P.v l) (P.fits l)
+  module Y = X.At r cv R h (R lvl1 C.slot) (V.index h)
+  next = X.next
+  state = Y.state
+  both = Y.present
+
+module Twice {p : Src.Lev₂} (l : P.Label p) (y : T₀) (r : Tm.Run lvl3) (cv : Cov.Covered r)
+             (R : Base lvl2) (h : V.Present l R) (z : Tr zero) (low : y ≼ read (suc z)) where
+  first : P.Label (p L.+ T.co₀ y)
+  first = A.Add.label′ l y
+  state₁ : Base lvl2
+  state₁ = A.Add.At.state {p = p} l y r cv R h z low
+  opaque
+    first-live : V.Present first state₁
+    first-live = A.Add.At.present {p = p} l y r cv R h z low
+  state₂ : Base lvl2
+  state₂ = Next.state {p = p L.+ T.co₀ y} first r cv state₁ first-live
+  label₂ : P.Label ((p L.+ T.co₀ y) L.+ T.co₁ (K.collapse (P.q first)))
+  label₂ = Next.next {p = p L.+ T.co₀ y} first r cv state₁ first-live
+  twice : V.Present label₂ state₂
+  twice = Next.both {p = p L.+ T.co₀ y} first r cv state₁ first-live

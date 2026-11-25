@@ -1,0 +1,83 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B9N 入口. 编译定理, 无前提: out 1 ≼ Ŝ (B9UpperTop.out1-up), Ŝ 是只含第 0 层影子算术的闭项, 不再含 W4;
+-- 与 B8A 合起来 ψ⁰ X₀ ≼ out 1 ≼ Ŝ. 条件否定: 若 Ŝ ≼ H 且 suc H ≼ ψ⁰ (Y 1), 则 First → ⊥ 与 Goal-add → ⊥;
+-- H = ψ⁰ X₀ 时第二个前提由 X₀≺Y1 给出. 不否定: First 本身 (剩下的 Gap 是 Level 与影子之间的闭不等式, 未证).
+module B9UpperMain where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Product using (_×_; _,_)
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; z≼; s≼s; ≼l; l≼; ≼-trans; ≼-refl) renaming (+-mono to +ᵛ-mono)
+open import WVOne using (T₀; 𝟏; Mv; Mv-mono)
+open import Data.Unit using (tt)
+open import W4Block using (inc; self; zero)
+open import W4Ops using (Ωt)
+open import W4Fold using (B₀)
+open import B9UpperRel using (sumU)
+open import B9UpperTop using (fΩ; opΩ)
+open import YiLAB7Replay using (Y; First)
+open import YiLAB8Split using (out; refute-at)
+open import B8FreezeMain using (irr; W; x≼W; W-sum; Z; ZE; Eψ; Pε; Wψ⁰)
+open import B8PairLevel using (X₀)
+open import WSLevel using (ψ₁; γ)
+open import B8PairMain using (c-add₀; X₀≺Y1; Goal-add)
+open import B9UpperTop using (Bnd; Ŝ; out1-up) public
+
+-- 夹逼: 下界来自 B8A 的被加项消费者, 上界来自本路.
+sandwich : (LV.ψ⁰ X₀ ≼ out 1) × (out 1 ≼ Ŝ)
+sandwich = c-add₀ , out1-up
+
+-- 剩下的闭命题 (只含 Level 与第 0 层影子, 不含 W4).
+Gap : Set
+Gap = Ŝ ≼ LV.ψ⁰ X₀
+
+Gap′ : Set
+Gap′ = LV.suc Ŝ ≼ LV.ψ⁰ (Y 1)
+
+Gap→Gap′ : Gap → Gap′
+Gap→Gap′ p = ≼-trans (s≼s p) X₀≺Y1
+
+-- 逐项形式: Gap 等价于对每个累加项的界.
+Gap-terms : (∀ n → Bnd n ≼ LV.ψ⁰ X₀) → Gap
+Gap-terms h = l≼ h
+
+terms-Gap : Gap → ∀ n → Bnd n ≼ LV.ψ⁰ X₀
+terms-Gap p n = ≼-trans (≼l n (≼-refl (Bnd n))) p
+
+-- 条件否定 (两个前提对同一个 H).
+no-first-if : (H : T₀) → Ŝ ≼ H → LV.suc H ≼ LV.ψ⁰ (Y 1) → First → ⊥
+no-first-if H up low = refute-at {X = Y 1} {n = 1} H (≼-trans out1-up up) low
+
+no-goal-add-if : (H : T₀) → Ŝ ≼ H → LV.suc H ≼ LV.ψ⁰ (Y 1) → Goal-add → ⊥
+no-goal-add-if H up low g = irr H (≼-trans low (≼-trans g (≼-trans out1-up up)))
+
+no-first-from-Gap : Gap → First → ⊥
+no-first-from-Gap p = no-first-if (LV.ψ⁰ X₀) p X₀≺Y1
+
+no-first-from-Gap′ : Gap′ → First → ⊥
+no-first-from-Gap′ p = no-first-if Ŝ (≼-refl Ŝ) p
+
+-- 逐项的更细形式 (X₀ = lim ψ₁ (γ n) 定义上成立): 第 n 个累加项的界落在参照链的第 n 项之下.
+Gap-from-terms : (∀ n → Bnd n ≼ LV.ψ⁰ (ψ₁ (γ n))) → Gap
+Gap-from-terms h = l≼ (λ n → ≼l n (h n))
+
+-- Gap 成立时三者同值.
+Gap→val : Gap → out 1 ≈ᵛ LV.ψ⁰ X₀
+Gap→val p = ≼-trans out1-up p , c-add₀
+
+------------------------------------------------------------------------
+-- 正对照: 同一上界理论在初态给出 B8N 的精确界 (fold-up). fΩ 𝟏 𝟏 的链就是 B8N 的 Z.
+Sb : (n : ℕ) → sumU (λ y a c → Mv a (LV.suc y)) 𝟏 𝟏 n ≼ W (LV.suc (LV.suc (Z n)))
+Sb zero    = Mv-mono (≼-refl 𝟏) (s≼s z≼)
+Sb (suc n) = ≼-trans (+ᵛ-mono (Sb n) (≼-refl _)) (W-sum (s≼s (x≼W (LV.suc (Z n)))))
+
+fΩ-1 : fΩ 𝟏 𝟏 ≼ Pε
+fΩ-1 = l≼ (λ n → ≼-trans (Sb n) (≼l (suc n) (≼-trans (Mv-mono (≼-refl 𝟏) (ZE n)) (Wψ⁰ (Eψ (suc n))))))
+
+out0-up : out 0 ≼ fΩ 𝟏 𝟏
+out0-up = opΩ (B₀ _) (inc tt self) (Ωt zero) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏)
+
+out0-cross : out 0 ≼ Pε
+out0-cross = ≼-trans out0-up fΩ-1

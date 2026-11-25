@@ -1,0 +1,127 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 全部正的真实首塔询问均可在零孩子路径中执行此同一单位。其继承槽取真实值，完整返回是原 ε₀。
+module B30UOrbit where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (sym; subst)
+import W4Block as W
+import W4Ops as O
+import W4Path as Path
+import W4Fold as Fold
+import WVOne as V
+open V using (T₀; 𝟏; read; lvl1)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; s≼s; l≼; ≼l)
+import B12Strict as Str
+import B12XRef as Ref
+import B14PathHeight as PH
+import B18ResetCellGoal as Init
+import B18Product as M
+import B19PathValue as Scale
+import B19IdealProduct as Law
+import B18TowerSlots as Slots
+import B18TowerEmb as Tower
+import B19IdealArithmetic as A
+import B21StandardShape as Shape
+import B25DLimit as Orig
+import B26CDecode as Names
+import B27UArbitrary as U
+import B29SUnit as Unit
+import B29SPath as Path₀
+import B29SFirst as True
+import B19Canonical as K
+import B22MovingIndex as E
+import B30UCut as Cut
+import B30UOne as One
+
+one : W.Tr W.zero
+one = W.suc W.zero
+o = proj₂ (Path.Ok-tw 1) one
+B = Slots.slots lvl1 1
+module Actual = One.Run o B
+module Std = One.Run V.o₂ (Fold.B₀ lvl1)
+module S = Cut.At 𝟏
+
+positive : 𝟏 ≼ Actual.c
+positive = Str.strict (proj₂ Actual.slot)
+std-pos : 𝟏 ≼ Std.c
+std-pos = ≼-refl 𝟏
+one-small : S.Small 𝟏
+one-small = E.strict 𝟏
+omega-small : S.Small L.ωᶜ
+omega-small = S.down {L.ωᶜ} {A.norm 𝟏} (M.one-left L.ωᶜ) (S.normal {𝟏} one-small)
+slot-upper : Actual.c ≼ L.ωᶜ
+slot-upper = ≼-trans {b = read (proj₁ (Tower.standard 0))} (Shape.trim (Tower.standard 0) Shape.root)
+  (proj₁ Init.First.omega)
+slot-small : S.Small Actual.c
+slot-small = S.down {Actual.c} {L.ωᶜ} slot-upper omega-small
+
+module Budget = Actual.Cap 𝟏 slot-small
+
+report : Actual.term ≈ᵛ Ref.row 1
+report = ≼-trans {b = E.above 𝟏} (Budget.all Actual.β₀ one-small)
+  (≼-trans {b = Std.term} (proj₂ (Std.Positive.exact std-pos)) Names.read-bound) ,
+  ≼-trans {b = OCF.Align.NoCumsum.γ 1} Ref.epsilon (V.eps₀ o B Actual.β₀ (≼-refl 𝟏) positive)
+
+general : ∀ β → Actual.result β ≈ᵛ (read (proj₁ β) M.· Ref.row 1)
+general β = Law._∙_ (Scale.At.scale lvl1 o B (proj₁ (O.Ωt lvl1)) (PH.standard lvl1) β)
+  (Law.mul (Law.id (read (proj₁ β))) report)
+
+path : ∀ j → Path₀.Path one (K.seq (suc j))
+path zero = Path₀.join Path₀.down Path₀.down
+path (suc j) = Path₀.join (path j) (Path₀.climb (suc j))
+place : ∀ β j → W.zero W.⊢ Unit.output β one ◃ Unit.output β (U.index (suc j))
+place β j = subst (λ z → W.zero W.⊢ Unit.output β one ◃ Unit.output β z) (sym (True.link (suc j)))
+  (Unit.physical (Unit.keep β (path j)))
+new-unit : ∀ j → L.suc (Ref.row 1) ≼ True.f (suc j)
+new-unit j = ≼-trans {b = L.suc Actual.term} (s≼s (proj₂ report)) (Str.strict (place Actual.β₀ j))
+
+ref-finite : ∀ n → L.suc (Actual.pre Actual.β₀ n) ≼ Ref.row 1
+ref-finite n = ≼-trans {b = E.above 𝟏} (Budget.finite Actual.β₀ one-small n)
+  (≼-trans {b = Std.term} (proj₂ (Std.Positive.exact std-pos)) Names.read-bound)
+import B19RowSecondParent as Append
+import B19IdealPowers as Pow
+
+-- 这条内部轨道在真实的继承槽上从零开始。给出每个有限调用的确切序数算式。
+slot-exact : Actual.c ≈ᵛ L.ωᶜ
+slot-exact = slot-upper , ≼-trans {b = read (proj₁ (Tower.standard 0))} (proj₂ Init.First.omega)
+  (Append.append (O.Ωt W.zero) (Tower.standard 0))
+
+ω-times : ∀ a → (a M.· L.ωᶜ) ≼ V.Mv a 𝟏
+ω-times a = l≼ (λ n → ≼l n (≼-trans {b = A.word a n} (proj₁ (A.copies a n)) (fit n))) where
+  fit : ∀ n → A.word a n ≼ W.iter (a L.+_) a n
+  fit zero = OCF.Align.Value.z≼
+  fit (suc n) = OCF.Align.Value.+-mono (≼-refl a) (fit n)
+
+mul-lower : ∀ a x → (a M.· A.norm x) ≼ V.Mv a x
+mul-lower a L.zero = proj₁ (Law.one a)
+mul-lower a (L.suc x) = ≼-trans {b = (a M.· A.norm x) M.· L.ωᶜ}
+  (proj₂ (Law.assoc a (A.norm x) L.ωᶜ))
+  (≼-trans {b = V.Mv a x M.· L.ωᶜ} (M.mono (mul-lower a x) (≼-refl L.ωᶜ)) (ω-times (V.Mv a x)))
+mul-lower a (L.lim g) = l≼ λ n → ≼l n (mul-lower a (g n))
+
+ord : ℕ → T₀
+ord zero = L.zero
+ord (suc n) = L.ωᶜ M.· A.norm (L.suc (ord n))
+
+indices : ∀ n → Actual.x n ≈ᵛ ord n
+indices zero = Law.id L.zero
+indices (suc n) = Law._∙_ raw (Law.mul slot-exact (Pow.expo Pow.omega-pos (s≼s (proj₁ rep)) ,
+  Pow.expo Pow.omega-pos (s≼s (proj₂ rep)))) where
+  rep = indices n
+  a = Actual.c
+  x = L.suc (Actual.x n)
+  raw : Actual.x (suc n) ≈ᵛ (a M.· A.norm x)
+  raw = ≼-trans {b = V.Mv a x} (Actual.↑next n) (Cut.mul-upper a x) ,
+    ≼-trans {b = V.Mv a x} (mul-lower a x) (V.G-row o B V.wc Actual.slot (Actual.ζ n))
+
+outputs : ∀ n → read (Actual.F₀ Actual.β₀ n) ≈ᵛ A.norm (L.suc (ord n))
+outputs n = Law._∙_ raw (Pow.expo Pow.omega-pos (s≼s (proj₁ (indices n))) ,
+  Pow.expo Pow.omega-pos (s≼s (proj₂ (indices n)))) where
+  x = L.suc (Actual.x n)
+  raw : read (Actual.F₀ Actual.β₀ n) ≈ᵛ A.norm x
+  raw = ≼-trans {b = V.Mv 𝟏 x} (Actual.↑row Actual.β₀ (Actual.ζ n))
+    (≼-trans {b = 𝟏 M.· A.norm x} (Cut.mul-upper 𝟏 x) (proj₁ (Law.left-one (A.norm x)))) ,
+    ≼-trans {b = L.ψ⁰ x} (proj₁ (A.normal x))
+      (≼-trans {b = V.Mv 𝟏 x} (V.ψ⁰-lvl0 x) (V.G-row o B V.wu Actual.β₀ (Actual.ζ n)))

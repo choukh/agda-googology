@@ -1,0 +1,59 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实标准塔第一项内固定的一次有限一级运行，反馈零下标的值与 ε₀ 规范分支双向共尾。
+module B25DTrack where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; _,_)
+import OCF.Align.Level as L
+import OCF.Align.Uniform as U
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≅→≼; s≼s; ≼l; l≼)
+import W4Block as W
+open import W4Ops using (Ωt)
+open import W4Fold using (B₀)
+import WVOne as WV
+open WV using (read; T₀)
+import B8FreezeMain as Q
+import B12BtboCut as C
+import B16IndexBase as I
+import B20StandardInside as S
+
+χ = Q.zs
+source : ℕ → T₀
+source n = L.ψ⁰ (U.G n)
+hsource : ∀ n → L.HS (source n)
+hsource = L.hl₁ (N.cert 1)
+
+shift : ∀ n → source n L.≅ U.G (suc n)
+shift n = L.ψ⁰≅ψ {p = L.zero} {σ = λ q → L.suc q} (U.G-refl n)
+
+module Chain = WV.L1g WV.o₂ (B₀ WV.lvl1) WV.wu (Ωt W.zero) WV.𝟏 WV.𝟏
+  (≼-refl WV.𝟏) (≼-refl WV.𝟏) (≼-refl WV.𝟏) WV.H₀ WV.ψ-lvl0 source (λ n → WV.ψ⁰-lvl0 (U.G n))
+
+branch-in-input : ∀ n → source n ≼ read (χ (suc (suc n)))
+branch-in-input n = ≼-trans {a = source n} {b = U.G (suc n)} {c = read (χ (suc (suc n)))}
+  (≅→≼ (shift n)) (Chain.chain (suc n))
+
+input-in-branch : ∀ n → L.suc (L.suc (read (χ n))) ≼ source n
+input-in-branch n = ≼-trans {a = L.suc (L.suc (read (χ n)))} {b = U.G (suc n)} {c = source n}
+  (≼-trans {a = L.suc (L.suc (read (χ n)))} {b = L.suc (L.suc (Q.Z n))} {c = U.G (suc n)}
+     (s≼s (s≼s (Q.zsZ n))) (Q.ZE n)) (≅→≼ (L.≅-sym (shift n)))
+
+unit-output : T₀
+unit-output = read (proj₁ (W4Fold.ψ WV.lvl1 WV.o₂ (B₀ WV.lvl1) W.zero (W.inu (λ _ → W.self)) (Ωt W.zero) (proj₁ (Ωt WV.lvl1))))
+
+in-fold : ∀ n → read (χ (suc n)) ≼ unit-output
+in-fold n = WV.Φ-cum WV.o₂ (B₀ WV.lvl1) WV.wu (Ωt W.zero) n
+
+in-tower : unit-output ≼ S.std 1
+in-tower = ≼-trans {a = unit-output} {b = read (WV.Ftw 1)} {c = S.std 1}
+  (≼l 0 (≼-refl unit-output)) (≼l 1 (WV.cum-≥ WV.Ftw 1))
+
+input-value : L.lim (λ n → read (χ n)) OCF.Align.Value.≈ᵛ N.γ 1
+input-value = (l≼ λ n → ≼l n (≼-trans (≼-suc (≼-suc (≼-refl _))) (input-in-branch n)))
+  , (l≼ λ n → ≼l (suc (suc n)) (branch-in-input n))
+
+index : ℕ → L.Ordᴵ
+index n = I.κ (χ n)
+name : ℕ → T₀
+name n = L.ψ⁰ (L.Ω (index n))

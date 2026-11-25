@@ -1,0 +1,109 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- D 路判定件：塔第 1 项的比较表里，"另一孩子是数字 n" 的整列可以字面地、全函数地填满。
+-- 不读记号；不改树、折叠、合法性；只给 YiTBRow.Rb (tw 1) 的一个新居民与它的全性。
+module AuditDFin where
+open import Data.Nat using (ℕ; zero; suc) renaming (_≤_ to _≤ᴺ_; z≤n to z≤ᴺ; s≤s to s≤ᴺ)
+open import Data.Nat.Properties using (≤-refl; ≤-trans; n≤1+n)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiTBRow using (Rb; rb-no; nat; h₁; IsNat; isn; isNat; isNat-nat)
+
+-- 第一位置序下，数字的前驱还是更小的数字。
+lt-nat : ∀ {x y : Tr zero} → zero ⊢ x ◃ y → ∀ m → y ≡ nat m → Σ ℕ λ k → (x ≡ nat k) × (suc k ≤ᴺ m)
+lt-nat ◃s zero ()
+lt-nat ◃s (suc m) refl = m , refl , ≤-refl
+lt-nat (◃l n) zero ()
+lt-nat (◃l n) (suc m) ()
+lt-nat (◃w {p = ()}) m eq
+lt-nat (◃u x () y e) m eq
+lt-nat (◃c x () d) m eq
+lt-nat (◃t d e) m eq with lt-nat e m eq
+... | (k , refl , le) with lt-nat d k refl
+...   | (k′ , eq′ , le′) = k′ , eq′ , ≤-trans le′ (≤-trans (n≤1+n k) le)
+
+-- 合法 ℕ 极限的第 n 项若是数字 m，则 n ≤ m。
+chain : (f : ℕ → Tr zero) (a : ∀ n → zero ⊢ f n ◃ f (suc n)) → ∀ n m → f n ≡ nat m → n ≤ᴺ m
+chain f a zero    m eq = z≤ᴺ
+chain f a (suc n) m eq with lt-nat (a n) m eq
+... | (k , eq′ , le) = ≤-trans (s≤ᴺ (chain f a n k eq′)) le
+
+no : ∀ {n m} → n ≤ᴺ m → suc m ≤ᴺ n → ⊥
+no (s≤ᴺ p) (s≤ᴺ q) = no p q
+
+split≤ : ∀ {m n} → m ≤ᴺ n → (m ≡ n) ⊎ (suc m ≤ᴺ n)
+split≤ {n = zero}  z≤ᴺ = inj₁ refl
+split≤ {n = suc n} z≤ᴺ = inj₂ (s≤ᴺ z≤ᴺ)
+split≤ (s≤ᴺ p) with split≤ p
+... | inj₁ refl = inj₁ refl
+... | inj₂ q    = inj₂ (s≤ᴺ q)
+
+Fin< : ℕ → Tr zero → Set
+Fin< n c = Σ ℕ λ m → (c ≡ nat m) × (suc m ≤ᴺ n)
+
+stepS : ∀ n (c : Tr zero) → Fin< (suc n) c ⊎ (h₁ (nat (suc n)) ≤ h₁ c)
+      → Fin< (suc n) (suc c) ⊎ (h₁ (nat (suc n)) ≤ h₁ (suc c))
+stepS n c (inj₂ p) = inj₂ (inc tt p)
+stepS n .(nat m) (inj₁ (m , refl , s≤ᴺ p)) with split≤ p
+... | inj₁ refl = inj₂ self
+... | inj₂ q    = inj₁ (suc m , refl , s≤ᴺ q)
+
+-- 对任意可数树 c 与数字 n：c 字面是更小的数字，或第 n 层是第 c 层的字面子层号。
+Q : (c : Tr zero) (n : ℕ) → Fin< n c ⊎ (h₁ (nat n) ≤ h₁ c)
+Q c         zero    = inj₂ (z≤ (h₁ c))
+Q zero      (suc n) = inj₁ (zero , refl , s≤ᴺ z≤ᴺ)
+Q (suc c)   (suc n) = stepS n c (Q c (suc n))
+Q (lim f a) (suc n) with Q (f (suc n)) (suc n)
+... | inj₂ p             = inj₂ (inc (suc n) p)
+... | inj₁ (m , eq , lt) = ⊥-elim (no (chain f a (suc n) m eq) lt)
+Q (Ω () g)      (suc n)
+Q (up x () y e) (suc n)
+
+le-path : ∀ m n → m ≤ᴺ n → h₁ (nat m) ≤ h₁ (nat n)
+le-path m n p with split≤ p
+le-path m n       p | inj₁ refl      = self
+le-path m (suc n) p | inj₂ (s≤ᴺ q)   = inc tt (le-path m n q)
+
+-- 整列的全性：对一切 c，第 c 层与第 n 层有字面路径（某一方向）。
+colFin : ∀ n (c : Tr zero) → (h₁ c ≤ h₁ (nat n)) ⊎ (h₁ (nat n) ≤ h₁ c)
+colFin n c with Q c n
+... | inj₂ p = inj₂ p
+colFin (suc n) .(nat m) | inj₁ (m , refl , s≤ᴺ p) = inj₁ (le-path m (suc n) (≤-trans p (n≤1+n n)))
+
+-- 比较表：任一端是数字就有条目（现行 rbᶻ 只在字面 zero 处有，YiTBRow.tb 只在两端都是数字时有）。
+sw : {A B : Set} → A ⊎ B → B ⊎ A
+sw (inj₁ a) = inj₂ a
+sw (inj₂ b) = inj₁ b
+
+tbF′ : ∀ c c′ → Maybe (IsNat c) → Maybe (IsNat c′) → Maybe ((h₁ c′ ≤ h₁ c) ⊎ (h₁ c ≤ h₁ c′))
+tbF′ c c′ _              (just (isn n)) = just (sw (colFin n c))
+tbF′ c c′ (just (isn n)) nothing        = just (colFin n c′)
+tbF′ c c′ nothing        nothing        = nothing
+
+tbF : (c c′ : Tr zero) → Maybe ((h₁ c′ ≤ h₁ c) ⊎ (h₁ c ≤ h₁ c′))
+tbF c c′ = tbF′ c c′ (isNat c) (isNat c′)
+
+rbF : Rb (tw 1)
+rbF = tbF , λ c → rb-no (h₁ c)
+
+-- 目标孩子是数字 n 时，对一切 c（含极限与任意后继）都有条目：退路行在这一列不触发。
+col-total : ∀ n (c : Tr zero) → tbF c (nat n) ≡ just (sw (colFin n c))
+col-total n c rewrite isNat-nat n = refl
+
+-- 闭测试：c = ω+1（现行表无条目，YiMTTab.ent-ss），c′ = 2。
+ωᶜ : Tr zero
+ωᶜ = lim nat (λ n → ◃s)
+
+IsHi : ∀ {A B : Set} → Maybe (A ⊎ B) → Set
+IsHi (just (inj₁ _)) = ⊤
+IsHi _               = ⊥
+
+test : IsHi (tbF (suc ωᶜ) (nat 2))
+test = tt

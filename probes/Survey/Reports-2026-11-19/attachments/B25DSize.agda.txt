@@ -1,0 +1,42 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- B22 的第一个参照输出严格高过位于 γ₂ 和 γ₃ 之间的 ψ₀(Ω_{ψ₀(Ω₂)})。
+module B25DSize where
+open import W4Block using (tw)
+open import W4Path using (Ok-tw)
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Uniform using (Uniform)
+open import OCF.Align.BTBOFullLv using (SV-toLevel; St-F; svz; svs; ps)
+open import OCF.Align.BTBOFullV3 using (Fstep)
+open import OCF.Align.BTBOValMain using (nat≺L₁)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼; ≺→s≼)
+import B12ActualSlots as A
+import B12Terminal as T
+import B14Btbo as B
+import B15TowerSeed as Seed
+import B20StandardInside as S
+import B22TowerDiagonal as D
+open import B25Least using (raises)
+open import B25Return using (reserve)
+
+two = L.natᴵ 2
+h = Uniform two
+a = L.toLevel T.Ω₂ref h
+between : T₀
+between = B.α a
+
+lower : L.suc (N.γ 2) ≼ between
+lower = ≺→s≼ {c = N.γ 2} {b = between} (raises {N.L 1} {a} (L.toLevel-≺ {c = N.γ 1} {b = T.Ω₂ref} (N.cert 1) h (Fstep (N.L 0))))
+
+upper : L.suc between ≼ N.γ 3
+upper = ≺→s≼ {c = between} {b = N.γ 3} (raises {a} {N.L 2} (L.toLevel-≺ {c = T.Ω₂ref} {b = N.γ 2} h (N.cert 2) (raises {two} {N.L 1} (nat≺L₁ 2))))
+
+at-one : T.Ω₂ref ≼ S.std 1
+at-one = Seed.initial-bound 1 {Q = T.Ω₂ref} (λ r cv → T.anchor₂ r)
+  (T.initial (tw 1) (Ok-tw 1)) (A.initial (tw 1) (Ok-tw 1))
+
+charged : L.suc between ≼ D.target 0
+charged = reserve 0 a (SV-toLevel T.Ω₂ref h (St-F {a = two} (svs (svs svz)) ps))
+  (≼-trans {a = L.forget a} {b = T.Ω₂ref} {c = S.std 1}
+    (≅→≼ (L.forget-toLevel T.Ω₂ref h)) at-one)

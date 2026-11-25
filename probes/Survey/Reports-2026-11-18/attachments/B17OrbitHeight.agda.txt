@@ -1,0 +1,78 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 在真实零层指数上迭代一级系数的 Γ 更新。一级默认状态作指数，输出同时支持所有有限阶。
+module B17OrbitHeight where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl; _≡_; cong)
+open import W4Block hiding (D)
+open import W4Ops
+open import W4Fold hiding (mono)
+open import WVOne using (T₀; read)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import WKGen using (Ω₁t)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; l≼; ≼l; i≼; u≼)
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+import B13OrbitFeed as O
+import B15OrbitModel as M
+import B16OrbitNode as N
+import B17OrbitNatural as R
+import B17OrbitVector as B
+import B17RefVector as V
+open B using (Index; oper)
+
+mono : ∀ b c → lvl1 ⊢ proj₁ b ◃ proj₁ c → ∀ v → Index b v → Index c v
+mono b c t v h m rm zero = R.closed 1 m (oper D b 0) (oper D c 0)
+   (λ u G S i w a → Emono ok₂ (trTD u D) G S i w a t) (v 0) (h m rm 0)
+  where D = trTD m O.D₁
+mono b c t v h m rm (suc n) = R.closed (suc (suc n)) m (oper D b (suc n)) (oper D c (suc n))
+   (λ u K w G → Itmono n ok₂ (trTD w (trTD u D)) (enter (suc n) w K) G t) (v (suc n)) (h m rm (suc n))
+  where D = trTD m O.D₁
+
+combine : ∀ b (seq : ℕ → V.Vector) → (∀ n → Index b (seq n)) → Index b (V.sup seq)
+combine b s h m rm n = R.sup (suc n) m (oper (trTD m O.D₁) b n) (λ k → s k n) (λ k → h k m rm n)
+
+module At {X : Cx lvl2} (slot : ⟦ X ⟧ lvl1) (D : TD X zero) where
+  point = λ (S : St X) → S lvl1 slot
+  Law : Op X → (V.Vector → V.Vector) → Set
+  Law K F = ∀ S v → lvl1 ⊢ Ω₁t ◃ proj₁ (point S) → Index (point S) v → Index (point (stepS K S)) (F v)
+  e = λ z K → op (E ok₂ D z K) (Einf ok₂ D z K)
+  rise : ∀ Q Q′ → Rl Q Q′ → ∀ F → Law Q F → Law Q′ F
+  rise Q Q′ rr F law S v t vb = mono (point (stepS Q S)) (point (stepS Q′ S)) (rr S lvl1 slot (point S)) _ (law S v t vb)
+  gather : ∀ Q (f : ℕ → V.Vector → V.Vector) → (∀ n → Law Q (f n)) → Law Q (λ v → V.sup (λ n → f n v))
+  gather Q f h S v t vb = combine _ (λ n → f n v) (λ n → h n S v t vb)
+  module Power (z : Tr zero) (y : T₀) (K : Op X) (law : Law (e z K) (V.height y))
+               (S : St X) (v : V.Vector) (t : lvl1 ⊢ Ω₁t ◃ proj₁ (point S)) (h : Index (point S) v) where
+    Q = e z K
+    Sₙ = λ n → itS Q n S
+    vₙ = Ord.iter (V.height y) v
+    upper : ∀ n → lvl1 ⊢ Ω₁t ◃ proj₁ (point (Sₙ n))
+    upper zero = t
+    upper (suc n) = ◃t (upper n) (inf Q (Sₙ n) lvl1 slot (point (Sₙ n)))
+    seq : ∀ n → Index (point (Sₙ n)) (vₙ n)
+    seq zero = h
+    seq (suc n) = law (Sₙ n) (vₙ n) (upper n) (seq n)
+    same : ∀ n → point (Sₙ n) ≡ itV Q n S lvl1 slot (point S)
+    same zero = refl
+    same (suc n) = cong (run Q (Sₙ n) lvl1 slot) (same n)
+    part : ∀ n → lvl1 ⊢ proj₁ (point (Sₙ n)) ◃ proj₁ (point (stepS (e (suc z) K) S))
+    part zero = inf (e (suc z) K) S lvl1 slot (point S)
+    part (suc n) rewrite same n = ◃l n
+    full : Index (point (stepS (e (suc z) K) S)) (V.height (L.suc y) v)
+    full = combine _ vₙ (λ n → mono (point (Sₙ n)) _ (part n) _ (seq n))
+
+  eval : ∀ z {y} → y ≼ read z → ∀ K → Law K V.step → Law (e z K) (V.height y)
+  eval (Ω () g)
+  eval (up p () b d)
+  eval (ex p b nb z ())
+  eval zero z≼ K h = h
+  eval (suc z) z≼ K h = rise K (e (suc z) K) (λ S i t v → Emono ok₂ D K S i t v (z◃ z ◃s)) V.step h
+  eval (lim g d) z≼ K h = rise K (e (lim g d) K) (λ S i t v → Emono ok₂ D K S i t v (z◃ (g 0) (◃l 0))) V.step h
+  eval (suc z) (s≼s {a = y} d) K h = Power.full z y K (eval z d K h)
+  eval (lim g d) (≼l n q) K h = rise (e (g n) K) (e (lim g d) K) (λ S i t v → Emono ok₂ D K S i t v (◃l n)) _ (eval (g n) q K h)
+  eval zero (l≼ {f = g} h) K q = gather (e zero K) (λ n → V.height (g n)) (λ n → eval zero (h n) K q)
+  eval (suc z) (l≼ {f = g} h) K q = gather (e (suc z) K) (λ n → V.height (g n)) (λ n → eval (suc z) (h n) K q)
+  eval (lim g d) (l≼ {f = g′} h) K q = gather (e (lim g d) K) (λ n → V.height (g′ n)) (λ n → eval (lim g d) (h n) K q)
+  eval z (i≼ {p = ()} _) K h
+  eval z (u≼ {r = ()} _) K h

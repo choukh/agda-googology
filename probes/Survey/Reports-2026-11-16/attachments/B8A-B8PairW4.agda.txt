@@ -1,0 +1,156 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B8A: W4 一侧. 第一次更新后的实际分量 chainW 1 = lim (cum (z ∘ suc)), z (m+1) = ex Ω₁ Ω₁ (suc (z m)).
+-- 指数: Real (chainW 1) (lC ε) (累加项用 W2 的前缀版); 被加项: SumR (chainW 1) d₁ (d₁ 逐项是 Nx, sE (ε m) Nx).
+-- 另: Real, SumR 沿 W4 的 ◃ 向上封闭; chainW n ◃ chainW (n+1). 编译定理, 无前提.
+module B8PairW4 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Value as V
+open V using (_≼_; ≼l; l≼; ≼-refl; ≼-trans; ≼-suc)
+import OCF.Align.Level as LV
+open import WVOne using (T₀; 𝟏; read)
+open import WVTwo using (◃→≼)
+open import WVThree using (Nx; Nx-infl)
+open import WSShadow
+open import WSW4
+open import WSLevel using (ε)
+import WKSum
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F; c₁)
+open import YiLAB7Replay using (chainW)
+
+o : Ok lvl1
+o = proj₂ ok₂ tt
+
+open Lem o
+open WKSum.Sum o
+
+------------------------------------------------------------------------
+-- 沿 W4 的结构序向上: 指数实现与被加项关系都保持.
+Real-up : ∀ {x y e} → lvl1 ⊢ x ◃ y → Real x e → Real y e
+Real-up {x} {y} d (rE , rI) =
+    (λ tv mk G f hG → R-cl 0 (op (E o (td stop tv mk) x G) (Einf o (td stop tv mk) x G))
+                               (op (E o (td stop tv mk) y G) (Einf o (td stop tv mk) y G))
+                               (rE tv mk G f hG) (λ S i t v → Emono o (td stop tv mk) G S i t v d))
+  , (λ n tv mk K k G g hK hG → R-cl n (It n o (td stop tv mk) x K G) (It n o (td stop tv mk) y K G)
+                                     (rI n tv mk K k G g hK hG) (Itmono n o (td stop tv mk) K G d))
+
+SumR-up : ∀ {y y′ d} → lvl1 ⊢ y ◃ y′ → SumR y d → SumR y′ d
+SumR-up dd r B w β a c ha hc h1 = ≼-trans (r B w β a c ha hc h1) (◃→≼ (mono lvl1 o B zero w β dd))
+
+-- ℕ 极限 (语义版的 re-l).
+Real-lim : ∀ {f : ℕ → Tr lvl1} {s} {h : ℕ → ES} → (∀ j → Real (f j) (h j)) → Real (lim f s) (lC h)
+Real-lim r =
+    (λ tv mk G f′ hG S t v x c hx hc h1 → l≼ (λ j → ≼l j (proj₁ (r j) tv mk G f′ hG S t v x c hx hc h1)))
+  , (λ n tv mk K k G g hK hG → R-limC n _ _ _ (λ j → proj₂ (r j) n tv mk K k G g hK hG))
+
+-- 实际状态的步进: 第 2 层 Ω 运算的膨胀律.
+chain-step : (n : ℕ) → lvl1 ⊢ chainW n ◃ chainW (suc n)
+chain-step n = inf F (itS F n (B₀ lvl2)) lvl1 (inc tt self) (itS F n (B₀ lvl2) lvl1 (inc tt self))
+
+------------------------------------------------------------------------
+-- W2 的前缀版: a₀ 之后的 ex (a₀ + Ω₁) Ω₁ (suc x) 也实现 sh e. 只改 "先折 a" 的那一份 (W4 的 Emono / Itmono).
+module Pre (a₀ : Tr lvl1) where
+  nbp : lvl1 ⊢ zero ◃ (a₀ + Ω₁t)
+  nbp = z◃ a₀ (+-mono a₀ nbΩ)
+
+  xp : Tr lvl1 → Tr lvl1
+  xp x = ex (a₀ + Ω₁t) Ω₁t nbΩ (suc x) tt
+
+  W2PE : (x : Tr lvl1) (e : ES) → RealI x e → RealE (xp x) (sh e)
+  W2PE x e rI {X} tv mk G f hG =
+    R-cl 0 (It 0 o Tᵈ x (Kb o Tᵈ Ω₁t nbΩ) (op (E o Tᵈ (a₀ + Ω₁t) G) (Einf o Tᵈ (a₀ + Ω₁t) G)))
+           (op (E o Tᵈ (xp x) G) (Einf o Tᵈ (xp x) G))
+           (rI 0 tv mk (Kb o Tᵈ Ω₁t nbΩ) kb (op (E o Tᵈ (a₀ + Ω₁t) G) (Einf o Tᵈ (a₀ + Ω₁t) G)) f hKb hG′)
+           (Itmono 0 o Tᵈ (Kb o Tᵈ Ω₁t nbΩ) (op (E o Tᵈ (a₀ + Ω₁t) G) (Einf o Tᵈ (a₀ + Ω₁t) G)) ◃s)
+    where
+    Tᵈ : TD X lvl1
+    Tᵈ = td stop tv mk
+    hKb : 𝓡 1 (mk (inc tt self)) (Kb o Tᵈ Ω₁t nbΩ) kb
+    hKb m gm G₁ g rg = W1E (λ y → tv (π m y)) (λ τ → σ m (mk τ)) G₁ g rg
+    hG′ : 𝓡 0 (mk (inc tt self)) (op (E o Tᵈ (a₀ + Ω₁t) G) (Einf o Tᵈ (a₀ + Ω₁t) G)) f
+    hG′ = R-cl 0 G (op (E o Tᵈ (a₀ + Ω₁t) G) (Einf o Tᵈ (a₀ + Ω₁t) G)) hG (λ S i t v → Emono o Tᵈ G S i t v nbp)
+
+  W2PI : (x : Tr lvl1) (e : ES) → RealI x e → RealI (xp x) (sh e)
+  W2PI x e rI n {X} tv mk K k G g hK hG =
+    R-cl (suc n) (It (suc n) o Tᵈ x (Kₑ n o Tᵈ Ω₁t nbΩ) (Itᴺ n o Tᵈ (a₀ + Ω₁t) K))
+                 (It (suc n) o Tᵈ (suc x) (Kₑ n o Tᵈ Ω₁t nbΩ) (Itᴺ n o Tᵈ (a₀ + Ω₁t) K))
+                 (rI (suc n) tv mk (Kₑ n o Tᵈ Ω₁t nbΩ) (kₑ n) (Itᴺ n o Tᵈ (a₀ + Ω₁t) K) (λ g′ → k g′) hKₑ hIa)
+                 (Itmono (suc n) o Tᵈ (Kₑ n o Tᵈ Ω₁t nbΩ) (Itᴺ n o Tᵈ (a₀ + Ω₁t) K) ◃s)
+         idM refl G g hG
+    where
+    Tᵈ : TD X lvl1
+    Tᵈ = td stop tv mk
+    hKₑ : 𝓡 (suc (suc n)) (mk (inc tt self)) (Kₑ n o Tᵈ Ω₁t nbΩ) (kₑ n)
+    hKₑ m gm K₁ k₁ r₁ m′ gm′ G₁ g₁ rg₁ =
+      W1I n (λ y → tv (π m (π m′ y))) (λ τ → σ m′ (σ m (mk τ))) (enter (suc n) m′ K₁) k₁ G₁ g₁
+          (R-enter (suc n) m′ gm′ K₁ r₁) rg₁
+    hIa : 𝓡 (suc n) (mk (inc tt self)) (Itᴺ n o Tᵈ (a₀ + Ω₁t) K) (λ g′ → k g′)
+    hIa m gm G₁ g₁ r₁ =
+      R-cl n _ _ (hK (idM ⊙ m) gm G₁ g₁ r₁) (Itmono n o (trTD m Tᵈ) (enter (suc n) m K) G₁ nbp)
+
+  W2P : (x : Tr lvl1) (e : ES) → Real x e → Real (xp x) (sh e)
+  W2P x e (rE , rI) = W2PE x e rI , W2PI x e rI
+
+open Pre using (W2P)
+
+------------------------------------------------------------------------
+-- 第一次更新的链项.
+zW : ℕ → Tr lvl1
+zW = iter (λ x → ex Ω₁t Ω₁t nbΩ (suc x) tt) zero
+
+Fz : ℕ → Tr lvl1
+Fz n = zW (suc n)
+
+-- 指数: z (m+1) 实现 ε m (与 Level 的 Lx (γ m) (ε m) 同一个影子).
+Rz : (m : ℕ) → Real (zW (suc m)) (ε m)
+Rz zero    = W2 zero zC Real-zero
+Rz (suc m) = W2 (zW (suc m)) (ε m) (Rz m)
+
+Rcum : (n : ℕ) → Real (cum Fz n) (ε n)
+Rcum zero    = Rz zero
+Rcum (suc n) = W2P (cum Fz n) (zW (suc n)) (ε n) (Rz n)
+
+Real-c1 : Real (chainW 1) (lC ε)
+Real-c1 = Real-lim Rcum
+
+-- 被加项: Ω₁ 的两种被加项影子 (Nx 与恒等), 再经 ex 行与累加.
+Sm-Ω₁ : Sm Ω₁t Nx
+Sm-Ω₁ = mΩ (λ z → ◃u zero tt (suc z) (z◃ z ◃s)) (λ y z h → mu y (≼-suc h) mz)
+
+Sm-Ω₁id : Sm Ω₁t (λ a c → a)
+Sm-Ω₁id = mw Sm-Ω₁ (λ a c → Nx-infl a c)
+
+dW : ℕ → Sh 0
+dW zero    = Nx
+dW (suc m) = sE (ε m) Nx
+
+SmZ : (n : ℕ) → Sm (Fz n) (dW n)
+SmZ zero    = mx {e = zC} nbΩ Sm-Ω₁id (sound Sm-Ω₁) (proj₁ (Real-up ◃s Real-zero))
+SmZ (suc m) = mx {e = ε m} nbΩ Sm-Ω₁id (sound Sm-Ω₁) (proj₁ (Real-up ◃s (Rz m)))
+
+d₁ : Sh 0
+d₁ a c = LV.lim (λ n → dW n a c)
+
+SumR-c1 : SumR (chainW 1) d₁
+SumR-c1 = cumR Fz dW SmZ _
+
+------------------------------------------------------------------------
+-- 展开的核对 (定义性): 初态分量就是 Ω₁; 更新一次后是自身行输出的累加极限, 链项读旧分量 Ω₁ 两次;
+-- 累加的后一项按 W4 的加法把前缀推进 ex 的第一个参数.
+chainW0-shape : chainW 0 ≡ Ω₁t
+chainW0-shape = refl
+
+chainW1-shape : Σ _ (λ s → chainW 1 ≡ lim (cum Fz) s)
+chainW1-shape = _ , refl
+
+cum-shape : (n : ℕ) → cum Fz (suc n) ≡ Pre.xp (cum Fz n) (zW (suc n))
+cum-shape n = refl

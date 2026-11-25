@@ -1,0 +1,80 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 前缀收回推广到前缀内的较低目标；须保留路径的实际复合写法。
+module B29CRelay where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Unit.Base using (tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Maybe.Base using (just)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold hiding (run)
+import B15Spine as Sp
+import B20Towers as J
+import B28POrbit as Orbit
+import B28PProgram as Pr
+import B28PRoute as R
+import B28PPull as Pull
+import B28BFirst as First
+import B28BBranch as Direct
+import B28BHead as Main
+
+pull : ∀ k (o : Ok k) {i j} (w : i ≤ k) (t : Pos⁼ i) (v : j ≤ k) b (e : OkO k b) →
+  let w′ = w ∙ lift k b in
+  mapK (pshBr w′ t) (pshFirst w′ t) (kp⁼ (k ⊕ b) (Ok⊕ k b o e) (psh w′ t) (self ∙ (v ∙ lift k b))) ≡
+    mapK (pshBr w t) (pshFirst w t) (kp⁼ k o (psh w t) (self ∙ v))
+pull k o w t v zero e = refl
+pull k o w t v (nd s h) e = pull k o w t v (h (c₀ s)) (proj₂ e (c₀ s))
+
+module At (n : ℕ) where
+  m = suc n
+  d = tw n
+  i = tw m
+  k = tw (suc m)
+  module H = Main.At m
+  module X = Orbit.At m
+  module F = Pr.At m
+  module C = R.Call m
+  module D = First.At m
+  base : Pos i
+  base = inj₁ (inj₁ tt)
+
+  -- 两类可达源坐标：真实零起点，或以前塔的首 Ω 作根。
+  data Key : Tr i → Set where
+    start : Key zero
+    again : ∀ h → Key (Ω base h)
+
+  -- 在 k 的第 c 个实际孩子内部保留的、下标为 d 的首槽。
+  node : ∀ c → Key c → Pos k
+  node ._ start = inj₂ (zero , inj₂ (inj₁ (inj₁ tt)))
+  node ._ (again h) = inj₂ (Ω base h , inj₂ (inj₁ (inj₁ tt)))
+
+  data Root (p : Pos k) : Tr k → Set where
+    read-head : ∀ g → Root p (Ω p g)
+
+  keep : ∀ p x → Root p x → Root p (X.K.next x)
+  keep p ._ (read-head g) = subst (Root p) (sym (R.Route.root e)) (read-head (R.Route.branch e))
+    where e = C.relay p g
+
+  seed-node : ∀ {v} (children : Tr d → W4Block.L)
+    (ol : Ok (nd (sΩ d) children)) (u : nd (sΩ d) children ≤ k)
+    (eq : psh (ink self ∙ u) (inj₁ tt) ≡ inj₂ v) → Root v (F.program (nd (sΩ d) children) ol u)
+  seed-node {v} children ol u eq = subst (Root v) (sym (R.Route.root e)) (read-head (R.Route.branch e))
+    where
+    right = λ z → F.certificate (children z) (proj₂ ol z) (inc z self ∙ u)
+    e = C.Node.track (λ z → F.tree (children z)) (ink self ∙ u) (proj₁ (proj₁ ol)) right v eq
+
+  initial : ∀ c (q : Key c) → Root (node c q) (X.branch 0 c)
+  initial ._ start = subst (Root (node zero start)) (sym (X.Seed.point zero))
+    (seed-node (Sp.branch d) (Ok-tw m) (inc zero self) refl)
+  initial ._ (again h) = subst (Root (node c (again h))) (sym (X.Seed.point c))
+    (seed-node (λ v → i ⊕ ↑ i (h v)) (proj₂ (Ok-tw (suc m)) c) (inc c self) refl)
+    where c = Ω base h
+
+  branches : ∀ c (q : Key c) j → Root (node c q) (X.branch j c)
+  branches c q 0 = initial c q
+  branches c q (suc j) = subst (Root (node c q)) (sym (X.Step.point (X.branch j) c))
+    (keep (node c q) (X.branch j c) (branches c q j))

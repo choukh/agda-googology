@@ -1,0 +1,76 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 从每个变正层任选相邻快照和后续反馈，所选完整零观测仍对 Y 共尾；下界可沿继承的零层起点逐步核对。
+module B27SCofinal where
+
+open import Data.Nat.Base as N using (ℕ; zero; suc)
+open import Data.Nat.Properties using (≤⇒≤′; ≤-refl; m≤n⇒m≤1+n)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+open import W4Block
+open import W4Path
+open import W4Ops using (Ωt)
+open import WVOne using (T₀; read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≼l; l≼; ≼-suc)
+import B12Terminal as T
+import B12ActualSlots as A
+import B12EboRows as End
+import B15ReadPaths as R
+import B17Cofinal as C
+import B17CellNext as Nxt
+import B18Reset as F
+import B19OldSlots as Frame
+import B20Room as Room
+import B26PActual as Y
+import B26Names as Names
+import B27SActual as X
+open T.Run
+
+base : ∀ {k} → T.Run k → T₀
+base r = read (proj₁ (β r))
+
+carry : ∀ {a b} (p : R.Reach a b) (r : T.Run b) → base r ≼ base (Room.sub p r)
+carry R.here r = ≼-refl _
+carry R.succ r = ≼-refl _
+carry (R.limit {h} n) r = T.inflate0 _ (ok r) (bs r) (z≤ _) (β r) (T.prefix h n)
+carry R.omega r = ≼-refl _
+carry (R.via p q) r = ≼-trans (carry q r) (carry p (Room.sub q r))
+
+infl : ∀ {k} (r : T.Run k) → base r ≼ read (T.value r)
+infl {k} r = T.inflate0 k (ok r) (bs r) (z≤ k) (β r) (proj₁ (Ωt k))
+
+module Host (m : ℕ) (r : T.Run (tw (suc (X.count m)))) (eq : ok r ≡ Ok-tw (suc (X.count m))) (cr : A.Covered r) where
+  module H = X.Host m r eq cr
+  module Z = H.History
+  region = H.X.found
+  room : base r ≼ base region
+  room = carry H.X.path H.X.one
+  module At (t j : ℕ) where
+    module P = Z.Pass t
+    here = P.Pair.whole-site j
+    selected = P.Pair.Y.C.child (suc j)
+
+    inherited : base r ≼ base here
+    inherited = ≼-trans {a = base r} {b = base region} {c = base here} room
+      (≼-trans {a = base region} {b = base P.b} {c = base here}
+        (Frame.start {f = Z.J.root} {g = Z.J.run-at (suc t)} (proj₂ (Z.J.child (suc t))))
+        (carry (P.Pair.whole-path j) selected))
+    value : base r ≼ H.value t j
+    value = ≼-trans {a = base r} {b = base here} {c = H.value t j} inherited (infl here)
+
+module Layer (m : ℕ) where
+  open X.Layer m
+  module Real′ = Host m run refl (A.enter sL tw T.terminal upper (T.prefix tw upper) (A.initial Λ Ok-Λ))
+  lower : ∀ t j → End.child n ≼ Real.value t j
+  lower t j = subst (_≼ Real.value t j) (F.previous n) (Real′.At.value t j)
+
+joint : ∀ (t j : ℕ → ℕ) → Y.Y ≈ᵛ L.lim (λ m → X.Layer.Real.value m (t m) (j m))
+joint t j = Nxt.assemble (λ n → ≼l n (≼-trans {a = End.child n} {b = End.child (X.count n)}
+      (Nxt.walk (≤⇒≤′ (m≤n⇒m≤1+n (m≤n⇒m≤1+n ≤-refl)))) (Layer.lower n (t n) (j n))))
+  , l≼ (λ m → ≼-trans (≼-suc (≼-refl _)) (X.Layer.below m (t m) (j m)))
+
+names : ∀ a → L.suc (Names.value a) ≼ Y.Y → Σ ℕ (λ m → ∀ t j → L.suc (Names.value a) ≼ X.Layer.Real.value m t j)
+names a p = let m , h = C.witness p in m , (λ t j → ≼-trans {a = L.suc (Names.value a)} {b = End.child m}
+  {c = X.Layer.Real.value m t j} h (≼-trans {b = End.child (X.count m)}
+    (Nxt.walk (≤⇒≤′ (m≤n⇒m≤1+n (m≤n⇒m≤1+n ≤-refl)))) (Layer.lower m t j)))

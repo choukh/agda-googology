@@ -1,0 +1,39 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20IdealKeep where
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥-elim)
+open import Induction.WellFounded using (Acc; acc)
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+open import OCF.Lean.YiRWFold using (node⁺)
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM; _≼ᴸ_; _≺ᴸ_; z≼; n≼; ≺-irrefl; ≼≺)
+open import B13SharpOne using (r₁)
+open import B14SharpStack using (p; oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B20IdealRel
+
+module Keep (lem : LEM) where
+  open I.Sharp lem
+  τZ : ∀ (ac : Acc _≺ᴸ_ R.zero) (le : R.zero ≼ᴸ R.zero) {x y} → Z x y → Z x (τ R.zero R.zero tt tt ac le y)
+  τZ ac le zz = zz
+  τZ ac le (zs h) = zs (τZ ac le h)
+  τZ ac le (zl q) = zl (λ n → τZ ac le (q n))
+
+  τH : ∀ (ac : Acc _≺ᴸ_ r₁) (le : r₁ ≼ᴸ r₁) {x y} → H x y → H x (τ r₁ r₁ oR oR ac le y)
+  τH ac le hz = hz
+  τH ac le (hs h) = hs (τH ac le h)
+  τH ac le (hl q) = hl (λ n → τH ac le (q n))
+  τH (acc r) le (hn h) = hn (λ z w t → τH (acc r) le (h z _ (τZ _ _ t)))
+  τH (acc r) (n≼ f) (hu h q) = hu (τH (acc r) (n≼ f) h) (τZ _ _ q)
+
+  keep₁ : ∀ f g s → (∀ z w → H z w → J (f z) (proj₁ (g w))) →
+    J (Y.Ω pt f) (proj₁ (node⁺ (kp♯ r₂ o₂ p₂i r₂ o₂) g s))
+  keep₁ f g s h with Dk r₂ r₁
+  ... | inj₁ d = ⊥-elim (≺-irrefl r₂ (≼≺ r₂ d (I.posLt r₂ o₂ p₂i)))
+  ... | inj₂ lt with Dk r₁ r₁
+  ...   | inj₂ e = ⊥-elim (≺-irrefl r₁ e)
+  ...   | inj₁ e = jt (λ z w t → h z _ (τH (I.wfL r₁) e t))

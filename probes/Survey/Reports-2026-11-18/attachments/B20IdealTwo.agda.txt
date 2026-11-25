@@ -1,0 +1,83 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20IdealTwo where
+open import Data.Product using (proj₁; _,_)
+open import Data.Unit using (tt)
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiFreshFold as O
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+import OCF.Lean.YiUpFold as F
+import OCF.Lean.YiUpLegal as L
+import OCF.Lean.YiPhiBlock as P
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiUpCheck using (one; two)
+open import B13SharpOne using (r₁)
+open import B14SharpStack using (p; oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B20IdealRel
+import B20IdealKeep
+import B20IdealOne
+import B17SharpUpdate
+
+module At (lem : LEM) where
+  open I.Sharp lem
+  open B20IdealKeep.Keep lem
+  open B20IdealOne.At lem using (high₁; self₁; zero₁; bot₁; zp)
+  open B17SharpUpdate.Update lem using (vacant)
+  after : Base♯ → R.Tr r₂ → Base♯
+  after D x j o = ψ♯ r₂ o₂ D j o (D j o) x
+  low = λ D → ψ♯ r₂ o₂ D R.zero tt
+  mid = λ D → ψ♯ r₂ o₂ D r₁ oR
+  own = λ D → ψ♯ r₂ o₂ D r₂ o₂
+  m : one P.≤ two
+  m = P.ins P.self
+  z : Y.zero P.≤ two
+  z = P.ins zp
+  C₁ : P.Base two → Base♯ → Set
+  C₁ S D = H (P.bs S one m) (proj₁ (D r₁ oR))
+  C₀ : P.Base two → Base♯ → Set
+  C₀ S D = Z (P.bs S Y.zero z) (proj₁ (D R.zero tt))
+
+  self₂ : ∀ D S b {a x y} → J a (proj₁ b) → J x y →
+    J (F.ψs two tt S two P.self a x) (proj₁ (own D b y))
+  self₂ D S b h jz = h
+  self₂ D S b h (js q) = nj _ (self₂ D S b h q)
+  self₂ D S b h (jl q) = jl (λ n → self₂ D S b h (q n))
+  self₂ D S b h (jt q) = keep₁ _ _ _ (λ u v t → self₂ D S b h (q u v t))
+  self₂ D S b h (jb q) = jb (λ u v t → self₂ D S b h (q u _ (τZ _ _ t)))
+  self₂ D S b h (ju {y = y} q e) = high₁ (after D y) (own D b y) (self₂ D S b h q) e
+
+  mid₂ : ∀ D S → C₁ S D → ∀ b {a x y} → H a (proj₁ b) → J x y →
+    H (F.ψs two tt S one m a x) (proj₁ (mid D b y))
+  mid₂ D S c b h jz = h
+  mid₂ D S c b h (js q) = nh _ (mid₂ D S c b h q)
+  mid₂ D S c b h (jl q) = hl (λ n → mid₂ D S c b h (q n))
+  mid₂ D S c b h (jt q) rewrite vacant = hl (cumH _ _ (λ n → mid₂ D S c b h
+    (q _ _ (it H hz (λ t → mid₂ D S c (D r₁ oR) c (q _ _ t)) n))))
+  mid₂ D S c b h (jb q) = hn (λ u v t → mid₂ D S c b h (q u _ (τZ _ _ t)))
+  mid₂ D S c b h (ju {x = x} {y = y} q e) = self₁ (after D y) (L.dS one tt S x) (mid D b y) (mid₂ D S c b h q) e
+
+  low₂ : ∀ D S → C₁ S D → C₀ S D → ∀ b {a x y} → Z a (proj₁ b) → J x y →
+    Z (F.ψs two tt S Y.zero z a x) (proj₁ (low D b y))
+  low₂ D S c k b h jz = h
+  low₂ D S c k b h (js q) = nz _ (low₂ D S c k b h q)
+  low₂ D S c k b h (jl q) = zl (λ n → low₂ D S c k b h (q n))
+  low₂ D S c k b h (jt q) = zl (cums _ _ (λ n → low₂ D S c k b h
+    (q _ _ (it H hz (λ t → mid₂ D S c (D r₁ oR) c (q _ _ t)) n))))
+  low₂ D S c k b h (jb q) = zl (cums _ _ (λ n → low₂ D S c k b h
+    (q _ _ (it Z zz (λ t → low₂ D S c k (D R.zero tt) k (q _ _ t)) n))))
+  low₂ D S c k b h (ju {x = x} {y = y} q e) = zero₁ (after D y) (L.dS one tt S x)
+    (low₂ D S c k (D R.zero tt) k q) (low D b y) (low₂ D S c k b h q) e
+
+  bot₂ : ∀ D S → C₁ S D → C₀ S D → ∀ b {x y} → Z (P.b⊥ S) (proj₁ b) → J x y →
+    Z (F.ψ⊥ two tt S x) (proj₁ (low D b y))
+  bot₂ D S c k b h jz = h
+  bot₂ D S c k b h (js q) = nz _ (bot₂ D S c k b h q)
+  bot₂ D S c k b h (jl q) = zl (λ n → bot₂ D S c k b h (q n))
+  bot₂ D S c k b h (jt q) = zl (cums _ _ (λ n → bot₂ D S c k b h
+    (q _ _ (it H hz (λ t → mid₂ D S c (D r₁ oR) c (q _ _ t)) n))))
+  bot₂ D S c k b h (jb q) = zl (cums _ _ (λ n → bot₂ D S c k b h
+    (q _ _ (it Z zz (λ t → low₂ D S c k (D R.zero tt) k (q _ _ t)) n))))
+  bot₂ D S c k b h (ju {x = x} {y = y} q e) = bot₁ (after D y) (L.dS one tt S x)
+    (low₂ D S c k (D R.zero tt) k q) (low D b y) (bot₂ D S c k b h q) e

@@ -1,0 +1,74 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21IdealInside where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst; trans)
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiFreshFold as O
+import OCF.Lean.YiFreshValRead as V
+import OCF.Lean.YiUpBlock as U
+import OCF.Lean.YiUpFold as F
+import OCF.Lean.YiUpLegal as K
+import OCF.Lean.YiPhiBlock as P
+import OCF.Lean.YiFreshLegal as J
+open import OCF.Lean.YiUpCheck using (one; two)
+open import OCF.Lean.YiUpVal using (⊴→≼; ⊴◃)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼)
+import B20IdealRetained as T
+import B20IdealThree as A
+import B20IdealPhysical as X
+
+up₁ = U.down {j = two} U.stop tt
+up₀ = U.down up₁ tt
+base = O.Ωt two
+fold = F.ψ⊥ two tt A.model
+middle = F.ψs two tt A.model one T.path (O.Ωt one)
+zero-slot : Y.zero P.≤ two
+zero-slot = P.ins (P.ins P.self)
+clock = F.ψs two tt A.model Y.zero zero-slot (O.Ωt Y.zero)
+ret = U.Up one up₁ base (O.Ωt one)
+branch = λ z → O.next (U.Up Y.zero up₀ base z)
+indices = O.iter (λ z → clock (branch z)) Y.zero
+
+appears : one J.⊢ O.Ωt one ◃ T.track 1
+appears = J.◃t (J.◃l 0) (J.◃t (J.◃l 0) (J.◃l 0))
+under : V.read (fold ret) ≼ X.raw 2
+under = ≼-trans (⊴→≼ (⊴◃ (K.mono⊥ two tt A.model (J.◃t (K.Up-mono one up₁ base appears) (J.◃l 0))))) (T.below 1)
+
+entry : ∀ n → V.read (fold (branch (indices n))) ≼ V.read (fold ret)
+entry n = V.limcum≽ (λ j → fold (branch (indices j))) n (≼-refl _)
+first : V.read (fold (branch (indices 0))) ≡ X.raw 1
+first = refl
+
+num : ℕ → Y.Tr Y.zero
+num zero = Y.zero
+num (suc n) = Y.suc (num n)
+plus-one : ∀ n → (Y.suc Y.zero O.+ num n) ≡ num (suc n)
+plus-one zero = refl
+plus-one (suc n) = cong Y.suc (plus-one n)
+linear : ∀ n → O.iter (Y.suc Y.zero O.+_) (Y.suc Y.zero) n ≡ num (suc n)
+linear zero = refl
+linear (suc n) = trans (cong (Y.suc Y.zero O.+_) (linear n)) (plus-one (suc n))
+in-clock : ∀ n → Y.zero J.⊢ num (suc n) ◃ indices 1
+in-clock n = J.◃t (subst (λ z → Y.zero J.⊢ z ◃ O.next (O.Ωt Y.zero)) (linear n) (J.◃l n)) (J.◃t (J.◃l 0) (J.◃l 0))
+positive = O.iter O.next base
+embed : ∀ n → U.Up Y.zero up₀ base (num n) ≡ positive n
+embed zero = refl
+embed (suc n) = cong O.next (embed n)
+member : ∀ n → V.read (fold (positive (suc n))) ≼ V.read (fold (branch (indices 1)))
+member n = subst (λ x → V.read (fold x) ≼ V.read (fold (branch (indices 1)))) (embed (suc n))
+  (⊴→≼ (⊴◃ (K.mono⊥ two tt A.model (J.◃t (K.Up-mono Y.zero up₀ base (in-clock n)) (J.◃l 0)))))
+family : L.lim (λ n → V.read (fold (positive (suc n)))) ≼ X.raw 2
+family = ≼-trans (l≼ member) (≼-trans (entry 1) under)
+
+
+open import OCF.Lean.YiUpSimFold using (ψ⊥-⊵)
+open import OCF.Align.Value using (+-mono; ≅→≼)
+-- The first child of this moved node is raw 1; the second adds a positive output.
+strict : L.suc (X.raw 1) ≼ V.read (fold ret)
+strict = ≼l 1 (≼-trans (+-mono {a = X.raw 1} (≼-refl _) (⊴→≼ (ψ⊥-⊵ two tt A.model (branch (indices 1)))))
+  (≅→≼ (L.≅-sym (V.read-+ (fold (branch (indices 0))) (fold (branch (indices 1)))))))
+

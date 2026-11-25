@@ -1,0 +1,170 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B16SharpSource where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import OCF.Lean.YiFreshBlock as F
+import OCF.Lean.YiFreshFold as W
+import OCF.Lean.YiPhiBlock as B
+import OCF.Lean.YiUpFold as Fold
+import OCF.Lean.YiUpBlock as Up
+import OCF.Lean.YiUpLegal as Legal
+import OCF.Lean.YiUpVal as Y
+open import OCF.Lean.YiUpCheck using (one; two)
+open import OCF.Lean.YiFreshValRead using (read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼)
+open import OCF.Align.BTBOValMain using (ψ₀≈)
+import OCF.BTBO as BT
+open import OCF.Align.BTBOValBase using (tr₀)
+open import B13SharpOne using (r₁)
+open import B14SharpStack
+import B14SharpNext as N
+import B14SharpLive as A
+import B14SharpStation as S
+open import B15SharpLift using (module Lift)
+
+data Z : F.Tr F.zero → R.Tr R.zero → Set where
+  zz : Z F.zero R.zero
+  zs : ∀ {x y} → Z x y → Z (F.suc x) (R.suc y)
+  zl : ∀ {f g d} → (∀ n → Z (f n) (g n)) → Z (F.lim f) (R.lim g d)
+
+data H : F.Tr one → R.Tr r₁ → Set where
+  hz : H F.zero R.zero
+  hs : ∀ {x y} → H x y → H (F.suc x) (R.suc y)
+  hl : ∀ {f g d} → (∀ n → H (f n) (g n)) → H (F.lim f) (R.lim g d)
+  hn : ∀ {f g} → (∀ z w → Z z w → H (f z) (g w)) → H (F.Ω (inj₁ tt) f) (R.Ω p g)
+  hu : ∀ {x y u v d} → H x y → Z u v → H (F.up x tt u) (R.up y tt v d)
+
+za : ∀ {x y a b} → Z x y → Z a b → Z (x W.+ a) (y V.+ b)
+za h zz = h
+za h (zs q) = zs (za h q)
+za h (zl q) = zl (λ n → za h (q n))
+
+ha : ∀ {x y a b} → H x y → H a b → H (x W.+ a) (y V.+ b)
+ha h hz = h
+ha h (hs q) = hs (ha h q)
+ha h (hl q) = hl (λ n → ha h (q n))
+ha h (hn q) = hn (λ z w e → ha h (q z w e))
+ha h (hu q r) = hu (ha h q) r
+
+it : ∀ {X Y : Set} {x y} {f : X → X} {g : Y → Y} (P : X → Y → Set) → P x y → (∀ {u v} → P u v → P (f u) (g v)) →
+  ∀ n → P (W.iter f x n) (V.iter g y n)
+it P h step zero = h
+it P h step (suc n) = step (it P h step n)
+
+nz : ∀ {x} (b : V.Tr⁺ R.zero) → Z x (proj₁ b) → Z (W.next x) (proj₁ (V.next⁺ b))
+nz b h = zl (it Z h (za h))
+
+nh : ∀ {x} (b : V.Tr⁺ r₁) → H x (proj₁ b) → H (W.next x) (proj₁ (V.next⁺ b))
+nh b h = hl (it H h (ha h))
+
+cums : ∀ f g → (∀ n → Z (f n) (g n)) → ∀ n → Z (W.cum f n) (V.cum g n)
+cums f g h zero = h zero
+cums f g h (suc n) = za (cums f g h n) (h (suc n))
+
+value : ∀ {a b} → Z a b → read a L.≅ readRW b
+value zz = L.z≅
+value (zs h) = L.s≅ (value h)
+value (zl h) = L.l≅ (λ n → value (h n))
+
+Ω¹ : H (W.Ωt one) Ωi
+Ω¹ = hn (λ z w h → hu hz (zs h))
+
+module Source (lem : LEM) where
+  open I.Sharp lem
+  open Lift lem using (selfFold; cv)
+  open Sim lem using (fold; after)
+  bI = V.Ωt R.zero
+  bY = W.Ωt F.zero
+  BS = B.B₀ one
+  one-rel : Z bY (proj₁ bI)
+  one-rel = zs zz
+
+  cv-rel : ∀ {x y} → Z x y → Z x (cv y)
+  cv-rel zz = zz
+  cv-rel (zs h) = zs (cv-rel h)
+  cv-rel (zl h) = zl (λ n → cv-rel (h n))
+
+  leafH : ∀ D {a} b {u v} → H a (proj₁ b) → Z u v →
+    H (Up.Up F.zero (Up.down Up.stop tt) a u) (proj₁ (ψ♯ R.zero tt D r₁ oR b v))
+  leafH D b h zz = h
+  leafH D b h (zs q) = nh _ (leafH D b h q)
+  leafH D b h (zl q) = hl (λ n → leafH D b h (q n))
+
+  leafS : ∀ D S {a} b {u v} → Z a (proj₁ b) → Z u v →
+    Z (Fold.ψs F.zero tt S F.zero B.self a u) (proj₁ (ψ♯ R.zero tt D R.zero tt b v))
+  leafS D S b h zz = h
+  leafS D S b h (zs q) = nz _ (leafS D S b h q)
+  leafS D S b h (zl q) = zl (λ n → leafS D S b h (q n))
+
+  leafV : ∀ D S b {u v} → Z (B.b⊥ S) (proj₁ b) → Z u v →
+    Z (Fold.ψ⊥ F.zero tt S u) (proj₁ (ψ♯ R.zero tt D R.zero tt b v))
+  leafV D S b h zz = h
+  leafV D S b h (zs q) = nz _ (leafV D S b h q)
+  leafV D S b h (zl q) = zl (λ n → leafV D S b h (q n))
+
+  fY = Fold.ψs one tt BS one B.self (W.Ωt one)
+  fI = selfFold B♯ (V.Ωt r₁)
+
+  self-match : ∀ {x y} → H x y → H (fY x) (proj₁ (fI y))
+  self-match hz = Ω¹
+  self-match (hs q) = nh _ (self-match q)
+  self-match (hl q) = hl (λ n → self-match (q n))
+  self-match (hn q) = hn (λ z w r → self-match (q z (cv w) (cv-rel r)))
+  self-match (hu {y = y} q e) = leafH (after B♯ y) (fI y) (self-match q) e
+
+  coord = Fold.ψs one tt BS F.zero (B.ins B.self) bY
+  bot = Fold.ψ⊥ one tt BS
+  low = fold B♯ bI
+
+  mutual
+    coord-match : ∀ {x y} → H x y → Z (coord x) (proj₁ (low y))
+    coord-match hz = one-rel
+    coord-match (hs q) = nz _ (coord-match q)
+    coord-match (hl q) = zl (λ n → coord-match (q n))
+    coord-match (hn {f} {g} q) = zl (cums _ _ (λ n → coord-match (q _ _ (walk f g q n))))
+    coord-match (hu {x} {y} q e) = leafS (after B♯ y) (Legal.dS F.zero tt BS x) (low y) (coord-match q) e
+
+    walk : (f : F.Tr F.zero → F.Tr one) (g : R.Tr R.zero → R.Tr r₁) → (∀ z w → Z z w → H (f z) (g w)) → ∀ n →
+      Z (W.iter (λ z → coord (f z)) F.zero n) (V.iter (λ w → proj₁ (low (g w))) R.zero n)
+    walk f g h zero = zz
+    walk f g h (suc n) = coord-match (h _ _ (walk f g h n))
+
+  bot-match : ∀ {x y} → H x y → Z (bot x) (proj₁ (low y))
+  bot-match hz = one-rel
+  bot-match (hs q) = nz _ (bot-match q)
+  bot-match (hl q) = zl (λ n → bot-match (q n))
+  bot-match (hn {f} {g} q) = zl (cums _ _ (λ n → bot-match (q _ _ (walk f g q n))))
+  bot-match (hu {x} {y} q e) = leafV (after B♯ y) (Legal.dS F.zero tt BS x) (low y) (bot-match q) e
+
+  pair : ∀ n → H (W.iter (λ x → W.next (fY x)) F.zero n) (V.iter (N.Next.step lem) R.zero n)
+  pair = it H hz (λ q → nh _ (self-match q))
+
+  old = read (Fold.ψ₀ two tt (W.Ωt two))
+  exact : old L.≅ S.Station.whole lem
+  exact = subst (old L.≅_) (sym (S.Station.actual-shape lem))
+    (L.l≅ (λ j → value (cums _ _ (λ n → nz _ (bot-match (pair n))) j)))
+
+  twoᴰ : BT.BoundedTrich.Ordᴰ
+  twoᴰ = BT.BoundedTrich.suc (BT.BoundedTrich.suc BT.BoundedTrich.zero)
+  src = tr₀ (BT.Ord-Ord.ψ₀ (BT.Ord-Ord.Ω twoᴰ))
+
+  lower : src ≼ S.Station.whole lem
+  lower = ≼-trans (proj₁ (ψ₀≈ twoᴰ)) (≼-trans Y.bho-lower (≅→≼ exact))
+
+  ref = L.ψ⁰ (L.Ω Y.I2)
+  reverse-criterion : (old ≼ ref) → S.Station.whole lem ≼ src
+  reverse-criterion h = ≼-trans (≅→≼ (L.≅-sym exact)) (≼-trans h (proj₂ (ψ₀≈ twoᴰ)))
+
+  reverse-necessary : (S.Station.whole lem ≼ src) → old ≼ ref
+  reverse-necessary h = ≼-trans (≅→≼ exact) (≼-trans h (proj₁ (ψ₀≈ twoᴰ)))
+

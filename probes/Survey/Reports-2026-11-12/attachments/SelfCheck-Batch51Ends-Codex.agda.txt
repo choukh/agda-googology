@@ -1,0 +1,32 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module Batch51Ends where
+open import Data.Nat using (ℕ; zero; suc)
+import OCF.Lean.YiCNKeel as C
+import OCF.Lean.YiNLKeel as NL
+import OCF.Lean.YiS1Low as S1
+import OCF.Lean.YiFRStations as FR
+import OCF.Lean.YiKVRel as K
+import OCF.Lean.YiMTTab as MT
+import OCF.Align.EboLeanTree as ET
+open import OCF.Lean.YiMonoExit using (toL)
+open import OCF.Align.Value using (_≼_)
+
+Endpoint : Set
+Endpoint = toL ET.EBO-tree′ ≼ K.readRW MT.EBOᶻ
+
+LowFrom2 : Set
+LowFrom2 = ∀ n → C.LowAt (suc (suc n))
+
+endpoint-from-low2 : LowFrom2 → Endpoint
+endpoint-from-low2 h = NL.ebo-from-low λ { zero → S1.low1 ; (suc n) → h n }
+
+ValuesFrom3 : Set
+ValuesFrom3 = ∀ n → FR.Kᴱ (suc (suc (suc n)))
+
+endpoint-from-values3 : ValuesFrom3 → Endpoint
+endpoint-from-values3 h = FR.ebo-from-stations λ
+  { zero → FR.k0
+  ; (suc zero) → FR.k1
+  ; (suc (suc zero)) → FR.k2
+  ; (suc (suc (suc n))) → h n
+  }

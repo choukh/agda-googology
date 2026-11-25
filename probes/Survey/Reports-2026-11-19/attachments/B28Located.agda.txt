@@ -1,0 +1,76 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每个规范森林的代码都是某个真实选中 χ 下标的字面子树；还可要求这个下标晚于任一给定序号。
+module B28Located where
+
+open import Data.Nat.Base using (ℕ; suc; _⊔_; _≤_)
+import Data.Nat.Properties as N
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; sym; subst)
+open import OCF.Align.EboLeanDef using (T; HC; _<ᵀ_; EBOψ)
+open import Relation.Binary.PropositionalEquality using (cong)
+import B12XRef as Ref
+import B26CDecode as Decode
+open import OCF.Align.EboLeanTree using (nf-tower)
+open import OCF.Align.EboLeanBase using (c∷; c[]; NF; Ctbl; _≤ᵀ_)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import OCF.Align.Value using (≺→s≼; _≼_; ≼l; ≼-trans; ≼-refl; s≼s; z≼; ≼-suc)
+import OCF.Align.Level as L
+import B26CForest as F
+import B26CScalar as S
+import B26Names as A
+import B26CMeaning as M
+import B27Threshold as Th
+import B27NOrbit as X
+import B25DTrack as R
+import B28Orbit as O
+import B28CodePath as P
+open import WVOne using (read)
+import B25DUnit as I
+import B16IndexBase as Ix
+
+down : ∀ {x y} → P.Path x y → read x ≼ read y
+down P.stop = ≼-refl _
+down (P.prev q) = ≼-suc (down q)
+down (P.take j q) = ≼l j (down q)
+
+record Code : Set where
+  constructor witness
+  field
+    name : A.Name
+    fits : L.suc (A.value name) ≼ R.unit-output
+  tree = S.code (A.name name)
+  exact = S.inside-code (A.nt name) (A.ct name) (A.hcN name) fits (A.hcN name)
+open Code
+
+order : ∀ a b → P.Path (tree a) (tree b) → A.name (name a) ≤ᵀ A.name (name b)
+order a b path = A.reflect (name a) (name b)
+  (≼-trans {b = read (tree a)} (proj₁ (exact a))
+     (≼-trans {b = read (tree b)} (down path) (proj₂ (exact b))))
+
+small : ∀ b → A.name (name b) <ᵀ EBOψ 1
+small b = Th.strict-name (name b) (A.named (EBOψ 1) (nf-tower 1) (c∷ c[]) (Ref.H 1)) (≼-trans {b = R.unit-output} (fits b) Decode.read-bound)
+path : ∀ a b → A.name (name a) ≤ᵀ A.name (name b) → P.Path (tree a) (tree b)
+path a b (inj₁ less) = P.descend (A.nt (name a)) (A.nt (name b)) (small b) (A.hcN (name b)) less
+path a b (inj₂ e) = subst (P.Path (tree a)) (Relation.Binary.PropositionalEquality.cong S.code e) P.stop
+
+module At (a : Code) where
+  forest = tree a
+  picked : Σ ℕ (λ n → L.suc (read forest) ≼ read (R.χ n))
+  picked = X.after forest (≼-trans {b = L.suc (A.value (name a))} (s≼s (proj₂ (exact a))) (fits a))
+  member : ∀ n → L.suc (read forest) ≼ read (R.χ n) → P.Path forest (R.χ n)
+  member n h = subst (P.Path forest) (O.literal n)
+    (P.descend (A.nt (name a)) (O.regular-term n) (F.belowε (O.forest n)) (O.input-h n)
+       (Th.strict-name (name a) (O.input n)
+         (≼-trans {b = L.suc (read forest)} (s≼s (proj₁ (exact a)))
+              (≼-trans {b = read (R.χ n)} h (proj₂ (O.identified n))))))
+
+  all-later : Σ ℕ (λ start → ∀ n → start ≤ n → P.Path forest (R.χ n))
+  all-later = proj₁ picked , (λ n ge → member n (≼-trans {b = read (R.χ (proj₁ picked))} (proj₂ picked) (move ge)))
+    where
+    move : ∀ {i n} → i ≤ n → read (R.χ i) ≼ read (R.χ n)
+    move {i} {n} p = walk (N.≤⇒≤′ p) where
+      walk : ∀ {m} → i Data.Nat.Base.≤′ m → read (R.χ i) ≼ read (R.χ m)
+      walk Data.Nat.Base.≤′-refl = ≼-refl _
+      walk {suc m} (Data.Nat.Base.≤′-step e) = ≼-trans {b = read (R.χ m)} (walk e) (≼-trans {b = L.suc (read (R.χ m))}
+        (≼-suc (≼-refl _)) (OCF.Align.Value.≺→s≼ (Ix.pred (I.rise m 0))))

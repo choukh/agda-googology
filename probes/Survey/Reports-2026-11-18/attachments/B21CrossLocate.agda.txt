@@ -1,0 +1,85 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意合法前缀不必传递混合 Ω 路上的高阶槽。两次实际正反馈就能找出它的所有有限后继层。
+module B21CrossLocate where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; trans; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import WVOne using (read; h₁)
+import OCF.Align.Value as V
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B15TowerIteration as I
+import B15ReadPaths as R
+import B20Room as Room
+import B21CrossPath as Z
+import B21CrossFront as Fr
+import B21CrossAnyFront as N
+open import B21CrossPlace using (wrap; shift; wrap-num)
+open T.Run
+
+node-wrap : ∀ n s (h : Ch s → W4Block.L) → wrap n (nd s h) ≡ nd s (λ c → wrap n (h c))
+node-wrap zero s h = refl
+node-wrap (suc n) s h = cong (zero ⊕_) (node-wrap n s h)
+w = ↑ (tw 1) (proj₁ (Ωt (tw 1)))
+tail = λ z → zero ⊕ Z.by z
+last = λ (z : Tr zero) → wrap 4 (↑ zero (suc z))
+
+module At (s : Sh) (h : Ch s → W4Block.L) (o : Ok (nd s h)) where
+  k = nd s h
+  module P = I.Prefix s h o
+  module F = N.On s h
+  record Found (a : W4Block.L) {b : W4Block.L} (r : T.Run (k ⊕ b)) : Set where
+    constructor inside
+    field
+      run : T.Run (k ⊕ a)
+      cert : P.Kept a (ok run)
+      covered : A.Covered run
+      value : read (T.value run) V.≼ read (T.value r)
+  open Found
+  Locate : W4Block.L → W4Block.L → Set
+  Locate a b = ∀ (r : T.Run (k ⊕ b)) → P.Kept b (ok r) → A.Covered r → Z.Ones r → Found a {b} r
+
+  along : ∀ {a b} (d : R.Reach a b) → Locate a b
+  along d r c cv one = inside sub keep (Room.cover path r cv) (Room.below path r cv)
+    where
+    path = R.left k d
+    sub = Room.sub path r
+    keep = subst (P.Kept _) (sym (Room.cert path r)) (P.descend d c)
+
+  follow : ∀ {a b c} (p : R.Reach b c) → Z.Clean p → Locate a b → Locate a c
+  follow {a} {b} {c} p pc f r hb cv one = inside (run y) (cert y) (covered y) (V.≼-trans (value y) (value point))
+    where
+    point = along p r hb cv one
+    next = Room.sub (R.left k p) r
+    y = f next (cert point) (covered point) (Z.pres (Z.left k pc) r one)
+
+  feedback : ∀ {a} (t : Tr zero → W4Block.L) → t zero ≡ U.sc zero →
+    (∀ z → Fr.Head z → Locate a (t z)) → Locate a (nd (sΩ zero) t)
+  feedback t eq f r good cv one = inside (run y) (cert y) (covered y) (V.≼-trans (value y) (B.C.lift-value 1))
+    where
+    module B = F.Point (λ j → k ⊕ t j) (cong (k ⊕_) eq) r one
+    y = f (B.C.ix 1) B.front (B.C.child 1) (good (B.C.ix 1)) (B.C.cover cv 1) (B.ready 1)
+
+  second : ∀ m n → Locate (Z.finite n) (wrap m (zero ⊕ Z.inner))
+  second m n = subst (Locate (Z.finite n)) (sym (node-wrap m (sΩ zero) last))
+    (feedback (λ z → wrap m (last z)) (trans (cong (wrap m) (wrap-num 4 1)) (wrap-num m 1)) each)
+    where
+    each : ∀ z → Fr.Head z → Locate (Z.finite n) (wrap m (last z))
+    each z d = along (subst (λ a → R.Reach a (wrap m (last z))) eq
+      (shift m (shift 4 (R.via (Z.seek n z (Fr.span z d n)) R.succ))))
+      where eq = trans (cong (wrap m) (wrap-num 4 n)) (wrap-num m n)
+
+  locate : ∀ m n → Locate (Z.finite n) (wrap m w)
+  locate m n = subst (Locate (Z.finite n)) (sym (node-wrap m (sΩ zero) tail))
+    (feedback (λ z → wrap m (tail z)) (wrap-num m 1) each)
+    where
+    clean : ∀ m {a b} {p : R.Reach a b} → Z.Clean p → Z.Clean (shift m p)
+    clean zero pc = pc
+    clean (suc m) pc = Z.left zero (clean m pc)
+    each : ∀ z → Fr.Head z → Locate (Z.finite n) (wrap m (tail z))
+    each z d = follow (shift m (R.left zero (proj₁ g))) (clean m (Z.left zero (proj₂ g))) (second m n)
+      where g = Z.peel z d

@@ -1,0 +1,71 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对给定首下标，重复该首项的序列共尾于全部正规后缀；份数只需读至首项改变为止。
+module B28FHead where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_; replicate)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; ≼l; l≼)
+import OCF.Align.Level as L
+import B26CForest as F
+import B26CLift as K
+import B26OSparse as S
+import B26Names as N
+
+-- 第二个投影同时给出严格的首重复上界。
+strip : (x : PT) (t : T) → HdLe x t → NF t → Σ ℕ (λ k → t <ᵀ replicate (suc k) x)
+strip x [] _ _ = 0 , []<
+strip x (y ∷ ys) (inj₁ d) _ = 0 , hd< d
+strip x (.x ∷ ys) (inj₂ refl) n with strip x ys (nf-le n) (nf-tl n)
+... | k , p = suc k , tl< p
+
+copies : T → ℕ → T
+copies a k = replicate k (ψ a [])
+
+pure-copies : ∀ {a} → F.Pure a → ∀ k → F.Pure (copies a k)
+pure-copies pa zero = F.empty
+pure-copies pa (suc k) = F.node pa (pure-copies pa k)
+
+normal-response : ∀ {u} → F.Pure u → NF u → NF (S.collapse u)
+normal-response pu nu = nf-ψ n[] (nf-Ω nu) (S.admissible (K.fit pu))
+
+opaque
+  response : ∀ {u} → F.Pure u → NF u → HC (S.collapse u)
+  response pu nu = hc (normal-response pu nu) (c∷ c[])
+
+step : ∀ {u v} (pu : F.Pure u) (nu : NF u) (pv : F.Pure v) (nv : NF v)
+      (c : HC (S.collapse u)) (d : HC (S.collapse v)) →
+      u <ᵀ v → L.suc (Rt c) ≼ Rt d
+step {u} {v} pu nu pv nv c d o = mono<ⁿ {s = S.collapse u} {t = S.collapse v}
+   (normal-response pu nu) (normal-response pv nv) (c∷ c[]) c d (hd< (ar< (hd< (lv< o))))
+
+module Head {a : T} (pa : F.Pure a) (na : NF a) where
+  x = ψ a []
+  normal : ∀ k → NF (copies a k)
+  normal = nf-rep (nψ na n[] GB[])
+  at : ∀ n → HC (S.collapse (copies a (suc n)))
+  at n = response (pure-copies pa (suc n)) (normal (suc n))
+  point : ℕ → N.T₀
+  point n = Rt (at n)
+  limit : N.T₀
+  limit = L.lim point
+
+  inside : ∀ {t} (pt : F.Pure t) (nt : NF (x ∷ t)) (c : HC (S.collapse (x ∷ t))) →
+    Σ ℕ (λ k → L.suc (Rt c) ≼ point k)
+  inside {t} pt nt c with strip x t (nf-le nt) (nf-tl nt)
+  ... | k , d = suc k , step {u = x ∷ t} {v = copies a (suc (suc k))} (F.node pa pt) nt
+                  (pure-copies pa (suc (suc k))) (normal (suc (suc k))) c (at (suc k)) (tl< d)
+
+  cover : ∀ {t} (pt : F.Pure t) (nt : NF (x ∷ t)) (c : HC (S.collapse (x ∷ t))) → L.suc (Rt c) ≼ limit
+  cover {t} pt nt c with inside {t} pt nt c
+  ... | k , d = ≼l {f = point} k d
+
+  entire : ∀ (y : N.T₀) → (∀ {t} (pt : F.Pure t) (nt : NF (x ∷ t)) (c : HC (S.collapse (x ∷ t))) →
+     Rt c ≼ y) → limit ≼ y
+  entire y h = l≼ {f = point} (λ n → h {t = copies a n} (pure-copies pa n) (normal (suc n)) (at n))

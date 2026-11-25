@@ -1,0 +1,84 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原 EBO 的反例会使每座足够晚的实际塔在全部反馈点上具有同一个首下标深度。排除这种恒定即可证明原终点。
+module B26Flat where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_; _⊔_)
+open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-antisym; m≤m⊔n; m≤n⊔m)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Relation.Binary.PropositionalEquality using (_≡_; trans; sym; subst)
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Align.Value using (_≼_; ≼-trans; s≼s)
+import OCF.Align.Level as L
+import B26PActual as Run
+import B14Goal as G
+import B12EboRows as B
+import B17CellPrefix as Cells
+import B17CellNext as Next
+import B26Names as A
+import B26Depth as D
+import B26Profile as P
+import B17ValueDich as V
+open P.Actual using (Profile; at; Peak)
+
+between : ∀ {x y : A.T₀} (a : A.Name) (nx : A.Named x) → A.value a ≼ x → x ≼ y →
+          (b : A.Name) → y ≼ A.value b → D.height a ≤ D.height (proj₁ nx) × D.height (proj₁ nx) ≤ D.height b
+between {x} {y} a (c , l , h) ax xy b yb =
+  D.ordered a c (≼-trans {b = x} ax h) , D.ordered c b (≼-trans {b = x} l (≼-trans {b = y} xy yb))
+
+Flat = Σ ℕ (λ i → Σ ℕ (λ k → ∀ n → i ≤ n → ∀ j →
+  Σ (A.Named (Cells.cell n j)) (λ nx → D.height (proj₁ nx) ≡ k)))
+
+strict-bound : Flat → L.suc Run.Y ≼ A.E
+strict-bound (i , k , cells) = ≼-trans {b = L.suc Q.Y} (s≼s (proj₁ sample)) (Q.from-peak p (0 , hi))
+  where
+  ρ = i ⊔_
+  module Q = P.Chain (λ n → Cells.cell (ρ n) 0)
+  sample = Next.sample ρ (λ n → n , m≤n⊔m i n) (λ _ → 0)
+  at-cell = λ n → cells (ρ n) (m≤m⊔n i n) 0
+  p : Q.Profile
+  p n = proj₁ (at-cell n)
+  hi : ∀ n → Q.at p n ≤ Q.at p 0
+  hi n = subst (Q.at p n ≤_) (trans (proj₂ (at-cell n)) (sym (proj₂ (at-cell 0)))) ≤-refl
+
+module Classical (lem : LEM) where
+  module AC = A.Classical lem
+
+  downward : ∀ (b : A.Name) x → x ≼ A.value b → A.Named x
+  downward b x d with V.Classical.compare lem (A.value b) x
+  ... | inj₁ h = b , h , d
+  ... | inj₂ lt = AC.descend (A.nt b) (A.ct b) (A.hcN b) x lt
+
+  realize : ∀ (p : Profile) → Peak p → Flat
+  realize p (i , peak) = i , at p i , all-cells
+    where
+    all-cells : ∀ n → i ≤ n → ∀ j → Σ (A.Named (Cells.cell n j)) (λ nx → D.height (proj₁ nx) ≡ at p i)
+    all-cells n le j = nx , ≤-antisym (≤-trans (proj₂ limits) (peak (suc n))) (proj₁ limits)
+      where
+      a = proj₁ (p i)
+      b = proj₁ (p (suc n))
+      x = Cells.cell n j
+      upper : x ≼ B.child (suc n)
+      upper = Cells.At.S.lift-value n j
+      hi = proj₂ (proj₂ (p (suc n)))
+      nx : A.Named x
+      nx = downward b x (≼-trans {b = B.child (suc n)} upper hi)
+      lo : A.value a ≼ x
+      lo = ≼-trans {b = B.child i} (proj₁ (proj₂ (p i)))
+             (≼-trans {b = B.child n} (P.up {i} {n} le) (Next.previous n j))
+      limits = between {x} {B.child (suc n)} a nx lo upper b hi
+
+  finish : (A.E ≼ P.Actual.Y) ⊎ Σ Profile Peak → G.Goal ⊎ Flat
+  finish (inj₁ g) = inj₁ (≼-trans {b = P.Actual.Y} g (proj₂ P.actual-both))
+  finish (inj₂ (p , h)) = inj₂ (realize p h)
+
+  alternative : G.Goal ⊎ Flat
+  alternative = finish (P.Actual.Classical.alternative lem)
+
+  sufficient : (Flat → ⊥) → G.Goal
+  sufficient no = take alternative
+    where
+    take : G.Goal ⊎ Flat → G.Goal
+    take (inj₁ h) = h
+    take (inj₂ flat) = ⊥-elim (no flat)

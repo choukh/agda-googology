@@ -1,0 +1,95 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原 G 从 1 起迭代的有限阶段，对全部可数指数所需时钟及同层对角反馈封闭。
+module B31UStageHull where
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_; _≤′_; _⊔_; ≤′-refl; ≤′-step)
+import Data.Nat.Properties as Nat
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; s≼s; z≼; l≼)
+open import WVOne using (T₀; 𝟏)
+import W4Block as W
+import WSShadow as S
+import B9UpperRel as U
+import B19IdealArithmetic as A
+import B22MovingIndex as E
+import B23NDomain as Raw
+import B23RKernel as M
+import B25ABounds as B
+import B30UCut as H
+import B31UStageClock as Clock
+import B31UStageStep as Step
+import B31UStageOp as Op
+
+G = Raw.G
+p = Raw.orbit
+mono : ∀ a b → a ≼ b → G a ≼ G b
+mono a b = M.At.monotone 1 0 {a} {b}
+module C = Clock.Clock G mono Op.f Step.advance
+
+grow : ∀ n → L.suc (p n) ≼ p (suc n)
+grow zero = B.second
+grow (suc n) = ≼-trans {b = G (L.suc (p n))} (Raw.Growth.next (p n)) (mono (L.suc (p n)) (p (suc n)) (grow n))
+grow′ : ∀ n → p n ≼ p (suc n)
+grow′ n = ≼-trans {b = L.suc (p n)} (≼-suc (≼-refl (p n))) (grow n)
+
+In : T₀ → Set
+In x = Σ ℕ (λ n → x ≼ p n)
+down : ∀ x y → x ≼ y → In y → In x
+down x y h (n , b) = n , ≼-trans {a = x} {b = y} {c = p n} h b
+point : ∀ n → In (p n)
+point n = n , ≼-refl (p n)
+walk : ∀ i j → i ≤′ j → p i ≼ p j
+walk i .i ≤′-refl = ≼-refl (p i)
+walk i (suc j) (≤′-step w) = ≼-trans {b = p j} (walk i j w) (grow′ j)
+together : ∀ a b → In a → In b → Σ ℕ (λ n → a ≼ p n × b ≼ p n)
+together a b (i , h) (j , d) = i ⊔ j ,
+  ≼-trans {b = p i} h (walk i (i ⊔ j) (Nat.≤⇒≤′ (Nat.m≤m⊔n i j))) ,
+  ≼-trans {b = p j} d (walk j (i ⊔ j) (Nat.≤⇒≤′ (Nat.m≤n⊔m i j)))
+reserve : ∀ n → In (E.above (p n))
+reserve n = suc (suc n) , ≼-trans {b = E.above (p (suc n))}
+  (E.least (p n) (E.above (p (suc n))) (≼-trans {b = L.suc (p (suc n))} (s≼s (grow′ n)) (E.strict (p (suc n))))
+    (proj₁ (E.fix (p (suc n))))) (≼-trans {b = E.above (E.above (p (suc n)))}
+  (≼-trans {b = L.suc (E.above (p (suc n)))} (≼-suc (≼-refl _)) (E.strict (E.above (p (suc n)))))
+  (≼-trans {b = G (L.suc (p n))} (Step.reserve (p n)) (mono (L.suc (p n)) (p (suc n)) (grow n))))
+seal : ∀ n x → H.At.Small (p n) x → In x
+seal n x h = down x (E.above (p n)) (≼-trans {b = L.suc x} (≼-suc (≼-refl x)) h) (reserve n)
+small : ∀ n x → x ≼ p n → H.At.Small (p n) x
+small n x d = H.At.down (p n) {x} {p n} d (E.strict (p n))
+next : ∀ x → In x → In (L.suc x)
+next x (n , h) = suc n , ≼-trans {b = L.suc (p n)} (s≼s h) (grow n)
+normal : ∀ x → In x → In (A.norm x)
+normal x (n , h) = seal n (A.norm x) (H.At.normal (p n) {x} (small n x h))
+sum : ∀ x y → In x → In y → In (x L.+ y)
+sum x y hx hy with together x y hx hy
+... | n , a , b = seal n (x L.+ y) (H.At.sum (p n) {x} {y} (small n x a) (small n y b))
+tick : ∀ x → In x → In (G x)
+tick x (n , h) = suc n , mono x (p n) h
+
+h = λ y → S.sE (S.lv (L.suc y)) Op.f
+branch : ∀ y a c → In y → In a → In c → In (h y a c)
+branch y a c hy ha hc with together a c ha hc
+... | n , da , dc = down (h y a c) (G t)
+  (C.room (L.suc y) (p n) a c (≼-trans {b = p n} da (grow′ n)) (≼-trans {b = p n} dc (grow′ n)))
+  (tick t (sum (p n) (A.norm (L.suc y)) (point n) (normal (L.suc y) (next y hy))))
+  where t = p n L.+ A.norm (L.suc y)
+
+module Outer (a c : T₀) (ha : In a) (hc : In c) where
+  orbit = U.chU h c
+  indices : ∀ n → In (orbit n)
+  indices zero = zero , z≼
+  indices (suc n) = branch (orbit n) c c (indices n) hc hc
+  terms : ∀ n → In (h (orbit n) a c)
+  terms n = branch (orbit n) a c (indices n) ha hc
+  prefixes : ∀ n → In (U.sumU h a c n)
+  prefixes zero = terms zero
+  prefixes (suc n) = sum (U.sumU h a c n) (h (orbit (suc n)) a c) (prefixes n) (terms (suc n))
+  ceiling : S.sE U.Ω̂U Op.f a c ≼ Raw.child
+  ceiling = l≼ (λ n → let j , d = prefixes n in ≼-trans {b = p j} d
+    (≼-trans {b = p (suc j)} (grow′ j) (Raw.in-child j)))
+
+operation : ∀ a c → In a → In c → In (Op.f a c)
+operation a c ha hc with together a c ha hc
+... | n , da , dc = suc (suc n) , ≼-trans {b = G (L.suc (p n))}
+  (Step.advance (p n) a c (≼-trans {b = p n} da (grow′ n)) (≼-trans {b = p n} dc (grow′ n)))
+  (mono (L.suc (p n)) (p (suc n)) (grow n))
+

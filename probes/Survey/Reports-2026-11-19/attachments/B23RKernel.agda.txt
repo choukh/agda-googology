@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23RKernel where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≅→≼; ≼-trans)
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import WVOne using (T₀)
+open import B12LimitSrc using (Lev₂)
+import YiLAB10Src as T
+import B12Omega3Ref as R
+import B13Target as P
+import B14RefAllRows as A
+import B17RefAllSource as Src
+
+copy : T₀ → S.Ord₀
+copy L.zero = S.zero
+copy (L.suc x) = S.suc (copy x)
+copy (L.lim f) = S.lim (λ i → copy (f i))
+
+copied : ∀ x → tr₀ (copy x) L.≅ x
+copied L.zero = L.z≅
+copied (L.suc x) = L.s≅ (copied x)
+copied (L.lim f) = L.l≅ (λ j → copied (f j))
+
+module At (m n : ℕ) where
+  F = A.gain m n
+
+  -- These two inequalities can use different zero-level input trees.
+  from-source : ∀ x y → tr₀ x ≼ y → tr₀ (Src.gain m n x) ≼ F y
+  from-source x y h = ≼-trans
+    (U.Mh→≼ (U.M-ψ L.z≅ (D.τ-< T.w) R.idσ T.w (Src.up m n x y h)))
+    (≅→≼ (L.≅-sym (L.ψ⁰≅ψ {p = D.τ-< T.w} {σ = R.idσ} (A.pres m (A.regular m n (L.≅-refl⁰ y))))))
+
+  monotone : ∀ {x y} → x ≼ y → F x ≼ F y
+  monotone {x} {y} h = ≼-trans
+    (proj₂ (Src.pair m n (copy x) x (≅→≼ (copied x) , ≅→≼ (L.≅-sym (copied x)))))
+    (from-source (copy x) y (≼-trans (≅→≼ (copied x)) h))
+
+passes-limit : ∀ m (f : ℕ → Lev₂) → A.passⁿ m (L.lim f) ≡ L.lim (λ k → A.passⁿ m (f k))
+passes-limit zero f = refl
+passes-limit (suc m) f rewrite passes-limit m f = refl
+
+kernel-limit : ∀ m n (f : ℕ → T₀) → A.kernel m n (L.lim f) ≡ L.lim (λ k → A.kernel m n (f k))
+kernel-limit m zero f = passes-limit m (λ j → P.co₀ (f j))
+kernel-limit m (suc n) f rewrite kernel-limit m n f = passes-limit m (λ j → P.co₁ (L.ψ L.zero R.idσ (A.kernel m n (f j))))
+
+gain-limit : ∀ m n (f : ℕ → T₀) → A.gain m n (L.lim f) ≡ L.lim (λ j → A.gain m n (f j))
+gain-limit m n f rewrite kernel-limit m n f = refl

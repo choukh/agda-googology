@@ -1,0 +1,27 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 纯常数更新对有限迭代及取上确界都封闭在原界内：给出提升接口所需要的额外信息。
+module B13FiniteNeg where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import WVOne using (T₀)
+open import W4Block using (iter)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; l≼)
+open import B8FreezeMain using (irr)
+open import B13FiniteTower using (height; constant)
+
+bounded : (Q : T₀) (n : ℕ) {x : T₀} → x ≼ Q → height (λ _ → Q) n x ≼ Q
+bounded Q zero hx = ≼-refl _
+bounded Q (suc n) {x} hx = l≼ go
+  where
+  go : (k : ℕ) → iter (height (λ _ → Q) n) x k ≼ Q
+  go zero = hx
+  go (suc k) = bounded Q n (go k)
+
+cap : (Q : T₀) (n : ℕ) → constant (λ _ → Q) Q n ≼ Q
+cap Q zero = ≼-refl _
+cap Q (suc n) = bounded Q (suc n) (cap Q n)
+
+no-higher : (Q : T₀) → L.suc Q ≼ L.lim (constant (λ _ → Q) Q) → ⊥
+no-higher Q d = irr Q (≼-trans d (l≼ (cap Q)))

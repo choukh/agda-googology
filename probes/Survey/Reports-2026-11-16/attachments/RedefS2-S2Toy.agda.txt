@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- S2 判定件 (2): 玩具. 只测停机检查器对 "挂起的乘幂 ex a b x (读作 a + b·ω^x, 指数与本层同型) 加
+-- 高阶迭代子 E (对结果类型多态)" 这个调用形状的态度. 没有层号, 没有合法性, 没有保留判定.
+-- 通过不等于真折叠通过.
+module S2Toy where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+
+data O : Set where
+  zero : O
+  suc  : O → O
+  lim  : (ℕ → O) → O
+
+data T : Set where
+  zero : T
+  suc  : T → T
+  lim  : (ℕ → T) → T
+  Ω    : (O → T) → T               -- 在低层 O 上分支
+  ex   : T → T → T → T             -- ex a b x = a + b·ω^x
+
+iter : {A : Set} → (A → A) → A → ℕ → A
+iter f a zero    = a
+iter f a (suc n) = f (iter f a n)
+
+-- 结果类型上要的运算: ℕ 极限与结点 (逐点抬到函数空间).
+record Alg (X : Set) : Set where
+  field
+    limA  : (ℕ → X) → X
+    nodeA : (O → X) → X
+open Alg
+
+pt : ∀ {X Y : Set} → Alg X → Alg (Y → X)
+limA  (pt A) F = λ m → limA A (λ n → F n m)
+nodeA (pt A) G = λ m → nodeA A (λ z → G z m)
+
+-- E x op: op 迭代 ω^x 次. 指数里再有 ex 时在高一阶的类型上调用自己 (多态递归), 对树结构递减.
+E : T → {X : Set} → Alg X → (X → X) → (X → X)
+E zero       A op = op
+E (suc x)    A op = λ m → limA A (λ n → iter (E x A op) m (suc n))
+E (lim f)    A op = λ m → limA A (λ n → E (f n) A op m)
+E (Ω g)      A op = λ m → nodeA A (λ z → E (g z) A op m)
+E (ex a b x) A op = E x (pt A) (λ o → E b A o) (E a A op)
+
+-- 折叠的玩具: 状态 = (回灌用的底, 当前值). D t 是 "右边接上 t" 的状态变换.
+St : Set
+St = O × O
+
+algSt : Alg St
+limA  algSt F = lim (λ n → proj₁ (F n)) , lim (λ n → proj₂ (F n))
+nodeA algSt G =                                   -- 玩具里结点一律走链 (回灌到底)
+  lim (λ n → proj₁ (G (iter (λ z → proj₁ (G z)) zero n))) ,
+  lim (λ n → proj₂ (G (iter (λ z → proj₁ (G z)) zero n)))
+
+D : T → St → St
+D zero       s = s
+D (suc t)    s = limA algSt (λ n → iter (λ u → proj₁ u , suc (proj₂ u)) (D t s) n)
+D (lim f)    s = limA algSt (λ n → D (f n) s)
+D (Ω g)      s = nodeA algSt (λ z → D (g z) s)
+D (ex a b x) s = E x algSt (D b) (D a s)
+
+-- 自身行是构造子, 不递归.
+selfFold : T → T → T
+selfFold β x = ex zero β x
+
+ψ : O → O → T → O
+ψ B β t = proj₂ (D t (B , β))

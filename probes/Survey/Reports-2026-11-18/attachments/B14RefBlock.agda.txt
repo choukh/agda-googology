@@ -1,0 +1,40 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B14RefBlock where
+open import Data.List using ([]; _∷_)
+open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≅→≼)
+open import WVOne using (T₀)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B14RefRow as Row
+import B14RefGain as G
+import B14RefDescribed as D
+open import W4Block using (iter)
+
+piece : T₀
+piece = G.along (0 ∷ 1 ∷ 0 ∷ 0 ∷ 2 ∷ 0 ∷ 2 ∷ 0 ∷ []) (Row.node 1)
+
+literal : piece ≡ L.ψ⁰ (G.C L.+ R.power Ω₂ᴸ)
+literal = refl
+
+terms : ℕ → Lev₂
+terms = iter (λ a → a L.+ Ω₂ᴸ) D.C′
+
+rec : ∀ n → terms n L.≅ S.iter (λ a → a L.+ Ω₂ᴸ) D.C′ n
+rec zero = L.≅-trans D.same (L.≅-sym D.same)
+rec (suc n) = L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (rec n) (L.Ω-refl _)
+
+module Model = U.Sum.Prefix Ω₂ᴸ (L.Ω-refl _) (λ a → a L.+ Ω₂ᴸ)
+  (λ q → L.add-≅ {σ = R.idσ} {σ′ = R.idσ} q (L.Ω-refl _))
+
+fit : ∀ n → terms n L.≅ (G.C L.+ R.left n)
+fit n = L.≅-trans (rec n) (Model.along D.same n)
+
+into-model : piece ≼ L.ψ⁰ (L.lim terms)
+into-model = ≅→≼ (L.ψ⁰-≅ (L.l≅ (λ n → L.≅-sym (fit n))))

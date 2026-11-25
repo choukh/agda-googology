@@ -1,0 +1,33 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- R15 (第十五次独立审查的实验文件). 右加法在读回层号上是字面嵌入: ↑ x 字面地出现在 ↑ (x + y) 里.
+-- 由此塔的孩子族对右加法有字面路径: h c ≤ h (c + d). 不用任何判定.
+module R15Mono where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+
+-- 对一切层号 k 与 k 上的树 x, y.
+↑⊑+ : (k : L) (x y : Tr k) → ↑ k x ⊑ ↑ k (x + y)
+↑⊑+ k        x zero            = self
+↑⊑+ k        x (suc y)         = inc tt (↑⊑+ k x y)
+↑⊑+ k        x (lim f a)       = inc 0 (↑⊑+ k x (f 0))
+↑⊑+ k        x (Ω p g)         = inu (λ c → ↑⊑+ k x (g (fromBr k p c)))
+↑⊑+ (nd s h) x (up y c w e)    = ↑⊑+ (nd s h) x y ∙ lift (↑ (nd s h) (x + y)) (↑ (h c) w)
+↑⊑+ (nd s h) x (ex a b nb y ε) = ↑⊑+ (nd s h) x a ∙ proj₂ (Eh AL tt y (opR (↑ (nd s h) b))) (↑ (nd s h) (x + a))
+
+-- 塔第 n+1 项的孩子族.
+hN : (n : ℕ) → Tr (tw n) → L
+hN n c = tw n ⊕ ↑ (tw n) c
+
+-- 孩子 c 的层号字面地出现在孩子 c + d 的层号里.
+tw-mono : (n : ℕ) (c d : Tr (tw n)) → hN n c ≤ hN n (c + d)
+tw-mono n c d = wk (⊕⊑ (tw n) (↑⊑+ (tw n) c d))
+
+-- 换参数: 孩子 c′ 里的层 j, 对一切 d 都字面地在孩子 c′ + d 里.
+steerPath : (n : ℕ) {j : L} (c′ : Tr (tw n)) → j ≤ hN n c′ → (d : Tr (tw n)) → j ≤ hN n (c′ + d)
+steerPath n c′ v d = v ∙ tw-mono n c′ d

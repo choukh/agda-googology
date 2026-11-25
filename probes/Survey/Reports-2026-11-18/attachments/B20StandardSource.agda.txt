@@ -1,0 +1,36 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同一 src 参照上，比一次可数闭包更进一步；任意指定的反馈孩子可从 1 起算。
+module B20StandardSource where
+open import Data.Nat.Base as N using (ℕ; zero; suc)
+open import Data.Nat.Properties using (≤-refl)
+open import Data.Product using (proj₁; proj₂)
+open import OCF.BTBO using (module Ord-Ord)
+import OCF.Align.Level as L
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; s≼s)
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read)
+import B12LimitSrc as A
+import B18ResetCell as C
+import B19OldSource as Prev
+import B19RowSecond as P
+import B20OldTail as Tail
+import B20OldSecond as Second
+import B20OldSource as Old
+import B20StandardGoal as W
+
+module S = Ord-Ord
+parameter = Tail.block P.p
+source-argument = S.lim Old.Actual.term
+base-alignment = A.lim Old.Actual.term Old.Actual.prefix Old.Actual.terms
+target = S.ψ₀ (Old.source-step source-argument)
+exact : tr₀ target ≈ᵛ L.ψ⁰ (Tail.next parameter)
+exact = A.fold (A.plus base-alignment Prev.omega-one)
+strict : L.suc (tr₀ Old.Actual.closed) ≼ tr₀ target
+strict = ≼-trans (s≼s (proj₁ Old.Actual.exact)) (≼-trans (Old.Actual.strict-step parameter) (proj₂ exact))
+
+coefficients : ∀ n → 2 N.≤ suc n → ∀ j → tr₀ target ≼ C.At.fresh (suc n) j
+coefficients n d j = ≼-trans (proj₁ exact) (W.At.update n j parameter 2 d Second.standard)
+
+terminal : tr₀ target ≼ read EBOᶜ
+terminal = ≼-trans (coefficients 1 ≤-refl 0) (W.into 2 0)

@@ -1,0 +1,12 @@
+from pathlib import Path
+import subprocess,time,json,re,sys
+p=Path(__file__).parent
+name=sys.argv[1]; source=sys.argv[2] if len(sys.argv)>2 else str(p/(name+'.agda'))
+extra=sys.argv[3:]
+cmd=['timeout','600','agda','+RTS','-M8G','-s','-RTS','--library-file='+str(p/'libraries'),'-i','src','-i','probes','-i',str(p),'-l','standard-library']+extra+[source]
+t=time.monotonic()
+with (p/(name+'.log')).open('w') as f:
+ r=subprocess.run(cmd,stdout=f,stderr=subprocess.STDOUT)
+s=(p/(name+'.log')).read_text(); m=re.search(r'([0-9,]+) bytes maximum residency',s)
+d=dict(name=name,source=source,command=cmd,exit=r.returncode,seconds=time.monotonic()-t,maximum_residency=int(m[1].replace(',','')) if m else None)
+(p/(name+'.json')).write_text(json.dumps(d,indent=2)); print(json.dumps(d))

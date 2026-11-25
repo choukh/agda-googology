@@ -1,0 +1,44 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第 n 座正塔进入反馈前的高层起点只需要先前各塔的 Ω 树。依次沿零号孩子嵌入，再作同层的挂起乘幂。
+module B20Head where
+open import Data.Nat.Base as N using (ℕ; zero; suc; s≤s)
+import Data.Nat.Properties as Nat
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold using (Base; ψ)
+import B18TowerEmb as E
+
+no-zero : ∀ {k} {x : Tr k} → k ⊢ x ◃ zero → ⊥
+no-zero (◃t d e) = no-zero e
+
+push : ∀ n → Tr⁺ (tw n) → Tr⁺ (tw n) → Tr⁺ (tw n)
+push zero v x = next⁺ v
+push (suc n) (v , pos) x = ex v v pos (proj₁ x) tt , ◃t pos ◃e
+
+same : ∀ n (B : Base (tw (suc n))) (v x : Tr⁺ (tw (suc n))) →
+  ψ (tw (suc n)) (Ok-tw (suc n)) B (tw (suc n)) self v (proj₁ x) ≡ push (suc n) v x
+same n b v (zero , d) = ⊥-elim (no-zero d)
+same n b v (suc x , d) = refl
+same n b v (lim f p , d) = refl
+same n b v (Ω p f , d) = refl
+same n b v (up x c y e , d) = refl
+same n b v (ex a b′ p x e , d) = refl
+
+last : ∀ n m {p} → m N.< suc n → E.Walk tw E.spine m (suc n) p → Tr⁺ (tw m) → Tr⁺ (tw n)
+last n .(suc n) d E.start x = ⊥-elim (Nat.<-irrefl refl d)
+last n m d (E.step {p = p} w) x = emb (tw n) (Ok-tw n) p x
+
+body : ∀ n m → m N.< suc n → Tr⁺ (tw n)
+body n m d = last n m d (proj₂ (proj₂ (E.choose tw E.spine m (suc n) d))) (Ωt (tw m))
+
+headAt : ∀ n m → m N.≤ suc n → Tr⁺ (tw n)
+headAt n zero _ = Ωt (tw n)
+headAt n (suc m) d = push n (headAt n m (Nat.<⇒≤ d)) (body n m d)
+
+head : ∀ n → Tr⁺ (tw n)
+head n = headAt n (suc n) Nat.≤-refl

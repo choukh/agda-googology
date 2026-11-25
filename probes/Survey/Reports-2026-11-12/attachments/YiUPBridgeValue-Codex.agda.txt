@@ -1,0 +1,66 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiUPBridgeValue where
+open import Data.Nat using (zero)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Empty using (⊥)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiRWFold as RW
+import OCF.Lean.YiTBRow as TB
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiGIInst as GI
+import OCF.Lean.YiBRRel as R
+import OCF.Lean.YiBROps as RO
+import OCF.Lean.YiBRValue as RV
+import OCF.Lean.YiLegBlock as S
+import OCF.Lean.YiLegOps as SO
+import OCF.Lean.YiLSRead as Read
+import OCF.Lean.YiDropRow as DR
+import OCF.Lean.YiCeilRead as C
+import OCF.Lean.YiNFO as NF
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≅→≼; ≼l; s≼s; +-mono)
+open import YiUPBridgeProbe using (x)
+
+-- 由实际 betaᴱ1 供给的最小值探针；不改变原 q=0/1 的目标。
+β : O.Tr⁺ B.zero
+β = GI.betaᴱ 1
+b′ : S.Tr S.zero
+b′ = SO.next (S.suc S.zero) S.◃s
+nb′ : S.zero S.⊢ S.zero ◃ b′
+nb′ = S.◃t S.◃s (S.◃l 0)
+rβ : R.RelT B.zero S.zero (proj₁ β) b′
+rβ = proj₁ (RO.next-R (O.Ωt B.zero) (R.is R.iz) R.ds)
+rnβ : R.RelD B.zero S.zero (proj₂ β) nb′
+rnβ = proj₂ (RO.next-R (O.Ωt B.zero) (R.is R.iz) R.ds)
+new : B.Tr B.zero
+new = proj₁ (TB.ψ (B.tw 1) (P.Ok-tw 1) (MT.rbᶻ (B.tw 1)) (RW.B₀ (B.tw 1))
+  B.zero (P.inc B.zero P.self) β x)
+old : B.Tr B.zero
+old = proj₁ (RW.ψ (B.tw 1) (P.Ok-tw 1) (RW.B₀ (B.tw 1))
+  B.zero (P.inc B.zero P.self) β x)
+new-R : R.RelT B.zero S.zero new (SO.next b′ nb′)
+new-R = proj₁ (RO.next-R β rβ rnβ)
+old-R : R.RelT B.zero S.zero old (b′ SO.+ SO.ι S.zero b′)
+old-R = RO.+-R rβ (RO.ι-R rβ)
+W = Read.read b′
+old-eq : RV.readRW old L.≅ (W L.+ W)
+old-eq = L.≅-trans (RV.rel≅ old-R)
+  (L.≅-trans (Read.read-+ b′ (SO.ι S.zero b′))
+    (L.add-≅ (L.≅-refl⁰ W) (DR.ι₀≅ b′)))
+branch-eq : Read.read (b′ SO.+ (b′ SO.+ b′)) L.≅ (W L.+ (W L.+ W))
+branch-eq = L.≅-trans (Read.read-+ b′ (b′ SO.+ b′))
+  (L.add-≅ (L.≅-refl⁰ W) (Read.read-+ b′ b′))
+new-low : (W L.+ (W L.+ W)) ≼ RV.readRW new
+new-low = ≼-trans (≅→≼ (L.≅-sym branch-eq))
+  (≼-trans (≼l 2 (≼-refl (Read.read (b′ SO.+ (b′ SO.+ b′)))))
+    (≅→≼ (L.≅-sym (RV.rel≅ new-R))))
+one≤W : L.suc L.zero ≼ W
+one≤W = ≼l 0 (≼-refl (L.suc L.zero))
+strict : L.suc (RV.readRW old) ≼ RV.readRW new
+strict = ≼-trans (s≼s (≅→≼ old-eq))
+  (≼-trans (+-mono (≼-refl (W L.+ W)) one≤W)
+    (≼-trans (C.assoc≼ W W W) new-low))
+not-upper-bridge : RV.readRW new ≼ RV.readRW old → ⊥
+not-upper-bridge up = NF.s≼-irrefl (RV.readRW old) (≼-trans strict up)

@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 合法性只沿相同的有限后继前缀取子件，零层的首两个真实反馈给所有有限阶一个共同出口。
+module B21CrossPlace where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; proj₁; proj₂; _,_)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong; subst; sym)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import WVOne using (read; h₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼; z≼)
+open import B12LimitSrc using (Lev₂)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B15ReadPaths as R
+import B15FixedWitness as H
+import B20OldRanks as Rank
+import B20OldSecond as Old
+import B20OldTail as Tail
+import B20Room as Room
+import B21CrossFront as Fr
+import B21CrossNode as Node
+import B21CrossPath as Z
+open T.Run
+k = tw 1
+module P = Old.Tower.P
+wrap : ℕ → W4Block.L → W4Block.L
+wrap zero l = l
+wrap (suc n) l = zero ⊕ wrap n l
+shift : ∀ n {a b} → R.Reach a b → R.Reach (wrap n a) (wrap n b)
+shift zero p = p
+shift (suc n) p = R.left zero (shift n p)
+idnum : ∀ n → zero ⊕ Z.finite n ≡ Z.finite n
+idnum zero = refl
+idnum (suc n) = cong U.sc (idnum n)
+wrap-num : ∀ j n → wrap j (Z.finite n) ≡ Z.finite n
+wrap-num zero n = refl
+wrap-num (suc j) n = trans (cong (zero ⊕_) (wrap-num j n)) (idnum n)
+pair : ∀ n (o : Ok (k ⊕ Z.finite n)) → P.Kept (Z.finite n) o →
+  (k ⊕ Z.finite n , o) ≡ (Rank.level n , Rank.certified n)
+pair zero o v = cong (k ,_) v
+pair (suc n) o v = cong next (pair n (proj₂ o tt) (v tt))
+  where
+  next : Σ W4Block.L Ok → Σ W4Block.L Ok
+  next (a , w) = U.sc a , tt , (λ _ → w)
+
+module Source (p : Lev₂) (base : Tail.type p) where
+  q = λ n → L.ψ⁰ (Rank.threshold n p)
+  law : ∀ n → P.Law (Z.finite n) (λ _ → q n)
+  law n o keep = subst (λ (a : Σ W4Block.L Ok) → H.At (proj₁ a) (proj₂ a) (λ _ → q n)) (sym (pair n o keep))
+    (λ r eq cv a low → Rank.closed n p base r (subst (Rank.Valid n) (sym eq) (Rank.correct n)) cv _ (Rank.std n))
+
+module Site (r : T.Run (k ⊕ ↑ k (proj₁ (Ωt k)))) (cv : A.Covered r) (ones : Z.Ones r)
+            (kept : P.Kept (↑ k (proj₁ (Ωt k))) (ok r)) where
+  h = λ z → k ⊕ (zero ⊕ Z.by z)
+  module X = Node.At h refl r ones
+  c = X.C.child 1
+  hc = X.C.cover cv 1
+  z = X.C.ix 1
+  to = R.left zero (proj₁ (Z.peel z X.front))
+  path = R.left k to
+  s = Room.sub path c
+  sv = Room.cover path c hc
+  s1 = Z.pres (Z.left k (Z.left zero (proj₂ (Z.peel z X.front)))) c (X.ready 1)
+  inner = zero ⊕ Z.inner
+  sk : P.Kept inner (ok s)
+  sk = subst (P.Kept inner) (sym (Room.cert path c)) (P.descend to (kept z))
+  module Y = Node.At (λ u → k ⊕ wrap 4 (↑ zero (suc u))) refl s s1
+  y = Y.C.ix 1
+  child = Y.C.child 1
+  to-child : ∀ n → R.Reach (Z.finite n) (wrap 4 (↑ zero (suc y)))
+  to-child n = subst (λ a → R.Reach a (wrap 4 (↑ zero (suc y)))) (wrap-num 4 n)
+    (shift 4 (R.via (Z.seek n y (Fr.span y Y.front n)) R.succ))
+  module From (p : Lev₂) (hp : Tail.type p) where
+    module Q = Source p hp
+    one : ∀ n → Q.q n ≼ read (T.value child)
+    one n = P.send (to-child n) (Q.law n) _ (sk y) child refl (Y.C.cover sv 1) L.zero z≼
+    value : L.lim Q.q ≼ read (T.value r)
+    value = l≼ (λ n → ≼-trans (one n) (≼-trans (Y.C.lift-value 1) (≼-trans (Room.below path c hc) (X.C.lift-value 1))))

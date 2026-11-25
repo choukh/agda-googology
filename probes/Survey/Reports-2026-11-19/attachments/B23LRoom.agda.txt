@@ -1,0 +1,74 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意正有限层可以在同一较高标准塔或 Λ 实际孩子内定位，并使其每个零槽都容纳给定的前塔读数。
+module B23LRoom where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Fold using (EBOᶜ)
+open import W4Path using (Ok-tw; Ok-Λ)
+open import WVOne using (read; T₀; h₁)
+open import WKShape using (lvl3)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; s≼s; ≼-refl; ≼-suc; ≼-trans)
+import B12Terminal as T
+import B12ActualSlots as A
+import B12EboRows as End
+import B14Floor as F
+import B15ReadPaths as P
+import B15TowerSeed as Seed
+import B20Room as Room
+import B20StandardInside as S
+import B21StandardShape as Shape
+import B22TowerCut as K
+import B22ResetBridge as Lift
+
+finite = λ n → h₁ (F.num n)
+
+seek : ∀ k (z : Tr zero) → L.natᶜ (suc k) ≼ read z → P.Reach (finite (suc k)) (h₁ z)
+seek k zero ()
+seek k (suc z) (s≼s d) with F.split k z d
+... | inj₁ refl = P.here
+... | inj₂ h = P.via (seek k z h) P.succ
+seek k (lim f a) (≼l j h) = P.via (seek k (f j) h) (P.limit j)
+
+module At (m k : ℕ) (r : T.Run (tw (Lift.Level.upper m))) (eq : T.Run.ok r ≡ Ok-tw (Lift.Level.upper m))
+          (cr : A.Covered r) where
+  module X = Lift.Level.At m r eq cr
+  z = T.index1 X.first 1
+  site = T.tower-child X.first 1
+  path = seek k z (Seed.First.finite X.first X.cv (suc k))
+  run = Room.sub path site
+  site-cover = A.enter (sΩ zero) h₁ X.first z zero X.cv
+  covered = Room.cover path site site-cover
+  high : Room.Room run (S.std (suc m))
+  high = Room.room path site (λ w → X.high (inc z w))
+  into : read (T.value run) ≼ read (T.value r)
+  into = ≼-trans (Room.below path site site-cover) (≼-trans (T.tower-ge X.first 1) X.outer)
+
+module Level (m k : ℕ) where
+  j = Lift.Level.upper m
+  module Std = At m k (T.initial (tw j) (Ok-tw j)) refl (A.initial (tw j) (Ok-tw j))
+  module Actual = At m k (T.limRun tw T.terminal j) refl (A.enter sL tw T.terminal j (T.prefix tw j) (A.initial Λ Ok-Λ))
+
+record Site (k : ℕ) (x bound : T₀) : Set where
+  constructor located
+  field
+    run : T.Run (finite (suc k))
+    covered : A.Covered run
+    slots : Room.Room run x
+    below : read (T.value run) ≼ bound
+
+module From {x : T₀} (k : ℕ) where
+  next : ∀ m → L.suc x ≼ S.std m → x ≼ S.std (suc m)
+  next m d = ≼-trans (≼-suc (≼-refl x)) (≼-trans (≼-suc d) (Shape.rise m))
+  standard : L.suc x ≼ K.cut → Σ ℕ (λ j → Site k x (S.std j))
+  standard (≼l m d) = Lvl.j , located Lvl.Std.run Lvl.Std.covered
+     (λ w → ≼-trans (next m d) (Lvl.Std.high w)) Lvl.Std.into
+    where module Lvl = Level m k
+  actual : L.suc x ≼ K.cut → Σ ℕ (λ j → Site k x (End.child j))
+  actual (≼l m d) = Lvl.j , located Lvl.Actual.run Lvl.Actual.covered
+     (λ w → ≼-trans (next m d) (Lvl.Actual.high w)) Lvl.Actual.into
+    where module Lvl = Level m k

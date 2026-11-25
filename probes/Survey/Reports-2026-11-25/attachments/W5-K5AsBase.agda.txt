@@ -1,0 +1,132 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- M5 第 1 段: 小引理. 第 0 层的 ◃ 给 read 的字面前驱; read 与加法字面 ≅; cp 与 Mono; 层号码与读回 ≅ᴵ;
+-- 只含 inu 的到零路径 U; 覆盖与底的几条一步事实. 编译定理, 无前提.
+module K5AsBase where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block
+open import W4Ops
+open import W5Path
+open import W5Fold
+import OCF.Align.Level as LV
+open LV using (Ordᶜ; Ordᴵ; _≅ᴵ_)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≅→≼)
+open import OCF.BTBO using (module Ord-Ord)
+module Src = Ord-Ord
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOFullV3 using (≺→⊑₀)
+open import OCF.Lean.YiBtboV2 using (Mono; mz; ms; ml)
+open import OCF.Align.BTBOFullEmb using (PEmb)
+open import W5VOne using (read; 𝟏; h₁)
+open import W5VTwo using (◃→≼)
+open import K5Mir using (IsN; code)
+
+T₀ : Set
+T₀ = Ordᶜ LV.zero
+
+------------------------------------------------------------------------
+-- 第 0 层的 ◃ 给字面前驱 (◃l 的情形用极限自带的相邻证据; ◃l 存着它, 结构递归).
+◃→≺ : {x y : Tr zero} → zero ⊢ x ◃ y → read x LV.≺ read y
+◃→≺ {x} ◃s     = LV.≺z (LV.≅-refl⁰ (read x))
+◃→≺ (◃l {f} {a} n) = LV.≺l (suc n) (◃→≺ (a n))
+◃→≺ (◃w {p = ()})
+◃→≺ (◃u x () y e)
+◃→≺ (◃c x () r)
+◃→≺ (◃e {ε = ()})
+◃→≺ (◃x {ε = ()} r)
+◃→≺ (◃t d e)   = ≺→⊑₀ (◃→≺ e) (◃→≺ d)
+
+◃→⊑r : {x y : Tr zero} → zero ⊢ x ◃ y → read x LV.⊑ read y
+◃→⊑r d = ≺→⊑₀ (◃→≺ d)
+
+read-+≅ : (a b : Tr zero) → read (a + b) LV.≅ (read a LV.+ read b)
+read-+≅ a zero      = LV.≅-refl⁰ (read a)
+read-+≅ a (suc b)   = LV.s≅ (read-+≅ a b)
+read-+≅ a (lim f _) = LV.l≅ (λ n → read-+≅ a (f n))
+read-+≅ a (Ω () _)
+read-+≅ a (up _ () _ _)
+read-+≅ a (ex _ _ _ _ ())
+
+HS-read : (η : Tr zero) → LV.HS (read η)
+HS-read zero      = LV.hz
+HS-read (suc a)   = LV.hs (HS-read a)
+HS-read (lim f r) = LV.hl (λ n → HS-read (f n)) (λ n → ◃→⊑r (r n))
+HS-read (Ω () _)
+HS-read (up _ () _ _)
+HS-read (ex _ _ _ _ ())
+
+------------------------------------------------------------------------
+-- 第 0 层的树抄成 src 的第 0 层树.
+cp : Tr zero → Src.Ord₀
+cp zero      = Src.zero
+cp (suc a)   = Src.suc (cp a)
+cp (lim f _) = Src.lim (λ n → cp (f n))
+cp (Ω () _)
+cp (up _ () _ _)
+cp (ex _ _ _ _ ())
+
+cp≅ : (η : Tr zero) → tr₀ (cp η) LV.≅ read η
+cp≅ zero      = LV.z≅
+cp≅ (suc a)   = LV.s≅ (cp≅ a)
+cp≅ (lim f _) = LV.l≅ (λ n → cp≅ (f n))
+cp≅ (Ω () _)
+cp≅ (up _ () _ _)
+cp≅ (ex _ _ _ _ ())
+
+Mono-cp : (η : Tr zero) → Mono (tr₀ (cp η))
+Mono-cp zero      = mz
+Mono-cp (suc a)   = ms (Mono-cp a)
+Mono-cp (lim f r) = ml (λ n → Mono-cp (f n))
+  (λ n → ≼-trans (≅→≼ (cp≅ (f n))) (≼-trans (◃→≼ (r n)) (≅→≼ (LV.≅-sym (cp≅ (f (suc n)))))))
+Mono-cp (Ω () _)
+Mono-cp (up _ () _ _)
+Mono-cp (ex _ _ _ _ ())
+
+------------------------------------------------------------------------
+-- 层号码与读回: code (h₁ η) ≅ᴵ toLevel (read η), 对一切 IsN/Ok/HS 证明.
+code-read : (η : Tr zero) (i : IsN (h₁ η)) (o : Ok (h₁ η)) (h : LV.HS (read η)) → code (h₁ η) i o ≅ᴵ LV.toLevel (read η) h
+code-read zero      i o h = LV.z≅
+code-read (suc a)   i o h = LV.s≅ (code-read a i (proj₂ o tt) (LV.hs⁻ h))
+code-read (lim f _) i o h = LV.l≅ (λ n → code-read (f n) (i n) (proj₂ o n) (LV.hl₁ h n))
+code-read (Ω () _)
+code-read (up _ () _ _)
+code-read (ex _ _ _ _ ())
+
+PEmb-≅ : ∀ {a b b′} → PEmb a b → b ≅ᴵ b′ → PEmb a b′
+PEmb-≅ P e = record
+  { map = PEmb.map P ; bnd = λ r → LV.≺ᴵ-respʳ (PEmb.bnd P r) e
+  ; mono = PEmb.mono P ; coh = PEmb.coh P }
+
+------------------------------------------------------------------------
+-- 只含 inu 的到零路径.
+data U : {m : L} → zero ≤ m → Set where
+  us : U {zero} self
+  uu : ∀ {s} {h : Ch s → L} {vs : (c : Ch s) → zero ≤ h c} → ((c : Ch s) → U (vs c)) → U (inu vs)
+
+Uz≤ : (m : L) → U (z≤ m)
+Uz≤ zero     = us
+Uz≤ (nd s h) = uu {h = h} (λ c → Uz≤ (h c))
+
+Ulift : (x : L) → U (self ∙ lift zero x)
+Ulift zero     = us
+Ulift (nd s h) = uu {h = λ c → zero ⊕ h c} (λ c → Ulift (h c))
+
+------------------------------------------------------------------------
+-- 覆盖与底.
+le◃ : ∀ {j} {a b c : Tr j} → (a ≡ b) ⊎ (j ⊢ a ◃ b) → j ⊢ b ◃ c → j ⊢ a ◃ c
+le◃ (inj₁ refl) d = d
+le◃ (inj₂ d′)   d = ◃t d′ d
+
+one≼ : (β : Tr⁺ zero) → (proj₁ (Ωt zero) ≡ proj₁ β) ⊎ (zero ⊢ proj₁ (Ωt zero) ◃ proj₁ β) → 𝟏 ≼ read (proj₁ β)
+one≼ β (inj₁ refl) = ≼-refl 𝟏
+one≼ β (inj₂ d)    = ◃→≼ d
+
+-- 折一棵 Ωt 严格高于底 (W4 的 mono, 树 zero ◃ Ωt m).
+baseLt : (m : L) (o : Ok m) (S : Base m) (j : L) (w : j ≤ m) (β : Tr⁺ j)
+       → j ⊢ proj₁ β ◃ proj₁ (ψ m o S j w β (proj₁ (Ωt m)))
+baseLt m o S j w β = mono m o S j w β (proj₂ (Ωt m))

@@ -1,0 +1,248 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B5D 第 1 步 (再续): E 的 Ω 行与 up 行 (第一阶, 孩子语境). 编译定理, 无前提.
+-- 第 0 层的影子算术 Ξ y v c ("折 Ω₁" 以 (底, 链底) 同步迭代 ω^y 次), 两侧各自压到它下面:
+-- 参照 ψ⁰(A T y) ≼ Ξ y (ψ⁰ T) (ψ_0 T) (Level 一侧), Ξ (read y) (read v) (read 链底) ≼ read (E y …) (W4 一侧, 孩子语境 cons).
+-- 闭项: ex Ω₁ Ω₁ Ω₁ 在第 1 层折到第 0 层, 不低于 Level 参照 ψ⁰ X*, X* = limᵢ (y ↦ A Ω₁ (y+1)) (值 Ω₁·Ω₁; 读作 ψ₀(Ω₁²) 是判断).
+module WVThree where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open LV using (Ordᶜ; _<ᴵ_; Simᴵ)
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-refl; ≼-trans; ≼-suc)
+open import WVOne
+open import WVTwo using (◃→≼; T₁; Ω₁ᴸ; ψz; ψ⁰-add; ψz-add; Hᴸ; w₀)
+
+------------------------------------------------------------------------
+-- 影子算术. Nx X Y: 以 X 为底, 以 Y 为链底的 "折 Ω₁" (L1g 的结论形状).
+Nx : T₀ → T₀ → T₀
+Nx X Y = LV.lim (λ k → Mv X (S.iter (Mv Y) 𝟏 k))
+
+itMv : {Y Y′ : T₀} → Y ≼ Y′ → (k : ℕ) → S.iter (Mv Y) 𝟏 k ≼ S.iter (Mv Y′) 𝟏 k
+itMv e zero    = ≼-refl 𝟏
+itMv e (suc k) = Mv-mono e (itMv e k)
+
+Nx-mono : {X X′ Y Y′ : T₀} → X ≼ X′ → Y ≼ Y′ → Nx X Y ≼ Nx X′ Y′
+Nx-mono hX hY = l≼ (λ k → ≼l k (Mv-mono hX (itMv hY k)))
+
+Nx-infl : (X Y : T₀) → X ≼ Nx X Y
+Nx-infl X Y = ≼l 0 (Mv-infl X 𝟏)
+
+Ξ : T₀ → T₀ → T₀ → T₀
+stp : T₀ → T₀ × T₀ → T₀ × T₀
+Ξ LV.zero        v c = Nx v c
+Ξ (LV.suc y)     v c = LV.lim (λ n → proj₁ (iter (stp y) (v , c) (suc n)))
+Ξ (LV.lim f)     v c = LV.lim (λ n → Ξ (f n) v c)
+Ξ (LV.limᵢ () f) v c
+Ξ (LV.up () x)   v c
+stp y (a , b) = Ξ y a b , Ξ y b b
+
+_≼²_ : T₀ × T₀ → T₀ × T₀ → Set
+p ≼² q = (proj₁ p ≼ proj₁ q) × (proj₂ p ≼ proj₂ q)
+
+mutual
+  Ξ-mono : (y : T₀) {v v′ c c′ : T₀} → v ≼ v′ → c ≼ c′ → Ξ y v c ≼ Ξ y v′ c′
+  Ξ-mono LV.zero        hv hc = Nx-mono hv hc
+  Ξ-mono (LV.suc y)     hv hc = l≼ (λ n → ≼l n (proj₁ (it-mono y (hv , hc) (suc n))))
+  Ξ-mono (LV.lim f)     hv hc = l≼ (λ n → ≼l n (Ξ-mono (f n) hv hc))
+  Ξ-mono (LV.limᵢ () f) hv hc
+  Ξ-mono (LV.up () x)   hv hc
+
+  it-mono : (y : T₀) {p q : T₀ × T₀} → p ≼² q → (n : ℕ) → iter (stp y) p n ≼² iter (stp y) q n
+  it-mono y h zero    = h
+  it-mono y h (suc n) with it-mono y h n
+  ... | (h₁ , h₂) = Ξ-mono y h₁ h₂ , Ξ-mono y h₂ h₂
+
+Ξ-infl : (y v c : T₀) → v ≼ Ξ y v c
+Ξ-infl LV.zero        v c = Nx-infl v c
+Ξ-infl (LV.suc y)     v c = ≼l 0 (Ξ-infl y v c)
+Ξ-infl (LV.lim f)     v c = ≼l 0 (Ξ-infl (f 0) v c)
+Ξ-infl (LV.limᵢ () f) v c
+Ξ-infl (LV.up () x)   v c
+
+Ξ-0 : (y v c : T₀) → Nx v c ≼ Ξ y v c
+Ξ-0 LV.zero        v c = ≼-refl _
+Ξ-0 (LV.suc y)     v c = ≼l 0 (Ξ-0 y v c)
+Ξ-0 (LV.lim f)     v c = ≼l 0 (Ξ-0 (f 0) v c)
+Ξ-0 (LV.limᵢ () f) v c
+Ξ-0 (LV.up () x)   v c
+
+-- 对指数单调 (按 ≼ 的推导).
+it-le : (a b : T₀) → ((v c : T₀) → Ξ a v c ≼ Ξ b v c) → (p : T₀ × T₀) (n : ℕ) → iter (stp a) p n ≼² iter (stp b) p n
+it-le a b le p zero    = ≼-refl _ , ≼-refl _
+it-le a b le p (suc n) with it-le a b le p n
+... | (h₁ , h₂) = ≼-trans (le _ _) (Ξ-mono b h₁ h₂) , ≼-trans (le _ _) (Ξ-mono b h₂ h₂)
+
+Ξ-monoʸ : {y y′ : T₀} → y ≼ y′ → (v c : T₀) → Ξ y v c ≼ Ξ y′ v c
+Ξ-monoʸ {y′ = y′} z≼ v c = Ξ-0 y′ v c
+Ξ-monoʸ {LV.suc a} {LV.suc b} (s≼s d) v c = l≼ (λ n → ≼l n (proj₁ (it-le a b (Ξ-monoʸ d) (v , c) (suc n))))
+Ξ-monoʸ (≼l n d) v c = ≼l n (Ξ-monoʸ d v c)
+Ξ-monoʸ (l≼ h)   v c = l≼ (λ n → Ξ-monoʸ (h n) v c)
+Ξ-monoʸ (≼i {p = ()} x e d) v c
+Ξ-monoʸ (i≼ {p = ()} h) v c
+Ξ-monoʸ (≼u {r = ()} d) v c
+Ξ-monoʸ (u≼ {r = ()} d) v c
+
+------------------------------------------------------------------------
+-- Level 一侧. A T y = "T + Ω₁·ω^y" (按迭代写).
+A : T₁ → T₀ → T₁
+A T LV.zero        = T LV.+ Ω₁ᴸ
+A T (LV.suc y)     = LV.lim (λ n → iter (λ T′ → A T′ y) T (suc n))
+A T (LV.lim f)     = LV.lim (λ n → A T (f n))
+A T (LV.limᵢ () f)
+A T (LV.up () x)
+
+chainᴸ : (T : T₁) (k : ℕ) → S.iter (Hᴸ T) 𝟏 k ≼ S.iter (Mv (ψz T)) 𝟏 k
+chainᴸ T zero    = ≼-refl 𝟏
+chainᴸ T (suc k) = ≼-trans (ψz-add T (λ q → LV.suc q) _) (Mv-mono (≼-refl _) (chainᴸ T k))
+
+next⁰ : (T : T₁) → LV.ψ⁰ (T LV.+ Ω₁ᴸ) ≼ Nx (LV.ψ⁰ T) (ψz T)
+next⁰ T = l≼ (λ k → ≼l k (≼-trans (ψ⁰-add T (λ q → LV.suc q) _) (Mv-mono (≼-refl _) (chainᴸ T k))))
+
+nextz : (T : T₁) → ψz (T LV.+ Ω₁ᴸ) ≼ Nx (ψz T) (ψz T)
+nextz T = l≼ (λ k → ≼l k (≼-trans (ψz-add T (λ q → LV.suc q) _) (Mv-mono (≼-refl _) (chainᴸ T k))))
+
+mutual
+  Aᴸ : (y : T₀) (T : T₁) → (LV.ψ⁰ (A T y) ≼ Ξ y (LV.ψ⁰ T) (ψz T)) × (ψz (A T y) ≼ Ξ y (ψz T) (ψz T))
+  Aᴸ LV.zero T = next⁰ T , nextz T
+  Aᴸ (LV.suc y) T =
+      l≼ (λ n → ≼l n (proj₁ (itA y T (suc n))))
+    , l≼ (λ n → ≼l n (proj₁ (itA′ y T (suc n))))
+  Aᴸ (LV.lim f) T = l≼ (λ n → ≼l n (proj₁ (Aᴸ (f n) T))) , l≼ (λ n → ≼l n (proj₂ (Aᴸ (f n) T)))
+  Aᴸ (LV.limᵢ () f) T
+  Aᴸ (LV.up () x) T
+
+  -- 迭代 n 次后的两种折叠, 分别压在影子迭代的两个分量下面.
+  itA : (y : T₀) (T : T₁) (n : ℕ)
+      → (LV.ψ⁰ (iter (λ T′ → A T′ y) T n) , ψz (iter (λ T′ → A T′ y) T n)) ≼² iter (stp y) (LV.ψ⁰ T , ψz T) n
+  itA y T zero    = ≼-refl _ , ≼-refl _
+  itA y T (suc n) with itA y T n
+  ... | (h₁ , h₂) = ≼-trans (proj₁ (Aᴸ y (iter (λ T′ → A T′ y) T n))) (Ξ-mono y h₁ h₂)
+                  , ≼-trans (proj₂ (Aᴸ y (iter (λ T′ → A T′ y) T n))) (Ξ-mono y h₂ h₂)
+
+  itA′ : (y : T₀) (T : T₁) (n : ℕ)
+       → (ψz (iter (λ T′ → A T′ y) T n) , ψz (iter (λ T′ → A T′ y) T n)) ≼² iter (stp y) (ψz T , ψz T) n
+  itA′ y T zero    = ≼-refl _ , ≼-refl _
+  itA′ y T (suc n) with itA′ y T n
+  ... | (h₁ , h₂) = ≼-trans (proj₂ (Aᴸ y (iter (λ T′ → A T′ y) T n))) (Ξ-mono y h₁ h₂)
+                  , ≼-trans (proj₂ (Aᴸ y (iter (λ T′ → A T′ y) T n))) (Ξ-mono y h₂ h₂)
+
+-- 参照树 X* = limᵢ (y ↦ A Ω₁ (y + 1)).
+X* : T₁
+X* = LV.limᵢ LV.zero (λ y → A Ω₁ᴸ (LV.suc y))
+
+γ* : ℕ → T₀
+γ* = S.iter (λ x → ψz (A Ω₁ᴸ (LV.suc x))) (LV.Ω LV.zero)
+
+------------------------------------------------------------------------
+-- W4 一侧: 孩子语境里的 E (第 0 层的指数).
+module EW (o : Ok lvl1) where
+
+  F : Op {lvl1} nil
+  F = opB lvl1 o (proj₁ (Ωt lvl1)) (proj₂ (Ωt lvl1))
+
+  X′ : Cx lvl1
+  X′ = cons (down stop tt) nil
+
+  T′ : TD X′ zero
+  T′ = chTD tdNil tt
+
+  F′ : Op X′
+  F′ = enterO (chMT tdNil tt) (op (E o tdNil zero F) (Einf o tdNil zero F))
+
+  σ′ : zero ≤ lvl1 → ⟦ X′ ⟧ zero
+  σ′ x = inj₂ x , x
+
+  c* : St X′ → Tr⁺ zero
+  c* S′ = S′ zero (σ′ (inc tt self))
+
+  Ew : (y : Tr zero) (S′ : St X′) (v : Tr⁺ zero) {x : zero ≤ lvl1} → W1 x → 𝟏 ≼ read (proj₁ (c* S′))
+     → Ξ (read y) (read (proj₁ v)) (read (proj₁ (c* S′))) ≼ read (proj₁ (E o T′ y F′ S′ zero (σ′ x) v))
+  Ew zero S′ v wx h1 =
+    L1g.low o (λ i x′ → S′ i (inj₂ x′ , x′)) wx v _ _ (≼-refl _) (≼-refl _) h1 (Mv _) (λ y → ≼-refl _)
+            (λ k → Mv _ (S.iter (Mv _) 𝟏 k)) (λ k → ≼-refl _)
+  Ew (suc y) S′ v {x} wx h1 = l≼ (λ n → ≼l n (proj₁ (proj₁ (J (suc n)))))
+    where
+    G′ : Op X′
+    G′ = op (E o T′ y F′) (Einf o T′ y F′)
+    J : (n : ℕ) → (iter (stp (read y)) (read (proj₁ v) , read (proj₁ (c* S′))) n
+                   ≼² (read (proj₁ (itV G′ n S′ zero (σ′ x) v)) , read (proj₁ (c* (itS G′ n S′)))))
+                × (𝟏 ≼ read (proj₁ (c* (itS G′ n S′))))
+    J zero = (≼-refl _ , ≼-refl _) , h1
+    J (suc n) with J n
+    ... | ((h₁ , h₂) , g) =
+        ( ≼-trans (Ξ-mono (read y) h₁ h₂) (Ew y (itS G′ n S′) (itV G′ n S′ zero (σ′ x) v) wx g)
+        , ≼-trans (Ξ-mono (read y) h₂ h₂) (Ew y (itS G′ n S′) (c* (itS G′ n S′)) wc g) )
+      , ≼-trans g (◃→≼ (inf G′ (itS G′ n S′) zero (σ′ (inc tt self)) (c* (itS G′ n S′))))
+  Ew (lim f a) S′ v wx h1 = l≼ (λ n → ≼l n (Ew (f n) S′ v wx h1))
+  Ew (Ω () _) S′ v wx h1
+  Ew (up _ () _ _) S′ v wx h1
+  Ew (ex _ _ _ _ ()) S′ v wx h1
+
+------------------------------------------------------------------------
+-- 闭项: ex Ω₁ Ω₁ Ω₁ 在第 1 层以底 β 折到第 0 层. ex 行转到 E Ω₁ (opB Ω₁); E 的 Ω 行走链 (链目标 inc tt self, 链底是状态),
+-- 每个分支 up zero tt (suc d) 进孩子语境 (E 的 up 行), 由 Ew 压到影子下面.
+module XS (o : Ok lvl1) (B : Base lvl1) (β : Tr⁺ zero) (hβ : 𝟏 ≼ read (proj₁ β))
+          (h1 : 𝟏 ≼ read (proj₁ (B zero (inc tt self)))) where
+  open EW o
+
+  Ω₁⁺ : Tr⁺ lvl1
+  Ω₁⁺ = Ωt lvl1
+
+  xs : Tr lvl1
+  xs = ex (proj₁ Ω₁⁺) (proj₁ Ω₁⁺) (proj₂ Ω₁⁺) (proj₁ Ω₁⁺) tt
+
+  S₀ : St {lvl1} nil
+  S₀ i u = ψ lvl1 o B i u (B i u) (proj₁ Ω₁⁺)
+
+  v₀ cb : Tr⁺ zero
+  v₀ = ψ lvl1 o B zero w₀ β (proj₁ Ω₁⁺)
+  cb = S₀ zero (inc tt self)
+
+  gb : Tr zero → Tr lvl1
+  gb z = up zero tt (suc z) (z◃ z ◃s)
+
+  term : zero ≤ lvl1 → Tr⁺ zero → Tr zero → Tr zero
+  term t b z = proj₁ (E o tdNil (gb z) F S₀ zero t b)
+
+  d : ℕ → Tr zero
+  d = iter (term (inc tt self) cb) zero
+
+  -- 两条底的事实 (L1g, Level 的 ψ⁰(Ω₁) 与 ψ_0(Ω₁)).
+  v₀≥ : LV.ψ⁰ Ω₁ᴸ ≼ read (proj₁ v₀)
+  v₀≥ = L1g.low o B wu β 𝟏 𝟏 hβ h1 h1 H₀ ψ-lvl0 (λ k → LV.ψ⁰ (S.iter H₀ 𝟏 k)) (λ k → ψ⁰-lvl0 _)
+
+  cb≥ : ψz Ω₁ᴸ ≼ read (proj₁ cb)
+  cb≥ = L1g.low o B wc (B zero (inc tt self)) 𝟏 𝟏 h1 h1 h1 H₀ ψ-lvl0 (λ k → ψz (LV.up LV.zero (S.iter H₀ 𝟏 k))) (λ k → ψ-lvl0 _)
+
+  cb1 : 𝟏 ≼ read (proj₁ cb)
+  cb1 = ≼-trans h1 (◃→≼ (mono lvl1 o B zero (inc tt self) (B zero (inc tt self)) (proj₂ Ω₁⁺)))
+
+  -- 每个分支: E 的 up 行进孩子语境.
+  br : {t : zero ≤ lvl1} → W1 t → (b : Tr⁺ zero) (z : Tr zero)
+     → Ξ (LV.suc (read z)) (read (proj₁ b)) (read (proj₁ cb)) ≼ read (term t b z)
+  br wt b z = Ew (suc z) (λ i′ y′ → S₀ i′ (proj₂ y′)) b wt cb1
+
+  chain* : (k : ℕ) → γ* k ≼ read (d (suc k))
+  chain* zero    = ≼-trans cb1 (≼-trans (Ξ-infl (LV.suc LV.zero) _ _) (br wc cb zero))
+  chain* (suc k) = ≼-trans (proj₂ (Aᴸ (LV.suc (γ* k)) Ω₁ᴸ))
+                     (≼-trans (Ξ-monoʸ (s≼s (chain* k)) _ _)
+                       (≼-trans (Ξ-mono (LV.suc (read (d (suc k)))) cb≥ cb≥) (br wc cb (d (suc k)))))
+
+  Fx : ℕ → Tr zero
+  Fx k = term w₀ v₀ (d k)
+
+  low* : LV.ψ⁰ X* ≼ read (proj₁ (ψ lvl1 o B zero w₀ β xs))
+  low* = l≼ (λ k → ≼-trans (proj₁ (Aᴸ (LV.suc (γ* k)) Ω₁ᴸ))
+                    (≼-trans (Ξ-monoʸ (s≼s (chain* k)) _ _)
+                      (≼-trans (Ξ-mono (LV.suc (read (d (suc k)))) v₀≥ cb≥)
+                        (≼-trans (br wu v₀ (d (suc k))) (≼l (suc k) (cum-≥ Fx (suc k)))))))

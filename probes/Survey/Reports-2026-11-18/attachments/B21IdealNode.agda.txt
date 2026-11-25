@@ -1,0 +1,164 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21IdealNode where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; subst₂; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Path as Path
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B14SharpBound using (data≤)
+open import OCF.Align.Value using (≼-refl; ≼-trans; l≼; ≼l)
+import B12ActualSlots as C
+import B17SharpFeed as Link
+import B17SharpUpdate as U
+import B17SharpTwo as T
+import B18SharpMacro as M
+import B13Orbit as Orb
+import B12Orbit as Win
+
+import B21IdealRepeat as Reps
+import B15SharpAction as P1
+import B16SharpModel as H1
+import B16SharpOmega as O1
+import B15SharpLift as L1
+import B21IdealContext as Context
+open Context using (Pref; plug; empty; push)
+
+import B21IdealFrames as Frames
+open import OCF.Align.Value using (s≼s)
+open import Data.Sum using (inj₁)
+import B21IdealCount as Compare
+import B21IdealInside as Old
+import B20IdealRel as Rel
+import B20IdealOne as One
+import B20IdealTwo as Two
+import B20IdealThree as A
+import OCF.Lean.YiUpFold as YF
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiFreshFold as YO
+import OCF.Lean.YiFreshValRead as YV
+open import OCF.Lean.YiUpCheck using (two)
+open import OCF.Lean.YiKVRel using (readRW)
+open import WVOne using (read; p₁; g₁; cum-≥)
+open import WVTwo using (p₂; g₂)
+open import B14SharpBound using (sum≤)
+open import OCF.Align.Value using (_≼_; ≅→≼; z≼)
+import B14SharpLive as Live
+import B13SharpOne as Z
+import B13SeedOuter as Seed
+import B12Terminal as Tm
+import B18SharpClosed as Known
+import B18SharpHead
+open import WKShape using (lvl3)
+open import Data.Maybe using (nothing; just)
+import OCF.Align.Level as L
+
+module Proof (lem : LEM) where
+  open I.Sharp lem
+  open U.Update lem
+  open T.Two lem using (w₀)
+  open Context.At lem using (out)
+  open Compare.At lem using (grow; module Origin; module Enter; module Count)
+
+  data₀ : R.Tr R.zero → R.Tr r₂
+  data₀ u = proj₁ (grow (V.Ωt r₂) (R.suc u))
+  next = λ u → proj₁ (out B♯ A.unit empty (data₀ u))
+  ix = V.iter next R.zero
+  source = λ n → next (ix n)
+  old-point : ∀ {x u} → Rel.Z x u → Rel.J (Old.branch x) (data₀ u)
+  old-point q = One.At.high₀ lem B♯ (V.Ωt r₂) Rel.Ω² (Rel.zs q)
+  tick : ∀ {x u} → Rel.Z x u → Rel.Z (Old.clock (Old.branch x)) (next u)
+  tick q = Two.At.low₂ lem B♯ A.model Rel.Ω¹ (Rel.zs Rel.zz) A.unit (Rel.zs Rel.zz) (old-point q)
+  times : ∀ n → Rel.Z (Old.indices n) (ix n)
+  times = Rel.it Rel.Z Rel.zz tick
+  branch : ∀ n → Rel.Z (Old.fold (Old.branch (Old.indices n))) (source n)
+  branch n = Two.At.bot₂ lem B♯ A.model Rel.Ω¹ (Rel.zs Rel.zz) A.unit (Rel.zs Rel.zz) (old-point (times n))
+  exact : YV.read (Old.fold Old.ret) L.≅ readRW (R.lim (V.cum source) (λ n → V.+-mono (V.cum source n) (proj₂ (out B♯ A.unit empty (data₀ (ix (suc n)))))))
+  exact = Rel.value (Rel.zl (Rel.cums _ _ branch))
+
+  module Physical (c : W.Tr⁺ lvl2) (big : C._⊴_ wΩ₂ (proj₁ c)) where
+    K = Orb.K c
+    root = Compare.At.initial lem (Context.At.Base.basis lem c big)
+    T₁ = F.chTD (F.tdNil {ℓ = lvl2}) tt
+    m₁ = F.chMT (F.tdNil {ℓ = lvl2}) tt
+    module S₁ = Enter w₁ w₀ (W.down W.stop tt) (λ t → inj₂ t)
+    K₁ = F.enterO m₁ K
+    T₀ = F.chTD T₁ tt
+    m₀ = F.chMT T₁ tt
+    module S₀ = Enter (F.σ m₁ w₁) (F.σ m₁ w₀) (W.down (W.down W.stop tt) tt) (λ t → inj₂ (F.tv T₁ t))
+    K₀ = F.enterO m₀ K₁
+    h₁ = S₁.transport root
+    h₀ = S₀.transport h₁
+    module Z₀ = Count (F.σ m₀ (F.σ m₁ w₁)) (F.σ m₀ (F.σ m₁ w₀)) T₀ (V.Ωt r₂) K₀ h₀
+    module F₁ = Frames.At.Frame lem (F.σ m₁ w₁) (F.σ m₁ w₀)
+    module F₀ = Frames.At.Frame lem (F.σ m₀ (F.σ m₁ w₁)) (F.σ m₀ (F.σ m₁ w₀))
+
+    module Run (S : F.Base lvl2) (h : M.Macro.State lem B♯ S) where
+      S₁′ : F.St (F.cons (W.down W.stop tt) F.nil)
+      S₁′ = λ i t → S i (proj₂ t)
+      S₀′ : F.St (F.cons (W.down (W.down W.stop tt) tt) (F.cons (W.down W.stop tt) F.nil))
+      S₀′ = λ i t → S₁′ i (proj₂ t)
+      real = λ z → F.E ok₂ T₁ (g₁ z) K₁ S₁′
+      ctx = F.mk T₁ (F.hereT (F.fr T₁) (Path.posW lvl1 p₁))
+      st : F₀.Fit B♯ S₀′
+      st = F₀.fit (M.Macro.State.one h) (M.Macro.State.bot h)
+      go : ∀ z w → data≤ z w → ∀ t b → data≤ (proj₁ A.unit) (proj₁ b) →
+        data≤ (next z) (proj₁ (real w B.zero t b))
+      go z w e t b hv = F₀.Model.value (Z₀.result (R.suc z) (B.suc w) (s≼s e)) B♯ A.unit empty S₀′ st (F.σ m₀ t) b hv
+      step = λ w → proj₁ (real w B.zero ctx (S₁′ B.zero ctx))
+      timesW : ∀ n → data≤ (ix n) (B.iter step B.zero n)
+      timesW zero = z≼
+      timesW (suc n) = go _ _ (timesW n) ctx (S₁′ B.zero ctx) (M.Macro.State.bot h)
+      value : ∀ t b → data≤ (proj₁ A.unit) (proj₁ b) →
+        YV.read (Old.fold Old.ret) ≼ read (proj₁ (F.E ok₂ T₁ (proj₁ (W.Ωt lvl1)) K₁ S₁′ B.zero t b))
+      value t b hv = ≼-trans (≅→≼ exact) (l≼ λ n →
+        ≼-trans (sum≤ source (λ i → proj₁ (real (B.iter step B.zero i) B.zero t b)) (λ i → go _ _ (timesW i) t b hv) n)
+               (Live.cumulative (F.kpT (F.fr T₁) ok₂ p₁ (F.tv T₁ t)) (λ w → real w B.zero t b) step n))
+
+      wstep = λ w → proj₁ (F.E ok₂ F.tdNil (g₂ w) K S lvl1 w₁ (S lvl1 w₁))
+      wcor = wstep B.zero
+      module Ahead (wbig : C._⊴_ (proj₁ (W.Ωt lvl1)) (proj₁ (S lvl1 w₁))) where
+        cover : lvl1 B.⊢ proj₁ (W.Ωt lvl1) ◃ B.suc wcor
+        cover = helper (C.extend wbig (F.Einf ok₂ F.tdNil (g₂ B.zero) K S lvl1 w₁ (S lvl1 w₁)))
+          where
+          helper : C._⊴_ (proj₁ (W.Ωt lvl1)) wcor → lvl1 B.⊢ proj₁ (W.Ωt lvl1) ◃ B.suc wcor
+          helper (inj₁ e) = subst (λ w → lvl1 B.⊢ w ◃ B.suc wcor) (sym e) B.◃s
+          helper (inj₂ e) = B.◃t e B.◃s
+        omega : ∀ t b → data≤ (proj₁ A.unit) (proj₁ b) →
+          YV.read (Old.fold Old.ret) ≼ read (proj₁ (F.E ok₂ F.tdNil wΩ₂ K S B.zero t b))
+        omega t b hv = ≼-trans (value (F.σ m₁ t) b hv) (≼-trans (◃→≼ (F.Emono ok₂ T₁ K₁ S₁′ B.zero (F.σ m₁ t) b cover))
+          (≼-trans (cum-≥ (λ n → proj₁ (outW (B.iter wstep B.zero n))) 1) (Live.cumulative (F.kp lvl2 ok₂ p₂ t) outW wstep 1)))
+          where outW = λ w → F.E ok₂ F.tdNil (g₂ w) K S B.zero t b
+        actual : ∀ t b → data≤ (proj₁ A.unit) (proj₁ b) →
+          YV.read (Old.fold Old.ret) ≼ read (proj₁ (F.run (Orb.block c K) S B.zero t b))
+        actual t b hv = ext _ big
+          where
+          ext : ∀ x → C._⊴_ wΩ₂ x → YV.read (Old.fold Old.ret) ≼ read (proj₁ (F.E ok₂ F.tdNil x K S B.zero t b))
+          ext .wΩ₂ (inj₁ refl) = omega t b hv
+          ext x (inj₂ e) = ≼-trans (omega t b hv) (◃→≼ (F.Emono ok₂ F.tdNil K S B.zero t b e))
+
+  module Closed (r : Tm.Run lvl3) (cv : C.Covered r) where
+    module A₀ = Seed.At r
+    module R₀ = Physical A₀.c⁺ (cv lvl2 (B.inc tt B.self))
+    z = Known.Closed.Run.start lem r cv
+    module H = R₀.Run.Ahead A₀.st1 z (C.extend (Tm.Run.omegaB r (B.inc tt w₁)) (F.inf A₀.K A₀.S₀ lvl1 w₁ (A₀.S₀ lvl1 w₁)))
+    j = Orb.block A₀.c⁺ A₀.K
+    at-J : YV.read (Old.fold Old.ret) ≼ read (proj₁ (F.run j A₀.st1 B.zero A₀.w2 A₀.v₁))
+    at-J = H.actual A₀.w2 A₀.v₁ (≼-trans (Tm.Run.oneβ r) (◃→≼ (F.inf A₀.K A₀.S₀ B.zero A₀.w2 (Tm.Run.β r))))
+    module Aux = B18SharpHead.Head.At lem A₀.c⁺ (cv lvl2 (B.inc tt B.self))
+    bound : YV.read (Old.fold Old.ret) ≼ read (Tm.value r)
+    bound = ≼-trans at-J (≼-trans (◃→≼ (B.◃t (Aux.climb 0 A₀.st1 B.zero A₀.w2 A₀.v₁) (Aux.part 0 A₀.st1 B.zero A₀.w2 A₀.v₁))) (A₀.outer 0))
+

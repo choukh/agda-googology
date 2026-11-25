@@ -1,0 +1,134 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B10A 内链归纳. 编译定理, 无前提, 不用排中律与函数外延 (第 4 层值验收).
+-- rows : 对一切 n, Row n = Match (Y (suc n)) (B.z n 2); 状态不变量 Real (B.c n) (eY n) 经累加分支 B.U n 1 与 part n 传递.
+-- 另: 累加分支自身也配对 (Match (Y (suc n)) (B.U n 1)), 两个消费者对一切 n 实例化. 不否定任何东西.
+module B10LocalRows where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_)
+open import WVOne using (read)
+open import WVThree using (Nx)
+open import WSShadow
+open import WSW4 using (module Lem)
+import WKSum
+import WSLevel as WL
+open import YiLAB7Orbit using (lvl1; ok₂)
+open import YiLAB7Replay using (Match; together; Y; consume; consume-exp; o₁; Ω₁op)
+open import B8PairLevel using (eΩ₂; eY; Ld-Y; Lx-Y)
+open import B8PairW4 using (Real-up; SumR-up)
+open import B9InnerReal using (module RX)
+open import B9InnerSecond using (Real-cΩ₂; Real-cΩ₁; SumR-cNx; SumR-id)
+import YiLAB10Branches as B
+import YiLAB10Rows
+open YiLAB10Rows using (Row)
+
+open Lem o₁
+open WKSum.Sum o₁
+open RX o₁
+
+------------------------------------------------------------------------
+-- 状态不变量. 规范指数 eY n 是归纳量; 另三项 (Ω₂ 指数, Ω₁ 指数, 被加项 Nx) 只沿 rise 搬运.
+record Inv (n : ℕ) : Set where
+  constructor st
+  field
+    rY  : Real (B.c n) (eY n)
+    rΩ₂ : Real (B.c n) eΩ₂
+    rΩ₁ : Real (B.c n) Ω̂
+    sN  : SumR (B.c n) Nx
+open Inv
+
+-- 起点: B.c 0 定义上就是 B9 的 O.c (一次更新后的分量), eY 0 = Ω̂.
+st0 : Inv 0
+st0 = st Real-cΩ₁ Real-cΩ₂ Real-cΩ₁ SumR-cNx
+
+------------------------------------------------------------------------
+-- 第 n 个状态内部的两项与累加分支. 证据槽位见每行注释.
+module In (n : ℕ) (H : Inv n) where
+  -- z n 1 = ex c c (suc 0): 左槽 c 取 rΩ₂, 底槽 c 取 rY (归纳假设), 指数槽 suc 0 取零影子.
+  Real-z1 : Real (B.z n 1) (eΩ₂ ⨾ eY n)
+  Real-z1 = RealX (B.nc n) (rΩ₂ H) (rY H) (Real-pos (suc zero) ◃s)
+
+  Real-sz1 : Real (suc (B.z n 1)) (eΩ₂ ⨾ eY n)
+  Real-sz1 = Real-up ◃s Real-z1
+
+  -- 原始项 z n 2 = ex c c (suc (z n 1)): 左槽 c 只取正性 (nc), 底槽 c 取 rΩ₁, 指数槽取 Real-sz1.
+  Real-z2 : Real (B.z n 2) (eY (suc n))
+  Real-z2 = RealX (B.nc n) (Real-pos (B.c n) (B.nc n)) (rΩ₁ H) Real-sz1
+
+  -- 被加项: 左槽 c 读恒等 (SumR-id), 底槽 c 读 sN (Nx), 指数槽取 Real-sz1 的 E 半.
+  SumR-z2 : SumR (B.z n 2) (sE (eΩ₂ ⨾ eY n) Nx)
+  SumR-z2 = SumR-x {da = λ a c′ → a} {db = Nx} {e = eΩ₂ ⨾ eY n} (B.nc n) (SumR-id (B.c n)) (sN H) (proj₁ Real-sz1)
+
+  row : Row n
+  row = together _ _ SumR-z2 Real-z2 (Ld-Y n) (Lx-Y (suc n))
+
+  -- 累加分支 U n 1 = ex (z n 1 + c) c (suc (z n 1)): 前缀只取正性, 底槽 c 取 rΩ₁, 指数槽取 Real-sz1.
+  pos-pre : lvl1 ⊢ zero ◃ (B.z n 1 + B.c n)
+  pos-pre = z◃ (B.z n 1) (+-mono (B.z n 1) (B.nc n))
+
+  Real-U1 : Real (B.U n 1) (eY (suc n))
+  Real-U1 = RealX (B.nc n) (Real-pos (B.z n 1 + B.c n) pos-pre) (rΩ₁ H) Real-sz1
+
+  SumR-U1 : SumR (B.U n 1) (sE (eΩ₂ ⨾ eY n) Nx)
+  SumR-U1 = SumR-x {da = λ a c′ → a} {db = Nx} {e = eΩ₂ ⨾ eY n} (B.nc n) (SumR-id (B.z n 1 + B.c n)) (sN H) (proj₁ Real-sz1)
+
+  row-U : Match (Y (suc n)) (B.U n 1)
+  row-U = together _ _ SumR-U1 Real-U1 (Ld-Y n) (Lx-Y (suc n))
+
+  -- 把规范指数交给下一状态: U n 1 ◃ c (suc n) (part n); 其余三项沿 rise n.
+  next : Inv (suc n)
+  next = st (Real-up (B.part n) Real-U1) (Real-up (B.rise n) (rΩ₂ H))
+            (Real-up (B.rise n) (rΩ₁ H)) (SumR-up (B.rise n) (sN H))
+
+-- 交接引理 (只看指数): 在累加分支上把 Real (c n) (eY n) 传给 Real (c (suc n)) (eY (suc n)).
+pass : (n : ℕ) → Real (B.c n) eΩ₂ → Real (B.c n) Ω̂ → Real (B.c n) (eY n) → Real (B.c (suc n)) (eY (suc n))
+pass n rΩ₂′ rΩ₁′ rY′ =
+  Real-up (B.part n)
+    (RealX (B.nc n) (Real-pos (B.z n 1 + B.c n) (z◃ (B.z n 1) (+-mono (B.z n 1) (B.nc n)))) rΩ₁′
+           (Real-up ◃s (RealX (B.nc n) rΩ₂′ rY′ (Real-pos (suc zero) ◃s))))
+
+------------------------------------------------------------------------
+inv : (n : ℕ) → Inv n
+inv zero    = st0
+inv (suc n) = In.next n (inv n)
+
+rows : (n : ℕ) → Row n
+rows n = In.row n (inv n)
+
+rows-U : (n : ℕ) → Match (Y (suc n)) (B.U n 1)
+rows-U n = In.row-U n (inv n)
+
+-- 首行与已编首例使用同一对描述 (不比较证明本身).
+row0-desc : Match.e₀ (rows 0) ≡ Match.e₀ YiLAB10Rows.row0
+row0-desc = refl
+
+-- 手算核对: n = 1 时 Y 2 的指数影子是 sh (eΩ₂ ⨾ eY 1), 被加项影子是 sE (eΩ₂ ⨾ eY 1) Nx (定义上).
+row1-exp : Match.e₀ (rows 1) ≡ sh (eΩ₂ ⨾ eY 1)
+row1-exp = refl
+
+row1-add : Match.d₀ (rows 1) ≡ sE (eΩ₂ ⨾ eY 1) Nx
+row1-add = refl
+
+------------------------------------------------------------------------
+-- 新链点的两个消费者, 左右端逐字 (原始项 z n 2 与累加分支 U n 1 各一次).
+add-z2 : (n : ℕ) → LV.ψ⁰ (Y (suc n)) ≼ read (proj₁ (ψ lvl1 (proj₂ ok₂ tt) (B₀ lvl1) zero (inc tt self) (Ωt zero) (B.z n 2)))
+add-z2 n = consume (rows n)
+
+exp-z2 : (n : ℕ) → LV.ψ⁰ (WL.ψ₁ (Y (suc n))) ≼ read (proj₁ (E o₁ tdNil (B.z n 2) Ω₁op (B₀ lvl1) zero (inc tt self) (Ωt zero)))
+exp-z2 n = consume-exp (rows n)
+
+add-U1 : (n : ℕ) → LV.ψ⁰ (Y (suc n)) ≼ read (proj₁ (ψ lvl1 (proj₂ ok₂ tt) (B₀ lvl1) zero (inc tt self) (Ωt zero) (B.U n 1)))
+add-U1 n = consume (rows-U n)
+
+exp-U1 : (n : ℕ) → LV.ψ⁰ (WL.ψ₁ (Y (suc n))) ≼ read (proj₁ (E o₁ tdNil (B.U n 1) Ω₁op (B₀ lvl1) zero (inc tt self) (Ωt zero)))
+exp-U1 n = consume-exp (rows-U n)

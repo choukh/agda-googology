@@ -1,0 +1,39 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 随原合法性证明一起递归，记录其指定性质；高阶幂返回的证书可原样沿用。
+module B30Invariant where
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Product using (proj₁)
+open import W4Block
+
+record Extra {A : RA} (S : PS A) : Set₁ where
+  field
+    Prop : ∀ u → Pr S u → Set
+    at-lim : ∀ f r q → (∀ n → Prop (f n) (q n)) → Prop (limA A f r) (limP S f r q)
+    at-node : ∀ {m} (ctx : Ctx A m) p f g q → (∀ z → Prop (f z) (q z)) →
+      Prop (nodeA A ctx p f) (nodeP S ctx p f g q)
+open Extra public
+
+Pres : ∀ {A S} → Extra {A} S → (F : OpA A) → Opp S F → Set
+Pres M F proof = ∀ u q → Prop M u q → Prop M (proj₁ F u) (proof u q)
+
+point : ∀ {A S} → Extra {A} S → Extra (ptP S)
+Prop (point M) = Pres M
+at-lim (point M) f r q h u b p = at-lim M _ _ _ (λ n → h n u b p)
+at-node (point M) ctx p f g q h u b m = at-node M ctx p _ g _ (λ z → h z u b m)
+
+iterations : ∀ {A S} (M : Extra {A} S) F h → Pres M F h → ∀ u q → Prop M u q → ∀ n →
+  Prop M (iter (proj₁ F) u n) (iterP (Pr S) (proj₁ F) h u q n)
+iterations M F h hold u q p zero = p
+iterations M F h hold u q p (suc n) = hold _ _ (iterations M F h hold u q p n)
+
+keep : ∀ {A S m} (M : Extra {A} S) (ctx : Ctx A m) g (x : Tr m) F h →
+  Pres M F h → Pres M (Eh A ctx x F) (EP A S ctx g x F h)
+keep M ctx g zero F h p = p
+keep {A} M ctx g (suc x) F h p u q b = at-lim M _ _ _ (λ n →
+  iterations M (Eh A ctx x F) _ (keep M ctx g x F h p) u q b (suc n))
+keep M ctx g (lim f r) F h p u q b = at-lim M _ _ _ (λ n → keep M ctx g (f n) F h p u q b)
+keep M ctx g (Ω a f) F h p u q b = at-node M ctx a _ g _ (λ z → keep M ctx g (f z) F h p u q b)
+keep {A} {S} {nd s family} M ctx g (up x c y e) F h p = keep M (dn A ctx c) (Gd-dn S c g) y _ _ (keep M ctx g x F h p)
+keep {A} M ctx g (ex a b nb x e) F h p =
+  keep (point M) ctx g x (opE A ctx b nb) _ (λ G r v → keep M ctx g b G r v)
+    _ _ (keep M ctx g a F h p)

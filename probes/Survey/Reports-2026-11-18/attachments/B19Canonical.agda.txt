@@ -1,0 +1,36 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第一座正塔的实际反馈下标，逐项字面等于用固定起点与固定槽规则计算的独立迭代。
+module B19Canonical where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; h₁)
+import B14Tower as W
+import B18TowerSlots as S
+import B12Terminal as T
+import B19PathShape as H
+
+seed : Tr⁺ zero
+seed = next⁺ (Ωt zero)
+slots : ∀ ℓ → Base ℓ
+slots ℓ j w = Ωt j ⊞ seed
+
+runWith : ∀ z → Base (h₁ z) → Tr zero
+runWith z b = proj₁ (ψ (h₁ z) (proj₂ (Ok-tw 1) z) b zero
+  (self ∙ lift zero (↑ zero z)) seed (proj₁ (Ωt (h₁ z))))
+
+step : Tr zero → Tr zero
+step z = runWith z (slots (h₁ z))
+
+pointwise : ∀ z → W.Actual.next z ≡ step z
+pointwise z = cong (runWith z) (S.At.all 0 z)
+
+seq : ℕ → Tr zero
+seq = iter step zero
+indices : ∀ n → W.Actual.idx n ≡ seq n
+indices zero = refl
+indices (suc n) = trans (pointwise (W.Actual.idx n)) (cong step (indices n))

@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 首阶 E 对所有可数指数的迭代，可由一个严格推进的原参照时钟统一控制。
+module B31UStageClock where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼; +-mono)
+import W4Block as W
+open import WVOne using (T₀)
+import WSShadow as Sh
+import B18Product as P
+import B19IdealProduct as I
+import B19IdealArithmetic as Ar
+
+module Clock (G : T₀ → T₀) (mono : ∀ a b → a ≼ b → G a ≼ G b)
+  (f : Sh.Sh 0) (next : ∀ t a c → a ≼ G t → c ≼ G t → f a c ≼ G (L.suc t)) where
+
+  room : ∀ y t a c → a ≼ G t → c ≼ G t →
+    Sh.sE (Sh.lv y) f a c ≼ G (t L.+ Ar.norm y)
+  room L.zero t a c da dc = next t a c da dc
+  room (L.lim k) t a c da dc = l≼ (λ n → ≼-trans {b = G (t L.+ Ar.norm (k n))}
+    (room (k n) t a c da dc) (mono _ _ (≼l n (≼-refl (t L.+ Ar.norm (k n)))) ))
+  room (L.suc y) t a c da dc = l≼ (λ n → ≼-trans {b = G (p (suc n))} (proj₁ (pay (suc n)))
+      (mono (p (suc n)) (t L.+ Ar.norm (L.suc y)) (≼l (suc n) (≼-refl (p (suc n))))))
+    where
+    d = Ar.norm y
+    p = λ n → t L.+ (d P.· L.natᶜ n)
+    step = Sh.sE (Sh.lv y) f
+    points = Sh.S.iter (Sh.pr step) (a , c)
+    pay : ∀ n → (proj₁ (points n) ≼ G (p n)) × (proj₂ (points n) ≼ G (p n))
+    pay zero = da , dc
+    pay (suc n) =
+      let h = pay n
+          widen = mono (p n L.+ d) (p (suc n)) (proj₁ (I.assoc+ t (d P.· L.natᶜ n) d))
+      in ≼-trans {b = G (p n L.+ d)} (room y (p n) (proj₁ (points n)) (proj₂ (points n)) (proj₁ h) (proj₂ h)) widen ,
+         ≼-trans {b = G (p n L.+ d)} (room y (p n) (proj₂ (points n)) (proj₂ (points n)) (proj₂ h) (proj₂ h)) widen
+

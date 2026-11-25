@@ -1,0 +1,109 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22RowRule where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import W4Block hiding (lift)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (◃→≼)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import WKShape using (lvl3)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B12ActualSlots as Cov
+import B12Terminal as Tm
+import B13Target as Src
+import B19RowSecond as Old
+import B21RowPool as Pool
+import B22RowPrefix as P
+import B22RowLive as V
+import B22RowLimit as Lim
+
+act : Tr lvl2 → Op {lvl2} nil → Op {lvl2} nil
+act z F = op (E ok₂ tdNil z F) (Einf ok₂ tdNil z F)
+
+record Rule (Q : Op {lvl2} nil) (x : Lev₂) : Set where
+  field
+    reg : x L.≅ x
+    advance : ∀ {p} → P.Label p → P.Label (p L.+ Src.pass x)
+    state : ∀ {p} (l : P.Label p) (R : Base lvl2) → V.Present l R → V.Present (advance l) (stepS Q R)
+    value : ∀ {p} (l : P.Label p) (R : Base lvl2) → V.Present l R →
+      ∀ t b → L.ψ⁰ (P.q l) ≼ read (proj₁ b) → L.ψ⁰ (P.q (advance l)) ≼ read (proj₁ (run Q R zero t b))
+open Rule public
+
+module BaseRule (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  open Pool.At.V.A r cv using (G)
+  base : Rule G (L.Ω (L.suc (L.suc L.zero)))
+  reg base = L.Ω-refl _
+  advance base = P.Step.next
+  state base = V.Update.next r cv
+  value base = V.Update.Emit.all r cv
+
+module Succ (z : Tr lvl2) (F : Op {lvl2} nil) (x : Lev₂) (h : Rule (act z F) x) where
+  Q = act z F
+  Q′ = act (suc z) F
+  increment = Src.pass x
+  rg = Src.pass-pres (reg h)
+  module Sum = U.Sum increment rg
+  module Along = Sum.Prefix (λ p → p L.+ increment) (λ xy → L.add-≅ {σ = R.idσ} {σ′ = R.idσ} xy rg)
+  module For {p : Lev₂} (l : P.Label p) where
+    prefix = R.S.iter (λ t → t L.+ increment) p
+    seq : ∀ n → P.Label (prefix n)
+    seq zero = l
+    seq (suc n) = advance h (seq n)
+    shape : L.lim prefix L.≅ (p L.+ Src.pass (L.suc x))
+    shape = L.l≅ (Along.along (P.rp l))
+    module All = Lim.Collect prefix seq (p L.+ Src.pass (L.suc x)) shape
+    module At (S : Base lvl2) (initial : V.Present l S) where
+      st = λ n → itS Q n S
+      hs : ∀ n → V.Present (seq n) (st n)
+      hs zero = initial
+      hs (suc n) = state h (seq n) (st n) (hs n)
+      same : ∀ n i t → st n i t ≡ itV Q n S i t (S i t)
+      same zero i t = refl
+      same (suc n) i t = cong (run Q (st n) i t) (same n i t)
+      weak : ∀ n i t → i ⊢ proj₁ (st n i t) ◃ proj₁ (stepS Q′ S i t)
+      weak zero i t = inf Q′ S i t (S i t)
+      weak (suc n) i t rewrite same n i t = ◃l n
+      all = All.At.all st (stepS Q′ S) hs weak
+      module Emit (t : zero ≤ lvl2) (b : Tr⁺ zero) (hb : L.ψ⁰ (P.q l) ≼ read (proj₁ b)) where
+        env = λ n → itV Q n S zero t b
+        part : ∀ n → L.ψ⁰ (P.q (seq n)) ≼ read (proj₁ (env n))
+        part zero = hb
+        part (suc n) = value h (seq n) (st n) (hs n) t (env n) (part n)
+        below : ∀ n → zero ⊢ proj₁ (env n) ◃ proj₁ (run Q′ S zero t b)
+        below zero = inf Q′ S zero t b
+        below (suc n) = ◃l n
+        out : L.ψ⁰ All.rep ≼ read (proj₁ (run Q′ S zero t b))
+        out = l≼ (λ n → ≼-trans (part n) (◃→≼ (below n)))
+  lift : Rule Q′ (L.suc x)
+  reg lift = L.s≅ (reg h)
+  advance lift = For.All.label
+  state lift = For.At.all
+  value lift = For.At.Emit.out
+
+module Limit (f : ℕ → Tr lvl2) (rf : ∀ n → lvl2 ⊢ f n ◃ f (suc n))
+             (F : Op {lvl2} nil) (x : ℕ → Lev₂) (h : ∀ n → Rule (act (f n) F) (x n)) where
+  Q = act (lim f rf) F
+  module For {p : Lev₂} (l : P.Label p) where
+    prefix = λ n → p L.+ Src.pass (x n)
+    labels = λ n → advance (h n) l
+    equal : L.lim prefix L.≅ (p L.+ Src.pass (L.lim x))
+    equal = L.l≅ λ n → P.rp (labels n)
+    module All = Lim.Collect prefix labels (p L.+ Src.pass (L.lim x)) equal
+    module At (S : Base lvl2) (initial : V.Present l S) where
+      sts = λ n → stepS (act (f n) F) S
+      together = All.At.all sts (stepS Q S) (λ n → state (h n) l S initial) (λ n i t → ◃l n)
+      emit : ∀ t b → L.ψ⁰ (P.q l) ≼ read (proj₁ b) → L.ψ⁰ All.rep ≼ read (proj₁ (run Q S zero t b))
+      emit t b hb = l≼ (λ n → ≼-trans (value (h n) l S initial t b hb) (◃→≼ (◃l n)))
+  lift : Rule Q (L.lim x)
+  reg lift = L.l≅ (λ n → reg (h n))
+  advance lift = For.All.label
+  state lift = For.At.together
+  value lift = For.At.emit
+

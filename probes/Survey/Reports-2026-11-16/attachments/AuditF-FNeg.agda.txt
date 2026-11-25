@@ -1,0 +1,204 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- F 路判定件: YiWREnd 的 LowSlot 在两个现有不变式 (Inv₀, Inv₁) 下不成立.
+-- 反例: 层号 nd sS (λ _ → zero), 默认底 B₀, 上下文 K = 1, 零树. 不变式不约束槽位层的底.
+module FNeg where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.List using (List; []; _∷_; _++_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
+
+open import OCF.Lean.YiRWBlock hiding (R)
+open import OCF.Lean.YiRWOps using (Ωt; next⁺; Tr⁺)
+open import OCF.Lean.YiRWPath using (Ok)
+open import OCF.Lean.YiRWFold using (Base; B₀)
+open import OCF.Lean.YiBSBase using (Rb)
+import OCF.Align.EboLeanDef as E
+import OCF.Align.EBO as EB
+open import OCF.Align.EboLeanBase using (_≤ᵀ_)
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiGIRel as GR
+open import OCF.Lean.YiKVRel using (¬◃z; ⊴r)
+open import OCF.Lean.YiBALemma using (cons≢c0; argψ; tl; ≤[]; inv0)
+open import OCF.Lean.YiWRZero using (Stᶻ; slotFold)
+import OCF.Lean.YiWREnd as W
+
+-- 记号一侧: 余尾 ω 的项的第 2 项不是 0 也不是 1.
+
+Le1 : E.T → Set
+Le1 t = (t ≡ []) ⊎ (t ≡ E.𝟏 ∷ [])
+
+lvψ : E.T → E.T
+lvψ (E.ψ u _ ∷ _) = u
+lvψ []            = []
+
+fsT≢[] : ∀ b {μ} z zs → E.cof b ≡ E.cΩ μ → E.fsT b (z ∷ zs) ≡ [] → ⊥
+fsT≢[] []                       z zs () _
+fsT≢[] (x ∷ y ∷ ys)             z zs _  ()
+fsT≢[] (E.ψ u (y ∷ ys) ∷ [])    z zs _  f = go (E.cof (y ∷ ys)) f
+  where
+  goc : ∀ ν m → E.fsTc u (y ∷ ys) ν m (z ∷ zs) ≡ [] → ⊥
+  goc ν E.lt ()
+  goc ν E.eq ()
+  goc ν E.gt ()
+  go : ∀ c → E.fsT₊ u (y ∷ ys) c (z ∷ zs) ≡ [] → ⊥
+  go E.c0     ()
+  go E.c1     ()
+  go E.cω     ()
+  go (E.cΩ ν) f′ = goc ν (E.cmpᵀ (E.sucT ν) u) f′
+fsT≢[] (E.ψ (w ∷ ws) [] ∷ [])   z zs _  f = go (E.cof (w ∷ ws)) f
+  where
+  go : ∀ c → E.fsT0 (w ∷ ws) c (z ∷ zs) ≡ [] → ⊥
+  go E.c0     ()
+  go E.c1     ()
+  go E.cω     ()
+  go (E.cΩ ν) ()
+fsT≢[] (E.ψ [] [] ∷ [])         z zs () _
+
+fsnc2 : ∀ u b μ m → E.fsnc u b μ m 2 ≡ [] → ⊥
+fsnc2 u b μ E.lt ()
+fsnc2 u b μ E.eq ()
+fsnc2 u b μ E.gt ()
+
+fsn₊2 : ∀ u b c → (c ≡ E.c0 → ⊥) → E.fsn₊ u b c 2 ≡ [] → ⊥
+fsn₊2 u b E.c0     n _ = n refl
+fsn₊2 u b E.c1     _ ()
+fsn₊2 u b E.cω     _ ()
+fsn₊2 u b (E.cΩ μ) _ f = fsnc2 u b μ (E.cmpᵀ (E.sucT μ) u) f
+
+fsn02 : ∀ u c → E.cofψ0 u c ≡ E.cω → E.fsn0 u c 2 ≡ [] → ⊥
+fsn02 u E.c0     () _
+fsn02 u E.c1     () _
+fsn02 u E.cω     _  ()
+fsn02 u (E.cΩ _) () _
+
+fsn2 : ∀ t → E.cof t ≡ E.cω → E.fsn t 2 ≡ [] → ⊥
+fsn2 []                       () _
+fsn2 (x ∷ y ∷ ys)             _  ()
+fsn2 (E.ψ u (y ∷ ys) ∷ [])    _  f = fsn₊2 u (y ∷ ys) (E.cof (y ∷ ys)) (cons≢c0 y ys) f
+fsn2 (E.ψ (w ∷ ws) [] ∷ [])   e  f = fsn02 (w ∷ ws) (E.cof (w ∷ ws)) e f
+fsn2 (E.ψ [] [] ∷ [])         () _
+
+hc : ∀ u b μ m → E.cof b ≡ E.cΩ μ → E.cofψ₊ u μ m ≡ E.cω → Le1 (E.fsnc u b μ m 2) → ⊥
+hc u b μ E.lt be () _
+hc u b μ E.eq be () _
+hc u b μ E.gt be _  (inj₁ ())
+hc u b μ E.gt be _  (inj₂ e) = fsT≢[] b _ _ be (cong argψ e)
+
+h₊ : ∀ u y ys c → E.cof (y ∷ ys) ≡ c → E.cofA u c ≡ E.cω → Le1 (E.fsn₊ u (y ∷ ys) c 2) → ⊥
+h₊ u y ys E.c0     be _ _        = cons≢c0 y ys be
+h₊ u y ys E.c1     be _ (inj₁ ())
+h₊ u y ys E.c1     be _ (inj₂ ())
+h₊ u y ys E.cω     be _ (inj₁ ())
+h₊ u y ys E.cω     be _ (inj₂ e) = fsn2 (y ∷ ys) be (cong argψ e)
+h₊ u y ys (E.cΩ μ) be ce l       = hc u (y ∷ ys) μ (E.cmpᵀ (E.sucT μ) u) be ce l
+
+h0 : ∀ u c → E.cof u ≡ c → E.cofψ0 u c ≡ E.cω → Le1 (E.fsn0 u c 2) → ⊥
+h0 u E.c0     ue () _
+h0 u E.c1     ue () _
+h0 u E.cω     ue _  (inj₁ ())
+h0 u E.cω     ue _  (inj₂ e) = fsn2 u ue (cong lvψ e)
+h0 u (E.cΩ _) ue () _
+
+lim-le1 : ∀ t → E.cof t ≡ E.cω → Le1 (E.fsn t 2) → ⊥
+lim-le1 []                       () _
+lim-le1 (x ∷ y ∷ ys)             e  (inj₁ ())
+lim-le1 (x ∷ y ∷ ys)             e  (inj₂ q) = fsn2 (y ∷ ys) e (cong tl q)
+lim-le1 (E.ψ u (y ∷ ys) ∷ [])    e  l = h₊ u y ys (E.cof (y ∷ ys)) refl e l
+lim-le1 (E.ψ (w ∷ ws) [] ∷ [])   e  l = h0 (w ∷ ws) (E.cof (w ∷ ws)) refl e l
+lim-le1 (E.ψ [] [] ∷ [])         () _
+
+<𝟏 : ∀ {s} → s E.<ᵀ (E.𝟏 ∷ []) → s ≡ []
+<𝟏 E.[]<             = refl
+<𝟏 (E.hd< (E.lv< ()))
+<𝟏 (E.hd< (E.ar< ()))
+<𝟏 (E.tl< ())
+
+≤𝟏 : ∀ {s} → s ≤ᵀ (E.𝟏 ∷ []) → Le1 s
+≤𝟏 (inj₁ d) = inj₁ (<𝟏 d)
+≤𝟏 (inj₂ e) = inj₂ e
+
+-- 关系一侧: 对着树 1 的参照项只有 0 与 1 (一切层).
+
+module _ {S : Sg} {Low : (p : P S) → E.T → B S p → Set} {Chd : (c : C S) → E.T → D S c → Set}
+         {Nu : P S → E.T → Set} where
+
+  lt-one : ∀ {x y : T S} → Lt S x y → y ≡ suc zero → x ≡ zero
+  lt-one ◃s           refl = refl
+  lt-one (◃l n)       ()
+  lt-one ◃w           ()
+  lt-one (◃u x c y e) ()
+  lt-one (◃c x c r)   ()
+  lt-one (◃t d d′)    q with lt-one d′ q
+  ... | refl = ⊥-elim (¬◃z d)
+
+  inv1 : ∀ {τ x} → H.Mᴴ S Low Chd Nu τ x → x ≡ suc zero → Le1 τ
+  inv1 H.mz               _    = inj₁ refl
+  inv1 (H.m1 {t = t} e r) refl = inj₂ (trans (sym (EB.pred-suc t e)) (cong E.sucT (inv0 r refl)))
+  inv1 (H.mL {t = t} e h) q    = ⊥-elim (lim-le1 t e (inv1 (h 2) q))
+  inv1 (H.mΩ _ _ _)       ()
+  inv1 (H.mU _ _)         ()
+  inv1 (H.mw m d)         q with lt-one d q
+  ... | refl = inj₁ (inv0 m refl)
+  inv1 (H.mc le m)        q with inv1 m q
+  ... | inj₁ refl = inj₁ (≤[] le)
+  ... | inj₂ refl = ≤𝟏 le
+
+-- 反例.
+
+a₁ : L
+a₁ = nd sS (λ _ → zero)
+
+o₁ : Ok a₁
+o₁ = tt , λ _ → tt
+
+r₁ : Rb a₁
+r₁ = tt , λ _ → tt
+
+β₁ : Tr⁺ zero
+β₁ = next⁺ (Ωt zero)
+
+s₁ : Stᶻ a₁
+s₁ = o₁ , r₁ , B₀ a₁ , β₁
+
+K₁ : E.T
+K₁ = E.𝟏 ∷ []
+
+p₁ : Pos a₁
+p₁ = inj₂ (tt , inj₁ tt)
+
+-- 前提可满足: 状态 s₁ 对着 K₁ 满足 Inv₀ 与 Inv₁.
+inv₀-s₁ : W.Inv₀ s₁ K₁
+inv₀-s₁ = H.G⁰.m-next (Ωt zero) refl (λ n → refl) (H.m1 refl H.mz)
+
+inv₁-s₁ : W.Inv₁ s₁ K₁
+inv₁-s₁ = inv₀-s₁ , λ i u → ⊴r
+
+bad : GR.R zero (E.ψ [] K₁ ∷ []) (suc zero) → ⊥
+bad r with inv1 r refl
+... | inj₁ ()
+... | inj₂ ()
+
+¬LowSlot₀ : W.W₀.LowSlot → ⊥
+¬LowSlot₀ ls = bad (ls {a = a₁} s₁ K₁ inv₀-s₁ p₁ {κ = []} (GR.c0 refl) {η = []} {y = zero} H.mz)
+
+¬LowSlot₁ : W.W₁.LowSlot → ⊥
+¬LowSlot₁ ls = bad (ls {a = a₁} s₁ K₁ inv₁-s₁ p₁ {κ = []} (GR.c0 refl) {η = []} {y = zero} H.mz)
+
+-- 必要条件 (对任何不变式): LowSlot 推出槽位层的底对着 ψ_κ(K).
+module Need (Inv : ∀ {a} → Stᶻ a → E.T → Set) where
+  LowSlot′ : Set
+  LowSlot′ = ∀ {a} (s : Stᶻ a) K → Inv s K → (p : Pos a) → ∀ {κ} → GR.Nu a p κ
+    → ∀ {η y} → GR.R a η y → GR.R (at a p) (E.ψ κ (K ++ η) ∷ []) (slotFold s p y)
+
+  mzᴿ : ∀ ℓ {x} → GR.R ℓ [] x
+  mzᴿ zero     = H.mz
+  mzᴿ (nd s h) = H.mz
+
+  base-need : LowSlot′ → ∀ {a} (o : Ok a) (r : Rb a) (B : Base a) (β : Tr⁺ zero) K → Inv (o , r , B , β) K
+    → (p : Pos a) → ∀ {κ} → GR.Nu a p κ
+    → GR.R (at a p) (E.ψ κ (K ++ []) ∷ []) (proj₁ (B (at a p) (OCF.Lean.YiRWPath.posW a p)))
+  base-need ls {a} o r B β K iv p nu = ls (o , r , B , β) K iv p nu {η = []} {y = zero} (mzᴿ a)

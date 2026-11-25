@@ -1,0 +1,35 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 零层合法树只要被一个原名界住，每条树边都能改取严格较小的原名。
+module B31Strict where
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Sum.Base using (inj₁)
+open import OCF.Align.EboLeanDef using (_<ᵀ_)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import WVOne using (read)
+import W4Block as W
+import B12Strict as Step
+import B26Names as A
+import B30OutputRank as Old
+import B31NName as N
+import B27UArbitrary as U
+
+Lab : W.Tr W.zero → A.Name → Set
+Lab W.zero b = ⊤
+Lab (W.suc x) b = Σ A.Name (λ a → A.name a <ᵀ A.name b × Lab x a)
+Lab (W.lim f _) b = ∀ n → Σ A.Name (λ a → A.name a <ᵀ A.name b × Lab (f n) a)
+assign : ∀ x b → read x ≼ A.value b → Lab x b
+assign W.zero b h = tt
+assign (W.suc x) b h with Old.smaller b (read x) h
+... | a , cap , lt = a , lt , assign x a cap
+assign (W.lim f d) b h n with Old.smaller b (read (f n)) (≼-trans {b = read (W.lim f d)} (Step.strict (W.◃l {a = d} n)) h)
+... | a , cap , lt = a , lt , assign (f n) a cap
+weak : ∀ x b → Lab x b → Old.Label x b
+weak W.zero b _ = tt
+weak (W.suc x) b (a , d , p) = a , d , weak x a p
+weak (W.lim f _) b lab n = let a , d , p = lab n in a , inj₁ d , weak (f n) a p
+sound : ∀ x b → Lab x b → read x ≼ A.value b
+sound x b h = Old.sound x b (weak x b h)
+
+first : Lab (U.index 1) N.a
+first = assign (U.index 1) N.a (proj₂ N.actual)

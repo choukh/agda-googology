@@ -1,0 +1,44 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiUPBridgeProbe where
+open import Data.Product using (proj₁; _,_)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiRWFold as RW
+import OCF.Lean.YiTBRow as TB
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiBRRel as R
+import OCF.Lean.YiLegBlock as S
+import OCF.Lean.YiLegOps as SO
+open import OCF.Lean.YiS1Shape using (branch0)
+
+-- 试图去掉 MTRel 的 NoΩ 条件并直接保持新旧逐支桥的最小探针。
+x : B.Tr (B.tw 1)
+x = B.up B.zero B.zero (B.suc B.zero) B.◃s
+β : O.Tr⁺ B.zero
+β = O.Ωt B.zero
+new : B.Tr B.zero
+new = proj₁ (TB.ψ (B.tw 1) (P.Ok-tw 1) (MT.rbᶻ (B.tw 1)) (RW.B₀ (B.tw 1))
+  B.zero (P.inc B.zero P.self) β x)
+old : B.Tr B.zero
+old = proj₁ (RW.ψ (B.tw 1) (P.Ok-tw 1) (RW.B₀ (B.tw 1))
+  B.zero (P.inc B.zero P.self) β x)
+one two : B.Tr B.zero
+one = B.suc B.zero
+two = B.suc (B.suc B.zero)
+new-first : branch0 new ≡ one
+new-first = refl
+old-first : branch0 old ≡ two
+old-first = refl
+one≠two : one ≡ two → ⊥
+one≠two ()
+not-literal-bridge : new ≡ old → ⊥
+not-literal-bridge e = one≠two (trans (sym new-first) (trans (cong branch0 e) old-first))
+
+old′ : S.Tr S.zero
+old′ = S.suc S.zero SO.+ SO.ι S.zero (SO.next (S.suc S.zero) S.◃s)
+not-rel-bridge : R.RelT B.zero S.zero new old′ → ⊥
+not-rel-bridge (R.il (rf , ra)) with rf 0
+... | R.is ()

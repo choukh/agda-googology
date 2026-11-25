@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24APositive where
+open import Data.Empty using (⊥)
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; _,_)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (𝟏; read)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl1; lvl2)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; s≼s; ≼l; ≼-trans; ≼-suc; ≼-refl; ≅→≼)
+import B12ActualSlots as Cov
+import B12Terminal as Tm
+import B12Omega3Ref as Ref
+import B12Omega3Cuts as U
+import B13SeedOuter as Seed
+import B13Target as P
+import B13OrbitFeed as O
+import B18OrbitRows as Rows
+import B22RowLive as V
+import B22RowWhole as Live
+import B22RowPrefix as B
+import B22RowRule as Ru
+import B23ABlocks as Bl
+import B24RKernel as K
+import B24ROrbit as R
+import B24NProduct as Prod
+import B24NKid as Kid
+
+short : Op {lvl2} nil → Op {lvl2} nil
+run (short Q) S zero t b = suc (proj₁ b) , z◃ (proj₁ b) ◃s
+run (short Q) S (nd sh h) t b = run Q S (nd sh h) t b
+inf (short Q) S zero t b = ◃s
+inf (short Q) S (nd sh h) t b = inf Q S (nd sh h) t b
+
+impossible : Ref.numeral 3 ≼ Ref.numeral 2 → ⊥
+impossible (s≼s (s≼s ()))
+low : R.omega ≼ Ref.numeral 2 → ⊥
+low h = impossible (≼-trans (≼l 3 (≼-refl (Ref.numeral 3))) h)
+
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  Q = Bl.Site.Q′ r cv
+  Q′ = short Q
+  positive : Kid.BaseLaw.R Rows.m (enterO O.m₁ Q′) Prod.theta
+  positive = Kid.At.model r cv
+  one = Ωt zero
+  no-H : ∀ S t → K.H 𝟏 ≼ read (proj₁ (run Q′ S zero t one)) → ⊥
+  no-H S t h = low (≼-trans (≼-suc (≼-refl _)) (≼-trans R.w₁ h))
+  no-rule : Ru.Rule Q′ Ω₂ᴸ → ⊥
+  no-rule h = low (≼-trans R.w₀ (≼-trans (≅→≼ (L.≅-sym (L.≅-trans (proj₁ (B.link next))
+    (L.ψ⁰-≅ (U.left-unit Ref.idσ (P.pass-pres (L.Ω-refl _)))))))
+    (Ru.value h B.empty (Seed.At.st1 r) (Live.At.initial r cv) (Seed.At.w2 r) one (≼-refl 𝟏))))
+    where next = Ru.advance h B.empty

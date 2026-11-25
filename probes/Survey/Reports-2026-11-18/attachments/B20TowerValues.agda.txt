@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 独立生成的高层迭代逐项等于 Λ 的真实下标，所得孩子系数及其有限和决定每座塔的全值。
+module B20TowerValues where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; cong₂; trans; sym; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; ≼-refl; ≼l; l≼)
+import B12Terminal as T
+import B17CellPrefix as C
+import B18CellState as D
+import B18Reset as F
+import B18ResetCell as R
+import B18TowerSlots as S
+import B19Coefficient as Q
+import B19IdealProduct as V
+import B20HeadActual as H
+import B20Towers as J
+
+slots : ∀ l n → S.slots l n ≡ J.slots l n
+slots l zero = refl
+slots l (suc n) = cong (λ b → J.extend b _) (slots l n)
+
+module At (n : ℕ) where
+  module K = J.At n
+  module P = C.At n
+  actual = P.S.ix
+  step : ∀ z → P.S.step z ≡ K.next z
+  step z = cong₂ (K.nextWith z) (trans (S.At.all n z) (slots (K.ℓ z) (suc n))) (H.At.slot n)
+  index : ∀ j → actual j ≡ K.index j
+  index zero = refl
+  index (suc j) = trans (step (actual j)) (cong K.next (index j))
+  fresh : ∀ j → D.At.fresh n j ≡ read (K.coefficient j)
+  fresh j = trans (cong (λ b → read (K.evaluate (actual j) b (Ωt zero))) (slots (K.ℓ (actual j)) (suc n)))
+    (cong (λ z → read (K.evaluate z (J.slots (K.ℓ z) (suc n)) (Ωt zero))) (index j))
+
+  raw : ∀ j → R.At.raw n j ≡ K.coefficient j
+  raw j = trans (cong (λ b → K.evaluate (actual j) b (Ωt zero))
+    (trans (S.At.all n (actual j)) (slots (K.ℓ (actual j)) (suc n))))
+    (cong (λ z → K.evaluate z (J.slots (K.ℓ z) (suc n)) (Ωt zero)) (index j))
+  sums : ∀ j → cum (R.At.raw n) j ≡ K.prefix j
+  sums zero = raw zero
+  sums (suc j) = cong₂ _+_ (sums j) (raw (suc j))
+  tower : F.fresh (suc n) ≈ᵛ L.lim (λ j → read (K.prefix j))
+  tower = subst (λ x → x ≈ᵛ L.lim (λ j → read (K.prefix j))) (sym (R.At.shape n))
+    (V.lim (λ j → subst (λ y → read (cum (R.At.raw n) j) ≈ᵛ read y) (sums j) (V.id _)))

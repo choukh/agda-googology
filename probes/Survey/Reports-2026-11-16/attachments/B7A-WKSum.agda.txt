@@ -1,0 +1,164 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B7A: 第 1 层的树作被加项 (在目标 0 上被消费) 的值关系 SumR, 对 W4 在目标 1 的输出构造封闭:
+-- suc, lim, 保留下来的 Ω₁ 结点 (分支为正), 第 0 层尾巴, ex 行; 以及 "前缀无关": 结构关系 Sm b d ⟹ SumR (a + b) d,
+-- 所以第 1 层走链结点的输出 lim (cum …) 不低于逐项的影子 (只用 W4 的膨胀, 不要影子单调). 编译定理, 无前提.
+module WKSum where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-refl; ≼-trans)
+open import WVOne using (T₀; 𝟏; read; lvl1; p₁; Mv; Mv-mono; P-read; iterR; cumL)
+open import WVTwo using (◃→≼)
+open import WSShadow
+open import WSW4
+
+-- 目标 0 上的第 1 层路径只有两种形状; 折叠的自身行要先排除 self 才能展开.
+byW : (P : zero ≤ lvl1 → Set) → P (inc tt self) → ((ws : (c : ⊤) → zero ≤ zero) → P (inu ws)) → (w : zero ≤ lvl1) → P w
+byW P p q (inc tt self) = p
+byW P p q (inu ws)      = q ws
+
+-- 第 0 层的折叠, 路径任意 (第 0 层没有自身行, 不必拆路径).
+P-any : ∀ {o₀ : Ok zero} {Bs : Base zero} (w : zero ≤ zero) (β : Tr⁺ zero) (x : Tr zero)
+      → Mv (read (proj₁ β)) (read x) ≼ read (proj₁ (ψ zero o₀ Bs zero w β x))
+P-any w β zero          = ≼-refl _
+P-any {o₀} {Bs} w β (suc x) = l≼ (λ n → ≼l n (iterR (P-any {o₀} {Bs} w β x) n))
+P-any {o₀} {Bs} w β (lim f _) = l≼ (λ n → ≼l n (P-any {o₀} {Bs} w β (f n)))
+P-any w β (Ω () _)
+P-any w β (up _ () _ _)
+P-any w β (ex _ _ _ _ ())
+
+module Sum (o : Ok lvl1) where
+  open Lem o
+
+  -- 被加项的值关系 (= 𝓡 0 (inc tt self) (opB lvl1 o y _), 定义上).
+  SumR : Tr lvl1 → Sh 0 → Set
+  SumR y d = (B : Base lvl1) (w : zero ≤ lvl1) (β : Tr⁺ zero) (a c : T₀) → a ≼ read (proj₁ β)
+           → c ≼ read (proj₁ (B zero (inc tt self))) → 𝟏 ≼ read (proj₁ (B zero (inc tt self)))
+           → d a c ≼ read (proj₁ (ψ lvl1 o B zero w β y))
+
+  -- 底的膨胀 (W4 的 mono).
+  baseInfl : (B : Base lvl1) (w : zero ≤ lvl1) (β : Tr⁺ zero) (y : Tr lvl1) → read (proj₁ β) ≼ read (proj₁ (ψ lvl1 o B zero w β y))
+  baseInfl B w β y with zl y
+  ... | inj₁ refl = ≼-refl _
+  ... | inj₂ d    = ◃→≼ (mono lvl1 o B zero w β d)
+
+  ----------------------------------------------------------------------
+  -- 逐行的封闭 (语义).
+  SumR-s : ∀ {y d} → SumR y d → SumR (suc y) (λ a c → Mv (d a c) 𝟏)
+  SumR-s {y} {d} r B = byW (λ w → ∀ β a c → a ≼ read (proj₁ β) → c ≼ read (proj₁ (B zero (inc tt self))) → 𝟏 ≼ read (proj₁ (B zero (inc tt self)))
+                              → Mv (d a c) 𝟏 ≼ read (proj₁ (ψ lvl1 o B zero w β (suc y))))
+                       (λ β a c ha hc h1 → l≼ (λ n → ≼l n (iterR (r B (inc tt self) β a c ha hc h1) n)))
+                       (λ ws β a c ha hc h1 → l≼ (λ n → ≼l n (iterR (r B (inu ws) β a c ha hc h1) n)))
+
+  SumR-l : ∀ {f : ℕ → Tr lvl1} {s} {d : ℕ → Sh 0} → (∀ j → SumR (f j) (d j)) → SumR (lim f s) (λ a c → LV.lim (λ j → d j a c))
+  SumR-l {f} {s} {d} r B = byW (λ w → ∀ β a c → a ≼ read (proj₁ β) → c ≼ read (proj₁ (B zero (inc tt self))) → 𝟏 ≼ read (proj₁ (B zero (inc tt self)))
+                                 → LV.lim (λ j → d j a c) ≼ read (proj₁ (ψ lvl1 o B zero w β (lim f s))))
+                          (λ β a c ha hc h1 → l≼ (λ j → ≼l j (r j B (inc tt self) β a c ha hc h1)))
+                          (λ ws β a c ha hc h1 → l≼ (λ j → ≼l j (r j B (inu ws) β a c ha hc h1)))
+
+  -- 保留行的输出 (第 1 层的 Ω₁ 结点, 分支为正) 在目标 0 被消费: 走链, 链底是状态的第 0 层分量.
+  SumR-Ω : (g : Tr zero → Tr lvl1) (h : T₀ → Sh 0) → (∀ z → lvl1 ⊢ zero ◃ g z)
+         → (∀ y z → y ≼ read z → SumR (g z) (h y)) → SumR (Ω p₁ g) (nodeS 0 h)
+  SumR-Ω g h nz r B = byW (λ w → ∀ β a c → a ≼ read (proj₁ β) → c ≼ read (proj₁ (B zero (inc tt self))) → 𝟏 ≼ read (proj₁ (B zero (inc tt self)))
+                               → nodeS 0 h a c ≼ read (proj₁ (ψ lvl1 o B zero w β (Ω p₁ g))))
+                        (go (inc tt self)) (λ ws → go (inu ws))
+    where
+    go : (w : zero ≤ lvl1) (β : Tr⁺ zero) (a c : T₀) → a ≼ read (proj₁ β) → c ≼ read (proj₁ (B zero (inc tt self)))
+       → 𝟏 ≼ read (proj₁ (B zero (inc tt self)))
+       → nodeS 0 h a c ≼ read (proj₁ (node⁺ (kp lvl1 o p₁ w) (λ z → ψ lvl1 o B zero w β (g z))
+                                            (λ z → proj₁ (ψ lvl1 o B zero (inc tt self) (B zero (inc tt self)) (g z)))))
+    go w β a c ha hc h1 =
+      NodeG.low (B zero (inc tt self)) (λ z → ψ lvl1 o B zero w β (g z))
+                (λ z → ψ lvl1 o B zero (inc tt self) (B zero (inc tt self)) (g z))
+                (λ z → mono lvl1 o B zero (inc tt self) (B zero (inc tt self)) (nz z))
+                h a c hc h1
+                (λ y z d → r y z d B w β a c ha hc h1)
+                (λ y z d → r y z d B (inc tt self) (B zero (inc tt self)) c c hc hc h1)
+                (kp lvl1 o p₁ w)
+
+  -- 第 0 层尾巴: up x tt t (x 之后接第 0 层的 t).
+  SumR-u : ∀ {x d} {t : Tr zero} {e : zero ⊢ zero ◃ t} (t′ : T₀) → t′ ≼ read t → SumR x d → SumR (up x tt t e) (λ a c → Mv (d a c) t′)
+  SumR-u {x} {d} {t = t} {e} t′ dt r B = byW (λ w → ∀ β a c → a ≼ read (proj₁ β) → c ≼ read (proj₁ (B zero (inc tt self))) → 𝟏 ≼ read (proj₁ (B zero (inc tt self)))
+                                     → Mv (d a c) t′ ≼ read (proj₁ (ψ lvl1 o B zero w β (up x tt t e))))
+    (λ β a c ha hc h1 → ≼-trans (Mv-mono (r B (inc tt self) β a c ha hc h1) dt)
+                                 (P-read (ψ lvl1 o B zero (inc tt self) β x) t))
+    (λ ws β a c ha hc h1 → ≼-trans (Mv-mono (r B (inu ws) β a c ha hc h1) dt)
+                                    (P-any (ws tt) (ψ lvl1 o B zero (inu ws) β x) t))
+
+  -- ex 行: a 之后把 "右边接上 b" 迭代 ω^x 次.
+  SumR-x : ∀ {a₁ b₁ x da db e} (nb : lvl1 ⊢ zero ◃ b₁) → SumR a₁ da → SumR b₁ db → RealE x e
+         → SumR (ex a₁ b₁ nb x tt) (λ a c → sE e db (da a c) (da c c))
+  SumR-x {a₁} {b₁} {x} {da} {db} {e} nb ra rb rx B = byW (λ w → ∀ β a c → a ≼ read (proj₁ β) → c ≼ read (proj₁ (B zero (inc tt self))) → 𝟏 ≼ read (proj₁ (B zero (inc tt self)))
+                                            → sE e db (da a c) (da c c) ≼ read (proj₁ (ψ lvl1 o B zero w β (ex a₁ b₁ nb x tt))))
+    (λ β a c ha hc h1 → go (inc tt self) β a c ha hc h1)
+    (λ ws β a c ha hc h1 → go (inu ws) β a c ha hc h1)
+    where
+    Sa : St {lvl1} nil
+    Sa i u = ψ lvl1 o B i u (B i u) a₁
+    hE : 𝓡 0 {nil} (inc tt self) (op (E o tdNil x (opB lvl1 o b₁ nb)) (Einf o tdNil x (opB lvl1 o b₁ nb))) (sE e db)
+    hE = rx (λ t → t) (λ t → t) (opB lvl1 o b₁ nb) db rb
+    go : (w : zero ≤ lvl1) (β : Tr⁺ zero) (a c : T₀) → a ≼ read (proj₁ β) → c ≼ read (proj₁ (B zero (inc tt self)))
+       → 𝟏 ≼ read (proj₁ (B zero (inc tt self)))
+       → sE e db (da a c) (da c c) ≼ read (proj₁ (E o tdNil x (opB lvl1 o b₁ nb) Sa zero w (ψ lvl1 o B zero w β a₁)))
+    go w β a c ha hc h1 =
+      hE Sa w (ψ lvl1 o B zero w β a₁) (da a c) (da c c) (ra B w β a c ha hc h1)
+         (ra B (inc tt self) (B zero (inc tt self)) c c hc hc h1)
+         (≼-trans h1 (baseInfl B (inc tt self) (B zero (inc tt self)) a₁))
+
+  SumR-w : ∀ {y d d′} → SumR y d → Le 0 d′ d → SumR y d′
+  SumR-w r p B w β a c ha hc h1 = ≼-trans (p a c) (r B w β a c ha hc h1)
+
+  ----------------------------------------------------------------------
+  -- 结构关系 (逐构造子, 子项 b 与指数 x 只要语义前提) 与它的两条定理: 可靠, 前缀无关.
+  data Sm : Tr lvl1 → Sh 0 → Set where
+    mz : Sm zero (λ a c → a)
+    ms : ∀ {y d} → Sm y d → Sm (suc y) (λ a c → Mv (d a c) 𝟏)
+    ml : ∀ {f : ℕ → Tr lvl1} {s} {d : ℕ → Sh 0} → (∀ j → Sm (f j) (d j)) → Sm (lim f s) (λ a c → LV.lim (λ j → d j a c))
+    mΩ : ∀ {g : Tr zero → Tr lvl1} {h : T₀ → Sh 0} → (∀ z → lvl1 ⊢ zero ◃ g z)
+       → (∀ y z → y ≼ read z → Sm (g z) (h y)) → Sm (Ω p₁ g) (nodeS 0 h)
+    mu : ∀ {x d} {t : Tr zero} {e : zero ⊢ zero ◃ t} (t′ : T₀) → t′ ≼ read t → Sm x d → Sm (up x tt t e) (λ a c → Mv (d a c) t′)
+    mx : ∀ {a₁ b₁ x da db e} (nb : lvl1 ⊢ zero ◃ b₁) → Sm a₁ da → SumR b₁ db → RealE x e
+       → Sm (ex a₁ b₁ nb x tt) (λ a c → sE e db (da a c) (da c c))
+    mw : ∀ {y d d′} → Sm y d → Le 0 d′ d → Sm y d′
+
+  sound : ∀ {y d} → Sm y d → SumR y d
+  sound mz B w β a c ha hc h1 = ha
+  sound (ms r)             = SumR-s (sound r)
+  sound (ml h)             = SumR-l (λ j → sound (h j))
+  sound (mΩ nz h)          = SumR-Ω _ _ nz (λ y z d → sound (h y z d))
+  sound (mu t′ dt r)       = SumR-u t′ dt (sound r)
+  sound (mx {da = da} {db} {e} nb ra rb rx) = SumR-x {da = da} {db} {e} nb (sound ra) rb rx
+  sound (mw r p)           = SumR-w (sound r) p
+
+  pos+ : (a : Tr lvl1) {y : Tr lvl1} → lvl1 ⊢ zero ◃ y → lvl1 ⊢ zero ◃ (a + y)
+  pos+ a d = z◃ a (+-mono a d)
+
+  -- 前缀无关: b 的影子对 a + b 仍成立 (a 任意). 只用 W4 的膨胀 (baseInfl) 与 Mv 的单调, 不要影子单调.
+  prefix : ∀ {b d} → Sm b d → (a : Tr lvl1) → SumR (a + b) d
+  prefix mz a B w β a′ c ha hc h1 = ≼-trans ha (baseInfl B w β a)
+  prefix (ms r)           a = SumR-s (prefix r a)
+  prefix (ml h)           a = SumR-l (λ j → prefix (h j) a)
+  prefix (mΩ {g} nz h)    a = SumR-Ω (λ z → a + g z) _ (λ z → pos+ a (nz z)) (λ y z d → prefix (h y z d) a)
+  prefix (mu t′ dt r)     a = SumR-u t′ dt (prefix r a)
+  prefix (mx {da = da} {db} {e} nb ra rb rx) a = SumR-x {da = da} {db} {e} nb (prefix ra a) rb rx
+  prefix (mw r p)         a = SumR-w (prefix r a) p
+
+  -- 第 1 层走链结点的输出 (W4: 累加的极限) 不低于逐项影子的极限 (Level 一侧的链是逐项的极限).
+  cumR : (F : ℕ → Tr lvl1) (d : ℕ → Sh 0) → (∀ n → Sm (F n) (d n)) → (s : (n : ℕ) → lvl1 ⊢ cum F n ◃ cum F (suc n))
+       → SumR (lim (cum F) s) (λ a c → LV.lim (λ n → d n a c))
+  cumR F d r s = SumR-l term
+    where
+    term : (n : ℕ) → SumR (cum F n) (d n)
+    term zero    = sound (r zero)
+    term (suc n) = prefix (r (suc n)) (cum F n)

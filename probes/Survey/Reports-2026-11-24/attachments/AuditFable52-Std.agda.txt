@@ -1,0 +1,38 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 规范证书: 真实闭项用到的那一类层号证书 (Λ 与塔的证书, 以及它们的孩子与下标层). Ω 形层号上折叠的输出依赖证书里的下标路径
+-- (见 Audit3 的 keep-K-inu 与 keep-K-ink), 所以 Ω 形层号上的值定理要对这一类陈述.
+module Audit4 where  -- 留档名 AuditFable52-Std; 与 B4W4-W4*.agda.txt 同目录编译
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+
+data Std : (ℓ : L) → Ok ℓ → Set where
+  s-Λ   : Std Λ Ok-Λ
+  s-tw  : (n : ℕ) → Std (tw n) (Ok-tw n)
+  s-ch  : ∀ {s h} {o : Ok (nd s h)} → Std (nd s h) o → (c : Ch s) → Std (h c) (proj₂ o c)
+  s-idx : ∀ {k h} {o : Ok (nd (sΩ k) h)} → Std (nd (sΩ k) h) o → Std k (proj₁ (proj₁ o))
+
+-- 塔的孩子的证书就是 "在基底 tw n 上读回 tw n 的树" 给出的证书 (定义性).
+tw-child : (n : ℕ) (c : Tr (tw n))
+         → proj₂ (Ok-tw (suc n)) c ≡ Ok⊕ (tw n) (↑ (tw n) c) (Ok-tw n) (OkO↑ (tw n) (tw n) (Ok-tw n) self c)
+tw-child n c = refl
+
+-- 塔自己的下标路径: 提升 (下标层 tw n 在每个孩子的底部).
+tw-idx : (n : ℕ) (c : Tr (tw n)) → proj₂ (proj₁ (Ok-tw (suc n))) c ≡ lift (tw n) (↑ (tw n) c)
+tw-idx n c = refl
+
+-- 读回层号里 Ω 形结点的下标路径 (定义性): 树上那个结点位置自己的路径, 接上提升.
+idx-↑ : (a : L) (oa : Ok a) (p : Pos a) (g : Br a p → Tr a) (c : Tr (at a p))
+      → proj₂ (proj₁ (Ok⊕ a (↑ a (Ω p g)) oa (OkO↑ a a oa self (Ω p g)))) c
+      ≡ (posW a p ∙ self) ∙ lift a (↑ a (g (fromBr a p c)))
+idx-↑ a oa p g c = refl
+
+-- Ω 形层号自己顶部一族位置的路径经自己的下标 (ink), 不经孩子.
+own-ink : (k : L) (h : Tr k → L) (t : Pos⁼ k) → posW (nd (sΩ k) h) (inj₁ t) ≡ ink (posW⁼ k t)
+own-ink k h t = refl

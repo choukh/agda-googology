@@ -1,0 +1,40 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同一实际子运行的每个槽，连同正层槽，都严格包含原槽右加前两层独立标准值的树。
+module B22TowerPorts where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Path
+open import W4Ops
+open import W4Fold
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B18TowerEmb as E
+import B21TowerSeed as S
+import B20Room as Room
+open T.Run
+
+module Layer (m : ℕ) where
+  open S.Layer m using (k; mid; n)
+  first : ∀ B j (w : j ≤ k) (v : Tr⁺ j) →
+    j ⊢ proj₁ (v ⊞ E.standard m) ◃ proj₁ (ψ mid (Ok-tw n) B j (inc zero w) v (proj₁ (Ωt mid)))
+  first B j w v = ◃l 0
+  reached : ∀ {o : Ok mid} → o ≡ Ok-tw n → ∀ B j (w : j ≤ k) (v : Tr⁺ j) x →
+    A._⊴_ (proj₁ (Ωt mid)) x →
+    j ⊢ proj₁ (v ⊞ E.standard m) ◃ proj₁ (ψ mid o B j (inc zero w) v x)
+  reached refl B j w v _ (inj₁ refl) = first B j w v
+  reached refl B j w v x (inj₂ e) = ◃t (first B j w v) (mono mid (Ok-tw n) B j (inc zero w) v e)
+  module Within (r : T.Run (U.sc mid)) (eq : proj₂ (ok r) tt ≡ Ok-tw n) (cr : A.Covered r) where
+    module X = S.Layer.Inside m r eq cr
+    previous : Base k
+    previous j w = bs X.M.r₀ j (inc zero w)
+    high : ∀ j (w : j ≤ k) → j ⊢ proj₁ (previous j w ⊞ E.standard m) ◃ proj₁ (bs X.sub j w)
+    high j w = reached eq (bs X.M.r₀) j w (previous j w) X.M.c (cr mid (inc tt self))
+  module At (r : T.Run (tw (suc n))) (eq : ok r ≡ Ok-tw (suc n)) (cr : A.Covered r) where
+    module X = S.Layer.At m r eq cr
+    module I = Within X.found X.cert (Room.cover X.path X.one X.oc)
+    open I public using (previous; high)

@@ -1,0 +1,80 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真回灌沿正树的每一首边生成一个零层自然首边；第 u 个选择至少有 u 层这样的首边并在底部保有原启动程序。
+module B30PActual where
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Maybe.Base using (nothing; just)
+open import Data.Sum.Base using (inj₁)
+open import Data.Unit.Base using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst; cong)
+open import W4Block
+open import W4Path
+open import W4Ops
+open import W4Fold hiding (run)
+import WVOne as V
+import B18TowerSlots as Sl
+import B28BFirst as A
+import B28BBranch as Z
+import B29CLimit as Shape
+import B30PFirst as F
+import B30PStart as S
+module C = A.At 0
+k = S.X.K.k
+zero-edge : ∀ {x y : Tr zero} → F.First x y → S.NatEdge x y
+zero-edge (F.nat f d) = S.edge f d
+zero-edge (F.card () g)
+
+module Read (w : (b : L) → zero ≤ (k ⊕ b))
+  (open-w : ∀ s h → w (nd s h) ≡ inu (λ i → w (h i))) (β : Tr⁺ zero) where
+  fold : ∀ b → OkO k b → Tr zero
+  fold b e = proj₁ (ψ (k ⊕ b) (Ok⊕ k b (Ok-tw 1) e) (Sl.slots (k ⊕ b) 2) zero (w b) β (proj₁ (Ωt (k ⊕ b))))
+  run = λ x → fold (↑ k x) (OkO↑ k k (Ok-tw 1) self x)
+  keep : ∀ {x y : Tr k} → F.First x y → S.NatEdge (run x) (run y)
+  keep (F.nat f d) = subst (λ t → S.NatEdge (run (f 0)) (top t)) (sym (open-w sL (λ i → ↑ k (f i))))
+    (subst (λ z → S.NatEdge z (top (inu (λ i → w (↑ k (f i)))))) (cong call (A.restrict {sL} h 0 2)) (S.edge _ _))
+    where
+    h = λ i → C.lev (f i)
+    parent = nd sL h
+    ok = C.cert (lim f d)
+    env = Sl.slots parent 2
+    top = λ t → proj₁ (ψ parent ok env zero t β (proj₁ (Ωt parent)))
+    call = λ b → proj₁ (ψ (h 0) (proj₂ ok 0) b zero (w (↑ k (f 0))) β (proj₁ (Ωt (h 0))))
+  keep (F.card p g) = subst (λ t → S.NatEdge (run (child zero)) (top t)) (sym (open-w (sΩ i) (λ z → ↑ k (child z))))
+    (subst (λ z → S.NatEdge z (top (inu (λ z → w (↑ k (child z)))))) (cong call (A.restrict {sΩ i} h zero 2))
+      (zero-edge (F.node μ family advance)))
+    where
+    i = at k p
+    child = λ z → g (fromBr k p z)
+    h = λ z → C.lev (child z)
+    parent = nd (sΩ i) h
+    ok = C.cert (Ω p g)
+    env = Sl.slots parent 2
+    path = inu (λ z → w (↑ k (child z)))
+    top = λ t → proj₁ (ψ parent ok env zero t β (proj₁ (Ωt parent)))
+    call = λ b → proj₁ (ψ (h zero) (proj₂ ok zero) b zero (w (↑ k (child zero))) β (proj₁ (Ωt (h zero))))
+    μ = kp parent ok (inj₁ (inj₁ tt)) path
+    body = λ z → proj₁ (upz {h = h} z (Ωt (h z)))
+    family = λ z → ψ parent ok env zero path β (body z)
+    advance = λ z → proj₁ (ψ parent ok env i (ink self) (env i (ink self)) (body z))
+
+module D = Read (λ b → self ∙ (ink self ∙ lift k b)) (λ s h → refl) C.start
+module Raw = Read (λ b → z≤ (k ⊕ b)) (λ s h → refl) C.β
+
+from-limit : ∀ {k} {x : Tr k} → Shape.Limit x → S.Deep 1 x
+from-limit (Shape.hit f d) = S.deeper (S.all (f 0)) (S.edge f d)
+first : ∀ j → S.Deep 1 (D.run (S.X.branch j zero))
+first j = from-limit {x = D.run (S.X.branch j zero)} (Shape.inner-preserves (S.X.branch j zero) (Shape.At.actual j 0))
+
+gain : ∀ {a n x} → S.Deep 1 (D.run a) → S.Layers a n x → S.Deep (suc n) (D.run x)
+gain q (S.bottom F.stay) = q
+gain q (S.bottom (F.step _ h)) = S.deeper (S.all _) (D.keep h)
+gain q (S.layer p (S.edge f d)) = S.deeper (gain q p) (D.keep (F.nat f d))
+
+module Actual (j : ℕ) where
+  module X = Shape.At j
+  d : ∀ u → S.Deep u (X.c u)
+  d zero = S.all _
+  d (suc u) = subst (S.Deep (suc u)) (sym (Z.At.step 0 X.g (X.c u))) (gain (first j) (S.actual j (X.c u) (d u)))
+  layers : ∀ u → S.Layers (X.x 0) u (X.x u)
+  layers u = S.actual j (X.c u) (d u)
+

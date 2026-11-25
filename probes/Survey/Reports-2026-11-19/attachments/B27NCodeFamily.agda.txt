@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意深度、带一项后缀的规范 Ω 森林确实小于同一次 ε₀ 运行，且其编译代码均不是该运行的字面回灌点。
+module B27NCodeFamily where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_; _++_)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym; cong)
+open import OCF.Align.EboLeanDef using (ψ; ΩTower; natT; _<ᵀ_; []<; ar<)
+open import OCF.Align.EboLeanBase using (NF; n∷; nψ; n[]; GB[]; nf-hd; nf-Ω)
+open import OCF.Align.EboLeanTree using (nf-ΩT)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (s≼s; _≼_; ≼-trans)
+open import WVOne using (read)
+open import B26CForest using (small; normal; count; entry)
+import B26CScalar as S
+import B26CLift as F
+import B25DTrack as R
+import B26CMeaning as M
+import B27NOrbit as O
+
+word = λ n → small (ΩTower n) ++ natT 1
+positive : ∀ n → [] <ᵀ small (ΩTower n)
+positive zero = []<
+positive (suc n) = []<
+
+regular : ∀ n → NF (word n)
+regular zero = n∷ (nψ n[] n[] GB[]) (inj₂ refl) (nf-Ω n[])
+regular (suc n) = n∷ (nf-hd (normal (F.pure-tower (suc n)) (nf-ΩT (suc n))))
+  (inj₁ (ar< (positive n))) (nf-Ω n[])
+
+base : ∀ n → M.Fits (S.code (small (ΩTower n)))
+base n = ≼-trans (s≼s (proj₂ (S.inside-code (normal pt nt) (count (ΩTower n)) h source h))) source
+  where
+  pt = F.pure-tower n
+  nt = nf-ΩT n
+  h = F.input-h n
+  source = entry pt nt h
+
+fits : ∀ n → M.Fits (S.code (word n))
+fits n = subst M.Fits (sym (O.trailing t))
+  (≼-trans {b = L.suc (read (R.χ j))} (s≼s bound) (O.point j))
+  where
+  t = small (ΩTower n)
+  j = proj₁ (O.after (S.code t) (base n))
+  bound = proj₂ (O.after (S.code t) (base n))
+
+miss : ∀ n j → R.χ j ≡ S.code (word n) → ⊥
+miss = O.forest-miss
+

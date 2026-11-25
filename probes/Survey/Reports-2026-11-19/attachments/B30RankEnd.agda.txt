@@ -1,0 +1,52 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在原 W4 零层输出树上，严格的原行上界等价于可沿输出逐步检查的原名标号；只在第四层使用。
+module B30RankEnd where
+open import Data.Nat.Base as N using (ℕ)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂; _⊎_)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit.Base using (⊤; tt)
+open import Relation.Binary.PropositionalEquality using (refl)
+import W4Block as W
+open import WVOne using (read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼lim⁻; ≼-suc; ≼-trans; ≼-refl; ≼l; l≼; z≼; s≼s)
+open import OCF.Align.EboLeanDef using (_<ᵀ_)
+open import OCF.Align.EboLeanBase using (_≤ᵀ_)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRVLevel using (LEM)
+import B26Names as A
+import B26Depth as D
+import B27CutArithmetic as C
+import B27Threshold as R
+import B27Endpoint as E
+import B17ValueDich as O
+
+import B30OutputRank as Namer
+open Namer using (Ranked; sound; chart)
+
+module Endpoint (e : A.T₀) (within : ∀ a → L.suc (A.value a) ≼ e)
+  (cap : ∀ y → L.suc y ≼ e → Σ A.Name (λ a → y ≼ A.value a)) where
+  below : ∀ x → Ranked x → L.suc (read x) ≼ e
+  below x (a , lab) = ≼-trans {a = L.suc (read x)} {b = L.suc (A.value a)} {c = e}
+    (s≼s {a = read x} {b = A.value a} (sound x a lab)) (within a)
+  complete : ∀ x → L.suc (read x) ≼ e → Ranked x
+  complete x h with cap (read x) h
+  ... | a , d = a , chart x a d
+  reject : LEM → ∀ x → (Ranked x → ⊥) → e ≼ read x
+  reject lem x no with O.Classical.compare lem e (read x)
+  ... | inj₁ h = h
+  ... | inj₂ h = ⊥-elim (no (complete x h))
+
+module Branch (v : ℕ → A.Name) where
+  cap : (y : A.T₀) → L.suc y ≼ L.lim (λ k → A.value (v k)) →
+    Σ A.Name (λ a → y ≼ A.value a)
+  cap y h with ≼lim⁻ {a = y} {f = λ k → A.value (v k)} h
+  ... | k , p = v k , ≼-trans {a = y} {b = L.suc y} {c = A.value (v k)}
+    (≼-suc (≼-refl y)) p
+
+caps : (y : A.T₀) → L.suc y ≼ A.E → Σ A.Name (λ a → y ≼ A.value a)
+caps = Branch.cap D.tower
+
+module Original = Endpoint A.E A.strict caps
+

@@ -1,0 +1,87 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- BTBO 在塔第 1 项的两条实际路径上校准。可数极限自动消去，未填的比较只在两侧同为后继的实际调用上提出。
+module B14Btbo where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; 𝟏; h₁; read; ψ⁰-lvl0)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; ≅→≼; s≼s)
+import OCF.Align.NoCumsum as N
+open import OCF.Align.BTBOFull using (BTBO≈)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.BTBO using (module Ord-Ord)
+import B12Terminal as T
+import B12ActualSlots as A
+import B12EboRows as E
+import B13Feedback as F
+import B14Tower as W
+import B14PathHeight as P
+import B14Height as H
+open T.Run
+open W.Actual
+
+endpoint = T.tower1
+α : L.Ordᴵ → T₀
+α i = L.ψ⁰ (L.Ω i)
+hR : A.Covered endpoint
+hR = A.enter sL tw T.terminal 1 (T.prefix tw 1) (A.initial Λ Ok-Λ)
+pc : ∀ n → A.Covered (point n)
+pc n = A.enter (sΩ zero) h₁ endpoint (idx n) zero hR
+
+first-in : N.γ 1 ≼ read (idx 2)
+first-in = ≼-trans E.epsilon-in-Ω₂ (≼-trans (T.anchor₂ (W.Inner.sub 1)) (≼-trans (W.Inner.part 1) (W.Outer.part 0)))
+
+-- 编号 n=0 的进、出两条调用已实填。因此研究域从 γ₂ 对应的调用开始。
+data Ask : (i : L.Ordᴵ) (z : Tr zero) → T.Run (h₁ z) → zero ≤ h₁ z → Set where
+  incoming : ∀ n → Ask (N.L (suc n)) (idx (suc (suc n))) (chain (idx (suc (suc n)))) (path (idx (suc (suc n))))
+  outgoing : ∀ n → Ask (N.L (suc n)) (idx (suc (suc n))) (point (suc (suc n))) (z≤ _)
+  ref-child : ∀ {f m z r w} → Ask (L.lim f m) z r w → (n : ℕ) → Ask (f n) z r w
+  run-child : ∀ {i f d} {r : T.Run (h₁ (lim f d))} {ws : (n : ℕ) → zero ≤ h₁ (f n)} →
+    Ask (L.suc i) (lim f d) r (inu ws) → (n : ℕ) → Ask (L.suc i) (f n) (W.Lim.sub (λ k → h₁ (f k)) r ws n) (ws n)
+
+Successors : Set
+Successors = ∀ {i z r w} → Ask (L.suc i) (suc z) r w →
+  L.forget i ≼ read z → α (L.suc i) ≼ W.valueAt r w
+
+module From (steps : Successors) where
+  on-suc : (i : L.Ordᴵ) (z : Tr zero) {r : T.Run (h₁ z)} {w : zero ≤ h₁ z} →
+    Ask (L.suc i) z r w → A.Covered r → P.All w → L.suc (L.forget i) ≼ read z →
+    α (L.suc i) ≼ W.valueAt r w
+  on-suc i zero a hr wp ()
+  on-suc i (suc z) a hr wp (s≼s d) = steps a d
+  on-suc i (lim f d) {r} a hr (P.each {ws = ws} lower) (≼l n h) = ≼-trans
+    (on-suc i (f n) (run-child a n) (M.covered hr n) (lower n) h) (M.part n)
+    where module M = W.Lim (λ k → h₁ (f k)) r ws
+  on-suc i (Ω () _)
+  on-suc i (up _ () _ _)
+  on-suc i (ex _ _ _ _ ())
+
+  solve : (i : L.Ordᴵ) (z : Tr zero) {r : T.Run (h₁ z)} {w : zero ≤ h₁ z} →
+    Ask i z r w → A.Covered r → P.All w → L.forget i ≼ read z → α i ≼ W.valueAt r w
+  solve L.zero z {r} a hr wp d = ≼-trans (ψ⁰-lvl0 𝟏) (P.compare z wp d r hr 𝟏 (oneβ r))
+  solve (L.suc i) z = on-suc i z
+  solve (L.lim f m) z a hr wp d = l≼ (λ n → solve (f n) z (ref-child a n) hr wp (≼-trans (≼l n (≼-refl _)) d))
+
+  current : (n : ℕ) → N.γ n ≼ read (idx (suc n)) → L.forget (N.L n) ≼ read (idx (suc n))
+  current n e = ≼-trans (≅→≼ (L.forget-toLevel (N.γ n) (N.cert n))) e
+
+  advance : (n : ℕ) → N.γ n ≼ read (idx (suc n)) → N.γ (suc n) ≼ read (idx (suc (suc n)))
+  advance zero _ = first-in
+  advance (suc n) e = solve (N.L (suc n)) _ (incoming n) (W.chain-covered endpoint hR _)
+    (P.through (↑ zero (idx (suc (suc n))))) (current (suc n) e)
+
+  emit : (n : ℕ) → N.γ n ≼ read (idx (suc n)) → N.γ (suc n) ≼ read (T.value (point (suc n)))
+  emit zero _ = ≼-trans E.epsilon-in-Ω₂ E.first-point
+  emit (suc n) e = solve (N.L (suc n)) _ (outgoing n) (pc _) (P.standard _) (current (suc n) e)
+
+  module D = Diagonal advance emit
+  src-btbo : tr₀ Ord-Ord.BTBO ≼ read EBOᶜ
+  src-btbo = ≼-trans (proj₁ BTBO≈) (≼-trans D.btbo (T.lim-child tw T.terminal 1))
+
+  row-two : E.InChild (E.row 2)
+  row-two = 1 Data.Product., ≼-trans E.row-two D.btbo

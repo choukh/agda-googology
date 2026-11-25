@@ -1,0 +1,90 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第十八次审查的临时试验 (二): 主线与候选 A 在 "目标在指定孩子 c′, 嵌入在孩子 z" 这一行上的头部.
+-- 层号 tw 1 (孩子下标是第 0 层的树). 目标取孩子 c′ 的层本身. 输入 up zero z (Ω_z).
+module R18Rows where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+import OCF.Lean.YiRWPath as MP
+import OCF.Lean.YiRWFold as M
+import OCF.Lean.YiKVPath as AP
+import OCF.Lean.YiKVFold as A
+import OCF.Lean.YiCertFold as CF
+open MP using (self; inc)
+
+data Hd : Set where
+  hz hs hl hΩ hu : Hd
+
+hd : ∀ {S} → T S → Hd
+hd zero         = hz
+hd (suc _)      = hs
+hd (lim _ _)    = hl
+hd (Ω _ _)      = hΩ
+hd (up _ _ _ _) = hu
+
+n̂ : ℕ → Tr zero
+n̂ zero    = zero
+n̂ (suc n) = suc (n̂ n)
+
+hc : Tr zero → L
+hc c = zero ⊕ ↑ zero c
+
+piece : (z : Tr zero) → Tr (tw 1)
+piece z = proj₁ (upz {s = sΩ zero} {h = hc} z (Ωt (hc z)))
+
+-- 主线: 目标在孩子 c′ 的层本身.
+rowM : (c′ z : Tr zero) → Tr (hc c′)
+rowM c′ z = proj₁ (M.ψ (tw 1) (MP.Ok-tw 1) (M.B₀ (tw 1)) (hc c′) (inc c′ self) (Ωt (hc c′)) (piece z))
+
+-- 候选 A: 同一个输入.
+rowA : (c′ z : Tr zero) → Tr (hc c′)
+rowA c′ z = proj₁ (A.ψ (tw 1) (AP.Ok-tw 1) (CF.B₀ (tw 1)) (hc c′) (inc c′ self) (Ωt (hc c′)) (piece z))
+
+-- 孩子自己的折叠 (只在 z 与 c′ 逐字相同时可写): 作参照.
+own : (c : Tr zero) → Tr (hc c)
+own c = proj₁ (M.ψ (hc c) (proj₂ (MP.Ok-tw 1) c) (M.B₀ (hc c)) (hc c) self (Ωt (hc c)) (proj₁ (Ωt (hc c))))
+
+-- 主线的行逐字是回退: 底加上 "折到第 0 层再嵌回".
+M-shape : (c′ z : Tr zero) → rowM c′ z ≡ proj₁ (Ωt (hc c′) ⊞ M.ψ₀ (hc z) (proj₂ (MP.Ok-tw 1) z) (proj₁ (Ωt (hc z))))
+M-shape c′ z = refl
+
+-- 头部. 目标层 3 (Tr 里可保留的槽位层是 0, 1, 2). Ω_z 的顶槽位层是 z - 1.
+-- 逐字正确的读法: z = 1, 2, 3 保留 (hΩ), z = 4, 5 走链 (hl).
+M1 : hd (rowM (n̂ 3) (n̂ 1)) ≡ hl
+M1 = refl
+M2 : hd (rowM (n̂ 3) (n̂ 2)) ≡ hl
+M2 = refl
+M4 : hd (rowM (n̂ 3) (n̂ 4)) ≡ hl
+M4 = refl
+
+A1 : hd (rowA (n̂ 3) (n̂ 1)) ≡ hΩ     -- 顶槽位在地板 (第 0 层): 保留
+A1 = refl
+A2 : hd (rowA (n̂ 3) (n̂ 2)) ≡ hl     -- 顶槽位层 1, 高于地板低于目标: 走链 (缺口 D2)
+A2 = refl
+A3 : hd (rowA (n̂ 3) (n̂ 3)) ≡ hl     -- z 与 c′ 逐字相同, 仍走链
+A3 = refl
+A4 : hd (rowA (n̂ 3) (n̂ 4)) ≡ hl     -- 顶槽位层 3 = 目标: 走链 (正确)
+A4 = refl
+A5 : hd (rowA (n̂ 3) (n̂ 5)) ≡ hl
+A5 = refl
+
+-- 参照: 孩子自己的折叠在 z = c′ = 3 时保留.
+O3 : hd (own (n̂ 3)) ≡ hΩ
+O3 = refl
+
+-- 目标层 1 (地板的后一层): 候选 A 的头部与逐字正确的读法在 z = 1 .. 4 上相同
+-- (z = 1 保留; z ≥ 2 顶槽位层 ≥ 1 = 目标, 走链).
+B1 : hd (rowA (n̂ 1) (n̂ 1)) ≡ hΩ
+B1 = refl
+B2 : hd (rowA (n̂ 1) (n̂ 2)) ≡ hl
+B2 = refl
+B3 : hd (rowA (n̂ 1) (n̂ 3)) ≡ hl
+B3 = refl
+B4 : hd (rowA (n̂ 1) (n̂ 4)) ≡ hl
+B4 = refl

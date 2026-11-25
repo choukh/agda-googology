@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- γ₂ 的真实取样无排中律。规范幂塔与有限一级反馈的双向比较都保留前驱嵌入所需的证据。
+module B25DExactNames where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; proj₁; proj₂; _,_)
+import OCF.Align.Level as L
+import OCF.Align.Uniform as U
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; s≼s; ≼l; l≼; ≼-refl; ≼-suc; ≼-trans; ≼lim⁻; ≺→s≼)
+open import OCF.Align.YiVmConExact using (_≼ˣ_; reflˣ; ≅→≼ˣ; wˣ; ≼lˣ; VMᵖ; ˣ→ᵖ)
+open import OCF.Lean.YiZeroAccP using (ψ⁰ˣ)
+open import OCF.Lean.YiChainBase using (transˣ)
+open import OCF.Align.BTBOFullV3 using (Fstep)
+import W4Block
+open import WVOne using (T₀; read)
+import B8FreezeMain as Q
+import B12BtboCut as C
+import B16IndexBase as I
+import B20StandardInside as S
+import B22TowerCut as K
+open import B25DTrack
+open import B25DExactFold using (finite; paired; boost)
+
+start : U.G 0 ≼ˣ read (χ 1)
+start = ≼lˣ 0 (reflˣ _)
+
+low : ∀ n → U.G n ≼ˣ read (χ (suc n))
+low zero = start
+low (suc n) = transˣ (≅→≼ˣ (L.≅-sym (shift n)))
+  (transˣ (ψ⁰ˣ (wˣ (low n))) (proj₁ (paired (W4Block.suc (χ (suc n))))))
+
+high : ∀ n → L.suc (L.suc (read (χ n))) ≼ˣ U.G (suc n)
+high zero = ≼lˣ 2 (reflˣ _)
+high (suc n) = transˣ (boost (χ n)) (transˣ (ψ⁰ˣ (high n)) (≅→≼ˣ (shift (suc n))))
+
+covers : ∀ n → C.branch n ≼ name (suc (suc n))
+covers n = VMᵖ (source n) (hsource n) (read (χ (suc (suc n)))) (I.hs _)
+  (ˣ→ᵖ (transˣ (≅→≼ˣ (shift n)) (low (suc n))))
+
+inside : ∀ n → L.suc (name n) ≼ C.branch n
+inside n = ≼-trans {a = L.suc (name n)} {b = L.ψ⁰ (L.Ω (L.suc (index n)))} {c = C.branch n}
+  (≺→s≼ {c = name n} {b = L.ψ⁰ (L.Ω (L.suc (index n)))} (Fstep (index n)))
+  (VMᵖ (L.suc (read (χ n))) (L.hs (I.hs _)) (source n) (hsource n)
+    (ˣ→ᵖ (transˣ (wˣ (reflˣ (L.suc (read (χ n))))) (transˣ (high n) (≅→≼ˣ (L.≅-sym (shift n)))))))
+
+exact : N.γ 2 ≈ᵛ L.lim name
+exact = (l≼ λ n → ≼l (suc (suc n)) (covers n))
+      , (l≼ λ n → ≼l n (≼-trans (≼-suc (≼-refl (name n))) (inside n)))
+
+Witnesses = ∀ n → Σ ℕ (λ j → name n ≼ S.std j)
+realize : Witnesses → N.γ 2 ≼ K.cut
+realize h = l≼ λ n → let j , d = h (suc (suc n))
+                      in ≼l j (≼-trans {a = C.branch n} {b = name (suc (suc n))} {c = S.std j} (covers n) d)
+extract : N.γ 2 ≼ K.cut → Witnesses
+extract h n = let j , d = ≼lim⁻ {a = name n} {f = S.std} (≼-trans {a = L.suc (name n)} {b = N.γ 2} {c = K.cut} (≼l n (inside n)) h)
+              in j , ≼-trans {a = name n} {b = L.suc (name n)} {c = S.std j} (≼-suc (≼-refl _)) d

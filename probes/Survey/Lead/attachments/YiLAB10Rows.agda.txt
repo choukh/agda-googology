@@ -1,0 +1,26 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiLAB10Rows where
+
+open import Data.Nat using (ℕ; suc)
+open import Data.Empty using (⊥)
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_)
+open import WVOne using (read)
+open import WKShape using (Ψ₃)
+open import YiLAB7Replay using (Match; Y; Ω₂ᴸ; chainW)
+import B8FreezeMain as Freeze
+import B9InnerOuter as Outer
+import YiLAB10Branches as B
+
+Row : ℕ → Set
+Row n = Match (Y (suc n)) (B.z n 2)
+
+Result : Set
+Result = LV.ψ⁰ (Ω₂ᴸ LV.+ Ω₂ᴸ) ≼ read Ψ₃
+
+row0 : Row 0
+row0 = Outer.match-z2
+
+-- 同一族的首行若以冻结初态代替所取内链项，Match 已有反例。
+frozen₀ : Match (Y 1) (chainW 0) → ⊥
+frozen₀ = Freeze.no-frozen

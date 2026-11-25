@@ -1,0 +1,14 @@
+[
+  {
+    "file": "probes/OCF/Lean/YiAZStart.lagda.md",
+    "code_nonempty_nonwhole_comment": 71,
+    "code_physical_lines": 72,
+    "file_physical_lines": 78
+  },
+  {
+    "file": "probes/OCF/Lean/YiAZLocal.lagda.md",
+    "code_nonempty_nonwhole_comment": 57,
+    "code_physical_lines": 58,
+    "file_physical_lines": 64
+  }
+]

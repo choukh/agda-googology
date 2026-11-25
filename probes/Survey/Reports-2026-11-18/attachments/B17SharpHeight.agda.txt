@@ -1,0 +1,113 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B17SharpHeight where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Path as P
+import W4Fold as F
+open import WVOne using (read; h₁)
+open import WVTwo using (◃→≼)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; s≼s)
+import B12Terminal as T
+import B12ActualSlots as C
+import B14Tower as Tw
+import B14PathHeight as PH
+import B14Floor as Floor
+open import B17SharpSeed
+
+Pos = V.Tr⁺ R.zero
+see : Pos → L.Ordᶜ L.zero
+see x = readRW (proj₁ x)
+
+Law : ∀ {j} → B.zero B.≤ j → (Pos → Pos) → Set
+Law {j} w f = (r : T.Run j) → C.Covered r → (a : Pos) → see a ≼ read (proj₁ (T.Run.β r)) → see (f a) ≼ Tw.valueAt r w
+
+At : (z : B.Tr B.zero) → (Pos → Pos) → Set
+At z f = ∀ {w : B.zero B.≤ h₁ z} → PH.All w → Law w f
+
+Grows : (Pos → Pos) → Set
+Grows f = ∀ a → R.zero R.⊢ proj₁ a ◃ proj₁ (f a)
+
+rep : (f : Pos → Pos) → Grows f → Pos → Pos
+rep f gain a = V.lim⁺ (λ n → V.iter f (f a) n) (λ n → gain (V.iter f (f a) n))
+
+mutual
+  hierarchy : (z : B.Tr B.zero) → (f : Pos → Pos) → Grows f → Pos → Pos
+  hierarchy B.zero f e = f
+  hierarchy (B.suc z) f e = rep (hierarchy z f e) (rises z f e)
+  hierarchy (B.lim g d) f e a = V.lim⁺ (λ n → hierarchy (g n) f e a) (λ n → edges (d n) f e a)
+
+  edges : ∀ {z z′} → B.zero B.⊢ z ◃ z′ → ∀ f e a → R.zero R.⊢ proj₁ (hierarchy z f e a) ◃ proj₁ (hierarchy z′ f e a)
+  edges B.◃s f e a = R.◃l 0
+  edges (B.◃l n) f e a = R.◃l n
+  edges (B.◃t d d′) f e a = R.◃t (edges d f e a) (edges d′ f e a)
+
+  rises : ∀ z f e → Grows (hierarchy z f e)
+  rises B.zero f e = e
+  rises (B.suc z) f e a = R.◃t (rises z f e a) (R.◃l zero)
+  rises (B.lim g d) f e a = R.◃t (rises (g zero) f e a) (R.◃l zero)
+
+module Lift (s : B.Sh) (h : B.Ch s → B.L) (ws : (c : B.Ch B.sS) → B.zero B.≤ B.nd s h) (normal : PH.All (ws tt))
+  (f : Pos → Pos) (e : Grows f) (u : Law (ws tt) f) (r : T.Run (B.nd B.sS (λ _ → B.nd s h))) (hr : C.Covered r) where
+  j = B.nd s h
+  w = ws tt
+  module N = PH.Next s h ws normal (λ x → x) (λ v h a d → ≼-trans d (T.inflate0 _ (T.Run.ok v) (T.Run.bs v) w (T.Run.β v) (proj₁ (W.Ωt j)))) r hr
+  grow : ∀ n a → see a ≼ read (proj₁ (N.v n)) → see (f a) ≼ read (proj₁ (N.v (suc n)))
+  grow n a ha with hr j (B.inc tt B.self)
+  ... | inj₁ q = subst (λ t → see (f a) ≼ read (proj₁ (F.ψ j (T.Run.ok N.K.r₀) (N.K.S n) B.zero w (N.v n) t))) q (u (N.snap n) (N.K.cover n) a ha)
+  ... | inj₂ d = ≼-trans (u (N.snap n) (N.K.cover n) a ha) (◃→≼ (F.mono j (T.Run.ok N.K.r₀) (N.K.S n) B.zero w (N.v n) d))
+
+  along : ∀ a → see a ≼ read (proj₁ (T.Run.β r)) → ∀ n → see (V.iter f (f a) n) ≼ read (proj₁ (N.v (suc n)))
+  along a ha zero = grow 0 a (≼-trans ha (N.low 0))
+  along a ha (suc n) = grow (suc n) _ (along a ha n)
+
+  result : ∀ a → see a ≼ read (proj₁ (T.Run.β r)) → see (rep f e a) ≼ Tw.valueAt r (B.inu ws)
+  result a ha = l≼ (λ n → ≼-trans (along a ha n) (N.upper n))
+
+-- Every uniform path through a nonzero child admits the same positive iteration.
+next : ∀ z → L.natᶜ 2 ≼ read z → ∀ f e → At z f → At (B.suc z) (rep f e)
+next B.zero ()
+next (B.suc z) low f e u (PH.each {ws = ws} d) = Lift.result B.sS (λ _ → h₁ z) ws (d tt) f e (u (d tt))
+next (B.lim g d) low f e u (PH.each {ws = ws} v) = Lift.result B.sL (λ n → h₁ (g n)) ws (v tt) f e (u (v tt))
+
+module Compare (lem : LEM) where
+  open Seed lem
+  H = λ u → hierarchy u act gain
+
+  base : ∀ z → L.natᶜ 2 ≼ read z → At z act
+  base B.zero ()
+  base (B.suc z) (s≼s d) with Floor.split 1 z d
+  ... | inj₁ refl = λ wp r hr a ha → subst (λ t → see (act a) ≼ Tw.valueAt r t) (sym (Floor.normal 2 wp)) (Run.bound r a ha)
+  ... | inj₂ p = λ wp r hr a ha → ≼-trans (≼l 0 (≼-refl _)) (next z p act gain (base z p) wp r hr a ha)
+  base (B.lim g p) (≼l n d) (PH.each {ws = ws} paths) r hr a ha =
+    ≼-trans (base (g n) d (paths n) (Lw.sub n) (Lw.covered hr n) a (≼-trans ha (T.inflate0 _ (T.Run.ok r) (T.Run.bs r) (B.inu ws) (T.Run.β r) (T.prefix _ n))))
+      (Lw.part n)
+    where module Lw = Tw.Lim (λ i → h₁ (g i)) r ws
+
+  cut : B.Tr B.zero → B.Tr B.zero
+  cut u = Floor.num 2 W.+ u
+
+  at-least : ∀ u → L.natᶜ 2 ≼ read (cut u)
+  at-least B.zero = ≼-refl _
+  at-least (B.suc u) = OCF.Align.Value.≼-suc (at-least u)
+  at-least (B.lim g p) = ≼l 0 (at-least (g 0))
+
+  all : ∀ u z → read (cut u) ≼ read z → At z (H u)
+  all B.zero z d = base z d
+  all (B.suc u) (B.suc z) (s≼s d) = next z (≼-trans (at-least u) d) (H u) (rises u act gain) (all u z d)
+  all (B.suc u) (B.lim g p) (≼l n d) (PH.each {ws = ws} paths) r hr a ha =
+    ≼-trans (all (B.suc u) (g n) d (paths n) (Lw.sub n) (Lw.covered hr n) a (≼-trans ha (T.inflate0 _ (T.Run.ok r) (T.Run.bs r) (B.inu ws) (T.Run.β r) (T.prefix _ n))))
+      (Lw.part n)
+    where module Lw = Tw.Lim (λ i → h₁ (g i)) r ws
+  all (B.lim g p) z d wp r hr a ha = l≼ (λ n → all (g n) z (≼-trans (≼l n (≼-refl _)) d) wp r hr a ha)
+

@@ -1,0 +1,127 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B8A: Level 一侧. 对一切有指数描述的 X, ψ (body X) 有被加项描述 sE (eΩ₂ ⨾ e) Nx 与指数描述 sh (eΩ₂ ⨾ e),
+-- eΩ₂ = lC ε 是 Ω₂ 的指数影子. 于是参照链 Y n 的两项描述对一切 n 都有 (Y 1: eΩ₂ ⨾ Ω̂). 编译定理, 无前提.
+module B8PairLevel where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-refl; ≼-trans)
+open import WVOne using (T₀; 𝟏)
+open import WVTwo using (T₁)
+open import WVThree using (Nx; Nx-infl)
+open import WSShadow
+open import WSLevel using (Ld; Lz; Ls; Ll; Li; Lu; Lw; Lx; Ez; Es; El; Ei; Eu; Ew; Lx-infl; sumLim; sumLimH;
+  shift0; shiftH; Lx-γ; Ld-Ω₁; Lx-Ω₁; tr⁻≼; lC-ub; lC-const; ⨾-mono; sh-mono; ε; ε-infl; ψ₁; γ)
+open import YiLAB7Replay using (Ω₂ᴸ; body; Y)
+
+-- Ω₂ 的指数影子与被加项影子.
+eΩ₂ : ES
+eΩ₂ = lC ε
+
+dΩ₂ : Sh 0
+dΩ₂ = sE eΩ₂ Nx
+
+inflΩ₂ : InflE eΩ₂
+inflΩ₂ = Infl-lC ε (ε-infl 0)
+
+-- ψ (Ω₂ + X) 与 ψ (Ω₂ + y) (y 在第 0 层). Y (suc n) 定义上就是 QB (Y n).
+QB : T₁ → T₁
+QB X = LV.ψ LV.zero (λ q → q) (LV.add Ω₂ᴸ (λ q → LV.suc q) X)
+
+P : T₀ → T₁
+P y = LV.ψ LV.zero (λ q → q) (LV.add Ω₂ᴸ (λ q → LV.suc (LV.suc q)) y)
+
+Y-step : (n : ℕ) → Y (suc n) ≡ QB (Y n)
+Y-step n = refl
+
+-- Y 1 是第 1 层的 Ω 结点 (穿透输出), 第 y 个分支是 ψ (Ω₂ + y); 第 0 个分支就是 X₀ = ψ (Ω₂).
+X₀ : T₁
+X₀ = QB LV.zero
+
+Y1-shape : Y 1 ≡ LV.limᵢ LV.zero (λ y → P (LV.tr⁻ LV.z≅ y))
+Y1-shape = refl
+
+X₀-shape : X₀ ≡ LV.lim (λ n → ψ₁ (γ n))
+X₀-shape = refl
+
+------------------------------------------------------------------------
+Ld-base : Ld X₀ dΩ₂
+Ld-base = Ll (λ k → shift0 (Lx-γ k))
+
+Lx-base : Lx X₀ (sh eΩ₂)
+Lx-base = Ew (El (λ k → shiftH (Lx-γ k))) (LeE-refl _)
+
+infl-d : (e : ES) → InflE e → (a c : T₀) → a ≼ sE (eΩ₂ ⨾ e) Nx a c
+infl-d e ie a c = ≼-trans (Nx-infl a c) (proj₁ (Infl-⨾ eΩ₂ e inflΩ₂ ie) Nx a c)
+
+Ω₂⨾-lv : (y′ : T₀) → LeE eΩ₂ (eΩ₂ ⨾ lv y′)
+Ω₂⨾-lv y′ = (λ f → proj₁ (Infl-lv y′) (sE eΩ₂ f)) , (λ n k g → proj₂ (Infl-lv y′) n (λ g′ → sI eΩ₂ n k g′) g)
+
+-- 第 0 层尾巴 (Eu 行): 对 y ≼ y′ 归纳, 同 WSLevel.shift0u / shiftHu.
+LdP : (y y′ : T₀) → y ≼ y′ → Ld (P y) (sE (eΩ₂ ⨾ lv y′) Nx)
+LdP _ y′ z≼ = Lw Ld-base (proj₁ (Infl-lv y′) dΩ₂)
+LdP (LV.suc y) (LV.suc y′) (s≼s d) = sumLim (LdP y y′ d) (infl-d (lv y′) (Infl-lv y′))
+LdP y (LV.lim f′) (≼l n d) = Lw (LdP y (f′ n) d) (λ a c → ≼l n (≼-refl _))
+LdP (LV.lim f) y′ (l≼ h) = Lw (Ll (λ k → LdP (f k) y′ (h k))) (λ a c → l≼ (λ j → ≼-refl _))
+LdP _ _ (≼i {p = ()} x e d)
+LdP _ _ (i≼ {p = ()} h)
+LdP _ _ (≼u {r = ()} d)
+LdP _ _ (u≼ {r = ()} d)
+
+LxP : (y y′ : T₀) → y ≼ y′ → Lx (P y) (sh (eΩ₂ ⨾ lv y′))
+LxP _ y′ z≼ = Ew Lx-base (sh-mono (Ω₂⨾-lv y′))
+LxP (LV.suc y) (LV.suc y′) (s≼s d) =
+  Ew (sumLimH (LxP y y′ d) (Infl-⨾ eΩ₂ (lv y′) inflΩ₂ (Infl-lv y′))) (LeE-refl _)
+LxP y (LV.lim f′) (≼l n d) = Ew (LxP y (f′ n) d) (sh-mono (⨾-mono eΩ₂ (lC-ub (λ j → lv (f′ j)) n)))
+LxP (LV.lim f) y′ (l≼ h) = Ew (El (λ k → LxP (f k) y′ (h k))) (lC-const (sh (eΩ₂ ⨾ lv y′)))
+LxP _ _ (≼i {p = ()} x e d)
+LxP _ _ (i≼ {p = ()} h)
+LxP _ _ (≼u {r = ()} d)
+LxP _ _ (u≼ {r = ()} d)
+
+------------------------------------------------------------------------
+-- 主定理: 对 X 的指数描述归纳, 同 WSLevel.shift0 / shiftH 的形状.
+LdQ : ∀ {X e} → Lx X e → Ld (QB X) (sE (eΩ₂ ⨾ e) Nx)
+LdQ Ez = Ld-base
+LdQ (Es {e = e} r) = sumLim (LdQ r) (infl-d e (Lx-infl r))
+LdQ (El h) = Ll (λ k → LdQ (h k))
+LdQ (Ei hh) = Li (λ y y′ d → LdQ (hh (LV.tr⁻ LV.z≅ y) y′ (≼-trans (tr⁻≼ y) d)))
+LdQ (Eu y y′ d) = LdP y y′ d
+LdQ (Ew r p) = Lw (LdQ r) (proj₁ (⨾-mono eΩ₂ p) Nx)
+
+LxQ : ∀ {X e} → Lx X e → Lx (QB X) (sh (eΩ₂ ⨾ e))
+LxQ Ez = Lx-base
+LxQ (Es {e = e} r) = Ew (sumLimH (LxQ r) (Infl-⨾ eΩ₂ e inflΩ₂ (Lx-infl r))) (LeE-refl _)
+LxQ (El h) = Ew (El (λ k → LxQ (h k))) (LeE-refl _)
+LxQ (Ei hh) = Ew (Ei (λ y y′ d → LxQ (hh (LV.tr⁻ LV.z≅ y) y′ (≼-trans (tr⁻≼ y) d)))) (LeE-refl _)
+LxQ (Eu y y′ d) = LxP y y′ d
+LxQ (Ew r p) = Ew (LxQ r) (sh-mono (⨾-mono eΩ₂ p))
+
+------------------------------------------------------------------------
+-- 参照链的描述: Y 0 = Ω₁ ↦ Ω̂, Y (n+1) ↦ sh (eΩ₂ ⨾ eY n).
+eY : ℕ → ES
+eY zero    = Ω̂
+eY (suc n) = sh (eΩ₂ ⨾ eY n)
+
+Lx-Y : (n : ℕ) → Lx (Y n) (eY n)
+Lx-Y zero    = Lx-Ω₁
+Lx-Y (suc n) = LxQ (Lx-Y n)
+
+Ld-Y : (n : ℕ) → Ld (Y (suc n)) (sE (eΩ₂ ⨾ eY n) Nx)
+Ld-Y n = LdQ (Lx-Y n)
+
+-- 实例: 第一个非初始链点.
+dY1 : Sh 0
+dY1 = sE (eΩ₂ ⨾ Ω̂) Nx
+
+eY1 : ES
+eY1 = sh (eΩ₂ ⨾ Ω̂)
+
+Ld-Y1 : Ld (Y 1) dY1
+Ld-Y1 = Ld-Y 0
+
+Lx-Y1 : Lx (Y 1) eY1
+Lx-Y1 = Lx-Y 1

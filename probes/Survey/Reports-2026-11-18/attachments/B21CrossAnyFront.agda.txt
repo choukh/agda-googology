@@ -1,0 +1,47 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21CrossAnyFront where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import B12Terminal as T
+import B13FiniteLift as U
+import B15Spine as S
+import B21CrossFront as Fr
+import B21CrossPath as Z
+open T.Run
+
+module On (s : Sh) (h : Ch s → W4Block.L) where
+  k = nd s h
+  inner : ∀ o b (q : zero ≤ k) → Fr.First (_≡ suc zero) (proj₁ (ψ k o b zero q (Ωt zero) (suc zero)))
+  inner o b (inc _ q) = Fr.point refl
+  inner o b (ink q) = Fr.point refl
+  inner o b (inu q) = Fr.point refl
+  module At (o : Ok (U.sc k)) (b : Base (U.sc k)) where
+    ℓ = U.sc k
+    pos : Pos ℓ
+    pos = inj₂ (tt , inj₁ tt)
+    body = λ (z : Tr k) → proj₁ (upz {s = sS} {h = λ _ → k} tt (suc z , z◃ z ◃s))
+    step = λ z → fromBr ℓ pos (proj₁ (ψ ℓ o b k (posW ℓ pos) (b k (posW ℓ pos)) (body z)))
+    family = λ (w : zero ≤ ℓ) z → ψ ℓ o b zero w (Ωt zero) (body z)
+    own : ∀ (w : zero ≤ ℓ) → Fr.Head (proj₁ (ψ ℓ o b zero w (Ωt zero) (proj₁ (Ωt ℓ))))
+    own w@(inc tt v) = Fr.node (kp ℓ o pos w) (family w) step (inner _ _ v)
+    own w@(inu vs) = Fr.node (kp ℓ o pos w) (family w) step (inner _ _ (vs tt))
+
+  feed : ∀ l → l ≡ U.sc k → ∀ o b (w : zero ≤ l) v → v ≡ Ωt zero →
+    Fr.Head (proj₁ (ψ l o b zero w v (proj₁ (Ωt l))))
+  feed .(U.sc k) refl o b w .(Ωt zero) refl = At.own o b w
+
+  module Point (g : Tr zero → W4Block.L) (same : g zero ≡ U.sc k)
+          (r : T.Run (nd (sΩ zero) g)) (bs1 : Z.Ones r) where
+    module C = S.Cardinal zero g r
+    front : Fr.Head (C.ix 1)
+    front = feed (g zero) same (proj₂ (ok r) zero) (λ i w → bs r i (inc zero w))
+      (self ∙ proj₂ (proj₁ (ok r)) zero) (bs r zero (ink self)) (bs1 _)
+    ready : ∀ j → Z.Ones (C.child j)
+    ready j w = bs1 (inc (C.ix j) w)

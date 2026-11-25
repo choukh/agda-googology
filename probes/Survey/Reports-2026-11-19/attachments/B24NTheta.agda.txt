@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24NTheta where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import W4Block hiding (b₀)
+open import W4Ops
+open import W4Fold
+open import WVTwo using (g₂)
+open import WKGen using (Ω₁t)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F)
+import B11OuterCore as C
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B12Orbit as Std
+import B13Orbit as Orb
+import B13SeedOuter as A
+import B13OrbitFeed as O
+import B18RefDepth as H
+import B18OrbitWorld as W
+import B18OrbitLevels as Worlds
+import B18OrbitRows as Old
+import B21RowTheta as Th
+import B21RowDynamics as Dy
+import B21RowCopy as Cp
+import B21RowWorldCopy as Copy
+
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) (R : Base lvl2) (v : Th.Vec)
+          (cover : lvl1 ⊢ Ω₁t ◃ proj₁ (R lvl1 C.slot)) (start : Dy.Index (R lvl1 C.slot) v)
+          (b : Tr⁺ lvl1) (bi : Dy.Index b v) where
+  open Dy.At r cv R v cover start using (current; clock; S₁; Q; st; j; seq)
+  open A.At r using (c⁺) 
+  open Old.At.I r cv using (K₁; J; module E₀)
+  module Y = Th.Program v
+  bp = λ n → run (Q n) S₁ lvl1 Old.Out.slot b
+  state : ∀ n → Dy.Index (bp n) (λ d → Y.read d n)
+  state n d = current (suc d) n Old.m (λ _ → refl) 0 idM (λ _ → refl) K₁ (H.grad d) (Old.At.Laws.model r cv d)
+    S₁ (v d) cover (start d) b (bi d)
+  first : ∀ S (u : Tr⁺ lvl1) → lvl1 ⊢ Cp.copy u ◃ proj₁ (run F S lvl1 C.slot u)
+  first S u = ◃l 0
+  fp = λ i → E ok₂ tdNil (g₂ (seq i)) J R lvl1 C.slot b
+  front : ∀ n → lvl1 ⊢ Cp.copy (bp n) ◃ proj₁ (run (Orb.K c⁺) (st n) lvl1 C.slot (bp n))
+  front n = Orb.push-path {y = proj₁ (run F (st n) lvl1 C.slot (bp n))} (first (st n) (bp n))
+    (Orb.standard≤K c⁺ E₀.cp (st n) lvl1 C.slot (bp n))
+  branch : ∀ n → lvl1 ⊢ Cp.copy (bp n) ◃ proj₁ (fp (suc (j n)))
+  branch n = ◃t (front n) (◃t (Emono ok₂ tdNil (Orb.K c⁺) (st n) lvl1 C.slot (bp n) (proj₂ c⁺))
+    (◃t (Emono ok₂ O.D₁ K₁ (stepS (Q n) S₁) lvl1 Old.Out.slot (bp n) (proj₂ (clock n))) (◃l 1)))
+  mid = run (Std.block J) R lvl1 C.slot b
+  pool : Dy.Index mid Y.build
+  pool d = W.gather (Worlds.world d) mid (Y.read d) each where
+    each : ∀ n → W.Index (Worlds.world d) mid (Y.read d n)
+    each n = W.rise (Worlds.world d) (Copy.shell p (bp n)) mid (◃t (+-mono p (branch n)) (◃l (suc (j n)))) _
+      (Copy.copy d p (bp n) _ (state n d))
+      where p = cum (λ i → proj₁ (fp i)) (j n)
+  move : ∀ d → Cov._⊴_ (proj₁ (Ωt lvl2)) (proj₁ d) → Dy.Index (run (Orb.block d J) R lvl1 C.slot b) Y.build
+  move d (inj₁ p) = subst (λ z → Dy.Index (E ok₂ tdNil z J R lvl1 C.slot b) Y.build) p pool
+  move d (inj₂ p) k = W.rise (Worlds.world k) mid (run (Orb.block d J) R lvl1 C.slot b)
+    (Emono ok₂ tdNil J R lvl1 C.slot b p) _ (pool k)
+  result : Dy.Index (run (Orb.block c⁺ J) R lvl1 C.slot b) Y.build
+  result = move c⁺ E₀.cp

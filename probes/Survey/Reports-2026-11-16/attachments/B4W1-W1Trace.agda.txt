@@ -1,0 +1,280 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W1 检查件 (2): 来源追踪 (有限测试, 全是 refl). ψ♯ 的计算里, 闭调用 ψ₀♯ (tw 1) (b + b) 经哪几步问到
+-- "b 朝第 1 层的折叠" E₁ = ψ♯ (tw 1) o₁ B♯ lvl1 _ (Ωt lvl1) b (W1Cell 的那一格).
+-- 排中律只作模块参数; 这条路径上的判定都不问排中律 (Dk zero _ 与 Dk (nd _ _) zero 直接计算).
+module W1Trace where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (node⁺)
+open import S1Sharp
+open import W1Cell using (h₁; n1; n2; n3; lvl1; lvl2; lvl3; o₁; ok1; ok2; b⁺; b; pS)
+import W1Cell as C
+
+module T1 (lem : LEM) where
+  open Sharp lem
+
+  bb : Tr (tw 1)                     -- b + b
+  bb = b + b
+
+  Bb : Base♯                         -- 左项 b 朝各层的折叠 (嵌入行交给孩子层的底族)
+  Bb i oi = ψ♯ (tw 1) o₁ B♯ i oi (B♯ i oi) b
+
+  E₁ : Tr⁺ lvl1                      -- 被问到的那一格: b 朝第 1 层的折叠
+  E₁ = ψ♯ (tw 1) o₁ B♯ lvl1 ok1 (Ωt lvl1) b
+
+  E₁-is-Bb : E₁ ≡ Bb lvl1 ok1
+  E₁-is-Bb = refl
+
+  β₀ : Tr⁺ zero                      -- ψ₀♯(b)
+  β₀ = ψ♯ (tw 1) o₁ B♯ zero tt (Ωt zero) b
+
+  Gbb : Tr zero → Tr⁺ zero           -- b + b 的顶结点走链: 分支 z 上进孩子 z
+  Gbb z = ψ♯ (h₁ z) (proj₂ o₁ z) Bb zero tt β₀ (proj₁ (Ωt (h₁ z)))
+
+  sbb : Tr zero → Tr zero
+  sbb z = proj₁ (Gbb z)
+
+  -- 第 1 步: ψ₀♯ (b + b) 的顶结点走链.
+  t-top : ψ♯ (tw 1) o₁ B♯ zero tt (Ωt zero) bb ≡ node⁺ {X = Tr zero} {x₀ = zero} nothing Gbb sbb
+  t-top = refl
+
+  -- 第 2 步: 第一个链点 e₁ = ψ₀♯(b)·ω.
+  e₁ : Tr zero
+  e₁ = proj₁ (next⁺ β₀)
+
+  t-e₁ : sbb zero ≡ e₁
+  t-e₁ = refl
+
+  -- 第 3 步: 第二个链点 sbb e₁ 的计算. e₁ 是 ℕ 极限, 孩子层 h₁ e₁ 是 ℕ 极限形状; 沿第一孩子下行三层:
+  --   La = h₁ e₁ (孩子 n: 第 ψ₀♯(b)·(n+1) 层), Lb = La 的孩子 0 (第 ψ₀♯(b) 层), Lc = Lb 的孩子 0 (第 ω 层).
+  La Lb Lc : L
+  La = h₁ e₁
+  Lb = zero ⊕ ↑ zero (proj₁ β₀)
+  Lc = zero ⊕ ↑ zero (proj₁ (next⁺ (Ωt zero)))
+
+  g_c : ℕ → L                        -- Lc 的孩子: 第 n+1 层
+  g_c n = zero ⊕ ↑ zero (iter (suc zero +_) (suc zero) n)
+
+  shapes : Σ (ℕ → L) λ gₐ → Σ (ℕ → L) λ g_b
+    → (La ≡ nd sL gₐ) × (gₐ 0 ≡ Lb) × (Lb ≡ nd sL g_b) × (g_b 0 ≡ Lc) × (Lc ≡ nd sL g_c) × (g_c 0 ≡ lvl1) × (g_c 1 ≡ lvl2)
+  shapes = _ , _ , refl , refl , refl , refl , refl , refl , refl
+
+  oa : Ok La
+  oa = proj₂ o₁ e₁
+
+  ob : Ok Lb
+  ob = proj₂ oa 0
+
+  oc : Ok Lc
+  oc = proj₂ ob 0
+
+  o2 : Ok lvl2
+  o2 = proj₂ oc 1
+
+  -- 三层的 Ω 树都是部分和极限, 左项为零的第 0 项逐字是 "进第一孩子"; 底族原样传下 (左项为零).
+  t-down : Σ (ℕ → Tr zero) λ H → Σ _ λ a → Σ (ℕ → Tr zero) λ H′ → Σ _ λ a′
+    → (sbb e₁ ≡ lim H a)
+    × (H 0 ≡ proj₁ (ψ♯ Lb ob Bb zero tt β₀ (proj₁ (Ωt Lb))))
+    × (proj₁ (ψ♯ Lb ob Bb zero tt β₀ (proj₁ (Ωt Lb))) ≡ lim H′ a′)
+    × (H′ 0 ≡ proj₁ (ψ♯ Lc oc Bb zero tt β₀ (proj₁ (Ωt Lc))))
+  t-down = _ , _ , _ , _ , refl , refl , refl , refl
+
+  -- 第 4 步: Lc 的 Ω 树的第 1 项是 Ω₁ + Ω₂ (左项 x₁ = 孩子 0 的 Ω₁, 嵌入孩子 1 的 Ω₂).
+  x₁ : Tr Lc
+  x₁ = proj₁ (upz {s = sL} {h = g_c} 0 (Ωt (g_c 0)))
+
+  Bx : Base♯                         -- 进孩子 1 时交下去的底族: 左项 x₁ 朝各层的折叠
+  Bx i oi = ψ♯ Lc oc Bb i oi (Bb i oi) x₁
+
+  β₂ : Tr⁺ zero
+  β₂ = ψ♯ Lc oc Bb zero tt β₀ x₁
+
+  G₄ : Tr lvl1 → Tr⁺ zero            -- Ω₂ 的顶结点 (槽位层 lvl1) 朝第 0 层走链
+  G₄ z = ψ♯ lvl2 o2 Bx zero tt β₂ (proj₁ (upz {s = sS} {h = λ _ → lvl1} tt (suc z , z◃ z ◃s)))
+
+  s₄ : Tr lvl1 → Tr lvl1             -- 回灌: 目标是槽位层 lvl1, 起点是底族在 lvl1 的值
+  s₄ z = proj₁ (ψ♯ lvl2 o2 Bx lvl1 ok1 (Bx lvl1 ok1) (proj₁ (upz {s = sS} {h = λ _ → lvl1} tt (suc z , z◃ z ◃s))))
+
+  t-node : Σ (ℕ → Tr zero) λ H″ → Σ _ λ a″
+    → (proj₁ (ψ♯ Lc oc Bb zero tt β₀ (proj₁ (Ωt Lc))) ≡ lim H″ a″)
+    × (H″ 1 ≡ proj₁ (node⁺ {X = Tr lvl1} {x₀ = zero} nothing G₄ s₄))
+  t-node = _ , _ , refl , refl
+
+  -- 第 5 步: 第一次回灌的起点就是底族在 lvl1 的值; 它是 "Ω₁ 朝 lvl1 折, 底值 E₁".
+  t-feed : s₄ zero ≡ proj₁ (next⁺ (Bx lvl1 ok1))
+  t-feed = refl
+
+  t-base : Bx lvl1 ok1 ≡ ψ♯ lvl1 ok1 Bb lvl1 ok1 E₁ (proj₁ (Ωt lvl1))
+  t-base = refl
+
+  -- 第 6 步 (目标不在地板上的实例): Lc 的 Ω 树的第 2 项是 Ω₁ + Ω₂ + Ω₃; Ω₃ 的顶结点 (槽位层 lvl2) 走链,
+  --   回灌的起点是底族在 lvl2 的值, 它的最里面的底值是 E₂ = b 朝第 2 层的折叠.
+  E₂ : Tr⁺ lvl2
+  E₂ = ψ♯ (tw 1) o₁ B♯ lvl2 ok2 (Ωt lvl2) b
+
+  x₂ : Tr Lc
+  x₂ = x₁ + proj₁ (upz {s = sL} {h = g_c} 1 (Ωt (g_c 1)))
+
+  Bx′ : Base♯
+  Bx′ i oi = ψ♯ Lc oc Bb i oi (Bb i oi) x₂
+
+  β₃ : Tr⁺ zero
+  β₃ = ψ♯ Lc oc Bb zero tt β₀ x₂
+
+  o3 : Ok lvl3
+  o3 = proj₂ oc 2
+
+  G₄′ : Tr lvl2 → Tr⁺ zero
+  G₄′ z = ψ♯ lvl3 o3 Bx′ zero tt β₃ (proj₁ (upz {s = sS} {h = λ _ → lvl2} tt (suc z , z◃ z ◃s)))
+
+  s₄′ : Tr lvl2 → Tr lvl2
+  s₄′ z = proj₁ (ψ♯ lvl3 o3 Bx′ lvl2 ok2 (Bx′ lvl2 ok2) (proj₁ (upz {s = sS} {h = λ _ → lvl2} tt (suc z , z◃ z ◃s))))
+
+  t-node₂ : Σ (ℕ → Tr zero) λ H″ → Σ _ λ a″
+    → (proj₁ (ψ♯ Lc oc Bb zero tt β₀ (proj₁ (Ωt Lc))) ≡ lim H″ a″)
+    × (H″ 2 ≡ proj₁ (node⁺ {X = Tr lvl2} {x₀ = zero} nothing G₄′ s₄′))
+  t-node₂ = _ , _ , refl , refl
+
+  t-feed₂ : s₄′ zero ≡ proj₁ (next⁺ (Bx′ lvl2 ok2))
+  t-feed₂ = refl
+
+  t-base₂ : Bx′ lvl2 ok2 ≡ ψ♯ lvl2 o2 Bx lvl2 ok2 (ψ♯ lvl1 ok1 Bb lvl2 ok2 E₂ (proj₁ (Ωt lvl1))) (proj₁ (Ωt lvl2))
+  t-base₂ = refl
+
+-- 从塔第 2 项到闭调用 ψ₀♯ (tw 1) (b + b): tw♯ 2 的第二个链点 z₁ 的层号 h₂ z₁ 里, 沿第一孩子下行到 Ω+1 层
+-- (nd sS λ _ → tw 1), 它的 Ω 树朝第 0 层走链, 第一个链点是 b·ω, 折它的第 1 项就是 b + b.
+module T0 (lem : LEM) where
+  open Sharp lem
+  open T1 lem using (bb)
+
+  o₂ : Ok (tw 2)
+  o₂ = Ok-tw 2
+
+  h₂ : Tr (tw 1) → L
+  h₂ c = tw 1 ⊕ ↑ (tw 1) c
+
+  chL : (ℓ : L) → CH ℓ → L           -- 层号的孩子
+  chL (nd s h) c = h c
+
+  G₂ : Tr (tw 1) → Tr⁺ zero
+  G₂ z = ψ♯ (h₂ z) (proj₂ o₂ z) B♯ zero tt (Ωt zero) (proj₁ (Ωt (h₂ z)))
+
+  s₂ : Tr (tw 1) → Tr (tw 1)
+  s₂ z = proj₁ (ψ♯ (h₂ z) (proj₂ o₂ z) B♯ (tw 1) o₁ b⁺ (proj₁ (Ωt (h₂ z))))
+
+  -- 第 1 步: 顶结点走链.
+  u-top : ψ₀♯ (tw 2) o₂ (proj₁ (Ωt (tw 2))) ≡ node⁺ {X = Tr (tw 1)} {x₀ = zero} nothing G₂ s₂
+  u-top = refl
+
+  -- 第 2 步: 第一个链点 z₁ 是 tw 1 的自身折叠, 顶结点保留 (槽位由 slot♯ 选在孩子 zero).
+  z₁ : Tr (tw 1)
+  z₁ = s₂ zero
+
+  u-z₁ : Σ (Pos (tw 1)) λ q → Σ (Br (tw 1) q → Tr (tw 1)) λ g → z₁ ≡ Ω q g
+  u-z₁ = _ , _ , refl
+
+  -- 第 3 步: G₂ z₁. 层号 L₁ = h₂ z₁ 是 Ω 形状 (下标层 zero), Ω 树的顶结点朝第 0 层走链.
+  L₁ : L
+  L₁ = h₂ z₁
+
+  oL₁ : Ok L₁
+  oL₁ = proj₂ o₂ z₁
+
+  hc₁ : Tr zero → L
+  hc₁ c = chL L₁ c
+
+  u-L₁ : L₁ ≡ nd (sΩ zero) hc₁
+  u-L₁ = refl
+
+  G₃ : Tr zero → Tr⁺ zero
+  G₃ c = ψ♯ (hc₁ c) (proj₂ oL₁ c) B♯ zero tt (Ωt zero) (proj₁ (Ωt (hc₁ c)))
+
+  u-G₃ : G₂ z₁ ≡ node⁺ {X = Tr zero} {x₀ = zero} nothing G₃ (λ c → proj₁ (G₃ c))
+  u-G₃ = refl
+
+  -- 第 4 步: 孩子 zero 是 ℕ 极限形状, 第 n 个孩子是 h₂ (b·(n+1)); 第 0 个是 L₃ = h₂ b (Ω 形状, 下标层 zero).
+  g₂ : ℕ → L
+  g₂ n = h₂ (iter (b +_) b n)
+
+  u-L₂ : hc₁ zero ≡ nd sL g₂
+  u-L₂ = refl
+
+  L₃ : L
+  L₃ = h₂ b
+
+  oL₃ : Ok L₃
+  oL₃ = proj₂ (proj₂ oL₁ zero) 0
+
+  hc₃ : Tr zero → L
+  hc₃ c = chL L₃ c
+
+  u-L₃ : (L₃ ≡ nd (sΩ zero) hc₃) × ((c : Tr zero) → hc₃ c ≡ tw 1 ⊕ (zero ⊕ ↑ (h₁ c) (proj₁ (Ωt (h₁ c)))))
+  u-L₃ = refl , λ c → refl
+
+  G₅ : Tr zero → Tr⁺ zero
+  G₅ c = ψ♯ (hc₃ c) (proj₂ oL₃ c) B♯ zero tt (Ωt zero) (proj₁ (Ωt (hc₃ c)))
+
+  u-G₅ : Σ (ℕ → Tr zero) λ H → Σ _ λ a
+    → (proj₁ (G₃ zero) ≡ lim H a)
+    × (H 0 ≡ proj₁ (ψ♯ L₃ oL₃ B♯ zero tt (Ωt zero) (proj₁ (Ωt L₃))))
+    × (ψ♯ L₃ oL₃ B♯ zero tt (Ωt zero) (proj₁ (Ωt L₃)) ≡ node⁺ {X = Tr zero} {x₀ = zero} nothing G₅ (λ c → proj₁ (G₅ c)))
+  u-G₅ = _ , _ , refl , refl , refl
+
+  -- 第 5 步: L₃ 的孩子 zero 是 Ω+1 层; 它的 Ω 树 (槽位层 tw 1) 朝第 0 层走链.
+  L₄ : L
+  L₄ = nd sS λ _ → tw 1
+
+  u-L₄ : hc₃ zero ≡ L₄
+  u-L₄ = refl
+
+  oL₄ : Ok L₄
+  oL₄ = proj₂ oL₃ zero
+
+  G₆ : Tr (tw 1) → Tr⁺ zero
+  G₆ z = next⁺ (ψ♯ (tw 1) (proj₂ oL₄ tt) B♯ zero tt (Ωt zero) z)
+
+  s₆ : Tr (tw 1) → Tr (tw 1)
+  s₆ z = proj₁ (next⁺ (ψ♯ (tw 1) (proj₂ oL₄ tt) B♯ (tw 1) (proj₂ oL₄ tt) b⁺ z))
+
+  u-G₆ : G₅ zero ≡ node⁺ {X = Tr (tw 1)} {x₀ = zero} nothing G₆ s₆
+  u-G₆ = refl
+
+  -- 第 6 步: 第一个链点 c₁ = b·ω; 折它 (第二个链项) 时第 1 项就是 ψ₀♯ (tw 1) (b + b).
+  c₁ : Tr (tw 1)
+  c₁ = proj₁ (next⁺ b⁺)
+
+  u-c₁ : s₆ zero ≡ c₁
+  u-c₁ = refl
+
+  u-bb : Σ (ℕ → Tr zero) λ H → Σ _ λ a → Σ (ℕ → Tr zero) λ H′ → Σ _ λ a′
+    → (proj₁ (G₆ c₁) ≡ lim H a) × (H 0 ≡ lim H′ a′)
+    × (H′ 1 ≡ proj₁ (ψ♯ (tw 1) o₁ B♯ zero tt (Ωt zero) bb))
+  u-bb = _ , _ , _ , _ , refl , refl , refl
+
+  oL₃-same : oL₃ ≡ C.oL₃             -- L₃ 的证据与 "tw 2 的孩子 b" 的证据是同一项
+  oL₃-same = refl
+
+-- 塔的每一项都含前一项的计算: tw♯ (n+1) 的顶结点走链, 第 0 个链项 (z = zero) 逐字是 ψ₀♯ (tw n) (Ωt (tw n)).
+-- 所以 tw♯ 2 里问到的格在一切 tw♯ n (n ≥ 2) 里都被问到.
+module Tower (lem : LEM) where
+  open Sharp lem
+
+  tower-step : ∀ n → ψ₀♯ (tw (suc n)) (Ok-tw (suc n)) (proj₁ (Ωt (tw (suc n))))
+    ≡ node⁺ {X = Tr (tw n)} {x₀ = zero} nothing
+        (λ z → ψ♯ (tw n ⊕ ↑ (tw n) z) (proj₂ (Ok-tw (suc n)) z) B♯ zero tt (Ωt zero) (proj₁ (Ωt (tw n ⊕ ↑ (tw n) z))))
+        (λ z → proj₁ (ψ♯ (tw n ⊕ ↑ (tw n) z) (proj₂ (Ok-tw (suc n)) z) B♯ (tw n) (Ok-tw n) (Ωt (tw n))
+                         (proj₁ (Ωt (tw n ⊕ ↑ (tw n) z)))))
+  tower-step n = refl
+
+  tower-first : ∀ n → ψ♯ (tw n ⊕ ↑ (tw n) zero) (proj₂ (Ok-tw (suc n)) zero) B♯ zero tt (Ωt zero) (proj₁ (Ωt (tw n ⊕ ↑ (tw n) zero)))
+    ≡ ψ₀♯ (tw n) (Ok-tw n) (proj₁ (Ωt (tw n)))
+  tower-first n = refl

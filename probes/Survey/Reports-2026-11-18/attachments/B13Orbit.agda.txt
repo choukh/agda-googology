@@ -1,0 +1,45 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 在同一输入状态上比较折叠的右参数；可在任意变底 c 上使用真实 K 迭代窗。
+module B13Orbit where
+
+open import Data.Nat using (zero; suc)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (refl; cong)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import YiLAB7Orbit using (lvl2; ok₂; F)
+open import YiLAB11Orbit using (Ω₂t)
+open import B12ActualSlots using (_⊴_)
+import B12Orbit as U
+
+K : Tr⁺ lvl2 → Op {lvl2} nil
+K c = opB lvl2 ok₂ (proj₁ c) (proj₂ c)
+
+block : Tr⁺ lvl2 → Op {lvl2} nil → Op {lvl2} nil
+block c Q = op (E ok₂ tdNil (proj₁ c) Q) (Einf ok₂ tdNil (proj₁ c) Q)
+
+Jc : Tr⁺ lvl2 → Op {lvl2} nil
+Jc c = block c (K c)
+
+WeakOp : Op {lvl2} nil → Op {lvl2} nil → Set
+WeakOp P Q = (R : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i) → proj₁ (run P R i t v) ⊴ proj₁ (run Q R i t v)
+
+push-path : ∀ {i} {x y z : Tr i} → i ⊢ x ◃ y → y ⊴ z → i ⊢ x ◃ z
+push-path p (inj₁ refl) = p
+push-path p (inj₂ q) = ◃t p q
+
+standard≤K : (c : Tr⁺ lvl2) → Ω₂t ⊴ proj₁ c → WeakOp F (K c)
+standard≤K c (inj₁ q) R i t v = inj₁ (cong (λ x → proj₁ (ψ lvl2 ok₂ R i t v x)) q)
+standard≤K c (inj₂ p) R i t v = inj₂ (mono lvl2 ok₂ R i t v p)
+
+Contains : Op {lvl2} nil → Op {lvl2} nil → Set
+Contains Q J = (R : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i)
+  → i ⊢ proj₁ (U.Window.child Q R i t v) ◃ proj₁ (run J R i t v)
+
+contains : (c : Tr⁺ lvl2) → Ω₂t ⊴ proj₁ c → (Q : Op {lvl2} nil) → Contains Q (block c Q)
+contains c cp Q R i t v = Emono ok₂ tdNil Q R i t v {x = up zero tt (suc zero) ◃s} {y = proj₁ c}
+  (push-path {y = Ω₂t} ◃w cp)

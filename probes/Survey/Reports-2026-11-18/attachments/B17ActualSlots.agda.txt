@@ -1,0 +1,70 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 原 BTBO 行的前驱已经落实到下一真实下标的 W4 槽。分支和目标来自同一个上界，真实 kp 的保留、走链与原层序一致。
+module B17ActualSlots where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Maybe using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+open import W4Block
+open import W4Path
+open import W4Fold using (Keep; kp)
+open import WVOne using (read; h₁)
+import OCF.Align.Level as V
+open import OCF.Align.Value using (_≼_)
+open import OCF.Align.BTBOFullEmb using (PEmb)
+import OCF.Align.NoCumsum as N
+import B14Tower as W
+import B14Btbo as D
+import B16GammaRows as G
+import B17SlotLevel as S
+open import B17Keep using (Pass; classify; loc; run)
+
+record Kept {a j} (p : Pos a) (k : Keep j (Br a p) (fromBr a p zero)) : Set where
+  field
+    q : Pos j
+    cv : Br j q → Br a p
+    first : cv (fromBr j q zero) ≡ fromBr a p zero
+    decision : k ≡ just (q , cv , first)
+    every-input : Pass cv (sl j q) (sl a p)
+
+module Check {a j i h b} (bound : S.Corr i a) (target : S.Corr h j) (p : Pos a)
+             (source : S.Corr b (at a p)) (o : Ok a) (w : j ≤ a) where
+  private
+    yes : (k : Keep j (Br a p) (fromBr a p zero)) → classify {j} (sl a p) k → b V.≺ᴵ h → Kept {a} {j} p k
+    yes nothing c d = ⊥-elim (c source target d)
+    yes (just (q , f , e)) c d = record { q = q ; cv = f ; first = e ; decision = refl ; every-input = c }
+    no : (k : Keep j (Br a p) (fromBr a p zero)) → classify {j} (sl a p) k → (b V.≺ᴵ h → ⊥) → k ≡ nothing
+    no nothing c d = refl
+    no (just (q , f , e)) c d = ⊥-elim (d (S.below target q (subst (S.Corr b) (sym (loc c)) source)))
+  retain : b V.≺ᴵ h → Kept {a} {j} p (kp a o p w)
+  retain = yes (kp a o p w) (run bound o p w)
+  chain : (b V.≺ᴵ h → ⊥) → kp a o p w ≡ nothing
+  chain = no (kp a o p w) (run bound o p w)
+
+module Chart {a i j} (c : S.Corr i a) (m : PEmb j i) (o : Ok a) where
+  open PEmb m
+  place : ∀ {x} (b : x V.≺ᴵ j) → Pos a
+  place b = proj₁ (S.find c (bnd b))
+  typed : ∀ {x} (b : x V.≺ᴵ j) → S.Corr (map b) (at a (place b))
+  typed b = proj₂ (S.find c (bnd b))
+
+  module Pair {x y} (p : x V.≺ᴵ j) (q : y V.≺ᴵ j) where
+    module C = Check c (typed q) (place p) (typed p) o (posW a (place q))
+    decide = kp a o (place p) (posW a (place q))
+    lower : x V.≺ᴵ y → Kept {a} {at a (place q)} (place p) decide
+    lower d = C.retain (mono p q d)
+    equal : x V.≅ᴵ y → decide ≡ nothing
+    equal d = C.chain (λ h → V.≺ᴵ-irrefl (V.≺ᴵ-respˡ (V.≅ᴵ-sym (coh p q d)) h))
+    higher : y V.≺ᴵ x → decide ≡ nothing
+    higher d = C.chain (λ h → V.≺ᴵ-irrefl (V.≺ᴵ-trans (mono q p d) h))
+
+module Orbit (n m : ℕ) (d : N.γ n ≼ read (W.Actual.idx m)) where
+  z = W.Actual.idx (suc m)
+  module With (o : Ok (h₁ z)) = Chart (S.real z) (G.Actual.position n m d) o
+
+-- 原 γ₂ 所问的层号 N.L 1 在 i₃ 上的所有前驱比较无前提。
+import B12Terminal as T
+module First = Orbit 1 2 D.first-in
+module Closed = First.With (T.Run.ok (W.Actual.chain First.z))

@@ -1,0 +1,70 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- ψ₀(Ω₃) 原地址 [1,1,0,1] 的全部有限阶程序在相同的 Q 内兑现，进标准 Ψ₃ 和 Λ 的实际累加孩子。
+module B17OrbitFour where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (p₂; g₂)
+open import WKGen using (node-ge)
+open import WKShape using (Ψ₃; lvl3; ok₃)
+open import YiLAB7Orbit using (lvl2; ok₂)
+open import B9InnerOuter using (w2)
+open import WSShadow using (zC)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼l; l≼; ≼-refl; ≅→≼)
+import B12ActualSlots as Cover
+import B12Terminal as T
+import B12Update as U
+import B13OrbitFeed as O
+import B13SeedOuter as St
+import B14RefDescribed as D
+import B14RefGain as G
+import B15OrbitAction as P
+import B15OrbitModel as M
+import B15OrbitEx as E
+import B15OrbitRaise as R
+import B16OrbitWide as W
+import B17OrbitModel as Mod
+import B17OrbitTower as S
+import B17OrbitNatural as Nat
+import B17OrbitLadder as Ladder
+import B17OrbitAll as All
+import B17RefTower as Ref
+import B17RefGamma as Gm
+
+m = idM {X = M.X₁}
+module Frame = Mod.At m
+module Out = M.At m
+
+module At (r : T.Run lvl3) (cv : Cover.Covered r) where
+  module I = E.At r cv
+  module Ld = Ladder.At r cv
+  open I using (module Previous; module E₀; module Inn; K₁; J; initial)
+  open Ld.Prev using (b; nb; cover)
+  open St.At r using (st1; v₁; c⁺; outer)
+  open Previous.Proof.Core.Run using (S₁; step₂)
+  module Stage (k : ℕ) where
+    module Q = Ld.Stage k
+    pre-law : Mod.Both m Q.pre P.base
+    pre-law = Frame.lift₀ K₁ Q.pre (λ S i t v → Emono ok₂ O.D₁ K₁ S i t v (z◃ (Inn.U 0 k) (+-mono (Inn.U 0 k) nb))) P.base
+                 (R.protected c⁺ E₀.cp , W.base c⁺ E₀.cp)
+    module H = All.Hierarchy m (λ _ → refl) b nb cover Q.pre pre-law
+    rows : Mod.Both m Previous.Q (S.value 0 k)
+    rows = Frame.lift₀ Q.real Previous.Q Q.into _ (H.models 0 k)
+    level : L.ψ⁰ (P.f (S.value 0 k) L.zero) ≼ read (T.value r)
+    level = ≼-trans (U.value-bound (Out.seed (proj₁ rows Previous.t L.zero zC D.zero-row L.z≅ S₁ v₁ initial)))
+       (≼-trans (≼l 0 (≼-refl _)) (≼-trans (node-ge (kp lvl2 ok₂ p₂ w2) (λ z → E ok₂ tdNil (g₂ z) J st1 zero w2 v₁) step₂ 1)
+                       (≼-trans (E₀.inG st1 w2 v₁) (outer 0))))
+    reference : Gm.node k ≼ read (T.value r)
+    reference = ≼-trans (≅→≼ (Ref.every k)) level
+  whole : G.inner ≼ read (T.value r)
+  whole = l≼ Stage.reference
+
+standard : G.inner ≼ read Ψ₃
+standard = At.whole (T.initial lvl3 ok₃) (Cover.initial lvl3 ok₃)
+terminal : G.inner ≼ read EBOᶜ
+terminal = ≼-trans (At.whole (T.finiteRun 2) (Cover.all-finite 2)) (T.finite-ge 2)

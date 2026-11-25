@@ -1,0 +1,69 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18RefProduct where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁)
+open import Data.List.Base using ([]; _∷_; _++_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst)
+open import OCF.Align.EboLeanDef using (T; ψ; ΩTower; EBOψ; HC; h0; _<ᵀ_; []<; hd<; lv<; ar<)
+open import OCF.Align.EboLeanBase using (NF; n∷; n[]; nf-ψ; nf-hd; Ctbl; c∷; c[]; GB; InG; gp; gtl; gh; gw; gc; G-rep; HdLe)
+open import OCF.Align.EboLeanTree using (nf-tower; nf-ΩT; G0-tower; pos-tower; hc)
+open import OCF.Align.EboLean3Base using (<Ωt)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; s≼s; ≼-suc; l≼; +-mono; z≼; ψ⁰-mono⁰)
+open import WVOne using (T₀; 𝟏)
+import B17CapRows as W
+import B17CapAppend as A
+import B18Product as P
+import B18RefExponent as E
+open import B12XRef using (row; H)
+open import B17Cofinal using (strict-row)
+
+module At (k : ℕ) where
+  p = ψ (ΩTower k) []
+  arg = λ n → p ∷ W.word k n
+  form = λ n → ψ [] (arg n) ∷ []
+  head≤ : ∀ n → HdLe p (W.word k n)
+  head≤ zero = tt
+  head≤ (suc n) = inj₁ (lv< (pos-tower k))
+  small : ∀ j s → ΩTower j <ᵀ (ψ (ΩTower j) [] ∷ s)
+  small zero s = hd< (lv< (pos-tower 0))
+  small (suc j) s = hd< (lv< (<Ωt (ΩTower j)))
+  guarded : ∀ n → GB [] (arg n) (arg n)
+  guarded n (gp h) = subst (_<ᵀ arg n) (sym (G0-tower (suc k) (gp h))) []<
+  guarded n (gtl h) with G-rep n h
+  ... | gp (gh _) = small k (W.word k n)
+  ... | gp (gw _ ())
+  ... | gp (gc _ z) = subst (_<ᵀ arg n) (sym (G0-tower k z)) []<
+  ... | gtl ()
+  nf : ∀ n → NF (form n)
+  nf n = nf-ψ n[] (n∷ (nf-hd (nf-ΩT (suc k))) (head≤ n) (W.normal k n)) (guarded n)
+  result : ∀ n → HC (form n)
+  result n = hc (nf n) (c∷ c[])
+  bounded : ∀ n → form n <ᵀ EBOψ (suc (suc k))
+  bounded n = hd< (ar< (hd< (lv< (<Ωt (ΩTower k)))))
+  base : ∀ (h : HC (ψ [] (p ∷ []) ∷ [])) → 𝟏 ≼ Rt h
+  base h = mono<ⁿ n[] (nf-tower (suc k)) (c∷ c[]) (h0 refl) h []<
+  module Bound = E.Prefix p base
+
+  snoc : ∀ n → W.word k n ++ (W.letter k ∷ []) ≡ W.word k (suc n)
+  snoc zero = refl
+  snoc (suc n) = cong (W.letter k ∷_) (snoc n)
+  degree : ℕ → T₀
+  degree zero = L.zero
+  degree (suc n) = degree n L.+ row k
+  span : ∀ n → degree n ≼ Rt (W.cert k n)
+  span zero = z≼
+  span (suc n) = ≼-trans (+-mono (span n) (≼-refl (row k)))
+    (A.append (W.cert k n) (H k) (sym (snoc n)) (W.cert k (suc n)))
+  power : ∀ n → P.powers (row k) n ≼ L.ψ⁰ (degree n)
+  power zero = ≼-refl _
+  power (suc n) = ≼-trans (P.mono (power n) (≼-refl (row k))) (E.multiply (degree n) (row k))
+  terms : ∀ n → P.powers (row k) n ≼ row (suc (suc k))
+  terms n = ≼-trans (power n) (≼-trans (ψ⁰-mono⁰ (span n)) (≼-trans (Bound.bound _ (W.cert k n) (result n))
+    (≼-trans (≼-suc (≼-refl _)) (mono<ⁿ (nf n) (nf-tower (suc (suc k))) (c∷ c[]) (result n) (H _) (bounded n)))))
+
+cap : ∀ k → L.suc (L.lim (P.powers (row k))) ≼ row (suc (suc (suc k)))
+cap k = ≼-trans (s≼s (l≼ (At.terms k))) (strict-row _)

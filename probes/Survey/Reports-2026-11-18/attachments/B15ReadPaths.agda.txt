@@ -1,0 +1,100 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 树内步进经 ↑ 后只需后继、可数孩子与 Ω 的零号孩子。这些路径可在实际折叠中使用。
+module B15ReadPaths where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import W4Block
+
+data Reach : L → L → Set where
+  here : ∀ {a} → Reach a a
+  succ : ∀ {h} → Reach (h tt) (nd sS h)
+  limit : ∀ {h} n → Reach (h n) (nd sL h)
+  omega : ∀ {k : L} {h : Tr k → L} → Reach (h zero) (nd (sΩ k) h)
+  via : ∀ {a b c} → Reach a b → Reach b c → Reach a c
+
+left : (a : L) {b c : L} → Reach b c → Reach (a ⊕ b) (a ⊕ c)
+left a here = here
+left a succ = succ
+left a (limit n) = limit n
+left a omega = omega
+left a (via p q) = via (left a p) (left a q)
+
+base : (a b : L) → Reach a (a ⊕ b)
+base a zero = here
+base a (nd sS h) = via (base a (h tt)) succ
+base a (nd sL h) = via (base a (h 0)) (limit 0)
+base a (nd (sΩ k) h) = via (base a (h zero)) omega
+
+record Test (A : RA) : Set₁ where
+  field
+    Good : Car A → Set
+    Path : Car A → Car A → Set
+    compose : ∀ {u v w} → Path u v → Path v w → Path u w
+    lim-good : ∀ F t → (∀ n → Good (F n)) → Good (limA A F t)
+    lim-in : ∀ F t n → Path (F n) (limA A F t)
+    node-good : ∀ {m} (κ : Ctx A m) p G → (∀ z → Good (G z)) → Good (nodeA A κ p G)
+    node-in : ∀ {m} (κ : Ctx A m) p G → Path (G (fromBr m p zero)) (nodeA A κ p G)
+open Test
+Valid : ∀ {A} → Test A → OpA A → Set
+Valid S F = ∀ u → Good S u → Good S (proj₁ F u) × Path S u (proj₁ F u)
+
+higher : ∀ {A} → Test A → Test (pt A)
+Good (higher S) = Valid S
+Path (higher S) F G = ∀ u → Good S u → Path S (proj₁ F u) (proj₁ G u)
+compose (higher S) d e u h = compose S (d u h) (e u h)
+lim-good (higher S) F t g u h = lim-good S _ _ (λ n → proj₁ (g n u h)) ,
+  compose S (proj₂ (g 0 u h)) (lim-in S _ _ 0)
+lim-in (higher S) F t n u h = lim-in S _ _ n
+node-good (higher S) κ p G g u h = node-good S κ p _ (λ z → proj₁ (g z u h)) ,
+  compose S (proj₂ (g _ u h)) (node-in S κ p _)
+node-in (higher S) κ p G u h = node-in S κ p _
+
+mutual
+  eval : ∀ {A m} (S : Test A) (κ : Ctx A m) (x : Tr m) (F : OpA A) → Valid S F → Valid S (Eh A κ x F)
+  eval S κ zero F f = f
+  eval S κ (suc x) F f u h = lim-good S _ _ (λ n → iterP (Good S) _ (λ v g → proj₁ (eval S κ x F f v g)) u h (suc n)) ,
+    compose S (proj₂ (eval S κ x F f u h)) (lim-in S _ _ 0)
+  eval S κ (lim a d) F f u h = lim-good S _ _ (λ n → proj₁ (eval S κ (a n) F f u h)) ,
+    compose S (proj₂ (eval S κ (a 0) F f u h)) (lim-in S _ _ 0)
+  eval {A} {m} S κ (Ω p g) F f u h = node-good S κ p _ (λ z → proj₁ (eval S κ (g z) F f u h)) ,
+    compose S (proj₂ (eval S κ (g (fromBr m p zero)) F f u h)) (node-in S κ p _)
+  eval {A} {nd s h} S κ (up x c y e) F f = eval S (dn A κ c) y _ (eval S κ x F f)
+  eval {A} S κ (ex a b nb x ε) F f = proj₁ (eval (higher S) κ x (opE A κ b nb)
+    (λ G g → eval S κ b G g , step S κ G g nb) _ (eval S κ a F f))
+
+  step : ∀ {A m} (S : Test A) (κ : Ctx A m) (F : OpA A) → Valid S F →
+    ∀ {x y : Tr m} → m ⊢ x ◃ y → ∀ u → Good S u → Path S (proj₁ (Eh A κ x F) u) (proj₁ (Eh A κ y F) u)
+  step S κ F f ◃s u h = lim-in S _ _ 0
+  step S κ F f (◃l n) u h = lim-in S _ _ n
+  step S κ F f (◃w {p = p}) u h = node-in S κ p _
+  step {A} {nd s h} S κ F f (◃u x c y e) = step S (dn A κ c) _ (eval S κ x F f) e
+  step {A} {nd s h} S κ F f (◃c x c e) = step S (dn A κ c) _ (eval S κ x F f) e
+  step {A} S κ F f (◃e {a} {b} {nb} {x}) = proj₂ (eval (higher S) κ x (opE A κ b nb)
+    (λ G g → eval S κ b G g , step S κ G g nb) _ (eval S κ a F f))
+  step {A} S κ F f (◃x {a} {b} {nb} d) = step (higher S) κ (opE A κ b nb)
+    (λ G g → eval S κ b G g , step S κ G g nb) d _ (eval S κ a F f)
+  step S κ F f (◃t d e) u h = compose S (step S κ F f d u h) (step S κ F f e u h)
+
+levels : Test AL
+Good levels _ = ⊤
+Path levels = Reach
+compose levels = via
+lim-good levels _ _ _ = tt
+lim-in levels _ _ n = limit n
+node-good levels _ _ _ _ = tt
+node-in levels _ _ _ = omega
+
+right : ∀ w → Valid levels (opR w)
+right w u _ = tt , base u w
+
+read-step : (k : L) {x y : Tr k} → k ⊢ x ◃ y → Reach (↑ k x) (↑ k y)
+read-step k ◃s = succ
+read-step k (◃l n) = limit n
+read-step k ◃w = omega
+read-step (nd s h) (◃u x c y e) = base _ _
+read-step (nd s h) (◃c x c d) = left _ (read-step (h c) d)
+read-step k (◃e {a} {b} {nb} {x}) = proj₂ (eval levels tt x (opR (↑ k b)) (right (↑ k b)) (↑ k a) tt)
+read-step k (◃x {a} {b} {nb} d) = step levels tt _ (right (↑ k b)) d (↑ k a) tt
+read-step k (◃t d e) = via (read-step k d) (read-step k e)

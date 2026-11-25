@@ -1,0 +1,40 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原 EBO 的严格初段对乘法封闭，有限多个预算可移到某个共同行。
+module B29LimitCut where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; s≼s; ≼l; l≼)
+import WVOne as V
+import B18Product as P
+import B26Names as A
+import B26Depth as D
+import B27Endpoint as E
+import B27Threshold as R
+import B27CutArithmetic as C
+
+import B29Common as Family
+open import Data.Nat.Base using (s≤s)
+
+move : ∀ i j → i ≤ j → R.row i ≼ R.row j
+move i j p = R.minimum i (D.tower j) (subst (suc i ≤_) (sym (D.calibrate j)) (s≤s p))
+module Row = Family.Family A.E R.row E.small-index move E.room
+Small : V.T₀ → Set
+Small x = L.suc x ≼ A.E
+
+module Cut (e : V.T₀) (r : ℕ → V.T₀) (rr : ∀ k → r k ≼ e)
+  (pick : ∀ x y → L.suc x ≼ e → L.suc y ≼ e →
+      Σ ℕ (λ k → 2 ≤ k × L.suc x ≼ r k × L.suc y ≼ r k × L.suc y ≼ r k))
+  (mul : ∀ k → 2 ≤ k → ∀ x y → L.suc x ≼ r k → L.suc y ≼ r k → L.suc (x P.· y) ≼ r k) where
+  raise : ∀ (k : ℕ) (x : V.T₀) → L.suc x ≼ r k → L.suc x ≼ e
+  raise k x h = ≼-trans {a = L.suc x} {b = r k} {c = e} h (rr k)
+  small-prod : ∀ x y → L.suc x ≼ e → L.suc y ≼ e → L.suc (x P.· y) ≼ e
+  small-prod x y px py with pick x y px py
+  ... | k , d , p , q , _ = raise k (x P.· y) (mul k d x y p q)
+
+row-in : ∀ k → R.row k ≼ A.E
+row-in k = ≼-trans {a = R.row k} {b = L.suc (R.row k)} {c = A.E}
+  (≼-suc (≼-refl (R.row k))) (A.strict (D.tower k))
+open Cut A.E R.row row-in (λ x y p q → Row.row-for x y y p q q) C.At.product public

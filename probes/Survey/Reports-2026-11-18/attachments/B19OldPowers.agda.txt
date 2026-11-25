@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在旧对角的第四实际下标内，用任意有限的更高层对已知原行的右乘做整排迭代。
+module B19OldPowers where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import W4Block hiding (D)
+open import W4Ops
+open import WVOne using (h₁; read; T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; l≼)
+import OCF.Align.NoCumsum as N
+import B12Terminal as T
+import B12ActualSlots as A
+import B12Omega3Ref as Ref
+import B13FiniteLift as U
+import B14Floor as F
+import B14Tower as W
+import B14PathHeight as P
+import B14Btbo as Bt
+import B18Product as M
+import B18OrbitRows as Row
+import B19PathValue as Path
+import B19OldSlots as Q
+import B19OldFinite as Exact
+open T.Run
+
+b = Ref.at (L.ψ⁰ Ref.Ω₃) 1
+point : ℕ → ℕ
+point = λ n → suc (suc (suc n))
+level = λ n → h₁ (F.num (point n))
+
+module Base (r : T.Run (level 0)) (cr : A.Covered r) where
+  r₁ = W.reset r (Ωt zero) (≼-refl _)
+  module Z = Path.At (level 0) (ok r) (bs r) (proj₁ (Ωt (level 0)))
+  first : b ≼ Z.coefficient
+  first = Row.At.whole r₁ cr
+  physical : ∀ {w} → P.All w → ∀ a → a ≼ read (proj₁ (β r)) → a M.· b ≼ W.valueAt r w
+  physical h a d = ≼-trans (M.mono d first) (proj₂ (Z.scale h (β r)))
+
+op : ℕ → T₀ → T₀
+op zero a = a M.· b
+op (suc n) = U.repeatω (op n)
+
+law : ∀ n {w : zero ≤ level n} → P.All w → P.Law w (op n)
+law zero h r cr = Base.physical r cr h
+law (suc n) (P.each {ws = ws} ps) r cr = P.Next.result sS (λ _ → h₁ (F.num (suc (suc n)))) ws (ps tt) (op n) (law n (ps tt)) r cr
+
+module At (k m : ℕ) (seed : N.γ k ≼ read (W.Actual.idx m)) (floor : ∀ n → L.natᶜ n ≼ L.forget (N.L k)) where
+  upper = read (W.Actual.idx (suc (suc m)))
+  module One (n : ℕ) (clock : ℕ → ℕ) where
+    module S = Exact.Orbit k m seed floor (point n) clock
+    site = S.Here.slot
+    right : op n 𝟏 ≼ upper
+    right = ≼-trans {a = op n 𝟏} {b = Q.value site} {c = upper}
+      (law n (Q.all site) (Q.state site) (Q.cover site) 𝟏 (oneβ (Q.state site))) S.at-four
+  complete : L.lim (λ n → op n 𝟏) ≼ upper
+  complete = l≼ (λ n → One.right n (λ _ → 0))
+
+module First = At 1 2 Bt.first-in Exact.low

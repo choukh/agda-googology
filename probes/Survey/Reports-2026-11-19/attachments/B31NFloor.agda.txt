@@ -1,0 +1,77 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 压缩后的真实 D 不能严格低于从 ψ₀(Ω₂) 开始的全体有限 ε 跳跃的上确界。正向弱下界用排中律，原名预算的深度下限无条件。
+module B31NFloor where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_)
+open import Data.Nat.Properties using (≰⇒>)
+open import Data.Product using (_,_)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import WVOne using (T₀)
+import W4Block as W
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; ≼lim⁻; ≼l; s≼s)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRVLevel using (LEM)
+import B12Terminal as T
+import B12XRef as Ref
+import B12EboRows as Rows
+import B17ValueDich as Order
+import B22MovingIndex as E
+import B22TowerCut as K
+import B26Names as A
+import B26Depth as Depth
+import B27Threshold as Names
+import B29End as End
+import B29SFirst as True
+import B31OrbitRank as Rank
+import B31NInside as In
+import B31NReal as Real
+
+q = T.Ω₂ref
+seq = W.iter E.above q
+H : T₀
+H = In.hull q
+
+closed : ∀ x → L.suc x ≼ H → E.above x ≼ H
+closed x h with ≼lim⁻ {a = x} {f = seq} h
+... | m , hm = ≼l {f = seq} (suc m) (K.advance {x} {seq m}
+  (≼-trans {b = L.suc x} (≼-suc (≼-refl x)) hm))
+
+abstract
+  strict : L.suc H ≼ E.above Rank.D
+  strict = ≼-trans {a = L.suc H} {b = True.f 1} {c = E.above Rank.D} (Real.forced q (≼-refl q))
+    (≼-trans {a = True.f 1} {b = True.S} {c = E.above Rank.D} (≼l {f = True.f} 1 (≼-refl (True.f 1))) Rank.high)
+
+  no-strict-below : L.suc Rank.D ≼ H → ⊥
+  no-strict-below small = s≼-irrefl H (≼-trans {a = L.suc H} {b = E.above Rank.D} {c = H} strict (closed Rank.D small))
+
+  compare-at : ∀ (lem : LEM) (x y : T₀) → (L.suc y ≼ x → ⊥) → x ≼ y
+  compare-at lem x y no with Order.Classical.compare lem x y
+  ... | inj₁ d = d
+  ... | inj₂ h = ⊥-elim (no h)
+
+  conditional : LEM → H ≼ Rank.D
+  conditional lem = compare-at lem H Rank.D no-strict-below
+
+  no-base : Rank.D ≼ q → ⊥
+  no-base d = no-strict-below (≼l {a = L.suc Rank.D} {f = seq} 1 (≼-trans {a = L.suc Rank.D} {b = L.suc q} {c = E.above q} (s≼s d) (E.strict q)))
+
+  bridge : ∀ n → Names.row n ≼ Ref.row n
+  bridge n = Ref.original n
+
+  row-one : Names.row 1 ≼ q
+  row-one = ≼-trans {a = Names.row 1} {b = Ref.row 1} {c = q} (bridge 1)
+    (≼-trans {a = Ref.row 1} {b = N.γ 1} {c = q} Ref.epsilon Rows.epsilon-in-Ω₂)
+
+module NamesBelow (v : T₀) (no : v ≼ Names.row 1 → ⊥) where
+  depth : ∀ a → v ≼ A.value a → 2 ≤ Depth.height a
+  depth a d = ≰⇒> λ shallow → no (≼-trans {a = v} {b = A.value a} {c = Names.row 1} d
+    (≼-trans {a = A.value a} {b = L.suc (A.value a)} {c = Names.row 1} (≼-suc (≼-refl (A.value a)))
+      (Names.below 1 a shallow)))
+
+  row-budget : ∀ k → v ≼ Names.row k → 2 ≤ k
+  row-budget k d = ≰⇒> λ shallow → no (≼-trans {a = v} {b = Names.row k} {c = Names.row 1} d (End.move k 1 shallow))
+
+module Actual = NamesBelow Rank.D (λ d → no-base (≼-trans {a = Rank.D} {b = Names.row 1} {c = q} d row-one))

@@ -1,0 +1,19 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiCNInherited where
+open import Data.List using ([])
+open import Data.Product using (proj₁)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiCNDomain
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiGIRel as GR
+import OCF.Lean.YiHCRel as H
+import OCF.Align.EboLeanDef as E
+
+-- 尝试一：假定各孩子完整 Leaf，沿嵌入把指定孩子的结果送到顶层。
+-- 检查器仍要求这个孩子等于第一孩子，Cn 的正向单调没有给反向路径。
+inherited : ∀ {k} → Cn k
+  → (∀ c {ν} → GR.Rd (k ⊕ ↑ k c) ν
+       → GR.R (k ⊕ ↑ k c) (E.Ωt ν) (proj₁ (O.Ωt (k ⊕ ↑ k c))))
+  → ∀ c {ν} → GR.Rd (k ⊕ ↑ k c) ν
+  → GR.R (Ωc k) (E.Ωt ν) (proj₁ (O.Ωt (Ωc k)))
+inherited ck lc c q = H.mw (H.mU {t = []} H.mz (lc c q)) ◃w

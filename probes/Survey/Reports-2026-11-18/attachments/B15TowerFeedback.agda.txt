@@ -1,0 +1,34 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 任意标准 Ω 含有一个可访问的后继层。用它解释操作时，所有正有限次迭代都出现在安全路径上。
+module B15TowerFeedback where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; l≼; z≼)
+import OCF.Align.Level as LV
+open import WVOne using (T₀; read)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B13FiniteTower as F
+import B15ReadPaths as R
+
+floor : (j : L) → R.Reach (U.sc zero) (↑ j (proj₁ (Ωt j)))
+floor zero = R.here
+floor (nd sS h) = R.omega
+floor (nd sL h) = R.via (R.left zero (floor (h 0))) (R.limit 0)
+floor (nd (sΩ k) h) = R.via (R.left zero (floor (h zero))) R.omega
+
+through : (j : L) (F : OpA AL) (u : L) (n : ℕ) →
+  R.Reach (iter (proj₁ F) u (suc n)) (proj₁ (Eh AL tt (proj₁ (Ωt j)) F) u)
+through zero F u n = R.limit n
+through (nd sS h) F u n = R.via (R.limit n) R.omega
+through (nd sL h) F u n = R.via (through (h 0) F u n) (R.limit 0)
+through (nd (sΩ k) h) F u n = R.via (through (h zero) F u n) R.omega

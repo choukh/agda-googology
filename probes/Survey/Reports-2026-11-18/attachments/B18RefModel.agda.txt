@@ -1,0 +1,64 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18RefModel where
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_)
+import B13Target as P
+import B15RefAlgebra as A
+import B15RefRaise as Q
+import B17RefExp as E
+import B17RefVector as V
+import B17RefTower as H
+import B17OrbitTower as T
+import B18OrbitSpace as O
+open import B18RefDelta using (δ)
+open import B18RefCong using (δ-pres)
+open T using (Space; End; Arr; Rel; Eq; Carrier; run)
+open H using (Regular)
+
+record Model (S : Space) : Set₁ where
+  field
+    fit : Carrier S → T₁ → Set
+    conv : ∀ {a u v} → fit a u → u L.≅ v → fit a v
+    sup : ∀ (a : ℕ → Carrier S) (d : ℕ → T₁) → (∀ j → d j L.≅ d j) → (∀ j → fit (a j) (d j)) → fit (T.sup S a) (L.lim d)
+    node : ∀ (a : T₀ → Carrier S) (ra : ∀ {x y} → x ≼ y → Rel S (a x) (a y)) (ea : ∀ {x y} → x L.≅ y → Eq S (a x) (a y))
+               (d : T₀ → T₁) → Regular d → (∀ j → fit (a j) (d j)) → fit (T.node S a ra ea) (L.limᵢ L.zero d)
+open Model public
+
+old : Model O.old
+fit old = V.Fits
+conv old {a = a} p d n = H.conv (suc n) {a = a n} (p n) d
+sup old a d rd p n = H.sup (suc n) (λ j → a j n) d rd (λ j → p j n)
+node old a ra ea d rd p n = H.node (suc n) (λ x → a x n) (λ r → ra r n) (λ e → ea e n) d rd (λ x → p x n)
+
+module Operators (S : Space) (M : Model S) where
+  Action : Model (End S)
+  fit Action a u = ∀ b t → t L.≅ t → fit M b t → fit M (run a b) (δ u t)
+  conv Action p uv b t rt q = conv M (p b t rt q) (δ-pres uv rt)
+  sup Action a d rd p b t rt q = sup M (λ j → run (a j) b) (λ j → δ (d j) t) (λ j → δ-pres (rd j) rt) (λ j → p j b t rt q)
+  node Action a ra ea d rd p b t rt q = node M (λ j → run (a j) b)
+    (λ r → ra r b b (T.rr S b)) (λ r → ea r b b (T.ee S b))
+    (λ j → δ (d j) t) (λ d → δ-pres (rd d) rt) (λ j → p j b t rt q)
+
+  module Lift (h : Arr S) (u : T₁) (ru : u L.≅ u) (law : fit Action h u) where
+    suffix = Q.body u
+    proper : ∀ {x y : T₀} → x L.≅ y → suffix x L.≅ suffix y
+    proper = L.add-≅ {σ = L.suc} {σ′ = L.suc} ru
+    part : ∀ y b t → t L.≅ t → fit M b t → fit M (T.height S y (run h) b) (δ (suffix y) t)
+    part L.zero = law
+    part (L.suc y) b t rt p = sup M _ _ regs terms where
+      open import OCF.BTBO using (module Ord-Ord)
+      ps = Ord-Ord.iter (δ (suffix y)) t
+      regs : ∀ j → ps j L.≅ ps j
+      regs = L.iter-R L._≅_ {G = δ (suffix y)} {G′ = δ (suffix y)} (δ-pres (proper (L.≅-refl⁰ y))) rt
+      terms : ∀ j → fit M (iter (T.height S y (run h)) b j) (ps j)
+      terms zero = p
+      terms (suc j) = part y _ _ (regs j) (terms j)
+    part (L.lim f) b t rt p = sup M _ _ (λ j → δ-pres (proper (L.≅-refl⁰ (f j))) rt) (λ j → part (f j) b t rt p)
+
+    raised : fit Action (run (T.Φ S) h) (u L.+ L.Ω (L.suc L.zero))
+    raised b t rt p = node M (T.Diag.f S h b) (T.Diag.r S h b) (T.Diag.q S h b)
+      (λ x → δ (suffix x) t) (λ d → δ-pres (proper d) rt) (λ x → part x b t rt p)

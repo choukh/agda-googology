@@ -1,0 +1,76 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 从任一有限层的统一更新和常数界出发，同时推进两者；最后汇入 Λ 的真实有限层运行。
+module B13FiniteTower where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; cong; sym; trans)
+open import W4Block
+open import W4Ops
+import W4Fold
+open import WVOne using (T₀; read; h₁; lvl1; Mv-mono; 𝟏)
+open import WVTwo using (lvl2)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; l≼)
+import OCF.Align.Level as LV
+import WKTower as WT
+import B12Terminal as T
+import B12ActualSlots as A
+open import B12TerminalTail using (push; mulω)
+open import B13FiniteLift
+
+height : (T₀ → T₀) → ℕ → T₀ → T₀
+height f = iter repeatω f
+
+constant : (T₀ → T₀) → T₀ → ℕ → T₀
+constant f Q zero = Q
+constant f Q (suc n) = height f (suc n) (constant f Q n)
+
+module Climb (j : L) (f : T₀ → T₀) (Q : T₀) (u : Uniform (sc j) f) (q : Bound (sc j) Q) where
+  lev : ℕ → L
+  lev n = sc (iter sc j n)
+
+  law : (n : ℕ) → Uniform (lev n) (height f n)
+  law zero = u
+  law (suc n) = lift-uniform sS (λ _ → iter sc j n) (height f n) (law n)
+
+  floors : (n : ℕ) → Bound (lev n) (constant f Q n)
+  floors zero = q
+  floors (suc n) = lift-bound sS (λ _ → iter sc j n) (height f n) (constant f Q n) (law n) (floors n)
+
+-- 所用层号正是 finiteRun 的层号。
+succ-one : (n : ℕ) → WT.f₁ (suc n) ≡ suc (WT.f₁ n)
+succ-one zero = refl
+succ-one (suc n) = cong (suc zero +_) (succ-one n)
+
+succ-level : (n : ℕ) → WT.gL (suc n) ≡ sc (WT.gL n)
+succ-level n = cong h₁ (succ-one n)
+
+module Actual (j : L) (start : ℕ) (p : WT.gL start ≡ sc j)
+  (f : T₀ → T₀) (Q : T₀) (u : Uniform (sc j) f) (q : Bound (sc j) Q) where
+  open Climb j f Q u q
+
+  loc : (n : ℕ) → WT.gL (iter suc start n) ≡ lev n
+  loc zero = p
+  loc (suc n) = trans (succ-level (iter suc start n)) (cong sc (loc n))
+
+  allAt : (n : ℕ) → Bound (WT.gL (iter suc start n)) (constant f Q n)
+  allAt n = subst (λ ℓ → Bound ℓ (constant f Q n)) (sym (loc n)) (floors n)
+
+  at-omega : Bound WT.Lω (LV.lim (constant f Q))
+  at-omega r H = l≼ (λ n → ≼-trans
+    (allAt n (T.limRun WT.gL r (ix n)) (A.enter sL WT.gL r (ix n) (T.prefix WT.gL (ix n)) H))
+    (T.lim-child WT.gL r (ix n)))
+    where ix = iter suc start
+
+  lower : (n : ℕ) → constant f Q n ≼ read (T.value (T.finiteRun (iter suc start n)))
+  lower n = allAt n
+    (T.finiteRun (iter suc start n)) (A.all-finite (iter suc start n))
+
+  terminal : LV.lim (constant f Q) ≼ read W4Fold.EBOᶜ
+  terminal = l≼ (λ n → ≼-trans (lower n) (T.finite-ge (iter suc start n)))
+
+timesω : (ℓ : L) → Uniform ℓ mulω
+timesω ℓ r h a d = ≼-trans (Mv-mono d (≼-refl 𝟏)) (push ℓ r)
+
+-- 第 2 层的已校准常数给一个无前提实例。
+module From₂ = Actual lvl1 1 refl mulω T.Ω₂ref (timesω lvl2) (λ r _ → T.anchor₂ r)

@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 从原前驱的数值高度中选出恰为任意所给有限层的真实已覆盖运行。该层的路径可与标准零路径比较。
+module B19OldFinite where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import W4Block
+open import WVOne using (h₁; read)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum
+open import OCF.Align.Value using (_≼_; s≼s; z≼; ≼l; ≼-refl; ≼-trans)
+open import OCF.Align.BTBOValMain using (nat⊑L₁)
+open import OCF.Align.YiMonoEmb using (PEmb-⊑)
+import B14Floor as F
+import B14Tower as W
+import B14PathHeight as P
+import B19OldSlots as Q
+import B19OldChart as M
+import B19OldTrace as D
+
+same : ∀ n → L.forget (L.natᴵ n) ≡ L.natᶜ n
+same zero = refl
+same (suc n) = cong L.suc (same n)
+
+seek : ∀ n z → L.natᶜ n ≼ read z → (c : Q.Frame (h₁ z)) → (ℕ → ℕ) → Q.Reach c (h₁ (F.num n))
+seek zero zero e c t = c , Q.inside (≼-refl _) (≼-refl _)
+seek zero (suc z) e c t = Q.nested s (seek 0 z z≼ (proj₁ s) (λ j → t (suc j))) where s = Q.successor z c (t 0)
+seek zero (lim f p) e (Q.frame r .(inu _) (P.each {ws = ws} ps) cr) t = Q.nested s (seek 0 (f 0) z≼ (proj₁ s) (λ j → t (suc j)))
+  where s = Q.Limit.child (λ i → h₁ (f i)) r ws ps cr 0
+seek (suc n) zero ()
+seek (suc n) (suc z) (s≼s h) c t with F.split n z h
+... | inj₁ refl = c , Q.inside (≼-refl _) (≼-refl _)
+... | inj₂ h′ = Q.nested s (seek (suc n) z h′ (proj₁ s) (λ j → t (suc j))) where s = Q.successor z c (t 0)
+seek (suc n) (lim f p) (≼l j d) (Q.frame r .(inu _) (P.each {ws = ws} ps) cr) t = Q.nested s (seek (suc n) (f j) d (proj₁ s) (λ j → t (suc j)))
+  where s = Q.Limit.child (λ i → h₁ (f i)) r ws ps cr j
+
+module At {a b} (r : M.Chart a) (d : D.Descent a b) (n : ℕ) (low : L.natᶜ n ≼ L.forget b) (t : ℕ → ℕ) where
+  module Point = D.Point r d
+  base = Point.child
+  actual = seek n (M.z base) (≼-trans low (M.Here.index-bound base)) (M.frame base) t
+  slot = proj₁ actual
+  inside : Q.Inside (M.frame r) slot
+  inside = Q.join Point.room (proj₂ actual)
+
+low : ∀ n → L.natᶜ n ≼ L.forget (OCF.Align.NoCumsum.L 1)
+low n = subst (λ a → a ≼ _) (same n) (M.height (L.natᴵ n) (PEmb-⊑ (nat⊑L₁ n)))
+module Orbit (k m : ℕ) (d : OCF.Align.NoCumsum.γ k ≼ read (W.Actual.idx m)) (floor : ∀ n → L.natᶜ n ≼ L.forget (OCF.Align.NoCumsum.L k))
+             (n : ℕ) (t : ℕ → ℕ) where
+  module Site = M.Actual k m d
+  module Here = At Site.original D.root n (floor n) t
+  at-four : Q.value Here.slot ≼ read (W.Actual.idx (suc (suc m)))
+  at-four = ≼-trans {a = Q.value Here.slot} {b = Q.value Site.f} {c = read (W.Actual.idx (suc (suc m)))} (Q.bound Here.inside) Site.main
+import B14Btbo as B
+module First = Orbit 1 2 B.first-in low

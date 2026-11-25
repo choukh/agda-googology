@@ -1,0 +1,26 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第十一批协调者合成入口: A 路的 stages 接 B 路的 run-stages, 再经 src-exit 落到 src.
+module B11Join where
+
+open import OCF.BTBO using (module Ord-Ord)
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import WVOne using (read)
+open import WKShape using (Ψ₃)
+import YiLAB10Src as T
+open import YiLAB11Target using (Goal; src-exit)
+import B11PrefixMain as A
+import B11OuterCore as B
+
+-- Level 闭定理: Ψ₃ 不低于 ψ⁰ (lim ll), 即 Level 参照的 ψ₀(Ω₂·ω).
+level : LV.ψ⁰ (LV.lim T.ll) ≼ read Ψ₃
+level = B.run-stages A.stages
+
+-- 以公共命题 Goal 交付同一陈述.
+goal : Goal
+goal = level
+
+-- src 闭定理: Ψ₃ 不低于 src 的 ψ₀(lim ss), 即 src 的 ψ₀(Ω₂·ω).
+src : tr₀ (Ord-Ord.ψ₀ (Ord-Ord.lim T.ss)) ≼ read Ψ₃
+src = src-exit level

@@ -1,0 +1,48 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对固定真实一级轨道，逐项取恢复值并判共尾均无需排中律。由终点反取严格支配的单位点沿用经典方向。
+module B28Acceptance where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (sym; subst)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≼-suc; ≼lim⁻; l≼; ≅→≼)
+open import OCF.Align.EboLeanDef using (HC)
+import B19IdealProduct
+import B26Names as A
+import B27Joint as J
+import B27UEnvelope as Env
+import B27NMeaning as M
+import B27NOrbit as N
+import B26CMeaning as C
+import B25DTrack as R
+import B26PActual as W
+import B14Goal as G
+import B28Orbit as O
+import B28OrbitValue as V
+
+Units = ∀ n → J.Hit (O.value n)
+whole : ∀ (y : A.T₀) → (∀ n → O.value n ≼ y) → A.E ≼ y
+whole y covered = ≼-trans {b = L.lim O.value} (proj₁ V.complete) (l≼ covered)
+outward : A.E ≼ Env.U → Units
+outward h n = J.Matrix.locate J.f (O.value n) (≼-trans {b = A.E} (A.strict (O.target n)) h)
+inward : Units → A.E ≼ Env.U
+inward cover = whole Env.U (λ n → J.bound (O.value n) Env.U Env.component (cover n))
+enough : Units → G.Goal
+enough cover = J.unit-to-terminal (inward cover)
+necessary : G.Goal → ∀ n → L.suc (O.value n) ≼ W.Y
+necessary g n = ≼-trans {b = A.E} (A.strict (O.target n)) g
+
+module Classical (lem : LEM) where
+  module Orbit = M.Classical lem
+  opaque
+    unfolding M.Classical.response
+    same : ∀ n → Orbit.response n ≈ᵛ O.value n
+    same n = C.Classical.selected lem (R.χ n) (N.point n) (O.input n) (O.identified n)
+      (subst HC (sym (O.recovery n)) (O.out-h n))
+      B19IdealProduct.∙ (tree-≼ (O.recovery n) _ (O.out-h n) , tree-≼ (sym (O.recovery n)) (O.out-h n) _)
+
+  all-units : G.Goal → Units
+  all-units g = outward (J.Classical.terminal-to-unit lem g)

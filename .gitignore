@@ -31,3 +31,5 @@
 /_site/
 /dist-newstyle/
 /node_modules/
+/probes/_build/
+__pycache__/

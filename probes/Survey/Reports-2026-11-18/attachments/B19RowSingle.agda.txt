@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19RowSingle where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+open import WVOne using (T₀; read)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+open import W4Fold using (EBOᶜ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼l; ≼-trans; ≼-refl; ≅→≼)
+import B12Omega3Ref as R
+import B13Target as Target
+import B14RefAllRows as F
+import B14RefFixed
+import B17RefAllSource as Src
+import B18OrbitRows as Old
+import B19RowWorld as W
+import B19RowPair as Pair
+import B19RowProgram as P
+import B19RowAccept as A
+import B12EboRows as E
+import B12Terminal as T
+import B12ActualSlots as Cover
+open import WKShape using (lvl3)
+
+both : ℕ → T₁ → Pair.Pair
+both m = P.op m Pair.W
+whole : ℕ → T₀
+whole m = proj₁ (Pair.large (both m))
+
+shape : ∀ m → whole m L.≅ Src.branches (suc m)
+shape m = L.≅-trans (proj₁ (Pair.Large.value (both m) (F.norm m) (F.pres m) (P.calibrate m Pair.W))) raw
+  where
+  raw : L.ψ⁰ (L.limᵢ L.zero (F.norm m)) L.≅ Src.branches (suc m)
+  raw rewrite Target.outer (suc m) = L.ψ⁰-≅ (L.lᵢ≅ {p = L.zero} {q = L.zero} {f = F.norm m} {g = Target.family (suc m)}
+    (L.≅ᴵ-refl _) (λ x y d → L.≅-sym (F.family m {x = y} {y = x} (L.≅-sym d))))
+
+same : ∀ m → whole m L.≅ P.outer m
+same m = L.≅-trans (shape m) (L.≅-sym (P.positive m))
+
+index : ℕ → ℕ → T₁
+index m = W.O.iter (λ u → proj₂ (both m u)) Ω₁ᴸ
+point : ∀ m n → proj₁ (both m (index m n)) L.≅ F.node m n
+point m n = L.≅-trans (Src.part (same m) n) (P.actual m n)
+
+natural : ∀ m {x y} → x L.≅ y →
+  (proj₁ (both m x) L.≅ proj₁ (both m y)) × (proj₂ (both m x) L.≅ proj₂ (both m y))
+natural m {x} {y} d = L.≅-trans (proj₁ a) (L.≅-trans (L.ψ⁰-≅ (F.pres m d)) (L.≅-sym (proj₁ b))) ,
+  L.≅-trans (proj₂ a) (L.≅-trans (B14RefFixed.pres (F.pres m d)) (L.≅-sym (proj₂ b))) where
+  a = P.calibrate m Pair.W x (Target.refl-left d)
+  b = P.calibrate m Pair.W y (Target.refl-left (L.≅-sym d))
+
+Trace : ℕ → T₀ → Set₁
+Trace m t = A.Run Ω₁ᴸ (λ u → proj₂ (both m u)) (λ u → proj₁ (both m u)) t
+
+onto : ∀ m {t} → Trace m t → Src.branches (suc m) ≼ t
+onto m state = ≼-trans (≅→≼ (L.≅-sym (shape m))) (A.Run.bound state)
+
+covered : ∀ (r : T.Run lvl3) → Cover.Covered r → Trace zero (read (T.value r))
+A.Run.Z (covered r cv) = ℕ
+A.Run.z (covered r cv) = 0
+A.Run.next (covered r cv) = suc
+A.Run.covers (covered r cv) x j = x L.≅ index 0 j
+A.Run.start (covered r cv) = L.Ω-refl _
+A.Run.advance (covered r cv) x j d = proj₂ (natural 0 d)
+A.Run.observe (covered r cv) j x d = ≼-trans (≅→≼ (proj₁ (natural 0 d))) (≼-trans (≅→≼ (point 0 _)) (Old.At.row r cv _))
+
+module Real where
+  earlier : whole zero ≼ read EBOᶜ
+  earlier = ≼-trans (≅→≼ (shape zero)) Old.terminal
+  shared : (∀ m → Trace (suc m) (read EBOᶜ)) → L.ψ⁰ R.Ω₃ ≼ read EBOᶜ
+  shared h = l≼ λ where
+    zero → T.ebo-level
+    (suc zero) → Old.terminal
+    (suc (suc m)) → onto (suc m) (h m)
+  terminal : (∀ m → Σ ℕ (λ k → Trace (suc m) (E.child k))) → L.ψ⁰ R.Ω₃ ≼ read EBOᶜ
+  terminal h = l≼ rows where
+    rows : ∀ m → Src.branches m ≼ read EBOᶜ
+    rows zero = T.ebo-level
+    rows (suc zero) = Old.terminal
+    rows (suc (suc m)) = let k , t = h m in E.into (k , onto (suc m) t)

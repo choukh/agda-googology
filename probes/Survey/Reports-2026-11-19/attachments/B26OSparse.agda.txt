@@ -1,0 +1,74 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 把完整可数形的字典序嵌入单个裸 Ω 主项。中间的有限和只在最外层收集各旧主项的参数。
+module B26OSparse where
+
+open import Data.List.Base using ([]; _∷_)
+open import Data.Empty using (⊥-elim)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Unit.Base using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Align.EboLeanDef using (T; ψ; _<ᵀ_; _<ᴾ_; []<; hd<; tl<; lv<; ar<)
+open import OCF.Align.EboLeanBase using (tri; <ᵀ-irrefl; <ᵀ-asym; NF; NFP; n[]; n∷; nψ; Ctbl; c[]; c∷; GB; InG; InGP; gp; gtl; gw; gc; gh; GB[]; idx<; <ᵀ-trans; tail<; nf-hd; nf-tl; nf-le; nf-ψ; nf-Ω; HdLe)
+open import B26ORank using (Name; name; term; normal; countable; _≪_)
+
+card = λ (a : T) → ψ a [] ∷ []
+collapse = λ (a : T) → ψ [] (card a) ∷ []
+
+raise : T → T
+raise [] = []
+raise (ψ _ a ∷ ts) = ψ a [] ∷ raise ts
+
+sorted : ∀ {a ts} → Ctbl ts → HdLe (ψ [] a) ts → HdLe (ψ a []) (raise ts)
+sorted c[] _ = tt
+sorted (c∷ c) (inj₁ (lv< ()))
+sorted (c∷ c) (inj₁ (ar< p)) = inj₁ (lv< p)
+sorted (c∷ c) (inj₂ refl) = inj₂ refl
+
+normalized : ∀ {t} → NF t → Ctbl t → NF (raise t)
+normalized n[] c[] = n[]
+normalized (n∷ (nψ _ na _) h n) (c∷ c) = n∷ (nψ na n[] GB[]) (sorted c h) (normalized n c)
+
+guard : ∀ {t} → NF t → Ctbl t → GB [] (raise t) (raise t)
+guard (n∷ _ _ _) (c∷ _) (gp (gh _)) = []<
+guard (n∷ (nψ _ _ g) _ _) (c∷ _) (gp (gw _ h)) = <ᵀ-trans (g h) (idx< _ _ _)
+guard (n∷ _ _ _) (c∷ _) (gp (gc _ ()))
+guard (n∷ (nψ _ na _) h n) (c∷ c) (gtl g) = <ᵀ-trans (guard n c g)
+  (tail< _ _ (sorted c h) (normalized n c))
+
+admissible : ∀ {a} → GB [] a a → GB [] (card a) (card a)
+admissible g (gp (gh _)) = []<
+admissible g (gp (gw _ h)) = <ᵀ-trans (g h) (idx< _ _ _)
+admissible g (gp (gc _ ()))
+admissible g (gtl ())
+
+tag : Name → Name
+tag (name t nt ct) = name (collapse (raise t))
+  (nf-ψ n[] (nf-Ω (normalized nt ct)) (admissible (guard nt ct))) (c∷ c[])
+
+preserve : ∀ {t u} → Ctbl t → Ctbl u → t <ᵀ u → raise t <ᵀ raise u
+preserve c[] (c∷ _) []< = []<
+preserve (c∷ _) (c∷ _) (hd< (lv< ()))
+preserve (c∷ _) (c∷ _) (hd< (ar< h)) = hd< (lv< h)
+preserve (c∷ c) (c∷ d) (tl< h) = tl< (preserve c d h)
+
+reflect : ∀ {t u} → Ctbl t → Ctbl u → raise t <ᵀ raise u → t <ᵀ u
+reflect c[] (c∷ _) []< = []<
+reflect (c∷ _) (c∷ _) (hd< (lv< h)) = hd< (ar< h)
+reflect (c∷ _) (c∷ _) (hd< (ar< ()))
+reflect (c∷ c) (c∷ d) (tl< h) = tl< (reflect c d h)
+
+tag-mono : ∀ {a b} → a ≪ b → tag a ≪ tag b
+tag-mono {a} {b} h = hd< (ar< (hd< (lv< (preserve (countable a) (countable b) h))))
+
+tag-reflect : ∀ {a b} → tag a ≪ tag b → a ≪ b
+tag-reflect {a} {b} h with tri (term a) (term b)
+... | inj₁ p = p
+... | inj₂ (inj₁ eq) = ⊥-elim (<ᵀ-irrefl (same eq h))
+  where
+  same : ∀ {x y} → x ≡ y → collapse (raise x) <ᵀ collapse (raise y) → collapse (raise x) <ᵀ collapse (raise x)
+  same refl r = r
+... | inj₂ (inj₂ r) = ⊥-elim (<ᵀ-asym h (tag-mono {b} {a} r))
+
+charge : ∀ a → a ≪ tag a
+charge (name [] _ c[]) = []<
+charge (name (ψ [] a ∷ ts) _ (c∷ _)) = hd< (ar< (<ᵀ-trans (idx< a [] (raise ts)) (idx< (raise (ψ [] a ∷ ts)) [] [])))

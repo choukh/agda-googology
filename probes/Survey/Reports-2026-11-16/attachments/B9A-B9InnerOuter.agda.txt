@@ -1,0 +1,96 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B9A 外层: 第 3 层闭项 Ψ₃ 不低于 Level 参照 ψ⁰ (body (Y 1)) = ψ⁰(Ω₂ + Y 1). 编译定理, 无前提.
+-- 路径: Ψ₃ 的 Ω₃ 链第 1 项 s₃ 0 = ex Ω₂ Ω₂ (suc 0) → 其 E 的第 1 个近似项 = 第 2 层 Ω₂ 以状态 st1 (一次更新后) 为底族、
+-- 以 v₁ (= 状态在第 0 层的分量) 为底折到第 0 层 (WKGen.Main 的 Ψg) → 链点 zs 2 = 原始内链 O.z 2 = ex c c (suc (z 1))
+-- 以底族 st1 ∘ inc 折到第 0 层. 值: O.z 2 的被加项描述 dY1 (同 U 1), 在 (v₁, 链底) 两点都 ≥ ψ⁰(Ω₂) 处用 L2-sem.
+module B9InnerOuter where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼l; ≼-refl; ≼-trans; 1≼ψ⁰)
+open import WVOne using (T₀; 𝟏; read)
+open import WVThree using (Nx)
+open import WSShadow
+open import WSW4 using (module Lem)
+import WKSum
+import WKGen
+open import WKShape using (lvl3; ok₃; p₃; g₃; Ω₂t; s₃; Ψ₃)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F)
+open import YiLAB7Replay using (Match; together; Y; body; Ω₂ᴸ; consume; o₁)
+open import B8PairLevel using (eΩ₂; dY1; eY1; Ld-Y1; Lx-Y1)
+open import B8PairW4 using (chain-step)
+import YiLAB9Orbit as O
+open import B9InnerReal using (module RX)
+open import B9InnerSecond using (Real-cΩ₁; Real-sz1; SumR-cNx; SumR-id)
+open import B9InnerLevel2 using (body-Y1)
+
+open Lem o₁
+open WKSum.Sum o₁
+open RX o₁
+
+------------------------------------------------------------------------
+-- 原始内链的第 2 项 z 2 = ex c c (suc (z 1)) 也承载整棵 Y 1 (同一对描述; 前一个 c 只用正性).
+Real-z2 : Real (O.z 2) eY1
+Real-z2 = RealX O.nc (Real-pos O.c (O.nc)) Real-cΩ₁ Real-sz1
+
+SumR-z2 : SumR (O.z 2) dY1
+SumR-z2 = SumR-x {da = λ a c′ → a} {db = Nx} {e = eΩ₂ ⨾ Ω̂} O.nc (SumR-id O.c) SumR-cNx (proj₁ Real-sz1)
+
+match-z2 : Match (Y 1) (O.z 2)
+match-z2 = together dY1 eY1 SumR-z2 Real-z2 Ld-Y1 Lx-Y1
+
+------------------------------------------------------------------------
+-- Ψ₃ 内的状态与底.
+st1 : Base lvl2
+st1 = itS F 1 (B₀ lvl2)
+
+w2 : zero ≤ lvl2
+w2 = z≤ lvl2
+
+v₁ : Tr⁺ zero
+v₁ = ψ lvl2 ok₂ (B₀ lvl2) zero w2 (Ωt zero) Ω₂t
+
+cz : Tr⁺ zero
+cz = st1 zero (inc tt (inc tt self))
+
+-- 两点都不低于 ψ⁰(Ω₂): 初态底族上的 ψ₀(Ω₂) 定理 (WKGen.Main, 链底 Ω₁ 自身).
+module M0 = WKGen.Main ok₂ (B₀ lvl2) w2 (Ωt zero) (inj₁ refl) (≼-refl 𝟏) (≼-refl 𝟏)
+module M0′ = WKGen.Main ok₂ (B₀ lvl2) (inc tt (inc tt self)) (Ωt zero) (inj₁ refl) (≼-refl 𝟏) (≼-refl 𝟏)
+
+Ω₂-v₁ : LV.ψ⁰ Ω₂ᴸ ≼ read (proj₁ v₁)
+Ω₂-v₁ = M0.main
+
+Ω₂-cz : LV.ψ⁰ Ω₂ᴸ ≼ read (proj₁ cz)
+Ω₂-cz = M0′.main
+
+one-v₁ : 𝟏 ≼ read (proj₁ v₁)
+one-v₁ = ≼-trans (1≼ψ⁰ Ω₂ᴸ) Ω₂-v₁
+
+one-cz : 𝟏 ≼ read (proj₁ cz)
+one-cz = ≼-trans (1≼ψ⁰ Ω₂ᴸ) Ω₂-cz
+
+-- 一次更新后的状态为底族、v₁ 为底的 Ω₂ 折叠 (链底 c ⊐ Ω₁ 经 chain-step 0).
+module M1 = WKGen.Main ok₂ st1 w2 v₁ (inj₂ (chain-step 0)) one-v₁ one-cz
+
+-- 分支: zs 2 就是 O.z 2 (定义上), 以 st1 ∘ inc 为底族折到第 0 层.
+branch : LV.ψ⁰ (body (Y 1)) ≼ read (proj₁ (M1.fold 2))
+branch = ≼-trans (body-Y1 (read (proj₁ v₁)) (read (proj₁ cz)) Ω₂-v₁ Ω₂-cz)
+                 (SumR-z2 M1.B′ (WKGen.wd w2) v₁ (read (proj₁ v₁)) (read (proj₁ cz)) (≼-refl _) (≼-refl _) one-cz)
+
+-- Ψg (第 2 层 Ω₂ 以 st1, v₁ 折到 0) 在 Ψ₃ 里: Ω₃ 链第 1 项的 next⁺ 第 0 项, 再取 E (suc 0) 的第 0 个近似项.
+Ψg-Ψ₃ : read M1.Ψg ≼ read Ψ₃
+Ψg-Ψ₃ = ≼-trans (≼l 0 (≼l 0 (≼-refl _)))
+          (WKGen.node-ge (kp lvl3 ok₃ p₃ (z≤ lvl3)) (λ z → ψ lvl3 ok₃ (B₀ lvl3) zero (z≤ lvl3) (Ωt zero) (g₃ z)) s₃ 1)
+
+outer : LV.ψ⁰ (body (Y 1)) ≼ read Ψ₃
+outer = ≼-trans branch (≼-trans (M1.Ψg-ge 2) Ψg-Ψ₃)

@@ -1,0 +1,59 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 首个非零真实询问的输入是 ω²。即使用原 ψ₀(Ω₂) 以内的任意种子作全部有限次 ε 跳跃，所得上确界仍严格低于其单位返回。
+module B31NReal where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; s≼s; ≼-suc)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import B12Terminal as T
+import B12EboRows as Rows
+import B12XRef as Ref
+import B18ResetCellGoal as Init
+import B18Product as M
+import B19IdealProduct as Law
+import B19OldPowers as Old
+import B22MovingIndex as E
+import B26CDecode as Decode
+import B26Names as Name
+import B27UEpsilon as Env
+import B29SFirst as True
+import B30UFirst as Real
+import B30UOrbit as Run
+import B31NInside as In
+
+square = L.ωᶜ M.· L.ωᶜ
+
+abstract
+  input : True.x 1 ≈ᵛ square
+  input = Law._∙_ (True.factor 0) (Law.mul (Law.id L.ωᶜ) Init.First.omega)
+
+  square-small : L.suc square ≼ E.above 𝟏
+  square-small = X.finite {square} (X.mulC {L.ωᶜ} {L.ωᶜ} omega omega) where
+    module X = Env.At 𝟏
+    omega : X.In L.ωᶜ
+    omega = X.down {L.ωᶜ} {B19IdealArithmetic.norm 𝟏} (M.one-left L.ωᶜ) (X.expC {𝟏} X.seed)
+      where import B19IdealArithmetic
+
+  start : square ≼ T.Ω₂ref
+  start = ≼-trans {b = L.suc square} (≼-suc (≼-refl square))
+    (≼-trans {b = E.above 𝟏} square-small (≼-trans {b = Run.Std.term}
+      (proj₂ (Run.Std.Positive.exact Run.std-pos)) (≼-trans {b = Ref.row 1} Decode.read-bound
+        (≼-trans Ref.epsilon Rows.epsilon-in-Ω₂))))
+
+  floor : L.suc Old.b ≼ True.f 1
+  floor = ≼-trans {b = L.suc (Real.power 0)} (s≼s (proj₂ (Law.left-one Old.b))) (Real.strict 0)
+
+  forced : ∀ a → a ≼ T.Ω₂ref → L.suc (In.hull a) ≼ True.f 1
+  forced a h = ≼-trans {b = L.suc Old.b} (s≼s (In.At.bounded a h)) floor
+
+  input-cap : True.x 1 ≼ T.Ω₂ref
+  input-cap = ≼-trans {b = square} (proj₁ input) start
+
+  impossible : ∀ a → Name.value a ≈ᵛ True.x 1 → (y : T₀) → y ≼ In.hull (Name.value a) → True.f 1 ≼ y → ⊥
+  impossible a (lo , _) y estimate covers = s≼-irrefl (True.f 1)
+    (≼-trans {b = L.suc y} (s≼s covers) (≼-trans {b = L.suc (In.hull (Name.value a))}
+      (s≼s estimate) (forced (Name.value a) (≼-trans {b = True.x 1} lo input-cap))))

@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- src 数学端点。每经过一个可数 Ω 层的累加尾，从 a 推进到 a+ω。
+module B12TerminalSrc where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import W4Block
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼; ≅→≼)
+open import OCF.Align.BTBOValNeg using (tr₀-iter)
+open import OCF.Align.BTBOValMain using (ψ₀≈)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module S = Ord-Ord
+open import WVOne using (read; 𝟏; iterS; Mv-mono)
+import WKTower as WT
+open import B12Terminal
+open import B12TerminalTail
+
+two : B.Ordᴰ
+two = B.suc (B.suc B.zero)
+
+a : S.Ord two
+a = S.Ω two
+
+plusω : S.Ord two → S.Ord two
+plusω u = S.lim (S.iter S.suc u)
+
+src-step : (u : S.Ord two) → tr₀ (S.ψ₀ (S.suc u)) ≼ mulω (tr₀ (S.ψ₀ u))
+src-step u = l≼ (λ n → ≼l n (≼-trans (≅→≼ (tr₀-iter {A = S.ψ₀ u} (LV.≅-refl⁰ _) n)) (iterS (≼-refl _) n)))
+
+src-finite : (u : S.Ord two) (k : ℕ) → tr₀ (S.ψ₀ (S.iter S.suc u k)) ≼ iter mulω (tr₀ (S.ψ₀ u)) k
+src-finite u zero = ≼-refl _
+src-finite u (suc k) = ≼-trans (src-step (S.iter S.suc u k)) (Mv-mono (src-finite u k) (≼-refl 𝟏))
+
+seal : (g : ℕ → L) (r : Run (nd sL g)) (n : ℕ) (u : S.Ord two)
+     → tr₀ (S.ψ₀ u) ≼ read (value (limRun g r n)) → tr₀ (S.ψ₀ (plusω u)) ≼ read (value r)
+seal g r n u p = ≼-trans (l≼ (λ k → ≼l k (src-finite u k))) (close-tail g r n p)
+
+at-two : (r : Run (WT.gL 1)) → tr₀ (S.ψ₀ a) ≼ read (value r)
+at-two r = ≼-trans (proj₁ (ψ₀≈ two)) (anchor₂ r)
+
+standard : Run (tw 1)
+standard = initial (tw 1) (Ok-tw 1)
+
+-- 普通塔的对角第 1 项为 Ω_ω 的折叠。
+tw-src : tr₀ (S.ψ₀ (plusω a)) ≼ read (twᶜ 1)
+tw-src = ≼-trans (seal WT.gL (tower-child standard 1) 1 a (at-two (limRun WT.gL (tower-child standard 1) 1))) (tower-ge standard 1)
+
+middle : Run WT.Lω
+middle = limRun _ (tower-child tower1 1) 0
+
+at-middle : tr₀ (S.ψ₀ (plusω a)) ≼ read (value middle)
+at-middle = seal WT.gL middle 1 a (at-two (finiteRun 1))
+
+at-tower : tr₀ (S.ψ₀ (plusω (plusω a))) ≼ read (value tower1)
+at-tower = ≼-trans (seal _ (tower-child tower1 1) 0 (plusω a) at-middle) (tower-ge tower1 1)
+
+ebo-src-three : tr₀ (S.ψ₀ (plusω (plusω (plusω a)))) ≼ read EBOᶜ
+ebo-src-three = seal tw terminal 1 (plusω (plusω a)) at-tower

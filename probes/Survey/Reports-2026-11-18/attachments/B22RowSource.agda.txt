@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22RowSource where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import WVOne using (T₀; read)
+open import WKShape using (Ψ₃)
+open import W4Fold using (EBOᶜ)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼l; l≼; ≼-refl; s≼s; ≅→≼; 1≼ψ⁰)
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+import B12LimitSrc as A
+import B12LimitRef as Str
+import B12Omega3Cuts as Cut
+import B12Omega3Ref as R
+import B19OldSource as O
+import B19RowSecond as Old
+import B20RowPrefix as C
+import B21RowSource as Prev
+import B21RowRepeat as Re
+import B21RowPass as P
+import B22RowWhole as W
+
+src : ℕ → A.Src₂
+src zero = O.src-prefix
+src (suc n) = src n S.+ O.src-prefix
+lev : ℕ → A.Lev₂
+lev zero = Old.p
+lev (suc n) = lev n L.+ Old.p
+aligned : ∀ n → A.Aligned (src n) (lev n)
+aligned zero = O.prefix
+aligned (suc n) = A.plus (aligned n) O.prefix
+same : ∀ n → lev n L.≅ P.prefix (suc n)
+same zero = L.≅-sym (Cut.left-unit R.idσ C.rp)
+same (suc n) = L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (same n) C.rp
+source = S.ψ₀ (S.lim src)
+lim-both = A.fold (A.lim src lev aligned)
+value : tr₀ source ≈ᵛ W.total
+value = ≼-trans (proj₁ lim-both) (l≼ (λ n → ≼l (suc n) (≅→≼ (L.ψ⁰-≅ (same n))))) ,
+        ≼-trans (l≼ down) (proj₂ lim-both)
+  where
+  down : ∀ n → L.ψ⁰ (P.prefix n) ≼ L.ψ⁰ (L.lim lev)
+  down zero = ≼l 0 (1≼ψ⁰ Old.p)
+  down (suc n) = ≼l n (≅→≼ (L.ψ⁰-≅ (L.≅-sym (same n))))
+standard : tr₀ source ≼ read Ψ₃
+standard = ≼-trans (proj₁ value) W.standard
+terminal : tr₀ source ≼ read EBOᶜ
+terminal = ≼-trans (proj₁ value) W.terminal
+
+module Sum = Cut.Sum Ω₂ᴸ (L.Ω-refl _)
+add = λ (p : A.Lev₂) → p L.+ Ω₂ᴸ
+pres : ∀ {p q : A.Lev₂} → p L.≅ q → add p L.≅ add q
+pres h = L.add-≅ {σ = R.idσ} {σ′ = R.idσ} h (L.Ω-refl _)
+module Part = Sum.Prefix add pres
+regular : ∀ {p q} → p L.≅ q → ∀ n → Re.tail p n L.≅ S.iter add q n
+regular h zero = h
+regular h (suc n) = pres (regular h n)
+module Tail (p : A.Lev₂) (rp : p L.≅ p) where
+  row : T₀
+  row = L.lim (λ n → L.ψ⁰ (Re.tail p n))
+  match : ∀ n → Re.tail p n L.≅ (p L.+ Sum.left n)
+  match n = L.≅-trans (regular rp n) (Part.along rp n)
+  lower : row ≼ L.ψ⁰ (p L.+ Old.p)
+  lower = ≼l 0 (≼l 0 (≅→≼ (L.l≅ (λ j → L.ψ⁰-≅ (match j)))))
+  one : L.suc (L.ψ⁰ p) ≼ L.ψ⁰ (p L.+ Old.p)
+  one = ≼-trans (≼l 1 (Str.strict-step p)) lower
+
+strict : ∀ n → L.suc (L.ψ⁰ (P.prefix n)) ≼ W.total
+strict n = ≼l (suc n) (Tail.one (P.prefix n) (P.regular n))
+old : Prev.value ≼ L.ψ⁰ (P.prefix 2)
+old = ≼-trans (Tail.lower Old.p C.rp) (≅→≼ (L.ψ⁰-≅
+  (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (L.≅-sym (Cut.left-unit R.idσ C.rp)) C.rp)))
+reserve : L.suc (tr₀ Prev.source) ≼ tr₀ source
+reserve = ≼-trans (s≼s (≼-trans (proj₁ Prev.both) old)) (≼-trans (strict 2) (proj₂ value))
+

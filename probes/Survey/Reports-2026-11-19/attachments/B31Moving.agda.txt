@@ -1,0 +1,69 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 用每个有限前缀的预算分别闭合，不要求先给整条反馈轨道选共同上界。
+module B31Moving where
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Product using (proj₁; proj₂; _,_)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; s≼s; ≼l; l≼; ≼lim⁻; z≼)
+open import WVOne using (T₀; 𝟏)
+import B22MovingIndex as E
+import B22TowerCut as Inc
+import B27UEpsilon as Env
+import B18Product as M
+import B19IdealPowers as Pow
+import B19IdealProduct as I
+import B19IdealArithmetic as A
+import B31Cost as Cost
+
+two : T₀ → T₀ → ℕ → T₀
+two a b zero = a
+two a b (suc _) = b
+join : T₀ → T₀ → T₀
+join a b = L.lim (two a b)
+module Rule (p x f : ℕ → T₀)
+  (seed : L.ωᶜ ≼ p 0) (start : x 0 ≼ L.zero {L.zero})
+  (back : ∀ j → p j ≼ f j) (rise : ∀ j → L.suc (f j) ≼ f (suc j))
+  (feedback : ∀ j → x (suc j) ≼ (L.ωᶜ M.· f j))
+  (bounded : ∀ j (a : T₀) → L.ωᶜ ≼ a → p j ≼ a → f j ≼ I.power (Cost.width a) (A.norm (x j)))
+  (fixed : A.norm (L.lim f) ≼ L.lim f) where
+  q : ℕ → T₀
+  q zero = p 0
+  q (suc j) = join (q j) (p (suc j))
+  left : ∀ j → q j ≼ q (suc j)
+  left j = ≼l {f = two (q j) (p (suc j))} 0 (≼-refl _)
+  here : ∀ j → p j ≼ q j
+  here zero = ≼-refl _
+  here (suc j) = ≼l {f = two (q j) (p (suc j))} 1 (≼-refl _)
+  large : ∀ j → L.ωᶜ ≼ q j
+  large zero = seed
+  large (suc j) = ≼-trans {b = q j} (large j) (left j)
+  inside : ∀ j → q j ≼ f j
+  inside zero = back 0
+  inside (suc j) = l≼ {f = two (q j) (p (suc j))} λ
+    { zero → ≼-trans {b = L.suc (f j)} (≼-suc (inside j)) (rise j)
+    ; (suc _) → back (suc j) }
+  module At (j : ℕ) where
+    open Env.At (q j)
+    ω-in : In L.ωᶜ
+    ω-in = down {x = L.ωᶜ} {y = q j} (large j) (Env.At.seed (q j))
+    width-in : In (Cost.width (q j))
+    width-in = mulC {x = q j M.· L.ωᶜ} {y = L.ωᶜ} (mulC {x = q j} {y = L.ωᶜ} (Env.At.seed (q j)) ω-in) ω-in
+    one : 𝟏 ≼ Cost.width (q j)
+    one = ≼-trans {b = q j} (≼-trans {b = L.ωᶜ} Pow.omega-pos (large j))
+      (≼-trans {b = q j M.· L.ωᶜ} (Cost.keep (q j)) (Cost.keep (q j M.· L.ωᶜ)))
+    pay : In (x j) → In (f j)
+    pay h = down {x = f j} {y = I.power (Cost.width (q j)) (A.norm (x j))}
+      (bounded j (q j) (large j) (here j)) (powC {x = Cost.width (q j)} {y = A.norm (x j)} one width-in (expC {x = x j} h))
+  live : ∀ j → Env.At.In (q j) (x j)
+  live zero = Env.At.down (q 0) {x = x 0} {y = q 0} (≼-trans {b = L.zero {L.zero}} start z≼) (Env.At.seed (q 0))
+  live (suc j) = K.down {x = x (suc j)} {y = L.ωᶜ M.· f j} (feedback j)
+    (K.mulC {x = L.ωᶜ} {y = f j} (At.ω-in (suc j)) old)
+    where
+    module K = Env.At (q (suc j))
+    old = ≼lim⁻ {a = f j} {f = E.steps (q (suc j))} (≼-trans {b = E.above (q j)}
+      (Env.At.finite (q j) {x = f j} (At.pay j (live j))) (Inc.advance {x = q j} {y = q (suc j)} (left j)))
+  hit : ∀ j → E.above (q j) ≼ L.lim f
+  hit j = E.least (q j) (L.lim f) (≼l {f = f} (suc j) (≼-trans {b = L.suc (f j)} (s≼s (inside j)) (rise j))) fixed
+  exact : L.lim f ≈ᵛ L.lim (λ j → E.above (q j))
+  exact = l≼ {f = f} (λ j → ≼l {f = λ i → E.above (q i)} j
+    (≼-trans {b = L.suc (f j)} (≼-suc (≼-refl _)) (Env.At.finite (q j) {x = f j} (At.pay j (live j))))) , l≼ hit

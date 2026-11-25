@@ -1,0 +1,129 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B10B 出口: 第 k 个状态的内链项 z k j 的被加项证据 (Ld D d, SumR (z k j) d) ⟹ ψ⁰ (body D) ≼ read Ψ₃.
+-- 编译定理, 无前提. 零号项 (seed 搬到 z 0 2) 与首个非零项 (row0) 无前提; 整族只以 Row 或更弱的被加项族作前提.
+module B10ExitCore where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; 1≼ψ⁰)
+open import WVOne using (T₀; 𝟏; read)
+open import WVTwo using (T₁)
+open import WSShadow using (Sh)
+import WSLevel as L
+import WKSum
+import WKGen
+open import WKShape using (Ψ₃)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F)
+open import YiLAB7Replay using (Match; Y; body; Ω₂ᴸ; chainW; seed; o₁)
+open import B8PairW4 using (chain-step; SumR-up)
+open import B9InnerLevel2 using (L2-sem)
+open import B9InnerOuter using (w2)
+import YiLAB9Paths as P
+import YiLAB10Branches as B
+import YiLAB10Rows as R
+
+open WKSum.Sum o₁ using (SumR)
+
+------------------------------------------------------------------------
+-- 1. 编号对照 (定义性): YiLAB9Paths 的底族就是 YiLAB10Branches 的状态.
+S≡states : (k : ℕ) → P.S k ≡ B.states k
+S≡states k = refl
+
+cz≡ : (k : ℕ) → P.cz k ≡ B.states k zero (inc tt (inc tt self))
+cz≡ k = refl
+
+-- 零层底 v k 就是状态自己在路径 w2 上的槽 (命题相等, 对 k 归纳); 零层链底 cz k 在另一条路径 inc tt (inc tt self) 上.
+v≡slot : (k : ℕ) → P.v k ≡ B.states k zero w2
+v≡slot zero    = refl
+v≡slot (suc k) = cong (λ x → F .Op.run (B.states k) zero w2 x) (v≡slot k)
+
+-- WKGen.Main 的链底前提: Ω₁ 经第一次更新的步进到 c 0, 再沿 rise.
+Ω₁◃c : (k : ℕ) → lvl1 ⊢ WKGen.Ω₁t ◃ B.c k
+Ω₁◃c zero    = chain-step 0
+Ω₁◃c (suc k) = ◃t (Ω₁◃c k) (B.rise k)
+
+one-v : (k : ℕ) → 𝟏 ≼ read (proj₁ (P.v k))
+one-v k = ≼-trans (1≼ψ⁰ Ω₂ᴸ) (P.v-bound k)
+
+one-cz : (k : ℕ) → 𝟏 ≼ read (proj₁ (P.cz k))
+one-cz k = ≼-trans (1≼ψ⁰ Ω₂ᴸ) (P.cz-bound k)
+
+module M (k : ℕ) = WKGen.Main ok₂ (B.states k) w2 (P.v k) (inj₂ (Ω₁◃c k)) (one-v k) (one-cz k)
+
+-- 链点就是原始内链 (对一切 j), 实际 Ψg 就是下一个零层底 v (suc k) 的树.
+zs≡z : (k j : ℕ) → M.zs k j ≡ B.z k j
+zs≡z k j = refl
+
+Ψg≡v : (k : ℕ) → M.Ψg k ≡ proj₁ (P.v (suc k))
+Ψg≡v k = refl
+
+c≡ : (k : ℕ) → M.c k ≡ B.c k
+c≡ k = refl
+
+------------------------------------------------------------------------
+-- 2. 单项出口. 只用被加项一半; 指数一半不用.
+exit-add : (k j : ℕ) {D : T₁} {d : Sh 0} → L.Ld D d → SumR (B.z k j) d → LV.ψ⁰ (body D) ≼ read Ψ₃
+exit-add k j {D} {d} al aw =
+  ≼-trans (L2-sem al a c (P.v-bound k) (P.cz-bound k))
+  (≼-trans (aw (M.B′ k) (WKGen.wd w2) (P.v k) a c (≼-refl a) (≼-refl c) (one-cz k))
+  (≼-trans (M.Ψg-ge k j) (P.approx k)))
+  where
+  a = read (proj₁ (P.v k))
+  c = read (proj₁ (P.cz k))
+
+exit-match : (k j : ℕ) {D : T₁} → Match D (B.z k j) → LV.ψ⁰ (body D) ≼ read Ψ₃
+exit-match k j m = exit-add k j (Match.add-l m) (Match.add-w m)
+
+exit-row : (k : ℕ) → R.Row k → LV.ψ⁰ (body (Y (suc k))) ≼ read Ψ₃
+exit-row k = exit-match k 2
+
+-- 被加项证据沿 W4 的 ◃ 上传 (SumR-up), 所以 z k j 以下的任一树上的证据也够.
+exit-below : (k j : ℕ) {y : Tr lvl1} {D : T₁} {d : Sh 0} → lvl1 ⊢ y ◃ B.z k j → L.Ld D d → SumR y d → LV.ψ⁰ (body D) ≼ read Ψ₃
+exit-below k j r al aw = exit-add k j al (SumR-up r aw)
+
+-- 零号项: seed (Y 0, chainW 0 = Ω₁) 沿 chain-step 0 到 c 0, 沿 ◃e 到 z 0 2.
+term0 : LV.ψ⁰ (body (Y 0)) ≼ read Ψ₃
+term0 = exit-below 0 2 (◃t (chain-step 0) ◃e) (Match.add-l seed) (Match.add-w seed)
+
+-- 首个非零项: row0.
+term1 : LV.ψ⁰ (body (Y 1)) ≼ read Ψ₃
+term1 = exit-row 0 R.row0
+
+------------------------------------------------------------------------
+-- 合并.
+assemble : ((n : ℕ) → R.Row n) → R.Result
+assemble rows = P.finish t
+  where
+  t : (n : ℕ) → LV.ψ⁰ (body (Y n)) ≼ read Ψ₃
+  t zero    = term0
+  t (suc n) = exit-row n (rows n)
+
+-- 更弱的充分条件: 第 n+1 项只要在某个状态 k、某个链位 j 上有被加项证据.
+AddAt : T₁ → Set
+AddAt D = Σ ℕ (λ k → Σ ℕ (λ j → Σ (Sh 0) (λ d → L.Ld D d × SumR (B.z k j) d)))
+
+row→add : (n : ℕ) → R.Row n → AddAt (Y (suc n))
+row→add n m = n , 2 , Match.d₀ m , Match.add-l m , Match.add-w m
+
+exit-at : {D : T₁} → AddAt D → LV.ψ⁰ (body D) ≼ read Ψ₃
+exit-at (k , j , d , al , aw) = exit-add k j al aw
+
+assemble-add : ((n : ℕ) → AddAt (Y (suc n))) → R.Result
+assemble-add h = P.finish t
+  where
+  t : (n : ℕ) → LV.ψ⁰ (body (Y n)) ≼ read Ψ₃
+  t zero    = term0
+  t (suc n) = exit-at (h n)
+
+assemble′ : ((n : ℕ) → R.Row n) → R.Result
+assemble′ rows = assemble-add (λ n → row→add n (rows n))

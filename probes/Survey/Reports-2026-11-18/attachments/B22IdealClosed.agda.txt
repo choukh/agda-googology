@@ -1,0 +1,122 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22IdealClosed where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; subst₂; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B14SharpBound using (data≤)
+open import OCF.Align.Value using (≼-refl; ≼-trans; l≼; ≼l)
+import B12ActualSlots as C
+import B17SharpFeed as Link
+import B17SharpUpdate as U
+import B17SharpTwo as T
+import B18SharpMacro as M
+import B13Orbit as Orb
+import B12Orbit as Win
+
+import B21IdealRepeat as Reps
+import B15SharpAction as P1
+import B16SharpModel as H1
+import B16SharpOmega as O1
+import B15SharpLift as L1
+import B21IdealContext as Context
+open Context using (Pref; plug; empty; push)
+
+
+import B22IdealState as St
+import B22IdealIndex as Ix
+import B22IdealGrowth as Gr
+import B13SeedOuter as Seed
+import B12Terminal as Tm
+import B18SharpClosed as Known
+import B18SharpHead
+import B14SharpLive as Live
+import B20IdealThree as A
+open import OCF.Lean.YiKVRel using (readRW)
+open import OCF.Align.Value using (_≼_)
+open import WVOne using (p₁; read; cum-≥)
+open import WVTwo using (p₂; g₂)
+open import WKShape using (lvl3)
+open import Data.Sum using (inj₁)
+open import B14SharpStack using (Ωi; Ωw)
+
+module At (lem : LEM) (r : Tm.Run lvl3) (cv : C.Covered r) where
+  open I.Sharp lem
+  open U.Update lem
+  open St.At lem
+  module A₀ = Seed.At r
+  open A₀ using (K; c⁺; st1; S₀; w2; v₁)
+  big = cv lvl2 (B.inc tt B.self)
+  module O = Gr.Actual c⁺ big
+  module Window = Win.Window K
+  T₁ = F.chTD (F.tdNil {ℓ = lvl2}) tt
+  m₁ = F.chMT (F.tdNil {ℓ = lvl2}) tt
+  k₁ = F.enterO m₁ K
+  mid = F.σ m₁ w₁
+  keep : Middle mid (Ix.At.given lem T₁)
+  keep = kept refl
+  module Compare = Ix.At.With lem mid T₁ keep
+  root = effective (Context.At.Base.basis lem c⁺ big)
+  down = shift m₁ refl K root
+  st : F.St (F.cons (W.down W.stop tt) F.nil)
+  st i t = st1 i (proj₂ t)
+  fit₁ : Fit mid B♯ st
+  fit₁ = fit (M.Macro.State.one (Known.Closed.Run.start lem r cv)) (λ t →
+    ≼-trans (Tm.Run.oneB r (B.inc tt (proj₂ t))) (◃→≼ (F.inf K S₀ B.zero (proj₂ t) (S₀ B.zero (proj₂ t)))))
+  large = ≼-trans (Tm.Run.oneβ r) (◃→≼ (F.inf K S₀ B.zero w2 (Tm.Run.β r)))
+
+  start = st1 lvl1 w₁
+  step = λ w → proj₁ (F.E ok₂ F.tdNil (g₂ w) K st1 lvl1 w₁ start)
+  clock = step B.zero
+  initial : Ix.Match Ωi (proj₁ start)
+  initial = Gr.cover Gr.origin (C.extend (Tm.Run.omegaB r (B.inc tt w₁)) (F.inf K S₀ lvl1 w₁ (S₀ lvl1 w₁)))
+  module Turn (a : V.Tr⁺ r₁) (ha : Ix.Match (proj₁ a) (proj₁ start)) where
+    seq = λ n → proj₁ (V.iter V.next⁺ a (suc n))
+    tower = R.lim seq (λ n → R.◃l 0)
+    at-kid : ∀ n → Ix.Match (seq n) (proj₁ (Window.kid n st1 lvl1 w₁ start))
+    at-kid n = subst (λ w → Ix.Match (seq n) (proj₁ w)) (sym (trans
+      (Window.project-value (suc n) st1 lvl1 w₁ start) (Window.self-value (suc n) st1 lvl1 w₁))) (O.orbit a st1 ha (suc n))
+    part : ∀ n → Ix.Match (seq n) clock
+    part n = Ix.Match.slack (at-kid n) (B.◃l n)
+    all : Ix.Match tower clock
+    all = Ix.Match.l at-kid
+  module Canon = Turn (V.Ωt r₁) initial
+
+  moved = λ x → proj₁ (ψ♯ r₁ oR B♯ r₂ o₂ (V.Ωt r₂) x)
+  low = λ x → readRW (proj₁ (ψ♯ r₂ o₂ B♯ R.zero tt A.unit (moved x)))
+  outW = λ w → F.E ok₂ F.tdNil (g₂ w) K st1 B.zero w2 v₁
+  j = Orb.block c⁺ K
+  module Use {x : R.Tr r₁} (h : Ix.Match x clock) where
+    on-index : low x ≼ read (proj₁ (F.E ok₂ T₁ clock k₁ st B.zero (F.σ m₁ w2) v₁))
+    on-index = Model.value (Compare.ext k₁ (V.Ωt r₂) down B♯ h) B♯ A.unit empty st fit₁ (F.σ m₁ w2) v₁ large
+    on-omega : low x ≼ read (proj₁ (F.E ok₂ F.tdNil wΩ₂ K st1 B.zero w2 v₁))
+    on-omega = ≼-trans on-index (≼-trans (◃→≼ (F.Emono ok₂ T₁ k₁ st B.zero (F.σ m₁ w2) v₁ (B.◃s {x = clock})))
+      (≼-trans (cum-≥ (λ n → proj₁ (outW (B.iter step B.zero n))) 1) (Live.cumulative (F.kp lvl2 ok₂ p₂ w2) outW step 1)))
+    at-J : low x ≼ read (proj₁ (F.run j st1 B.zero w2 v₁))
+    at-J = raise _ big
+      where
+      raise : ∀ y → C._⊴_ wΩ₂ y → low x ≼ read (proj₁ (F.E ok₂ F.tdNil y K st1 B.zero w2 v₁))
+      raise _ (inj₁ refl) = on-omega
+      raise y (inj₂ e) = ≼-trans on-omega (◃→≼ (F.Emono ok₂ F.tdNil K st1 B.zero w2 v₁ e))
+    module Aux = B18SharpHead.Head.At lem c⁺ big
+    bound : low x ≼ read (Tm.value r)
+    bound = ≼-trans at-J (≼-trans (◃→≼ (B.◃t (Aux.climb 0 st1 B.zero w2 v₁) (Aux.part 0 st1 B.zero w2 v₁))) (A₀.outer 0))
+  whole : low Canon.tower ≼ read (Tm.value r)
+  whole = Use.bound Canon.all
+  each : ∀ n → low (Canon.seq n) ≼ read (Tm.value r)
+  each n = Use.bound (Canon.part n)
+

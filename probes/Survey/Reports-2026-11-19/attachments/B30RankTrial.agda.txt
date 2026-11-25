@@ -1,0 +1,31 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在首塔每个正反馈都包含的那次完整调用上实例化输出标号。
+module B30RankTrial where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (refl)
+import W4Block as W
+import W4Ops as O
+open import WVOne using (read)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import OCF.Align.EboLeanTree using (hc-tower)
+open import OCF.Lean.YiRefTw2 using (tree-≼)
+import B12XRef as Ref
+import B26Names as A
+import B26Depth as D
+import B27UArbitrary as F
+import B29SUnit as Unit
+import B30UOrbit as U
+import B30OutputRank as R
+
+name-bound : ∀ j → Ref.row j ≼ A.value (D.tower j)
+name-bound j = tree-≼ refl (Ref.H j) (hc-tower j)
+
+module Example (t : W.Tr W.zero) (d : read t ≼ Ref.row 1) where
+  assigned : R.Label t (D.tower 1)
+  assigned = R.chart t (D.tower 1) (≼-trans {a = read t} {b = Ref.row 1} {c = A.value (D.tower 1)} d (name-bound 1))
+
+sample = Unit.output U.Actual.β₀ U.one
+module Actual = Example sample (proj₁ U.report)
+inside : ∀ j → W._⊢_◃_ W.zero sample (Unit.output U.Actual.β₀ (F.index (suc j)))
+inside = U.place U.Actual.β₀

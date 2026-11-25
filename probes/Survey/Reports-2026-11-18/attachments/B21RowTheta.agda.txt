@@ -1,0 +1,68 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21RowTheta where
+open import Data.Nat using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_)
+import B12Omega3Cuts as U
+import B13Target as Src
+import B15RefAlgebra as A
+import B17OrbitTower as T
+import B18RefDepth as H
+import B18RefModel as M
+import B18RefRows as Rows
+import B18RefDelta as D
+import B18RefCong as G
+import B19RowAction as Act
+Vec = ∀ d → T.Carrier (H.S d)
+Fits : Vec → T₁ → Set
+Fits v u = ∀ d → M.fit (Rows.meaning d) (v d) u
+theta = Act.D₂ Ω₂ᴸ
+module Program (v : Vec) where
+  eval : ∀ d → ℕ → T₀ → T.Carrier (H.S d)
+  eval d zero y = T.height (H.S d) y (T.run (H.grad d)) (v d)
+  eval d (suc k) y = T.run (T.run (eval (suc d) k y 0) (H.grad d)) (v d)
+  rel : ∀ d k {x y} → x ≼ y → T.Rel (H.S d) (eval d k x) (eval d k y)
+  rel d zero = T.Diag.r (H.S d) (H.grad d) (v d)
+  rel d (suc k) q = rel (suc d) k q 0 (H.grad d) (H.grad d) (T.rm (H.grad d)) (v d) (v d) (T.rr (H.S d) (v d))
+  eqv : ∀ d k {x y} → x L.≅ y → T.Eq (H.S d) (eval d k x) (eval d k y)
+  eqv d zero = T.Diag.q (H.S d) (H.grad d) (v d)
+  eqv d (suc k) q = eqv (suc d) k q 0 (H.grad d) (H.grad d) (T.em (H.grad d)) (v d) (v d) (T.ee (H.S d) (v d))
+  term : ∀ d → ℕ → T.Carrier (H.S d)
+  term d zero = H.initial d
+  term d (suc n) = T.node (H.S d) (eval d n) (rel d n) (eqv d n)
+  read = λ d n → T.run (T.run (term (suc d) n 0) (H.grad d)) (v d)
+  build : Vec
+  build d = T.sup (H.S d) (read d)
+  module Meaning (u : T₁) (ru : u L.≅ u) (base : Fits v u) where
+    coeff : ℕ → T₀ → T₁
+    coeff zero x = L.up L.zero x
+    coeff (suc n) x = D.δ (coeff n x) u
+    reg : ∀ n {x y} → x L.≅ y → coeff n x L.≅ coeff n y
+    reg zero d = L.upˡ (L.upʳ d)
+    reg (suc n) d = G.δ-pres (reg n d) ru
+    seq = Ord.iter (λ t → D.δ t u) Ω₁ᴸ
+    shape : ∀ n → seq n L.≅ L.limᵢ L.zero (coeff n)
+    shape zero = L.Ω-refl _
+    shape (suc n) = G.δ-pres (shape n) ru
+    project : ∀ d g y → y L.≅ y → M.fit (Rows.meaning (suc d)) g y →
+      M.fit (Rows.meaning d) (T.run (T.run (g 0) (H.grad d)) (v d)) (D.δ y u)
+    project d g y ry h = M.conv (Rows.meaning d) (h 0 (H.grad d) L.zero L.z≅ (Rows.step d) (v d) u ru (base d))
+      (G.δ-pres (U.left-unit (λ t → t) ry) ru)
+    calibrated : ∀ d k y → M.fit (Rows.meaning d) (eval d k y) (coeff (suc k) y)
+    calibrated d zero y = Rows.height d y (v d) u ru (base d)
+    calibrated d (suc n) y = project d (eval (suc d) n y) (coeff (suc n) y) (reg (suc n) (L.≅-refl⁰ y)) (calibrated (suc d) n y)
+    fit-term : ∀ d n → M.fit (Rows.meaning d) (term d n) (seq n)
+    fit-term d zero = Rows.seed d
+    fit-term d (suc n) = M.conv (Rows.meaning d)
+      (M.node (Rows.meaning d) (eval d n) (rel d n) (eqv d n) (coeff (suc n)) (reg (suc n)) (calibrated d n)) (L.≅-sym (shape (suc n)))
+    fit-read : ∀ d n → M.fit (Rows.meaning d) (read d n) (seq (suc n))
+    fit-read d n = project d (term (suc d) n) (seq n) (Src.refl-left (shape n)) (fit-term (suc d) n)
+    fit : Fits build (theta u)
+    fit d = M.sup (Rows.meaning d) (read d) (λ n → seq (suc n)) (λ n → Src.refl-left (shape (suc n))) (fit-read d)
+

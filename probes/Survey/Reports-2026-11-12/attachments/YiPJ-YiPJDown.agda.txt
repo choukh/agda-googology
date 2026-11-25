@@ -1,0 +1,124 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiPJDown where
+open import Data.Nat using (ℕ; zero; suc; z≤n; s≤s) renaming (_≤_ to _≤ⁿ_)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_; _++_; replicate)
+open import Data.List.Properties using (++-assoc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym; trans; cong)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; Keep; kp; kp⁼; node⁺)
+open import OCF.Lean.YiTBRow hiding (nat; fn; h₁)
+open import OCF.Lean.YiKVRel using (_⊴_; ⊴r; ⊴◃; ⊴-◃; ++[])
+open import OCF.Lean.YiKCStep using (⊴-trans)
+open import OCF.Lean.YiHCRel using (M⁰; mz; m1; mL; mΩ; mU; mw; mc; module G⁰)
+import OCF.Align.EboLeanDef as E
+open E using (cof; c1; cω; cΩ; pred; fsn; fsT; γT; natT; sucT; cmpᵀ; gt)
+open import OCF.Lean.YiMENote using (cofψ1; fsnψ1; cofψω; fsnψω; cof++1; cof++ω; pred++; fsn++)
+open import OCF.Lean.YiMWPre using (cof++Ω; fsT++)
+open import OCF.Lean.YiANFam using (ψᴺ; Ωᴺ; Pen; cofK; fsTK; cofG; fsnG)
+open import OCF.Lean.YiDCRel using (app≤)
+open import OCF.Lean.YiCLFam using (nat; fn; lev; levP; Nw; penN; FD; fd0; fds; dn; ≤ⁿ-step; ≤ⁿ-refl)
+open import OCF.Lean.YiCLLow using (Sb; s0; ss; pth; sb≤; pos⁼; PV; pv; view; levEq; toBr; gen; penJ; gtJ)
+open import OCF.Lean.YiRBFam using (Pt; can; pu; pt; pt≤; Tp; tc; tu; tp; OKB)
+open import OCF.Lean.YiTBFam using (ψ-⊵; feedF; feed≡; cb)
+open import OCF.Lean.YiHCFam
+open import OCF.Lean.YiHCFold using (kcase; kcaseT; GB; mkGB; gΩ; gM)
+open import OCF.Lean.YiLRBridge using (τ)
+open import OCF.Lean.YiHCBridge using (MB; GBB)
+
+
+import OCF.Lean.YiLTFold as Old
+open import OCF.Lean.YiPJCase using (cases)
+
+data Mode : Set where
+  ic uc : Mode
+
+top : ∀ {n j} → Mode → fn j ≤ fn n → fn j ≤ fn (suc n)
+top ic u = inc tt u
+top uc u = inu (λ _ → u)
+
+Child : (n j : ℕ) → fn j ≤ fn n → Set
+Child n j u = (o : Ok (fn n)) (r : Rb (fn n)) (B : Base (fn n)) (t₀ : E.T) → GBB (fn n) refl B t₀
+  → (β : Tr⁺ (fn j)) → M j (ψᴺ j t₀) (proj₁ β)
+  → ∀ {a x} → M n a x → M j (ψᴺ j (t₀ ++ a)) (proj₁ (ψ (fn n) o r B (fn j) u β x))
+
+gbChild : ∀ n (o : Ok (fn (suc n))) (r : Rb (fn (suc n))) (B : Base (fn (suc n))) (t₀ : E.T)
+  → GB n B t₀ → ∀ {a x} → M (suc n) a x → GBB (fn n) refl (cb o r B x) (t₀ ++ a)
+gbChild zero o r B t₀ gb m = tt
+gbChild (suc n) o r B t₀ gb m = Old.gbS o r t₀ B gb m
+
+upEq : ∀ {n j} (mode : Mode) (u : fn j ≤ fn n) (o : Ok (fn (suc n))) (r : Rb (fn (suc n)))
+  (B : Base (fn (suc n))) (β : Tr⁺ (fn j)) x y ey
+  → ψ (fn (suc n)) o r B (fn j) (top mode u) β (up x tt y ey)
+  ≡ ψ (fn n) (proj₂ o tt) (proj₂ r tt) (cb o r B x) (fn j) u
+      (ψ (fn (suc n)) o r B (fn j) (top mode u) β x) y
+upEq ic u o r B β x y ey = refl
+upEq uc u o r B β x y ey = refl
+
+mutual
+  DLF : ∀ {n j} (mode : Mode) (u : fn j ≤ fn n) (child : Child n j u) (o : Ok (fn (suc n))) (r : Rb (fn (suc n))) (t₀ : E.T) (B : Base (fn (suc n))) → GB n B t₀
+     → (β : Tr⁺ (fn j)) → M j (ψᴺ j t₀) (proj₁ β)
+     → ∀ {a x} → M (suc n) a x
+     → M j (ψᴺ j (t₀ ++ a)) (proj₁ (ψ (fn (suc n)) o r B (fn j) (top mode u) β x))
+  DLF {n = n} {j = j} mode u child o r t₀ B gb β hβ (mz {x = x}) =
+    ++[] (λ q → M j (ψᴺ j q) (proj₁ (ψ (fn (suc n)) o r B (fn j) (top mode u) β x))) t₀
+      (zlJ j (λ x → proj₁ (ψ (fn (suc n)) o r B (fn j) (top mode u) β x))
+        (mono (fn (suc n)) o r B (fn j) (top mode u) β) hβ x)
+  DLF {n = n} {j = j} mode u child o r t₀ B gb β hβ (m1 {t = a} {x = x} e d) =
+    nextJ j (ψ (fn (suc n)) o r B (fn j) (top mode u) β x) (cofψ1 (natT j) (t₀ ++ a) (cof++1 t₀ a e))
+      (λ k → trans (fsnψ1 (natT j) (t₀ ++ a) k (cof++1 t₀ a e)) (cong (λ q → replicate k (E.ψ (natT j) q)) (pred++ t₀ a e)))
+      (DLF mode u child o r t₀ B gb β hβ d)
+  DLF {n = n} {j = j} mode u child o r t₀ B gb β hβ (mL {t = a} {x = x} e h) =
+    mLJ j (cofψω (natT j) (t₀ ++ a) (cof++ω t₀ a e))
+      (λ k → subst (λ q → M j q (proj₁ (ψ (fn (suc n)) o r B (fn j) (top mode u) β x)))
+        (sym (trans (fsnψω (natT j) (t₀ ++ a) k (cof++ω t₀ a e)) (cong (ψᴺ j) (fsn++ t₀ a k e))))
+        (DLF mode u child o r t₀ B gb β hβ (h k)))
+  DLF {n = n} mode u child o r t₀ B gb β hβ (mΩ {p = inj₂ (tt , t)} e nu h) = DLFΩ mode u child o r t₀ B gb β hβ t (view n t) e nu h
+  DLF {n = n} {j = j} mode u child o r t₀ B gb β hβ (mU {t = a} {s = s₁} {x = x} {y = y} {e = ey} m ch) =
+    subst (λ Z → M j (ψᴺ j (t₀ ++ (a ++ s₁))) (proj₁ Z)) (sym (upEq mode u o r B β x y ey))
+      (subst (λ q → M j (ψᴺ j q)
+        (proj₁ (ψ (fn n) (proj₂ o tt) (proj₂ r tt) (cb o r B x) (fn j) u
+          (ψ (fn (suc n)) o r B (fn j) (top mode u) β x) y)))
+        (++-assoc t₀ a s₁)
+        (child (proj₂ o tt) (proj₂ r tt) (cb o r B x) (t₀ ++ a) (gbChild n o r B t₀ gb m)
+          (ψ (fn (suc n)) o r B (fn j) (top mode u) β x)
+          (DLF mode u child o r t₀ B gb β hβ m) ch))
+  DLF {n = n} {j = j} mode u child o r t₀ B gb β hβ (mw m d) =
+    mwN j (DLF mode u child o r t₀ B gb β hβ m) (mono (fn (suc n)) o r B (fn j) (top mode u) β d)
+  DLF {j = j} mode u child o r t₀ B gb β hβ (mc le m) = mcJ j (app≤ j t₀ le) (DLF mode u child o r t₀ B gb β hβ m)
+
+  DLFΩ : ∀ {n j} (mode : Mode) (u : fn j ≤ fn n) (child : Child n j u) (o : Ok (fn (suc n))) (r : Rb (fn (suc n))) (t₀ : E.T) (B : Base (fn (suc n))) → GB n B t₀
+      → (β : Tr⁺ (fn j)) → M j (ψᴺ j t₀) (proj₁ β)
+      → (t : Pos⁼ (fn n)) → PV n t → ∀ {a ν} {g : Br⁼ (fn n) t → Tr (fn (suc n))} → cof a ≡ cΩ ν → ν ≡ natT (lev n t)
+      → (∀ η c → Lw⁼ n t η c → M (suc n) (fsT a η) (g c))
+      → M j (ψᴺ j (t₀ ++ a)) (proj₁ (ψ (fn (suc n)) o r B (fn j) (top mode u) β (Ω (inj₂ (tt , t)) g)))
+  DLFΩ {n = n} {j = j} mode u child o r t₀ B gb β hβ .(pos⁼ si) (pv {i} si) {a} {ν} {g} e nu h =
+    cases (suc n) (fn (suc n)) refl j (fn j) refl o (inj₂ (inj₂ (tt , pos⁼ si))) (top mode u)
+      (λ K → M j (ψᴺ j (t₀ ++ a))
+               (proj₁ (node⁺ K (λ z → ψ (fn (suc n)) o r B (fn j) (top mode u) β (g z)) (feedF o r B (pos⁼ si) g))))
+      (λ le → mLJ j (cofG (natT j) (t₀ ++ a) (gtJ le nu) (cof++Ω t₀ a e))
+        (λ k → subst (λ q → M j q (proj₁ (limc⁺ (λ m → ψ (fn (suc n)) o r B (fn j) (top mode u) β
+                                                     (g (iter (feedF o r B (pos⁼ si) g) (bz⁼ (fn n) (pos⁼ si)) m))))))
+          (sym (trans (fsnG (natT j) (t₀ ++ a) k (gtJ le nu) (cof++Ω t₀ a e))
+                      (cong (ψᴺ j) (fsT++ t₀ a (γT (t₀ ++ a) ν k) e))))
+          (cumJ j (λ m → ψ (fn (suc n)) o r B (fn j) (top mode u) β
+                           (g (iter (feedF o r B (pos⁼ si) g) (bz⁼ (fn n) (pos⁼ si)) m))) (suc k)
+            (DLF mode u child o r t₀ B gb β hβ (h (γT (t₀ ++ a) ν k) (iter (feedF o r B (pos⁼ si) g) (bz⁼ (fn n) (pos⁼ si)) (suc k))
+                                     (Old.chain o r si t₀ B gb e eqν h k))))))
+      (λ q cv eq lq lw →
+        mΩP j (cofK (natT j) (t₀ ++ a) (penJ j q (nuq lq)) (cof++Ω t₀ a e)) (nuq lq)
+          (λ η c l → subst (λ q′ → M j q′ (proj₁ (ψ (fn (suc n)) o r B (fn j) (top mode u) β (g (cv c)))))
+            (sym (trans (fsTK (natT j) (t₀ ++ a) η (penJ j q (nuq lq)) (cof++Ω t₀ a e)) (cong (ψᴺ j) (fsT++ t₀ a η e))))
+            (DLF mode u child o r t₀ B gb β hβ (h η (cv c) (lw η c l)))))
+    where
+    eqν : ν ≡ natT i
+    eqν = trans nu (cong natT (levEq si))
+    nuq : ∀ {q : Pos (fn j)} → levP j q ≡ lev n (pos⁼ si) → ν ≡ natT (levP j q)
+    nuq lq = trans nu (cong natT (sym lq))
+

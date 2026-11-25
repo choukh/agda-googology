@@ -1,0 +1,91 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 一级 δ 的任意零座位运行及 ex δ δ Ω₁ 的所有下标，由数值的二参数操作统一支配。
+module B31UStageOp where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit.Base using (tt)
+open import Data.Product using (proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; s≼s)
+import W4Block as W
+import W4Ops as O
+import W4Path as H
+import W4Fold as F
+import WVOne as V
+open V using (read; T₀; lvl1; 𝟏)
+import B18TowerEmb as Emb
+import B18ResetCellGoal as First
+import B8FreezeMain as Z
+import B9UpperTop as Top
+import B9UpperRel as U
+import WSShadow as Sh
+import B19IdealArithmetic as Ar
+import B19IdealProduct as I
+import B18Product as P
+import B19IdealPowers as Pow
+import B26CScalar as Scalar
+
+port : W.zero W.≤ lvl1
+port = W.inc tt W.self
+δ : O.Tr⁺ lvl1
+δ = O.Ωt lvl1 O.⊞ Emb.standard 0
+top = proj₁ (O.Ωt lvl1)
+f : Sh.Sh 0
+f a c = Top.fΩ a c P.· Ar.norm L.ωᶜ
+
+module Seat (o : H.Ok lvl1) (B : F.Base lvl1) (t : W.zero W.≤ lvl1) (β : O.Tr⁺ W.zero) where
+  val = λ x → read (proj₁ (F.ψ lvl1 o B W.zero t β x))
+  c = read (proj₁ (B W.zero port))
+  a = read (proj₁ β)
+  module Upper (A C : T₀) (ha : a ≼ A) (hc : c ≼ C) where
+    br : ∀ (p : W.zero W.≤ lvl1) b z → read (proj₁ (F.ψ lvl1 o B W.zero p b (V.g₁ z))) ≼ V.Mv (read (proj₁ b)) (L.suc (read z))
+    br (W.inc tt v) b z = Z.P-up {o₀ = proj₂ o tt} {Bs = λ i v → B i (W.inc tt v)} v b (W.suc z)
+    br (W.inu z₀) b z = Z.P-up {o₀ = proj₂ o tt} {Bs = λ i v → B i (W.inc tt v)} (z₀ tt) b (W.suc z)
+    node = U.NodeU.upb (λ z → F.ψ lvl1 o B W.zero t β (V.g₁ z))
+      (λ z → F.ψ lvl1 o B W.zero port (B W.zero port) (V.g₁ z)) (λ y a c → V.Mv a (L.suc y)) A C
+      (λ y z d → ≼-trans (br t β z) (V.Mv-mono ha (s≼s d)))
+      (λ y z d → ≼-trans (br port (B W.zero port) z) (V.Mv-mono hc (s≼s d))) (F.kp lvl1 o V.p₁ t)
+    cast : (p : W.zero W.≤ lvl1) →
+      read (proj₁ (F.node⁺ (F.kp lvl1 o V.p₁ p) (λ z → F.ψ lvl1 o B W.zero p β (V.g₁ z)) (V.s₁ o B))) ≼ Top.fΩ A C →
+      read (proj₁ (F.ψ lvl1 o B W.zero p β top)) ≼ Top.fΩ A C
+    cast (W.inc tt v) h = h
+    cast (W.inu z₀) h = h
+    omega : val top ≼ Top.fΩ A C
+    omega = cast t node
+
+  valAt = λ (p : W.zero W.≤ lvl1) x → read (proj₁ (F.ψ lvl1 o B W.zero p β x))
+  suc′ : ∀ p x → valAt p (W.suc x) ≈ᵛ (valAt p x P.· L.ωᶜ)
+  suc′ (W.inc tt v) x = Scalar.repeat (F.ψ lvl1 o B W.zero (W.inc tt v) β x)
+  suc′ (W.inu ws) x = Scalar.repeat (F.ψ lvl1 o B W.zero (W.inu ws) β x)
+  lim′ : ∀ p f d → valAt p (W.lim f d) ≈ᵛ L.lim (λ n → valAt p (f n))
+  lim′ (W.inc tt v) f d = I.id _
+  lim′ (W.inu ws) f d = I.id _
+  append : ∀ x → val (top O.+ O.ι lvl1 x) ≈ᵛ (val top P.· Ar.norm (read x))
+  append W.zero = I.flip (I.one (val top))
+  append (W.suc x) = I._∙_ (suc′ t (top O.+ O.ι lvl1 x))
+    (I._∙_ (I.mul (append x) (I.id L.ωᶜ)) (I.assoc (val top) (Ar.norm (read x)) L.ωᶜ))
+  append (W.lim k d) = I._∙_ (lim′ t _ _) (I.lim (λ n → append (k n)))
+
+  paid : ∀ A C → a ≼ A → c ≼ C → val (proj₁ δ) ≼ f A C
+  paid A C ha hc = ≼-trans {b = val top P.· Ar.norm (read (proj₁ (Emb.standard 0)))}
+    (proj₁ (append (proj₁ (Emb.standard 0)))) (P.mono (Upper.omega A C ha hc)
+       (Pow.expo Pow.omega-pos (proj₁ First.First.omega)))
+
+subject : W.Tr lvl1
+subject = W.ex (proj₁ δ) (proj₁ δ) (proj₂ δ) top tt
+module Run (o : H.Ok lvl1) where
+  operator : U.𝓤 0 {F.nil} port (F.opB lvl1 o (proj₁ δ) (proj₂ δ)) f
+  operator S t v = Seat.paid o S t v
+  state : F.Base lvl1 → F.Base lvl1
+  state B i u = F.ψ lvl1 o B i u (B i u) (proj₁ δ)
+  start = λ (B : F.Base lvl1) t β → F.ψ lvl1 o B W.zero t β (proj₁ δ)
+  output = λ (B : F.Base lvl1) (t : W.zero W.≤ lvl1) β → read (proj₁ (F.ψ lvl1 o B W.zero t β subject))
+  full : ∀ B t β A C → read (proj₁ β) ≼ A → read (proj₁ (B W.zero port)) ≼ C →
+    output B t β ≼ Sh.sE U.Ω̂U f (f A C) (f C C)
+  full B (W.inc tt v) β A C ha hc = U.Lem.U1E o {F.nil} (λ t → t) (λ t → t)
+    (F.opB lvl1 o (proj₁ δ) (proj₂ δ)) f operator (state B) (W.inc tt v) (start B (W.inc tt v) β) (f A C) (f C C)
+    (operator B (W.inc tt v) β A C ha hc) (operator B port (B W.zero port) C C hc hc)
+  full B (W.inu ws) β A C ha hc = U.Lem.U1E o {F.nil} (λ t → t) (λ t → t)
+    (F.opB lvl1 o (proj₁ δ) (proj₂ δ)) f operator (state B) (W.inu ws) (start B (W.inu ws) β) (f A C) (f C C)
+    (operator B (W.inu ws) β A C ha hc) (operator B port (B W.zero port) C C hc hc)
+

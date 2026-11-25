@@ -1,0 +1,164 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B17SharpFeed where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂; _×_)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥-elim)
+open import Data.Maybe using (nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM; ≺-irrefl)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (read; lvl1)
+open import WVTwo using (lvl2; ◃→≼)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼)
+open import B13SharpOne using (r₁)
+open import B14SharpStack hiding (K; sums)
+open import B14SharpBound
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B15SharpAction
+open import B15SharpLift using (module Lift)
+open import B16SharpModel
+open import B16SharpOmega
+open import B16SharpOrbit
+import B14SharpLive as Live
+import B12Terminal as T
+import B15SharpSecond as Second
+
+module Feed (lem : LEM) where
+  open I.Sharp lem
+  open Graded lem
+  open Action lem
+  open Lift lem using (selfFold; ch)
+  open Omega lem
+  open Orbit lem
+
+  -- This is the zero-target half of a matched coefficient. It also admits the empty prefix.
+  Output : B.Tr lvl1 → R.Tr r₁ → Set
+  Output w u = ∀ D a A S t v → data≤ (res D a A R.zero) (proj₁ v) →
+    data≤ (res D (D R.zero tt) A R.zero) (proj₁ (S B.zero ch)) →
+    data≤ (res D a A u) (proj₁ (F.ψ lvl1 oB S B.zero t v w))
+
+  Linked : B.Tr lvl1 → R.Tr r₁ → Set
+  Linked w u = GoodIndex w u × Output w u
+
+  data Pad : Set where
+    no : Pad
+    yes : (w : B.Tr lvl1) (u : R.Tr r₁) → Linked w u → Pad
+
+  putW : Pad → B.Tr lvl1 → B.Tr lvl1
+  putW no c = c
+  putW (yes w u h) c = w W.+ c
+
+  putI : Pad → R.Tr r₁ → R.Tr r₁
+  putI no a = a
+  putI (yes w u h) a = u V.+ a
+
+  extend : Pad → Pref → Pref
+  extend no A = A
+  extend (yes w u h) A = addL A u
+
+  plug-pad : ∀ b A a → plug A (putI b a) ≡ plug (extend b A) a
+  plug-pad no A a = refl
+  plug-pad (yes w u h) A a = refl
+
+  module Pair (D₀ : Base♯) (a₁ : V.Tr⁺ r₁) (c⁺ : W.Tr⁺ lvl1) (match : Linked (proj₁ c⁺) (proj₁ a₁)) where
+    C = proj₁ c⁺
+    nc = proj₂ c⁺
+    exec = F.opB lvl1 oB C nc
+    known : Model ch (proj₁ a₁) exec
+    known = proj₂ match
+    si : R.Tr r₁ → R.Tr r₁
+    si u = proj₁ (V.next⁺ (selfFold D₀ a₁ u))
+    sw : B.Tr lvl1 → B.Tr lvl1
+    sw w = B.ex C C nc (B.suc w) tt
+
+    gen : ∀ n {X} (tv : TV X) (mk : MK X) →
+      Rel (suc n) (mk (path slot)) (proj₁ a₁) (generator n (F.td W.stop tv mk) C nc)
+    gen n tv mk m gm D a A G g = subst (Rel n _ (val D a A (proj₁ a₁))) (sym (gen-at n (F.td W.stop tv mk) C nc m G))
+      (proj₁ match n (λ t → tv (F.π m t)) (λ t → F.σ m (mk t)) D a A G g)
+
+    before : ∀ b n {X} (tv : TV X) (mk : MK X) D a A G →
+      Rel n (mk ch) (val D a A R.zero) G →
+      Rel n (mk ch) (val D a (extend b A) R.zero) (applyC n (F.td W.stop tv mk) (putW b C) G)
+    before no n tv mk D a A G h = close n _ _ h (inflation n (F.td W.stop tv mk) nc G)
+    before (yes w u h) n tv mk D a A G g = close n _ _ (proj₁ h n tv mk D a A G g) (monotone n (F.td W.stop tv mk) (W.+-mono w nc) G)
+
+    before-value : ∀ b D a A S t v → data≤ (res D a A R.zero) (proj₁ v) → data≤ (res D (D R.zero tt) A R.zero) (proj₁ (S B.zero ch)) →
+      data≤ (res D a (extend b A) R.zero) (proj₁ (F.ψ lvl1 oB S B.zero t v (putW b C)))
+    before-value no D a A S t v hv hc = ≼-trans hv (◃→≼ (F.inf exec S B.zero t v))
+    before-value (yes w u h) D a A S t v hv hc = ≼-trans (proj₂ h D a A S t v hv hc) (◃→≼ (F.mono lvl1 oB S B.zero t v (W.+-mono w nc)))
+
+    module Step (b : Pad) (w : B.Tr lvl1) (u : R.Tr r₁) (old : GoodIndex w u) where
+      wc = putW b C
+      nextW = B.ex wc C nc (B.suc w) tt
+      nextI = putI b (si u)
+
+      mid : ∀ n {X} (tv : TV X) (mk : MK X) D a A G → Rel n (mk ch) (val D a A R.zero) G →
+        Rel n (mk ch) (val D a A nextI) (F.It n oB (F.td W.stop tv mk) (B.suc w) (generator n (F.td W.stop tv mk) C nc) (applyC n (F.td W.stop tv mk) wc G))
+      mid n tv mk D a A G g = subst (λ x → Rel n (mk ch) (proj₁ (selfFold D a x)) _) (sym (plug-pad b A (si u)))
+        (val-lim n D a (extend b A) _ _ _ _ (λ j → reps n K hk j D a (extend b A) _ (before b n tv mk D a A G g)))
+        where
+        T₁ = F.td W.stop tv mk
+        K = F.Itᴺ n oB T₁ w (generator n T₁ C nc)
+        hk : Rel (suc n) (mk ch) (proj₁ (selfFold D₀ a₁ u)) K
+        hk = old (suc n) tv mk D₀ a₁ id (generator n T₁ C nc) (gen n tv mk)
+
+      idx : GoodIndex nextW nextI
+      idx zero tv mk D a A G g = mid zero tv mk D a A G g
+      idx (suc n) tv mk D a A K h m gm D′ a′ P G g = mid (suc n) (λ t → tv (F.π m t)) (λ t → F.σ m (mk t)) D a A
+        (F.enter (suc n) m K) (enter (suc n) m gm K h) F.idM refl D′ a′ P G g
+
+      out : Output nextW nextI
+      out D a A S t v hv hc = subst (λ x → data≤ (proj₁ (Sim.fold lem D a x)) (proj₁ (F.ψ lvl1 oB S B.zero t v nextW))) (sym (plug-pad b A (si u))) result
+        where
+        S′ : F.Base lvl1
+        S′ i q = F.ψ lvl1 oB S i q (S i q) wc
+        v′ = F.ψ lvl1 oB S B.zero t v wc
+        mk : Model ch (proj₁ (selfFold D₀ a₁ u)) (eop F.tdNil w exec)
+        mk = old 0 (λ t → t) (λ t → t) D₀ a₁ id exec known
+        result : data≤ (res D a (extend b A) (si u)) (proj₁ (F.ψ lvl1 oB S B.zero t v nextW))
+        result = subst (data≤ (res D a (extend b A) (si u))) (edge t) (lim-out D a (extend b A) _ _ (λ j → ≼l j (power {G = eop F.tdNil w exec} mk j D a (extend b A) S′ t v′ (before-value b D a A S t v hv hc)
+          (before-value b D (D R.zero tt) A S ch (S B.zero ch) hc hc))))
+          where
+          edge : ∀ t → proj₁ (F.E oB F.tdNil (B.suc w) exec S′ B.zero t (F.ψ lvl1 oB S B.zero t v wc)) ≡ proj₁ (F.ψ lvl1 oB S B.zero t v nextW)
+          edge (B.inc _ _) = refl
+          edge (B.inu _) = refl
+
+    wi = B.iter sw B.zero
+    ui = V.iter si R.zero
+
+    indices : ∀ n → GoodIndex (wi n) (ui n)
+    indices zero = base-index
+    indices (suc n) = Step.idx no _ _ (indices n)
+
+    wcum = W.cum (λ n → wi (suc n))
+    icum = V.cum (λ n → ui (suc n))
+    sums : ∀ n → Linked (wcum n) (icum n)
+    sums zero = Step.idx no _ _ (indices zero) , Step.out no _ _ (indices zero)
+    sums (suc n) = Step.idx b _ _ (indices (suc n)) , Step.out b _ _ (indices (suc n))
+      where b = yes (wcum n) (icum n) (sums n)
+
+  lim-gen : ∀ {f g} d e → (∀ n → Linked (f n) (g n)) → Linked (B.lim f d) (R.lim g e)
+  lim-gen {f} {g} d e hs = high , low
+    where
+    deep : ∀ n {X ch} D a A D′ a′ P (K : ℕ → F.Ca n X) rise f q →
+      (∀ j → Rel n ch (val D′ a′ P (val D a A (f j))) (K j)) →
+      Rel n ch (val D′ a′ P (val D a A (R.lim f q))) (F.limC n K rise)
+    deep n D a id D′ a′ P K rise f q h = val-lim n D′ a′ P _ _ K rise h
+    deep n D a (addL A x) D′ a′ P K rise f q h = deep n D a A D′ a′ P K rise (λ j → x V.+ f j) _ h
+    high : GoodIndex (B.lim f d) (R.lim g e)
+    high zero tv mk D a A G h = val-lim 0 D a A g e (λ j → eop T₁ (f j) G) (λ j S i t v → F.Emono oB T₁ G S i t v (d j))
+      (λ j → proj₁ (hs j) 0 tv mk D a A G h)
+      where T₁ = F.td W.stop tv mk
+    high (suc n) tv mk D a A K k m gm D′ a′ P G h = deep n D a A D′ a′ P _ _ g e (λ j → proj₁ (hs j) (suc n) tv mk D a A K k m gm D′ a′ P G h)
+    low : Output (B.lim f d) (R.lim g e)
+    low D a A S t@(B.inc _ _) v hv hc = lim-out D a A g e (λ j → ≼l j (proj₂ (hs j) D a A S t v hv hc))
+    low D a A S t@(B.inu _) v hv hc = lim-out D a A g e (λ j → ≼l j (proj₂ (hs j) D a A S t v hv hc))
+

@@ -1,0 +1,99 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 一级树的保持槽关系。只在保留同一槽时比较所有支；两支的零层输入允许按值弱化。
+module B15RefMonotone where
+open import Data.Nat using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; l≼; ≼l; i≼; ≼i; u≼; ≼u; ≼-trans; ≼-refl)
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+import B15RefAlgebra as A
+
+data Below : T₁ → T₁ → Set where
+  zz : Below L.zero L.zero
+  ss : ∀ {a b} → Below a b → Below (L.suc a) (L.suc b)
+  to-s : ∀ {a b} → Below a b → Below a (L.suc b)
+  right : ∀ {a f} n → Below a (f n) → Below a (L.lim f)
+  left : ∀ {a f} → (∀ n → Below (f n) a) → Below (L.lim f) a
+  slot : ∀ {f g} → (∀ x y → x ≼ y → Below (f x) (g y)) →
+         Below (L.limᵢ L.zero f) (L.limᵢ L.zero g)
+  lifted : ∀ {x y} → x ≼ y → Below (L.up L.zero x) (L.up L.zero y)
+
+lim : ∀ {f g} → (∀ n → Below (f n) (g n)) → Below (L.lim f) (L.lim g)
+lim h = left (λ n → right n (h n))
+
+ω₁ : Below Ω₁ᴸ Ω₁ᴸ
+ω₁ = slot (λ x y d → lifted d)
+
+add₀ = λ (a : T₁) (y : T₀) → L.add a (λ q → L.suc q) y
+
+under : ∀ {a b} → Below a b → ∀ y → Below a (add₀ b y)
+under h L.zero = h
+under h (L.suc y) = to-s (under h y)
+under h (L.lim f) = right 0 (under h (f 0))
+
+tail : ∀ {a b x y} → Below a b → x ≼ y → Below (add₀ a x) (add₀ b y)
+tail h (z≼ {b = y}) = under h y
+tail h (s≼s d) = ss (tail h d)
+tail h (≼l n d) = right n (tail h d)
+tail h (l≼ p) = left (λ n → tail h (p n))
+tail h (≼i {p = ()} _ _ _)
+tail h (i≼ {p = ()} _)
+tail h (≼u {r = ()} _)
+tail h (u≼ {r = ()} _)
+
+plus : ∀ {a b x y} → Below a b → Below x y → Below (a L.+ x) (b L.+ y)
+plus h zz = h
+plus h (ss d) = ss (plus h d)
+plus h (to-s d) = to-s (plus h d)
+plus h (left f) = left (λ n → plus h (f n))
+plus h (right n d) = right n (plus h d)
+plus h (slot f) = slot (λ x y d → plus h (f x y d))
+plus h (lifted d) = tail h d
+
+power : ∀ {a b} → Below a b → Below (A.power a) (A.power b)
+power {a} {b} h = lim (L.iter-R Below {G = a L.+_} {G′ = b L.+_} (plus h) zz)
+
+root : ∀ {a b} → Below a b → ∀ y → Below a (A.E₀ b y)
+root h L.zero = h
+root h (L.suc y) = right 1 (root h y)
+root h (L.lim f) = right 0 (root h (f 0))
+
+e₀ : ∀ {a b x y} → Below a b → x ≼ y → Below (A.E₀ a x) (A.E₀ b y)
+e₀ h (z≼ {b = y}) = root h y
+e₀ h (s≼s d) = power (e₀ h d)
+e₀ h (≼l n d) = right n (e₀ h d)
+e₀ h (l≼ p) = left (λ n → e₀ h (p n))
+e₀ h (≼i {p = ()} _ _ _)
+e₀ h (i≼ {p = ()} _)
+e₀ h (≼u {r = ()} _)
+e₀ h (u≼ {r = ()} _)
+
+e : ∀ {a b x y} → Below a b → Below x y → Below (A.E a x) (A.E b y)
+e h zz = h
+e h (ss d) = power (e h d)
+e h (to-s d) = right 1 (e h d)
+e h (right n d) = right n (e h d)
+e h (left f) = left (λ n → e h (f n))
+e h (slot f) = slot (λ x y d → e h (f x y d))
+e h (lifted d) = e₀ h d
+
+advance : ∀ {a b} → Below a b → Below (A.Γ a) (A.Γ b)
+advance {a} {b} h = lim (λ n → L.iter-R Below {G = A.E a} {G′ = A.E b} (e h) ω₁ (suc n))
+
+bottom : ∀ {a b} → Below a b → ∀ y → Below (A.Γ a) (A.H y b)
+bottom h L.zero = advance h
+bottom h (L.suc y) = right 1 (bottom h y)
+bottom h (L.lim f) = right 0 (bottom h (f 0))
+
+height : ∀ {a b x y} → x ≼ y → Below a b → Below (A.H x a) (A.H y b)
+height (z≼ {b = y}) h = bottom h y
+height (s≼s {a = x} {b = y} d) h = lim (L.iter-R Below {G = A.H x} {G′ = A.H y} (height d) h)
+height (≼l n d) h = right n (height d h)
+height (l≼ f) h = left (λ n → height (f n) h)
+height (≼i {p = ()} _ _ _) h
+height (i≼ {p = ()} _) h
+height (≼u {r = ()} _) h
+height (u≼ {r = ()} _) h

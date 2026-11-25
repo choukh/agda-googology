@@ -1,0 +1,70 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 正塔第一个 ex 启动在层号读回、合法性证书和单位求值上等于指定 Ω 程序。
+module B30MStart where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Unit.Base using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
+import W4Block as W
+import W4Path as P
+import W4Ops as O
+import WVOne as V
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; l≼; ≼l)
+import B15Spine as Spine
+import B18CellState as Cell
+import B18Product as M
+import B20TowerValues as Id
+import B28POrbit as Orb
+import B28BBranch as B
+import B28BHead as H
+import B28BValues as Vals
+
+module At (m : ℕ) where
+  module A = H.At m
+  module K = Orb.At m
+  open A using (k; i; n; top)
+  a = proj₁ K.head
+  w : W.Tr i → W.Tr k
+  w c = W.ex a a (proj₂ K.head) (proj₁ (O.upz c (O.Ωt (Spine.branch i c)))) tt
+  key = W.Ω top w
+  level : W.↑ k K.z₁ ≡ W.↑ k key
+  level = refl
+  cert : P.OkO↑ k k (P.Ok-tw n) W.self K.z₁ ≡ P.OkO↑ k k (P.Ok-tw n) W.self key
+  cert = refl
+  exact-key : A.free K.z₁ ≡ A.free key
+  exact-key = trans (B.At.canon m K.z₁) (sym (B.At.canon m key))
+  genuine : Cell.At.fresh n 1 ≡ A.free key
+  genuine = trans (sym (A.real 1)) (trans (cong A.free (Id.At.index n 1)) exact-key)
+  lifted : ∀ c → K.branch 0 c ≡ K.K.next (w c)
+  lifted c = K.Seed.point c
+
+  module S = Vals.At m w
+  selected = λ u → w (A.Walk.Run.ix w u)
+  leaf = λ u → A.free (selected u)
+  sum = S.Vals.sum
+  exact : Cell.At.fresh n 1 ≈ᵛ L.lim sum
+  exact = subst (_≈ᵛ L.lim sum) (sym genuine) S.exact
+  ceiling : ∀ q → (∀ u → leaf u ≼ q) → Cell.At.fresh n 1 ≼ (q M.· L.ωᶜ)
+  ceiling q h = subst (_≼ (q M.· L.ωᶜ)) (sym genuine) (S.cap q h)
+  occurs : ∀ u → leaf u ≼ Cell.At.fresh n 1
+  occurs u = subst (leaf u ≼_) (sym genuine) (S.lower u)
+
+starts leaves : V.T₀
+starts = L.lim (λ m → Cell.At.fresh (suc m) 1)
+leaves = L.lim (λ m → L.lim (At.leaf m))
+lower : leaves ≼ starts
+lower = l≼ λ m → l≼ λ u → ≼l m (At.occurs m u)
+upper : starts ≼ (leaves M.· L.ωᶜ)
+upper = l≼ λ m → At.ceiling m leaves (λ u → ≼l m (≼l u (≼-refl _)))
+
+open import Data.Nat.Base using (_≤_)
+open import Data.Product using (_×_)
+open import OCF.Align.Value using (s≼s)
+import B27CutArithmetic as Cut
+module Fixed (k : ℕ) (two : 2 ≤ k) where
+  module C = Cut.At k two
+  same-cut : (C.Small leaves → C.Small starts) × (C.Small starts → C.Small leaves)
+  same-cut = (λ d → ≼-trans {a = L.suc starts} {b = L.suc (leaves M.· L.ωᶜ)} {c = C.Q}
+    (s≼s {a = starts} {b = leaves M.· L.ωᶜ} upper) (C.product leaves L.ωᶜ d C.omega)) ,
+    (λ h → ≼-trans {a = L.suc leaves} {b = L.suc starts} {c = C.Q} (s≼s {a = leaves} {b = starts} lower) h)

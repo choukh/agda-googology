@@ -1,0 +1,48 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在共同层 k 上增长的任意真嵌入可沿任意 j≤k 的继承座位剥回原源层，逐字保留显式正参数与输出树。
+module B31POrigin where
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Nat.Base using (ℕ; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import B18TowerEmb as E
+module _ (k : L) where
+  data Over (a : L) : (b : L) → k ⊕ a ≤ k ⊕ b → Set where
+    same : Over a a self
+    child : ∀ {s} {h : Ch s → L} (c : Ch s) {p} → Over a (h c) p → Over a (nd s h) (inc c p)
+    all : ∀ {s} {h : Ch s → L} {p} → (∀ c → Over a (h c) (p c)) → Over a (nd s h) (inu p)
+
+  from : ∀ {a b} (p : a ⊑ b) → Over a b (wk (⊕⊑ k p))
+  from self = same
+  from (inc c p) = child c (from p)
+  from (inu p) = all (λ c → from (p c))
+
+  join : ∀ {a b c p q} → Over a b p → Over b c q → Over a c (p ∙ q)
+  join f same = f
+  join f (child c g) = child c (join f g)
+  join f (all g) = all (λ c → join f (g c))
+
+  walk : ∀ (b : ℕ → L) (r : ∀ n → (k ⊕ b n) ≤ (k ⊕ b (suc n))) →
+    (∀ n → Over (b n) (b (suc n)) (r n)) → ∀ {m n p} → E.Walk (λ t → k ⊕ b t) r m n p → Over (b m) (b n) p
+  walk b r u E.start = same
+  walk b r u (E.step d) = join (walk b r u d) (u _)
+
+  pull-ok : ∀ {a b p} → Over a b p → Ok (k ⊕ b) → Ok (k ⊕ a)
+  pull-ok same o = o
+  pull-ok (child c h) o = pull-ok h (proj₂ o c)
+  pull-ok (all {s} h) o = pull-ok (h (c₀ s)) (proj₂ o (c₀ s))
+  pull : ∀ {a b p} → Over a b p → Base (k ⊕ b) → Base (k ⊕ a)
+  pull same B = B
+  pull (child c h) B = pull h (λ j w → B j (inc c w))
+  pull (all {s} h) B = pull (h (c₀ s)) (λ j w → B j (inc (c₀ s) w))
+
+  peel : ∀ {a b p} (h : Over a b p) (o : Ok (k ⊕ b)) (B : Base (k ⊕ b)) →
+    ∀ j (w : j ≤ k) (v : Tr⁺ j) (y : Tr⁺ (k ⊕ a)) →
+    ψ (k ⊕ b) o B j (w ∙ lift k b) v (proj₁ (emb (k ⊕ b) o p y)) ≡
+    ψ (k ⊕ a) (pull-ok h o) (pull h B) j (w ∙ lift k a) v (proj₁ y)
+  peel same o B j w v y = refl
+  peel (child c h) o B j w v y = peel h (proj₂ o c) (λ i t → B i (inc c t)) j w v y
+  peel (all {s} h) o B j w v y = peel (h (c₀ s)) (proj₂ o (c₀ s)) (λ i t → B i (inc (c₀ s) t)) j w v y

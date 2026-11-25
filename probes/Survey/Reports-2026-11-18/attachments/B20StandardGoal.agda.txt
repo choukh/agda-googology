@@ -1,0 +1,41 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每个指定的反馈孩子即使从 1 起算，也能严格包含以前的独立标准塔；在原 Λ 上合并。
+module B20StandardGoal where
+open import Data.Nat.Base as N using (ℕ; zero; suc)
+open import Data.Nat.Properties using (n≤1+n)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+open import WVOne using (read)
+open import W4Fold using (EBOᶜ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; l≼)
+open import WSLevel using (Ω₁ᴸ)
+import B12EboRows as B
+import B12XRef as R
+import B14Goal as G
+import B18Reset as F
+import B18ResetCell as C
+import B20Towers as T
+import B20TowerValues as V
+import B20StandardInside as S
+
+module At (n j : ℕ) where
+  k = suc n
+  module Inside = S.At n (T.At.index k j)
+  child : ∀ m → m N.≤ k → L.suc (S.std m) ≼ C.At.fresh k j
+  child m d = subst (L.suc (S.std m) ≼_) (sym (V.At.fresh k j)) (Inside.canonical m d)
+  update : ∀ p m → m N.≤ k → L.ψ⁰ p ≼ S.std m →
+    L.ψ⁰ (p L.+ L.up L.zero Ω₁ᴸ) ≼ C.At.fresh k j
+  update p m d h = subst (L.ψ⁰ (p L.+ L.up L.zero Ω₁ᴸ) ≼_) (sym (V.At.fresh k j)) (Inside.advance p m d h)
+
+into : ∀ n j → C.At.fresh n j ≼ read EBOᶜ
+into n j = B.into (suc n , ≼-trans (C.At.into n j) (F.lower (suc n)))
+
+bound : ∀ m → L.suc (S.std m) ≼ read EBOᶜ
+bound m = ≼-trans (At.child m zero m (n≤1+n m)) (into (suc m) zero)
+
+all-standard : L.lim (λ m → L.suc (S.std m)) ≼ read EBOᶜ
+all-standard = l≼ bound
+
+enough : (∀ k → Σ ℕ (λ m → R.row k ≼ S.std m)) → G.Goal
+enough covers = R.assemble λ k → let m , h = covers k in ≼-trans h (≼-trans (≼-suc (≼-refl _)) (bound m))

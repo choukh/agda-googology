@@ -1,0 +1,16 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiLAStatusFGH where
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block
+open import W4Fold using (EBOᶜ)
+
+FGH : Tr zero → ℕ → ℕ
+FGH zero n = suc n
+FGH (suc x) n = iter (FGH x) n n
+FGH (lim f _) n = FGH (f n) n
+FGH (Ω () _) n
+FGH (up _ () _ _) n
+FGH (ex _ _ _ _ ()) n
+
+big : ℕ
+big = FGH EBOᶜ 99

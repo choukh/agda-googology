@@ -1,0 +1,28 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 一塔顶层的反馈槽与零出口，在 Ωt 上同形。两条路径进入真实反馈的孩子后均逐点走入。
+module B20OldInk where
+open import Data.Product using (proj₁; proj₂)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (h₁; p₀; gt; read)
+import OCF.Align.Level as L
+open import B14PathHeight using (All; standard; through)
+import B19PathShape as H
+import B19PathFold as F
+import B19PathRel as R
+
+module At (B : Base (tw 1)) (v : Tr⁺ zero) where
+  o = Ok-tw 1
+  l = tw 1
+  f = λ (w : zero ≤ l) z → ψ l o B zero w v (gt z)
+  s = λ z → fromBr l p₀ (proj₁ (ψ l o B zero (ink self) (B zero (ink self)) (gt z)))
+  both : ∀ z → H.Shape (proj₁ (f (z≤ l) z)) (proj₁ (f (ink self) z))
+  both z = F.Check.fold H.law (h₁ z) (proj₂ o z) (λ i w → B i (inc z w))
+    (standard (h₁ z)) (through (↑ zero z)) (proj₁ (Ωt (h₁ z))) v v (H.ident (proj₁ v))
+  fold = λ w → proj₁ (ψ l o B zero w v (proj₁ (Ωt l)))
+  shape : H.Shape (fold (z≤ l)) (fold (ink self))
+  shape = R.Test.node H.law (kp l o p₀ (z≤ l)) (kp l o p₀ (ink self)) (f (z≤ l)) (f (ink self)) s both
+  value : read (fold (z≤ l)) L.≅ read (fold (ink self))
+  value = H.read-shape shape

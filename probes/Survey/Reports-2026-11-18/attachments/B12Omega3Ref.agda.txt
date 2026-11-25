@@ -1,0 +1,139 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：Ω₃ 基本列的第 0 项和第 1 项内的两个零号分支。
+module B12Omega3Ref where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; trans; subst)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼l; l≼; ≼-trans; ≼-refl; ≼-suc; ≅→≼; 1≼ψ⁰)
+open import WVOne using (T₀; read)
+open import WKShape using (Ψ₃)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Src as T
+import B11Join as J
+import B12LimitSrc as A
+
+three : L.Ordᴵ
+three = L.suc (L.suc (L.suc L.zero))
+Ω₃ = L.Ω three
+
+X : ℕ → A.Lev₂
+X = S.iter (L.ψ {ℓ = three} L.zero (λ r → L.suc r)) Ω₂ᴸ
+
+outer-shape : L.ψ⁰ Ω₃ ≡ L.lim (λ n → L.ψ⁰ (X n))
+outer-shape = refl
+
+-- 第零层取指定基本列项，也定义了零与后继上的向下步。
+at : T₀ → ℕ → T₀
+at L.zero n = L.zero
+at (L.suc x) n = x
+at (L.lim f) n = f n
+
+at-below : (x : T₀) (n : ℕ) → at x n ≼ x
+at-below L.zero n = ≼-refl _
+at-below (L.suc x) n = ≼-suc (≼-refl _)
+at-below (L.lim f) n = ≼l n (≼-refl _)
+
+first-actual : at (L.ψ⁰ Ω₃) 0 ≼ read Ψ₃
+first-actual = ≼-trans (≼l 0 (≼-refl (L.ψ⁰ Ω₂ᴸ))) J.level
+
+left : ℕ → A.Lev₂
+left = S.iter (Ω₂ᴸ L.+_) L.zero
+
+inside : T₀
+inside = at (at (at (L.ψ⁰ Ω₃) 1) 0) 0
+
+inside-shape : inside ≡ L.ψ⁰ (L.lim left)
+inside-shape = refl
+
+inside-below-one : inside ≼ at (L.ψ⁰ Ω₃) 1
+inside-below-one = ≼-trans (at-below (at (at (L.ψ⁰ Ω₃) 1) 0) 0) (at-below (at (L.ψ⁰ Ω₃) 1) 0)
+
+-- 对末项的 ≅ 推导归纳，同时允许两末项在不同的层中。
+assoc : ∀ {k k′ ℓ} {c : L.Ordᶜ k} {c′ : L.Ordᶜ k′} {A B C : L.Ordᶜ ℓ} (σ : L.Simᴵ k ℓ) (σ′ : L.Simᴵ k′ ℓ) →
+  C L.≅ (A L.+ B) → c L.≅ c′ → L.add C σ c L.≅ (A L.+ L.add B σ′ c′)
+assoc σ σ′ e L.z≅ = e
+assoc σ σ′ e (L.s≅ h) = L.s≅ (assoc σ σ′ e h)
+assoc σ σ′ e (L.l≅ h) = L.l≅ (λ n → assoc σ σ′ e (h n))
+assoc σ σ′ e (L.upˡ {r = L.zero} h) = assoc (λ q → σ (L.suc q)) σ′ e h
+assoc σ σ′ e (L.upˡ {r = L.self n} h) = assoc (λ q → σ (L.lim n q)) σ′ e h
+assoc σ σ′ e (L.upʳ {r = L.zero} h) = assoc σ (λ q → σ′ (L.suc q)) e h
+assoc σ σ′ e (L.upʳ {r = L.self n} h) = assoc σ (λ q → σ′ (L.lim n q)) e h
+assoc {A = A} {B} {C} σ σ′ e (L.lᵢ≅ {p = p} {q} {f} {g} h M) = L.lᵢ≅ h λ x y d → go x y d
+  where
+  rp = L.<→◃ (σ p)
+  rq = L.<→◃ (σ′ q)
+  go : ∀ x y (d : L.R _ rp (L.into rp x) y) →
+    L.add C σ (f (L.coe rp (L.<→◃ p) (L.into rp x))) L.≅
+    (A L.+ L.add B σ′ (g (L.coe rq (L.<→◃ q) (L.coe rq rq (L.into rq y)))))
+  go x y d rewrite L.out-into rp x | L.out-into rq y | L.out-into rq y = assoc σ σ′ e (M x y (L.R-conv rp (L.<→◃ p) d))
+
+idσ : L.Simᴵ (L.suc (L.suc L.zero)) (L.suc (L.suc L.zero))
+idσ r = r
+
+reg : (n : ℕ) → left n L.≅ left n
+reg zero = L.z≅
+reg (suc n) = L.add-≅ {σ = idσ} {σ′ = idσ} (L.Ω-refl _) (reg n)
+
+split : (n : ℕ) → left (suc (suc n)) L.≅ (left (suc n) L.+ Ω₂ᴸ)
+split zero = reg 2
+split (suc n) = L.≅-trans (L.add-≅ {σ = idσ} {σ′ = idσ} (L.Ω-refl _) (split n))
+  (L.≅-sym (assoc {A = Ω₂ᴸ} {B = left (suc n)} {C = left (suc (suc n))} idσ idσ (reg (suc (suc n))) (L.Ω-refl _)))
+
+matches : ∀ n → left (suc n) L.≅ T.ll n
+matches zero = reg 1
+matches (suc n) = L.≅-trans (split n) (L.add-≅ {σ = idσ} {σ′ = idσ} (matches n) (L.Ω-refl _))
+
+inside-values : inside ≈ᵛ L.ψ⁰ (L.lim T.ll)
+inside-values = l≼ down , l≼ (λ n → ≼l (suc n) (≅→≼ (L.≅-sym (L.ψ⁰-≅ (matches n)))))
+  where
+  down : ∀ n → L.ψ⁰ (left n) ≼ L.ψ⁰ (L.lim T.ll)
+  down zero = ≼l 0 (1≼ψ⁰ Ω₂ᴸ)
+  down (suc n) = ≼l n (≅→≼ (L.ψ⁰-≅ (matches n)))
+
+inside-actual : inside ≼ read Ψ₃
+inside-actual = ≼-trans (proj₁ inside-values) J.level
+
+inner-next = at (at (at (L.ψ⁰ Ω₃) 1) 0) 1
+inner-cut : ℕ → T₀
+inner-cut n = at (at (at (at inner-next 1) 0) 0) n
+
+power : A.Lev₂ → A.Lev₂
+power P = L.lim (S.iter (P L.+_) L.zero)
+finitePower = S.iter power Ω₂ᴸ
+
+numeral : ℕ → T₀
+numeral = S.iter L.suc L.zero
+
+one-plus : ∀ n → L.suc L.zero L.+ numeral n ≡ L.suc (numeral n)
+one-plus zero = refl
+one-plus (suc n) = cong L.suc (one-plus n)
+
+index : ∀ n → S.iter (L.suc L.zero L.+_) L.zero n ≡ numeral n
+index zero = refl
+index (suc n) = trans (cong (L.suc L.zero L.+_) (index n)) (one-plus n)
+
+transports : T₀ → T₀
+transports x = L.tr⁻ L.z≅ (L.tr L.z≅ (L.tr⁻ L.z≅ x))
+
+strip : ∀ n → transports (numeral n) ≡ numeral n
+strip zero = refl
+strip (suc n) = cong L.suc (strip n)
+
+coefficient : T₀ → A.Lev₂
+coefficient = L.ψ {ℓ = three} L.zero (λ q → L.suc (L.suc (L.suc q)))
+
+coeff-nat : ∀ n → coefficient (numeral n) ≡ finitePower n
+coeff-nat zero = refl
+coeff-nat (suc n) = cong power (coeff-nat n)
+
+cuts : ∀ n → inner-cut n ≡ L.ψ⁰ (finitePower n)
+cuts n = trans (cong (λ x → L.ψ⁰ (coefficient x)) (trans (cong transports (index n)) (strip n)))
+               (cong L.ψ⁰ (coeff-nat n))
+
+cuts-below : ∀ n → L.ψ⁰ (finitePower n) ≼ at (L.ψ⁰ Ω₃) 1
+cuts-below n = subst (λ x → x ≼ at (L.ψ⁰ Ω₃) 1) (cuts n)
+  (≼l 0 (≼l 1 (≼l 1 (≼l 0 (≼l 0 (≼l n (≼-refl _)))))))

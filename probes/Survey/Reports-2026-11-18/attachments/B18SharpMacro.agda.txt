@@ -1,0 +1,83 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18SharpMacro where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+import Data.Sum
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+import W4Path as P
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import OCF.Align.Value using (≼-trans; l≼; ≼l)
+open import B13SharpOne using (r₁)
+open import B14SharpStack using (oR)
+open import B14SharpBound using (data≤)
+open import B14SharpTwo using (r₂; o₂)
+import B12ActualSlots as A
+import B17SharpFeed as A1
+import B17SharpUpdate as A2
+import B17SharpTwo as A3
+
+module Macro (lem : LEM) where
+  open I.Sharp lem
+  open A1.Feed lem
+  open A2.Update lem
+  open A3.Two lem
+
+  record State (D : Base♯) (S : F.Base lvl2) : Set where
+    constructor pair
+    field
+      one : Linked (proj₁ (S lvl1 w₁)) (proj₁ (D r₁ oR))
+      bot : data≤ (proj₁ (D R.zero tt)) (proj₁ (S B.zero w₀))
+
+  u = proj₁ (V.next⁺ (V.Ωt r₂))
+  after : Base♯ → R.Tr r₂ → Base♯
+  after D x j oj = ψ♯ r₂ o₂ D j oj (D j oj) x
+
+  canonical-value : ∀ (operator : F.Op {lvl2} F.nil) n S i t →
+    F.itS operator n S i t ≡ F.itV operator n S i t (S i t)
+  canonical-value operator zero S i t = refl
+  canonical-value operator (suc n) S i t = cong (F.run operator (F.itS operator n S) i t) (canonical-value operator n S i t)
+
+  module Coeff (o : P.Ok lvl2) (c : W.Tr⁺ lvl2) (big : A._⊴_ wΩ₂ (proj₁ c)) where
+    op = F.opB lvl2 o (proj₁ c) (proj₂ c)
+    y = B.ex (proj₁ c) (proj₁ c) (proj₂ c) (B.suc B.zero) tt
+    yy : lvl2 B.⊢ B.zero ◃ y
+    yy = B.◃t (proj₂ c) B.◃e
+    macroOp = F.opB lvl2 o y yy
+
+    module Use (D : Base♯) (S : F.Base lvl2) (h : State D S) where
+      open State h
+      S₁ = F.stepS op S
+      get = λ {i} t → F.inf op S i t (S i t)
+      module Words = Seq D o S₁ c big
+        (matched _ _ _ one (Data.Sum.inj₂ (get w₁)))
+        (≼-trans bot (◃→≼ (get w₀)))
+
+      stage : ∀ n → Linked
+        (proj₁ (F.itV op (suc n) S₁ lvl1 w₁ (S₁ lvl1 w₁)))
+        (proj₁ (after D (V.iter (iΩ₂ V.+_) iΩ₂ n) r₁ oR))
+      stage n = subst (λ b → Linked (proj₁ b) _) (canonical-value op (suc n) S₁ lvl1 w₁)
+        (Words.feed (all-words n))
+
+      feedback : Linked (proj₁ (F.stepS macroOp S lvl1 w₁)) (proj₁ (after D u r₁ oR))
+      feedback = lim-gen _ _ stage
+
+      output : ∀ (a : V.Tr⁺ R.zero) t (b : W.Tr⁺ B.zero) → data≤ (proj₁ a) (proj₁ b) →
+        data≤ (proj₁ (ψ♯ r₂ o₂ D R.zero tt a u)) (proj₁ (F.run macroOp S B.zero t b))
+      output a t@(B.inc _ _) b hb = l≼ (λ n → ≼l n (Words.output (all-words n) a t (F.run op S B.zero t b)
+        (≼-trans hb (◃→≼ (F.inf op S B.zero t b)))))
+      output a t@(B.inu _) b hb = l≼ (λ n → ≼l n (Words.output (all-words n) a t (F.run op S B.zero t b)
+        (≼-trans hb (◃→≼ (F.inf op S B.zero t b)))))
+
+      change : State (after D u) (F.stepS macroOp S)
+      change = pair feedback (output (D R.zero tt) w₀ (S B.zero w₀) bot)
+

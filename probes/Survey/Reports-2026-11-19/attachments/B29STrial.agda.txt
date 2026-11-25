@@ -1,0 +1,10 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- R₂（原 BTBO）严格切可支付每次乘法回灌，缺口为单位折叠在真实轨道内保持此界。
+module B29STrial where
+import Data.Nat.Properties as N
+import B27CutArithmetic as Cut
+import B29STrialCore as Generic
+
+module At = Cut.At 2 N.≤-refl
+module Result = Generic.X At.Q At.omega At.product
+open Result public using (feedback; first; accepted; UnitCloses; remaining)

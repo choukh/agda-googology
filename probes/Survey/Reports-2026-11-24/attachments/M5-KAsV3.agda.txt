@@ -1,0 +1,162 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- M5 第 2 段: W4 版的 V3 (对一切运行). 对一切 η : Tr zero, 层号 h₁ η 上的一切运行 (Ok, 覆盖的状态 S, 底 β,
+-- 只含 inu 的到零路径 w): 累加规范化层号 ordᴰ (cp η) 的前驱保序映到 W4 折叠值的字面前驱, 像都字面高于 read β.
+-- 编译定理, 无前提. 后继情形左移一个加数 (第 0 个累加项); 极限情形 W4 的部分结果就是下一块的底, 由 Blk 粘起.
+module KAsV3 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as LV
+open LV using (Ordᶜ)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module Src = Ord-Ord
+module BT = BoundedTrich
+open BT using (Ordᴰ)
+open Src using (ordᴰ)
+open import OCF.Align.BTBOValNeg using (add-≺)
+open import OCF.Align.BTBOFullQ using (<ᴰ-irrefl; clash-lt)
+open import OCF.Align.BTBOFullEb using (module Blocks; Inv; inl; inr; inv)
+open import OCF.Align.BTBOFullV3 using (𝕋₀; ≺→⊑₀; add-left)
+open import KLowIface using (Cov)
+open import WVOne using (read; h₁)
+open import KAsBase
+
+module WT = Blocks 𝕋₀
+
+lift≺ : ∀ {a b : T₀} → a LV.≺ b → ∀ {x : T₀} → x LV.≺ LV.suc a → x LV.≺ b
+lift≺ ab (LV.≺z e) = LV.≺-respˡ (LV.≅-sym e) ab
+lift≺ ab (LV.≺s h) = ≺→⊑₀ ab h
+
+Abv : ∀ {A : Ordᴰ} {Bd : T₀} → T₀ → WT.Eb A Bd → Set
+Abv {A} b e = ∀ {c} (p : c BT.< A) → b LV.≺ WT.map e p
+
+RV : (η : Tr zero) (o : Ok (h₁ η)) (S : Base (h₁ η)) (β : Tr⁺ zero) (w : zero ≤ h₁ η) → T₀
+RV η o S β w = read (proj₁ (ψ (h₁ η) o S zero w β (proj₁ (Ωt (h₁ η)))))
+
+V3w : (η : Tr zero) (o : Ok (h₁ η)) (S : Base (h₁ η)) → Cov S → (β : Tr⁺ zero) (w : zero ≤ h₁ η) → U w
+    → Σ (WT.Eb (ordᴰ (cp η)) (RV η o S β w)) (Abv (read (proj₁ β)))
+V3w zero o S cv β self us = WT.Eb-zero , λ ()
+V3w (suc a) o S cv β (inu vs) (uu us′) = WT.Eb-suc e′ (A LV.+ read (proj₁ Rr)) (λ h → h) lt , abS
+  where
+  H : L
+  H = h₁ a
+  o′ : Ok H
+  o′ = proj₂ o tt
+  S′ : Base H
+  S′ i u = S i (inc tt u)
+  β′ : Tr⁺ H
+  β′ = S H (inc tt self)
+  Rr : Tr⁺ zero
+  Rr = ψ H o′ S′ zero (vs tt) β (proj₁ (Ωt H))
+  IH = V3w a o′ S′ (λ j u → cv j (inc tt u)) β (vs tt) (us′ tt)
+  e : WT.Eb (ordᴰ (cp a)) (read (proj₁ Rr))
+  e = proj₁ IH
+  c₁ : Tr H
+  c₁ = proj₁ (ψ H o′ S′ H self β′ (suc zero))
+  Gt : Tr H → Tr⁺ zero
+  Gt z = ψ H o′ S′ zero (vs tt) β (suc z)
+  Ω◃c₁ : H ⊢ proj₁ (Ωt H) ◃ c₁
+  Ω◃c₁ = le◃ (cv H (inc tt self)) (mono H o′ S′ H self β′ (◃s {x = zero}))
+  R◃ : zero ⊢ proj₁ Rr ◃ proj₁ (Gt c₁)
+  R◃ = ◃t (mono H o′ S′ zero (vs tt) β Ω◃c₁) (mono H o′ S′ zero (vs tt) β (◃s {x = c₁}))
+  β◃A : zero ⊢ proj₁ β ◃ proj₁ (Gt zero)
+  β◃A = mono H o′ S′ zero (vs tt) β (◃s {x = zero})
+  A : T₀
+  A = read (proj₁ (Gt zero))
+  e′ : WT.Eb (ordᴰ (cp a)) (A LV.+ read (proj₁ Rr))
+  e′ = record
+    { map = λ p → A LV.+ WT.map e p
+    ; below = λ p → add-≺ A (WT.below e p)
+    ; mono = λ p q r → add-≺ A (WT.mono e p q r)
+    ; coh = λ p q r → LV.add-≅ (LV.≅-refl⁰ A) (WT.coh e p q r) }
+  lt : (A LV.+ read (proj₁ Rr)) LV.≺ RV (suc a) o S β (inu vs)
+  lt = LV.≺l 1 (LV.≺-respʳ (add-≺ A (◃→≺ R◃)) (LV.≅-sym (read-+≅ (proj₁ (Gt zero)) (proj₁ (Gt c₁)))))
+  abS : ∀ {c} (p : c BT.< BT.suc (ordᴰ (cp a))) → read (proj₁ β) LV.≺ WT.map (WT.Eb-suc e′ (A LV.+ read (proj₁ Rr)) (λ h → h) lt) p
+  abS BT.zero    = add-left (◃→≺ β◃A) (read (proj₁ Rr))
+  abS (BT.suc p) = add-left (◃→≺ β◃A) (WT.map e p)
+V3w (lim f r) o S cv β (inu ws) (uu us′) = BL.Lim , abL
+  where
+  g : ℕ → L
+  g n = h₁ (f n)
+  ℓ : L
+  ℓ = nd sL g
+  Yc : ℕ → Tr ℓ
+  Yc = cum (λ n → proj₁ (upz {s = sL} {h = g} n (Ωt (g n))))
+  Tn : ℕ → Tr⁺ zero
+  Tn n = ψ ℓ o S zero (inu ws) β (Yc n)
+  Pn : ℕ → T₀
+  Pn n = read (proj₁ (Tn n))
+  zcum : ∀ n → ℓ ⊢ zero ◃ Yc n
+  zcum zero    = ◃u zero 0 (proj₁ (Ωt (g 0))) (proj₂ (Ωt (g 0)))
+  zcum (suc n) = ◃t (zcum n) (◃u (Yc n) (suc n) (proj₁ (Ωt (g (suc n)))) (proj₂ (Ωt (g (suc n)))))
+  S₀ : Base (g 0)
+  S₀ i u = S i (inc 0 u)
+  Sₛ : (n : ℕ) → Base (g (suc n))
+  Sₛ n i u = ψ ℓ o S i (inc (suc n) u) (S i (inc (suc n) u)) (Yc n)
+  cvₛ : ∀ n → Cov (Sₛ n)
+  cvₛ n j u = inj₂ (le◃ (cv j (inc (suc n) u)) (mono ℓ o S j (inc (suc n) u) (S j (inc (suc n) u)) (zcum n)))
+  IH₀ = V3w (f 0) (proj₂ o 0) S₀ (λ j u → cv j (inc 0 u)) β (ws 0) (us′ 0)
+  IHₛ : ∀ n → Σ (WT.Eb (ordᴰ (cp (f (suc n)))) (Pn (suc n))) (Abv (Pn n))
+  IHₛ n = V3w (f (suc n)) (proj₂ o (suc n)) (Sₛ n) (cvₛ n) (Tn n) (ws (suc n)) (us′ (suc n))
+  P≺ : ∀ n → Pn n LV.≺ Pn (suc n)
+  P≺ n = ◃→≺ (baseLt (g (suc n)) (proj₂ o (suc n)) (Sₛ n) zero (ws (suc n)) (Tn n))
+  Pβ : ∀ n → read (proj₁ β) LV.≺ Pn n
+  Pβ zero    = ◃→≺ (baseLt (g 0) (proj₂ o 0) S₀ zero (ws 0) β)
+  Pβ (suc n) = ≺→⊑₀ (P≺ n) (Pβ n)
+  O : ℕ → Ordᴰ
+  O n = ordᴰ (cp (f n))
+  Bd : ℕ → T₀
+  Bd zero    = Pn 0
+  Bd (suc n) = LV.suc (Pn (suc n))
+  e₀ : WT.Eb (O 0) (Bd 0)
+  e₀ = proj₁ IH₀
+  eN : ∀ n → WT.Eb (O (suc n)) (Pn (suc n))
+  eN n = proj₁ (IHₛ n)
+  N′ : ∀ n {d} → d BT.< BT.suc (O (suc n)) → T₀
+  N′ n BT.zero    = Pn (suc n)
+  N′ n (BT.suc p) = WT.map (eN n) p
+  Nb : ∀ n {d} (p : d BT.< BT.suc (O (suc n))) → N′ n p LV.≺ Bd (suc n)
+  Nb n BT.zero    = LV.≺z (LV.≅-refl⁰ (Pn (suc n)))
+  Nb n (BT.suc p) = LV.≺s (WT.below (eN n) p)
+  Nm : ∀ n {d₁ d₂} (p : d₁ BT.< BT.suc (O (suc n))) (q : d₂ BT.< BT.suc (O (suc n))) → d₁ BT.< d₂ → N′ n p LV.≺ N′ n q
+  Nm n BT.zero     BT.zero     x = ⊥-elim (<ᴰ-irrefl x)
+  Nm n BT.zero     (BT.suc q)  x = ⊥-elim (clash-lt x q)
+  Nm n (BT.suc p)  BT.zero     x = WT.below (eN n) p
+  Nm n (BT.suc p)  (BT.suc q)  x = WT.mono (eN n) p q x
+  Nc : ∀ n {d₁ d₂} (p : d₁ BT.< BT.suc (O (suc n))) (q : d₂ BT.< BT.suc (O (suc n))) → d₁ ≡ d₂ → N′ n p LV.≅ N′ n q
+  Nc n BT.zero     BT.zero     x    = LV.≅-refl⁰ _
+  Nc n BT.zero     (BT.suc q)  refl = ⊥-elim (<ᴰ-irrefl q)
+  Nc n (BT.suc p)  BT.zero     refl = ⊥-elim (<ᴰ-irrefl p)
+  Nc n (BT.suc p)  (BT.suc q)  x    = WT.coh (eN n) p q x
+  fl : ∀ n {x} → x LV.≺ Bd n → ∀ {d} (p : d BT.< BT.suc (O (suc n))) → x LV.≺ N′ n p
+  fl zero    h BT.zero     = ≺→⊑₀ (P≺ 0) h
+  fl zero    h (BT.suc p)  = ≺→⊑₀ (proj₂ (IHₛ 0) p) h
+  fl (suc n) h BT.zero     = lift≺ (P≺ (suc n)) h
+  fl (suc n) h (BT.suc p)  = lift≺ (proj₂ (IHₛ (suc n)) p) h
+  sp : ∀ n {x} → x LV.≺ Bd n → x LV.≺ LV.lim Pn
+  sp zero    h = LV.≺l 0 h
+  sp (suc n) h = LV.≺l (suc (suc n)) (lift≺ (P≺ (suc n)) h)
+  module BL = WT.Blk O Bd (LV.lim Pn) e₀ N′ Nb Nm Nc fl sp
+  b : T₀
+  b = read (proj₁ β)
+  abN : ∀ n {d} (p : d BT.< BT.suc (O (suc n))) → b LV.≺ N′ n p
+  abN n BT.zero     = Pβ (suc n)
+  abN n (BT.suc p)  = ≺→⊑₀ (proj₂ (IHₛ n) p) (Pβ n)
+  abD : ∀ n {c} (m₀ : ∀ {c′} → c′ BT.< BL.Σs n → T₀) → (∀ {c′} (q : c′ BT.< BL.Σs n) → b LV.≺ m₀ q) →
+        (i : Inv (BL.Σs n) (BT.suc (O (suc n))) c) → b LV.≺ BL.disp n m₀ i
+  abD n m₀ h (inl q)     = h q
+  abD n m₀ h (inr d x e) = abN n x
+  abE : ∀ n {c} (p : c BT.< BL.Σs n) → b LV.≺ WT.map (BL.En n) p
+  abE zero    p = proj₂ IH₀ p
+  abE (suc n) p = abD n (WT.map (BL.En n)) (abE n) (inv {BL.Σs n} {BT.suc (O (suc n))} p)
+  abL : ∀ {c} (p : c BT.< ordᴰ (cp (lim f r))) → b LV.≺ WT.map BL.Lim p
+  abL (BT.lim n p) = abE n p

@@ -1,0 +1,29 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module C3Shape where
+open import Data.Unit using (tt)
+open import Data.Maybe using (just; nothing)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (kp; Keep)
+
+-- 自身路径上一切槽位保留
+self-keep : ∀ ℓ (o : Ok ℓ) (p : Pos ℓ) → kp ℓ o p self ≡ just (p , (λ z → z) , refl)
+self-keep ℓ o p = refl
+
+-- 后继形状层号 (下标 λ+1) 上, 由 Ω 形状层号 a 的孩子侧搬来的槽位, 朝 a 的指定孩子 c′ 里的目标: 走链
+-- (K6 经后继层原样传上来; a 任意 Ω 形状层号, 不限 tw 1)
+sS-k6 : ∀ k h (o : Ok (nd sS (λ _ → nd (sΩ k) h))) c t c′ {j} (v : j ≤ h c′)
+  → kp (nd sS (λ _ → nd (sΩ k) h)) o (inj₂ (tt , inj₂ (inj₂ (c , t)))) (inc tt (inc c′ v)) ≡ nothing
+sS-k6 k h o c t c′ v = refl
+
+-- ℕ 极限形状同理 (目标经孩子 n, 槽位在孩子 n 里): 这里只核后继, 极限经 way 派发不是 refl
+
+-- 上折把孩子树的结点搬到孩子侧槽位 (一切层号)
+up-side : ∀ s h (c : Ch s) (b : Tr⁺ (nd s h)) (p : Pos (h c)) g
+  → proj₁ (Up (h c) (down stop c) b (Ω p g))
+  ≡ Ω (inj₂ (c , inj₂ p)) (λ z → proj₁ (Up (h c) (down stop c) b (g z)))
+up-side s h c b p g = refl

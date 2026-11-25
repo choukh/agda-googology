@@ -1,0 +1,177 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- (B) 的行引理 (路径不是 self 时 W4 一侧已展开的形式): rs (用加法相容), rΩ (保留与走链), re (用 OpStmt).
+module KBRows where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Maybe using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as I
+open I using (Ordᴵ; Ordᶜ; Simᴵ; _<ᴵ_; _≅_; _≅ᴵ_; _≺ᴵ_; via; add; into; out; <→◃; out-into;
+              lᵢ≅; ≅-trans; ≅-sym; ≅→R; tr⁻; tr⁻-≅; add-≅)
+open import OCF.BTBO using (injᵃ; injᵇ; injᶜ; module Ord-Ord)
+module O = Ord-Ord
+open import KPow
+open import KMir
+open import KRel
+open import KIface
+open import KBBase
+
+≡D : ∀ {j k} {A A′ : Ordᶜ k} {t : Tr j} → A ≡ A′ → Dom j A′ t → Dom j A t
+≡D refl d = d
+
+------------------------------------------------------------------------
+-- rs 行: Level 是 lim [0, Q, Q+Q, …], W4 是 lim [b, b+b, …].
+rowS : (m : L) (o : Ok m) (S : Base m) (j : L) (w : j ≤ m) (β : Tr⁺ j) (t₀ : Tr m) {kQ : Ordᴵ} (Q : Ordᶜ kQ)
+     → (∀ {k₂} {D₂ : Ordᶜ k₂} {t₂ : Tr j} → Dom j D₂ t₂ → ∀ {k₁} {D₁ : Ordᶜ k₁} {t₁ : Tr j} (τ : Simᴵ k₂ k₁)
+           → Dom j D₁ t₁ → Dom j (add D₁ τ D₂) (t₁ + t₂))
+     → Dom j Q (proj₁ (ψ m o S j w β t₀))
+     → Dom j (I.lim (O.iter (Q I.+_) I.zero)) (proj₁ (next⁺ (ψ m o S j w β t₀)))
+rowS m o S j w β t₀ Q addC dQ = rl go
+  where
+  b : Tr j
+  b = proj₁ (ψ m o S j w β t₀)
+  it : (n : ℕ) → Dom j (O.iter (Q I.+_) I.zero (suc n)) (iter (b +_) b n)
+  it zero    = dQ
+  it (suc n) = addC (it n) (λ q → q) dQ
+  go : (n : ℕ) → Dom j (O.iter (Q I.+_) I.zero n) (proj₁ (next⁺ (ψ m o S j w β t₀)))
+  go zero    = rz
+  go (suc n) = r◃ (it n) (◃l n)
+
+------------------------------------------------------------------------
+-- rΩ 行.
+brRefl : ∀ {k j′} {q : j′ <ᴵ k} {F : I.U j′ (<→◃ q) → Ordᶜ k} → I.limᵢ q F ≅ I.limᵢ q F
+       → (Y : Ordᶜ j′) → Y ≅ Y → F (into (<→◃ q) Y) ≅ F (into (<→◃ q) Y)
+brRefl {q = q} (lᵢ≅ e h) Y eY = h Y Y (≅→R (<→◃ q) eY)
+
+module ChainΩ (m : L) (st : IsS m) (o : Ok m) (S : Base m) {j : L} (w : j ≤ m) (β : Tr⁺ j)
+         {k j′ : Ordᴵ} (q : j′ <ᴵ k) (F : I.U j′ (<→◃ q) → Ordᶜ k) (p : Pos m) (g : Br m p → Tr m)
+         {kP jc : Ordᴵ} (P : Ordᶜ kP) (σ : Simᴵ k kP) (r : jc <ᴵ I.suc kP)
+         (mir : Mirror k m) (pre : Pre S β P r) (mp : Mirror j′ (at m p)) (eF : I.limᵢ q F ≅ I.limᵢ q F)
+         (IH : (Y : Ordᶜ j′) (z : Br m p) → SubD m p Y z → BFor m (F (into (<→◃ q) Y)) (g z)) where
+
+  Fp : I.U j′ (<→◃ (σ q)) → Ordᶜ kP
+  Fp y = add P σ (F (I.coe (<→◃ (σ q)) (<→◃ q) y))
+
+  γ : ℕ → Ordᶜ j′
+  γ = O.iter (λ x → I.ψ (σ q) (λ r → r) (Fp (into (<→◃ (σ q)) x))) (I.Ω j′)
+
+  sW : Br m p → Br m p
+  sW z = fromBr m p (proj₁ (ψ m o S (at m p) (posW m p) (S (at m p) (posW m p)) (g z)))
+
+  zW : ℕ → Br m p
+  zW = iter sW (fromBr m p zero)
+
+  pre₂ : Pre S (S (at m p) (posW m p)) P (I.suc (σ q))
+  pre₂ = record { mj = mp ; reP = reP pre ; real = real pre ; cov = cov pre ; base = real pre (posW m p) (I.suc (σ q)) mp }
+
+  -- 链对齐: Level 的第 n 个链点 ⊴ W4 的第 n+1 个链点.
+  chainSub : (n : ℕ) → SubD m p (γ n) (zW (suc n))
+  chainSub zero    = toSub m p (infl m o S (at m p) (posW m p) (S (at m p) (posW m p)) (g (fromBr m p zero)) (cov pre (posW m p) mp))
+  chainSub (suc n) = Sub-≅ m p eγ (toSub m p d)
+    where
+    d : Dom (at m p) (ψ̂ (I.suc (σ q)) (add P σ (F (into (<→◃ q) (γ n)))))
+                     (proj₁ (ψ m o S (at m p) (posW m p) (S (at m p) (posW m p)) (g (zW (suc n)))))
+    d = IH (γ n) (zW (suc n)) (chainSub n) st o S (posW m p) (S (at m p) (posW m p)) P σ (I.suc (σ q)) mir pre₂
+    eγ : γ (suc n) ≅ ψ̂ (I.suc (σ q)) (add P σ (F (into (<→◃ q) (γ n))))
+    eγ = ≡ˡ (cong (λ w′ → I.ψ (σ q) (λ r → r) (add P σ (F (into (<→◃ q) w′)))) (out-into (<→◃ (σ q)) (γ n)))
+            (I.ψ-≅ (I.≅ᴵ-refl j′) (add-≅ (reP pre) (brRefl eF (γ n) (Sub→refl m p (chainSub n)))))
+
+  Gs : ℕ → Tr j
+  Gs n = proj₁ (ψ m o S j w β (g (zW n)))
+
+  res : Dom j (I.lim (λ n → I.ψ r (λ q → I.suc q) (Fp (into (<→◃ (σ q)) (γ n)))))
+              (proj₁ (limc⁺ (λ n → ψ m o S j w β (g (zW n)))))
+  res = rl λ n → ≡D (cong (λ w′ → ψ̂ r (add P σ (F (into (<→◃ q) w′)))) (out-into (<→◃ (σ q)) (γ n)))
+                    (r◃ (cumInfl Gs (suc n) (IH (γ n) (zW (suc n)) (chainSub n) st o S w β P σ r mir pre)) (◃l (suc n)))
+
+rowΩ : (m : L) (st : IsS m) (o : Ok m) (S : Base m) {j : L} (w : j ≤ m) (β : Tr⁺ j)
+       {k j′ : Ordᴵ} {q : j′ <ᴵ k} {F : I.U j′ (<→◃ q) → Ordᶜ k} {p : Pos m} {g : Br m p → Tr m}
+       {kP jc : Ordᴵ} (P : Ordᶜ kP) (σ : Simᴵ k kP) (r : jc <ᴵ I.suc kP)
+     → Mirror k m → Pre S β P r → Mirror j′ (at m p) → I.limᵢ q F ≅ I.limᵢ q F
+     → ψ̂ r (add P σ (I.limᵢ q F)) ≅ ψ̂ r (add P σ (I.limᵢ q F))
+     → ((Y : Ordᶜ j′) (z : Br m p) → SubD m p Y z → BFor m (F (into (<→◃ q) Y)) (g z))
+     → Dom j (ψ̂ r (add P σ (I.limᵢ q F)))
+             (proj₁ (node⁺ (kp m o p w) (λ z → ψ m o S j w β (g z))
+                (λ z → fromBr m p (proj₁ (ψ m o S (at m p) (posW m p) (S (at m p) (posW m p)) (g z))))))
+rowΩ m st o S {j} w β {k} {j′} {q} {F} {p} {g} {kP} {jc} P σ r mir pre mp eF eL IH
+  with kp m o p w | K m st o p w | kdLem m o p w | I.<ᴵ-dec (I.suc (σ q)) r
+... | just (q′ , cv , _) | ag | (ea , sb) | injᵃ (via e₁ r₁) = rΩ mq eL br
+  where
+  mq : Mirror _ (at j q′)
+  mq = subst (Mirror _) (sym ea) (λ ia oa → I.≅ᴵ-trans (I.≅ᴵ-sym e₁) (mp ia oa))
+  br : (Y : Ordᶜ _) (z′ : Br j q′) → SubD j q′ Y z′
+     → Dom j (I.ψ r (λ q → I.suc q) (add P σ (F (I.coe (<→◃ (σ q)) (<→◃ q) (into (<→◃ (σ q)) (tr⁻ e₁ (out (<→◃ r₁) (into (<→◃ r₁) Y))))))))
+             (proj₁ (ψ m o S j w β (g (cv z′))))
+  br Y z′ s′ =
+    ≡D (trans (cong (λ w′ → ψ̂ r (add P σ (F (into (<→◃ q) (out (<→◃ (σ q)) (into (<→◃ (σ q)) (tr⁻ e₁ w′))))))) (out-into (<→◃ r₁) Y))
+              (cong (λ w′ → ψ̂ r (add P σ (F (into (<→◃ q) w′)))) (out-into (<→◃ (σ q)) (tr⁻ e₁ Y))))
+       (IH (tr⁻ e₁ Y) (cv z′) (Sub-≅ m p (tr⁻-≅ e₁ (Sub→refl j q′ s′)) (sb z′ s′)) st o S w β P σ r mir pre)
+... | just _ | ag | _ | injᵇ s₁ = ⊥-elim (I.≺ᴵ-irrefl (I.≺ᴵ-trans (ag ia oa ij oj) s′))
+  where
+  i₀ = IsS→IsN m st
+  ia = IsN-at m i₀ p
+  oa = Ok-at m o p
+  ij = IsN-path w i₀
+  oj = Ok-path w o
+  s′ = I.≺ᴵ-respˡ (I.≅ᴵ-sym (mj pre ij oj)) (I.≺ᴵ-respʳ s₁ (mp ia oa))
+... | just _ | ag | _ | injᶜ c₁ =
+  ⊥-elim (I.≺ᴵ-irrefl (I.≺ᴵ-respʳ (ag ia oa ij oj) (I.≅ᴵ-trans (I.≅ᴵ-sym (mj pre ij oj)) (I.≅ᴵ-trans (I.≅ᴵ-sym c₁) (mp ia oa)))))
+  where
+  i₀ = IsS→IsN m st
+  ia = IsN-at m i₀ p
+  oa = Ok-at m o p
+  ij = IsN-path w i₀
+  oj = Ok-path w o
+... | nothing | ag | _ | injᵃ (via e₁ r₁) = ⊥-elim (go (ag ia oa ij oj))
+  where
+  i₀ = IsS→IsN m st
+  ia = IsN-at m i₀ p
+  oa = Ok-at m o p
+  ij = IsN-path w i₀
+  oj = Ok-path w o
+  jA = I.≺ᴵ-respˡ (I.≅ᴵ-sym (mp ia oa)) (I.≺ᴵ-respʳ (via e₁ r₁) (mj pre ij oj))
+  go : (code j ij oj ≅ᴵ code (at m p) ia oa) ⊎ (code j ij oj ≺ᴵ code (at m p) ia oa) → ⊥
+  go (inj₁ e′) = I.≺ᴵ-irrefl (I.≺ᴵ-respʳ jA e′)
+  go (inj₂ r′) = I.≺ᴵ-irrefl (I.≺ᴵ-trans jA r′)
+... | nothing | ag | _ | injᵇ _ = ChainΩ.res m st o S w β q F p g P σ r mir pre mp eF IH
+... | nothing | ag | _ | injᶜ _ = ChainΩ.res m st o S w β q F p g P σ r mir pre mp eF IH
+
+------------------------------------------------------------------------
+-- re 行: 对 u 用 (B) 得状态, 对 v 的 (B) 包成 RealOp, 交给 OpStmt.
+rowE : (opS : (m : L) → OpStmt m) (m : L) (st : IsS m) (o : Ok m) (S : Base m) {j : L} (w : j ≤ m) (β : Tr⁺ j)
+       {k : Ordᴵ} {A A₀ V X : Ordᶜ k} {a v x : Tr m} {nb : m ⊢ zero ◃ v}
+       {kP jc : Ordᴵ} (P : Ordᶜ kP) (σ : Simᴵ k kP) (r : jc <ᴵ I.suc kP)
+     → Mirror k m → Pre S β P r
+     → Dom m A₀ a → BFor m A₀ a → Dom m V v → BFor m V v → Dom m X x
+     → A ≅ add A₀ (λ q → q) (pwb V (λ q → q) X)
+     → Dom j (ψ̂ r (add P σ A)) (proj₁ (E o tdNil x (opB m o v nb) (λ i u → ψ m o S i u (S i u) a) j w (ψ m o S j w β a)))
+rowE opS m st o S {j} w β {k} {A} {A₀} {V} {X} {a} {v} {x} {nb} {kP} {jc} P σ r mir pre d₀ ih₀ dv ihv dx eA =
+  r≅ eL (opS m st o mir (Dom→refl dv) rOp dx S′ w β′ (add P σ A₀) σ r pre′)
+  where
+  S′ : Base m
+  S′ i u = ψ m o S i u (S i u) a
+  β′ : Tr⁺ j
+  β′ = ψ m o S j w β a
+  rOp : RealOp m o v nb V
+  rOp S″ w″ β″ P″ σ″ r″ pre″ = ihv st o S″ w″ β″ P″ σ″ r″ mir pre″
+  pre′ : Pre S′ β′ (add P σ A₀) r
+  pre′ = record
+    { mj   = mj pre
+    ; reP  = add-≅ (reP pre) (Dom→refl d₀)
+    ; real = λ u r′ mi → ih₀ st o S u (S _ u) P σ r′ mir
+                (record { mj = mi ; reP = reP pre ; real = real pre ; cov = cov pre ; base = real pre u r′ mi })
+    ; cov  = λ u mi → infl m o S _ u (S _ u) a (cov pre u mi)
+    ; base = ih₀ st o S w β P σ r mir pre
+    }
+  eL : ψ̂ r (add P σ A) ≅ ψ̂ r (add (add P σ A₀) σ (pwb V (λ q → q) X))
+  eL = I.ψ-≅ (I.≅ᴵ-refl jc) (≅-trans (add-≅ (reP pre) eA)
+         (add-assoc P σ A₀ (λ q → q) (pwb V (λ q → q) X) (reP pre) (Dom→refl d₀) (pwb-≅ (Dom→refl dv) (Dom→refl dx))))

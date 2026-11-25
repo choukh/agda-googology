@@ -1,0 +1,87 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 可数指数作用在前缀变换上；相异指数下仍把二层前缀送入一级保留节点的描述域。
+module B16OrbitAction where
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+open import WSShadow using (lC; nC; Infl-nC; LeE; LeE-refl; LeE-trans)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-trans)
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+import WSLevel as W
+import B12LimitRef as A
+import B14RefDescribed as D
+import B15OrbitAction as P
+open P using (Act; f; s; hp; he; infl; rows; pres; raise)
+open import B16OrbitTransform using (height; sup)
+
+Bridge : Act → Act → Set
+Bridge a b = ∀ {p e} → A.Described p e → A.Described (f a p) (s b e)
+Same : Act → Act → Set
+Same a b = ∀ {p q} → p L.≅ q → f a p L.≅ f b q
+
+raised : ∀ {a b} → Bridge a b → Bridge (raise a) (raise b)
+raised {a} {b} bridge {p} {e} r = A.described (P.infl (raise b) e (A.Described.infl r))
+  (W.Li (λ y y′ d → A.Described.bd (cross (≼-trans (W.tr⁻≼ y) d) r)))
+  (W.Ew (W.Ei (λ y y′ d → A.Described.bx (cross (≼-trans (W.tr⁻≼ y) d) r))) (LeE-refl _))
+  where
+  cross : ∀ {x y : T₀} → x ≼ y → ∀ {u v} → A.Described u v → A.Described (hp a x u) (he b y v)
+  cross {y = y} z≼ {v = v} d = D.weaken (bridge d) (P.floor b y v) (P.ih b y v (A.Described.infl d))
+  cross {L.suc x} {L.suc y} (s≼s q) {u} {v} d = A.limit (Ord.iter (hp a x) u) (iter (he b y) v) (D.iterate (cross q) d)
+  cross {y = L.lim g} (≼l n q) {v = v} d = D.weaken (cross q d) (W.lC-ub (λ j → he b (g j) v) n) (P.ih b (L.lim g) v (A.Described.infl d))
+  cross {L.lim g} {y} (l≼ q) {u} {v} d = D.weaken (A.limit (λ j → hp a (g j) u) (λ _ → he b y v) (λ j → cross (q j) d)) (W.lC-const (he b y v)) (P.ih b y v (A.Described.infl d))
+  cross (≼i {p = ()} _ _ _)
+  cross (i≼ {p = ()} _)
+  cross (≼u {r = ()} _)
+  cross (u≼ {r = ()} _)
+
+raised-same : ∀ {a b} → Same a b → Same (raise a) (raise b)
+raised-same {a} {b} same q = L.lᵢ≅ L.z≅ λ y z r → cross r q
+  where
+  cross : ∀ {x y : T₀} → x L.≅ y → ∀ {p q} → p L.≅ q → hp a x p L.≅ hp b y q
+  cross L.z≅ = same
+  cross {L.suc x} {L.suc y} (L.s≅ d) r = L.l≅ (L.iter-R L._≅_ {G = hp a x} {G′ = hp b y} (cross d) r)
+  cross (L.l≅ d) r = L.l≅ (λ n → cross (d n) r)
+  cross (L.lᵢ≅ {p = ()} d g)
+  cross (L.upˡ {r = ()} g)
+  cross (L.upʳ {r = ()} g)
+
+iter-rel : (Rel : Act → Act → Set) (F G : Act → Act) → (∀ a b → Rel a b → Rel (F a) (G b)) →
+           ∀ a b → Rel a b → ∀ n → Rel (iter F a n) (iter G b n)
+iter-rel Rel F G step a b d zero = d
+iter-rel Rel F G step a b d (suc n) = step _ _ (iter-rel Rel F G step a b d n)
+
+hh = λ y → height y raise
+floor : ∀ y b e → LeE (s (raise b) e) (s (hh y b) e)
+floor L.zero b e = LeE-refl _
+floor (L.suc y) b e = LeE-trans (floor y b e) (W.lC-ub (λ n → s (iter (hh y) b n) e) 1)
+floor (L.lim g) b e = LeE-trans (floor (g 0) b e) (W.lC-ub (λ n → s (hh (g n) b) e) 0)
+
+height-bridge : ∀ {x y : T₀} → x ≼ y → ∀ a b → Bridge a b → Bridge (hh x a) (hh y b)
+height-bridge {y = y} z≼ a b r {e = e} d = D.weaken (raised {a} {b} r d) (floor y b e) (infl (hh y b) e (A.Described.infl d))
+height-bridge {L.suc x} {L.suc y} (s≼s rr) a b r {p} {e} d =
+  A.limit (λ n → f (iter (hh x) a n) p) (λ n → s (iter (hh y) b n) e) (λ n → iter-rel Bridge (hh x) (hh y) (height-bridge rr) a b r n d)
+height-bridge {y = L.lim g} (≼l n rr) a b r {e = e} d = D.weaken (height-bridge rr a b r d) (W.lC-ub (λ j → s (hh (g j) b) e) n) (infl (hh (L.lim g) b) e (A.Described.infl d))
+height-bridge {L.lim g} {y} (l≼ rr) a b r {p} {e} d = D.weaken (A.limit (λ n → f (hh (g n) a) p) (λ _ → s (hh y b) e) (λ n → height-bridge (rr n) a b r d)) (W.lC-const (s (hh y b) e)) (infl (hh y b) e (A.Described.infl d))
+height-bridge (≼i {p = ()} _ _ _)
+height-bridge (i≼ {p = ()} _)
+height-bridge (≼u {r = ()} _)
+height-bridge (u≼ {r = ()} _)
+
+height-same : ∀ {x y : T₀} → x L.≅ y → ∀ a b → Same a b → Same (hh x a) (hh y b)
+height-same L.z≅ a b = raised-same {a} {b}
+height-same {L.suc x} {L.suc y} (L.s≅ d) a b r rel = L.l≅ (λ n → iter-rel Same (hh x) (hh y) (height-same d) a b r n rel)
+height-same (L.l≅ q) a b r rel = L.l≅ (λ n → height-same (q n) a b r rel)
+height-same (L.lᵢ≅ {p = ()} _ _)
+height-same (L.upˡ {r = ()} _)
+height-same (L.upʳ {r = ()} _)
+
+higher : Act → Act
+f (higher a) p = L.limᵢ (L.suc L.zero) (λ y → f (hh y a) p)
+s (higher a) e = nC (λ y → s (hh y a) e)
+rows (higher a) {e = e} d = A.described (Infl-nC (λ y → s (hh y a) e) (infl (hh (L.suc L.zero) a) e (A.Described.infl d)))
+  (W.Li (λ y y′ u → A.Described.bd (height-bridge (≼-trans (W.tr⁻≼ y) u) a a (rows a) d)))
+  (W.Ew (W.Ei (λ y y′ u → A.Described.bx (height-bridge (≼-trans (W.tr⁻≼ y) u) a a (rows a) d))) (LeE-refl _))
+infl (higher a) e ie = Infl-nC (λ y → s (hh y a) e) (infl (hh (L.suc L.zero) a) e ie)
+pres (higher a) q = L.lᵢ≅ L.z≅ (λ y z r → height-same r a a (pres a) q)

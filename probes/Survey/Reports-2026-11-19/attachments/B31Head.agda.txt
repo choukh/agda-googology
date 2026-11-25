@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 后继层的全部单位成本由同一个真实子槽的迭代询问给界，子层可以为零。
+module B31Head where
+open import Data.Nat.Base using (ℕ)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Unit.Base using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym; cong)
+import W4Block as W
+import W4Path as H
+import W4Fold as F
+import W4Ops as O
+import WKGen as G
+open import WVOne using (read; T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼)
+import B12Terminal as T
+import B13FiniteLift as S
+import B17CellPrefix as Look
+import B18Product as M
+import B26CScalar as Rep
+import B28BValues as Series
+import B31UProduct as Prod
+open T.Run
+
+after : ∀ k (o : H.Ok k) (B : F.Base k) β z →
+  F.ψ k o B W.zero (H.z≤ k) β (W.suc z) ≡ O.next⁺ (F.ψ k o B W.zero (H.z≤ k) β z)
+after W.zero o B β z = refl
+after (W.nd s h) o B β z = refl
+
+module Cell (k : W.L) (r : T.Run (S.sc k)) where
+  o = proj₂ (ok r) tt
+  B : F.Base k
+  B i w = bs r i (W.inc tt w)
+  slot = B k W.self
+  step : W.Tr k → W.Tr k
+  step z = proj₁ (F.ψ k o B k W.self slot (W.suc z))
+  state = W.iter step W.zero
+  probe = λ n → F.ψ k o B W.zero (H.z≤ k) (O.Ωt W.zero) (state n)
+  leaf = λ n → read (proj₁ (probe n))
+  root = S.sc k
+  p : W.Pos root
+  p = inj₂ (tt , inj₁ tt)
+  call = λ z → F.ψ root (ok r) (bs r) W.zero (H.z≤ root) (O.Ωt W.zero)
+    (W.up W.zero tt (W.suc z) (O.z◃ z W.◃s))
+  raw = λ n → proj₁ (call (state n))
+  term = λ n → read (raw n)
+  bumped : ∀ n → term n ≡ read (proj₁ (O.next⁺ (probe n)))
+  bumped n = cong (λ v → read (proj₁ v)) (after k o B (O.Ωt W.zero) (state n))
+  into : ∀ n → leaf n ≼ Prod.fold₁ r
+  into n = ≼-trans {b = term n}
+    (subst (leaf n ≼_) (sym (bumped n)) (≼l 0 (≼-refl _)))
+    (G.node-ge (F.kp root (ok r) p (H.z≤ root)) call step n)
+  shape : Prod.fold₁ r ≡ L.lim (λ n → read (O.cum raw n))
+  shape = Look.lookup (F.kp root (ok r) p (H.z≤ root)) call step
+  module Sum = Series.Series raw term (λ n → refl)
+  module Whole = Sum.Whole (Prod.fold₁ r) shape
+  cap : ∀ q → (∀ n → leaf n ≼ q) → Prod.fold₁ r ≼ ((q M.· L.ωᶜ) M.· L.ωᶜ)
+  cap q h = Whole.cap (q M.· L.ωᶜ) λ n → subst (_≼ (q M.· L.ωᶜ)) (sym (bumped n))
+    (≼-trans {b = leaf n M.· L.ωᶜ} (proj₁ (Rep.repeat (probe n))) (M.mono (h n) (≼-refl L.ωᶜ)))

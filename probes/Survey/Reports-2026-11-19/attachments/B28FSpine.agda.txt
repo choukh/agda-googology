@@ -1,0 +1,48 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 保持实际首深度，仅最底行要数份数，向上每层一次 Ω 已经严格覆盖该层的一切后缀。
+module B28FSpine where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+import B17Cofinal as Height
+import B26CForest as F
+import B26OSparse as S
+import B28FHead as H
+
+tower : ℕ → T → T
+tower zero a = a
+tower (suc k) a = S.card (tower k a)
+
+width : ℕ → T
+width n = H.copies [] (suc n)
+ladder : ℕ → ℕ → T
+ladder k n = tower k (width n)
+
+pure : ∀ k n → F.Pure (ladder k n)
+pure zero n = H.pure-copies F.empty (suc n)
+pure (suc k) n = F.node (pure k n) F.empty
+
+normal : ∀ k n → NF (ladder k n)
+normal zero n = nf-rep (nψ n[] n[] GB[]) (suc n)
+normal (suc k) n = nf-Ω (normal k n)
+
+height : ∀ k n → Height.depth (ladder k n) ≡ suc k
+height zero n = refl
+height (suc k) n = cong suc (height k n)
+
+major : ∀ {a t} → F.Pure a → NF (ψ a [] ∷ t) → Σ ℕ (λ n → (ψ a [] ∷ t) <ᵀ ladder (Height.depth a) n)
+major {t = t} F.empty nt with H.strip (ψ [] []) t (nf-le nt) (nf-tl nt)
+... | n , tail = suc n , tl< tail
+major (F.node b bs) nt with major b (nfp-u (nf-hd nt))
+... | n , hi = n , hd< (lv< hi)
+
+-- 全域只用底宽 2，允许多一层。下面两项还给固定高度内每个底宽的严格比较。
+width-below : ∀ m → width m <ᵀ S.card (width 1)
+width-below m = hd< (lv< []<)
+promote : ∀ k m → ladder k m <ᵀ ladder (suc k) 1
+promote zero m = width-below m
+promote (suc k) m = hd< (lv< (promote k m))
+

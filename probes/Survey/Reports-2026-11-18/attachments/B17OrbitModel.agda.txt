@@ -1,0 +1,105 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 零阶操作、一级自然变换和二级自然变换共有的实现接口。一级显式初值与环境状态可独立选。
+module B17OrbitModel where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans)
+open import W4Block hiding (D)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (◃→≼)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+open import WKGen using (Ω₁t)
+open import B8PairW4 using (Real-up)
+open import OCF.Align.Value using (≼-trans; _≼_; ≼-suc)
+import OCF.Align.Level as L
+import B12Update as U
+import B12LimitRef as A
+import B13OrbitFeed as O
+import B14OrbitReal as W
+import B15OrbitAction as P
+import B15OrbitModel as M
+import B16OrbitNode as N
+import B16OrbitEnv as E
+import B16OrbitIt as I
+import B16OrbitWide as V
+import B16OrbitWideEnv as E′
+import B16OrbitWideIt as I′
+import B16OrbitAction
+import B16OrbitTransform as H
+open import B17OrbitOperator as H₁ using (Trans; app)
+
+Both : ∀ {X : Cx lvl2} (m : Mor M.X₁ X) → Op X → P.Act → Set
+Both m Q a = M.At.Models m Q a × V.At.Wide m Q a
+
+good : ∀ {X Y Z : Cx lvl2} (f : Mor X Y) (g : Mor Y Z) → N.Left f → N.Left g → N.Left (g ⊙ f)
+good f g rf rg t = trans (cong (π f) (rg (σ f t))) (rf t)
+
+One : ∀ {X : Cx lvl2} (m : Mor M.X₁ X) → Ca 1 X → Trans → Set
+One {X} m K F = ∀ {Y : Cx lvl2} (u : Mor X Y) → N.Left u → ∀ Q a → Both (u ⊙ m) Q a → Both (u ⊙ m) (proj₁ K u Q) (app F a)
+Two : ∀ {X : Cx lvl2} (m : Mor M.X₁ X) → Ca 2 X → (Trans → Trans) → Set
+Two {X} m K F = ∀ {Y : Cx lvl2} (u : Mor X Y) → N.Left u → ∀ Q a → One (u ⊙ m) Q a → One (u ⊙ m) (proj₁ K u Q) (F a)
+
+module At {X : Cx lvl2} (m : Mor M.X₁ X) where
+  module N₀ = M.At m
+  module V₀ = V.At m
+  lift₀ : ∀ Q Q′ → Rl Q Q′ → ∀ a → Both m Q a → Both m Q′ a
+  lift₀ Q Q′ r a h = N₀.lift-law {Q = Q} {Q′ = Q′} r (proj₁ h) , V₀.lift {Q = Q} {Q′ = Q′} r (proj₂ h)
+  sup₀ : ∀ Q h → (∀ n → Both m Q (h n)) → Both m Q (H.sup h)
+  sup₀ Q h hyp = N₀.sup Q (λ n → P.f (h n)) (λ n → P.s (h n)) (λ n → proj₁ (hyp n)) ,
+                        V₀.sup Q (λ n → P.s (h n)) (λ n → proj₂ (hyp n))
+  lift₁ : ∀ K K′ → Rn 1 K K′ → ∀ F → One m K F → One m K′ F
+  lift₁ K K′ r F h u ru Q a qa = let module B = M.At (u ⊙ m); module C = V.At (u ⊙ m); t = h u ru Q a qa
+                                    in B.lift-law {Q = proj₁ K u Q} {Q′ = proj₁ K′ u Q} (r u Q) (proj₁ t) ,
+                                       C.lift {Q = proj₁ K u Q} {Q′ = proj₁ K′ u Q} (r u Q) (proj₂ t)
+  sup₁ : ∀ K h → (∀ n → One m K (h n)) → One m K (H₁.supT h)
+  sup₁ K h t u ru Q a qa =
+     M.At.sup (u ⊙ m) (proj₁ K u Q) (λ n → P.f (app (h n) a)) (λ n → P.s (app (h n) a)) (λ n → proj₁ (t n u ru Q a qa)) ,
+     V.At.sup (u ⊙ m) (proj₁ K u Q) (λ n → P.s (app (h n) a)) (λ n → proj₂ (t n u ru Q a qa))
+  enter₁ : ∀ {Y : Cx lvl2} (u : Mor X Y) → N.Left u → ∀ K a → One m K a → One (u ⊙ m) (enter 1 u K) a
+  enter₁ u ru K a h v rv = h (v ⊙ u) (good u v ru rv)
+  enter₂ : ∀ {Y : Cx lvl2} (u : Mor X Y) → N.Left u → ∀ K a → Two m K a → Two (u ⊙ m) (enter 2 u K) a
+  enter₂ u ru K a h v rv = h (v ⊙ u) (good u v ru rv)
+
+module Frame {X : Cx lvl2} (m : Mor M.X₁ X) (ret : N.Left m) where
+  module Common = At m
+  module Old = N.Frame m ret
+  module Uf = E.Frame m ret
+  module Vf = E′.Frame m ret
+  module Out = M.At m
+  module Wout = V.At m
+  open Old using (D)
+  w = down (fr D) tt
+  φ = chMT D tt
+  dm = φ ⊙ m
+  module In = M.At dm
+  module Win = V.At dm
+  upward : ∀ G a → Both m G a → Both dm (enterO φ G) a
+  upward G a h = Uf.enter-law G a (proj₁ h) , Vf.enter-law G a (proj₂ h)
+
+  leave : ∀ A₀ R a → Both dm R a → Both m (upC 0 w (λ t → proj₁ (σ φ t)) A₀ R) a
+  leave A₀ R a h = us , wd
+    where
+    Q = upC 0 w (λ t → proj₁ (σ φ t)) A₀ R
+    wd : Wout.Wide Q a
+    wd e S ie hs v re ro = proj₂ h e (λ j u → S j (proj₂ u)) ie hs (run A₀ S lvl1 Out.slot v) (Real-up t re) (Real-up t ro)
+      where t = inf A₀ S lvl1 Out.slot v
+    us : Out.Models Q a
+    us t p e d rr S v i = Out.packed (U.seeds (val t v (U.value-bound seed)) (val Out.zp (S zero Out.zp) (U.slot-bound seed))
+          (Wout.canonical Q (P.s a) wd e S (A.Described.infl d) (U.structure seed))) (val Out.ip (S zero Out.ip) (Out.inner i))
+      where
+      seed = Out.seed i
+      S₀ : St (cons w X)
+      S₀ j u = S j (proj₂ u)
+      val = λ t′ v′ hv → U.value-bound (In.seed (proj₁ h (σ φ t′) p e d rr S₀ (run A₀ S zero t′ v′)
+             (In.packed (U.seeds (≼-trans hv (◃→≼ (inf A₀ S zero t′ v′))) (U.slot-bound seed) (U.structure seed)) (Out.inner i))))
+
+  node : ∀ G h (rg : ∀ {x y} → x ≼ y → B16OrbitAction.Bridge (h x) (h y)) (qg : ∀ {x y} → x L.≅ y → B16OrbitAction.Same (h x) (h y)) → (∀ y z → y ≼ read (suc z) → Both m (G z) (h y)) →
+    Both m (nodeC 0 p₁ Old.jd Old.ch G) (H₁.node h rg qg)
+  node G h rg qg pieces = Acc.aggregate , wd
+    where
+    module Acc = Old.Rule G h (λ y z low → proj₁ (pieces y z low))
+    wd : Wout.Wide Acc.Xnode (H₁.node h rg qg)
+    wd e S ie hs v re ro rewrite Old.kept = W.real-node _ _ (λ y z low → proj₂ (pieces y z (≼-suc low)) e S ie hs v re ro)

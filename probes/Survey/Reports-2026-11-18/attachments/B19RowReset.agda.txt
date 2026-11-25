@@ -1,0 +1,29 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19RowReset where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Data.Empty using (⊥)
+open import WSLevel using (Ω₁ᴸ)
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼l; ≼-refl; ≼-trans; s≼s; ≅→≼)
+open import B8FreezeMain using (irr)
+import B14RefGain as G
+import B19RowSingle as S
+
+head : ℕ → T₀
+head m = proj₁ (S.both m Ω₁ᴸ)
+reset : ℕ → T₀
+reset m = L.lim (λ _ → head m)
+below : ∀ m → reset m ≼ S.whole m
+below m = l≼ (λ _ → ≼l 0 (≼-refl (head m)))
+
+next : L.suc (head 0) ≼ proj₁ (S.both 0 (S.index 0 1))
+next = ≼-trans (s≼s (≅→≼ (S.point 0 0))) (≼-trans G.strict
+  (≼-trans G.inside-second (≅→≼ (L.≅-sym (S.point 0 1)))))
+
+strict : L.suc (reset 0) ≼ S.whole 0
+strict = ≼-trans (s≼s (l≼ (λ _ → ≼-refl (head 0)))) (≼l 1 next)
+
+impossible : S.whole 0 ≼ reset 0 → ⊥
+impossible h = irr (reset 0) (≼-trans strict h)

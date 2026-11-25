@@ -1,0 +1,226 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第十三次审查的临时试验: 空白页的块上 "目标在基底里" 的折叠 φ.
+-- 层号写成 a ⊕ b; 目标 j ≤ a. up x c y 一律交给孩子 (a ⊕ b′), 不看 c.
+module R13Base where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+open import OCF.Lean.YiFreshBlock
+open import OCF.Lean.YiFreshFold
+open import OCF.Lean.YiFreshLegal
+
+-- 基底目标上的底: 偏移对每个 j ≤ a 的折叠.
+Bt : L → Set
+Bt a = (j : L) → j ≤ a → Tr j
+
+φ : (a b : L) → Base (a ⊕ b) → Bt a → {j : L} → j ≤ a → Tr (a ⊕ b) → Tr j
+φ a zero B β {j} w t = ψs a (base (b⊥ B) β) j w t
+-- b = suc b
+φ a (suc b) B β {j} w zero = β j w
+φ a (suc b) B β w (suc x) = next (φ a (suc b) B β w x)
+φ a (suc b) B β w (lim f) = lim (λ n → φ a (suc b) B β w (f n))
+φ a (suc b) B β w (Ω p g) =
+  lim (cum (λ n → φ a (suc b) B β w (g (iter step (fromBr (suc (a ⊕ b)) p zero) n))))
+  where
+  step : Br (suc (a ⊕ b)) p → Br (suc (a ⊕ b)) p
+  step z = fromBr (suc (a ⊕ b)) p
+    (ψs (suc (a ⊕ b)) B (at (suc (a ⊕ b)) p) (posW (suc (a ⊕ b)) p) (g z))
+φ a (suc b) B β w (up x _ y) =
+  φ a b (dS (a ⊕ b) B x) (λ j′ w′ → φ a (suc b) B β w′ x) w y
+-- b = lim g
+φ a (lim g) B β {j} w zero = β j w
+φ a (lim g) B β w (suc x) = next (φ a (lim g) B β w x)
+φ a (lim g) B β w (lim f) = lim (λ n → φ a (lim g) B β w (f n))
+φ a (lim g) B β w (Ω p h) =
+  lim (cum (λ n → φ a (lim g) B β w (h (iter step (fromBr (lim (λ n → a ⊕ g n)) p zero) n))))
+  where
+  step : Br (lim (λ n → a ⊕ g n)) p → Br (lim (λ n → a ⊕ g n)) p
+  step z = fromBr (lim (λ n → a ⊕ g n)) p
+    (ψs (lim (λ n → a ⊕ g n)) B (at (lim (λ n → a ⊕ g n)) p) (posW (lim (λ n → a ⊕ g n)) p) (h z))
+φ a (lim g) B β w (up x n y) =
+  φ a (g n) (dL (λ n → a ⊕ g n) B n x) (λ j′ w′ → φ a (lim g) B β w′ x) w y
+-- b = Ωₗ k h: 孩子 c 的层号是 a ⊕ h c, 对一切 c 都交给孩子, 不比较 c.
+φ a (Ωₗ k h) B β {j} w zero = β j w
+φ a (Ωₗ k h) B β w (suc x) = next (φ a (Ωₗ k h) B β w x)
+φ a (Ωₗ k h) B β w (lim f) = lim (λ n → φ a (Ωₗ k h) B β w (f n))
+φ a (Ωₗ k h) B β w (Ω p g) =
+  lim (cum (λ n → φ a (Ωₗ k h) B β w (g (iter step (fromBr (Ωₗ k (λ c → a ⊕ h c)) p zero) n))))
+  where
+  step : Br (Ωₗ k (λ c → a ⊕ h c)) p → Br (Ωₗ k (λ c → a ⊕ h c)) p
+  step z = fromBr (Ωₗ k (λ c → a ⊕ h c)) p
+    (ψs (Ωₗ k (λ c → a ⊕ h c)) B (at (Ωₗ k (λ c → a ⊕ h c)) p) (posW (Ωₗ k (λ c → a ⊕ h c)) p) (g z))
+φ a (Ωₗ k h) B β w (up x c y) =
+  φ a (h c) (dW k (λ c → a ⊕ h c) B c x) (λ j′ w′ → φ a (Ωₗ k h) B β w′ x) w y
+
+-- 嵌入一致 (基底目标), 对三种孩子都是 refl; Ωₗ 的分支 c 是变量.
+J2φ-suc : ∀ a b B β {j} (w : j ≤ a) x y →
+  φ a (suc b) B β w (up x tt y) ≡ φ a b (dS (a ⊕ b) B x) (λ j′ w′ → φ a (suc b) B β w′ x) w y
+J2φ-suc a b B β w x y = refl
+
+J2φ-lim : ∀ a g B β {j} (w : j ≤ a) x n y →
+  φ a (lim g) B β w (up x n y) ≡ φ a (g n) (dL (λ n → a ⊕ g n) B n x) (λ j′ w′ → φ a (lim g) B β w′ x) w y
+J2φ-lim a g B β w x n y = refl
+
+J2φ-Ω : ∀ a k h B β {j} (w : j ≤ a) x (c : Tr k) y →
+  φ a (Ωₗ k h) B β w (up x c y) ≡ φ a (h c) (dW k (λ c → a ⊕ h c) B c x) (λ j′ w′ → φ a (Ωₗ k h) B β w′ x) w y
+J2φ-Ω a k h B β w x c y = refl
+
+φ-zero : ∀ a b B β {j} (w : j ≤ a) → φ a b B β w zero ≡ β j w
+φ-zero a zero B β w = refl
+φ-zero a (suc b) B β w = refl
+φ-zero a (lim g) B β w = refl
+φ-zero a (Ωₗ k h) B β w = refl
+
+-- 单调, 无前提.
+monoφ : (a b : L) (B : Base (a ⊕ b)) (β : Bt a) {j : L} (w : j ≤ a) {x y : Tr (a ⊕ b)}
+  → (a ⊕ b) ⊢ x ◃ y → j ⊢ φ a b B β w x ◃ φ a b B β w y
+monoφ a zero B β w d = monos a (base (b⊥ B) β) _ w d
+monoφ a (suc b) B β w ◃s = ◃l zero
+monoφ a (suc b) B β w (◃l n) = ◃l n
+monoφ a (suc b) B β w ◃w = ◃l zero
+monoφ a (suc b) B β {j} w (◃u {x = x} {y = y} zy) =
+  subst (λ t → j ⊢ t ◃ φ a b (dS (a ⊕ b) B x) (λ j′ w′ → φ a (suc b) B β w′ x) w y)
+    (φ-zero a b (dS (a ⊕ b) B x) (λ j′ w′ → φ a (suc b) B β w′ x) w)
+    (monoφ a b (dS (a ⊕ b) B x) (λ j′ w′ → φ a (suc b) B β w′ x) w zy)
+monoφ a (suc b) B β w (◃c {x = x} d) =
+  monoφ a b (dS (a ⊕ b) B x) (λ j′ w′ → φ a (suc b) B β w′ x) w d
+monoφ a (suc b) B β w (◃t d e) = ◃t (monoφ a (suc b) B β w d) (monoφ a (suc b) B β w e)
+monoφ a (lim g) B β w ◃s = ◃l zero
+monoφ a (lim g) B β w (◃l n) = ◃l n
+monoφ a (lim g) B β w ◃w = ◃l zero
+monoφ a (lim g) B β {j} w (◃u {x = x} {c = n} {y = y} zy) =
+  subst (λ t → j ⊢ t ◃ φ a (g n) (dL (λ n → a ⊕ g n) B n x) (λ j′ w′ → φ a (lim g) B β w′ x) w y)
+    (φ-zero a (g n) (dL (λ n → a ⊕ g n) B n x) (λ j′ w′ → φ a (lim g) B β w′ x) w)
+    (monoφ a (g n) (dL (λ n → a ⊕ g n) B n x) (λ j′ w′ → φ a (lim g) B β w′ x) w zy)
+monoφ a (lim g) B β w (◃c {x = x} {c = n} d) =
+  monoφ a (g n) (dL (λ n → a ⊕ g n) B n x) (λ j′ w′ → φ a (lim g) B β w′ x) w d
+monoφ a (lim g) B β w (◃t d e) = ◃t (monoφ a (lim g) B β w d) (monoφ a (lim g) B β w e)
+monoφ a (Ωₗ k h) B β w ◃s = ◃l zero
+monoφ a (Ωₗ k h) B β w (◃l n) = ◃l n
+monoφ a (Ωₗ k h) B β w ◃w = ◃l zero
+monoφ a (Ωₗ k h) B β {j} w (◃u {x = x} {c = c} {y = y} zy) =
+  subst (λ t → j ⊢ t ◃ φ a (h c) (dW k (λ c → a ⊕ h c) B c x) (λ j′ w′ → φ a (Ωₗ k h) B β w′ x) w y)
+    (φ-zero a (h c) (dW k (λ c → a ⊕ h c) B c x) (λ j′ w′ → φ a (Ωₗ k h) B β w′ x) w)
+    (monoφ a (h c) (dW k (λ c → a ⊕ h c) B c x) (λ j′ w′ → φ a (Ωₗ k h) B β w′ x) w zy)
+monoφ a (Ωₗ k h) B β w (◃c {x = x} {c = c} d) =
+  monoφ a (h c) (dW k (λ c → a ⊕ h c) B c x) (λ j′ w′ → φ a (Ωₗ k h) B β w′ x) w d
+monoφ a (Ωₗ k h) B β w (◃t d e) = ◃t (monoφ a (Ωₗ k h) B β w d) (monoφ a (Ωₗ k h) B β w e)
+
+-- 保持 "合法且非零" (底合法且非零).
+LegBt : (a : L) → Bt a → Set
+LegBt a β = (j : L) (w : j ≤ a) → LN j (β j w)
+
+pressφ : (a b : L) (B : Base (a ⊕ b)) → LegB (a ⊕ b) B → (β : Bt a) → LegBt a β
+  → {j : L} (w : j ≤ a) (t : Tr (a ⊕ b)) → Leg (a ⊕ b) t → LN j (φ a b B β w t)
+pressφ a zero B hB β hβ w t h = press a (base (b⊥ B) β) (proj₁ hB , hβ) _ w t h
+pressφ a (suc b) B hB β hβ w zero h = hβ _ w
+pressφ a (suc b) B hB β hβ w (suc x) h = nextLN _ (pressφ a (suc b) B hB β hβ w x h)
+pressφ a (suc b) B hB β hβ w (lim f) (hf , adj) =
+  ((λ n → proj₁ (pressφ a (suc b) B hB β hβ w (f n) (hf n))) , (λ n → monoφ a (suc b) B β w (adj n)))
+  , ◃t (proj₂ (pressφ a (suc b) B hB β hβ w (f zero) (hf zero))) (◃l zero)
+pressφ a (suc b) B hB β hβ w (Ω p g) h =
+  cumLN _ (λ n → pressφ a (suc b) B hB β hβ w (g _)
+    (h _ (iterInv (LegBr (suc (a ⊕ b)) p) _ _ (legFrom (suc (a ⊕ b)) p zero tt)
+      (λ z hz → legFrom (suc (a ⊕ b)) p _
+        (proj₁ (press (suc (a ⊕ b)) B hB (at (suc (a ⊕ b)) p) (posW (suc (a ⊕ b)) p) (g z) (h z hz)))) n)))
+pressφ a (suc b) B hB β hβ w (up x _ y) (hx , hy , zy) =
+  pressφ a b (dS (a ⊕ b) B x)
+    (pres⊥ (suc (a ⊕ b)) B hB x hx , λ j′ w′ → press (suc (a ⊕ b)) B hB j′ (ins w′) x hx)
+    (λ j′ w′ → φ a (suc b) B β w′ x) (λ j′ w′ → pressφ a (suc b) B hB β hβ w′ x hx) w y hy
+pressφ a (lim g) B hB β hβ w zero h = hβ _ w
+pressφ a (lim g) B hB β hβ w (suc x) h = nextLN _ (pressφ a (lim g) B hB β hβ w x h)
+pressφ a (lim g) B hB β hβ w (lim f) (hf , adj) =
+  ((λ n → proj₁ (pressφ a (lim g) B hB β hβ w (f n) (hf n))) , (λ n → monoφ a (lim g) B β w (adj n)))
+  , ◃t (proj₂ (pressφ a (lim g) B hB β hβ w (f zero) (hf zero))) (◃l zero)
+pressφ a (lim g) B hB β hβ w (Ω p r) h =
+  cumLN _ (λ n → pressφ a (lim g) B hB β hβ w (r _)
+    (h _ (iterInv (LegBr (lim (λ n → a ⊕ g n)) p) _ _ (legFrom (lim (λ n → a ⊕ g n)) p zero tt)
+      (λ z hz → legFrom (lim (λ n → a ⊕ g n)) p _
+        (proj₁ (press (lim (λ n → a ⊕ g n)) B hB (at (lim (λ n → a ⊕ g n)) p)
+          (posW (lim (λ n → a ⊕ g n)) p) (r z) (h z hz)))) n)))
+pressφ a (lim g) B hB β hβ w (up x n y) (hx , hy , zy) =
+  pressφ a (g n) (dL (λ n → a ⊕ g n) B n x)
+    (pres⊥ (lim (λ n → a ⊕ g n)) B hB x hx , λ j′ w′ → press (lim (λ n → a ⊕ g n)) B hB j′ (inl n w′) x hx)
+    (λ j′ w′ → φ a (lim g) B β w′ x) (λ j′ w′ → pressφ a (lim g) B hB β hβ w′ x hx) w y hy
+pressφ a (Ωₗ k h′) B hB β hβ w zero h = hβ _ w
+pressφ a (Ωₗ k h′) B hB β hβ w (suc x) h = nextLN _ (pressφ a (Ωₗ k h′) B hB β hβ w x h)
+pressφ a (Ωₗ k h′) B hB β hβ w (lim f) (hf , adj) =
+  ((λ n → proj₁ (pressφ a (Ωₗ k h′) B hB β hβ w (f n) (hf n))) , (λ n → monoφ a (Ωₗ k h′) B β w (adj n)))
+  , ◃t (proj₂ (pressφ a (Ωₗ k h′) B hB β hβ w (f zero) (hf zero))) (◃l zero)
+pressφ a (Ωₗ k h′) B hB β hβ w (Ω p g) h =
+  cumLN _ (λ n → pressφ a (Ωₗ k h′) B hB β hβ w (g _)
+    (h _ (iterInv (LegBr (Ωₗ k (λ c → a ⊕ h′ c)) p) _ _ (legFrom (Ωₗ k (λ c → a ⊕ h′ c)) p zero tt)
+      (λ z hz → legFrom (Ωₗ k (λ c → a ⊕ h′ c)) p _
+        (proj₁ (press (Ωₗ k (λ c → a ⊕ h′ c)) B hB (at (Ωₗ k (λ c → a ⊕ h′ c)) p)
+          (posW (Ωₗ k (λ c → a ⊕ h′ c)) p) (g z) (h z hz)))) n)))
+pressφ a (Ωₗ k h′) B hB β hβ w (up x c y) (hx , hy , zy) =
+  pressφ a (h′ c) (dW k (λ c → a ⊕ h′ c) B c x)
+    (pres⊥ (Ωₗ k (λ c → a ⊕ h′ c)) B hB x hx , λ j′ w′ → press (Ωₗ k (λ c → a ⊕ h′ c)) B hB j′ (inb c w′) x hx)
+    (λ j′ w′ → φ a (Ωₗ k h′) B β w′ x) (λ j′ w′ → pressφ a (Ωₗ k h′) B hB β hβ w′ x hx) w y hy
+
+------------------------------------------------------------------------
+-- 塔: tw (suc n) 字面就是 tw n ⊕ (Ωₗ (tw n) ↑), 不用改块.
+
+tw-split : (n : ℕ) → tw (suc n) ≡ tw n ⊕ Ωₗ (tw n) (↑ (tw n))
+tw-split n = refl
+
+β₀ : (a : L) → Bt a
+β₀ a j _ = Ωt j
+
+β₀-leg : (a : L) → LegBt a (β₀ a)
+β₀-leg a j _ = Ωt-leg j , Ωt-nz j
+
+-- 塔第 n+1 项的根结点的链步: 目标是下标层 tw n (k 侧), 嵌入在分支 c.
+stepφ : (n : ℕ) → Tr (tw n) → Tr (tw n)
+stepφ n c = φ (tw n) (Ωₗ (tw n) (↑ (tw n))) (B₀ (tw (suc n))) (β₀ (tw n)) self
+  (up zero c (Ωt (tw n ⊕ ↑ (tw n) c)))
+
+-- 对一切分支 c: 链步就是孩子层 tw n ⊕ ↑c 的树折到 tw n (refl), 不比较 c.
+J2k : ∀ n (c : Tr (tw n)) → stepφ n c ≡
+  φ (tw n) (↑ (tw n) c) (dW (tw n) (λ c → tw n ⊕ ↑ (tw n) c) (B₀ (tw (suc n))) c zero)
+    (λ j′ w′ → φ (tw n) (Ωₗ (tw n) (↑ (tw n))) (B₀ (tw (suc n))) (β₀ (tw n)) w′ zero) self
+    (Ωt (tw n ⊕ ↑ (tw n) c))
+J2k n c = refl
+
+stepφ-LN : ∀ n c → LN (tw n) (stepφ n c)
+stepφ-LN n c = pressφ (tw n) (Ωₗ (tw n) (↑ (tw n))) (B₀ (tw (suc n))) (LegB₀ (tw (suc n)))
+  (β₀ (tw n)) (β₀-leg (tw n)) self (up zero c (Ωt (tw n ⊕ ↑ (tw n) c)))
+  (tt , Ωt-leg (tw n ⊕ ↑ (tw n) c) , Ωt-nz (tw n ⊕ ↑ (tw n) c))
+
+stepφ-mono : ∀ n {y y′ : Tr (tw n ⊕ ↑ (tw n) zero)} → (tw n) ⊢ y ◃ y′ →
+  tw n ⊢ φ (tw n) (Ωₗ (tw n) (↑ (tw n))) (B₀ (tw (suc n))) (β₀ (tw n)) self (up zero zero y)
+       ◃ φ (tw n) (Ωₗ (tw n) (↑ (tw n))) (B₀ (tw (suc n))) (β₀ (tw n)) self (up zero zero y′)
+stepφ-mono n d = monoφ (tw n) (Ωₗ (tw n) (↑ (tw n))) (B₀ (tw (suc n))) (β₀ (tw n)) self (◃c d)
+
+-- 对照: 空白页原折叠的同一步走回退 (成 ℕ 极限); φ 的这一步在 c = 0 时保留孩子里的结点.
+isLim isΩ : ∀ {P B C D} → T P B C D → Set
+isLim (lim _) = ⊤
+isLim _       = ⊥
+isΩ (Ω _ _) = ⊤
+isΩ _       = ⊥
+
+old-step : isLim (ψs (tw 2) (B₀ _) (tw 1) (ink self) (up zero zero (Ωt (tw 1 ⊕ ↑ (tw 1) zero))))
+old-step = tt
+
+new-step : isΩ (stepφ 1 zero)
+new-step = tt
+
+-- 链点合法且非零; 用 φ 作链步的塔第 n+1 项的对角 (闭项), 合法.
+γ : (n : ℕ) → ℕ → Tr (tw n)
+γ n = iter (stepφ n) zero
+
+Tw′ : ℕ → Tr zero
+Tw′ n = lim (cum (λ m → ψ⊥ (tw (suc n)) (B₀ _) (up zero (γ n m) (Ωt (tw n ⊕ ↑ (tw n) (γ n m))))))
+
+γ-leg : ∀ n m → Leg (tw n) (γ n m)
+γ-leg n zero = tt
+γ-leg n (suc m) = proj₁ (stepφ-LN n (γ n m))
+
+Tw′-leg : ∀ n → Leg zero (Tw′ n)
+Tw′-leg n = proj₁ (cumLN _ (λ m → pres⊥ (tw (suc n)) (B₀ _) (LegB₀ _)
+  (up zero (γ n m) (Ωt (tw n ⊕ ↑ (tw n) (γ n m))))
+  (tt , Ωt-leg (tw n ⊕ ↑ (tw n) (γ n m)) , Ωt-nz (tw n ⊕ ↑ (tw n) (γ n m)))))

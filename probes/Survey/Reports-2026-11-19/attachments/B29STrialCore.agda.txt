@@ -1,0 +1,44 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 可数乘法回灌切与单位折叠切的比较；参照和闭包律保持抽象。
+module B29STrialCore where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; s≼s; l≼; ≼l)
+import B18ResetCellGoal as Init
+import B18Product as M
+import B29SFirst as F
+import B29SUnit as U
+import B29SCases as C
+open import WVOne using (T₀)
+module X (Q : T₀) (smallω : L.suc L.ωᶜ ≼ Q)
+  (prod : ∀ a b → L.suc a ≼ Q → L.suc b ≼ Q → L.suc (a M.· b) ≼ Q) where
+  Small : T₀ → Set
+  Small = λ a → L.suc a ≼ Q
+  down : ∀ (a b : T₀) → a ≼ b → Small b → Small a
+  down a b h d = ≼-trans {a = L.suc a} {b = L.suc b} {c = Q} (s≼s {a = a} {b = b} h) d
+  abstract
+    feedback : ∀ j → (Small (F.f j) → Small (F.x (suc j))) × (Small (F.x (suc j)) → Small (F.f j))
+    feedback j = (λ d → down (F.x (suc j)) (L.ωᶜ M.· F.f j) (proj₁ (F.factor j)) (prod L.ωᶜ (F.f j) smallω d))
+      , down (F.f j) (F.x (suc j)) (F.forward j)
+    first : Small (F.f 0)
+    first = down (F.f 0) L.ωᶜ (proj₁ Init.First.omega) smallω
+    accepted : Small (F.x 1)
+    accepted = proj₁ (feedback 0) first
+
+  UnitCloses = ∀ j → Small (F.x j) → Small (F.f j)
+  abstract
+    steps : UnitCloses → ∀ j → Small (F.f j)
+    steps h zero = first
+    steps h (suc j) = h (suc j) (proj₁ (feedback j) (steps h j))
+    inside : C.Y₁ ≼ Q → UnitCloses
+    inside h j _ = ≼-trans {a = L.suc (F.f j)} {b = F.f (suc j)} {c = Q} (U.unit j)
+      (≼-trans {a = F.f (suc j)} {b = F.S} {c = Q} (≼l {f = F.f} (suc j) (≼-refl (F.f (suc j))))
+        (≼-trans {a = F.S} {b = C.Y₁} {c = Q} C.lower h))
+    close : UnitCloses → C.Y₁ ≼ Q
+    close h = ≼-trans {a = C.Y₁} {b = F.S} {c = Q} C.upper
+      (l≼ {f = F.f} (λ j → ≼-trans {a = F.f j} {b = L.suc (F.f j)} {c = Q} (≼-suc (≼-refl (F.f j))) (steps h j)))
+  remaining : (C.Y₁ ≼ Q → UnitCloses) × (UnitCloses → C.Y₁ ≼ Q)
+  remaining = inside , close
+
+

@@ -63,10 +63,7 @@ def fs(t, z):
 def z_term(z): return nat(z) if isinstance(z, int) else z
 
 # T_W: 0=(), sum of primitives ('p',pi,g) ('O',b) ('I',b)
-def W_ONE(): return (('p', (('O', W_ONE_()),), ()),)
-def W_ONE_(): return (('p', None, ()),)
 W1 = (('p', None, ()),)  # psi_pi(0)=1, value independent of pi
-def wadd(s, t): return s + t
 def wnat(n): return W1 * n
 def wsucc(s): return s + W1
 def w_is_succ(s): return s and s[-1] == W1[0]

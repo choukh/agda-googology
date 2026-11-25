@@ -1,0 +1,59 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- KRel 的副本, 只改 r≅: 新层 k′ ⊑ᴵ 旧层 k (M4 提议的修改). 关系 (接口): Level 的树 A 与 W4 的树 t, 逐层定义. 结点分支的前提只用到更低层的关系 (参数 Sub), 所以分层良定义.
+module KOpRelW where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_)
+
+open import W4Block
+open import W4Ops
+import OCF.Align.Level as I
+open I using (Ordᴵ; Ordᶜ; Simᴵ; _<ᴵ_; _≅_; add; U; into; <→◃; zero; suc; lim; limᵢ)
+open import KPow using (pwb)
+open import KMir using (IsN; code)
+open import W4Path using (Ok)
+open I using (_≅ᴵ_; _⊑ᴵ_)
+
+-- 层镜像: Level 的层号码 k 与 W4 的层号 m (对 m 的任何 IsN/Ok 证明).
+Mirror : Ordᴵ → L → Set
+Mirror k m = (i : IsN m) (o : Ok m) → k ≅ᴵ code m i o
+
+module _ (m : L)
+         (Sub : (p : Pos m) → ∀ {j} → Ordᶜ j → Br m p → Set)
+         (Kid : (c : CH m) → ∀ {k′} → Ordᶜ k′ → ChT m c → Set) where
+  data Dom₊ : ∀ {k} → Ordᶜ k → Tr m → Set where
+    -- 零在一切之下.
+    rz : ∀ {k} {t : Tr m} → Dom₊ {k} zero t
+    rs : ∀ {k} {A : Ordᶜ k} {t : Tr m} → Dom₊ A t → Dom₊ (suc A) (suc t)
+    rl : ∀ {k} {f : ℕ → Ordᶜ k} {t : Tr m} → ((n : ℕ) → Dom₊ (f n) t) → Dom₊ (lim f) t
+    -- 结点对结点: 结点层镜像; Level 一侧自反 (≅ 不自动自反); 相关的下标给相关的树.
+    rΩ : ∀ {k j} {q : j <ᴵ k} {F : U j (<→◃ q) → Ordᶜ k} {p : Pos m} {g : Br m p → Tr m}
+       → Mirror j (at m p)
+       → limᵢ q F ≅ limᵢ q F
+       → ((Y : Ordᶜ j) (z : Br m p) → Sub p Y z → Dom₊ (F (into (<→◃ q) Y)) (g z))
+       → Dom₊ (limᵢ q F) (Ω p g)
+    -- 左项加孩子层的树.
+    ru : ∀ {k k′} {A A₀ : Ordᶜ k} {Y : Ordᶜ k′} {t₀ : Tr m} {c : CH m} {y : ChT m c} {e : RCh m c (chZ m c) y}
+       → Dom₊ A₀ t₀ → Kid c Y y → (σ : Simᴵ k′ k) → A ≅ add A₀ σ Y → Dom₊ A (up t₀ c y e)
+    -- 挂起的乘幂: 左项加 V·ω^X.
+    re : ∀ {k} {A A₀ V X : Ordᶜ k} {u v x : Tr m} {nb : m ⊢ zero ◃ v} {ε : EX m}
+       → Dom₊ A₀ u → Dom₊ V v → Dom₊ X x → A ≅ add A₀ (λ q → q) (pwb V (λ q → q) X) → Dom₊ A (ex u v nb x ε)
+    -- Level 一侧沿 ≅ 搬运; W4 一侧沿自己的步进序放大.
+    r≅ : ∀ {k k′} {A : Ordᶜ k} {A′ : Ordᶜ k′} {t : Tr m} → k′ ⊑ᴵ k → A ≅ A′ → Dom₊ A′ t → Dom₊ A t
+    r◃ : ∀ {k} {A : Ordᶜ k} {t t′ : Tr m} → Dom₊ A t → m ⊢ t ◃ t′ → Dom₊ A t′
+
+mutual
+  Dom : (m : L) → ∀ {k} → Ordᶜ k → Tr m → Set
+  Dom m = Dom₊ m (SubD m) (KidD m)
+
+  SubD : (m : L) (p : Pos m) → ∀ {j} → Ordᶜ j → Br m p → Set
+  SubD (nd s h)      (inj₂ (c , t)) = SubD⁼ (h c) t
+  SubD (nd (sΩ k) h) (inj₁ t)       = SubD⁼ k t
+
+  SubD⁼ : (a : L) (t : Pos⁼ a) → ∀ {j} → Ordᶜ j → Br⁼ a t → Set
+  SubD⁼ a (inj₁ _) = Dom a
+  SubD⁼ a (inj₂ p) = SubD a p
+
+  KidD : (m : L) (c : CH m) → ∀ {k′} → Ordᶜ k′ → ChT m c → Set
+  KidD (nd s h) c = Dom (h c)

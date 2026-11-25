@@ -1,0 +1,72 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- E 路判定件: 换基折叠 YiBSFold 在塔第 2 项顶结点上, 目标经孩子 c′ 的偏移里一个 Ω 形状结点的孩子到达时,
+-- 槽位 (层号 tw 1) 低于目标 (route 给出 tw 1 ≤ j, j 自己有分支类型为 Tr (tw 1) 的槽位), 但 kp 给 nothing, 输出的头是 ℕ 极限.
+module AuditEKeep where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; kp)
+open import OCF.Lean.YiBSBase
+import OCF.Lean.YiBSFold as BS
+
+-- 目标经过的孩子: 塔第 1 项的 Ω 树 (顶是 Ω 结点, 所以偏移 ↑ (tw 1) c′ 的顶是 Ω 形状).
+c′ : Tr (tw 1)
+c′ = proj₁ (Ωt (tw 1))
+
+child0 : L → L
+child0 (nd (sΩ k) h) = h zero
+child0 _             = zero
+
+-- 目标层: 孩子 c′ 的层号里, 偏移顶上 Ω 形状结点的第 0 个孩子.
+j : L
+j = child0 (tw 1 ⊕ ↑ (tw 1) c′)
+
+j-shape : j ≡ nd sS (λ _ → tw 1)
+j-shape = refl
+
+v : j ≤ tw 1 ⊕ ↑ (tw 1) c′
+v = inc zero self
+
+-- 塔第 2 项的换基证据 (rb-tw 2 的第一分量).
+S₂ : Schema (tw 1) (λ c → tw 1 ⊕ ↑ (tw 1) c)
+S₂ = schema (tw 1) (↑ (tw 1)) (Ok-tw 1) self (OkO↑ (tw 1) (tw 1) (Ok-tw 1) self) (λ c → refl)
+
+rb-is : proj₁ (rb-tw 2) ≡ just S₂
+rb-is = refl
+
+data Is₂ {A B : Set} : A ⊎ B → Set where
+  is₂ : (b : B) → Is₂ (inj₂ b)
+
+-- (1) route 落在地板之上: 给出 tw 1 ≤ j.
+above : Is₂ (route S₂ j c′ v)
+above = is₂ _
+
+-- (2) j 自己有分支类型为 Tr (tw 1) 的槽位.
+q : Pos j
+q = inj₂ (tt , inj₁ tt)
+
+q-at : at j q ≡ tw 1
+q-at = refl
+
+q-br : Br j q ≡ Tr (tw 1)
+q-br = refl
+
+-- (3) 顶结点的槽位 (下标层 tw 1 自身) 不保留.
+drop₂ : kp (tw 2) (Ok-tw 2) (inj₁ (inj₁ tt)) (inc c′ v) ≡ nothing
+drop₂ = refl
+
+-- (4) 所以换基折叠在这个目标上把 Ωt (tw 2) 折成 ℕ 极限 (链), 对一切底与起点.
+data IsL {S : Sg} : T S → Set where
+  isL : ∀ f a → IsL (lim f a)
+
+chain₂ : (B : Base (tw 2)) (β : Tr⁺ j)
+  → IsL (proj₁ (BS.ψ (tw 2) (Ok-tw 2) (rb-tw 2) B j (inc c′ v) β (proj₁ (Ωt (tw 2)))))
+chain₂ B β = isL _ _

@@ -1,0 +1,102 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22IdealOld where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst; trans)
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiFreshFold as O
+import OCF.Lean.YiFreshValRead as V
+import OCF.Lean.YiUpBlock as U
+import OCF.Lean.YiUpFold as F
+import OCF.Lean.YiUpLegal as K
+import OCF.Lean.YiPhiBlock as P
+import OCF.Lean.YiFreshLegal as J
+open import OCF.Lean.YiUpCheck using (one; two)
+open import OCF.Lean.YiUpVal using (⊴→≼; ⊴◃)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼)
+import B20IdealRetained as T
+import B20IdealThree as A
+
+import B20IdealPhysical as X
+import B21IdealInside as Old
+import B20IdealRel as Rel
+import B20IdealOne as One
+import B20IdealTwo as Two
+import B22IdealClosed as Real
+import B12Terminal as Tm
+import B12ActualSlots as C
+open import WVOne using (read)
+open import WKShape using (lvl3)
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import OCF.Lean.YiRWOps as RW
+open import B13SharpOne using (r₁)
+open import B14SharpTwo using (r₂)
+import OCF.Lean.YiNMSharp as I
+open import OCF.Align.Value using (s≼s; ≅→≼)
+open import Data.Product using (_,_; proj₂)
+import W4Fold as WF
+
+stage = O.iter O.next (O.Ωt one)
+seq = λ n → stage (suc n)
+tower : Y.Tr one
+tower = Y.lim seq
+old = λ u → V.read (Old.fold (U.Up one Old.up₁ Old.base u))
+inside : one J.⊢ seq 0 ◃ T.track 1
+inside = J.◃t (J.◃l 0) (J.◃l 0)
+below : old (seq 0) ≼ X.raw 2
+below = ≼-trans (⊴→≼ (⊴◃ (K.mono⊥ two tt A.model (J.◃t (K.Up-mono one Old.up₁ Old.base inside) (J.◃l 0))))) (T.below 1)
+
+higher : ∀ {u} (v : Y.Tr Y.zero) → J.Leg Y.zero v → Y.zero J.⊢ u ◃ v → L.suc (V.read u) ≼ V.read v
+higher (Y.suc v) leg J.◃s = ≼-refl _
+higher (Y.lim f) (lf , st) (J.◃l n) = ≼l (suc n) (higher (f (suc n)) (lf (suc n)) (st n))
+higher v l (J.◃w {p = ()})
+higher v l (J.◃u {c = ()} _)
+higher v l (J.◃c {c = ()} _)
+higher v l (J.◃t e f) = ≼-trans (s≼s (⊴→≼ (⊴◃ e))) (higher v l f)
+
+good : ∀ n → J.LN one (stage n)
+good zero = J.Ωt-leg one , J.Ωt-nz one
+good (suc n) = J.nextLN (stage n) (good n)
+
+strict : ∀ n → L.suc (old (stage n)) ≼ old (stage (suc n))
+strict n = higher (Old.fold (U.Up one Old.up₁ Old.base (stage (suc n)))) (K.ψ₀-leg two tt (U.Up one Old.up₁ Old.base (stage (suc n))) (proj₁ (K.Up-LN one Old.up₁ Old.base (J.Ωt-leg two , J.Ωt-nz two) (stage (suc n)) (proj₁ (good (suc n))))))
+  (K.mono⊥ two tt A.model (K.Up-mono one Old.up₁ Old.base (J.◃l 0)))
+
+base-ok : J.LN two Old.base
+base-ok = J.Ωt-leg two , J.Ωt-nz two
+index-ok : J.Leg one (T.track 1)
+index-ok = proj₁ (K.press two tt A.model (K.LegB₀ two) one T.path (O.Ωt one) (good 0)
+  (O.next Old.base) (proj₁ (J.nextLN Old.base base-ok)))
+ret-ok : J.Leg two (T.branch (T.track 1))
+ret-ok = proj₁ (J.nextLN _ (K.Up-LN one Old.up₁ Old.base base-ok (T.track 1) index-ok))
+strict-raw : L.suc (old (seq 0)) ≼ X.raw 2
+strict-raw = ≼-trans (higher (T.out 1) (K.ψ₀-leg two tt (T.branch (T.track 1)) ret-ok)
+  (K.mono⊥ two tt A.model (J.◃t (K.Up-mono one Old.up₁ Old.base inside) (J.◃l 0)))) (T.below 1)
+
+raw-all : (∀ n → old (seq n) ≼ X.raw 2) → old tower ≼ X.raw 2
+raw-all hs = l≼ hs
+raw-parts : old tower ≼ X.raw 2 → ∀ n → old (seq n) ≼ X.raw 2
+raw-parts h n = ≼-trans (≼l n (≼-refl _)) h
+
+module At (lem : LEM) where
+  open I.Sharp lem
+  rw = RW.iter RW.next⁺ (RW.Ωt r₁)
+  steps : ∀ n → Rel.H (stage n) (proj₁ (rw n))
+  steps zero = Rel.Ω¹
+  steps (suc n) = Rel.nh _ (steps n)
+  module Closed (r : Tm.Run lvl3) (cv : C.Covered r) where
+    module R₀ = Real.At lem r cv
+    bridge : ∀ {x w} → Rel.H x w → old x ≼ R₀.low w
+    bridge {x} {w} h = ≅→≼ (Rel.value (Two.At.bot₂ lem B♯ A.model Rel.Ω¹ (Rel.zs Rel.zz) A.unit (Rel.zs Rel.zz)
+      (One.At.high₁ lem B♯ (RW.Ωt r₂) Rel.Ω² h)))
+    whole : old tower ≼ read (Tm.value r)
+    whole = ≼-trans (bridge {x = tower} {w = R₀.Canon.tower} (Rel.hl (λ n → steps (suc n)))) R₀.whole
+    each : ∀ n → old (seq n) ≼ read (Tm.value r)
+    each n = ≼-trans (bridge (steps (suc n))) (R₀.each n)
+  module Fin = Closed (Tm.finiteRun 2) (C.all-finite 2)
+  Λ-bound : old tower ≼ read WF.EBOᶜ
+  Λ-bound = ≼-trans Fin.whole (Tm.finite-ge 2)

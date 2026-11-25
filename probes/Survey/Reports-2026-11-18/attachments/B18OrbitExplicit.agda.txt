@@ -1,0 +1,72 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 默认槽 c 决定 ex 的反馈指数，实际显式输入 b 决定 ex 的两个基数。两棵树只需实现同一个系数。
+module B18OrbitExplicit where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block hiding (D; R)
+open import W4Ops
+open import W4Fold
+open import WKGen using (Ω₁t)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F)
+import B11OuterCore as C
+import B13OrbitFeed as O
+import B13Orbit as K
+import B15OrbitModel as M
+import B16OrbitNode as N
+import B17OrbitModel as B
+import B17OrbitNatural as R
+import B17OrbitAll as A
+import B17OrbitVector as V
+import B17OrbitTower as T
+import B17RefVector as W
+open R using (R; closed; enterR)
+open V using (Index; oper)
+
+module Step (c b out : Tr⁺ lvl1) (cv : lvl1 ⊢ Ω₁t ◃ proj₁ c) (v : W.Vector) (ci : Index c v) (bi : Index b v) where
+  module Canon = V.Step c out cv v ci
+  open Canon using (z; vec)
+  g = λ j → ex (proj₁ b) (proj₁ b) (proj₂ b) (suc (z j)) tt
+  branch = cum g
+  front = λ j → branch j + proj₁ b
+  pos = λ j → z◃ (branch j) (+-mono (branch j) (proj₂ b))
+
+  module In {X : Cx lvl2} (m : Mor M.X₁ X) (rm : N.Left m) where
+    D = trTD m O.D₁
+    extend : ∀ n K → R (suc n) m K (v n) → R (suc n) m (Itᴺ n ok₂ D (proj₁ c) K) (v n)
+    extend n K h u ru G a rg = closed n (u ⊙ m) (proj₁ K u G) _ (Itmono n ok₂ (trTD u D) (enter (suc n) u K) G (proj₂ c)) _ (h u ru G a rg)
+    mixed : ∀ n j K → R (suc n) m K (v n) → ∀ G a → R n m G a → R n m (It n ok₂ D (suc (z (suc j))) K G) (T.run (vec (suc j) n) a)
+    mixed n zero K h G a rg = closed n m (It n ok₂ D Ω₁t K G) _ (Itmono n ok₂ D K G {x = Ω₁t} {y = suc (z 1)} (◃t cv (◃t ◃e ◃s))) _
+                  (A.At.For.omega n m rm K (v n) h G a rg)
+    mixed n (suc j) K h G a rg = closed n m (It n ok₂ D (z (suc (suc j))) K G) _ (Itmono n ok₂ D K G {x = z (suc (suc j))} {y = suc (z (suc (suc j)))} ◃s) _
+                  (Canon.In.nested m rm (suc n) j (Itᴺ n ok₂ D (proj₁ c) K) (v n) (extend n K h) idM (λ _ → refl) G a rg)
+  module Collect (hit : ∀ j → lvl1 ⊢ branch (suc j) ◃ proj₁ out) where
+    term : ∀ {X : Cx lvl2} (m : Mor M.X₁ X) (rm : N.Left m) n j → R (suc n) m (oper (trTD m O.D₁) out n) (vec (suc j) n)
+    term m rm zero j u ru G a rg = closed 0 dm (op (E ok₂ D (branch (suc j)) G) (Einf ok₂ D (branch (suc j)) G)) _ (λ S i t w → Emono ok₂ D G S i t w (hit j)) _
+        (In.mixed dm dr 0 j (oper D b 0) (bi dm dr 0) G′ a (closed 0 dm G G′ (λ S i t w → Emono ok₂ D G S i t w (pos j)) a rg))
+      where
+      dm = u ⊙ m
+      dr = B.good m u rm ru
+      D = trTD dm O.D₁
+      G′ = op (E ok₂ D (front j) G) (Einf ok₂ D (front j) G)
+    term m rm (suc n) j u ru K F rk w rw G a rg = closed n dm (It n ok₂ D (branch (suc j)) K′ G) _ (Itmono n ok₂ D K′ G (hit j)) _
+       (In.mixed dm dr (suc n) j (oper D b (suc n)) (bi dm dr (suc n)) frontK F (closed (suc n) dm K′ frontK raise F (enterR (suc n) (u ⊙ m) w rw K F rk)) idM (λ _ → refl) G a rg)
+      where
+      dm = w ⊙ u ⊙ m
+      dr = B.good (u ⊙ m) w (B.good m u rm ru) rw
+      D = trTD dm O.D₁
+      K′ = enter (suc n) w K
+      frontK = Itᴺ n ok₂ D (front j) K′
+      raise : Rn (suc n) K′ frontK
+      raise s H = Itmono n ok₂ (trTD s D) (enter (suc n) s K′) H (pos j)
+    whole : Index out (W.step v)
+    whole m rm n = R.sup (suc n) m (oper (trTD m O.D₁) out n) (λ j → vec (suc j) n) (term m rm n)
+
+advance : ∀ K′ → K.WeakOp F K′ → ∀ S b v → lvl1 ⊢ Ω₁t ◃ proj₁ (S lvl1 C.slot) → Index (S lvl1 C.slot) v → Index b v →
+          Index (run K′ S lvl1 C.slot b) (W.step v)
+advance K′ cover S b v cv ci bi = Push.Collect.whole hit
+  where
+  module Push = Step (S lvl1 C.slot) b (run K′ S lvl1 C.slot b) cv v ci bi
+  hit : ∀ j → lvl1 ⊢ Push.branch (suc j) ◃ proj₁ (run K′ S lvl1 C.slot b)
+  hit j = K.push-path {y = proj₁ (run F S lvl1 C.slot b)} (◃l (suc j)) (cover S lvl1 C.slot b)

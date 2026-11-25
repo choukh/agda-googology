@@ -1,0 +1,45 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- (0,1) 一级 ex 的操作数 δ 在真实观察状态中读成 ε₁·ω^ω。
+module B31POperand where
+open import Data.Nat.Base using (ℕ; suc; zero; s≤s; z≤n)
+open import Data.Nat.Properties using (≤-refl)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (sym; subst)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≼-suc; s≼s; ≼l; l≼; +-mono)
+open import WVOne using (T₀; 𝟏; lvl1; read)
+import W4Block as W
+import W4Ops as O
+import W4Path as P
+import W4Fold as F
+import B12XRef as Ref
+import B12Strict as Strict
+import B18Product as M
+import B18TowerEmb as Emb
+import B18ResetCellGoal as Init
+import B19IdealProduct as A
+import B19IdealPowers as Pow
+import B19IdealArithmetic as Ar
+import B22MovingIndex as E
+import B22TowerCut as K
+import B27URetained as Ext
+import B30UOne as One
+import B31PCell as Cell
+open M using (_·_)
+seed = O.Ωt W.zero
+ε₀ = Ref.row 1
+ε₁ = E.above ε₀
+module Calculate (o : P.Ok lvl1) (b : F.Base lvl1) (x : T₀) (match : One.Run.c o b ≈ᵛ x)
+  (tail : O.Tr⁺ W.zero) (t : T₀) (size : read (proj₁ tail) ≈ᵛ t) where
+  module First = One.Run o b
+  base : First.term ≈ᵛ E.above x
+  base = First.Positive.exact (Strict.strict (proj₂ First.slot)) A.∙ (K.advance (proj₁ match) , K.advance (proj₂ match))
+  output = proj₁ (F.ψ lvl1 o b W.zero (P.z≤ lvl1) seed (proj₁ (O.Ωt lvl1 O.⊞ tail)))
+  formula : read output ≈ᵛ (E.above x · Ar.norm t)
+  formula = Ext.At.extension lvl1 o b seed (proj₁ (O.Ωt lvl1)) (proj₁ tail) A.∙
+    A.mul base (Pow.expo Pow.omega-pos (proj₁ size) , Pow.expo Pow.omega-pos (proj₂ size))
+
+module S = Cell.P.Run
+module Actual = Calculate S.o₁ S.B′ ε₀ Cell.exact (Emb.standard 0) L.ωᶜ Init.First.omega
+open Actual public using (output; formula; base)
+

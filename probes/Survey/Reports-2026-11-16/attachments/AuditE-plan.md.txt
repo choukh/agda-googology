@@ -1,0 +1,30 @@
+# E 路第 1 步：只读定义后的判断（封存件）
+
+读过的只有定义体：YiRWBlock, YiRWOps, YiRWPath, YiRWFold, YiTBRow, YiMTTab, YiBSBase, YiBSFold, YiRBSib (证据与 ψ 前几行), YiBSRead, YiSYReduce, YiSYDesc.Node, EboLeanDef, YiKVRel.readRW/M⁰/lower⁰, Value.≼。以下除标明处外全是纸面判断，没有编译。
+
+## (a) 换基行在同步对象链步上做什么
+
+- 换基只改一行：`YiBSFold.ψ (nd (sΩ k) h) o r B j (inc c′ v) β (up x c y e)`。有 `Schema`（h c ≡ floor ⊕ offsets c）时用 `route`（= `split`）把目标分成两支：`j ≤ floor` 时经 `back` 在原孩子 h c 上朝 j 折 y（不需要比较 c 与 c′，逐字保真）；`floor ≤ j` 时取 `seen S j … β c ⊞ ψ₀(y)`，其中 `seen` = 在层号 `j ⊕ offsets c` 上沿 `lift j (offsets c)` 朝 j 折 `Ωt (j ⊕ offsets c)`，底是 x 的折叠。y 只以折到第 0 层的尾项出现。
+- 同步对象 `nd (sΩ zero) a₁`，`a₁ c = tw 1 ⊕ ↑(Ωt (h₁ c))`。顶层链 `feed` 走 `ink self`，是 `ink` 行，不碰这一格。碰到这一格的地方在孩子里面：折 `Ωt (a₁ z)` 时，偏移里的 Ω 形状结点下标层是 `h₁ m`（经 `OkO↑` 的 `posW k p ∙ v`，路径是经 tw 1 的孩子 m 的 `inc`），于是要把 `Ωt (tw 1) = Ω⁺ (inj₁ (inj₁ tt)) (λ c → upz c (Ωt (h₁ c)))` 朝 `j = h₁ c′` 折。这个结点被 `kp` 保留（`kp … (inj₁ t) (inc c v)`，v = self，h₁ c′ ≠ zero 时得 `just`），分支 z 上是 `up zero z (Ωt (h₁ z))`，目标经孩子 c′：就是这一行。
+- 现行表（`tbᶻ`, `tb`）只在一方为零或两方都是字面自然数时有项，其余走 `β ⊞ ψ₀(y)`：每个分支是可数的，结点的值远低于 ψ_{c′}(Ω_{Ω₁})。换基行在 tw 1 的 Schema（floor = zero, offsets = ↑ zero，`rb-tw`）下给每个分支 ψ_j(Ω_{j ⊕ ↑z})，z 遍历 Tr zero，纸面上值不低于 ψ_{c′}(Ω_{Ω₁})（c′ = ω 的情形同）。判断：换基行在这一格上能承载需要的参照。
+- 但把它变成编译下界需要 z ↦ `seen S j u β z` 对 z 的保持：链点 e 与参照 γ 只由关系 `M⁰ γ e` 相连，不是字面路径。字面前缀（z 到 suc z，f n 到 lim f）有 `inc` 路径，可望成立；对一般的值嵌入，`seen` 依赖 `↑ zero z` 的形状而不是 z 的值，这是跨层号的单调，我预计是主要难点。
+
+## (b) 会不会在别处掉值；最危险处
+
+1. **`kp` 那一格没有被换基修**（我认为最危险）。`YiBSFold` 原样导入 `YiRWFold.kp`，其中 `kp (nd (sΩ k) h) _ (inj₂ _) (inc _ _) = nothing` 仍在。`kp … (inj₁ t) (inc c′ v)` 用固定见证 `kh c′`（塔上是 `lift`，`psh` 走 `c₀`）把槽位推进孩子，目标路径 v 若在 offsets c′ 内部的 Ω 形状结点上走 `inc c″`，就落进这一格，得 `nothing`，结点改成可数链 `limc⁺`。tw 1 的偏移 `↑ zero c′` 没有 Ω 形状，不触发；tw 2 起偏移 `↑ (tw 1) c′` 有 Ω 形状，会触发，而此时槽位层 ≤ floor ≤ j，本该保留。Schema 自己就能给出修法：`route` 得 `floor ≤ j` 时用 `psh (index-floor ∙ u) t` 直接给出 Pos j 里的槽位。现在的换基折叠没有这样做。
+2. **嵌套的换基被截断**。`seen` 调的是 `YiRBSib.ψ` 配 `rb-no`，不是 `YiBSFold.ψ` 自己（`Ωt (j ⊕ offsets c)` 不是结构更小的参数，自调用过不了停机检查）。重建树内部若再遇到 Ω 形状行（offsets c 含 Ω 形状，即 tw 2 起），走的是无表回退行。顶层经 `lift`（`inu` 行）不受影响，受影响的是重建树里底 `B` 的求值与内部链经 `inc` 的路径。要么按层号分层定义折叠，要么找到良基度量。
+3. **原孩子树只进低层尾项**。y = `Ωt (h c)` 时无损（重建的就是同一个配方）。y 远大于 `Ωt (h c)` 时丢值。Ωt 生成的树里 Ω 形状行的 y 只有 `Ωt (h c)` 与经 `emb` 落到孩子 zero 的树（`emb … (ink v)`, `(inu vs)`）；后者在 `floor ≤ j` 支被 `Ωt (j ⊕ offsets zero)` 取代，纸面上是高估不是丢值。所以在 Ωt 读回域内这一条我判断不丢，在全域上丢。
+4. 高估：y 很小而 `seen` 给 ψ_j(Ω_{j⊕off c})。对下界无害，对将来的互相 `≼` 有害。
+5. 回灌输出作块：输出只作下标 c 进入，换基只用 `offsets c` 的形状，不看 y，这一处本身不丢；难点仍是 (a) 末的保持。上折（`self` 行）未改。
+
+## (c) 进主线要重做什么
+
+- 合法性：`YiBSFold.mono` 已与 ψ 同时定义，闭项 `closed n` 已有；Λ 的 `Rb` 是 `tt , rb-tw`，EBO 闭项可以直接写。View 与 FGH 在 Tr zero 上，不依赖折叠的行，应当可原样套用。
+- 已证站值（对 `YiTBRow.ψ`/`rbᶻ` 的下界，`keelᶻ`, `Uᶻ` 等）不能直接搬：表有项处旧行做精确搬运，新行做 `seen`，两个折叠不逐字相等。要么重证，要么证 "换基折叠 ≽ 表折叠"（又是跨层号比较），要么写成 "先查表再换基" 的合行保住旧证。
+- LowKeep 一类关于 `kp` 的引理：`kp` 没变则不必重做；若按 (b)1 修 `kp`，要重做。
+- 若采用 `Read` 码（让行能对 y ≠ Ωt 重建），`up` 要带码，块 `Tr` 的定义要改，前三层全部重做。
+
+## (d) 形状来自树还是记号
+
+- 由树逼出的部分：c 与 c′ 不可比较（壁垒），所以不派发，改用字面公共地板 floor 与复合（`split` 只看路径字面）；Schema 的 floor/offsets 读自 `tw` 自己的定义 `tw n ⊕ ↑ (tw n) c`，属于层号龙骨。记号的规则 6 与 `fsn0 … (cΩ ν)` 靠 `cmpᵀ` 三歧，没有 "j ⊕ offsets" 这种东西。
+- 受记号引导的部分：选 "在 j ⊕ offsets c 上重建 Ωt" 而不是别的替身，是用参照值（ψ_ω(Ω_{Ω₁})）挑出来的；`Read` 文法若进 `up`，是为验收域加的脚手架。判断：行的形状主要由树的要求逼出，值的取舍受记号验收引导，应如实记账；`Read` 码进块算新增脚手架。

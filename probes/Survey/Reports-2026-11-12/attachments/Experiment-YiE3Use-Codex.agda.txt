@@ -1,0 +1,23 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiE3Use where
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+import OCF.Lean.YiKVRel as K
+import OCF.Lean.YiAbsSimInst as SI
+import OCF.Lean.YiFRStep as FR
+import YiE3Base as Q
+import YiE3Objects as A
+import YiE3Frame as V
+open import OCF.Align.Value using (_≼_)
+
+Missing : Set
+Missing = (h : SI.E.HC A.target) → A.reference h ≼ K.readRW (proj₁ A.output)
+module Actual (missing-child-low₁ : Missing) where
+  low : (h : SI.E.HC A.target) → A.reference h ≼ K.readRW (proj₁ (Q.collapse A.ctx A.β))
+  low h = subst (λ x → A.reference h ≼ K.readRW (proj₁ x)) A.output-def (missing-child-low₁ h)
+  -- perf: C-9，唯一一次实例化；等式前提实填 refl，困难不等式仍为参数。
+  module OnlyCall = V.Frame A.ctx refl A.β refl low
+  first : FR.FirstMissing
+  first = OnlyCall.first-at-one
+first-at-one : Missing → FR.FirstMissing
+first-at-one = Actual.first

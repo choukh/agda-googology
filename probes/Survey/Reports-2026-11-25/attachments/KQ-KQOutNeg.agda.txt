@@ -1,0 +1,142 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- KQ B2(b) 的否定, 现行块, 规范实例 c′ = 1, d = 0, e = 1 (目标 j = h₁ 1, 状态 Ωt, 底 Ωt j). 编译定理, 无前提:
+-- ↑ j (G 1 0) ⋢ ↑ j (G 1 1). 不变式: G 1 读回的一切 "第 0 个孩子是 ℕ 极限的 Ω 形子项" 首枝深度 ≥ 7, 而 G 1 0 的读回是 6.
+-- 原因 (KQOut.G1-read): G 1 的第 m+1 个累加成员从 ↑ (前缀 + Ωt j) 起迭代 (深度 ≥ 7), 第 0 个成员只有 Lβ 的有限和.
+module KQOutNeg where
+
+open import Data.Nat using (ℕ; zero; suc; z≤n; s≤s) renaming (_≤_ to _≤ℕ_)
+open import Data.Nat.Properties using (≤-refl; ≤-trans; m≤n⇒m≤1+n)
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤; tt)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block
+open import W4Ops
+open import KQRead using (memL; h₁)
+open import KQOut using (G; Sb; zz; Lβ; Ωc)
+
+j₁ : L
+j₁ = h₁ (suc zero)
+
+A Bt : L
+A  = ↑ j₁ (proj₁ (G (suc zero) zero))
+Bt = ↑ j₁ (proj₁ (G (suc zero) (suc zero)))
+
+-- 形状: A 是 Ω 形, 第 c 个孩子是 ℕ 极限 (Lβ 迭代 ω^c 次的各项).
+A-shape : A ≡ nd (sΩ zero) (λ c → nd sL (λ n → iter (proj₁ (Eh AL tt c (opR (Lβ (suc zero))))) (Lβ (suc zero)) (suc n)))
+A-shape = refl
+
+zd : L → ℕ
+zd zero     = 0
+zd (nd s h) = suc (zd (h (c₀ s)))
+
+zdA : zd A ≡ 6
+zdA = refl
+
+zd-⊕ : (X Y : L) → zd X ≤ℕ zd (X ⊕ Y)
+zd-⊕ X zero     = ≤-refl
+zd-⊕ X (nd s h) = m≤n⇒m≤1+n (zd-⊕ X (h (c₀ s)))
+
+IsSL : L → Set
+IsSL zero          = ⊥
+IsSL (nd sS h)     = ⊥
+IsSL (nd sL h)     = ⊤
+IsSL (nd (sΩ k) h) = ⊥
+
+Q : L → Set
+Q zero          = ⊤
+Q (nd sS h)     = ⊤
+Q (nd sL h)     = ⊤
+Q (nd (sΩ k) h) = IsSL (h zero) → 7 ≤ℕ zd (nd (sΩ k) h)
+
+AllQ : L → Set
+AllQ zero     = Q zero
+AllQ (nd s h) = Q (nd s h) × ((c : Ch s) → AllQ (h c))
+
+All→Q : (ℓ : L) → AllQ ℓ → Q ℓ
+All→Q zero     _       = tt
+All→Q (nd s h) (p , _) = p
+
+sub : ∀ {j ℓ} → j ⊑ ℓ → AllQ ℓ → Q j
+sub {ℓ = ℓ} self a                = All→Q ℓ a
+sub (inc c v) (_ , a)             = sub v (a c)
+sub {ℓ = nd s h} (inu vs) (_ , a) = sub (vs (c₀ s)) (a (c₀ s))
+
+NoΩ : L → Set
+NoΩ zero          = ⊤
+NoΩ (nd sS h)     = (c : ⊤) → NoΩ (h c)
+NoΩ (nd sL h)     = (n : ℕ) → NoΩ (h n)
+NoΩ (nd (sΩ k) h) = ⊥
+
+noΩ⊕ : (X Y : L) → NoΩ X → NoΩ Y → NoΩ (X ⊕ Y)
+noΩ⊕ X zero          nx _ = nx
+noΩ⊕ X (nd sS h)     nx n = λ c → noΩ⊕ X (h c) nx (n c)
+noΩ⊕ X (nd sL h)     nx n = λ c → noΩ⊕ X (h c) nx (n c)
+noΩ⊕ X (nd (sΩ k) h) nx ()
+
+allN : (Y : L) → NoΩ Y → AllQ Y
+allN zero          _ = tt
+allN (nd sS h)     n = tt , λ c → allN (h c) (n c)
+allN (nd sL h)     n = tt , λ c → allN (h c) (n c)
+allN (nd (sΩ k) h) ()
+
+allB : (X Y : L) → AllQ X → NoΩ Y → AllQ (X ⊕ Y)
+allB X zero          a _  = a
+allB X (nd sS h)     a n  = tt , λ c → allB X (h c) a (n c)
+allB X (nd sL h)     a n  = tt , λ c → allB X (h c) a (n c)
+allB X (nd (sΩ k) h) a ()
+
+noΩ↑ : (z : Tr zero) → NoΩ (↑ zero z)
+noΩ↑ zero          = tt
+noΩ↑ (suc z)       = λ _ → noΩ↑ z
+noΩ↑ (lim f a)     = λ n → noΩ↑ (f n)
+noΩ↑ (Ω () _)
+noΩ↑ (up _ () _ _)
+noΩ↑ (ex _ _ _ _ ())
+
+L₁ : L
+L₁ = Lβ (suc zero)
+
+allL₁ : AllQ L₁
+allL₁ = (λ ()) , λ z → tt , λ _ → allN _ (noΩ⊕ zero (↑ zero z) tt (noΩ↑ z))
+
+allX⊕L₁ : (X : L) → AllQ X → AllQ (X ⊕ L₁)
+allX⊕L₁ X a = (λ ()) , λ z → tt , λ _ → allB X (zero ⊕ ↑ zero z) a (noΩ⊕ zero (↑ zero z) tt (noΩ↑ z))
+
+iterAll : (k : ℕ) → AllQ (iter (λ u → u ⊕ L₁) L₁ k)
+iterAll zero    = allL₁
+iterAll (suc k) = allX⊕L₁ _ (iterAll k)
+
+Rm : ℕ → L
+Rm m = memL Bt m
+
+-- 读回层号上的不变式: AllQ 且首枝深度 ≥ 7; 对 ℕ 极限 (nd sL) 与结点 (nd (sΩ _)) 封闭, "右边接上 L₁" 保持.
+PSQ : PS AL
+Pr PSQ x = AllQ x × (7 ≤ℕ zd x)
+Gd PSQ _ = ⊤
+Gd-dn PSQ _ _ = tt
+limP PSQ F r Qs = (tt , λ n → proj₁ (Qs n)) , m≤n⇒m≤1+n (proj₂ (Qs 0))
+nodeP PSQ {m} κ p G′ g Qs =
+  ((λ _ → m≤n⇒m≤1+n (proj₂ (Qs (fromBr m p zero)))) , (λ c → proj₁ (Qs (fromBr m p c)))) , m≤n⇒m≤1+n (proj₂ (Qs (fromBr m p zero)))
+
+hF : (u : L) → Pr PSQ u → Pr PSQ (u ⊕ L₁)
+hF u (a , q) = allX⊕L₁ u a , ≤-trans q (zd-⊕ u L₁)
+
+5≤7 : 5 ≤ℕ 7
+5≤7 = s≤s (s≤s (s≤s (s≤s (s≤s z≤n))))
+
+inv : (m : ℕ) → AllQ (Rm m) × (5 ≤ℕ zd (Rm m))
+inv zero = (tt , λ n → iterAll (suc n)) , s≤s (s≤s (s≤s (s≤s (s≤s z≤n))))
+inv (suc m) with inv m
+... | a , q with EP AL PSQ {j₁} tt tt (suc (zz (suc zero) (suc m))) (opR L₁) hF
+                  (↑ j₁ (cum (λ n → proj₁ (Sb (suc zero) (zz (suc zero) n))) m + Ωc (suc zero)))
+                  (((λ ()) , λ z → tt , λ _ → allB (Rm m) (↑ zero z) a (noΩ↑ z)) , s≤s (s≤s q))
+...   | r = proj₁ r , ≤-trans 5≤7 (proj₂ r)
+
+allBt : AllQ Bt
+allBt = tt , λ m → proj₁ (inv m)
+
+no-01 : A ⊑ Bt → ⊥
+no-01 v with sub v allBt tt
+... | s≤s (s≤s (s≤s (s≤s (s≤s (s≤s ())))))

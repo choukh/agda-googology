@@ -1,0 +1,6 @@
+probes/OCF/Align/BoundedCompletionStageWf.lagda.md	路径	1	第 6 行 (代码围栏外的文字): 临时目录路径 <临时目录>/lambda-target-arch 换成 <实验目录>/lambda-target-arch, 其余字不动
+probes/RESULTS.md	表格	99	第 131–229 行 (表头 "层 | 声称 | 文件 | 定理 | 档" 下只有 4 格的行): 在 "文件" 格与 "档" 格之间各插入一个空的 "定理" 格, 格内文字不动
+probes/Survey/IdeaLedger.md	表格	1	第 876 行 (V501): 文字里的 |β| 两个竖线转义成 \|β\|, 使该行恢复 5 格; 条目文字不动
+probes/Survey/RouteReview3.md	表格	1	第 654 行: 代码片段 `|β|·ω³` 的两个竖线转义成 `\|β\|·ω³`, 使该行恢复 4 格
+probes/Survey/RR3-Backward.md	表格	1	第 196 行: |closed| 的两个竖线转义成 \|closed\|, 使该行恢复 3 格
+probes/Survey/SkeletonAudit.md	表格	2	第 46 行 Ω_{|B_s|} 与第 88 行 Ω_{|X|} 的竖线转义成 \|, 两行分别恢复 6 格与 4 格

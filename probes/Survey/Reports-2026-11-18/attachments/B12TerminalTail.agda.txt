@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 从真实孩子继续上推。每次在新的 Ω 层至少把前缀值右乘 ω。
+module B12TerminalTail where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼; s≼s) renaming (+-mono to +v)
+open import WVOne using (read; T₀; 𝟏; iterR; Mv; Mv-mono; cum-≥; read-+)
+open import WVTwo using (◃→≼)
+open import B12Terminal
+open Run
+
+mulω : T₀ → T₀
+mulω x = Mv x 𝟏
+
+suc-row : (ℓ : L) (r : Run ℓ) → mulω (read (proj₁ (β r))) ≼ read (proj₁ (ψ ℓ (ok r) (bs r) zero (z≤ ℓ) (β r) (suc zero)))
+suc-row zero r = l≼ (λ n → ≼l n (iterR (≼-refl _) n))
+suc-row (nd s h) r = l≼ (λ n → ≼l n (iterR (≼-refl _) n))
+
+push : (ℓ : L) (r : Run ℓ) → mulω (read (proj₁ (β r))) ≼ read (value r)
+push zero r = suc-row zero r
+push ℓ@(nd sS h) r = ≼-trans (suc-row (h tt) (enterRun sS h r tt zero))
+  (◃→≼ (mono ℓ (ok r) (bs r) zero (z≤ ℓ) (β r) {y = proj₁ (Ωt ℓ)} ◃w))
+push ℓ@(nd sL h) r = ≼-trans (push (h 0) (limRun h r 0)) (lim-child h r 0)
+push ℓ@(nd (sΩ k) h) r = ≼-trans (push (h zero) (enterRun (sΩ k) h r zero zero))
+  (◃→≼ (mono ℓ (ok r) (bs r) zero (z≤ ℓ) (β r) {y = proj₁ (Ωt ℓ)} ◃w))
+
+prior : (g : ℕ → L) (r : Run (nd sL g)) (n : ℕ) → read (value (limRun g r n)) ≼ read (proj₁ (β (limRun g r (suc n))))
+prior g r zero = ≼-refl _
+prior g r (suc n) = ≼-refl _
+
+raise : (g : ℕ → L) (r : Run (nd sL g)) (n : ℕ) {a : T₀}
+      → a ≼ read (value (limRun g r n)) → mulω a ≼ read (value (limRun g r (suc n)))
+raise g r n e = ≼-trans (Mv-mono (≼-trans e (prior g r n)) (≼-refl 𝟏))
+                        (push (g (suc n)) (limRun g r (suc n)))
+
+tail : (g : ℕ → L) (r : Run (nd sL g)) (n : ℕ) {a : T₀}
+     → a ≼ read (value (limRun g r n)) → (k : ℕ) → iter mulω a k ≼ read (value (limRun g r (iter suc n k)))
+tail g r n e zero = e
+tail g r n e (suc k) = raise g r _ (tail g r n e k)
+
+close-tail : (g : ℕ → L) (r : Run (nd sL g)) (n : ℕ) {a : T₀}
+           → a ≼ read (value (limRun g r n)) → LV.lim (iter mulω a) ≼ read (value r)
+close-tail g r n e = l≼ (λ k → ≼-trans (tail g r n e k) (lim-child g r (iter suc n k)))
+
+terminal-tail : LV.lim (iter mulω Ω₂ref) ≼ read EBOᶜ
+terminal-tail = close-tail tw terminal 1 (≼-trans (anchor₂ (finiteRun 1)) (≼-trans (follow-ge (visit 1) (tower-child tower1 1)) (tower-ge tower1 1)))

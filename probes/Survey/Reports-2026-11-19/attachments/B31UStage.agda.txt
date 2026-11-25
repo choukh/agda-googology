@@ -1,0 +1,43 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原参照 ψ₀(Ω₃)[2][0] 是实际 (0,1) 一级正槽的独立上界。
+module B31UStage where
+open import Data.Unit.Base using (tt)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; s≼s; ≼-trans; ≼-refl; ≼l)
+import W4Block as W
+open import WVOne using (read; T₀; lvl1)
+import B12Terminal as T
+import WVTwo as V
+import B12XRef as X
+import B23NDomain as G
+import B31UStageHull as H
+import B31UStageOp as Op
+import B31UStageBridge as A
+import B31UStageReference as Bound
+import B31UDouble as D
+import B31UFirst as U
+import B31UPositive as P
+import B31PCell as Cell
+
+module Take (r : T.Run V.lvl2) where
+  module Z = P.At (D.reset r)
+  val = read (proj₁ (Z.Run.B′ W.zero (W.inc tt W.self)))
+  data Paid : Set where
+    paid : (q : T₀) → val ≼ q → H.In q → Paid
+  module Receive (eq : Z.Run.c ≡ Op.subject) where
+    module Slot = A.Slot Z.Run.o₁ Z.Run.B′ Z.Run.c eq
+    close : Paid → Z.receipt ≼ G.child
+    close (paid q h p) = Slot.actual (H.down val q h p)
+
+    strict-btbo : Paid → L.suc Z.receipt ≼ X.row 2
+    strict-btbo ticket = Bound.Original.all Z.receipt (close ticket)
+
+module Real = Take (U.Actual.state 0 1)
+ticket : Real.Paid
+ticket = Real.paid (X.row 1) (proj₁ Cell.exact) A.epsilon
+module Physical = Real.Receive Cell.positive
+actual = Physical.close ticket
+below-btbo = Physical.strict-btbo ticket
+

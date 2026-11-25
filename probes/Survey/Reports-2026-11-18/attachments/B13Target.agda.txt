@@ -1,0 +1,173 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：Ω₃ 真实外链的每个一级节点、所有节点实际问到的回灌参数，以及第一节点的全部一级系数。
+module B13Target where
+open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-refl; ≼-trans; ≅→≼)
+open import WVOne using (T₀; read)
+open import WVTwo using (T₁)
+open import WKShape using (Ψ₃)
+open import WSLevel using (Ω₁ᴸ)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B12Omega3Cuts as C
+
+pass : Lev₂ → Lev₂
+pass = L.ψ {ℓ = R.three} L.zero (λ r → L.suc r)
+
+back : T₁ → T₁
+back = L.tr⁻ (L.≅ᴵ-refl (L.suc L.zero))
+
+family : ℕ → T₁ → Lev₂
+family zero y = L.up L.zero y
+family (suc m) y = pass (family m (back y))
+
+outer : ∀ m → R.X m ≡ L.limᵢ L.zero (family m)
+outer zero = refl
+outer (suc m) rewrite outer m = refl
+
+feed : (T₁ → Lev₂) → ℕ → T₁
+feed g = S.iter (λ x → L.ψ L.zero (λ r → r) (g x)) Ω₁ᴸ
+
+asked : ℕ → ℕ → Lev₂
+asked m n = family m (feed (family m) n)
+
+row : ∀ m → L.ψ⁰ (R.X m) ≡ L.lim (λ n → L.ψ⁰ (asked m n))
+row m rewrite outer m = refl
+
+-- 同一个目标零层树 t 上，下一站需实填的域恰好是每个 m 的 feed，标号已由上式算出。
+from-asked : ∀ {t : T₀} → (∀ m n → L.ψ⁰ (asked m n) ≼ t) → L.ψ⁰ R.Ω₃ ≼ t
+from-asked h = l≼ (λ m → subst (λ x → x ≼ _) (sym (row m)) (l≼ (h m)))
+
+to-asked : ∀ {t : T₀} → L.ψ⁰ R.Ω₃ ≼ t → ∀ m n → L.ψ⁰ (asked m n) ≼ t
+to-asked u m n = ≼-trans (subst (λ x → L.ψ⁰ (asked m n) ≼ x) (sym (row m)) (≼l n (≼-refl _)))
+                           (≼-trans (≼l m (≼-refl _)) u)
+
+seed-row : ∀ n → L.ψ⁰ (asked 0 n) ≼ read Ψ₃
+seed-row n = ≼-trans (≼l n (≼-refl _)) R.first-actual
+
+co₀ : T₀ → Lev₂
+co₀ = R.coefficient
+
+co₁ : T₁ → Lev₂
+co₁ = L.ψ {ℓ = R.three} L.zero (λ q → L.suc (L.suc q))
+
+first-family : ∀ y → family 1 y ≡ co₁ (back y)
+first-family y = refl
+
+-- 一级输入的四行：极限槽接受任意第零层树，其余行经 ω 次迭代或逐项极限计算。
+co₁-zero : co₁ L.zero ≡ Ω₂ᴸ
+co₁-zero = refl
+co₁-suc : ∀ x → co₁ (L.suc x) ≡ R.power (co₁ x)
+co₁-suc x = refl
+co₁-lim : ∀ f → co₁ (L.lim f) ≡ L.lim (λ j → co₁ (f j))
+co₁-lim f = refl
+co₁-up : ∀ x → co₁ (L.up L.zero x) ≡ co₀ x
+co₁-up x = refl
+co₁-node : ∀ g → co₁ (L.limᵢ L.zero g) ≡ L.limᵢ (L.suc L.zero) (λ y → co₁ (g (L.tr⁻ L.z≅ y)))
+co₁-node g = refl
+
+-- 将零层系数写成以加 Ω₂ 为起点的迭代高度，沿输入结构证明，不要求输入是有限序数。
+height : T₀ → Lev₂ → Lev₂
+height L.zero p = p L.+ Ω₂ᴸ
+height (L.suc x) p = L.lim (S.iter (height x) p)
+height (L.lim f) p = L.lim (λ n → height (f n) p)
+
+regular₀ : ∀ x → co₀ x L.≅ co₀ x
+regular₀ x = L.ψ-≅ {p = L.zero} {σ = λ q → L.suc (L.suc (L.suc q))}
+                    {p′ = L.zero} {σ′ = λ q → L.suc (L.suc (L.suc q))} (L.≅ᴵ-refl _) (L.≅-refl⁰ x)
+
+shift₀ : ∀ x {p q} → p L.≅ q → height x p L.≅ (q L.+ co₀ x)
+shift₀ L.zero e = L.add-≅ {σ = R.idσ} {σ′ = R.idσ} e (L.Ω-refl _)
+shift₀ (L.suc x) e = L.l≅ (C.Sum.Prefix.along (co₀ x) (regular₀ x) (height x) (shift₀ x) e)
+shift₀ (L.lim f) e = L.l≅ (λ n → shift₀ (f n) e)
+
+height₁ : T₁ → Lev₂ → Lev₂
+height₁ L.zero p = p L.+ Ω₂ᴸ
+height₁ (L.suc x) p = L.lim (S.iter (height₁ x) p)
+height₁ (L.lim f) p = L.lim (λ n → height₁ (f n) p)
+height₁ (L.up L.zero x) p = height x p
+height₁ (L.limᵢ L.zero g) p = L.limᵢ (L.suc L.zero) (λ y → height₁ (g (L.tr⁻ L.z≅ y)) p)
+
+refl-left : ∀ {i j} {x : L.Ordᶜ i} {y : L.Ordᶜ j} → x L.≅ y → x L.≅ x
+refl-left h = L.≅-trans h (L.≅-sym h)
+
+co-pres : ∀ {u v} → u L.≅ v → co₁ u L.≅ co₁ v
+co-pres = L.ψ-≅ {p = L.zero} {σ = λ q → L.suc (L.suc q)} {p′ = L.zero} {σ′ = λ q → L.suc (L.suc q)} (L.≅ᴵ-refl _)
+
+tr-both : ∀ {i j} (e : i L.≅ᴵ j) {x y : L.Ordᶜ j} → x L.≅ y → L.tr⁻ e x L.≅ L.tr⁻ e y
+tr-both e d = L.≅-trans (L.tr⁻-≅ e d) (L.≅-sym (L.tr⁻-≅ e (refl-left (L.≅-sym d))))
+
+shift₁ : ∀ x → x L.≅ x → ∀ {p q} → p L.≅ q → height₁ x p L.≅ (q L.+ co₁ x)
+shift₁ L.zero _ pq = L.add-≅ {σ = R.idσ} {σ′ = R.idσ} pq (L.Ω-refl _)
+shift₁ (L.suc x) (L.s≅ d) pq = L.l≅ (C.Sum.Prefix.along (co₁ x) (co-pres d) (height₁ x) (shift₁ x d) pq)
+shift₁ (L.lim f) (L.l≅ d) pq = L.l≅ (λ n → shift₁ (f n) (d n) pq)
+shift₁ (L.up L.zero x) _ pq = shift₀ x pq
+shift₁ (L.limᵢ L.zero g) (L.lᵢ≅ e h) pq = L.lᵢ≅ e λ x y d →
+  let tx = L.tr⁻ L.z≅ x
+      rel = h tx (L.tr⁻ L.z≅ y) (tr-both L.z≅ d)
+  in L.≅-trans (shift₁ (g tx) (refl-left rel) pq)
+               (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (refl-left (L.≅-sym pq)) (co-pres rel))
+
+pres-family : ∀ m {x y} → x L.≅ y → family m x L.≅ family m y
+pres-family zero d = L.upˡ (L.upʳ d)
+pres-family (suc m) d = L.ψ-≅ {p = L.zero} {σ = λ r → L.suc r} {p′ = L.zero} {σ′ = λ r → L.suc r} (L.≅ᴵ-refl _) (pres-family m (tr-both (L.≅ᴵ-refl _) d))
+
+feed-regular : ∀ m n → feed (family m) n L.≅ feed (family m) n
+feed-regular m = L.iter-R L._≅_ {G = λ x → L.ψ L.zero R.idσ (family m x)} {G′ = λ x → L.ψ L.zero R.idσ (family m x)}
+  (λ d → L.ψ-≅ {p = L.zero} {σ = R.idσ} {p′ = L.zero} {σ′ = R.idσ} (L.≅ᴵ-refl _) (pres-family m d)) (L.Ω-refl _)
+
+first-arithmetic : ∀ n → height₁ (back (feed (family 1) n)) L.zero L.≅ asked 1 n
+first-arithmetic n = L.≅-trans (shift₁ _ d L.z≅) (C.left-unit R.idσ (co-pres d))
+  where d = tr-both (L.≅ᴵ-refl _) (feed-regular 1 n)
+
+first-lower : ∀ {t : T₀} → (∀ n → L.ψ⁰ (height₁ (back (feed (family 1) n)) L.zero) ≼ t) → L.ψ⁰ (R.X 1) ≼ t
+first-lower {t} h = subst (λ x → x ≼ t) (sym (row 1)) (l≼ (λ n → ≼-trans (≅→≼ (L.ψ⁰-≅ (L.≅-sym (first-arithmetic n)))) (h n)))
+
+-- 所有后续外链项都在同一个二层载体内调用 pass；这一层多出真正的一层树参数。
+height₂ : Lev₂ → Lev₂ → Lev₂
+height₂ L.zero p = p L.+ Ω₂ᴸ
+height₂ (L.suc x) p = L.lim (S.iter (height₂ x) p)
+height₂ (L.lim f) p = L.lim (λ n → height₂ (f n) p)
+height₂ (L.up L.zero x) p = height₁ x p
+height₂ (L.limᵢ L.zero g) p = L.limᵢ L.zero (λ y → height₂ (g (back y)) p)
+height₂ (L.limᵢ (L.suc L.zero) g) p = L.limᵢ (L.suc L.zero) (λ y → height₂ (g (L.tr⁻ L.z≅ y)) p)
+
+pass-pres : ∀ {u v} → u L.≅ v → pass u L.≅ pass v
+pass-pres = L.ψ-≅ {p = L.zero} {σ = λ q → L.suc q} {p′ = L.zero} {σ′ = λ q → L.suc q} (L.≅ᴵ-refl _)
+
+shift₂ : ∀ x → x L.≅ x → ∀ {p q} → p L.≅ q → height₂ x p L.≅ (q L.+ pass x)
+shift₂ L.zero d pq = L.add-≅ {σ = R.idσ} {σ′ = R.idσ} pq (L.Ω-refl _)
+shift₂ (L.suc x) (L.s≅ d) pq = L.l≅ (C.Sum.Prefix.along (pass x) (pass-pres d) (height₂ x) (shift₂ x d) pq)
+shift₂ (L.lim f) (L.l≅ d) pq = L.l≅ (λ n → shift₂ (f n) (d n) pq)
+shift₂ (L.up L.zero x) (L.upˡ d) pq = shift₁ x (refl-left d) pq
+shift₂ (L.up L.zero x) (L.upʳ d) pq = shift₁ x (refl-left (L.≅-sym d)) pq
+shift₂ (L.limᵢ L.zero g) (L.lᵢ≅ e h) pq = L.lᵢ≅ e λ x y d →
+  let rel = h (back x) (back y) (tr-both (L.≅ᴵ-refl _) d)
+  in L.≅-trans (shift₂ (g (back x)) (refl-left rel) pq)
+               (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (refl-left (L.≅-sym pq)) (pass-pres rel))
+shift₂ (L.limᵢ (L.suc L.zero) g) (L.lᵢ≅ e h) pq = L.lᵢ≅ e λ x y d →
+  let tx = L.tr⁻ L.z≅ x
+      rel = h tx (L.tr⁻ L.z≅ y) (tr-both L.z≅ d)
+  in L.≅-trans (shift₂ (g tx) (refl-left rel) pq)
+               (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (refl-left (L.≅-sym pq)) (pass-pres rel))
+
+argument : ℕ → ℕ → Lev₂
+argument m n = family m (back (feed (family (suc m)) n))
+
+all-arithmetic : ∀ m n → height₂ (argument m n) L.zero L.≅ asked (suc m) n
+all-arithmetic m n = L.≅-trans (shift₂ _ d L.z≅) (C.left-unit R.idσ (pass-pres d))
+  where d = pres-family m (tr-both (L.≅ᴵ-refl _) (feed-regular (suc m) n))
+
+-- 准确的全行条件有闭合的第 0 行；后续每行只需对实际回灌到的参数实现 height₂。
+all-lower : (∀ m n → L.ψ⁰ (height₂ (argument m n) L.zero) ≼ read Ψ₃) → L.ψ⁰ R.Ω₃ ≼ read Ψ₃
+all-lower h = from-asked λ where
+  zero n → seed-row n
+  (suc m) n → ≼-trans (≅→≼ (L.ψ⁰-≅ (L.≅-sym (all-arithmetic m n)))) (h m n)
+
+all-necessary : L.ψ⁰ R.Ω₃ ≼ read Ψ₃ → ∀ m n → L.ψ⁰ (height₂ (argument m n) L.zero) ≼ read Ψ₃
+all-necessary h m n = ≼-trans (≅→≼ (L.ψ⁰-≅ (all-arithmetic m n))) (to-asked h (suc m) n)

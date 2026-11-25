@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在候选界上只计算一次 src 的原迭代算子，再比较两个零层树；给出完整的双向定理。
+module B25OneFold where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Uniform using (Uniform)
+open import OCF.Align.Stage2 using (seed⁻)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; z≼; l≼; ≅→≼; ⊑→≼; ≺→s≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValMain using (ψ₀≈)
+open import OCF.Align.BTBOValAbsorb using (St; stl)
+open import OCF.Align.BTBOFullSt using (St-x)
+open import OCF.Align.BTBOFullLv using (SV; St-γ; SV-toLevel)
+open import OCF.Align.BTBOFullEb using (V2)
+open import OCF.Align.BTBOFullEmb using (Ψ-emb)
+open import OCF.Align.BTBOFullV1 using (V1; PW₁; PW₂; PW₃)
+open import OCF.Align.BTBOFullV3 using (V3; bkᴵ; Fʸ)
+open import OCF.Align.BTBOFull using (tr₀-bk; St-bk; BTBO≈)
+open import B25Least using (strict-step; T₀)
+
+J : S.Ord₀ → S.Ord₀
+J x = S.ψ₀ (S.Ω (S.ordᴰ x))
+
+monotone : ∀ {x y} → St (tr₀ x) → St (tr₀ y) → tr₀ x ≼ tr₀ y → tr₀ (J x) ≼ tr₀ (J y)
+monotone {x} {y} sx sy d = ≼-trans (proj₁ (ψ₀≈ (S.ordᴰ x)))
+    (≼-trans (Ψ-emb (PW₁ (V2 x y sx sy d))) (proj₂ (ψ₀≈ (S.ordᴰ y))))
+
+majorant : ∀ a → SV a → ∀ y → St (tr₀ y) → L.forget a ≼ tr₀ y → Fʸ a ≼ tr₀ (J y)
+majorant a va y sy low = ≼-trans (Ψ-emb (PW₃ (V1 va)))
+  (≼-trans (Ψ-emb (PW₁ (V2 (bkᴵ a) y (St-bk va) sy (≼-trans (≅→≼ (tr₀-bk a)) low))))
+           (proj₂ (ψ₀≈ (S.ordᴰ y))))
+
+module From (y : S.Ord₀) (sy : St (tr₀ y)) (fold : tr₀ (J y) ≼ tr₀ y) where
+  iterates : ∀ n → tr₀ (S.ψⁿ n) ≼ tr₀ y
+  iterates zero = z≼
+  iterates (suc n) = ≼-trans (monotone {S.ψⁿ n} {y} (St-x n) sy (iterates n)) fold
+
+  least : tr₀ S.BTBO ≼ tr₀ y
+  least = l≼ iterates
+
+regular : SV N.BTBOᴸ
+regular = SV-toLevel N.BTBOᴵ N.BTBO-HS (stl (λ n → St-γ (suc n))
+  (λ n → ≺→s≼ (strict-step (suc n))))
+
+canonical = bkᴵ N.BTBOᴸ
+exact : tr₀ canonical L.≅ N.BTBOᴵ
+exact = L.≅-trans (tr₀-bk N.BTBOᴸ) (L.forget-toLevel N.BTBOᴵ N.BTBO-HS)
+
+canonical-fold : tr₀ (J canonical) ≼ tr₀ canonical
+canonical-fold = ≼-trans (proj₁ (ψ₀≈ (S.ordᴰ canonical)))
+  (≼-trans (Ψ-emb (PW₂ (Uniform N.BTBOᴸ) (V3 regular)))
+    (≼-trans (⊑→≼ _ (L.Ψ⁰-mono (L.toLevel-⊑ (Uniform N.BTBOᴸ) N.BTBO-HS seed⁻)))
+      (≼-trans (⊑→≼ _ seed⁻) (≅→≼ (L.≅-sym exact)))))
+
+Witness : T₀ → Set
+Witness Y = Σ S.Ord₀ (λ y → St (tr₀ y) × tr₀ (J y) ≼ tr₀ y × tr₀ y ≼ Y)
+
+sufficient : ∀ {Y} → Witness Y → tr₀ S.BTBO ≼ Y
+sufficient (y , sy , fold , bound) = ≼-trans (From.least y sy fold) bound
+
+necessary : ∀ {Y} → tr₀ S.BTBO ≼ Y → Witness Y
+necessary h = canonical , St-bk regular , canonical-fold , ≼-trans (≅→≼ exact) (≼-trans (proj₂ BTBO≈) h)

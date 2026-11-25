@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同起点在任意两条统一零路径上给出逐枝等形的可数树，可继续用作下一轮下标。
+module B19PathShape where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import W4Block hiding (R)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; h₁)
+import OCF.Align.Level as L
+open import B14PathHeight using (All; standard; through)
+open import B19PathRel using (Laws)
+open import B19PathFold using (module Check)
+import B12Terminal as T
+import B14Tower as W
+open T.Run
+
+data Shape : Tr zero → Tr zero → Set where
+  z : Shape zero zero
+  s : ∀ {u v} → Shape u v → Shape (suc u) (suc v)
+  l : ∀ {f g : ℕ → Tr zero} {p q} → (∀ j → Shape (f j) (g j)) → Shape (lim f p) (lim g q)
+
+ident : (x : Tr zero) → Shape x x
+ident zero = z
+ident (suc u) = s (ident u)
+ident (lim f p) = l (λ n → ident (f n))
+
+append : ∀ {a b c d} → Shape a b → Shape c d → Shape (a + c) (b + d)
+append p z = p
+append p (s q) = s (append p q)
+append p (l q) = l (λ n → append p (q n))
+law : Laws
+Laws.R law = Shape
+Laws.plus law = append
+Laws.limit law f g p = l p
+read-shape : ∀ {a b} → Shape a b → read a L.≅ read b
+read-shape z = L.z≅
+read-shape (s p) = L.s≅ (read-shape p)
+read-shape (l p) = L.l≅ (λ n → read-shape (p n))
+
+module At (r : T.Run (tw 1)) (paths : ∀ z → All (W.At.path r z)) (start : Shape (proj₁ (W.At.slot r)) (proj₁ (β r))) where
+  open W.At r hiding (start)
+  twin : ∀ n → Shape (idx (suc n)) (T.value (point n))
+  twin n = Check.fold law (h₁ (idx n)) (ok (chain (idx n))) (bs (chain (idx n)))
+    (paths (idx n)) (standard (h₁ (idx n))) (proj₁ (Ωt (h₁ (idx n)))) slot (β r) start
+  next-is-output : ∀ n → read (idx (suc n)) L.≅ read (T.value (point n))
+  next-is-output n = read-shape (twin n)
+
+module Actual = At T.tower1 (λ z → through (↑ zero z)) (ident (proj₁ (β T.tower1)))
+module Standard = At (T.initial (tw 1) (Ok-tw 1)) (λ z → through (↑ zero z)) (ident (proj₁ (Ωt zero)))

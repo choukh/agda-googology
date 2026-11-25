@@ -1,0 +1,34 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module Goal where
+open import Data.Nat using (ℕ)
+open import Data.Product using (Σ; proj₁; proj₂)
+import OCF.Align.EboLeanDef as E
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiTBRow as TB
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiKVRel as K
+import OCF.Lean.YiAbsSimInst as SI
+import OCF.Lean.YiCWActual as C
+import OCF.Lean.YiGIInst as GI
+open import OCF.Lean.YiExSuff
+open import OCF.Lean.YiFNTarget using (target-hc)
+open import OCF.Align.Value using (_≼_)
+open ExSuff GI.gradedᵍ GI.domsᵍ using (Keel⁻)
+h₁ : B.L
+h₁ = C.Step.child 2 C.c₁
+Target : Set
+Target = SI.E.HC (E.fsn (Keel⁻.row GI.keelᴱ 3) 1)
+target-inhabited : Target
+target-inhabited = target-hc
+Missing₁ : Set
+Missing₁ = (h : SI.E.HC (E.fsn (Keel⁻.row GI.keelᴱ 3) 1)) →
+  SI.E.tree h ≼ K.readRW (proj₁
+    (TB.ψ h₁ (proj₂ (P.Ok-tw 3) C.c₁) (MT.rbᶻ h₁)
+      (λ i u → C.baseᴱ 3 i (P.inc C.c₁ u))
+      B.zero (P.z≤ h₁) (C.betaᴱ 3)
+      (proj₁ (O.Ωt h₁))))
+FirstMissingᵗ : Set
+FirstMissingᵗ = Σ ℕ λ q → (h : SI.E.HC (E.fsn (Keel⁻.row GI.keelᴱ 3) 1)) →
+  SI.E.tree h ≼ K.readRW (proj₁ (C.Step.out 2 (C.Step.chain 2 q)))

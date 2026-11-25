@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 若固定种子 b 达到所需地板，且在 t 上方的 ε 不动点的某个有限逼近内，则比较族的上确界不超过该 ε 不动点。
+module B30MLocal where
+open import Data.Nat.Base using (ℕ; zero; suc)
+import Data.Nat.Properties as N
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; s≼s; ≼l; l≼; z≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRefTw2 using (tree-≼; endpoint)
+import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanTree using (hc-tower)
+import OCF.Align.Level as L
+open import WVOne using (T₀; 𝟏)
+import B18Product as M
+import B19IdealArithmetic as Ar
+import B22MovingIndex as Eps
+import B12Omega3Ref as Three
+import B19IdealRow as Old
+import B12BtboCut as Fin
+import B17Calibration as Orig
+import B12XRef as Ref
+import B26Names as A
+import B26Depth as D
+import B27Threshold as T
+import B27CutArithmetic as Row
+import B27EpsilonCut as ER
+import B27UEpsilon as Env
+import B27Endpoint as End
+import B29LimitCut as Lim
+open import B30MScalar
+
+open import B30MSeed using (q; r; base; rq; small-q)
+
+open import B30MBudget using (module Budget)
+
+module Local (t b : T₀) (h : L.suc r ≼ b) (d : Env.At.In t b) where
+  module X = Env.At t
+  module B = Build (λ _ → b) h
+  omega : X.In L.ωᶜ
+  omega = X.down {x = L.ωᶜ} {y = Ar.norm 𝟏} (M.one-left L.ωᶜ)
+    (X.expC {x = 𝟏} (X.sucC {x = L.zero} (X.down {x = L.zero} {y = t} z≼ X.seed)))
+  both : ∀ a c → X.In a → X.In c → X.In (pair a c)
+  both a c pa pc with X.together {x = a} {y = c} pa pc
+  ... | n , p , v = X.down {x = pair a c} {y = X.e n} (bound a c (X.e n) p v) (X.point n)
+  module Lw = Budget {λ _ → b} h X.In omega (λ a → X.sucC {x = a}) (λ a → X.expC {x = a})
+    (λ a c → X.mulC {x = a} {y = c}) both (λ _ → d)
+  abstract
+    under : L.lim B.f ≼ Eps.above t
+    under = l≼ {f = B.f} (λ j → ≼-trans {a = B.f j} {b = L.suc (B.f j)} {c = Eps.above t}
+      (≼-suc (≼-refl (B.f j))) (X.finite {x = B.f j} (Lw.inside j)))
+
+one-more : ∀ (a b : T₀) → a ≼ b → Env.At.In b (L.suc a)
+one-more a b e = Env.At.sucC b {x = a} (Env.At.down b {x = a} {y = b} e (Env.At.seed b))
+

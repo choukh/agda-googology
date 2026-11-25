@@ -1,0 +1,65 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21RowPool where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F)
+open import YiLAB7Replay using (o₁)
+open import WVTwo using (g₂; p₂)
+open import WSW4 using (module Lem)
+open Lem o₁ using (Real)
+open import B8PairW4 using (Real-up)
+open import B12ActualSlots using (Covered; _⊴_)
+import OCF.Align.Level as L
+import B11OuterCore as C
+import B12Terminal as T
+import B12Update
+import B12Orbit as Std
+import B13Orbit as K
+import B13OrbitFeed as O
+import B18OrbitRows as Old
+import B20RowPrefix as P
+import B20RowRun as Run
+import B20RowAcross as Across
+import B21RowCopy as Cp
+open T.Run
+
+module At (r : T.Run lvl3) (cv : Covered r) where
+  module V = Run.At L.zero L.z≅ r cv (oneβ r) (oneB r)
+  module Y = Across.At L.zero L.z≅ r cv (oneβ r) (oneB r)
+  open V using (module R; module Clock; module A; slotₙ; k-of; clock; opₙ; S′; st)
+  open R.I using (module Previous; module E₀; K₁; J)
+  open Previous.Proof.Core.Run using (S₁; step₂)
+  open A using (st1; c⁺; G)
+  b : ℕ → Tr⁺ lvl1
+  b n = st n lvl1 C.slot
+  h : ∀ n → Real (proj₁ (b n)) (P.e n)
+  h n = C.rP (Y.h n)
+  front : ∀ n → lvl1 ⊢ Cp.copy (b n) ◃ proj₁ (run A.K (st n) lvl1 C.slot (b n))
+  front n = K.push-path {y = proj₁ (run F (st n) lvl1 C.slot (b n))}
+      (Cp.inside (st n)) (K.standard≤K c⁺ E₀.cp (st n) lvl1 C.slot (b n))
+  later : ∀ n → lvl1 ⊢ Cp.copy (b n) ◃ proj₁ (run (opₙ n) (S′ n) lvl1 Old.Out.slot (b n))
+  later n = ◃t (front n) (◃t (Emono ok₂ tdNil A.K (st n) lvl1 C.slot (b n) (proj₂ c⁺))
+                     (Emono ok₂ O.D₁ K₁ (S′ n) lvl1 Old.Out.slot (b n) (proj₂ (clock n))))
+  fp = λ j → E ok₂ tdNil (g₂ (R.seq j)) J st1 lvl1 C.slot (st1 lvl1 C.slot)
+  branch : ∀ n → lvl1 ⊢ Cp.copy (b n) ◃ proj₁ (fp (suc (suc (k-of n))))
+  branch n = ◃t (later n) (◃l 1)
+  module Pool = Cp.Collect fp (λ n → suc (k-of n)) b P.e branch h
+  full : Real (proj₁ (run (Std.block J) st1 lvl1 C.slot (st1 lvl1 C.slot))) P.shadow
+  full = Pool.all
+  carry : ∀ d → proj₁ (Ωt lvl2) ⊴ proj₁ d →
+    Real (proj₁ (run (K.block d J) st1 lvl1 C.slot (st1 lvl1 C.slot))) P.shadow
+  carry d (inj₁ e) = subst (λ x → Real (proj₁ (E ok₂ tdNil x J st1 lvl1 C.slot (st1 lvl1 C.slot))) P.shadow) e full
+  carry d (inj₂ q) = Real-up (Emono ok₂ tdNil J st1 lvl1 C.slot (st1 lvl1 C.slot) q) full
+  ready : Real (proj₁ (E₀.state 1 lvl1 C.slot)) P.shadow
+  ready = Real-up (◃l 0) (carry c⁺ E₀.cp)
+  basis : C.Str P.shadow (E₀.state 1)
+  basis = C.str ready (C.rΩ old) (C.sN old) (C.st old)
+    where old = B12Update.structure (E₀.seeds 1)
+
+

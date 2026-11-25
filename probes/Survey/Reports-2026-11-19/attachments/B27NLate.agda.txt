@@ -1,0 +1,39 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同一真回灌链上一项的原森林意义会越过整次本地预算；在 Flat 假设下，可以越过整个原 W4 闭项。
+module B27NLate where
+
+open import Data.Nat.Base using (ℕ)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Align.EboLeanBase using (c∷; c[])
+open import OCF.Align.EboLeanTree using (nf-tower)
+open import OCF.Align.EboLeanDef using (EBOψ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼lim⁻; s≼s)
+open import WVOne using (read)
+import B12XRef as X
+import B25DTrack as R
+import B26Flat as S
+import B26Names as A
+import B26CDecode as D
+import B26PActual as W
+import B17CellNext as C
+import B17CellPrefix as Cell
+import B27NMeaning as G
+
+module Classical (lem : LEM) where
+  module M = G.Classical lem
+  large : ∀ {x : A.T₀} → L.suc x ≼ A.E → Σ ℕ (λ j → L.suc x ≼ M.response j)
+  large {x} d = ≼lim⁻ {a = x} {f = M.response} (≼-trans {b = A.E} d M.all)
+
+  above-source : Σ ℕ (λ j → L.suc R.unit-output ≼ M.response j)
+  above-source = large {x = R.unit-output} (≼-trans {b = L.suc (X.row 1)} (s≼s D.read-bound)
+    (A.strict (A.named (EBOψ 1) (nf-tower 1) (c∷ c[]) (X.H 1))))
+
+  above-terminal : S.Flat → Σ ℕ (λ j → L.suc W.Y ≼ M.response j)
+  above-terminal f = large {x = W.Y} (S.strict-bound f)
+
+  above-cells : S.Flat → Σ ℕ (λ j → ∀ n m → L.suc (Cell.cell n m) ≼ M.response j)
+  above-cells f = let j , d = above-terminal f in j , λ n m →
+    ≼-trans {b = L.suc W.Y} (s≼s (C.actual n m)) d
+

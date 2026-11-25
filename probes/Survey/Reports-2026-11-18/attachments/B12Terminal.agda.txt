@@ -1,0 +1,135 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 真实 Λ 孩子使用累加前缀产生的基。沿这些前缀保留 WKGen.Main 所需的两个槽位见证。
+module B12Terminal where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼; s≼s) renaming (+-mono to +v)
+open import WVOne using (read; 𝟏; T₀; lvl1; gt; h₁; p₀)
+open import WVTwo using (lvl2; ◃→≼)
+open import WKGen using (Ω₁t; _⊴_; module Main; node-ge)
+import WKTower as WT
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module B = BoundedTrich
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValMain using (ψ₀≈)
+
+Ω₂ref : T₀
+Ω₂ref = LV.ψ⁰ (LV.Ω (LV.suc (LV.suc LV.zero)))
+
+inflate0 : (ℓ : L) (o : Ok ℓ) (S : Base ℓ) (w : zero ≤ ℓ) (β : Tr⁺ zero) (x : Tr ℓ)
+         → read (proj₁ β) ≼ read (proj₁ (ψ ℓ o S zero w β x))
+inflate0 ℓ o S w β x with zl x
+... | inj₁ refl = ≼-refl _
+... | inj₂ d = ◃→≼ (mono ℓ o S zero w β d)
+
+keep1 : (ℓ : L) (o : Ok ℓ) (S : Base ℓ) (w : lvl1 ≤ ℓ) (β : Tr⁺ lvl1) (x : Tr ℓ)
+      → Ω₁t ⊴ proj₁ β → Ω₁t ⊴ proj₁ (ψ ℓ o S lvl1 w β x)
+keep1 ℓ o S w β x p with zl x
+... | inj₁ refl = p
+... | inj₂ d with p
+...   | inj₁ refl = inj₂ (mono ℓ o S lvl1 w β d)
+...   | inj₂ e = inj₂ (◃t e (mono ℓ o S lvl1 w β d))
+
+record Run (ℓ : L) : Set where
+  constructor makeRun
+  field
+    ok : Ok ℓ
+    bs : Base ℓ
+    β : Tr⁺ zero
+    oneB : (w : zero ≤ ℓ) → 𝟏 ≼ read (proj₁ (bs zero w))
+    omegaB : (w : lvl1 ≤ ℓ) → Ω₁t ⊴ proj₁ (bs lvl1 w)
+    oneβ : 𝟏 ≼ read (proj₁ β)
+open Run
+
+initial : (ℓ : L) → Ok ℓ → Run ℓ
+initial ℓ o = makeRun o (B₀ ℓ) (Ωt zero) (λ _ → ≼-refl _) (λ _ → inj₁ refl) (≼-refl _)
+
+value : ∀ {ℓ} → Run ℓ → Tr zero
+value {ℓ} r = proj₁ (ψ ℓ (ok r) (bs r) zero (z≤ ℓ) (β r) (proj₁ (Ωt ℓ)))
+
+enterRun : (s : Sh) (h : Ch s → L) (r : Run (nd s h)) (c : Ch s) → Tr (nd s h) → Run (h c)
+enterRun s h r c x = makeRun (proj₂ (ok r) c)
+  (λ i u → ψ ℓ (ok r) (bs r) i (inc c u) (bs r i (inc c u)) x)
+  (ψ ℓ (ok r) (bs r) zero (z≤ ℓ) (β r) x)
+  (λ u → ≼-trans (oneB r (inc c u)) (inflate0 ℓ (ok r) (bs r) (inc c u) (bs r zero (inc c u)) x))
+  (λ u → keep1 ℓ (ok r) (bs r) (inc c u) (bs r lvl1 (inc c u)) x (omegaB r (inc c u)))
+  (≼-trans (oneβ r) (inflate0 ℓ (ok r) (bs r) (z≤ ℓ) (β r) x))
+  where ℓ = nd s h
+
+segment : (g : ℕ → L) → ℕ → Tr (nd sL g)
+segment g n = proj₁ (upz {s = sL} {h = g} n (Ωt (g n)))
+
+prefix : (g : ℕ → L) → ℕ → Tr (nd sL g)
+prefix g zero = zero
+prefix g (suc n) = cum (segment g) n
+
+limRun : (g : ℕ → L) (r : Run (nd sL g)) (n : ℕ) → Run (g n)
+limRun g r n = enterRun sL g r n (prefix g n)
+
+lim-child : (g : ℕ → L) (r : Run (nd sL g)) (n : ℕ) → read (value (limRun g r n)) ≼ read (value r)
+lim-child g r zero = ≼l 0 (≼-refl _)
+lim-child g r (suc n) = ≼l (suc n) (≼-refl _)
+
+data Visit (target : L) : L → Set where
+  here : Visit target target
+  child : {g : ℕ → L} (n : ℕ) → Visit target (g n) → Visit target (nd sL g)
+
+follow : ∀ {target ℓ} → Visit target ℓ → Run ℓ → Run target
+follow here r = r
+follow (child {g} n p) r = follow p (limRun g r n)
+
+follow-ge : ∀ {target ℓ} (p : Visit target ℓ) (r : Run ℓ) → read (value (follow p r)) ≼ read (value r)
+follow-ge here r = ≼-refl _
+follow-ge (child {g} n p) r = ≼-trans (follow-ge p (limRun g r n)) (lim-child g r n)
+
+anchor₂ : (r : Run lvl2) → Ω₂ref ≼ read (value r)
+anchor₂ r = Main.main (ok r) (bs r) (z≤ lvl2) (β r) (omegaB r (inc tt self)) (oneβ r) (oneB r (inc tt (inc tt self)))
+
+terminal : Run Λ
+terminal = initial Λ Ok-Λ
+
+tower1 : Run (tw 1)
+tower1 = limRun tw terminal 1
+
+-- tw 1 的实际链点由当前运行的槽位产生。
+step1 : Run (tw 1) → Tr zero → Tr zero
+step1 r z = fromBr (tw 1) p₀ (proj₁ (ψ (tw 1) (ok r) (bs r) zero (posW (tw 1) p₀)
+                         (bs r zero (posW (tw 1) p₀)) (gt z)))
+
+index1 : Run (tw 1) → ℕ → Tr zero
+index1 r = iter (step1 r) zero
+
+tower-child : (r : Run (tw 1)) (n : ℕ) → Run (h₁ (index1 r n))
+tower-child r n = enterRun (sΩ zero) h₁ r (index1 r n) zero
+
+tower-ge : (r : Run (tw 1)) (n : ℕ) → read (value (tower-child r n)) ≼ read (value r)
+tower-ge r n = node-ge (kp (tw 1) (ok r) p₀ (z≤ (tw 1)))
+  (λ z → ψ (tw 1) (ok r) (bs r) zero (z≤ (tw 1)) (β r) (gt z)) (step1 r) n
+
+-- 第 n 个有限层为 1+n。路径穿过真实的 Λ 与 tw 1 外折叠。
+visit : (n : ℕ) → Visit (WT.gL n) (h₁ (index1 tower1 1))
+visit n = child 0 (child n here)
+
+finiteRun : (n : ℕ) → Run (WT.gL n)
+finiteRun n = follow (visit n) (tower-child tower1 1)
+
+finite-ge : (n : ℕ) → read (value (finiteRun n)) ≼ read EBOᶜ
+finite-ge n = ≼-trans (follow-ge (visit n) (tower-child tower1 1)) (≼-trans (tower-ge tower1 1) (lim-child tw terminal 1))
+
+collect : (Q : ℕ → T₀) → ((n : ℕ) → Q n ≼ read (value (finiteRun n))) → LV.lim Q ≼ read EBOᶜ
+collect Q f = l≼ (λ n → ≼-trans (f n) (finite-ge n))
+
+ebo-level : Ω₂ref ≼ read EBOᶜ
+ebo-level = ≼-trans (anchor₂ (finiteRun 1)) (finite-ge 1)
+
+ebo-src : tr₀ (Ord-Ord.ψ₀ (Ord-Ord.Ω (B.suc (B.suc B.zero)))) ≼ read EBOᶜ
+ebo-src = ≼-trans (proj₁ (ψ₀≈ (B.suc (B.suc B.zero)))) ebo-level

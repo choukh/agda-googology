@@ -1,0 +1,34 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 目标从公共前缀不到右项：沿右侧进入同一槽、再抽回原分支的复合完全等于前缀内的调用。
+module B28PPull where
+open import Data.Unit using (tt)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Maybe.Base using (just)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import Data.Nat.Base using (ℕ; suc)
+import B15Spine as S
+
+pull : ∀ k (o : Ok k) {i} (w : i ≤ k) (t : Pos⁼ i) b (e : OkO k b) →
+  let v = w ∙ lift k b in
+  mapK (pshBr v t) (pshFirst v t) (kp⁼ (k ⊕ b) (Ok⊕ k b o e) (psh v t) (self ∙ lift k b)) ≡
+    mapK (pshBr w t) (pshFirst w t) (kp⁼ k o (psh w t) self)
+pull k o w t zero e = refl
+pull k o w t (nd s h) e = pull k o w t (h (c₀ s)) (proj₂ e (c₀ s))
+
+module Positive (n : ℕ) where
+  i = tw n
+  k = tw (suc n)
+  h = S.branch i
+  o = Ok-tw (suc n)
+  p : Pos k
+  p = inj₁ (inj₁ tt)
+  label : ∀ (b : Tr i → L) (e : ∀ c → OkO k (b c)) →
+    let l = k ⊕ nd (sΩ i) b
+        o′ = Ok⊕ k (nd (sΩ i) b) o ((ink self , Ok-tw n) , e)
+    in kp l o′ (inj₁ (inj₁ tt)) (self ∙ lift k (nd (sΩ i) b)) ≡ just (p , (λ z → z) , refl)
+  label b e = pull k o (ink self) (inj₁ tt) (b zero) (e zero)

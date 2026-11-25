@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21RowWhole where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (𝟏; read)
+open import WVTwo using (g₂; p₂; ◃→≼)
+open import WKGen using (node-ge)
+open import WKShape using (lvl3; ok₃; Ψ₃)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import WSShadow using (zC)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼; ≼l; ≼-refl; ≅→≼)
+import B11OuterCore as C
+import B12Terminal as T
+import B12ActualSlots as Cov
+import B12Update as U
+import B13OrbitFeed as O
+import B13Update as Step
+import B14RefDescribed as D
+import B18OrbitRows as Old
+import B19RowSecond as Src
+import B20RowPrefix as P
+import B21RowPool as Y
+open T.Run
+target = L.ψ⁰ (Src.p L.+ Ω₂ᴸ)
+
+module At (r : T.Run lvl3) (cv : Cov.Covered r) where
+  module Pool = Y.At r cv
+  open Pool.V using (module R; module A; model; k-of; clock; opₙ)
+  open R.I using (module Previous; module E₀; J)
+  open Previous.Proof.Core.Run using (S₁; step₂)
+  open A using (st1; c⁺; v₁; G; w2; outer)
+  module Emit (w : zero ≤ lvl2) (b : Tr⁺ zero) (low : 𝟏 ≼ read (proj₁ b)) where
+    a : ∀ n → L.ψ⁰ (P.stage n) ≼ read (proj₁ (run (opₙ n) S₁ zero (σ O.m₁ w) b))
+    a n = U.value-bound (Old.Out.seed (proj₁ (model n) (σ O.m₁ w) L.zero zC D.zero-row L.z≅ S₁ b (R.OldRow.input b low)))
+    each : ∀ n → L.ψ⁰ (P.stage n) ≼ read (proj₁ (run G st1 zero w b))
+    each n = ≼-trans (a n) (≼-trans (≼l 0 (≼-refl _)) (≼-trans
+      (node-ge (kp lvl2 ok₂ p₂ w) (λ z → E ok₂ tdNil (g₂ z) J st1 zero w b) step₂ (suc (suc (k-of n))))
+      (E₀.inG st1 w b)))
+    all : L.ψ⁰ P.q ≼ read (proj₁ (run G st1 zero w b))
+    all = l≼ each
+  hv : 𝟏 ≼ read (proj₁ v₁)
+  hv = ≼-trans (oneβ r) (◃→≼ (inf A.K A.S₀ zero w2 (β r)))
+  hz : 𝟏 ≼ read (proj₁ (st1 zero C.zpath))
+  hz = ≼-trans (oneB r (inc tt C.zpath)) (◃→≼ (inf A.K A.S₀ zero C.zpath (A.S₀ zero C.zpath)))
+  before : U.Seeds P.q P.shadow (E₀.state 1) (E₀.value 1)
+  before = U.seeds (Emit.all w2 v₁ hv) (Emit.all C.zpath (st1 zero C.zpath) hz) Pool.basis
+  after = Step.advanceJc c⁺ E₀.cp w2 P.q P.shadow P.rows (E₀.state 1) (E₀.value 1) before
+  final : target ≼ read (T.value r)
+  final = ≼-trans (≅→≼ P.scalar) (≼-trans (U.value-bound after)
+          (≼-trans (◃→≼ (Emono ok₂ tdNil A.K (E₀.state 1) zero w2 (E₀.value 1) {x = proj₁ c⁺} {y = A.t₁} ◃e)) (outer 1)))
+
+standard : target ≼ read Ψ₃
+standard = At.final (T.initial lvl3 ok₃) (Cov.initial lvl3 ok₃)
+terminal : target ≼ read EBOᶜ
+terminal = ≼-trans (At.final (T.finiteRun 2) (Cov.all-finite 2)) (T.finite-ge 2)
+

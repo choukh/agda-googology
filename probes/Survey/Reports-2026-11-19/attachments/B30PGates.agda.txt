@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 此次显式提取的右因子在各高原行的严格初段；因此也保持原 EBO 的严格初段。
+module B30PGates where
+open import Data.Nat.Base using (ℕ; suc; _≤_; s≤s; z≤n)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; s≼s; ≼l)
+import OCF.Align.Level as L
+open import WVOne using (T₀; 𝟏)
+import B18Product as P
+import B19IdealArithmetic as A
+import B27CutArithmetic as R
+import B26Names as Names
+import B27Threshold as Th
+import B29LimitCut as E
+open P using (_·_)
+
+square : T₀
+square = L.ωᶜ · L.ωᶜ
+module Closed (r : T₀) (sm : L.suc L.ωᶜ ≼ r)
+  (times : ∀ x y → L.suc x ≼ r → L.suc y ≼ r → L.suc (x · y) ≼ r)
+  (power : ∀ x → L.suc x ≼ r → L.suc (A.norm x) ≼ r) where
+  small : L.suc (A.norm square) ≼ r
+  small = power square (times L.ωᶜ L.ωᶜ sm sm)
+  cap : ∀ q → L.suc q ≼ r → L.suc (q · A.norm square) ≼ r
+  cap q d = times q (A.norm square) d small
+
+module Row (k : ℕ) (high : 2 ≤ k) where
+  module H = R.At k high
+  open Closed H.Q H.omega H.product H.powω public
+
+end-factor-at : ∀ k → 2 ≤ k → L.suc (A.norm square) ≼ Names.E
+end-factor-at k d = ≼-trans {a = L.suc (A.norm square)} {b = Th.row k} {c = Names.E}
+  (Row.small k d) (E.row-in k)
+end-factor : L.suc (A.norm square) ≼ Names.E
+end-factor = end-factor-at 2 (s≤s (s≤s z≤n))
+endpoint : ∀ q → L.suc q ≼ Names.E → L.suc (q · A.norm square) ≼ Names.E
+endpoint q d = E.small-prod q (A.norm square) d end-factor

@@ -1,0 +1,63 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 对任意两个嵌在同一实际 Ω 塔的塔层，现行折叠的 kp 恰在分支层严格较低时保留；全部分支下标逐个不变。
+module B17TowerSlots where
+open import Data.Nat.Base using (ℕ; zero; suc; z≤n; s≤s) renaming (_≤_ to _≤ᴺ_)
+open import Data.Nat.Properties using (≤-refl; ≤-trans; m≤n⇒m≤1+n; 1+n≰n; <⇒≤)
+open import Data.Unit using (tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Path
+open import W4Fold using (kp; Keep)
+
+data Floor : ℕ → ℕ → Set where
+  top : ∀ {k} → Floor k (suc k)
+  upF : ∀ {i k} → Floor i k → Floor i (suc k)
+
+bound : ∀ {i k} → Floor i k → suc i ≤ᴺ k
+bound top = ≤-refl
+bound (upF p) = m≤n⇒m≤1+n (bound p)
+
+pos : ∀ {i k} → Floor i k → Pos (tw k)
+pos top = inj₁ (inj₁ tt)
+pos (upF p) = inj₁ (inj₂ (pos p))
+path : ∀ {i k} → Floor i k → tw i ≤ tw k
+path top = ink self
+path (upF p) = ink (path p)
+level : ∀ {i k} (p : Floor i k) → at (tw k) (pos p) ≡ tw i
+level top = refl
+level (upF p) = level p
+put : ∀ {i k} (p : Floor i k) → Tr (tw i) → Br (tw k) (pos p)
+put top z = z
+put (upF p) z = put p z
+get : ∀ {i k} (p : Floor i k) → Br (tw k) (pos p) → Tr (tw i)
+get top z = z
+get (upF p) z = get p z
+back : ∀ {i k} (p : Floor i k) z → put p (get p z) ≡ z
+back top z = refl
+back (upF p) z = back p z
+forward : ∀ {i k} (p : Floor i k) z → get p (put p z) ≡ z
+forward top z = refl
+forward (upF p) z = forward p z
+
+decision : ∀ {i j k} (p : Floor i k) (q : Floor j k) → Ok (tw k) →
+  Keep (tw j) (Br (tw k) (pos p)) (fromBr (tw k) (pos p) zero)
+decision {k = k} p q o = kp (tw k) o (pos p) (path q)
+
+data Verdict {i j k} (p : Floor i k) : Keep (tw j) (Br (tw k) (pos p)) (fromBr (tw k) (pos p) zero) → Set where
+  walk : (Floor i j → ⊥) → Verdict p nothing
+  retain : (r : Floor i j) {cv : Br (tw j) (pos r) → Br (tw k) (pos p)} {e : cv (fromBr (tw j) (pos r) zero) ≡ fromBr (tw k) (pos p) zero} →
+    (∀ z → cv (put r z) ≡ put p z) → Verdict p (just (pos r , cv , e))
+
+ascend : ∀ {i j k} (p : Floor i k) {v : Keep (tw j) (Br (tw k) (pos p)) (fromBr (tw k) (pos p) zero)} → Verdict p v → Verdict (upF p) v
+ascend p (walk d) = walk d
+ascend p (retain r h) = retain r h
+
+actual : ∀ {i j k} (p : Floor i k) (q : Floor j k) (o : Ok (tw k)) → Verdict p (decision p q o)
+actual top top o = walk (λ r → 1+n≰n (bound r))
+actual top (upF q) o = walk (λ r → 1+n≰n (≤-trans (bound r) (<⇒≤ (bound q))))
+actual (upF p) top o = retain p (λ _ → refl)
+actual (upF p) (upF q) o = ascend p (actual p q (proj₁ (proj₁ o)))

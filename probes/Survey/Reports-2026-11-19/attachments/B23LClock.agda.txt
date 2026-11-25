@@ -1,0 +1,32 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原生第一个反馈点容纳所有零槽的共同下界。
+module B23LClock where
+
+open import Data.Nat.Base using (zero)
+open import Data.Product using (proj₂)
+open import Data.Unit using (tt)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WVTwo using (◃→≼)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (ok₂)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc)
+import B12ActualSlots as Cov
+import B12Terminal as T
+import B13SeedOuter as Seed
+import B13OrbitFeed as O
+import B18OrbitRows as Rows
+import B20Room as R
+
+module At (r : T.Run lvl3) (cv : Cov.Covered r) {q : T₀} (room : R.Room r q) where
+  module A = Seed.At r
+  module B = Rows.At r cv
+  module F = B.I.Previous.Proof.Core.Run
+  z : Tr zero
+  z = F.zeta
+  bound : q ≼ read (suc z)
+  bound = ≼-suc (≼-trans (room (inc tt (proj₂ F.down-target)))
+            (≼-trans (◃→≼ (inf A.K A.S₀ zero (proj₂ F.down-target) (A.S₀ zero (proj₂ F.down-target))))
+                     (◃→≼ (Einf ok₂ O.D₁ (O.g₁ zero) B.I.K₁ F.S₁ zero F.down-target (F.S₁ zero F.down-target)))))

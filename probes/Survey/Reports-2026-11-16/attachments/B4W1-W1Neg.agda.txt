@@ -1,0 +1,155 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W1 检查件 (5): 配对否定. 格律 (K) "保留当且仅当槽位层的值低于目标层" 若在跨孩子格的一整列
+-- (被约束的孩子 suc c 的顶结点, c 取遍 Tr zero; 目标是任一极限层 r 的后继层) 上成立, 就推出 WLPO.
+-- 无排中律, 无函数外延. 前提在排中律下可满足 (kp♯ 就是, 见 Sat). 不否定: 有限目标层上的整列 (可判定), 换基之后的判定.
+module W1Neg where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Bool using (Bool; true; false; _∨_)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import S1Sharp
+open import W1Cell using (h₁; o₁; pS; IsJust; ≺-irr; at-suc; module Cell)
+
+WLPO : Set
+WLPO = (α : ℕ → Bool) → ((n : ℕ) → α n ≡ false) ⊎ (((n : ℕ) → α n ≡ false) → ⊥)
+
+-- 布尔的小引理.
+t≢f : true ≡ false → ⊥
+t≢f ()
+
+bfalse : (b : Bool) → (b ≡ true → ⊥) → b ≡ false
+bfalse false _ = refl
+bfalse true  n = ⊥-elim (n refl)
+
+seen : (ℕ → Bool) → ℕ → Bool           -- α 0 ∨ … ∨ α n
+seen α zero    = α zero
+seen α (suc n) = α (suc n) ∨ seen α n
+
+seen-false : ∀ α → ((n : ℕ) → α n ≡ false) → (n : ℕ) → seen α n ≡ false
+seen-false α all zero    = all zero
+seen-false α all (suc n) = trans (cong (_∨ seen α n) (all (suc n))) (seen-false α all n)
+
+seen-true : ∀ α k → α k ≡ true → seen α k ≡ true
+seen-true α zero    e = e
+seen-true α (suc n) e = cong (_∨ seen α n) e
+
+module Neg (g : ℕ → Tr zero) (a : (n : ℕ) → zero ⊢ g n ◃ g (suc n)) where
+
+  r : Tr zero                            -- 任一极限树
+  r = lim g a
+
+  J : L                                  -- 目标: 第 r+1 层
+  J = h₁ (suc r)
+
+  sucs : ℕ → Tr zero                     -- r + n
+  sucs zero    = r
+  sucs (suc n) = suc (sucs n)
+
+  r◃ : ∀ n → zero ⊢ r ◃ sucs (suc n)
+  r◃ zero    = ◃s
+  r◃ (suc n) = ◃t (r◃ n) ◃s
+
+  el : Bool → ℕ → Tr zero
+  el false n = g n
+  el true  n = sucs n
+
+  adj : ∀ b a′ n → zero ⊢ el b n ◃ el (a′ ∨ b) (suc n)
+  adj false false n = a n
+  adj false true  n = ◃t (◃l n) (r◃ n)
+  adj true  false n = ◃s
+  adj true  true  n = ◃s
+
+  -- 康托式的族: α 恒假时逐项是 g n (值同 r); 一旦见到真, 以后的项是 r + n (值 r + ω).
+  cα : (ℕ → Bool) → Tr zero
+  cα α = lim (λ n → el (seen α n) n) (λ n → adj (seen α n) (α (suc n)) n)
+
+  el≼f : ∀ b n → b ≡ false → h₁ (el b n) ≼ᴸ h₁ (g n)
+  el≼f false n _  = ≼-refl _
+  el≼f true  n ()
+
+  el≽t : ∀ b n → b ≡ true → h₁ (sucs n) ≼ᴸ h₁ (el b n)
+  el≽t true  n _  = ≼-refl _
+  el≽t false n ()
+
+  r≼sucs : ∀ n → h₁ r ≼ᴸ h₁ (sucs n)
+  r≼sucs zero    = ≼-refl _
+  r≼sucs (suc n) = up≼ tt (r≼sucs n)
+
+  -- α 恒假 ⇒ 第 cα 层不高于第 r 层 ⇒ 严格低于目标.
+  low : ∀ α → ((n : ℕ) → α n ≡ false) → h₁ (cα α) ≺ᴸ J
+  low α all = tt , n≼ (λ n → n , el≼f (seen α n) n (seen-false α all n))
+
+  -- 第 cα 层严格低于目标 ⇒ α 恒假.
+  high : ∀ α → h₁ (cα α) ≺ᴸ J → (k : ℕ) → α k ≡ false
+  high α (_ , n≼ gg) k = bfalse (α k) (λ e → bad e (gg k))
+    where
+    bad : α k ≡ true → h₁ (el (seen α k) k) ≺ᴸ h₁ r → ⊥
+    bad e (m , le) = ≺-irr (h₁ r)
+      (≼≺ (h₁ r) (≼-trans (r≼sucs k) (≼-trans (el≽t (seen α k) k (seen-true α k e)) le)) (m , ≼-refl _))
+
+  -- 一列布尔答案与 "第 c 层严格低于目标" 等价 ⇒ WLPO.
+  col→wlpo : (K : Tr zero → Bool) → (∀ c → K c ≡ true → h₁ c ≺ᴸ J) → (∀ c → h₁ c ≺ᴸ J → K c ≡ true) → WLPO
+  col→wlpo K snd cpl α = go (K (cα α)) refl
+    where
+    go : (b : Bool) → K (cα α) ≡ b → ((n : ℕ) → α n ≡ false) ⊎ (((n : ℕ) → α n ≡ false) → ⊥)
+    go true  e = inj₁ (high α (snd (cα α) e))
+    go false e = inj₂ (λ all → t≢f (trans (sym (cpl (cα α) (low α all))) e))
+
+  -- 格律 (K) 的形式: 任何 "保留判定" kpc (对孩子 suc c 的顶结点, 目标 J) 若 just 当且仅当槽位层严格低于目标, 就推出 WLPO.
+  isJ : ∀ {A : Set} → Maybe A → Bool
+  isJ (just _) = true
+  isJ nothing  = false
+
+  isJ→ : ∀ {A : Set} (m : Maybe A) → isJ m ≡ true → IsJust m
+  isJ→ (just _) _ = tt
+  isJ→ nothing ()
+
+  →isJ : ∀ {A : Set} (m : Maybe A) → IsJust m → isJ m ≡ true
+  →isJ (just _) _ = refl
+  →isJ nothing ()
+
+  lawK→wlpo : {X : Tr zero → Set} (kpc : (c : Tr zero) → Maybe (X c))
+    → (∀ c → IsJust (kpc c) → at (h₁ (suc c)) pS ≺ᴸ J)
+    → (∀ c → at (h₁ (suc c)) pS ≺ᴸ J → IsJust (kpc c))
+    → WLPO
+  lawK→wlpo kpc snd cpl =
+    col→wlpo (λ c → isJ (kpc c)) (λ c e → snd c (isJ→ (kpc c) e)) (λ c lt → →isJ (kpc c) (cpl c lt))
+
+  -- 前提可满足 (条件: 排中律): ψ♯ 的判定 kp♯ 满足两条.
+  module Sat (lem : LEM) where
+    open Sharp lem
+    open Cell lem
+
+    oJ : Ok J
+    oJ = proj₂ o₁ (suc r)
+
+    just→lt : ∀ ℓ o p j oj → IsJust (kp♯ ℓ o p j oj) → at ℓ p ≺ᴸ j
+    just→lt ℓ o p j oj with Dk j (at ℓ p)
+    ... | inj₁ _  = λ ()
+    ... | inj₂ lt = λ _ → lt
+
+    lt→just : ∀ ℓ o p j oj → at ℓ p ≺ᴸ j → IsJust (kp♯ ℓ o p j oj)
+    lt→just ℓ o p j oj lt with kp♯ ℓ o p j oj | keep-forced ℓ o p j oj lt
+    ... | _ | _ , refl = tt
+
+    sat-snd : ∀ c → IsJust (kp♯ (h₁ (suc c)) (proj₂ o₁ (suc c)) pS J oJ) → at (h₁ (suc c)) pS ≺ᴸ J
+    sat-snd c = just→lt (h₁ (suc c)) (proj₂ o₁ (suc c)) pS J oJ
+
+    sat-cpl : ∀ c → at (h₁ (suc c)) pS ≺ᴸ J → IsJust (kp♯ (h₁ (suc c)) (proj₂ o₁ (suc c)) pS J oJ)
+    sat-cpl c = lt→just (h₁ (suc c)) (proj₂ o₁ (suc c)) pS J oJ
+
+-- 实例: r = ω (逐项是有限数).
+fin : ℕ → Tr zero
+fin zero    = zero
+fin (suc n) = suc (fin n)
+
+module Negω = Neg fin (λ n → ◃s)

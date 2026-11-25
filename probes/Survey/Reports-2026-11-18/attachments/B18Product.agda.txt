@@ -1,0 +1,46 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 零层普通序数乘法，对右参连续；用于估计外部起点的贡献。
+module B18Product where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; +-mono; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼)
+
+infixl 8 _·_
+_·_ : T₀ → T₀ → T₀
+a · L.zero = L.zero
+a · L.suc b = (a · b) L.+ a
+a · L.lim f = L.lim (λ n → a · f n)
+powers : T₀ → ℕ → T₀
+powers q zero = 𝟏
+powers q (suc n) = powers q n · q
+
+mono : ∀ {a b x y : T₀} → a ≼ b → x ≼ y → a · x ≼ b · y
+mono p z≼ = z≼
+mono p (s≼s h) = +-mono (mono p h) p
+mono p (≼l n h) = ≼l n (mono p h)
+mono p (l≼ h) = l≼ (λ n → mono p (h n))
+mono p (≼i {p = ()} _ _ _)
+mono p (i≼ {p = ()} _)
+mono p (≼u {r = ()} _)
+mono p (u≼ {r = ()} _)
+
+one-left : ∀ x → x ≼ 𝟏 · x
+one-left L.zero = z≼
+one-left (L.suc x) = s≼s (one-left x)
+one-left (L.lim f) = l≼ (λ n → ≼l n (one-left (f n)))
+pad : ∀ {q} → 𝟏 ≼ q → ∀ x → x ≼ q · x
+pad h x = ≼-trans (one-left x) (mono h (≼-refl x))
+one-right : ∀ q → q ≼ q · 𝟏
+one-right L.zero = z≼
+one-right (L.suc a) = s≼s (one-right a)
+one-right (L.lim f) = l≼ (λ n → ≼l n (one-right (f n)))
+
+assoc : ∀ (a b c : T₀) → a L.+ (b L.+ c) ≼ (a L.+ b) L.+ c
+assoc a b L.zero = ≼-refl _
+assoc a b (L.suc c) = s≼s (assoc a b c)
+assoc a b (L.lim f) = l≼ (λ n → ≼l n (assoc a b (f n)))
+sum : ∀ (q x y : T₀) → (q · x) L.+ (q · y) ≼ q · (x L.+ y)
+sum q x L.zero = ≼-refl _
+sum q x (L.suc y) = ≼-trans (assoc (q · x) (q · y) q) (+-mono (sum q x y) (≼-refl _))
+sum q x (L.lim f) = l≼ (λ n → ≼l n (sum q x (f n)))

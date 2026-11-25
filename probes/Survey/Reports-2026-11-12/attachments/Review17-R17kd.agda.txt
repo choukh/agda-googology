@@ -1,0 +1,108 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module R17kd where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiKDPath
+open import OCF.Lean.YiKDFold
+open import OCF.Lean.YiKDKeel
+open import OCF.Lean.YiCertFold using (Base; B₀; Keep)
+
+isJ : {A : Set} → Maybe A → Set
+isJ (just _) = ⊤
+isJ nothing  = ⊥
+
+isΩ isLim : {ℓ : L} → Tr ℓ → Set
+isΩ (Ω _ _) = ⊤
+isΩ _       = ⊥
+isLim (lim _ _) = ⊤
+isLim _         = ⊥
+
+n1 n2 n3 : Tr zero
+n1 = suc zero
+n2 = suc n1
+n3 = suc n2
+
+-- θ 0 是有限层
+_ : θ 0 n3 ≡ nd sS (λ _ → θ 0 n2)
+_ = refl
+
+-- κ 0 里的槽位: 孩子 3 里的 "第 1 层的树作分支" (Tr (θ 0 1))
+p13 : Pos (κ 0)
+p13 = inj₂ (n3 , inj₂ (inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))))
+
+_ : at (κ 0) p13 ≡ θ 0 n1
+_ = refl
+
+-- 同一槽位, 孩子 3 里的 Tr zero
+p03 : Pos (κ 0)
+p03 = inj₂ (n3 , inj₂ (inj₂ (tt , inj₂ (inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))))))
+
+_ : at (κ 0) p03 ≡ zero
+_ = refl
+
+-- 目标: 第 2 层, 经孩子 3
+v2 : θ 0 n2 ≤ κ 0
+v2 = inc n3 (inc tt self)
+
+-- T1: 孩子 3 里的 Tr(第 1 层) 槽位, 朝 "经孩子 3 的第 2 层" 不保留
+t1 : kp (κ 0) (Ok-κ 0) p13 v2 ≡ nothing
+t1 = refl
+
+-- T2: 同一槽位在第 3 层内部朝第 2 层保留
+t2 : isJ (kp (θ 0 n3) (proj₂ (Ok-κ 0) n3) (inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))) {θ 0 n2} (inc tt self))
+t2 = tt
+
+-- T3: Tr zero 槽位朝经孩子 3 的第 2 层保留 (孩子侧与下标侧)
+t3 : isJ (kp (κ 0) (Ok-κ 0) p03 v2)
+t3 = tt
+
+t3′ : isJ (kp (κ 0) (Ok-κ 0) (inj₁ (inj₁ tt)) v2)
+t3′ = tt
+
+-- T4: cut 交出 tt (走 φ)
+t4 : cut (crt (Ok-κ 0) n3) (inc tt self) ≡ inj₂ tt
+t4 = refl
+
+-- T5: θ 1 3 的下标层到地板的路径: 经 κ 0 的孩子 3
+o13 : Ok (θ 1 n3)
+o13 = proj₂ (Ok-κ 1) n3
+
+t5a : flr o13 ≡ κ 0
+t5a = refl
+
+t5 : kfl o13 ≡ inc n3 (inc tt self)
+t5 = refl
+
+-- T6: 孩子 2 的 Ω 树 (Ω₂) 嵌在 κ 0 里, 朝经孩子 3 的第 2 层折叠: ℕ 极限 (不保留, 取链)
+emb2 : (d : Tr zero) → Tr (κ 0)
+emb2 d = up zero d (proj₁ (Ωt (θ 0 d))) (proj₂ (Ωt (θ 0 d)))
+
+f2 : Tr zero → Tr⁺ (θ 0 n2)
+f2 d = ψ (κ 0) (Ok-κ 0) (B₀ (κ 0)) (θ 0 n2) v2 (Ωt (θ 0 n2)) (emb2 d)
+
+t6 : isLim (proj₁ (f2 n2))
+t6 = tt
+
+t6′ : isΩ (proj₁ (f2 n1))
+t6′ = tt
+
+t6″ : isLim (proj₁ (f2 n3))
+t6″ = tt
+
+-- T7: 对照: 在第 3 层内朝第 2 层折 Ω₂ (孩子里): Ω 结点
+t7 : isΩ (proj₁ (ψ (θ 0 n3) (proj₂ (Ok-κ 0) n3) (B₀ (θ 0 n3)) (θ 0 n2) (inc tt self) (Ωt (θ 0 n2))
+                  (up zero tt (proj₁ (Ωt (θ 0 n2))) (proj₂ (Ωt (θ 0 n2))))))
+t7 = tt
+
+-- T8: Ω_Ω (κ 0 的 Ω 树) 朝经孩子 3 的第 2 层: Ω 结点, 槽位是 Tr zero
+t8 : isΩ (proj₁ (ψ (κ 0) (Ok-κ 0) (B₀ (κ 0)) (θ 0 n2) v2 (Ωt (θ 0 n2)) (proj₁ (Ωt (κ 0)))))
+t8 = tt

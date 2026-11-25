@@ -1,0 +1,134 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21IdealCarry where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; subst₂; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Path as Path
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B14SharpBound using (data≤)
+open import OCF.Align.Value using (≼-refl; ≼-trans; l≼; ≼l)
+import B12ActualSlots as C
+import B17SharpFeed as Link
+import B17SharpUpdate as U
+import B17SharpTwo as T
+import B18SharpMacro as M
+import B13Orbit as Orb
+import B12Orbit as Win
+
+import B21IdealRepeat as Reps
+import B15SharpAction as P1
+import B16SharpModel as H1
+import B16SharpOmega as O1
+import B15SharpLift as L1
+import B21IdealContext as Context
+open Context using (Pref; plug; empty; push)
+
+import B21IdealFrames as Frames
+open import OCF.Align.Value using (s≼s)
+open import Data.Sum using (inj₁)
+import B21IdealCount as Compare
+import B21IdealInside as Old
+import B20IdealRel as Rel
+import B20IdealOne as One
+import B20IdealTwo as Two
+import B20IdealThree as A
+import OCF.Lean.YiUpFold as YF
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiFreshFold as YO
+import OCF.Lean.YiFreshValRead as YV
+open import OCF.Lean.YiUpCheck using (two)
+open import OCF.Lean.YiKVRel using (readRW)
+open import WVOne using (read; p₁; g₁; cum-≥)
+open import WVTwo using (p₂; g₂)
+open import B14SharpBound using (sum≤)
+open import OCF.Align.Value using (_≼_; ≅→≼; z≼)
+import B14SharpLive as Live
+import B13SharpOne as Z
+import B13SeedOuter as Seed
+import B12Terminal as Tm
+import B18SharpClosed as Known
+import B18SharpHead
+open import WKShape using (lvl3)
+open import Data.Maybe using (nothing; just)
+import OCF.Align.Level as L
+
+import B21IdealLinked as Join
+import B21IdealNode as Node
+open import B15SharpLift using (module Lift)
+open import OCF.Lean.YiKVRel using (readRW)
+open import B14SharpStack using (p)
+
+module At (lem : LEM) where
+  open I.Sharp lem
+  open U.Update lem
+  open T.Two lem using (w₀)
+  open Context.At lem using (out; nextState; Model; model)
+  open M.Macro lem using (State; pair)
+  open Link.Feed lem using (Linked)
+  open Lift lem using (cv; cv≤)
+  open Node.Proof lem using (data₀; module Physical)
+  ν = R.Ω Rel.p₂₀ data₀
+
+  mid-node : ∀ D p₀ f g → (∀ z w → data≤ z w → Linked (g w) (proj₁ (nextState D p₀ (f z) r₁ oR))) →
+    Linked (B.Ω p₁ g) (proj₁ (nextState D p₀ (R.Ω Rel.p₂₀ f) r₁ oR))
+  mid-node D empty f g h = Join.Joined.Node.both lem (λ z → proj₁ (nextState D empty (f (cv z)) r₁ oR)) g
+    (λ z w e → h (cv z) w (≼-trans (cv≤ z) e))
+  mid-node D (push p₀ x) f g h = mid-node D p₀ (λ z → x V.+ f z) g h
+
+  zero-node : ∀ D a p₀ f (output step : B.Tr B.zero → B.Tr B.zero) →
+    (∀ z w → data≤ z w → data≤ (proj₁ (out D a p₀ (f z))) (output w)) →
+    (∀ z w → data≤ z w → data≤ (proj₁ (out D (D R.zero tt) p₀ (f z))) (step w)) →
+    ∀ y → (∀ n → read (W.cum (λ j → output (B.iter step B.zero j)) n) ≼ read y) →
+    data≤ (proj₁ (out D a p₀ (R.Ω Rel.p₂₀ f))) y
+  zero-node D a (push p₀ x) f output step = zero-node D a p₀ (λ z → x V.+ f z) output step
+  zero-node D a empty f output step ho hs y hy =
+    l≼ (λ n → ≼-trans (sum≤ _ _ (λ j → ho _ _ (clock j)) n) (hy n))
+    where
+    it = λ z → proj₁ (out D (D R.zero tt) empty (f z))
+    clock : ∀ i → data≤ (V.iter it R.zero i) (B.iter step B.zero i)
+    clock zero = z≼
+    clock (suc i) = hs _ _ (clock i)
+
+  module Moved (c : W.Tr⁺ lvl2) (big : C._⊴_ wΩ₂ (proj₁ c)) where
+    open Physical c big using (T₁; T₀; m₁; m₀; K; K₁; K₀; module F₀; module Z₀)
+    push₁ : F.Base lvl2 → F.St (F.cons (W.down W.stop tt) F.nil)
+    push₁ S i t = S i (proj₂ t)
+    push₀ : F.Base lvl2 → F.St (F.cons (W.down (W.down W.stop tt) tt) (F.cons (W.down W.stop tt) F.nil))
+    push₀ S i t = S i (proj₂ (proj₂ t))
+    omega = proj₁ (W.Ωt lvl1)
+    ret = F.op (λ S i t b → F.E ok₂ T₁ omega K₁ (push₁ S) i (F.σ m₁ t) b)
+               (λ S i t b → F.Einf ok₂ T₁ omega K₁ (push₁ S) i (F.σ m₁ t) b)
+    module Use (D : Base♯) (p₀ : Pref) (S : F.Base lvl2) (h : State (nextState D p₀ R.zero) S) where
+      ctx = F.mk T₁ (F.hereT (F.fr T₁) (Path.posW lvl1 p₁))
+      st : F₀.Fit (nextState D p₀ R.zero) (push₀ S)
+      st = F₀.fit (State.one h) (State.bot h)
+      real = λ w → F.E ok₂ T₁ (g₁ w) K₁ (push₁ S)
+      cstep = λ w → proj₁ (real w B.zero ctx (S B.zero w₀))
+      child : ∀ a t b → data≤ (proj₁ (out D a p₀ R.zero)) (proj₁ b) → ∀ z w → data≤ z w →
+        data≤ (proj₁ (out D a p₀ (data₀ z))) (proj₁ (real w B.zero t b))
+      child a t b hv z w e = F₀.Model.value (Z₀.result (R.suc z) (B.suc w) (s≼s e)) D a p₀ (push₀ S) st (F.σ m₀ t) b hv
+      bot : ∀ a t b → data≤ (proj₁ (out D a p₀ R.zero)) (proj₁ b) → data≤ (proj₁ (out D a p₀ ν)) (proj₁ (F.run ret S B.zero t b))
+      bot a t b hv = zero-node D a p₀ data₀ _ cstep (child a (F.σ m₁ t) b hv) (child (D R.zero tt) ctx (S B.zero w₀) (State.bot h)) _
+        (Live.cumulative (F.kpT (F.fr T₁) ok₂ p₁ (F.tv T₁ (F.σ m₁ t))) (λ w → real w B.zero (F.σ m₁ t) b) cstep)
+      feedback : Linked (proj₁ (F.stepS ret S lvl1 w₁)) (proj₁ (nextState D p₀ ν r₁ oR))
+      feedback = mid-node D p₀ data₀ _ λ z w e →
+        F₀.Fit.one (F₀.Model.state (Z₀.result (R.suc z) (B.suc w) (s≼s e)) D p₀ (push₀ S) st)
+      state : State (nextState D p₀ ν) (F.stepS ret S)
+      state = pair feedback (bot (D R.zero tt) w₀ (S B.zero w₀) (State.bot h))
+    cert : Model ν ret
+    cert = model Use.state (λ D a p₀ S h → Use.bot D p₀ S h a)
+

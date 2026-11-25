@@ -1,0 +1,116 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：第 1 行的每支是一个无搬运的系数运算的值固定点；同一极限的尾部逐支对齐。
+module B14RefFixed where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; s≼s; l≼; ≼l; ≼-refl; ≼-trans; ≅→≼)
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B12LimitSrc using (Lev₂)
+import B12LimitRef as Strict
+import B12Omega3Ref as R
+import B13Target as P
+import B13Feedback as F
+import B14RefRow as W
+
+one : T₀
+one = L.suc L.zero
+collapse : Lev₂ → T₁
+collapse = L.ψ L.zero R.idσ
+
+kernel : ℕ → T₀ → Lev₂
+kernel zero = P.co₀
+kernel (suc n) x = P.co₁ (collapse (kernel n x))
+
+gain : ℕ → T₀ → T₀
+gain n x = L.ψ⁰ (kernel n x)
+
+chain : ℕ → ℕ → T₀
+chain n = S.iter (gain n) one
+
+pres : ∀ {u v} → u L.≅ v → collapse u L.≅ collapse v
+pres = L.ψ-≅ {p = L.zero} {σ = R.idσ} {p′ = L.zero} {σ′ = R.idσ} (L.≅ᴵ-refl _)
+
+co₀-pres : ∀ {x y} → x L.≅ y → P.co₀ x L.≅ P.co₀ y
+co₀-pres = L.ψ-≅ {p = L.zero} {σ = λ q → L.suc (L.suc (L.suc q))} {p′ = L.zero} {σ′ = λ q → L.suc (L.suc (L.suc q))} (L.≅ᴵ-refl _)
+
+kernel-pres : ∀ n {x y} → x L.≅ y → kernel n x L.≅ kernel n y
+kernel-pres zero d = co₀-pres d
+kernel-pres (suc n) d = P.co-pres (pres (kernel-pres n d))
+
+actual : ∀ n {x y} → x L.≅ y → W.coord (W.kids n) x L.≅ kernel n y
+actual zero {x} d = co₀-pres (L.≅-trans (F.transport≅ x) d)
+actual (suc n) {x} d = P.co-pres (L.tr⁻-≅ (L.≅ᴵ-refl _) (pres (actual n (L.≅-trans (F.transport≅ x) d))))
+
+indices : ∀ n j → W.arg n j L.≅ chain n j
+indices n = L.iter-R L._≅_ {G = λ x → L.ψ (L.suc L.zero) R.idσ (W.coord (W.kids n) x)} {G′ = gain n}
+  (λ d → L.≅-sym (L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (L.≅-sym (actual n d)))) (L.s≅ L.z≅)
+
+as-chain : ∀ n → W.node n L.≅ L.lim (λ j → chain n (suc j))
+as-chain n rewrite W.node-shape n = L.l≅ (λ j → L.ψ⁰-≅ (actual n (indices n j)))
+
+kernel-lim : ∀ n f → kernel n (L.lim f) ≡ L.lim (λ k → kernel n (f k))
+kernel-lim zero f = refl
+kernel-lim (suc n) f rewrite kernel-lim n f = refl
+
+gain-lim : ∀ n f → gain n (L.lim f) ≡ L.lim (λ k → gain n (f k))
+gain-lim n f rewrite kernel-lim n f = refl
+
+-- 仅沿 ℕ 极限选支；保持该关系的运算可再应用一次。
+data Select {a : L.Ordᴵ} (x : L.Ordᶜ a) : L.Ordᶜ a → Set where
+  here : Select x x
+  branch : ∀ {g} k → Select x (g k) → Select x (L.lim g)
+
+map-select : ∀ {a b} (f : L.Ordᶜ a → L.Ordᶜ b) → (∀ g → f (L.lim g) ≡ L.lim (λ k → f (g k))) →
+  ∀ {x y} → Select x y → Select (f x) (f y)
+map-select f h here = here
+map-select f h (branch {g} j s) rewrite h g = branch j (map-select f h s)
+
+value : ∀ {a} {x y : L.Ordᶜ a} → Select x y → x ≼ y
+value here = ≼-refl _
+value (branch j s) = ≼l j (value s)
+
+one-in : ∀ {i} (p : L.Ordᶜ i) → Select one (L.ψ⁰ p)
+one-in L.zero = here
+one-in (L.suc p) = branch 1 (one-in p)
+one-in (L.lim f) = branch 0 (one-in (f 0))
+one-in (L.limᵢ q f) = branch 0 (one-in (f _))
+one-in (L.up L.zero x) = one-in x
+one-in (L.up (L.self n) x) = one-in x
+
+increasing : ∀ n j → Select (chain n j) (chain n (suc j))
+increasing n zero = one-in (kernel n one)
+increasing n (suc j) = map-select (gain n) (gain-lim n) (increasing n j)
+
+-- 两棵树的归一基本列相差一个下标；逆向时落下的首项有实际选支路径。
+fixed : ∀ n → gain n (W.node n) ≈ᵛ W.node n
+fixed n = ≼-trans (≅→≼ lhs) (≼-trans forward (≅→≼ (L.≅-sym (as-chain n)))) ,
+          ≼-trans (≅→≼ (as-chain n)) (≼-trans backward (≅→≼ (L.≅-sym lhs)))
+  where
+  f = λ j → chain n (suc j)
+  rhs = L.lim f
+  lhs : gain n (W.node n) L.≅ L.lim (λ j → chain n (suc (suc j)))
+  lhs = subst (λ z → gain n (W.node n) L.≅ z) (gain-lim n f) (L.ψ⁰-≅ (kernel-pres n (as-chain n)))
+  forward : L.lim (λ j → chain n (suc (suc j))) ≼ rhs
+  forward = l≼ (λ j → ≼l (suc j) (≼-refl _))
+  backward : rhs ≼ L.lim (λ j → chain n (suc (suc j)))
+  backward = l≼ λ where
+    zero → ≼l 0 (value (increasing n 1))
+    (suc j) → ≼l j (≼-refl _)
+
+omega-in : ∀ x → Select Ω₂ᴸ (P.co₀ x)
+omega-in L.zero = here
+omega-in (L.suc x) = branch 1 (omega-in x)
+omega-in (L.lim f) = branch 0 (omega-in (f 0))
+
+strict-coeff : ∀ x → L.suc (gain 0 x) ≼ gain 0 (L.suc x)
+strict-coeff x = ≼-trans (Strict.strict-step (P.co₀ x))
+  (≼l 2 (value (map-select L.ψ⁰ (λ _ → refl) (map-select (P.co₀ x L.+_) (λ _ → refl) (omega-in x)))))
+
+strict-first : L.suc F.first-node ≼ L.ψ⁰ (P.co₀ (L.suc F.first-node))
+strict-first = ≼-trans (s≼s (proj₂ (fixed 0))) (strict-coeff F.first-node)

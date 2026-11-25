@@ -1,0 +1,64 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 全部 EBO 只须比较一个外层 Ω 的统一返回，有限和及嵌套留在拥有真实 W4 零树的单个输入里。
+module B26CCardinal where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+open import OCF.Align.EboLeanTree using (EBO-tree′; nf-tower)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import OCF.Lean.YiMonoExit using (toL)
+import W4Block
+import B26PActual
+open import WVOne using (T₀; read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-suc; ≼-refl; ≼-trans; s≼s)
+import B12XRef as R
+import B12EboRows as End
+import B14Goal as G
+import B17Cofinal as C
+import B25DTrack as Tr
+open import B26CForest
+open import B26CLift hiding (necessary; enough)
+import B26CScalar as S
+
+Ω-argument : T → T
+Ω-argument a = ψ a [] ∷ []
+
+response : T → T
+response t = principal (Ω-argument (restore t))
+
+normal-response : ∀ {t} (nt : NF t) (ct : Ctbl t) (h : HC t) → L.suc (Rt h) ≼ Tr.unit-output → NF (response t)
+normal-response {t} nt ct h hi = nf-ψ n[] (nf-Ω (nfp-a (nf-hd (output-normal nt ct h hi))))
+  (fit (node (pure-restore t) empty))
+
+OneCard : T₀ → Set
+OneCard Y = Inside (λ t → (d : HC (response t)) → Rt d ≼ Y)
+
+rows : ∀ {Y} → OneCard Y → ∀ n → R.row (suc n) ≼ Y
+rows {Y} f n = ≼-trans (tree-≼ (sym e) (R.H (suc n)) h)
+  (applied {P = λ t → (d : HC (response t)) → Rt d ≼ Y} f n h)
+  where
+  e = cong (λ t → principal (Ω-argument t)) (undo (pure-tower n))
+  h = subst HC (sym e) (R.H (suc n))
+
+sufficient : ∀ {Y} → OneCard Y → toL EBO-tree′ ≼ Y
+sufficient f = R.assemble λ where
+  zero → ≼-trans R.small (rows f 0)
+  (suc n) → rows f n
+
+necessary : ∀ {Y} → toL EBO-tree′ ≼ Y → OneCard Y
+necessary g nt ct h hi d = ≼-trans (≼-suc (≼-refl _))
+  (≼-trans (mono<ⁿ (normal-response nt ct h hi) (nf-tower _) (c∷ c[]) d (R.H _) (C.below (c∷ c[]))) (≼-trans (G.row-in _) g))
+
+-- 跨层算法只收实际 W4 树；在已经编成的输入上给出下界，在获付的输入上给出上界。
+via-real : (A : W4Block.Tr W4Block.zero → T₀)
+  → (∀ {x} → L.suc (read x) ≼ Tr.unit-output → A x ≼ B26PActual.Y)
+  → Inside (λ t → (d : HC (response t)) → Rt d ≼ A (S.code t)) → G.Goal
+via-real A paid accepts = sufficient (λ nt ct h hi d → ≼-trans (accepts nt ct h hi d)
+  (paid (≼-trans (s≼s (proj₂ (S.inside-code nt ct h hi h))) hi)))
+

@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第一座正塔的实际尾反馈始终以自然极限作正程序，且每个非初始内键也以自然极限为根。
+module B29CLimit where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; trans; subst)
+import W4Block as W
+import W4Ops as O
+import W4Path as K
+import W4Fold as F
+import B28BFirst as D
+import B28BHead as A
+import B28BBranch as Direct
+import B28POrbit as P
+import B28BCut as Cut
+
+data Limit {k : W.L} : W.Tr k → Set where
+  hit : ∀ f h → Limit (W.lim f h)
+
+module M = P.At 0
+module H = A.At 0
+module C = D.At 0
+k = H.k
+i = H.i
+
+-- 在正前缀后读可数极限时，回到前缀和继续回到更低层的两个方向都读取同一个极限构造子。
+outer-preserves : ∀ x → Limit x → Limit (M.K.next x)
+outer-preserves ._ (hit f h) = hit _ _
+
+inner-preserves : ∀ x → Limit x → Limit (C.decode₁ x)
+inner-preserves ._ (hit f h) = hit _ _
+
+start : Limit (M.branch 0 W.zero)
+start = hit _ _
+
+feed : ∀ c → Limit c → Limit (M.branch 0 c)
+feed ._ (hit f h) = hit _ _
+
+from-start : ∀ c → Limit (M.branch 0 c) → ∀ j → Limit (M.branch j c)
+from-start c d zero = d
+from-start c d (suc j) = subst Limit (sym (M.Step.point (M.branch j) c))
+  (outer-preserves (M.branch j c) (from-start c d j))
+
+module At (j : ℕ) where
+  g = M.branch j
+  module Walk = H.Walk g
+  c = Walk.Run.ix
+  x = λ u → g (c u)
+  actual : ∀ u → Limit (x u)
+  actual zero = from-start W.zero start j
+  actual (suc u) = from-start (c (suc u)) (feed (c (suc u))
+    (subst Limit (sym (Direct.At.step 0 g (c u))) (inner-preserves (x u) (actual u)))) j
+  next-shape : ∀ u → Limit (c (suc u))
+  next-shape u = subst Limit (sym (Direct.At.step 0 g (c u))) (inner-preserves (x u) (actual u))

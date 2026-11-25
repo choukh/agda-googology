@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21CrossTower where
+open import Data.Nat.Base as N using (ℕ; zero; suc; z≤n; s≤s)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst; sym)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc)
+open import B12LimitSrc using (Lev₂)
+import B12Terminal as T
+import B12ActualSlots as A
+import B15ReadPaths as R
+import B18ResetCell as C
+import B18TowerEmb as E
+import B19RowSecond as Row
+import B20OldTail as Tail
+import B20OldSecond as Old
+import B20OldRanks as Rank
+import B20Room as Room
+import B20StandardGoal as Goal
+import B21CrossPath as Z
+import B21CrossPlace as P
+open T.Run
+
+k = tw 1
+std = T.initial (tw 2) (Ok-tw 2)
+cv = A.initial (tw 2) (Ok-tw 2)
+module D = Old.Tower.State std refl cv
+c = D.C.child 1
+cc = D.C.cover cv 1
+w = ↑ k (proj₁ (Ωt k))
+trail = R.via (R.base w w) (D.at-index 0)
+path = R.left k trail
+s = Room.sub path c
+sv = Room.cover path c cc
+clean : Z.Clean path
+clean = Z.left k (Z.join (Z.base w w) (Z.join Z.count Z.card))
+ones : Z.Ones s
+ones = Z.pres clean c (λ _ → refl)
+kept : Old.Tower.P.Kept w (ok s)
+kept = subst (Old.Tower.P.Kept w) (sym (Room.cert path c)) (Old.Tower.P.descend trail D.certified)
+module X = P.Site s sv ones kept
+module From (p : Lev₂) (hp : Tail.type p) where
+  row : WVOne.T₀
+  row = L.lim (λ n → L.ψ⁰ (Rank.threshold n p))
+  each : ∀ n → L.ψ⁰ (Rank.threshold n p) ≼ read (T.value X.child)
+  each = X.From.one p hp
+  first-positive : row ≼ read (T.value c)
+  first-positive = ≼-trans (X.From.value p hp) (Room.below path c cc)
+  standard : row ≼ read (proj₁ (E.standard 2))
+  standard = ≼-trans first-positive (D.C.lift-value 1)
+  actual : ∀ n j → L.suc row ≼ C.At.fresh (suc (suc n)) j
+  actual n j = ≼-trans (OCF.Align.Value.s≼s standard) (Goal.At.child (suc n) j 2 (s≤s (s≤s z≤n)))
+  terminal : L.suc row ≼ read EBOᶜ
+  terminal = ≼-trans (actual 0 0) (Goal.into 2 0)
+module Actual = From Row.p Old.initial

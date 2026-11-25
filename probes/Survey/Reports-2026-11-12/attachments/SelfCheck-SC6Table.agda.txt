@@ -1,0 +1,29 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module SC6Table where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (_×_; _,_)
+open import Data.Unit using (tt)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWPath using (_≤_; self; lift)
+open import OCF.Lean.YiTBRow using (Rb)
+open import OCF.Lean.YiMTTab using (rbᶻ)
+
+-- 塔第 n+1 项的孩子层号函数
+hᵗ : (n : ℕ) → Tr (tw n) → L
+hᵗ n c = tw n ⊕ ↑ (tw n) c
+
+-- 按龙骨的比较表: 源或目标是 zero 时给出字面路径 (h zero 就是 tw n), 其余与最小比较表一样返回 nothing
+tbᵗ : (n : ℕ) (c c′ : Tr (tw n)) → Maybe ((hᵗ n c′ ≤ hᵗ n c) ⊎ (hᵗ n c ≤ hᵗ n c′))
+tbᵗ n zero zero = just (inj₁ self)
+tbᵗ n zero c′   = just (inj₂ (lift (tw n) (↑ (tw n) c′)))
+tbᵗ n c    zero = just (inj₁ (lift (tw n) (↑ (tw n) c)))
+tbᵗ n _    _    = nothing
+
+rbᵗ : (n : ℕ) → Rb (tw n)
+rbᵗ zero    = tt
+rbᵗ (suc n) = tbᵗ n , λ c → rbᶻ (hᵗ n c)
+
+rbΛ : Rb Λ
+rbΛ = tt , rbᵗ

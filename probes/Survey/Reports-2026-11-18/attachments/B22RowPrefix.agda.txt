@@ -1,0 +1,96 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22RowPrefix where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+open import WSShadow using (ES; zC; lC)
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+import OCF.Align.Level as L
+open import B12LimitSrc using (Lev₂)
+import B12LimitRef as Desc
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B13Target as P
+import B14RefFixed as K
+import B14RefDescribed as Z
+import B15OrbitAction as Act
+import B15RefRaise as Ar
+import B17OrbitTower as T
+import B18RefDelta as Delta
+import B18RefModel as Model
+import B18RefRows as Rows
+import B19RowPair as Pair
+import B19RowWorld as World
+import B19RowProgram as Phrase
+import B19RowSecond as Old
+import B21RowTheta as Th
+
+project : Lev₂ → Pair.Pair
+project q = L.ψ⁰ q , K.collapse q
+self : ∀ {q} → q L.≅ q → Pair.PairFit (project q) q
+self r = L.ψ⁰-≅ r , K.pres r
+
+record Label (p : Lev₂) : Set where
+  constructor label
+  field
+    rp : p L.≅ p
+    q : Lev₂
+    rq : q L.≅ q
+    link : Pair.PairFit (project q) p
+    e : ES
+    rows : Desc.Described q e
+    v : Th.Vec
+    fits : Th.Fits v (K.collapse q)
+open Label public
+
+empty : Label L.zero
+empty = label L.z≅ L.zero L.z≅ (self L.z≅) zC Z.zero-row _ Rows.seed
+
+module Step {p : Lev₂} (l : Label p) where
+  open Label l renaming (q to q₀; rq to rq₀; rp to rp₀; link to link₀; v to v₀; e to e₀)
+  u = K.collapse q₀
+  module Mean = Th.Program.Meaning v₀ u (K.pres rq₀) (Label.fits l)
+  module Pr = Th.Program v₀
+  y = Mean.seq
+  ry : ∀ n → y n L.≅ y n
+  ry n = P.refl-left (Mean.shape n)
+  op = λ n → T.run (Pr.term 0 n 0) Act.base
+  stage = λ n → Act.f (op n) q₀
+  sh = λ n → Act.s (op n) e₀
+  stage-co : ∀ n → stage n L.≅ (q₀ L.+ P.co₁ (y n))
+  stage-co n = L.≅-trans (Mean.fit-term 0 n 0 Act.base L.zero L.z≅ (Ar.arithmetic 0) rq₀)
+    (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} rq₀ (P.co-pres (U.left-unit (λ t → t) (ry n))))
+  q′ : Lev₂
+  q′ = L.lim stage
+  e′ = lC sh
+  rq′ : q′ L.≅ q′
+  rq′ = L.l≅ (λ n → P.refl-left (stage-co n))
+  d′ : Desc.Described q′ e′
+  d′ = Desc.limit stage sh (λ n → Act.rows (op n) (Label.rows l))
+  κ : K.collapse q′ L.≅ Th.theta u
+  κ = L.l≅ λ n → L.≅-trans (K.pres (stage-co n)) (Delta.increment rq₀ (ry n) (K.pres rq₀))
+  same : ∀ x → x L.≅ x → Pair.PairFit (project (q₀ L.+ P.co₁ x)) (p L.+ P.co₁ x)
+  same x rx = L.≅-trans (L.≅-sym (proj₁ a)) (proj₁ b) , L.≅-trans (L.≅-sym (proj₂ a)) (proj₂ b)
+    where
+    h = Phrase.low (World.Higher.end Pair.W) x rx
+    a = h {p = q₀} rq₀ (self rq₀)
+    b = h {p = p} rp₀ link₀
+  native = λ x → p L.+ P.co₁ (P.back x)
+  f = λ x → L.ψ⁰ (q₀ L.+ P.co₁ x) , Delta.δ x u
+  coh : World.Natural native
+  coh xy = L.add-≅ {σ = R.idσ} {σ′ = R.idσ} rp₀ (P.co-pres (P.tr-both (L.≅ᴵ-refl _) xy))
+  branch : ∀ x → x L.≅ x → Pair.PairFit (f x) (native x)
+  branch x rx = L.≅-trans (proj₁ (same x rx)) (L.ψ⁰-≅ move) ,
+    L.≅-trans (L.≅-sym (Delta.increment rq₀ rx (K.pres rq₀))) (L.≅-trans (proj₂ (same x rx)) (K.pres move))
+    where move = L.add-≅ {σ = R.idσ} {σ′ = R.idσ} rp₀ (P.co-pres (L.≅-sym (L.tr⁻-≅ (L.≅ᴵ-refl _) rx)))
+  module Bound = Pair.Large f native coh branch
+  both : Pair.PairFit (project q′) (p L.+ Old.p)
+  both = L.≅-trans (L.l≅ (λ j → L.ψ⁰-≅ (stage-co j))) (proj₁ Bound.value) ,
+         L.≅-trans κ (proj₂ Bound.value)
+  next : Label (p L.+ Old.p)
+  next = label (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} rp₀ (P.pass-pres (L.Ω-refl _)))
+    q′ rq′ both e′ d′ Pr.build (λ d → Model.conv (Rows.meaning d) (Mean.fit d) (L.≅-sym κ))
+

@@ -1,0 +1,111 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意高首 H=Ω_i 改变右侧准入：每个 H+Ω₁ 下都能再容纳原 ψ₀(H) 整段。
+module B26OUContext where
+open import Data.List.Base using ([]; _∷_)
+open import Data.Empty using (⊥)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit.Base using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Align.EboLeanDef using (T; ψ; _<ᵀ_; _<ᴾ_; lv<; ar<; hd<; tl<; []<; natT; HC; h0; h1; hω)
+open import OCF.Align.EboLeanBase using (NF; n∷; n[]; nψ; GB; GB[]; gp; gh; gc; gw; gtl; Ctbl; c∷; c[]; HdLe; nf-hd; nfp-g; nf-tl; nf-le; tail<; <ᵀ-trans; idx<; <-≤; _≤ᵀ_; ≤ᴾ-trans; ≤-trans′)
+open import OCF.Align.EboLeanTrian using (T-pred; t<)
+open import OCF.Align.EboLeanClosure using (trian-fsn)
+open import OCF.Lean.YiRefTw2 using (Rt)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl; s≼s; l≼; z≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import WVOne using (T₀; read)
+import W4Block as W
+import B26ORank as R
+import B26OSparse as U
+open import B26OArgument as A using (Argument; argument; raw; valid; admissible)
+import B26OSection as Sec
+import B26OGame as G
+
+under : ∀ {t h} → NF t → Ctbl t → t <ᵀ (ψ [] h ∷ []) → GB [] t h
+under n[] c[] _ ()
+under (n∷ (nψ _ _ _) _ _) (c∷ _) (hd< (lv< ()))
+under (n∷ (nψ _ _ _) _ _) (c∷ _) (tl< ())
+under (n∷ (nψ _ _ _) _ _) (c∷ _) (hd< (ar< p)) (gp (gh _)) = p
+under (n∷ (nψ _ _ _) _ _) (c∷ _) (hd< (ar< p)) (gp (gw _ ()))
+under (n∷ (nψ _ _ g) _ _) (c∷ _) (hd< (ar< p)) (gp (gc _ h)) = <ᵀ-trans (g h) p
+under (n∷ _ le n) (c∷ c) (hd< (ar< p)) (gtl h) =
+  under n c (<ᵀ-trans (tail< _ _ le n) (hd< (ar< p))) h
+
+module At (i : Argument) (high : natT 1 ≤ᵀ raw i) where
+  pos : [] <ᵀ raw i
+  pos = <-≤ ([]< {x = ψ [] []} {xs = []}) high
+
+  head = ψ (raw i) []
+  H : Argument
+  H = argument (U.card (raw i)) (OCF.Align.EboLeanBase.nf-Ω (valid i)) (U.admissible (admissible i))
+  P = A.principal H
+
+  sorted : ∀ {t} → Ctbl t → HdLe head t
+  sorted c[] = tt
+  sorted (c∷ _) = inj₁ (lv< pos)
+
+  fixed : ∀ {t} → GB [] t (head ∷ t) → GB [] (head ∷ t) (head ∷ t)
+  fixed g (gp (gh _)) = []<
+  fixed g (gp (gw _ h)) = <ᵀ-trans (admissible i h) (idx< _ _ _)
+  fixed g (gp (gc _ ()))
+  fixed g (gtl h) = g h
+
+  start< : ∀ {x xs} → raw H <ᵀ (head ∷ x ∷ xs)
+  start< = tl< []<
+
+  budget : ∀ {t} → NF t → Ctbl t → t ≤ᵀ R.term P → GB [] t (head ∷ t)
+  budget {t = []} _ _ _ ()
+  budget {x ∷ xs} n c (inj₁ p) h = <ᵀ-trans (under n c p h) start<
+  budget _ _ (inj₂ refl) (gp (gh _)) = start<
+  budget _ _ (inj₂ refl) (gp (gc _ h)) = <ᵀ-trans (admissible H h) start<
+  budget _ _ (inj₂ refl) (gp (gw _ ()))
+  budget _ _ (inj₂ refl) (gtl ())
+
+  entry : (a : R.Name) → R.term a ≤ᵀ R.term P → Argument
+  entry (R.name t nt ct) d = argument (head ∷ t)
+    (n∷ (nψ (valid i) n[] GB[]) (sorted ct) nt) (fixed (budget nt ct d))
+
+  lift-level : ∀ {a b} → a ≤ᵀ b → OCF.Align.EboLeanBase._≤ᴾ_ (ψ a []) (ψ b [])
+  lift-level (inj₁ p) = inj₁ (lv< p)
+  lift-level (inj₂ refl) = inj₂ refl
+
+  roof-order : HdLe head (raw Sec.top)
+  roof-order = lift-level high
+
+  roof : Argument
+  roof = argument (head ∷ raw Sec.top) (n∷ (nψ (valid i) n[] GB[]) roof-order (valid Sec.top))
+    (fixed (λ h → <ᵀ-trans (admissible Sec.top h) (tail< _ _ roof-order (valid Sec.top))))
+
+  middle = entry P (inj₂ refl)
+  mixed : raw middle <ᵀ raw roof
+  mixed = tl< (hd< (lv< []<))
+
+  module Rank (r : Argument → T₀) (rise : A.Strict r) (x : T₀)
+              (zero-bound : ∀ a → raw a ≡ raw H → x ≼ r a) where
+    from-head : ∀ a p → x ≼ r (entry a p)
+    from-head a@(R.name [] _ _) p = zero-bound (entry a p) refl
+    from-head a@(R.name (_ ∷ _) _ _) p = ≼-trans (zero-bound H refl)
+      (≼-trans (≼-suc (≼-refl (r H))) (rise H (entry a p) start<))
+
+    walk : ∀ a p (h : HC (R.term a)) → x L.+ Rt h ≼ r (entry a p)
+    walk a p (h0 _) = from-head a p
+    walk a p (h1 eq h) = ≼-trans (s≼s (walk b q h)) (rise (entry b q) (entry a p) (tl< smaller))
+      where
+      b = R.P a eq
+      smaller = t< (T-pred (R.term a) eq)
+      q = inj₁ (<-≤ smaller p)
+    walk a p (hω eq f) = l≼ λ n →
+      let b = R.B a eq n
+          smaller = t< (trian-fsn (R.normal a) eq n)
+          q = inj₁ (<-≤ smaller p)
+      in ≼-trans (walk b q (f n))
+           (≼-trans (≼-suc (≼-refl (r (entry b q)))) (rise (entry b q) (entry a p) (tl< smaller)))
+
+    charge : (h : HC (R.term P)) → L.suc (x L.+ Rt h) ≼ r roof
+    charge h = ≼-trans (s≼s (walk P (inj₂ refl) h)) (rise middle roof mixed)
+
+    no-fixed : (h : HC (R.term P)) → r roof ≼ x L.+ Rt h → ⊥
+    no-fixed h p = s≼-irrefl _ (≼-trans (charge h) p)
+

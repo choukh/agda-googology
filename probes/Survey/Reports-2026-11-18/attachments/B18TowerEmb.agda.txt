@@ -1,0 +1,45 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在塔的前项到后项的实际嵌入上，按标准零层折叠能逐层收回原来的运算。
+module B18TowerEmb where
+open import Data.Nat.Base as N using (ℕ; zero; suc; s≤s; z≤n)
+open import Data.Product using (Σ; _,_; _×_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import Data.Empty using (⊥-elim)
+import Data.Nat.Properties as NP
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+data Walk (g : ℕ → L) (r : ∀ n → g n ≤ g (suc n)) (m : ℕ) : (k : ℕ) → g m ≤ g k → Set where
+  start : Walk g r m m self
+  step : ∀ {k p} → Walk g r m k p → Walk g r m (suc k) (p ∙ r k)
+
+from : ∀ g r k → Walk g r zero k (from0 g r k)
+from g r zero = start
+from g r (suc n) = step (from g r n)
+shift : ∀ g r {m k p} → Walk (λ n → g (suc n)) (λ n → r (suc n)) m k p → Walk g r (suc m) (suc k) p
+shift g r start = start
+shift g r (step d) = step (shift g r d)
+choose : ∀ g r m k → m N.< k → Σ (g m ≤ g k) λ p → (way g r m k ≡ inj₁ p) × Walk g r m k p
+choose g r zero (suc n) _ = _ , refl , from g r (suc n)
+choose g r (suc m) (suc k) (s≤s d) with choose (λ n → g (suc n)) (λ n → r (suc n)) m k d
+... | p , e , h = p , e , shift g r h
+
+spine : ∀ n → tw n ≤ tw (suc n)
+spine n = ink self
+base : ∀ n → Tr⁺ (tw n) → Tr⁺ zero
+base n x = ψ (tw n) (Ok-tw n) (B₀ (tw n)) zero (z≤ _) (Ωt zero) (proj₁ x)
+standard = λ n → base n (Ωt (tw n))
+pres : ∀ {m k p} (d : Walk tw spine m k p) x → base k (emb (tw k) (Ok-tw k) p x) ≡ base m x
+pres start x = refl
+pres (step d) x = pres d x
+
+module At (n : ℕ) (c : Tr (tw n)) {j} (w : j ≤ (tw n ⊕ ↑ (tw n) c)) where
+  path = inc {s = sΩ (tw n)} {h = λ z → tw n ⊕ ↑ (tw n) z} c w
+  peel : ∀ {m p} → m N.< suc n → Walk tw spine m (suc n) p → (x : Tr⁺ (tw m)) →
+    (B : Base (tw (suc n))) (β : Tr⁺ j) →
+    ψ (tw (suc n)) (Ok-tw (suc n)) B j path β (proj₁ (emb (tw (suc n)) (Ok-tw (suc n)) p x)) ≡ β ⊞ base m x
+  peel lt start x B β = ⊥-elim (NP.<-irrefl refl lt)
+  peel lt (step d) x B β = cong (β ⊞_) (pres d x)

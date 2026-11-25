@@ -1,0 +1,124 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W4 塔的每一级统一加强前一层的值作用与常数界。证书沿右项取子件时保留左端塔证书。
+module B15TowerIteration where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_; _×_)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; l≼; z≼)
+import OCF.Align.Level as LV
+open import WVOne using (T₀; read)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B13FiniteTower as F
+import B15ReadPaths as R
+import B15Spine as S
+import B15TowerFeedback as W
+import B15FixedWitness as H
+open T.Run
+
+module Prefix (s : Sh) (h : Ch s → L) (o : Ok (nd s h)) where
+  k = nd s h
+  Kept : (b : L) → Ok (k ⊕ b) → Set
+  Kept zero t = t ≡ o
+  Kept (nd g a) t = ∀ c → Kept (a c) (proj₂ t c)
+  kept : ∀ b (v : OkO k b) → Kept b (Ok⊕ k b o v)
+  kept zero v = refl
+  kept (nd g a) v c = kept (a c) (proj₂ v c)
+
+  descend : ∀ {a b} (d : R.Reach a b) {t} → Kept b t → Kept a (H.pull (R.left k d) t)
+  descend R.here p = p
+  descend R.succ p = p tt
+  descend (R.limit n) p = p n
+  descend R.omega p = p zero
+  descend (R.via d e) p = descend d (descend e p)
+
+  Law : L → (T₀ → T₀) → Set
+  Law b f = ∀ t → Kept b t → H.At (k ⊕ b) t f
+  send : ∀ {a b f} → R.Reach a b → Law a f → Law b f
+  send d u t p = H.send (R.left k d) (u _ (descend d p))
+  start : ∀ {f} → H.At k o f → Law zero f
+  start u _ refl = u
+  base : ∀ b {f} → Law zero f → Law b f
+  base zero u = u
+  base (nd sS a) u = send R.succ (base (a tt) u)
+  base (nd sL a) u = send (R.limit 0) (base (a 0) u)
+  base (nd (sΩ j) a) u = send R.omega (base (a zero) u)
+
+  liftU : ∀ b {f} → Law b f → Law (U.sc b) (U.repeatω f)
+  liftU zero u t p = H.liftU s h (u _ (p tt))
+  liftU (nd g a) u t p = H.liftU g (λ c → k ⊕ a c) (u _ (p tt))
+  liftQ : ∀ b {f Q} → Law b f → Law b (λ _ → Q) → Law (U.sc b) (λ _ → U.repeatω f Q)
+  liftQ zero u q t p = H.liftQ s h (u _ (p tt)) (q _ (p tt))
+  liftQ (nd g a) u q t p = H.liftQ g (λ c → k ⊕ a c) (u _ (p tt)) (q _ (p tt))
+
+  module Count (w : L) (d : R.Reach (U.sc zero) w) (f : T₀ → T₀) (Q : T₀)
+    (u : H.At k o f) (q : H.At k o (λ _ → Q)) where
+    t = iter (_⊕ w) w
+    next : ∀ n → R.Reach (U.sc (t n)) (t (suc n))
+    next n = R.left (t n) d
+    law : ∀ n → Law (t n) (F.height f n)
+    law zero = base w (start u)
+    law (suc n) = send (next n) (liftU (t n) (law n))
+    bound : ∀ n → Law (t n) (λ _ → F.constant f Q n)
+    bound zero = base w (start q)
+    bound (suc n) = send (next n) (liftQ (t n) (law n) (bound n))
+
+jump : (T₀ → T₀) → T₀ → T₀
+jump f a = LV.lim (λ i → F.height f (suc i) a)
+jumpQ : (T₀ → T₀) → T₀ → T₀
+jumpQ f Q = LV.lim (λ i → F.constant f Q (suc i))
+
+module Tower (n : ℕ) (f : T₀ → T₀) (Q : T₀) where
+  k = tw (suc n)
+  upper = tw (suc (suc n))
+  module P = Prefix (sΩ (tw n)) (S.branch (tw n)) (Ok-tw (suc n))
+  module State (r : T.Run upper) (eq : ok r ≡ Ok-tw (suc (suc n))) (hr : A.Covered r) where
+    module C = S.Cardinal k (S.branch k) r
+    c = proj₁ (bs r k (ink self))
+    w = ↑ k c
+    root : R.Reach (U.sc zero) w
+    root with hr k (ink self)
+    ... | inj₁ p = Relation.Binary.PropositionalEquality.subst (λ x → R.Reach (U.sc zero) (↑ k x)) p (W.floor k)
+    ... | inj₂ d = R.via (W.floor k) (R.read-step k d)
+    at-index : ∀ i → R.Reach (iter (_⊕ w) w (suc i)) (↑ k (C.ix 1))
+    at-index i rewrite eq = W.through k (opR w) w i
+    certified : P.Kept (↑ k (C.ix 1)) (ok (C.child 1))
+    certified rewrite eq = P.kept _ (OkO↑ k k (Ok-tw (suc n)) self _)
+
+  module From (u : H.At k (Ok-tw (suc n)) f) (q : H.At k (Ok-tw (suc n)) (λ _ → Q)) where
+    law : H.At upper (Ok-tw (suc (suc n))) (jump f)
+    law r eq hr a e = l≼ (λ i → ≼-trans
+      (P.send (D.at-index i) (M.law (suc i)) _ D.certified (D.C.child 1) refl (D.C.cover hr 1) a e)
+      (D.C.lift-value 1))
+      where
+      module D = State r eq hr
+      module M = P.Count D.w D.root f Q u q
+    bound : H.At upper (Ok-tw (suc (suc n))) (λ _ → jumpQ f Q)
+    bound r eq hr a e = l≼ (λ i → ≼-trans
+      (P.send (D.at-index i) (M.bound (suc i)) _ D.certified (D.C.child 1) refl (D.C.cover hr 1) a e)
+      (D.C.lift-value 1))
+      where
+      module D = State r eq hr
+      module M = P.Count D.w D.root f Q u q
+
+module Climb (f : T₀ → T₀) (Q : T₀) (u : U.Uniform (tw 1) f) (q : U.Bound (tw 1) Q) where
+  ops = iter jump f
+  floor : ℕ → T₀
+  floor zero = Q
+  floor (suc n) = jumpQ (ops n) (floor n)
+  both : ∀ n → H.At (tw (suc n)) (Ok-tw (suc n)) (ops n) × H.At (tw (suc n)) (Ok-tw (suc n)) (λ _ → floor n)
+  both zero = (λ r _ → u r) , (λ r _ h _ _ → q r h)
+  both (suc n) = G.law , G.bound
+    where module G = Tower.From n (ops n) (floor n) (proj₁ (both n)) (proj₂ (both n))
+  terminal : LV.lim floor ≼ read EBOᶜ
+  terminal = l≼ (λ n → ≼-trans (proj₂ (both n) (T.limRun tw T.terminal (suc n)) refl
+    (A.enter sL tw T.terminal (suc n) (T.prefix tw (suc n)) (A.initial Λ Ok-Λ)) LV.zero z≼)
+    (T.lim-child tw T.terminal (suc n)))

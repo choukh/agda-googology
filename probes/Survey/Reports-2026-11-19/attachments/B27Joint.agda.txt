@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 条件（排中律）。原 EBO 下界等价于逐个恢复询问在某一实际单位反馈单元取得严格支配。
+module B27Joint where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl; ≼l; l≼; ≼lim⁻)
+import OCF.Align.Level as L
+open import OCF.Lean.YiRVLevel using (LEM)
+import B26Names as A
+import B27Endpoint as E
+import B27RunCut as R
+import B26CCardinal as Card
+import B26CLift as Code
+open import OCF.Align.EboLeanDef using (HC)
+open import OCF.Lean.YiRefTw2 using (Rt; endpoint)
+import B27Threshold as H
+import B27NMeaning as M
+import B27NLocated as N
+import B27UEnvelope as Env
+import B18ResetCell as C
+import B14Goal as G
+
+f = C.At.fresh
+Hit : A.T₀ → Set
+Hit x = Σ ℕ (λ n → Σ ℕ (λ j → L.suc x ≼ f n j))
+
+module Matrix (g : ℕ → ℕ → A.T₀) where
+  upper : A.T₀
+  upper = L.lim (λ n → L.lim (g n))
+  locate : ∀ (x : A.T₀) → L.suc x ≼ upper → Σ ℕ (λ n → Σ ℕ (λ j → L.suc x ≼ g n j))
+  locate x h with ≼lim⁻ {a = x} {f = λ n → L.lim (g n)} h
+  ... | n , p = n , ≼lim⁻ {a = x} {f = g n} p
+
+  row : (q : A.T₀) (n : ℕ) → (∀ (x : A.T₀) → L.suc x ≼ q → Σ ℕ (λ j → L.suc x ≼ g n j)) → q ≼ upper
+  row q n co = R.predecessors q upper (λ x p → add x (co x p)) where
+    add : ∀ (x : A.T₀) → Σ ℕ (λ j → L.suc x ≼ g n j) → L.suc x ≼ upper
+    add x (j , h) = ≼l {f = λ m → L.lim (g m)} n (≼l {f = g n} j h)
+
+unit-row : ∀ k d → E.Index.Run k d → H.row k ≼ Env.U
+unit-row k d (n , co) = Matrix.row f (H.row k) n co
+
+-- 行号只用于证明这条收集性质，两个最终输入接口可以直接按森林递归。
+collect : ∀ (u : A.T₀) (demand : (k : ℕ) → 2 ≤ k → Set) →
+  (∀ k two → demand k two → H.row k ≼ u) → (∀ k two → demand k two) → A.E ≼ u
+collect u demand row run = endpoint u each where
+  each : ∀ k → H.row k ≼ u
+  each k = ≼-trans {b = L.suc (H.row k)} (≼-suc (≼-refl (H.row k)))
+    (≼-trans {b = H.row (suc (suc k))} (E.room k) (row (suc (suc k)) (E.two k) (run (suc (suc k)) (E.two k))))
+
+runs-to-unit : E.Runs → A.E ≼ Env.U
+runs-to-unit = collect Env.U E.Index.Run unit-row
+
+unit-to-terminal : A.E ≼ Env.U → G.Goal
+unit-to-terminal lower = ≼-trans {b = Env.U} lower Env.into
+
+bound : ∀ (v y : A.T₀) → (∀ n j → f n j ≼ y) → Hit v → v ≼ y
+bound v y all (n , j , p) = ≼-trans {b = L.suc v} (≼-suc (≼-refl v))
+  (≼-trans {b = f n j} p (all n j))
+
+Codes = Code.Inside (λ t → (d : HC (Card.response t)) → Hit (Rt d))
+from-codes : Codes → G.Goal
+from-codes c = unit-to-terminal (Card.sufficient {Y = Env.U}
+  (λ nt ct h small d → bound (Rt d) Env.U Env.component (c nt ct h small d)))
+
+module Classical (lem : LEM) where
+  module Orbit = M.Classical lem
+  module Address = N.Classical lem
+  Local = ∀ i → Hit (Orbit.response i)
+  named-input : ∀ i → L.suc (Orbit.response i) ≼ A.E
+  named-input i = subst (λ x → L.suc x ≼ A.E) (sym (N.Seen.exact w)) (A.strict (N.Seen.original w))
+    where w = Address.decode i
+  necessary : G.Goal → Local
+  necessary g i = Matrix.locate f (Orbit.response i) (≼-trans {b = A.E} (named-input i) (runs-to-unit (E.to-runs lem g)))
+  local-to-unit : Local → A.E ≼ Env.U
+  local-to-unit all = ≼-trans {b = L.lim Orbit.response} Orbit.all
+    (l≼ (λ i → bound (Orbit.response i) Env.U Env.component (all i)))
+  sufficient : Local → G.Goal
+  sufficient h = unit-to-terminal (local-to-unit h)
+  terminal-to-unit : G.Goal → A.E ≼ Env.U
+  terminal-to-unit g = local-to-unit (necessary g)

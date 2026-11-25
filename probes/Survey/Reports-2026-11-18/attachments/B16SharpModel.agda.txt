@@ -1,0 +1,114 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B16SharpModel where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Maybe using (nothing; just)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; trans; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1; read; p₁)
+open import WVTwo using (◃→≼)
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-trans; ≼-refl)
+open import B13SharpOne using (r₁)
+open import B14SharpStack
+open import B14SharpBound
+open import B15SharpAction
+open import B15SharpLift
+open import WSW4 using (Good)
+
+module Graded (lem : LEM) where
+  open I.Sharp lem
+  open Action lem
+  open Lift lem using (selfFold; node; cv; cv≤)
+
+  val : Base♯ → V.Tr⁺ r₁ → Pref → R.Tr r₁ → R.Tr r₁
+  val D a A x = proj₁ (selfFold D a (plug A x))
+
+  Rel : ∀ n {X : F.Cx lvl1} → F.⟦ X ⟧ B.zero → R.Tr r₁ → F.Ca n X → Set
+  Rel zero ch x H = Model ch x H
+  Rel (suc n) {X} ch x H = ∀ {Y} (m : F.Mor X Y) → Good m ch → ∀ D a A G →
+    Rel n (F.σ m ch) (val D a A R.zero) G → Rel n (F.σ m ch) (val D a A x) (proj₁ H m G)
+
+  close : ∀ n {X ch x} (H K : F.Ca n X) → Rel n ch x H → F.Rn n H K → Rel n ch x K
+  close zero H K h q = weak {G = H} {H = K} h q
+  close (suc n) H K h q m gm D a A G g = close n _ _ (h m gm D a A G g) (q m G)
+
+  enter : ∀ n {X Y ch x} (m : F.Mor X Y) → Good m ch → (H : F.Ca n X) → Rel n ch x H → Rel n (F.σ m ch) x (F.enter n m H)
+  enter zero m gm H h D a A S t v hv hc = h D a A (λ i q → S i (F.σ m q)) (F.π m t) v hv hc
+  enter (suc n) m gm H h q gq = h (q F.⊙ m) (trans (cong (F.π m) gq) gm)
+
+  mutual
+    lim : ∀ n {X ch} f d (H : ℕ → F.Ca n X) g → (∀ j → Rel n ch (f j) (H j)) →
+      Rel n ch (R.lim f d) (F.limC n H g)
+    lim zero f d H g h D a A S t v hv hc = lim-out D a A f d (λ j → ≼l j (h j D a A S t v hv hc))
+    lim (suc n) f d H g h m gm D a A G hg = val-lim n D a A f d (λ j → proj₁ (H j) m G)
+      (λ j → g j m G) (λ j → h j m gm D a A G hg)
+
+    val-lim : ∀ n {X ch} D a A f d (H : ℕ → F.Ca n X) g → (∀ j → Rel n ch (val D a A (f j)) (H j)) →
+      Rel n ch (val D a A (R.lim f d)) (F.limC n H g)
+    val-lim n D a id f d H g h = lim n _ _ H g h
+    val-lim n D a (addL A x) f d H g h = val-lim n D a A (λ j → x V.+ f j) _ H g h
+
+  mutual
+    sup : ∀ n {X ch} f d (H : F.Ca n X) → (∀ j → Rel n ch (f j) H) → Rel n ch (R.lim f d) H
+    sup zero f d H h D a A S t v hv hc = lim-out D a A f d (λ j → h j D a A S t v hv hc)
+    sup (suc n) f d H h m gm D a A G hg = val-sup n D a A f d _ (λ j → h j m gm D a A G hg)
+
+    val-sup : ∀ n {X ch} D a A f d (H : F.Ca n X) → (∀ j → Rel n ch (val D a A (f j)) H) →
+      Rel n ch (val D a A (R.lim f d)) H
+    val-sup n D a id f d H h = sup n _ _ H h
+    val-sup n D a (addL A x) f d H h = val-sup n D a A (λ j → x V.+ f j) _ H h
+
+  mutual
+    nd : ∀ n {X} (ch : F.⟦ X ⟧ B.zero) → ∀ (jd : ∀ {i} → F.⟦ X ⟧ i → F.Keep i (B.Tr B.zero) B.zero)
+      (f : R.Tr R.zero → R.Tr r₁) (H : B.Tr B.zero → F.Ca n X) →
+      (∀ z w → data≤ z w → Rel n ch (f z) (H w)) → Rel n ch (R.Ω p f) (F.nodeC n {mu = lvl1} p₁ jd ch H)
+    nd zero ch jd f H h D a A S t v hv hc = node D a A f _ _
+      (λ z w e → h z w e D a A S t v hv hc) (λ z w e → h z w e D (D R.zero tt) A S ch (S B.zero ch) hc hc) (ub (jd t))
+      where
+      ub : ∀ (k : F.Keep B.zero (B.Tr B.zero) B.zero) j →
+        read (W.cum (λ l → proj₁ (F.run (H (B.iter (λ w → proj₁ (F.run (H w) S B.zero ch (S B.zero ch))) B.zero l)) S B.zero t v)) j) ≼
+        read (proj₁ (F.node⁺ k (λ w → F.run (H w) S B.zero t v) (λ w → proj₁ (F.run (H w) S B.zero ch (S B.zero ch)))))
+      ub nothing j = ≼l j (≼-refl _)
+      ub (just (() , _)) j
+    nd (suc n) ch jd f H h m gm D a A G g = val-nd n (F.σ m ch) (λ t → jd (F.π m t)) D a A f
+      (λ w → proj₁ (H w) m G) (λ z w e → h z w e m gm D a A G g)
+
+    val-nd : ∀ n {X} (ch : F.⟦ X ⟧ B.zero) → ∀ (jd : ∀ {i} → F.⟦ X ⟧ i → F.Keep i (B.Tr B.zero) B.zero)
+      D a A (f : R.Tr R.zero → R.Tr r₁) (H : B.Tr B.zero → F.Ca n X) →
+      (∀ z w → data≤ z w → Rel n ch (val D a A (f z)) (H w)) →
+      Rel n ch (val D a A (R.Ω p f)) (F.nodeC n {mu = lvl1} p₁ jd ch H)
+    val-nd n ch jd D a id f H h = nd n ch jd _ H (λ z w e → h (cv z) w (≼-trans (cv≤ z) e))
+    val-nd n ch jd D a (addL A x) f H h = val-nd n ch jd D a A (λ z → x V.+ f z) H h
+
+  up : ∀ n {X : F.Cx lvl1} {mw : B.L} (w : W.Dn lvl1 mw) (iota : ∀ {i} → F.⟦ X ⟧ i → F.Tg w i)
+    (ch : F.⟦ X ⟧ B.zero) (A : F.Ca n X) (U : F.Ca n (F.cons w X)) {x} →
+    Rel n (iota ch , ch) x U → Rel n ch x (F.upC n w iota A U)
+  up zero w io ch A U h D a P S t v hv hc = h D a P (λ i q → S i (proj₂ q)) (io t , t) (F.run A S B.zero t v)
+    (≼-trans hv (◃→≼ (F.inf A S B.zero t v))) hc
+  up (suc n) w io ch A U h m gm D a P G g =
+    up n w (λ y → io (F.π m y)) (F.σ m ch) (proj₁ A m G) _ (subst
+      (λ z → Rel n (io z , F.σ m ch) (val D a P _) (proj₁ U (F.liftM w m) (F.enter n (F.chM w (λ y → io (F.π m y))) G))) (sym gm)
+      (h (F.liftM w m) (cong (λ z → io ch , z) gm) D a P (F.enter n (F.chM w (λ y → io (F.π m y))) G)
+        (subst (λ z → Rel n (io z , F.σ m ch) (val D a P R.zero) (F.enter n (F.chM w (λ y → io (F.π m y))) G)) gm
+          (enter n (F.chM w (λ y → io (F.π m y))) refl G g))))
+
+  reps : ∀ n {X ch x} (K : F.Ca (suc n) X) → Rel (suc n) ch x K → ∀ k D a A G → Rel n ch (val D a A R.zero) G →
+    Rel n ch (val D a A (V.iter (x V.+_) x k)) (B.iter (proj₁ K F.idM) G (suc k))
+  reps n K h zero D a A G g = h F.idM refl D a A G g
+  reps n {ch = ch} {x = x} K h (suc k) D a A G g = subst (Rel n ch (val D a (addL A x) (V.iter (x V.+_) x k)))
+    (shift (suc k) G) (reps n K h k D a (addL A x) (proj₁ K F.idM G) (h F.idM refl D a A G g))
+    where
+    step = proj₁ K F.idM
+    shift : ∀ l G → B.iter step (step G) l ≡ B.iter step G (suc l)
+    shift zero G = refl
+    shift (suc l) G = cong step (shift l G)
+

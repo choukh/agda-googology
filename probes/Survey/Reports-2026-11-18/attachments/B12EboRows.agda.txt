@@ -1,0 +1,69 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W4 的 Λ 累加孩子承接 EBO 的实际塔参照。第 0、1 行成立；给出 BTBO 行所需的余链。
+module B12EboRows where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import W4Block using (tw)
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read; T₀)
+import B12Terminal as T
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; l≼; ≼l; ≼-refl; ≼-trans)
+open import OCF.Align.EboLeanTree using (EBO-tree′; hc-tower)
+open import OCF.Lean.YiMonoExit using (toL)
+open import B12XRef using (row; epsilon; small; row-two; assemble) public
+
+child : ℕ → T₀
+child n = read (T.value (T.limRun tw T.terminal n))
+
+-- h 的右端是实际的累加孩子，编号可随参照项而变。
+InChild : T₀ → Set
+InChild x = Σ ℕ (λ n → x ≼ child n)
+
+into : ∀ {x} → InChild x → x ≼ read EBOᶜ
+into (n , h) = ≼-trans h (T.lim-child tw T.terminal n)
+
+epsilon-in-Ω₂ : N.γ 1 ≼ T.Ω₂ref
+epsilon-in-Ω₂ = ≼l 0 (≼-refl _)
+
+-- 第 1 个 Λ 孩子的第 1 个实际回灌点包含二层结点。
+first-point : T.Ω₂ref ≼ read (T.value (T.tower-child T.tower1 1))
+first-point = ≼-trans (T.anchor₂ (T.finiteRun 1)) (T.follow-ge (T.visit 1) (T.tower-child T.tower1 1))
+
+omega₂-in-child : T.Ω₂ref ≼ child 1
+omega₂-in-child = ≼-trans first-point (T.tower-ge T.tower1 1)
+
+one : InChild (row 1)
+one = 1 , ≼-trans epsilon (≼-trans epsilon-in-Ω₂ omega₂-in-child)
+
+zero-row : InChild (row 0)
+zero-row = 1 , ≼-trans small (proj₂ one)
+
+collect : ((k : ℕ) → InChild (row (suc (suc k)))) → toL EBO-tree′ ≼ read EBOᶜ
+collect rest = assemble go
+  where
+  go : ∀ k → row k ≼ read EBOᶜ
+  go zero = into zero-row
+  go (suc zero) = into one
+  go (suc (suc k)) = into (rest k)
+
+-- BTBO 的每个正迭代可落在不同实际 Λ 孩子。第一个正迭代已由同一个孩子实现。
+btbo : ((k : ℕ) → InChild (N.γ (suc (suc k)))) → row 2 ≼ read EBOᶜ
+btbo rest = ≼-trans row-two (l≼ go)
+  where
+  go : ∀ k → N.γ (suc k) ≼ read EBOᶜ
+  go zero = into (1 , ≼-trans epsilon-in-Ω₂ omega₂-in-child)
+  go (suc k) = into (rest k)
+
+complete : ((k : ℕ) → InChild (N.γ (suc (suc k))))
+         → ((k : ℕ) → InChild (row (suc (suc (suc k)))))
+         → toL EBO-tree′ ≼ read EBOᶜ
+complete b e = assemble go
+  where
+  go : ∀ k → row k ≼ read EBOᶜ
+  go zero = into zero-row
+  go (suc zero) = into one
+  go (suc (suc zero)) = btbo b
+  go (suc (suc (suc k))) = into (e k)

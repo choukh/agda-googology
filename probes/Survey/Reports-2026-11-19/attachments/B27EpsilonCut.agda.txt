@@ -1,0 +1,40 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原行的严格初段对上一个 ε 不动点的算子封闭。有精确名字时从深度 ≥2 的输入升到该 ε 点，名字深度相等。
+module B27EpsilonCut where
+
+open import Data.Nat.Base using (ℕ; _≤_)
+import Data.Nat.Properties as N
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; sym; subst)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl; s≼s)
+import OCF.Align.Level as L
+import B26Depth as D
+import B26Names as A
+import B22MovingIndex as E
+import B27Epsilon as R
+import B27Threshold as Th
+import B27CutArithmetic as C
+
+exact : ∀ a → 2 ≤ D.height a → (u : A.Named (E.above (A.value a))) → D.height (proj₁ u) ≡ D.height a
+exact a d (u , lo , hi) with R.cover a d
+... | b , e , cap = N.≤-antisym
+  (subst (D.height u ≤_) e (D.ordered u b (≼-trans {b = E.above (A.value a)} lo cap)))
+  (D.ordered a u (≼-trans {b = L.suc (A.value a)} (≼-suc (≼-refl _))
+     (≼-trans {b = E.above (A.value a)} (E.strict (A.value a)) hi)))
+
+module Generic (q : A.T₀) (k : ℕ)
+    (inside : ∀ x → L.suc x ≼ q → Σ A.Name (λ a → x ≼ A.value a × 2 ≤ D.height a × L.suc (A.value a) ≼ q))
+    (small : ∀ a → L.suc (A.value a) ≼ q → D.height a ≤ k)
+    (below : ∀ a → D.height a ≤ k → L.suc (A.value a) ≼ q) where
+  go : ∀ x → L.suc x ≼ q → L.suc (E.above x) ≼ q
+  go x p with inside x p
+  ... | a , xa , d , sm with R.cover a d
+  ... | b , e , cap = ≼-trans {b = L.suc (A.value b)} (s≼s (≼-trans {b = E.above (A.value a)}
+    (E.least x (E.above (A.value a)) (≼-trans {b = L.suc (A.value a)} (s≼s xa) (E.strict (A.value a))) (proj₁ (E.fix (A.value a)))) cap))
+    (below b (subst (_≤ k) (sym e) (small a sm)))
+
+module At (k : ℕ) (two : 2 ≤ k) where
+  module I = C.At k two
+  module G = C.Generic I.Q I.pad (N.≤-refl {2}) I.pad-in (C.approx (D.tower k)) I.bound
+  closed : ∀ x → I.Small x → I.Small (E.above x)
+  closed = Generic.go I.Q k G.padded (Th.small k) (Th.below k)

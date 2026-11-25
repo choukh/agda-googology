@@ -1,0 +1,97 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B17SharpSelected where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Path as P
+import W4Fold as F
+open import WVOne using (read; h₁; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; s≼s; s≼s⁻; ≼-suc; ≅→≼; z≼)
+import B12Strict as J
+import B12Terminal as T
+import B12ActualSlots as C
+import B14Tower as Tw
+import B14PathHeight as PH
+import B14Floor as Floor
+import B14Btbo as Bt
+import B16GammaRows as Rows
+open import B12TerminalTail using (mulω)
+open import B17SharpHeight
+
+two = Floor.num 2
+
+at-most : ∀ z → read (two W.+ z) ≼ L.suc (L.suc (read z))
+at-most B.zero = ≼-refl _
+at-most (B.suc z) = s≼s (at-most z)
+at-most (B.lim g p) = l≼ (λ n → ≼-trans (at-most (g n)) (s≼s (s≼s (≼l n (≼-refl _)))))
+
+absorb : ∀ z → L.ωᶜ ≼ read z → read (two W.+ z) ≼ read z
+absorb B.zero d with ≼-trans (≼l 1 (≼-refl (L.natᶜ 1))) d
+... | ()
+absorb (B.suc z) d = s≼s (absorb z (l≼ (λ n → s≼s⁻ (≼-trans (≼l (suc n) (≼-refl _)) d))))
+absorb (B.lim g p) d = l≼ (λ n → ≼l (suc (suc n)) (≼-trans (at-most (g n)) (≼-trans (s≼s (J.strict (p n))) (J.strict (p (suc n))))))
+
+mutual
+  copy : B.Tr B.zero → R.Tr R.zero
+  copy B.zero = R.zero
+  copy (B.suc z) = R.suc (copy z)
+  copy (B.lim g p) = R.lim (λ n → copy (g n)) (λ n → copy-edge (p n))
+
+  copy-edge : ∀ {z y} → B.zero B.⊢ z ◃ y → R.zero R.⊢ copy z ◃ copy y
+  copy-edge B.◃s = R.◃s
+  copy-edge (B.◃l n) = R.◃l n
+  copy-edge (B.◃t p q) = R.◃t (copy-edge p) (copy-edge q)
+
+same : ∀ z → readRW (copy z) L.≅ read z
+same B.zero = L.z≅
+same (B.suc z) = L.s≅ (same z)
+same (B.lim g p) = L.l≅ (λ n → same (g n))
+
+start : W.Tr⁺ B.zero → Pos
+start (z , p) = copy z , copy-edge p
+
+ω-base : L.ωᶜ ≼ mulω 𝟏
+ω-base = l≼ (λ n → ≼l n (subst (L.natᶜ n ≼_) (sym (iteration n)) (≼-suc (≼-refl _))))
+  where
+  one-plus : ∀ n → 𝟏 L.+ L.natᶜ n ≡ L.suc (L.natᶜ n)
+  one-plus zero = refl
+  one-plus (suc n) = cong L.suc (one-plus n)
+  iteration : ∀ n → B.iter (𝟏 L.+_) 𝟏 n ≡ L.suc (L.natᶜ n)
+  iteration zero = refl
+  iteration (suc n) rewrite iteration n = one-plus (suc n)
+
+module Actual (lem : LEM) where
+  open Compare lem
+
+  selected : ∀ z → L.ωᶜ ≼ read z → ∀ {w : B.zero B.≤ h₁ z} → PH.All w →
+    (r : T.Run (h₁ z)) → C.Covered r → see (H z (start (T.Run.β r))) ≼ Tw.valueAt r w
+  selected z h wp r hr = all z z (absorb z h) wp r hr _ (≅→≼ (same _))
+
+  module Track (r : T.Run (B.tw 1)) (hr : C.Covered r) (paths : ∀ z → PH.All (Tw.At.path r z)) where
+    open Tw.At r hiding (start)
+
+    infinite : ∀ n → L.ωᶜ ≼ read (idx (suc n))
+    infinite n = ≼-trans ω-base (PH.compare (idx n) (paths _) z≼ (chain (idx n)) (Tw.chain-covered r hr _) 𝟏 (T.Run.oneβ (chain _)))
+
+    incoming-value : ∀ n → see (H (idx (suc n)) (start (T.Run.β (chain (idx (suc n)))))) ≼ read (idx (suc (suc n)))
+    incoming-value n = selected (idx (suc n)) (infinite n) (paths _) (chain _) (Tw.chain-covered r hr _)
+
+    outgoing-value : ∀ n → see (H (idx (suc n)) (start (T.Run.β (point (suc n))))) ≼ read (T.value (point (suc n)))
+    outgoing-value n = selected (idx (suc n)) (infinite n) (PH.standard _) (point _) (C.enter (B.sΩ B.zero) h₁ r _ B.zero hr)
+
+  module Endpoint = Track T.tower1 Bt.hR (λ z → PH.through (B.↑ B.zero z))
+  candidate : ℕ → L.Ordᶜ L.zero
+  candidate n = see (H z (start (T.Run.β (Tw.Actual.chain z))))
+    where z = Tw.Actual.idx (suc (Rows.at n))
+
+  covers : (∀ n → Rows.inner n ≼ candidate n) → Rows.Incoming
+  covers h n = ≼-trans (h n) (Endpoint.incoming-value (Rows.at n))
+

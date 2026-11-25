@@ -1,0 +1,44 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- A 路审核判定件: tw 2 的孩子 c = Ωt (tw 1) 处的层号 L* 是 "孩子来自第 0 层" 的 Ω 形状,
+-- 它的 Ω 树折到第 0 层是 Tr zero 上的对角链 (与 row 3 = ψ₀(Ω_{Ω_Ω}) 的 γ-链同在第 0 层).
+module AuditASync where
+open import Data.Nat using (ℕ)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiRWFold as F
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiE4Base as Q
+import OCF.Lean.YiE4Inner as I
+import OCF.Lean.YiFRStep as FR
+
+c* : B.Tr (B.tw 1)
+c* = proj₁ (O.Ωt (B.tw 1))
+
+L* : B.L
+L* = B.tw 1 B.⊕ B.↑ (B.tw 1) c*
+
+-- L* 逐字是 tw 2 的孩子 (第 2 站 Step 1 的 child)
+is-child : L* ≡ FR.Step.child 1 c*
+is-child = refl
+
+a* : B.Tr B.zero → B.L
+a* e = B.tw 1 B.⊕ (B.zero B.⊕ B.↑ (B.zero B.⊕ B.↑ B.zero e) (proj₁ (O.Ωt (B.zero B.⊕ B.↑ B.zero e))))
+
+-- 形状: 下标层是第 0 层
+shape : L* ≡ B.nd (B.sΩ B.zero) a*
+shape = refl
+
+o* : P.Ok L*
+o* = proj₂ (P.Ok-tw 2) c*
+
+module In = I.Inner B.zero a* o* (MT.rbᶻ L*) (F.B₀ L*) (O.Ωt B.zero)
+
+-- 折到第 0 层 = 第 0 层链的部分和极限
+chain* : ℕ → B.Tr B.zero
+chain* = In.chain
+
+row* : Q.collapse (L* , o* , MT.rbᶻ L* , F.B₀ L*) (O.Ωt B.zero) ≡ O.limc⁺ (λ n → In.out (In.chain n))
+row* = In.row

@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiPFReachCheck where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiRWBlock hiding (D)
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀)
+open import OCF.Lean.YiTBRow using (Rb; ψ)
+open import OCF.Lean.YiMTTab using (rbᶻ)
+open import OCF.Lean.YiPFDom using (feedᴰ)
+import OCF.Lean.YiPCDom as PC
+
+OKᵀ : ∀ {ℓ} → Base ℓ → Set
+OKᵀ B = ∀ i u → (proj₁ (Ωt i) ≡ proj₁ (B i u)) ⊎ (i ⊢ proj₁ (Ωt i) ◃ proj₁ (B i u))
+
+base-ok : ∀ ℓ → OKᵀ (B₀ ℓ)
+base-ok ℓ i u = inj₁ refl
+
+chain : ∀ ℓ (o : Ok ℓ) (r : Rb ℓ) (B : Base ℓ) (p : Pos ℓ) (g : Br ℓ p → Tr ℓ) → ℕ → Br ℓ p
+chain ℓ o r B p g = iter (feedᴰ ℓ o r B p g) (fromBr ℓ p zero)
+
+data W : (ℓ : L) → Tr ℓ → Set where
+  root : ∀ ℓ → W ℓ (proj₁ (Ωt ℓ))
+  below : ∀ {ℓ x y} → W ℓ y → ℓ ⊢ x ◃ y → W ℓ x
+  child : ∀ {s h x c y e} → W (nd s h) (up x c y e) → W (h c) y
+  visit : ∀ ℓ (o : Ok ℓ) (r : Rb ℓ) (B : Base ℓ) → OKᵀ B
+    → (p : Pos ℓ) (g : Br ℓ p → Tr ℓ) → W ℓ (Ω p g)
+    → ∀ n → W ℓ (g (chain ℓ o r B p g n))
+  output : ∀ ℓ (o : Ok ℓ) (r : Rb ℓ) (B : Base ℓ) → OKᵀ B
+    → (p : Pos ℓ) (g : Br ℓ p → Tr ℓ) → W ℓ (Ω p g)
+    → ∀ n → W (at ℓ p) (proj₁ (ψ ℓ o r B (at ℓ p) (posW ℓ p)
+        (B (at ℓ p) (posW ℓ p)) (g (chain ℓ o r B p g n))))
+
+zero-in : ∀ ℓ → W ℓ zero
+zero-in ℓ = below (root ℓ) (proj₂ (Ωt ℓ))
+
+idx-in : ∀ n → W zero (PC.idx n)
+idx-in zero = zero-in zero
+idx-in (suc n) = output (tw 1) (Ok-tw 1) (rbᶻ (tw 1)) (B₀ (tw 1)) (base-ok (tw 1))
+  (inj₁ (inj₁ tt)) PC.G (root (tw 1)) n
+
+pre-in : ∀ {x} → PC.Pre x → W zero x
+pre-in (n , PC.⊴r) = idx-in n
+pre-in (n , PC.⊴◃ d) = below (idx-in n) d
+
+p₂ : Pos (tw 2)
+p₂ = inj₁ (inj₁ tt)
+
+G₂ : Br (tw 2) p₂ → Tr (tw 2)
+G₂ c = proj₁ (upz c (Ωt (tw 1 ⊕ ↑ (tw 1) c)))
+
+idx₂ : ℕ → Tr (tw 1)
+idx₂ = chain (tw 2) (Ok-tw 2) (rbᶻ (tw 2)) (B₀ (tw 2)) p₂ G₂
+
+idx₂-in : ∀ n → W (tw 1) (idx₂ n)
+idx₂-in zero = zero-in (tw 1)
+idx₂-in (suc n) = output (tw 2) (Ok-tw 2) (rbᶻ (tw 2)) (B₀ (tw 2)) (base-ok (tw 2))
+  p₂ G₂ (root (tw 2)) n

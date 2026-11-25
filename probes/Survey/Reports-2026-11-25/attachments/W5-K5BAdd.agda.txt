@@ -1,0 +1,103 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 加法相容 (接口第二版): D₁ ⊴ t₁, D₂ ⊴ t₂ 推出 add D₁ τ E ⊴ t₁ + t₂, 对 D₂ 的一切好代表元 E. 对 D₂ 的推导归纳, 无参数.
+module K5BAdd where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
+
+open import W4Block
+open import W4Ops
+open import W5Path using (Ok)
+import OCF.Align.Level as I
+open I using (Ordᴵ; Ordᶜ; Simᴵ; _<ᴵ_; _≅_; _≅ᴵ_; add; into; out; <→◃; out-into; ≅-trans; ≅-sym; add-≅; tr⁻; tr⁻-≅;
+              z≅; upˡ; zero; self)
+open import KPow
+open import K5Mir using (IsN)
+open import K5Rel
+open import KEmb
+open import KEmbTr
+open import K5BBase
+
+-- E ≅ 0 与零所在的层无关.
+≅zero : ∀ {k k₂ k₃} {E : Ordᶜ k} → E ≅ I.zero {k₂} → E ≅ I.zero {k₃}
+≅zero z≅                  = z≅
+≅zero (upˡ {r = zero} e)   = upˡ (≅zero e)
+≅zero (upˡ {r = self n} e) = upˡ (≅zero e)
+
+AddFor : ∀ {j k₂} → Ordᶜ k₂ → Tr j → Set
+AddFor {j} {k₂} D₂ t₂ = ∀ {k₁} {D₁ : Ordᶜ k₁} {t₁ : Tr j} → Dom j D₁ t₁
+                      → ∀ {k″} (E : Ordᶜ k″) → E ≅ D₂ → Mirror k″ j → (τ : Simᴵ k″ k₁) → Dom j (add D₁ τ E) (t₁ + t₂)
+
+conv : ∀ {j k₁ k″ k₃} {D₁ : Ordᶜ k₁} {τ : Simᴵ k″ k₁} {τ′ : Simᴵ k₃ k₁} {E : Ordᶜ k″} {E′ : Ordᶜ k₃} {t : Tr j}
+     → D₁ ≅ D₁ → E ≅ E′ → Dom j (add D₁ τ′ E′) t → Dom j (add D₁ τ E) t
+conv e₁ e d = r≅ (I.≅ᴵ-refl _) (add-≅ e₁ e) d
+
+≡D : ∀ {j k} {A A′ : Ordᶜ k} {t : Tr j} → A ≡ A′ → Dom j A′ t → Dom j A t
+≡D refl d = d
+
+addC : ∀ {j k₂} {D₂ : Ordᶜ k₂} {t₂ : Tr j} → IsN j → Ok j → Dom j D₂ t₂ → AddFor D₂ t₂
+addC ij oj (rz mk) {D₁ = D₁} {t₁ = t₁} d₁ E eE mE τ =
+  r≅ (I.≅ᴵ-refl _) (add-≅ {σ′ = τ} (Dom→refl d₁) (≅zero eE)) (rinfl _ d₁)
+addC ij oj d@(rs {A = A} d₀) d₁ E eE mE τ =
+  conv (Dom→refl d₁) (≅-trans eE (≅-sym (embW-≅ ρ (Dom→refl d))))
+       (rs (addC ij oj d₀ d₁ (embW ρ A) (embW-≅ ρ (Dom→refl d₀)) mE τ))
+  where ρ = ≅W (mirEq ij oj (Dom→Mir d) mE)
+addC ij oj d@(rl {f = f} h) d₁ E eE mE τ =
+  conv (Dom→refl d₁) (≅-trans eE (≅-sym (embW-≅ ρ (Dom→refl d))))
+       (rl (λ n → addC ij oj (h n) d₁ (embW ρ (f n)) (embW-≅ ρ (Dom→refl (h n))) mE τ))
+  where ρ = ≅W (mirEq ij oj (Dom→Mir d) mE)
+addC {j} ij oj d@(rΩ {q = q} {F = F} {p = p} {g = g} mk mp e h) {D₁ = D₁} {t₁ = t₁} d₁ E eE mE τ =
+  conv (Dom→refl d₁) (≅-trans eE (≅-sym (embW-≅ ρ (Dom→refl d))))
+       (rΩ (Dom→Mir d₁) (λ i o → I.≅ᴵ-trans (I.≅ᴵ-sym e₁) (mp i o)) (add-≅ (Dom→refl d₁) (embW-refl ρ e)) br)
+  where
+  ρ = ≅W (mirEq ij oj (Dom→Mir d) mE)
+  e₁ = ≺e (ρ q)
+  q₁ = ≺l (ρ q)
+  br : (Y : Ordᶜ (≺r (ρ q))) (z : Br j p) → SubD j p Y z
+     → Dom j (add D₁ τ (embW ρ (F (into (<→◃ q) (tr⁻ e₁ (out (<→◃ q₁)
+              (I.coe (<→◃ (τ q₁)) (<→◃ q₁) (into (<→◃ (τ q₁)) Y)))))))) (t₁ + g z)
+  br Y z s =
+    ≡D (trans (cong (λ w → add D₁ τ (embW ρ (F (into (<→◃ q) (tr⁻ e₁ (out (<→◃ q₁) (into (<→◃ q₁) w))))))) (out-into (<→◃ (τ q₁)) Y))
+              (cong (λ w → add D₁ τ (embW ρ (F (into (<→◃ q) (tr⁻ e₁ w))))) (out-into (<→◃ q₁) Y)))
+       (addC ij oj (h (tr⁻ e₁ Y) z s′) d₁ (embW ρ (F (into (<→◃ q) (tr⁻ e₁ Y)))) (embW-≅ ρ (Dom→refl (h (tr⁻ e₁ Y) z s′))) mE τ)
+    where s′ = Sub-≅ j p (I.≅ᴵ-sym e₁) (tr⁻-≅ e₁ (Sub→refl j p s)) s
+addC {j} ij oj (ru {k′ = k′} {A₀ = A₀} {Y = Y} {c = c} d₀ kd σr eA) {D₁ = D₁} d₁ E eE mE τ =
+  ru (addC ij oj d₀ d₁ A₀″ eA₀″ mE τ) (Kid-≅ j c (I.≅ᴵ-sym e‴) eY‴ kd) (λ q → τ (τ‴ q))
+     (≅-trans (add-≅ e₁ (≅-trans eE (≅-trans eA (add-≅ (≅-sym eA₀″) (≅-sym eY‴)))))
+              (add-assoc D₁ τ A₀″ τ‴ Y‴ e₁ (reflˡ eA₀″) (reflˡ eY‴)))
+  where
+  e₁ = Dom→refl d₁
+  eKK = mirEq ij oj (Dom→Mir d₀) mE
+  A₀″ = embW (≅W eKK) A₀
+  eA₀″ = embW-≅ (≅W eKK) (Dom→refl d₀)
+  tr‴ = simTr k′ σr eKK
+  e‴ = proj₁ (proj₂ tr‴)
+  τ‴ = proj₂ (proj₂ tr‴)
+  Y‴ = embW (≅W (I.≅ᴵ-sym e‴)) Y
+  eY‴ = embW-≅ (≅W (I.≅ᴵ-sym e‴)) (Kid→refl j c kd)
+addC ij oj (re {A₀ = A₀} {V = V} {X = X} d₀ dv dx eA) {D₁ = D₁} d₁ E eE mE τ =
+  re (addC ij oj d₀ d₁ A₀″ eA₀″ mE τ) (r≅ eK1 eV′ dv) (r≅ eK1 eX′ dx)
+     (≅-trans (add-≅ e₁ (≅-trans eE (≅-trans eA (add-≅ (≅-sym eA₀″) (pwb-≅ (≅-sym eV″) (≅-sym eX″))))))
+     (≅-trans (add-assoc D₁ τ A₀″ (λ q → q) (pwb V″ (λ q → q) X″) e₁ (reflˡ eA₀″) (pwb-≅ (reflˡ eV″) (reflˡ eX″)))
+              (add-≅ (add-≅ e₁ (reflˡ eA₀″)) (pwb-≅ (≅-trans eV″ (≅-sym eV′)) (≅-trans eX″ (≅-sym eX′))))))
+  where
+  e₁ = Dom→refl d₁
+  eKK = mirEq ij oj (Dom→Mir d₀) mE
+  ρ = ≅W eKK
+  A₀″ = embW ρ A₀
+  eA₀″ = embW-≅ ρ (Dom→refl d₀)
+  V″ = embW ρ V
+  X″ = embW ρ X
+  eV″ = embW-≅ ρ (Dom→refl dv)
+  eX″ = embW-≅ ρ (Dom→refl dx)
+  eK1 = mirEq ij oj (Dom→Mir dv) (Dom→Mir d₁)
+  eV′ = embW-≅ (≅W eK1) (Dom→refl dv)
+  eX′ = embW-≅ (≅W eK1) (Dom→refl dx)
+addC ij oj (r≅ kk e d) d₁ E eE mE τ = addC ij oj d d₁ E (≅-trans eE e) mE τ
+addC ij oj (r◃ d lt) {t₁ = t₁} d₁ E eE mE τ = r◃ (addC ij oj d d₁ E eE mE τ) (+-mono t₁ lt)
+
+-- rs 行要的形式 (E 取 D₂ 自己).
+addC′ : ∀ {j} → IsN j → Ok j → ∀ {k₂} {D₂ : Ordᶜ k₂} {t₂ : Tr j} → Dom j D₂ t₂ → ∀ {k₁} {D₁ : Ordᶜ k₁} {t₁ : Tr j} (τ : Simᴵ k₂ k₁)
+      → Dom j D₁ t₁ → Dom j (add D₁ τ D₂) (t₁ + t₂)
+addC′ ij oj d₂ τ d₁ = addC ij oj d₂ d₁ _ (Dom→refl d₂) (Dom→Mir d₂) τ

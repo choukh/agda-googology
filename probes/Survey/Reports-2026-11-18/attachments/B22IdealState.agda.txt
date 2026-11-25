@@ -1,0 +1,110 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22IdealState where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; subst₂; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B14SharpBound using (data≤)
+open import OCF.Align.Value using (≼-refl; ≼-trans; l≼; ≼l)
+import B12ActualSlots as C
+import B17SharpFeed as Link
+import B17SharpUpdate as U
+import B17SharpTwo as T
+import B18SharpMacro as M
+import B13Orbit as Orb
+import B12Orbit as Win
+
+import B21IdealRepeat as Reps
+import B15SharpAction as P1
+import B16SharpModel as H1
+import B16SharpOmega as O1
+import B15SharpLift as L1
+import B21IdealContext as Context
+open Context using (Pref; plug; empty; push)
+
+import B21IdealFrames as Old
+import B21IdealCarry as Carry
+import B20IdealRel as Rel
+import B14SharpLive as Live
+open import Data.Maybe.Base using (just)
+open import WVOne using (p₁; read)
+open import OCF.Align.Value using (_≼_)
+import OCF.Lean.YiKVRel as IR
+
+module At (lem : LEM) where
+  open I.Sharp lem
+  open U.Update lem
+  open Link.Feed lem using (Linked; lim-gen)
+  open Reps.At lem using (link-limit; out-limit)
+  open Context.At lem using (nextState; out)
+  open Old.At lem using (link-fixed)
+  open Carry.At lem using (mid-node; zero-node)
+  record Fit {X : F.Cx lvl2} (ch : F.⟦ X ⟧ lvl1) (D : Base♯) (S : F.St X) : Set where
+    constructor fit
+    field
+      one : Linked (proj₁ (S lvl1 ch)) (proj₁ (D r₁ oR))
+      lows : ∀ t → data≤ (proj₁ (D R.zero tt)) (proj₁ (S B.zero t))
+
+  record Model {X : F.Cx lvl2} (ch : F.⟦ X ⟧ lvl1) (x : R.Tr r₂) (K : F.Op X) : Set where
+    constructor model
+    field
+      feed : ∀ D p S → Fit ch (nextState D p R.zero) S → Linked (proj₁ (F.stepS K S lvl1 ch)) (proj₁ (nextState D p x r₁ oR))
+      value : ∀ D a p S → Fit ch (nextState D p R.zero) S → ∀ t b → data≤ (proj₁ (out D a p R.zero)) (proj₁ b) →
+        data≤ (proj₁ (out D a p x)) (proj₁ (F.run K S B.zero t b))
+    state : ∀ D p S → Fit ch (nextState D p R.zero) S → Fit ch (nextState D p x) (F.stepS K S)
+    state D p S h = fit (feed D p S h) (λ t → value D (D R.zero tt) p S h t (S B.zero t) (Fit.lows h t))
+
+  effective : ∀ {x K} → Context.At.Model lem x K → Model w₁ x K
+  effective h = model (λ D p S h′ → M.Macro.State.one (Context.At.Model.state h D p S
+     (M.Macro.pair (Fit.one h′) (Fit.lows h′ (T.Two.w₀ lem)))))
+     (λ D a p S h′ → Context.At.Model.value h D a p S (M.Macro.pair (Fit.one h′) (Fit.lows h′ (T.Two.w₀ lem))))
+
+  lower : ∀ {X ch x} (K J : F.Op X) → F.Rl K J → Model ch x K → Model ch x J
+  lower K J e h = model (λ D p S f → matched _ _ _ (Model.feed h D p S f) (inj₂ (e S lvl1 _ (S lvl1 _))))
+    (λ D a p S f t b hb → ≼-trans (Model.value h D a p S f t b hb) (◃→≼ (e S B.zero t b)))
+
+  shift : ∀ {X Y ch x} (m : F.Mor X Y) → F.π m (F.σ m ch) ≡ ch → (G : F.Op X) → Model ch x G → Model (F.σ m ch) x (F.enterO m G)
+  shift {ch = ch} m eq G h = model feed val
+    where
+    f′ : ∀ {D S} → Fit (F.σ m ch) D S → Fit ch D (λ i t → S i (F.σ m t))
+    f′ {S = S} f = fit (Fit.one f) (λ t → Fit.lows f (F.σ m t))
+    feed = λ D p S f → subst (λ t → Linked (proj₁ (F.run G (λ i q → S i (F.σ m q)) lvl1 t (S lvl1 (F.σ m ch)))) _) (sym eq)
+      (Model.feed h D p _ (f′ {D = nextState D p R.zero} {S = S} f))
+    val = λ D a p S f t b hb → Model.value h D a p _ (f′ {D = nextState D p R.zero} {S = S} f) (F.π m t) b hb
+
+  fixed : ∀ {X ch} f d (K : F.Op X) → (∀ j → Model ch (f j) K) → Model ch (R.lim f d) K
+  fixed f d K h = model (λ D p S h′ → link-fixed D p f d _ (λ j → Model.feed (h j) D p S h′))
+    (λ D a p S h′ t b hb → out-limit D a p f d _ (λ j → Model.value (h j) D a p S h′ t b hb))
+  limits : ∀ {X ch} f d (K : ℕ → F.Op X) rise → (∀ j → Model ch (f j) (K j)) → Model ch (R.lim f d) (F.limO K rise)
+  limits f d K rise h = model (λ D p S h′ → link-limit D p f d _ _ (λ j → Model.feed (h j) D p S h′))
+    (λ D a p S h′ t b hb → out-limit D a p f d _ (λ j → ≼l j (Model.value (h j) D a p S h′ t b hb)))
+
+  record Middle {X : F.Cx lvl2} (ch : F.⟦ X ⟧ lvl1)
+    (jd : ∀ {i} → F.⟦ X ⟧ i → F.Keep i (B.Tr B.zero) B.zero) : Set where
+    constructor kept
+    field pick : jd ch ≡ just (p₁ , (λ z → z) , refl)
+
+  node : ∀ {X ch} (jd : ∀ {i} → F.⟦ X ⟧ i → F.Keep i (B.Tr B.zero) B.zero) → Middle {X} ch jd → ∀ (lo : F.⟦ X ⟧ B.zero) (f : R.Tr R.zero → R.Tr r₂) (G : B.Tr B.zero → F.Op X) →
+    (∀ z w → data≤ z w → Model ch (f z) (G w)) → Model ch (R.Ω Rel.p₂₀ f) (F.nodeC 0 {mu = lvl1} p₁ jd lo G)
+  node {ch = ch} jd yes lo f G hs = model feed val
+    where
+    feed : ∀ D p S → Fit ch (nextState D p R.zero) S →
+      Linked (proj₁ (F.stepS (F.nodeC 0 {mu = lvl1} p₁ jd lo G) S lvl1 ch)) (proj₁ (nextState D p (R.Ω Rel.p₂₀ f) r₁ oR))
+    feed D p S h rewrite Middle.pick yes = mid-node D p f _ (λ z w e → Model.feed (hs z w e) D p S h)
+    val = λ D a p S h t b hb → zero-node D a p f _ _ (λ z w e → Model.value (hs z w e) D a p S h t b hb)
+      (λ z w e → Model.value (hs z w e) D (D R.zero tt) p S h lo (S B.zero lo) (Fit.lows h lo)) _
+      (Live.cumulative (jd t) (λ w → F.run (G w) S B.zero t b) (λ w → proj₁ (F.run (G w) S B.zero lo (S B.zero lo))))

@@ -1,0 +1,77 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第 n 项真实前缀至多取第 2n+2 个单位。首塔、反馈下标族及单位族同值。
+module B29SCases where
+open import Data.Nat.Base as N using (ℕ; zero; suc; _≤_; s≤s; _≤′_; ≤′-refl; ≤′-step)
+import Data.Nat.Properties as NP
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; l≼; ≼l; +-mono; ≅→≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import W4Ops as O
+import WVOne as V
+import B12EboRows as Row
+import B17CellPrefix as P
+import B19FirstTower as T
+import B19PathShape as H
+import B19IdealArithmetic as A
+import B19IdealPowers as Pow
+import B8FreezeMain as Add
+import B22MovingIndex as E
+import B27SOriginal as Old
+import B19IdealRow as R
+open import B29SFirst
+import B29SUnit as U
+
+Y₁ = Row.child 1
+pre = P.At.pre 0
+cell = P.cell 0
+tree = P.At.tree 0
+
+abstract
+  full : ∀ j → cell j ≈ᵛ x (suc j)
+  full j = subst (λ z → cell j ≈ᵛ V.read z) (sym (link (suc j)))
+    (≅→≼ (L.≅-sym (H.read-shape (T.same j))) , ≅→≼ (H.read-shape (T.same j)))
+
+  lower : S ≼ Y₁
+  lower = l≼ λ j → ≼-trans {b = x (suc j)} (forward j) (≼-trans {b = cell j} (proj₂ (full j))
+    (≼-trans {b = pre j} (V.cum-≥ tree j) (P.At.below 0 j)))
+
+  each : ∀ j → cell j ≼ f (suc j)
+  each j = ≼-trans {b = x (suc j)} (proj₁ (full j)) (back (suc j))
+
+  finite-fails : ∀ n → (∀ j → f j ≼ E.steps R.row n) → ⊥
+  finite-fails n cap = s≼-irrefl (E.steps R.row n)
+    (≼-trans {b = E.above R.row} (≼l (suc n) (Old.more R.row n)) (≼-trans {b = S} room (l≼ cap)))
+
+  walk′ : ∀ {i k} → i ≤′ k → f i ≼ f k
+  walk′ {i} ≤′-refl = ≼-refl (f i)
+  walk′ (≤′-step {n = k} h) = ≼-trans {b = f k} (walk′ h) (mono k)
+  walk : ∀ {i k} → i ≤ k → f i ≼ f k
+  walk d = walk′ (NP.≤⇒≤′ d)
+
+offset : ℕ → ℕ
+offset zero = 2
+offset (suc j) = suc (suc (offset j))
+
+count : ∀ j → suc (suc j) ≤ offset j
+count zero = NP.≤-refl
+count (suc j) = s≤s (NP.m≤n⇒m≤1+n (count j))
+
+abstract
+  double : ∀ k → (f k L.+ f k) ≼ f (suc (suc k))
+  double k = ≼-trans {b = A.level (f k)} (A.plusBound (f k))
+    (≼-trans {b = A.norm (f (suc k))} (Pow.expo Pow.omega-pos (U.unit k)) (power-step (suc k)))
+
+  cover : ∀ j → pre j ≼ f (offset j)
+  cover zero = ≼-trans {b = f 1} (each 0) (mono 1)
+  cover (suc j) = ≼-trans {b = pre j L.+ cell (suc j)} (Add.read-+′ (O.cum tree j) (tree (suc j)))
+    (≼-trans {b = f (offset j) L.+ f (offset j)}
+      (+-mono (cover j) (≼-trans {b = f (suc (suc j))} (each (suc j)) (walk (count j)))) (double (offset j)))
+
+  upper : Y₁ ≼ S
+  upper = subst (_≼ S) (sym (P.At.shape 0)) (l≼ (λ j → ≼l {f = f} (offset j) (cover j)))
+
+  exact-tower : Y₁ ≈ᵛ S
+  exact-tower = upper , lower

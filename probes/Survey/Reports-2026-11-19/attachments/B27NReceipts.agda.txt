@@ -1,0 +1,59 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 编译后的两个层号在同次实际折叠内依次选回灌点；入口在原 Λ 中的预算仍取决于所选坐标。
+module B27NReceipts where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; sym; subst)
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+import W4Block as W
+import B15Spine as S
+import B17CellPrefix as C
+import B17CellNext as Late
+import B12Terminal as T
+import B20Towers as J
+import B20TowerValues as V
+open import B27NPlaces
+
+entry : ∀ q → T.Run (level q)
+entry (room n z) = T.enterRun (W.sΩ (W.tw n)) (S.branch (W.tw n)) (C.At.r n) z W.zero
+
+visited : ∀ n j → Place
+visited n j = room n (C.At.S.ix n j)
+
+actual : ∀ n j → read (T.value (entry (visited n j))) ≼ read EBOᶜ
+actual = Late.actual
+
+paid : ∀ q j → key q ≡ C.At.S.ix (floor q) j → read (T.value (entry q)) ≼ read EBOᶜ
+paid (room n z) j refl = actual n j
+
+module Unary (a : Place) where
+  module K = One a
+  module Head = S.Cardinal (level a) K.children (entry K.result)
+  exchange : ∀ j → read (T.value (Head.child j)) ≼ read (T.value (entry K.result))
+  exchange = Head.lift-value
+
+module Binary (a b : Place) where
+  module K = Two a b
+  module Head = S.Cardinal (W.at K.k K.p) K.children (entry K.result)
+  module Tail (j : ℕ) = S.Cardinal (W.at K.k K.q) (K.ends (Head.ix j)) (Head.child j)
+  receipt : ∀ j m → read (T.value (Tail.child j m)) ≼ read (T.value (entry K.result))
+  receipt j m = ≼-trans (Tail.lift-value j m) (Head.lift-value j)
+  in-terminal : ∀ j m t → key K.result ≡ C.At.S.ix K.n t → read (T.value (Tail.child j m)) ≼ read EBOᶜ
+  in-terminal j m t hit = ≼-trans (receipt j m) (paid K.result t hit)
+
+-- 所有正塔第一次回灌都取 ex，而非任意字面 Ω 构造的坐标。
+first-misses : ∀ n (p : W.Pos (W.tw (suc n))) g → W.Ω p g ≡ C.At.S.ix (suc n) 1 → ⊥
+first-misses n p g d = mismatch n p g (trans d (V.At.index (suc n) 1))
+  where
+  mismatch : ∀ n (p : W.Pos (W.tw (suc n))) g → W.Ω p g ≡ J.At.index (suc n) 1 → ⊥
+  mismatch n p g ()
+
+misses-one : ∀ a → key (One.result a) ≡ C.At.S.ix (One.n a) 1 → ⊥
+misses-one a = first-misses (floor a) (One.p a) (One.tail a)
+
+misses-two : ∀ a b → key (Two.result a b) ≡ C.At.S.ix (Two.n a b) 1 → ⊥
+misses-two a b = first-misses (Two.m a b) (Two.p a b) (Two.second a b)
+

@@ -1,0 +1,224 @@
+[
+  {
+    "kind": "source",
+    "path": "<repository>/probes/OCF/Lean/YiNDTower.lagda.md",
+    "sha256": "f6ebcd98a2fbb3c30bb60864e763aabb9778d50bc7f81aad591e1a600ae0b422",
+    "bytes": 1030
+  },
+  {
+    "kind": "log",
+    "path": "<experiment>/YiNDTower-cold.log",
+    "sha256": "eaa5711c469dd3537386c6ea5e954247b762e7ef8d633e0e922afefd70802cdd",
+    "bytes": 1054
+  },
+  {
+    "kind": "source",
+    "path": "<repository>/probes/OCF/Lean/YiNDTop.lagda.md",
+    "sha256": "35816f177a47f68478e6f0a5c13822cbb76e5ec5bc7eb2deb20f973285c802d9",
+    "bytes": 6472
+  },
+  {
+    "kind": "log",
+    "path": "<experiment>/YiNDTop-cold.log",
+    "sha256": "c1a82a36da4ee4d9c71474438b4209a7bf9ed9a386441f0326d380006eec039a",
+    "bytes": 1050
+  },
+  {
+    "kind": "source",
+    "path": "<repository>/probes/OCF/Lean/YiNDBridge.lagda.md",
+    "sha256": "5583d7b50b86ed19ff55b33124918cd6600be22e608385b7ca51db69bd3b9fd0",
+    "bytes": 2558
+  },
+  {
+    "kind": "log",
+    "path": "<experiment>/YiNDBridge-cold.log",
+    "sha256": "d09aaf57d3f549d5bb0cc023d5098c869e80f2cefb7c107d274500530680a603",
+    "bytes": 1056
+  },
+  {
+    "kind": "source",
+    "path": "<repository>/probes/OCF/Lean/YiNDAccept.lagda.md",
+    "sha256": "9ba115e333baeafdea400f4e5bc73b1f96f6d96b78104a295ffb94dc9f4ac5d8",
+    "bytes": 4117
+  },
+  {
+    "kind": "log",
+    "path": "<experiment>/YiNDAccept-cold.log",
+    "sha256": "45fa16cd938cdb7321bcdd44996a44860b5839a1dc54b9a16e60d62397abe468",
+    "bytes": 1056
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiND-brief-original.md",
+    "sha256": "d1408d1e26f4999d88f17f72086a309232140c9d983928e728d01de57d42abc4",
+    "bytes": 13126
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiND-report.md",
+    "sha256": "f659127d76b18a8b9191671e2b0b9e30d253593b1cae583e20c8ade1f41d30d1",
+    "bytes": 12893
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiNDAccept-2.log",
+    "sha256": "7890ed67a1e0c95d473df6196e01a26ff4fbe407b72e389e364ac28937598d87",
+    "bytes": 1017
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiNDAccept-first-source.agda.txt",
+    "sha256": "42423dfe15039fb573d6c6f747b2543ebbe659663a3a580e9bfc736559901409",
+    "bytes": 3626
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiNDAccept.agda",
+    "sha256": "d9f33a6db16f657ce6d5d1d90620fb09a49eab9779ec685a5a84cd5be6de4e6d",
+    "bytes": 3835
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiNDAccept.log",
+    "sha256": "8a694935b6dadf301fb5ae624704d7fb71e3aade03360cf0f571c76d57dbf60a",
+    "bytes": 1399
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiNDBridge.agda",
+    "sha256": "096a40df57b968b39dda1e5f976251d3c316fc1a854a3590cf0e3120905d9250",
+    "bytes": 2363
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiNDBridge.log",
+    "sha256": "4d95d219d887712a9f3fd3f57ee900b282219f291bc5608b7a97e1b0b726752c",
+    "bytes": 1017
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiNDLocal.agda",
+    "sha256": "73a57dc1721a8efc7e094dad03718ddc86b1730622d2c0944df35feb3dd1dcbf",
+    "bytes": 759
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiNDLocal.log",
+    "sha256": "6c64c86296e759e0ea516038876dedec775f878246da2b96ec5308af9691016e",
+    "bytes": 17674
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiNDProbe.agda",
+    "sha256": "0aab18a69ea95934087d9a8af010877d2111abb8aa3faed1b81b429a5d8a810f",
+    "bytes": 843
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiNDProbe.log",
+    "sha256": "3227568c240a7f2b08cd6e180f8f4cd9e2934db56885b77a3aa41ae72179dba1",
+    "bytes": 1015
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiNDTop.agda",
+    "sha256": "f690a013f91a561649dbe3ed7ae19ba2484b50d164a2f4b9e279c7a5b6386535",
+    "bytes": 6229
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/YiNDTop.log",
+    "sha256": "2c2d093324f578ef71761e40654da2816db87d2713a46b6e17c9bb1bf39c95c0",
+    "bytes": 1011
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/batch59-guardrails.md",
+    "sha256": "312d287d710834f1343f15a5ef44345f4923204cb8047aa6cf20c31e42355698",
+    "bytes": 2516
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/cold-measurements.json",
+    "sha256": "14179703b355bd04fccfa7e144d9c3ee20f40cd1d4d435cb8aa16db4227cb203",
+    "bytes": 3698
+  },
+  {
+    "kind": "snapshot",
+    "path": "<experiment>/frozen/YiNDAccept-cold.log",
+    "sha256": "45fa16cd938cdb7321bcdd44996a44860b5839a1dc54b9a16e60d62397abe468",
+    "bytes": 1056
+  },
+  {
+    "kind": "snapshot",
+    "path": "<experiment>/frozen/YiNDAccept.lagda.md",
+    "sha256": "9ba115e333baeafdea400f4e5bc73b1f96f6d96b78104a295ffb94dc9f4ac5d8",
+    "bytes": 4117
+  },
+  {
+    "kind": "snapshot",
+    "path": "<experiment>/frozen/YiNDBridge-cold.log",
+    "sha256": "d09aaf57d3f549d5bb0cc023d5098c869e80f2cefb7c107d274500530680a603",
+    "bytes": 1056
+  },
+  {
+    "kind": "snapshot",
+    "path": "<experiment>/frozen/YiNDBridge.lagda.md",
+    "sha256": "5583d7b50b86ed19ff55b33124918cd6600be22e608385b7ca51db69bd3b9fd0",
+    "bytes": 2558
+  },
+  {
+    "kind": "snapshot",
+    "path": "<experiment>/frozen/YiNDTop-cold.log",
+    "sha256": "c1a82a36da4ee4d9c71474438b4209a7bf9ed9a386441f0326d380006eec039a",
+    "bytes": 1050
+  },
+  {
+    "kind": "snapshot",
+    "path": "<experiment>/frozen/YiNDTop.lagda.md",
+    "sha256": "35816f177a47f68478e6f0a5c13822cbb76e5ec5bc7eb2deb20f973285c802d9",
+    "bytes": 6472
+  },
+  {
+    "kind": "snapshot",
+    "path": "<experiment>/frozen/YiNDTower-cold.log",
+    "sha256": "eaa5711c469dd3537386c6ea5e954247b762e7ef8d633e0e922afefd70802cdd",
+    "bytes": 1054
+  },
+  {
+    "kind": "snapshot",
+    "path": "<experiment>/frozen/YiNDTower.lagda.md",
+    "sha256": "f6ebcd98a2fbb3c30bb60864e763aabb9778d50bc7f81aad591e1a600ae0b422",
+    "bytes": 1030
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/libraries",
+    "sha256": "d96badab849f077f582483d52395dd1d73a25ac79ddc89c354b4fd7a75f794d8",
+    "bytes": 152
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/self-check.json",
+    "sha256": "4066b9c130184b29d6582e6a904047d37974a923d63e82d4f15d0d7f0c535521",
+    "bytes": 1031
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/theorem-signatures.md",
+    "sha256": "2c8bf0a82490d41f8d6fe047cda6f8f4a1c753359b9140a74c746dcef01586b1",
+    "bytes": 9300
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/verify-output.jsonl",
+    "sha256": "d1c141e82558bac4c6164bdd27e3ca49fbad37a2b8530724b81b6798e7478125",
+    "bytes": 3123
+  },
+  {
+    "kind": "artifact",
+    "path": "<experiment>/verify.py",
+    "sha256": "3888587c56099ec10a636692ef6cc724f4df94b1b25afbc85bb01d2b7f120219",
+    "bytes": 1980
+  }
+]

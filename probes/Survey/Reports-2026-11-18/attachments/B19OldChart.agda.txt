@@ -1,0 +1,92 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原 γ₂ 层号前驱的每条严格下降，可在上一实际子运行内部继续下降；每站带其独立零层值与全部可数高度更新。
+module B19OldChart where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; s≼s; z≼; l≼; ≼-refl; ≼-trans; ≅→≼)
+open import OCF.Align.BTBOFullEmb using (PEmb)
+open import OCF.Align.BTBOValNeg using (≺ᴵ→s≼; forget-≅ᴵ)
+import OCF.Align.NoCumsum as N
+open import W4Block
+open import W4Path
+open import WVOne using (h₁; read)
+import B12Terminal as T
+import B14Height as H
+import B14PathHeight as P
+import B14Tower as W
+import B14Btbo as Bt
+import B16GammaRows as G
+import B16IndexBase as I
+import B17SlotLevel as C
+import B19OldSlots as Q
+
+below : ∀ {a b} (m : PEmb a b) {x} (p : x L.≺ᴵ a) → PEmb x (PEmb.map m p)
+PEmb.map (below m p) q = PEmb.map m (L.≺ᴵ-trans q p)
+PEmb.bnd (below m p) q = PEmb.mono m (L.≺ᴵ-trans q p) p q
+PEmb.mono (below m p) q r = PEmb.mono m (L.≺ᴵ-trans q p) (L.≺ᴵ-trans r p)
+PEmb.coh (below m p) q r = PEmb.coh m (L.≺ᴵ-trans q p) (L.≺ᴵ-trans r p)
+lim-part : ∀ {f s b} (m : PEmb (L.lim f s) b) n → PEmb (f n) b
+PEmb.map (lim-part m n) p = PEmb.map m (L.≺-lim n p)
+PEmb.bnd (lim-part m n) p = PEmb.bnd m (L.≺-lim n p)
+PEmb.mono (lim-part m n) p q = PEmb.mono m (L.≺-lim n p) (L.≺-lim n q)
+PEmb.coh (lim-part m n) p q = PEmb.coh m (L.≺-lim n p) (L.≺-lim n q)
+height : ∀ a {b} (m : PEmb a b) → L.forget a ≼ L.forget b
+height L.zero m = z≼
+height (L.suc a) m = ≼-trans (s≼s (height a (below m p))) (≺ᴵ→s≼ (PEmb.bnd m p))
+  where p = L.via (L.≅ᴵ-refl a) L.zero
+height (L.lim f s) m = l≼ (λ n → height (f n) (lim-part m n))
+
+-- 根上的位置在可数索引树中有逐字的子层代码；后续再次选位不需比较两个树的函数。
+code : (z : Tr zero) → Pos (h₁ z) → Tr zero
+code zero ()
+code (suc z) (inj₂ (_ , inj₁ _)) = z
+code (suc z) (inj₂ (_ , inj₂ p)) = code z p
+code (lim f d) (inj₂ (n , inj₁ _)) = f n
+code (lim f d) (inj₂ (n , inj₂ p)) = code (f n) p
+code-is : (z : Tr zero) (p : Pos (h₁ z)) → h₁ (code z p) ≡ at (h₁ z) p
+code-is zero ()
+code-is (suc z) (inj₂ (_ , inj₁ _)) = refl
+code-is (suc z) (inj₂ (_ , inj₂ p)) = code-is z p
+code-is (lim f d) (inj₂ (n , inj₁ _)) = refl
+code-is (lim f d) (inj₂ (n , inj₂ p)) = code-is (f n) p
+
+record Chart (a : L.Ordᴵ) : Set where
+  constructor chart
+  field
+    z : Tr zero
+    frame : Q.Frame (h₁ z)
+    target : L.Ordᴵ
+    corr : C.Corr target (h₁ z)
+    embedding : PEmb a target
+open Chart public
+module Here {a} (c : Chart a) where
+  frame₀ = frame c
+  index-bound : L.forget a ≼ read (z c)
+  index-bound = ≼-trans (height a (embedding c)) (≼-trans (≅→≼ (forget-≅ᴵ (C.same (corr c) (C.real (z c))))) (≅→≼ (L.forget-toLevel (read (z c)) (I.hs (z c)))))
+  act : ∀ u → u ≼ Q.seed frame₀ → H.act (L.forget a) u ≼ Q.value frame₀
+  act = P.compare (z c) (Q.all frame₀) index-bound (Q.state frame₀) (Q.cover frame₀)
+
+  module Lower {x} (p : x L.≺ᴵ a) (times : ℕ → ℕ) where
+    mapped = PEmb.map (embedding c) p
+    found = C.find (corr c) (PEmb.bnd (embedding c) p)
+    spot = proj₁ found
+    source = code (z c) spot
+    reach : Q.Reach frame₀ (h₁ source)
+    reach = subst (Q.Reach frame₀) (sym (code-is (z c) spot)) (Q.descend (z c) spot frame₀ times)
+    result : Chart x
+    result = chart source (proj₁ reach) mapped (subst (C.Corr mapped) (sym (code-is (z c) spot)) (proj₂ found)) (below (embedding c) p)
+    stays : Q.Inside frame₀ (frame result)
+    stays = proj₂ reach
+
+module Actual (n m : ℕ) (d : N.γ n ≼ read (W.Actual.idx m)) where
+  z′ = W.Actual.idx (suc m)
+  f = Q.frame (W.Actual.chain z′) (W.Actual.path z′) (P.through (↑ zero z′)) (W.chain-covered T.tower1 Bt.hR z′)
+  original : Chart (N.L n)
+  original = chart z′ f (I.κ z′) (C.real z′) (G.Actual.position n m d)
+  main : Q.value f ≼ read (W.Actual.idx (suc (suc m)))
+  main = ≼-refl _
+module First = Actual 1 2 Bt.first-in

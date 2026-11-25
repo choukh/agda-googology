@@ -1,0 +1,184 @@
+# YiNX 完整回报（2026-11-14）
+
+## 1. 判决与进度
+
+对纲领与目标的意义：记号一侧能够处理至少一族非标准形见证，而不用反过来改树、折叠或合法性。已证明 ψ₀(ψₖ(Ωₖ₊₁)) 的参照值与标准形 ψ₀(Ωₖ₊₁) 互相 `≼`，并把 `s ≤ᵀ ψ₀(ψₖ(Ωₖ₊₁))` 搬到该标准形。成果全属验收一侧，读记号；不算树自足，也没有增加主线 EBO 下界。
+
+第 0 步通过。临时文件 `YiNXCheck.agda` 用 t = ψ₀(ψ₂(Ω₃))、u = ψ₀(Ω₃)：构造 `ht : HC t`，写出 `Wanted`，并证明 `wanted : Wanted`。前提有非零标准形实例 s = ψ₀(Ω₂)，`ns`、`st`、`hs` 和 `instance-result` 均已编译。没有把“只有 Set 声明”当成证明。
+
+第 1 步完成到一族，而非任意有 HC 的项。`YiNXNote` 对所有自然数 k 证明相邻层规范化、所需方向的项序搬运，以及标准形左项上的值单调；另证该族的每个见证都不是标准形。规范化标准形由参数 k 明给，不提供任意 HC 项的规范化算法。
+
+第 2 步交付局部出口与第一个缺口。`YiNXExit.exitNX` 允许叶子见证是这族非标准形，保留既有关系 `M̂`；`YiNXLow.First.first-exit` 已接到 `YiMHLean.low0` 的第 0 片实际叶子，`example` 实填全部参数。**完整 low0 出口未走通**，没有称其无条件出口已完成；首个未填项是第 1 片叶子的 `FirstMissing`。`LowMove`、`FirstMissing` 只是未证的类型声明，不是已证明命题。
+
+本轮没有需要改前三层的步骤，没有触发 5G 堆耗尽或同处两次数学重新设计仍不能通过的停止条件。依简报第 2 步“交第一个挡住的引理”定稿交付；不把这个局部缺口判成路线否定。
+
+| 问题 | 位置 | 档 |
+|---|---|---|
+| 最小 t 有 HC 且目标有可满足前提 | 临时 `YiNXCheck.ht/ns/st/hs/wanted/instance-result` | 编译定理 |
+| 对所有 k 的非标准形族有 HC、规范化值与项序搬运 | `YiNXNote.hW/W≼N/N≼W/orderW/monoW` | 编译定理 |
+| 新出口条件实际接受非标准形叶子 | `YiNXExit.exitNX`、`YiNXLow.First.first-exit/example` | 编译定理；仅第 0 片 low0 叶子已实填 |
+| 下一片见证的共尾度及第 0 个基本列项 | `YiNXLow.cofB₁/firstB₁` | 有限测试，编译通过 |
+| 原相邻层平移等式不能直接用于下一片 | `YiNXLow.¬shift₄` | 编译否定定理，仅针对写明的闭项等式 |
+| 完整 low0 的叶子比较、下一片见证的 HC | `YiNXLow.LowMove/FirstMissing` | 未证陈述；将其作为当前缺口是判断 |
+
+## 2. 文件、冷编与自查
+
+代码行口径：Agda 代码块内非空、非整行注释行，包含模块头与导入。各模块先删掉自己的接口，依赖使用既有接口；按 Note、Exit、Low 顺序编译。每次都是单个 Agda、`+RTS -M5G -s -RTS`。下列 maximum residency 是 RTS 实测字节数；total memory 是同份日志的总内存，不把 5G 上限写成实测使用量。
+
+| 文件 | 物理行 | 代码行 | 冷编退出码 | maximum residency (bytes) | total memory (MiB) |
+|---|---:|---:|---:|---:|---:|
+| `<仓库>/probes/OCF/Lean/YiNXNote.lagda.md` | 94 | 67 | 0 | 1,293,119,664 | 2203 |
+| `<仓库>/probes/OCF/Lean/YiNXExit.lagda.md` | 48 | 34 | 0 | 1,310,460,136 | 2249 |
+| `<仓库>/probes/OCF/Lean/YiNXLow.lagda.md` | 119 | 87 | 0 | 1,333,885,488 | 2339 |
+
+三份冷编日志均恰有一条自身模块的 `Checking` 行，无依赖 `Checking`、无警告、无错误。源码禁用构造与洞检索 0，本机绝对路径检索 0；三份源码都使用指定选项。未使用函数外延。审计数据、签名与哈希见临时目录的 `YiNX-audit.json`。只新建 YiNX 源码；未编辑旧数学文件、文档、其他路线前缀；未提交、未推送、未派子路。
+
+临时目录创建于本地时间 20:23:12；首个临时文件的初次编译日志写完于 20:24:03（退出 42），修正后 20:24:40 通过，目标证明版 20:25:39 通过。第一个临时检查在本轮开始后 30 分钟内已写出并编译。
+
+可复核命令（从仓库根目录，按模块替换文件名与日志名）：
+
+```sh
+agda +RTS -M5G -s -RTS --library-file=<实验目录>/libraries -i src -i probes probes/OCF/Lean/YiNXNote.lagda.md > <实验目录>/YiNXNote-cold.log 2>&1
+code=$?
+print -r -- "exit $code"
+```
+
+冷编仅删除过这三个字面路径：
+
+- `probes/_build/2.8.0.2/agda/OCF/Lean/YiNXNote.agdai`
+- `probes/_build/2.8.0.2/agda/OCF/Lean/YiNXExit.agdai`
+- `probes/_build/2.8.0.2/agda/OCF/Lean/YiNXLow.agdai`
+
+## 3. 定理表
+
+记法定义：`N k = ψᴺ 0 (Ωᴺ (suc k))`，`W k = ψᴺ 0 (ψᴺ k (Ωᴺ (suc k)))`，`G k n = γT (Ωᴺ (suc k)) (natT k) n`。Low 模块中 `A n = ψᴺ 0 (ψᴺ 2 (Ωᴺ n))`，`Wit n = A (suc (suc (suc n)))`，`lowTerm = ψᴺ 0 (ψᴺ 2 (E.Ωt ωᵀ))`。
+
+下表逐字取源码签名，多行签名在表中并为一行。文件名均指第 2 节绝对路径。`First` 内的两条定理带如下模块参数，`example` 实填这些参数：
+
+```agda
+module First (o : Ok (fn 2)) (r : Rb (fn 2)) (s : Tp 1 0) (b : Base (fn 2)) (ok : OKB b)
+             (β : Tr⁺ (fn 0)) (hβ : M⁰ (Ωᴺ 0) (proj₁ β)) {c : Tr zero} (cc : Can c) (l : M⁰ ωᵀ c) where
+```
+
+| 名字 | 逐字陈述 | 一句白话 | 文件 | 档 |
+|---|---|---|---|---|
+| `nfN` | `nfN : ∀ k → NF (N k)` | 规范化目标为标准形 | `YiNXNote.lagda.md` | 编译定理 |
+| `cofN` | `cofN : ∀ k → cof (N k) ≡ cω` | 规范化目标共尾度为 ω | `YiNXNote.lagda.md` | 编译定理 |
+| `cofI` | `cofI : ∀ k → cof (ψᴺ k (Ωᴺ (suc k))) ≡ cω` | 内层折叠的共尾度为 ω | `YiNXNote.lagda.md` | 编译定理 |
+| `cofW` | `cofW : ∀ k → cof (W k) ≡ cω` | 非标准形见证共尾度为 ω | `YiNXNote.lagda.md` | 编译定理 |
+| `fsN` | `fsN : ∀ k n → fsn (N k) n ≡ ψᴺ 0 (G k n)` | 标准形参照的基本列方程 | `YiNXNote.lagda.md` | 编译定理 |
+| `fsI` | `fsI : ∀ k n → fsn (ψᴺ k (Ωᴺ (suc k))) n ≡ ψᴺ k (G k n)` | 内层折叠的基本列方程 | `YiNXNote.lagda.md` | 编译定理 |
+| `G-step` | `G-step : ∀ k n → G k (suc n) ≡ ψᴺ k (G k n)` | γ 链的下一步方程 | `YiNXNote.lagda.md` | 编译定理 |
+| `shift` | `shift : ∀ k n → fsn (W k) n ≡ fsn (N k) (suc n)` | 非标准形基本列等于标准形基本列去掉第 0 项 | `YiNXNote.lagda.md` | 编译定理 |
+| `first-step` | `first-step : ∀ k → fsn (N k) 0 <ᵀ fsn (N k) 1` | 被去掉的第 0 项低于第 1 项 | `YiNXNote.lagda.md` | 编译定理 |
+| `W<N` | `W<N : ∀ k → W k <ᵀ N k` | 原见证项在语法序上低于规范化目标 | `YiNXNote.lagda.md` | 编译定理 |
+| `hN` | `hN : ∀ k → HC (N k)` | 所有规范化目标都有 HC 推导 | `YiNXNote.lagda.md` | 编译定理 |
+| `hW` | `hW : ∀ k → HC (W k)` | 所有非标准形见证都有 HC 推导 | `YiNXNote.lagda.md` | 编译定理 |
+| `W≼N` | `W≼N : ∀ k (h : HC (W k)) (h′ : HC (N k)) → Rt h ≼ Rt h′` | 见证的参照值不高于标准形 | `YiNXNote.lagda.md` | 编译定理 |
+| `N≼W` | `N≼W : ∀ k (h : HC (N k)) (h′ : HC (W k)) → Rt h ≼ Rt h′` | 标准形的参照值不高于见证 | `YiNXNote.lagda.md` | 编译定理 |
+| `orderW` | `orderW : ∀ k {s} → s ≤ᵀ W k → s ≤ᵀ N k` | 所需方向的项序关系搬到标准形 | `YiNXNote.lagda.md` | 编译定理 |
+| `monoW` | `monoW : ∀ k {s} → NF s → s ≤ᵀ W k → (h : HC s) (h′ : HC (W k)) → Rt h ≼ Rt h′` | 标准形左项在 W 下的项序推出参照值序 | `YiNXNote.lagda.md` | 编译定理 |
+| `¬nfW` | `¬nfW : ∀ k → NF (W k) → ⊥` | 这族见证确实不是标准形 | `YiNXNote.lagda.md` | 编译定理 |
+| `exitW` | `exitW : ∀ {X : Set} {R : T → X → Set} (v : X → L.Ordᶜ L.zero) → (∀ {t x} → R t x → (h : HC t) → Rt h ≼ v x) → ∀ k {s x} → NF s → s ≤ᵀ W k → R (W k) x → (h : HC s) → Rt h ≼ v x` | 基础出口接收 W 见证，不要求 NF W | `YiNXExit.lagda.md` | 编译定理 |
+| `oldNX` | `oldNX : ∀ {X : Set} {R : T → X → Set} {s x} (m : M̂ R s x) → Ex m → ExNX m` | 原来的出口条件蕴含新条件 | `YiNXExit.lagda.md` | 编译定理 |
+| `exitNX` | `exitNX : ∀ {X : Set} {R : T → X → Set} (v : X → L.Ordᶜ L.zero) → (∀ {t x} → R t x → (h : HC t) → Rt h ≼ v x) → ∀ {s x} (m : M̂ R s x) → ExNX m → (h : HC s) → Rt h ≼ v x` | 既有 M̂ 关系在新叶子条件下的出口 | `YiNXExit.lagda.md` | 编译定理 |
+| `fsLow` | `fsLow : ∀ n → fsn lowTerm n ≡ A n` | low0 的参照项第 n 个基本列项正是 A n | `YiNXLow.lagda.md` | 编译定理 |
+| `nf-small` | `nf-small : ∀ m → m ≤ⁿ 2 → NF (A m)` | 前 3 个左参照项有标准形证明 | `YiNXLow.lagda.md` | 编译定理 |
+| `hA₀` | `hA₀ : HC (A 0)` | 第 0 片左参照项有 HC | `YiNXLow.lagda.md` | 编译定理 |
+| `hA₁` | `hA₁ : HC (A 1)` | 第 1 片左参照项有 HC | `YiNXLow.lagda.md` | 编译定理 |
+| `leAB` | `leAB : ∀ n → A n ≤ᵀ Wit n` | 全部叶子的语法比较均已满足 | `YiNXLow.lagda.md` | 编译定理 |
+| `First.first-base` | `first-base : M⁰ (W 2) (proj₁ (ψ (fn 2) o r b (fn 0) (tp s) β (proj₁ (gˢ c))))` | 实际折叠的输出承接第 0 片非标准形见证 | `YiNXLow.lagda.md` | 编译定理 |
+| `First.first-exit` | `first-exit : (h : HC (A 0)) → Rt h ≼ readRW (proj₁ (ψ (fn 2) o r b (fn 0) (tp s) β (proj₁ (gˢ c))))` | 第 0 片叶子通过新出口 | `YiNXLow.lagda.md` | 编译定理 |
+| `example` | `example : Rt hA₀ ≼ readRW (proj₁ (ψ (fn 2) (okf 2) (rb-no (fn 2)) (B₀ (fn 2)) (fn 0) (tp (tc (ss s0))) (Ωt (fn 0)) (proj₁ (gˢ ωᶜ))))` | 第 0 片叶子出口的闭合参数实例 | `YiNXLow.lagda.md` | 编译定理 |
+| `at-zero` | `at-zero : Σ (HC (Wit 0)) λ h′ → (h : HC (A 0)) → Rt h ≼ Rt h′` | LowMove 的第 0 项已填 | `YiNXLow.lagda.md` | 编译定理 |
+| `cofB₁` | `cofB₁ : cof (Wit 1) ≡ cω` | 下一片见证的共尾度计算为 ω | `YiNXLow.lagda.md` | 有限测试（编译通过） |
+| `firstB₁` | `firstB₁ : fsn (Wit 1) 0 ≡ W 2` | 下一片见证的第 0 个基本列项为 W 2 | `YiNXLow.lagda.md` | 有限测试（编译通过） |
+| `¬shift₄` | `¬shift₄ : fsn (Wit 1) 0 ≡ fsn (N 3) 1 → ⊥` | 下一片不满足原来的相邻层平移等式 | `YiNXLow.lagda.md` | 编译定理 |
+
+`exitW`、`exitNX` 的 `low` 前提由 `YiKVRel.lower⁰` 实填；`ExNX` 在 `First.first-exit` 的推导上取 `inj₂ (2 , nf-small 0 z≤n , refl)`，不是未给实例的新公理。标准形支直接承接旧条件，`oldNX` 给出包含关系。`nf-small` 的界由 `z≤n`、`s≤s z≤n` 等实例满足；hA₀、hA₁ 已填。`monoW` 的非零标准形前提实例是临时文件的 ψ₀(Ω₂)；实际第 0 片则是 A 0。
+
+`W≼N`、`N≼W` 对两边任取 HC 推导，结果不依赖选定推导；这里没有进一步证明不同写法的 FGH 值相等。
+
+## 4. 第一个障碍（精确到引理）
+
+完整 low0 的第 n 片叶子是左项 A n、见证 Wit n；`fsLow` 与 `leAB` 已验证这一对应和语法序条件。已填 n = 0。沿当前出口证明办法，接下来需要 n = 1：
+
+```agda
+FirstMissing : Set
+FirstMissing = Σ (HC (Wit 1)) λ h′ → Rt hA₁ ≼ Rt h′
+```
+
+展开是：给 ψ₀(ψ₂(Ω₄)) 的 HC 推导，并证明 ψ₀(ψ₂(Ω₁)) 的参照值不高于该推导的参照值。左项有 `hA₁`、`nf-small 1 (s≤s z≤n)`，语法序前提有 `leAB 1`；缺的最先字段是较大见证项的 `HC` 构造，没有用矛盾前提把出口做成空真。`FirstMissing` 的可满足性尚未证明，因此本轮不把它作为一个已实填前提的条件定理来汇报。
+
+更完整的待证陈述为：
+
+```agda
+LowMove : Set
+LowMove = ∀ n → Σ (HC (Wit n)) λ h′ → (h : HC (A n)) → Rt h ≼ Rt h′
+```
+
+边界事实：`fsn (Wit 1) 0 = W 2 = ψ₀(ψ₂(Ω₃))`，而原样套用规范化目标 N 3 = ψ₀(Ω₄) 的平移会要求它等于 `fsn (N 3) 1 = ψ₀(ψ₃(Ω₃))`。`¬shift₄` 通过检查器否定的正是这个固定语法等式；没有折叠值、没有对所有规范化办法的量化，不能读成规范化路线已否定，亦不归到既有墙的名字下。
+
+后续建议（判断，不是本轮另开任务）：发展跨过一层以上的记号侧吸收／规范化引理，并先在 `FirstMissing` 上检查可满足性；保留树、折叠、合法性。没有尝试修改这三者。
+
+## 5. 偏离、事故与阅读范围
+
+数学范围无改题。采用简报允许的记号侧两种工作：给相邻层见证族的规范化及值比较，回接既有 M̂ 出口；完整 low0 停在第一个未填引理，不把局部结果写成完整出口。
+
+工程事故与修正：
+
+- 临时检查首轮退出 42：把 `nf-low` 所需的 `3 ≤ 3` 误填成 `0 ≤ 3`，改成 `≤-refl`；另有不存在的 `≤-trans` 导入警告，随后删掉并改用真实的 `≤-<`。第 0 步修正后的目标证明版本退出 0、无警告。不是数学反例。
+- `YiNXExit` 首轮退出 42：隐式载体 `{X}` 留下层级元变量，显式写成 `{X : Set}` 后通过。未改数学陈述。
+- `YiNXLow` 首轮退出 42：局部见证族名字 B 与块的字段 B 重名，改名 Wit 后通过。未改变定义的值或引理范围。
+- 无 251、124、154；无增加堆上限。没有在同一数学缺口连续两次重新设计后继续硬攻。
+
+完整读取：任务简报、AGENTS.md、EBOHandbook.md §4。导航读取过 probes/README.md 开头；它的工具输出有截断，没有把未显示的部分当作已读。数学检索及读过的相关代码：YiDCExit、YiMHLean、YiMHRel、YiCFMono、EboLeanDef；EboLeanBase 的 NF/GB/序关系工具，EboLeanTree 的 HC 构造，EboLeanClosure 的基本列标准形与可数性封闭；YiNFOCase 的 D≼B/B≼D，YiKSRead 的 fs-sup，YiANFam 的记号方程，YiANEnd 的 natB/nat</flatN，YiKVRel 的基础出口，YiRBFam、YiRLCrit、YiCLFam、YiCLLow、YiCLPhi、YiCLCrit、YiRBCrit 的本轮用到的签名与子句。没有重读这些大模块的全文，也不声称重读。
+
+只凭简报、未独立重读：IdeaLedger V157(ii) 的历史定位、作者给主审的前序批次事实及主审已冷编结论；这些只作任务来源，不作新证明的前提。本轮最终所有数学依赖均由检查器载入接口；没有进行浏览、外部文献调研或独立 Fable 审核，不声称已有该审核。
+
+## 6. 全部源码、临时目录、日志与审计文件
+
+仓库源码（只有这三份是本轮交付）：
+- `<仓库>/probes/OCF/Lean/YiNXNote.lagda.md`；SHA-256 `71d1a3bff0914b43c0f6c2324a0a02d162d80ebc96a74b638d67bc8745ca8db5`
+- `<仓库>/probes/OCF/Lean/YiNXExit.lagda.md`；SHA-256 `62baed415f2c15ce3bed130afc69d597272886c4dab84e8bffcb339fc469fca8`
+- `<仓库>/probes/OCF/Lean/YiNXLow.lagda.md`；SHA-256 `80195abfd2704b07e8a34db8054d68137827c0fefd7e328733e005ec7dea99cc`
+
+临时目录：`<实验目录>`。
+
+临时 Agda 源码：
+
+- `<实验目录>/YiNXCheck.agda`（第 0 步及其完整 wanted 证明，现版本通过）
+- `<实验目录>/YiNXFamily.agda`（相邻层族的暂存实验，现版本通过；定稿在 YiNXNote）
+
+库配置与审计：
+
+- `<实验目录>/libraries`
+- `<实验目录>/YiNX-audit.json`
+
+全部编译日志（退出码为本轮直接读取的 Agda 退出码，不经管道）：
+
+- `<实验目录>/YiNXCheck.log`：退出 42
+- `<实验目录>/YiNXCheck-pass.log`：退出 0
+- `<实验目录>/YiNXCheck-wanted.log`：退出 0
+- `<实验目录>/YiNXFamily.log`：退出 0
+- `<实验目录>/YiNXFamily-reuse.log`：退出 0
+- `<实验目录>/YiNXNote-build.log`：退出 0
+- `<实验目录>/YiNXExit-build.log`：退出 42
+- `<实验目录>/YiNXExit-build2.log`：退出 0
+- `<实验目录>/YiNXLow-build.log`：退出 42
+- `<实验目录>/YiNXLow-build2.log`：退出 0
+- `<实验目录>/YiNXNote-cold.log`：退出 0
+- `<实验目录>/YiNXExit-cold.log`：退出 0
+- `<实验目录>/YiNXLow-cold.log`：退出 0
+
+冷编退出码文件：
+
+- `<实验目录>/YiNXNote-cold.exit`
+- `<实验目录>/YiNXExit-cold.exit`
+- `<实验目录>/YiNXLow-cold.exit`
+
+生成的接口也保留：临时目录中的 `YiNXCheck.agdai`、`YiNXFamily.agdai`，以及仓库构建目录中三份对应的 YiNX 接口。没有删除其他模块接口。
+
+原简报：`<临时目录>`。
+
+完整回报：`<实验目录>/YiNX-report.md`。本回报不写回仓库导航、日志或台账；留待主审独立冷编复核。

@@ -1,0 +1,43 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 一次性有限测试 (refl): top 的四行 = Ψ 作用在 top 的展开 (子层 top 的嵌入) 上, 再加单调修补.
+module LangTop where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit.Base using (tt)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product.Base using (_,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiNextCore
+open import OCF.Lean.YiNextBase using (Ext; psum; ΩT)
+open import OCF.Lean.YiLamFold
+
+-- 层号 0: top 读成 1 = suc zero; 行 = Ψ (suc zero).
+top⁰ : ∀ m (x : Ext m zero) → Ψ m w0 x G.top ≡ Ψ m w0 x (G.suc G.zero)
+top⁰ m x = refl
+
+-- 后继层号: top 的行与根位置上的结点 lc (inj₁ tt) (em tt) 的结点行逐字相同.
+topˢ : ∀ m {k} (V : Lw k) (x : Ext m (suc k)) →
+  Ψ m (ws V) x G.top ≡ Ψ m (ws V) x (G.lc (inj₁ tt) (λ η → G.em tt η))
+topˢ m V x = refl
+
+-- ℕ 极限层号: top 的行 = 各孩子 top 的嵌入的像的部分和 (展开 lim (em n top) 不合法, 部分和是修补).
+topˡ : ∀ m {f} (V : ∀ n → Lw (f n)) st (x : Ext m (lim f)) →
+  Ψ m (wl V st) x G.top ≡ G.lim (psum m (λ n → Ψ m (wl V st) x (G.em n G.top)))
+topˡ m V st x = refl
+
+-- Ω 结点层号: 没有根位置; 行 = 虚根的保留/折叠, 分支是孩子 top 的嵌入的像 (经 Kfk∘nrmk 单调化), 链点同样.
+topᶜ : ∀ m {k g} (V : ∀ η → Lgl k η → Lw (g η)) (w : Wit k g) (x : Ext m (lc k g)) →
+  Ψ m (wΩ V w) x G.top ≡
+  ΩT m k (rootW m k g w x)
+    (Kfk k (λ η → Ψ m (wΩ V w) x (G.em (nrmk k η , nrmk-lgl k η) G.top)))
+    (psum m (λ n → Ψ m (wΩ V w) x (G.em (Pk.co (ptsΩ k g V n) , Pk.lw (ptsΩ k g V n)) G.top)))
+topᶜ m V w x = refl
+
+-- Ω 结点层号上 x + top 是哑值 x + 1 (块里写不出根位置上的结点); 例: 层号 tw 2.
+dummy-plus : plus (tw 2) G.top G.top ≡ G.suc G.top
+dummy-plus = refl
+
+-- 后继层号上 x + top 是根位置上的结点 (对照).
+real-plus : ∀ k (x : Raw (suc k)) →
+  plus (suc k) x G.top ≡ G.lc (inj₁ tt) (λ η → add k (λ r → G.lc (inj₂ r)) x η)
+real-plus k x = refl

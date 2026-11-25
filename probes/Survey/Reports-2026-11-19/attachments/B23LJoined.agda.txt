@@ -1,0 +1,43 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原反馈 G(1) 的一个完整可数子树、纯 src 闭式和同一实际三级运行相接，有严格超旧界的余量。
+module B23LJoined where
+
+open import Data.Product using (proj₁; proj₂)
+open import W4Block using (tw; sL)
+open import W4Path using (Ok-Λ)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import Data.Nat.Base using (zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼)
+open import WVOne using (read)
+open import WKShape using (lvl3)
+import B12ActualSlots as C
+import B12Terminal as T
+import B12EboRows as End
+import B13Target as P
+import B14RefGain as Path
+import B15TowerSeed as Seed
+import B23RFamily as Family
+import B23LOriginal as Orig
+import B23NWindow as Physical
+import B23RExit as Source
+open Source public using (source; original; strict; strict-before; power-stage)
+
+module At (r : T.Run lvl3) (cv : C.Covered r) where
+  module W = Physical.At r cv
+  heights : ∀ n → Orig.height n ≡ W.height n
+  heights zero = refl
+  heights (suc n) = cong L.suc (heights n)
+  inside : Orig.cut ≼ read (T.value r)
+  inside = ≼-trans (l≼ (λ n → ≼l n (subst (Orig.part n ≼_) (cong (λ v → L.ψ⁰ (P.pass v)) (heights n)) (≼-refl _)))) W.whole
+
+open Source.From At.inside public
+
+first-tower : tr₀ source ≼ End.child 1
+first-tower = ≼-trans (proj₁ Source.same) (Seed.initial-bound 2 At.inside T.tower1
+  (C.enter sL tw T.terminal 1 (T.prefix tw 1) (C.initial _ Ok-Λ)))
+
+family-below : tr₀ Family.Native.source ≼ tr₀ source
+family-below = ≼-trans (proj₁ Family.Native.both) (≼-trans (Path.path-bound Family.common Family.base)
+  (≼-trans (≼l 2 (≼-refl (Orig.part 2))) (proj₂ Source.same)))

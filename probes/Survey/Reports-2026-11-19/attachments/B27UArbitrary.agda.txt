@@ -1,0 +1,71 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在第一座真实 Ω 塔保留全部实际槽，将反馈下标放宽成任意合法零树，便严格越过任意给定的零层界；此超界输入确实不在实际轨道。
+module B27UArbitrary where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst)
+import W4Block as W
+import W4Ops as O
+import W4Path as Path
+import WVOne
+open WVOne using (read; 𝟏; T₀; h₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; s≼s; z≼; l≼; ≼l)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import B12Terminal as T
+import B12ActualSlots as Cv
+import B14Height as H
+import B14Tower as Tw
+import B17CellPrefix as P
+import B18TowerSlots as Slot
+import B18CellState as C
+import B19IdealArithmetic as Ar
+import B20StandardGoal as True
+import B22HeightValue as HV
+import B26PActual as A
+
+zrep : T₀ → O.Tr⁺ W.zero
+zrep L.zero = O.Ωt W.zero
+zrep (L.suc x) = W.suc (proj₁ (zrep x)) , O.z◃ _ W.◃s
+zrep (L.lim f) = O.limc⁺ (λ n → zrep (f n))
+
+dominates : ∀ x → x ≼ read (proj₁ (zrep x))
+dominates L.zero = z≼
+dominates (L.suc x) = s≼s (dominates x)
+dominates (L.lim f) = l≼ (λ n → ≼l n (≼-trans (dominates (f n)) (WVOne.cum-≥ (λ j → proj₁ (zrep (f j))) n)))
+
+tree = W.Tr W.zero
+enter : (z : tree) → T.Run (h₁ z)
+enter z = T.enterRun (W.sΩ W.zero) h₁ T.tower1 z W.zero
+run : (z : tree) → T.Run (h₁ z)
+run z = Tw.reset (enter z) (O.Ωt W.zero) (≼-refl 𝟏)
+
+all : ∀ z → Cv.Covered (run z)
+all z = Cv.enter (W.sΩ W.zero) h₁ T.tower1 z W.zero (Cv.enter W.sL W.tw T.terminal 1 (T.prefix W.tw 1) (Cv.initial W.Λ Path.Ok-Λ))
+
+free : tree → T₀
+free z = read (T.value (run z))
+
+growth : ∀ z → read z ≼ free z
+growth z = ≼-trans {b = Ar.norm (read z)} (Ar.up (read z))
+  (≼-trans {b = H.act (read z) 𝟏} (HV.normal (read z) 𝟏 (≼-refl 𝟏)) (H.law z (run z) (all z) 𝟏 (≼-refl 𝟏)))
+
+index : ℕ → tree
+index = P.At.S.ix 0
+
+real : ∀ j → free (index j) ≡ C.At.fresh 0 j
+real j = cong (λ b → C.At.with-base 0 j b (O.Ωt W.zero)) (Slot.At.all 0 (index j))
+
+exceeds : ∀ q → Σ tree (λ z → L.suc q ≼ free z)
+exceeds q = z , ≼-trans {a = L.suc q} {b = read z} {c = free z} (s≼s (dominates q)) (growth z)
+  where z = W.suc (proj₁ (zrep q))
+
+no-bound : ∀ q → (∀ z → free z ≼ q) → ⊥
+no-bound q f = s≼-irrefl q (≼-trans (proj₂ (exceeds q)) (f _))
+
+absent : ∀ j → proj₁ (exceeds A.Y) ≡ index j → ⊥
+absent j e = s≼-irrefl A.Y (≼-trans {b = free (index j)}
+  (subst (λ z → L.suc A.Y ≼ free z) e (proj₂ (exceeds A.Y)))
+  (subst (_≼ A.Y) (sym (real j)) (True.into 0 j)))

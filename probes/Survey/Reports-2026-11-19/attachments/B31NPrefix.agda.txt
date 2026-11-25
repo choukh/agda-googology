@@ -1,0 +1,94 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 实际首塔下标 1 和加一个零号孩子的等值表示在同一槽运行。两者字面零号子调用的单位值严格不同。
+module B31NPrefix where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst)
+import W4Block as W
+import WVOne as V
+open V using (T₀; read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; s≼s; l≼; ≼l; z≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import B12Strict as Strict
+import B12XRef as Ref
+import B18ResetCellGoal as Init
+import B19IdealProduct as Law
+import B19Canonical as K
+import B26Names as A
+import B27UArbitrary as U
+import B29SFirst as F
+import B29SPath as P
+import B29SUnit as Unit
+import B30UOrbit as Orbit
+import B31NName as Named
+
+Tree = W.Tr W.zero
+
+data Starts : Tree → Set where
+  branches : ∀ {g d} → Starts (W.lim g d)
+
+first : Tree → Tree
+first (W.lim g _) = g 0
+first x = W.zero
+
+cons : (ℕ → Tree) → ℕ → Tree
+cons g zero = W.zero
+cons g (suc n) = g n
+
+pad : (t : Tree) → Starts t → P.Path W.zero (first t) → Tree
+pad (W.lim g d) branches path = W.lim (cons g) law where
+  law : ∀ n → W.zero W.⊢ cons g n ◃ cons g (suc n)
+  law zero = Unit.physical path
+  law (suc n) = d n
+
+equal : ∀ t (s : Starts t) p → read (pad t s p) ≈ᵛ read t
+equal (W.lim g d) branches p = l≼ by , l≼ (λ n → ≼l (suc n) (≼-refl (read (g n)))) where
+  by : ∀ n → read (cons g n) ≼ read (W.lim g d)
+  by zero = z≼
+  by (suc n) = ≼l n (≼-refl (read (g n)))
+
+unit = Unit.output Unit.β₀
+
+physical-first : ∀ z → Starts z → first (unit z) ≡ unit (first z)
+physical-first (W.lim g d) branches = refl
+
+-- 这棵树是同一实际下标的独立标准表示，F.link 给出字面相等。
+original = K.seq 1
+starts : Starts original
+starts = branches
+inner : P.Path Orbit.one (first original)
+inner = P.down
+start : P.Path W.zero (first original)
+start = P.join P.one inner
+
+padded : Tree
+padded = pad original starts start
+
+named-original : A.value Named.a ≈ᵛ read original
+named-original = subst (λ z → A.value Named.a ≈ᵛ read z) (F.link 1) Named.actual
+
+named-padded : A.value Named.a ≈ᵛ read padded
+named-padded = Law._∙_ named-original (Law.flip (equal original starts start))
+
+return₀ : Tree → T₀
+return₀ z = read (first (unit z))
+
+low : return₀ padded ≈ᵛ L.ωᶜ
+low = Init.First.omega
+
+high : L.suc (Ref.row 1) ≼ return₀ original
+high = ≼-trans {b = L.suc Orbit.Actual.term} (s≼s (proj₂ Orbit.report))
+  (Strict.strict (Unit.physical (Unit.keep Unit.β₀ inner)))
+
+gap : L.suc (return₀ padded) ≼ return₀ original
+gap = Strict.strict (Unit.physical (Unit.keep Unit.β₀ start))
+
+-- 两个查询的确切原名相同，故任何只读该名字的程序都无法同时精确给出这两个返回的零号孩子。
+no-first : (G : A.Name → T₀)
+  → G Named.a ≈ᵛ return₀ original → G Named.a ≈ᵛ return₀ padded → ⊥
+no-first G (_ , actual≤) (padded≤ , _) = s≼-irrefl (return₀ original)
+  (≼-trans {b = L.suc (G Named.a)} (s≼s actual≤)
+    (≼-trans {b = L.suc (return₀ padded)} (s≼s padded≤) gap))

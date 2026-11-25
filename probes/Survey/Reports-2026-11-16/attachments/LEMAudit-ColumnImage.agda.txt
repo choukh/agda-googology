@@ -1,0 +1,40 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module ColumnImage where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Bool using (Bool; true)
+open import Data.Product using (proj₁; proj₂; _,_; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import S1Sharp
+open import W1Cell using (h₁)
+open import W1Neg using (WLPO; module Neg)
+open import W1Trace3 using (module T3)
+
+module Pull (f : ℕ → Tr zero) (a : ∀ n → zero ⊢ f n ◃ f (suc n)) where
+  module N = Neg f a
+  image-law : (d : Tr zero → Tr zero) → (∀ c → (h₁ (d c) ≼ᴸ h₁ c) × (h₁ c ≼ᴸ h₁ (d c)))
+      → (K : Tr zero → Bool) → (∀ c → K c ≡ true → h₁ (d c) ≺ᴸ N.J)
+      → (∀ c → h₁ (d c) ≺ᴸ N.J → K c ≡ true) → WLPO
+  image-law d eq K s t = N.col→wlpo K (λ c kc → ≼≺ N.J (proj₂ (eq c)) (s c kc))
+    (λ c lt → t c (≼≺ N.J (proj₁ (eq c)) lt))
+
+module Actual (lem : LEM) where
+  open Sharp lem
+  open T3 lem
+  ok = N.Sat.oJ lem
+  cell = bJ-keeps ok (Ωt J)
+  q = proj₁ cell
+  cv = proj₁ (proj₂ cell)
+  d : Tr zero → Tr zero
+  d = τ zero zero tt tt (wfL zero) z≼
+  image-suc : ∀ c → cv (fromBr J q (suc c)) ≡ suc (d c)
+  image-suc c = refl
+  eq : ∀ c → (h₁ (d c) ≼ᴸ h₁ c) × (h₁ c ≼ᴸ h₁ (d c))
+  eq zero = z≼ , z≼
+  eq (suc c) = n≼ (λ _ → tt , proj₁ (eq c)) , n≼ (λ _ → tt , proj₂ (eq c))
+  eq (lim f a) = n≼ (λ n → n , proj₁ (eq (f n))) , n≼ (λ n → n , proj₂ (eq (f n)))
+  module P = Pull (proj₁ β-lim) (proj₁ (proj₂ β-lim))
+  actual-law = P.image-law d eq

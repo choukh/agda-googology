@@ -1,0 +1,104 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 任意非零子层的统一值更新在后继层变成任意有限次迭代取极限。底族沿实际右操作逐步变化。
+module B13FiniteLift where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼; z≼)
+open import WVOne using (T₀; 𝟏; read; lvl1)
+open import WVTwo using (◃→≼)
+open import WKGen using (node-ge)
+import B12Terminal as T
+open T.Run
+import B12ActualSlots as A
+
+sc : L → L
+sc j = nd sS (λ _ → j)
+
+Uniform : L → (T₀ → T₀) → Set
+Uniform j f = (r : T.Run j) → A.Covered r → (a : T₀) → a ≼ read (proj₁ (β r)) → f a ≼ read (T.value r)
+
+repeatω : (T₀ → T₀) → T₀ → T₀
+repeatω f a = LV.lim (iter f a)
+
+module Lift (s : Sh) (h : Ch s → L) (f : T₀ → T₀) (u : Uniform (nd s h) f)
+            (p : T.Run (sc (nd s h))) (hp : A.Covered p) where
+  j = nd s h
+
+  r₀ = T.enterRun sS (λ _ → j) p tt zero
+  c⁺ = bs p j (inc tt self)
+  c = proj₁ c⁺
+  K = opB j (ok r₀) c (proj₂ c⁺)
+  w = z≤ j
+
+  -- 计算零阶操作的第一次更新，在同一状态上覆盖的标准 Ω 折叠提供下界。
+  grow : (r : T.Run j) → (hc : A._⊴_ (proj₁ (Ωt j)) c) → (a : T₀) →
+    A.Covered r → a ≼ read (proj₁ (β r)) →
+    f a ≼ read (proj₁ (ψ j (ok r) (bs r) zero w (β r) c))
+  grow r (inj₁ q) a hr e = subst (λ x → f a ≼ read (proj₁ (ψ j (ok r) (bs r) zero w (β r) x))) q (u r hr a e)
+  grow r (inj₂ d) a hr e = ≼-trans (u r hr a e) (◃→≼ (mono j (ok r) (bs r) zero w (β r) d))
+
+  S₁ = stepS K (bs r₀)
+  v₁ = run K (bs r₀) zero w (β r₀)
+  S : ℕ → Base j
+  S n = itS K n S₁
+  v : ℕ → Tr⁺ zero
+  v n = itV K n S₁ zero w v₁
+
+  sub-covered = A.enter sS (λ _ → j) p tt zero hp
+
+  cover : (n : ℕ) (i : L) (t : i ≤ j) → A._⊴_ (proj₁ (Ωt i)) (proj₁ (S n i t))
+  cover zero i t = A.extend (sub-covered i t) (inf K (bs r₀) i t (bs r₀ i t))
+  cover (suc n) i t = A.extend (cover n i t) (inf K (S n) i t (S n i t))
+
+  lowS : (n : ℕ) (t : zero ≤ j) → 𝟏 ≼ read (proj₁ (S n zero t))
+  lowS zero t = ≼-trans (oneB r₀ t) (◃→≼ (inf K (bs r₀) zero t (bs r₀ zero t)))
+  lowS (suc n) t = ≼-trans (lowS n t) (◃→≼ (inf K (S n) zero t (S n zero t)))
+
+  lowv : (n : ℕ) → read (proj₁ (β p)) ≼ read (proj₁ (v n))
+  lowv zero = ◃→≼ (inf K (bs r₀) zero w (β r₀))
+  lowv (suc n) = ≼-trans (lowv n) (◃→≼ (inf K (S n) zero w (v n)))
+
+  snap : ℕ → T.Run j
+  snap n = T.makeRun (ok r₀) (S n) (v n) (lowS n) (cover n lvl1) (≼-trans (oneβ p) (lowv n))
+
+  orbit : (a : T₀) → a ≼ read (proj₁ v₁) → (n : ℕ) → iter f a n ≼ read (proj₁ (v n))
+  orbit a e zero = e
+  orbit a e (suc n) = grow (snap n) (hp j (inc tt self)) _ (cover n) (orbit a e n)
+
+  pos : Pos (sc j)
+  pos = inj₂ (tt , inj₁ tt)
+  body : Tr j → Tr (sc j)
+  body z = up zero tt (suc z) (z◃ z ◃s)
+  step : Tr j → Tr j
+  step z = ex c c (proj₂ c⁺) (suc z) tt
+
+  outer : (n : ℕ) → read (proj₁ (v (suc n))) ≼ read (T.value p)
+  outer n = ≼-trans (≼l 0 (≼l n (≼-refl _)))
+    (node-ge (kp (sc j) (ok p) pos (z≤ (sc j))) (λ z → ψ (sc j) (ok p) (bs p) zero (z≤ (sc j)) (β p) (body z)) step 1)
+
+  from-first : (a : T₀) → a ≼ read (proj₁ v₁) → repeatω f a ≼ read (T.value p)
+  from-first a e = l≼ (λ n → ≼-trans (orbit a e n) (≼-trans (◃→≼ (inf K (S n) zero w (v n))) (outer n)))
+
+lift-uniform : (s : Sh) (h : Ch s → L) (f : T₀ → T₀) → Uniform (nd s h) f → Uniform (sc (nd s h)) (repeatω f)
+lift-uniform s h f u p hp a e = W.from-first a (≼-trans e (W.lowv 0))
+  where module W = Lift s h f u p hp
+
+Bound : L → T₀ → Set
+Bound j Q = (r : T.Run j) → A.Covered r → Q ≼ read (T.value r)
+
+lift-bound : (s : Sh) (h : Ch s → L) (f : T₀ → T₀) (Q : T₀) →
+  Uniform (nd s h) f → Bound (nd s h) Q → Bound (sc (nd s h)) (repeatω f Q)
+lift-bound s h f Q u q p hp = W.from-first Q
+  (C.grow W.r₀ (hp _ (inc tt self)) LV.zero W.sub-covered z≼)
+  where
+  module W = Lift s h f u p hp
+  module C = Lift s h (λ _ → Q) (λ r hr _ _ → q r hr) p hp

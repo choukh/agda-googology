@@ -1,0 +1,94 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 固定原 Λ 的父状态、直接前塔 Ω 头和完整零分支。只在非零枝右接一个升层零树，可令此单位重置及其全部非零序号内选孩子越过任一给定值。
+module B28BHead where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit.Base using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst)
+import W4Block as W
+import W4Fold as F
+import W4Ops as O
+import W4Path as P
+import WVOne as V
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; s≼s)
+import B13FiniteLift
+import B12ActualSlots as Cov
+import B12Terminal as T
+import B14Tower as T0
+import B15Spine as S
+import B17CellPrefix as Cells
+import B18CellState as C
+import B18TowerSlots as Slots
+import B20Head as Head
+import B27UArbitrary as Any
+import B28BClock as Clock
+
+module At (m : ℕ) where
+  n = suc m
+  i = W.tw m
+  k = W.tw n
+  top : W.Pos k
+  top = inj₁ (inj₁ tt)
+  Branch = W.Tr i → W.Tr k
+
+  enter : (t : W.Tr k) → T.Run (S.branch k t)
+  enter t = T.enterRun (W.sΩ k) (S.branch k) (Cells.At.r n) t W.zero
+  restart : (t : W.Tr k) → T.Run (S.branch k t)
+  restart t = T0.reset (enter t) (O.Ωt W.zero) (≼-refl V.𝟏)
+  covered : ∀ t → Cov.Covered (restart t)
+  covered t = Cov.enter (W.sΩ k) (S.branch k) (Cells.At.r n) t W.zero
+    (Cov.enter W.sL W.tw T.terminal (suc n) (T.prefix W.tw (suc n)) (Cov.initial W.Λ P.Ok-Λ))
+
+  free : W.Tr k → V.T₀
+  free t = V.read (T.value (restart t))
+  real : ∀ j → free (Cells.At.S.ix n j) ≡ C.At.fresh n j
+  real j = cong (λ b → C.At.with-base n j b (O.Ωt W.zero)) (Slots.At.all n (Cells.At.S.ix n j))
+
+  module Walk (g : Branch) where
+    key = W.Ω top g
+    r = restart key
+    child = λ c → k W.⊕ W.↑ k (g c)
+    module Run = S.Cardinal i child r
+    inner : ℕ → V.T₀
+    inner j = V.read (T.value (Run.child j))
+
+    picked : ∀ j → W._⊢_◃_ i W.zero (Run.ix (suc j))
+    picked j = proj₂ (F.ψ _ (T.Run.ok r) (T.Run.bs r) i (W.ink W.self)
+      (T.Run.bs r i (W.ink W.self)) (Run.b (Run.ix j)))
+
+  module Edit (g : Branch) (z : W.Tr W.zero) where
+    alter : Branch
+    alter c with O.zl c
+    ... | inj₁ _ = g c
+    ... | inj₂ _ = g c O.+ O.ι k z
+
+    first : alter W.zero ≡ g W.zero
+    first = refl
+    nonzero : ∀ c → W._⊢_◃_ i W.zero c → alter c ≡ (g c O.+ O.ι k z)
+    nonzero c d with O.zl c
+    ... | inj₁ eq = ⊥-elim (Head.no-zero (subst (W._⊢_◃_ i W.zero) (sym eq) d))
+    ... | inj₂ _ = refl
+
+    open Walk alter
+    local : ∀ j → V.read z ≼ inner (suc j)
+    local j = work (Run.child (suc j)) (Run.cover (covered key) (suc j)) where
+      c = Run.ix (suc j)
+      step : child c ≡ k W.⊕ W.↑ k (g c O.+ O.ι k z)
+      step = cong (λ t → k W.⊕ W.↑ k t) (nonzero c (picked j))
+      work = subst (λ a → B13FiniteLift.Bound a (V.read z)) (sym step)
+        (Clock.At.bound k k (Clock.node _ _) (g c) z)
+    out : V.read z ≼ free key
+    out = ≼-trans {b = inner 1} (local 0) (Run.lift-value 1)
+
+  module Exceeds (g : Branch) (q : V.T₀) where
+    z = W.suc (proj₁ (Any.zrep q))
+    module Change = Edit g z
+    candidate = W.Ω top Change.alter
+    beyond : L.suc q ≼ free candidate
+    beyond = ≼-trans {b = V.read z} (s≼s (Any.dominates q)) Change.out
+    inside : ∀ j → L.suc q ≼ Walk.inner Change.alter (suc j)
+    inside j = ≼-trans {b = V.read z} (s≼s (Any.dominates q)) (Change.local j)

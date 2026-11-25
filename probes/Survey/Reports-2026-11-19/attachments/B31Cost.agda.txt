@@ -1,0 +1,35 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 所有后继根的外层累加都可支付；只收集较低一层的自反馈询问与零叶。
+module B31Cost where
+open import Data.Nat.Base using (ℕ)
+open import Data.Product using (proj₁; proj₂)
+open import WVOne using (h₁; T₀)
+import W4Block as W
+import B12Terminal as T
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; l≼; ≼l)
+import B31Front as F
+import B31Head as H
+import B31UProduct as P
+import B18Product as M
+import B19IdealPowers as Pow
+
+cost : ∀ z → T.Run (h₁ z) → T₀
+cost W.zero r = P.fold₁ r
+cost (W.suc z) r = L.lim (H.Cell.leaf (h₁ z) r)
+cost (W.lim g _) r = L.lim (λ n → cost (g n) (T.limRun (λ j → h₁ (g j)) r n))
+
+inside : ∀ z r → cost z r ≼ F.front z r
+inside W.zero r = ≼-refl _
+inside (W.suc z) r = l≼ (H.Cell.into (h₁ z) r)
+inside (W.lim g _) r = l≼ (λ n → ≼l n (inside (g n) (T.limRun (λ j → h₁ (g j)) r n)))
+
+width = λ q → (q M.· L.ωᶜ) M.· L.ωᶜ
+keep : ∀ q → q ≼ (q M.· L.ωᶜ)
+keep q = ≼-trans {b = q M.· WVOne.𝟏} (M.one-right q) (M.mono (≼-refl q) Pow.omega-pos)
+cover : ∀ q z r → cost z r ≼ q → F.front z r ≼ width q
+cover q W.zero r h = ≼-trans {b = q} h (≼-trans {b = q M.· L.ωᶜ} (keep q) (keep (q M.· L.ωᶜ)))
+cover q (W.suc z) r h = H.Cell.cap (h₁ z) r q λ n → ≼-trans {b = cost (W.suc z) r}
+  (≼l {f = H.Cell.leaf (h₁ z) r} n (≼-refl _)) h
+cover q (W.lim g d) r h = l≼ λ n → cover q (g n) (T.limRun (λ j → h₁ (g j)) r n)
+  (≼-trans {b = cost (W.lim g d) r} (≼l {f = λ j → cost (g j) (T.limRun (λ a → h₁ (g a)) r j)} n (≼-refl _)) h)

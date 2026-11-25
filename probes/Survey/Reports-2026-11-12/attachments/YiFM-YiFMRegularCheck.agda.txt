@@ -1,0 +1,21 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiFMRegularCheck where
+open import Data.Unit using (tt)
+open import Data.Product using (_,_; proj₁)
+open import OCF.Lean.YiRWBlock
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiHCFam as F
+open import OCF.Lean.YiFMFin using (p²)
+open import OCF.Lean.YiFMNode using (regular-back)
+open import OCF.Lean.YiCLFam using (fn)
+import OCF.Align.EboLeanDef as E
+
+h : Tr (fn 1) → Tr (fn 2)
+h c = proj₁ (O.upz tt (suc c , O.z◃ c ◃s))
+
+premise : ∀ η c → F.M 1 η c → F.M 2 η (h c)
+premise η c m = H.mU H.mz (F.mwN 1 m ◃s)
+
+instance-old : F.M 2 (E.Ωt (E.natT 1)) (proj₁ (O.Ωt (fn 2)))
+instance-old = regular-back premise

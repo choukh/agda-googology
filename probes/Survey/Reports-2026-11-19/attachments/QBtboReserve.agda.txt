@@ -1,0 +1,21 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module QBtboReserve where
+open import Data.Nat.Base using (suc)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼; ≺→s≼; s≼s)
+open import OCF.Align.BTBOFullLv using (svs; SV-L)
+open import OCF.Align.BTBOFullV3 using (Fstep)
+import B14Btbo as B
+import B20StandardInside as S
+import B22SourceSlots as Src
+import B22TowerDiagonal as D
+
+open D public using (target)
+opaque
+  unfolding D.target
+  reserve : ∀ m k → N.γ k ≼ S.std (suc m) → L.suc (N.γ (suc k)) ≼ target m
+  reserve m k h = ≼-trans {a = L.suc (N.γ (suc k))} {b = B.α (L.suc (N.L k))} {c = target m}
+    (≺→s≼ {c = B.α (N.L k)} {b = B.α (L.suc (N.L k))} (Fstep (N.L k)))
+    (Src.Level.Std.named m {a = L.suc (N.L k)} (svs (SV-L k)) (s≼s {a = L.forget (N.L k)} {b = S.std (suc m)} (≼-trans {a = L.forget (N.L k)} {b = N.γ k} {c = S.std (suc m)} (≅→≼ (L.forget-toLevel (N.γ k) (N.cert k))) h)))
+

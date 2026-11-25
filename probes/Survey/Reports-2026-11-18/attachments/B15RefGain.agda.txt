@@ -1,0 +1,85 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 每个真实零层输入的 gain₁ 均有一级运算的值对应和两种描述；保留的 Ω₀ 分支按值比较变元。
+module B15RefGain where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≅→≼; ≼l; l≼)
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+open import W4Block using (iter)
+open import B12LimitSrc using (Lev₂)
+open import WSShadow using (ES; InflE; lC; nC; Infl-lC; Infl-nC; zC)
+import WSLevel as W
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B12LimitRef as D
+import B13Target as P
+import B14RefDescribed as Z
+import B14RefFixed as K
+import B14RefRow as Node
+import B14OrbitHeight as O
+import B15RefAlgebra as A
+import B15RefMonotone as M
+open D.Described using (infl; bx; bd)
+
+action : T₁ → ES → ES
+action L.zero e = D.next e
+action (L.suc x) e = lC (iter (action x) e)
+action (L.lim f) e = lC (λ n → action (f n) e)
+action (L.up L.zero y) e = O.he y e
+action (L.limᵢ L.zero f) e = nC (λ y → action (f y) e)
+
+grows : ∀ x e → InflE e → InflE (action x e)
+grows L.zero e h = O.infl L.zero e h
+grows (L.suc x) e h = Infl-lC _ h
+grows (L.lim f) e h = Infl-lC _ (grows (f 0) e h)
+grows (L.up L.zero y) e h = O.infl y e h
+grows (L.limᵢ L.zero f) e h = Infl-nC (λ y → action (f y) e) (grows (f K.one) e h)
+
+model : ∀ {u v x e} → M.Below u v → D.Described x e → D.Described (P.height₁ u x) (action v e)
+model M.zz d = D.Rows.advance _ _ d
+model {x = x} {e = e} (M.ss {a} {b} r) d = D.limit (S.iter (P.height₁ a) x) (iter (action b) e) (Z.iterate (model r) d)
+model {v = L.suc b} {e = e} (M.to-s r) d = Z.weaken (model r d) (W.lC-ub (iter (action b) e) 1) (grows (L.suc b) e (infl d))
+model {v = L.lim f} {e = e} (M.right n r) d = Z.weaken (model r d) (W.lC-ub (λ j → action (f j) e) n) (grows (L.lim f) e (infl d))
+model {u = L.lim f} {v} {x} {e} (M.left h) d =
+  Z.weaken (D.limit (λ n → P.height₁ (f n) x) (λ _ → action v e) (λ n → model (h n) d))
+    (W.lC-const _) (grows v e (infl d))
+model {v = L.limᵢ L.zero g} {e = e} (M.slot h) d = D.described (grows (L.limᵢ L.zero g) e (infl d))
+  (W.Li (λ x y r → bd (model (h _ _ (≼-trans (W.tr⁻≼ _) (≼-trans (W.tr⁻≼ x) r))) d)))
+  (W.Ew (W.Ei (λ x y r → bx (model (h _ _ (≼-trans (W.tr⁻≼ _) (≼-trans (W.tr⁻≼ x) r))) d))) (WSShadow.LeE-refl _))
+model (M.lifted r) d = Z.height r d
+
+stage : T₀ → Lev₂ → Lev₂
+stage x = P.height₁ (A.H x W.Ω₁ᴸ)
+
+effect : T₀ → ES → ES
+effect x = action (A.H x W.Ω₁ᴸ)
+
+described : ∀ {x y p e} → x ≼ y → D.Described p e → D.Described (stage x p) (effect y e)
+described d rows = model (M.height d M.ω₁) rows
+
+meaning : ∀ x {p q} → p L.≅ q → stage x p L.≅ (q L.+ K.kernel 1 x)
+meaning x d = L.≅-trans (P.shift₁ _ (P.refl-left (L.≅-sym c)) d)
+                         (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (P.refl-left (L.≅-sym d)) (P.co-pres (L.≅-sym c)))
+  where c = A.true-coeff x
+
+exact : ∀ x → stage x L.zero L.≅ K.kernel 1 x
+exact x = L.≅-trans (meaning x L.z≅) (U.left-unit R.idσ (K.kernel-pres 1 (L.≅-refl⁰ x)))
+
+values : ∀ x → L.ψ⁰ (stage x L.zero) ≈ᵛ K.gain 1 x
+values x = ≅→≼ (L.ψ⁰-≅ (exact x)) , ≅→≼ (L.ψ⁰-≅ (L.≅-sym (exact x)))
+
+first : K.gain 1 K.one L.≅ L.lim (λ n → L.ψ⁰ (P.co₁ (S.iter A.Γ W.Ω₁ᴸ n)))
+first = L.ψ⁰-≅ (P.co-pres (A.true-coeff K.one))
+
+-- 输入变量只须给真实回灌串，两个方向均直接由其基本列得出。
+reduce : ∀ {v : T₀} → (∀ j → L.ψ⁰ (stage (K.chain 1 j) L.zero) ≼ v) → Node.node 1 ≼ v
+reduce h = ≼-trans (≅→≼ (K.as-chain 1)) (l≼ (λ j → ≼-trans (proj₂ (values (K.chain 1 j))) (h j)))
+
+necessary : ∀ {v : T₀} → Node.node 1 ≼ v → ∀ j → L.ψ⁰ (stage (K.chain 1 j) L.zero) ≼ v
+necessary h j = ≼-trans (proj₁ (values (K.chain 1 j))) (≼-trans (≼l j (≼-refl _))
+  (≼-trans (≅→≼ (L.≅-sym (K.as-chain 1))) h))

@@ -1,0 +1,36 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 入口 (接口第二版): (B) 与顶层的镜像下界, 只以 OpStmt 为参数.
+module K5BAll where
+
+open import K5Iface using (OpStmt; BStmt)
+open import W4Block using (L)
+open import K5BMain using (module Main)
+open import K5BTop using (module Top)
+
+module All (opS : (m : L) → OpStmt m) where
+  open Main opS public using (bInd; bStmt)
+  open Top bStmt public using (lower; lower′)
+
+------------------------------------------------------------------------
+-- 事后多余的前提 (编译): 都可由不变式 Dom→Mir 得到.
+open import Data.Product using (proj₁)
+open import W4Block using (Tr; Pos; Br; at; fromBr; _≤_; T)
+open import W4Ops using (Tr⁺)
+open import W5Fold using (Base)
+import OCF.Align.Level as I
+open import K5Rel using (Dom; SubD; Mirror; Dom→Mir; rz)
+open import K5Iface using (Pre; ψ̂)
+open import K5BBase using (toSub)
+
+-- BStmt 里的 Mirror k m: 由推导本身给出.
+mir-from-dom : ∀ {m k} {A : I.Ordᶜ k} {t : Tr m} → Dom m A t → Mirror k m
+mir-from-dom = Dom→Mir
+
+-- Pre 的 mj (目标镜像): 由 base 给出.
+mj-from-base : ∀ {m} {S : Base m} {j} {β : Tr⁺ j} {kP jc} {P : I.Ordᶜ kP} {r : jc I.<ᴵ I.suc kP} → Pre S β P r → Mirror jc j
+mj-from-base pre = Dom→Mir (Pre.base pre)
+
+-- 规则 rΩ 的第一个前提 Mirror k m: 由结点镜像与零下标处的分支给出.
+rΩ-mir : ∀ {m k j} {q : j I.<ᴵ k} {F : I.U j (I.<→◃ q) → I.Ordᶜ k} {p : Pos m} {g : Br m p → Tr m}
+       → Mirror j (at m p) → ((Y : I.Ordᶜ j) (z : Br m p) → SubD m p Y z → Dom m (F (I.into (I.<→◃ q) Y)) (g z)) → Mirror k m
+rΩ-mir {m} {p = p} mp h = Dom→Mir (h I.zero (fromBr m p T.zero) (toSub m p (rz mp)))

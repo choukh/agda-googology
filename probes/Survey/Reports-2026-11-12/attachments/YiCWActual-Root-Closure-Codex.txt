@@ -1,0 +1,11 @@
+== OCF.Lean.YiCWActual: 闭包 16 个模块 (本地 8, 库 8)
+   OCF.Lean.YiCWActual
+   OCF.Lean.YiCWTable
+   OCF.Lean.YiMTTab
+   OCF.Lean.YiRWBlock
+   OCF.Lean.YiRWFold
+   OCF.Lean.YiRWOps
+   OCF.Lean.YiRWPath
+   OCF.Lean.YiTBRow
+   禁用表命中: 0; --only 之外: 0
+   OK

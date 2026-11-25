@@ -1,0 +1,34 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiLAB9Orbit where
+
+open import Data.Nat using (ℕ; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import YiLAB7Orbit using (lvl1; lvl2; F; c₁)
+
+-- 从第一次更新后的状态，按 W4 自身的运算产生第二次更新的累加分支。
+state : ℕ → Tr lvl1
+state n = c₁ (itS F n (B₀ lvl2))
+
+c = state 1
+nc = proj₂ (itS F 1 (B₀ lvl2) lvl1 (inc tt self))
+
+z : ℕ → Tr lvl1
+z = iter (λ x → ex c c nc (suc x) tt) zero
+
+U : ℕ → Tr lvl1
+U = cum (λ n → z (suc n))
+
+part : (k : ℕ) → lvl1 ⊢ U k ◃ state 2
+part k = ◃l k
+
+first-part : lvl1 ⊢ state 1 ◃ U 0
+first-part = ◃e
+
+second-part : U 1 ≡ ex (z 1 + c) c nc (suc (z 1)) tt
+second-part = refl

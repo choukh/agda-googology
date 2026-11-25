@@ -1,0 +1,97 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W6 真实运行追踪之一 (塔第 2 项, 全是 refl): 塔第 1 块 (tw 2 的孩子 zero) 里第 ω 层这个无穷私有目标, 运行查询它 (feed, query-ω),
+-- W6 在那里走换参数的一行 (steer-ω); W5 在同一处的回退见 W6VsW5. W6 仍回退的一处见 W6TraceZ. 不说明: "第一处" (判断); 值.
+module W6Trace where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W6Block
+open import W6Ops
+open import W6Path
+open import W6Fold
+open import W6Loc using (loc)
+open import W6Shape using (t; h₁; module Steer)
+
+------------------------------------------------------------------------
+-- 真实运行 (同 W5Trace 三).
+h₂ : Tr (tw 1) → L
+h₂ c = tw 1 ⊕ ↑ (tw 1) c
+o₂ : Ok (tw 2)
+o₂ = Ok-tw 2
+b : Tr⁺ (tw 1)
+b = Ωt (tw 1)
+
+seg : ℕ → Tr Λ
+seg n = proj₁ (upz {s = sL} {h = tw} n (Ωt (tw n)))
+pre₂ : Tr Λ
+pre₂ = cum seg 1
+B₂ : Base (tw 2)
+B₂ i u = ψ Λ Ok-Λ (B₀ Λ) i (inc 2 u) (B₀ Λ i (inc 2 u)) pre₂
+v₁ : Tr⁺ zero
+v₁ = ψ Λ Ok-Λ (B₀ Λ) zero (z≤ Λ) (Ωt zero) pre₂
+real₂ : Tr⁺ zero
+real₂ = ψ (tw 2) o₂ B₂ zero (z≤ (tw 2)) v₁ (proj₁ (Ωt (tw 2)))
+
+member₂ : ψ Λ Ok-Λ (B₀ Λ) zero (z≤ Λ) (Ωt zero) (cum seg 2) ≡ real₂
+member₂ = refl
+
+top₂ : Pos (tw 2)
+top₂ = inj₁ (inj₁ tt)
+
+-- 顶层: tw 2 的规范 Ω 树朝第 0 层 (一致路径) 折, 是 Ω top 行复合 up 行 (去糖形式); 第 d 支在孩子 d 里, 状态是 B₂ 的 inc d 条目.
+real-top : real₂
+  ≡ node⁺ (kp (tw 2) o₂ top₂ (z≤ (tw 2)))
+      (λ d → ψ (h₂ d) (proj₂ o₂ d) (λ i u → B₂ i (inc d u)) zero (z≤ (h₂ d)) v₁ (proj₁ (Ωt (h₂ d))))
+      (λ d → proj₁ (ψ (h₂ d) (proj₂ o₂ d) (λ i u → B₂ i (inc d u)) (tw 1) (self ∙ lift (tw 1) (↑ (tw 1) d)) (B₂ (tw 1) (ink self)) (proj₁ (Ωt (h₂ d)))))
+real-top = refl
+
+-- 第 0 支就是在塔第 1 项 tw 1 里折它的规范 Ω 树.
+branch-0 : ψ (h₂ zero) (proj₂ o₂ zero) (λ i u → B₂ i (inc zero u)) zero (z≤ (h₂ zero)) v₁ (proj₁ (Ωt (h₂ zero)))
+         ≡ ψ (tw 1) (Ok-tw 1) (λ i u → B₂ i (inc zero u)) zero (z≤ (tw 1)) v₁ (proj₁ (Ωt (tw 1)))
+branch-0 = refl
+
+-- 它的第 suc t 支 (第 ω+1 层 = 第 ω 层上的后继层) 里, 规范 Ω 树的回灌读 "第 ω 层, 经孩子 suc t" 这一条状态.
+module FeedOmega (S : Base (h₁ (suc t))) where
+  feed : (z : Tr (h₁ t))
+       → proj₁ (ψ (h₁ (suc t)) (proj₂ (Ok-tw 1) (suc t)) S (h₁ t) (inc tt self) (S (h₁ t) (inc tt self))
+                  (proj₁ (upz {s = sS} {h = λ _ → h₁ t} tt (suc z , z◃ z ◃s))))
+       ≡ ex (proj₁ (S (h₁ t) (inc tt self))) (proj₁ (S (h₁ t) (inc tt self))) (proj₂ (S (h₁ t) (inc tt self))) (suc z) tt
+  feed z = refl
+
+-- 于是被查询的状态条目是 B₂ (h₁ t) (inc zero (inc (suc t) (inc tt self))): 目标是塔第 1 块孩子 suc t 里的第 ω 层 (无穷私有层).
+pathω : h₁ t ≤ tw 2
+pathω = inc zero (inc (suc t) (inc tt self))
+
+-- 前缀的左项, 逐字取运行中出现的形式 (cum seg 0 + zero, 定义上等于 seg 0).
+x₀ : Tr Λ
+x₀ = cum seg 0 + zero
+x₀-is : x₀ ≡ seg 0
+x₀-is = refl
+B₁ : Base (tw 2)
+B₁ i u = ψ Λ Ok-Λ (B₀ Λ) i (inc 2 u) (B₀ Λ i (inc 2 u)) x₀
+βω : Tr⁺ (h₁ t)
+βω = ψ Λ Ok-Λ (B₀ Λ) (h₁ t) (inc 2 pathω) (B₀ Λ (h₁ t) (inc 2 pathω)) x₀
+
+-- 这一条目: 前缀的第 1 段 (Ωt (tw 1)) 经证书嵌进 tw 2 的孩子 zero, 在 tw 1 里朝孩子 suc t 里的第 ω 层折规范 Ω 树.
+query-ω : B₂ (h₁ t) pathω ≡ ψ (tw 1) (Ok-tw 1) (λ i u → B₁ i (inc zero u)) (h₁ t) (inc (suc t) (inc tt self)) βω (proj₁ (Ωt (tw 1)))
+query-ω = refl
+
+-- W6 在这一处: 换参数的一行. 第 d 支在孩子 suc t + d 里沿字面路径折; 第 0 支就是含目标的孩子 suc t 本身, 路径 inc tt self.
+module Sω = Steer 0 (suc t)
+
+steer-ω : B₂ (h₁ t) pathω
+  ≡ node⁺ (kp (tw 1) (Ok-tw 1) (inj₁ (inj₁ tt)) (inc (suc t) (inc tt self)))
+      (λ d → ψ (h₁ (suc t + d)) (proj₂ (Ok-tw 1) (suc t + d)) (λ i u → B₁ i (inc zero (inc (suc t + d) u))) (h₁ t)
+               (inc tt self ∙ tw-mono 0 (suc t) d) βω (proj₁ (Ωt (h₁ (suc t + d)))))
+      (λ d → proj₁ (ψ (h₁ (suc t + d)) (proj₂ (Ok-tw 1) (suc t + d)) (λ i u → B₁ i (inc zero (inc (suc t + d) u))) zero
+                      (self ∙ lift zero (↑ zero (suc t + d))) (B₁ zero (inc zero (ink self))) (proj₁ (Ωt (h₁ (suc t + d))))))
+steer-ω = Sω.steer-node (λ i u → B₁ i (inc zero u)) (inc tt self) βω
+
+path-ω0 : inc tt self ∙ tw-mono 0 (suc t) zero ≡ inc tt self
+path-ω0 = refl
+
+------------------------------------------------------------------------

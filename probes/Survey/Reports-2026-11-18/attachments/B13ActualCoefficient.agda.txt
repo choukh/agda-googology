@@ -1,0 +1,104 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：真实 E 在任意覆盖反馈系数的零层树上给出该整支的值界；实例取 Ψ₃ 内的真实 raw 2。
+module B13ActualCoefficient where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-refl; ≅→≼; ≼-trans)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import W4Block using (Tr; zero; suc; lim; iter)
+open import W4Ops using (ι)
+open import W4Fold using (op; E; Einf; tdNil; idM; run)
+open import WVOne using (read; T₀)
+open import YiLAB7Orbit using (lvl2; ok₂)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B9InnerOuter using (w2)
+import YiLAB10Src as T
+import YiLAB11Target as Y
+import B12Hierarchy as H
+import B12LimitSrc as Z
+import B12Orbit as B
+import B12Update as St
+import B12StrictExit as V
+import B12Omega3Ref as R
+import B12Omega3Cuts as C
+import B13Target as P
+import B13Feedback as F
+import B13Countable as Evl
+open H.Prefix using (val; aligned)
+
+positive : T₀ → Z.Lev₂ → Z.Lev₂
+positive L.zero a = a L.+ Ω₂ᴸ
+positive (L.suc x) a = L.lim (λ n → S.iter (positive x) a (suc n))
+positive (L.lim f) a = L.lim (λ n → positive (f n) a)
+
+base : ∀ y {s p} → U.Mh s p → U.Mh (s S.+ T.a) (positive y p)
+base L.zero e = U.M-add {σ = R.idσ} e (T.up-rel 0)
+base (L.suc y) e = U.Mlr 0 (base y e)
+base (L.lim f) e = U.Mlr 0 (base (f 0) e)
+
+floor : ∀ y {s : Z.Src₂} {p : Z.Lev₂} → U.Mh s p → U.Mh s (positive y p)
+floor L.zero e = U.M-add-r {σ = R.idσ} Ω₂ᴸ e
+floor (L.suc y) e = U.Mlr 0 (floor y e)
+floor (L.lim f) e = U.Mlr 0 (floor (f 0) e)
+
+above : ∀ {x y : T₀} → x ≼ y → ∀ {s p} → U.Mh s p → U.Mh (F.heightS x s) (positive y p)
+above {y = y} z≼ e = base y e
+above {L.suc x} {L.suc y} (s≼s d) e = U.Mll λ where
+  zero → U.Mlr 0 (floor y e)
+  (suc n) → U.Mlr n (L.iter-R U.Mh {G = F.heightS x} {G′ = positive y} (above d) e (suc n))
+above (≼l n d) e = U.Mlr n (above d e)
+above (l≼ h) e = U.Mll (λ n → above (h n) e)
+above (≼i {p = ()} _ _ _)
+above (i≼ {p = ()} _)
+above (≼u {r = ()} _)
+above (u≼ {r = ()} _)
+
+module Run (z : Tr zero) where
+  output = proj₁ (run (op (E ok₂ tdNil (ι lvl2 z) B.J) (Einf ok₂ tdNil (ι lvl2 z) B.J)) (Y.state 0) zero w2 (Y.value 0))
+  bound : L.ψ⁰ (val (Evl.effect z H.add H.first)) ≼ read output
+  bound = St.value-bound (Evl.In.eval idM w2 tdNil z B.J H.add (H.realizes 0) H.first (Y.state 0) (Y.value 0) H.initial)
+
+Rel : Z.Lev₂ → H.Prefix → Set
+Rel p x = p L.≅ val x
+
+iterate : ∀ {f g} → (∀ {p x} → Rel p x → Rel (f p) (g x)) → ∀ {p x} → Rel p x → ∀ n → Rel (S.iter f p n) (iter g x n)
+iterate h e zero = e
+iterate h e (suc n) = h (iterate h e n)
+
+meaning : ∀ z {p x} → Rel p x → Rel (positive (read z) p) (Evl.effect z H.add x)
+meaning zero e = L.add-≅ {σ = R.idσ} {σ′ = R.idσ} e (L.Ω-refl _)
+meaning (suc z) e = L.l≅ (λ n → iterate {f = positive (read z)} {g = Evl.effect z H.add} (meaning z) e (suc n))
+meaning (lim f _) e = L.l≅ (λ n → meaning (f n) e)
+
+coefficient-run : ∀ {x : T₀} z → x ≼ read z → L.ψ⁰ (P.co₀ x) ≼ read (Run.output z)
+coefficient-run {x} z d = ≼-trans (≅→≼ (L.ψ⁰-≅ (L.≅-sym lo)))
+  (≼-trans (C.sandwich {s = F.heightS x S.zero} (F.down x D.Rz) (above d (U.Mz (U.NZ-Ω _))) (P.refl-left lo) (P.refl-left hi))
+           (≼-trans (≅→≼ (L.ψ⁰-≅ hi)) (Run.bound z)))
+  where
+  lo = L.≅-trans (P.shift₀ x L.z≅) (C.left-unit R.idσ (P.regular₀ x))
+  hi = meaning z {x = H.first} (L.Ω-refl _)
+
+actual-run : ∀ n z → F.feedback n ≼ read z → R.at F.first-node n ≼ read (Run.output z)
+actual-run n z h = coefficient-run z (≼-trans (≅→≼ (F.transport≅ (F.feedback n))) h)
+
+whole-next : R.at F.first-node 1 ≼ read (Run.output (V.raw 2))
+whole-next = actual-run 1 (V.raw 2) F.actual₂
+
+import B13FeedbackTree as A
+open import WVOne using (cum-≥)
+
+-- Pₙ 已是自身的下一次输入。任意 n 的 ψ⁰ 参照和真实更新双方均有定义。
+tracked : ∀ n → F.feedback (suc n) ≼ read (proj₁ (A.branch n))
+tracked zero = F.actual₂
+tracked (suc n) = ≼-trans (≅→≼ (L.≅-sym (F.feedback-matches (suc n))))
+                    (actual-run (suc n) (proj₁ (A.branch n)) (tracked n))
+
+contained : ∀ {t : T₀} → (∀ n → read (proj₁ (A.branch n)) ≼ t) → F.first-node ≼ t
+contained h = l≼ (λ n → ≼-trans (≅→≼ (F.feedback-matches n)) (≼-trans (tracked n) (h n)))
+
+first-node-closed : F.first-node ≼ read (proj₁ A.whole)
+first-node-closed = contained (λ n → ≼l n (cum-≥ (λ j → proj₁ (A.branch j)) n))

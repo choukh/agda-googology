@@ -1,0 +1,42 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- E 路判定件 2: 换基证据 Schema 自己给出保留判定所缺的字面路径.
+-- Ω 形状层号的下标层槽位 t, 目标 j 在地板之上 (u : floor ≤ j) 时, 沿 index-floor ∙ u 把 t 推进 j;
+-- 落在 j 的真槽位上就保留, 落在 j 自身 (同层) 就不保留. 不比较孩子, 不读记号. 只是保留判定的一行, 没有接进折叠.
+module AuditEKeepFix where
+
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Keep; node⁺; nodeLe)
+open import OCF.Lean.YiBSBase
+open import AuditEKeep
+
+toKeep : ∀ {j X x₀} (r : Pos⁼ j) (cv : Br⁼ j r → X) → cv (bz⁼ j r) ≡ x₀ → Keep j X x₀
+toKeep (inj₁ _) cv e = nothing
+toKeep (inj₂ q) cv e = just (q , cv , e)
+
+-- 对一切 Schema, 一切下标层槽位, 一切地板之上的目标.
+keepS : ∀ {k h} (S : Schema k h) (t : Pos⁼ k) {j} → floor S ≤ j
+      → Keep j (Br (nd (sΩ k) h) (inj₁ t)) (fromBr (nd (sΩ k) h) (inj₁ t) zero)
+keepS S t u = toKeep (psh (index-floor S ∙ u) t) (pshBr (index-floor S ∙ u) t) (pshFirst (index-floor S ∙ u) t)
+
+-- 判定件 1 的那一格: route 给 inj₂ u 时用 keepS.
+kp₂ : Keep j (Br (tw 2) (inj₁ (inj₁ tt))) (fromBr (tw 2) (inj₁ (inj₁ tt)) zero)
+kp₂ = cW (route S₂ j c′ v) (λ _ → nothing) (λ u → keepS S₂ (inj₁ tt) u)
+
+data KeptAt {j X x₀} (q : Pos j) : Keep j X x₀ → Set where
+  kept : ∀ cv e → KeptAt q (just (q , cv , e))
+
+-- 保留在 AuditEKeep.q (分支类型 Tr (tw 1)) 上.
+kp₂-kept : KeptAt q kp₂
+kp₂-kept = kept _ _
+
+-- 合法性不需要另证: 结点一步 nodeLe 对任何 Keep 值成立.
+step₂ : (G : Tr (tw 1) → Tr⁺ j) (s : Tr (tw 1) → Tr (tw 1)) → j ⊢ proj₁ (G zero) ◃ proj₁ (node⁺ kp₂ G s)
+step₂ G s = nodeLe kp₂ G s

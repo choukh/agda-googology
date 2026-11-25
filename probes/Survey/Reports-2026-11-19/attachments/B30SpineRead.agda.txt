@@ -1,0 +1,45 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第一孩子上的相同证书、规范槽、显式起点同时保留，由实际子运行取回原单位值。
+module B30SpineRead where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit.Base using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
+open import W4Block
+open import W4Ops using (c₀; Ωt)
+open import W4Path
+import WVOne as V
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans)
+import B12Terminal as T
+import B12ActualSlots as Cover
+import B15ReadPaths as Path
+import B20Room as Room
+import B18TowerSlots as Slots
+import B28BHead as H
+import B28BBranch as D
+import B29Floor as F
+open import B30Spine using (Mark; here; down; recorded)
+open T.Run
+
+edge : ∀ s h → Path.Reach (h (c₀ s)) (nd s h)
+edge sS h = Path.succ
+edge sL h = Path.limit 0
+edge (sΩ i) h = Path.omega
+
+module At (k : L) (o : Ok k) (a : L) (ea : OkO k a) (depth : ℕ) where
+  val = F.eval (k ⊕ a) (Ok⊕ k a o ea) (Slots.slots (k ⊕ a) depth)
+  lower : ∀ b (eb : OkO k b) → Mark k a ea b eb → (r : T.Run (k ⊕ b)) →
+    ok r ≡ Ok⊕ k b o eb → bs r ≡ Slots.slots (k ⊕ b) depth → Cover.Covered r → val (β r) ≼ V.read (T.value r)
+  lower .a .ea here r refl refl cr = ≼-refl _
+  lower ._ eb (down {s = sS} {h} p) r eq b cr = ≼-trans (lower (h tt) _ p _ (cong (λ t → proj₂ t tt) eq)
+    (F.child sS _ tt r depth b) (Room.cover (edge sS _) r cr)) (Room.below (edge sS _) r cr)
+  lower ._ eb (down {s = sL} {h} p) r eq b cr = ≼-trans (lower (h 0) _ p _ (cong (λ t → proj₂ t 0) eq)
+    (F.child sL _ 0 r depth b) (Room.cover (edge sL _) r cr)) (Room.below (edge sL _) r cr)
+  lower ._ eb (down {s = sΩ i} {h} p) r eq b cr = ≼-trans (lower (h zero) _ p _ (cong (λ t → proj₂ t zero) eq)
+    (F.child (sΩ i) _ zero r depth b) (Room.cover (edge (sΩ i) _) r cr)) (Room.below (edge (sΩ i) _) r cr)
+
+module Actual (m : ℕ) where
+  open H.At m using (n; k; free; restart; covered)
+  reads : ∀ x y → recorded k (Ok-tw n) x y → free x ≼ free y
+  reads x y p = subst (_≼ free y) (sym (D.At.canon m x))
+    (At.lower k (Ok-tw n) (↑ k x) _ (suc n) (↑ k y) _ p (restart y) refl (Slots.At.all n y) (covered y))

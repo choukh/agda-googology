@@ -1,0 +1,98 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiLLStart where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import OCF.Lean.YiRWBlock
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiGIRel as GR
+import OCF.Lean.YiHCRel as H
+import OCF.Align.EboLeanDef as E
+open import OCF.Align.EboLeanBase using (_≤ᵀ_)
+open import OCF.Align.EBO using (<-sucT; pred-suc)
+open import OCF.Align.EboLeanView using (cof0; ne)
+open import OCF.Align.JiaAuditClosure using (cof-regular; fs-regular)
+open import OCF.Lean.YiKVInst using (Ωω; fsnΩω)
+open import OCF.Align.EboLean3Base using (Ωt-mono)
+open import OCF.Lean.YiVRRel using (NoΩ; NoΩ↑)
+open import OCF.Lean.YiGICheck using (limᵍ; lift-start; rw-weak; succᵍ; mzᵍ)
+open import OCF.Lean.YiGIInst using (gradedᵍ; domsᵍ; startᴿ)
+open import OCF.Lean.YiAbsGIface using (Doms)
+open Doms domsᵍ using (Gl)
+
+module G (s : Sh) (h : Ch s → L) = H.Gen {Sig (nd s h)} {GR.Low (nd s h)} {λ c → GR.R (h c)} {GR.Nu (nd s h)}
+
+rd-wk0 : ∀ {x y ν} → zero ⊢ x ◃ y → GR.Rd (↑ zero x) ν → GR.Rd (↑ zero y) ν
+rd-wk0 ◃s q = GR.rd-child sS _ tt q
+rd-wk0 (◃l n) q = GR.rd-child sL _ n q
+rd-wk0 (◃t d e) q = rd-wk0 e (rd-wk0 d q)
+
+read0 : ∀ {ν c} → GR.R zero ν c → GR.Rd (↑ zero c) ν
+read0 H.mz = GR.c0 refl
+read0 (H.m1 e r) = GR.ca (inj₂ (e , read0 r))
+read0 (H.mL e h) = GR.cL e (λ n → read0 (h n))
+read0 (H.mΩ {p = ()} _ _ _)
+read0 (H.mU {c = ()} _ _)
+read0 (H.mw m d) = rd-wk0 d (read0 m)
+read0 (H.mc le m) = GR.cc le (read0 m)
+
+rdown : ∀ ℓ {ν μ x} → ν ≤ᵀ μ → GR.R ℓ μ x → GR.R ℓ ν x
+rdown zero = H.mc
+rdown (nd s h) = H.mc
+
+succ-upper : (h : ⊤ → L) {ν : E.T} → GR.Rd (h tt) ν → GR.R (nd sS h) (E.Ωs ν) (proj₁ (O.Ωt (nd sS h)))
+succ-upper h {ν} q = H.mΩ (cof-regular ν) q
+  (λ η c r → subst (λ t → GR.R (nd sS h) t (up zero tt (suc c) (O.z◃ c ◃s)))
+    (sym (fs-regular ν η)) (H.mU H.mz (rw-weak (h tt) r ◃s)))
+
+succ-exact : (h : ⊤ → L) {ν : E.T} → E.cof ν ≡ E.c1 → GR.Rd (h tt) (E.pred ν)
+  → GR.R (nd sS h) (E.Ωt ν) (proj₁ (O.Ωt (nd sS h)))
+succ-exact h {ν} e q = subst (λ t → GR.R (nd sS h) (E.Ωt t) (proj₁ (O.Ωt (nd sS h))))
+  (pred-suc ν e) (succ-upper h q)
+
+oneC : (ℓ : L) → NoΩ ℓ → GR.R ℓ (E.natT 1) (proj₁ (O.Ωt ℓ))
+oneC zero _ = startᴿ
+oneC (nd sS h) _ = H.mw (H.mU H.mz (succᵍ {ℓ = h tt} refl (mzᵍ (h tt)))) ◃w
+oneC (nd sL h) ct = G.m-cum sL h (λ n → O.upz {s = sL} {h = h} n (O.Ωt (h n))) 0 (H.mU H.mz (oneC (h 0) (ct 0)))
+oneC (nd (sΩ k) h) ()
+
+leafC : (ℓ : L) → NoΩ ℓ → ∀ {ν} → GR.Rd ℓ ν → GR.R ℓ (E.Ωt ν) (proj₁ (O.Ωt ℓ))
+leafC (nd (sΩ k) h) () q
+leafC ℓ ct {ν = []} (GR.c0 e) = oneC ℓ ct
+leafC ℓ ct {ν = _ ∷ _} (GR.c0 e) = ⊥-elim (cof0 _ ne e)
+leafC zero ct (GR.ca ())
+leafC (nd sS h) ct {ν} (GR.ca (inj₁ (tt , q))) =
+  H.mc (Ωt-mono (inj₁ (<-sucT ν))) (succ-upper h q)
+leafC (nd sS h) ct (GR.ca (inj₂ (e , q))) = succ-exact h e q
+leafC (nd sL h) ct (GR.ca (inj₁ (n , q))) =
+  G.m-cum sL h (λ n → O.upz {s = sL} {h = h} n (O.Ωt (h n))) n (H.mU H.mz (leafC (h n) (ct n) q))
+leafC (nd sL h) ct (GR.ca (inj₂ ()))
+leafC ℓ ct {ν} (GR.cL e h) = limᵍ {ℓ = ℓ} (Ωω ν e)
+  (λ n → subst (λ t → GR.R ℓ t (proj₁ (O.Ωt ℓ))) (sym (fsnΩω ν n e)) (leafC ℓ ct (h n)))
+leafC ℓ ct (GR.cc le q) = rdown ℓ (Ωt-mono le) (leafC ℓ ct q)
+
+hΩ : Tr zero → L
+hΩ c = zero ⊕ ↑ zero c
+
+ℓΩ : L
+ℓΩ = nd (sΩ zero) hΩ
+
+shΩ : GR.ShR (sΩ zero) hΩ (E.Ωt (E.natT 1))
+shΩ = [] , refl , GR.c0 refl , λ η c r → GR.rd-add zero (↑ zero c) (read0 r)
+
+rdΩ : GR.Rd ℓΩ (E.Ωt (E.natT 1))
+rdΩ = GR.ca (inj₂ shΩ)
+
+leafΩ : GR.R ℓΩ (E.Ωt (E.Ωt (E.natT 1))) (proj₁ (O.Ωt ℓΩ))
+leafΩ = H.mΩ refl (GR.c0 refl)
+  (λ η c r → H.mU H.mz (leafC (hΩ c) (NoΩ↑ c) (GR.rd-add zero (↑ zero c) (read0 r))))
+
+gl0 : Gl zero (proj₁ (O.Ωt zero))
+gl0 = refl
+
+rd0 : GR.Rd (↑ zero (proj₁ (O.Ωt zero))) (E.natT 1)
+rd0 = lift-start startᴿ

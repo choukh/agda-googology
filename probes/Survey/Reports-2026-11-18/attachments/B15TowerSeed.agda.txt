@@ -1,0 +1,45 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 任一已校准的正有限层常数界都可作为整座 W4 塔的起步值。
+module B15TowerSeed where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold using (EBOᶜ)
+open import WVOne using (T₀; h₁; read)
+open import OCF.Align.Value using (_≼_; ≼-trans; s≼s; z≼; ≼l; l≼; ≼-refl)
+import OCF.Align.Level as LV
+import B12Terminal as T
+import B12ActualSlots as A
+import B12Strict as S
+import B12TerminalTail as TT
+import B13FiniteLift as U
+import B13FiniteTower as F
+import B14Tower as W
+import B14Floor as V
+import B14PathHeight as P
+import B15TowerIteration as I
+
+module First (r : T.Run (tw 1)) (hr : A.Covered r) where
+  module X = W.At r
+  z = X.idx 1
+  c = proj₁ X.slot
+  parts = iter (c +_) c
+  term : ∀ n → LV.natᶜ n ≼ read (parts n)
+  term zero = z≼
+  term (suc n) = ≼-trans (s≼s (term n)) (S.strict (nextA c (proj₂ X.slot) n))
+  finite : ∀ n → LV.natᶜ n ≼ read z
+  finite n = ≼l n (term n)
+  from : ∀ m {Q} → V.Finite (suc m) Q → Q ≼ read (T.value r)
+  from m q = ≼-trans (V.Above.lower m _ q z (finite (suc m)) (P.standard _) (X.point 1)
+    (A.enter (sΩ zero) h₁ r z zero hr)) (X.out 1)
+
+initial-bound : ∀ m {Q} → V.Finite (suc m) Q → U.Bound (tw 1) Q
+initial-bound m q r hr = First.from r hr m q
+
+module Amplify (m : ℕ) (Q : T₀) (q : V.Finite (suc m) Q) where
+  module All = I.Climb TT.mulω Q (F.timesω (tw 1)) (initial-bound m q)
+  terminal : LV.lim All.floor ≼ read EBOᶜ
+  terminal = All.terminal

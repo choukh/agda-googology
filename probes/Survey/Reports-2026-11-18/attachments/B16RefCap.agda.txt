@@ -1,0 +1,33 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B16RefCap where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; ≼l; l≼; ≼-refl; ≼-trans; ψ⁰-mono⁰; 1≼ψ⁰; ≅→≼; +-mono)
+open import WVOne using (T₀; 𝟏; H₀)
+open import WSLevel using (Ω₁ᴸ)
+import B12Omega3Ref as R
+open import B16RefTails using (module Sum; cap; plusω; successors; degrees)
+
+liftω : ∀ {a d : T₀} → a ≼ L.ψ⁰ d → plusω a ≼ L.ψ⁰ (L.suc d)
+liftω {a} {d} h = l≼ λ k → ≼l (suc k) (at k) where
+  module M = Sum (L.ψ⁰ d)
+  at : ∀ k → successors a k ≼ M.left (suc k)
+  at zero = h
+  at (suc k) = ≼-trans (+-mono {b = 𝟏} (at k) (1≼ψ⁰ d)) (≅→≼ (M.rotate (suc k)))
+
+ordinal : ∀ n → degrees n ≼ L.ψ⁰ (R.numeral n)
+ordinal zero = z≼
+ordinal (suc n) = liftω (ordinal n)
+
+small : cap ≼ L.ψ⁰ (L.ψ⁰ (L.ψ⁰ 𝟏))
+small = ψ⁰-mono⁰ (l≼ (λ n → ≼-trans (ordinal n) (ψ⁰-mono⁰ (≼l n (subst (R.numeral n ≼_) (sym (R.index n)) (≼-refl _))))))
+
+chain : ∀ n → S.iter (L.ψ⁰ {L.zero}) 𝟏 n L.≅ S.iter H₀ 𝟏 n
+chain = L.iter-R L._≅_ {G = L.ψ⁰} {G′ = H₀}
+  (λ d → L.ψ⁰≅ψ {p = L.zero} {σ = λ r → L.suc r} d) (L.s≅ L.z≅)
+
+epsilon : cap ≼ L.ψ⁰ Ω₁ᴸ
+epsilon = ≼-trans small (≼l 2 (≅→≼ (L.ψ⁰-≅ (chain 2))))

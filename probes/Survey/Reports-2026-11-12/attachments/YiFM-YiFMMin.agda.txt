@@ -1,0 +1,61 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiFMMin where
+open import Data.Nat using (zero; suc)
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁)
+open import Data.List using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst)
+import OCF.Align.EboLeanDef as E
+open import OCF.Align.EboLeanBase using (_≤ᵀ_; ≤[])
+open import OCF.Align.EboLeanView using (Vω; ws; wl; w4; w5; w6; vω; fω; fω-eq; cof0; ne)
+open import OCF.Lean.YiRWBlock
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiHCFam as F
+import OCF.Lean.YiGIRel as G
+open import OCF.Lean.YiCLFam using (fn)
+
+fω₁≢[] : ∀ {t} (v : Vω t) → fω v 1 ≡ [] → ⊥
+fω₁≢[] (ws v) ()
+fω₁≢[] (wl e v) ()
+fω₁≢[] (w4 e) ()
+fω₁≢[] (w5 e v) ()
+fω₁≢[] (w6 e q v) ()
+
+rd-zero : ∀ {ν} → G.Rd zero ν → ν ≡ []
+rd-zero {ν = []} (G.c0 e) = refl
+rd-zero {ν = _ ∷ _} (G.c0 e) = ⊥-elim (cof0 _ ne e)
+rd-zero (G.ca ())
+rd-zero {ν} (G.cL e h) = ⊥-elim (fω₁≢[] (vω ν e) (trans (sym (fω-eq (vω ν e) 1)) (rd-zero (h 1))))
+rd-zero {ν} (G.cc le r) = ≤[] (subst (λ μ → ν ≤ᵀ μ) (rd-zero r) le)
+
+old-new : ∀ {s x} → F.M 1 s x → G.R (fn 1) s x
+old-new H.mz = H.mz
+old-new (H.m1 e r) = H.m1 e (old-new r)
+old-new (H.mL e h) = H.mL e (λ n → old-new (h n))
+old-new (H.mΩ {p = inj₂ (tt , inj₁ tt)} e refl h) = H.mΩ e (G.c0 refl) (λ η c l → old-new (h η c l))
+old-new (H.mΩ {p = inj₂ (tt , inj₂ ())} e nu h)
+old-new (H.mU m ch) = H.mU (old-new m) ch
+old-new (H.mw m d) = H.mw (old-new m) d
+old-new (H.mc le m) = H.mc le (old-new m)
+
+new-old : ∀ {s x} → G.R (fn 1) s x → F.M 1 s x
+new-old H.mz = H.mz
+new-old (H.m1 e r) = H.m1 e (new-old r)
+new-old (H.mL e h) = H.mL e (λ n → new-old (h n))
+new-old (H.mΩ {p = inj₂ (tt , inj₁ tt)} e nu h) = H.mΩ e (rd-zero nu) (λ η c l → new-old (h η c l))
+new-old (H.mΩ {p = inj₂ (tt , inj₂ ())} e nu h)
+new-old (H.mU m ch) = H.mU (new-old m) ch
+new-old (H.mw m d) = H.mw (new-old m) d
+new-old (H.mc le m) = H.mc le (new-old m)
+
+old-leaf : F.M 1 (E.Ωt (E.natT 1)) (proj₁ (O.Ωt (fn 1)))
+old-leaf = F.Mβ 0
+
+new-leaf : G.R (fn 1) (E.Ωt (E.natT 1)) (proj₁ (O.Ωt (fn 1)))
+new-leaf = old-new old-leaf
+
+back-leaf : F.M 1 (E.Ωt (E.natT 1)) (proj₁ (O.Ωt (fn 1)))
+back-leaf = new-old new-leaf

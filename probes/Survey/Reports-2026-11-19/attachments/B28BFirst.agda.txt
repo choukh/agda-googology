@@ -1,0 +1,70 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第一条内分支相同，就连该分支的真实单位读回和下一次选中的内下标也相同，共用原 Λ 的真实前塔状态。
+module B28BFirst where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; cong₂; sym; trans)
+import W4Block as W
+import W4Ops as O
+import W4Path as P
+import W4Fold as F
+import WVOne as V
+import B12Terminal as T
+import B15Spine as S
+import B18TowerSlots as B
+import B18TowerEmb as E
+import B28BHead as Seed
+
+restrict : ∀ {s} (h : W.Ch s → W.L) c u →
+  (λ j w → B.slots (W.nd s h) u j (W.inc c w)) ≡ B.slots (h c) u
+restrict h c zero = refl
+restrict h c (suc u) = cong (λ b → B.add b (E.standard u)) (restrict h c u)
+
+one : ∀ l t (w : t W.≤ l) u → B.slots l u t w ≡ B.slots t u t W.self
+one l t w zero = refl
+one l t w (suc u) = cong (λ v → v O.⊞ E.standard u) (one l t w u)
+
+module At (m : ℕ) where
+  module A = Seed.At m
+  open A using (n; i; k; Branch; top; module Walk)
+  depth = suc n
+  lev = S.branch k
+  cert = λ x → proj₂ (P.Ok-tw (suc n)) x
+  β = O.Ωt W.zero
+
+  start = B.slots i depth i W.self
+
+  decode₀ : W.Tr k → V.T₀
+  decode₀ x = V.read (proj₁ (F.ψ (lev x) (cert x) (B.slots (lev x) depth)
+    W.zero (P.z≤ _) β (proj₁ (O.Ωt (lev x)))))
+
+  route : ∀ x → i W.≤ lev x
+  route x = W.self W.∙ (W.ink W.self W.∙ W.lift k (W.↑ k x))
+  decode₁ : W.Tr k → W.Tr i
+  decode₁ x = proj₁ (F.ψ (lev x) (cert x) (B.slots (lev x) depth)
+    i (route x) start (proj₁ (O.Ωt (lev x))))
+
+  module Read (g : Branch) where
+    open Walk g
+    x = g W.zero
+    parent = W.nd (W.sΩ i) child
+    bs = T.Run.bs r
+    slot : bs ≡ B.slots parent depth
+    slot = B.At.all n key
+    incoming = λ j w → bs j (W.inc W.zero w)
+    small : incoming ≡ B.slots (lev x) depth
+    small = trans (cong (λ b → λ j w → b j (W.inc W.zero w)) slot) (restrict {W.sΩ i} child W.zero depth)
+    anchor : bs i (W.ink W.self) ≡ start
+    anchor = trans (cong (λ b → b i (W.ink W.self)) slot) (one parent i (W.ink W.self) depth)
+
+    first-return : inner 0 ≡ decode₀ x
+    first-return = cong (λ b → V.read (proj₁ (F.ψ (lev x) (cert x) b W.zero (P.z≤ _) β (proj₁ (O.Ωt (lev x)))))) small
+
+    first-choice : Run.ix 1 ≡ decode₁ x
+    first-choice = cong₂ (λ b v → proj₁ (F.ψ (lev x) (cert x) b i (route x) v (proj₁ (O.Ωt (lev x))))) small anchor
+
+  returns : ∀ g h → g W.zero ≡ h W.zero → Walk.inner g 0 ≡ Walk.inner h 0
+  returns g h eq = trans (Read.first-return g) (trans (cong decode₀ eq) (sym (Read.first-return h)))
+  picks : ∀ g h → g W.zero ≡ h W.zero → Walk.Run.ix g 1 ≡ Walk.Run.ix h 1
+  picks g h eq = trans (Read.first-choice g) (trans (cong decode₁ eq) (sym (Read.first-choice h)))

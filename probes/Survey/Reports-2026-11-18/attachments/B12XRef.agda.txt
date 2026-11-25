@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 对闭定理先把可数塔证书封装为 opaque，变量 k 处保留与 EBO-tree′ 的值桥。
+module B12XRef where
+open import Data.Nat using (ℕ)
+open import Relation.Binary.PropositionalEquality using (refl)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; l≼; ≼-refl; ≼-trans)
+import OCF.Align.EboLeanDef as E
+open import OCF.Align.EboLeanTree using (EBO-tree′; hc-tower)
+open import OCF.Lean.YiMonoExit using (toL)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼; hω-inv; fs≼)
+open import OCF.Lean.YiEXRow using (Rt≼Lab)
+open import OCF.Align.Correspond using (ε₀-label)
+open import OCF.Align.Label using (BTBO-label)
+
+opaque
+  H : (k : ℕ) → E.HC (E.EBOψ k)
+  H = hc-tower
+
+  original : ∀ k → Rt (hc-tower k) ≼ Rt (H k)
+  original k = ≼-refl (Rt (H k))
+
+row : ℕ → L.Ordᶜ L.zero
+row k = Rt (H k)
+
+epsilon : row 1 ≼ N.γ 1
+epsilon = Rt≼Lab {t = E.EBOψ 1} {X = N.γ 1} (H 1) ε₀-label
+
+small : row 0 ≼ row 1
+small = ≼-trans (tree-≼ refl (H 0) (hω-inv (H 1) refl 0)) (fs≼ (H 1) refl 0)
+
+row-two : row 2 ≼ N.BTBOᴵ
+row-two = Rt≼Lab {t = E.EBOψ 2} {X = N.BTBOᴵ} (H 2) BTBO-label
+
+assemble : {Y : L.Ordᶜ L.zero} → (∀ k → row k ≼ Y) → toL EBO-tree′ ≼ Y
+assemble f = l≼ (λ k → ≼-trans (original k) (f k))

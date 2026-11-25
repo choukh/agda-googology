@@ -1,0 +1,82 @@
+{
+  "repository": [
+    {
+      "module": "YiATStart",
+      "exit": 0,
+      "seconds": 17.28,
+      "checking": [
+        "OCF.Lean.YiATStart"
+      ],
+      "residency": 1574070048,
+      "sha256": "224b76a375365a58acd9f461545f9e4424841280c2ebf161ef251d71fe181c0f",
+      "unchanged": true
+    },
+    {
+      "module": "YiATWire",
+      "exit": 0,
+      "seconds": 16.46,
+      "checking": [
+        "OCF.Lean.YiATWire"
+      ],
+      "residency": 1721793848,
+      "sha256": "9f51caf94a6ad742791e8cb2851af9b9b75a958fbf314c450b4c0ea9d0b5ca3d",
+      "unchanged": true
+    },
+    {
+      "module": "YiAZStart",
+      "exit": 0,
+      "seconds": 16.37,
+      "checking": [
+        "OCF.Lean.YiAZStart"
+      ],
+      "residency": 1484891416,
+      "sha256": "08f5a110e49363298682fc310a99b5eab51c09eba40db53586bf383d62f34d10",
+      "unchanged": true
+    },
+    {
+      "module": "YiAZLocal",
+      "exit": 0,
+      "seconds": 16.49,
+      "checking": [
+        "OCF.Lean.YiAZLocal"
+      ],
+      "residency": 1524560032,
+      "sha256": "1232273a34aecf79d70b547d9d9fe26af0dd1e277eaf1e2d3f20a388a532c3db",
+      "unchanged": true
+    }
+  ],
+  "temporary_claims": [
+    {
+      "module": "YiATSource",
+      "exit": 0,
+      "seconds": 16.46,
+      "residency": 1664733608,
+      "checking": [
+        "YiATSource"
+      ],
+      "sha256": "ac86f1180363b90acfdc0dfb64a88c6a20b0f39ac04b4aeb3e056f08b26b6c16"
+    },
+    {
+      "module": "YiAZQuant",
+      "exit": 0,
+      "seconds": 16.61,
+      "residency": 1530306800,
+      "checking": [
+        "YiAZQuant"
+      ],
+      "sha256": "8d70ed08ce32cc194e89dca2e5a163b33c1f7f5bba59ce053e728166c04b1c57"
+    }
+  ],
+  "nonempty_noncomment_lines": 232,
+  "physical_code_lines": 235,
+  "physical_file_lines": 259,
+  "repo_wall_seconds_sum": 66.6,
+  "repo_max_RTS_residency": 1721793848,
+  "temp_wall_seconds_sum": 33.07,
+  "temporary_files_are_not_repo_module_count": true,
+  "cold_scope": "each own module interface removed / new private copies; dependency interfaces retained",
+  "original_goal_complete": false,
+  "unconditional_T0_bound": false,
+  "target_negation_proved": false,
+  "engineering_stop_condition_triggered": false
+}

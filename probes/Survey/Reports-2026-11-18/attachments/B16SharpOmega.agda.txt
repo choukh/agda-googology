@@ -1,0 +1,89 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B16SharpOmega where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1; p₁)
+open import OCF.Align.Value using (s≼s; ≼-trans)
+open import B13SharpOne using (r₁)
+open import B14SharpStack
+open import B14SharpBound
+open import B15SharpAction
+open import B15SharpLift using (module Lift)
+open import B16SharpModel
+open import B16SharpCount
+import WSW4 as WS
+
+module Omega (lem : LEM) where
+  open I.Sharp lem
+  open Sim lem using (after)
+  open Action lem using (eop; count)
+  open Graded lem
+  open Count lem
+  open Lift lem using (selfFold; cv; cv≤)
+  open WS.Lem oB using (TV; MK) public
+
+  applyC : ∀ n {X mu} → F.TD {lvl1} X mu → B.Tr mu → F.Ca n X → F.Ca n X
+  applyC zero T y G = eop T y G
+  applyC (suc n) T y K = F.Itᴺ n oB T y K
+
+  GoodIndex : B.Tr lvl1 → R.Tr r₁ → Set
+  GoodIndex y u = ∀ n {X} (tv : TV X) (mk : MK X) →
+    Acts n (mk (path slot)) u (applyC n (F.td W.stop tv mk) y)
+
+  module Root {X : F.Cx lvl1} (tv : TV X) (mk : MK X) where
+    T : F.TD X lvl1
+    T = F.td W.stop tv mk
+    s = mk (path slot)
+    m = F.chMT T tt
+    T₀ = F.chTD T tt
+    gz : B.Tr B.zero → B.Tr lvl1
+    gz w = B.up B.zero tt (B.suc w) (W.z◃ w B.◃s)
+
+    module Seed (D : Base♯) (a : V.Tr⁺ r₁) (x : R.Tr r₁) where
+      seed = selfFold D a x
+      body : R.Tr R.zero → R.Tr r₁
+      body z = proj₁ (ψ♯ R.zero tt (after D x) r₁ oR seed (R.suc (cv z)))
+
+      zero-case : ∀ G → Rel 0 s (proj₁ seed) G → Rel 0 s (proj₁ (selfFold D a (block x))) (applyC 0 T Ωw G)
+      zero-case G h = nd 0 s (λ t → F.kp lvl1 oB p₁ (tv t)) body (λ w → eop T (gz w) G) branch
+        where
+        branch : ∀ z w → data≤ z w → Rel 0 s (body z) (eop T (gz w) G)
+        branch z w e D′ a′ P S t v hv hc = count T₀ (after D x) seed (R.suc (cv z)) (B.suc w) (F.enterO m (eop T B.zero G))
+          (enter 0 m refl G h) (s≼s (≼-trans (cv≤ z) e)) D′ a′ P (λ i q → S i (proj₂ q)) (F.σ m t) v hv hc
+
+      pos-case : ∀ n (K : F.Ca (suc n) X) → Rel (suc n) s (proj₁ seed) K →
+        ∀ D′ a′ P G → Rel n s (val D′ a′ P R.zero) G →
+        Rel n s (val D′ a′ P (proj₁ (selfFold D a (block x)))) (F.It n oB T Ωw K G)
+      pos-case n K h D′ a′ P G g = val-nd n s (λ t → F.kp lvl1 oB p₁ (tv t)) D′ a′ P body (λ w → F.It n oB T (gz w) K G) branch
+        where
+        K0 = F.Itᴺ n oB T B.zero K
+        h0 : Rel (suc n) s (proj₁ seed) K0
+        h0 m gm = h (F.idM F.⊙ m) gm
+
+        G0 = F.It n oB T B.zero K G
+        g0 : Rel n s (val D′ a′ P R.zero) G0
+        g0 = close n G G0 g (proj₂ K F.idM G)
+
+        branch : ∀ z w → data≤ z w → Rel n s (val D′ a′ P (body z)) (F.It n oB T (gz w) K G)
+        branch z w e = up n (W.down W.stop tt) (λ t → inj₂ (tv t)) s G0 _ (countI n T₀ (after D x) seed (R.suc (cv z)) (B.suc w)
+          (F.enter (suc n) m K0) (enter (suc n) m refl K0 h0) (s≼s (≼-trans (cv≤ z) e)) D′ a′ P (F.enter n m G0) (enter n m refl G0 g0))
+
+  omega : GoodIndex Ωw Ωi
+  omega zero tv mk D a A G h = subst (λ x → Rel 0 _ (proj₁ (selfFold D a x)) (eop (F.td W.stop tv mk) Ωw G))
+    (sym (block-plug A R.zero)) (Root.Seed.zero-case tv mk D a (plug A R.zero) G h)
+  omega (suc n) tv mk D a A K h m gm D′ a′ P G g = subst
+    (λ x → Rel n (F.σ m (mk (path slot))) (val D′ a′ P (proj₁ (selfFold D a x))) (F.It n oB (F.trTD m (F.td W.stop tv mk)) Ωw (F.enter (suc n) m K) G))
+    (sym (block-plug A R.zero)) (Root.Seed.pos-case (λ t → tv (F.π m t)) (λ t → F.σ m (mk t)) D a (plug A R.zero) n
+      (F.enter (suc n) m K) (enter (suc n) m gm K h) D′ a′ P G g)
+

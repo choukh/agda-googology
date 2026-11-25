@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 二级后继实际收回一级槽的折叠值。固定其他零槽与起点时，覆盖标准 Ω 的槽模型仍无统一上界。
+module B31UPositive where
+
+open import Data.Nat.Base using (ℕ)
+open import Data.Unit.Base using (tt)
+open import Data.Empty using (⊥)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import W4Block as W
+import W4Ops as O
+import W4Path as H
+import W4Fold as F
+import WVOne as V
+open V using (read; T₀; 𝟏; lvl1)
+open import WVTwo using (lvl2; ok₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; s≼s)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import WKGen as K
+import B12Terminal as T
+import B12ActualSlots as Cover
+import B12Strict as Str
+import B18Product as P
+import B19IdealArithmetic as Ar
+import B27URetained as Ext
+import B27UArbitrary as Z
+import B31UFirst as U
+import B31UDouble as D
+
+module At (r : T.Run lvl2) where
+  open T.Run r
+  module Run = K.Main ok bs (H.z≤ lvl2) β (omegaB (W.inc tt W.self)) oneβ (oneB (W.inc tt (W.inc tt W.self)))
+  receipt = read (proj₁ Run.v₀)
+  strict : L.suc receipt ≼ read (T.value r)
+  strict = ≼-trans {b = read (proj₁ (Run.fold 1))}
+    (Str.strict (F.mono lvl1 Run.o₁ Run.B′ W.zero (H.z≤ lvl1) β
+        (W.◃e {a = Run.c} {b = Run.c} {nb = Run.nc} {x = W.suc W.zero} {ε = tt})))
+    (Run.Ψg-ge 1)
+
+actual : T.Run lvl2
+actual = D.reset (U.Actual.state 0 1)
+actual-receipt : L.suc (At.receipt actual) ≼ U.Actual.M.cell 0 1
+actual-receipt = At.strict actual
+
+module Tail (x : O.Tr⁺ W.zero) where
+  slots : F.Base lvl2
+  slots W.zero w = O.Ωt W.zero
+  slots j@(W.nd s h) w = O.Ωt j O.⊞ x
+  grows : ∀ j → W._⊢_◃_ j (proj₁ (O.Ωt j)) (proj₁ (O.Ωt j O.⊞ x))
+  grows j = O.+-mono (proj₁ (O.Ωt j)) (O.ι-mono j (proj₂ x))
+  r : T.Run lvl2
+  r = T.makeRun ok₂ slots (O.Ωt W.zero) (λ _ → ≼-refl 𝟏) (λ _ → inj₂ (grows lvl1)) (≼-refl 𝟏)
+  covered : Cover.Covered r
+  covered W.zero w = inj₁ refl
+  covered j@(W.nd s h) w = inj₂ (grows j)
+  same-zero : ∀ w → T.Run.bs r W.zero w ≡ O.Ωt W.zero
+  same-zero w = refl
+  module A = At r
+  module E = Ext.At lvl1 A.Run.o₁ A.Run.B′ (O.Ωt W.zero) (proj₁ (O.Ωt lvl1))
+  base : 𝟏 ≼ E.b
+  base = T.inflate0 lvl1 A.Run.o₁ A.Run.B′ (H.z≤ lvl1) (O.Ωt W.zero) (proj₁ (O.Ωt lvl1))
+  paid : read (proj₁ x) ≼ A.receipt
+  paid = ≼-trans {b = Ar.norm (read (proj₁ x))} (Ar.up (read (proj₁ x)))
+    (≼-trans {b = E.b P.· Ar.norm (read (proj₁ x))}
+      (P.pad base (Ar.norm (read (proj₁ x)))) (proj₂ (E.extension (proj₁ x))))
+
+  returned : L.suc (read (proj₁ x)) ≼ read (T.value r)
+  returned = ≼-trans {b = L.suc A.receipt} (s≼s paid) A.strict
+
+escape : ∀ q → Σ (O.Tr⁺ W.zero) (λ x → L.suc q ≼ read (T.value (Tail.r x)))
+escape q = Z.zrep q , ≼-trans {b = L.suc (read (proj₁ (Z.zrep q)))}
+  (s≼s (Z.dominates q)) (Tail.returned (Z.zrep q))
+
+no-cap : ∀ q → (∀ x → read (T.value (Tail.r x)) ≼ q) → ⊥
+no-cap q cap = s≼-irrefl q (≼-trans {b = read (T.value (Tail.r (proj₁ (escape q))))}
+  (proj₂ (escape q)) (cap (proj₁ (escape q))))
+

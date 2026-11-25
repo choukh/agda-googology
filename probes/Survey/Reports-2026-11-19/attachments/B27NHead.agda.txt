@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 用非空可数名字首个 ψ₀ 内部的参数升深一次；参数、尾部与深度任意。
+module B27NHead where
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_; s≤s; z≤n)
+open import Data.Nat.Properties using (≤-refl)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym; cong)
+open import OCF.Align.EboLeanDef using (T; ψ; _<ᵀ_; ΩTower; EBOψ; []<; hd<; tl<; lv<; ar<)
+open import OCF.Align.EboLeanBase using (NF; GB; n[]; GB[]; nf-ψ; nf-Ω; nfp-g; nfp-a; nf-hd; _≤ᵀ_; Ctbl; c[]; c∷)
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiRefTw2 using (tree-≼)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-suc; ≼-refl; ≼-trans)
+import B26OSparse as U
+import B17Cofinal as Cap
+import B26Depth as D
+import B26Names as N
+
+-- 非空可数名字取 ψ₀(a)+... 的 a，不把完整的名字放回下标。
+arg : ∀ {t} → Ctbl t → T
+arg c[] = []
+arg (c∷ {a = a} _) = a
+
+normal : ∀ {t} (c : Ctbl t) → NF t → NF (arg c)
+normal c[] _ = n[]
+normal (c∷ _) n = nfp-a (nf-hd n)
+guard : ∀ {t} (c : Ctbl t) → NF t → GB [] (arg c) (arg c)
+guard c[] _ = GB[]
+guard (c∷ _) n = nfp-g (nf-hd n)
+
+child : N.Name → N.Name
+child b = N.named _ nt (c∷ c[]) (hc nt (c∷ c[]))
+  where
+  c = N.ct b
+  n = N.nt b
+  nt = nf-ψ n[] (nf-Ω (normal c n)) (U.admissible (guard c n))
+
+raw-height : ∀ {t} (c : Ctbl t) → Cap.depth (arg c) ≡ Cap.cap c
+raw-height c[] = refl
+raw-height (c∷ _) = refl
+
+exact-height : ∀ b → D.height (child b) ≡ suc (D.height b)
+exact-height b = cong suc (raw-height (N.ct b))
+
+advance : ∀ b → L.suc (N.value b) ≼ N.value (child b)
+advance b = mono<ⁿ (N.nt b) (N.nt (child b)) (N.ct (child b)) (N.hcN b) (N.hcN (child b))
+  (D.tall b (child b) (subst (suc (D.height b) ≤_) (sym (exact-height b)) ≤-refl))
+

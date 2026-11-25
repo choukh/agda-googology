@@ -1,0 +1,40 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 接口: 在一个层号里定位另一个层号 (给出一条路径). 只有定义与陈述, 没有证明.
+-- 用途: 折叠朝 "某个孩子里的层 j" 折一棵 "在另一个孩子 c 里的树" 时, 若能在孩子 c 的层号里找到 j, 就可以在孩子 c 里就地折, 不必回退.
+module KLoc where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Product using (Σ)
+open import W4Block
+open import WVOne using (h₁)
+open import OCF.Lean.YiAbsObs using (LPO; IsJust)
+
+-- 定位器: 给两个层号, 返回一条路径或者放弃. 可靠性由类型保证.
+Locator : Set
+Locator = (j a : L) → Maybe (j ≤ a)
+
+-- 有限层.
+lvl : ℕ → L
+lvl zero    = zero
+lvl (suc n) = nd sS (λ _ → lvl n)
+
+-- 读回域上的完全: 两个层号都由第 0 层的树读回 (h₁ t = zero ⊕ ↑ zero t), 只要有路径就找到.
+CompleteR : Locator → Set
+CompleteR loc = (t z : Tr zero) → h₁ t ≤ h₁ z → IsJust (loc (h₁ t) (h₁ z))
+
+-- 固定被找的层号 (由树 t 读回), 对一切 z 完全.
+CompleteAt : Tr zero → Locator → Set
+CompleteAt t loc = (z : Tr zero) → h₁ t ≤ h₁ z → IsJust (loc (h₁ t) (h₁ z))
+
+-- 有限层上的完全.
+CompleteFin : Locator → Set
+CompleteFin loc = (n : ℕ) (z : Tr zero) → lvl n ≤ h₁ z → IsJust (loc (lvl n) (h₁ z))
+
+-- 否定一路的陈述: 对某一棵固定的 (无穷的) 树 t, 对一切 z 完全的定位器推出 LPO.
+NegStmt : Set
+NegStmt = Σ (Tr zero) λ t → (loc : Locator) → CompleteAt t loc → LPO
+
+-- 构造一路的陈述: 有一个定位器在有限层上完全.
+PosStmt : Set
+PosStmt = Σ Locator CompleteFin

@@ -1,0 +1,58 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- Λ 的每个正塔，进入任一反馈孩子后，整族槽字面等于标准槽依次右加此前各座独立标准塔的零层值。证明在函数外做归纳。
+module B18TowerSlots where
+open import Data.Nat.Base as N using (ℕ; zero; suc; z≤n; s≤s)
+import Data.Nat.Properties as NP
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum.Base using (inj₁)
+open import Data.Empty using (⊥-elim)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import B12Terminal as T
+import B15Spine as Sp
+import B18TowerEmb as E
+open T.Run
+
+add : ∀ {ℓ} → Base ℓ → Tr⁺ zero → Base ℓ
+add b a j w = b j w ⊞ a
+slots : ∀ ℓ → ℕ → Base ℓ
+slots ℓ zero = B₀ ℓ
+slots ℓ (suc m) = add (slots ℓ m) (E.standard m)
+
+module At (n : ℕ) (c : Tr (tw n)) where
+  l = tw n
+  h = Sp.branch l
+  end = suc n
+  root = tw end
+  family : Tr Λ → Base (h c)
+  family x j w = ψ Λ Ok-Λ (B₀ Λ) j (inc end (inc c w)) (Ωt j) x
+
+  peel : ∀ m {p} → m N.< end → E.Walk tw E.spine m end p →
+    (t : Tr Λ) (x : Tr⁺ (tw m)) →
+    (λ j w → ψ root (Ok-tw end) (λ i v → ψ Λ Ok-Λ (B₀ Λ) i (inc end v) (Ωt i) t)
+      j (inc c w) (family t j w) (proj₁ (emb root (Ok-tw end) p x))) ≡ add (family t) (E.base m x)
+  peel .end d E.start t x = ⊥-elim (NP.<-irrefl refl d)
+  peel m d (E.step q) t x = cong (add (family t)) (E.pres q x)
+
+  append : ∀ m → m N.< end → (t : Tr Λ) (x : Tr⁺ (tw m)) →
+    family (up t m (proj₁ x) (proj₂ x)) ≡ add (family t) (E.base m x)
+  append m d t x with E.choose tw E.spine m end d
+  ... | p , eq , f rewrite eq = peel m d f t x
+
+  entry : ∀ m → m N.< end →
+    family (T.prefix tw (suc m)) ≡ add (family (T.prefix tw m)) (E.standard m)
+  entry zero d = append 0 d zero (Ωt (tw 0))
+  entry (suc m) d = append (suc m) d (T.prefix tw (suc m)) (Ωt (tw (suc m)))
+
+  prefix : ∀ m → m N.≤ end → family (T.prefix tw m) ≡ slots (h c) m
+  prefix zero d = refl
+  prefix (suc m) d = trans (entry m d)
+    (cong (λ b → add b (E.standard m)) (prefix m (NP.<⇒≤ d)))
+
+  r = T.limRun tw T.terminal end
+  child = T.enterRun (sΩ l) h r c zero
+  all : bs child ≡ slots (h c) end
+  all = prefix end NP.≤-refl

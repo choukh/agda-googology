@@ -1,0 +1,141 @@
+24a25,36
+> mW : ∀ {A X : Set} → Maybe A → (A → X) → X → X
+> mW (just a) F G = F a
+> mW nothing  F G = G
+> 
+> mW-ind : ∀ {A X : Set} (Q : X → Set) (W : Maybe A) {F : A → X} {G : X} → ((a : A) → Q (F a)) → Q G → Q (mW W F G)
+> mW-ind Q (just a) hF hG = hF a
+> mW-ind Q nothing  hF hG = hG
+> 
+> mW-ind₂ : ∀ {A X : Set} (Q : X → X → Set) (W : Maybe A) {F F′ : A → X} {G G′ : X} → ((a : A) → Q (F a) (F′ a)) → Q G G′ → Q (mW W F G) (mW W F′ G′)
+> mW-ind₂ Q (just a) hF hG = hF a
+> mW-ind₂ Q nothing  hF hG = hG
+> 
+36c48
+<   kp (nd (sΩ k) h) ((_ , kh) , oc) (inj₂ (c , t)) (ink v)   = kp⁼ (h c) (oc c) t (v ∙ kh c)
+---
+>   kp (nd (sΩ k) h) ((_ , kh) , oc) (inj₂ (c , t)) (ink v)   = kp⁼ (h c) (oc c) t (v ∙ proj₁ (kh c))
+44c56
+<     mapK (pshBr (kh c) t) (pshFirst (kh c) t) (kp⁼ (h c) (oc c) (psh (kh c) t) v)
+---
+>     mapK (pshBr (proj₁ (kh c)) t) (pshFirst (proj₁ (kh c)) t) (kp⁼ (h c) (oc c) (psh (proj₁ (kh c)) t) v)
+46c58
+<     mapK (pshBr (kh zero) t) (pshFirst (kh zero) t) (kp⁼ (h zero) (oc zero) (psh (kh zero) t) (vs zero))
+---
+>     mapK (pshBr (proj₁ (kh zero)) t) (pshFirst (proj₁ (kh zero)) t) (kp⁼ (h zero) (oc zero) (psh (proj₁ (kh zero)) t) (vs zero))
+343c355
+<     ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) j (v ∙ proj₂ (proj₁ o) c)
+---
+>     ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) j (v ∙ proj₁ (proj₂ (proj₁ o) c))
+352,353c364,393
+<   ψ (nd (sΩ k) h) o B j (inc c′ v) β (up x c y e) =
+<     ψ (nd (sΩ k) h) o B j (inc c′ v) β x ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y
+---
+>   -- 试验 (公共部分忠实). 树的孩子不是 zero: 原来的回退行.
+>   ψ (nd (sΩ k) h) o B j (inc c′ v) β (up x c@(suc _) y e) =
+>     (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y
+>   ψ (nd (sΩ k) h) o B j (inc c′ v) β (up x c@(lim _ _) y e) =
+>     (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y
+>   ψ (nd (sΩ k) h) o B j (inc c′ v) β (up x c@(Ω _ _) y e) =
+>     (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y
+>   ψ (nd (sΩ k) h) o B j (inc c′ v) β (up x c@(up _ _ _ _) y e) =
+>     (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y
+>   ψ (nd (sΩ k) h) o B j (inc c′ v) β (up x c@(ex _ _ _ _ _) y e) =
+>     (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y
+>   -- 树的孩子与目标的孩子都是 zero: 同一个孩子, 进去折.
+>   ψ (nd (sΩ k) h) o B j (inc zero v) β (up x zero y e) =
+>     ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j v (ψ (nd (sΩ k) h) o B j (inc zero v) β x) y
+>   -- 树的孩子是 zero, 目标在别的孩子: 证书给出孩子 zero 到目标孩子的路径时, 把 y 嵌进目标孩子再折; 没有时回退.
+>   ψ (nd (sΩ k) h) o B j (inc c′@(suc _) v) β (up x zero y e) = mW (proj₂ (proj₂ (proj₁ o) c′))
+>     (λ p → ψ (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (proj₁ (emb (h c′) (proj₂ o c′) p (y , e))))
+>     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y)
+>   ψ (nd (sΩ k) h) o B j (inc c′@(lim _ _) v) β (up x zero y e) = mW (proj₂ (proj₂ (proj₁ o) c′))
+>     (λ p → ψ (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (proj₁ (emb (h c′) (proj₂ o c′) p (y , e))))
+>     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y)
+>   ψ (nd (sΩ k) h) o B j (inc c′@(Ω _ _) v) β (up x zero y e) = mW (proj₂ (proj₂ (proj₁ o) c′))
+>     (λ p → ψ (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (proj₁ (emb (h c′) (proj₂ o c′) p (y , e))))
+>     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y)
+>   ψ (nd (sΩ k) h) o B j (inc c′@(up _ _ _ _) v) β (up x zero y e) = mW (proj₂ (proj₂ (proj₁ o) c′))
+>     (λ p → ψ (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (proj₁ (emb (h c′) (proj₂ o c′) p (y , e))))
+>     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y)
+>   ψ (nd (sΩ k) h) o B j (inc c′@(ex _ _ _ _ _) v) β (up x zero y e) = mW (proj₂ (proj₂ (proj₁ o) c′))
+>     (λ p → ψ (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (proj₁ (emb (h c′) (proj₂ o c′) p (y , e))))
+>     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y)
+395c435
+<     mono (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) j (v ∙ proj₂ (proj₁ o) c)
+---
+>     mono (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) j (v ∙ proj₁ (proj₂ (proj₁ o) c))
+405c445,451
+<   mono (nd (sΩ k) h) o B j (inc c′ v) β (◃u x c y e) =
+---
+>   mono (nd (sΩ k) h) o B j (inc c′ v) β (◃u x c@(suc _) y e) =
+>     +-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y)))
+>   mono (nd (sΩ k) h) o B j (inc c′ v) β (◃u x c@(lim _ _) y e) =
+>     +-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y)))
+>   mono (nd (sΩ k) h) o B j (inc c′ v) β (◃u x c@(Ω _ _) y e) =
+>     +-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y)))
+>   mono (nd (sΩ k) h) o B j (inc c′ v) β (◃u x c@(up _ _ _ _) y e) =
+406a453,476
+>   mono (nd (sΩ k) h) o B j (inc c′ v) β (◃u x c@(ex _ _ _ _ _) y e) =
+>     +-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y)))
+>   mono (nd (sΩ k) h) o B j (inc zero v) β (◃u x zero y e) =
+>     mono (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j v (ψ (nd (sΩ k) h) o B j (inc zero v) β x) e
+>   mono (nd (sΩ k) h) o B j (inc c′@(suc _) v) β (◃u x zero y e) =
+>     mW-ind (λ Z → j ⊢ proj₁ (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ◃ proj₁ Z) (proj₂ (proj₂ (proj₁ o) c′))
+>       (λ p → mono (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (proj₂ (emb (h c′) (proj₂ o c′) p (y , e))))
+>       (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y))))
+>   mono (nd (sΩ k) h) o B j (inc c′@(lim _ _) v) β (◃u x zero y e) =
+>     mW-ind (λ Z → j ⊢ proj₁ (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ◃ proj₁ Z) (proj₂ (proj₂ (proj₁ o) c′))
+>       (λ p → mono (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (proj₂ (emb (h c′) (proj₂ o c′) p (y , e))))
+>       (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y))))
+>   mono (nd (sΩ k) h) o B j (inc c′@(Ω _ _) v) β (◃u x zero y e) =
+>     mW-ind (λ Z → j ⊢ proj₁ (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ◃ proj₁ Z) (proj₂ (proj₂ (proj₁ o) c′))
+>       (λ p → mono (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (proj₂ (emb (h c′) (proj₂ o c′) p (y , e))))
+>       (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y))))
+>   mono (nd (sΩ k) h) o B j (inc c′@(up _ _ _ _) v) β (◃u x zero y e) =
+>     mW-ind (λ Z → j ⊢ proj₁ (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ◃ proj₁ Z) (proj₂ (proj₂ (proj₁ o) c′))
+>       (λ p → mono (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (proj₂ (emb (h c′) (proj₂ o c′) p (y , e))))
+>       (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y))))
+>   mono (nd (sΩ k) h) o B j (inc c′@(ex _ _ _ _ _) v) β (◃u x zero y e) =
+>     mW-ind (λ Z → j ⊢ proj₁ (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ◃ proj₁ Z) (proj₂ (proj₂ (proj₁ o) c′))
+>       (λ p → mono (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (proj₂ (emb (h c′) (proj₂ o c′) p (y , e))))
+>       (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y))))
+410c480
+<     mono (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) j (v ∙ proj₂ (proj₁ o) c)
+---
+>     mono (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) j (v ∙ proj₁ (proj₂ (proj₁ o) c))
+420c490
+<   mono (nd (sΩ k) h) o B j (inc c′ v) β (◃c x c r) =
+---
+>   mono (nd (sΩ k) h) o B j (inc c′ v) β (◃c x c@(suc _) r) =
+421a492,521
+>   mono (nd (sΩ k) h) o B j (inc c′ v) β (◃c x c@(lim _ _) r) =
+>     +-mono _ (ι-mono j (mono (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) r))
+>   mono (nd (sΩ k) h) o B j (inc c′ v) β (◃c x c@(Ω _ _) r) =
+>     +-mono _ (ι-mono j (mono (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) r))
+>   mono (nd (sΩ k) h) o B j (inc c′ v) β (◃c x c@(up _ _ _ _) r) =
+>     +-mono _ (ι-mono j (mono (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) r))
+>   mono (nd (sΩ k) h) o B j (inc c′ v) β (◃c x c@(ex _ _ _ _ _) r) =
+>     +-mono _ (ι-mono j (mono (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) r))
+>   mono (nd (sΩ k) h) o B j (inc zero v) β (◃c x zero r) =
+>     mono (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j v (ψ (nd (sΩ k) h) o B j (inc zero v) β x) r
+>   mono (nd (sΩ k) h) o B j (inc c′@(suc _) v) β (◃c x zero r) =
+>     mW-ind₂ (λ Z Z′ → j ⊢ proj₁ Z ◃ proj₁ Z′) (proj₂ (proj₂ (proj₁ o) c′))
+>       (λ p → mono (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (emb-mono (h c′) (proj₂ o c′) p r))
+>       (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) r)))
+>   mono (nd (sΩ k) h) o B j (inc c′@(lim _ _) v) β (◃c x zero r) =
+>     mW-ind₂ (λ Z Z′ → j ⊢ proj₁ Z ◃ proj₁ Z′) (proj₂ (proj₂ (proj₁ o) c′))
+>       (λ p → mono (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (emb-mono (h c′) (proj₂ o c′) p r))
+>       (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) r)))
+>   mono (nd (sΩ k) h) o B j (inc c′@(Ω _ _) v) β (◃c x zero r) =
+>     mW-ind₂ (λ Z Z′ → j ⊢ proj₁ Z ◃ proj₁ Z′) (proj₂ (proj₂ (proj₁ o) c′))
+>       (λ p → mono (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (emb-mono (h c′) (proj₂ o c′) p r))
+>       (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) r)))
+>   mono (nd (sΩ k) h) o B j (inc c′@(up _ _ _ _) v) β (◃c x zero r) =
+>     mW-ind₂ (λ Z Z′ → j ⊢ proj₁ Z ◃ proj₁ Z′) (proj₂ (proj₂ (proj₁ o) c′))
+>       (λ p → mono (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (emb-mono (h c′) (proj₂ o c′) p r))
+>       (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) r)))
+>   mono (nd (sΩ k) h) o B j (inc c′@(ex _ _ _ _ _) v) β (◃c x zero r) =
+>     mW-ind₂ (λ Z Z′ → j ⊢ proj₁ Z ◃ proj₁ Z′) (proj₂ (proj₂ (proj₁ o) c′))
+>       (λ p → mono (h c′) (proj₂ o c′) (λ i u → ψ (nd (sΩ k) h) o B i (inc c′ u) (B i (inc c′ u)) x) j v (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) (emb-mono (h c′) (proj₂ o c′) p r))
+>       (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) r)))

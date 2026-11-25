@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19IdealHeight where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼l; l≼)
+open import WVOne using (T₀; read)
+import W4Block as B
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiKVRel as KV
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import B14SharpTwo using (r₂; o₂)
+import B14SharpStation as St
+import B17SharpHeight as H
+import B17SharpSeed as S
+import B18Product as P
+open P using (_·_)
+open import B19IdealProduct
+import B19IdealLinear as K
+open H using (see; Pos)
+
+shift : ∀ {A : Set} (f : A → A) a n → V.iter f (f a) n ≡ V.iter f a (suc n)
+shift f a zero = refl
+shift f a (suc n) = cong f (shift f a n)
+
+module Iteration (f : Pos → Pos) (e : H.Grows f) (δ b : T₀)
+  (action : ∀ a → see (f a) ≈ᵛ (see a · power δ b)) where
+
+  iter : ∀ a n → see (V.iter f a n) ≈ᵛ (see a · power δ (b · L.natᶜ n))
+  iter a zero = flip (one (see a))
+  iter a (suc n) = action (V.iter f a n) ∙ mul (iter a n) (id (power δ b))
+    ∙ assoc (see a) (power δ (b · L.natᶜ n)) (power δ b)
+    ∙ mul (id (see a)) (flip (power-sum δ (b · L.natᶜ n) b))
+
+  pos : ∀ a n → see (V.iter f (f a) n) ≈ᵛ (see a · power δ (b · L.natᶜ (suc n)))
+  pos a n rewrite shift f a n = iter a (suc n)
+
+  envelope : ∀ a → see (H.rep f e a) ≈ᵛ (see a · power δ (b · L.ωᶜ))
+  envelope a = l≼ (λ n → ≼l (suc n) (proj₁ (pos a n))) , l≼ λ where
+    zero → ≼l 0 (≼-trans (proj₁ (one (see a))) (KV.◃→≼ (e a)))
+    (suc n) → ≼l n (proj₂ (pos a n))
+
+module Exact (lem : LEM) where
+  open S.Seed lem using (act; gain)
+  open H.Compare lem using (H)
+  open I.Sharp lem using (B♯)
+  δ = St.Station.whole lem
+
+  result : ∀ z a → see (H z a) ≈ᵛ (see a · power δ (power L.ωᶜ (read z)))
+  result B.zero a = K.Check.linear lem r₂ o₂ B♯ a (proj₁ (V.Ωt r₂))
+    ∙ mul (id (see a)) (flip (left-one δ))
+  result (B.suc z) a = Iteration.envelope (H z) (H.rises z act gain) δ (power L.ωᶜ (read z)) (result z) a
+  result (B.lim g d) a = lim (λ n → result (g n) a)

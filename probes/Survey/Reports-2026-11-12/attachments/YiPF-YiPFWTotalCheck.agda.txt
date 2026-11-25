@@ -1,0 +1,74 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiPFWTotalCheck where
+open import Data.Nat using (zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Lean.YiRWBlock hiding (D; B)
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base)
+open import OCF.Lean.YiTBRow using (rb-no)
+open import OCF.Lean.YiPFReach using (W; OKᵀ)
+import OCF.Lean.YiPFReach as W
+
+S : L → L
+S ℓ = nd sS (λ _ → ℓ)
+
+module Test (ℓ : L) (o : Ok ℓ) (x : Tr ℓ) where
+  a : L
+  a = S ℓ
+
+  H : L
+  H = S a
+
+  oa : Ok a
+  oa = tt , λ _ → o
+
+  oh : Ok H
+  oh = tt , λ _ → oa
+
+  e : ℓ ⊢ zero ◃ suc x
+  e = z◃ x ◃s
+
+  b : Tr⁺ a
+  b = up (proj₁ (Ωt a)) tt (suc x) e , ◃t (proj₂ (Ωt a)) (◃u (proj₁ (Ωt a)) tt (suc x) e)
+
+  Ba : Base a
+  Ba .a self = b
+  Ba j (inc c u) = Ωt j
+  Ba j (inu us) = Ωt j
+
+  Ba-ok : OKᵀ Ba
+  Ba-ok .a self = inj₂ (◃u (proj₁ (Ωt a)) tt (suc x) e)
+  Ba-ok j (inc c u) = inj₁ refl
+  Ba-ok j (inu us) = inj₁ refl
+
+  B : Base H
+  B .H self = Ωt H
+  B j (inc c u) = Ba j u
+  B j (inu us) = Ωt j
+
+  B-ok : OKᵀ B
+  B-ok .H self = inj₁ refl
+  B-ok j (inc c u) = Ba-ok j u
+  B-ok j (inu us) = inj₁ refl
+
+  p : Pos H
+  p = inj₂ (tt , inj₁ tt)
+
+  g : Br H p → Tr H
+  g c = up zero tt (suc c) (z◃ c ◃s)
+
+  first-output : W a (proj₁ (next⁺ b))
+  first-output = W.output H oh (rb-no H) B B-ok p g (W.root H) 0
+
+  b-in : W a (proj₁ b)
+  b-in = W.below first-output (◃l 0)
+
+  result : W ℓ x
+  result = W.suc-inv (W.child b-in)
+
+all-ok : ∀ ℓ → Ok ℓ → ∀ (x : Tr ℓ) → W ℓ x
+all-ok ℓ o x = Test.result ℓ o x

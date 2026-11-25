@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module W4Local where
+open import Data.Empty using (⊥)
+open import Data.Unit using (tt)
+open import Data.Maybe using (nothing)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Path
+open import W4Ops
+open import W4Fold
+import W4Val as V
+open import W4Check using (lvl1; q; o₁; n1; n2; IsJust; τ)
+module _ {s h} (o : Ok (nd s h)) (B : Base (nd s h)) (β : Tr⁺ (nd s h)) where
+  out : Tr (nd s h) → V.V (nd s h)
+  out x = V.val (nd s h) (proj₁ (ψ (nd s h) o B (nd s h) self β x))
+  self-node-mono : ∀ p p′ g g′ → V.val (nd s h) (Ω p g) V.≼ V.val (nd s h) (Ω p′ g′)
+                  → out (Ω p g) V.≼ out (Ω p′ g′)
+  self-node-mono p p′ g g′ d = V.Ev-monoˣ (V._⊹ v) (V.⊹r-mono v) d v
+    where v = V.val (nd s h) (proj₁ β)
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+bare : ∀ (c e : Tr zero) (p : Pos (h₁ c)) {j} (v : j ≤ h₁ e)
+        → kpT (down stop c) o₁ p (inj₂ (inc e v)) ≡ nothing
+bare c e p v = refl
+
+-- 已经给出同一个孩子，外来目标仍不能满足“对角都保留”。
+off : IsJust (kpT (down stop n2) o₁ (inj₂ (tt , inj₂ q)) (inj₂ (inc n2 τ))) → ⊥
+off ()
+
+shift : Tr zero → Tr zero → Tr zero
+shift r zero = zero
+shift r (suc c) = suc (r + c)
+shift r (lim f a) = r + lim f a
+
+add-dom : (r c : Tr zero) → V.val zero c V.≼ V.val zero (r + c)
+add-dom r zero = V.z≼
+add-dom r (suc c) = V.s≼s (add-dom r c)
+add-dom r (lim f a) = V.l≼ (λ n → V.≼l n (add-dom r (f n)))
+
+shift-dom : (r c : Tr zero) → V.val zero c V.≼ V.val zero (shift r c)
+shift-dom r zero = V.z≼
+shift-dom r (suc c) = V.s≼s (add-dom r c)
+shift-dom r (lim f a) = add-dom r (lim f a)
+
+br : Tr zero → Tr lvl1
+br c = proj₁ (upz {s = sS} {h = λ _ → zero} tt (suc c , z◃ c ◃s))
+
+ok : Ok lvl1
+ok = proj₂ o₁ n1
+
+self-canonical : (B : Base lvl1) (β : Tr⁺ lvl1) (r : Tr zero)
+  → out ok B β (proj₁ (Ωt lvl1)) V.≈ out ok B β (Ω q (λ c → br (shift r c)))
+self-canonical B β r =
+  self-node-mono ok B β q q br (λ c → br (shift r c))
+    (V.Ω≼ (λ c → V.≼Ω c (V.⊹-mono V.zero (V.emb-mono lvl1 tt (V.s≼s (shift-dom r c)))))) ,
+  self-node-mono ok B β q q (λ c → br (shift r c)) br
+    (V.Ω≼ (λ c → V.≼Ω (shift r c) (V.≼-refl _)))
+
+open W4Check using (lvl2; b⁺)
+q₂ : Pos lvl2
+q₂ = inj₂ (tt , inj₂ q)
+
+G₂ : Tr zero → Tr lvl2
+G₂ c = proj₁ (Ωt lvl2 ⊞ ψ₀ (h₁ c) (proj₂ o₁ c) (proj₁ (Ωt (h₁ c))))
+
+d-form : proj₁ (ψ (tw 1) o₁ (B₀ (tw 1)) lvl2 (inc (suc n2) (inc tt self)) (Ωt lvl2) (proj₁ b⁺)) ≡ Ω q₂ G₂
+d-form = refl
+
+D-tail : Set
+D-tail = V.val lvl2 (Ω q₂ G₂) V.≼ V.val lvl2 (Ω q₂ (λ c → G₂ (shift n2 c)))
+
+d-back : V.val lvl2 (Ω q₂ (λ c → G₂ (shift n2 c))) V.≼ V.val lvl2 (Ω q₂ G₂)
+d-back = V.Ω≼ (λ c → V.≼Ω (shift n2 c) (V.≼-refl _))
+
+d-first : V.val lvl2 (G₂ zero) V.≼ V.val lvl2 (Ω q₂ (λ c → G₂ (shift n2 c)))
+d-first = V.≼Ω zero (V.≼-refl _)

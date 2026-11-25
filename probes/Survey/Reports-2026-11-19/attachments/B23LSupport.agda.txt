@@ -1,0 +1,40 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 有限组严格在 K 内的询问可以在同一个实际运行的所有零槽相遇。
+module B23LSupport where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _⊔_; _≤′_; ≤′-refl; ≤′-step)
+open import Data.Nat.Properties using (≤⇒≤′; m≤m⊔n; m≤n⊔m)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.List.Base using (List; []; _∷_)
+import Data.List.Relation.Unary.All as A
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≼l)
+import B12EboRows as End
+import B20StandardInside as S
+import B21StandardShape as Shape
+import B22TowerCut as K
+import B23LRoom as Place
+
+mono : ∀ {m n} → m ≤′ n → S.std m ≼ S.std n
+mono ≤′-refl = ≼-refl _
+mono (≤′-step {n} d) = ≼-trans (mono d) (≼-trans (≼-suc (≼-refl _)) (Shape.rise n))
+
+Below = λ (x : T₀) → L.suc x ≼ K.cut
+bound : ∀ {ys : List T₀} → A.All Below ys → Σ ℕ (λ m → A.All (λ y → y ≼ S.std m) ys)
+bound A.[] = 0 , A.[]
+bound ((≼l i e) A.∷ ds) with bound ds
+... | j , rest = (i ⊔ j) , (≼-trans (≼-suc (≼-refl _)) (≼-trans e (mono (≤⇒≤′ (m≤m⊔n i j)))))
+                     A.∷ A.map (λ d → ≼-trans d (mono (≤⇒≤′ (m≤n⊔m i j)))) rest
+
+module Together {ys : List T₀} (ds : A.All Below ys) (k : ℕ) where
+  j = proj₁ (bound ds)
+  q = S.std j
+  members : A.All (_≼ q) ys
+  members = proj₂ (bound ds)
+  margin : L.suc q ≼ K.cut
+  margin = ≼l (suc j) (Shape.rise j)
+  physical : Σ ℕ (λ h → Place.Site k q (End.child h))
+  physical = Place.From.actual k margin
+  standard : Σ ℕ (λ h → Place.Site k q (S.std h))
+  standard = Place.From.standard k margin

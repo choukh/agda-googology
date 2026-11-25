@@ -1,0 +1,70 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- (A) 摊平式 = YiUp 现有折叠. 有限测试: omD 配置在 YiUpFold 上重现.
+module OmA where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiFreshBlock
+open import OCF.Lean.YiFreshFold using (Ωt)
+open import OCF.Lean.YiPhiBlock
+open import OCF.Lean.YiUpBlock
+open import OCF.Lean.YiUpFold
+
+IsΩ IsLim IsUp : ∀ {P B C D} → T P B C D → Set
+IsΩ (Ω _ _) = ⊤
+IsΩ _       = ⊥
+IsLim (lim _) = ⊤
+IsLim _       = ⊥
+IsUp (up _ _ _) = ⊤
+IsUp _          = ⊥
+
+one two : L
+one = suc zero
+two = suc one
+
+c₂ : Tr zero
+c₂ = suc (suc zero)
+
+ε₁ : Ev (tw 1)
+ε₁ = Ev-tw 1
+
+-- 第 0 层共尾结点, 住在层号 two 里
+nodeC : (Tr zero → Tr two) → Tr two
+nodeC G = Ω (inj₂ (inj₁ tt)) G
+
+-- 嵌入时 (在孩子层 two 里折到 one): 保留
+omC : (B : Base two) (β : Tr one) (G : Tr zero → Tr two) → IsΩ (ψs two tt B one (ins self) β (nodeC G))
+omC B β G = tt
+
+-- 自身行把它摊平进 tw 1
+self-W : (B : Base (tw 1)) (β x : Tr (tw 1)) (G : Tr zero → Tr two) →
+  ψs (tw 1) ε₁ B (tw 1) self β (up x c₂ (nodeC G))
+  ≡ Ω (inj₂ (c₂ , inj₂ (inj₂ (inj₁ tt))))
+      (λ z → Up two (down stop c₂) (ψs (tw 1) ε₁ B (tw 1) self β x) (G z))
+self-W B β x G = refl
+
+-- 摊平后以同支目标折叠: 走默认
+omD : (B : Base (tw 1)) (β : Tr one) (X : Tr (tw 1)) (G : Tr zero → Tr two) →
+  IsLim (ψs (tw 1) ε₁ B one (inb c₂ (ins self)) β (Upc (tw 1) c₂ X (nodeC G)))
+omD B β X G = tt
+
+-- 完整配置: 外层结点 P 住在 two 的 one 槽位, 分支里是 nodeC. 自身行摊平后, P 的链步 (目标 inb c₂ (ins self)) 把 nodeC 折掉.
+P : (Tr one → Tr zero → Tr two) → Tr two
+P G = Ω (inj₁ tt) (λ z → nodeC (G z))
+
+P-flat : (B : Base (tw 1)) (β x : Tr (tw 1)) (G : Tr one → Tr zero → Tr two) →
+  ψs (tw 1) ε₁ B (tw 1) self β (up x c₂ (P G))
+  ≡ Ω (inj₂ (c₂ , inj₂ (inj₁ tt)))
+      (λ z → Upc (tw 1) c₂ (ψs (tw 1) ε₁ B (tw 1) self β x) (nodeC (G z)))
+P-flat B β x G = refl
+
+P-at : at (tw 1) (inj₂ (c₂ , inj₂ (inj₁ tt))) ≡ one
+P-at = refl
+
+P-path : posW (tw 1) (inj₂ (c₂ , inj₂ (inj₁ tt))) ≡ inb c₂ (ins self)
+P-path = refl

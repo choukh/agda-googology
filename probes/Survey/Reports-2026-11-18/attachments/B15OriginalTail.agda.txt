@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 在原 EBO-tree′ 与同一个 W4 终点之间，可以略去任意有限个塔行。保留每个正塔行真正的 γ 回灌指标。
+module B15OriginalTail where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (_×_; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; trans)
+open import OCF.Align.EboLeanDef as E using (T; cof; cofA; cΩ; cω; ψ; Ωt; ΩTower; EBOψ; fsT; fsT0; fsn; γT)
+open import OCF.Align.JiaChainTower using (tower-cof)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼; hω-inv; fs≼)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read)
+import B12XRef as R
+import B14Goal as B
+
+powers : ℕ → T → T
+powers zero z = z
+powers (suc k) z = Ωt (powers k z)
+
+expand : ∀ k z → fsT (ΩTower (suc k)) z ≡ powers k z
+expand zero z = refl
+expand (suc k) z rewrite tower-cof k = cong Ωt (expand k z)
+
+seed : ∀ k → powers k (Ωt []) ≡ ΩTower k
+seed zero = refl
+seed (suc k) = cong Ωt (seed k)
+
+chain = λ k → γT (ΩTower (suc k)) []
+collapse = λ k x → ψ [] (powers k x) ∷ []
+child : ∀ k n → fsn (EBOψ (suc k)) n ≡ collapse k (chain k n)
+child k n rewrite tower-cof k = cong (λ z → ψ [] z ∷ []) (expand k (chain k n))
+advance : ∀ k n → chain k (suc n) ≡ collapse k (chain k n)
+advance k n = cong (λ z → ψ [] z ∷ []) (expand k (chain k n))
+
+cof-row : ∀ k → cof (EBOψ (suc k)) ≡ cω
+cof-row k = cong (cofA []) (tower-cof k)
+zero-child : ∀ k → fsn (EBOψ (suc k)) 0 ≡ EBOψ k
+zero-child k = trans (child k 0) (cong (λ z → ψ [] z ∷ []) (seed k))
+
+rise : ∀ k → R.row k ≼ R.row (suc k)
+rise k = ≼-trans (tree-≼ (sym (zero-child k)) (R.H k) (hω-inv (R.H (suc k)) (cof-row k) 0))
+  (fs≼ (R.H (suc k)) (cof-row k) 0)
+
+shift : ℕ → ℕ → ℕ
+shift zero n = n
+shift (suc K) n = shift K (suc n)
+cofinal : ∀ K → ((∀ n → R.row (shift K n) ≼ read EBOᶜ) → B.Goal) ×
+  (B.Goal → ∀ n → R.row (shift K n) ≼ read EBOᶜ)
+cofinal K = (λ g → R.assemble (λ n → ≼-trans (walk K n) (g n))) ,
+  (λ g n → ≼-trans (B.row-in (shift K n)) g)
+  where
+  walk : ∀ i n → R.row n ≼ R.row (shift i n)
+  walk zero n = OCF.Align.Value.≼-refl _
+  walk (suc i) n = ≼-trans (rise n) (walk i (suc n))

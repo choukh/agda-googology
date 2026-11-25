@@ -1,0 +1,33 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19IdealThreshold where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥-elim)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; s≼s)
+import W4Block as B
+import W4Ops as W
+open import WVOne using (read; h₁; T₀)
+import B12Terminal as T
+import B14Tower as Tw
+import B14Btbo as D
+import B14PathHeight as PH
+import B16ReadIndex as Ret
+import B16GammaRows as G
+import B17SharpSelected as Q
+import B17ValueDich as Dich
+import B18RefHeight as RH
+import B8FreezeMain as Ir
+import B19IdealSelected as S
+import B19IdealTrack as K
+import B19IdealDich as C
+
+module At (lem : LEM) where
+  open K.At lem using (candidate; height; formula; coeff)
+  module Result = C.With lem (K.i 3) candidate S.β S.δ₀ K.initial coeff height formula
+  open Result public using (strict; necessary; sufficient)
+

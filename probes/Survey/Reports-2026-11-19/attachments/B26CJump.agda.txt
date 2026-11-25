@@ -1,0 +1,111 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同一批 ε₀ 代码换 Ω 解释后，在第一个极限已不连续；全体也越过对 z 的单次原塌缩。
+module B26CJump where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥)
+open import Data.Unit.Base using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; trans; subst)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+open import OCF.Align.EboLeanTree using (hc; nf-ΩT; nf-tower; pos-tower)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import OCF.Lean.YiEXRow using (labR)
+open import OCF.Align.Stage2 using (Lab-uniq)
+open import OCF.Align.Label using (BTBO-label)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; s≼s; l≼; ≅→≼)
+import B12XRef as R
+import B14Goal as Goal
+import B17Cofinal as C
+import B25DTrack as Tr
+import B25DLimit as D
+import B25DUnit as U
+import B25Least as Least
+import B16IndexBase as I
+open import B26CForest
+open import B26CDecode using (read-bound)
+open import B26CLift
+
+rest-nat : ∀ n → restore (natT n) ≡ natT n
+rest-nat zero = refl
+rest-nat (suc n) = cong (𝟏 ∷_) (rest-nat n)
+
+pure-nat : ∀ n → Pure (natT n)
+pure-nat zero = empty
+pure-nat (suc n) = node empty (pure-nat n)
+
+nat-NF : ∀ n → NF (natT n)
+nat-NF zero = n[]
+nat-NF (suc zero) = nf-Ω n[]
+nat-NF (suc (suc n)) = n∷ (nψ n[] n[] GB[]) (inj₂ refl) (nat-NF (suc n))
+
+output-nat : ∀ n → NF (Φ (natT n))
+output-nat n = nf-ψ n[] (subst NF (sym (rest-nat n)) (nat-NF n)) (fit (pure-restore _))
+
+finite-code : ∀ n → HC (Φ (natT n))
+finite-code n = hc (output-nat n) (c∷ c[])
+
+ωcode = EBOψ 0
+bridge = principal ωcode
+
+bridge-normal : NF bridge
+bridge-normal = nf-ψ n[] (nf-tower 0) (guard (pure-tower 1) (nf-tower 0))
+
+bridge-h : HC bridge
+bridge-h = hc bridge-normal (c∷ c[])
+
+nat-below : ∀ n → natT n <ᵀ ωcode
+nat-below zero = []<
+nat-below (suc n) = hd< (ar< []<)
+
+below-bridge : ∀ n → L.suc (Rt (finite-code n)) ≼ Rt bridge-h
+below-bridge n = mono<ⁿ (output-nat n) bridge-normal (c∷ c[]) (finite-code n) bridge-h
+  (hd< (ar< (subst (_<ᵀ ωcode) (sym (rest-nat n)) (nat-below n))))
+
+finite-limit : T₀
+finite-limit = L.lim (λ n → Rt (finite-code n))
+
+gap : L.suc finite-limit ≼ R.row 1
+gap = ≼-trans (s≼s (l≼ (λ n → ≼-trans (≼-suc (≼-refl _)) (below-bridge n))))
+  (mono<ⁿ bridge-normal (nf-tower 1) (c∷ c[]) bridge-h (R.H 1) (hd< (ar< (hd< (lv< []<)))))
+
+first-limit : (h : HC (Φ ωcode)) → Rt h ≈ᵛ Tr.unit-output
+first-limit h = ≼-trans (tree-≼ refl h (R.H 1)) (≼-trans R.epsilon (proj₂ D.out-value)) ,
+  ≼-trans read-bound (tree-≼ refl (R.H 1) h)
+
+discontinuous : ∀ (h : HC (Φ ωcode)) → Rt h ≼ finite-limit → ⊥
+discontinuous h d = s≼-irrefl finite-limit (≼-trans gap (≼-trans (tree-≼ refl (R.H 1) h) d))
+
+single-collapse = L.ψ⁰ (L.Ω (I.κ U.z))
+
+-- 原塌缩一次用于真实 z 本身，也无法实现换 Ω 后所有输入的统一界。
+no-single : Bound single-collapse → ⊥
+no-single f = s≼-irrefl (N.γ 2) (≼-trans (Least.interior 2)
+  (≼-trans (≅→≼ (Lab-uniq BTBO-label (labR (R.H 2)))) (≼-trans (Goal.row-in 2) (≼-trans (upper f) (proj₁ U.exact)))))
+
+Visible : T → T → Set
+Visible a b = ∀ {q} → InG [] q a → InG [] q b
+
+zero-at : ∀ n → InG [] [] (ΩTower n)
+zero-at zero = gp (gh (inj₂ refl))
+zero-at (suc n) = gp (gh (inj₁ (pos-tower n)))
+
+same-visible : ∀ n m → Visible (ΩTower n) (ΩTower m)
+same-visible n m i = subst (λ q → InG [] q (ΩTower m)) (sym (gzero (pure-tower n) i)) (zero-at m)
+
+no-named-common : (F : T → T₀) → (∀ a b → Visible a b → Visible b a → F a ≼ F b)
+  → (∀ n → R.row n ≼ F (ΩTower n))
+  → ∀ {t} (nt : NF t) (ct : Ctbl t) (h : HC t) → F (ΩTower 0) ≼ Rt h → ⊥
+no-named-common F ext covers nt ct h named = s≼-irrefl (Rt h)
+  (≼-trans (mono<ⁿ nt (nf-tower n) (c∷ c[]) h (R.H n) (C.below ct))
+    (≼-trans (covers n) (≼-trans (ext _ _ (same-visible n 0) (same-visible 0 n)) named)))
+  where n = C.cap ct
+

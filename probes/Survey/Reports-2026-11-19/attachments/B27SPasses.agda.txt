@@ -1,0 +1,50 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 两次相邻真实操作：第 t 轮整条正层反馈的任意有限前缀写入 t+1 轮同一槽，并决定下一轮真实子运行的层号。
+module B27SPasses where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B14PathHeight as Height
+import B15Spine as Spine
+import B19OldSlots as Frame
+import B27SRelay as Relay
+open T.Run
+
+import B27STrace as Traces
+
+module At (m : ℕ) (r : T.Run (U.sc (tw (suc (suc m)))))
+          (eq : proj₂ (ok r) tt ≡ Ok-tw (suc (suc m))) (cr : A.Covered r) where
+  k = tw (suc m)
+  top = tw (suc (suc m))
+  h = Spine.branch k
+  module J = Frame.Positive (sΩ k) h r (λ _ → z≤ top) (λ _ → Height.standard _) cr
+  module M = J.F.K
+  snap = J.F.snap
+  module Pass (t : ℕ) where
+    a = snap t
+    b = snap (suc t)
+
+    link : A._⊴_ (proj₁ (Traces.Row.whole m a)) (proj₁ (Traces.Row.current m b))
+    link = Traces.fold-in top (ok M.r₀) (M.S t) k (ink self) (M.S t k (ink self))
+      {proj₁ (Ωt top)} {M.c} (cr top (inc tt self))
+
+    module Pair = Traces.Pair m a b eq (M.cover (suc t)) link
+
+    second : read (T.value b) ≼ read (T.value r)
+    second = Frame.bound {f = J.root} {g = J.run-at (suc t)} (proj₂ (J.child (suc t)))
+
+    paid : ∀ j → read (T.value (Pair.whole-site j)) ≼ read (T.value r)
+    paid j = ≼-trans {a = read (T.value (Pair.whole-site j))} {b = read (T.value b)} {c = read (T.value r)}
+      (Pair.paid j) second

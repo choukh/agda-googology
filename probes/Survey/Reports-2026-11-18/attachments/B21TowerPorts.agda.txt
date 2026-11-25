@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 塔的主 Ω 结点在两种零路径上逐枝相同。指定孩子的零路径会将每个真实下标送到独立标准折叠。
+module B21TowerPorts where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Path
+open import W4Ops
+open import W4Fold
+open import WVOne using (read; T₀)
+import OCF.Align.Level as O
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≅→≼)
+import B14PathHeight as P
+import B15Spine as S
+import B19PathFold as F
+import B19PathShape as H
+import B19PathRel as R
+import B19RowSecondParent as A
+import B12Strict as D
+import B12Terminal as T
+import B18TowerEmb as E
+
+all-lift : ∀ k l {w : zero ≤ k} → P.All w → P.All (w ∙ lift k l)
+all-lift k zero a = a
+all-lift k (nd s h) a = P.each (λ c → all-lift k (h c) a)
+
+module At (n : ℕ) (B : Base (tw (suc n))) (v : Tr⁺ zero) where
+  k = tw n
+  top = tw (suc n)
+  module C = S.Cardinal k (S.branch k)
+  o = Ok-tw (suc n)
+  r = T.initial top o
+  pos = C.p r
+  body = C.b r
+  high = B k (ink self)
+  action = λ z → proj₁ (ψ top o B k (ink self) high (body z))
+  index = iter action zero
+  result = λ w → proj₁ (ψ top o B zero w v (proj₁ (Ωt top)))
+  branch = λ w z → ψ top o B zero w v (body z)
+  exact : ∀ {w : zero ≤ k} → P.All w → H.Shape (result (z≤ top)) (result (ink w))
+  exact {w} aw = R.Test.node H.law (kp top o pos (z≤ top)) (kp top o pos (ink w))
+    (branch (z≤ top)) (branch (ink w)) action λ z → F.Check.fold H.law
+      (S.branch k z) (proj₂ o z) (λ j u → B j (inc z u)) (P.standard _) (all-lift k (↑ k z) aw)
+      (proj₁ (Ωt (S.branch k z))) v v (H.ident (proj₁ v))
+  independent = λ z → ψ₀ (S.branch k z) (proj₂ o z) (proj₁ (Ωt (S.branch k z)))
+  copies = λ j → proj₁ (v ⊞ independent (index j))
+  directed : ∀ c (w : zero ≤ S.branch k c) j →
+    read (proj₁ (independent (index j))) ≼ read (result (inc c w))
+  directed c w j = ≼-trans (A.append v (independent (index j))) (WKGen.node-ge (kp top o pos (inc c w))
+    (branch (inc c w)) action j)
+    where import WKGen
+  first : ∀ c (w : zero ≤ S.branch k c) → read (proj₁ (E.standard n)) ≼ read (result (inc c w))
+  first c w = directed c w 0

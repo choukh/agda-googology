@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiE3Base where
+open import Data.Nat using (ℕ)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiRWFold as F
+import OCF.Lean.YiTBRow as TB
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiFRStep as FR
+import OCF.Lean.YiGIInst as GI
+import OCF.Lean.YiLBActual as LA
+
+-- perf: C-9，索引、证据与底作为一个变量环境传递。
+Ctx : Set
+Ctx = Σ B.L λ h → P.Ok h × TB.Rb h × F.Base h
+level : Ctx → B.L
+level = proj₁
+okay : (d : Ctx) → P.Ok (level d)
+okay d = proj₁ (proj₂ d)
+table : (d : Ctx) → TB.Rb (level d)
+table d = proj₁ (proj₂ (proj₂ d))
+base : (d : Ctx) → F.Base (level d)
+base d = proj₂ (proj₂ (proj₂ d))
+collapse : Ctx → O.Tr⁺ B.zero → O.Tr⁺ B.zero
+collapse (h , o , r , bs) β = TB.ψ h o r bs B.zero (P.z≤ h) β (proj₁ (O.Ωt h))
+make : B.Tr (B.tw 2) → Ctx
+make c = FR.Step.child 2 c , proj₂ (P.Ok-tw 3) c , MT.rbᶻ (FR.Step.child 2 c) , (λ i u → GI.baseᴱ 3 i (P.inc c u))
+-- perf: C-9，出口接线先在变量 q 上检查，调用处不展开实际链点。
+raw-wire : ∀ q → collapse (make (FR.Step.chain 2 q)) (GI.betaᴱ 3)
+  ≡ FR.Step.out 2 (FR.Step.chain 2 q)
+raw-wire q = sym (LA.out-child q)
+-- perf: C-9，迭代等式在变量函数上检查，不计算具体回灌。
+iter-two : {A : Set} (f : A → A) (z : A) → O.iter f z 2 ≡ f (f z)
+iter-two f z = refl

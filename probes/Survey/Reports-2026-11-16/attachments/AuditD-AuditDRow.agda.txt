@@ -1,0 +1,48 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- D 路判定件 2：换上有限列的表 rbF 后，YiVALeaf.leaf-branch / YiRQDom.fall 那一格不再走退路，
+-- 而是按现行 YiTBRow.ψ 的比较臂进孩子层朝原目标折叠。折叠的各行一字未改，只换表这个参数。
+module AuditDRow where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base)
+open import OCF.Lean.YiTBRow using (Rb; rb-no; nat; h₁; ψ; ψ₀ʳ)
+open import OCF.Lean.YiMTTab using (rbᶻ)
+open import AuditDFin
+
+fromHi : ∀ {A B : Set} (m : Maybe (A ⊎ B)) → IsHi m → A
+fromHi (just (inj₁ a)) _ = a
+
+one two : Tr zero
+one = nat 1
+two = nat 2
+
+c* : Tr zero
+c* = suc ωᶜ
+
+u* : h₁ two ≤ h₁ c*
+u* = fromHi (tbF c* two) tt
+
+-- 目标 h₁ one，经孩子 two 到达；材料在孩子 ω+1 上。
+honest : (B : Base (tw 1)) (β : Tr⁺ (h₁ one)) (x : Tr (tw 1)) (y : Tr (h₁ c*)) (e : h₁ c* ⊢ zero ◃ y)
+  → ψ (tw 1) (Ok-tw 1) rbF B (h₁ one) (inc two (inc tt self)) β (up x c* y e)
+  ≡ ψ (h₁ c*) (proj₂ (Ok-tw 1) c*) (rb-no (h₁ c*))
+      (λ i u′ → ψ (tw 1) (Ok-tw 1) rbF B i (inc c* u′) (B i (inc c* u′)) x)
+      (h₁ one) (inc tt self ∙ u*)
+      (ψ (tw 1) (Ok-tw 1) rbF B (h₁ one) (inc two (inc tt self)) β x) y
+honest B β x y e = refl
+
+-- 对照：现行最小表在同一格走退路（折到第 0 层再加）。
+fallᶻ : (B : Base (tw 1)) (β : Tr⁺ (h₁ one)) (x : Tr (tw 1)) (y : Tr (h₁ c*)) (e : h₁ c* ⊢ zero ◃ y)
+  → ψ (tw 1) (Ok-tw 1) (rbᶻ (tw 1)) B (h₁ one) (inc two (inc tt self)) β (up x c* y e)
+  ≡ ψ (tw 1) (Ok-tw 1) (rbᶻ (tw 1)) B (h₁ one) (inc two (inc tt self)) β x
+      ⊞ ψ₀ʳ (h₁ c*) (proj₂ (Ok-tw 1) c*) (rbᶻ (h₁ c*)) y
+fallᶻ B β x y e = refl

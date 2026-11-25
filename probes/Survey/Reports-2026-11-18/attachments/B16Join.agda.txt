@@ -1,0 +1,64 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 在同一实际 Λ 上，五位整支严格超过上批的 src 塔界。以该整支为初值，真实下标逐次驱动下一次指数作用。
+module B16Join where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import W4Block
+open import W4Path
+open import W4Fold using (EBOᶜ; ψ)
+open import W4Ops using (Ωt)
+open import WVOne using (read; T₀; h₁)
+open import WKShape using (Ψ₃; lvl3)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; ≼-refl; ≼-trans; s≼s)
+import B8FreezeMain as R
+open import Data.Empty using (⊥)
+import B12Terminal as T
+import B12ActualSlots as A
+import B12Strict as S
+import B14PathHeight as P
+import B14Tower as W
+import B14Btbo as B
+import B14RefGain as G
+open import Data.List.Base using ([]; _∷_)
+import B16Feedback as Feed
+import B16RefFive as F
+import B16RefRaise as Q
+import B16OrbitExit as Ex
+import B16RefLimit as Cap
+import WKTower as WT
+
+bound : (r : T.Run lvl3) → A.Covered r → F.five ≼ read (T.value r)
+bound r hr = ≼-trans Q.to-orbit (Ex.At.level r hr)
+standard : F.five ≼ read Ψ₃
+standard = ≼-trans Q.to-orbit Ex.standard
+terminal : F.five ≼ read EBOᶜ
+terminal = ≼-trans Q.to-orbit Ex.terminal
+
+strict : L.suc Cap.source ≼ F.five
+strict = ≼-trans Cap.strict (G.path-bound (1 ∷ []) F.five)
+no-reverse : F.five ≼ Cap.source → ⊥
+no-reverse e = R.irr Cap.source (≼-trans strict e)
+
+module Cumulative (g : ℕ → W4Block.L) (r : T.Run (nd sL g)) (ws : ∀ n → zero ≤ g n) where
+  module M = W.Lim g r ws
+  raw : ℕ → Tr zero
+  raw n = proj₁ (ψ (g n) (T.Run.ok (M.sub n)) (T.Run.bs (M.sub n)) zero (ws n)
+    (T.Run.β (M.sub n)) (proj₁ (Ωt (g n))))
+  top = proj₁ (ψ (nd sL g) (T.Run.ok r) (T.Run.bs r) zero (inu ws) (T.Run.β r) (proj₁ (Ωt (nd sL g))))
+  part : ∀ n → L.suc (read (raw n)) ≼ read top
+  part zero = S.strict {x = raw 0} {y = top} (◃l 0)
+  part (suc n) = S.strict {x = raw (suc n)} {y = top} (◃l (suc n))
+
+module Inner = Cumulative WT.gL (W.Outer.sub 0) (W.parts (W.parts W.pA 0))
+seed : L.suc F.five ≼ read (W.Actual.idx 2)
+seed = ≼-trans (s≼s (bound (W.Inner.sub 2) (W.Inner.covered (W.Outer.covered W.hA 0) 2)))
+  (≼-trans (Inner.part 2) (W.Outer.part 0))
+
+module Track = Feed.Trace T.tower1 B.hR (λ z → P.through (↑ zero z))
+module Run = Track.From 1 F.five seed
+dynamic : L.lim (λ n → L.suc (Run.stages n)) ≼ read EBOᶜ
+dynamic = ≼-trans Run.closed (T.lim-child tw T.terminal 1)
+above : L.suc F.five ≼ L.lim (λ n → L.suc (Run.stages n))
+above = ≼l 0 (≼-refl _)

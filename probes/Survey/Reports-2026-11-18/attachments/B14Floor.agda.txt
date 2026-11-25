@@ -1,0 +1,77 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 正有限层的任一统一常数界，对读回不低于它的所有真实零层下标、沿所有逐层通行的路径成立。
+module B14Floor where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import WVOne using (T₀; read; h₁; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; s≼s; z≼; ≼-refl; ≼-trans)
+import B12Terminal as T
+import B12ActualSlots as A
+import B12Strict as S
+import B14PathHeight as P
+import B14Tower as W
+
+num : ℕ → Tr zero
+num zero = zero
+num (suc n) = suc (num n)
+
+-- 到达有限切点时，极限下一支已有更高的整数下界。
+split : (n : ℕ) (z : Tr zero) → L.natᶜ n ≼ read z → (z ≡ num n) ⊎ (L.natᶜ (suc n) ≼ read z)
+split zero zero d = inj₁ refl
+split zero (suc z) d = inj₂ (s≼s z≼)
+split zero (lim f p) d = inj₂ (≼l 1 (≼-trans (s≼s z≼) (S.strict (p 0))))
+split (suc n) zero ()
+split (suc n) (suc z) (s≼s d) with split n z d
+... | inj₁ q = inj₁ (cong suc q)
+... | inj₂ d′ = inj₂ (s≼s d′)
+split (suc n) (lim f p) (≼l i d) = inj₂ (≼l (suc i) (≼-trans (s≼s d) (S.strict (p i))))
+split n (Ω () _)
+split n (up _ () _ _)
+split n (ex _ _ _ _ ())
+
+normal : (n : ℕ) {w : zero ≤ h₁ (num n)} → P.All w → w ≡ z≤ (h₁ (num n))
+normal zero P.base = refl
+normal (suc n) (P.each d) = cong (λ v → inu (λ _ → v)) (normal n (d tt))
+
+BoundAt : (Q : T₀) (z : Tr zero) → Set
+BoundAt Q z = ∀ {w : zero ≤ h₁ z} → P.All w → (r : T.Run (h₁ z)) → A.Covered r → Q ≼ W.valueAt r w
+
+Finite : (n : ℕ) → T₀ → Set
+Finite n Q = (r : T.Run (h₁ (num n))) → A.Covered r → Q ≼ read (T.value r)
+
+module Above (k : ℕ) (Q : T₀) (at-base : Finite (suc k) Q) where
+  exact : BoundAt Q (num (suc k))
+  exact wp r hr = subst (λ w → Q ≼ W.valueAt r w) (sym (normal (suc k) wp)) (at-base r hr)
+
+  -- 子层已传入 Q。后继取常数迭代的第 1 项即可保留它。
+  rise : (z : Tr zero) → L.natᶜ (suc k) ≼ read z → BoundAt Q z → BoundAt Q (suc z)
+  rise zero ()
+  rise (suc z) e g (P.each {ws = ws} d) r hr =
+    ≼-trans (≼l 1 (≼-refl Q))
+      (P.Next.result sS (λ _ → h₁ z) ws (d tt) (λ _ → Q) (λ v hv _ _ → g (d tt) v hv) r hr 𝟏 (T.Run.oneβ r))
+  rise (lim f a) e g (P.each {ws = ws} d) r hr =
+    ≼-trans (≼l 1 (≼-refl Q))
+      (P.Next.result sL (λ n → h₁ (f n)) ws (d tt) (λ _ → Q) (λ v hv _ _ → g (d tt) v hv) r hr 𝟏 (T.Run.oneβ r))
+  rise (Ω () _)
+  rise (up _ () _ _)
+  rise (ex _ _ _ _ ())
+
+  lower : (z : Tr zero) → L.natᶜ (suc k) ≼ read z → BoundAt Q z
+  lower zero ()
+  lower (suc z) (s≼s d) with split k z d
+  ... | inj₁ refl = exact
+  ... | inj₂ q = rise z q (lower z q)
+  lower (lim f a) (≼l n d) (P.each {ws = ws} v) r hr =
+    ≼-trans (lower (f n) d (v n) (M.sub n) (M.covered hr n)) (M.part n)
+    where module M = W.Lim (λ i → h₁ (f i)) r ws
+  lower (Ω () _)
+  lower (up _ () _ _)
+  lower (ex _ _ _ _ ())

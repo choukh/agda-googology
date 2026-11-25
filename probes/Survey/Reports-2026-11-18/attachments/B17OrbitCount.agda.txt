@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 可数树对任意阶的真实 It 作同一种控制，可分别用在带显式种子的操作和在操作之间的自然变换。
+module B17OrbitCount where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import W4Block hiding (D)
+open import W4Ops
+open import W4Fold
+open import YiLAB7Orbit using (lvl2; ok₂)
+open import WVOne using (T₀; read)
+open import Relation.Binary.PropositionalEquality using (_≡_; subst; sym)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; l≼; ≼l; i≼; u≼)
+
+module For (n : ℕ) {X : Cx lvl2} (D : TD X zero) (A : Set) (sup : (ℕ → A) → A)
+           (R : Ca n X → A → Set)
+           (cl : ∀ G G′ → Rn n G G′ → ∀ a → R G a → R G′ a)
+           (gather : ∀ G f → (∀ k → R G (f k)) → R G (sup f))
+           (height : T₀ → (A → A) → A → A)
+           (hz : ∀ F a → height L.zero F a ≡ F a)
+           (hs : ∀ y F a → height (L.suc y) F a ≡ sup (iter (height y F) a))
+           (hl : ∀ g F a → height (L.lim g) F a ≡ sup (λ k → height (g k) F a)) where
+  apply = λ z K G → It n ok₂ D z K G
+  contract : Ca (suc n) X → (A → A) → Set
+  contract K F = ∀ G a → R G a → R (proj₁ K idM G) (F a)
+  module Power (z : Tr zero) (F : A → A) (K : Ca (suc n) X)
+               (p : ∀ G a → R G a → R (apply z K G) (F a))
+               (G : Ca n X) (a : A) (h : R G a) where
+    fn = apply z K
+    model : ∀ k → R (iter fn G k) (iter F a k)
+    model zero = h
+    model (suc k) = p _ _ (model k)
+    part : ∀ k → Rn n (iter fn G k) (apply (suc z) K G)
+    part zero = trC n (Itinf n ok₂ D z K G) (limCUB n _ _ zero)
+    part (suc k) = limCUB n _ _ k
+    closed : R (apply (suc z) K G) (sup (iter F a))
+    closed = gather _ _ (λ k → cl _ _ (part k) _ (model k))
+  eval : ∀ z {y} → y ≼ read z → ∀ K F → contract K F → ∀ G a → R G a → R (apply z K G) (height y F a)
+  eval (Ω () g)
+  eval (up p () b d)
+  eval (ex p b nb z ())
+  eval zero z≼ K F t G a h = subst (R _) (sym (hz F a)) (t G a h)
+  eval (suc z) z≼ K F t G a h = subst (R _) (sym (hz F a)) (cl (proj₁ K idM G) (apply (suc z) K G) (Itmono n ok₂ D K G (z◃ z ◃s)) (F a) (t G a h))
+  eval (lim g d) z≼ K F t G a h = subst (R _) (sym (hz F a)) (cl (proj₁ K idM G) (apply (lim g d) K G) (Itmono n ok₂ D K G (z◃ (g 0) (◃l 0))) (F a) (t G a h))
+  eval (suc z) (s≼s {a = y} u) K F t G a h = subst (R _) (sym (hs y F a)) (Power.closed z (height y F) K (eval z u K F t) G a h)
+  eval (lim g d) (≼l j h) K F t G a p = cl (apply (g j) K G) (apply (lim g d) K G) (Itmono n ok₂ D K G (◃l j)) _ (eval (g j) h K F t G a p)
+  eval zero (l≼ {f = g} d) K F t G a u = subst (R _) (sym (hl g F a)) (gather _ _ (λ k → eval zero (d k) K F t G a u))
+  eval (suc z) (l≼ {f = g} d) K F t G a u = subst (R _) (sym (hl g F a)) (gather _ _ (λ k → eval (suc z) (d k) K F t G a u))
+  eval (lim g d) (l≼ {f = g′} k) K F t G a u = subst (R _) (sym (hl g′ F a)) (gather _ _ (λ j → eval (lim g d) (k j) K F t G a u))
+  eval z (i≼ {p = ()} d) K F sim
+  eval z (u≼ {r = ()} d) K F sim

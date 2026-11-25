@@ -1,0 +1,98 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- V 路判定件 (不读记号, 不改仓库). 三件:
+-- (1) 下标侧槽位配指定孩子路径, 现行 kp 也会给 nothing (槽位层低于目标): 对 E 路分类里 "下标侧槽位配 inc 精确" 的反例.
+-- (2) 裸路径上的保留行在数字孩子上写得出 (只对有限深度的孩子下标给证据, 极限孩子处为空): 对 K 路结论 3 字面说法的反例.
+-- (3) 见 MathVTerm.agda.
+module MathVCheck where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Keep; kp; kp⁼; mapK)
+
+IsJust : ∀ {A : Set} → Maybe A → Set
+IsJust (just _) = ⊤
+IsJust nothing  = ⊥
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+ok₁ : (c : Tr zero) → Ok (h₁ c)
+ok₁ c = Ok⊕ zero (↑ zero c) tt (OkO↑ zero zero tt self c)
+
+n1 n2 : Tr zero
+n1 = suc zero
+n2 = suc n1
+
+lvl1 lvl2 : L
+lvl1 = h₁ n1
+lvl2 = h₁ n2
+
+-- (1) 层号 M: Ω 形状, 下标层是第 1 层 (经 tw 1 的孩子 2 到达), 孩子 c 是 tw 1 ⊕ ↑ c.
+k≤ : lvl1 ≤ tw 1
+k≤ = inc n2 (inc tt self)
+
+M : L
+M = nd (sΩ lvl1) λ c → tw 1 ⊕ ↑ lvl1 c
+
+okM : Ok M
+okM = (ok₁ n1 , λ c → k≤ ∙ lift (tw 1) (↑ lvl1 c)) ,
+      λ c → Ok⊕ (tw 1) (↑ lvl1 c) (Ok-tw 1) (OkO↑ (tw 1) lvl1 (ok₁ n1) k≤ c)
+
+-- 目标第 2 层, 经 M 的孩子 zero (= tw 1) 的孩子 2; 槽位是 M 的下标侧顶槽位 (第 1 层, 低于目标).
+tgt : lvl2 ≤ M
+tgt = inc zero (inc n2 self)
+
+idx-lossy : kp M okM (inj₁ (inj₁ tt)) tgt ≡ nothing
+idx-lossy = refl
+
+-- 同一对层号放进字面公共上界 lvl2 里: 现有 kp⁼ 给 just (与 K 路 cellA 同一事实, 这里只作对照).
+idx-framed : IsJust (kp⁼ lvl2 (ok₁ n2) (psh {k = lvl1} (inc tt self) (inj₁ tt)) self)
+idx-framed = tt
+
+-- (2) 孩子下标上的部分证据函数: 只在有限后继塔上给 just, 极限处为空.
+eqF : (c c′ : Tr zero) → Maybe (c ≡ c′)
+eqF zero    zero     = just refl
+eqF (suc c) (suc c′) = sc (eqF c c′)
+  where
+  sc : Maybe (c ≡ c′) → Maybe (suc c ≡ suc c′)
+  sc (just refl) = just refl
+  sc nothing     = nothing
+eqF _       _        = nothing
+
+-- tw 1 上 R77 那一行的替代: 输入是裸的 (c , t) 与 (c′ , v).
+kpN : (c : Tr zero) (t : Pos⁼ (h₁ c)) (c′ : Tr zero) {j : L} → j ≤ h₁ c′ → Keep j (Br⁼ (h₁ c) t) (bz⁼ (h₁ c) t)
+kpN c t c′ v = go (eqF c c′) v
+  where
+  go : ∀ {j} → Maybe (c ≡ c′) → j ≤ h₁ c′ → Keep j (Br⁼ (h₁ c) t) (bz⁼ (h₁ c) t)
+  go (just refl) v = kp⁼ (h₁ c) (ok₁ c) t v
+  go nothing     v = nothing
+
+-- E 路 lossy-cell 的同一格 (槽位: 孩子 2 里的第 0 层; 目标: 孩子 2 里的第 1 层; 裸路径): 保留.
+slot0 : Pos⁼ (h₁ n2)
+slot0 = inj₂ (inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt))))
+
+cur-lossy : kp (tw 1) (Ok-tw 1) (inj₂ (n2 , slot0)) (inc n2 (inc tt self)) ≡ nothing
+cur-lossy = refl
+
+bare-kept : IsJust (kpN n2 slot0 n2 {j = lvl1} (inc tt self))
+bare-kept = tt
+
+-- 极限孩子的对角上为空, 所以不满足 ColW.wdecα / diag→dec 的前提 "对角有条目".
+dbl : ℕ → Tr zero
+dbl zero    = zero
+dbl (suc n) = suc (suc (dbl n))
+
+ωᵉ : Tr zero
+ωᵉ = lim dbl (λ n → ◃t ◃s ◃s)
+
+bare-lim : ∀ (t : Pos⁼ (h₁ ωᵉ)) {j} (v : j ≤ h₁ ωᵉ) → kpN ωᵉ t ωᵉ v ≡ nothing
+bare-lim t v = refl

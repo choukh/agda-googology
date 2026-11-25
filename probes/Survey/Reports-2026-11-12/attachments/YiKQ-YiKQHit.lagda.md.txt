@@ -1,0 +1,50 @@
+# 第 2 项的表条目出现在回灌计算内
+> 验收文件（不读记号）。编译定理：`YiMTHit.hit-tw2ᶻ` 的根步进入计算第 2 个链元的折叠，该调用内到达原见证的 `self` 条目。
+> 根的两条保持路径本身不会匹配经指定孩子的行；原见证的目标非零，故它不是 `Kid₂.foldᶜ` 结论的那次第 0 层折叠。
+> 见证照 `YiMTHit.hit-tw2ᶻ` 分解，不声称穷尽所有触发；更深的底分量仍可触发表。
+
+```agda
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+module OCF.Lean.YiKQHit where
+open import Data.Nat using (zero; suc)
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (B₀)
+open import OCF.Lean.YiTBRow using (ψ)
+open import OCF.Lean.YiMTTab using (rbᶻ)
+open import OCF.Lean.YiKQRel using (ℓ²; h₂; o²; r²; Kid₂; module Top)
+import OCF.Lean.YiMTHit as H
+
+branch₂ : Tr (tw 1) → Tr ℓ²
+branch₂ c = up zero c (proj₁ (Ωt (h₂ c))) (proj₂ (Ωt (h₂ c)))
+
+feed₂ : Tr (tw 1) → Tr (tw 1)
+feed₂ c = proj₁ (ψ ℓ² o² r² (B₀ ℓ²) (tw 1) (ink self) (Ωt (tw 1)) (branch₂ c))
+
+FeedHit : Set
+FeedHit = H.Hit H.P₂ᶻ ℓ² o² r² (B₀ ℓ²) (λ _ _ → ⊥)
+  (tw 1) (ink self) (Ωt (tw 1)) ⊥ (branch₂ (feed₂ zero))
+
+hit-feed : FeedHit
+hit-feed = zero , (1 , (zero , (0 , inj₂ (refl , refl , refl , refl , H.is₁ self))))
+
+from-feed : FeedHit → H.HitTw H.P₂ᶻ 2
+from-feed h = 1 , inj₂ h
+
+hit-root : H.HitTw H.P₂ᶻ 2
+hit-root = from-feed hit-feed
+
+root-no-inc : (K : Kid₂) → ∀ {w} → Top.Pw K w
+  → ∀ (c : Tr (tw 1)) (v : zero ≤ h₂ c) → w ≡ inc c v → ⊥
+root-no-inc K (Top.wu) c v ()
+root-no-inc K (Top.wi) c v ()
+
+hit-target≢zero : h₂ H.b₁ ≡ zero → ⊥
+hit-target≢zero ()
+```

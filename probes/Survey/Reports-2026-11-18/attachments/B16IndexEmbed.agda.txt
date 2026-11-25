@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 对任意可数 W4 下标，累加正规化后的整个前驱段嵌入实际折叠输出。这同时适用于产生下一下标的路径与输往 Λ 的路径。
+module B16IndexEmbed where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Unit using (tt)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold hiding (E)
+open import WVOne using (T₀; read; h₁)
+import OCF.Align.Level as L
+import B12Terminal as T
+import B12ActualSlots as A
+import B14Tower as W
+import B14PathHeight as P
+import B16IndexBase as I
+open import B16IndexBlocks using (module WT; module B; Marked; prior; module Merge)
+import B16IndexSucc as U
+open T.Run
+
+module Limit (f : ℕ → Tr zero) (r : T.Run (nd sL (λ n → h₁ (f n))))
+             (ws : (n : ℕ) → zero ≤ h₁ (f n)) where
+  g = λ n → h₁ (f n)
+  j = nd sL g
+  b = β r
+  fold = ψ j (ok r) (bs r) zero (inu ws) b
+  X : ℕ → Tr zero
+  X n = proj₁ (fold (cum (T.segment g) n))
+  E = λ n → read (X n)
+  first : read (proj₁ b) L.≺ E 0
+  first = I.pred (mono j (ok r) (bs r) zero (inu ws) b (◃u zero 0 (proj₁ (Ωt (g 0))) (proj₂ (Ωt (g 0)))))
+  step : ∀ n → E n L.≺ E (suc n)
+  step n = I.pred (mono j (ok r) (bs r) zero (inu ws) b
+    (◃u (cum (T.segment g) n) (suc n) (proj₁ (Ωt (g (suc n)))) (proj₂ (Ωt (g (suc n))))))
+  module Child = W.Lim g r ws
+
+embed : (z : Tr zero) (r : T.Run (h₁ z)) {w : zero ≤ h₁ z} → A.Covered r → P.All w →
+  Marked (I.S.ordᴰ (I.cp z)) (read (proj₁ (β r))) (W.valueAt r w)
+embed zero r hr normal = WT.Eb-zero , (λ ())
+embed (suc z) r hr (P.each {ws = ws} normal) = M.new (embed z M.child
+  (A.enter sS (λ _ → h₁ z) r tt zero hr) (normal tt))
+  where module M = U.Step (h₁ z) r hr ws
+embed (lim f d) r hr (P.each {ws = ws} normal) = G.result
+  where
+  module M = Limit f r ws
+  O = λ n → I.S.ordᴰ (I.cp (f n))
+  eN : ∀ n → Marked (O n) (prior (read (proj₁ (β r))) M.E n) (M.E n)
+  eN zero = embed (f 0) (M.Child.sub 0) (M.Child.covered hr 0) (normal 0)
+  eN (suc n) = embed (f (suc n)) (M.Child.sub (suc n)) (M.Child.covered hr (suc n)) (normal (suc n))
+  module G = Merge O (read (proj₁ (β r))) M.E M.first M.step eN
+embed (Ω () _) r hr p
+embed (up _ () _ _) r hr p
+embed (ex _ _ _ _ ()) r hr p

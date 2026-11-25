@@ -1,0 +1,101 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实 Λ 不越过指定原行，当且仅当每条单位反馈轨道各有严格低于该行的共同界；行号无需加一。
+module B27RunCut where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl; s≼s; l≼; ≼l; z≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRVLevel using (LEM)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+import B26PActual as W
+import B26PSums as Sum
+import B18Product as Mul
+import B18Reset as F
+import B18ResetCell as C
+import B19Coefficient as V
+import B26PBounds as Low
+import B12EboRows as Row
+import B17ValueDich as Compare
+import B27CutArithmetic as Ar
+import B27Threshold as Th
+
+predecessors : ∀ (q z : T₀) → (∀ (x : T₀) → L.suc x ≼ q → L.suc x ≼ z) → q ≼ z
+predecessors L.zero z h = z≼
+predecessors (L.suc t) z h = h t (≼-refl (L.suc t))
+predecessors (L.lim f) z h = l≼ (λ j → predecessors (f j) z (λ x p → h x (≼l {f = f} j p)))
+
+module Choice (q y : T₀) (f : ℕ → ℕ → T₀) (lem : LEM) where
+  open Compare.Classical lem using (compare)
+  cap = λ n → Σ T₀ (λ x → L.suc x ≼ q × (∀ j → f n j ≼ x))
+  cofinal = λ n → (x : T₀) → L.suc x ≼ q → Σ ℕ (λ j → L.suc x ≼ f n j)
+
+  escape : ∀ n → (cap n → ⊥) → cofinal n
+  escape n no x sx with lem (Σ ℕ (λ j → L.suc x ≼ f n j))
+  ... | inj₁ w = w
+  ... | inj₂ miss = ⊥-elim (no (x , sx , each)) where
+    each : ∀ j → f n j ≼ x
+    each j with compare (f n j) x
+    ... | inj₁ h = h
+    ... | inj₂ h = ⊥-elim (miss (j , h))
+
+  witness : ((∀ n → cap n) → y ≼ q) → L.suc q ≼ y → Σ ℕ cofinal
+  witness sufficient hit with lem (Σ ℕ cofinal)
+  ... | inj₁ w = w
+  ... | inj₂ no = ⊥-elim (s≼-irrefl q (≼-trans {b = y} hit (sufficient all)))
+    where
+    all : ∀ n → cap n
+    all n with lem (cap n)
+    ... | inj₁ w = w
+    ... | inj₂ fail = ⊥-elim (no (n , escape n fail))
+
+module At (k : ℕ) (two : 2 ≤ k) where
+  module I = Ar.At k two
+  open I using (Q; Small)
+  pieces = C.At.fresh
+  Cap : ℕ → Set
+  Cap n = Σ T₀ (λ q → Small q × (∀ j → pieces n j ≼ q))
+  Capped = ∀ n → Cap n
+
+  necessary : W.Y ≼ Q → Capped
+  necessary d n = F.fresh (suc n) , ≼-trans {b = L.suc (Row.child (suc n))}
+    (s≼s (F.lower (suc n))) (≼-trans {b = W.Y} (Sum.child-in (suc n)) d) , C.At.into n
+
+  unit : ∀ n → Cap n → Small (F.fresh (suc n))
+  unit n (q , sm , all) = ≼-trans {b = L.suc (q Mul.· L.ωᶜ)} (s≼s
+    (≼-trans (C.At.bound n q all) (Low.one-step q))) (I.product q L.ωᶜ sm I.omega)
+
+  factors : Capped → ∀ n → Small (F.fresh n)
+  factors cap zero = let q , sm , all = cap 0 in ≼-trans {b = L.suc q}
+    (s≼s (subst (_≼ q) (sym C.first) (all 0))) sm
+  factors cap (suc n) = unit n (cap n)
+
+  finite : Capped → ∀ n → Small (F.product n)
+  finite cap zero = I.one
+  finite cap (suc n) = I.product (F.product n) (F.fresh n) (finite cap n) (factors cap n)
+
+  sufficient : Capped → W.Y ≼ Q
+  sufficient cap = ≼-trans {b = L.lim (λ n → F.product (suc n))} (proj₁ V.terminal)
+    (l≼ (λ n → ≼-trans {b = L.suc (F.product (suc n))} (≼-suc (≼-refl _)) (finite cap (suc n))))
+
+  Cofinal : ℕ → Set
+  Cofinal n = ∀ x → Small x → Σ ℕ (λ j → L.suc x ≼ pieces n j)
+
+  enter : ∀ n → Q ≼ F.fresh (suc n) → L.suc Q ≼ W.Y
+  enter n h = ≼-trans {b = L.suc (Row.child (suc n))}
+    (s≼s (≼-trans {b = F.fresh (suc n)} h (F.lower (suc n)))) (Sum.child-in (suc n))
+
+  reverse : ∀ n → Cofinal n → L.suc Q ≼ W.Y
+  reverse n co = enter n (predecessors Q (F.fresh (suc n)) lift)
+    where
+    lift : ∀ x → Small x → L.suc x ≼ F.fresh (suc n)
+    lift x h with co x h
+    ... | j , p = ≼-trans {b = pieces n j} p (C.At.into n j)
+
+  module Classical (lem : LEM) where
+    witness : L.suc Q ≼ W.Y → Σ ℕ Cofinal
+    witness = Choice.witness Q W.Y pieces lem sufficient

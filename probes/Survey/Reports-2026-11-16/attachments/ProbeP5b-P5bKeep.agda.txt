@@ -1,0 +1,110 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- P5b 探针的接口检查 (临时, 不进仓库).
+-- 坍缩定理 (Buchholz 1987 定理 4.6) 第 1 情形要的 "保留律": 结点的槽位层严格低于目标层时,
+-- 折叠输出仍是同一槽位上的 Ω 结点, 逐分支折叠. 这里在主线块 (YiRWFold 的 kp/ψ, 成品 YiTBRow 原样导入) 上查两例:
+--   有限层号 L2 里的 Ω₁ 恒等结点折到层 1: 保留 (keep-law-fin, out-fin);
+--   Ω 形状层号 tw 1 里的同一个 Ω₁ 恒等结点折到层 1 (经孩子 1): 不保留, 输出是 ℕ 极限 (keep-law-fails, out-Ω).
+-- 不陈述值; 不否定任何路线.
+module P5bKeep where
+
+open import Data.Nat using (ℕ)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Relation.Nullary using (¬_)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold
+
+IsJust : {A : Set} → Maybe A → Set
+IsJust (just _) = ⊤
+IsJust nothing  = ⊥
+
+-- 层号: 第 1 层 (Ω₁ 结点按第 0 层的树分支), 第 2 层, Ω 形状的层号 tw 1 (孩子 c 是层号 ↑ c)
+L1 L2 LΩ : L
+L1 = nd sS (λ _ → zero)
+L2 = nd sS (λ _ → L1)
+LΩ = tw 1
+
+one : Tr zero
+one = suc zero
+
+kid-one : LΩ ≡ nd (sΩ zero) (λ c → zero ⊕ ↑ zero c)
+kid-one = refl
+
+kid-one-is-L1 : zero ⊕ ↑ zero one ≡ L1
+kid-one-is-L1 = refl
+
+-- 槽位: 经孩子进第 1 层, 再取第 1 层的 Ω₁ 槽位 (按第 0 层的树分支)
+p2 : Pos L2
+p2 = inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))
+
+pΩ : Pos LΩ
+pΩ = inj₂ (one , inj₂ (inj₂ (tt , inj₁ tt)))
+
+slot-2 : at L2 p2 ≡ zero
+slot-2 = refl
+
+slot-Ω : at LΩ pΩ ≡ zero
+slot-Ω = refl
+
+-- 目标: 第 1 层, 经指定孩子到达
+w2 : L1 ≤ L2
+w2 = inc tt self
+
+wΩ : L1 ≤ LΩ
+wΩ = inc one self
+
+ok2 : Ok L2
+ok2 = tt , λ _ → tt , λ _ → tt
+
+-- 坍缩定理第 1 情形的条件: 槽位层严格低于目标层
+StrictBelow : L → L → Set
+StrictBelow a j = (a ≤ j) × ¬ (j ≤ a)
+
+below-1 : StrictBelow zero L1
+below-1 = z≤ L1 , λ ()
+
+-- 接口的一个字段: 保留律 (只说派发, 不说值)
+KeepLaw : (ℓ : L) → Ok ℓ → (p : Pos ℓ) → {j : L} → j ≤ ℓ → Set
+KeepLaw ℓ o p {j} w = StrictBelow (at ℓ p) j → IsJust (kp ℓ o p w)
+
+keep-law-fin : KeepLaw L2 ok2 p2 w2
+keep-law-fin _ = tt
+
+lost-Ω : kp LΩ (Ok-tw 1) pΩ wΩ ≡ nothing
+lost-Ω = refl
+
+keep-law-fails : ¬ KeepLaw LΩ (Ok-tw 1) pΩ wΩ
+keep-law-fails law = law below-1
+
+-- 输出的头: 同一个 Ω₁ 恒等结点 (分支 z ↦ z), 同一目标层 L1, 同一底 Ωt L1
+data IsΩ {S : Sg} : T S → Set where
+  isΩ : ∀ {p g} → IsΩ (Ω p g)
+
+a2 : Tr L2
+a2 = Ω p2 (λ z → ι L2 z)
+
+aΩ : Tr LΩ
+aΩ = Ω pΩ (λ z → ι LΩ z)
+
+out-fin : IsΩ (proj₁ (ψ L2 ok2 (B₀ L2) L1 w2 (Ωt L1) a2))
+out-fin = isΩ
+
+out-Ω : ¬ IsΩ (proj₁ (ψ LΩ (Ok-tw 1) (B₀ LΩ) L1 wΩ (Ωt L1) aΩ))
+out-Ω ()
+
+-- 成品的折叠 (YiTBRow.ψ, 配成品的表 rbᶻ; YiSHEntry 汇出的就是这两个): 同样的两例
+import OCF.Lean.YiTBRow as P
+open import OCF.Lean.YiMTTab using (rbᶻ)
+
+out-fin-prod : IsΩ (proj₁ (P.ψ L2 ok2 (rbᶻ L2) (B₀ L2) L1 w2 (Ωt L1) a2))
+out-fin-prod = isΩ
+
+out-Ω-prod : ¬ IsΩ (proj₁ (P.ψ LΩ (Ok-tw 1) (rbᶻ LΩ) (B₀ LΩ) L1 wΩ (Ωt L1) aΩ))
+out-Ω-prod ()

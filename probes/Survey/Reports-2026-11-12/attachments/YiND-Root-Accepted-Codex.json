@@ -1,0 +1,87 @@
+{
+  "modules": [
+    {
+      "module": "YiNDTower",
+      "exit": 0,
+      "seconds": 14.69,
+      "checking": [
+        "OCF.Lean.YiNDTower"
+      ],
+      "residency": 1409593072,
+      "sha256": "f6ebcd98a2fbb3c30bb60864e763aabb9778d50bc7f81aad591e1a600ae0b422",
+      "unchanged": true
+    },
+    {
+      "module": "YiNDTop",
+      "exit": 0,
+      "seconds": 4.5,
+      "checking": [
+        "OCF.Lean.YiNDTop"
+      ],
+      "residency": 342042944,
+      "sha256": "35816f177a47f68478e6f0a5c13822cbb76e5ec5bc7eb2deb20f973285c802d9",
+      "unchanged": true
+    },
+    {
+      "module": "YiNDBridge",
+      "exit": 0,
+      "seconds": 16.1,
+      "checking": [
+        "OCF.Lean.YiNDBridge"
+      ],
+      "residency": 1583998400,
+      "sha256": "5583d7b50b86ed19ff55b33124918cd6600be22e608385b7ca51db69bd3b9fd0",
+      "unchanged": true
+    },
+    {
+      "module": "YiNDAccept",
+      "exit": 0,
+      "seconds": 18.5,
+      "checking": [
+        "OCF.Lean.YiNDAccept"
+      ],
+      "residency": 1670349664,
+      "sha256": "9ba115e333baeafdea400f4e5bc73b1f96f6d96b78104a295ffb94dc9f4ac5d8",
+      "unchanged": true
+    }
+  ],
+  "accepted_source_hashes": {
+    "probes/OCF/Lean/YiNDTower.lagda.md": "f6ebcd98a2fbb3c30bb60864e763aabb9778d50bc7f81aad591e1a600ae0b422",
+    "probes/OCF/Lean/YiNDTop.lagda.md": "35816f177a47f68478e6f0a5c13822cbb76e5ec5bc7eb2deb20f973285c802d9",
+    "probes/OCF/Lean/YiNDBridge.lagda.md": "5583d7b50b86ed19ff55b33124918cd6600be22e608385b7ca51db69bd3b9fd0",
+    "probes/OCF/Lean/YiNDAccept.lagda.md": "9ba115e333baeafdea400f4e5bc73b1f96f6d96b78104a295ffb94dc9f4ac5d8"
+  },
+  "freeze_entries": 37,
+  "source_counts": {
+    "YiNDTower.lagda": {
+      "nonempty": 16,
+      "physical_code": 16,
+      "sha256": "f6ebcd98a2fbb3c30bb60864e763aabb9778d50bc7f81aad591e1a600ae0b422"
+    },
+    "YiNDTop.lagda": {
+      "nonempty": 78,
+      "physical_code": 81,
+      "sha256": "35816f177a47f68478e6f0a5c13822cbb76e5ec5bc7eb2deb20f973285c802d9"
+    },
+    "YiNDBridge.lagda": {
+      "nonempty": 45,
+      "physical_code": 45,
+      "sha256": "5583d7b50b86ed19ff55b33124918cd6600be22e608385b7ca51db69bd3b9fd0"
+    },
+    "YiNDAccept.lagda": {
+      "nonempty": 67,
+      "physical_code": 67,
+      "sha256": "9ba115e333baeafdea400f4e5bc73b1f96f6d96b78104a295ffb94dc9f4ac5d8"
+    }
+  },
+  "nonempty_noncomment_code_lines": 206,
+  "physical_code_lines": 209,
+  "physical_file_lines": 233,
+  "root_wall_sum_seconds": 53.79,
+  "root_RTS_maximum_residency_bytes": 1670349664,
+  "cold_scope": "each new module interface removed; dependency interfaces retained",
+  "report_original_sha256": "f659127d76b18a8b9191671e2b0b9e30d253593b1cae583e20c8ade1f41d30d1",
+  "target": "all HC t-omega: Rt h <= YiBRValue.readRW YiCWTable.EBO-t",
+  "unfilled_premises": false,
+  "scope_note": "actual new station2 q0 output; does not prove entire old endpoint <= new endpoint, station3, or full EBO bound"
+}

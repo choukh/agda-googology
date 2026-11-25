@@ -1,0 +1,117 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21IdealSeries where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; subst₂; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B14SharpBound using (data≤)
+open import OCF.Align.Value using (≼-refl; ≼-trans; l≼; ≼l)
+import B12ActualSlots as C
+import B17SharpFeed as Link
+import B17SharpUpdate as U
+import B17SharpTwo as T
+import B18SharpMacro as M
+import B13Orbit as Orb
+import B12Orbit as Win
+
+import B21IdealContext as Context
+open Context using (Pref; plug; empty; push)
+
+import B21IdealRepeat as Rep
+import B18SharpHead as Head
+import B18SharpClosed as Known
+import B13SeedOuter as Seed
+import B12Terminal as Tm
+open import WKShape using (lvl3)
+open import WVOne using (read)
+open import OCF.Lean.YiKVRel using (readRW)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≅→≼)
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiFreshFold as O
+import OCF.Lean.YiUpFold as F₀
+import OCF.Lean.YiFreshValRead as V₀
+open import OCF.Lean.YiUpCheck using (two)
+import B20IdealRel as Rel
+import B20IdealTwo as Fold
+import B20IdealThree as Three
+
+xs = O.iter O.next (O.Ωt two)
+raws = λ n → V₀.read (F₀.ψ⊥ two tt Three.model (xs n))
+series : L.Ordᶜ L.zero
+series = L.lim raws
+
+module Proof (lem : LEM) where
+  open I.Sharp lem
+  open U.Update lem
+  open T.Two lem using (w₀)
+  open M.Macro lem using (State; pair; after)
+  open Context.At lem
+  open Rep.At lem using (weak)
+  ix = V.iter V.next⁺ (V.Ωt r₂)
+  exact : ∀ n → Rel.J (xs n) (proj₁ (ix n))
+  exact zero = Rel.Ω²
+  exact (suc n) = Rel.nj (ix n) (exact n)
+  low : ∀ n → raws n L.≅ readRW (proj₁ (out B♯ Three.unit empty (proj₁ (ix n))))
+  low n = Rel.value (Fold.At.bot₂ lem B♯ Three.model Rel.Ω¹ (Rel.zs Rel.zz) Three.unit (Rel.zs Rel.zz) (exact n))
+
+  module Bound (c : W.Tr⁺ lvl2) (big : C._⊴_ wΩ₂ (proj₁ c)) where
+    module H = Head.Head.At lem c big
+    module O₀ = Context.At.Base lem c big
+    ops = B.iter (Orb.block c) (Orb.K c)
+    module Lift (x : V.Tr⁺ r₂) (K : F.Op {lvl2} F.nil) (m : Model (proj₁ x) K) where
+      module A = Rep.At.Rep lem (proj₁ x) K m
+      module N = Win.Window K
+      J = Orb.block c K
+      target = proj₁ (V.next⁺ x)
+      module At (D : Base♯) (p : Pref) (S : F.Base lvl2) (h : State (nextState D p R.zero) S) where
+        val : ∀ a t b → data≤ (proj₁ (out D a p R.zero)) (proj₁ b) → data≤ (proj₁ (out D a p target)) (proj₁ (F.run J S B.zero t b))
+        val a t b hv = Rep.At.out-limit lem D a p A.word _ _ λ n → ≼-trans (A.val n D a p S h t b hv) (◃→≼ (subst
+          (λ v → B.zero B.⊢ proj₁ v ◃ proj₁ (F.run J S B.zero t b)) (N.project-value (suc n) S B.zero t b)
+          (B.◃t (N.in-child n S B.zero t b) (Orb.contains c big K S B.zero t b))))
+        link : Link.Feed.Linked lem (proj₁ (F.stepS J S lvl1 w₁)) (proj₁ (nextState D p target r₁ oR))
+        link = matched _ _ _ (Rep.At.link-limit lem D p A.word _ _ _ λ n → subst
+          (λ v → Link.Feed.Linked lem (proj₁ v) (proj₁ (nextState D p (A.word n) r₁ oR)))
+          (sym (trans (N.project-value (suc n) S lvl1 w₁ (S lvl1 w₁)) (N.self-value (suc n) S lvl1 w₁)))
+          (State.one (A.stage n D p S h))) (inj₂ (Orb.contains c big K S lvl1 w₁ (S lvl1 w₁)))
+        feed : State (nextState D p target) (F.stepS J S)
+        feed = pair link (val (D R.zero tt) w₀ (S B.zero w₀) (State.bot h))
+      raised : Model target J
+      raised = model At.feed (λ D a p S h → At.val D p S h a)
+    models : ∀ n → Model (proj₁ (ix n)) (ops n)
+    models zero = O₀.basis
+    models (suc n) = Lift.raised (ix n) (ops n) (models n)
+    skip : ∀ n → ops (suc n) ≡ H.ops n
+    skip zero = refl
+    skip (suc n) = cong (Orb.block c) (skip n)
+    paid : ∀ n → Model (proj₁ (ix (suc n))) H.G
+    paid n = weak (H.ops n) H.G (λ S i t v → B.◃t (H.climb n S i t v) (H.part n S i t v))
+      (subst (Model (proj₁ (ix (suc n)))) (skip n) (models (suc n)))
+
+  module Real (r : Tm.Run lvl3) (cv : C.Covered r) where
+    module A = Seed.At r
+    module H = Bound A.c⁺ (cv lvl2 (B.inc tt B.self))
+    open Tm.Run
+    st = Known.Closed.Run.start lem r cv
+    one = Tm.Run.oneβ r
+    module Point (n : ℕ) where
+      value : raws (suc n) ≼ read (proj₁ (F.run A.G A.st1 B.zero A.w2 A.v₁))
+      value = ≼-trans (≅→≼ (low (suc n))) (Model.value (H.paid n) B♯ Three.unit empty A.st1 st A.w2 A.v₁
+        (≼-trans one (◃→≼ (F.inf A.K A.S₀ B.zero A.w2 (β r)))))
+    next-series : L.lim (λ n → raws (suc n)) ≼ read (Tm.value r)
+    next-series = l≼ λ n → ≼-trans (Point.value n) (A.outer 0)
+

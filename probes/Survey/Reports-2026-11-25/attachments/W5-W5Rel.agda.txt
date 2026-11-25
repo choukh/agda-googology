@@ -1,0 +1,38 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 测量: 真实运行里的 Ω 形层号 Qr (塔第 2 项里, 在 tw 1 之上). 它的孩子的私有层都是 "基底加一段".
+-- "基底加 1" 这一层字面地出现在不同的孩子里, 但候选的定位器只认绝对的有限层, 找不到它.
+module W5Rel where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Maybe using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W5Loc using (loc)
+open import W5Trace using (Qr; Lβ₁; Lβ′; lev)
+
+-- 基底: Qr 的每个孩子都是 base ⊕ lev c.
+base : L
+base = tw 1 ⊕ (Lβ₁ ⊕ Lβ′)
+
+kidQ : Tr zero → L
+kidQ c = tw 1 ⊕ (Lβ₁ ⊕ (Lβ′ ⊕ lev c))
+
+c₂ c₃ : Tr zero
+c₂ = suc (suc zero)
+c₃ = suc c₂
+
+-- "基底加 1".
+j₁ : L
+j₁ = nd sS (λ _ → base)
+
+-- 它字面地是孩子 2 的子层号, 也是孩子 3 的子层号 (各在第 0 个下标处).
+in-2 : j₁ ≤ kidQ c₂
+in-2 = inc zero self
+
+in-3 : j₁ ≤ kidQ c₃
+in-3 = inc zero self
+
+-- 候选的定位器在孩子 3 里找不到它 (它不是绝对的有限层), 所以朝它折孩子 3 里的树时仍然回退.
+miss : loc j₁ (kidQ c₃) ≡ nothing
+miss = refl

@@ -1,0 +1,94 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：第 1 个 Ω₃ 基本列项内，同一极限的所有自然数分支及该极限均不高于 W4 的 Ψ₃。
+module B12Omega3Cuts where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≅→≼; ≼l; l≼)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import WVOne using (read)
+open import WKShape using (Ψ₃)
+import YiLAB10Src as T
+import B12Arithmetic as H
+import B12LimitSrc as A
+import B12Omega3Ref as R
+open R using (idσ; power; finitePower)
+
+-- 去掉左端的零只要求末项的结构对应。
+left-unit : ∀ {k k′ ℓ} {u : L.Ordᶜ k} {v : L.Ordᶜ k′} (σ : L.Simᴵ k ℓ) → u L.≅ v → L.add L.zero σ u L.≅ v
+left-unit σ L.z≅ = L.z≅
+left-unit σ (L.s≅ h) = L.s≅ (left-unit σ h)
+left-unit σ (L.l≅ h) = L.l≅ (λ n → left-unit σ (h n))
+left-unit σ (L.upˡ {r = L.zero} h) = left-unit (λ q → σ (L.suc q)) h
+left-unit σ (L.upˡ {r = L.self n} h) = left-unit (λ q → σ (L.lim n q)) h
+left-unit σ (L.upʳ h) = L.upʳ (left-unit σ h)
+left-unit σ (L.lᵢ≅ {p = p} {q} {f} {g} h M) = L.lᵢ≅ h λ x y d →
+  subst (λ z → L.add L.zero σ (f (L.into (L.<→◃ p) z)) L.≅ g (L.into (L.<→◃ q) y))
+    (sym (L.out-into (L.<→◃ (σ p)) x)) (left-unit σ (M x y (L.R-conv (L.<→◃ (σ p)) (L.<→◃ p) d)))
+
+module Sum (D : A.Lev₂) (d : D L.≅ D) where
+  left = S.iter (D L.+_) L.zero
+  reg : ∀ n → left n L.≅ left n
+  reg = L.iter-R L._≅_ {G = D L.+_} {G′ = D L.+_} (L.add-≅ {σ = idσ} {σ′ = idσ} d) L.z≅
+
+  rotate : ∀ n → (left n L.+ D) L.≅ left (suc n)
+  rotate zero = left-unit idσ d
+  rotate (suc n) = L.≅-trans (R.assoc {A = D} {B = left n} {C = left (suc n)} idσ idσ (reg (suc n)) d)
+                             (L.add-≅ {σ = idσ} {σ′ = idσ} d (rotate n))
+
+  module Prefix (f : A.Lev₂ → A.Lev₂) (step : ∀ {x y} → x L.≅ y → f x L.≅ (y L.+ D)) where
+    along : ∀ {x y} → x L.≅ y → ∀ n → S.iter f x n L.≅ (y L.+ left n)
+    along e zero = e
+    along {y = y} e (suc n) = L.≅-trans (step (along e n))
+      (L.≅-trans (R.assoc {A = y} {B = left n} {C = y L.+ left n} idσ idσ
+                          (L.add-≅ {σ = idσ} {σ′ = idσ} (L.≅-trans (L.≅-sym e) e) (reg n)) d)
+                   (L.add-≅ {σ = idσ} {σ′ = idσ} (L.≅-trans (L.≅-sym e) e) (rotate n)))
+
+regD : ∀ k → finitePower k L.≅ finitePower k
+regD zero = L.Ω-refl _
+regD (suc k) = L.l≅ (Sum.reg (finitePower k) (regD k))
+
+arithmetic : ∀ k {x y} → x L.≅ y → H.hL k x L.≅ (y L.+ finitePower k)
+arithmetic zero e = L.add-≅ {σ = idσ} {σ′ = idσ} e (regD 0)
+arithmetic (suc k) e = L.l≅ (Sum.Prefix.along (finitePower k) (regD k) (H.hL k) (arithmetic k) e)
+
+-- src 的同一个起点在两侧使用不同性质：零在 Dn 左端无条件，Mh 的右端 Ω₂ 有正性证据。
+up : ∀ k {s p} → U.Mh s p → U.Mh (H.hS k s) (H.hL k p)
+up zero e = U.M-add {σ = idσ} e (T.up-rel 0)
+up (suc k) e = U.Mll (λ n → U.Mlr n (L.iter-R U.Mh {G = H.hS k} {G′ = H.hL k} (up k) e n))
+
+down : ∀ k {p s} → D.Dn p s → D.Dn (H.hL k p) (H.hS k s)
+down zero e = D.Dn-add {σ = idσ} e (T.dn-rel 0)
+down (suc k) e = D.Rll (λ n → D.Rlr n (L.iter-R D.Dn {G = H.hL k} {G′ = H.hS k} (down k) e n))
+
+sandwich : ∀ {p q : A.Lev₂} {s : A.Src₂} → D.Dn p s → U.Mh s q → p L.≅ p → q L.≅ q → L.ψ⁰ p ≼ L.ψ⁰ q
+sandwich dp uq pp qq = ≼-trans (≅→≼ (L.ψ⁰≅ψ {p = D.τ-< T.w} {σ = idσ} pp))
+  (≼-trans (D.Dn→≼ (D.Dn-ψ L.z≅ (D.τ-< T.w) idσ T.w dp))
+  (≼-trans (U.Mh→≼ (U.M-ψ L.z≅ (D.τ-< T.w) idσ T.w uq)) (≅→≼ (L.≅-sym (L.ψ⁰≅ψ {p = D.τ-< T.w} {σ = idσ} qq)))))
+
+zero-agrees : ∀ k → H.hL k L.zero L.≅ finitePower k
+zero-agrees k = L.≅-trans (arithmetic k L.z≅) (left-unit idσ (regD k))
+
+as-started : ∀ k → L.ψ⁰ (finitePower k) ≼ L.ψ⁰ (H.hL k Ω₂ᴸ)
+as-started k = ≼-trans (≅→≼ (L.ψ⁰-≅ (L.≅-sym ez)))
+  (sandwich {s = H.hS k S.zero} (down k D.Rz) (up k (U.Mz (U.NZ-Ω _)))
+      (L.≅-trans ez (L.≅-sym ez)) (L.≅-trans eo (L.≅-sym eo)))
+  where
+  ez = zero-agrees k
+  eo = arithmetic k (L.Ω-refl _)
+
+finite-actual : ∀ k → L.ψ⁰ (finitePower k) ≼ read Ψ₃
+finite-actual zero = R.first-actual
+finite-actual (suc k) = ≼-trans (as-started (suc k)) (≼-trans (≼l 1 (≼l k (≼-refl _))) H.level)
+
+actual-cut : ∀ n → R.inner-cut n ≼ read Ψ₃
+actual-cut n = subst (λ t → t ≼ read Ψ₃) (sym (R.cuts n)) (finite-actual n)
+
+actual-limit : R.at (R.at (R.at R.inner-next 1) 0) 0 ≼ read Ψ₃
+actual-limit = l≼ actual-cut

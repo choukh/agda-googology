@@ -1,0 +1,32 @@
+[
+  {
+    "run": "cut20-v2",
+    "log_birth_utc": "2026-11-15T08:52:48.150662+00:00",
+    "log_last_write_utc": "2026-11-15T08:55:14.856998+00:00",
+    "timestamp_span_seconds": 146.70633602142334
+  },
+  {
+    "run": "premises",
+    "log_birth_utc": "2026-11-15T08:53:26.821339+00:00",
+    "log_last_write_utc": "2026-11-15T08:53:44.461213+00:00",
+    "timestamp_span_seconds": 17.63987374305725
+  },
+  {
+    "run": "cut20-v3",
+    "log_birth_utc": "2026-11-15T08:54:56.957636+00:00",
+    "log_last_write_utc": "2026-11-15T08:55:13.469558+00:00",
+    "timestamp_span_seconds": 16.511921882629395
+  },
+  {
+    "run": "ab-direct",
+    "log_birth_utc": "2026-11-15T09:04:29.713393+00:00",
+    "log_last_write_utc": "2026-11-15T09:06:56.424896+00:00",
+    "timestamp_span_seconds": 146.7115023136139
+  },
+  {
+    "run": "ab-sealed",
+    "log_birth_utc": "2026-11-15T09:07:35.788246+00:00",
+    "log_last_write_utc": "2026-11-15T09:07:52.190775+00:00",
+    "timestamp_span_seconds": 16.402528524398804
+  }
+]

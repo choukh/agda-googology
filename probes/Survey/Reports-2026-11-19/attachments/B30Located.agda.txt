@@ -1,0 +1,52 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 标准塔每个门槛在同一晚塔的全部真实孙返回与一号启动点同时严格兑现。
+module B30Located where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_)
+import Data.Nat.Properties as N
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; trans; sym; subst; cong)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl; ≼l; l≼)
+import WVOne as V
+import W4Ops as O
+import W4Block as W
+import B20TowerValues as TV
+import B20StandardInside as St
+import B20StandardGoal as G
+import B22TowerCut as K
+import B28BBranch as Dec
+import B28BSlot as Slot
+import B29CRelay as Relay
+import B29CKeys as Key
+import B29CValue as Val
+import B29CBudget as Budget
+import B29Channels as Ch
+
+module At (n : ℕ) where
+  open Relay.At n
+  canon : ∀ x → H.free x ≡ St.At.value m x
+  canon x = trans (Dec.At.canon m x)
+    (cong (λ b → V.read (X.K.evaluate x b (O.Ωt W.zero))) (TV.slots (X.K.ℓ x) (suc (suc m))))
+  lift-free : ∀ t → t ≤ suc m → ∀ x → L.suc (St.std t) ≼ H.free x
+  lift-free t d x = subst (L.suc (St.std t) ≼_) (sym (canon x)) (St.At.canonical m x t d)
+  factor : ∀ t → t ≤ suc m → ∀ p x (h : Root p x) v → L.suc (St.std t) ≼ Val.At.family n p x h v
+  factor t d p ._ (read-head g) v = lift-free t d (Slot.At.Node.selected m p g v)
+  all : ∀ t → t ≤ suc m → ∀ j u v → L.suc (St.std t) ≼ Val.At.Real.leaves n j u v
+  all t d j u v = factor t d (node (A.c u) (A.actual u)) (A.x u) (A.positive u) v
+    where module A = Key.At.Real n j
+  same : ∀ t → t ≤ suc m → L.suc (St.std t) ≼ Ch.second m ×
+    (∀ j u v → L.suc (St.std t) ≼ Val.At.Real.leaves n j u v)
+  same t d = G.At.child m 1 t d , all t d
+
+lower : ∀ t → L.suc (St.std t) ≼ Ch.starts × L.suc (St.std t) ≼ Budget.Actual.Γ
+lower t = ≼l {f = Ch.second} (suc t) (proj₁ pair) , ≼-trans {b = Val.At.Real.leaves t 0 0 0} (proj₂ pair 0 0 0)
+  (Budget.Actual.inside (suc t) 0 0 0)
+  where
+  pair = At.same t t (N.m≤n⇒m≤1+n (N.n≤1+n t))
+
+into-starts : K.cut ≼ Ch.starts
+into-starts = l≼ {f = St.std} λ t → ≼-trans {b = L.suc (St.std t)} (≼-suc (≼-refl _)) (proj₁ (lower t))
+
+into-leaves : K.cut ≼ Budget.Actual.Γ
+into-leaves = l≼ {f = St.std} λ t → ≼-trans {b = L.suc (St.std t)} (≼-suc (≼-refl _)) (proj₂ (lower t))

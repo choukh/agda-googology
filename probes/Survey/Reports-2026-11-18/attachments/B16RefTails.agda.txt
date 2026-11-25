@@ -1,0 +1,103 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B16RefTails where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼-refl; ≼-trans; ≼-suc; ≅→≼; +-mono; ψ⁰-mono⁰; 1≼ψ⁰; ≼-+ʳ)
+open import W4Block using (iter)
+open import WVOne using (T₀; 𝟏)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B14RefSuffix as U
+import B12TerminalTail as V
+import B13FiniteLift as Lift
+import B13FiniteTower as F
+import B15TowerIteration as I
+
+module Sum (d : T₀) where
+  left = S.iter (d L.+_) L.zero
+  rd = L.≅-refl⁰ d
+  r : ∀ n → left n L.≅ left n
+  r n = L.≅-refl⁰ _
+  rotate : ∀ n → (left n L.+ d) L.≅ left (suc n)
+  rotate zero = B12Omega3Cuts.left-unit (λ q → q) rd where import B12Omega3Cuts
+  rotate (suc n) = L.≅-trans (R.assoc {A = d} {B = left n} {C = left (suc n)} (λ q → q) (λ q → q) (r (suc n)) rd)
+    (L.add-≅ {σ = λ q → q} {σ′ = λ q → q} rd (rotate n))
+
+  regroup : ∀ x n → ((x L.+ left n) L.+ d) L.≅ (x L.+ left (suc n))
+  regroup x n = L.≅-trans (R.assoc {A = x} {B = left n} {C = x L.+ left n} (λ q → q) (λ q → q) (L.≅-refl⁰ _) rd)
+    (L.add-≅ {σ = λ q → q} {σ′ = λ q → q} (L.≅-refl⁰ x) (rotate n))
+
+double : ∀ (x : T₀) → (L.ψ⁰ x L.+ L.ψ⁰ x) ≼ L.ψ⁰ (L.suc x)
+double x = ≼l 2 (≼-refl _)
+
+successors : T₀ → ℕ → T₀
+successors = iter L.suc
+plusω : T₀ → T₀
+plusω d = L.lim (successors d)
+degrees : ℕ → T₀
+degrees = iter plusω L.zero
+cap : T₀
+cap = L.ψ⁰ (L.lim degrees)
+
+module Prefix (P : Lev₂) where
+  v : T₀ → T₀
+  v x = L.ψ⁰ (U.suffix P x)
+  mono : ∀ {x y} → x ≼ y → v x ≼ v y
+  mono = U.tails P P (≼-refl _)
+  Cost : (T₀ → T₀) → T₀ → Set
+  Cost f d = ∀ x a → a ≼ v x → f a ≼ v (x L.+ L.ψ⁰ d)
+
+  seed : Cost V.mulω L.zero
+  seed x a h = l≼ λ n → ≼l (suc n) (go n) where
+    go : ∀ n → iter (a L.+_) a n ≼ S.iter (v x L.+_) L.zero (suc n)
+    go zero = h
+    go (suc n) = +-mono h (go n)
+
+  times : ∀ f d → Cost f d → Cost (Lift.repeatω f) (L.suc d)
+  times f d h x a e = l≼ (λ n → ≼l n (run n)) where
+    module M = Sum (L.ψ⁰ d)
+    run : ∀ n → iter f a n ≼ v (x L.+ M.left n)
+    run zero = e
+    run (suc n) = ≼-trans (h _ _ (run n)) (mono (≅→≼ (M.regroup x n)))
+
+  height : ∀ f d → Cost f d → ∀ n → Cost (F.height f n) (successors d n)
+  height f d h zero = h
+  height f d h (suc n) = times _ _ (height f d h n)
+
+  jump : ∀ f d → Cost f d → Cost (I.jump f) (plusω d)
+  jump f d h x a e = l≼ (λ n → ≼l (suc n) (height f d h (suc n) x a e))
+
+  ops : ∀ n → Cost (iter I.jump V.mulω n) (degrees n)
+  ops zero = seed
+  ops (suc n) = jump _ _ (ops n)
+
+  -- 前缀固定，可数阶段只须花一个新的后继指数来吸收相同上界的两个和项。
+  twice : ℕ → ℕ
+  twice zero = zero
+  twice (suc n) = suc (suc (twice n))
+
+  enough : ∀ d n → successors d n ≼ successors d (twice n)
+  enough d zero = ≼-refl _
+  enough d (suc n) = ≼-suc (s≼s (enough d n))
+
+  steps : ∀ f d → Cost f d → ∀ a → a ≼ v (L.ψ⁰ d) →
+    ∀ n → F.constant f a n ≼ v (L.ψ⁰ (successors d (twice n)))
+  steps f d h a e zero = e
+  steps f d h a e (suc n) = ≼-trans (height f d h (suc n) _ _ (steps f d h a e n)) (mono (≼-trans
+    (+-mono (ψ⁰-mono⁰ (≼-suc (≼-refl _))) (ψ⁰-mono⁰ (s≼s (enough d n)))) (double (successors d (suc (twice n))))))
+
+  climb : ∀ f d → Cost f d → ∀ a → a ≼ v (L.ψ⁰ d) → I.jumpQ f a ≼ v (L.ψ⁰ (plusω d))
+  climb f d h a e = l≼ (λ n → ≼l (twice (suc n)) (steps f d h a e (suc n)))
+
+  floors : T₀ → ℕ → T₀
+  floors q zero = q
+  floors q (suc n) = I.jumpQ (iter I.jump V.mulω n) (floors q n)
+
+  at : ∀ q → q ≼ L.ψ⁰ P → ∀ n → floors q n ≼ v (L.ψ⁰ (degrees n))
+  at q e zero = ≼-trans e (U.floor P 𝟏)
+  at q e (suc n) = climb _ _ (ops n) _ (at q e n)
+
+  upper : ∀ q → q ≼ L.ψ⁰ P → L.lim (floors q) ≼ v cap
+  upper q e = l≼ (λ n → ≼l n (at q e n))

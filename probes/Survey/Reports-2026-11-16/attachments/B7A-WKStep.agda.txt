@@ -1,0 +1,78 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B7A: Ψ₃ 计算里第 1 层状态的一步更新 (第 2 层 Ω 树作右边的 op 在目标 1 跑一次, WKShape.step₁) 保持被加项的值关系:
+-- 若旧状态 c₁ 有结构关系 (Sm 被加项, Re 指数), 则新状态在目标 0 被消费时不低于 lim_n (c₁ 的影子迭代 ω^{z_n+1} 次).
+-- 编译定理, 无前提. 只是第 3 层值理论的一块 (目标 1 的状态分量, 被加项一半, 第一阶); 不涉及 Level 一侧.
+module WKStep where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import WVOne using (T₀; lvl1)
+import WVOne
+open import WVTwo using (lvl2; ok₂)
+open import WSShadow
+import WSW4
+open import WSReal using (Re; re-z; re-s; re-x; re-Ω; re-u; xC; uC)
+open import OCF.Align.Value using (s≼s)
+import WSReal
+open import WKSum
+open import WKShape using (Ω₂t; step₁)
+
+module _ (o : Ok lvl2) (S : St {lvl2} nil) where
+
+  o₁ : Ok lvl1
+  o₁ = proj₂ o tt
+
+  open Sum o₁
+  open WSReal.Gen o₁ using (real)
+
+  c₁ : Tr lvl1
+  c₁ = proj₁ (S lvl1 (inc tt self))
+
+  n₁ : lvl1 ⊢ zero ◃ c₁
+  n₁ = proj₂ (S lvl1 (inc tt self))
+
+  zc : ℕ → Tr lvl1
+  zc = iter (λ z → ex c₁ c₁ n₁ (suc z) tt) zero
+
+  module _ {dc : Sh 0} {ec : ES} (mc : Sm c₁ dc) (rc : Re c₁ ec) where
+
+    εc : ℕ → ES
+    εc zero    = zC
+    εc (suc n) = xC ec ec (sC (εc n))
+
+    Re-zc : (n : ℕ) → Re (zc n) (εc n)
+    Re-zc zero    = re-z
+    Re-zc (suc n) = re-x n₁ rc rc (re-s (Re-zc n))
+
+    dᶜ : ℕ → Sh 0
+    dᶜ n = λ a c → sE (sC (εc n)) dc (dc a c) (dc c c)
+
+    Sm-term : (n : ℕ) → Sm (ex c₁ c₁ n₁ (suc (zc n)) tt) (dᶜ n)
+    Sm-term n = mx {e = sC (εc n)} n₁ mc (sound mc) (proj₁ (real (re-s (Re-zc n))))
+
+    -- 新状态 (目标 1) 在目标 0 被消费: 不低于 lim_n dᶜ n.
+    step-sum : SumR (proj₁ (stepS (opB lvl2 o Ω₂t (proj₂ (Ωt lvl2))) S lvl1 (inc tt self))) (λ a c → LV.lim (λ n → dᶜ n a c))
+    step-sum = subst (λ y → SumR y (λ a c → LV.lim (λ n → dᶜ n a c))) (sym (step₁ o S))
+                     (cumR (λ n → ex c₁ c₁ n₁ (suc (zc n)) tt) dᶜ Sm-term _)
+
+------------------------------------------------------------------------
+-- 前提可满足: 初始状态 B₀ lvl2 的第 1 层分量就是 Ω₁, 它有两种结构关系.
+module Inst where
+  open Sum (proj₂ ok₂ tt)
+
+  Sm-Ω₁ : Sm (proj₁ (Ωt lvl1)) (nodeS 0 (λ y a c → WVOne.Mv a (LV.suc y)))
+  Sm-Ω₁ = mΩ (λ z → ◃u zero tt (suc z) (z◃ z ◃s)) (λ y z d → mu (LV.suc y) (s≼s d) mz)
+
+  Re-Ω₁ : Re (proj₁ (Ωt lvl1)) (nC (λ y → uC zC (LV.suc y)))
+  Re-Ω₁ = re-Ω (λ y z d → re-u re-z (LV.suc y) (s≼s d) (z◃ z ◃s))
+
+  step-B₀ = step-sum ok₂ (B₀ lvl2) Sm-Ω₁ Re-Ω₁

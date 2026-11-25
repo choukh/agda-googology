@@ -1,0 +1,85 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 审计第三轮的形状事实 (全是 refl 或空模式). 一: 第 1 层在 tw 1 上只能经指定孩子到达. 二: tw 1 之上以第 0 层为下标的 Ω 形层号,
+-- 朝 tw 1 折它的 Ω 树时结点保留; 保留在 tw 1 的哪个位置取决于层号证书里的下标路径: 一致路径给孩子 zero 的位置 (再朝孩子里的层折就被摊平),
+-- 经 tw 1 自己下标的路径给 tw 1 自己的顶位置; 真实运行的证书 (OkO↑) 是后一种. 三: tw 1 自己的顶位置上的结点朝孩子里的第 1 层折时保留.
+module Audit3 where  -- 留档名 AuditFable52-Mirror; 与 B4W4-W4*.agda.txt, B5D-WVOne.agda.txt 同目录编译
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (lvl1; h₁)
+
+posOf : ∀ {j X x₀} → Keep j X x₀ → Maybe (Pos j)
+posOf (just (q , _)) = just q
+posOf nothing        = nothing
+
+------------------------------------------------------------------------
+-- 一. 没有到第 1 层的一致路径: 孩子 zero 的层号就是第 0 层.
+lvl1-private : ((c : Tr zero) → lvl1 ≤ h₁ c) → ⊥
+lvl1-private f with f zero
+... | ()
+
+------------------------------------------------------------------------
+-- 二. M₂: 下标层是第 0 层, 孩子 c 是 tw 1 ⊕ ↑c. 到 tw 1 的路径是一致路径 (lift 的定义).
+M₂ : L
+M₂ = nd (sΩ zero) (λ c → tw 1 ⊕ ↑ zero c)
+
+oM₂ : Ok M₂
+oM₂ = (tt , (λ c → z≤ (tw 1 ⊕ ↑ zero c))) , (λ c → Ok⊕ (tw 1) (↑ zero c) (Ok-tw 1) (OkO↑ (tw 1) zero tt (z≤ (tw 1)) c))
+
+wK : tw 1 ≤ M₂
+wK = inu (λ c → lift (tw 1) (↑ zero c))
+
+topM : Pos M₂
+topM = inj₁ (inj₁ tt)
+
+topK : Pos (tw 1)
+topK = inj₁ (inj₁ tt)
+
+-- 下标路径取一致路径 (z≤) 时: 保留, 但输出结点落在 tw 1 的孩子 zero 的位置上.
+keep-K-inu : posOf (kp M₂ oM₂ topM wK) ≡ just (inj₂ (zero , inj₁ tt))
+keep-K-inu = refl
+
+-- 这个位置上的结点再朝孩子里的层折: 不保留 (摊平).
+flat-after : kp (tw 1) (Ok-tw 1) (inj₂ (zero , inj₁ tt)) (inc (suc zero) self) ≡ nothing
+flat-after = refl
+
+-- 同一个层号 M₂, 另一份合法证书: 下标路径经 tw 1 自己的下标 (ink). 这时输出结点在 tw 1 自己的顶位置.
+oM₂′ : Ok M₂
+oM₂′ = (tt , (λ c → ink self ∙ lift (tw 1) (↑ zero c))) , proj₂ oM₂
+
+keep-K-ink : posOf (kp M₂ oM₂′ topM wK) ≡ just topK
+keep-K-ink = refl
+
+-- 真实的层号: 塔第 2 项的孩子 c = Ωt (tw 1), 即 tw 1 ⊕ ↑(Ωt (tw 1)) (读作 Ω + Ω_Ω). 它的证书由 OkO↑ 给出,
+-- 下标路径经 tw 1 自己的下标 (ink). 朝 tw 1: 保留, 输出结点在 tw 1 自己的顶位置.
+ΩK : Tr (tw 1)
+ΩK = proj₁ (Ωt (tw 1))
+
+Mr : L
+Mr = tw 1 ⊕ ↑ (tw 1) ΩK
+
+oMr : Ok Mr
+oMr = proj₂ (Ok-tw 2) ΩK
+
+wKr : tw 1 ≤ Mr
+wKr = lift (tw 1) (↑ (tw 1) ΩK)
+
+keep-K-real : posOf (kp Mr oMr (inj₁ (inj₁ tt)) wKr) ≡ just topK
+keep-K-real = refl
+
+------------------------------------------------------------------------
+-- 三. tw 1 自己的顶位置上的结点, 朝孩子 1 里的第 1 层 (路径 inc 1 self): 保留, 位置是第 1 层的顶位置.
+c₁ : Tr zero
+c₁ = suc zero
+
+keep-1 : posOf (kp (tw 1) (Ok-tw 1) topK (inc c₁ self)) ≡ just (inj₂ (tt , inj₁ tt))
+keep-1 = refl

@@ -1,0 +1,85 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 下一座正塔的每一孩子继承前一整塔的读值。任选共尾塔号及每塔一个实际反馈点，其极限与 Λ 值相同。
+module B17CellNext where
+open import Data.Nat.Base as Nat using (ℕ; zero; suc)
+import Data.Nat.Properties as N
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼l; l≼; ≼-refl; ≼-trans; ≼-suc; s≼s)
+open import OCF.Align.BTBOValBase using (tr₀)
+import B12Terminal as T
+import B12TerminalTail as Tail
+import B12EboRows as B
+import B12XRef as Orig
+import B12Strict as Strict
+import B12ActualSlots as Cover
+import B14Goal as G
+import B14RefRow as Row
+import B17Cofinal as C
+import B17CellPrefix as P
+import B17OrbitRow as New
+import B17Join as J
+
+module At (n j : ℕ) where
+  module A = P.At n
+  run₀ = A.S.child j
+  ℓ = A.h (A.S.ix j)
+  b = T.Run.β run₀
+  before : B.child n ≼ read (proj₁ b)
+  before = Tail.prior tw T.terminal n
+  actual : P.cell n j ≼ read EBOᶜ
+  actual = ≼-trans (A.S.lift-value j) (T.lim-child tw T.terminal (suc n))
+  previous : B.child n ≼ P.cell n j
+  previous = ≼-trans before (T.inflate0 ℓ (T.Run.ok run₀) (T.Run.bs run₀) (z≤ ℓ) b (proj₁ (Ωt ℓ)))
+  strict : L.suc (B.child n) ≼ P.cell n j
+  strict = ≼-trans (s≼s before) (Strict.strict (mono ℓ (T.Run.ok run₀) (T.Run.bs run₀) zero (z≤ ℓ) b (proj₂ (Ωt ℓ))))
+open At public using (previous; strict; actual)
+
+fixed : ∀ {x} → L.suc x ≼ read EBOᶜ → Σ ℕ (λ n → ∀ j → L.suc x ≼ P.cell n j)
+fixed h with C.witness h
+... | n , p = n , λ j → ≼-trans p (previous n j)
+
+walk : ∀ {k n} → k Nat.≤′ n → B.child k ≼ B.child n
+walk Nat.≤′-refl = ≼-refl _
+walk {n = suc n} (Nat.≤′-step d) = ≼-trans (walk d) (P.promote n)
+
+Eventually : T₀ → Set
+Eventually x = Σ ℕ (λ k → ∀ n → k Nat.≤ n → ∀ j → x ≼ P.cell n j)
+eventual : ∀ {x} → L.suc x ≼ read EBOᶜ → Eventually (L.suc x)
+eventual h with C.witness h
+... | k , p = k , λ n kn j → ≼-trans p (≼-trans (walk (N.≤⇒≤′ kn)) (previous n j))
+inside : ∀ {x} → Eventually x → x ≼ read EBOᶜ
+inside (k , h) = ≼-trans (h k N.≤-refl 0) (actual k 0)
+
+eventual-goal : (G.Goal → ∀ i → Eventually (L.suc (Orig.row i))) × ((∀ i → Eventually (L.suc (Orig.row i))) → G.Goal)
+eventual-goal = (λ g i → eventual (≼-trans (C.strict-row i) (≼-trans (G.row-in (suc i)) g))) ,
+                (λ f → Orig.assemble (λ i → ≼-trans (≼-suc (≼-refl _)) (inside (f i))))
+
+prescribed : ∀ (j : ℕ → ℕ → ℕ) → (G.Goal → ∀ i → Σ ℕ (λ n → L.suc (Orig.row i) ≼ P.cell n (j i n))) ×
+                                 ((∀ i → Σ ℕ (λ n → L.suc (Orig.row i) ≼ P.cell n (j i n))) → G.Goal)
+prescribed j = (λ g i → let f = proj₁ eventual-goal g i in proj₁ f , proj₂ f (proj₁ f) N.≤-refl (j i (proj₁ f))) ,
+   (λ f → Orig.assemble (λ i → ≼-trans (≼-suc (≼-refl _)) (≼-trans (proj₂ (f i)) (actual (proj₁ (f i)) (j i (proj₁ (f i)))))))
+
+assemble : ∀ {q : T₀} → (∀ n → B.child n ≼ q) → read EBOᶜ ≼ q
+assemble h = l≼ λ { zero → h zero ; (suc n) → h (suc n) }
+
+sample : ∀ (ρ : ℕ → ℕ) → (∀ k → Σ ℕ (λ m → k Nat.≤ ρ m)) → ∀ (j : ℕ → ℕ) →
+         read EBOᶜ ≈ᵛ L.lim (λ m → P.cell (ρ m) (j m))
+sample ρ cofinal j = assemble (λ k → ≼l (n k) (≼-trans (walk (N.≤⇒≤′ (proj₂ (cofinal k)))) (previous (ρ (n k)) (j (n k))))) ,
+                      l≼ (λ m → actual (ρ m) (j m))
+  where n = λ k → proj₁ (cofinal k)
+every : ∀ (j : ℕ → ℕ) → read EBOᶜ ≈ᵛ L.lim (λ n → P.cell n (j n))
+every = sample (λ n → n) (λ k → k , N.≤-refl)
+zero-chain : read EBOᶜ ≈ᵛ L.lim (λ n → P.cell n 0)
+zero-chain = every (λ _ → 0)
+
+row-in-first : Row.node 1 ≼ P.cell 0 1
+row-in-first = ≼-trans (New.At.whole (T.finiteRun 2) (Cover.all-finite 2)) (T.follow-ge (T.visit 2) (T.tower-child T.tower1 1))
+source-in-every : ∀ j → tr₀ J.source ≼ P.cell 1 j
+source-in-every j = ≼-trans (s≼s (≼-trans (proj₁ J.exact) J.Run.closed)) (strict 1 j)

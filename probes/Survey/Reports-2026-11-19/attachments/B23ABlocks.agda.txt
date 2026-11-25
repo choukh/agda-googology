@@ -1,0 +1,81 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23ABlocks where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import W4Block hiding (b₀)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (p₂; g₂; ◃→≼)
+open import WKShape using (lvl3)
+open import WKGen using (node-ge)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼l; l≼; ≼-trans)
+import B11OuterCore as C
+import B12LimitSrc as Src
+import B12ActualSlots as Cov
+import B12Terminal as Tm
+import B12Update as U
+import B13Orbit as Orb
+import B13Update as Old
+import B13SeedOuter as Outer
+import B14OrbitReal as Real
+import B18OrbitWorld as W
+import B18OrbitLevels as All
+import B21RowPool as Pool
+import B22RowRule as Rule
+import B22RowPrefix as P
+import B22RowLive as V
+import B23ACoeff
+open Rule.Rule
+module Site (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  module A = Outer.At r
+  open A using (c⁺; c; nc; K)
+  J = Orb.Jc c⁺
+  Q′ = Orb.block c⁺ J
+  module E₀ = Pool.At.V.R.I.E₀ r cv
+  cp = E₀.cp
+  module One {p : Src.Lev₂} (l : P.Label p) (R : Base lvl2) (h : V.Present l R) where
+    module Add = B23ACoeff.Add l L.zero
+    module At (w : zero ≤ lvl2) (b : Tr⁺ zero) (hb : L.ψ⁰ (P.q l) ≼ read (proj₁ b)) where
+      result = Old.advanceJc c⁺ cp w (P.q l) (P.e l) (P.rows l) R b (U.seeds hb (V.lower h C.zpath) (V.struct h))
+    b₀ = R lvl1 C.slot
+    st : V.Present Add.label′ (stepS J R)
+    st = V.present (λ w → U.value-bound (At.result w (R zero w) (V.lower h w)))
+      (U.structure (At.result C.zpath (R zero C.zpath) (V.lower h C.zpath)))
+      (λ d → W.rise (All.world d) (run K R lvl1 C.slot b₀) (run J R lvl1 C.slot b₀)
+        (Emono ok₂ tdNil K R lvl1 C.slot b₀ nc) _
+        (W.advance (All.world d) K (Orb.standard≤K c⁺ cp) R b₀ (P.v l d) (C.st (V.struct h)) (V.index h d) (V.index h d)))
+  base : Rule.Rule J L.zero
+  reg base = L.z≅
+  advance base l = B23ACoeff.Add.label′ l L.zero
+  state base = One.st
+  Rule.value base = λ l R h w b hb → U.value-bound (One.At.result l R h w b hb)
+
+  module Two {p : Src.Lev₂} (l : P.Label p) (R : Base lvl2) (h : V.Present l R) where
+    module X = P.Step l
+    module Y = V.Update r cv l R h
+    kept = Real.carry {e = P.e l} {R = R} {S = stepS Q′ R} (inf Q′ R lvl1 C.slot (R lvl1 C.slot)) (V.struct h)
+    module At (w : zero ≤ lvl2) (t : Tr⁺ zero) (ht : L.ψ⁰ (P.q l) ≼ read (proj₁ t)) where
+      module E = Y.Emit w t ht
+      E₂ = run (Orb.block (Ωt lvl2) J)
+      std : ∀ n → L.ψ⁰ (X.stage n) ≼ read (proj₁ (E₂ R zero w t))
+      std n = ≼-trans (E.a n) (≼-trans (≼l 0 (≼-refl _))
+        (node-ge (kp lvl2 ok₂ p₂ w) (λ z → E ok₂ tdNil (g₂ z) J R zero w t) E.ck (suc (Y.Y.j n))))
+      move : ∀ (d : Tr⁺ lvl2) → Cov._⊴_ (proj₁ (Ωt lvl2)) (proj₁ d) →
+        L.ψ⁰ X.q′ ≼ read (proj₁ (run (Orb.block d J) R zero w t))
+      move d (inj₁ eq) = subst (λ z → L.ψ⁰ X.q′ ≼ read (proj₁ (E ok₂ tdNil z J R zero w t))) eq (l≼ std)
+      move d (inj₂ gt) = ≼-trans (l≼ std) (◃→≼ (Emono ok₂ tdNil J R zero w t gt))
+      out = move c⁺ cp
+    st : V.Present X.next (stepS Q′ R)
+    st = V.present (λ w → At.out w (R zero w) (V.lower h w))
+      (C.str (Y.raise′ c⁺ cp) (C.rΩ kept) (C.sN kept) (C.st kept)) (λ d → Y.Y.move d c⁺ cp)
+  once : Rule.Rule Q′ Ω₂ᴸ
+  reg once = L.Ω-refl _
+  advance once = P.Step.next
+  state once = Two.st
+  Rule.value once = Two.At.out

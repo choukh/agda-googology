@@ -1,0 +1,66 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 首塔真实回灌下标与单位系数相互夹住同一个上确界。该上确界是 ε 不动点，且超过一个已知的原塔分支。
+module B29SFirst where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; cong; sym)
+open import WVOne using (T₀; 𝟏; read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; l≼; ≼l; s≼s)
+import B27UArbitrary as U
+import B19FirstTower as T
+import B19Canonical as K
+import B18CellState as C
+import B18Product as M
+import B19IdealArithmetic as A
+import B19IdealPowers as P
+import B14Height as H
+import B22HeightValue as V
+import B22MovingIndex as E
+import B19IdealRow as R
+
+f = C.At.fresh 0
+x : ℕ → T₀
+x j = read (U.index j)
+S : T₀
+S = L.lim f
+I : T₀
+I = L.lim x
+
+link : ∀ j → U.index j ≡ K.seq j
+link = K.indices
+factor : ∀ j → x (suc j) ≈ᵛ (L.ωᶜ M.· f j)
+factor j = subst (λ y → read y ≈ᵛ (L.ωᶜ M.· f j)) (sym (link (suc j))) (T.index-factor j)
+
+forward : ∀ j → f j ≼ x (suc j)
+forward j = ≼-trans {b = L.ωᶜ M.· f j} (M.pad P.omega-pos (f j)) (proj₂ (factor j))
+
+twice : ∀ j → A.norm (A.norm (x j)) ≼ f j
+twice j = ≼-trans {b = 𝟏 M.· A.norm (A.norm (x j))} (M.pad (≼-refl 𝟏) _)
+  (≼-trans {b = H.act (x j) 𝟏} (proj₂ (V.exact (x j) 𝟏))
+    (subst (H.act (x j) 𝟏 ≼_) (U.real j) (H.law (U.index j) (U.run (U.index j)) (U.all (U.index j)) 𝟏 (≼-refl 𝟏))))
+
+power : ∀ j → A.norm (x j) ≼ f j
+power j = ≼-trans {b = A.norm (A.norm (x j))} (A.up (A.norm (x j))) (twice j)
+
+back : ∀ j → x j ≼ f j
+back j = ≼-trans {b = A.norm (x j)} (A.up (x j)) (power j)
+
+exact : I ≈ᵛ S
+exact = l≼ (λ j → ≼l {f = f} j (back j)) , l≼ (λ j → ≼l {f = x} (suc j) (forward j))
+
+power-step : ∀ j → A.norm (f j) ≼ f (suc j)
+power-step j = ≼-trans {b = A.norm (x (suc j))} (P.expo P.omega-pos (forward j)) (power (suc j))
+
+mono : ∀ j → f j ≼ f (suc j)
+mono j = ≼-trans {b = A.norm (f j)} (A.up (f j)) (power-step j)
+
+fixed : A.norm S ≈ᵛ S
+fixed = l≼ (λ j → ≼l {f = f} (suc j) (power-step j)) , A.up S
+
+floor : L.suc R.row ≼ f 2
+floor = ≼-trans {b = x 2} (subst (λ y → L.suc R.row ≼ read y) (sym (link 2)) T.first-positive) (back 2)
+
+room : E.above R.row ≼ S
+room = E.least R.row S (≼l {f = f} 2 floor) (proj₁ fixed)
+

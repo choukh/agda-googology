@@ -1,0 +1,87 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21IdealCount where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; subst₂; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B14SharpBound using (data≤)
+open import OCF.Align.Value using (≼-refl; ≼-trans; l≼; ≼l)
+import B12ActualSlots as C
+import B17SharpFeed as Link
+import B17SharpUpdate as U
+import B17SharpTwo as Two
+import B18SharpMacro as M
+import B13Orbit as Orb
+import B12Orbit as Win
+
+import B21IdealRepeat as Reps
+import B15SharpAction as P1
+import B16SharpModel as H1
+import B16SharpOmega as O1
+import B15SharpLift as L1
+import B21IdealContext as Context
+open Context using (Pref; plug; empty; push)
+
+import B21IdealFrames as Frames
+open import OCF.Align.Value using (s≼s)
+open import Data.Sum using (inj₁)
+module At (lem : LEM) where
+  open I.Sharp lem
+  open U.Update lem
+  open M.Macro lem using (State; after)
+  open Two.Two lem using (w₀)
+  open Context.At lem using (nextState; out)
+  open Frames.At lem using (module Frame)
+  module Origin = Frame w₁ w₀
+
+  initial : ∀ {x K} → Context.At.Model lem x K → Origin.Model x K
+  initial m = Origin.model state (λ D a p S h → Context.At.Model.value m D a p S (convert h))
+    where
+    convert : ∀ {D S} → Origin.Fit D S → State D S
+    convert h = M.Macro.pair (Origin.Fit.one h) (Origin.Fit.bot h)
+    state = λ D p S h → Origin.fit (State.one (Context.At.Model.state m D p S (convert h)))
+      (State.bot (Context.At.Model.state m D p S (convert h)))
+
+  module Enter {X : F.Cx lvl2} (mid : F.⟦ X ⟧ lvl1) (low : F.⟦ X ⟧ B.zero)
+    {k : B.L} (w : W.Dn lvl2 k) (io : ∀ {i} → F.⟦ X ⟧ i → F.Tg w i) where
+    m = F.chM w io
+    module S = Frame mid low
+    module T = Frame (F.σ m mid) (F.σ m low)
+    transport : ∀ {x K} → S.Model x K → T.Model x (F.enterO m K)
+    transport h = T.model state value
+      where
+      pull = λ (st : F.St (F.cons w X)) i t → st i (F.σ m t)
+      back : ∀ {D st} → T.Fit D st → S.Fit D (pull st)
+      back h′ = S.fit (T.Fit.one h′) (T.Fit.bot h′)
+      value = λ D a p st h′ t b hb → S.Model.value h D a p (pull st) (back {D = nextState D p R.zero} {st = st} h′) (proj₂ t) b hb
+      state = λ D p st h′ → T.fit (S.Fit.one (S.Model.state h D p (pull st) (back {D = nextState D p R.zero} {st = st} h′)))
+        (S.Fit.bot (S.Model.state h D p (pull st) (back {D = nextState D p R.zero} {st = st} h′)))
+
+  grow : V.Tr⁺ r₂ → R.Tr R.zero → V.Tr⁺ r₂
+  grow a x = ψ♯ R.zero tt B♯ r₂ o₂ a x
+  module Count {X : F.Cx lvl2} (mid : F.⟦ X ⟧ lvl1) (low : F.⟦ X ⟧ B.zero)
+    (T : F.TD X B.zero) (a : V.Tr⁺ r₂) (K : F.Op X) (h : Frame.Model mid low (proj₁ a) K) where
+    open Frame mid low
+    op = λ y → F.op (F.E ok₂ T y K) (F.Einf ok₂ T y K)
+    result : ∀ (x : R.Tr R.zero) (y : B.Tr B.zero) → data≤ x y → Model (proj₁ (grow a x)) (op y)
+    result R.zero y e with W.zl y
+    ... | inj₁ refl = h
+    ... | inj₂ d = weak K (op y) (λ S i t v → F.Emono ok₂ T K S i t v d) h
+    result (R.suc x) (B.suc y) (s≼s e) = Rep.Take.raised _ _ (result x y e) T (proj₂ (grow a x))
+    result (R.suc x) (B.lim f d) (≼l n e) = weak (op (f n)) (op (B.lim f d)) (λ S i t v → F.Emono ok₂ T K S i t v (B.◃l n)) (result (R.suc x) (f n) e)
+    result (R.lim f d) y e = fixed _ _ (op y) (λ n → result (f n) y (≼-trans (≼l n (≼-refl _)) e))
+

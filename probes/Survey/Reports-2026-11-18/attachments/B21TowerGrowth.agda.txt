@@ -1,0 +1,46 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在任意标准证书的塔上，把两层之前独立标准塔所容纳的前缀用于整个变化系数。
+module B21TowerGrowth where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans)
+open import W4Block
+open import W4Path
+open import WVOne using (read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans)
+import B12Terminal as T
+import B12ActualSlots as A
+import B15FixedWitness as H
+import B19RowSecond as S
+import B14RefFixed as F
+import B20OldTail as Tail
+import B20OldBlocks as B
+import B20Room as Room
+import B20UnitAcross as U
+import B20StandardInside as St
+import B21TowerSeed as Seed
+open import B12LimitSrc using (Lev₂)
+
+add : Lev₂ → Lev₂
+add p = p L.+ L.up L.zero (F.collapse S.p)
+
+module At (m : ℕ) where
+  k : ℕ
+  k = suc (suc m)
+  top : ℕ
+  top = suc (suc k)
+  module Run (r : T.Run (tw top)) (eq : T.Run.ok r ≡ Ok-tw top) (cr : A.Covered r) where
+    module X = Seed.Layer.At k r eq cr
+    path = B.toward m
+    s = Room.sub path X.sub
+    cert : T.Run.ok s ≡ Ok-tw 2
+    cert = trans (Room.cert path X.sub) (trans (cong (H.pull path) X.okay) (B.good m))
+    cv = Room.cover path X.sub X.cv
+    high = Room.room path X.sub X.high
+    below : read (T.value s) ≼ read (T.value r)
+    below = ≼-trans (Room.below path X.sub X.cv) X.value
+    coefficient : ∀ p → p L.≅ p → L.ψ⁰ p ≼ St.std k → L.ψ⁰ (add p) ≼ read (T.value r)
+    coefficient p rp h = ≼-trans (U.At.apply s cert cv (St.std k) high p rp h) below
+    block : ∀ p → L.ψ⁰ p ≼ St.std k → L.ψ⁰ (Tail.block p) ≼ read (T.value r)
+    block p h = ≼-trans (B.Second.value s cert cv p (λ w → ≼-trans h (high w))) below
+  module Standard = Run (T.initial (tw top) (Ok-tw top)) refl (A.initial (tw top) (Ok-tw top))

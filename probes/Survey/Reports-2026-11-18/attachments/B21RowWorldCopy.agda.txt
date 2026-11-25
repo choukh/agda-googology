@@ -1,0 +1,87 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21RowWorldCopy where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block hiding (D; R)
+open import W4Ops
+open import W4Fold
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+import B13OrbitFeed as O
+import B17OrbitTower
+import B17OrbitModel as B
+import B17OrbitVector as V
+import B17OrbitNatural as N
+import B18OrbitWorld as W
+import B18OrbitLift as Lift
+import B18OrbitNatural as Nat
+import B18OrbitLevels as Depth
+import B21RowCopy as C
+
+shell : Tr lvl1 → Tr⁺ lvl1 → Tr⁺ lvl1
+shell = λ a (b : Tr⁺ lvl1) → (a + C.copy b) , z◃ a (+-mono a (◃t (proj₂ b) ◃e))
+nonzero = λ a (b : Tr⁺ lvl1) → z◃ a (+-mono a (proj₂ b))
+
+module Geom {X : Cx lvl2} (D : TD X lvl1) (a : Tr lvl1) (b : Tr⁺ lvl1) where
+  big = proj₁ (shell a b)
+  front = a + proj₁ b
+  e = λ x G → op (E ok₂ D x G) (Einf ok₂ D x G)
+  intoE : ∀ G → Rl (e (proj₁ b) (e front G)) (e big G)
+  intoE G S i t v = ◃l 0
+  intoI : ∀ n K G → Rn n (It n ok₂ D (proj₁ b) (Itᴺ n ok₂ D front K) G) (It n ok₂ D big K G)
+  intoI n K G = limCUB (suc n) (λ j → iter (It (suc n) ok₂ D zero (Kₑ n ok₂ D (proj₁ b) (proj₂ b))) (Itᴺ n ok₂ D front K) (suc j)) (λ j → Itinf (suc n) ok₂ D zero (Kₑ n ok₂ D (proj₁ b) (proj₂ b)) _) zero idM G
+
+module Old where
+  module H = N
+  open H using (closed; enterR)
+  I = V.Index
+  copied : ∀ a b v → I b v → I (shell a b) v
+  copied a b v h m rm zero u ru G g gg =
+    closed 0 dm (P.e (proj₁ b) (P.e P.front G)) (P.e P.big G) (P.intoE G) (B17OrbitTower.run (v 0) g)
+      (h m rm zero u ru (P.e P.front G) g (closed 0 dm G (P.e P.front G) (λ S i t z → Emono ok₂ D G S i t z (nonzero a b)) g gg))
+    where dm = u ⊙ m
+          D = trTD dm O.D₁
+          module P = Geom D a b
+  copied a b v h m rm (suc n) u ru K f k w′ rw G g gg =
+    closed n dm _ _ (P.intoI n K′ G) _
+      (h dm dr (suc n) idM (λ _ → refl) front f
+         (closed (suc n) dm K′ front grow f (enterR (suc n) (u ⊙ m) w′ rw K f k))
+         idM (λ _ → refl) G g gg)
+    where dm = w′ ⊙ u ⊙ m
+          dr = B.good (u ⊙ m) w′ (B.good m u rm ru) rw
+          D = trTD dm O.D₁
+          module P = Geom D a b
+          K′ = enter (suc n) w′ K
+          front = Itᴺ n ok₂ D P.front K′
+          grow : Rn (suc n) K′ front
+          grow s H = Itmono n ok₂ (trTD s D) (enter (suc n) s K′) H (nonzero a b)
+
+module Next (w : W.World) where
+  module H = Nat.For w
+  open H using (closed; enterR)
+  I = Lift.For.Index w
+  copied : ∀ a b v → I b v → I (shell a b) v
+  copied a b v h m rm zero u ru G g gg =
+    closed 0 dm (P.e (proj₁ b) (P.e P.front G)) (P.e P.big G) (P.intoE G) (B17OrbitTower.run (v 0) g)
+      (h m rm zero u ru (P.e P.front G) g (closed 0 dm G (P.e P.front G) (λ S i t z → Emono ok₂ D G S i t z (nonzero a b)) g gg))
+    where dm = u ⊙ m
+          D = trTD dm O.D₁
+          module P = Geom D a b
+  copied a b v h m rm (suc n) u ru K f k w′ rw G g gg =
+    closed n dm _ _ (P.intoI n K′ G) _
+      (h dm dr (suc n) idM (λ _ → refl) front f
+         (closed (suc n) dm K′ front grow f (enterR (suc n) (u ⊙ m) w′ rw K f k))
+         idM (λ _ → refl) G g gg)
+    where dm = w′ ⊙ u ⊙ m
+          dr = B.good (u ⊙ m) w′ (B.good m u rm ru) rw
+          D = trTD dm O.D₁
+          module P = Geom D a b
+          K′ = enter (suc n) w′ K
+          front = Itᴺ n ok₂ D P.front K′
+          grow : Rn (suc n) K′ front
+          grow s H = Itmono n ok₂ (trTD s D) (enter (suc n) s K′) H (nonzero a b)
+
+copy : ∀ d a b v → W.Index (Depth.world d) b v → W.Index (Depth.world d) (shell a b) v
+copy zero = Old.copied
+copy (suc d) = Next.copied (Depth.world d)
+

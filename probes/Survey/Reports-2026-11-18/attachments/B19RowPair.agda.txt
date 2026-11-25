@@ -1,0 +1,65 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19RowPair where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import WVOne using (T₀; 𝟏)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B13Target as P
+import B14RefFixed as K
+import B15RefAlgebra as A
+open import B19RowWorld
+
+Pair = T₀ × T₁
+PairFit : Pair → Lev₂ → Set
+PairFit a p = (proj₁ a L.≅ L.ψ⁰ p) × (proj₂ a L.≅ K.collapse p)
+
+Pow : ∀ {i} → L.Ordᶜ i → L.Ordᶜ i
+Pow p = L.lim (O.iter (p L.+_) L.zero)
+proper : ∀ {i} {p q : L.Ordᶜ i} → p L.≅ q → Pow p L.≅ Pow q
+proper d = L.l≅ (L.iter-R L._≅_ (L.add-≅ {σ = λ q → q} {σ′ = λ q → q} d) L.z≅)
+
+small : (T₀ → Pair) → Pair
+small f = L.lim (λ n → O.iter (λ x → proj₁ (f x)) 𝟏 (suc n)) , L.limᵢ L.zero (λ x → proj₂ (f x))
+
+large : (T₁ → Pair) → Pair
+large f = L.lim (λ n → proj₁ (f (chain n))) , L.lim (λ n → chain (suc n))
+  where chain = O.iter (λ x → proj₂ (f x)) Ω₁ᴸ
+
+module Small (f : T₀ → Pair) (g : T₀ → Lev₂) (rg : Natural g) (h : ∀ x → PairFit (f x) (g x)) where
+  step = λ x → L.ψ (L.suc L.zero) R.idσ (g x)
+  track : ∀ n → O.iter (λ x → proj₁ (f x)) 𝟏 n L.≅ O.iter step 𝟏 n
+  track = L.iter-R L._≅_ {G = λ x → proj₁ (f x)} {G′ = step}
+    (λ {x} {y} d → L.≅-trans (proj₁ (h x)) (L.≅-trans (L.ψ⁰-≅ (rg d)) (L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (rg (L.≅-refl⁰ y)))))
+    (L.s≅ L.z≅)
+  value : PairFit (small f) (L.limᵢ (L.suc L.zero) g)
+  value = L.l≅ (λ n → L.≅-trans (proj₁ (h _)) (L.ψ⁰-≅ (rg (track n)))) ,
+    L.lᵢ≅ L.z≅ λ x y d → L.≅-trans (proj₂ (h x)) (K.pres (rg (L.≅-sym (L.tr⁻-≅ L.z≅ (L.≅-sym d)))))
+
+module Large (f : T₁ → Pair) (g : T₁ → Lev₂) (rg : Natural g) (h : ∀ x → Reg x → PairFit (f x) (g x)) where
+  seq = O.iter (λ t → proj₂ (f t)) Ω₁ᴸ
+  chain = O.iter (λ t → K.collapse (g t)) Ω₁ᴸ
+  track : ∀ n → seq n L.≅ chain n
+  track = L.iter-R L._≅_ {G = λ t → proj₂ (f t)} {G′ = λ t → K.collapse (g t)}
+    (λ {x} {y} d → L.≅-trans (proj₂ (h x (P.refl-left d))) (K.pres (rg d))) (L.Ω-refl _)
+  value : PairFit (large f) (L.limᵢ L.zero g)
+  value = L.l≅ (λ n → L.≅-trans (proj₁ (h (seq n) (P.refl-left (track n)))) (L.ψ⁰-≅ (rg (track n)))) ,
+          L.l≅ (λ n → track (suc n))
+
+W : World
+C W = Pair
+fit W = PairFit
+conv W (s , t) d = L.≅-trans s (L.ψ⁰-≅ d) , L.≅-trans t (K.pres d)
+z W = 𝟏 , Ω₁ᴸ
+rz W = L.s≅ L.z≅ , L.Ω-refl _
+next W p = Pow (proj₁ p) , Pow (proj₂ p)
+rn W _ (s , t) = proper s , proper t
+sup W f = L.lim (λ j → proj₁ (f j)) , L.lim (λ j → proj₂ (f j))
+rs W a p rp h = L.l≅ (λ j → proj₁ (h j)) , L.l≅ (λ j → proj₂ (h j))
+node₀ W = small
+n₀ W = Small.value
+node₁ W = large
+n₁ W = Large.value

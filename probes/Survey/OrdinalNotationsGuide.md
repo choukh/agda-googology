@@ -15,6 +15,10 @@
 | **社区无证明** | 社区定义或声称, 没有证明 |
 | **推断** | 我方的推理 |
 
+> **2026-11-17 补:** 针对树侧折叠三类困难 (Ω 形状层号上不可判定的派发, 内涵树的值语义, 阶段无关的下界) 的文献调查见 [报告](reports/布劳威尔树折叠难点文献调查.md), 五路笔记在 `research_notes/布劳威尔树折叠难点文献调查/`. 其中 Buchholz 1987 的树类折叠与 ≪_k、Schwichtenberg 1993、Fairtlough 1992、Buchholz 1991、Freund 的 support 与导数、Setzer 的 ordinal systems、Kraus–Nordvall Forsberg–Xu 的禁忌表、coquand/agda-ordinal-analysis-id1 的 `collD`, 本手册以前没有收. 报告列了两处待核的文献注 (`Barrier.lagda.md` 的 TCS 2023 作者名单; 本手册 "Buchholz 1986" 那条).
+
+> **2026-11-17 补 (二):** 按作者纠正重做的发散调查 (不找同一问题的先例, 找可迁移的想法) 见 [报告](reports/折叠难点跨领域启发调查.md), 四路笔记在 `research_notes/折叠难点跨领域启发调查/`.
+
 ## 1. 一页结论
 
 | 层 | 最好的定义 | 最好的证明状态 | 我们用什么 |
@@ -144,6 +148,7 @@ $\chi(0,\alpha)=\aleph_{1+\alpha}$, $\chi(\alpha,0)$ 与 $\chi(\alpha,\beta+1)$ 
 | **koteitan/pss-proof** | `d1be91f` (2026-09-06) | Isabelle `y5_PSS_wf` `isabelle/8/Support_8_C.thy:13087`; `lean/Buchholz-1986/`, `lean/Buchholz-rel-ord/` | PSS 停机, 含 Buchholz 1986 Lemma 2.1、2.2、3.2a、3.3 的自证; **不用序数值的良基** `OT_B_wellFounded` (`lean/OTB-well-founded-syntactic/…-main.lean:235`, $D_\omega$-free, §6.1 末) | Isabelle/HOL; Lean 4 | Lean 0/0 (文本计数); Isabelle 按词 114 处在 20 文件 (未去注释). **131 与 5 已解开**: 131 是 `isabelle/8/audit.thy:41-42` 的历史清单, 陈述已迁到单命题文件, README 的 "`pss_paper.thy` 131 处" 是过时说法; 5 = 3 条真 `sorry` (`pss_paper.thy:233,239,250`, 都是 [Buc1] 引用) + 2 处注释. 全 `isabelle/` 独占一行的 `sorry` 8 处; 审计按名字, 不按证明项 (`Support_8_C.thy:12651`) | 未 | **未找到 LICENSE** (仓库无文件, GitHub 无判定) → 默认无授权 |
 | **我方 OT_I** `archive/src/Mahlo/Inacc/` | 工作树 | `Theorem.lagda.md`: `wellfounded : ∀ n {y} → OT y → y ≺ endpt n → Acc y` | Setzer OT_I 到 $\psi_{\Omega_1}\Omega_{I+n}$ 的构造性良基 | `--safe --cubical-compatible`, stdlib | 文件头 `--safe` | 我方, 本次未重编 | 本仓库 |
 | **我方 EBO** `probes/OCF/Align/EBO.lagda.md` | `c56b781` | `fsn↓`, `fsT↓`, `γ↓`; `FGH` 沿 `Acc` | 规则式基本列 + 递减证书; **无** NF 封闭, **无** 标准形良基 | `--safe --without-K --lossy-unification` | 文件头 `--safe` | 我方, 本次未重编 | 本仓库 |
+| **我方 EboLean3** `probes/OCF/Align/EboLean3*.lagda.md` | 工作树 (2026-11-05/06) | `EboLean3Omega.wf : NF t → Acc′ t`; `EboLean3Tree.EBO-tree″`, `fgh-EBO″` | 一切 EBO 标准形良基 (限标准形的可及性 `Acc′`), 基本列封闭 (`EboLeanClosure`), 抽出的树与 FGH 到 ψ₀(Λ) (2026-11-17 补记: 上一行 "无标准形良基" 只对 `EBO.lagda.md` 这一个文件成立) | `--safe --without-K --lossy-unification` | 文件头 `--safe` | 我方, 2026-11-17 主审冷编 `EboLean3Tree` 退出 0 | 本仓库 |
 | **我方 EBOI** `probes/OCF/Align/EBOI.lagda.md` | 未提交 | `fsn (ιT t) n ≡ ιT (E.fsn t n)` 等; `NF-ι`; `ψ₀Λ-tower` | 对 EBO 保守; 片段封闭 (§9.1); 全系统封闭、良基未做 | 同上 | 文件头 `--safe` | 我方, 本次未重编 | 本仓库 |
 
 ### 5.2 `ExBuchholz` 文件地图 (行号于 `6da2de5`, 路径 `Googology/Notation/ExBuchholz/`)

@@ -1,0 +1,312 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- KQ B1, 改过的块 (KQBlock: zero ⊕ b = b 定义地成立). 编译定理, 无前提.
+-- 正面: 规范 Ω 树的读回 Ω̂ 沿 "首枝路径" FB 字面单调; 读回对右加法给出 FB; 所以对一切层号 k 与 x y : Tr k, Ω̂ (↑ k x) ⊑ Ω̂ (↑ k (x + y)).
+-- lev 与塔的孩子 (hN n) 是推论. 否定: 对层号上的序不单调, ℕ 极限层号的第 1 个成员就失败 (lev 1 ⋢ lev ω, 而 lev 1 ⊑ lev (1 + ω)).
+module KQLev where
+
+open import Data.Nat using (ℕ; zero; suc; z≤n; s≤s) renaming (_≤_ to _≤ℕ_)
+open import Data.Nat.Properties using (≤-refl; ≤-trans; m≤n⇒m≤1+n)
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import KQBlock
+open import KQOps
+open import KQPath using (wk)
+
+-- 规范 Ω 树的读回.
+Ω̂ : L → L
+Ω̂ a = ↑ a (proj₁ (Ωt a))
+
+-- 首枝路径: 每一步进第 0 个孩子 (c₀).
+data FB : L → L → Set where
+  fself : ∀ {j} → FB j j
+  fdn   : ∀ {j s h} → FB j (h (c₀ s)) → FB j (nd s h)
+
+FB-trans : ∀ {i j ℓ} → FB i j → FB j ℓ → FB i ℓ
+FB-trans r fself   = r
+FB-trans r (fdn v) = fdn (FB-trans r v)
+
+FB→⊑ : ∀ {j ℓ} → FB j ℓ → j ⊑ ℓ
+FB→⊑ fself           = self
+FB→⊑ (fdn {s = s} v) = inc (c₀ s) (FB→⊑ v)
+
+------------------------------------------------------------------------
+-- B1(b) 的单步: 后继层, ℕ 极限层的第 0 个成员, Ω 形层的任一孩子.
+suc-step : (h : ⊤ → L) → Ω̂ (h tt) ⊑ Ω̂ (nd sS h)
+suc-step h = inc (proj₁ (Ωt (h tt))) (inc tt self)
+
+lim-step₀ : (g : ℕ → L) → Ω̂ (g 0) ⊑ Ω̂ (nd sL g)
+lim-step₀ g = inc 0 self
+
+Ω-step : (k : L) (h : Tr k → L) (c : Tr k) → Ω̂ (h c) ⊑ Ω̂ (nd (sΩ k) h)
+Ω-step k h c = inc c self
+
+-- ℕ 极限层的后续成员是累加: 第 n+1 个成员 = 第 n 个成员 ⊕ Ω̂ (g (n+1)).
+memL : L → ℕ → L
+memL zero          n = zero
+memL (nd sS h)     n = zero
+memL (nd sL g)     n = g n
+memL (nd (sΩ k) h) n = zero
+
+lim-cum : (g : ℕ → L) (n : ℕ) → memL (Ω̂ (nd sL g)) (suc n) ≡ memL (Ω̂ (nd sL g)) n ⊕ Ω̂ (g (suc n))
+lim-cum g n = refl
+
+FB→Ω̂ : ∀ {j ℓ} → FB j ℓ → Ω̂ j ⊑ Ω̂ ℓ
+FB→Ω̂ fself                   = self
+FB→Ω̂ (fdn {s = sS} {h} v)     = FB→Ω̂ v ∙ suc-step h
+FB→Ω̂ (fdn {s = sL} {h} v)     = FB→Ω̂ v ∙ lim-step₀ h
+FB→Ω̂ (fdn {s = sΩ k} {h} v)   = FB→Ω̂ v ∙ Ω-step k h zero
+
+------------------------------------------------------------------------
+-- ⊕ 与首枝路径.
+fz : (ℓ : L) → FB zero ℓ
+fz zero     = fself
+fz (nd s h) = fdn (fz (h (c₀ s)))
+
+FB-⊕ : (a b : L) → FB a (a ⊕ b)
+FB-⊕ zero     b          = fz b
+FB-⊕ (nd s h) zero       = fself
+FB-⊕ (nd s h) (nd s′ h′) = fdn (FB-⊕ (nd s h) (h′ (c₀ s′)))
+
+FB-⊕l : (a : L) {u u′ : L} → FB u u′ → FB (a ⊕ u) (a ⊕ u′)
+FB-⊕l zero     v       = v
+FB-⊕l (nd s h) fself   = fself
+FB-⊕l (nd s h) (fdn v) = fdn (FB-⊕l (nd s h) v)
+
+------------------------------------------------------------------------
+-- 迭代子的首枝: 在任一带 "首枝关系" 的结果代数上, F u 在 Eh x F u 的首枝上. 高一阶取逐点.
+record FBR (A : RA) : Set₁ where
+  field
+    Rf : Car A → Car A → Set
+    rf : ∀ {u} → Rf u u
+    tr : ∀ {u v w} → Rf u v → Rf v w → Rf u w
+    lR : ∀ {u} (F : ℕ → Car A) (a : (n : ℕ) → Rel A (F n) (F (suc n))) → Rf u (F 0) → Rf u (limA A F a)
+    nR : ∀ {u m} (κ : Ctx A m) (p : Pos m) (G : Br m p → Car A) → Rf u (G (fromBr m p zero)) → Rf u (nodeA A κ p G)
+open FBR
+
+ptR : ∀ {A} → FBR A → FBR (pt A)
+Rf (ptR R) f g = (u : _) → Rf R (proj₁ f u) (proj₁ g u)
+rf (ptR R) = λ u → rf R
+tr (ptR R) r r′ = λ u → tr R (r u) (r′ u)
+lR (ptR R) F a r = λ u → lR R _ _ (r u)
+nR (ptR R) κ p G r = λ u → nR R κ p _ (r u)
+
+Eh-first : (A : RA) (R : FBR A) {m : L} (κ : Ctx A m) (x : Tr m) (F : OpA A) (u : Car A)
+         → Rf R (proj₁ F u) (proj₁ (Eh A κ x F) u)
+Eh-first A R κ zero F u = rf R
+Eh-first A R κ (suc x) F u = lR R _ _ (Eh-first A R κ x F u)
+Eh-first A R κ (lim f a) F u = lR R _ _ (Eh-first A R κ (f 0) F u)
+Eh-first A R {m} κ (Ω p g) F u = nR R κ p _ (Eh-first A R κ (g (fromBr m p zero)) F u)
+Eh-first A R {nd s h} κ (up x c y e) F u =
+  tr R (Eh-first A R κ x F u) (Eh-first A R (dn A κ c) y (Eh A κ x F) u)
+Eh-first A R κ (ex a b nb x ε) F u =
+  tr R (Eh-first A R κ a F u)
+       (tr R (Eh-first A R κ b (Eh A κ a F) u) (Eh-first (pt A) (ptR R) κ x (opE A κ b nb) (Eh A κ a F) u))
+
+FBAL : FBR AL
+Rf FBAL = FB
+rf FBAL = fself
+tr FBAL = FB-trans
+lR FBAL F a r = fdn r
+nR FBAL κ p G r = fdn r
+
+-- 读回对右加法: ↑ k x 在 ↑ k (x + y) 的首枝上.
+↑-FB+ : (k : L) (x y : Tr k) → FB (↑ k x) (↑ k (x + y))
+↑-FB+ k        x zero            = fself
+↑-FB+ k        x (suc y)         = fdn (↑-FB+ k x y)
+↑-FB+ k        x (lim f a)       = fdn (↑-FB+ k x (f 0))
+↑-FB+ k        x (Ω p g)         = fdn (↑-FB+ k x (g (fromBr k p zero)))
+↑-FB+ (nd s h) x (up y c w e)    = FB-trans (↑-FB+ (nd s h) x y) (FB-⊕ (↑ (nd s h) (x + y)) (↑ (h c) w))
+↑-FB+ (nd s h) x (ex a b nb y ε) =
+  FB-trans (↑-FB+ (nd s h) x a)
+    (FB-trans (FB-⊕ (↑ (nd s h) (x + a)) (↑ (nd s h) b))
+              (Eh-first AL FBAL tt y (opR (↑ (nd s h) b)) (↑ (nd s h) (x + a))))
+
+------------------------------------------------------------------------
+-- 主定理与推论.
+Ω̂-+ : (k : L) (x y : Tr k) → Ω̂ (↑ k x) ⊑ Ω̂ (↑ k (x + y))
+Ω̂-+ k x y = FB→Ω̂ (↑-FB+ k x y)
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+lev : Tr zero → L
+lev c = zero ⊕ ↑ (h₁ c) (proj₁ (Ωt (h₁ c)))
+
+-- B1(a).
+lev-mono : (c d : Tr zero) → lev c ⊑ lev (c + d)
+lev-mono c d = Ω̂-+ zero c d
+
+lev-mono≤ : (c d : Tr zero) → lev c ≤ lev (c + d)
+lev-mono≤ c d = wk (lev-mono c d)
+
+-- 塔的孩子: 读回出来的 Ω 形层号 Ω̂ (hN n c) 的族对右加法字面单调.
+hN : (n : ℕ) → Tr (tw n) → L
+hN n c = tw n ⊕ ↑ (tw n) c
+
+tw-Ω̂ : (n : ℕ) (c d : Tr (tw n)) → Ω̂ (hN n c) ⊑ Ω̂ (hN n (c + d))
+tw-Ω̂ n c d = FB→Ω̂ (FB-⊕l (tw n) (↑-FB+ (tw n) c d))
+
+------------------------------------------------------------------------
+-- 否定: 层号序 h₁ 1 ≤ h₁ ω 不给 lev 1 ⊑ lev ω. 不变式: 首枝深度 zd; lev ω 的一切 Ω 形子项首枝深度 ≥ 3, lev 1 是 2.
+sn : ℕ → Tr zero
+sn zero    = zero
+sn (suc m) = suc (sn m)
+
+ω : Tr zero
+ω = lim sn (λ m → ◃s)
+
+lvl-path : h₁ (suc zero) ≤ h₁ ω
+lvl-path = inc 1 self
+
+right-ok : lev (suc zero) ⊑ lev (suc zero + ω)
+right-ok = lev-mono (suc zero) ω
+
+zd : L → ℕ
+zd zero     = 0
+zd (nd s h) = suc (zd (h (c₀ s)))
+
+zd-⊕ : (X Y : L) → zd X ≤ℕ zd (X ⊕ Y)
+zd-⊕ zero     Y          = z≤n
+zd-⊕ (nd s h) zero       = ≤-refl
+zd-⊕ (nd s h) (nd s′ h′) = m≤n⇒m≤1+n (zd-⊕ (nd s h) (h′ (c₀ s′)))
+
+Pz : L → Set
+Pz zero          = ⊤
+Pz (nd sS h)     = ⊤
+Pz (nd sL h)     = ⊤
+Pz (nd (sΩ k) h) = 3 ≤ℕ zd (nd (sΩ k) h)
+
+All : L → Set
+All zero     = Pz zero
+All (nd s h) = Pz (nd s h) × ((c : Ch s) → All (h c))
+
+All→Pz : (ℓ : L) → All ℓ → Pz ℓ
+All→Pz zero     _       = tt
+All→Pz (nd s h) (p , _) = p
+
+sub : ∀ {j ℓ} → j ⊑ ℓ → All ℓ → Pz j
+sub {ℓ = ℓ} self a                  = All→Pz ℓ a
+sub (inc c v) (_ , a)               = sub v (a c)
+sub {ℓ = nd s h} (inu vs) (_ , a)   = sub (vs (c₀ s)) (a (c₀ s))
+
+allA : (X Y : L) → 2 ≤ℕ zd X → All X → All (X ⊕ Y)
+allA zero     Y              () _
+allA (nd s h) zero           q  a = a
+allA (nd s h) (nd sS h′)     q  a = tt , λ c → allA (nd s h) (h′ c) q a
+allA (nd s h) (nd sL h′)     q  a = tt , λ c → allA (nd s h) (h′ c) q a
+allA (nd s h) (nd (sΩ k) h′) q  a = s≤s (≤-trans q (zd-⊕ (nd s h) (h′ zero))) , λ c → allA (nd s h) (h′ c) q a
+
+NoΩ : L → Set
+NoΩ zero          = ⊤
+NoΩ (nd sS h)     = (c : ⊤) → NoΩ (h c)
+NoΩ (nd sL h)     = (n : ℕ) → NoΩ (h n)
+NoΩ (nd (sΩ k) h) = ⊥
+
+allN : (Y : L) → NoΩ Y → All Y
+allN zero          _ = tt
+allN (nd sS h)     n = tt , λ c → allN (h c) (n c)
+allN (nd sL h)     n = tt , λ c → allN (h c) (n c)
+allN (nd (sΩ k) h) ()
+
+allB : (X Y : L) → All X → NoΩ Y → All (X ⊕ Y)
+allB zero     Y              a n  = allN Y n
+allB (nd s h) zero           a _  = a
+allB (nd s h) (nd sS h′)     a n  = tt , λ c → allB (nd s h) (h′ c) a (n c)
+allB (nd s h) (nd sL h′)     a n  = tt , λ c → allB (nd s h) (h′ c) a (n c)
+allB (nd s h) (nd (sΩ k) h′) a ()
+
+noΩ↑ : (z : Tr zero) → NoΩ (↑ zero z)
+noΩ↑ zero          = tt
+noΩ↑ (suc z)       = λ _ → noΩ↑ z
+noΩ↑ (lim f a)     = λ n → noΩ↑ (f n)
+noΩ↑ (Ω () _)
+noΩ↑ (up _ () _ _)
+noΩ↑ (ex _ _ _ _ ())
+
+M : ℕ → L
+M n = memL (lev ω) n
+
+all0 : All (M 0)
+all0 = tt , λ _ → tt
+
+all1 : All (M 1)
+all1 = s≤s (s≤s (s≤s z≤n)) , λ z → tt , λ _ → allB (M 0) (↑ zero z) all0 (noΩ↑ z)
+
+allS : (n : ℕ) → All (M (suc n)) × (2 ≤ℕ zd (M (suc n)))
+allS zero    = all1 , s≤s (s≤s z≤n)
+allS (suc n) with allS n
+... | a , q = allA (M (suc n)) (Ω̂ (h₁ (sn (suc (suc n))))) q a , ≤-trans q (zd-⊕ (M (suc n)) (Ω̂ (h₁ (sn (suc (suc n))))))
+
+allω : All (lev ω)
+allω = tt , λ { zero → all0 ; (suc n) → proj₁ (allS n) }
+
+lev1-zd : zd (lev (suc zero)) ≡ 2
+lev1-zd = refl
+
+no-lim-member : lev (suc zero) ⊑ lev ω → ⊥
+no-lim-member v with sub v allω
+... | s≤s (s≤s ())
+
+------------------------------------------------------------------------
+-- B3 的材料: "ℕ 极限只走第 0 个成员" 的路径 P0. 它被 Ω̂ 与 a ⊕ 保持 (自持), 包含 FB, 不包含一般的 ⊑ (no-lim-member).
+data P0 : L → L → Set where
+  p0self : ∀ {j} → P0 j j
+  p0S    : ∀ {j h} → P0 j (h tt) → P0 j (nd sS h)
+  p0L    : ∀ {j g} → P0 j (g 0) → P0 j (nd sL g)
+  p0Ω    : ∀ {j k h} (c : Tr k) → P0 j (h c) → P0 j (nd (sΩ k) h)
+
+P0-trans : ∀ {i j ℓ} → P0 i j → P0 j ℓ → P0 i ℓ
+P0-trans r p0self    = r
+P0-trans r (p0S v)   = p0S (P0-trans r v)
+P0-trans r (p0L v)   = p0L (P0-trans r v)
+P0-trans r (p0Ω c v) = p0Ω c (P0-trans r v)
+
+P0→⊑ : ∀ {j ℓ} → P0 j ℓ → j ⊑ ℓ
+P0→⊑ p0self    = self
+P0→⊑ (p0S v)   = inc tt (P0→⊑ v)
+P0→⊑ (p0L v)   = inc 0 (P0→⊑ v)
+P0→⊑ (p0Ω c v) = inc c (P0→⊑ v)
+
+FB→P0 : ∀ {j ℓ} → FB j ℓ → P0 j ℓ
+FB→P0 fself              = p0self
+FB→P0 (fdn {s = sS} v)   = p0S (FB→P0 v)
+FB→P0 (fdn {s = sL} v)   = p0L (FB→P0 v)
+FB→P0 (fdn {s = sΩ k} v) = p0Ω zero (FB→P0 v)
+
+-- 自持: Ω̂ 把 P0 送到 P0.
+Ω̂-P0 : ∀ {j ℓ} → P0 j ℓ → P0 (Ω̂ j) (Ω̂ ℓ)
+Ω̂-P0 p0self             = p0self
+Ω̂-P0 (p0S {h = h} v)    = P0-trans (Ω̂-P0 v) (p0Ω (proj₁ (Ωt (h tt))) (p0S p0self))
+Ω̂-P0 (p0L v)            = P0-trans (Ω̂-P0 v) (p0L p0self)
+Ω̂-P0 (p0Ω c v)          = P0-trans (Ω̂-P0 v) (p0Ω c p0self)
+
+P0-⊕l : (a : L) {u u′ : L} → P0 u u′ → P0 (a ⊕ u) (a ⊕ u′)
+P0-⊕l zero     v         = v
+P0-⊕l (nd s h) p0self    = p0self
+P0-⊕l (nd s h) (p0S v)   = p0S (P0-⊕l (nd s h) v)
+P0-⊕l (nd s h) (p0L v)   = p0L (P0-⊕l (nd s h) v)
+P0-⊕l (nd s h) (p0Ω c v) = p0Ω c (P0-⊕l (nd s h) v)
+
+-- 候选条件 "Ω 分支对右加法 P0 单调", 塔满足, Ω̂ 的任意次迭代保持.
+RMono : (k : L) → (Tr k → L) → Set
+RMono k h = (c d : Tr k) → P0 (h c) (h (c + d))
+
+tw-RMono : (n : ℕ) → RMono (tw n) (hN n)
+tw-RMono n c d = FB→P0 (FB-⊕l (tw n) (↑-FB+ (tw n) c d))
+
+Ω̂-RMono : (k : L) (h : Tr k → L) → RMono k h → RMono k (λ c → Ω̂ (h c))
+Ω̂-RMono k h r c d = Ω̂-P0 (r c d)
+
+⊕-RMono : (a k : L) (h : Tr k → L) → RMono k h → RMono k (λ c → a ⊕ h c)
+⊕-RMono a k h r c d = P0-⊕l a (r c d)
+
+lev-RMono : RMono zero lev
+lev-RMono c d = Ω̂-P0 (FB→P0 (↑-FB+ zero c d))
+
+-- 真实运行的层号 Qr (W5Trace) 的孩子族形如 c ↦ a₁ ⊕ (a₂ ⊕ (a₃ ⊕ lev c)): 在改过的块里满足候选条件.
+Qr-RMono : (a₁ a₂ a₃ : L) → RMono zero (λ c → a₁ ⊕ (a₂ ⊕ (a₃ ⊕ lev c)))
+Qr-RMono a₁ a₂ a₃ = ⊕-RMono a₁ zero _ (⊕-RMono a₂ zero _ (⊕-RMono a₃ zero lev lev-RMono))

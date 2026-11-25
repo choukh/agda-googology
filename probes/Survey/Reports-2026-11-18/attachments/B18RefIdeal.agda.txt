@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 固定原下标与另择下标的量词分开。三个估计只调用正性、零层结构与已经校准的标准底。
+module B18RefIdeal where
+open import Data.Nat using (zero; suc)
+open import Data.Product using (Σ; _,_; proj₁)
+import OCF.Lean.YiRWBlock as I
+import OCF.Lean.YiRWOps as IO
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.NoCumsum as N
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; ≅→≼)
+import W4Block as B
+import B14Btbo as T
+import B16IndexBase as S
+import B16SharpSource as U
+import B17SharpHeight as H
+import B17SharpSelected as Q
+import B18RefHeight as R
+
+module At (lem : LEM) where
+  open H.Compare lem using (H)
+  base = IO.Ωt I.zero
+  point = proj₁ (R.inflate (N.γ 2))
+  chosen-height : N.γ 2 ≼ H.see (H point base)
+  chosen-height = ≼-trans (R.ceiling _) (R.Sharp.height lem point base)
+
+  chosen-base : ∀ z → Σ H.Pos (λ a → L.suc (T.α (S.κ z)) ≼ H.see (H z a))
+  chosen-base z = a , ≼-trans (OCF.Align.Value.s≼s (≼-trans (R.ceiling _) (≅→≼ (L.≅-sym (Q.same _)))))
+    (R.Sharp.base lem z a)
+    where a = Q.start (R.inflate (T.α (S.κ z)))
+
+  initial : ∀ z a → H.see (H B.zero a) ≼ H.see (H z a)
+  initial B.zero a = ≼-refl _
+  initial (B.suc z) a = ≼l 0 (initial z a)
+  initial (B.lim f p) a = ≼l 0 (initial (f 0) a)
+  floor : ∀ z → U.Source.src lem ≼ H.see (H z base)
+  floor z = ≼-trans (U.Source.lower lem) (initial z base)

@@ -1,0 +1,34 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 独立生成所有正塔的回灌。高层走链的起点是同层的树，孩子的每个槽追加先前标准塔的零层输出。
+module B20Towers where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import B18TowerEmb as E
+import B20Head as H
+
+extend : ∀ {l} → Base l → Tr⁺ zero → Base l
+extend b q j w = b j w ⊞ q
+slots : ∀ l → ℕ → Base l
+slots l zero = B₀ l
+slots l (suc m) = extend (slots l m) (E.standard m)
+
+module At (n : ℕ) where
+  k = tw n
+  ℓ : Tr k → L
+  ℓ z = k ⊕ ↑ k z
+  ok = proj₂ (Ok-tw (suc n))
+  nextWith : ∀ z → Base (ℓ z) → Tr⁺ k → Tr k
+  nextWith z b v = proj₁ (ψ (ℓ z) (ok z) b k (self ∙ lift k (↑ k z)) v (proj₁ (Ωt (ℓ z))))
+  next : Tr k → Tr k
+  next z = nextWith z (slots (ℓ z) (suc n)) (H.head n)
+  index = iter next zero
+  evaluate : ∀ z → Base (ℓ z) → Tr⁺ zero → Tr zero
+  evaluate z b v = proj₁ (ψ (ℓ z) (ok z) b zero (z≤ _) v (proj₁ (Ωt (ℓ z))))
+  coefficient : ℕ → Tr zero
+  coefficient j = evaluate z (slots (ℓ z) (suc n)) (Ωt zero)
+    where z = index j
+  prefix = cum coefficient

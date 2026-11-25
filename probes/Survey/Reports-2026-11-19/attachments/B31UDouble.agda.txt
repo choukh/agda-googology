@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 双层极限中，沿真实前缀产生的全部单位只需一个上界 q，整棵的幂指数为 ω·ω。
+module B31UDouble where
+
+open import Data.Nat.Base using (ℕ)
+open import Data.Product using (proj₁; proj₂)
+import W4Block as W
+import W4Ops as O
+open import WVOne using (read; T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼)
+import B12Terminal as T
+import B14Tower as Tw
+import B14PathHeight as Path
+import B19IdealProduct as I
+import B19IdealArithmetic as A
+import B18Product as P
+import B31UProduct as U
+
+data Countable : W.L → Set where
+  branch : (g : ℕ → W.L) → Countable (W.nd W.sL g)
+
+reset : ∀ {k} → T.Run k → T.Run k
+reset r = Tw.reset r (O.Ωt W.zero) (≼-refl 𝟏)
+
+coefficient : ∀ {k} → Countable k → T.Run k → ℕ → T₀
+coefficient (branch g) r = U.Run.unit g (reset r)
+
+bounded : ∀ {k} (shape : Countable k) (r : T.Run k) (q : T₀) →
+  (∀ j → coefficient shape r j ≼ q) → U.fold₁ r ≼ I.power q L.ωᶜ
+bounded (branch g) r q pay = ≼-trans {b = 𝟏 P.· I.power q L.ωᶜ}
+  (U.Run.Budget.whole g (reset r) q pay) (proj₁ (I.left-one (I.power q L.ωᶜ)))
+
+into : ∀ {k} (shape : Countable k) (r : T.Run k) (j : ℕ) → coefficient shape r j ≼ U.fold₁ r
+into (branch g) r j = ≼-trans {b = read (T.value (U.Run.part g (reset r) j))}
+  (≼-trans {b = U.Run.seed g (reset r) j P.· U.Run.unit g (reset r) j}
+    (P.pad (T.Run.oneβ (U.Run.part g (reset r) j)) (U.Run.unit g (reset r) j))
+    (proj₂ (U.Run.scale g (reset r) j))) (T.lim-child g (reset r) j)
+
+module Grid (g : ℕ → W.L) (s : ∀ n → Countable (g n)) (r : T.Run (W.nd W.sL g)) where
+  module Outer = U.Run g r
+  cell : ℕ → ℕ → T₀
+  cell n = coefficient (s n) (Outer.part n)
+  Γ : T₀
+  Γ = L.lim (λ n → L.lim (cell n))
+  lower : Γ ≼ read (T.value r)
+  lower = l≼ (λ n → l≼ (λ j → ≼-trans {b = Outer.unit n} (into (s n) (Outer.part n) j)
+    (≼-trans {b = Outer.seed n P.· Outer.unit n}
+      (P.pad (T.Run.oneβ (Outer.part n)) (Outer.unit n))
+      (≼-trans {b = Outer.term n} (proj₂ (Outer.scale n)) (T.lim-child g r n)))))
+
+  upper : ∀ q → (∀ n j → cell n j ≼ q) →
+    read (T.value r) ≼ (Outer.start P.· I.power q (L.ωᶜ P.· L.ωᶜ))
+  upper q pay = ≼-trans {b = Outer.start P.· I.power (I.power q L.ωᶜ) L.ωᶜ}
+    (Outer.Budget.whole (I.power q L.ωᶜ) (λ n → bounded (s n) (Outer.part n) q (pay n)))
+    (P.mono (≼-refl Outer.start) (proj₁ (A.pow-pow q L.ωᶜ L.ωᶜ)))
+
+  bound : read (T.value r) ≼ (Outer.start P.· I.power Γ (L.ωᶜ P.· L.ωᶜ))
+  bound = upper Γ (λ n j → ≼l n (≼l j (≼-refl (cell n j))))
+

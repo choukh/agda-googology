@@ -1,0 +1,20 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 并存检查: 原 W4 的闭项与候选的闭项在同一个模块里, 各有自己的 BTBO 下界.
+module W5Both where
+
+open import W4Block using (Tr; zero)
+import W4Fold
+import W5Fold
+import WVOne
+import W5VOne
+open import OCF.Align.Value using (_≼_)
+open import OCF.BTBO using (module Ord-Ord)
+open import OCF.Align.BTBOValBase using (tr₀)
+import KBtbo
+import K5Btbo
+
+old : tr₀ Ord-Ord.BTBO ≼ WVOne.read W4Fold.EBOᶜ
+old = KBtbo.btbo-lower
+
+new : tr₀ Ord-Ord.BTBO ≼ W5VOne.read W5Fold.EBOᶜ
+new = K5Btbo.btbo-lower

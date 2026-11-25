@@ -1,0 +1,58 @@
+# R 路封存计划 (只读定义后自己算的那一格)
+
+读过的文件 (只读定义): YiRWBlock, YiRWOps, YiRWPath, YiRWFold, YiBSBase, YiBSFold, YiSOLow, YiSOEnd, YiGIRel, YiHCRel,
+EBO.lagda.md 与 EboLeanDef 的 cof/fsT/γT/cmpᵀ/fsn 段, YiWREnd 的 baseᴮ 段, YiAltTest 的 h₁ 一行.
+没有读: A 路 proof.md, MathAShape.agda, MathA.md 及附件, LOG.md, RESULTS.md.
+
+## 0. 我对 "那一格" 的读法 (简报没写 x 与 t, 这是我的补全)
+
+- 记 lvl1 = nd sS (λ _ → zero), lvl2 = h₁ 2 = nd sS (λ _ → lvl1). tw 1 = nd (sΩ zero) h₁.
+- b = Ωt (tw 1) (值 Ω_Ω). Ωt lvl2 = Ω (inj₂ (tt , inj₁ tt)) (λ z → up zero tt (suc z)), 槽位层 lvl1.
+  W = Up lvl2 (down stop 2) b (Ωt lvl2) = Ω q (λ z → next⁺ (Up lvl1 (down (down stop 2) tt) b z)),
+  q = mv (down stop 2) (inj₂ (tt , inj₁ tt)) = inj₂ (2 , inj₂ (inj₂ (tt , inj₁ tt))), at (tw 1) q = lvl1.
+  值: Up b y = b·ω^y, 所以 W = Ω_Ω·ω^{Ω_2}; 记号一侧 ψ_Ω(Ω_2) (按 SelfRow 的读法 K′ ++ u).
+- 状态 st = stepˢ (rootˢ 2) W zero 在层号 a = chLᵍ (tw 2) W = tw 1 ⊕ ↑ (tw 1) W = nd (sΩ lvl1) h′,
+  h′ z = tw 1 ⊕ ↑ (tw 1) (next⁺ (Up … b z)); 底 B′ i u = BS.ψ (tw 2) … i (inc W u) (baseᴮ 2 i (inc W u)) zero = baseᴮ 2 i (inc W u) (x = zero, 底只是限制).
+  换基证据: rbO 给 a 的顶结点 Schema, floor = tw 1.
+- 我取的 x 是 Ωt a (理由: 域的封闭 dnd + dch 从 Ωt (tw 2) = Ω _ (λ c → up zero c (Ωt (h c))) 取 c = W 正好把 Ωt a 逼进 Dm st).
+  Ωt a = Ω p (λ z → up zero z (Ωt (h′ z))), p = inj₁ (inj₁ tt), 槽位层 at a p = lvl1.
+- 参照: 槽位读法 ν = 1 (精确), 目标读法 κ = 2 (精确), K = [].
+  a 的精确读法 u_a = ψ_Ω(Ω_2) (= ψ (Ω_1) (ψ 2 []) ), cof = cΩ 1 (cmpᵀ 2 Ω_1 = lt, 穿透).
+  t = Ω_{u_a} = ψ u_a [], cof t = cΩ 1, fsT t η = Ω_{ψ_Ω(η)}.
+  参照项 ψ_2(K ++ t) = ψ_2(Ω_{ψ_Ω(Ω_2)}); cofA 2 (cΩ 1) = cofψ₊ 2 1 (cmpᵀ 2 2 = eq) = cΩ 1: 参照**穿透** (规则 5Ω), 基本列 ψ_2(Ω_{ψ_Ω(η)}), η < Ω_2.
+
+## 1. 折叠一侧的形状 (纸面, 由定义逐行展开; 未编译)
+
+目标 j = lvl2, 路径 w : lvl2 ≤ a. 断言: **对每一条路径 w, kp a o p w = nothing**, 即走链.
+- lvl2 ≤ a 的路径顶上只能是 inc c v 或 inu vs (ink 要 lvl2 ≤ lvl1, 无此路径; self 层号不等).
+  这两行都是 mapK … (kp⁼ (h′ c) … (psh (kh c) (inj₁ tt)) v): 槽位被 psh 推进孩子 h′ c, 沿 lift 的 c₀ 孩子一路到 tw 1 这片叶子, 再进 tw 1 的孩子 2, 再进 lvl2 的孩子 tt (因为 kh c = inc 2 (inc tt self) ∙ lift (tw 1) _).
+- h′ c 内部 (↑ 部分) 的 Ω 形状下标层都是 zero (b 的顶结点, 以及 z : Tr lvl1 的结点), 所以没有 ink 能通到 lvl2; 路径必须走到 tw 1 那片叶子.
+- 在 tw 1 = nd (sΩ zero) h₁ 上, lvl2 ≤ tw 1 的路径只能是 inc c′ v′ (inu 要对 c = 0 有 lvl2 ≤ zero, 不可能; ink 要 lvl2 ≤ zero, 不可能). 此时槽位是 inj₂ (2 , …) 形, 落在
+  `kp (nd (sΩ k) h) _ (inj₂ _) (inc _ _) = nothing` 这一行 (Ω 形状, 经指定孩子的路径, 槽位在孩子侧: 一律不保留, 不比较 c′ 与 2).
+  途中若更早碰到 ↑ 部分的 Ω 形状而路径取 inc, 也是同一行的 nothing.
+- 所以 BS.ψ a o r B′ lvl2 w β (Ωt a) = node⁺ nothing G S = limc⁺ (λ n → G (pt n)): **走链, node⁺ 的 nothing 行**; 是 ℕ 极限 (部分和), 不是 lvl2 上以 lvl1 槽位分支的 Ω 结点.
+  pt 0 = zero, pt (n+1) = 朝槽位层 lvl1 (底 B′ lvl1 (ink self)) 折叠 g (pt n) 的值, 是 lvl1 的树 (< Ω_2).
+  G z = 朝 lvl2 折叠 up zero z (Ωt (h′ z)); 这是 Ω 形状的 inc 行, route 落在 floor = tw 1 之下 (split 到叶子给 inj₁), 走 back 行, 递归进孩子 h′ z.
+- 对照 YiSOLow.Node.go: m = nothing, cmpᵀ (sucT 1) 2 = eq → `Mis nothing eq` = **drop-eq**, 即 "走链而参照穿透" 的不一致格, lowAll 不覆盖, 落在前提 NodeMis 上.
+- FGH 视角的应有效果: 槽位层 1 低于目标层 2, 应保留. 这里不保留的原因是 kp 那一行的回退, 不是层号关系.
+
+## 2. 两边的值
+
+- 参照: ψ_2(Ω_{Ω_Ω·ω^{Ω_2}}) (第 2 层的序数, 在 Ω_2 与 Ω_3 之间), 共尾度 Ω_2 (不可数), = sup_{η<Ω_2} ψ_2(Ω_{Ω_Ω·ω^η}).
+- 折叠 (取 β = Ωt lvl2 = Ω_2): sup_n Σ_{i≤n} G(pt i), 共尾度 ω. 记 ζ = sup_n (pt n + 1) < Ω_2 (lvl1 的树的可数上确界).
+  在假设 (H2) 下 折叠值 ≤ ψ_2(Ω_{Ω_Ω·ω^{ζ}}) < 参照值. ζ 的估计: 链是 ζ ↦ ψ_1 一类折叠的迭代, ζ ≤ ψ_1(Ω_{Ω_Ω·ω^{Ω_2}}) (估计, 不是定理).
+  即折叠值约为 ψ_2(Ω_{Ω_Ω·ω^{ψ_1(Ω_{Ω_Ω·ω^{Ω_2}})}}) 以下, 参照是 ψ_2(Ω_{Ω_Ω·ω^{Ω_2}}).
+- 不依赖 (H2) 精确形式的说法: 只要每个 G(z) (z 是 lvl1 的树) 的值 < 参照值, 由参照值是加法不可分且共尾度不可数, ω 个部分和的上确界就 < 参照值.
+
+## 3. 结论与用到的假设
+
+**判断: Keepᵗ st [] t (Ωt a) 在这一格 (j = lvl2, 任意路径 w, β = Ωt lvl2, κ = 2) 在值的意义上不成立**: 它要求 R lvl2 (ψ_2(t) ∷ []) (折叠), 而折叠值严格小于 ψ_2(t) 的值.
+这是纸面判断, 依赖:
+- (H1) GR.R 在第 2 层对值可靠: R lvl2 s y 推出 |s| ≤ |y|. **这不是仓库里的定理, 一般情形我认为未知**: Mᴴ 有 `mc : s ≤ᵀ t → M t x → M s x`, ≤ᵀ 是项的语法序, 对非标准形的 t 不保证与值一致; 出口 exitᴴ 只在第 0 层, 且带条件 Exᴴ (每个 mc 的两项为标准形, 较大者可数). 所以严格地说, 我能断言的是 "不存在每个 mc 都落在标准形上的推导" (在 H2 与高层版的 mono≤ 之下), 不是 "Keepᵗ 这个类型无居民". 若存在经非标准形 mc 的推导, 它过不了终点的出口条件, 对终点同样无用 —— 但那是另一条论证, 不等于命题为假.
+  另: mΩ 对 Low 是逆变的, 高层可靠性还要 Low 对 η 的 "上满" (每个 η < Ω_2 有被关联的分支), 此处未用到 (折叠一侧不是 Ω 结点).
+- (H2) 折叠值的上界: 对 lvl1 的每棵树 z, G(z) 的值 < ψ_2(Ω_{Ω_Ω·ω^{Ω_2}}) (期望 ≤ ψ_2(Ω_{Ω_Ω·ω^{z+2}}) 量级). 仓库的关系只给下界 (YiHCRel 文首 "不涉及上界"), 这是未证的判断. 依据: G(z) 只由 β = Ω_2, 层号 h′ z (读法 ψ_Ω(z+1)·ω 量级, < u_a) 的 Ω 树, 以及槽位层 ≤ 1 的底构成, h′ z 里没有第 2 层的槽位, 所以不取用 baseᴮ 2 在 lvl2 上的值.
+- (H3) 前提可满足: R lvl2 (ψ 2 [] ∷ []) (Ωt lvl2), GR.Rd lvl2 2 成立 (未逐行核对, 预期由 Ω≤ψ/叶子引理给出).
+- (H4) 我对 x, t 的补全 (第 0 节) 就是 A 路说的那一格. 若 A 路取别的 x (例如再深一层的 up 行 / RebRow 格), 第 1 节的 kp 断言仍可用: 凡目标 lvl2 经 tw 1 的孩子路径, 槽位在 tw 1 孩子侧, kp 一律 nothing.
+
+预判 A 路的结论形态: NodeMis 在 drop-eq 格上值不成立, 而该格被域的封闭 (RootIn + dnd + dch) 逼进任何域, 故 End 的前提组不能同时成立.
+我预先的保留意见: (i) "不能同时成立" 需要 H1, 而 H1 对含非标准形 mc 的推导未知, 所以推论应写成 "NodeMis 在该格无值上可靠的证明" 或带 H1 的条件命题; (ii) 这一格的失败来自 kp 的回退行 (Ω 形状经指定孩子), 是折叠定义的保留判定比 FGH 规则 "低于目标保留" 弱, 不是壁垒直接禁止的东西 —— 但壁垒一族 (branch→wdec / hand→wdec) 可能正是那一行回退的原因, 改 kp 之前要对照; (iii) 终点目标是第 0 层, 那里槽位层 ≥ 目标, 这种 "该保留而走链" 的格只在高目标的中间陈述里出现, 终点值是否真受影响要单独看 (链值 ψ_2(Ω_{ψ_Ω(ζ)}) 在外层再被折叠时可能被吸收).

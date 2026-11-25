@@ -1,0 +1,65 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对各原正规 ψ₀ 主项，其严格初段对自加封闭。
+module B29PPrincipal where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_; _++_; replicate; length)
+open import Data.Empty using (⊥-elim)
+open import Data.Unit.Base using (tt)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+import OCF.Align.Level as L
+open import OCF.Align.EboLeanDef using (T; PT; ψ; HC; h0; h1; hω; hd<; tl<)
+open import OCF.Align.EboLeanBase using (NF; Ctbl; n[]; n∷; c[]; c∷; nf-hd; NFP)
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; s≼s; +-mono)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRVLevel using (LEM)
+import WVOne as V
+import B17ValueDich as D
+import B26Names as A
+import B26PAppend as Add
+import B27Arithmetic as W
+import B27CutArithmetic as C
+import B27Threshold as Th
+
+copies : ∀ w n → NFP (ψ [] w) → NF (replicate n (ψ [] w))
+copies w zero normal = n[]
+copies w (suc zero) normal = n∷ normal tt n[]
+copies w (suc (suc n)) normal = n∷ normal (inj₂ refl) (copies w (suc n) normal)
+counts : ∀ w n → Ctbl (replicate n (ψ [] w))
+counts w zero = c[]
+counts w (suc n) = c∷ (counts w n)
+extend : ∀ {x y} → Ctbl x → Ctbl y → Ctbl (x ++ y)
+extend c[] ct = ct
+extend (c∷ t) ct = c∷ (extend t ct)
+
+module Principal (p : T) (np : NF (ψ [] p ∷ [])) (hp : HC (ψ [] p ∷ [])) where
+  name = A.named (ψ [] p ∷ []) np (c∷ c[]) hp
+  r = Rt hp
+  widen : ∀ b → L.suc (A.value b) ≼ r → L.suc (A.value b L.+ A.value b) ≼ r
+  widen (A.named [] nt c[] (h0 refl)) small = small
+  widen b@(A.named (ψ [] w ∷ xs) n (c∷ ct) h) small with Th.strict-name b name small
+  ... | tl< ()
+  ... | hd< lower = ≼-trans {b = L.suc (Rt hw)} (s≼s (≼-trans {b = Rt h₁ L.+ Rt h₁} (+-mono {a = Rt h} {a′ = Rt h₁} {b = Rt h} {b′ = Rt h₁} bound bound)
+    (proj₂ (Add.both h₁ h₁ refl hw)))) (mono<ⁿ nw np (c∷ c[]) hw hp (hd< lower))
+    where
+    t = ψ [] w ∷ xs
+    d = suc (length t)
+    u = replicate d (ψ [] w)
+    nu = copies w d (nf-hd n)
+    cu = counts w d
+    nw = W.word-nf (ψ [] w) d u (nf-hd n) nu (inj₂ refl)
+    opaque
+      h₁ : HC u
+      h₁ = hc nu cu
+      hw : HC (u ++ u)
+      hw = hc nw (extend cu cu)
+    bound : Rt h ≼ Rt h₁
+    bound = ≼-trans {b = L.suc (Rt h)} (≼-suc (≼-refl (Rt h))) (mono<ⁿ n nu cu h h₁ (W.cover (ψ [] w) t n (inj₂ refl)))
+
+  double : ∀ x → L.suc x ≼ r → L.suc (x L.+ x) ≼ r
+  double x h with C.approx name x h
+  ... | b , d , strict = ≼-trans {b = L.suc (A.value b L.+ A.value b)} (s≼s (+-mono {a = x} {a′ = A.value b} {b = x} {b′ = A.value b} d d)) (widen b strict)

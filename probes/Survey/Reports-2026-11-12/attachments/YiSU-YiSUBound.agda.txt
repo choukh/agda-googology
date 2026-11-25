@@ -1,0 +1,175 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiSUBound where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_; replicate)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym; trans; cong)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiCLFam using (nat)
+open import OCF.Lean.YiKVRel using (¬◃z)
+import OCF.Lean.YiHCRel as H
+import OCF.Align.EboLeanDef as E
+open E using (_<ᵀ_; _<ᴾ_; []<; hd<; tl<; lv<; ar<)
+open import OCF.Align.EBO using (pred-suc; <-sucT)
+open import OCF.Align.EboLeanBase using (_≤ᵀ_; ≤-trans′; <-≤; <ᵀ-irrefl; <ᵀ-trans)
+open import OCF.Align.EboLean3Base using (one≤ᴾ; sucT≤)
+open import OCF.Align.EboLeanView using (Vω; ws; wl; w4; w5; w6; vω; fω; fω-eq; VΩ; ωs; ωr; ωl; ωp; fΩ; fΩ-pos; γ)
+open import OCF.Lean.YiLLLeafNeg using (fω-big; one<ψ; one<tail; positive)
+
+nat-step : ∀ n → E.natT n <ᵀ E.natT (suc n)
+nat-step zero = []<
+nat-step (suc n) = tl< (nat-step n)
+
+nat-pos : ∀ {n s} → E.natT n <ᵀ s → [] <ᵀ s
+nat-pos {s = _ ∷ _} _ = []<
+
+nat-prefix : ∀ n x {s} → E.natT n <ᵀ s → E.natT n <ᵀ (x ∷ s)
+nat-prefix zero x p = []<
+nat-prefix (suc n) x p with one≤ᴾ x
+... | inj₁ q = hd< q
+... | inj₂ refl = tl< (<ᵀ-trans (nat-step n) p)
+
+nat-ψ : ∀ n u {s} → [] <ᵀ s → E.natT n <ᵀ (E.ψ u s ∷ [])
+nat-ψ zero u p = []<
+nat-ψ (suc n) [] p = hd< (ar< p)
+nat-ψ (suc n) (_ ∷ _) p = hd< (lv< []<)
+
+nat-rep : ∀ n x → E.natT n <ᵀ replicate (suc n) x
+nat-rep zero x = []<
+nat-rep (suc n) x with one≤ᴾ x
+... | inj₁ q = hd< q
+... | inj₂ refl = tl< (nat-rep n E.𝟏)
+
+fω-nat : ∀ {t} (v : Vω t) n → E.natT n <ᵀ fω v (suc n)
+fω-nat (ws {x = x} v) n = nat-prefix n x (fω-nat v n)
+fω-nat (wl e v) zero = []<
+fω-nat (wl e v) (suc n) = hd< (lv< (nat-pos (fω-nat v (suc n))))
+fω-nat (w4 {u = u} {b} e) n = nat-rep n (E.ψ u (E.pred b))
+fω-nat (w5 {u = u} e v) n = nat-ψ n u (nat-pos (fω-nat v n))
+fω-nat (w6 {u = u} e cmp v) n = nat-ψ n u (fΩ-pos v []<)
+
+fsn-nat : ∀ {t} → E.cof t ≡ E.cω → ∀ n → E.natT n <ᵀ E.fsn t (suc n)
+fsn-nat {t} e n = subst (E.natT n <ᵀ_) (sym (fω-eq (vω t e) (suc n))) (fω-nat (vω t e) n)
+
+suc-nat : ∀ n → E.sucT (E.natT n) ≡ E.natT (suc n)
+suc-nat zero = refl
+suc-nat (suc n) = cong (E.𝟏 ∷_) (suc-nat n)
+
+suc-bound : ∀ {s n} → s ≤ᵀ E.natT n → E.sucT s ≤ᵀ E.natT (suc n)
+suc-bound {n = n} (inj₁ p) = ≤-trans′ (sucT≤ p) (inj₁ (nat-step n))
+suc-bound {n = n} (inj₂ refl) = inj₂ (suc-nat n)
+
+data Fin : Tr zero → ℕ → Set where
+  fz : Fin zero zero
+  fs : ∀ {x n} → Fin x n → Fin (suc x) (suc n)
+
+fin-nat : ∀ n → Fin (nat n) n
+fin-nat zero = fz
+fin-nat (suc n) = fs (fin-nat n)
+
+fin-down : ∀ {x y n} → zero ⊢ x ◃ y → Fin y n → Σ ℕ λ m → Fin x m × (E.natT m <ᵀ E.natT n)
+fin-down d fz = ⊥-elim (¬◃z d)
+fin-down ◃s (fs {n = n} f) = n , f , nat-step n
+fin-down (◃t d e) f with fin-down e f
+... | m , fm , le with fin-down d fm
+... | k , fk , ld = k , fk , <ᵀ-trans ld le
+
+fin-bound : ∀ {t x n} → H.M⁰ t x → Fin x n → t ≤ᵀ E.natT n
+fin-bound {n = zero} H.mz f = inj₂ refl
+fin-bound {n = suc n} H.mz f = inj₁ []<
+fin-bound (H.m1 {t = t} e r) (fs f) = subst (_≤ᵀ _) (pred-suc t e) (suc-bound (fin-bound r f))
+fin-bound {n = n} (H.mL e r) f = ⊥-elim (<ᵀ-irrefl (<-≤ (fsn-nat e n) (fin-bound (r (suc n)) f)))
+fin-bound (H.mΩ {p = ()} e nu r) f
+fin-bound (H.mU {c = ()} m ch) f
+fin-bound (H.mw m d) f with fin-down d f
+... | n , fn , lt = ≤-trans′ (fin-bound m fn) (inj₁ lt)
+fin-bound (H.mc le m) f = ≤-trans′ le (fin-bound m f)
+
+ωᵀ : E.T
+ωᵀ = E.ψ [] (E.natT 1) ∷ []
+
+below-one : ∀ {s} → s <ᵀ E.natT 1 → s ≡ []
+below-one []< = refl
+below-one (hd< (lv< ()))
+below-one (hd< (ar< ()))
+
+coeff : ∀ {u b} → E.ψ u b <ᴾ E.ψ [] (E.natT 1) → (u ≡ []) × (b ≡ [])
+coeff (lv< ())
+coeff (ar< p) = refl , below-one p
+
+rep-below : ∀ {x} → (x ∷ x ∷ []) ≤ᵀ ωᵀ → x <ᴾ E.ψ [] (E.natT 1)
+rep-below (inj₁ (hd< p)) = p
+
+fΩ-big-η : ∀ {s κ η} (v : VΩ s κ) → E.natT 1 <ᵀ η → E.natT 1 <ᵀ fΩ v η
+fΩ-big-η (ωs {x = x} v) p = one<tail x (positive (fΩ-big-η v p))
+fΩ-big-η (ωr e) p = p
+fΩ-big-η (ωl e v) p = hd< (lv< (positive (fΩ-big-η v p)))
+fΩ-big-η (ωp {u = u} e cmp v) p = one<ψ u (positive (fΩ-big-η v p))
+
+ψ-index : ∀ {u b} → (E.ψ u b ∷ []) ≤ᵀ ωᵀ → u ≡ []
+ψ-index (inj₁ (hd< (ar< p))) = refl
+ψ-index (inj₁ (hd< (lv< ())))
+ψ-index (inj₂ refl) = refl
+
+ψ-arg : ∀ {b} → (E.ψ [] b ∷ []) ≤ᵀ ωᵀ → b ≤ᵀ E.natT 1
+ψ-arg (inj₁ (hd< (ar< p))) = inj₁ p
+ψ-arg (inj₁ (hd< (lv< ())))
+ψ-arg (inj₂ refl) = inj₂ refl
+
+cons-small : ∀ x s → [] <ᵀ s → (x ∷ s) ≤ᵀ ωᵀ → ∀ ys → (x ∷ ys) ≤ᵀ ωᵀ
+cons-small x s pos (inj₁ (hd< p)) ys = inj₁ (hd< p)
+cons-small x .[] () (inj₂ refl) ys
+
+fω-bound : ∀ {t} (v : Vω t) → fω v 2 ≤ᵀ ωᵀ → t ≤ᵀ ωᵀ
+fω-bound (ws {x = x} {y} {ys} v) le = cons-small x (fω v 2) (positive (fω-big v)) le (y ∷ ys)
+fω-bound (wl e v) le with ψ-index le
+... | eq = ⊥-elim (bad (subst (E.natT 1 <ᵀ_) eq (fω-big v)))
+  where
+  bad : E.natT 1 <ᵀ [] → ⊥
+  bad ()
+fω-bound (w4 {u = u} {b} e) le with coeff (rep-below le)
+... | refl , eq = inj₂ (cong (λ z → E.ψ [] z ∷ [])
+  (trans (sym (pred-suc b e)) (cong E.sucT eq)))
+fω-bound (w5 e v) le with ψ-index le
+... | refl = ⊥-elim (<ᵀ-irrefl (<-≤ (fω-big v) (ψ-arg le)))
+fω-bound (w6 {u = u} e cmp v) le with ψ-index le
+... | refl = ⊥-elim (<ᵀ-irrefl (<-≤ (fΩ-big-η v (one<ψ _ (fΩ-pos v []<))) (ψ-arg le)))
+
+ωᶜ : Tr zero
+ωᶜ = proj₁ (next⁺ (Ωt zero))
+
+one-nat : ∀ n → (suc zero + nat n) ≡ nat (suc n)
+one-nat zero = refl
+one-nat (suc n) = cong suc (one-nat n)
+
+iter-one : ∀ n → iter (suc zero +_) (suc zero) n ≡ nat (suc n)
+iter-one zero = refl
+iter-one (suc n) = trans (cong (suc zero +_) (iter-one n)) (one-nat (suc n))
+
+data Small : Tr zero → Set where
+  sf : ∀ {x n} → Fin x n → Small x
+  sw : Small ωᶜ
+
+small-down : ∀ {x y} → zero ⊢ x ◃ y → Small y → Small x
+small-down d (sf f) with fin-down d f
+... | n , fx , lt = sf fx
+small-down (◃l n) sw = sf (subst (λ x → Fin x (suc n)) (sym (iter-one n)) (fin-nat (suc n)))
+small-down (◃t d e) sw = small-down d (small-down e sw)
+
+nat-ω : ∀ n → E.natT n ≤ᵀ ωᵀ
+nat-ω zero = inj₁ []<
+nat-ω (suc n) = inj₁ (hd< (ar< []<))
+
+small-bound : ∀ {t x} → H.M⁰ t x → Small x → t ≤ᵀ ωᵀ
+small-bound m (sf {n = n} f) = ≤-trans′ (fin-bound m f) (nat-ω n)
+small-bound H.mz sw = inj₁ []<
+small-bound (H.mL {t = t} e r) sw = fω-bound (vω t e)
+  (subst (_≤ᵀ ωᵀ) (fω-eq (vω t e) 2) (small-bound (r 2) sw))
+small-bound (H.mw m d) sw = small-bound m (small-down d sw)
+small-bound (H.mc le m) sw = ≤-trans′ le (small-bound m sw)
+
+no-ω² : H.M⁰ (E.ψ [] (E.natT 2) ∷ []) ωᶜ → ⊥
+no-ω² m = <ᵀ-irrefl (<-≤ (hd< (ar< (tl< []<))) (small-bound m sw))

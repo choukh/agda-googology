@@ -1,0 +1,115 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- R15A: F2 块上, 孩子 two 在 x = β 之后的底的形状, 与 Ω_2 对角列的递推. 全部是 refl (有限的形状测试).
+module R15A where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiLegBlock renaming (L to LF)
+open import OCF.Lean.YiLegOps
+open import OCF.Lean.YiLegPath using (_≤_; self; ins; inb; ink; Ev; Rt)
+open import OCF.Lean.YiLegFold
+open import OCF.Lean.YiLSTw1 using (h₁; G; εh; ρh)
+open import OCF.Lean.YiT2Frame using (ε¹; ρ¹; β; one; two)
+open import OCF.Lean.YiDecWit using (Gw; β₁)
+
+L1 L2 : LF
+L1 = suc zero
+L2 = suc L1
+
+ε² : Ev L2
+ε² = εh two
+
+ρ² : Rt L2
+ρ² = ρh two
+
+BW : Base L2
+BW = dW zero h₁ ε¹ ρ¹ (B₀ (tw 1)) two β
+
+BW1 : Base L1
+BW1 = dW zero h₁ ε¹ ρ¹ (B₀ (tw 1)) one β
+
+-- (1) 孩子 two 的底, 第 2, 1 层: Ω_j + Ω(G)
+b2-form : bs BW L2 self ≡ Ω (inj₂ (inj₁ tt)) (λ c → Ωt L2 + ι L2 (G c))
+b2-form = refl
+
+b1-form : bs BW L1 (ins self) ≡ β₁
+b1-form = refl
+
+-- 第 0 层的底与孩子 one 的相同; 可数分量 b⊥ 是 twᶜ 1
+b0-same : bs BW zero (ins (ins self)) ≡ bs BW1 zero (ins self)
+b0-same = refl
+
+b⊥-form : b⊥ BW ≡ twᶜ 1
+b⊥-form = refl
+
+-- (2) 分支侧一行对任意 x, 任意孩子 c, 任意 y: 第 1 层的底只多一个可数加项
+fb-any : (x : Tr (tw 1)) (c : Tr zero) (y : Tr (h₁ c)) (e : h₁ c ⊢ zero ◃ y)
+  → Gw (up x c y e) ≡ Gw x + ι L1 (ψ₀ (h₁ c) (εh c) (ρh c) y)
+fb-any x c y e = refl
+
+-- 顶槽位结点下挂任意一族孩子树: 第 1 层只看见它们各自的可数折叠
+top-any : (y : (c : Tr zero) → Tr (h₁ c)) (e : (c : Tr zero) → h₁ c ⊢ zero ◃ y c)
+  → Gw (Ω (inj₁ (inj₁ tt)) (λ c → up zero c (y c) (e c)))
+  ≡ Ω (inj₁ tt) (λ c → Ωt L1 + ι L1 (ψ₀ (h₁ c) (εh c) (ρh c) (y c)))
+top-any y e = refl
+
+-- (3) 树 up β two (Ωt 2): Ω_2 结点的对角列
+zz : ℕ → Tr L1
+zz = iter (λ z → ψs L2 ε² ρ² BW L1 (ins self) (bs BW L1 (ins self)) (ns BW L1 (ins self)) (up zero tt (suc z) (z◃s z))) zero
+
+form2 : ψ₀ (tw 1) ε¹ ρ¹ (up β two (Ωt L2) (Ωt-nz L2))
+      ≡ limc (λ n → ψ⊥ L2 ε² ρ² BW (up zero tt (suc (zz n)) (z◃s (zz n))))
+             (λ n → nz⊥ L2 ε² ρ² BW (up zero tt (suc (zz n)) (z◃s (zz n))))
+form2 = refl
+
+BS : Base L1
+BS = dS L1 ε² ρ² BW zero
+
+zz-step : ∀ n → zz (suc n)
+  ≡ next (ψs L1 ε² ρ² BS L1 self (bs BW L1 (ins self)) (ns BW L1 (ins self)) (zz n))
+         (nzs L1 ε² ρ² BS L1 self (bs BW L1 (ins self)) (ns BW L1 (ins self)) (zz n))
+zz-step n = refl
+
+row-step : ∀ n → ψ⊥ L2 ε² ρ² BW (up zero tt (suc (zz n)) (z◃s (zz n)))
+  ≡ next (ψ⊥ L1 ε² ρ² BS (zz n)) (nz⊥ L1 ε² ρ² BS (zz n))
+row-step n = refl
+
+BS-b⊥ : b⊥ BS ≡ twᶜ 1
+BS-b⊥ = refl
+
+BS-0 : bs BS zero (ins self) ≡ bs BW1 zero (ins self)
+BS-0 = refl
+
+BS-1 : bs BS L1 self ≡ β₁
+BS-1 = refl
+
+-- (4) x = β + β 时孩子 two 的第 1, 2 层的底: 再多一个 Ω(G)
+BW′ : Base L2
+BW′ = dW zero h₁ ε¹ ρ¹ (B₀ (tw 1)) two (β + β)
+
+b1′-form : bs BW′ L1 (ins self) ≡ Ω (inj₁ tt) (λ c → β₁ + ι L1 (G c))
+b1′-form = refl
+
+b2′-form : bs BW′ L2 self
+  ≡ Ω (inj₂ (inj₁ tt)) (λ c → Ω (inj₂ (inj₁ tt)) (λ c′ → Ωt L2 + ι L2 (G c′)) + ι L2 (G c))
+b2′-form = refl
+
+-- (5) 对孩子 two 的任意树 y: 块在 tw 1 上的值就是第 2 层上以 BW 为底的折叠
+all-y : (y : Tr L2) (e : L2 ⊢ zero ◃ y) → ψ₀ (tw 1) ε¹ ρ¹ (up β two y e) ≡ ψ⊥ L2 ε² ρ² BW y
+all-y y e = refl
+
+-- (6) 读回出的层号: β 与自身行输出读成 Ωₗ zero …, 即 k = zero 的 Ω 结点层号
+lvβ : ↑ (tw 1) β ≡ Ωₗ zero (λ c → ↑ (tw 1) (up zero c (Ωt (h₁ c)) (Ωt-nz (h₁ c))))
+lvβ = refl
+
+β₂ : Tr (tw 1)
+β₂ = ψs (tw 1) ε¹ ρ¹ (B₀ (tw 1)) (tw 1) self β (Ωt-nz (tw 1)) β
+
+lvβ₂ : tw 1 ⊕ ↑ (tw 1) β₂
+     ≡ Ωₗ zero (λ c → tw 1 ⊕ ↑ (tw 1) (Upc (tw 1) c β (Ωt-nz (tw 1)) (Ωt (h₁ c))))
+lvβ₂ = refl

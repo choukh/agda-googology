@@ -1,0 +1,49 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22RowLimit where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import W4Block
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (◃→≼)
+open import YiLAB7Orbit using (lvl1; lvl2)
+open import WSShadow using (lC)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼)
+import B8PairW4 as Weak
+import B11OuterCore as C
+import B12LimitRef as D
+open import B12LimitSrc using (Lev₂)
+import B13Target as Reg
+import B14RefFixed as K
+import B14OrbitReal as Real
+import B17OrbitTower as T
+import B18RefDepth as H
+import B18RefModel as Model
+import B18RefRows as Rows
+import B18OrbitWorld as Ix
+import B18OrbitLevels as All
+import B22RowPrefix as P
+import B22RowLive as V
+open P.Label
+
+module Collect (p : ℕ → Lev₂) (l : ∀ n → P.Label (p n)) (target : Lev₂) (shape : L.lim p L.≅ target) where
+  rep : Lev₂
+  rep = L.lim (λ n → q (l n))
+  prog = λ d → T.sup (H.S d) (λ n → v (l n) d)
+  label : P.Label target
+  label = P.label (Reg.refl-left (L.≅-sym shape)) rep (L.l≅ (λ n → rq (l n)))
+    (L.≅-trans (L.l≅ (λ n → proj₁ (link (l n)))) (L.ψ⁰-≅ shape) ,
+     L.≅-trans (L.l≅ (λ n → proj₂ (link (l n)))) (K.pres shape))
+    (lC (λ n → e (l n))) (D.limit _ _ (λ n → rows (l n))) prog
+    (λ d → Model.sup (Rows.meaning d) (λ n → v (l n) d) (λ n → K.collapse (q (l n))) (λ n → K.pres (rq (l n))) (λ n → fits (l n) d))
+
+  module At (R : ℕ → Base lvl2) (S : Base lvl2) (h : ∀ n → V.Present (l n) (R n))
+            (weak : ∀ n i t → i ⊢ proj₁ (R n i t) ◃ proj₁ (S i t)) where
+    kept = Real.carry {e = e (l 0)} {R = R 0} {S = S} (weak 0 lvl1 C.slot) (V.struct (h 0))
+    all : V.Present label S
+    all = V.present (λ w → l≼ (λ n → ≼-trans (V.lower (h n) w) (◃→≼ (weak n zero w))))
+      (C.str (Real.real-sup _ (λ n → Weak.Real-up (weak n lvl1 C.slot) (C.rP (V.struct (h n))))) (C.rΩ kept) (C.sN kept) (C.st kept))
+      (λ d → Ix.gather (All.world d) (S lvl1 C.slot) (λ n → v (l n) d) (λ n → Ix.rise (All.world d)
+        (R n lvl1 C.slot) (S lvl1 C.slot) (weak n lvl1 C.slot) (v (l n) d) (V.index (h n) d)))
+

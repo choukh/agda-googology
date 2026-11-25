@@ -1,0 +1,71 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B16RefFive where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≅→≼)
+open import WVOne using (T₀; 𝟏)
+open import WVTwo using (T₁)
+import WSLevel as W
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B13Target as P
+import B14RefAllRows as Normal
+import B14RefFixed as K
+import B14RefGain as G
+import B14RefRow as Row
+import B15RefAlgebra as A
+
+five : T₀
+five = G.along (0 ∷ 1 ∷ 0 ∷ []) (Row.node 1)
+
+g : T₀ → T₁
+g = A.E₀ W.Ω₁ᴸ
+F : T₀ → Lev₂
+F x = P.co₁ (g x)
+Π : T₀ → T₀
+Π x = L.ψ⁰ (F x)
+chain = S.iter Π 𝟏
+
+regular : ∀ {x y} → x L.≅ y → g x L.≅ g y
+regular L.z≅ = L.Ω-refl _
+regular (L.s≅ d) = A.pow-pres (regular d)
+regular (L.l≅ d) = L.l≅ (λ n → regular (d n))
+regular (L.lᵢ≅ {p = ()} _ _)
+regular (L.upˡ {r = ()} _)
+regular (L.upʳ {r = ()} _)
+
+small : ∀ {x y} → x L.≅ y → W.ψ₁⁰ x L.≅ g y
+small L.z≅ = L.Ω-refl _
+small (L.s≅ d) = A.pow-pres (small d)
+small (L.l≅ d) = L.l≅ (λ n → small (d n))
+small (L.lᵢ≅ {p = ()} _ _)
+small (L.upˡ {r = ()} _)
+small (L.upʳ {r = ()} _)
+
+raw : P.back (W.γ 1) L.≅ L.limᵢ L.zero g
+raw = L.tr⁻-≅ (L.≅ᴵ-refl _) (L.lᵢ≅ L.z≅ λ x y d → small (L.tr⁻-≅ L.z≅ d))
+
+normalized : P.co₁ (P.back (W.γ 1)) L.≅ L.limᵢ (L.suc L.zero) F
+normalized = L.≅-trans (P.co-pres raw) (Normal.lifted 0 g regular)
+
+whole : five L.≅ L.lim (λ n → chain (suc n))
+whole = L.≅-trans (L.ψ⁰-≅ normalized) (L.l≅ λ n → L.ψ⁰-≅ (P.co-pres (regular (ix n)))) where
+  row = λ x → L.ψ (L.suc L.zero) R.idσ (F x)
+  ix : ∀ n → S.iter row 𝟏 n L.≅ chain n
+  ix = L.iter-R L._≅_ {G = row} {G′ = Π} (λ d → L.≅-sym (L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ}
+    (L.≅-sym (P.co-pres (regular d))))) (L.s≅ L.z≅)
+
+item : ∀ n → R.at five n L.≅ chain (suc n)
+item n with whole
+... | L.l≅ h = h n
+
+-- 只取真实第一个回灌参数的一条 ℕ 路径，足以让下一支包含系数 2。
+two-in : K.Select (L.suc 𝟏) (chain 1)
+two-in = K.branch 0 (K.branch 0 (K.branch 0 (K.branch 2 K.here)))
+
+under-second : Π (L.suc 𝟏) ≼ R.at five 1
+under-second = ≼-trans (K.value (K.map-select Π (λ f → refl) two-in)) (≅→≼ (L.≅-sym (item 1)))

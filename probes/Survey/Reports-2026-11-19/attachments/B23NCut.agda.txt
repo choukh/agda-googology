@@ -1,0 +1,39 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23NCut where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; _×_)
+open import OCF.Align.Value using (_≼_; s≼s; ≼l; l≼; ≼-refl; ≼-trans; ≼-suc; 1≼ψ⁰; ≅→≼)
+import OCF.Align.Level as L
+open import WVOne using (T₀; read)
+open import W4Fold using (EBOᶜ)
+import B12EboRows as B
+import B17Cofinal as E
+import B14RefAllRows as Row
+import B13Target as P
+import B23RKernel as R
+open import B23NDomain using (G; inflation; orbit; child; suffices; module Growth)
+
+rise : ∀ n → L.suc (orbit n) ≼ orbit (suc n)
+rise zero = ≼-trans (s≼s (1≼ψ⁰ (P.pass (P.co₀ L.zero)))) (Growth.next L.zero)
+rise (suc n) = ≼-trans (Growth.next (orbit n))
+  (R.At.monotone 1 0 {L.suc (orbit n)} {orbit (suc n)} (rise n))
+
+inside : ∀ n → L.suc (orbit n) ≼ child
+inside n = ≼-trans (≼l n (rise n)) (≅→≼ (L.≅-sym (Row.as-chain 1 0)))
+
+-- 后继落入上确界，必在一个有限轨道阶段已达到。
+stage : ∀ {x : T₀} → L.suc x ≼ child → Σ ℕ (λ n → L.suc x ≼ orbit (suc n))
+stage d with ≼-trans d (≅→≼ (Row.as-chain 1 0))
+... | ≼l n e = n , e
+
+close : ∀ {x : T₀} → L.suc x ≼ child → L.suc (G x) ≼ child
+close {x} d with stage d
+... | n , h = ≼-trans (s≼s (R.At.monotone 1 0 {x} {orbit (suc n)} (≼-trans (≼-suc (≼-refl x)) h))) (inside (suc (suc n)))
+
+Queries : Set
+Queries = ∀ {x : T₀} → L.suc x ≼ child → B.InChild (L.suc (G x))
+
+localized : ((child ≼ read EBOᶜ) → Queries) × (Queries → child ≼ read EBOᶜ)
+localized = (λ whole {x} d → E.witness (≼-trans (close {x} d) whole)) ,
+  (λ answers → suffices (λ n → ≼-trans (≼-suc (≼-refl (G (orbit n)))) (B.into (answers {orbit n} (inside n)))))

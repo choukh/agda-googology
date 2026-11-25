@@ -1,0 +1,223 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- M4 基础: Dom 的自反与左加膨胀, 槽位关系 SubD 的搬运, 保留判定的槽位搬运 (KO), 与 Level 判定的一致 (AgL),
+-- ψ 在 limᵢ 上的展开, ≺-Sim 的嵌入 embW, 指数推导的层条件 Good (r≅ 的新层 ⊑ᴵ 旧层).
+module KOpBase where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; cong; sym; trans)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as I
+open I using (Ordᴵ; Ordᶜ; Simᴵ; _<ᴵ_; _≅ᴵ_; _≺ᴵ_; _⊑ᴵ_; via; _≅_; U; into; out; out-into; <→◃; limᵢ; up;
+              R→≅; ≅→R; z≅; s≅; l≅; lᵢ≅; upˡ; upʳ; tr⁻; tr⁻-≅; ≅-sym; ≅-trans)
+open import OCF.BTBO using (module Ord-Ord; injᵃ; injᵇ; injᶜ)
+open Ord-Ord using () renaming (iter to iterᴸ)
+open import KPow using (reflˡ)
+open import KMir using (IsN; IsS; code; Ag; IsS-ch; IsS-dn; at-psh)
+open import KRel
+
+------------------------------------------------------------------------
+-- 1. Dom 的一般性质 (对任意 Sub/Kid).
+module _ {m : L} {Sub : (p : Pos m) → ∀ {j} → Ordᶜ j → Br m p → Set} {Kid : (c : CH m) → ∀ {k′} → Ordᶜ k′ → ChT m c → Set} where
+  D-refl : ∀ {k} {A : Ordᶜ k} {t : Tr m} → Dom₊ m Sub Kid A t → A ≅ A
+  D-refl rz           = z≅
+  D-refl (rs d)       = s≅ (D-refl d)
+  D-refl (rl h)       = l≅ (λ n → D-refl (h n))
+  D-refl (rΩ _ e _)   = e
+  D-refl (ru _ _ _ e) = reflˡ e
+  D-refl (re _ _ _ e) = reflˡ e
+  D-refl (r≅ e _)     = reflˡ e
+  D-refl (r◃ d _)     = D-refl d
+
+  -- 左加膨胀: W4 的树左边加上任意 a.
+  D-addL : ∀ {k} {A : Ordᶜ k} {b : Tr m} → Dom₊ m Sub Kid A b → (a : Tr m) → Dom₊ m Sub Kid A (a + b)
+  D-addL rz             a = rz
+  D-addL (rs d)         a = rs (D-addL d a)
+  D-addL (rl h)         a = rl (λ n → D-addL (h n) a)
+  D-addL (rΩ mj e h)    a = rΩ mj e (λ Y z s → D-addL (h Y z s) a)
+  D-addL (ru d kd σ e)  a = ru (D-addL d a) kd σ e
+  D-addL (re d dv dx e) a = re (D-addL d a) dv dx e
+  D-addL (r≅ e d)       a = r≅ e (D-addL d a)
+  D-addL (r◃ d l)       a = r◃ (D-addL d a) (+-mono a l)
+
+------------------------------------------------------------------------
+-- 2. 槽位关系 SubD: 与槽位层的 Dom 对应; 沿 ≅ 搬运; 自反.
+mutual
+  Sub-fromBr : (m : L) (p : Pos m) {k : Ordᴵ} {Y : Ordᶜ k} {t : Tr (at m p)} → Dom (at m p) Y t → SubD m p Y (fromBr m p t)
+  Sub-fromBr (nd s h)      (inj₂ (c , t)) d = Sub⁼-fromBr (h c) t d
+  Sub-fromBr (nd (sΩ a) h) (inj₁ t)       d = Sub⁼-fromBr a t d
+
+  Sub⁼-fromBr : (a : L) (t : Pos⁼ a) {k : Ordᴵ} {Y : Ordᶜ k} {x : Tr (proj₁ (sl⁼ a t))}
+              → Dom (proj₁ (sl⁼ a t)) Y x → SubD⁼ a t Y (proj₂ (sl⁼ a t) x)
+  Sub⁼-fromBr a (inj₁ _) d = d
+  Sub⁼-fromBr a (inj₂ p) d = Sub-fromBr a p d
+
+mutual
+  Sub-≅ : (m : L) (p : Pos m) {k k′ : Ordᴵ} {Y : Ordᶜ k} {Y′ : Ordᶜ k′} {z : Br m p} → Y′ ≅ Y → SubD m p Y z → SubD m p Y′ z
+  Sub-≅ (nd s h)      (inj₂ (c , t)) e d = Sub⁼-≅ (h c) t e d
+  Sub-≅ (nd (sΩ a) h) (inj₁ t)       e d = Sub⁼-≅ a t e d
+
+  Sub⁼-≅ : (a : L) (t : Pos⁼ a) {k k′ : Ordᴵ} {Y : Ordᶜ k} {Y′ : Ordᶜ k′} {z : Br⁼ a t} → Y′ ≅ Y → SubD⁼ a t Y z → SubD⁼ a t Y′ z
+  Sub⁼-≅ a (inj₁ _) e d = r≅ e d
+  Sub⁼-≅ a (inj₂ p) e d = Sub-≅ a p e d
+
+mutual
+  Sub-refl : (m : L) (p : Pos m) {k : Ordᴵ} {Y : Ordᶜ k} {z : Br m p} → SubD m p Y z → Y ≅ Y
+  Sub-refl (nd s h)      (inj₂ (c , t)) d = Sub⁼-refl (h c) t d
+  Sub-refl (nd (sΩ a) h) (inj₁ t)       d = Sub⁼-refl a t d
+
+  Sub⁼-refl : (a : L) (t : Pos⁼ a) {k : Ordᴵ} {Y : Ordᶜ k} {z : Br⁼ a t} → SubD⁼ a t Y z → Y ≅ Y
+  Sub⁼-refl a (inj₁ _) d = D-refl d
+  Sub⁼-refl a (inj₂ p) d = Sub-refl a p d
+
+------------------------------------------------------------------------
+-- 3. 保留判定的槽位搬运: 保留时, 输出槽位的层就是原槽位的层, 输出分支上的关系搬回原分支.
+KO : (j a : L) {X : Set} {x₀ : X} → (∀ {k} → Ordᶜ k → X → Set) → Keep j X x₀ → Set
+KO j a Q nothing             = ⊤
+KO j a Q (just (q , cv , _)) = (at j q ≡ a) × (∀ {k} (Y : Ordᶜ k) (z : Br j q) → SubD j q Y z → Q Y (cv z))
+
+KO-map : ∀ {j a : L} {X Z : Set} {x₀ : X} {z₀ : Z} {Q : ∀ {k} → Ordᶜ k → X → Set} {Q′ : ∀ {k} → Ordᶜ k → Z → Set}
+       (f : X → Z) (e : f x₀ ≡ z₀) (r : Keep j X x₀) → (∀ {k} {Y : Ordᶜ k} {z : X} → Q Y z → Q′ Y (f z))
+       → KO j a Q r → KO j a Q′ (mapK f e r)
+KO-map f e (just (q , cv , g)) F (ea , sb) = ea , λ Y z s → F (sb Y z s)
+KO-map f e nothing             F _         = tt
+
+KO-at : ∀ {j a a′ : L} {X : Set} {x₀ : X} {Q : ∀ {k} → Ordᶜ k → X → Set} (r : Keep j X x₀) → a ≡ a′ → KO j a Q r → KO j a′ Q r
+KO-at r refl h = h
+
+psh-Sub : ∀ {k a} (u : k ≤ a) (t : Pos⁼ k) {kY : Ordᴵ} {Y : Ordᶜ kY} {z : Br⁼ a (psh u t)}
+        → SubD⁼ a (psh u t) Y z → SubD⁼ k t Y (pshBr u t z)
+psh-Sub self t d = d
+psh-Sub (inc c v) t d = psh-Sub v t d
+psh-Sub {a = nd s h} (inu vs) t d = psh-Sub (vs (c₀ s)) t d
+psh-Sub (ink v) t d = psh-Sub v t d
+
+mutual
+  KOk : (m : L) → IsS m → (o : Ok m) (p : Pos m) {j : L} (w : j ≤ m) → KO j (at m p) (SubD m p) (kp m o p w)
+  KOk m st o p self = refl , λ Y z s → s
+  KOk (nd s h) st o (inj₂ (c , t)) (inu vs) = KOk⁼ (h c) (IsS-ch (nd s h) st c) (proj₂ o c) t (vs c)
+  KOk (nd sS h) st o (inj₂ (c , t)) (inc _ v) = KOk⁼ (h c) st (proj₂ o c) t v
+  KOk (nd sL g) st o (inj₂ (m , t)) {j} (inc n v) =
+    cW-ind (KO j (proj₁ (sl⁼ (g m) t)) (SubD⁼ (g m) t)) (way g (proj₁ o) m n)
+      (λ u → KO-at (mapK (pshBr u t) (pshFirst u t) (kp⁼ (g n) (proj₂ o n) (psh u t) v)) (at-psh u t)
+               (KO-map (pshBr u t) (pshFirst u t) (kp⁼ (g n) (proj₂ o n) (psh u t) v) (psh-Sub u t)
+                  (KOk⁼ (g n) (proj₁ st n) (proj₂ o n) (psh u t) v)))
+      (λ u → KOk⁼ (g m) (proj₁ st m) (proj₂ o m) t (v ∙ u))
+  KOk (nd sS h) st o (inj₁ ()) w
+  KOk (nd sL g) st o (inj₁ ()) w
+  KOk (nd (sΩ _) _) () o p w
+
+  KOk⁼ : (a : L) → IsS a → (o : Ok a) (t : Pos⁼ a) {j : L} (w : j ≤ a) → KO j (proj₁ (sl⁼ a t)) (SubD⁼ a t) (kp⁼ a o t w)
+  KOk⁼ a sa o (inj₁ _) w = tt
+  KOk⁼ a sa o (inj₂ p) w = KOk a sa o p w
+
+module _ {ℓ : L} (st : IsS ℓ) (o : Ok ℓ) where
+  KOT : ∀ {m} (d : Dn ℓ m) (p : Pos m) {i : L} (t : Tg d i) → KO i (at m p) (SubD m p) (kpT d o p t)
+  KOT stop       p u        = KOk _ st o p u
+  KOT (down d c) p (inj₁ τ) = KOk _ (IsS-dn (down d c) st) (okD (down d c) o) p τ
+  KOT (down d c) p (inj₂ t) = KOT d (inj₂ (c , inj₂ p)) t
+
+------------------------------------------------------------------------
+-- 4. 判定一致, 换成 Level 层号码的说法.
+AgL : (jn ic : Ordᴵ) {Z : Set} → Maybe Z → Set
+AgL jn ic (just _) = jn ≺ᴵ ic
+AgL jn ic nothing  = (ic ≅ᴵ jn) ⊎ (ic ≺ᴵ jn)
+
+toAgL : ∀ {a i : L} {jn ic : Ordᴵ} {Z : Set} (r : Maybe Z) → Ag a i r → Mirror jn a → Mirror ic i
+      → IsN a → Ok a → IsN i → Ok i → AgL jn ic r
+toAgL (just _) h ma mi ia oa ii oi = I.≺ᴵ-respˡ (ma ia oa) (I.≺ᴵ-respʳ (h ia oa ii oi) (I.≅ᴵ-sym (mi ii oi)))
+toAgL nothing  h ma mi ia oa ii oi with h ia oa ii oi
+... | inj₁ e  = inj₁ (I.≅ᴵ-trans (mi ii oi) (I.≅ᴵ-trans e (I.≅ᴵ-sym (ma ia oa))))
+... | inj₂ r  = inj₂ (I.≺ᴵ-respˡ (mi ii oi) (I.≺ᴵ-respʳ r (I.≅ᴵ-sym (ma ia oa))))
+
+------------------------------------------------------------------------
+-- 5. ψ (目标取 suc 的 Sim) 在 limᵢ 上按判定展开.
+ψL : ∀ {ic kP j : Ordᴵ} (r : ic <ᴵ I.suc kP) (q : j <ᴵ kP) (f : U j (<→◃ q) → Ordᶜ kP)
+   → (j ≺ᴵ ic) ⊎ (ic ≺ᴵ j) ⊎ (j ≅ᴵ ic) → Ordᶜ ic
+ψL r q f (injᵃ (via e r₀)) = limᵢ r₀ (λ y → I.ψ r (λ q → I.suc q) (f (into (<→◃ q) (tr⁻ e (out (<→◃ r₀) y)))))
+ψL {j = j} r q f (injᵇ _) =
+  I.lim (λ n → I.ψ r (λ q → I.suc q) (f (into (<→◃ q) (iterᴸ (λ x → I.ψ q (λ r → r) (f (into (<→◃ q) x))) (I.Ω j) n))))
+ψL {j = j} r q f (injᶜ _) =
+  I.lim (λ n → I.ψ r (λ q → I.suc q) (f (into (<→◃ q) (iterᴸ (λ x → I.ψ q (λ r → r) (f (into (<→◃ q) x))) (I.Ω j) n))))
+
+ψ-unf : ∀ {ic kP j : Ordᴵ} (r : ic <ᴵ I.suc kP) (q : j <ᴵ kP) (f : U j (<→◃ q) → Ordᶜ kP)
+      → I.ψ r (λ q → I.suc q) (limᵢ q f) ≡ ψL r q f (I.<ᴵ-dec (I.suc q) r)
+ψ-unf r q f with I.<ᴵ-dec (I.suc q) r
+... | injᵃ (via e r₀) = refl
+... | injᵇ _          = refl
+... | injᶜ _          = refl
+
+-- limᵢ 自反给出分支的 ≅.
+brR : ∀ {ℓ₁ ℓ₂ j j′ : Ordᴵ} {q : j <ᴵ ℓ₁} {q′ : j′ <ᴵ ℓ₂} {f : U j (<→◃ q) → Ordᶜ ℓ₁} {g : U j′ (<→◃ q′) → Ordᶜ ℓ₂}
+    → limᵢ q f ≅ limᵢ q′ g → ∀ {x : Ordᶜ j} {y : Ordᶜ j′} → x ≅ y → f (into (<→◃ q) x) ≅ g (into (<→◃ q′) y)
+brR {q = q} (lᵢ≅ _ h) d = h _ _ (≅→R (<→◃ q) d)
+
+------------------------------------------------------------------------
+-- 6. ≺-Sim 与嵌入 embW (节点处用 tr⁻ 换到字面代表元). embW ρ x ≅ x.
+SimW : Ordᴵ → Ordᴵ → Set
+SimW a b = ∀ {c} → c <ᴵ a → c ≺ᴵ b
+
+≺r : ∀ {a b} → a ≺ᴵ b → Ordᴵ
+≺r (via {a′} _ _) = a′
+
+≺e : ∀ {a b} (w : a ≺ᴵ b) → a ≅ᴵ ≺r w
+≺e (via e _) = e
+
+≺l : ∀ {a b} (w : a ≺ᴵ b) → ≺r w <ᴵ b
+≺l (via _ l) = l
+
+litW : ∀ {a b} → Simᴵ a b → SimW a b
+litW σ q = via (I.≅ᴵ-refl _) (σ q)
+
+⊑W : ∀ {a b} → a ⊑ᴵ b → SimW a b
+⊑W le q = I.sim le q
+
+∘W : ∀ {a b c} → SimW b c → SimW a b → SimW a c
+∘W ρ₂ ρ₁ q = I.≺ᴵ-respˡ (≺e (ρ₁ q)) (ρ₂ (≺l (ρ₁ q)))
+
+embW : ∀ {a b} → SimW a b → Ordᶜ a → Ordᶜ b
+embW ρ I.zero            = I.zero
+embW ρ (I.suc x)         = I.suc (embW ρ x)
+embW ρ (I.lim f)         = I.lim (λ n → embW ρ (f n))
+embW ρ (limᵢ q f)        =
+  limᵢ (≺l (ρ q)) (λ y → embW ρ (f (into (<→◃ q) (tr⁻ (≺e (ρ q)) (out (<→◃ (≺l (ρ q))) y)))))
+embW ρ (up I.zero x)     = embW (λ q → ρ (I.suc q)) x
+embW ρ (up (I.self n) x) = embW (λ q → ρ (I.lim n q)) x
+
+embW-≅ : ∀ {a b ℓ′} (ρ : SimW a b) {x : Ordᶜ a} {y : Ordᶜ ℓ′} → x ≅ y → embW ρ x ≅ y
+embW-≅ ρ z≅     = z≅
+embW-≅ ρ (s≅ d) = s≅ (embW-≅ ρ d)
+embW-≅ ρ (l≅ h) = l≅ (λ n → embW-≅ ρ (h n))
+embW-≅ ρ (lᵢ≅ {p = q} {q = q₂} {f = f} {g = g} ej h) =
+  lᵢ≅ (I.≅ᴵ-trans (I.≅ᴵ-sym (≺e (ρ q))) ej) λ u v d →
+    subst (λ w → embW ρ (f (into (<→◃ q) (tr⁻ (≺e (ρ q)) w))) ≅ g (into (<→◃ q₂) v))
+          (sym (out-into (<→◃ (≺l (ρ q))) u))
+          (embW-≅ ρ (h (tr⁻ (≺e (ρ q)) u) v (≅→R (<→◃ q) (tr⁻-≅ (≺e (ρ q)) (R→≅ (<→◃ (≺l (ρ q))) d)))))
+embW-≅ ρ (upˡ {r = I.zero} d)   = embW-≅ (λ q → ρ (I.suc q)) d
+embW-≅ ρ (upˡ {r = I.self n} d) = embW-≅ (λ q → ρ (I.lim n q)) d
+embW-≅ ρ (upʳ d) = upʳ (embW-≅ ρ d)
+
+embW-refl : ∀ {a b} (ρ : SimW a b) {x : Ordᶜ a} → x ≅ x → embW ρ x ≅ embW ρ x
+embW-refl ρ e = ≅-trans (embW-≅ ρ e) (≅-sym (embW-≅ ρ e))
+
+------------------------------------------------------------------------
+-- 7. 层条件: 指数推导里每个 r≅ 的新层 k′ ⊑ᴵ 旧层 k (递归进 rs/rl/rΩ 的分支/ru 两支/re 三支/r◃).
+--    槽位前提 (rΩ 的 Sub) 不受限制.
+Good : ∀ {m : L} {k : Ordᴵ} {A : Ordᶜ k} {t : Tr m} → Dom m A t → Set
+Good rz                          = ⊤
+Good (rs d)                      = Good d
+Good (rl h)                      = ∀ n → Good (h n)
+Good (rΩ _ _ h)                  = ∀ Y z s → Good (h Y z s)
+Good {m = zero} (ru {c = ()} _ _ _ _)
+Good {m = nd s h} (ru d kd _ _)  = Good d × Good kd
+Good (re d dv dx _)              = Good d × Good dv × Good dx
+Good (r≅ {k = k} {k′ = k′} _ d)  = (k′ ⊑ᴵ k) × Good d
+Good (r◃ d _)                    = Good d

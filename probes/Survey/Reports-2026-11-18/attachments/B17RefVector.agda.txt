@@ -1,0 +1,77 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B17RefVector where
+open import Data.Nat using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≅→≼; ≼-trans; l≼)
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+import WSLevel as W
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B13Target as P
+import B14RefFixed as K
+import B14RefRow as Row
+import B15RefAlgebra as A
+import B15RefRaise as Q
+import B15OrbitAction as B
+import B17OrbitTower as T
+import B17RefExp as E
+import B17RefTower as H
+
+Vector = ∀ n → T.Arr (T.Twr n)
+Fits : Vector → T₁ → Set
+Fits b u = ∀ n → H.Fit (suc n) (b n) u
+
+-- 左端为可更换的整阶族，右端总是高一阶的动作。
+push : Vector → Vector → Vector
+push b c n = T.run (c (suc n)) (b n)
+pushed : ∀ b c u v → Fits b u → Fits c v → u L.≅ u → Fits (push b c) (A.E u v)
+pushed b c u v rb rc ru n = rc (suc n) (b n) u ru (rb n)
+sup : (ℕ → Vector) → Vector
+sup seq n = T.sup (T.Twr (suc n)) (λ k → seq k n)
+capped : ∀ seq coeff → (∀ k → coeff k L.≅ coeff k) → (∀ k → Fits (seq k) (coeff k)) → Fits (sup seq) (L.lim coeff)
+capped seq coeff regular fitted n = H.sup (suc n) (λ k → seq k n) coeff regular (λ k → fitted k n)
+step : Vector → Vector
+step b = sup (λ j → S.iter (push b) T.semK (suc j))
+
+module Generate (u : T₁) (ru : u L.≅ u) (b : Vector) (fit : Fits b u) where
+  terms = S.iter (A.E u) W.Ω₁ᴸ
+  fit-term : ∀ j → Fits (S.iter (push b) T.semK j) (terms j)
+  fit-term zero = H.sem
+  fit-term (suc j) = pushed b _ u (terms j) fit (fit-term j) ru
+  regular : ∀ j → terms j L.≅ terms j
+  regular zero = L.Ω-refl _
+  regular (suc j) = E.wide ru (regular j)
+  all : Fits (step b) (A.Γ u)
+  all = capped _ _ (λ j → regular (suc j)) (λ j → fit-term (suc j))
+
+height : T₀ → Vector → Vector
+height L.zero b = step b
+height (L.suc x) b = sup (S.iter (height x) b)
+height (L.lim h) b = sup (λ n → height (h n) b)
+
+regularΓ : ∀ {u v} → u L.≅ v → A.Γ u L.≅ A.Γ v
+regularΓ {u} {v} r = L.l≅ (λ n → L.iter-R L._≅_ {G = A.E u} {G′ = A.E v} (E.wide r) (L.Ω-refl _) (suc n))
+regularH : ∀ x {u v} → u L.≅ v → A.H x u L.≅ A.H x v
+regularH L.zero = regularΓ
+regularH (L.suc x) r = L.l≅ (L.iter-R L._≅_ {G = A.H x} {G′ = A.H x} (regularH x) r)
+regularH (L.lim h) r = L.l≅ (λ n → regularH (h n) r)
+
+all : ∀ x b u → u L.≅ u → Fits b u → Fits (height x b) (A.H x u)
+all L.zero b u ru r = Generate.all u ru b r
+all (L.suc x) b u ru r = capped _ _ regs terms where
+  regs = L.iter-R L._≅_ {G = A.H x} {G′ = A.H x} (regularH x) ru
+  terms : ∀ n → Fits (S.iter (height x) b n) (S.iter (A.H x) u n)
+  terms zero = r
+  terms (suc n) = all x _ _ (regs n) (terms n)
+all (L.lim h) b u ru r = capped _ _ (λ n → regularH (h n) ru) (λ n → all (h n) b u ru r)
+
+actual = λ x → B.f (T.run (height x T.semK 0) B.base) L.zero
+gain : ∀ x → K.gain 1 x L.≅ L.ψ⁰ (actual x)
+gain x = L.ψ⁰-≅ (L.≅-trans (P.co-pres (A.true-coeff x)) (L.≅-sym from-vector)) where
+  h = A.H x W.Ω₁ᴸ
+  from-vector : actual x L.≅ P.co₁ h
+  from-vector = L.≅-trans (all x T.semK W.Ω₁ᴸ (L.Ω-refl _) H.sem 0 B.base L.zero L.z≅ (Q.arithmetic 0) L.z≅)
+    (U.left-unit R.idσ (P.co-pres (U.left-unit (λ t → t) (regularH x (L.Ω-refl _)))))

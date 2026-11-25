@@ -1,0 +1,184 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 审计追踪 (全是 refl). 一: 对任意 Ω 形层号成立的机制. 二: Ω 形层号之上的后继层. 三: 真实运行塔第 2 项沿第 0 支走到这样的后继层.
+module Audit4X where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import W4Loc using (loc)
+
+------------------------------------------------------------------------
+-- 一. 任意 Ω 形层号 Pk = nd (sΩ k) h. "经指定孩子寻址" = 路径 inc c′ u.
+module Gen (k : L) (h : Tr k → L) (o : Ok (nd (sΩ k) h)) where
+  Pk : L
+  Pk = nd (sΩ k) h
+  top : Pos Pk
+  top = inj₁ (inj₁ tt)
+
+  -- 试验四. 树的孩子不是 zero (这里取后继形): 先在树自己的孩子里找目标层, 找到就地折, 找不到回退.
+  try-own : (B : Base Pk) {i : L} (c′ : Tr k) (u : i ≤ h c′) (β : Tr⁺ i)
+            (x : Tr Pk) (c₁ : Tr k) (y : Tr (h (suc c₁))) (e : h (suc c₁) ⊢ zero ◃ y)
+          → ψ Pk o B i (inc c′ u) β (up x (suc c₁) y e)
+          ≡ mW (loc i (h (suc c₁)))
+              (λ p → ψ (h (suc c₁)) (proj₂ o (suc c₁)) (λ i′ u′ → ψ Pk o B i′ (inc (suc c₁) u′) (B i′ (inc (suc c₁) u′)) x) i p (ψ Pk o B i (inc c′ u) β x) y)
+              (ψ Pk o B i (inc c′ u) β x ⊞ ψ₀ (h (suc c₁)) (proj₂ o (suc c₁)) y)
+  try-own B c′ u β x c₁ y e = refl
+
+  -- 树的孩子与目标的孩子都是 zero: 进孩子 zero 折, 状态是 x 经孩子 zero 朝各层的折叠.
+  same-zero : (B : Base Pk) {i : L} (u : i ≤ h zero) (β : Tr⁺ i) (x : Tr Pk) (y : Tr (h zero)) (e : h zero ⊢ zero ◃ y)
+            → ψ Pk o B i (inc zero u) β (up x zero y e)
+            ≡ ψ (h zero) (proj₂ o zero) (λ i′ u′ → ψ Pk o B i′ (inc zero u′) (B i′ (inc zero u′)) x) i u (ψ Pk o B i (inc zero u) β x) y
+  same-zero B u β x y e = refl
+
+  -- 孩子一侧的槽位朝任一孩子里的目标: 不保留.
+  flat : (c : Tr k) (t : Pos⁼ (h c)) {i : L} (c′ : Tr k) (u : i ≤ h c′) → kp Pk o (inj₂ (c , t)) (inc c′ u) ≡ nothing
+  flat c t c′ u = refl
+
+  -- 一致路径上的嵌入行: 交给孩子的底族是 "x 经指定孩子朝各层的折叠".
+  base-inc : (B : Base Pk) {j : L} (ws : (c : Tr k) → j ≤ h c) (β : Tr⁺ j)
+             (x : Tr Pk) (c : Tr k) (y : Tr (h c)) (e : h c ⊢ zero ◃ y)
+           → ψ Pk o B j (inu ws) β (up x c y e)
+           ≡ ψ (h c) (proj₂ o c) (λ i u → ψ Pk o B i (inc c u) (B i (inc c u)) x) j (ws c) (ψ Pk o B j (inu ws) β x) y
+  base-inc B ws β x c y e = refl
+
+  -- 迭代子在孩子框架里走链时读的状态条目: 外层写法是 inc c (…).
+  addr : (c : Tr k) (p′ : Pos (h c))
+       → mk (chTD (tdNil {Pk}) c) (hereT (down stop c) (posW (h c) p′)) ≡ (inj₁ (posW (h c) p′) , inc c (posW (h c) p′))
+  addr c p′ = refl
+
+------------------------------------------------------------------------
+-- 二. Ω 形层号 Q 之上的后继层 N: 链点是 Q 上挂起的塔, 折它就是在 Q 上迭代 "右边接上底".
+module Succ (k : L) (h : Tr k → L) (oQ : Ok (nd (sΩ k) h)) where
+  Q N : L
+  Q = nd (sΩ k) h
+  N = nd sS (λ _ → Q)
+  oN : Ok N
+  oN = tt , λ _ → oQ
+  pN : Pos N
+  pN = inj₂ (tt , inj₁ tt)
+
+  feed : (B : Base N) (z : Tr Q)
+       → proj₁ (ψ N oN B Q (posW N pN) (B Q (posW N pN)) (proj₁ (upz {s = sS} {h = λ _ → Q} tt (suc z , z◃ z ◃s))))
+       ≡ ex (proj₁ (B Q (inc tt self))) (proj₁ (B Q (inc tt self))) (proj₂ (B Q (inc tt self))) (suc z) tt
+  feed B z = refl
+
+  query : (B : Base N) (β₀ : Tr⁺ zero) (a : Tr⁺ Q) (x : Tr Q)
+        → ψ N oN B zero (z≤ N) β₀
+            (proj₁ (upz {s = sS} {h = λ _ → Q} tt (suc (ex (proj₁ a) (proj₁ a) (proj₂ a) x tt) , z◃ (ex (proj₁ a) (proj₁ a) (proj₂ a) x tt) ◃s)))
+        ≡ next⁺ (E oQ tdNil x (opB Q oQ (proj₁ a) (proj₂ a))
+                   (λ i u → ψ Q oQ (λ i′ u′ → B i′ (inc tt u′)) i u (B i (inc tt u)) (proj₁ a))
+                   zero (z≤ Q) (ψ Q oQ (λ i′ u′ → B i′ (inc tt u′)) zero (z≤ Q) β₀ (proj₁ a)))
+  query B β₀ a x = refl
+
+------------------------------------------------------------------------
+-- 三. 真实运行. 塔第 2 项 = 终点 EBOᶜ 的第 2 个成员.
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+h₂ : Tr (tw 1) → L
+h₂ c = tw 1 ⊕ ↑ (tw 1) c
+o₂ : Ok (tw 2)
+o₂ = Ok-tw 2
+b : Tr⁺ (tw 1)
+b = Ωt (tw 1)
+
+seg : ℕ → Tr Λ
+seg n = proj₁ (upz {s = sL} {h = tw} n (Ωt (tw n)))
+pre₂ : Tr Λ
+pre₂ = cum seg 1
+B₂ : Base (tw 2)
+B₂ i u = ψ Λ Ok-Λ (B₀ Λ) i (inc 2 u) (B₀ Λ i (inc 2 u)) pre₂
+v₁ : Tr⁺ zero
+v₁ = ψ Λ Ok-Λ (B₀ Λ) zero (z≤ Λ) (Ωt zero) pre₂
+real₂ : Tr⁺ zero
+real₂ = ψ (tw 2) o₂ B₂ zero (z≤ (tw 2)) v₁ (proj₁ (Ωt (tw 2)))
+
+member₂ : ψ Λ Ok-Λ (B₀ Λ) zero (z≤ Λ) (Ωt zero) (cum seg 2) ≡ real₂
+member₂ = refl
+
+-- 真实底族在 tw 1 (下标侧路径) 的值: 两层挂起的塔.
+one : Tr (tw 1)
+one = proj₁ (upz {s = sΩ zero} {h = h₁} zero (Ωt zero))
+β′ β₁ : Tr⁺ (tw 1)
+β′ = ψ Λ Ok-Λ (B₀ Λ) (tw 1) (inc 2 (ink self)) b (seg 0)
+β₁ = B₂ (tw 1) (ink self)
+
+β′-shape : proj₁ β′ ≡ ex (proj₁ b) (proj₁ b) (proj₂ b) one tt
+β′-shape = refl
+β₁-shape : proj₁ β₁ ≡ ex (proj₁ β′) (proj₁ β′) (proj₂ β′) (proj₁ b) tt
+β₁-shape = refl
+
+-- 顶层链: 第 1 个链点.
+top₂ : Pos (tw 2)
+top₂ = inj₁ (inj₁ tt)
+step₂ : Tr (tw 1) → Tr (tw 1)
+step₂ z = proj₁ (ψ (tw 2) o₂ B₂ (tw 1) (posW (tw 2) top₂) (B₂ (tw 1) (posW (tw 2) top₂)) (proj₁ (upz {s = sΩ (tw 1)} {h = h₂} z (Ωt (h₂ z)))))
+z₁ : Tr (tw 1)
+z₁ = ex (proj₁ β₁) (proj₁ β₁) (proj₂ β₁) (proj₁ b) tt
+z₁-is : step₂ zero ≡ z₁
+z₁-is = refl
+
+-- 读回层号的形状.
+lev : Tr zero → L
+lev c = zero ⊕ ↑ (h₁ c) (proj₁ (Ωt (h₁ c)))
+Lb Lβ′ Lβ₁ : L
+Lb = ↑ (tw 1) (proj₁ b)
+Lβ′ = ↑ (tw 1) (proj₁ β′)
+Lβ₁ = ↑ (tw 1) (proj₁ β₁)
+
+Lb-shape : Lb ≡ nd (sΩ zero) lev
+Lb-shape = refl
+Lβ′-shape : Lβ′ ≡ nd sL (λ n → iter (_⊕ Lb) Lb (suc n))
+Lβ′-shape = refl
+K₁ K₂ : Tr zero → L
+K₁ c = proj₁ (Eh AL tt (proj₁ (Ωt (h₁ c))) (opR Lβ′)) Lβ′
+K₂ c = proj₁ (Eh AL tt (proj₁ (Ωt (h₁ c))) (opR Lβ₁)) Lβ₁
+Lβ₁-shape : Lβ₁ ≡ nd (sΩ zero) K₁
+Lβ₁-shape = refl
+z₁-level : h₂ z₁ ≡ nd (sΩ zero) (λ c → tw 1 ⊕ K₂ c)
+z₁-level = refl
+
+-- 沿第 0 支往下: Ω 形 → ℕ 极限 → Ω 形 → ℕ 极限 → ℕ 极限 → Ω 形 → 后继 → Ω 形 (Q).
+s1 : tw 1 ⊕ K₂ zero ≡ nd sL (λ n → tw 1 ⊕ iter (_⊕ Lβ₁) Lβ₁ (suc n))
+s1 = refl
+s2 : tw 1 ⊕ iter (_⊕ Lβ₁) Lβ₁ 1 ≡ nd (sΩ zero) (λ c → tw 1 ⊕ (Lβ₁ ⊕ K₁ c))
+s2 = refl
+s3 : tw 1 ⊕ (Lβ₁ ⊕ K₁ zero) ≡ nd sL (λ n → tw 1 ⊕ (Lβ₁ ⊕ iter (_⊕ Lβ′) Lβ′ (suc n)))
+s3 = refl
+s4 : tw 1 ⊕ (Lβ₁ ⊕ iter (_⊕ Lβ′) Lβ′ 1) ≡ nd sL (λ n → tw 1 ⊕ (Lβ₁ ⊕ (Lβ′ ⊕ iter (_⊕ Lb) Lb (suc n))))
+s4 = refl
+s5 : tw 1 ⊕ (Lβ₁ ⊕ (Lβ′ ⊕ iter (_⊕ Lb) Lb 1)) ≡ nd (sΩ zero) (λ c → tw 1 ⊕ (Lβ₁ ⊕ (Lβ′ ⊕ (Lb ⊕ lev c))))
+s5 = refl
+Qr : L
+Qr = nd (sΩ zero) (λ c → tw 1 ⊕ (Lβ₁ ⊕ (Lβ′ ⊕ lev c)))
+s6 : tw 1 ⊕ (Lβ₁ ⊕ (Lβ′ ⊕ (Lb ⊕ lev zero))) ≡ nd sS (λ _ → Qr)
+s6 = refl
+
+-- 真实底族在 Qr 处 (后继层的走链底) 的值: 标准的 Ω_{Qr} 加两条第 0 层的尾巴 (前缀的两段各自从头折).
+pathQ : Qr ≤ tw 2
+pathQ = inc z₁ (inc zero (inc 0 (inc zero (inc 0 (inc 0 (inc zero (inc tt self)))))))
+βQ : Tr⁺ Qr
+βQ = B₂ Qr pathQ
+-- 取出挂起乘幂的指数.
+exX : ∀ {ℓ} → Tr ℓ → Tr ℓ
+exX (ex a b nb x ε) = x
+exX zero = zero
+exX (suc x) = suc x
+exX (lim f a) = lim f a
+exX (Ω p g) = Ω p g
+exX (up x c y e) = up x c y e
+
+βQ₀ : Tr⁺ Qr
+βQ₀ = ψ Λ Ok-Λ (B₀ Λ) Qr (inc 2 pathQ) (B₀ Λ Qr (inc 2 pathQ)) (seg 0)
+
+-- 试验折叠上: 真实底族在 Qr 处的值不再是 "标准 Ω 树加两条尾巴", 而是两层挂起的乘幂, 与 tw 1 处的条目 (β₁-shape) 同形.
+βQ₀-shape : proj₁ βQ₀ ≡ ex (proj₁ (Ωt Qr)) (proj₁ (Ωt Qr)) (proj₂ (Ωt Qr)) (exX (proj₁ βQ₀)) tt
+βQ₀-shape = refl
+βQ-shape : proj₁ βQ ≡ ex (proj₁ βQ₀) (proj₁ βQ₀) (proj₂ βQ₀) (exX (proj₁ βQ)) tt
+βQ-shape = refl

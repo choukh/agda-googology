@@ -1,0 +1,94 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B17RefAgain where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.List.Base using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≅→≼; ≼-trans; ≼-refl; ≼l; l≼; s≼s; 1≼ψ⁰)
+open import WVOne using (T₀; 𝟏)
+open import WSLevel using (Ω₁ᴸ)
+import YiLAB7Replay as Y
+import B8FreezeMain as Neg
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B12LimitRef as Strict
+import B13Target as P
+import B14RefGain as Path
+import B14RefFixed as K
+import B15RefRaise as Q
+import B15RefAlgebra as A
+import B16RefFive as F5
+import B16OrbitTransform as O
+import B16OrbitAgain as B
+import B17OrbitOperator as T
+import B17RefExp as E
+import B17RefGamma as G
+import B17RefTransform as Z
+
+X = A.E Ω₁ᴸ Ω₁ᴸ
+rX : X L.≅ X
+rX = E.wide (L.Ω-refl _) (L.Ω-refl _)
+V = P.co₁ X
+rV = P.co-pres rX
+Pw = R.power V
+d = L.ψ⁰ Pw
+
+-- 固定 Φ 第二次和原 Γ 第二次，保留同一个槽 1 的孩子 0 已有零/Ω₁ 之别。
+wrong : A.E X Ω₁ᴸ L.≅ A.E Ω₁ᴸ X → ⊥
+wrong (L.lᵢ≅ L.z≅ h) with h 𝟏 𝟏 (L.s≅ L.z≅)
+... | L.l≅ row with row 0
+... | ()
+
+higher : Q.Fit B.a X
+higher h = L.≅-trans (Z.phi T.raiseT Ω₁ᴸ (L.Ω-refl _) Q.raise O.base L.zero L.z≅ (Q.arithmetic 0) h)
+  (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (P.refl-left (L.≅-sym h)) (P.co-pres (U.left-unit (λ t → t) rX)))
+
+module M = U.Sum V rV
+term : ∀ n → B.p n L.≅ M.left n
+term n = L.≅-trans (same n) (L.≅-trans (M.Prefix.along (O.f B.a) higher L.z≅ n)
+  (U.left-unit R.idσ (M.reg n))) where
+  same : ∀ j → B.p j L.≅ S.iter (O.f B.a) L.zero j
+  same zero = L.z≅
+  same (suc j) = O.pres B.a (same j)
+
+into : L.ψ⁰ B.limit ≼ d
+into = l≼ (λ n → ≼l (suc n) (≅→≼ (L.ψ⁰-≅ (term (suc n)))))
+out : d ≼ L.ψ⁰ B.limit
+out = l≼ λ where
+  zero → ≼l 0 (1≼ψ⁰ _)
+  (suc n) → ≼l n (≅→≼ (L.ψ⁰-≅ (L.≅-sym (term (suc n)))))
+
+cap = L.ψ⁰ (P.co₁ (A.E X Ω₁ᴸ))
+cap-second : cap ≼ G.node 1
+cap-second = ≼-trans (≅→≼ (L.ψ⁰-≅ (P.co-pres (E.Shift.compose Ω₁ᴸ Ω₁ᴸ X rX (L.Ω-refl _)))))
+  (≼-trans (≼l 2 (≼-refl _)) (≼-trans (≼l 0 (≼-refl _)) (≅→≼ (L.≅-sym (G.full 1)))))
+
+b = L.ψ⁰ (P.co₁ (X L.+ Ω₁ᴸ))
+in-cap : Path.along (0 ∷ 2 ∷ 0 ∷ 1 ∷ []) cap ≡ b
+in-cap = refl
+
+body = λ x → P.co₁ (Q.body X x)
+val = λ x → L.ψ⁰ (body x)
+rbody : ∀ {x y : T₀} → x L.≅ y → body x L.≅ body y
+rbody r = P.co-pres (L.add-≅ {σ = λ q → L.suc q} {σ′ = λ q → L.suc q} rX r)
+b-normal : b L.≅ L.ψ⁰ (L.limᵢ (L.suc L.zero) body)
+b-normal = L.ψ⁰-≅ {a = P.co₁ (X L.+ Ω₁ᴸ)} {b = L.limᵢ (L.suc L.zero) body} (L.lᵢ≅ L.z≅ (λ x y r → rbody (L.tr⁻-≅ L.z≅ r)))
+next-in-b : val d ≼ b
+next-in-b = ≼-trans (≅→≼ (L.ψ⁰-≅ (rbody (L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (L.l≅ M.reg)))))
+  (≼-trans (≼l 1 (≼-refl _)) (≅→≼ (L.≅-sym b-normal)))
+two-in-d : K.Select (L.suc 𝟏) d
+two-in-d = K.branch 1 (K.branch 0 F5.two-in)
+focus : Path.along (2 ∷ 1 ∷ 0 ∷ 0 ∷ []) (val (L.suc 𝟏)) ≡ L.ψ⁰ (Pw L.+ Y.Ω₂ᴸ)
+focus = refl
+strict : L.suc d ≼ G.node 1
+strict = ≼-trans (Strict.strict-step Pw) (≼-trans (Path.path-bound (2 ∷ 1 ∷ 0 ∷ 0 ∷ []) (val (L.suc 𝟏)))
+  (≼-trans (K.value (K.map-select val (λ _ → refl) two-in-d)) (≼-trans next-in-b
+  (≼-trans (Path.path-bound (0 ∷ 2 ∷ 0 ∷ 1 ∷ []) cap) cap-second))))
+strict-again : L.suc (L.ψ⁰ B.limit) ≼ G.node 1
+strict-again = ≼-trans (s≼s into) strict
+
+no-four : Path.inner ≼ L.ψ⁰ B.limit → ⊥
+no-four h = Neg.irr _ (≼-trans strict-again (≼-trans (R.at-below Path.inner 1) h))

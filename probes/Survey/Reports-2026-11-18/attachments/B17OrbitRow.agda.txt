@@ -1,0 +1,96 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- ψ₀(Ω₃) 的整行 [1,1]。第二个 Ω₂ 反馈点保存一整个 Ω₁ 节点；它的每个真实孩子在变动指数上实现 Γ 的层迭代。
+module B17OrbitRow where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block hiding (D; R)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (p₂; g₂; ◃→≼)
+open import WKGen using (Ω₁t; node-ge)
+open import WKShape using (Ψ₃; lvl3; ok₃)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+open import B9InnerOuter using (w2)
+open import WSShadow using (zC)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; l≼; ≅→≼)
+import B11OuterCore as C
+import B12Terminal as T
+import B12ActualSlots as Cover
+import B12Update as U
+import B13OrbitFeed as O
+import B13Orbit as B
+import B13SeedOuter as St
+import B14RefFixed as F
+import B14RefRow as Row
+import B14RefDescribed as D
+import B15OrbitAction as A
+import B15OrbitModel as M
+import B15OrbitRaise as H
+import B15OrbitEx as E
+import B16OrbitWide as W
+import B16OrbitExit as Old
+import B17OrbitModel as Model
+import B17OrbitTower as V
+import B17OrbitHeight as P
+import B17OrbitVector as Rec
+import B17OrbitThree as Three
+import B17RefVector as Ref
+
+m = idM {X = M.X₁}
+module Out = M.At m
+deep = σ O.m₂ Out.slot
+module Height = P.At deep O.D₀
+
+module At (r : T.Run lvl3) (cv : Cover.Covered r) where
+  module I = E.At r cv
+  module X = Three.At r cv
+  open I using (module Previous; module E₀; K₁; J; initial)
+  open X.Prev using (cover)
+  open St.At r using (st1; c⁺; v₁; outer)
+  open Previous.Proof.Core.Run using (S₁; step₂)
+  opK = B.K c⁺
+  K₀ = enterO O.m₂ K₁
+  K₁-law : Model.Both m K₁ A.base
+  K₁-law = H.protected c⁺ E₀.cp , W.base c⁺ E₀.cp
+  advance : Height.Law K₀ Ref.step
+  advance S v t h = P.mono (run opK R lvl1 C.slot (R lvl1 C.slot)) (run J R lvl1 C.slot (R lvl1 C.slot))
+     (Emono ok₂ tdNil opK R lvl1 C.slot (R lvl1 C.slot) (proj₂ c⁺)) _
+     (Three.Regular.advance opK (B.standard≤K c⁺ E₀.cp) R v t h)
+    where R : Base lvl2
+          R j s = S j (σ O.m s)
+  S₀ : St M.X₀
+  S₀ j u = S₁ j (proj₂ u)
+  curve = λ z → E ok₂ O.D₁ (O.g₁ z) K₁ S₁ lvl1 Out.slot (S₁ lvl1 Out.slot)
+  tree = Ω p₁ (λ z → proj₁ (curve z))
+  indexed : ∀ y z → y ≼ read (suc z) → Rec.Index (curve z) (Ref.height y V.semK)
+  indexed y z low = Height.eval (suc z) low K₀ advance S₀ V.semK cover (Rec.initial (S₀ lvl1 deep) cover)
+
+  point = λ z → op (E ok₂ O.D₁ (proj₁ (curve z)) K₁) (Einf ok₂ O.D₁ (proj₁ (curve z)) K₁)
+  point-model : ∀ y z → y ≼ read (suc z) → Model.Both m (point z) (V.run (Ref.height y V.semK 0) A.base)
+  point-model y z low = indexed y z low m (λ _ → refl) 0 idM (λ _ → refl) K₁ A.base K₁-law
+  step = λ z → proj₁ (run (point z) S₁ zero Out.ip (S₁ zero Out.ip))
+  index = iter step zero
+  input : ∀ v → L.ψ⁰ L.zero ≼ read (proj₁ v) → Out.Pack L.zero zC S₁ v
+  input v low = Out.packed (U.seeds low (U.slot-bound (Out.seed initial)) (U.structure (Out.seed initial))) (Out.inner initial)
+  part : ∀ y z → y ≼ read (suc z) → ∀ t v → L.ψ⁰ L.zero ≼ read (proj₁ v) → F.gain 1 y ≼ read (proj₁ (run (point z) S₁ zero t v))
+  part y z low t v h = ≼-trans (≅→≼ (Ref.gain y)) (U.value-bound (Out.seed (proj₁ (point-model y z low) t L.zero zC D.zero-row L.z≅ S₁ v (input v h))))
+  track : ∀ j → F.chain 1 j ≼ read (suc (index j))
+  track zero = ≼-refl _
+  track (suc j) = ≼-suc (part (F.chain 1 j) (index j) (track j) Out.ip (S₁ zero Out.ip) (Out.inner initial))
+  internal : Row.node 1 ≼ read (proj₁ (E ok₂ O.D₁ tree K₁ S₁ zero Previous.t v₁))
+  internal = ≼-trans (≅→≼ (F.as-chain 1)) (l≼ λ j → ≼-trans (part (F.chain 1 j) (index j) (track j) Previous.t v₁ (U.value-bound (Out.seed initial)))
+                  (node-ge (kpT (fr O.D₁) ok₂ p₁ (tv O.D₁ Previous.t)) (λ z → run (point z) S₁ zero Previous.t v₁) step j))
+  stored : lvl1 ⊢ tree ◃ step₂ Previous.y
+  stored = Emono ok₂ O.D₁ K₁ S₁ lvl1 Out.slot (S₁ lvl1 Out.slot) {x = Ω₁t} {y = suc Previous.y} (◃t cover (◃t (X.into 0) ◃s))
+  upper : read (proj₁ (E ok₂ O.D₁ tree K₁ S₁ zero Previous.t v₁)) ≼ read (T.value r)
+  upper = ≼-trans (◃→≼ (Emono ok₂ O.D₁ K₁ S₁ zero Previous.t v₁ {x = tree} {y = suc (step₂ Previous.y)} (◃t stored ◃s)))
+      (≼-trans (node-ge (kp lvl2 ok₂ p₂ w2) (λ z → E ok₂ tdNil (g₂ z) J st1 zero w2 v₁) step₂ 2) (≼-trans (E₀.inG st1 w2 v₁) (outer 0)))
+  whole : Row.node 1 ≼ read (T.value r)
+  whole = ≼-trans internal upper
+standard : Row.node 1 ≼ read Ψ₃
+standard = At.whole (T.initial lvl3 ok₃) (Cover.initial lvl3 ok₃)
+terminal : Row.node 1 ≼ read EBOᶜ
+terminal = ≼-trans (At.whole (T.finiteRun 2) (Cover.all-finite 2)) (T.finite-ge 2)

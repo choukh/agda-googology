@@ -1,0 +1,155 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- KQ B1, 现行块 (W4). 判决: 首枝路径 FB 在现行块里照样成立 (读回对右加法, 迭代子), 卡在 "Ω̂ 沿 FB 单调" 的每一步:
+-- 规范 Ω 树读回的孩子是 zero ⊕ Ω̂ (…), 而 zero ⊕ x 与 x 定义地不同. 编译: 形状事实 (refl), 条件定理 (条件 Z: x ⊑ zero ⊕ x), c = 0 的有限测试.
+-- 失败原文见 KQFail1 / KQFail2 的日志. FB 一族也供 KQOut 用.
+module KQRead where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+
+Ω̂ : L → L
+Ω̂ a = ↑ a (proj₁ (Ωt a))
+
+memL : L → ℕ → L
+memL zero          n = zero
+memL (nd sS h)     n = zero
+memL (nd sL g)     n = g n
+memL (nd (sΩ k) h) n = zero
+
+data FB : L → L → Set where
+  fself : ∀ {j} → FB j j
+  fdn   : ∀ {j s h} → FB j (h (c₀ s)) → FB j (nd s h)
+
+FB-trans : ∀ {i j ℓ} → FB i j → FB j ℓ → FB i ℓ
+FB-trans r fself   = r
+FB-trans r (fdn v) = fdn (FB-trans r v)
+
+FB→⊑ : ∀ {j ℓ} → FB j ℓ → j ⊑ ℓ
+FB→⊑ fself           = self
+FB→⊑ (fdn {s = s} v) = inc (c₀ s) (FB→⊑ v)
+
+-- 现行 ⊕ 对右参数递归: 这两条无需对左参数分情形.
+FB-⊕ : (a b : L) → FB a (a ⊕ b)
+FB-⊕ a zero     = fself
+FB-⊕ a (nd s h) = fdn (FB-⊕ a (h (c₀ s)))
+
+FB-⊕l : (a : L) {u u′ : L} → FB u u′ → FB (a ⊕ u) (a ⊕ u′)
+FB-⊕l a fself   = fself
+FB-⊕l a (fdn v) = fdn (FB-⊕l a v)
+
+record FBR (A : RA) : Set₁ where
+  field
+    Rf : Car A → Car A → Set
+    rf : ∀ {u} → Rf u u
+    tr : ∀ {u v w} → Rf u v → Rf v w → Rf u w
+    lR : ∀ {u} (F : ℕ → Car A) (a : (n : ℕ) → Rel A (F n) (F (suc n))) → Rf u (F 0) → Rf u (limA A F a)
+    nR : ∀ {u m} (κ : Ctx A m) (p : Pos m) (G : Br m p → Car A) → Rf u (G (fromBr m p zero)) → Rf u (nodeA A κ p G)
+open FBR
+
+ptR : ∀ {A} → FBR A → FBR (pt A)
+Rf (ptR R) f g = (u : _) → Rf R (proj₁ f u) (proj₁ g u)
+rf (ptR R) = λ u → rf R
+tr (ptR R) r r′ = λ u → tr R (r u) (r′ u)
+lR (ptR R) F a r = λ u → lR R _ _ (r u)
+nR (ptR R) κ p G r = λ u → nR R κ p _ (r u)
+
+Eh-first : (A : RA) (R : FBR A) {m : L} (κ : Ctx A m) (x : Tr m) (F : OpA A) (u : Car A)
+         → Rf R (proj₁ F u) (proj₁ (Eh A κ x F) u)
+Eh-first A R κ zero F u = rf R
+Eh-first A R κ (suc x) F u = lR R _ _ (Eh-first A R κ x F u)
+Eh-first A R κ (lim f a) F u = lR R _ _ (Eh-first A R κ (f 0) F u)
+Eh-first A R {m} κ (Ω p g) F u = nR R κ p _ (Eh-first A R κ (g (fromBr m p zero)) F u)
+Eh-first A R {nd s h} κ (up x c y e) F u =
+  tr R (Eh-first A R κ x F u) (Eh-first A R (dn A κ c) y (Eh A κ x F) u)
+Eh-first A R κ (ex a b nb x ε) F u =
+  tr R (Eh-first A R κ a F u)
+       (tr R (Eh-first A R κ b (Eh A κ a F) u) (Eh-first (pt A) (ptR R) κ x (opE A κ b nb) (Eh A κ a F) u))
+
+FBAL : FBR AL
+Rf FBAL = FB
+rf FBAL = fself
+tr FBAL = FB-trans
+lR FBAL F a r = fdn r
+nR FBAL κ p G r = fdn r
+
+-- 读回对右加法: 现行块里照样成立.
+↑-FB+ : (k : L) (x y : Tr k) → FB (↑ k x) (↑ k (x + y))
+↑-FB+ k        x zero            = fself
+↑-FB+ k        x (suc y)         = fdn (↑-FB+ k x y)
+↑-FB+ k        x (lim f a)       = fdn (↑-FB+ k x (f 0))
+↑-FB+ k        x (Ω p g)         = fdn (↑-FB+ k x (g (fromBr k p zero)))
+↑-FB+ (nd s h) x (up y c w e)    = FB-trans (↑-FB+ (nd s h) x y) (FB-⊕ (↑ (nd s h) (x + y)) (↑ (h c) w))
+↑-FB+ (nd s h) x (ex a b nb y ε) =
+  FB-trans (↑-FB+ (nd s h) x a)
+    (FB-trans (FB-⊕ (↑ (nd s h) (x + a)) (↑ (nd s h) b))
+              (Eh-first AL FBAL tt y (opR (↑ (nd s h) b)) (↑ (nd s h) (x + a))))
+
+------------------------------------------------------------------------
+-- 形状 (对变量都是 refl): 规范 Ω 树读回的每种结点, 孩子前面都多一个 zero ⊕.
+Ω̂-sS : (h : ⊤ → L) → Ω̂ (nd sS h) ≡ nd (sΩ (h tt)) (λ z → nd sS (λ _ → zero ⊕ ↑ (h tt) z))
+Ω̂-sS h = refl
+
+Ω̂-sΩ : (k : L) (h : Tr k → L) → Ω̂ (nd (sΩ k) h) ≡ nd (sΩ k) (λ c → zero ⊕ Ω̂ (h c))
+Ω̂-sΩ k h = refl
+
+Ω̂-sL₀ : (g : ℕ → L) → memL (Ω̂ (nd sL g)) 0 ≡ zero ⊕ Ω̂ (g 0)
+Ω̂-sL₀ g = refl
+
+Ω̂-sL : (g : ℕ → L) (n : ℕ) → memL (Ω̂ (nd sL g)) (suc n) ≡ memL (Ω̂ (nd sL g)) n ⊕ Ω̂ (g (suc n))
+Ω̂-sL g n = refl
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+lev : Tr zero → L
+lev c = zero ⊕ ↑ (h₁ c) (proj₁ (Ωt (h₁ c)))
+
+lev-Ω̂ : (c : Tr zero) → lev c ≡ zero ⊕ Ω̂ (h₁ c)
+lev-Ω̂ c = refl
+
+-- B1(a) 的后继一步: lev (c+1) 在孩子 Ωt (h₁ c) 上是 nd sS (λ _ → zero ⊕ lev c), 不是 lev c.
+lev-suc : (c : Tr zero) → lev (suc c) ≡ nd (sΩ (h₁ c)) (λ z → nd sS (λ _ → zero ⊕ (zero ⊕ ↑ (h₁ c) z)))
+lev-suc c = refl
+
+-- 有限测试: c = 0 时 zero ⊕ 定义地消掉, 自然路径通过.
+lev01 : lev zero ⊑ lev (suc zero)
+lev01 = inc (suc zero) (inc tt self)
+
+------------------------------------------------------------------------
+-- 条件定理 (条件 Z). Z 只用在 Ω̂ 的三种单步上; 其余 (FB, ↑-FB+, Eh-first) 无条件.
+module Cond (Z : (x : L) → x ⊑ zero ⊕ x) where
+  FB→Ω̂ : ∀ {j ℓ} → FB j ℓ → Ω̂ j ⊑ Ω̂ ℓ
+  FB→Ω̂ fself                 = self
+  FB→Ω̂ (fdn {s = sS} {h} v)   = FB→Ω̂ v ∙ (Z (Ω̂ (h tt)) ∙ inc (proj₁ (Ωt (h tt))) (inc tt self))
+  FB→Ω̂ (fdn {s = sL} {h} v)   = FB→Ω̂ v ∙ (Z (Ω̂ (h 0)) ∙ inc 0 self)
+  FB→Ω̂ (fdn {s = sΩ k} {h} v) = FB→Ω̂ v ∙ (Z (Ω̂ (h zero)) ∙ inc zero self)
+
+  Ω̂-+ : (k : L) (x y : Tr k) → Ω̂ (↑ k x) ⊑ Ω̂ (↑ k (x + y))
+  Ω̂-+ k x y = FB→Ω̂ (↑-FB+ k x y)
+
+  lev-mono : (c d : Tr zero) → lev c ⊑ lev (c + d)
+  lev-mono c d = ⊕⊑ zero (FB→Ω̂ (FB-⊕l zero (↑-FB+ zero c d)))
+
+------------------------------------------------------------------------
+-- 现行块里塔的孩子族满足 "对右加法 P0 单调" (无条件); 卡住的只是 Ω̂ 一步 (zero ⊕).
+data P0 : L → L → Set where
+  p0self : ∀ {j} → P0 j j
+  p0S    : ∀ {j h} → P0 j (h tt) → P0 j (nd sS h)
+  p0L    : ∀ {j g} → P0 j (g 0) → P0 j (nd sL g)
+  p0Ω    : ∀ {j k h} (c : Tr k) → P0 j (h c) → P0 j (nd (sΩ k) h)
+
+FB→P0 : ∀ {j ℓ} → FB j ℓ → P0 j ℓ
+FB→P0 fself              = p0self
+FB→P0 (fdn {s = sS} v)   = p0S (FB→P0 v)
+FB→P0 (fdn {s = sL} v)   = p0L (FB→P0 v)
+FB→P0 (fdn {s = sΩ k} v) = p0Ω zero (FB→P0 v)
+
+tw-RMono : (n : ℕ) (c d : Tr (tw n)) → P0 (tw n ⊕ ↑ (tw n) c) (tw n ⊕ ↑ (tw n) (c + d))
+tw-RMono n c d = FB→P0 (FB-⊕l (tw n) (↑-FB+ (tw n) c d))

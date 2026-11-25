@@ -1,0 +1,301 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- E2: N2Fold 的改写. 改动: (1) 指数里再有 ex 时, 第一阶迭代子 E 在高一阶结果代数 A₂ (载体是本框架的 op,
+-- 逐点序) 上调用 E2Block 的 Eh, 取代 E1 的回退写法; A₂ 的 up 行不进新框架, 沿下行链 κ 把槽位推到框架层判定;
+-- (2) 自身行只在非零层是构造子 ex β β x; 第 0 层的自身行就是原 FGH 行 (零, 后继 next⁺, ℕ 极限).
+module E2Fold where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; cong; trans)
+
+open import E2Block
+open import E2Ops
+open import E2Path
+
+Base : L → Set
+Base ℓ = (j : L) → j ≤ ℓ → Tr⁺ j
+
+B₀ : (ℓ : L) → Base ℓ
+B₀ ℓ j _ = Ωt j
+
+Keep : L → (X : Set) → X → Set
+Keep j X x₀ = Maybe (Σ (Pos j) λ q → Σ (Br j q → X) λ cv → cv (fromBr j q zero) ≡ x₀)
+
+mapK : ∀ {j X Y x₀ y₀} (f : X → Y) → f x₀ ≡ y₀ → Keep j X x₀ → Keep j Y y₀
+mapK f e (just (q , cv , g)) = just (q , (λ z → f (cv z)) , trans (cong f g) e)
+mapK f e nothing             = nothing
+
+mutual
+  kp : (ℓ : L) → Ok ℓ → (p : Pos ℓ) → ∀ {j} → j ≤ ℓ → Keep j (Br ℓ p) (fromBr ℓ p zero)
+  kp ℓ             o               p              self      = just (p , (λ z → z) , refl)
+  kp (nd s h)      (_ , oc)        (inj₂ (c , t)) (inu vs)  = kp⁼ (h c) (oc c) t (vs c)
+  kp (nd (sΩ k) h) ((_ , kh) , oc) (inj₂ (c , t)) (ink v)   = kp⁼ (h c) (oc c) t (v ∙ kh c)
+  kp (nd sS h)     (_ , oc)        (inj₂ (c , t)) (inc _ v) = kp⁼ (h c) (oc c) t v
+  kp (nd sL g)     (r , oc)        (inj₂ (m , t)) (inc n v) =
+    cW (way g r m n) (λ u → mapK (pshBr u t) (pshFirst u t) (kp⁼ (g n) (oc n) (psh u t) v))
+                     (λ u → kp⁼ (g m) (oc m) t (v ∙ u))
+  kp (nd (sΩ k) h) _               (inj₂ _)       (inc _ _) = nothing
+  kp (nd (sΩ k) h) ((ok , _) , _)  (inj₁ t)       (ink v)   = kp⁼ k ok t v
+  kp (nd (sΩ k) h) ((_ , kh) , oc) (inj₁ t)       (inc c v) =
+    mapK (pshBr (kh c) t) (pshFirst (kh c) t) (kp⁼ (h c) (oc c) (psh (kh c) t) v)
+  kp (nd (sΩ k) h) ((_ , kh) , oc) (inj₁ t)       (inu vs)  =
+    mapK (pshBr (kh zero) t) (pshFirst (kh zero) t) (kp⁼ (h zero) (oc zero) (psh (kh zero) t) (vs zero))
+
+  kp⁼ : (a : L) → Ok a → (t : Pos⁼ a) → ∀ {j} → j ≤ a → Keep j (Br⁼ a t) (bz⁼ a t)
+  kp⁼ a o (inj₁ _) w = nothing
+  kp⁼ a o (inj₂ p) w = kp a o p w
+
+node⁺ : ∀ {j X x₀} → Keep j X x₀ → (X → Tr⁺ j) → (X → X) → Tr⁺ j
+node⁺ (just (q , cv , _)) G s = Ω⁺ q (λ z → G (cv z))
+node⁺ {x₀ = x₀} nothing G s   = limc⁺ (λ n → G (iter s x₀ n))
+
+nodeLe : ∀ {j X x₀} (m : Keep j X x₀) (G : X → Tr⁺ j) (s : X → X) → j ⊢ proj₁ (G x₀) ◃ proj₁ (node⁺ m G s)
+nodeLe {j} (just (q , cv , e)) G s = subst (λ t → j ⊢ proj₁ (G t) ◃ Ω q (λ z → proj₁ (G (cv z)))) e ◃w
+nodeLe nothing                 G s = ◃l zero
+
+-- 框架栈 d : Dn ℓ m (m 是当前框架层). 目标 Tg d i: 最内框架的写法 (i ≤ m), 或外层框架的目标;
+-- d = stop 时就是环境写法 i ≤ ℓ.
+Tg : ∀ {ℓ m} → Dn ℓ m → L → Set
+Tg {ℓ} stop            i = i ≤ ℓ
+Tg (down {h = h} d c)  i = (i ≤ h c) ⊎ Tg d i
+
+hereT : ∀ {ℓ m} (d : Dn ℓ m) {i} → i ≤ m → Tg d i
+hereT stop       τ = τ
+hereT (down d c) τ = inj₁ τ
+
+-- 出框架: 框架写法 τ 忘成外层的 inc c τ (跨框架, 裸).
+upT : ∀ {ℓ s h} (d : Dn ℓ (nd s h)) (c : Ch s) {i} → Tg (down d c) i → Tg d i
+upT d c (inj₁ τ) = hereT d (inc c τ)
+upT d c (inj₂ t) = t
+
+okD : ∀ {ℓ m} → Dn ℓ m → Ok ℓ → Ok m
+okD stop       o = o
+okD (down d c) o = proj₂ (okD d o) c
+
+-- 保留判定: 对本框架的目标用 kp m; 对外层目标, 槽位看成外层的孩子侧槽位 (c , p), 交给外层.
+kpT : ∀ {ℓ m} (d : Dn ℓ m) (o : Ok ℓ) (p : Pos m) {i} → Tg d i → Keep i (Br m p) (fromBr m p zero)
+kpT {m = m} stop o p u = kp m o p u
+kpT {m = m} (down d c) o p (inj₁ τ) = kp m (okD (down d c) o) p τ
+kpT (down d c) o p (inj₂ t) = kpT d o (inj₂ (c , inj₂ p)) t
+
+-- 状态: 每个目标一个当前值. op 逐目标作用, 带膨胀律.
+St : ∀ {ℓ m} → Dn ℓ m → Set
+St d = (i : L) → Tg d i → Tr⁺ i
+
+record Op {ℓ m : L} (d : Dn ℓ m) : Set where
+  constructor op
+  field
+    run : St d → (i : L) → Tg d i → Tr⁺ i → Tr⁺ i
+    inf : (S : St d) (i : L) (t : Tg d i) (v : Tr⁺ i) → i ⊢ proj₁ v ◃ proj₁ (run S i t v)
+open Op public
+
+module _ {ℓ m : L} {d : Dn ℓ m} where
+  stepS : Op d → St d → St d
+  stepS F S i t = run F S i t (S i t)
+
+  itS : Op d → ℕ → St d → St d
+  itS F zero    S = S
+  itS F (suc n) S = stepS F (itS F n S)
+
+  itV : Op d → ℕ → St d → (i : L) → Tg d i → Tr⁺ i → Tr⁺ i
+  itV F zero    S i t v = v
+  itV F (suc n) S i t v = run F (itS F n S) i t (itV F n S i t v)
+
+enter : ∀ {ℓ s h} (d : Dn ℓ (nd s h)) (c : Ch s) → Op d → Op (down d c)
+run (enter d c F) S′ i t′ v = run F (λ i′ t → S′ i′ (inj₂ t)) i (upT d c t′) v
+inf (enter d c F) S′ i t′ v = inf F (λ i′ t → S′ i′ (inj₂ t)) i (upT d c t′) v
+
+-- 高一阶结果代数 A₂ o d: 载体是框架 d 的 op, 序是逐点的 ◃. 语境是从框架层下行的链 κ;
+-- 结点按 d ++ κ 判定 (目标经 embT 作外层目标), 走链的回灌目标经 dropT 忘回框架 d.
+_++_ : ∀ {ℓ m₀ m} → Dn ℓ m₀ → Dn m₀ m → Dn ℓ m
+d ++ stop       = d
+d ++ down κ c   = down (d ++ κ) c
+
+embT : ∀ {ℓ m₀ m} (d : Dn ℓ m₀) (κ : Dn m₀ m) {i} → Tg d i → Tg (d ++ κ) i
+embT d stop       t = t
+embT d (down κ c) t = inj₂ (embT d κ t)
+
+dropT : ∀ {ℓ m₀ m} (d : Dn ℓ m₀) (κ : Dn m₀ m) {i} → Tg (d ++ κ) i → Tg d i
+dropT d stop       t = t
+dropT d (down κ c) t = dropT d κ (upT (d ++ κ) c t)
+
+chT : ∀ {ℓ m₀ m} (d : Dn ℓ m₀) (κ : Dn m₀ m) (p : Pos m) → Tg d (at m p)
+chT {m = m} d κ p = dropT d κ (hereT (d ++ κ) (posW m p))
+
+A₂ : ∀ {ℓ m₀} (o : Ok ℓ) (d : Dn ℓ m₀) → RA
+Ctx (A₂ {m₀ = m₀} o d) m = Dn m₀ m
+dn (A₂ o d) κ c = down κ c
+Car (A₂ o d) = Op d
+Rel (A₂ o d) F G = (S : St d) (i : L) (t : Tg d i) (v : Tr⁺ i) → i ⊢ proj₁ (run F S i t v) ◃ proj₁ (run G S i t v)
+trn (A₂ o d) r r′ S i t v = ◃t (r S i t v) (r′ S i t v)
+limA (A₂ o d) F a = op (λ S i t v → lim⁺ (λ n → run (F n) S i t v) (λ n → a n S i t v))
+                       (λ S i t v → ◃t (inf (F zero) S i t v) (◃l zero))
+limUB (A₂ o d) F a n S i t v = ◃l n
+nodeA (A₂ o d) {m} κ p G = op
+  (λ S i t v → node⁺ (kpT (d ++ κ) o p (embT d κ t)) (λ z → run (G z) S i t v)
+     (λ z → fromBr m p (proj₁ (run (G z) S (at m p) (chT d κ p) (S (at m p) (chT d κ p))))))
+  (λ S i t v → ◃t (inf (G (fromBr m p zero)) S i t v) (nodeLe (kpT (d ++ κ) o p (embT d κ t)) _ _))
+nodeUB (A₂ o d) κ p G S i t v = nodeLe (kpT (d ++ κ) o p (embT d κ t)) _ _
+
+-- 迭代子 E x F: F 迭代 ω^x 次 (一阶; 指数里再有 ex 时转到高一阶的 Eh). 进 up 的孩子树时换到孩子框架; 指数里再有 ex 一行回退.
+mutual
+  E : ∀ {ℓ m} (o : Ok ℓ) (d : Dn ℓ m) → Tr m → Op d → St d → (i : L) → Tg d i → Tr⁺ i → Tr⁺ i
+  E o d zero F = run F
+  E o d (suc x) F S i t v =
+    lim⁺ (λ n → itV (op (E o d x F) (Einf o d x F)) (suc n) S i t v)
+         (λ n → Einf o d x F (itS (op (E o d x F) (Einf o d x F)) (suc n) S) i t
+                  (itV (op (E o d x F) (Einf o d x F)) (suc n) S i t v))
+  E o d (lim f a) F S i t v = lim⁺ (λ n → E o d (f n) F S i t v) (λ n → Emono o d F S i t v (a n))
+  E {m = m} o d (Ω p g) F S i t v = node⁺ (kpT d o p t) (λ z → E o d (g z) F S i t v)
+    (λ z → fromBr m p (proj₁ (E o d (g z) F S (at m p) (hereT d (posW m p)) (S (at m p) (hereT d (posW m p))))))
+  E {m = nd s h} o d (up x c y e) F S i t v =
+    E o (down d c) y (enter d c (op (E o d x F) (Einf o d x F))) (λ i′ t′ → S i′ (upT d c t′)) i (inj₂ t) v
+  E o d (ex a b nb x ε) F S i t v =
+    run (proj₁ (Eh (A₂ o d) stop x (opb o d b nb)) (op (E o d a F) (Einf o d a F))) S i t v
+
+  -- "迭代 ω^b 次" 作为 A₂ 上的膨胀 op; 膨胀律是 b 非零时的 Emono (E zero G = run G).
+  opb : ∀ {ℓ m} (o : Ok ℓ) (d : Dn ℓ m) (b : Tr m) → m ⊢ zero ◃ b → OpA (A₂ o d)
+  opb o d b nb = (λ G → op (E o d b G) (Einf o d b G)) , (λ G S i t v → Emono o d G S i t v nb)
+
+  Einf : ∀ {ℓ m} (o : Ok ℓ) (d : Dn ℓ m) (x : Tr m) (F : Op d) (S : St d) (i : L) (t : Tg d i) (v : Tr⁺ i)
+       → i ⊢ proj₁ v ◃ proj₁ (E o d x F S i t v)
+  Einf o d zero F S i t v = inf F S i t v
+  Einf o d (suc x) F S i t v = ◃t (Einf o d x F S i t v) (◃l zero)
+  Einf o d (lim f a) F S i t v = ◃t (Einf o d (f zero) F S i t v) (◃l zero)
+  Einf {m = m} o d (Ω p g) F S i t v = ◃t (Einf o d (g (fromBr m p zero)) F S i t v) (nodeLe (kpT d o p t) _ _)
+  Einf {m = nd s h} o d (up x c y e) F S i t v =
+    Einf o (down d c) y (enter d c (op (E o d x F) (Einf o d x F))) (λ i′ t′ → S i′ (upT d c t′)) i (inj₂ t) v
+  Einf o d (ex a b nb x ε) F S i t v =
+    inf (proj₁ (Eh (A₂ o d) stop x (opb o d b nb)) (op (E o d a F) (Einf o d a F))) S i t v
+
+  Emono : ∀ {ℓ m} (o : Ok ℓ) (d : Dn ℓ m) (F : Op d) (S : St d) (i : L) (t : Tg d i) (v : Tr⁺ i) {x y : Tr m}
+        → m ⊢ x ◃ y → i ⊢ proj₁ (E o d x F S i t v) ◃ proj₁ (E o d y F S i t v)
+  Emono o d F S i t v ◃s = ◃l zero
+  Emono o d F S i t v (◃l n) = ◃l n
+  Emono o d F S i t v (◃w {p = p}) = nodeLe (kpT d o p t) _ _
+  Emono {m = nd s h} o d F S i t v (◃u x c y e) =
+    Emono o (down d c) (enter d c (op (E o d x F) (Einf o d x F))) (λ i′ t′ → S i′ (upT d c t′)) i (inj₂ t) v e
+  Emono {m = nd s h} o d F S i t v (◃c x c r) =
+    Emono o (down d c) (enter d c (op (E o d x F) (Einf o d x F))) (λ i′ t′ → S i′ (upT d c t′)) i (inj₂ t) v r
+  Emono o d F S i t v (◃e {a} {b} {nb} {x}) =
+    proj₂ (Eh (A₂ o d) stop x (opb o d b nb)) (op (E o d a F) (Einf o d a F)) S i t v
+  Emono o d F S i t v (◃x {a} {b} {nb} r) =
+    Emh (A₂ o d) stop (opb o d b nb) (op (E o d a F) (Einf o d a F)) r S i t v
+  Emono o d F S i t v (◃t r r′) = ◃t (Emono o d F S i t v r) (Emono o d F S i t v r′)
+
+-- 折叠. 自身行 (目标就是本层, 层非零, 树非零) 是一个构造子 (第 0 层走原 FGH 行); ex 行: 先折 a, 再把 "右边接上 b" 迭代 ω^x 次.
+mutual
+  ψ : (ℓ : L) → Ok ℓ → Base ℓ → (j : L) → j ≤ ℓ → Tr⁺ j → Tr ℓ → Tr⁺ j
+  ψ ℓ o B j w β zero    = β
+  ψ (nd s h) o B _ self β x = ex (proj₁ β) (proj₁ β) (proj₂ β) x tt , ◃t (proj₂ β) ◃e
+  ψ ℓ o B j w β (suc x) = next⁺ (ψ ℓ o B j w β x)
+  ψ ℓ o B j w β (lim f a) = lim⁺ (λ n → ψ ℓ o B j w β (f n)) (λ n → mono ℓ o B j w β (a n))
+  ψ ℓ o B j w β (Ω p g) = node⁺ (kp ℓ o p w) (λ z → ψ ℓ o B j w β (g z))
+    (λ z → fromBr ℓ p (proj₁ (ψ ℓ o B (at ℓ p) (posW ℓ p) (B (at ℓ p) (posW ℓ p)) (g z))))
+  ψ (nd s h) o B j (inu ws) β (up x c y e) =
+    ψ (h c) (proj₂ o c) (λ i u → ψ (nd s h) o B i (inc c u) (B i (inc c u)) x) j (ws c) (ψ (nd s h) o B j (inu ws) β x) y
+  ψ (nd (sΩ k) h) o B j (ink v) β (up x c y e) =
+    ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) j (v ∙ proj₂ (proj₁ o) c)
+      (ψ (nd (sΩ k) h) o B j (ink v) β x) y
+  ψ (nd sS h) o B j (inc c′ v) β (up x c y e) =
+    ψ (h c) (proj₂ o c) (λ i u → ψ (nd sS h) o B i (inc c u) (B i (inc c u)) x) j v (ψ (nd sS h) o B j (inc c′ v) β x) y
+  ψ (nd sL g) o B j (inc n v) β (up x m y e) = cW (way g (proj₁ o) m n)
+    (λ u → ψ (g n) (proj₂ o n) (λ i u′ → ψ (nd sL g) o B i (inc n u′) (B i (inc n u′)) x) j v
+             (ψ (nd sL g) o B j (inc n v) β x) (proj₁ (emb (g n) (proj₂ o n) u (y , e))))
+    (λ u → ψ (g m) (proj₂ o m) (λ i u′ → ψ (nd sL g) o B i (inc m u′) (B i (inc m u′)) x) j (v ∙ u)
+             (ψ (nd sL g) o B j (inc n v) β x) y)
+  ψ (nd (sΩ k) h) o B j (inc c′ v) β (up x c y e) =
+    ψ (nd (sΩ k) h) o B j (inc c′ v) β x ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y
+  ψ ℓ o B j w β (ex a b nb x ε) =
+    E o stop x (opB ℓ o b nb) (λ i u → ψ ℓ o B i u (B i u) a) j w (ψ ℓ o B j w β a)
+
+  -- "右边接上 b" 作为环境格 (stop) 上的 op; 膨胀律就是 b 非零时的单调.
+  opB : (ℓ : L) → Ok ℓ → (b : Tr ℓ) → ℓ ⊢ zero ◃ b → Op {ℓ} stop
+  opB ℓ o b nb = op (λ S i u v → ψ ℓ o S i u v b) (λ S i u v → mono ℓ o S i u v nb)
+
+  -- 自身行 (非零层) 的序: β 低于 ex β β y (◃e); 两个 ex 之间用 ◃x.
+  sfLt : (s : Sh) (h : Ch s → L) (o : Ok (nd s h)) (B : Base (nd s h)) (β : Tr⁺ (nd s h)) {x y : Tr (nd s h)}
+       → nd s h ⊢ x ◃ y → nd s h ⊢ proj₁ (ψ (nd s h) o B (nd s h) self β x) ◃ ex (proj₁ β) (proj₁ β) (proj₂ β) y tt
+  sfLt s h o B β {x = zero}         r = ◃e
+  sfLt s h o B β {x = suc _}        r = ◃x r
+  sfLt s h o B β {x = lim _ _}      r = ◃x r
+  sfLt s h o B β {x = Ω _ _}        r = ◃x r
+  sfLt s h o B β {x = up _ _ _ _}   r = ◃x r
+  sfLt s h o B β {x = ex _ _ _ _ _} r = ◃x r
+
+  mono : (ℓ : L) (o : Ok ℓ) (B : Base ℓ) (j : L) (w : j ≤ ℓ) (β : Tr⁺ j) {x y : Tr ℓ}
+       → ℓ ⊢ x ◃ y → j ⊢ proj₁ (ψ ℓ o B j w β x) ◃ proj₁ (ψ ℓ o B j w β y)
+  mono ℓ o B _ self β (◃t d d′) = ◃t (mono ℓ o B _ self β d) (mono ℓ o B _ self β d′)
+  mono (nd s h) o B _ self β r@◃s          = sfLt s h o B β r
+  mono (nd s h) o B _ self β r@(◃l _)      = sfLt s h o B β r
+  mono (nd s h) o B _ self β r@◃w          = sfLt s h o B β r
+  mono (nd s h) o B _ self β r@(◃u _ _ _ _) = sfLt s h o B β r
+  mono (nd s h) o B _ self β r@(◃c _ _ _)  = sfLt s h o B β r
+  mono (nd s h) o B _ self β r@◃e          = sfLt s h o B β r
+  mono (nd s h) o B _ self β r@(◃x _)      = sfLt s h o B β r
+  mono zero     o B _ self β ◃s            = ◃l zero
+  mono zero     o B _ self β (◃l n)        = ◃l n
+  mono ℓ o B j w@(inc _ _) β ◃s           = ◃l zero
+  mono ℓ o B j w@(inc _ _) β (◃l n)       = ◃l n
+  mono ℓ o B j w@(inc _ _) β (◃w {p = p}) = nodeLe (kp ℓ o p w) _ _
+  mono ℓ o B j w@(inu _) β ◃s           = ◃l zero
+  mono ℓ o B j w@(inu _) β (◃l n)       = ◃l n
+  mono ℓ o B j w@(inu _) β (◃w {p = p}) = nodeLe (kp ℓ o p w) _ _
+  mono ℓ o B j w@(ink _) β ◃s           = ◃l zero
+  mono ℓ o B j w@(ink _) β (◃l n)       = ◃l n
+  mono ℓ o B j w@(ink _) β (◃w {p = p}) = nodeLe (kp ℓ o p w) _ _
+  mono (nd s h) o B j (inu ws) β (◃u x c y e) =
+    mono (h c) (proj₂ o c) (λ i u → ψ (nd s h) o B i (inc c u) (B i (inc c u)) x) j (ws c) (ψ (nd s h) o B j (inu ws) β x) e
+  mono (nd (sΩ k) h) o B j (ink v) β (◃u x c y e) =
+    mono (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) j (v ∙ proj₂ (proj₁ o) c)
+      (ψ (nd (sΩ k) h) o B j (ink v) β x) e
+  mono (nd sS h) o B j (inc c′ v) β (◃u x c y e) =
+    mono (h c) (proj₂ o c) (λ i u → ψ (nd sS h) o B i (inc c u) (B i (inc c u)) x) j v (ψ (nd sS h) o B j (inc c′ v) β x) e
+  mono (nd sL g) o B j (inc n v) β (◃u x m y e) =
+    cW-ind (λ Z → j ⊢ proj₁ (ψ (nd sL g) o B j (inc n v) β x) ◃ proj₁ Z) (way g (proj₁ o) m n)
+      (λ u → mono (g n) (proj₂ o n) (λ i u′ → ψ (nd sL g) o B i (inc n u′) (B i (inc n u′)) x) j v
+               (ψ (nd sL g) o B j (inc n v) β x) (proj₂ (emb (g n) (proj₂ o n) u (y , e))))
+      (λ u → mono (g m) (proj₂ o m) (λ i u′ → ψ (nd sL g) o B i (inc m u′) (B i (inc m u′)) x) j (v ∙ u)
+               (ψ (nd sL g) o B j (inc n v) β x) e)
+  mono (nd (sΩ k) h) o B j (inc c′ v) β (◃u x c y e) =
+    +-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y)))
+  mono (nd s h) o B j (inu ws) β (◃c x c r) =
+    mono (h c) (proj₂ o c) (λ i u → ψ (nd s h) o B i (inc c u) (B i (inc c u)) x) j (ws c) (ψ (nd s h) o B j (inu ws) β x) r
+  mono (nd (sΩ k) h) o B j (ink v) β (◃c x c r) =
+    mono (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) j (v ∙ proj₂ (proj₁ o) c)
+      (ψ (nd (sΩ k) h) o B j (ink v) β x) r
+  mono (nd sS h) o B j (inc c′ v) β (◃c x c r) =
+    mono (h c) (proj₂ o c) (λ i u → ψ (nd sS h) o B i (inc c u) (B i (inc c u)) x) j v (ψ (nd sS h) o B j (inc c′ v) β x) r
+  mono (nd sL g) o B j (inc n v) β (◃c x m r) =
+    cW-ind₂ (λ Z Z′ → j ⊢ proj₁ Z ◃ proj₁ Z′) (way g (proj₁ o) m n)
+      (λ u → mono (g n) (proj₂ o n) (λ i u′ → ψ (nd sL g) o B i (inc n u′) (B i (inc n u′)) x) j v
+               (ψ (nd sL g) o B j (inc n v) β x) (emb-mono (g n) (proj₂ o n) u r))
+      (λ u → mono (g m) (proj₂ o m) (λ i u′ → ψ (nd sL g) o B i (inc m u′) (B i (inc m u′)) x) j (v ∙ u)
+               (ψ (nd sL g) o B j (inc n v) β x) r)
+  mono (nd (sΩ k) h) o B j (inc c′ v) β (◃c x c r) =
+    +-mono _ (ι-mono j (mono (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) r))
+  mono ℓ o B j w@(inc _ _) β (◃e {a} {b} {nb} {x}) =
+    Einf o stop x (opB ℓ o b nb) (λ i u → ψ ℓ o B i u (B i u) a) j w (ψ ℓ o B j w β a)
+  mono ℓ o B j w@(inc _ _) β (◃x {a} {b} {nb} r) =
+    Emono o stop (opB ℓ o b nb) (λ i u → ψ ℓ o B i u (B i u) a) j w (ψ ℓ o B j w β a) r
+  mono ℓ o B j w@(inu _) β (◃e {a} {b} {nb} {x}) =
+    Einf o stop x (opB ℓ o b nb) (λ i u → ψ ℓ o B i u (B i u) a) j w (ψ ℓ o B j w β a)
+  mono ℓ o B j w@(inu _) β (◃x {a} {b} {nb} r) =
+    Emono o stop (opB ℓ o b nb) (λ i u → ψ ℓ o B i u (B i u) a) j w (ψ ℓ o B j w β a) r
+  mono ℓ o B j w@(ink _) β (◃e {a} {b} {nb} {x}) =
+    Einf o stop x (opB ℓ o b nb) (λ i u → ψ ℓ o B i u (B i u) a) j w (ψ ℓ o B j w β a)
+  mono ℓ o B j w@(ink _) β (◃x {a} {b} {nb} r) =
+    Emono o stop (opB ℓ o b nb) (λ i u → ψ ℓ o B i u (B i u) a) j w (ψ ℓ o B j w β a) r
+  mono ℓ o B j w β (◃t d d′) = ◃t (mono ℓ o B j w β d) (mono ℓ o B j w β d′)
+
+ψ₀ : (ℓ : L) → Ok ℓ → Tr ℓ → Tr⁺ zero
+ψ₀ ℓ o = ψ ℓ o (B₀ ℓ) zero (z≤ ℓ) (Ωt zero)
+
+twᶜ : ℕ → Tr zero
+twᶜ n = proj₁ (ψ₀ (tw n) (Ok-tw n) (proj₁ (Ωt (tw n))))
+
+EBOᶜ : Tr zero
+EBOᶜ = proj₁ (ψ₀ Λ Ok-Λ (proj₁ (Ωt Λ)))

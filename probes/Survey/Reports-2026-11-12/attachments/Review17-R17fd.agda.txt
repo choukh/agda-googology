@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module R17fd where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiKDPath
+open import OCF.Lean.YiKDFold
+open import OCF.Lean.YiKDKeel
+open import OCF.Lean.YiCertFold using (Base; B₀; Keep)
+
+isΩ isLim : {ℓ : L} → Tr ℓ → Set
+isΩ (Ω _ _) = ⊤
+isΩ _       = ⊥
+isLim (lim _ _) = ⊤
+isLim _         = ⊥
+
+n1 n2 n3 : Tr zero
+n1 = suc zero
+n2 = suc n1
+n3 = suc n2
+
+o13 : Ok (θ 1 n3)
+o13 = proj₂ (Ok-κ 1) n3
+
+h′ : Tr (θ 0 n2) → L
+h′ c = nd sS (λ _ → κ 0 ⊕ (zero ⊕ (zero ⊕ ↑ (θ 0 n2) c)))
+
+_ : θ 1 n3 ≡ nd (sΩ (θ 0 n2)) h′
+_ = refl
+
+e′ : (c : Tr (θ 0 n2)) → Tr (θ 1 n3)
+e′ c = up zero c (proj₁ (Ωt (h′ c))) (proj₂ (Ωt (h′ c)))
+
+Gt : Tr (θ 0 n2) → Tr⁺ zero
+Gt c = ψ (θ 1 n3) o13 (λ i u → Ωt i) zero (self ∙ kh (Ok-κ 1) n3) (Ωt zero) (e′ c)
+
+s : Tr (θ 0 n2) → Tr (θ 0 n2)
+s c = proj₁ (ψ (θ 1 n3) o13 (λ i u → Ωt i) (θ 0 n2) (ink self) (Ωt (θ 0 n2)) (e′ c))
+
+-- 孩子层 h′ c (c = Ω₂, 第 2 层的 Ω 树) 的下面一层是下标层 θ 0 1 的 Ω 形状; 它的下标侧槽位朝第 2 层不保留
+c★ : Tr (θ 0 n2)
+c★ = proj₁ (Ωt (θ 0 n2))
+
+isN : {A : Set} → Maybe A → Set
+isN nothing  = ⊤
+isN (just _) = ⊥
+
+r1 : isN (kp (h′ c★) (proj₂ o13 c★) (inj₂ (tt , inj₂ (inj₁ (inj₁ tt)))) (kh o13 c★))
+r1 = tt
+
+_ : at (h′ c★) (inj₂ (tt , inj₂ (inj₁ (inj₁ tt)))) ≡ θ 0 n1
+_ = refl

@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 两条目标为零、逐层走入所有孩子的真实路径可以同时比较。无需起点关系自反或路径函数相等。
+module B19PathFold where
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import W4Block hiding (R)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import B14PathHeight using (All; base; each)
+open import B19PathRel
+
+route : ∀ {ℓ} → Ports (nil {ℓ})
+route w v = All w × All v
+
+module Check (s : Laws) where
+  open Laws s
+  open Test s
+  fold : (ℓ : L) (o : Ok ℓ) (B : Base ℓ) {w v : zero ≤ ℓ} → All w → All v → (x : Tr ℓ) →
+    (a b : Tr⁺ zero) → a ∼ b → ψ ℓ o B zero w a x ∼ ψ ℓ o B zero v b x
+  fold ℓ o B p q zero a b h = h
+  fold zero o B base base (suc x) a b h = next {a = ψ zero o B zero self a x} {b = ψ zero o B zero self b x} (fold zero o B base base x a b h)
+  fold zero o B base base (lim f d) a b h = limit _ _ (λ n → fold zero o B base base (f n) a b h)
+  fold zero o B base base (Ω () g) a b h
+  fold zero o B base base (up x () y e) a b h
+  fold zero o B base base (ex u v p x ()) a b h
+  fold ℓ o B {w} {v} p@(each _) q@(each _) (suc x) a b h =
+    next {a = ψ ℓ o B zero w a x} {b = ψ ℓ o B zero v b x} (fold ℓ o B p q x a b h)
+  fold ℓ o B p@(each _) q@(each _) (lim f d) a b h = limit _ _ (λ n → fold ℓ o B p q (f n) a b h)
+  fold ℓ o B {w} {v} p@(each _) q@(each _) (Ω t g) a b h = node (kp ℓ o t w) (kp ℓ o t v) _ _
+    (λ z → fromBr ℓ t (proj₁ (ψ ℓ o B (at ℓ t) (posW ℓ t) (B (at ℓ t) (posW ℓ t)) (g z))))
+    (λ z → fold ℓ o B p q (g z) a b h)
+  fold (nd t f) o B p@(each p′) q@(each q′) (up x c y e) a b h =
+    fold (f c) (proj₂ o c) (λ j w → ψ (nd t f) o B j (inc c w) (B j (inc c w)) x)
+      (p′ c) (q′ c) y _ _ (fold (nd t f) o B p q x a b h)
+  fold ℓ o B {w} {v} p@(each _) q@(each _) (ex u t nt x ε) a b h =
+    eval route o tdNil x (opB ℓ o t nt) (λ S _ _ d c d′ r → fold ℓ o S (proj₁ d) (proj₂ d) t c d′ r)
+      (λ j r → ψ ℓ o B j r (B j r) u) w v (p , q) _ _ (fold ℓ o B p q u a b h)

@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 固定任一外、内反馈时刻，跨塔的已选零值仍覆盖标准塔极限。在这些真实内叶上弱覆盖每轮任一一级孩子即可推出终点。
+module B28Joint where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_)
+import Data.Nat.Properties as N
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; sym; trans; cong; subst)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-suc; s≼s; ≼-trans; ≼lim⁻; ≼l; l≼)
+import W4Block as W
+import W4Ops as Op
+import WVOne as V
+import B14Goal as Goal
+import B20StandardInside as St
+import B20TowerValues as TV
+import B20Towers as Gen
+import B26PActual as End
+import B28BBranch as Rule
+import B28BHead as Head
+import B28BCut as Cut
+import B28OneChild as Single
+import B28Acceptance as Acc
+
+module At (m j u : ℕ) where
+  module P = Cut.Physical m j
+  module X = Gen.At (suc m)
+  x = P.Key.g (Head.At.Walk.Run.ix m P.Key.g u)
+  equal : P.inner u ≡ St.At.value m x
+  equal = trans (Rule.At.canon m x) (cong (λ b → V.read (X.evaluate x b (Op.Ωt W.zero)))
+    (TV.slots (X.ℓ x) (suc (suc m))))
+  standard : ∀ t → t ≤ suc m → L.suc (St.std t) ≼ P.inner u
+  standard t d = subst (L.suc (St.std t) ≼_) (sym equal) (St.At.canonical m x t d)
+
+-- 同一座充分高的塔内，外、内时刻可以在见到界以后任取。
+eventually : ∀ (q : V.T₀) → L.suc q ≼ End.K →
+  Σ ℕ (λ t → ∀ m → t ≤ m → ∀ j u → L.suc q ≼ Cut.Physical.inner m j u)
+eventually q h with ≼lim⁻ {a = q} {f = St.std} h
+... | t , low = t , λ m d j u → ≼-trans {b = St.std t} low
+  (≼-trans {b = L.suc (St.std t)} (≼-suc (≼-refl _))
+    (At.standard m j u t (N.≤-trans d (N.n≤1+n m))))
+
+fixed : ∀ (outer inner : ℕ → ℕ) → End.K ≼ L.lim (λ m → Cut.Physical.inner m (outer m) (inner m))
+fixed j u = l≼ λ m → ≼l m (≼-trans {b = L.suc (St.std m)} (≼-suc (≼-refl _))
+                                      (At.standard m (j m) (u m) m (N.n≤1+n m)))
+
+module Bridge (choose : ℕ → ℕ) where
+  module One = Single.Choice choose
+  Covered = ∀ n → Σ ℕ (λ m → Σ ℕ (λ j → Σ ℕ (λ u → One.v n ≼ Cut.Physical.inner m j u)))
+  units : Covered → Acc.Units
+  units hit = One.weak λ n → let m , j , u , d = hit n
+    in suc m , suc (suc j) , ≼-trans {b = Cut.Physical.inner m j u} d (Cut.Physical.into m j u)
+  lower : Covered → Goal.Goal
+  lower hit = Acc.enough (units hit)

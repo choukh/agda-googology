@@ -1,0 +1,83 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19IdealSelected where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Lean.YiRWOps
+import OCF.Lean.YiRWBlock
+import OCF.Lean.YiFreshFold as Y
+import OCF.Lean.YiUpFold as F
+import OCF.Lean.YiFreshValRead as V
+open import OCF.Lean.YiUpCheck using (two)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≅→≈ᵛ; ≅→≼)
+import W4Block as B
+import W4Ops as W
+open import WVOne using (T₀; 𝟏; read; h₁)
+import B12Terminal as T
+import B14Tower as Tw
+import B14Btbo as D
+import B14PathHeight as PH
+import B16ReadIndex as Ret
+import B16GammaRows as G
+import B16SharpSource as Source
+import B16SharpTerminal as End
+import B17SharpHeight as H
+import B17SharpSeed as Seed
+import B18RefHeight as RH
+import B17SharpSelected as Q
+open import B18Product using (_·_; mono; pad)
+open import B19IdealProduct
+open import B19IdealPowers
+import B19IdealHeight as A
+
+δ₀ : T₀
+δ₀ = V.read (F.ψ₀ two tt (Y.Ωt two))
+β : T₀
+β = read (proj₁ Tw.Actual.slot)
+
+value : T₀ → T₀
+value x = β · power δ₀ (power L.ωᶜ x)
+
+z : ℕ → B.Tr B.zero
+z n = Tw.Actual.idx (suc (G.at n))
+
+module Verify (lem : LEM) where
+  module E = A.Exact lem
+  module S = Source.Source lem
+  module I = Q.Actual lem
+
+  formula : ∀ n → I.candidate n ≈ᵛ value (read (z n))
+  formula n = E.result (z n) _ ∙ mul (≅→≈ᵛ (Q.same (proj₁ Tw.Actual.slot)))
+    (base≈ (flip (≅→≈ᵛ S.exact)) (power L.ωᶜ (read (z n))))
+
+  incoming : ∀ n → value (read (z n)) ≼ read (Tw.Actual.idx (G.at (suc n)))
+  incoming n = ≼-trans (proj₂ (formula n)) (I.Endpoint.incoming-value (G.at n))
+
+  δ-small : δ₀ ≼ read (Tw.Actual.idx 2)
+  δ-small = ≼-trans (≅→≼ S.exact) (≼-trans (End.Terminal.Run.whole lem (Tw.Inner.sub 1))
+    (≼-trans (Tw.Inner.part 1) (Tw.Outer.part 0)))
+
+  ceiling : ∀ n → I.candidate n ≼ (read (Tw.Actual.idx 1) · power (read (Tw.Actual.idx 2)) (power L.ωᶜ (read (z n))))
+  ceiling n = ≼-trans (proj₁ (formula n)) (mono initial (base δ-small (power L.ωᶜ (read (z n)))))
+    where
+    c = Tw.Actual.chain B.zero
+    initial = T.inflate0 (h₁ B.zero) (T.Run.ok c) (T.Run.bs c) (Tw.Actual.path B.zero) Tw.Actual.slot (proj₁ (W.Ωt (h₁ B.zero)))
+
+  src-lower : S.src ≼ δ₀
+  src-lower = ≼-trans S.lower (≅→≼ (L.≅-sym S.exact))
+
+  δ-pos : 𝟏 ≼ δ₀
+  δ-pos = ≼-trans (OCF.Align.Value.≼-suc (≼-refl 𝟏)) (≼-trans (RH.◃s≼ (Seed.Seed.gain lem (OCF.Lean.YiRWOps.Ωt OCF.Lean.YiRWBlock.zero))) (≅→≼ (L.≅-sym S.exact)))
+
+  lower : ∀ n x → x ≼ read (z n) → power S.src (power L.ωᶜ x) ≼ I.candidate n
+  lower n x p = ≼-trans (base src-lower (power L.ωᶜ x)) (≼-trans (expo δ-pos (expo omega-pos p))
+    (≼-trans (pad (T.Run.oneB T.tower1 (B.ink B.self)) _) (proj₂ (formula n))))
+
+  sufficient : (∀ n → G.inner n ≼ value (read (z n))) → G.Incoming
+  sufficient h n = ≼-trans (h n) (incoming n)
+
+independent : ∀ (u v : LEM) n → Q.Actual.candidate u n ≈ᵛ Q.Actual.candidate v n
+independent u v n = Verify.formula u n ∙ flip (Verify.formula v n)

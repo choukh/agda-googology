@@ -1,0 +1,39 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B17RefSwap where
+open import Data.Empty using (⊥)
+open import Data.List.Base using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; ≅→≼)
+open import WSLevel using (Ω₁ᴸ)
+import YiLAB7Replay as Y
+import B8FreezeMain as N
+import B12LimitRef as Strict
+import B13Target as P
+import B14RefGain as Path
+import B15RefAlgebra as A
+import B16RefRaise as Old
+import B17RefAgain as D
+import B17RefExp as E
+import B17RefGamma as G
+
+Y₂ = A.E D.X Ω₁ᴸ
+Y₃ = A.E Y₂ Ω₁ᴸ
+V₂ = P.co₁ Y₂
+cap₃ = L.ψ⁰ (P.co₁ Y₃)
+module M = Old.Sum Ω₁ᴸ (L.Ω-refl _) L.zero L.z≅
+r₂ : Y₂ L.≅ A.E Ω₁ᴸ (M.left 2)
+r₂ = E.Shift.compose Ω₁ᴸ Ω₁ᴸ D.X D.rX (L.Ω-refl _)
+r₃ : Y₃ L.≅ A.E Ω₁ᴸ (M.left 3)
+r₃ = L.≅-trans (E.Shift.compose Ω₁ᴸ (M.left 2) Y₂ r₂ (L.Ω-refl _))
+  (E.wide (L.Ω-refl _) (M.rotate 2))
+third : cap₃ ≼ G.node 1
+third = ≼-trans (≅→≼ (L.ψ⁰-≅ (P.co-pres r₃)))
+  (≼-trans (≼l 3 (≼-refl _)) (≼-trans (≼l 0 (≼-refl _)) (≅→≼ (L.≅-sym (G.full 1)))))
+path = 0 ∷ 2 ∷ 0 ∷ 1 ∷ 0 ∷ 1 ∷ 0 ∷ 2 ∷ 0 ∷ 0 ∷ []
+focus : Path.along path cap₃ ≡ L.ψ⁰ (V₂ L.+ Y.Ω₂ᴸ)
+focus = refl
+strict : L.suc D.cap ≼ G.node 1
+strict = ≼-trans (Strict.strict-step V₂) (≼-trans (Path.path-bound path cap₃) third)
+no-swap : G.node 1 ≼ D.cap → ⊥
+no-swap h = N.irr D.cap (≼-trans strict h)

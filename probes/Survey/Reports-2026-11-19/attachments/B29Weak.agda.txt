@@ -1,0 +1,73 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- Y 不超过原 EBO，恰好要求每一座固定塔的三个相关分量分别严格在原 EBO 以内。塔与塔之间的界可以随塔升高。
+module B29Weak where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; s≼s; ≼l; l≼)
+import WVOne as V
+import B18Product as P
+import B18Reset as T
+import B18ResetCell as U
+import B19Coefficient as Val
+import B26Names as A
+import B26Depth as D
+import B26PActual as W
+import B27Endpoint as E
+import B27Threshold as R
+import B27CutArithmetic as C
+import B27RunCut as G
+import B28BCut as B
+import B29Floor as Base
+import B29Channels as Ch
+import B29Local as Local
+import B29LimitCut as EC
+
+open EC using (Small; raise; small-prod)
+ByTower : Set
+ByTower = Small Ch.first × (∀ m → Small (Ch.second m) × Small (Ch.each m))
+
+necessary : W.Y ≼ A.E → ByTower
+necessary p = ≼-trans {a = L.suc Ch.first} {b = W.Y} {c = A.E} Local.first p ,
+  λ m → ≼-trans {a = L.suc (Ch.second m)} {b = W.Y} {c = A.E} (Local.At.start m) p ,
+        ≼-trans {a = L.suc (Ch.each m)} {b = W.Y} {c = A.E} (Local.At.tail m) p
+
+import B29UnitCut as Unit
+
+-- 一个有限计算只须给这一步已有的两个前驱合并原行。
+module Transfer (e : V.T₀) (r : ℕ → V.T₀) (x y z : V.T₀)
+  (pick : L.suc x ≼ e → L.suc y ≼ e →
+     Σ ℕ (λ k → 2 ≤ k × L.suc x ≼ r k × L.suc y ≼ r k × L.suc y ≼ r k))
+  (lift : ∀ k → L.suc z ≼ r k → L.suc z ≼ e)
+  (local : ∀ k → 2 ≤ k → L.suc x ≼ r k → L.suc y ≼ r k → L.suc z ≼ r k) where
+  go : L.suc x ≼ e → L.suc y ≼ e → L.suc z ≼ e
+  go p s with pick p s
+  ... | k , d , a , b , _ = lift k (local k d a b)
+
+up : ∀ (x y z : V.T₀) → (∀ k → 2 ≤ k → L.suc x ≼ R.row k → L.suc y ≼ R.row k → L.suc z ≼ R.row k) →
+      Small x → Small y → Small z
+up x y z = Transfer.go A.E R.row x y z (λ p q → EC.Row.row-for x y y p q q) (λ k → raise k z)
+
+import B29Finite as Finite
+
+first-zero : Small Ch.first → Small (T.fresh 0)
+first-zero h = subst Small (sym U.first) (≼-trans {a = L.suc (U.At.fresh 0 0)} {b = L.suc Ch.first} {c = A.E}
+    (s≼s {a = U.At.fresh 0 0} {b = Ch.first} (≼l {a = U.At.fresh 0 0} {f = U.At.fresh 0} 0 (≼-refl (U.At.fresh 0 0)))) h)
+first-one : Small Ch.first → Small (T.fresh 1)
+first-one h = up Ch.first Ch.first (T.fresh 1) (λ k two p _ → Unit.Row.first k two p) h h
+later : ∀ m → Small (Ch.second m) → Small (Ch.each m) → Small (T.fresh (suc (suc m)))
+later m = up (Ch.second m) (Ch.each m) (T.fresh (suc (suc m))) (λ k two → Unit.Row.next k two m)
+
+inside-one : ∀ k → 2 ≤ k → Small V.𝟏
+inside-one k d = raise k V.𝟏 (C.At.one k d)
+times : ∀ n → Small (T.product n) → Small (T.fresh n) → Small (T.product (suc n))
+times n = small-prod (T.product n) (T.fresh n)
+series : W.Y ≼ L.lim (λ n → T.product (suc n))
+series = proj₁ Val.terminal
+
+module Final = Finite.Assemble A.E W.Y Ch.first Ch.second Ch.each T.fresh T.product
+  first-zero first-one later (inside-one 2 (E.two 0)) times series
+sufficient : ByTower → W.Y ≼ A.E
+sufficient p = Final.From.whole (proj₁ p) (proj₂ p)

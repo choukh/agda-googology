@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20RowRun where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (◃→≼; p₂; g₂)
+open import WKShape using (lvl3)
+open import WKGen using (node-ge; Ω₁t)
+open import YiLAB7Orbit using (F; lvl1; lvl2; ok₂)
+open import B9InnerOuter using (w2)
+open import WSShadow using (zC)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; ≅→≼)
+import B11OuterCore as C
+import B11PrefixGen as Pr
+import B12ActualSlots as Cover
+import B12Terminal as Tm
+import B12Update as U
+import B13Orbit as K
+import B13OrbitFeed as O
+import B13SeedOuter as Seed
+import B14RefDescribed as Rows
+import B14RefFixed as Fix
+import B15OrbitAction as Act
+import B15OrbitModel as M
+import B17OrbitModel as B
+import B17OrbitVector as V
+import B18OrbitRows as Old
+import B19RowSecond as Src
+import B20RowIndex as I
+import B20RowPrefix as P
+import B20RowRead as RD
+open Tm.Run
+
+module At (p : Pr.T₂) (RP : p L.≅ p) (r : Tm.Run lvl3) (cv : Cover.Covered r)
+ (hb : L.ψ⁰ p ≼ read (proj₁ (β r))) (hz : ∀ w → L.ψ⁰ p ≼ read (proj₁ (bs r zero w))) where
+  module R = Old.At r cv
+  module Clock = I.At r cv
+  module A = Seed.At r
+  open R.I using (module Previous; module E₀; K₁; J; initial)
+  open Previous.Proof.Core.Run using (S₁; step₂)
+  open A using (st1; c⁺; v₁; outer)
+  slotₙ = λ k → Clock.clock k
+  k-of : ℕ → ℕ
+  k-of zero = zero
+  k-of (suc n) = n
+  clock = λ n → slotₙ (k-of n)
+  opₙ = λ n → op (E ok₂ O.D₁ (proj₁ (clock n)) K₁) (Einf ok₂ O.D₁ (proj₁ (clock n)) K₁)
+  index : ∀ n → V.Index (clock n) (P.v n)
+  index zero = V.initial (clock 0) (◃t R.X.Prev.cover (Einf ok₂ O.D₁ (suc (R.seq 1)) K₁ S₁ lvl1 Old.Out.slot (S₁ lvl1 Old.Out.slot)))
+  index (suc n) = Clock.next-index 0 n
+  model : ∀ n → B.Both Old.m (opₙ n) (P.a n)
+  model n = index n Old.m (λ _ → refl) 0 idM (λ _ → refl) K₁ Act.base R.OldRow.K₁-law
+  S′ = λ n → stepS (opₙ n) S₁
+  b′ = λ n → run (opₙ n) S₁ zero Previous.t v₁
+  st = λ n → M.pull (S′ n)

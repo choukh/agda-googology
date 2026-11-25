@@ -1,0 +1,64 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：[1][1] 的指定子树给出 [1][0] 的全体有限倍数的极限，对接同级回灌多出的后继。
+module B14RefGain where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.List using (List; []; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ψ⁰-suc-≼; ≼l; ≼-refl; ≼-trans; ≅→≼; +-mono; 1≼ψ⁰)
+open import WVOne using (T₀)
+open import WSLevel using (Ω₁ᴸ; γ)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B13Target as P
+import B13Feedback as F
+import B14RefRow as W
+import B14RefFixed as K
+
+along : List ℕ → T₀ → T₀
+along [] x = x
+along (n ∷ t) x = along t (R.at x n)
+
+path-bound : ∀ t x → along t x ≼ x
+path-bound [] x = ≼-refl _
+path-bound (n ∷ t) x = ≼-trans (path-bound t (R.at x n)) (R.at-below x n)
+
+inner : T₀
+inner = along (0 ∷ 1 ∷ []) (W.node 1)
+
+all-inner : inner ≡ L.lim (λ j → L.ψ⁰ (P.co₁ (P.back (γ (suc j)))))
+all-inner = refl
+
+address : List ℕ
+address = 0 ∷ 1 ∷ 0 ∷ 0 ∷ 2 ∷ 0 ∷ 2 ∷ 0 ∷ 1 ∷ 0 ∷ 0 ∷ []
+
+piece : T₀
+piece = along address (W.node 1)
+
+C : Lev₂
+C = P.co₁ (P.back Ω₁ᴸ)
+
+same : piece ≡ L.ψ⁰ (L.suc C)
+same = refl
+
+finite-multiples : piece ≡ L.lim (S.iter (F.first-node L.+_) L.zero)
+finite-multiples = refl
+
+inside-second : piece ≼ W.node 1
+inside-second = path-bound address (W.node 1)
+
+strict : L.suc F.first-node ≼ piece
+strict = ≼l 2 (+-mono (≼-refl F.first-node) (1≼ψ⁰ C))
+
+-- 普通回灌在旧支的极限上取固定点；对该指数先做后继，则包含上一固定点的全部有限倍数。
+to-orbit : piece ≼ L.ψ⁰ (P.co₀ (L.suc F.first-node))
+to-orbit = ≼-trans (ψ⁰-suc-≼ {a = C} {b = A} (proj₂ (K.fixed 0)))
+  (≼l 2 (≼-trans (≼l 0 (≼l 0 (≼-refl (L.ψ⁰ (L.suc A))))) (K.value path)))
+  where
+  A = P.co₀ F.first-node
+  path : K.Select (L.ψ⁰ (A L.+ Ω₂ᴸ)) (L.ψ⁰ (A L.+ A))
+  path = K.map-select L.ψ⁰ (λ _ → refl) (K.map-select (A L.+_) (λ _ → refl) (K.omega-in F.first-node))

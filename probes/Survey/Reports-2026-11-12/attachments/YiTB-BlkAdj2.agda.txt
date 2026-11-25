@@ -1,0 +1,144 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 临时原型 (改块, 不进仓库): 嵌入 up 带与左项最后一个嵌入的孩子的比较.
+-- 第二种写法. 改动的字段: T.up 加一个参数 Adj S x c, 只存 "哪一侧" 的声明 (Maybe Bool); 路径证据放在块之后的合法性谓词 Wit 里.
+-- 只查类型, 正性与停机; 没有折叠, 没有值.
+module BlkAdj2 where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Bool using (Bool; true; false)
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+
+record Sg : Set₁ where
+  constructor sg
+  field
+    P  : Set
+    B  : P → Set
+    C  : Set
+    D  : C → Set
+    b₀ : (p : P) → B p
+    z₀ : (c : C) → D c
+    R  : (c : C) → D c → D c → Set
+open Sg public
+
+mutual
+  data T (S : Sg) : Set where
+    zero : T S
+    suc  : T S → T S
+    lim  : (f : ℕ → T S) → ((n : ℕ) → Lt S (f n) (f (suc n))) → T S
+    Ω    : (p : P S) → (B S p → T S) → T S
+    up   : (x : T S) (c : C S) (y : D S c) → R S c (z₀ S c) y → Adj S x c → T S
+
+  -- 来历: 新嵌入的孩子 c 与左项 x 里最后一个嵌入的孩子的比较 (可缺)
+  Adj : (S : Sg) → T S → C S → Set
+  Adj S zero           c = ⊤
+  Adj S (suc x)        c = Adj S x c
+  Adj S (lim f a)      c = ⊤
+  Adj S (Ω p g)        c = ⊤
+  Adj S (up x c′ y e a) c = Maybe Bool
+
+  data Lt (S : Sg) : T S → T S → Set where
+    ◃s : ∀ {x} → Lt S x (suc x)
+    ◃l : ∀ {f a} (n : ℕ) → Lt S (f n) (lim f a)
+    ◃w : ∀ {p g} → Lt S (g (b₀ S p)) (Ω p g)
+    ◃u : (x : T S) (c : C S) (y : D S c) (e : R S c (z₀ S c) y) (a : Adj S x c) → Lt S x (up x c y e a)
+    ◃c : (x : T S) (c : C S) {y′ y : D S c} {e′ : R S c (z₀ S c) y′} {e : R S c (z₀ S c) y} {a′ a : Adj S x c}
+       → R S c y′ y → Lt S (up x c y′ e′ a′) (up x c y e a)
+    ◃t : ∀ {x y z} → Lt S x y → Lt S y z → Lt S x z
+
+mutual
+  data L : Set
+  data Sh : Set
+  Ch : Sh → Set
+  Sig : L → Sg
+  Tr : L → Set
+  Tr ℓ = T (Sig ℓ)
+
+  data L where
+    zero : L
+    nd   : (s : Sh) → (Ch s → L) → L
+
+  data Sh where
+    sS sL : Sh
+    sΩ    : L → Sh
+
+  Ch sS     = ⊤
+  Ch sL     = ℕ
+  Ch (sΩ k) = Tr k
+
+  PK : Sh → Set
+  PK (sΩ k) = Pos⁼ k
+  PK _      = ⊥
+
+  Pos : L → Set
+  Pos zero     = ⊥
+  Pos (nd s h) = PK s ⊎ Σ (Ch s) λ c → Pos⁼ (h c)
+
+  Pos⁼ : L → Set
+  Pos⁼ a = ⊤ ⊎ Pos a
+
+  Br : (ℓ : L) → Pos ℓ → Set
+  Br (nd s h)      (inj₂ (c , t)) = Br⁼ (h c) t
+  Br (nd (sΩ k) h) (inj₁ t)       = Br⁼ k t
+
+  Br⁼ : (a : L) → Pos⁼ a → Set
+  Br⁼ a (inj₁ _) = Tr a
+  Br⁼ a (inj₂ p) = Br a p
+
+  sl : (ℓ : L) (p : Pos ℓ) → Σ L λ a → Tr a → Br ℓ p
+  sl (nd s h)      (inj₂ (c , t)) = sl⁼ (h c) t
+  sl (nd (sΩ k) h) (inj₁ t)       = sl⁼ k t
+
+  sl⁼ : (a : L) (t : Pos⁼ a) → Σ L λ b → Tr b → Br⁼ a t
+  sl⁼ a (inj₁ _) = a , λ x → x
+  sl⁼ a (inj₂ p) = sl a p
+
+  CH : L → Set
+  CH zero     = ⊥
+  CH (nd s h) = Ch s
+
+  ChT : (ℓ : L) → CH ℓ → Set
+  ChT (nd s h) c = Tr (h c)
+
+  chZ : (ℓ : L) (c : CH ℓ) → ChT ℓ c
+  chZ (nd s h) c = zero
+
+  RCh : (ℓ : L) (c : CH ℓ) → ChT ℓ c → ChT ℓ c → Set
+  RCh (nd s h) c = Lt (Sig (h c))
+
+  Sig ℓ = sg (Pos ℓ) (Br ℓ) (CH ℓ) (ChT ℓ) (λ p → proj₂ (sl ℓ p) zero) (chZ ℓ) (RCh ℓ)
+
+
+data Pth : Bool → L → L → Set where
+  self : ∀ {b ℓ} → Pth b ℓ ℓ
+  inc  : ∀ {b j s h} (c : Ch s) → Pth b j (h c) → Pth b j (nd s h)
+  inu  : ∀ {b j s h} → ((c : Ch s) → Pth b j (h c)) → Pth b j (nd s h)
+  ink  : ∀ {j k h} → Pth true j k → Pth true j (nd (sΩ k) h)
+
+-- 声明的证据: 每个嵌入处, 声明的那一侧有字面路径
+AdjW : (ℓ : L) (x : Tr ℓ) (c : CH ℓ) → Adj (Sig ℓ) x c → Set
+AdjW ℓ        zero             c a            = ⊤
+AdjW ℓ        (suc x)          c a            = AdjW ℓ x c a
+AdjW ℓ        (lim f a′)       c a            = ⊤
+AdjW ℓ        (Ω p g)          c a            = ⊤
+AdjW (nd s h) (up x c′ y e a′) c (just true)  = Pth true (h c′) (h c)
+AdjW (nd s h) (up x c′ y e a′) c (just false) = Pth true (h c) (h c′)
+AdjW (nd s h) (up x c′ y e a′) c nothing      = ⊤
+
+Wit : (ℓ : L) → Tr ℓ → Set
+Wit ℓ        zero           = ⊤
+Wit ℓ        (suc x)        = Wit ℓ x
+Wit ℓ        (lim f a)      = (n : ℕ) → Wit ℓ (f n)
+Wit ℓ        (Ω p g)        = (z : Br ℓ p) → Wit ℓ (g z)
+Wit (nd s h) (up x c y e a) = Σ (Wit (nd s h) x) λ _ → Σ (Wit (h c) y) λ _ → AdjW (nd s h) x c a
+
+one : L
+one = nd sS (λ _ → zero)
+
+ex : Tr one
+ex = up (up zero tt (suc zero) ◃s tt) tt (suc (suc zero)) (◃t ◃s ◃s) (just true)
+
+ex-wit : Wit one ex
+ex-wit = (tt , tt , tt) , tt , self

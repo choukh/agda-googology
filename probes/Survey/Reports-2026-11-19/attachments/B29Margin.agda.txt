@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在真实正塔的每个 Ω 尾键内，每一选中内返回之后仍容纳该塔零启动值的 ω 倍；适用于分支随选点变化的轨道。
+module B29Margin where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _+_)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼l; ≼-refl; ≼-trans; +-mono; z≼; s≼s)
+import WVOne as V
+import B18Product as P
+import B19IdealProduct as Law
+import B20StandardGoal as St
+import B20StandardInside as Std
+import B28BCut as Physical
+import B29Floor as Fl
+import B18CellState as Cell
+import Data.Nat.Base as N
+
+module Series (v s : ℕ → V.T₀) (q x : V.T₀) (low : ∀ u → q ≼ v u)
+  (contains : ∀ u → v u ≼ s u) (step : ∀ u → (s u L.+ v (suc u)) ≼ s (suc u))
+  (cap : ∀ u → s u ≼ x) where
+  parts : ∀ u n → (v u L.+ (q P.· L.natᶜ n)) ≼ s (n + u)
+  parts u zero = contains u
+  parts u (suc n) = ≼-trans {b = (v u L.+ (q P.· L.natᶜ n)) L.+ q}
+    (P.assoc (v u) (q P.· L.natᶜ n) q) (≼-trans {b = s (n + u) L.+ v (suc (n + u))}
+      (+-mono (parts u n) (low (suc (n + u)))) (step (n + u)))
+  room : ∀ u → (v u L.+ (q P.· L.ωᶜ)) ≼ x
+  room u = l≼ {f = λ n → v u L.+ (q P.· L.natᶜ n)} (λ n → ≼-trans {b = s (n + u)} (parts u n) (cap (n + u)))
+  strict : V.𝟏 ≼ q → ∀ u → L.suc (v u) ≼ x
+  strict pos u = ≼-trans {b = s u L.+ v (suc u)}
+    (+-mono (contains u) (≼-trans {b = q} pos (low (suc u))))
+    (≼-trans {b = s (suc u)} (step u) (cap (suc u)))
+
+module At (m j : ℕ) where
+  module Pj = Physical.Physical m j
+  v = Pj.inner
+  s = Pj.Vj.Vals.sum
+  q = Cell.At.fresh (suc m) 0
+  contains : ∀ u → v u ≼ s u
+  contains zero = ≼-refl _
+  contains (suc u) = ≼-trans {a = v (suc u)} {b = L.zero L.+ v (suc u)} {c = s (suc u)}
+    (proj₂ (Law.plus-id (v (suc u)))) (+-mono z≼ (≼-refl _))
+  cap : ∀ u → s u ≼ Pj.f
+  cap u = subst (s u ≼_) (sym Pj.same) (≼-trans {a = s u} {b = L.lim s} {c = Pj.Vj.outer}
+    (≼l {f = s} u (≼-refl _)) (proj₂ Pj.Vj.exact))
+  module M = Series v s q Pj.f (Fl.At.selected m j) contains (λ u → ≼-refl (s (suc u))) cap
+  open M public using (room)
+  strict : ∀ u → L.suc (v u) ≼ Pj.f
+  strict = M.strict (≼-trans {a = V.𝟏} {b = L.suc (Std.std 0)} {c = q}
+    (s≼s z≼) (St.At.child m 0 0 N.z≤n))

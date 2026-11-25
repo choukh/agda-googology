@@ -1,0 +1,93 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 纯 src 的所有正外行和零层回灌孩子。相邻输入按值比较，允许两侧沿各自的回灌链前进。
+module B17RefAllSource where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import OCF.BTBO using (module BoundedTrich; module Ord-Ord)
+module B = BoundedTrich
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import WVOne using (T₀)
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; ≼-refl; ≼-trans; l≼; ≼l; ≅→≼)
+import YiLAB10Src as T
+open import B12LimitSrc using (Src₂; Lev₂)
+import B12Omega3Ref as R
+import B13Target as P
+import B14RefAllRows as A
+import B15RefSource as Old
+import B17RefThree as Three
+
+pass : Src₂ → Src₂
+pass a = S.ψ< {i = T.two} {ℓ = B.suc T.two} B.zero (S.↑ B.zero a)
+passes : ℕ → Src₂ → Src₂
+passes zero a = a
+passes (suc m) a = pass (passes m a)
+
+kernel : ℕ → ℕ → S.Ord₀ → Src₂
+kernel m zero x = passes m (Old.coeff x)
+kernel m (suc n) x = passes m (Old.lift-coeff (kernel m n x))
+gain : ℕ → ℕ → S.Ord₀ → S.Ord₀
+gain m n x = S.ψ₀ (kernel m n x)
+chain : ℕ → ℕ → ℕ → S.Ord₀
+chain m n = S.iter (gain m n) (S.suc S.zero)
+closed : ℕ → ℕ → S.Ord₀
+closed m n = S.lim (λ j → chain m n (suc j))
+
+pass-up : ∀ m {a b} → U.Mh a b → U.Mh (passes m a) (A.passⁿ m b)
+pass-up zero d = d
+pass-up (suc m) d = U.M-ψ {i = T.two} (L.≅ᴵ-refl _) L.zero (λ q → L.suc q) B.zero (U.M-↑ B.zero (pass-up m d))
+pass-down : ∀ m {a b} → D.Dn b a → D.Dn (A.passⁿ m b) (passes m a)
+pass-down zero d = d
+pass-down (suc m) d = D.Dn-ψ {i = T.two} (L.≅ᴵ-refl _) L.zero (λ q → L.suc q) B.zero (D.Dn-↑ B.zero (pass-down m d))
+
+up : ∀ m n x y → tr₀ x ≼ y → U.Mh (kernel m n x) (A.kernel m n y)
+up m zero x y xy = pass-up m (Old.toward x y xy)
+up m (suc n) x y xy = pass-up m (U.M-ψ {i = T.two} (L.≅ᴵ-refl _) L.zero (λ q → L.suc (L.suc q)) B.zero
+  (U.M-↑ (B.suc B.zero) (U.M-ψ {i = Old.one} (L.≅ᴵ-refl _) L.zero R.idσ B.zero (up m n x y xy))))
+down : ∀ m n y x → y ≼ tr₀ x → D.Dn (A.kernel m n y) (kernel m n x)
+down m zero y x yx = pass-down m (Old.backward y x yx)
+down m (suc n) y x yx = pass-down m (D.Dn-ψ {i = T.two} (L.≅ᴵ-refl _) L.zero (λ q → L.suc (L.suc q)) B.zero
+  (D.Dn-↑ (B.suc B.zero) (D.Dn-ψ {i = Old.one} (L.≅ᴵ-refl _) L.zero R.idσ B.zero (down m n y x yx))))
+
+pair : ∀ m n x y → tr₀ x ≈ᵛ y → tr₀ (gain m n x) ≈ᵛ A.gain m n y
+pair m n x y (xy , yx) = ≼-trans (U.Mh→≼ (U.M-ψ L.z≅ (D.τ-< T.w) R.idσ T.w (up m n x y xy))) (≅→≼ (L.≅-sym bridge)) ,
+  ≼-trans (≅→≼ bridge) (D.Dn→≼ (D.Dn-ψ L.z≅ (D.τ-< T.w) R.idσ T.w (down m n y x yx)))
+  where bridge = L.ψ⁰≅ψ {p = D.τ-< T.w} {σ = R.idσ} (A.pres m (A.regular m n (L.≅-refl⁰ y)))
+
+each : ∀ m n j → tr₀ (chain m n j) ≈ᵛ A.chain m n j
+each m n zero = ≼-refl _ , ≼-refl _
+each m n (suc j) = pair m n _ _ (each m n j)
+row : ∀ m n → tr₀ (closed m n) ≈ᵛ A.node m n
+row m n = ≼-trans (l≼ (λ j → ≼l j (proj₁ (each m n (suc j))))) (≅→≼ (L.≅-sym (A.as-chain m n))) ,
+  ≼-trans (≅→≼ (A.as-chain m n)) (l≼ (λ j → ≼l j (proj₂ (each m n (suc j)))))
+
+part : ∀ {x : T₀} {f : ℕ → T₀} → x L.≅ L.lim f → ∀ j → R.at x j L.≅ f j
+part (L.l≅ h) = h
+part (L.upˡ {r = ()} _)
+
+child : ∀ m n j → tr₀ (chain m n (suc j)) ≈ᵛ R.at (A.node m n) j
+child m n j = ≼-trans (proj₁ (each m n (suc j))) (≅→≼ (L.≅-sym h)) ,
+              ≼-trans (≅→≼ h) (proj₂ (each m n (suc j)))
+  where h = part (A.as-chain m n) j
+three : tr₀ (Old.gain (S.suc S.zero)) ≈ᵛ Three.three
+three = child 0 1 0
+
+outer : ℕ → S.Ord₀
+outer zero = S.ψ₀ (S.Ω T.two)
+outer (suc m) = S.lim (closed m)
+branches : ℕ → T₀
+branches n = R.at (L.ψ⁰ R.Ω₃) n
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+eta : ∀ (x : T₀) (g : ℕ → T₀) → x ≡ L.lim g → x L.≅ L.lim (R.at x)
+eta .(L.lim g) g refl = L.l≅ (λ j → L.≅-refl⁰ (g j))
+positive : ∀ m → branches (suc m) L.≅ L.lim (A.node m)
+positive m = eta _ _ (P.row (suc m))
+all-outer : ∀ n → tr₀ (outer n) ≈ᵛ branches n
+all-outer zero = U.Ψ⁰≽< T.w , D.Ψ⁰≼< T.w
+all-outer (suc m) = ≼-trans (l≼ (λ n → ≼l n (proj₁ (row m n)))) (≅→≼ (L.≅-sym (positive m))) ,
+                    ≼-trans (≅→≼ (positive m)) (l≼ (λ n → ≼l n (proj₂ (row m n))))
+all-source : tr₀ (S.lim outer) ≈ᵛ L.ψ⁰ R.Ω₃
+all-source = l≼ (λ m → ≼l m (proj₁ (all-outer m))) , l≼ (λ m → ≼l m (proj₂ (all-outer m)))

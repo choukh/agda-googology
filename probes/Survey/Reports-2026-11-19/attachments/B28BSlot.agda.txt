@@ -1,0 +1,73 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意合法 Ω 槽的零系数解释律。内路按明确的固定点函数查询，子运行的零值仍是同一原 Λ 单位重置作用于选中的子程序。
+module B28BSlot where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; cong₂; trans; sym)
+import W4Block as W
+import W4Ops as O
+import W4Path as P
+import W4Fold as F
+import WVOne as V
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; _≼_)
+import B12Terminal as T
+import B15Spine as S
+import B18TowerSlots as B
+import B28BHead as X
+import B28BFirst as First
+import B28BBranch as Direct
+import B28BValues as Values
+
+module At (m : ℕ) (p : W.Pos (W.tw (suc m))) where
+  module A = X.At m
+  module Z = First.At m
+  open A using (n; k; free)
+  open Z using (depth; lev; cert; β; decode₀)
+  i = W.at k p
+  start = B.slots i depth i W.self
+  route : ∀ x → i W.≤ lev x
+  route x = W.self W.∙ (P.posW k p W.∙ W.lift k (W.↑ k x))
+  decode : W.Tr k → W.Tr i
+  decode x = proj₁ (F.ψ (lev x) (cert x) (B.slots (lev x) depth) i (route x) start (proj₁ (O.Ωt (lev x))))
+
+  module Node (g : W.Br k p → W.Tr k) where
+    key = W.Ω p g
+    r = A.restart key
+    child = λ c → lev (g (W.fromBr k p c))
+    parent = W.nd (W.sΩ i) child
+    module Run = S.Cardinal i child r
+    argument : W.Tr i → W.Tr k
+    argument c = g (W.fromBr k p c)
+    next = λ c → decode (argument c)
+    stage = W.iter next W.zero
+    selected = λ u → argument (stage u)
+    bs = T.Run.bs r
+    slot : bs ≡ B.slots parent depth
+    slot = B.At.all n key
+    anchor : bs i (W.ink W.self) ≡ start
+    anchor = trans (cong (λ b → b i (W.ink W.self)) slot) (First.one parent i (W.ink W.self) depth)
+
+    module Call (c : W.Tr i) where
+      x = argument c
+      actual = T.enterRun (W.sΩ i) child r c W.zero
+      narrow : (λ j w → bs j (W.inc c w)) ≡ B.slots (lev x) depth
+      narrow = trans (cong (λ b → λ j w → b j (W.inc c w)) slot) (First.restrict {W.sΩ i} child c depth)
+      value : V.read (T.value actual) ≡ free x
+      value = trans (cong (λ b → V.read (proj₁ (F.ψ (lev x) (cert x) b W.zero (P.z≤ _) β (proj₁ (O.Ωt (lev x)))))) narrow)
+        (sym (Direct.At.canon m x))
+      step : Run.step c ≡ next c
+      step = cong₂ (λ b v → proj₁ (F.ψ (lev x) (cert x) b i (route x) v (proj₁ (O.Ωt (lev x))))) narrow anchor
+
+    point : ∀ u → Run.ix u ≡ stage u
+    point zero = refl
+    point (suc u) = trans (Call.step (Run.ix u)) (cong next (point u))
+    leaf = λ u → free (selected u)
+    raw = λ u → T.value (Run.child u)
+    values : ∀ u → V.read (raw u) ≡ leaf u
+    values u = trans (Call.value (Run.ix u)) (cong (λ c → free (argument c)) (point u))
+
+    module Seq = Values.Series raw leaf values
+    module Whole = Seq.Whole (free key) (Values.Shape.law i child r)
+    open Whole public using (exact; cap)

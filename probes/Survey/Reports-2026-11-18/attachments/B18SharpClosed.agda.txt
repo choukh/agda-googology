@@ -1,0 +1,94 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18SharpClosed where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW) renaming (◃→≼ to rw≤)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼l; s≼s; ≼-trans; ≼-refl)
+import W4Block as B
+import W4Fold as F
+open import WVOne using (lvl1; read)
+open import WVTwo using (lvl2; ◃→≼)
+open import WKShape using (lvl3)
+open import B14SharpBound using (data≤)
+import B12Terminal as T
+import B12ActualSlots as Cover
+import B13SeedOuter as Physical
+import B16SharpSource as Src
+import B17SharpUpdate
+import B17SharpTwo
+import B17SharpThree
+import B17CellNext as Cell
+import B17CellPrefix as P
+import B18SharpMacro
+import B18SharpEffect
+import B18SharpHead
+
+strict : ∀ {x y : R.Tr R.zero} → R.zero R.⊢ x ◃ y → L.suc (readRW x) ≼ readRW y
+strict R.◃s = ≼-refl _
+strict (R.◃l {a = d} n) = ≼l (suc n) (strict (d n))
+strict (R.◃w {p = ()})
+strict (R.◃u x () y e)
+strict (R.◃c x () e)
+strict (R.◃t p q) = ≼-trans (s≼s (rw≤ p)) (strict q)
+
+module Closed (lem : LEM) where
+  open I.Sharp lem
+  open B17SharpUpdate.Update lem
+  open B17SharpTwo.Two lem
+  open B18SharpMacro.Macro lem
+  open B18SharpEffect.Effects lem
+  open B18SharpHead.Head lem
+  open T.Run
+
+  first-input : B17SharpThree.Three.step lem R.zero ≡ u
+  first-input = refl
+  module Loop = Orbit diagonal
+  form : Base♯ → V.Tr⁺ R.zero → V.Tr⁺ R.zero
+  form D a = Loop.limit D R.zero tt a
+  closed = form B♯ (V.Ωt R.zero)
+  read-closed = readRW (proj₁ closed)
+
+  module Run (r : T.Run lvl3) (hr : Cover.Covered r) where
+    module W = Physical.At r
+    module E = At W.c⁺ (hr lvl2 (B.inc tt B.self))
+    start : State B♯ W.st1
+    start = pair
+      (canonical (W.st1 lvl1 w₁) (Cover.extend (omegaB r (B.inc tt w₁)) (F.inf W.K W.S₀ lvl1 w₁ (W.S₀ lvl1 w₁))))
+      (≼-trans (oneB r (B.inc tt w₀)) (◃→≼ (F.inf W.K W.S₀ B.zero w₀ (W.S₀ B.zero w₀))))
+    module LoopW = Iter E.whole B♯ W.st1 start
+
+    member : ∀ a → data≤ (proj₁ a) (proj₁ (β r)) → ∀ n →
+       data≤ (proj₁ (Loop.vals B♯ R.zero tt a (suc n))) (proj₁ (F.itV W.G (suc n) W.st1 B.zero W.w2 W.v₁))
+    member a d n = LoopW.value a W.w2 W.v₁ (≼-trans d (◃→≼ (F.inf W.K W.S₀ B.zero W.w2 (β r)))) (suc n)
+
+    all : ∀ a → data≤ (proj₁ a) (proj₁ (β r)) → readRW (proj₁ (form B♯ a)) ≼ read (T.value r)
+    all a d = l≼ (λ n → ≼-trans (member a d n) (W.outer n))
+
+  Λ-bound : read-closed ≼ read F.EBOᶜ
+  Λ-bound = ≼-trans point (T.finite-ge 2)
+    where point = Run.all (T.finiteRun 2) (Cover.all-finite 2) (V.Ωt R.zero) (oneβ (T.finiteRun 2))
+
+  fixed : ∀ j → L.suc read-closed ≼ P.cell 1 j
+  fixed j = ≼-trans (s≼s (≼-trans (Run.all (T.finiteRun 2) (Cover.all-finite 2) (V.Ωt R.zero) (oneβ (T.finiteRun 2)))
+     (≼-trans (T.follow-ge (T.visit 2) (T.tower-child T.tower1 1)) (T.tower-ge T.tower1 1)))) (Cell.strict 1 j)
+
+  module Original = Src.Source lem
+  src-first : L.suc Original.src ≼ readRW (proj₁ (Action.run seed B♯ R.zero tt (V.Ωt R.zero)))
+  src-first = ≼-trans (s≼s Original.lower)
+    (strict (mono♯ _ _ B♯ R.zero tt (V.Ωt R.zero) (R.◃l 0)))
+
+  higher : L.suc (readRW (proj₁ (Action.run seed B♯ R.zero tt (V.Ωt R.zero)))) ≼ read-closed
+  higher = ≼l 0 (strict path)
+    where
+    path : R.zero R.⊢ proj₁ (Action.run seed B♯ R.zero tt (V.Ωt R.zero)) ◃
+                        proj₁ (Action.run diagonal B♯ R.zero tt (V.Ωt R.zero))
+    path = R.◃l 0
+

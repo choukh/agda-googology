@@ -1,0 +1,39 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 所有零叶单位值为 ω，任意后继层的第零次实际反馈询问为 1。两种都与继承槽无关。
+module B31NLeaf where
+
+open import Data.Nat.Base using (_≤_; z≤n)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Nat.Properties using (≤-refl)
+open import WVOne using (𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; ≼-refl; ≼-trans)
+import W4Block as W
+import B12Terminal as T
+import B13FiniteLift as Succ
+import B18ResetCellGoal as Init
+import B26Names as A
+import B26Depth as N
+import B27Endpoint as E
+import B27CutArithmetic as Cut
+import B31UProduct as P
+import B31Head as H
+import B18Product as M
+import B19IdealPowers as Pow
+import B31NReal as Real
+import B31NName as Named
+
+zero-cost : ∀ (r : T.Run W.zero) → P.fold₁ r ≈ᵛ L.ωᶜ
+zero-cost r = Init.First.omega
+
+one : A.Name
+one = Cut.At.one-name 2 (E.two 0)
+
+initial : ∀ k (r : T.Run (Succ.sc k)) → N.height one ≤ 0 × H.Cell.leaf k r 0 ≼ A.value one
+initial k r = z≤n , ≼-refl 𝟏
+
+abstract
+  zero-name : ∀ (r : T.Run W.zero) → N.height Named.a ≤ 1 × P.fold₁ r ≼ A.value Named.a
+  zero-name r = ≤-refl , ≼-trans {a = P.fold₁ r} {b = L.ωᶜ} {c = A.value Named.a}
+    (proj₁ (zero-cost r)) (≼-trans {a = L.ωᶜ} {b = Real.square} {c = A.value Named.a}
+      (M.pad Pow.omega-pos L.ωᶜ) (proj₂ Named.original))

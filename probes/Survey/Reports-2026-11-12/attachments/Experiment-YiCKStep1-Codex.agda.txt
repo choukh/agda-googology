@@ -1,0 +1,34 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiCKStep1 where
+open import YiCKStep0
+open import Data.Nat using (ℕ; suc)
+open import Data.Product using (proj₁)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiRWFold as F
+import OCF.Lean.YiTBRow as TB
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiGIInst as GI
+import OCF.Lean.YiKVRel as K
+import OCF.Lean.YiGIRel as GR
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiLLCheck as LL
+import OCF.Lean.YiS2Chain as SC
+import OCF.Align.EboLeanDef as E
+open import OCF.Lean.YiTBFam using (ψ-⊵)
+open import OCF.Lean.YiKCStep using (⊴-trans)
+
+slot-above : proj₁ (O.Ωt (B.tw 1)) K.⊴ proj₁ (base₁ (B.tw 1) (P.ink P.self))
+slot-above = ψ-⊵ B.Λ P.Ok-Λ (MT.rbᶻ B.Λ) (F.B₀ B.Λ) (B.tw 1)
+  (P.inc 3 (P.inc c₁ (P.ink P.self))) (O.Ωt (B.tw 1)) (GI.pre 3)
+feed-above : ∀ d → proj₁ (base₁ (B.tw 1) (P.ink P.self)) K.⊴ inner-feed d
+feed-above d = ψ-⊵ h₁ o₁ (MT.rbᶻ h₁) base₁ (B.tw 1) (P.ink P.self)
+  (base₁ (B.tw 1) (P.ink P.self)) (inner-g d)
+actual-above : ∀ n → proj₁ (O.Ωt (B.tw 1)) K.⊴ inner-chain (suc n)
+actual-above n = ⊴-trans slot-above (feed-above (inner-chain n))
+chain-top : ∀ n → GR.R (B.tw 1) SC.ΩΩ (inner-chain (suc n))
+chain-top n = H.Gen.m⊴ LL.leafΩ (actual-above n)
+actual-chain : ∀ n → GR.R (B.tw 1) (E.γT SC.ΩΩ [] n) (inner-chain (suc n))
+actual-chain n = H.mc (SC.gamma-bound n) (chain-top n)
+  where open import Data.List using ([])

@@ -1,0 +1,249 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- M3 (接口第二版) 基础: (B) 的 "对一切好代表元" 归纳陈述 BFor, 自反与 Sub 搬运, W4 一侧的膨胀, 第 0 层读回,
+-- 自身行的 Level 恒等式 ψaddG 与行引理 selfRowG, kp 保留时的槽位数据 kdLem.
+module KBBase where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Maybe using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as I
+open I using (Ordᴵ; Ordᶜ; Simᴵ; _<ᴵ_; _≅_; _≅ᴵ_; _≺ᴵ_; via; add; into; out; <→◃; out-into;
+              z≅; s≅; l≅; lᵢ≅; upˡ; upʳ; zero; suc; lim; self;
+              ≅-trans; ≅-sym; R→≅; ≅→R; tr⁻; tr⁻-≅; iter-R; add-≅)
+open import OCF.BTBO using (injᵃ; injᵇ; injᶜ; module Ord-Ord)
+private module O = Ord-Ord
+open import OCF.Align.Value using (_≼_; z≼; s≼s; l≼; ≼-trans; ≅→≼)
+open import KPow
+open import KMir
+open import KRel
+open import KIface
+open import KEmb
+open import WVOne using (read)
+open import WVTwo using (◃→≼)
+
+open Pre public
+
+------------------------------------------------------------------------
+-- 前缀 P 与字面嵌入 σ 固定时, 对一切目标, 路径, 底的结论.
+Gl : (m : L) (o : Ok m) {kP k″ : Ordᴵ} (P : Ordᶜ kP) (σ : Simᴵ k″ kP) (A″ : Ordᶜ k″) (t : Tr m) → Set
+Gl m o {kP} P σ A″ t = (S : Base m) {j : L} (w : j ≤ m) (β : Tr⁺ j) {jc : Ordᴵ} (r : jc <ᴵ I.suc kP)
+                     → Pre S β P r → Dom j (ψ̂ r (add P σ A″)) (proj₁ (ψ m o S j w β t))
+
+-- (B) 对一条推导的结论: 对 A 的一切好代表元 A″ (A″ ≅ A, 层与 m 镜像, 字面嵌入前缀层).
+BFor : (m : L) → ∀ {k} → Ordᶜ k → Tr m → Set
+BFor m {k} A t = (st : IsS m) (o : Ok m) {kP k″ : Ordᴵ} (P : Ordᶜ kP) (A″ : Ordᶜ k″) → A″ ≅ A → Mirror k″ m
+               → (σ : Simᴵ k″ kP) → Gl m o P σ A″ t
+
+NS : ∀ {j m : L} → j ≤ m → Set
+NS self      = ⊥
+NS (inc _ _) = ⊤
+NS (inu _)   = ⊤
+NS (ink _)   = ⊤
+
+BForNS : (m : L) → ∀ {k} → Ordᶜ k → Tr m → Set
+BForNS m {k} A t = (st : IsS m) (o : Ok m) {kP k″ : Ordᴵ} (P : Ordᶜ kP) (A″ : Ordᶜ k″) → A″ ≅ A → Mirror k″ m
+                 → (σ : Simᴵ k″ kP) (S : Base m) {j : L} (w : j ≤ m) → NS w → (β : Tr⁺ j) {jc : Ordᴵ} (r : jc <ᴵ I.suc kP)
+                 → Pre S β P r → Dom j (ψ̂ r (add P σ A″)) (proj₁ (ψ m o S j w β t))
+
+-- 换代表元 (输出层同层的 r≅).
+Gl-≅ : ∀ {m o kP k₁ k₂} {P : Ordᶜ kP} {σ₁ : Simᴵ k₁ kP} {σ₂ : Simᴵ k₂ kP} {A₁ : Ordᶜ k₁} {A₂ : Ordᶜ k₂} {t : Tr m}
+     → A₁ ≅ A₂ → Gl m o P σ₂ A₂ t → Gl m o P σ₁ A₁ t
+Gl-≅ e g S w β r pre = r≅ (I.≅ᴵ-refl _) (I.ψ-≅ (I.≅ᴵ-refl _) (add-≅ (reP pre) e)) (g S w β r pre)
+
+-- 两个与同一 m 镜像的层之间的 ≅ᴵ.
+mirEq : ∀ {m k k″} → IsN m → Ok m → Mirror k m → Mirror k″ m → k ≅ᴵ k″
+mirEq i o mk mk″ = I.≅ᴵ-trans (mk i o) (I.≅ᴵ-sym (mk″ i o))
+
+------------------------------------------------------------------------
+-- 1. 自反.
+Dom→refl : ∀ {m k} {A : Ordᶜ k} {t : Tr m} → Dom m A t → A ≅ A
+Dom→refl (rz _)         = z≅
+Dom→refl (rs d)         = s≅ (Dom→refl d)
+Dom→refl (rl h)         = l≅ (λ n → Dom→refl (h n))
+Dom→refl (rΩ _ _ e _)   = e
+Dom→refl (ru _ _ _ e)   = reflˡ e
+Dom→refl (re _ _ _ e)   = reflˡ e
+Dom→refl (r≅ _ e _)     = reflˡ e
+Dom→refl (r◃ d _)       = Dom→refl d
+
+Kid→refl : (m : L) (c : CH m) → ∀ {k′} {Y : Ordᶜ k′} {y : ChT m c} → KidD m c Y y → Y ≅ Y
+Kid→refl (nd s h) c d = Dom→refl d
+
+Kid→Mir : (m : L) (c : CH m) → ∀ {k′} {Y : Ordᶜ k′} {y : ChT m c} → KidD m c Y y → Mirror k′ (kid m c)
+Kid→Mir (nd s h) c d = Dom→Mir d
+
+Kid-≅ : (m : L) (c : CH m) → ∀ {k k′} {Y : Ordᶜ k} {Y′ : Ordᶜ k′} {y : ChT m c} → k′ ≅ᴵ k → Y ≅ Y′ → KidD m c Y′ y → KidD m c Y y
+Kid-≅ (nd s h) c kk e d = r≅ kk e d
+
+mutual
+  Sub→refl : (m : L) (p : Pos m) → ∀ {j} {Y : Ordᶜ j} {z : Br m p} → SubD m p Y z → Y ≅ Y
+  Sub→refl (nd s h)      (inj₂ (c , t)) d = Sub⁼→refl (h c) t d
+  Sub→refl (nd (sΩ k) h) (inj₁ t)       d = Sub⁼→refl k t d
+
+  Sub⁼→refl : (a : L) (t : Pos⁼ a) → ∀ {j} {Y : Ordᶜ j} {z : Br⁼ a t} → SubD⁼ a t Y z → Y ≅ Y
+  Sub⁼→refl a (inj₁ _) d = Dom→refl d
+  Sub⁼→refl a (inj₂ p) d = Sub→refl a p d
+
+mutual
+  Sub-≅ : (m : L) (p : Pos m) → ∀ {j j′} {Y : Ordᶜ j} {Y′ : Ordᶜ j′} {z : Br m p} → j′ ≅ᴵ j → Y ≅ Y′ → SubD m p Y′ z → SubD m p Y z
+  Sub-≅ (nd s h)      (inj₂ (c , t)) kk e d = Sub⁼-≅ (h c) t kk e d
+  Sub-≅ (nd (sΩ k) h) (inj₁ t)       kk e d = Sub⁼-≅ k t kk e d
+
+  Sub⁼-≅ : (a : L) (t : Pos⁼ a) → ∀ {j j′} {Y : Ordᶜ j} {Y′ : Ordᶜ j′} {z : Br⁼ a t} → j′ ≅ᴵ j → Y ≅ Y′ → SubD⁼ a t Y′ z → SubD⁼ a t Y z
+  Sub⁼-≅ a (inj₁ _) kk e d = r≅ kk e d
+  Sub⁼-≅ a (inj₂ p) kk e d = Sub-≅ a p kk e d
+
+mutual
+  toSub : (m : L) (p : Pos m) → ∀ {j} {Y : Ordᶜ j} {T : Tr (at m p)} → Dom (at m p) Y T → SubD m p Y (fromBr m p T)
+  toSub (nd s h)      (inj₂ (c , t)) d = toSub⁼ (h c) t d
+  toSub (nd (sΩ k) h) (inj₁ t)       d = toSub⁼ k t d
+
+  toSub⁼ : (a : L) (t : Pos⁼ a) → ∀ {j} {Y : Ordᶜ j} {T : Tr (proj₁ (sl⁼ a t))}
+         → Dom (proj₁ (sl⁼ a t)) Y T → SubD⁼ a t Y (proj₂ (sl⁼ a t) T)
+  toSub⁼ a (inj₁ _) d = d
+  toSub⁼ a (inj₂ p) d = toSub a p d
+
+------------------------------------------------------------------------
+-- 2. W4 一侧的膨胀.
+infl : (m : L) (o : Ok m) (S : Base m) (j : L) (w : j ≤ m) (β : Tr⁺ j) (t : Tr m) {k : Ordᴵ} {D : Ordᶜ k}
+     → Dom j D (proj₁ β) → Dom j D (proj₁ (ψ m o S j w β t))
+infl m o S j w β t d with zl t
+... | inj₁ refl = d
+... | inj₂ z◃t  = r◃ d (mono m o S j w β z◃t)
+
+rinfl : ∀ {j k} {D : Ordᶜ k} {a : Tr j} (b : Tr j) → Dom j D a → Dom j D (a + b)
+rinfl {a = a} b d with zl b
+... | inj₁ refl = d
+... | inj₂ z◃b  = r◃ d (+-mono a z◃b)
+
+linfl : ∀ {j k} {D : Ordᶜ k} {b : Tr j} (a : Tr j) → Dom j D b → Dom j D (a + b)
+linfl a (rz mk)            = rz mk
+linfl a (rs d)             = rs (linfl a d)
+linfl a (rl h)             = rl (λ n → linfl a (h n))
+linfl a (rΩ mk mr e h)     = rΩ mk mr e (λ Y z s → linfl a (h Y z s))
+linfl a (ru d₀ kd σ e)     = ru (linfl a d₀) kd σ e
+linfl a (re d₀ dv dx e)    = re (linfl a d₀) dv dx e
+linfl a (r≅ kk e d)        = r≅ kk e (linfl a d)
+linfl a (r◃ d lt)          = r◃ (linfl a d) (+-mono a lt)
+
+cumInfl : ∀ {j k} {D : Ordᶜ k} (F : ℕ → Tr j) (n : ℕ) → Dom j D (F n) → Dom j D (cum F n)
+cumInfl F zero    d = d
+cumInfl F (suc n) d = linfl (cum F n) d
+
+------------------------------------------------------------------------
+-- 3. 第 0 层.
+dom0 : ∀ {k} {A : Ordᶜ k} {t : Tr zero} → Dom zero A t → A ≼ read t
+dom0 (rz _)                   = z≼
+dom0 (rs d)                   = s≼s (dom0 d)
+dom0 (rl h)                   = l≼ (λ n → dom0 (h n))
+dom0 (rΩ {p = ()} _ _ _ _)
+dom0 (ru {c = ()} _ _ _ _)
+dom0 (re {ε = ()} _ _ _ _)
+dom0 (r≅ _ e d)               = ≼-trans (≅→≼ e) (dom0 d)
+dom0 (r◃ d lt)                = ≼-trans (dom0 d) (◃→≼ lt)
+
+------------------------------------------------------------------------
+-- 4. 自身行的 Level 恒等式.
+ψaddG : ∀ {kP jc kx ℓ′ k′} {r : jc <ᴵ I.suc kP} {a : Ordᶜ kP} {σ : Simᴵ kx kP} {V : Ordᶜ ℓ′} {σ′ : Simᴵ k′ ℓ′}
+          {x : Ordᶜ kx} {x′ : Ordᶜ k′}
+      → (∀ {c} → c <ᴵ kx → c ≺ᴵ jc) → I.ψ r (λ q → I.suc q) a ≅ V → x ≅ x′
+      → I.ψ r (λ q → I.suc q) (add a σ x) ≅ pwb V σ′ x′
+ψaddG bd eV z≅     = eV
+ψaddG bd eV (s≅ d) = l≅ (iter-R _≅_ (λ e′ → add-≅ (ψaddG bd eV d) e′) z≅)
+ψaddG bd eV (l≅ h) = l≅ (λ n → ψaddG bd eV (h n))
+ψaddG bd eV (upˡ {r = zero} d)   = ψaddG (λ q → bd (I.suc q)) eV d
+ψaddG bd eV (upˡ {r = self n} d) = ψaddG (λ q → bd (I.lim n q)) eV d
+ψaddG bd eV (upʳ {r = zero} d)   = ψaddG bd eV d
+ψaddG bd eV (upʳ {r = self n} d) = ψaddG bd eV d
+ψaddG {r = r} {a = a} {σ = σ} {V = V} {σ′ = σ′} bd eV (lᵢ≅ {p = q} {q = q′} {f = f} {g = g} e h)
+  with I.<ᴵ-dec (I.suc (σ q)) r
+... | injᵃ (via e₁ r₁) = lᵢ≅ (I.≅ᴵ-trans (I.≅ᴵ-sym e₁) e) λ x y d →
+  ≡ˡ (cong (λ w → I.ψ r (λ q → I.suc q) (add a σ (f (into (<→◃ q) (out (<→◃ (σ q)) (into (<→◃ (σ q)) (tr⁻ e₁ w)))))))
+           (out-into (<→◃ r₁) x))
+  (≡ˡ (cong (λ w → I.ψ r (λ q → I.suc q) (add a σ (f (into (<→◃ q) w)))) (out-into (<→◃ (σ q)) (tr⁻ e₁ x)))
+  (≡ʳ (cong (λ w → pwb V σ′ (g (into (<→◃ q′) w))) (sym (out-into (<→◃ (σ′ q′)) y)))
+      (ψaddG bd eV (h (tr⁻ e₁ x) y (≅→R (<→◃ q) (tr⁻-≅ e₁ (R→≅ (<→◃ r₁) d)))))))
+... | injᵇ s = ⊥-elim (I.≺ᴵ-irrefl (I.≺ᴵ-trans (bd q) s))
+... | injᶜ c = ⊥-elim (I.≺ᴵ-irrefl (I.≺ᴵ-respʳ (bd q) (I.≅ᴵ-sym c)))
+
+-- 自身行: A 的结点都 ≺ 目标层, A ≅ A′ 且 A′ ⊴ t. re 规则取在目标层 jc 上 (指数沿 ≅ᴵ 用 r≅ 搬到 jc).
+selfRowG : ∀ {s h kA kA′} {A : Ordᶜ kA} {A′ : Ordᶜ kA′} {t : Tr (nd s h)} (i : IsN (nd s h)) (o : Ok (nd s h))
+           (S : Base (nd s h)) (β : Tr⁺ (nd s h)) {kP jc : Ordᴵ} (P : Ordᶜ kP) (σ : Simᴵ kA kP) (r : jc <ᴵ I.suc kP)
+         → (∀ {c} → c <ᴵ kA → c ≺ᴵ jc) → Pre S β P r → A ≅ A′ → Dom (nd s h) A′ t
+         → Dom (nd s h) (ψ̂ r (add P σ A)) (ex (proj₁ β) (proj₁ β) (proj₂ β) t tt)
+selfRowG {s} {h} {kA} {kA′} {A} {A′} {t} i o S β {kP} {jc} P σ r bd pre eAA′ d =
+  r≅ (I.≅ᴵ-refl jc) Lz (re (rz (mj pre)) (base pre) dX eZ)
+  where
+  eJ : kA′ ≅ᴵ jc
+  eJ = mirEq i o (Dom→Mir d) (mj pre)
+  X : Ordᶜ jc
+  X = embW (≅W eJ) A′
+  eXA′ : X ≅ A′
+  eXA′ = embW-≅ (≅W eJ) (Dom→refl d)
+  dX : Dom (nd s h) X t
+  dX = r≅ eJ eXA′ d
+  V W Z : Ordᶜ jc
+  V = ψ̂ r P
+  W = pwb V (λ q → q) X
+  Z = add I.zero (λ q → q) W
+  eV : V ≅ V
+  eV = I.ψ-≅ (I.≅ᴵ-refl jc) (reP pre)
+  eZW : Z ≅ W
+  eZW = add-zeroˡ (λ q → q) W (pwb-≅ eV (reflˡ eXA′))
+  eZ : Z ≅ Z
+  eZ = reflˡ eZW
+  Lz : ψ̂ r (add P σ A) ≅ Z
+  Lz = ≅-trans (ψaddG bd eV (≅-trans eAA′ (≅-sym eXA′))) (≅-sym eZW)
+
+-- 好代表元的结点界: 层与 j 镜像, 目标层也与 j 镜像.
+bdMir : ∀ {m k jc} → IsN m → Ok m → Mirror k m → Mirror jc m → ∀ {c} → c <ᴵ k → c ≺ᴵ jc
+bdMir i o mk mj′ q = I.<-≅ q (mirEq i o mk mj′)
+
+------------------------------------------------------------------------
+-- 5. kp 给 just 时的槽位数据.
+KDg : (j : L) {X : Set} {x₀ : X} (A : L) (SubX : ∀ {kY} → Ordᶜ kY → X → Set) → Keep j X x₀ → Set
+KDg j A SubX (just (q′ , cv , _)) = (at j q′ ≡ A) × (∀ {kY} {Y : Ordᶜ kY} (z′ : Br j q′) → SubD j q′ Y z′ → SubX Y (cv z′))
+KDg j A SubX nothing              = ⊤
+
+pshSub : ∀ {k a : L} (u : k ≤ a) (t : Pos⁼ k) {kY} {Y : Ordᶜ kY} {z : Br⁼ a (psh u t)}
+       → SubD⁼ a (psh u t) Y z → SubD⁼ k t Y (pshBr u t z)
+pshSub self                 t d = d
+pshSub (inc c v)            t d = pshSub v t d
+pshSub {a = nd s h} (inu vs) t d = pshSub (vs (c₀ s)) t d
+pshSub (ink v)              t d = pshSub v t d
+
+KD-map : ∀ {j k a : L} (u : k ≤ a) (t : Pos⁼ k) (X : Keep j (Br⁼ a (psh u t)) (bz⁼ a (psh u t)))
+       → KDg j (proj₁ (sl⁼ a (psh u t))) (SubD⁼ a (psh u t)) X
+       → KDg j (proj₁ (sl⁼ k t)) (SubD⁼ k t) (mapK (pshBr u t) (pshFirst u t) X)
+KD-map u t (just (q′ , cv , _)) (ea , sb) = trans ea (at-psh u t) , λ z′ d → pshSub u t (sb z′ d)
+KD-map u t nothing              _         = tt
+
+mutual
+  kdLem : (m : L) (o : Ok m) (p : Pos m) {j : L} (w : j ≤ m) → KDg j (at m p) (SubD m p) (kp m o p w)
+  kdLem ℓ             o               p              self      = refl , λ z′ d → d
+  kdLem (nd s h)      (_ , oc)        (inj₂ (c , t)) (inu vs)  = kdLem⁼ (h c) (oc c) t (vs c)
+  kdLem (nd (sΩ k) h) ((_ , kh) , oc) (inj₂ (c , t)) (ink v)   = kdLem⁼ (h c) (oc c) t (v ∙ kh c)
+  kdLem (nd sS h)     (_ , oc)        (inj₂ (c , t)) (inc _ v) = kdLem⁼ (h c) (oc c) t v
+  kdLem (nd sL g)     (r , oc)        (inj₂ (m , t)) {j} (inc n v) =
+    cW-ind (KDg j (proj₁ (sl⁼ (g m) t)) (SubD⁼ (g m) t)) (way g r m n)
+      (λ u → KD-map u t (kp⁼ (g n) (oc n) (psh u t) v) (kdLem⁼ (g n) (oc n) (psh u t) v))
+      (λ u → kdLem⁼ (g m) (oc m) t (v ∙ u))
+  kdLem (nd (sΩ k) h) _               (inj₂ _)       (inc _ _) = tt
+  kdLem (nd (sΩ k) h) ((ok , _) , _)  (inj₁ t)       (ink v)   = kdLem⁼ k ok t v
+  kdLem (nd (sΩ k) h) ((_ , kh) , oc) (inj₁ t)       (inc c v) =
+    KD-map (kh c) t (kp⁼ (h c) (oc c) (psh (kh c) t) v) (kdLem⁼ (h c) (oc c) (psh (kh c) t) v)
+  kdLem (nd (sΩ k) h) ((_ , kh) , oc) (inj₁ t)       (inu vs)  =
+    KD-map (kh zero) t (kp⁼ (h zero) (oc zero) (psh (kh zero) t) (vs zero)) (kdLem⁼ (h zero) (oc zero) (psh (kh zero) t) (vs zero))
+
+  kdLem⁼ : (a : L) (o : Ok a) (t : Pos⁼ a) {j : L} (w : j ≤ a) → KDg j (proj₁ (sl⁼ a t)) (SubD⁼ a t) (kp⁼ a o t w)
+  kdLem⁼ a o (inj₁ _) w = tt
+  kdLem⁼ a o (inj₂ p) w = kdLem a o p w

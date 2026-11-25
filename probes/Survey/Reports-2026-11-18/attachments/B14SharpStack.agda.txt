@@ -1,0 +1,94 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 理想 Ω₁ 有限和与 W4 的 Ω₁ 操作同次迭代，在零层输出逐枝相配。条件为排中律和两个起始底匹配。
+module B14SharpStack where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+import W4Path as P
+open import WVOne using (lvl1)
+open import B13SharpOne using (r₁; Match; module Compare; empty-slot)
+
+oR = tt , (λ (_ : Data.Unit.⊤) → tt)
+oB : P.Ok lvl1
+oB = tt , λ _ → tt
+
+p : R.Pos r₁
+p = inj₂ (tt , inj₁ tt)
+
+block : R.Tr r₁ → R.Tr r₁
+block x = R.Ω p (λ z → R.up x tt (R.suc z) (V.z◃ z R.◃s))
+
+Ωi = proj₁ (V.Ωt r₁)
+Ωw = proj₁ (W.Ωt lvl1)
+K = F.opB lvl1 oB Ωw (proj₂ (W.Ωt lvl1))
+
+data Blocks : ℕ → R.Tr r₁ → Set where
+  emp : Blocks 0 R.zero
+  add : ∀ {n x} → Blocks n x → Blocks (suc n) (block x)
+
+prepend : ∀ {n x} → Blocks n x → Blocks (suc n) (Ωi V.+ x)
+prepend emp = add emp
+prepend (add r) = add (prepend r)
+
+sums : ℕ → R.Tr r₁
+sums = V.iter (Ωi V.+_) Ωi
+
+finite : (n : ℕ) → Blocks (suc n) (sums n)
+finite zero = add emp
+finite (suc n) = prepend (finite n)
+
+data Seat : Set where
+  base slot : Seat
+
+path : Seat → B.zero B.≤ lvl1
+path base = P.z≤ lvl1
+path slot = B.inc tt B.self
+
+self-value : (n : ℕ) (S : F.Base lvl1) → F.itV K n S B.zero (path slot) (S B.zero (path slot)) ≡ F.itS K n S B.zero (path slot)
+self-value zero S = refl
+self-value (suc n) S = cong (F.run K (F.itS K n S) B.zero (path slot)) (self-value n S)
+
+module Sim (lem : LEM) where
+  open I.Sharp lem
+  open Compare lem
+
+  after : Base♯ → R.Tr r₁ → Base♯
+  after D x i oi = ψ♯ r₁ oR D i oi (D i oi) x
+
+  fold : Base♯ → V.Tr⁺ R.zero → R.Tr r₁ → V.Tr⁺ R.zero
+  fold D a x = ψ♯ r₁ oR D R.zero tt a x
+
+  append : (D : Base♯) (a : V.Tr⁺ R.zero) (x : R.Tr r₁) →
+           proj₁ (fold D a (block x)) ≡ proj₁ (fold (after D x) (fold D a x) Ωi)
+  append D a x rewrite empty-slot (kp♯ r₁ oR p R.zero tt) = refl
+
+  same-seat : (S : F.Base lvl1) (b : W.Tr⁺ B.zero) (t : Seat) →
+     proj₁ (F.run K S B.zero (path base) b) ≡ proj₁ (F.run K S B.zero (path t) b)
+  same-seat S b base = refl
+  same-seat S b slot = refl
+
+  module Run (D : Base♯) (S : F.Base lvl1)
+             (hc : Match (proj₁ (D R.zero tt)) (proj₁ (S B.zero (path slot)))) where
+    compare : ∀ {n x} → Blocks n x → (t : Seat) (a : V.Tr⁺ R.zero) (b : W.Tr⁺ B.zero) →
+       Match (proj₁ a) (proj₁ b) → Match (proj₁ (fold D a x)) (proj₁ (F.itV K n S B.zero (path t) b))
+    compare emp t a b hb = hb
+    compare {suc n} (add {x = x} d) t a b hb =
+      subst (λ y → Match y (proj₁ (F.run K Sn B.zero (path t) vn))) (sym (append D a x))
+         (subst (Match (proj₁ (fold (after D x) (fold D a x) Ωi))) (same-seat Sn vn t)
+            (One.omega (after D x) Sn (fold D a x) vn (compare d t a b hb) hc′))
+      where
+      Sn = F.itS K n S
+      vn = F.itV K n S B.zero (path t) b
+      hc′ : Match (proj₁ (after D x R.zero tt)) (proj₁ (Sn B.zero (path slot)))
+      hc′ = subst (Match (proj₁ (after D x R.zero tt))) (cong proj₁ (self-value n S))
+               (compare d slot (D R.zero tt) (S B.zero (path slot)) hc)

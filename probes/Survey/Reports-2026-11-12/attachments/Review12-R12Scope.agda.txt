@@ -1,0 +1,346 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- review12 的临时试验: 作用域化的块 (into / up), 不摊平的加法, 在 Ω 结点层号上没有派发的折叠.
+-- 只有定义与几条 refl; 没有第一位置, 没有合法性, 没有值. top 的各行是简化的. 没有 ℕ 极限层号.
+module R12Scope where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Product.Base using (Σ; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+------------------------------------------------------------------------
+-- 1 块. 树的下标是作用域 s (从本层的根往下的一条孩子路径).
+-- nd: 结点, 位置是当前作用域的根, 分支仍在当前作用域里.
+-- into c: 进孩子 c 的作用域. up c: 从孩子 c 的作用域回到外一层 (左加数从这里进来).
+-- hole x v: x + (根作用域之外的东西 v). top x: x + 本作用域那一层的 Ω.
+
+module G (X : Set) (Sc : Set) (rt : Sc) (Root : Sc → Set) (Dom : (s : Sc) → Root s → Set)
+         (Kid : Sc → Set) (sub : (s : Sc) → Kid s → Sc) where
+  data T : Sc → Set where
+    zero : ∀ {s} → T s
+    suc  : ∀ {s} → T s → T s
+    lim  : ∀ {s} → (ℕ → T s) → T s
+    nd   : ∀ {s} (r : Root s) → (Dom s r → T s) → T s
+    into : ∀ {s} (c : Kid s) → T (sub s c) → T s
+    up   : ∀ {s s′} (c : Kid s) → sub s c ≡ s′ → T s → T s′
+    hole : T rt → X → T rt
+    top  : ∀ {s} → T s → T s
+
+data Level : Set
+Below : Level → Set
+Path : Level → Set
+Root : (k : Level) → Path k → Set
+Dom : (k : Level) (s : Path k) → Root k s → Set
+Kid : (k : Level) → Path k → Set
+sub : (k : Level) (s : Path k) → Kid k s → Path k
+Tr : Set → (k : Level) → Path k → Set
+Raw : Level → Set
+
+data Level where
+  zero : Level
+  suc : Level → Level
+  lc : (k : Level) → (Raw k → Level) → Level
+
+Path k = ⊤ ⊎ Below k
+
+Below zero = ⊥
+Below (suc k) = Path k
+Below (lc k g) = Σ (Raw k) (λ η → Path (g η))
+
+Root zero (inj₁ _) = ⊥
+Root zero (inj₂ ())
+Root (suc k) (inj₁ _) = ⊤
+Root (suc k) (inj₂ p) = Root k p
+Root (lc k g) (inj₁ _) = ⊥
+Root (lc k g) (inj₂ (η , p)) = Root (g η) p
+
+Dom zero (inj₁ _) ()
+Dom zero (inj₂ ())
+Dom (suc k) (inj₁ _) _ = Raw k
+Dom (suc k) (inj₂ p) r = Dom k p r
+Dom (lc k g) (inj₁ _) ()
+Dom (lc k g) (inj₂ (η , p)) r = Dom (g η) p r
+
+Kid zero (inj₁ _) = ⊥
+Kid zero (inj₂ ())
+Kid (suc k) (inj₁ _) = ⊤
+Kid (suc k) (inj₂ p) = Kid k p
+Kid (lc k g) (inj₁ _) = Raw k
+Kid (lc k g) (inj₂ (η , p)) = Kid (g η) p
+
+sub zero (inj₁ _) ()
+sub zero (inj₂ ())
+sub (suc k) (inj₁ _) _ = inj₂ (inj₁ tt)
+sub (suc k) (inj₂ p) c = inj₂ (sub k p c)
+sub (lc k g) (inj₁ _) η = inj₂ (η , inj₁ tt)
+sub (lc k g) (inj₂ (η , p)) c = inj₂ (η , sub (g η) p c)
+
+Tr X k = G.T X (Path k) (inj₁ tt) (Root k) (Dom k) (Kid k) (sub k)
+
+Raw k = Tr ⊥ k (inj₁ tt)
+
+------------------------------------------------------------------------
+-- 2 加法: 不打开 into, 左加数经 up 进到作用域里.
+
+plus : ∀ {X k s} → Tr X k s → Tr X k s → Tr X k s
+plus x G.zero = x
+plus x (G.suc a) = G.suc (plus x a)
+plus x (G.lim f) = G.lim (λ n → plus x (f n))
+plus x (G.nd r g) = G.nd r (λ η → plus x (g η))
+plus x (G.into c t) = G.into c (plus (G.up c refl x) t)
+plus x (G.up c refl y) = G.up c refl (plus (G.into c x) y)
+plus x (G.hole y v) = G.hole (plus x y) v
+plus x (G.top y) = G.top (plus x y)
+
+plus-into : ∀ {X k s} (x : Tr X k s) c t → plus x (G.into c t) ≡ G.into c (plus (G.up c refl x) t)
+plus-into x c t = refl
+
+acc : ∀ {V : Set} → (ℕ → V → V) → V → ℕ → V
+acc step start zero = start
+acc step start (suc n) = step n (acc step start n)
+
+iter : ∀ {V : Set} → (V → V) → V → ℕ → V
+iter h x zero = x
+iter h x (suc n) = h (iter h x n)
+
+succ : ∀ {X k s} → Tr X k s → Tr X k s
+succ y = G.lim (acc (λ _ z → plus y z) y)
+
+psum : ∀ {X k s} → (ℕ → Tr X k s) → ℕ → Tr X k s
+psum h = acc (λ n z → plus z (h (suc n))) (h zero)
+
+chain : ∀ k → (Raw k → Raw k) → ℕ → Raw k
+chain k h = iter (λ γ → plus γ (h γ)) (G.top G.zero)
+
+------------------------------------------------------------------------
+-- 3 把根上的洞换回 up; 把根作用域的树抬到任意作用域.
+
+unS : ∀ {Y} k p → Tr (Tr Y (suc k) (inj₁ tt)) k p → Tr Y (suc k) (inj₂ p)
+unS k p G.zero = G.zero
+unS k p (G.suc a) = G.suc (unS k p a)
+unS k p (G.lim f) = G.lim (λ n → unS k p (f n))
+unS k p (G.nd r g) = G.nd r (λ η → unS k p (g η))
+unS k p (G.into c t) = G.into c (unS k (sub k p c) t)
+unS k p (G.up {s} c refl y) = G.up c refl (unS k s y)
+unS k p (G.hole x v) = plus (unS k (inj₁ tt) x) (G.up tt refl v)
+unS k p (G.top x) = G.top (unS k p x)
+
+unC : ∀ {Y} k g η p → Tr (Tr Y (lc k g) (inj₁ tt)) (g η) p → Tr Y (lc k g) (inj₂ (η , p))
+unC k g η p G.zero = G.zero
+unC k g η p (G.suc a) = G.suc (unC k g η p a)
+unC k g η p (G.lim f) = G.lim (λ n → unC k g η p (f n))
+unC k g η p (G.nd r h) = G.nd r (λ θ → unC k g η p (h θ))
+unC k g η p (G.into c t) = G.into c (unC k g η (sub (g η) p c) t)
+unC k g η p (G.up {s} c refl y) = G.up c refl (unC k g η s y)
+unC k g η p (G.hole x v) = plus (unC k g η (inj₁ tt) x) (G.up η refl v)
+unC k g η p (G.top x) = G.top (unC k g η p x)
+
+lift : ∀ {Y} k p → Tr Y k (inj₁ tt) → Tr Y k p
+lift k (inj₁ tt) t = t
+lift zero (inj₂ ()) t
+lift (suc k) (inj₂ p) t = unS k p (lift k p (G.hole G.zero t))
+lift (lc k g) (inj₂ (η , p)) t = unC k g η p (lift (g η) p (G.hole G.zero t))
+
+------------------------------------------------------------------------
+-- 4 折叠. 没有派发, 没有公共上界, 不比较孩子的下标.
+-- O: 目标层 J 与当前树无关, 结点一律经自己那一层的链折叠.
+-- Rl: 折到当前作用域根结点的下标层 (结点自己那一层); In: 在目标层之内, 结点保留.
+-- dn: 外层环境 K 换成孩子的环境, 越过孩子根的 up 变成洞, 洞里是 "对任意目标层折叠外面那棵树".
+-- b 是 zero 的像 (左加数的像).
+
+Res : Set
+Res = (J : Level) → Raw J → Raw J
+
+no⊥ : ⊥ → Res
+no⊥ ()
+
+DnR : (K : Level) → Path K → Set
+DnR K (inj₁ _) = ⊤
+DnR zero (inj₂ ())
+DnR (suc k) (inj₂ p) = Tr Res k p
+DnR (lc k g) (inj₂ (η , p)) = Tr Res (g η) p
+
+InB : Level → Set
+InB zero = ⊤
+InB (suc k) = Raw k
+InB (lc k g) = ⊤
+
+InR : (K : Level) → Path K → Set
+InR K (inj₁ _) = ⊤
+InR zero (inj₂ ())
+InR (suc k) (inj₂ p) = Tr ⊥ k p
+InR (lc k g) (inj₂ _) = ⊤
+
+PtsTy : Level → Set
+PtsTy zero = ⊤
+PtsTy (suc k) = ⊤
+PtsTy (lc k g) = Raw k
+
+-- 目标层之内的自折叠 (闭树, 没有越出目标的 up).
+slf : ∀ k p → Raw k → Tr ⊥ k p → Tr ⊥ k p
+slf k p b G.zero = lift k p b
+slf k p b (G.suc a) = succ (slf k p b a)
+slf k p b (G.lim f) = G.lim (λ n → slf k p b (f n))
+slf k p b (G.nd r g) = G.nd r (λ η → slf k p b (g η))
+slf k p b (G.into c t) = G.into c (slf k (sub k p c) b t)
+slf k p b (G.up {s} c refl y) = G.up c refl (slf k s b y)
+slf k p b (G.hole x ())
+slf k p b (G.top x) = G.top (slf k p b x)
+
+O : ∀ {X : Set} → (X → Res) → (K J : Level) (q : Path K) → Raw J → Tr X K q → Raw J
+Rl : ∀ {X : Set} → (X → Res) → (K : Level) (q : Path K) (r : Root K q) → Dom K q r → Tr X K q → Dom K q r
+In : ∀ {X : Set} → (X → Res) → (K : Level) (q : Path K) → InB K → Tr X K q → InR K q
+dn : ∀ {X : Set} → (X → Res) → (K : Level) (q : Path K) → Tr X K q → DnR K q
+pts : (K : Level) → ℕ → PtsTy K
+
+O ρ zero J (inj₂ ()) b t
+O ρ (suc k) J (inj₂ p) b t = O (λ v → v) k J p b (dn ρ (suc k) (inj₂ p) t)
+O ρ (lc k g) J (inj₂ (η , p)) b t = O (λ v → v) (g η) J p b (dn ρ (lc k g) (inj₂ (η , p)) t)
+O ρ zero J (inj₁ tt) b G.zero = b
+O ρ zero J (inj₁ tt) b (G.suc a) = succ (O ρ zero J (inj₁ tt) b a)
+O ρ zero J (inj₁ tt) b (G.lim f) = G.lim (λ n → O ρ zero J (inj₁ tt) b (f n))
+O ρ zero J (inj₁ tt) b (G.nd () g)
+O ρ zero J (inj₁ tt) b (G.into () t)
+O ρ zero J (inj₁ tt) b (G.up {s = inj₁ tt} () e y)
+O ρ zero J (inj₁ tt) b (G.up {s = inj₂ ()} c e y)
+O ρ zero J (inj₁ tt) b (G.hole x v) = ρ v J (O ρ zero J (inj₁ tt) b x)
+O ρ zero J (inj₁ tt) b (G.top x) = succ (O ρ zero J (inj₁ tt) b x)
+O ρ (suc k) J (inj₁ tt) b G.zero = b
+O ρ (suc k) J (inj₁ tt) b (G.suc a) = succ (O ρ (suc k) J (inj₁ tt) b a)
+O ρ (suc k) J (inj₁ tt) b (G.lim f) = G.lim (λ n → O ρ (suc k) J (inj₁ tt) b (f n))
+O ρ (suc k) J (inj₁ tt) b (G.nd tt g) = G.lim (λ n → O ρ (suc k) J (inj₁ tt) b
+  (g (chain k (λ γ → Rl ρ (suc k) (inj₁ tt) tt (G.top G.zero) (g γ)) n)))
+O ρ (suc k) J (inj₁ tt) b (G.into tt t) = O (λ v → v) k J (inj₁ tt) b (dn ρ (suc k) (inj₂ (inj₁ tt)) t)
+O ρ (suc k) J (inj₁ tt) b (G.up {s = inj₁ tt} c () y)
+O ρ (suc k) J (inj₁ tt) b (G.up {s = inj₂ p} c () y)
+O ρ (suc k) J (inj₁ tt) b (G.hole x v) = ρ v J (O ρ (suc k) J (inj₁ tt) b x)
+O ρ (suc k) J (inj₁ tt) b (G.top x) = G.lim (λ n → O no⊥ k J (inj₁ tt) (O ρ (suc k) J (inj₁ tt) b x)
+  (chain k (slf k (inj₁ tt) (G.top G.zero)) n))
+O ρ (lc k g) J (inj₁ tt) b G.zero = b
+O ρ (lc k g) J (inj₁ tt) b (G.suc a) = succ (O ρ (lc k g) J (inj₁ tt) b a)
+O ρ (lc k g) J (inj₁ tt) b (G.lim f) = G.lim (λ n → O ρ (lc k g) J (inj₁ tt) b (f n))
+O ρ (lc k g) J (inj₁ tt) b (G.nd () h)
+O ρ (lc k g) J (inj₁ tt) b (G.into η t) = O (λ v → v) (g η) J (inj₁ tt) b (dn ρ (lc k g) (inj₂ (η , (inj₁ tt))) t)
+O ρ (lc k g) J (inj₁ tt) b (G.up {s = inj₁ tt} c () y)
+O ρ (lc k g) J (inj₁ tt) b (G.up {s = inj₂ (η , p)} c () y)
+O ρ (lc k g) J (inj₁ tt) b (G.hole x v) = ρ v J (O ρ (lc k g) J (inj₁ tt) b x)
+-- Ω 结点层号的 top: 链点是折叠的输出, 回灌作孩子的下标 (同主线的 ptsΩ); 观察取部分和.
+O ρ (lc k g) J (inj₁ tt) b (G.top x) = G.lim (psum (λ n →
+  O no⊥ (g (pts (lc k g) n)) J (inj₁ tt) (O ρ (lc k g) J (inj₁ tt) b x) (G.top G.zero)))
+
+pts zero n = tt
+pts (suc k) n = tt
+pts (lc k g) zero = G.top G.zero
+pts (lc k g) (suc n) = plus (pts (lc k g) n)
+  (O no⊥ (g (pts (lc k g) n)) k (inj₁ tt) (G.top G.zero) (G.top G.zero))
+
+Rl ρ zero (inj₁ tt) () b t
+Rl ρ zero (inj₂ ()) r b t
+Rl ρ (lc k g) (inj₁ tt) () b t
+Rl ρ (suc k) (inj₂ p) r b t = Rl (λ v → v) k p r b (dn ρ (suc k) (inj₂ p) t)
+Rl ρ (lc k g) (inj₂ (η , p)) r b t = Rl (λ v → v) (g η) p r b (dn ρ (lc k g) (inj₂ (η , p)) t)
+Rl ρ (suc k) (inj₁ tt) tt b G.zero = b
+Rl ρ (suc k) (inj₁ tt) tt b (G.suc a) = succ (Rl ρ (suc k) (inj₁ tt) tt b a)
+Rl ρ (suc k) (inj₁ tt) tt b (G.lim f) = G.lim (λ n → Rl ρ (suc k) (inj₁ tt) tt b (f n))
+Rl ρ (suc k) (inj₁ tt) tt b (G.nd tt g) = G.lim (λ n → Rl ρ (suc k) (inj₁ tt) tt b
+  (g (chain k (λ γ → Rl ρ (suc k) (inj₁ tt) tt (G.top G.zero) (g γ)) n)))
+Rl ρ (suc k) (inj₁ tt) tt b (G.into tt t) = In ρ (suc k) (inj₂ (inj₁ tt)) b t
+Rl ρ (suc k) (inj₁ tt) tt b (G.up {s = inj₁ tt} c () y)
+Rl ρ (suc k) (inj₁ tt) tt b (G.up {s = inj₂ p} c () y)
+Rl ρ (suc k) (inj₁ tt) tt b (G.hole x v) = ρ v k (Rl ρ (suc k) (inj₁ tt) tt b x)
+Rl ρ (suc k) (inj₁ tt) tt b (G.top x) = G.lim (λ n →
+  slf k (inj₁ tt) (Rl ρ (suc k) (inj₁ tt) tt b x) (chain k (slf k (inj₁ tt) (G.top G.zero)) n))
+
+In ρ K (inj₁ _) b t = tt
+In ρ zero (inj₂ ()) b t
+In ρ (lc k g) (inj₂ _) b t = tt
+In ρ (suc k) (inj₂ p) b G.zero = lift k p b
+In ρ (suc k) (inj₂ p) b (G.suc a) = succ (In ρ (suc k) (inj₂ p) b a)
+In ρ (suc k) (inj₂ p) b (G.lim f) = G.lim (λ n → In ρ (suc k) (inj₂ p) b (f n))
+In ρ (suc k) (inj₂ p) b (G.nd r g) = G.nd r (λ η → In ρ (suc k) (inj₂ p) b (g η))
+In ρ (suc k) (inj₂ p) b (G.into c t) = G.into c (In ρ (suc k) (inj₂ (sub k p c)) b t)
+In ρ (suc k) (inj₂ p) b (G.up {s = inj₁ tt} tt refl y) = Rl ρ (suc k) (inj₁ tt) tt b y
+In ρ (suc k) (inj₂ p) b (G.up {s = inj₂ p′} c refl y) = G.up c refl (In ρ (suc k) (inj₂ p′) b y)
+In ρ (suc k) (inj₂ p) b (G.top x) = G.top (In ρ (suc k) (inj₂ p) b x)
+
+dn ρ K (inj₁ _) t = tt
+dn ρ zero (inj₂ ()) t
+dn ρ (suc k) (inj₂ p) G.zero = G.zero
+dn ρ (suc k) (inj₂ p) (G.suc a) = G.suc (dn ρ (suc k) (inj₂ p) a)
+dn ρ (suc k) (inj₂ p) (G.lim f) = G.lim (λ n → dn ρ (suc k) (inj₂ p) (f n))
+dn ρ (suc k) (inj₂ p) (G.nd r g) = G.nd r (λ η → dn ρ (suc k) (inj₂ p) (g η))
+dn ρ (suc k) (inj₂ p) (G.into c t) = G.into c (dn ρ (suc k) (inj₂ (sub k p c)) t)
+dn ρ (suc k) (inj₂ p) (G.up {s = inj₁ tt} tt refl y) = G.hole G.zero (λ J b → O ρ (suc k) J (inj₁ tt) b y)
+dn ρ (suc k) (inj₂ p) (G.up {s = inj₂ p′} c refl y) = G.up c refl (dn ρ (suc k) (inj₂ p′) y)
+dn ρ (suc k) (inj₂ p) (G.top x) = G.top (dn ρ (suc k) (inj₂ p) x)
+dn ρ (lc k g) (inj₂ (η , p)) G.zero = G.zero
+dn ρ (lc k g) (inj₂ (η , p)) (G.suc a) = G.suc (dn ρ (lc k g) (inj₂ (η , p)) a)
+dn ρ (lc k g) (inj₂ (η , p)) (G.lim f) = G.lim (λ n → dn ρ (lc k g) (inj₂ (η , p)) (f n))
+dn ρ (lc k g) (inj₂ (η , p)) (G.nd r h) = G.nd r (λ θ → dn ρ (lc k g) (inj₂ (η , p)) (h θ))
+dn ρ (lc k g) (inj₂ (η , p)) (G.into c t) = G.into c (dn ρ (lc k g) (inj₂ (η , (sub (g η) p c))) t)
+dn ρ (lc k g) (inj₂ (η , p)) (G.up {s = inj₁ tt} η′ refl y) = G.hole G.zero (λ J b → O ρ (lc k g) J (inj₁ tt) b y)
+dn ρ (lc k g) (inj₂ (η , p)) (G.up {s = inj₂ (η′ , p′)} c refl y) = G.up c refl (dn ρ (lc k g) (inj₂ (η′ , p′)) y)
+dn ρ (lc k g) (inj₂ (η , p)) (G.top x) = G.top (dn ρ (lc k g) (inj₂ (η , p)) x)
+
+------------------------------------------------------------------------
+-- 5 由构造成立的几条 (都是 refl).
+
+-- 嵌入支的折叠就是孩子里的折叠; 孩子的下标 η 只是被传过去, 没有被检查.
+O-into : ∀ {X} (ρ : X → Res) k g J b η t →
+  O ρ (lc k g) J (inj₁ tt) b (G.into η t) ≡ O {X = Res} (λ v → v) (g η) J (inj₁ tt) b (dn ρ (lc k g) (inj₂ (η , (inj₁ tt))) t)
+O-into ρ k g J b η t = refl
+
+Rl-sub : ∀ {X} (ρ : X → Res) k g η p r b t →
+  Rl ρ (lc k g) (inj₂ (η , p)) r b t ≡ Rl {X = Res} (λ v → v) (g η) p r b (dn ρ (lc k g) (inj₂ (η , p)) t)
+Rl-sub ρ k g η p r b t = refl
+
+-- 左加一个嵌入支再折叠: 不摊平, 仍是孩子里的折叠.
+O-plus-into : ∀ (ρ : ⊥ → Res) k g J b (x : Raw (lc k g)) η t →
+  O ρ (lc k g) J (inj₁ tt) b (plus x (G.into η t)) ≡
+  O (λ v → v) (g η) J (inj₁ tt) b (dn ρ (lc k g) (inj₂ (η , (inj₁ tt))) (plus (G.up η refl x) t))
+O-plus-into ρ k g J b x η t = refl
+
+-- YiCompatDlNeg.mis / YiCompatDlLoss.not-out 那个形状 (层号 ω 换成任意 a):
+-- 层 a+2 的树: 进孩子 a+1, 在它的根上放一个结点 (结点层 a). 折到 a+1 (结点自己外面那一层的下标层): 保留.
+ξL : ∀ a → Raw (suc (suc a))
+ξL a = G.into tt (G.nd tt (λ _ → G.zero))
+
+keepL : ∀ a → Rl no⊥ (suc (suc a)) (inj₁ tt) tt (G.top G.zero) (ξL a) ≡ G.nd tt (λ _ → G.top G.zero)
+keepL a = refl
+
+-- 同一棵树放在 Ω 结点层号的孩子 η 的作用域里 (η 任意, 是变量): 同样保留, 输出逐字相同.
+K₂ : Level → Level → Level
+K₂ k a = lc k (λ _ → suc (suc a))
+
+ξR : ∀ k a (η : Raw k) → Tr ⊥ (K₂ k a) (inj₂ (η , inj₁ tt))
+ξR k a η = G.into tt (G.nd tt (λ _ → G.zero))
+
+keepR : ∀ k a η → Rl no⊥ (K₂ k a) (inj₂ (η , inj₁ tt)) tt (G.top G.zero) (ξR k a η) ≡ G.nd tt (λ _ → G.top G.zero)
+keepR k a η = refl
+
+-- 再套一层 Ω 结点层号 (塔的下一项的形状).
+K₃ : Level → Level → Level → Level
+K₃ k′ k a = lc k′ (λ _ → K₂ k a)
+
+ξR₃ : ∀ k′ k a (η′ : Raw k′) (η : Raw k) → Tr ⊥ (K₃ k′ k a) (inj₂ (η′ , inj₂ (η , inj₁ tt)))
+ξR₃ k′ k a η′ η = G.into tt (G.nd tt (λ _ → G.zero))
+
+keepR₃ : ∀ k′ k a η′ η →
+  Rl no⊥ (K₃ k′ k a) (inj₂ (η′ , inj₂ (η , inj₁ tt))) tt (G.top G.zero) (ξR₃ k′ k a η′ η) ≡ G.nd tt (λ _ → G.top G.zero)
+keepR₃ k′ k a η′ η = refl
+
+-- 左加数 x 与结点同在孩子 η 的作用域里: 加法不摊平, 结点仍保留, 分支是 x 的折叠.
+keep-plus : ∀ k a η (x : Tr ⊥ (K₂ k a) (inj₂ (η , inj₁ tt))) →
+  Rl no⊥ (K₂ k a) (inj₂ (η , inj₁ tt)) tt (G.top G.zero) (plus x (ξR k a η)) ≡
+  G.nd tt (λ _ → Rl {X = Res} (λ v → v) (suc (suc a)) (inj₁ tt) tt (G.top G.zero) (dn no⊥ (K₂ k a) (inj₂ (η , (inj₁ tt))) x))
+keep-plus k a η x = refl
+
+-- 这个设计不给的: 越出孩子 η 再回来的东西一律按 "无关" 折叠 (O), 不管 y 里是否又进了同一个 η.
+-- 没有任何一处判定两个下标是否相同; 同支只由 "同一作用域里, 没有越出孩子" 定出.
+esc-off : ∀ k a η (b : Raw a) (y : Raw (K₂ k a)) →
+  Rl no⊥ (K₂ k a) (inj₂ (η , inj₂ (inj₁ tt))) tt b
+    (G.up {s = inj₂ (η , inj₁ tt)} tt refl (G.up {s = inj₁ tt} η refl y))
+  ≡ O no⊥ (K₂ k a) a (inj₁ tt) b y
+esc-off k a η b y = refl

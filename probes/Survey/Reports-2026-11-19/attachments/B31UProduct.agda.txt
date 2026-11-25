@@ -1,0 +1,65 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对任意真实极限层保留每次前缀更新后的整族槽；显式起点累乘单位系数。
+module B31UProduct where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import W4Block as W
+import W4Ops as O
+import W4Path as H
+open import WVOne using (read; T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; ≼-trans; ≼l; l≼; ≼-refl)
+import B12Terminal as T
+import B14PathHeight as Path
+import B19PathValue as V
+import B18Product as P
+import B19IdealProduct as I
+
+fold₁ : ∀ {k} → T.Run k → T₀
+fold₁ {k} r = V.At.coefficient k (T.Run.ok r) (T.Run.bs r) (proj₁ (O.Ωt k))
+
+module Run (g : ℕ → W.L) (r : T.Run (W.nd W.sL g)) where
+  start = read (proj₁ (T.Run.β r))
+  part = T.limRun g r
+  term = λ n → read (T.value (part n))
+  unit = λ n → fold₁ (part n)
+  seed = λ n → read (proj₁ (T.Run.β (part n)))
+  previous : ∀ n → seed (suc n) ≡ term n
+  previous zero = refl
+  previous (suc n) = refl
+
+  scale : ∀ n → term n ≈ᵛ (seed n P.· unit n)
+  scale n = V.At.scale (g n) (T.Run.ok (part n)) (T.Run.bs (part n)) (proj₁ (O.Ωt (g n)))
+    (Path.standard (g n)) (T.Run.β (part n))
+
+  product : ℕ → T₀
+  product zero = start
+  product (suc n) = product n P.· unit n
+
+  prefix : ∀ n → seed n ≈ᵛ product n
+  prefix zero = I.id start
+  prefix (suc zero) = scale zero
+  prefix (suc (suc n)) = I._∙_ (scale (suc n)) (I.mul (prefix (suc n)) (I.id (unit (suc n))))
+
+  part-value : ∀ n → term n ≈ᵛ product (suc n)
+  part-value n = I._∙_ (scale n) (I.mul (prefix n) (I.id (unit n)))
+
+  join : (u : T₀) → (∀ n → term n ≼ u) → read (T.value r) ≼ u
+  join u h = l≼ (λ { zero → h zero ; (suc n) → h (suc n) })
+
+  exact : read (T.value r) ≈ᵛ L.lim (λ n → product (suc n))
+  exact = join _ (λ n → ≼l n (proj₁ (part-value n))) ,
+    l≼ (λ n → ≼-trans {b = term n} (proj₂ (part-value n)) (T.lim-child g r n))
+
+  module Budget (q : T₀) (bound : ∀ n → unit n ≼ q) where
+    finite : ∀ n → product n ≼ (start P.· I.power q (L.natᶜ n))
+    finite zero = proj₂ (I.one start)
+    finite (suc n) = ≼-trans {b = (start P.· I.power q (L.natᶜ n)) P.· q}
+      (P.mono (finite n) (bound n)) (proj₁ (I.assoc start (I.power q (L.natᶜ n)) q))
+
+    whole : read (T.value r) ≼ (start P.· I.power q L.ωᶜ)
+    whole = join _ (λ n → ≼-trans {b = product (suc n)} (proj₁ (part-value n))
+      (≼l (suc n) (finite (suc n))))
+

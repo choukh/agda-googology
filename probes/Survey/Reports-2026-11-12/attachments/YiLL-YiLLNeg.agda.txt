@@ -1,0 +1,171 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiLLNeg where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym; trans)
+open import OCF.Lean.YiRWBlock
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiGIRel as GR
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiKVRel as K
+import OCF.Align.EboLeanDef as E
+open E using (_<ᵀ_; []<; hd<; tl<; lv<; ar<)
+open import OCF.Align.EboLeanBase using (_≤ᵀ_; ≤-trans′; <-≤; <ᵀ-irrefl)
+open import OCF.Align.EBO using (pred-suc)
+open import OCF.Align.EboLean3Base using (one≤ᴾ)
+open import OCF.Align.EboLeanView using (Vω; ws; wl; w4; w5; w6; vω; fω; fω-eq; VΩ; ωs; ωr; ωl; ωp; vΩ; fΩ; fΩ-eq; fΩ-pos; γ)
+open import OCF.Lean.YiCLFam using (fn)
+open import OCF.Lean.YiGICheck using (rd-fin)
+open import OCF.Lean.YiGIInst using (gradedᵍ; domsᵍ)
+open import OCF.Lean.YiAbsGIface using (module Laws)
+import OCF.Lean.YiRWPath as P
+
+one<tail : ∀ x {s} → [] <ᵀ s → E.natT 1 <ᵀ (x ∷ s)
+one<tail x p with one≤ᴾ x
+... | inj₁ q = hd< q
+... | inj₂ refl = tl< p
+
+one<ψ : ∀ u {s} → [] <ᵀ s → E.natT 1 <ᵀ (E.ψ u s ∷ [])
+one<ψ [] p = hd< (ar< p)
+one<ψ (_ ∷ _) p = hd< (lv< []<)
+
+positive : ∀ {s} → E.natT 1 <ᵀ s → [] <ᵀ s
+positive {s = _ ∷ _} _ = []<
+
+fΩ-big : ∀ {s κ} (v : VΩ s κ) → E.natT 1 <ᵀ fΩ v (E.natT 2)
+fΩ-big (ωs {x = x} v) = one<tail x (positive (fΩ-big v))
+fΩ-big (ωr e) = tl< []<
+fΩ-big (ωl e v) = hd< (lv< (positive (fΩ-big v)))
+fΩ-big (ωp {u = u} e pen v) = one<ψ u (positive (fΩ-big v))
+
+fω-big : ∀ {s} (v : Vω s) → E.natT 1 <ᵀ fω v 2
+fω-big (ws {x = x} v) = one<tail x (positive (fω-big v))
+fω-big (wl e v) = hd< (lv< (positive (fω-big v)))
+fω-big (w4 {u = u} {b = b} e) = one<tail (E.ψ u (E.pred b)) []<
+fω-big (w5 {u = u} e v) = one<ψ u (positive (fω-big v))
+fω-big (w6 {u = u} e cmp v) = one<ψ u (fΩ-pos v []<)
+
+fsn-big : ∀ {s} → E.cof s ≡ E.cω → E.natT 1 <ᵀ E.fsn s 2
+fsn-big {s} e = subst (E.natT 1 <ᵀ_) (sym (fω-eq (vω s e) 2)) (fω-big (vω s e))
+
+fsT-big : ∀ {s κ} → E.cof s ≡ E.cΩ κ → E.natT 1 <ᵀ E.fsT s (E.natT 2)
+fsT-big {s} e = subst (E.natT 1 <ᵀ_) (sym (fΩ-eq (vΩ s e) (E.natT 2))) (fΩ-big (vΩ s e))
+
+conflict : ∀ {s} → E.natT 1 <ᵀ s → s ≤ᵀ E.natT 1 → ⊥
+conflict p le = <ᵀ-irrefl (<-≤ p le)
+
+pred-one : ∀ {S x} → Lt S x (suc zero) → x ≡ zero
+pred-one ◃s = refl
+pred-one (◃t d e) with pred-one e
+... | refl = ⊥-elim (K.¬◃z d)
+
+module Fin {S : Sg} {Low : (p : P S) → E.T → B S p → Set}
+           {Chd : (c : C S) → E.T → D S c → Set} {Nu : P S → E.T → Set} where
+  private
+    M = H.Mᴴ S Low Chd Nu
+
+  zero-ref : ∀ {t} → M t zero → t ≡ []
+  zero-ref H.mz = refl
+  zero-ref (H.mL e h) = ⊥-elim (bad (subst (E.natT 1 <ᵀ_) (zero-ref (h 2)) (fsn-big e)))
+    where
+    bad : E.natT 1 <ᵀ [] → ⊥
+    bad ()
+  zero-ref (H.mw m d) = ⊥-elim (K.¬◃z d)
+  zero-ref (H.mc le m) with zero-ref m
+  ... | refl with le
+  ... | inj₂ refl = refl
+
+  one-ref : ∀ {t} → M t (suc zero) → t ≤ᵀ E.natT 1
+  one-ref H.mz = inj₁ []<
+  one-ref (H.m1 {t = t} e r) = inj₂ (trans (sym (pred-suc t e)) (cong E.sucT (zero-ref r)))
+  one-ref (H.mL e h) = ⊥-elim (conflict (fsn-big e) (one-ref (h 2)))
+  one-ref (H.mw m d) with pred-one d
+  ... | refl = subst (_≤ᵀ E.natT 1) (sym (zero-ref m)) (inj₁ []<)
+  one-ref (H.mc le m) = ≤-trans′ le (one-ref m)
+
+h : Tr zero → L
+h zero = zero
+h (suc zero) = fn 1
+h (suc (suc x)) = zero
+h (suc (lim f a)) = zero
+h (lim f a) = zero
+
+ℓ : L
+ℓ = nd (sΩ zero) h
+
+β : Tr ℓ
+β = proj₁ (O.Ωt ℓ)
+
+c2 : Tr zero
+c2 = suc (suc zero)
+
+u0 : Tr ℓ
+u0 = up zero zero (suc zero) ◃s
+
+u2 : Tr ℓ
+u2 = up zero c2 (suc zero) ◃s
+
+data Small : Tr ℓ → Set where
+  sz : Small zero
+  ss : Small (suc zero)
+  su0 : Small u0
+  su2 : Small u2
+  sb : Small β
+
+small-down : ∀ {x y} → ℓ ⊢ x ◃ y → Small y → Small x
+small-down d sz = ⊥-elim (K.¬◃z d)
+small-down d ss with pred-one d
+... | refl = sz
+small-down (◃u _ _ _ _) su0 = sz
+small-down (◃c _ _ {e′ = e′} d) su0 with pred-one d
+... | refl = ⊥-elim (K.¬◃z e′)
+small-down (◃t d e) su0 = small-down d (small-down e su0)
+small-down (◃u _ _ _ _) su2 = sz
+small-down (◃c _ _ {e′ = e′} d) su2 with pred-one d
+... | refl = ⊥-elim (K.¬◃z e′)
+small-down (◃t d e) su2 = small-down d (small-down e su2)
+small-down ◃w sb = su0
+small-down (◃t d e) sb = small-down d (small-down e sb)
+
+r2 : GR.R zero (E.natT 2) c2
+r2 = H.m1 refl (H.m1 refl H.mz)
+
+bound : ∀ {t x} → GR.R ℓ t x → Small x → t ≤ᵀ E.natT 1
+bound H.mz sm = inj₁ []<
+bound (H.m1 e r) ss = Fin.one-ref (H.m1 e r)
+bound (H.mL e r) sm = ⊥-elim (conflict (fsn-big e) (bound (r 2) sm))
+bound (H.mΩ e nu r) sb = ⊥-elim (conflict (fsT-big e) (bound (r (E.natT 2) c2 r2) su2))
+bound (H.mU {t = t} m ch) su0 with Fin.zero-ref m
+... | refl = Fin.one-ref ch
+bound (H.mU {t = t} m ch) su2 with Fin.zero-ref m
+... | refl = Fin.one-ref ch
+bound (H.mw m d) sm = bound m (small-down d sm)
+bound (H.mc le m) sm = ≤-trans′ le (bound m sm)
+
+rd : GR.Rd ℓ (E.natT 1)
+rd = GR.rd-child (sΩ zero) h (suc zero) (rd-fin 1)
+
+not-leaf-instance : GR.R ℓ (E.Ωt (E.natT 1)) β → ⊥
+not-leaf-instance r = conflict (hd< (lv< []<)) (bound r sb)
+
+open Laws gradedᵍ domsᵍ using (Leaf)
+
+noLeaf : Leaf → ⊥
+noLeaf lf = not-leaf-instance (lf rd)
+
+ok : P.Ok ℓ
+ok = (tt , λ c → P.z≤ (h c)) , oh
+  where
+  oh : ∀ c → P.Ok (h c)
+  oh zero = tt
+  oh (suc zero) = tt , λ _ → tt
+  oh (suc (suc x)) = tt
+  oh (suc (lim f a)) = tt
+  oh (lim f a) = tt
+
+noLeafOk : (∀ a → P.Ok a → ∀ {ν} → GR.Rd a ν → GR.R a (E.Ωt ν) (proj₁ (O.Ωt a))) → ⊥
+noLeafOk lf = not-leaf-instance (lf ℓ ok rd)

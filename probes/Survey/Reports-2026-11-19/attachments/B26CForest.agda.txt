@@ -1,0 +1,91 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 纯 Ω 的下标与有限和压缩为 ε₀ 内的可数标准名，严格序和语法均可反读。
+module B26CForest where
+
+open import Data.Nat.Base using (ℕ)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥-elim)
+open import Data.Unit.Base using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; cong₂; trans; sym)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+open import OCF.Align.EboLeanTree using (nf-tower; nf-ΩT; hc)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans)
+import B12XRef as R
+import B25DTrack as Tr
+import B25DLimit as Val
+open import Data.Product using (proj₂)
+
+data Pure : T → Set where
+  empty : Pure []
+  node : ∀ {u t} → Pure u → Pure t → Pure (ψ u [] ∷ t)
+
+small : T → T
+small [] = []
+small (ψ u _ ∷ t) = ψ [] (small u) ∷ small t
+
+restore : T → T
+restore [] = []
+restore (ψ _ b ∷ t) = ψ (restore b) [] ∷ restore t
+
+undo : ∀ {t} → Pure t → restore (small t) ≡ t
+undo empty = refl
+undo (node u t) = cong₂ (λ a b → ψ a [] ∷ b) (undo u) (undo t)
+
+pure-restore : ∀ t → Pure (restore t)
+pure-restore [] = empty
+pure-restore (ψ _ b ∷ t) = node (pure-restore b) (pure-restore t)
+
+forward : ∀ {s t} → Pure s → Pure t → s <ᵀ t → small s <ᵀ small t
+forward empty (node _ _) []< = []<
+forward (node u _) (node v _) (hd< (lv< p)) = hd< (ar< (forward u v p))
+forward (node _ _) (node _ _) (hd< (ar< ()))
+forward (node _ xs) (node _ ys) (tl< p) = tl< (forward xs ys p)
+
+reflect : ∀ {s t} → Pure s → Pure t → small s <ᵀ small t → s <ᵀ t
+reflect {s} {t} ps pt h with tri s t
+... | inj₁ d = d
+... | inj₂ (inj₁ refl) = ⊥-elim (<ᵀ-irrefl h)
+... | inj₂ (inj₂ r) = ⊥-elim (<ᵀ-asym h (forward pt ps r))
+
+below-head : ∀ {u} → Pure u → ∀ xs → small u <ᵀ (ψ [] (small u) ∷ xs)
+below-head empty xs = []<
+below-head (node v vs) xs = hd< (ar< (below-head v _))
+
+guard : ∀ {t} → Pure t → NF (small t) → GB [] (small t) (small t)
+guard (node u xs) n (gp (gh _)) = below-head u _
+guard (node u xs) n (gp (gc _ i)) = <ᵀ-trans (guard u (nfp-a (nf-hd n)) i) (below-head u _)
+guard (node u xs) n (gp (gw _ ()))
+guard (node u xs) n (gtl i) = <ᵀ-trans (guard xs (nf-tl n) i) (tail< _ _ (nf-le n) (nf-tl n))
+
+ordered : ∀ {u xs} → Pure u → Pure xs → HdLe (ψ u []) xs → HdLe (ψ [] (small u)) (small xs)
+ordered _ empty _ = tt
+ordered u (node v vs) (inj₁ (lv< p)) = inj₁ (ar< (forward v u p))
+ordered u (node v vs) (inj₁ (ar< ()))
+ordered u (node v vs) (inj₂ refl) = inj₂ refl
+
+normal : ∀ {t} → Pure t → NF t → NF (small t)
+normal empty n = n[]
+normal (node u xs) (n∷ (nψ nu _ _) h nt) = n∷ (nψ n[] inside (guard u inside)) (ordered u xs h) (normal xs nt)
+  where inside = normal u nu
+
+count : ∀ t → Ctbl (small t)
+count [] = c[]
+count (ψ u a ∷ xs) = c∷ (count xs)
+
+lessOmega : ∀ t → small t <ᵀ ΩTower 1
+lessOmega [] = []<
+lessOmega (ψ u a ∷ xs) = hd< (lv< []<)
+
+belowε : ∀ t → small t <ᵀ EBOψ 1
+belowε [] = []<
+belowε (ψ u a ∷ xs) = hd< (ar< (lessOmega u))
+
+entry : ∀ {t} → Pure t → NF t → (h : HC (small t)) → L.suc (Rt h) ≼ Tr.unit-output
+entry {t} pt nt h = ≼-trans (mono<ⁿ (normal pt nt) (nf-tower 1) (c∷ c[]) h (R.H 1) (belowε t))
+  (≼-trans R.epsilon (proj₂ Val.out-value))
+  where import B25DTrack

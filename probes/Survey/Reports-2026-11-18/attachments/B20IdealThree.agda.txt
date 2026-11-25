@@ -1,0 +1,52 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20IdealThree where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Data.Unit using (tt)
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiFreshFold as O
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+import OCF.Lean.YiUpFold as F
+import OCF.Lean.YiPhiBlock as P
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiFreshValRead using (read)
+open import OCF.Lean.YiUpCheck using (one; two)
+open import OCF.Lean.YiKVRel using (readRW)
+import OCF.Align.Level as L
+open import B13SharpOne using (r₁)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂)
+import B17SharpThree as S
+open import B20IdealRel
+import B20IdealTwo
+
+three = Y.suc two
+old = read (F.ψ₀ three tt (O.Ωt three))
+model = P.B₀ two
+ys = λ x → O.next (F.ψs two tt model two P.self (O.Ωt two) x)
+yi = O.iter ys Y.zero
+unit = V.Ωt R.zero
+
+module At (lem : LEM) where
+  open I.Sharp lem
+  open B20IdealTwo.At lem
+  open S.Three lem using (step; item; whole)
+  ri = V.iter step R.zero
+  indexes : ∀ n → J (yi n) (ri n)
+  indexes = it J jz (λ q → nj _ (self₂ B♯ model (V.Ωt r₂) Ω² q))
+
+  terms = λ n → O.next (F.ψ⊥ two tt model (yi n))
+  each : ∀ n → Z (terms n) (item unit n)
+  each n = nz _ (bot₂ B♯ model Ω¹ (zs zz) unit (zs zz) (indexes n))
+
+  exact : old L.≅ whole unit
+  exact = value {a = F.ψ₀ three tt (O.Ωt three)} {b = proj₁ (ψ♯ S.r₃ S.o₃ B♯ R.zero tt unit (proj₁ (V.Ωt S.r₃)))} (zl (cums _ _ each))
+
+  -- The two sides take the very same external zero seed in this strengthened form.
+  external : ∀ c a → Z c (proj₁ a) → ∀ n → Z (O.next (F.ψs two tt model Y.zero z c (yi n))) (item a n)
+  external c a e n = nz _ (low₂ B♯ model Ω¹ (zs zz) a e (indexes n))
+
+  all-seeds : ∀ c a → Z c (proj₁ a) → read (F.ψs three tt (P.B₀ three) Y.zero (P.ins z) c (O.Ωt three)) L.≅ whole a
+  all-seeds c a e = value {a = F.ψs three tt (P.B₀ three) Y.zero (P.ins z) c (O.Ωt three)} {b = proj₁ (ψ♯ S.r₃ S.o₃ B♯ R.zero tt a (proj₁ (V.Ωt S.r₃)))} (zl (cums _ _ (external c a e)))

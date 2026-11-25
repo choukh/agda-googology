@@ -1,0 +1,72 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任一有覆盖的塔 m+2 都能在内部重建标准塔 m 的值，并把它同时写入一个真实 m 层运行的全部零槽。
+module B21TowerSeed where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; trans)
+open import W4Block
+open import W4Path
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WVTwo using (◃→≼)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B14PathHeight as P
+import B15Spine as Sp
+import B15ReadPaths as R
+import B15TowerIteration as I
+import B19OldSlots as G
+import B20Room as Room
+import B20StandardInside as St
+import B21TowerPorts as Port
+open T.Run
+
+module Layer (m : ℕ) where
+  k = tw m
+  n = suc m
+  mid = tw n
+  h = Sp.branch k
+  seed = St.std m
+  read-slot : ∀ {o : Ok mid} → o ≡ Ok-tw n → ∀ B (v : Tr⁺ zero) x →
+    A._⊴_ (proj₁ (Ωt mid)) x → ∀ w →
+    seed ≼ read (proj₁ (ψ mid o B zero (inc zero w) v x))
+  read-slot refl B v x (inj₁ refl) w = Port.At.first m B v zero w
+  read-slot refl B v x (inj₂ q) w = ≼-trans (Port.At.first m B v zero w) (◃→≼ (mono mid (Ok-tw n) B zero (inc zero w) v q))
+
+  module Inside (r : T.Run (U.sc mid)) (eq : proj₂ (ok r) tt ≡ Ok-tw n) (cr : A.Covered r) where
+    module J = G.Positive (sΩ k) h r (λ _ → z≤ mid) (λ _ → P.standard _) cr
+    module M = J.F.K
+    mrun = J.F.snap 0
+    module C = Sp.Cardinal k h mrun
+    sub = C.child 0
+    cv = C.cover (M.cover 0) 0
+    okay : ok sub ≡ Ok-tw m
+    okay = cong (λ x → proj₂ x zero) eq
+    high : Room.Room sub seed
+    high w = read-slot eq (bs M.r₀) (bs M.r₀ zero (inc zero w)) M.c (cr mid (inc tt self)) w
+    below : read (T.value sub) ≼ read (T.value r)
+    below = ≼-trans (C.lift-value 0) (G.bound (proj₂ (J.child 0)))
+
+  module At (r : T.Run (tw (suc n))) (eq : ok r ≡ Ok-tw (suc n)) (cr : A.Covered r) where
+    module Z = I.Tower m (λ x → x) L.zero
+    module D = Z.State r eq cr
+    trail : R.Reach (U.sc zero) (↑ mid (D.C.ix 1))
+    trail = R.via D.root (R.via (R.base D.w D.w) (D.at-index 0))
+    path = R.left mid trail
+    one = D.C.child 1
+    oc = D.C.cover cr 1
+    found = Room.sub path one
+    cert : proj₂ (ok found) tt ≡ Ok-tw n
+    cert = trans (cong (λ o → proj₂ o tt) (Room.cert path one)) (Z.P.descend trail D.certified tt)
+    module X = Inside found cert (Room.cover path one oc)
+    open X public using (sub; cv; okay; high)
+    into-child : read (T.value sub) ≼ read (T.value one)
+    into-child = ≼-trans X.below (Room.below path one oc)
+    value : read (T.value sub) ≼ read (T.value r)
+    value = ≼-trans into-child (D.C.lift-value 1)

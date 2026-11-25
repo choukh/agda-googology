@@ -1,0 +1,69 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 只要 ψ₀ 的参数含一个非零、严格小于 K 的可数后缀，整项就不能命名真实终点。
+module B26PInterval where
+
+open import Data.List.Base using ([]; _∷_; _++_)
+open import Data.List.Properties using (++-identityʳ)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Product using (_×_; _,_; proj₁)
+
+open import Relation.Binary.PropositionalEquality using (cong; trans; subst; _≡_; refl)
+open import OCF.Align.EboLeanDef using (T; HC; h0; h1; hω; fsn; pred)
+open import OCF.Align.EboLeanView using (ne; cof0)
+open import OCF.Lean.YiMENote using (cof++1; pred++; cof++ω; fsn++; cofψ1; fsnψ1; cofψω; fsnψω)
+open import OCF.Lean.YiRefTw2 using (Rt; hω-inv)
+open import OCF.Align.EboLeanBase using (NF; Ctbl; n[]; c[])
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Align.EboLeanDef using ([]<)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; s≼s; ≼l; ≼-suc)
+open import B19IdealProduct using (_∙_; flip; left-one)
+import B19IdealArithmetic as Ar
+import B19IdealPowers as P
+import B22TowerCut as Cut
+import B26PActual as W
+import B26PSuffix as S
+open S using (φ)
+import B26PDivisor as D
+
+
+open import B26PLowTail using (exclude)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import OCF.Align.EboLeanBase using (gp; gh; gtl; nfp-g; nf-hd; nf-tl; nfp-a; c∷; InG)
+open import OCF.Align.EboLeanDef using (ψ; _<ᵀ_; hd<; ar<)
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiRVLevel using (LEM)
+import B17ValueDich as Dich
+
+through : ∀ {u z s} t → InG u z s → InG u z (t ++ s)
+through [] p = p
+through (x ∷ t) p = gtl (through t p)
+
+tail-nf : ∀ t {s} → NF (t ++ s) → NF s
+tail-nf [] p = p
+tail-nf (x ∷ t) p = tail-nf t (nf-tl p)
+
+module Canonical (t b bs : T) (ct : Ctbl bs) where
+  s = ψ [] b ∷ bs
+  full = φ (t ++ s)
+  module At (nf : NF full) (h : HC full) where
+    ns : NF s
+    ns = tail-nf t (nfp-a (nf-hd nf))
+    opaque
+      c : HC s
+      c = hc ns (c∷ ct)
+    below : L.suc (Rt c) ≼ Rt h
+    below = mono<ⁿ {s = s} {t = full} ns nf (c∷ c[]) c h
+      (hd< (ar< (nfp-g (nf-hd nf) (through t (gp (gh (inj₂ refl)))))))
+
+    positive : 𝟏 ≼ Rt c
+    positive = mono<ⁿ {s = []} {t = s} n[] ns (c∷ ct) (h0 refl) c []<
+
+    terminal-cut : Rt h ≈ᵛ W.Y → W.Y ≼ W.K → ⊥
+    terminal-cut eq cap = exclude t s c h positive (≼-trans {a = L.suc (Rt c)} {b = Rt h} {c = W.K} below (≼-trans {a = Rt h} {b = W.Y} {c = W.K} (proj₁ eq) cap)) eq
+
+    interval : (lem : LEM) → Rt h ≈ᵛ W.Y → (W.K ≼ Rt c) × (L.suc (Rt c) ≼ W.Y)
+    interval lem eq with Dich.Classical.compare lem W.K (Rt c)
+    ... | inj₁ low = low , ≼-trans {a = L.suc (Rt c)} {b = Rt h} {c = W.Y} below (proj₁ eq)
+    ... | inj₂ small = ⊥-elim (exclude t s c h positive small eq)

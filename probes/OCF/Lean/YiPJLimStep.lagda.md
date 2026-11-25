@@ -1,0 +1,95 @@
+# 有限读回分支的任意 ℕ 极限孩子之后继
+验收文件；编译定理。FinLim.step 对任意合法 f/a 及逐分支有限读回等式成立，实际 Ok 与表任意。
+共尾数字界 dk 由既有 nat⊴f 与 YiPJPath.bound 导出，不加作前提。尚未涵盖有非有限分支的极限孩子。
+来源：YiTSOrbit/Bridge 的接合，用既有 Machine.Orbit 链归纳及 YiSSOmega；Low 来自 YiPJLim。
+
+```agda
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+module OCF.Lean.YiPJLimStep where
+open import Data.Nat using (ℕ; zero; suc) renaming (_≤_ to _≤ⁿ_)
+open import Data.Unit using (tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.List using ([])
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; trans; sym; cong)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base)
+open import OCF.Lean.YiTBRow hiding (nat; fn)
+open import OCF.Lean.YiCLFam using (fn)
+open import OCF.Lean.YiCLPhi using (ωᵀ)
+open import OCF.Lean.YiRBFam using (OKB)
+open import OCF.Lean.YiANFam using (ψᴺ; Ωᴺ)
+open import OCF.Lean.YiHCRel using (M⁰; mw)
+open import OCF.Lean.YiHCFam using (ΩJ)
+open import OCF.Lean.YiLTLift using (Q; ZP; zu; nat⊴f)
+open import OCF.Lean.YiTSStep using (module Step)
+open import OCF.Lean.YiTSExit using (module Exit)
+open import OCF.Lean.YiTSNote using (fsTΩS)
+open import OCF.Lean.YiTSMachine using (module Machine)
+open import OCF.Lean.YiAbsGEbo using (refᴱ)
+open import OCF.Lean.YiSSOmega using (module Omega)
+open import OCF.Lean.YiHCLim using (module Lim)
+open import OCF.Lean.YiKVRel using (_⊴_; ⊴r; ⊴◃)
+open import OCF.Lean.YiPJPath using (bound)
+open import OCF.Lean.YiPJRef using (module Reference)
+open import OCF.Lean.YiPJLim using (module Generic)
+import OCF.Align.EboLeanDef as E
+
+module FinLim (f : ℕ → Tr zero) (a : ∀ n → zero ⊢ f n ◃ f (suc n))
+  (d : ℕ → ℕ) (eG : ∀ n → h₁ (f n) ≡ fn (d n)) where
+  readPath : ∀ {x y : Tr zero} → x ⊴ y → h₁ x ≤ h₁ y
+  readPath ⊴r = self
+  readPath (⊴◃ p) = wk (⊕⊑ zero (◃→⊑ zero p))
+  dk : ∀ n → n ≤ⁿ d n
+  dk n = bound (d n) (h₁ (f n)) (eG n) n (fn n) refl (readPath (nat⊴f f a n))
+  x : Tr zero
+  x = lim f a
+  G : ℕ → L
+  G n = h₁ (f n)
+
+  module At (o : Ok (h₁ (suc x))) (r : Rb (h₁ (suc x))) (B : Base (h₁ (suc x)))
+    (ok : OKB B) (ws : ∀ n → zero ≤ G n) (β : Tr⁺ zero) (hβ : M⁰ (Ωᴺ 0) (proj₁ β)) where
+    module TS = Step x o r B (inu ws) β
+    module X = Exit x o r B (inu ws) β
+    module Ref = Reference G d eG (proj₁ (proj₂ o tt))
+    module W = Lim G d eG Ref.Rref Ref.canRef
+    module H = Omega G d eG Ref.Rref Ref.canRef
+    module U = Generic G d eG Ref.Rref Ref.canRef (proj₁ (proj₂ o tt))
+    module K = Machine.Keep W.Lω (proj₂ o tt) (proj₂ r tt) TS.childBase refᴱ W.Mω H.ψω
+
+    self-law : K.SelfKeep
+    self-law _ β′ _ hP m = H.Self.PFω (proj₁ (proj₂ o tt)) (proj₂ (proj₂ o tt)) (proj₂ r tt) TS.childBase β′ hP m
+    weak-law : K.Weak
+    weak-law m dd = mw m dd
+    module C = K.Orbit self-law weak-law (TS.childBase W.Lω self) [] (E.Ωt ωᵀ)
+
+    γ-eq : ∀ k → C.γ k ≡ E.γT (E.Ωt (E.sucT ωᵀ)) ωᵀ k
+    γ-eq zero = refl
+    γ-eq (suc k) = trans (cong H.ψω (γ-eq k))
+      (cong H.ψω (sym (fsTΩS (E.sucT ωᵀ) refl (E.γT (E.Ωt (E.sucT ωᵀ)) ωᵀ k))))
+
+    gb : W.GBω TS.childBase []
+    gb = W.mkGBω (λ m {i} si u q → ok (fn i) (inc tt (inc m u)))
+       (λ m {i} si u q → ΩJ i (B (fn i) (inc tt (inc m u))) (ok (fn i) (inc tt (inc m u))))
+    hΩ : W.Mω (E.Ωt ωᵀ) (proj₁ (TS.childBase W.Lω self))
+    hΩ = H.Gω.m⊴ (H.leafω dk) (ok W.Lω (inc tt self))
+    orbit-ok : ∀ k → W.Mω (E.γT (E.Ωt (E.sucT ωᵀ)) ωᵀ k) (C.z k)
+    orbit-ok k = subst (λ t → W.Mω t (C.z k)) (γ-eq k) (C.chain hΩ (mw hΩ (◃l zero)) k)
+    low : ∀ {a z} → W.Mω a z → M⁰ (ψᴺ 0 a)
+      (proj₁ (ψ W.Lω (proj₂ o tt) (proj₂ r tt) TS.childBase zero (inu ws) β z))
+    low = U.FoldU.LFu (proj₂ (proj₂ o tt)) (proj₂ r tt) TS.childBase [] gb ws β hβ
+    cover : ∀ k → Σ ℕ λ m → M⁰ (ψᴺ 0 (E.γT (E.Ωt (E.sucT ωᵀ)) ωᵀ k)) (proj₁ (TS.parts m))
+    cover k = suc k , mw (low (orbit-ok k)) (◃l zero)
+    result : M⁰ (ψᴺ 0 (E.Ωt (E.sucT ωᵀ)))
+      (proj₁ (ψ (h₁ (suc x)) o r B zero (inu (λ _ → inu ws)) β (proj₁ (Ωt (h₁ (suc x))))))
+    result = X.note-covered (E.sucT ωᵀ) refl cover
+
+  step : Q (ψᴺ 0 (E.Ωt (E.sucT ωᵀ))) (h₁ (suc x))
+  step o r (inu vs) (zu zv) B ok β hβ = finish (vs tt) (zv tt)
+    where
+    finish : (w : zero ≤ h₁ x) → ZP (h₁ x) w →
+      M⁰ (ψᴺ 0 (E.Ωt (E.sucT ωᵀ)))
+        (proj₁ (ψ (h₁ (suc x)) o r B zero (inu (λ _ → w)) β (proj₁ (Ωt (h₁ (suc x))))))
+    finish (inu ws) (zu zw) = At.result o r B ok ws β hβ
+```

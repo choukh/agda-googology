@@ -1,0 +1,85 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 零代码的严格记号序给出实际树上有限条后继/所选极限孩子的字面路径。
+module B28CodePath where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_; replicate)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥-elim)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
+open import OCF.Align.EboLeanDef using (T; ψ; HC; h0; h1; hω; Cof; c0; c1; cω; cΩ; fsn; pred; cof; EBOψ; _<ᵀ_)
+open import OCF.Align.EboLeanBase using (NF; nf-pred; <ᵀ-trans)
+open import OCF.Align.Correspond using (cof-ne)
+open import OCF.Align.EboLeanTrian using (T-pred; t<)
+open import OCF.Align.EboLeanClosure using (trian-fsn; cl-fsn-NF; Ctbl-cof)
+open import OCF.Lean.YiMENote using (fsnψ1; fsnψω)
+open import OCF.Lean.YiNFO using (c0-min; pred-≤)
+open import OCF.Lean.YiCFCofin using (cofin)
+open import OCF.Align.EBO using (pred-suc)
+import W4Block as W
+import W4Ops as O
+import B26CScalar as S
+import B25DExactFold as E
+import B27NOrbit as U
+import B26CDecode as D
+
+Z = W.Tr W.zero
+data Path (x : Z) : Z → Set where
+  stop : Path x x
+  prev : ∀ {y} → Path x y → Path x (W.suc y)
+  take : ∀ {f d} j → Path x (f j) → Path x (W.lim f d)
+
+join : ∀ {x y z} → Path x y → Path y z → Path x z
+join p stop = p
+join p (prev q) = prev (join p q)
+join p (take j q) = take j (join p q)
+
+bottom : ∀ z → Path W.zero z
+bottom W.zero = stop
+bottom (W.suc z) = prev (bottom z)
+bottom (W.lim f d) = take 0 (bottom (f 0))
+
+prefix : ∀ a {x y} → Path x y → Path (a O.+ x) (a O.+ y)
+prefix a stop = stop
+prefix a (prev h) = prev (prefix a h)
+prefix a (take j h) = take j (prefix a h)
+
+power : ∀ {x y} → Path x y → Path (E.fold x) (E.fold y)
+power stop = stop
+power (prev h) = take 0 (power h)
+power (take j h) = take j (power h)
+
+one-step : ∀ t → cof t ≡ c1 → S.code t ≡ W.suc (S.code (pred t))
+one-step t e = trans (cong S.code (sym (pred-suc t e))) (U.trailing (pred t))
+
+copies : ∀ t n → S.code (replicate (suc n) (ψ [] t)) ≡ W.iter (E.fold (S.code t) O.+_) (E.fold (S.code t)) n
+copies t zero = refl
+copies t (suc n) = cong (E.fold (S.code t) O.+_) (copies t n)
+
+times : ∀ t n → Path (S.code (replicate n (ψ [] t))) (E.fold (W.suc (S.code t)))
+times t zero = bottom _
+times t (suc n) = subst (λ v → Path v (E.fold (W.suc (S.code t)))) (sym (copies t n)) (take n stop)
+
+fund : ∀ {t} → D.Small t → cof t ≡ cω → ∀ n → Path (S.code (fsn t n)) (S.code t)
+fund D.leaf ()
+fund (D.cons {b = []} D.leaf D.leaf) ()
+fund (D.cons {b = b} pb (D.cons pt ps)) e n = prefix (E.fold (S.code b)) (fund (D.cons pt ps) e n)
+fund (D.cons {b = b@(y ∷ ys)} pb D.leaf) e n with cof b in c
+... | c0 = ⊥-elim (cof-ne y ys c)
+... | cΩ u = ⊥-elim (Ctbl-cof (S.count pb) c)
+... | c1 = subst (λ z → Path (S.code (replicate n (ψ [] (pred b)))) (E.fold z))
+  (sym (one-step b c)) (times (pred b) n)
+... | cω = power (fund pb c n)
+
+descend : ∀ {s t} → NF s → NF t → t <ᵀ EBOψ 1 → HC t → s <ᵀ t → Path (S.code s) (S.code t)
+descend ns nt small (h0 e) lt = ⊥-elim (c0-min e lt)
+descend {s} {t} ns nt small (h1 e h) lt = subst (Path (S.code s)) (sym (one-step t e)) (prev at)
+  where
+  sub : ∀ {v} → (s <ᵀ v) Data.Sum.Base.⊎ (s ≡ v) → NF v → v <ᵀ EBOψ 1 → HC v → Path (S.code s) (S.code v)
+  sub (inj₁ p) n inside hv = descend ns n inside hv p
+  sub (inj₂ refl) _ _ _ = stop
+  at = sub (pred-≤ e lt) (nf-pred nt) (<ᵀ-trans (t< (T-pred t e)) small) h
+descend ns nt small (hω e h) lt with cofin nt e ns lt
+... | j , p = join (descend ns (cl-fsn-NF nt e j) (<ᵀ-trans (t< (trian-fsn nt e j)) small) (h j) p)
+  (fund (D.under nt small) e j)

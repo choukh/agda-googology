@@ -1,0 +1,129 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 单次 Ω₁ 尾的同时零槽律在每一有限后继层升为整个上一步操作的所有有限迭代。
+module B20OldRanks where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold hiding (op)
+open import WVOne using (read; T₀; 𝟏; h₁)
+open import WVTwo using (◃→≼)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; l≼; ≅→≼)
+open import B12LimitSrc using (Lev₂)
+import B12Terminal as T
+import B12ActualSlots as A
+import B14PathHeight as P
+import B14Tower as W
+import B19RowSecondParent as Prev
+import B20OldTail as Tail
+import B20OldInk as Ink
+import B20OldStage as St
+open T.Run
+
+shape : ℕ → Sh
+shape zero = sΩ zero
+shape (suc n) = sS
+kids : (n : ℕ) → Ch (shape n) → W4Block.L
+kids zero = h₁
+kids (suc n) _ = nd (shape n) (kids n)
+level = λ n → nd (shape n) (kids n)
+Valid : ∀ n → Ok (level n) → Set
+Valid zero o = o ≡ Ok-tw 1
+Valid (suc n) o = Valid n (proj₂ o tt)
+
+data Mark : ∀ n → zero ≤ level n → Set where
+  start : Mark 0 Tail.out
+  port : Mark 0 Tail.port
+  down : ∀ {n w} → Mark n w → Mark (suc n) (inc tt w)
+  every : ∀ {n} {ws : Ch sS → zero ≤ level n} → Mark n (ws tt) → Mark (suc n) (inu ws)
+
+std : ∀ n → Mark n (z≤ (level n))
+std zero = start
+std (suc n) = every (std n)
+
+Low : ∀ n → T.Run (level n) → Lev₂ → Set
+Low n r p = ∀ w → Mark n w → L.ψ⁰ p ≼ read (proj₁ (bs r zero w))
+Obs : ∀ n → (r : T.Run (level n)) → T₀ → Set
+Obs n r x = ∀ w → Mark n w → x ≼ read (proj₁ (ψ (level n) (ok r) (bs r) zero w (β r) (proj₁ (Ωt (level n)))))
+Law : ℕ → (Lev₂ → Lev₂) → Set
+Law n F = ∀ r → Valid n (ok r) → A.Covered r → ∀ p → Low n r p → L.ψ⁰ p ≼ read (proj₁ (β r)) → Obs n r (L.ψ⁰ (F p))
+Floor : ℕ → Lev₂ → Set
+Floor n p = ∀ r → Valid n (ok r) → A.Covered r → Obs n r (L.ψ⁰ p)
+op : ℕ → Lev₂ → Lev₂
+op zero = Tail.next
+op (suc n) p = L.lim (iter (op n) p)
+
+base : Law 0 Tail.next
+base r eq cr p low hi w h = select h whe
+  where
+  exact : ∀ {w} → Mark 0 w → read (T.value r) ≼ read (proj₁ (ψ (tw 1) (ok r) (bs r) zero w (β r) (proj₁ (Ωt (tw 1)))))
+  exact start = ≼-refl _
+  exact port = subst (λ o → read (proj₁ (ψ (tw 1) o (bs r) zero Tail.out (β r) (proj₁ (Ωt (tw 1))))) ≼ read (proj₁ (ψ (tw 1) o (bs r) zero Tail.port (β r) (proj₁ (Ωt (tw 1)))))) (sym eq) (≅→≼ (Ink.At.value (bs r) (β r)))
+  paths : ∀ z → P.All (W.At.path r z)
+  paths z = subst (λ o → P.All (self ∙ proj₂ (proj₁ o) z)) (sym eq) (P.through (↑ zero z))
+  whe = Prev.Orbit.full p r cr paths (low _ port) hi
+  select : ∀ {w} → Mark 0 w → L.ψ⁰ (Tail.next p) ≼ read (T.value r) → L.ψ⁰ (Tail.next p) ≼ read (proj₁ (ψ (tw 1) (ok r) (bs r) zero w (β r) (proj₁ (Ωt (tw 1)))))
+  select e d = ≼-trans d (exact e)
+
+origin : ∀ p → Tail.type p → Floor 0 p
+origin p h r eq cr w start = h r eq cr 𝟏 (oneβ r)
+origin p h r eq cr w port = ≼-trans (h r eq cr 𝟏 (oneβ r)) (subst (λ o → read (proj₁ (ψ (tw 1) o (bs r) zero Tail.out (β r) (proj₁ (Ωt (tw 1))))) ≼ read (proj₁ (ψ (tw 1) o (bs r) zero Tail.port (β r) (proj₁ (Ωt (tw 1)))))) (sym eq) (≅→≼ (Ink.At.value (bs r) (β r))))
+
+module At (n : ℕ) (r : T.Run (level (suc n))) (valid : Valid (suc n) (ok r)) (cr : A.Covered r) where
+  module M = St.At (shape n) (kids n) r cr
+  open M hiding (every; valid)
+  module Branch (w : zero ≤ level n) (mw : Mark n w) where
+    a = β r
+    st = setup w a (oneβ r)
+    left : ∀ p → Low (suc n) r p → Low n (st 0) p
+    left p low v m = ≼-trans (low (inc tt v) (down m)) (◃→≼ (inf K (bs r₀) zero v (bs r₀ zero v)))
+    right : ∀ (p : Lev₂) → L.ψ⁰ p ≼ read (proj₁ a) → L.ψ⁰ p ≼ read (proj₁ (β (st 0)))
+    right p d = ≼-trans d (◃→≼ (inf K (bs r₀) zero w a))
+
+    initial : ∀ p → Floor n p → Low n (st 0) p × (L.ψ⁰ p ≼ read (proj₁ (β (st 0))))
+    initial p f = (λ v m → ≼-trans (f (W.reset r₀ (bs r₀ zero v) (oneB r₀ v)) valid sub-covered v m) (weaken _ v _)) ,
+                   ≼-trans (f r₀ valid sub-covered w mw) (weaken _ w a)
+    advance : ∀ F → Law n F → ∀ i p → Low n (st i) p × (L.ψ⁰ p ≼ read (proj₁ (β (st i)))) →
+              Low n (st (suc i)) (F p) × (L.ψ⁰ (F p) ≼ read (proj₁ (β (st (suc i)))))
+    advance F f i p (u , d) = (λ v m → ≼-trans (f (W.reset s (bs s zero v) (oneB s v)) valid cv p u (u v m) v m) (weaken _ v _)) ,
+                   ≼-trans (f s valid cv p u d w mw) (weaken _ w _)
+      where s = st i
+            cv = cover i
+    iterate : ∀ F → Law n F → ∀ p → Low n (st 0) p × (L.ψ⁰ p ≼ read (proj₁ (β (st 0)))) → ∀ j →
+             Low n (st j) (iter F p j) × (L.ψ⁰ (iter F p j) ≼ read (proj₁ (β (st j))))
+    iterate F f p d zero = d
+    iterate F f p d (suc j) = advance F f j (iter F p j) (iterate F f p d j)
+    collect : ∀ {w′} → Route w w′ → ∀ F → Law n F → ∀ p → Low n (st 0) p × (L.ψ⁰ p ≼ read (proj₁ (β (st 0)))) →
+       L.ψ⁰ (L.lim (iter F p)) ≼ read (proj₁ (ψ (level (suc n)) (ok r) (bs r) zero w′ a (proj₁ (Ωt (level (suc n))))))
+    collect d F f p h = l≼ (λ j → ≼-trans (proj₂ (iterate F f p h j)) (≼-trans (◃→≼ (inf K (S j) zero w (β (st j)))) (send d a j)))
+  rise : ∀ F → Law n F → ∀ p → Low (suc n) r p → L.ψ⁰ p ≼ read (proj₁ (β r)) → Obs (suc n) r (L.ψ⁰ (L.lim (iter F p)))
+  rise F f p u d _ (down {w = w} m) = Branch.collect w m select F f p (Branch.left w m p u , Branch.right w m p d)
+  rise F f p u d _ (every {ws = ws} m) = Branch.collect (ws tt) m (M.every refl) F f p (Branch.left _ m p u , Branch.right _ m p d)
+  constant : ∀ F → Law n F → ∀ p → Floor n p → Obs (suc n) r (L.ψ⁰ (L.lim (iter F p)))
+  constant F f p h _ (down {w = w} m) = Branch.collect w m select F f p (Branch.initial w m p h)
+  constant F f p h _ (every {ws = ws} m) = Branch.collect _ m (M.every refl) F f p (Branch.initial _ m p h)
+
+laws : ∀ n → Law n (op n)
+laws zero = base
+laws (suc n) r v c = At.rise n r v c (op n) (laws n)
+
+threshold : ℕ → Lev₂ → Lev₂
+threshold zero p = p
+threshold (suc n) p = op (suc n) (threshold n p)
+
+closed : ∀ n p → Tail.type p → Floor n (threshold n p)
+closed zero p h = origin p h
+closed (suc n) p h r v c = At.constant n r v c (op n) (laws n) (threshold n p) (closed n p h)
+
+certified : ∀ n → Ok (level n)
+certified zero = Ok-tw 1
+certified (suc n) = tt , (λ _ → certified n)
+correct : ∀ n → Valid n (certified n)
+correct zero = refl
+correct (suc n) = correct n
+sample : ∀ n p → Tail.type p → L.ψ⁰ (threshold n p) ≼ read (T.value (T.initial (level n) (certified n)))
+sample n p h = closed n p h (T.initial _ (certified n)) (correct n) (A.initial _ _) _ (std n)

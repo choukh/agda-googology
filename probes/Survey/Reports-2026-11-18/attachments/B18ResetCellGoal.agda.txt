@@ -1,0 +1,57 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18ResetCellGoal where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; subst; sym)
+import W4Block as W
+import W4Ops as WO
+open import WVOne using (read)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-suc; ≼-refl; ≼-trans)
+import B12XRef as R
+import B14Goal as G
+import B17CapFirst as Cap
+import B17ValueDich as D
+import B18CellState as C
+import B18Reset as Tower
+import B18ResetGoal as Goal
+open import B18ResetCell using (Hit; enough; module Local)
+
+module First where
+  finite : ℕ → W.Tr W.zero
+  finite zero = W.zero
+  finite (suc n) = W.suc (finite n)
+  one = finite 1
+  left-one : ∀ n → (one WO.+ finite n) ≡ finite (suc n)
+  left-one zero = refl
+  left-one (suc n) = cong W.suc (left-one n)
+  add-one : ∀ n → W.iter (one WO.+_) one n ≡ finite (suc n)
+  add-one zero = refl
+  add-one (suc n) = trans (cong (one WO.+_) (add-one n)) (left-one (suc n))
+  read-nat : ∀ n → read (finite n) ≡ L.natᶜ n
+  read-nat zero = refl
+  read-nat (suc n) = cong L.suc (read-nat n)
+  branch : ∀ n → read (W.iter (one WO.+_) one n) ≡ L.natᶜ (suc n)
+  branch n = trans (cong read (add-one n)) (read-nat (suc n))
+  omega : (Tower.fresh 0 ≼ L.ωᶜ) × (L.ωᶜ ≼ Tower.fresh 0)
+  omega = OCF.Align.Value.l≼ (λ n → OCF.Align.Value.≼l (suc n)
+     (subst (_≼ L.natᶜ (suc n)) (sym (branch n)) (≼-refl _))) ,
+    OCF.Align.Value.l≼ (λ n → OCF.Align.Value.≼l n
+     (subst (L.natᶜ n ≼_) (sym (branch n)) (≼-suc (≼-refl _))))
+
+module FromTowers (lem : LEM)
+  (tower-hit : G.Goal → ∀ k → Σ ℕ (λ n → L.suc (R.row k) ≼ Tower.fresh n)) where
+  necessary : G.Goal → ∀ k → Hit (L.suc (R.row k))
+  necessary g k = Local.select k n (≼-trans (Cap.mul-strict k) (≼-trans (≼-suc (≼-refl _)) h))
+    (λ i j → D.Classical.compare lem (C.At.fresh i j) (R.row k))
+    where
+    witness = tower-hit g (suc k)
+    n = proj₁ witness
+    h = proj₂ witness
+
+  iff : (G.Goal → ∀ k → Hit (R.row k)) × ((∀ k → Hit (R.row k)) → G.Goal)
+  iff = (λ g k → let n , j , h = necessary g k in n , j , ≼-trans (≼-suc (≼-refl _)) h) , enough
+
+module Classical (lem : LEM) = FromTowers lem (Goal.Classical.necessary lem)

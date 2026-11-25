@@ -1,0 +1,52 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第三层运行的底族和零基任取；外链第 2 个对角项含 G 的所有正次迭代。
+module B13SeedOuter where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import OCF.Align.Value using (_≼_; ≼l; ≼-refl; ≼-trans)
+open import WVOne using (read)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WKShape using (lvl3; p₃; g₃)
+open import WKGen using (node-ge)
+open import YiLAB7Orbit using (lvl2; ok₂)
+import B12Terminal as T
+open T.Run
+
+module At (r : T.Run lvl3) where
+  c⁺ : Tr⁺ lvl2
+  c⁺ = bs r lvl2 (inc tt self)
+
+  c = proj₁ c⁺
+  nc = proj₂ c⁺
+
+  K : Op {lvl2} nil
+  K = opB lvl2 ok₂ c nc
+
+  t₁ : Tr lvl2
+  t₁ = ex c c nc (suc zero) tt
+
+  G : Op {lvl2} nil
+  G = op (E ok₂ tdNil t₁ K) (Einf ok₂ tdNil t₁ K)
+
+  S₀ : Base lvl2
+  S₀ i u = bs r i (inc tt u)
+
+  st1 : Base lvl2
+  st1 = stepS K S₀
+
+  w2 = z≤ lvl2
+
+  v₁ : Tr⁺ zero
+  v₁ = run K S₀ zero w2 (β r)
+
+  s₃ : Tr lvl2 → Tr lvl2
+  s₃ z = ex c c nc (suc z) tt
+
+  outer : (m : ℕ) → read (proj₁ (itV G (suc m) st1 zero w2 v₁)) ≼ read (T.value r)
+  outer m = ≼-trans (≼l 0 (≼l m (≼-refl _)))
+              (node-ge (kp lvl3 (ok r) p₃ (z≤ lvl3)) (λ z → ψ lvl3 (ok r) (bs r) zero (z≤ lvl3) (β r) (g₃ z)) s₃ 2)

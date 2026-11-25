@@ -43,7 +43,7 @@
 | # | 环节 | 值所在类型 | 类型事实 [定理, `refl` 或定义] | 读法上界 [判断] | 封顶 |
 |---|---|---|---|---|---|
 | 1 | 层号 | `B s : HB (Kc s)`, `Kc (s+1) = nxt (Kc s) = sup (⊤ ⊎ HB (Kc s)) (FN …)` | `B (s+1) = hs (emb (B s) ⊞ injL (B s) (top (B s)))` (`KcFoldTower.B-suc-shape`); `B (s+2)` 的头是坐标为 `HB (Lev X_s)` 的 Ω-结点 (`B-new`, `coord-new`) | `HB (Kc s)` 读 < λ_s, λ_{s+1} ≈ Ω_{λ_s+1}, sup = Λ (`LvKt` 入口的读法, 同意) | 否 |
-| 2 | 读回 | `rts s : HB (Lev (B s))` | `rts s = hs (top (B s))` (`rts-def`); `rtTop` 固定在 `w0 ck` 与全 0 的槽 `w₀K` 上; `top` 不读 `w`, `a` (`KcFoldTop` 文件头如实说明) | 第 `B s` 级的级顶读 Ω_{|B_s|} (R1) | 类型不封; **内容**: 读回不是折叠的输出, 不含任何站的计算 |
+| 2 | 读回 | `rts s : HB (Lev (B s))` | `rts s = hs (top (B s))` (`rts-def`); `rtTop` 固定在 `w0 ck` 与全 0 的槽 `w₀K` 上; `top` 不读 `w`, `a` (`KcFoldTop` 文件头如实说明) | 第 `B s` 级的级顶读 Ω_{\|B_s\|} (R1) | 类型不封; **内容**: 读回不是折叠的输出, 不含任何站的计算 |
 | 3 | 下降 | `dn s (B s) : HB (Lev (B s)) → Ht` (`KcFoldIf.DnK S = Σ (HB S → Ht) …`) | `dnG s (hs X) lb = constD (evB X)` (`GenFoldK` §1): 丢掉参数; `dnG s (hl f) = dn₀` 常数 (**[实验]** `dnG-hl-const`) | 值域 `Ht` 读 < Ω₃ (§1.3) | **类型封顶 (第 1 处)** |
 | 4 | 求值 | `evB X = EvAt.evAt … (ΩX X) : Ht`, 折叠在 `DK (Lev X)` 上, 层 `LX X : HB (step (Lev X))` | 世界 `W₀X X = (w₀ (genLev X) , hz)` (**[实验]** `W₀X-base`): 基世界, 新种类的界是 0; `fbA (genStep G) (inj₂ tt) = inj₂ tt` (**[实验]** `fb-new-none`); 并的坐标下标分量 `genSupNo` 全给 `inj₂ tt` (`GenFoldInst` §3) | 基世界里 `Lev X` 的种类只有底坐标可入 (`only-botLev` **[定理]**), 闭包结点只在更大的世界里有分支, 而升界只对 `fbA` 有定义的种类: 折叠看见的 `Lev X` 结构 (判断) 不超过 `S₀` 一层加新种类一层 | **内容封顶 (第 2 处)** |
 | 5 | 读回到 `Ht` | `rd₂ : LgW L₀ W → Ht → D₂ W → Ht` (`GenFoldRd`) | 旧种类闭包: `rd₂ lW b (nc (inj₁ κ) tt u) = rd₂ lW b (u ≤rf lW)` (**[实验]** `nc-old-drop`): Ω-极限整个丢掉, 只剩当前世界一支; 新种类闭包读成 κH 结点, 坐标经 `encH`, `encH (hΩ tt h) = encH (h azero)` (**[实验]** `encH-bot`): `H₀` 坐标里的 Ω-结点只剩底支 | κH 结点的分支只依赖坐标的无 Ω 部分, 有效共尾 ω (判断) | **内容封顶 (第 3 处)** |
@@ -85,7 +85,7 @@
 | C4 | **层号的类型随站换** (`Kc`, `nxt`), 没有种类以自身的高度类型为坐标 | `HtTowerNeg.no-retract` [定理]; `Kc` 的形状受 Λ 的定义启发 (设计, `LvKt` 入口如实说明) | 已满足 (`LvKt`) |
 | C5 | **种类的坐标类型就是该级的高度** (`Lev c`), 折叠的结点与闭包对一切种类一条 (`nc κ`), 比较只用公共上界之下的 `cmpB` | 壁垒 (`Barrier.barrier`) 逼出 "带字面公共上界的比较"; `no-wmatch` [定理] 逼出 "不做种类结构之间的世界映射" | 已满足 (`GenFold`) |
 | C6 | **每站折叠的世界不是基世界**: `Lev X_s` 里以高度为坐标的种类 (`inj₂ c , κ`) 的界要被回灌升高, 否则闭包只剩底支 | `only-botLev`, `code-botK` [定理] (基世界里只有底坐标); 升界的形状受 `upd₁-sep`, `updT-sep`, `upd→wdec`, `no-wmatch` [定理] 约束: 不能 "恰好升一个分量且别处不动"; 允许 "一起升" (`NegGenFoldUpd.upAll₁`, `rB` 已写) 或可入下标上的比较式更新 (`StallDxBdec.bdec` + `StallDiagnosis §5.1`, 未写) | **未满足**. 这是值的条件, 不是类型条件; 它与 W 墙、拷贝墙是同一件事 |
-| C7 | 下一站层号的读回可以是级顶 `top` (不必是折叠输出) | 设计选择; 读法上 `Ωtop (Lev X)` 已给出 Ω_{|X|} | 已满足 (`KcFold`); 若要 "x ↦ Ω_x" 由计算给出而不是由 `Lev` 的形状给出, 要一个 `D … → HB (Lev (B s))` 的读回 (`GenFoldRd.rd₁` 的形状, 但它对闭包有损) |
+| C7 | 下一站层号的读回可以是级顶 `top` (不必是折叠输出) | 设计选择; 读法上 `Ωtop (Lev X)` 已给出 Ω_{\|X\|} | 已满足 (`KcFold`); 若要 "x ↦ Ω_x" 由计算给出而不是由 `Lev` 的形状给出, 要一个 `D … → HB (Lev (B s))` 的读回 (`GenFoldRd.rd₁` 的形状, 但它对闭包有损) |
 | C8 | 极限站与 ℕ-极限层号处的坍缩不是常数 | 设计 | **[实验] 已满足**: `TXΛ` 不经 `dnL₀` |
 | C9 | 不用 `Funext`/UIP 作前提; 不用 `Sk`/`Cvt` 搬运 | 纲领 2, 作者 2026-11-05 定 | `SkelDxGen` 的路径不经 `Sk`, `Cvt`, `toS` (它们是 `Lev (fin n)` 与 `Sk n` 两种写法不一致带来的脚手架, `LvTopInst` 文件头如实记账) |
 

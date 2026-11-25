@@ -1,0 +1,201 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B13Update where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym; trans)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; l≼; ≼-refl; ≼-trans; 1≼ψ⁰)
+open import WVOne using (T₀; 𝟏; read)
+open import WVTwo using (T₁; ◃→≼)
+open import WVThree using (Nx)
+open import WSShadow using (Sh; ES; Ω̂; _⨾_; sh; lC; sE)
+open import WSW4 using (module Lem)
+import WKSum
+import WKGen
+import WSLevel as W
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F; c₁)
+open import YiLAB7Replay using (Match; seed; o₁)
+open import B8PairW4 using (Real-up; SumR-up; Real-lim)
+open import B9InnerReal using (module RX)
+open import B9InnerSecond using (SumR-id)
+import YiLAB11Orbit as O
+import B11OuterCore as C
+import B12Orbit as U
+import B12LimitRef as A
+open import B11PrefixGen using (T₂)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import YiLAB11Target using (track)
+
+open C using (zpath; slot; Str; str; rP; rΩ; sN; st)
+open Lem o₁
+open WKSum.Sum o₁ hiding (prefix)
+open RX o₁
+open import B12Update using (Seeds; seeds; structure; value-bound; slot-bound)
+import B13Orbit as V
+open import B12ActualSlots using (_⊴_)
+
+
+-- 一阶行对任意逐点覆盖 F 的运算成立。Rs 是该运算自己的实际迭代。
+module Inner (K : Op {lvl2} nil) (leFK : V.WeakOp F K) (P : ES) (R : Base lvl2) where
+  Rs : ℕ → Base lvl2
+  Rs n = itS K n R
+
+  cn : ℕ → Tr lvl1
+  cn n = c₁ (Rs n)
+
+  ncn : (n : ℕ) → lvl1 ⊢ zero ◃ cn n
+  ncn n = proj₂ (Rs n lvl1 slot)
+
+  -- 原始内链与累加分支.
+  zz : ℕ → ℕ → Tr lvl1
+  zz n = iter (λ x → ex (cn n) (cn n) (ncn n) (suc x) tt) zero
+
+  U : ℕ → ℕ → Tr lvl1
+  U n = cum (λ j → zz n (suc j))
+
+  part : (n : ℕ) → lvl1 ⊢ U n 1 ◃ cn (suc n)
+  part n = V.push-path {y = c₁ (stepS F (Rs n))} (◃l 1) (leFK (Rs n) lvl1 slot (Rs n lvl1 slot))
+
+  first : (n : ℕ) → lvl1 ⊢ zz n 1 ◃ cn (suc n)
+  first n = V.push-path {y = c₁ (stepS F (Rs n))} (◃l 0) (leFK (Rs n) lvl1 slot (Rs n lvl1 slot))
+
+  rise : (n : ℕ) → lvl1 ⊢ cn n ◃ cn (suc n)
+  rise n = inf K (Rs n) lvl1 slot (Rs n lvl1 slot)
+
+  record In (n : ℕ) : Set where
+    constructor inn
+    field
+      rY : Real (cn n) (track P n)
+      sT : Str P (Rs n)
+  open In public
+
+  module Step (n : ℕ) (H : In n) where
+    -- z n 1 = ex c c (suc 0): 左槽 c 取前缀 P, 底槽 c 取 track P n.
+    Real-z1 : Real (zz n 1) (P ⨾ track P n)
+    Real-z1 = RealX (ncn n) (rP (sT H)) (rY H) (Real-pos (suc zero) ◃s)
+
+    Real-sz1 : Real (suc (zz n 1)) (P ⨾ track P n)
+    Real-sz1 = Real-up ◃s Real-z1
+
+    -- 原始第 2 项 z n 2 = ex c c (suc (z n 1)) 供被加项消费.
+    SumR-z2 : SumR (zz n 2) (sE (P ⨾ track P n) Nx)
+    SumR-z2 = SumR-x {da = λ a c′ → a} {db = Nx} {e = P ⨾ track P n} (ncn n) (SumR-id (cn n)) (sN (sT H)) (proj₁ Real-sz1)
+
+    pos-pre : lvl1 ⊢ zero ◃ (zz n 1 + cn n)
+    pos-pre = z◃ (zz n 1) (+-mono (zz n 1) (ncn n))
+
+    -- 累加分支 1: U n 1 = ex (z n 1 + c) c (suc (z n 1)) 实现 track P (suc n), 传给下一次 F.
+    Real-U1 : Real (U n 1) (track P (suc n))
+    Real-U1 = RealX (ncn n) (Real-pos (zz n 1 + cn n) pos-pre) (rΩ (sT H)) Real-sz1
+
+    -- 累加分支 0: 第 1 项的指数进入这次 F 更新的结果.
+    first-exp : Real (cn (suc n)) (P ⨾ track P n)
+    first-exp = Real-up (first n) Real-z1
+
+    next : In (suc n)
+    next = inn (Real-up (part n) Real-U1)
+               (str (Real-up (rise n) (rP (sT H))) (Real-up (rise n) (rΩ (sT H)))
+                    (SumR-up (rise n) (sN (sT H))) (◃t (st (sT H)) (rise n)))
+
+  inner : Str P R → (n : ℕ) → In n
+  inner H zero    = inn (rΩ H) H
+  inner H (suc n) = Step.next n (inner H n)
+module Update (K J : Op {lvl2} nil) (leFK : V.WeakOp F K) (contains : V.Contains K J)
+              (P : T₂) (e : ES) (D : A.Described P e) (R : Base lvl2) (H : Str e R) where
+  open Inner K leFK e R
+  module Win = U.Window K
+  module Rows = A.Rows P e D
+
+  IN : (n : ℕ) → In n
+  IN = inner H
+
+  kidT : ℕ → Tr lvl1
+  kidT n = proj₁ (Win.kid n R lvl1 slot (R lvl1 slot))
+
+  kid≡ : (n : ℕ) → kidT n ≡ cn (suc n)
+  kid≡ n = cong proj₁ (trans (Win.project-value (suc n) R lvl1 slot (R lvl1 slot)) (Win.self-value (suc n) R lvl1 slot))
+
+  kidReal : (n : ℕ) → Real (kidT n) (e ⨾ track e n)
+  kidReal n = subst (λ X → Real X (e ⨾ track e n)) (sym (kid≡ n)) (Step.first-exp n (IN n))
+
+  childReal : Real (proj₁ (Win.child R lvl1 slot (R lvl1 slot))) (A.next e)
+  childReal = Real-lim kidReal
+
+
+  riseK : lvl1 ⊢ c₁ R ◃ c₁ (stepS J R)
+  riseK = inf J R lvl1 slot (R lvl1 slot)
+
+  new-str : Str (A.next e) (stepS J R)
+  new-str = str (Real-up (contains R lvl1 slot (R lvl1 slot)) childReal)
+                (Real-up riseK (rΩ H)) (SumR-up riseK (sN H)) (◃t (st H) riseK)
+
+  module Value (w : zero ≤ lvl2) (β : Tr⁺ zero)
+               (hβ : LV.ψ⁰ P ≼ read (proj₁ β))
+               (hz : LV.ψ⁰ P ≼ read (proj₁ (R zero zpath))) where
+    vv : ℕ → Tr⁺ zero
+    vv n = itV K n R zero w β
+
+    bv : (n : ℕ) → LV.ψ⁰ P ≼ read (proj₁ (vv n))
+    bv zero    = hβ
+    bv (suc n) = ≼-trans (bv n) (◃→≼ (inf K (Rs n) zero w (vv n)))
+
+    bz : (n : ℕ) → LV.ψ⁰ P ≼ read (proj₁ (Rs n zero zpath))
+    bz zero    = hz
+    bz (suc n) = ≼-trans (bz n) (◃→≼ (inf K (Rs n) zero zpath (Rs n zero zpath)))
+
+    one-v : (n : ℕ) → 𝟏 ≼ read (proj₁ (vv n))
+    one-v n = ≼-trans (1≼ψ⁰ P) (bv n)
+
+    one-z : (n : ℕ) → 𝟏 ≼ read (proj₁ (Rs n zero zpath))
+    one-z n = ≼-trans (1≼ψ⁰ P) (bz n)
+
+    module M (n : ℕ) = WKGen.Main ok₂ (Rs n) w (vv n) (inj₂ (st (sT (IN n)))) (one-v n) (one-z n)
+
+    standard-output : (n : ℕ) → read (proj₁ (run F (Rs n) zero w (vv n))) ≼ read (proj₁ (vv (suc n)))
+    standard-output n with leFK (Rs n) zero w (vv n)
+    ... | inj₁ eq = subst (λ x → read (proj₁ (run F (Rs n) zero w (vv n))) ≼ read x) eq (≼-refl _)
+    ... | inj₂ p = ◃→≼ p
+
+    exit : (n : ℕ) {D : T₁} {d : Sh 0} → W.Ld D d → SumR (zz n 2) d → LV.ψ⁰ (Rows.body D) ≼ read (proj₁ (vv (suc n)))
+    exit n al aw =
+      ≼-trans (Rows.sem al a c (bv n) (bz n))
+      (≼-trans (aw (M.B′ n) (WKGen.wd w) (vv n) a c (≼-refl a) (≼-refl c) (one-z n)) (≼-trans (M.Ψg-ge n 2) (standard-output n)))
+      where
+      a = read (proj₁ (vv n))
+      c = read (proj₁ (Rs n zero zpath))
+
+    -- K 的第 n+1 次是进入 J 的实际分支。
+    toK : (n : ℕ) → read (proj₁ (vv (suc n))) ≼ read (proj₁ (run J R zero w β))
+    toK n = subst (λ X → read (proj₁ X) ≼ read (proj₁ (run J R zero w β))) (Win.project-value (suc n) R zero w β)
+              (≼-trans (◃→≼ (Win.in-child n R zero w β)) (◃→≼ (contains R zero w β)))
+
+    term : (k : ℕ) → LV.ψ⁰ (Rows.body (Rows.y k)) ≼ read (proj₁ (run J R zero w β))
+    term zero    = ≼-trans (exit 0 W.Ld-Ω₁ (SumR-up (◃t (st H) ◃e) (Match.add-w seed))) (toK 0)
+    term (suc n) = ≼-trans (exit n (Rows.lower n) (Step.SumR-z2 n (IN n))) (toK n)
+
+    next-bound : LV.ψ⁰ (P LV.+ Ω₂ᴸ) ≼ read (proj₁ (run J R zero w β))
+    next-bound = l≼ term
+
+
+
+advance : (K J : Op {lvl2} nil) → V.WeakOp F K → V.Contains K J → (w : zero ≤ lvl2)
+        → (P : T₂) (e : ES) → A.Described P e → (R : Base lvl2) (v : Tr⁺ zero) → Seeds P e R v
+        → Seeds (P LV.+ Ω₂ᴸ) (A.next e) (stepS J R) (run J R zero w v)
+advance K J leFK included w P e D R v I = seeds
+  (X.Value.next-bound w v (value-bound I) (slot-bound I))
+  (X.Value.next-bound zpath (R zero zpath) (slot-bound I) (slot-bound I)) X.new-str
+  where module X = Update K J leFK included P e D R (structure I)
+
+advanceJc : (c : Tr⁺ lvl2) → O.Ω₂t ⊴ proj₁ c → (w : zero ≤ lvl2)
+          → (P : T₂) (e : ES) → A.Described P e → (R : Base lvl2) (v : Tr⁺ zero) → Seeds P e R v
+          → Seeds (P LV.+ Ω₂ᴸ) (A.next e) (stepS (V.Jc c) R) (run (V.Jc c) R zero w v)
+advanceJc c cp = advance (V.K c) (V.Jc c) (V.standard≤K c cp) (V.contains c cp (V.K c))

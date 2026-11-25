@@ -1,0 +1,121 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- S2 判定件 (1): 保留判定在 "同一绑定子" 的格上, 框架内的判定与 ψ★ 的判定逐字相同.
+-- 不读记号, 不改仓库. 排中律只作模块参数.
+module S2Cell where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym; trans)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Keep; kp; kp⁼; mapK)
+open import OCF.Lean.YiTBRow using (dW)
+open import OCF.Lean.YiPSStar
+
+IsJust : ∀ {A : Set} → Maybe A → Set
+IsJust (just _) = ⊤
+IsJust nothing  = ⊥
+
+-- (A) 一般形式: 比较函数在 (c , c) 上给出 self, K6 一行就逐字是孩子层 h c 里的判定 (目标路径 v 原样).
+module _ (cmpK : Cmp) where
+  open Keep★ cmpK
+
+  dW-self : ∀ {A B X : Set} (m : Maybe (A ⊎ B)) {a : A} {F : A → X} {G : B → X} {H : X}
+          → m ≡ just (inj₁ a) → dW m F G H ≡ F a
+  dW-self _ refl = refl
+
+  same-frame : ∀ k h (o : Ok (nd (sΩ k) h)) (c : Tr k) (t : Pos⁼ (h c)) {j} (v : j ≤ h c)
+    → cmpK h c c ≡ just (inj₁ self)
+    → kp★ (nd (sΩ k) h) o (inj₂ (c , t)) (inc c v) ≡ kp⁼★ (h c) (proj₂ o c) t v
+  same-frame k h o c t v e = dW-self (cmpK h c c) e
+
+-- (B) 最小亏损格 (tw 1, 孩子 2, 槽位第 0 层, 目标第 1 层).
+n1 n2 : Tr zero
+n1 = suc zero
+n2 = suc n1
+
+lvl1 lvl2 : L
+lvl1 = zero ⊕ ↑ zero n1
+lvl2 = zero ⊕ ↑ zero n2
+
+p′ : Pos lvl2                      -- lvl2 里层号为第 0 层的槽位
+p′ = inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))
+
+slot : Pos (tw 1)                  -- 上折搬出来的孩子侧槽位
+slot = inj₂ (n2 , inj₂ p′)
+
+τ : lvl1 ≤ lvl2                    -- 框架内的目标
+τ = inc tt self
+
+tgt : lvl1 ≤ tw 1                  -- 同一目标的裸路径
+tgt = inc n2 τ
+
+cur-lossy : kp (tw 1) (Ok-tw 1) slot tgt ≡ nothing
+cur-lossy = refl
+
+framed-just : IsJust (kp lvl2 (proj₂ (Ok-tw 1) n2) p′ τ)
+framed-just = tt
+
+-- ψ★ (只用可构造的数字比较 cmpN) 在这一格的判定逐字等于框架内的现判定.
+star-N : Keep★.kp★ cmpN (tw 1) (Ok-tw 1) slot tgt ≡ kp lvl2 (proj₂ (Ok-tw 1) n2) p′ τ
+star-N = refl
+
+-- 经典实例 cmpᴵ lem 在这一格同样 (主线表在 (2,2) 无条目, 落到 cmpN, 不问排中律).
+module _ (lem : LEM) where
+  star-I : Keep★.kp★ (cmpᴵ lem) (tw 1) (Ok-tw 1) slot tgt ≡ kp lvl2 (proj₂ (Ok-tw 1) n2) p′ τ
+  star-I = refl
+
+-- (C) 极限孩子上: 可构造的比较 (cmpᶻ ▹ cmpN) 在对角上缺项; 同一格若目标与槽位同框架, 框架内判定仍给 just.
+--     这里孩子取任意 c, 框架 = h c 的后继层 (槽位第 c 层, 目标 c+1 层).
+module _ (c : Tr zero) where
+  hc hc1 hc2 : L
+  hc  = zero ⊕ ↑ zero c
+  hc1 = zero ⊕ ↑ zero (suc c)
+  hc2 = zero ⊕ ↑ zero (suc (suc c))
+
+  okc2 : Ok hc2
+  okc2 = proj₂ (Ok-tw 1) (suc (suc c))
+
+  q : Pos hc2                      -- hc2 里层号为 hc 的槽位
+  q = inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))
+
+  any-child : IsJust (kp hc2 okc2 q (inc tt self))
+  any-child = tt
+
+  bare-any : kp (tw 1) (Ok-tw 1) (inj₂ (suc (suc c) , inj₂ q)) (inc (suc (suc c)) (inc tt self)) ≡ nothing
+  bare-any = refl
+
+-- (D) 第三类格的来源 (形状): 不经上折, 现判定的 K9 一行就把下标侧槽位推成目标层 tw 1 的孩子侧槽位并保留.
+--     层号 M 同 MathVCheck: 下标层是第 1 层 (证据路径经 tw 1 的孩子 2).
+k≤ : lvl1 ≤ tw 1
+k≤ = inc n2 (inc tt self)
+
+M : L
+M = nd (sΩ lvl1) λ c → tw 1 ⊕ ↑ lvl1 c
+
+okM : Ok M
+okM = (proj₂ (Ok-tw 1) n1 , λ c → k≤ ∙ lift (tw 1) (↑ lvl1 c)) ,
+      λ c → Ok⊕ (tw 1) (↑ lvl1 c) (Ok-tw 1) (OkO↑ (tw 1) lvl1 (proj₂ (Ok-tw 1) n1) k≤ c)
+
+toTw1 : tw 1 ≤ M                   -- 一致路径
+toTw1 = inu λ c → lift (tw 1) (↑ lvl1 c)
+
+qSide : Pos (tw 1)
+qSide = inj₂ (n2 , inj₂ (inj₂ (tt , inj₁ tt)))
+
+slotOf : ∀ {j X x₀} → Keep j X x₀ → Maybe (Pos j)
+slotOf (just (q , _)) = just q
+slotOf nothing        = nothing
+
+pushed-child-side : slotOf (kp M okM (inj₁ (inj₁ tt)) toTw1) ≡ just qSide
+pushed-child-side = refl
+
+-- 这个结点 (槽位第 1 层, 在孩子 2 里) 以后朝 "孩子 2 里的第 2 层" 折时又是 K6 (第 2 层自身作目标).
+again-k6 : kp (tw 1) (Ok-tw 1) qSide (inc n2 self) ≡ nothing
+again-k6 = refl

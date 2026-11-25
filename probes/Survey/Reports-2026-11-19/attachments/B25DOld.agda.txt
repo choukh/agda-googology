@@ -1,0 +1,44 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原旧链第二点与 ψ₀(Ω_ω) 双向同值。原 γ₂ 落在旧链第二项与第四项之间。
+module B25DOld where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+open import Data.Product using (proj₁; proj₂; _,_)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≼-suc; ≺→s≼; ≅→≼; ≼l; s≼s; ⊑→≼)
+open import OCF.Align.BTBOFullEmb using (Ψ-emb)
+open import OCF.Align.BTBOFullV3 using (Fstep)
+open import OCF.Align.BTBOFullLv using (St-γ)
+open import OCF.Align.BTBOValAbsorb using (st-l₂)
+import OCF.Lean.YiLSRead as V
+import OCF.Lean.YiLSTw1 as T
+import OCF.Lean.YiLSBtbo as B
+import OCF.Lean.YiXVNeedOne as Up
+import OCF.Lean.YiTUReduce as E
+import B12BtboCut as C
+import B12EboRows as R
+
+ω⊑ : L.ωᴵ L.⊑ᴵ T.lvl (T.pt 1)
+ω⊑ = L.Sim→⊑ᴵ (λ { (L.lim k q) → L.lim k (subst (λ t → _ L.<ᴵ t) (sym (E.comp k _)) (L.suc q)) })
+
+point = λ n → V.read (T.pt n)
+point₂ : C.omega-cut ≈ᵛ point 2
+point₂ = (≼-trans {a = C.omega-cut} {b = L.ψ⁰ (L.Ω (T.lvl (T.pt 1)))} {c = point 2}
+             (⊑→≼ C.omega-cut (L.Ψ⁰-mono ω⊑)) (B.lowc 1))
+       , (≼-trans {a = point 2} {b = V.read (T.G (T.pt 1))} {c = C.omega-cut} (≅→≼ (T.KG (T.pt 1))) Up.row)
+
+below : L.suc (point 2) ≼ N.γ 2
+below = ≼-trans {a = L.suc (point 2)} {b = L.suc (C.branch 0)} {c = N.γ 2}
+  (s≼s (≼-trans {a = point 2} {b = C.omega-cut} {c = C.branch 0} (proj₂ point₂) (≅→≼ C.cut≈first-branch)))
+  (≼l 1 (st-l₂ (St-γ 2) 0))
+
+first : L.suc (N.γ 1) ≼ point 2
+first = ≼-trans {a = L.suc (N.γ 1)} {b = C.finite 2} {c = point 2}
+  (≺→s≼ {c = N.γ 1} {b = C.finite 2} (Fstep (N.L 0)))
+  (≼-trans {a = C.finite 2} {b = C.omega-cut} {c = point 2} (≼l 2 (≼-refl _)) (proj₁ point₂))
+
+four : N.γ 2 ≼ point 4
+four = ≼-trans {a = N.γ 2} {b = L.ψ⁰ (L.Ω (T.κ 3))} {c = point 4}
+  (Ψ-emb (B.emb 1 2 (≼-trans {a = N.γ 1} {b = L.suc (N.γ 1)} {c = point 2} (≼-suc (≼-refl _)) first)))
+  (B.lowc 3)

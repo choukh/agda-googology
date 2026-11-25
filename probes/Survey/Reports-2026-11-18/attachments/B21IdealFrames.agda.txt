@@ -1,0 +1,123 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21IdealFrames where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; subst₂; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B14SharpBound using (data≤)
+open import OCF.Align.Value using (≼-refl; ≼-trans; l≼; ≼l)
+import B12ActualSlots as C
+import B17SharpFeed as Link
+import B17SharpUpdate as U
+import B17SharpTwo as T
+import B18SharpMacro as M
+import B13Orbit as Orb
+import B12Orbit as Win
+
+import B21IdealRepeat as Reps
+import B15SharpAction as P1
+import B16SharpModel as H1
+import B16SharpOmega as O1
+import B15SharpLift as L1
+import B21IdealContext as Context
+open Context using (Pref; plug; empty; push)
+
+module At (lem : LEM) where
+  open I.Sharp lem
+  open U.Update lem
+  open T.Two lem using (w₀)
+  open M.Macro lem using (State; pair; after)
+  open Link.Feed lem using (Linked; lim-gen)
+  open Context.At lem using (nextState; out)
+
+  open Reps.At lem using (link-limit; out-limit)
+  open P1.Action lem using (lim-out)
+  open H1.Graded lem using (val-sup; Rel) renaming (val to val₁)
+  open O1.Omega lem using (GoodIndex)
+  link-sup : ∀ w f d → (∀ j → Linked w (f j)) → Linked w (R.lim f d)
+  link-sup w f d h = hi , (λ D a A S t b hv hc → lim-out D a A f d (λ j → proj₂ (h j) D a A S t b hv hc))
+    where
+    deep : ∀ n {X ch} D a A D′ a′ P (K : F.Ca n X) f d →
+      (∀ j → Rel n ch (val₁ D′ a′ P (val₁ D a A (f j))) K) →
+      Rel n ch (val₁ D′ a′ P (val₁ D a A (R.lim f d))) K
+    deep n D a P1.id D′ a′ P K f d h = val-sup n D′ a′ P _ _ K h
+    deep n D a (P1.addL A x) D′ a′ P K f d h = deep n D a A D′ a′ P K (λ j → x V.+ f j) _ h
+    hi : GoodIndex w (R.lim f d)
+    hi zero tv mk D a A G g = val-sup 0 D a A f d (P1.Action.eop lem (F.td W.stop tv mk) w G) (λ j → proj₁ (h j) 0 tv mk D a A G g)
+    hi (suc n) tv mk D a A K k m gm D′ a′ P G g = deep n D a A D′ a′ P _ f d (λ j → proj₁ (h j) (suc n) tv mk D a A K k m gm D′ a′ P G g)
+
+  link-fixed : ∀ D p (f : ℕ → R.Tr r₂) d w →
+    (∀ i → Linked w (proj₁ (nextState D p (f i) r₁ oR))) →
+    Linked w (proj₁ (nextState D p (R.lim f d) r₁ oR))
+  link-fixed D empty f d w h = link-sup w _ _ h
+  link-fixed D (push p x) f d w = link-fixed D p (λ i → x V.+ f i) _ w
+
+  module Frame {X : F.Cx lvl2} (mid : F.⟦ X ⟧ lvl1) (low : F.⟦ X ⟧ B.zero) where
+    record Fit (D : Base♯) (S : F.St X) : Set where
+      constructor fit
+      field
+        one : Linked (proj₁ (S lvl1 mid)) (proj₁ (D r₁ oR))
+        bot : data≤ (proj₁ (D R.zero tt)) (proj₁ (S B.zero low))
+    record Model (x : R.Tr r₂) (K : F.Op X) : Set where
+      constructor model
+      field
+        state : ∀ D p S → Fit (nextState D p R.zero) S → Fit (nextState D p x) (F.stepS K S)
+        value : ∀ D a p S → Fit (nextState D p R.zero) S → ∀ t b → data≤ (proj₁ (out D a p R.zero)) (proj₁ b) →
+          data≤ (proj₁ (out D a p x)) (proj₁ (F.run K S B.zero t b))
+    fixed : ∀ f d K → (∀ i → Model (f i) K) → Model (R.lim f d) K
+    fixed f d K h = model (λ D p S st → fit (link-fixed D p f d _ (λ i → Fit.one (Model.state (h i) D p S st))) (v D (D R.zero tt) p S st low (S B.zero low) (Fit.bot st))) v
+      where
+      v = λ D a p S st t b hb → out-limit D a p f d _ (λ i → Model.value (h i) D a p S st t b hb)
+    weak : ∀ {x} (K J : F.Op X) → F.Rl K J → Model x K → Model x J
+    weak K J e m = model (λ D p S h → fit (matched _ _ _ (Fit.one (Model.state m D p S h)) (inj₂ (e S lvl1 mid (S lvl1 mid))))
+      (v D (D R.zero tt) p S h low (S B.zero low) (Fit.bot h))) v
+      where v = λ D a p S h t b hv → ≼-trans (Model.value m D a p S h t b hv) (◃→≼ (e S B.zero t b))
+    self-value : ∀ (K : F.Op X) n S i t → F.itV K n S i t (S i t) ≡ F.itS K n S i t
+    self-value K zero S i t = refl
+    self-value K (suc n) S i t = cong (F.run K (F.itS K n S) i t) (self-value K n S i t)
+    module Rep (x : R.Tr r₂) (K : F.Op X) (hK : Model x K) where
+      word = V.iter (x V.+_) x
+      shiftS : ∀ n S → F.itS K n (F.stepS K S) ≡ F.itS K (suc n) S
+      shiftS zero S = refl
+      shiftS (suc n) S = cong (F.stepS K) (shiftS n S)
+      shiftV : ∀ n S t b → F.itV K n (F.stepS K S) B.zero t (F.run K S B.zero t b) ≡ F.itV K (suc n) S B.zero t b
+      shiftV zero S t b = refl
+      shiftV (suc n) S t b rewrite shiftS n S | shiftV n S t b = refl
+
+      stage : ∀ n D p S → Fit (nextState D p R.zero) S → Fit (nextState D p (word n)) (F.itS K (suc n) S)
+      stage zero = Model.state hK
+      stage (suc n) D p S h = subst (Fit (nextState D (push p x) (word n))) (shiftS (suc n) S)
+        (stage n D (push p x) (F.stepS K S) (Model.state hK D p S h))
+      val : ∀ n D a p S → Fit (nextState D p R.zero) S → ∀ t b → data≤ (proj₁ (out D a p R.zero)) (proj₁ b) →
+        data≤ (proj₁ (out D a p (word n))) (proj₁ (F.itV K (suc n) S B.zero t b))
+      val zero = Model.value hK
+      val (suc n) D a p S h t b hv = subst (λ v → data≤ (proj₁ (out D a (push p x) (word n))) (proj₁ v)) (shiftV (suc n) S t b)
+        (val n D a (push p x) (F.stepS K S) (Model.state hK D p S h) t (F.run K S B.zero t b) (Model.value hK D a p S h t b hv))
+
+      module Take {mu : B.L} (T : F.TD X mu) (d : r₂ R.⊢ R.zero ◃ x) where
+        mark = proj₁ (V.next⁺ (x , d))
+        star = F.op (F.E ok₂ T (B.suc B.zero) K) (F.Einf ok₂ T (B.suc B.zero) K)
+        value : ∀ D a p S → Fit (nextState D p R.zero) S → ∀ t b → data≤ (proj₁ (out D a p R.zero)) (proj₁ b) →
+          data≤ (proj₁ (out D a p mark)) (proj₁ (F.run star S B.zero t b))
+        value D a p S h t b hv = out-limit D a p word _ _ (λ n → ≼l n (val n D a p S h t b hv))
+        state : ∀ D p S → Fit (nextState D p R.zero) S → Fit (nextState D p mark) (F.stepS star S)
+        state D p S h = fit (link-limit D p word _ _ _ (λ n → subst (λ v → Linked (proj₁ v) (proj₁ (nextState D p (word n) r₁ oR))) (sym (self-value K (suc n) S lvl1 mid))
+          (Fit.one (stage n D p S h)))) (value D (D R.zero tt) p S h low (S B.zero low) (Fit.bot h))
+        raised : Model mark star
+        raised = model state value
+
+

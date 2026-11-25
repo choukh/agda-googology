@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18RefTower where
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+import OCF.Align.Level as L
+import B13Target as P
+import B15RefAlgebra as A
+import B16RefRaise as Old
+import B17RefExp as E
+import B17RefVector as V
+import B17RefTower as H
+import B17OrbitTower as T
+import B18OrbitSpace as O
+open import B18RefDelta using (δ)
+open import B18RefCong using (δ-pres)
+open import B18RefModel using (Model; fit; conv; sup; node; module Operators)
+open T using (Space; End; Arr; Rel; Eq; Carrier; run)
+open H using (op; pres)
+
+EndModel : ∀ n {S} → Model S → Model (End S)
+fit (EndModel n M) a d = ∀ b u → u L.≅ u → fit M b u → fit M (run a b) (op n u d)
+conv (EndModel n M) p uv b t rt q = conv M (p b t rt q) (pres n rt uv)
+sup (EndModel n M) a d rd p b t rt q = conv M
+  (sup M (λ j → run (a j) b) (λ j → op n t (d j)) (λ j → pres n rt (rd j)) (λ j → p j b t rt q))
+  (H.lim-op n t d rd rt)
+node (EndModel n {S} M) a ra ea d rd p b t rt q = conv M (node M (λ j → run (a j) b)
+  (λ r → ra r b b (T.rr S b)) (λ r → ea r b b (T.ee S b))
+  (λ j → op n t (d j)) (λ d → pres n rt (rd d)) (λ j → p j b t rt q)) (H.node-op n t d rd rt)
+
+module Lift (S : Space) (M : Model S) where
+  module N = O.Next S
+  C : ∀ n → Model (N.tower n)
+  C zero = Operators.Action S M
+  C (suc n) = EndModel n (C n)
+
+  module At (n : ℕ) (h : Arr (N.tower n)) (d : T₁) (rd : d L.≅ d) (given : fit (C (suc n)) h d) where
+    good = E.small rd
+    parts : ∀ y a u → u L.≅ u → fit (C n) a u → fit (C n) (T.height (N.tower n) y (run h) a) (op n u (A.E₀ d y))
+    parts L.zero = given
+    parts (L.suc y) a u ru v = conv (C n) (sup (C n) _ _ (λ j → pres n ru (Sum.reg j)) term)
+      (H.lim-op n u Sum.left Sum.reg ru) where
+      g = A.E₀ d y
+      rg = good (L.≅-refl⁰ y)
+      module Sum = Old.Sum g rg L.zero L.z≅
+      term : ∀ j → fit (C n) (iter (T.height (N.tower n) y (run h)) a j) (op n u (Sum.left j))
+      term zero = conv (C n) v (H.unit n u ru)
+      term (suc j) = conv (C n) (parts y _ _ (pres n ru (Sum.reg j)) (term j))
+        (L.≅-trans (H.compose n u (Sum.left j) g ru (Sum.reg j) rg) (pres n ru (Sum.rotate j)))
+    parts (L.lim f) a u ru v = conv (C n) (sup (C n) _ _ (λ j → pres n ru (good (L.≅-refl⁰ (f j)))) (λ j → parts (f j) a u ru v))
+      (H.lim-op n u (λ j → A.E₀ d (f j)) (λ j → good (L.≅-refl⁰ (f j))) ru)
+
+    omega : fit (C (suc n)) (run (T.Φ (N.tower n)) h) (A.E d Ω₁ᴸ)
+    omega a u ru v = conv (C n) (node (C n) (T.Diag.f (N.tower n) h a) (T.Diag.r (N.tower n) h a) (T.Diag.q (N.tower n) h a)
+      (λ x → op n u (A.E₀ d x)) (λ r → pres n ru (good r)) (λ x → parts x a u ru v))
+      (H.node-op n u (A.E₀ d) good ru)
+
+  vec : Model N.vectors
+  fit vec b u = ∀ n → fit (C (suc n)) (b n) u
+  conv vec {a = a} p d n = conv (C (suc n)) {a = a n} (p n) d
+  sup vec a d rd p n = sup (C (suc n)) (λ j → a j n) d rd (λ j → p j n)
+  node vec a ra ea d rd p n = node (C (suc n)) (λ j → a j n) (λ r → ra r n) (λ r → ea r n) d rd (λ x → p x n)
+
+  universal : fit vec N.seed Ω₁ᴸ
+  universal zero h d rd model = Operators.Lift.raised S M h d rd model
+  universal (suc n) h d rd model = At.omega n h d rd model
+  Push : ∀ b c u v → fit vec b u → fit vec c v → u L.≅ u → fit vec (N.push b c) (A.E u v)
+  Push b c u v rb rc ru n = rc (suc n) (b n) u ru (rb n)
+
+  module Generate (u : T₁) (ru : u L.≅ u) (v : Carrier N.vectors) (known : fit vec v u) where
+    terms = Ord.iter (A.E u) Ω₁ᴸ
+    each : ∀ j → fit vec (Ord.iter (N.push v) N.seed j) (terms j)
+    each zero = universal
+    each (suc j) = Push v _ u (terms j) known (each j) ru
+    reg : ∀ j → terms j L.≅ terms j
+    reg = L.iter-R L._≅_ {G = A.E u} {G′ = A.E u} (E.wide ru) (L.Ω-refl _)
+    step : fit vec (run N.step v) (A.Γ u)
+    step = sup vec _ _ (λ j → reg (suc j)) (λ j → each (suc j))

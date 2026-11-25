@@ -1,0 +1,91 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：可描述的二层前缀在 ℕ 极限和右加 Ω₂ 下封闭。
+-- 实例为 Ω₂·ω 后再加 Ω₂ 的参照链与 src 双向值桥。
+module B12LimitRef where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; ≼l; ≼-refl; +-mono; 1≼ψ⁰)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import WVTwo using (T₁)
+open import WVThree using (Nx)
+open import WSShadow using (ES; Ω̂; _⨾_; sh; lC; sE; LeE-refl; InflE; Infl-lC; Infl-⨾; Infl-Ω̂)
+import WSLevel as W
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B11PrefixGen using (T₂; ψP; module Desc; module Sem)
+import B11PrefixMain as M
+import YiLAB10Src as T
+import YiLAB11Target as J
+import B12LimitSrc as Src
+
+record Described (P : T₂) (e : ES) : Set where
+  constructor described
+  field
+    infl : InflE e
+    bd : W.Ld (ψP P) (sE e Nx)
+    bx : W.Lx (ψP P) (sh e)
+open Described
+
+-- 分支在 lim 的同一编号上逐一搬运，毋须判断两前缀的序关系。
+limit : (f : ℕ → T₂) (h : ℕ → ES) → ((n : ℕ) → Described (f n) (h n)) →
+        Described (L.lim f) (lC h)
+limit f h H = described (Infl-lC h (infl (H 0))) (W.Ll (λ n → bd (H n)))
+                       (W.Ew (W.El (λ n → bx (H n))) (LeE-refl _))
+
+next : ES → ES
+next e = lC (λ n → e ⨾ J.track e n)
+
+strict-step : (P : T₂) → L.suc (L.ψ⁰ P) ≼ L.ψ⁰ (P L.+ Ω₂ᴸ)
+strict-step P = ≼l 0 (≼l 0 (≼l 2 (+-mono (≼-refl (L.ψ⁰ P)) (1≼ψ⁰ P))))
+
+module Rows (P : T₂) (e : ES) (H : Described P e) where
+  open Desc P e (infl H) (bd H) (bx H) using (LdQ; LxQ)
+  open Sem P using (sem) renaming (bodyP to body) public
+
+  q : T₁ → T₁
+  q x = ψP (body x)
+  y : ℕ → T₁
+  y = S.iter q W.Ω₁ᴸ
+
+  chain : (n : ℕ) → W.Lx (y n) (J.track e n)
+  chain zero = W.Lx-Ω₁
+  chain (suc n) = LxQ (chain n)
+
+  lower : (n : ℕ) → W.Ld (y (suc n)) (sE (e ⨾ J.track e n) Nx)
+  lower n = LdQ (chain n)
+
+  next-shape : L.ψ⁰ (P L.+ Ω₂ᴸ) ≡ L.lim (λ n → L.ψ⁰ (body (y n)))
+  next-shape = refl
+
+  advance : Described (P L.+ Ω₂ᴸ) (next e)
+  advance = described (Infl-lC _ (Infl-⨾ e Ω̂ (infl H) Infl-Ω̂)) (W.Ll lower)
+                      (W.Ew (W.El (λ n → chain (suc n))) (LeE-refl _))
+
+finite : (n : ℕ) → Described (T.ll n) (J.prefix n)
+finite n = described (M.Inv.infl I) (M.Inv.bd I) (M.Inv.bx I)
+  where I = M.inv n
+
+P∞ : T₂
+P∞ = L.lim T.ll
+e∞ : ES
+e∞ = lC J.prefix
+
+limit-inv : Described P∞ e∞
+limit-inv = limit T.ll J.prefix finite
+
+open Rows P∞ e∞ limit-inv public
+
+seed : W.Lx (y 0) Ω̂
+seed = chain 0
+
+first : W.Ld (y 1) (sE (e∞ ⨾ Ω̂) Nx)
+first = lower 0
+
+-- 源与 Level 的两个输入先沿同一极限及右加 Ω₂ 建立结构关系，再折到零层。
+srcNext : S.Ord T.two
+srcNext = S.lim T.ss S.+ T.a
+src-bridge : tr₀ (S.ψ₀ srcNext) ≈ᵛ L.ψ⁰ (P∞ L.+ Ω₂ᴸ)
+src-bridge = Src.fold (Src.plus (Src.lim T.ss T.ll (λ n → Src.aligned (T.up-rel n) (T.dn-rel n) (T.regular n))) Src.omega2)

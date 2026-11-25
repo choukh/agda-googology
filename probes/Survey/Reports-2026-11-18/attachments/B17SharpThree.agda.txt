@@ -1,0 +1,88 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B17SharpThree where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₂; inj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Path as P
+import W4Fold as F
+open import WVOne using (read; lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import WKShape using (lvl3; p₃; g₃)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; l≼; ≼l)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpBound
+open import B14SharpTwo using (r₂; o₂)
+open import B17SharpUpdate
+open import B17SharpTwo
+import B14SharpLive as Live
+import B12ActualSlots as A
+import B12Terminal as T
+
+r₃ = R.nd R.sS (λ _ → r₂)
+o₃ = tt , (λ (_ : ⊤) → o₂)
+p₃i : R.Pos r₃
+p₃i = inj₂ (tt , inj₁ tt)
+g₃i : R.Tr r₂ → R.Tr r₃
+g₃i z = R.up R.zero tt (R.suc z) (V.z◃ z R.◃s)
+
+module Three (lem : LEM) where
+  open I.Sharp lem
+  open Two lem
+  open Update lem
+
+  step : R.Tr r₂ → R.Tr r₂
+  step z = R.fromBr r₃ p₃i (proj₁ (ψ♯ r₃ o₃ B♯ r₂ o₂ (V.Ωt r₂) (g₃i z)))
+  item : V.Tr⁺ R.zero → ℕ → R.Tr R.zero
+  item a n = proj₁ (ψ♯ r₃ o₃ B♯ R.zero tt a (g₃i (V.iter step R.zero n)))
+
+  whole : V.Tr⁺ R.zero → L.Ordᶜ L.zero
+  whole a = readRW (proj₁ (ψ♯ r₃ o₃ B♯ R.zero tt a (proj₁ (V.Ωt r₃))))
+  shape : ∀ a → whole a ≡ L.lim (λ n → readRW (V.cum (item a) n))
+  shape a rewrite empty-slot (kp♯ r₃ o₃ p₃i R.zero tt) = refl
+  in-whole : ∀ a n → readRW (V.cum (item a) n) ≼ whole a
+  in-whole a n = subst (readRW (V.cum (item a) n) ≼_) (sym (shape a)) (≼l n (≼-refl _))
+
+  module Run (r : T.Run lvl3) (hr : A.Covered r) (a : V.Tr⁺ R.zero) (ha : data≤ (proj₁ a) (proj₁ (T.Run.β r))) where
+    open T.Run
+    S : F.Base lvl2
+    S i w = bs r i (B.inc tt w)
+    w = P.z≤ lvl2
+    c = bs r lvl2 (B.inc tt B.self)
+    op = F.opB lvl2 ok₂ (proj₁ c) (proj₂ c)
+    S₁ = F.stepS op S
+    v₁ = F.run op S B.zero w (β r)
+    b₁ = canonical (S₁ lvl1 w₁) (A.extend (omegaB r (B.inc tt w₁)) (F.inf op S lvl1 w₁ (S lvl1 w₁)))
+    b₀ = ≼-trans (oneB r (B.inc tt w₀)) (◃→≼ (F.inf op S B.zero w₀ (S B.zero w₀)))
+    module Words = Seq B♯ ok₂ S₁ c (hr lvl2 (B.inc tt B.self)) b₁ b₀
+
+    sw : B.Tr lvl2 → B.Tr lvl2
+    sw z = B.ex (proj₁ c) (proj₁ c) (proj₂ c) (B.suc z) tt
+    output : ℕ → W.Tr⁺ B.zero
+    output n = F.ψ lvl3 (ok r) (bs r) B.zero (P.z≤ lvl3) (β r) (g₃ (B.iter sw B.zero n))
+    node = F.ψ lvl2 ok₂ S B.zero w (β r) (sw B.zero)
+
+    first-index : data≤ (proj₁ (ψ♯ r₂ o₂ B♯ R.zero tt a (step R.zero))) (proj₁ node)
+    first-index = l≼ (λ n → ≼l n (Words.output (all-words n) a w v₁ (≼-trans ha (◃→≼ (F.inf op S B.zero w (β r))))))
+
+    first : data≤ (item a 1) (proj₁ (output 1))
+    first = next≤ _ node first-index
+
+    prefix : readRW (V.cum (item a) 1) ≼ read (T.value r)
+    prefix = ≼-trans (add≤ (next≤ _ (β r) ha) first) (Live.cumulative (F.kp lvl3 (ok r) p₃ (P.z≤ lvl3))
+      (λ z → F.ψ lvl3 (ok r) (bs r) B.zero (P.z≤ lvl3) (β r) (g₃ z)) sw 1)
+
+  closed : readRW (V.cum (item (V.Ωt R.zero)) 1) ≼ read F.EBOᶜ
+  closed = ≼-trans (Run.prefix (T.finiteRun 2) (A.all-finite 2) (V.Ωt R.zero) (T.Run.oneβ (T.finiteRun 2))) (T.finite-ge 2)
+

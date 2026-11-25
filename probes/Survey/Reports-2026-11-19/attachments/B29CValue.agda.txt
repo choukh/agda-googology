@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实较高塔的每个正程序都在其外 Ω 的槽位中逐字保存实际内查询键。
+module B29CValue where
+
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; trans; subst)
+import W4Block as W
+import WVOne as V
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl)
+import B18Product as M
+import B20Head as Head
+import B28BSlot as S
+import B28BCut as Cut
+import B29CRelay as R
+import B29CKeys as K
+
+module At (n : ℕ) where
+  open R.At n
+  read-slot : W.Pos k → W.Tr i
+  read-slot (inj₁ _) = W.zero
+  read-slot (inj₂ (c , _)) = c
+  read-key : W.Tr k → W.Tr i
+  read-key (W.Ω p g) = read-slot p
+  read-key _ = W.zero
+
+  faithful : ∀ c (s : Key c) x → Root (node c s) x → read-key x ≡ c
+  faithful ._ start ._ (read-head g) = refl
+  faithful ._ (again h) ._ (read-head g) = refl
+  family : ∀ p x → Root p x → ℕ → V.T₀
+  family p ._ (read-head g) = S.At.Node.leaf m p g
+  cap : ∀ p x (t : Root p x) q → (∀ v → family p x t v ≼ q) → H.free x ≼ (q M.· L.ωᶜ)
+  cap p ._ (read-head g) q small = S.At.Node.cap m p g q small
+  lower : ∀ p x (t : Root p x) v → family p x t v ≼ H.free x
+  lower p ._ (read-head g) v = subst (_≼ H.free (W.Ω p g))
+    (S.At.Node.values m p g v) (S.At.Node.Run.lift-value m p g v)
+
+  module Real (j : ℕ) where
+    open K.At.Real n j using (c; x; actual; positive; module Walk)
+    literal : ∀ u → read-key (x u) ≡ c u
+    literal u = faithful (c u) (actual u) (x u) (positive u)
+    reflects : ∀ u v → x u ≡ x v → c u ≡ c v
+    reflects u v p = trans (sym (literal u)) (trans (cong read-key p) (literal v))
+    changes : ∀ v → x 0 ≡ x (suc v) → ⊥
+    changes v p = Head.no-zero (subst (W._⊢_◃_ i W.zero) (sym (reflects 0 (suc v) p)) (Walk.picked v))
+
+    leaves = λ u → family (node (c u) (actual u)) (x u) (positive u)
+    direct : ∀ u q → (∀ v → leaves u v ≼ q) → Cut.Physical.inner m j u ≼ (q M.· L.ωᶜ)
+    direct u = cap (node (c u) (actual u)) (x u) (positive u)
+    into : ∀ u v → leaves u v ≼ Cut.Physical.inner m j u
+    into u = lower (node (c u) (actual u)) (x u) (positive u)
+    full : ∀ q → (∀ u v → leaves u v ≼ q) → Cut.Physical.f m j ≼ ((q M.· L.ωᶜ) M.· L.ωᶜ)
+    full q small = Cut.Physical.cap m j (q M.· L.ωᶜ) (λ u → direct u q (small u))

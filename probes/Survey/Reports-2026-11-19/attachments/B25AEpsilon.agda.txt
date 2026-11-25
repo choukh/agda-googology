@@ -1,0 +1,85 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25AEpsilon where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+open import W4Block
+open import W4Path
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; read; h₁)
+open import WVTwo using (◃→≼)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≅→≼; l≼; ≼l; s≼s)
+import B12ActualSlots as A
+import B12Terminal as T
+import B12Strict as Strict
+import B13FiniteLift as Lift
+import B14Tower as W
+import B14PathHeight as Paths
+import B19PathShape as Shape
+import B20Room as Room
+import B21TowerPorts as Port
+import B22MovingIndex as E
+open T.Run
+
+-- Only the zero slot at ink self is needed for the internal clock.
+special : zero ≤ tw 1
+special = ink self
+qslot : T.Run (tw 1) → T₀
+qslot r = read (proj₁ (bs r zero special))
+
+module First (r : T.Run (tw 1)) (eq : ok r ≡ Ok-tw 1) (cv : A.Covered r) where
+  module M = W.At r
+  start : L.suc (qslot r) ≼ read (M.idx 1)
+  start = Strict.strict (◃l 0)
+  module F = E.First r eq cv
+  exact : Shape.Shape (T.value r)
+            (proj₁ (ψ (tw 1) (ok r) (bs r) zero special (β r) (proj₁ (Ωt (tw 1)))))
+  exact = subst (λ o → Shape.Shape (proj₁ (ψ (tw 1) o (bs r) zero (z≤ _) (β r) (proj₁ (Ωt (tw 1)))))
+               (proj₁ (ψ (tw 1) o (bs r) zero special (β r) (proj₁ (Ωt (tw 1)))))) (sym eq)
+            (Port.At.exact 0 (bs r) (β r) Paths.base)
+  value : ∀ x → x ≼ qslot r → E.above x ≼ read (T.value r)
+  value x h = F.From.all x (≼-trans (s≼s h) start)
+  selected : ∀ x → x ≼ qslot r → E.above x ≼ W.valueAt r special
+  selected x h = ≼-trans (value x h) (≅→≼ (Shape.read-shape exact))
+
+hull : T₀ → T₀
+hull x = L.lim (iter E.above x)
+
+module Next (r : T.Run (Lift.sc (tw 1))) (eq : proj₂ (ok r) tt ≡ Ok-tw 1) (cv : A.Covered r) where
+  module M = Lift.Lift (sΩ zero) h₁ (λ a → a) (λ a _ _ e → ≼-trans e
+    (T.inflate0 _ (ok a) (bs a) (z≤ _) (β a) (proj₁ (Ωt (tw 1))))) r cv
+  b = inc tt special
+  slot = λ n → M.S n zero special
+  seen = λ n → read (proj₁ (slot n))
+  room₀ : read (proj₁ (bs r zero b)) ≼ seen 0
+  room₀ = ◃→≼ (inf M.K (bs M.r₀) zero special (bs M.r₀ zero special))
+  clock : ∀ n → E.above (seen n) ≼ seen (suc n)
+  clock n = move (cv (tw 1) (inc tt self))
+    where
+    run-at = λ y → read (proj₁ (ψ (tw 1) (ok M.r₀) (M.S n) zero special (slot n) y))
+    t = W.reset (M.snap n) (slot n) (M.lowS n special)
+    module G = First t eq (M.cover n)
+    move : A._⊴_ (proj₁ (Ωt (tw 1))) M.c → E.above (seen n) ≼ run-at M.c
+    move (inj₁ p) = subst (λ y → E.above (seen n) ≼ run-at y) p (G.selected (seen n) (≼-refl _))
+    move (inj₂ d) = ≼-trans (G.selected (seen n) (≼-refl _)) (◃→≼ (mono (tw 1) (ok M.r₀) (M.S n) zero special (slot n) d))
+  result : ∀ n → E.above (seen n) ≼ read (T.value r)
+  result n = ≼-trans (≼-trans (First.value (M.snap n) eq (M.cover n) (seen n) (≼-refl _))
+      (weak (cv _ (inc tt self)))) (M.outer n)
+    where
+    eval = λ y → read (proj₁ (ψ (tw 1) (ok M.r₀) (M.S n) zero M.w (M.v n) y))
+    weak : A._⊴_ (proj₁ (Ωt (tw 1))) M.c → eval (proj₁ (Ωt (tw 1))) ≼ eval M.c
+    weak (inj₁ p) = subst (λ y → eval (proj₁ (Ωt (tw 1))) ≼ eval y) p (≼-refl _)
+    weak (inj₂ d) = ◃→≼ (mono (tw 1) (ok M.r₀) (M.S n) zero M.w (M.v n) d)
+
+  module From (x : T₀) (hx : x ≼ read (proj₁ (bs r zero b))) where
+    seq = iter E.above x
+    follows : ∀ n → seq n ≼ seen n
+    follows zero = ≼-trans hx room₀
+    follows (suc n) = ≼-trans (B22TowerCut.advance {seq n} {seen n} (follows n)) (clock n)
+      where import B22TowerCut
+    bound : hull x ≼ read (T.value r)
+    bound = l≼ λ n → ≼-trans (follows n) (≼-trans (OCF.Align.Value.≼-suc (≼-refl _)) (≼-trans (E.strict (seen n)) (result n)))

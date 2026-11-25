@@ -1,0 +1,116 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第十八次审查的临时试验 (一): BTBO 的层面上, 一步折叠与它的复合.
+module R18BTBO where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Function using (_∘_)
+open import Data.Empty using (⊥)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.BTBO
+open BoundedTrich using (Ordᴰ; zero; suc; lim; _<_; <-trans; <-dec; z<nz; f<l)
+open Ord-Ord
+
+-- 一步折叠: 后继层到前一层. 只对 "i < suc ℓ" 的证明做模式匹配, 不调三歧性.
+θ : (ℓ : Ordᴰ) → Ord (suc ℓ) → Ord ℓ
+θ ℓ zero             = Ω ℓ
+θ ℓ (suc a)          = lfp (θ ℓ a +_)
+θ ℓ (lim f)          = lim (θ ℓ ∘ f)
+θ ℓ (limᵢ zero f)    = lfp (θ ℓ ∘ f)          -- 分支层就是目标: 对角
+θ ℓ (limᵢ (suc p) f) = limᵢ p (θ ℓ ∘ f)       -- 分支层严格低于目标: 保留
+
+-- 订正前的规则 (链只经目标层), 作对照.
+ψold : ∀ {i ℓ} → i < ℓ → Ord ℓ → Ord i
+ψold p zero     = Ω _
+ψold p (suc a)  = lfp (ψold p a +_)
+ψold p (lim f)  = lim (ψold p ∘ f)
+ψold {i} {ℓ} p (limᵢ {i = j} q f) with <-dec q p
+... | injᵃ j<i  = limᵢ j<i (ψold p ∘ f ∘ coe)
+... | injᵇ r    = lim (λ n → ψold p (f (coe₀ (↑ r (iter (ψold p ∘ f ∘ coe₀ ∘ ↑ r) zero n)))))
+... | injᶜ refl = lfp (ψold p ∘ f ∘ coe₀)
+
+-- 两情形的写法: "等于目标" 并进 "不低于目标" (都走经分支层自身的链).
+ψ2 : ∀ {i ℓ} → i < ℓ → Ord ℓ → Ord i
+ψ2 p zero     = Ω _
+ψ2 p (suc a)  = lfp (ψ2 p a +_)
+ψ2 p (lim f)  = lim (ψ2 p ∘ f)
+ψ2 {i} {ℓ} p (limᵢ {i = j} q f) with <-dec q p
+... | injᵃ j<i  = limᵢ j<i (ψ2 p ∘ f ∘ coe)
+... | injᵇ _    = lim (λ n → ψ2 p (f (coe₀ (iter (ψ2 q ∘ f ∘ coe₀) zero n))))
+... | injᶜ refl = lim (λ n → ψ2 p (f (coe₀ (iter (ψ2 q ∘ f ∘ coe₀) zero n))))
+
+-- 有限深度的取样 (ℕ 极限取前三项), 用来在 refl 里比较两棵可数树.
+data S : Set where
+  z cut : S
+  s     : S → S
+  l     : S → S → S → S
+
+smp : ℕ → Ord₀ → S
+smp zero    _        = cut
+smp (suc d) zero     = z
+smp (suc d) (suc a)  = s (smp (suc d) a)
+smp (suc d) (lim f)  = l (smp d (f 0)) (smp d (f 1)) (smp d (f 2))
+smp (suc d) (limᵢ () f)
+
+nth : Ord₀ → ℕ → Ord₀
+nth (lim f) n = f n
+nth _       n = zero
+
+1ᴰ 2ᴰ 3ᴰ : Ordᴰ
+1ᴰ = suc zero
+2ᴰ = suc 1ᴰ
+3ᴰ = suc 2ᴰ
+
+-- (A) ψ₀(Ω₂): 直接 (订正后的 ψ<) 与一步折叠的复合 θ₀ ∘ θ₁, 逐项取样相同.
+dir2 comp2 old2 : Ord₀
+dir2  = ψ₀ {ℓ = 2ᴰ} (Ω 2ᴰ)
+comp2 = θ zero (θ 1ᴰ (Ω 2ᴰ))
+old2  = ψold {ℓ = 2ᴰ} (suc zero) (Ω 2ᴰ)
+
+A0 : smp 4 (nth dir2 0) ≡ smp 4 (nth comp2 0)
+A0 = refl
+A1 : smp 4 (nth dir2 1) ≡ smp 4 (nth comp2 1)
+A1 = refl
+A2 : smp 4 (nth dir2 2) ≡ smp 4 (nth comp2 2)
+A2 = refl
+A3 : smp 3 (nth dir2 3) ≡ smp 3 (nth comp2 3)
+A3 = refl
+
+-- (B) 订正前的规则在 Ω₂ 上: 逐项等于 ψ₀(Ω₁) 的后一项 (压平到 Ω₁).
+one1 : Ord₀
+one1 = ψ₀ {ℓ = 1ᴰ} (Ω 1ᴰ)
+
+B0 : smp 4 (nth old2 0) ≡ smp 4 (nth one1 1)
+B0 = refl
+B1 : smp 4 (nth old2 1) ≡ smp 4 (nth one1 2)
+B1 = refl
+B2 : smp 4 (nth old2 2) ≡ smp 4 (nth one1 3)
+B2 = refl
+
+-- (C) 两情形的写法与三情形的写法: 在 Ω₁ 上相差一位; 在 Ω₂ 上逐项相同.
+two1 two2 : Ord₀
+two1 = ψ2 {ℓ = 1ᴰ} zero (Ω 1ᴰ)
+two2 = ψ2 {ℓ = 2ᴰ} (suc zero) (Ω 2ᴰ)
+
+C0 : smp 4 (nth two1 0) ≡ smp 4 (nth one1 1)
+C0 = refl
+C1 : smp 4 (nth two1 1) ≡ smp 4 (nth one1 2)
+C1 = refl
+-- (在 Ω₂ 上两种写法不逐项相同: 内层 "等于目标" 的结点各差一位, 所以不作 refl 比较.)
+
+-- (D) ψ₀(Ω₃): 直接与三步复合.
+dir3 comp3 : Ord₀
+dir3  = ψ₀ {ℓ = 3ᴰ} (Ω 3ᴰ)
+comp3 = θ zero (θ 1ᴰ (θ 2ᴰ (Ω 3ᴰ)))
+
+D1 : smp 3 (nth dir3 1) ≡ smp 3 (nth comp3 1)
+D1 = refl
+-- 第 2 项不逐项相同: 内层结点上复合的序列比直接的序列晚一位 (同一条链, 起点不同).
+D2 : smp 3 (nth (nth dir3 2) 0) ≡ smp 3 (nth (nth comp3 2) 1)
+D2 = refl
+D2n : smp 3 (nth dir3 2) ≡ smp 3 (nth comp3 2) → ⊥
+D2n ()
+
+-- (E) 订正前与订正后在 Ω₂ 上确实不同 (第 2 项的取样).
+E2 : smp 4 (nth dir2 2) ≡ smp 4 (nth old2 2) → ⊥
+E2 ()

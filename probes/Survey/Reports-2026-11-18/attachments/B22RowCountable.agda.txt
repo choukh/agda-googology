@@ -1,0 +1,53 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22RowCountable where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl2; ok₂)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B12ActualSlots as Cov
+import B12Terminal as Tm
+import B13Target as Src
+import B21RowPool as Pool
+import B22RowRule as B
+import B22RowWhole as W
+import B22RowPrefix as P
+import B22RowLive as V
+
+append : Lev₂ → T₀ → Lev₂
+append x = L.add x (λ ())
+module Tail (z : Tr lvl2) (F : Op {lvl2} nil) (x : Lev₂) (h : B.Rule (B.act z F) x) where
+  tree = λ t → z + ι lvl2 t
+  source = λ t → append x (read t)
+  rule : ∀ t → B.Rule (B.act (tree t) F) (source t)
+  rule zero = h
+  rule (suc t) = B.Succ.lift (tree t) F (source t) (rule t)
+  rule (lim f a) = B.Limit.lift (λ j → tree (f j)) (λ j → +-mono z (ι-mono lvl2 (a j)))
+    F (λ j → source (f j)) (λ j → rule (f j))
+  rule (Ω () _)
+  rule (up _ () _ _)
+  rule (ex _ _ _ _ ())
+
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  open Pool.At.V.A r cv using (K; st1; v₁; w2; t₁)
+  module Family = Tail t₁ K Ω₂ᴸ (B.BaseRule.base r cv)
+  effect = λ t → B.act (Family.tree t) K
+  output : Tr zero → T₀
+  output t = read (proj₁ (run (effect t) st1 zero w2 v₁))
+  value : ∀ t → L.ψ⁰ (Src.pass (Family.source t)) ≼ output t
+  value t = ≼-trans (≅→≼ (L.ψ⁰-≅ (L.≅-sym (U.left-unit R.idσ (Src.pass-pres (B.reg (Family.rule t)))))))
+    (≼-trans (≅→≼ (L.≅-sym (proj₁ (P.link (B.advance (Family.rule t) P.empty)))))
+             (B.value (Family.rule t) P.empty st1 (W.At.initial r cv) w2 v₁ (W.At.run-bound r cv 0)))
+  state : ∀ t → V.Present (B.advance (Family.rule t) P.empty) (stepS (effect t) st1)
+  state t = B.state (Family.rule t) P.empty st1 (W.At.initial r cv)
+

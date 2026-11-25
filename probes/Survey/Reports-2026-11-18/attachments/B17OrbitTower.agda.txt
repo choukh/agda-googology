@@ -1,0 +1,135 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 同一个保留节点运算在任意阶的前缀变换空间逐点解释。
+module B17OrbitTower where
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-refl)
+import WSLevel as W
+import B12LimitRef as A
+import B14RefDescribed as D
+import B15OrbitAction as P
+import B16OrbitTransform as H
+import B16OrbitAction as B
+import B17OrbitOperator as Z
+
+record Space : Set₁ where
+  field
+    Carrier : Set
+    Rel Eq : Carrier → Carrier → Set
+    rr : ∀ a → Rel a a
+    ee : ∀ a → Eq a a
+    sup : (ℕ → Carrier) → Carrier
+    sl : ∀ f a → (∀ n → Rel (f n) a) → Rel (sup f) a
+    sr : ∀ a f n → Rel a (f n) → Rel a (sup f)
+    ss : ∀ f g → (∀ n → Eq (f n) (g n)) → Eq (sup f) (sup g)
+    node : (f : T₀ → Carrier) → (∀ {x y} → x ≼ y → Rel (f x) (f y)) → (∀ {x y} → x L.≅ y → Eq (f x) (f y)) → Carrier
+    nr : ∀ f g (rf : ∀ {x y} → x ≼ y → Rel (f x) (f y)) (ef : ∀ {x y} → x L.≅ y → Eq (f x) (f y))
+                 (rg : ∀ {x y} → x ≼ y → Rel (g x) (g y)) (eg : ∀ {x y} → x L.≅ y → Eq (g x) (g y)) →
+                 (∀ {x y} → x ≼ y → Rel (f x) (g y)) → Rel (node f rf ef) (node g rg eg)
+    ne : ∀ f g (rf : ∀ {x y} → x ≼ y → Rel (f x) (f y)) (ef : ∀ {x y} → x L.≅ y → Eq (f x) (f y))
+                 (rg : ∀ {x y} → x ≼ y → Rel (g x) (g y)) (eg : ∀ {x y} → x L.≅ y → Eq (g x) (g y)) →
+                 (∀ {x y} → x L.≅ y → Eq (f x) (g y)) → Eq (node f rf ef) (node g rg eg)
+open Space public
+
+Base : Space
+Carrier Base = P.Act
+Rel Base = B.Bridge
+Eq Base = B.Same
+rr Base = P.rows
+ee Base = P.pres
+sup Base = H.sup
+sl Base f a h {p} {e} d = D.weaken (A.limit _ (λ _ → P.s a e) (λ n → h n d)) (W.lC-const (P.s a e)) (P.infl a e (A.Described.infl d))
+sr Base a f n h {p} {e} d = D.weaken (h d) (W.lC-ub (λ n → P.s (f n) e) n) (P.infl (H.sup f) e (A.Described.infl d))
+ss Base f g h d = L.l≅ (λ n → h n d)
+node Base = Z.node
+nr Base = Z.node-rel
+ne Base = Z.node-eq
+
+record Arr (S : Space) : Set where
+  constructor arrow
+  field
+    run : Carrier S → Carrier S
+    rm : ∀ a b → Rel S a b → Rel S (run a) (run b)
+    em : ∀ a b → Eq S a b → Eq S (run a) (run b)
+open Arr public
+
+End : Space → Space
+Carrier (End S) = Arr S
+Rel (End S) F G = ∀ a b → Rel S a b → Rel S (run F a) (run G b)
+Eq (End S) F G = ∀ a b → Eq S a b → Eq S (run F a) (run G b)
+rr (End S) = rm
+ee (End S) = em
+run (sup (End S) f) a = sup S (λ n → run (f n) a)
+rm (sup (End S) f) a b d = sl S _ _ (λ n → sr S _ _ n (rm (f n) a b d))
+em (sup (End S) f) a b d = ss S _ _ (λ n → em (f n) a b d)
+sl (End S) f a h b c d = sl S _ _ (λ n → h n b c d)
+sr (End S) a f n h b c d = sr S _ _ n (h b c d)
+ss (End S) f g h b c d = ss S _ _ (λ n → h n b c d)
+run (node (End S) f rf ef) a = node S (λ y → run (f y) a) (λ d → rf d a a (rr S a)) (λ d → ef d a a (ee S a))
+rm (node (End S) f rf ef) a b d = nr S _ _ _ _ _ _ (λ p → rf p a b d)
+em (node (End S) f rf ef) a b d = ne S _ _ _ _ _ _ (λ p → ef p a b d)
+nr (End S) f g rf ef rg eg h a b d = nr S _ _ _ _ _ _ (λ p → h p a b d)
+ne (End S) f g rf ef rg eg h a b d = ne S _ _ _ _ _ _ (λ p → h p a b d)
+
+height : (S : Space) → T₀ → (Carrier S → Carrier S) → Carrier S → Carrier S
+height S L.zero F = F
+height S (L.suc y) F a = sup S (iter (height S y F) a)
+height S (L.lim g) F a = sup S (λ n → height S (g n) F a)
+iterate : ∀ (S : Space) (R : Carrier S → Carrier S → Set) (F G : Carrier S → Carrier S) →
+          (∀ a b → R a b → R (F a) (G b)) → ∀ a b → R a b → ∀ n → R (iter F a n) (iter G b n)
+iterate S R F G s a b d zero = d
+iterate S R F G s a b d (suc n) = s _ _ (iterate S R F G s a b d n)
+
+module Compare (S : Space) (F G : Arr S) where
+  f = λ y → height S y (run F)
+  g = λ y → height S y (run G)
+  initial : (u : Rel (End S) F G) → ∀ y a b → Rel S a b → Rel S (run F a) (g y b)
+  initial u L.zero a b r = u a b r
+  initial u (L.suc y) a b r = sr S _ (iter (g y) b) 1 (initial u y a b r)
+  initial u (L.lim g′) a b r = sr S _ (λ j → g (g′ j) b) 0 (initial u (g′ 0) a b r)
+  rel : Rel (End S) F G → ∀ {x y : T₀} → x ≼ y → ∀ a b → Rel S a b → Rel S (f x a) (g y b)
+  rel u {y = y} z≼ a b = initial u y a b
+  rel u {L.suc x} {L.suc y} (s≼s d) a b r = sl S _ _ (λ n → sr S _ _ n (iterate S (Rel S) (f x) (g y) (rel u d) a b r n))
+  rel u {y = L.lim h} (≼l n d) a b r = sr S _ (λ n → g (h n) b) n (rel u d a b r)
+  rel u (l≼ h) a b r = sl S _ _ (λ n → rel u (h n) a b r)
+  rel u (≼i {p = ()} _ _ _)
+  rel u (i≼ {p = ()} _)
+  rel u (≼u {r = ()} _)
+  rel u (u≼ {r = ()} _)
+  eq : Eq (End S) F G → ∀ {x y : T₀} → x L.≅ y → ∀ a b → Eq S a b → Eq S (f x a) (g y b)
+  eq u L.z≅ = u
+  eq u {L.suc x} {L.suc y} (L.s≅ d) a b r = ss S _ _ (iterate S (Eq S) (f x) (g y) (eq u d) a b r)
+  eq u (L.l≅ h) a b r = ss S _ _ (λ n → eq u (h n) a b r)
+  eq u (L.lᵢ≅ {p = ()} _ _)
+  eq u (L.upˡ {r = ()} _)
+  eq u (L.upʳ {r = ()} _)
+
+module Diag (S : Space) (F : Arr S) (a : Carrier S) where
+  f = λ y → height S y (run F) a
+  r : ∀ {x y} → x ≼ y → Rel S (f x) (f y)
+  r d = Compare.rel S F F (rm F) d a a (rr S a)
+  q : ∀ {x y} → x L.≅ y → Eq S (f x) (f y)
+  q d = Compare.eq S F F (em F) d a a (ee S a)
+  target = node S f r q
+
+Φ : (S : Space) → Arr (End S)
+run (run (Φ S) F) a = Diag.target S F a
+rm (run (Φ S) F) a b d = nr S _ _ _ _ _ _ (λ t → Compare.rel S F F (rm F) t a b d)
+em (run (Φ S) F) a b d = ne S _ _ _ _ _ _ (λ t → Compare.eq S F F (em F) t a b d)
+rm (Φ S) F G v a b d = nr S _ _ _ _ _ _ (λ t → Compare.rel S F G v t a b d)
+em (Φ S) F G v a b d = ne S _ _ _ _ _ _ (λ t → Compare.eq S F G v t a b d)
+
+Twr : ℕ → Space
+Twr zero = Base
+Twr (suc n) = End (Twr n)
+semK : (n : ℕ) → Arr (Twr n)
+semK zero = arrow P.raise (λ a b → B.raised {a} {b}) (λ a b → B.raised-same {a} {b})
+semK (suc n) = Φ (Twr n)
+basis : (n : ℕ) → Carrier (Twr n)
+basis zero = P.base
+basis (suc n) = semK n
+value : (n k : ℕ) → Carrier (Twr n)
+value n zero = run (run (Φ (Twr n)) (semK n)) (basis n)
+value n (suc k) = run (value (suc n) k) (basis n)

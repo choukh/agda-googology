@@ -1,0 +1,119 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module LT0 where
+
+open import Data.Nat using (ℕ; zero; suc; z≤n) renaming (_≤_ to _≤ⁿ_)
+open import Data.Nat.Properties using (≤-refl)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_; _++_; replicate)
+open import Data.List.Properties using (++-assoc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym; trans; cong; cong₂)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀; Keep; node⁺)
+open import OCF.Lean.YiRBSib
+open import OCF.Lean.YiRBFam using (ψ-⊵; Pt; can; pu; pt; tc; tu; OKB)
+open import OCF.Lean.YiRBCrit using (h₁)
+open import OCF.Lean.YiKVRel using (_⊴_; ⊴r; ++[])
+open import OCF.Lean.YiHCRel using (Mᴴ; mz; m1; mL; mΩ; mU; mw; mc; M⁰)
+import OCF.Align.EboLeanDef as E
+open E using (cof; cΩ; fsT; γT; natT; sucT; cmpᵀ; gt)
+open import OCF.Lean.YiMENote using (cofψ1; fsnψ1; cofψω; fsnψω; cof++1; cof++ω; pred++; fsn++)
+open import OCF.Lean.YiMWPre using (cof++Ω; fsT++)
+open import OCF.Lean.YiANFam using (ψᴺ; Ωᴺ; cofG; fsnG)
+open import OCF.Lean.YiDCRel using (app≤)
+open import OCF.Lean.YiCLFam using (nat; fn)
+open import OCF.Lean.YiCLLow using (Sb; s0; ss; pth; gtJ)
+open import OCF.Lean.YiCLCrit using (ωᶜ)
+open import OCF.Lean.YiCLPhi using (ωᵀ)
+open import OCF.Lean.YiHCFam using (M; mwN; mcJ; zlJ; nextJ; cumJ; mLJ; ΩJ)
+open import OCF.Lean.YiHCFold using (Qu; LF; GB)
+open import OCF.Lean.YiLRBridge using (NwB; τ)
+open import OCF.Lean.YiHCBridge using (MB; LwB; GBB)
+open import OCF.Lean.YiHCLim using (module Lim)
+open import OCF.Lean.YiHCOmega using (module Tω)
+open import OCF.Lean.YiKPRel using (ℓ¹)
+open import OCF.Lean.YiKPInst using (o¹; zq; zpt; pz-eq; pk-eq; module Sem)
+
+nodeZ : ∀ {X : Set} {x₀ : X} (K′ : Keep zero X x₀) (Q : Tr⁺ zero → Set) (G : X → Tr⁺ zero) (s : X → X)
+      → Q (limc⁺ (λ n → G (iter s x₀ n))) → Q (node⁺ K′ G s)
+nodeZ nothing         Q G s q = q
+nodeZ (just (() , _)) Q G s q
+
+LFP : ∀ {N} (p : Pt N 0) (o : Ok (fn N)) (r : Rb (fn N)) (B : Base (fn N)) (t₀ : E.T) → GBB (fn N) refl B t₀
+    → (β : Tr⁺ zero) → M⁰ (ψᴺ 0 t₀) (proj₁ β)
+    → ∀ {a x} → M N a x → M⁰ (ψᴺ 0 (t₀ ++ a)) (proj₁ (ψ (fn N) o r B zero (pt p) β x))
+LFP {N = zero}  (can s0)     o r B t₀ gb β hβ m = Qu o r B self β hβ m
+LFP {N = suc N} (can (ss s)) o r B t₀ gb β hβ m = LF o r (tc s) t₀ B gb β hβ m
+LFP {N = suc N} (pu p)       o r B t₀ gb β hβ m = LF o r (tu p) t₀ B gb β hβ m
+
+LFPB : ∀ {N} (ℓ : L) (e : ℓ ≡ fn N) (o : Ok ℓ) (r : Rb ℓ) (B : Base ℓ) (v : zero ≤ ℓ) (p : Pt N 0) → τ {j = 0} e v ≡ pt p
+     → (t₀ : E.T) → GBB ℓ e B t₀ → (β : Tr⁺ zero) → M⁰ (ψᴺ 0 t₀) (proj₁ β)
+     → ∀ {a x} → MB ℓ e a x → M⁰ (ψᴺ 0 (t₀ ++ a)) (proj₁ (ψ ℓ o r B zero v β x))
+LFPB _ refl o r B _ p refl t₀ gb β hβ m = LFP p o r B t₀ gb β hβ m
+
+gt0B : ∀ {N} (ℓ : L) (e : ℓ ≡ fn N) (t : Pos⁼ ℓ) {ν} → NwB ℓ e t ν → cmpᵀ (sucT ν) (natT 0) ≡ gt
+gt0B _ refl t nu = gtJ z≤n nu
+
+module LimU (G : ℕ → L) (d : ℕ → ℕ) (eG : ∀ n → G n ≡ fn (d n)) (R : (n : ℕ) → G n ≤ G (suc n))
+            (canR : ∀ n → Σ (Sb (d (suc n)) (d n)) λ s → OCF.Lean.YiLRBridge.τ₂ (eG n) (eG (suc n)) (R n) ≡ pth s) where
+  open Lim G d eG R canR
+
+  module FoldU (oc : (k : ℕ) → Ok (G k)) (r : Rb Lω) (B : Base Lω) (t₀ : E.T) (gb : GBω B t₀)
+               (ws : ∀ n → zero ≤ G n) (P : ∀ n → Pt (d n) 0) (q : ∀ n → τ {j = 0} (eG n) (ws n) ≡ pt (P n)) where
+    open Fold oc r B t₀ gb
+
+    Fu : Tr⁺ zero → Tr Lω → Tr⁺ zero
+    Fu β x = ψ Lω o r B zero (inu ws) β x
+
+    LFu : (β : Tr⁺ zero) → M⁰ (ψᴺ 0 t₀) (proj₁ β)
+        → ∀ {a x} → Mω a x → M⁰ (ψᴺ 0 (t₀ ++ a)) (proj₁ (Fu β x))
+    LFu β hβ (mz {x = x}) =
+      ++[] (λ z → M⁰ (ψᴺ 0 z) (proj₁ (Fu β x))) t₀
+        (zlJ 0 (λ y → proj₁ (Fu β y)) (mono Lω o r B zero (inu ws) β) hβ x)
+    LFu β hβ (m1 {t = a} {x = x} e h) =
+      nextJ 0 (Fu β x) (cofψ1 (natT 0) (t₀ ++ a) (cof++1 t₀ a e))
+        (λ k → trans (fsnψ1 (natT 0) (t₀ ++ a) k (cof++1 t₀ a e)) (cong (λ z → replicate k (E.ψ (natT 0) z)) (pred++ t₀ a e)))
+        (LFu β hβ h)
+    LFu β hβ (mL {t = a} {x = x} e h) =
+      mLJ 0 (cofψω (natT 0) (t₀ ++ a) (cof++ω t₀ a e))
+        (λ k → subst (λ z → M⁰ z (proj₁ (Fu β x)))
+          (sym (trans (fsnψω (natT 0) (t₀ ++ a) k (cof++ω t₀ a e)) (cong (ψᴺ 0) (fsn++ t₀ a k e))))
+          (LFu β hβ (h k)))
+    LFu β hβ (mΩ {p = inj₁ ()} _ _ _)
+    LFu β hβ (mΩ {t = a} {ν = ν} {p = inj₂ (m , t)} {g = g} e nu h) =
+      nodeZ (OCF.Lean.YiRWFold.kp Lω o (inj₂ (m , t)) (inu ws)) (λ Z → M⁰ (ψᴺ 0 (t₀ ++ a)) (proj₁ Z)) (λ z → Fu β (g z)) (sf m t g)
+        (mLJ 0 (cofG (natT 0) (t₀ ++ a) (gt0B (G m) (eG m) t nu) (cof++Ω t₀ a e))
+          (λ k → subst (λ z → M⁰ z (proj₁ (limc⁺ (λ k′ → Fu β (g (iter (sf m t g) (bz⁼ (G m) t) k′))))))
+            (sym (trans (fsnG (natT 0) (t₀ ++ a) k (gt0B (G m) (eG m) t nu) (cof++Ω t₀ a e)) (cong (ψᴺ 0) (fsT++ t₀ a (γT (t₀ ++ a) ν k) e))))
+            (cumJ 0 (λ k′ → Fu β (g (iter (sf m t g) (bz⁼ (G m) t) k′))) (suc k)
+              (LFu β hβ (h (γT (t₀ ++ a) ν k) (iter (sf m t g) (bz⁼ (G m) t) (suc k)) (chain m t e nu h k))))))
+    LFu β hβ (mU {t = a} {s = s₁} {x = x} {c = m} {y = y} {e = ey} h ch) =
+      subst (λ z → M⁰ (ψᴺ 0 z) (proj₁ (Fu β (up x m y ey)))) (++-assoc t₀ a s₁)
+        (LFPB (G m) (eG m) (oc m) (proj₂ r m) (cb m x) (ws m) (P m) (q m) (t₀ ++ a) (gbL m h) (Fu β x) (LFu β hβ h) ch)
+    LFu β hβ (mw h dd) = mwN 0 (LFu β hβ h) (mono Lω o r B zero (inu ws) β dd)
+    LFu β hβ (mc le h) = mcJ 0 (app≤ 0 t₀ le) (LFu β hβ h)
+
+-- 实例: c = ωᶜ
+module Wω = Lim fn (λ n → n) (λ _ → refl) (λ n → inc tt self) (λ n → ss s0 , refl)
+module Uω = LimU fn (λ n → n) (λ _ → refl) (λ n → inc tt self) (λ n → ss s0 , refl)
+module Tωω = Tω fn (λ n → n) (λ _ → refl) (λ n → inc tt self) (λ n → ss s0 , refl)
+
+lvl : h₁ ωᶜ ≡ Wω.Lω
+lvl = refl
+
+module Inst (r : Rb ℓ¹) where
+  open Sem r
+
+  gbOK : (B : Base Wω.Lω) → OKB B → Wω.GBω B []
+  gbOK B ok = Wω.mkGBω (λ m {i} si u _ → ok (fn i) (inc m u)) (λ m {i} si u _ → ΩJ i (B (fn i) (inc m u)) (ok (fn i) (inc m u)))
+
+  lift-ω : Kdˢ ωᶜ (E.Ωt ωᵀ) (proj₁ (Ωt (h₁ ωᶜ)))
+  lift-ω _ (inj₁ refl) B ok β hβ =
+    Uω.FoldU.LFu (proj₂ (proj₂ o¹ ωᶜ)) (proj₂ r ωᶜ) B [] (gbOK B ok) (λ n → z≤ (fn n)) zq pz-eq β hβ (Tωω.leafω (λ k → ≤-refl))
+  lift-ω _ (inj₂ refl) B ok β hβ =
+    Uω.FoldU.LFu (proj₂ (proj₂ o¹ ωᶜ)) (proj₂ r ωᶜ) B [] (gbOK B ok) (λ n → self ∙ proj₂ (proj₁ o¹) (nat n)) zq pk-eq β hβ (Tωω.leafω (λ k → ≤-refl))

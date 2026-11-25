@@ -1,0 +1,45 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 可分别取严格上界的三个分量与终点。只有从终点达标提取达标分量使用排中律。
+module B29Three where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_; _⊔_; s≤s)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Empty using (⊥-elim)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl; s≼s; ≼l; l≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRVLevel using (LEM)
+import B26Names as A
+import B17ValueDich as Order
+
+module Three (e : A.T₀) (r : ℕ → A.T₀)
+  (common : ∀ (a b c : A.T₀) → L.suc a ≼ e → L.suc b ≼ e → L.suc c ≼ e →
+    Σ ℕ (λ k → 2 ≤ k × L.suc a ≼ r k × L.suc b ≼ r k × L.suc c ≼ r k))
+  (inside : ∀ k → L.suc (r k) ≼ e)
+  (a b c y : A.T₀) (ay : a ≼ y) (by : b ≼ y) (cy : c ≼ y)
+  (close : ∀ k → 2 ≤ k → L.suc a ≼ r k → L.suc b ≼ r k → L.suc c ≼ r k → y ≼ r k) where
+  Small : A.T₀ → Set
+  Small = λ x → L.suc x ≼ e
+  Bounded = Small a × Small b × Small c
+  bounded : Small y → Bounded
+  bounded h = ≼-trans {a = L.suc a} {b = L.suc y} {c = e} (s≼s ay) h ,
+    ≼-trans {a = L.suc b} {b = L.suc y} {c = e} (s≼s by) h , ≼-trans {a = L.suc c} {b = L.suc y} {c = e} (s≼s cy) h
+  finish : Bounded → Small y
+  finish (pa , pb , pc) with common a b c pa pb pc
+  ... | k , two , h , p , q = ≼-trans {a = L.suc y} {b = L.suc (r k)} {c = e}
+    (s≼s (close k two h p q)) (inside k)
+  High = (e ≼ a) ⊎ ((e ≼ b) ⊎ (e ≼ c))
+  enough : High → e ≼ y
+  enough (inj₁ p) = ≼-trans {a = e} {b = a} {c = y} p ay
+  enough (inj₂ (inj₁ p)) = ≼-trans {a = e} {b = b} {c = y} p by
+  enough (inj₂ (inj₂ p)) = ≼-trans {a = e} {b = c} {c = y} p cy
+  actual : LEM → e ≼ y → High
+  actual lem g with Order.Classical.compare lem e a
+  ... | inj₁ h = inj₁ h
+  ... | inj₂ h with Order.Classical.compare lem e b
+  ... | inj₁ l = inj₂ (inj₁ l)
+  ... | inj₂ l with Order.Classical.compare lem e c
+  ... | inj₁ t = inj₂ (inj₂ t)
+  ... | inj₂ t = ⊥-elim (s≼-irrefl y (≼-trans {a = L.suc y} {b = e} {c = y} (finish (h , l , t)) g))
+

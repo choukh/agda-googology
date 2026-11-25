@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 沿所有自然层的真实前缀走到零或后继，归集该处保留整族槽的单位系数。
+module B31Front where
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+import W4Block as W
+import W4Ops as O
+open import WVOne using (T₀; 𝟏; read; h₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≼l; l≼)
+import B12Terminal as T
+import B12Strict as Ord
+import B14PathHeight as Path
+import B19PathValue as Scale
+import B18Product as M
+import B31UProduct as Prod
+import B31Length as Len
+open M using (_·_)
+open T.Run
+
+seed : ∀ {k} → T.Run k → T₀
+seed r = read (proj₁ (β r))
+val : ∀ {k} → T.Run k → T₀
+val r = read (T.value r)
+scaled : ∀ {k} (r : T.Run k) → val r ≈ᵛ (seed r · Prod.fold₁ r)
+scaled {k} r = Scale.At.scale k (ok r) (bs r) (proj₁ (O.Ωt k)) (Path.standard k) (β r)
+
+front : (z : W.Tr W.zero) → T.Run (h₁ z) → T₀
+front W.zero r = Prod.fold₁ r
+front (W.suc z) r = Prod.fold₁ r
+front (W.lim g _) r = L.lim (λ n → front (g n) (T.limRun (λ j → h₁ (g j)) r n))
+
+unit-in : ∀ {k} (r : T.Run k) → Prod.fold₁ r ≼ val r
+unit-in r = ≼-trans {b = seed r · Prod.fold₁ r} (M.pad (oneβ r) (Prod.fold₁ r)) (proj₂ (scaled r))
+inside : ∀ z r → front z r ≼ val r
+inside W.zero r = unit-in r
+inside (W.suc z) r = unit-in r
+inside (W.lim g d) r = l≼ {f = λ n → front (g n) (T.limRun _ r n)} λ n →
+  ≼-trans {b = val (T.limRun _ r n)} (inside (g n) (T.limRun _ r n)) (T.lim-child _ r n)
+
+module Bound (q : T₀) (pos : 𝟏 ≼ q) where
+  open Len.Budget q pos
+  base : ∀ {k} a (r : T.Run k) → Prod.fold₁ r ≼ q → val r ≼ (seed r · size a)
+  base a r d = ≼-trans {b = seed r · Prod.fold₁ r} (proj₁ (scaled r))
+    (M.mono (≼-refl (seed r)) (≼-trans {b = q} d (one a)))
+  run : ∀ z r → front z r ≼ q → val r ≼ (seed r · size (read z))
+  run W.zero r d = base L.zero r d
+  run (W.suc z) r d = base (read (W.suc z)) r d
+  run (W.lim g h) r d = V.join _ covers
+    where
+    module V = Prod.Run (λ n → h₁ (g n)) r
+    rank = λ n → read (g n)
+    parts : ∀ n → V.term n ≼ (V.seed n · size (rank n))
+    parts n = run (g n) (V.part n) (≼-trans {b = front (W.lim g h) r}
+      (≼l {f = λ j → front (g j) (V.part j)} n (≼-refl _)) d)
+    step : ∀ n → V.term (suc n) ≼ (V.term n · size (rank (suc n)))
+    step n = subst (λ a → V.term (suc n) ≼ (a · size (rank (suc n)))) (V.previous n) (parts (suc n))
+    module S = Series rank V.term (seed r) (λ n → Ord.strict (h n)) (parts 0) step
+    covers = S.cover

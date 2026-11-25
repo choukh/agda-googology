@@ -1,0 +1,83 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module MathO2Check where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀; kp)
+open import OCF.Lean.YiTBRow using (Rb; ψ; ψ₀ʳ; nat; h₁)
+open import OCF.Lean.YiMTTab using (rbᶻ; tbᶻ; ψ₀ᶻ)
+
+-- 一般的 "在层 a 之上再起一层 Ω 形状": tw (suc n) = W (tw n)
+W : L → L
+W a = nd (sΩ a) λ c → a ⊕ ↑ a c
+
+Ok-W : (a : L) → Ok a → Ok (W a)
+Ok-W a oa = (oa , λ c → lift a (↑ a c)) , λ c → Ok⊕ a (↑ a c) oa (OkO↑ a a oa self c)
+
+one : L
+one = nd sS (λ _ → zero)
+
+ok-one : Ok one
+ok-one = tt , λ _ → tt
+
+-- 候选闭项: 理想值 ψ₀(Ω_{Ω₂}) (层号下标 sup(1+c), c < Ω₂)
+cand : Tr zero
+cand = proj₁ (ψ₀ᶻ (W one) (Ok-W one ok-one) (proj₁ (Ωt (W one))))
+
+-- (1) 主线表: 目标经孩子 2, 嵌入在非零字面孩子, 没有条目, 那一行回退
+tb-none-s : ∀ c → tbᶻ zero h₁ (suc c) (nat 2) ≡ nothing
+tb-none-s c = refl
+tb-none-l : ∀ f a → tbᶻ zero h₁ (lim f a) (nat 2) ≡ nothing
+tb-none-l f a = refl
+
+fallback : ∀ (B : Base (tw 1)) j (v : j ≤ h₁ (nat 2)) β x c y e
+  → ψ (tw 1) (Ok-tw 1) (rbᶻ (tw 1)) B j (inc (nat 2) v) β (up x (suc c) y e)
+  ≡ ψ (tw 1) (Ok-tw 1) (rbᶻ (tw 1)) B j (inc (nat 2) v) β x ⊞ ψ₀ʳ (h₁ (suc c)) (proj₂ (Ok-tw 1) (suc c)) (proj₂ (rbᶻ (tw 1)) (suc c)) y
+fallback B j v β x c y e = refl
+
+-- (2) 结点行: Ω 形状, 孩子侧槽位, 目标经指定孩子: 对一切层号/槽位/路径都是 nothing
+k6 : ∀ k h (o : Ok (nd (sΩ k) h)) c t {j} c′ (v : j ≤ h c′) → kp (nd (sΩ k) h) o (inj₂ (c , t)) (inc c′ v) ≡ nothing
+k6 k h o c t c′ v = refl
+
+-- (3) 候选世界里同一格可达: a′ = 1 + Ω₁ (Ω 形状), 自身折叠把孩子层 Ω 树的结点搬成孩子侧槽位, 链的目标路径是 inc d …
+a′ : L
+a′ = one ⊕ ↑ one (proj₁ (Ωt one))
+
+hd : Tr zero → L
+hd d = one ⊕ (zero ⊕ nd sS (λ _ → ↑ zero d))
+
+a′-shape : a′ ≡ nd (sΩ zero) hd
+a′-shape = refl
+
+slot : Tr zero → Pos a′
+slot d = inj₂ (d , inj₂ (inj₂ (tt , inj₁ tt)))
+
+up-node : ∀ (b : Tr⁺ a′) d → Σ (Br a′ (slot d) → Tr a′) λ g → proj₁ (Up (hd d) (down stop d) b (proj₁ (Ωt (hd d)))) ≡ Ω (slot d) g
+up-node b d = _ , refl
+
+feed-path : ∀ d → posW a′ (slot d) ≡ inc d (inc tt self)
+feed-path d = refl
+
+-- (4) 塔第 2 项里 Ω₂ 形状的孩子: 下标层 (第 1 层) 到孩子的证据路径经 tw 1 的指定孩子 2
+u2 : Tr (tw 1)
+u2 = proj₁ (upz {s = sΩ zero} {h = h₁} (nat 2) (Ωt (h₁ (nat 2))))
+
+K : L
+K = tw 1 ⊕ ↑ (tw 1) u2
+
+okK : Ok K
+okK = proj₂ (Ok-tw 2) u2
+
+K-shape : Σ (Tr one → L) λ g → K ≡ nd (sΩ one) g
+K-shape = _ , refl
+
+K-path : ∀ (c : Tr one) → proj₂ (proj₁ okK) c ≡ inc (nat 2) (inc tt self) ∙ lift (tw 1) (zero ⊕ (zero ⊕ nd sS (λ _ → ↑ one c)))
+K-path c = refl

@@ -1,0 +1,45 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 不先取累加极限：每个原一级反馈索引自身实现哪一个全阶程序。可从实际第二层 Ω 的同一对输出读取。
+module B19OldTerms where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block hiding (D; R)
+open import W4Ops
+open import W4Fold
+open import WKGen using (Ω₁t)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+import B13OrbitFeed as O
+import B15OrbitModel as M
+import B16OrbitNode as N
+import B17OrbitModel as B
+import B17OrbitNatural as R
+import B17OrbitVector as V
+import B17OrbitTower as T
+import B17RefVector as W
+import B18OrbitExplicit as X
+open R using (R; closed; enterR)
+open V using (Index; oper)
+
+module Terms (c : Tr⁺ lvl1) (cover : lvl1 ⊢ Ω₁t ◃ proj₁ c) (v : W.Vector) (initial : Index c v) where
+  module Push = X.Step c c c cover v initial initial
+  module Canon = V.Step c c cover v initial
+  point : ℕ → Tr⁺ lvl1
+  point n = Canon.z (suc n) , ◃t (proj₂ c) ◃e
+  term : ∀ j → Index (point (suc j)) (Canon.vec (suc j))
+  term j m rm zero u ru G a rg = Push.In.mixed dm dr 0 j (oper D c 0) (initial dm dr 0) front a
+       (closed 0 dm G front (λ S i t w → Emono ok₂ D G S i t w (proj₂ c)) a rg)
+    where dm = u ⊙ m
+          dr = B.good m u rm ru
+          D = trTD dm O.D₁
+          front = op (E ok₂ D (proj₁ c) G) (Einf ok₂ D (proj₁ c) G)
+  term j m rm (suc n) u ru K F rk s rs G a rg = Push.In.mixed dm dr (suc n) j (oper D c (suc n)) (initial dm dr (suc n)) front F
+       (closed (suc n) dm K′ front rise F (enterR (suc n) (u ⊙ m) s rs K F rk)) idM (λ _ → refl) G a rg
+    where dm = s ⊙ u ⊙ m
+          dr = B.good (u ⊙ m) s (B.good m u rm ru) rs
+          D = trTD dm O.D₁
+          K′ = enter (suc n) s K
+          front = Itᴺ n ok₂ D (proj₁ c) K′
+          rise : Rn (suc n) K′ front
+          rise t H = Itmono n ok₂ (trTD t D) (enter (suc n) t K′) H (proj₂ c)

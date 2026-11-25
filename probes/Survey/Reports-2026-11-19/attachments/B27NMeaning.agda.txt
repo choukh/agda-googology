@@ -1,0 +1,42 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原森林恢复的意义在同一物理 χ 链上已达原 EBO。Flat 时单个真实输入的这项意义超过整条实际反馈尾段。
+module B27NMeaning where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Nat.Properties using (≤-refl)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; ≼l; l≼; ≼lim⁻; s≼s)
+open import WVOne using (read)
+import B25DTrack as R
+import B26CMeaning as F
+import B26Names as N
+import B26Depth as D
+import B26Flat as Flat
+import B17CellPrefix as C
+import B27NOrbit as O
+import B27NHead as H
+
+module Classical (lem : LEM) where
+  module M = F.Classical lem
+  opaque
+    response : ℕ → N.T₀
+    response n = M.meaning (R.χ n) (O.point n)
+
+  opaque
+    unfolding response
+    all : N.E ≼ L.lim response
+    all = M.sufficient {Y = L.lim response} λ x w →
+      let n , h = O.after x w
+      in ≼l {f = response} n (≼-trans (≼-suc (≼-refl (M.meaning x w)))
+           (M.strict x (R.χ n) w (O.point n) h))
+
+    upper : L.lim response ≼ N.E
+    upper = l≼ (λ n → M.necessary {Y = N.E} (≼-refl N.E) (R.χ n) (O.point n))
+
+  lifted : ∀ b → Σ ℕ (λ n → L.suc (N.value (H.child b)) ≼ response n)
+  lifted b = ≼lim⁻ {a = N.value (H.child b)} {f = response} (≼-trans {b = N.E} (N.strict (H.child b)) all)
+

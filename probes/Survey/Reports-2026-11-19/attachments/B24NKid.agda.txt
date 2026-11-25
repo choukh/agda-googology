@@ -1,0 +1,80 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24NKid where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WVTwo using (T₁)
+open import WKShape using (lvl3)
+open import WKGen using (Ω₁t)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import WSLevel using (Ω₁ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_)
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B12Omega3Ref as Ref
+import B11OuterCore as C
+import B13Target as P
+import B13OrbitFeed as O
+import B14RefFixed as F
+import B15OrbitModel as Mod
+import B17OrbitTower as T
+import B18RefDepth as H
+import B18RefRows as Rows
+import B18RefModel as Mean
+import B18RefDelta as D
+import B18RefCong as G
+import B18OrbitRows as Old
+import B18OrbitBase as Base₁
+import B19RowAction as D₂
+import B21RowDynamics as Dy
+import B21RowTheta as Th
+import B22RowCountable as Ap
+import B23ABlocks as Block
+import B24NProduct as Prod
+import B24NTheta as Physical
+import B24RRows as RefRows
+module S = Ref.S
+module BaseLaw = Base₁.For Prod.world
+module Native = RefRows.At Ω₂ᴸ (L.Ω-refl _)
+a = Ap.append Ω₂ᴸ
+q = λ x → P.pass (a x)
+coef = λ x → T.height Prod.space x (T.run Prod.theta)
+reg : ∀ x {u v} → u L.≅ v → D₂.D₂ (a x) u L.≅ D₂.D₂ (a x) v
+reg L.zero {u} {v} uv = L.l≅ λ n → L.iter-R L._≅_ {G = λ t → D.δ t u} {G′ = λ t → D.δ t v}
+  (λ t → G.δ-pres t uv) (L.Ω-refl _) (suc n)
+reg (L.suc x) uv = L.l≅ (L.iter-R L._≅_ {G = D₂.D₂ (a x)} {G′ = D₂.D₂ (a x)} (reg x) uv)
+reg (L.lim f) uv = L.l≅ λ j → reg (f j) uv
+
+fit : ∀ x v u → u L.≅ u → Th.Fits v u → Th.Fits (coef x v) (D₂.D₂ (a x) u)
+fit L.zero v u ru h = Th.Program.Meaning.fit v u ru h
+fit (L.suc x) v u ru h d = Mean.sup (Rows.meaning d) _ _ rs (λ n → hs n d)
+  where
+  above = S.iter (D₂.D₂ (a x)) u
+  below = iter (coef x) v
+  rs : ∀ n → above n L.≅ above n
+  rs = L.iter-R L._≅_ {G = D₂.D₂ (a x)} {G′ = D₂.D₂ (a x)} (reg x) ru
+  hs : ∀ n → Th.Fits (below n) (above n)
+  hs zero = h
+  hs (suc n) = fit x (below n) (above n) (rs n) (hs n)
+fit (L.lim f) v u ru h d = Mean.sup (Rows.meaning d) _ _ (λ n → reg (f n) ru) (λ n → fit (f n) v u ru h d)
+
+kid : ∀ x → Th.Fits (coef x H.initial) (Native.kid 1 x)
+kid x d = Mean.conv (Rows.meaning d) (fit x H.initial Ω₁ᴸ (L.Ω-refl _) Rows.seed d)
+  (L.≅-trans (L.≅-sym (D₂.at-zero (L.add-≅ {σ = λ ()} {σ′ = λ ()} (L.Ω-refl _) (L.≅-refl⁰ x))))
+    (F.pres (P.pass-pres (L.add-≅ {σ = λ ()} {σ′ = λ q → L.suc (L.suc q)} (L.Ω-refl _) (L.≅-refl⁰ x)))))
+
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  open Block.Site r cv using (Q′)
+  K₁′ = enterO O.m₁ Q′
+  model : BaseLaw.R Old.m K₁′ Prod.theta
+  model S v cover vi b bi = Physical.At.result r cv (Mod.pull S) v cover vi b bi
+  module Raised = BaseLaw.Raise Old.m (λ _ → refl) K₁′ Prod.theta model
+  curve = λ z → op (E ok₂ O.D₁ (O.g₁ z) K₁′) (Einf ok₂ O.D₁ (O.g₁ z) K₁′)
+  queried : ∀ x z → x ≼ read (suc z) → BaseLaw.Law Old.m (curve z) (coef x)
+  queried = Raised.law

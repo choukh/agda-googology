@@ -1,0 +1,41 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B11B 入口. 条件定理 run-stages (前提: A 路的 stages), run-to k (前提: 前 k 站), two-stages (前提: Stage 1).
+-- 无前提: inv1 (stage0 推出的第 1 站: 新零层底, 新链底, 新前缀指数), double₁; 反查见 B11OuterNeg. 不用排中律与函数外延.
+module B11OuterMain where
+
+open import Data.Nat using (ℕ; zero; suc; _<_)
+open import Data.Nat.Properties using (n<1+n; m<n⇒m<1+n)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.BTBO using (module Ord-Ord)
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import WVOne using (read)
+open import WKShape using (Ψ₃)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Src as T
+open import YiLAB11Target using (Stage; Goal; src-exit)
+open import B11OuterCore public
+open import B11OuterNeg public
+
+-- 交给协调者的形式: A 路的 stages 作参数.
+run-src : ((m : ℕ) → Stage m) → tr₀ (Ord-Ord.ψ₀ (Ord-Ord.lim T.ss)) ≼ read Ψ₃
+run-src S = src-exit (run-stages S)
+
+-- 只给前 k 站也行 (单个 m 的实例可接).
+invs-to : (k : ℕ) → ((m : ℕ) → m < k → Stage m) → Inv k
+invs-to zero    S = inv0
+invs-to (suc k) S = step k (S k (n<1+n k)) (invs-to k (λ m p → S m (m<n⇒m<1+n p)))
+
+run-to : (k : ℕ) → ((m : ℕ) → m < k → Stage m) → LV.ψ⁰ (T.ll k) ≼ read Ψ₃
+run-to k S = at-Ψ₃ k (invs-to k S)
+
+two-stages : Stage 1 → LV.ψ⁰ (T.ll 2) ≼ read Ψ₃
+two-stages S1 = at-Ψ₃ 2 (step 1 S1 inv1)
+
+-- 第 1 站与第十批 B10Join.double 是同一陈述 (定义上).
+same-double : T.ll 1 ≡ Ω₂ᴸ LV.+ Ω₂ᴸ
+same-double = refl
+
+double′ : LV.ψ⁰ (Ω₂ᴸ LV.+ Ω₂ᴸ) ≼ read Ψ₃
+double′ = double₁

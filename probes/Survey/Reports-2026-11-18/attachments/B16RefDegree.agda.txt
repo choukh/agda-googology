@@ -1,0 +1,30 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 零层尾的统一上限写成 ω^(ω²)。这里校准的是上限本身。
+module B16RefDegree where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import WVOne using (T₀; 𝟏)
+import B12Omega3Ref as R
+import B16RefTails as T
+
+step : ∀ {a b : T₀} → a L.≅ b → ∀ n → T.successors a n L.≅ (b L.+ R.numeral n)
+step d zero = d
+step d (suc n) = L.s≅ (step d n)
+
+ω = L.ψ⁰ 𝟏
+ω² = L.ψ⁰ (L.suc 𝟏)
+
+plus : ∀ {a b : T₀} → a L.≅ b → T.plusω a L.≅ (b L.+ ω)
+plus {a} {b} d = L.l≅ (λ n → subst (λ t → T.successors a n L.≅ (b L.+ t)) (sym (R.index n)) (step d n))
+
+module Count = T.Sum ω
+
+degree : ∀ n → T.degrees n L.≅ Count.left n
+degree zero = L.z≅
+degree (suc n) = L.≅-trans (plus (degree n)) (Count.rotate n)
+
+cap-is : T.cap L.≅ L.ψ⁰ ω²
+cap-is = L.ψ⁰-≅ (L.l≅ degree)

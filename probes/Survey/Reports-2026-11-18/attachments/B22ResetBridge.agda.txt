@@ -1,0 +1,42 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每一座高塔的同一个反馈孩子里可取到一个底超过低两层标准塔的真实第一塔。
+module B22ResetBridge where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; cong; refl; trans)
+open import W4Block
+open import W4Path
+open import WVOne using (read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans)
+import B12Terminal as T
+import B12ActualSlots as A
+import B15FixedWitness as H
+import B20Room as Room
+import B20StandardInside as St
+import B21TowerSeed as S
+import B14Tower as W
+open T.Run
+
+module Level (m : ℕ) where
+  n : ℕ
+  n = suc m
+  upper : ℕ
+  upper = suc (suc n)
+  module At (r : T.Run (tw upper)) (eq : ok r ≡ Ok-tw upper) (cover : A.Covered r) where
+    module X = S.Layer.At n r eq cover
+    path = St.tower m
+    first = Room.sub path X.sub
+    checked : ok first ≡ Ok-tw 1
+    checked = trans (Room.cert path X.sub) (trans (cong (H.pull path) X.okay) (St.tower-ok m))
+    cv = Room.cover path X.sub X.cv
+    high : Room.Room first (St.std n)
+    high = Room.room path X.sub X.high
+    outer : read (T.value first) ≼ read (T.value r)
+    outer = ≼-trans (Room.below path X.sub X.cv) X.value
+    module Run = W.At first
+    start : L.suc (St.std n) ≼ read (Run.idx 1)
+    start = St.Capture.start first cv (St.std n) high
+    result : L.suc (St.std n) ≼ read (T.value r)
+    result = ≼-trans (St.Capture.result first cv _ high) outer
+  module Standard = At (T.initial (tw upper) (Ok-tw upper)) refl (A.initial (tw upper) (Ok-tw upper))

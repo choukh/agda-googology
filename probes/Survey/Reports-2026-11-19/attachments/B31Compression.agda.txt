@@ -1,0 +1,38 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 反馈乘法和按输入高度指数计费的单位估计在同一 ε 点以下一起封闭。
+module B31Compression where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; _×_; proj₁; proj₂)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; l≼; z≼)
+import B27UEpsilon as E
+import B22MovingIndex as Fix
+import B18Product as M
+import B19IdealProduct as A
+import B19IdealPowers as Pow
+import B19IdealArithmetic as Ar
+open M using (_·_)
+
+module Orbit (q : T₀) (large : L.ωᶜ ≼ q) (x f : ℕ → T₀)
+  (initial : x 0 ≼ L.zero {L.zero})
+  (feedback : ∀ j → x (suc j) ≼ (L.ωᶜ · f j))
+  (unit : ∀ j → f j ≼ A.power q (Ar.norm (x j))) where
+  module C = E.At q
+  pos : 𝟏 ≼ q
+  pos = ≼-trans {b = L.ωᶜ} Pow.omega-pos large
+  ω-in : C.In L.ωᶜ
+  ω-in = C.down {x = L.ωᶜ} {y = q} large C.seed
+  start : C.In (x 0)
+  start = C.down {x = x 0} {y = q} (≼-trans {b = L.zero} initial z≼) C.seed
+  round : ∀ j → C.In (x j) → C.In (f j)
+  round j h = C.down {x = f j} {y = A.power q (Ar.norm (x j))} (unit j)
+    (C.powC {x = q} {y = Ar.norm (x j)} pos C.seed (C.expC {x = x j} h))
+  live : ∀ j → C.In (x j)
+  live zero = start
+  live (suc j) = C.down {x = x (suc j)} {y = L.ωᶜ · f j} (feedback j)
+    (C.mulC {x = L.ωᶜ} {y = f j} ω-in (round j (live j)))
+  strict : ∀ j → L.suc (f j) ≼ Fix.above q
+  strict j = C.finite {x = f j} (round j (live j))
+  cap : L.lim f ≼ Fix.above q
+  cap = l≼ {f = f} (λ j → ≼-trans {b = L.suc (f j)} (≼-suc (≼-refl _)) (strict j))

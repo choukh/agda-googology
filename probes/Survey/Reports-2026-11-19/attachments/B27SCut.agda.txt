@@ -1,0 +1,88 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 清去最后的外部零起点，每个原名的严格 K 切口仍在同一变层的每个第二次零观测里兑现。
+module B27SCut where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import WVOne using (T₀; read)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≼l; l≼; ≼-suc; ≼lim⁻; s≼s)
+import OCF.Align.Level as L
+import B20StandardInside as St
+import B21StandardShape as Shape
+import B26PActual as End
+import B26Names as N
+import B27SActual as X
+import B27SRestart as R
+import B12Terminal as T
+import B12ActualSlots as A
+import W4Block as W
+import W4Path as Path
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+weaken : ∀ (a : T₀) → a ≼ L.suc a
+weaken a = ≼-suc (≼-refl a)
+down : ∀ (a b : T₀) → L.suc a ≼ b → a ≼ b
+down a b = ≼-trans {a = a} {b = L.suc a} {c = b} (weaken a)
+step : ∀ m → St.std m ≼ St.std (suc m)
+step m = down (St.std m) (St.std (suc m)) (Shape.rise m)
+
+
+module Host (m : ℕ) (r : T.Run (W.tw (suc (X.count m)))) (eq : T.Run.ok r ≡ Path.Ok-tw (suc (X.count m))) (cr : A.Covered r) where
+  private module Z = X.Host m r eq cr
+  abstract
+    unit : ℕ → ℕ → T₀
+    unit = R.At.Pass.AtIndex.unit m Z.X.found Z.X.cert Z.rc
+    lo : ∀ t j → L.suc (St.std m) ≼ unit t j
+    lo t j = ≼-trans {a = L.suc (St.std m)} {b = L.suc (St.std (suc m))} {c = unit t j}
+      (s≼s (step m)) (R.At.Pass.AtIndex.floor m Z.X.found Z.X.cert Z.rc t j)
+    hi : ∀ t j → unit t j ≼ Z.value t j
+    hi = R.At.Pass.AtIndex.reset-below m Z.X.found Z.X.cert Z.rc
+  
+    root : ∀ t j → unit t j ≼ read (T.value r)
+    root t j = ≼-trans {a = unit t j} {b = Z.value t j} {c = read (T.value r)} (hi t j)
+      (≼-trans {a = Z.value t j} {b = read (T.value Z.witness)} {c = read (T.value r)}
+        (Z.paid t j) (Z.X.D.C.lift-value 1))
+    computed : ∀ t j → unit t j ≡ R.At.Pass.AtIndex.unit m Z.X.found Z.X.cert Z.rc t j
+    computed t j = refl
+
+Root = λ m → T.Run (W.tw (suc (X.count m)))
+original : ∀ a → L.suc (N.value a) ≼ End.K → Σ ℕ (λ m →
+  ∀ (r : Root m) eq cr t j → L.suc (N.value a) ≼ Host.unit m r eq cr t j)
+original a d with ≼lim⁻ {a = N.value a} {f = St.std} d
+... | m , h = m , (λ r eq cr t j → ≼-trans {a = L.suc (N.value a)} {b = L.suc (St.std m)} {c = Host.unit m r eq cr t j}
+                   (s≼s (down (N.value a) (St.std m) h)) (Host.lo m r eq cr t j))
+
+module Family (f : ∀ m → Root m) (eq : ∀ m → T.Run.ok (f m) ≡ Path.Ok-tw (suc (X.count m)))
+  (cr : ∀ m → A.Covered (f m)) (t j : ℕ → ℕ) where
+  sample = λ m → Host.unit m (f m) (eq m) (cr m) (t m) (j m)
+  low : End.K ≼ L.lim sample
+  low = l≼ λ m → ≼l m (down (St.std m) (sample m) (Host.lo m (f m) (eq m) (cr m) (t m) (j m)))
+  high : ∀ (v : T₀) → (∀ m → read (T.value (f m)) ≼ v) → L.lim sample ≼ v
+  high v bounded = l≼ λ m → ≼-trans {a = sample m} {b = read (T.value (f m))} {c = v}
+     (Host.root m (f m) (eq m) (cr m) (t m) (j m)) (bounded m)
+
+  exact : (∀ m → read (T.value (f m)) ≼ End.K) → End.K ≈ᵛ L.lim sample
+  exact h = low , high End.K h
+  interval : (∀ m → read (T.value (f m)) ≼ End.Y) → End.K ≼ L.lim sample × L.lim sample ≼ End.Y
+  interval h = low , high End.Y h
+
+standard : ∀ m → Root m
+standard m = T.initial (W.tw (suc (X.count m))) (Path.Ok-tw (suc (X.count m)))
+standard-below : ∀ m → read (T.value (standard m)) ≼ End.K
+standard-below m = ≼l (suc (X.count m)) (≼-refl (St.std (suc (X.count m))))
+real : ∀ m → Root m
+real m = T.limRun W.tw T.terminal (suc (X.count m))
+real-below : ∀ m → read (T.value (real m)) ≼ End.Y
+real-below m = T.lim-child W.tw T.terminal (suc (X.count m))
+
+sc : ∀ m → A.Covered (standard m)
+sc m = A.initial (W.tw (suc (X.count m))) (Path.Ok-tw (suc (X.count m)))
+rc : ∀ m → A.Covered (real m)
+rc m = A.enter W.sL W.tw T.terminal (suc (X.count m)) (T.prefix W.tw (suc (X.count m))) (A.initial W.Λ Path.Ok-Λ)
+module Independent (t j : ℕ → ℕ) where
+  private module F = Family standard (λ m → refl) sc t j
+  cofinal : End.K ≈ᵛ L.lim F.sample
+  cofinal = F.exact standard-below
+module Actual (t j : ℕ → ℕ) where
+  private module F = Family real (λ m → refl) rc t j
+  interval : End.K ≼ L.lim F.sample × L.lim F.sample ≼ End.Y
+  interval = F.interval real-below

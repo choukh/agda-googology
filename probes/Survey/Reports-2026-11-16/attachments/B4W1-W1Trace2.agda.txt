@@ -1,0 +1,238 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W1 检查件 (4): 结点型的格的来源追踪 (有限测试, 全是 refl), 接 W1Trace.T0.
+-- G₃ zero 的第 1 项 (Ω_{Ω+b} + Ω_{Ω+b·2}) 进孩子 1 (层 L₅ = h₂ (b + b)), 底族是 By i = "Ωt L₃ 朝 i 层的折叠".
+module W1Trace2 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (node⁺)
+open import S1Sharp
+open import W1Cell using (h₁; lvl1; lvl2; o₁; ok1; ok2; b⁺; b)
+open import W1Trace
+
+-- 通用的三步 (对一切层号与底族, refl): 实例化时不必再把具体的大层号正规化.
+module Gen (lem : LEM) where
+  open Sharp lem
+
+  -- ℕ 极限形状的层: Ω 树的折叠是 ℕ 极限, 第 0 项是 "进孩子 0" (左项为零, 底族与底值原样).
+  step0 : ∀ (m : ℕ → L) (o : Ok (nd sL m)) (B : Base♯) j oj (β : Tr⁺ j) → Σ (ℕ → Tr j) λ H → Σ _ λ a
+    → (proj₁ (ψ♯ (nd sL m) o B j oj β (proj₁ (Ωt (nd sL m)))) ≡ lim H a)
+    × (H 0 ≡ proj₁ (ψ♯ (m 0) (proj₂ o 0) B j oj β (proj₁ (Ωt (m 0)))))
+  step0 m o B j oj β = _ , _ , refl , refl
+
+  -- 第 1 项是 "进孩子 1", 左项 x = 孩子 0 的 Ω 树; 交下去的底族是左项朝各层的折叠.
+  left : ∀ (m : ℕ → L) → Tr (nd sL m)
+  left m = proj₁ (upz {s = sL} {h = m} 0 (Ωt (m 0)))
+
+  step1 : ∀ (m : ℕ → L) (o : Ok (nd sL m)) (B : Base♯) j oj (β : Tr⁺ j) → Σ (ℕ → Tr j) λ H → Σ _ λ a
+    → (proj₁ (ψ♯ (nd sL m) o B j oj β (proj₁ (Ωt (nd sL m)))) ≡ lim H a)
+    × (H 1 ≡ proj₁ (ψ♯ (m 1) (proj₂ o 1) (λ i oi → ψ♯ (nd sL m) o B i oi (B i oi) (left m)) j oj
+                       (ψ♯ (nd sL m) o B j oj β (left m)) (proj₁ (Ωt (m 1)))))
+  step1 m o B j oj β = _ , _ , refl , refl
+
+  -- 左项朝 i 层的折叠就是孩子 0 的 Ω 树朝 i 层的折叠 (底族原样).
+  left-base : ∀ (m : ℕ → L) (o : Ok (nd sL m)) (B : Base♯) i oi (β : Tr⁺ i)
+    → ψ♯ (nd sL m) o B i oi β (left m) ≡ ψ♯ (m 0) (proj₂ o 0) B i oi β (proj₁ (Ωt (m 0)))
+  left-base m o B i oi β = refl
+
+  -- Ω 形状的层: Ω 树的顶结点 (槽位层 k) 朝第 0 层走链; 回灌的目标是 k, 起点是底族在 k 的值.
+  top-chain : ∀ k (h : Tr k → L) (o : Ok (nd (sΩ k) h)) (B : Base♯) (β : Tr⁺ zero)
+    → ψ♯ (nd (sΩ k) h) o B zero tt β (proj₁ (Ωt (nd (sΩ k) h)))
+    ≡ node⁺ {X = Tr k} {x₀ = zero} nothing
+        (λ z → ψ♯ (h z) (proj₂ o z) B zero tt β (proj₁ (Ωt (h z))))
+        (λ z → proj₁ (ψ♯ (h z) (proj₂ o z) B k (proj₁ (proj₁ o)) (B k (proj₁ (proj₁ o))) (proj₁ (Ωt (h z)))))
+  top-chain k h o B β = refl
+
+  -- 第 2 项是 "进孩子 2", 左项 = 孩子 0 的 Ω 树 + 孩子 1 的 Ω 树.
+  left2 : ∀ (m : ℕ → L) → Tr (nd sL m)
+  left2 m = left m + proj₁ (upz {s = sL} {h = m} 1 (Ωt (m 1)))
+
+  step2 : ∀ (m : ℕ → L) (o : Ok (nd sL m)) (B : Base♯) j oj (β : Tr⁺ j) → Σ (ℕ → Tr j) λ H → Σ _ λ a
+    → (proj₁ (ψ♯ (nd sL m) o B j oj β (proj₁ (Ωt (nd sL m)))) ≡ lim H a)
+    × (H 2 ≡ proj₁ (ψ♯ (m 2) (proj₂ o 2) (λ i oi → ψ♯ (nd sL m) o B i oi (B i oi) (left2 m)) j oj
+                       (ψ♯ (nd sL m) o B j oj β (left2 m)) (proj₁ (Ωt (m 2)))))
+  step2 m o B j oj β = _ , _ , refl , refl
+
+  left2-base : ∀ (m : ℕ → L) (o : Ok (nd sL m)) (B : Base♯) i oi (β : Tr⁺ i)
+    → ψ♯ (nd sL m) o B i oi β (left2 m)
+    ≡ ψ♯ (m 1) (proj₂ o 1) (λ i′ oi′ → ψ♯ (nd sL m) o B i′ oi′ (B i′ oi′) (left m)) i oi
+        (ψ♯ (m 0) (proj₂ o 0) B i oi β (proj₁ (Ωt (m 0)))) (proj₁ (Ωt (m 1)))
+  left2-base m o B i oi β = refl
+
+  -- 沿层号的相等搬运 (证据用 subst): 两个调用相等. 实例化时只用 refl 的形状等式, 不比较大项.
+  tr : ∀ {ℓ ℓ′ : L} (e : ℓ ≡ ℓ′) (o : Ok ℓ) (B : Base♯) j oj (β : Tr⁺ j)
+    → ψ♯ ℓ o B j oj β (proj₁ (Ωt ℓ)) ≡ ψ♯ ℓ′ (subst Ok e o) B j oj β (proj₁ (Ωt ℓ′))
+  tr refl o B j oj β = refl
+
+module T2 (lem : LEM) where
+  open Sharp lem
+  open T0 lem
+  open Gen lem
+
+  Ls : L
+  Ls = nd sL g₂
+
+  oLs : Ok Ls
+  oLs = proj₂ oL₁ zero
+
+  x_L : Tr Ls
+  x_L = proj₁ (upz {s = sL} {h = g₂} 0 (Ωt (g₂ 0)))
+
+  By : Base♯
+  By i oi = ψ♯ Ls oLs B♯ i oi (B♯ i oi) x_L
+
+  by-is : ∀ i oi → By i oi ≡ ψ♯ L₃ oL₃ B♯ i oi (B♯ i oi) (proj₁ (Ωt L₃))
+  by-is i oi = refl
+
+  βy : Tr⁺ zero
+  βy = ψ♯ Ls oLs B♯ zero tt (Ωt zero) x_L
+
+  L₅ : L
+  L₅ = g₂ 1
+
+  oL₅ : Ok L₅
+  oL₅ = proj₂ oLs 1
+
+  hc₅ : Tr zero → L
+  hc₅ c = chL L₅ c
+
+  v-1 : Σ (ℕ → Tr zero) λ H → Σ _ λ a
+    → (proj₁ (G₃ zero) ≡ lim H a) × (H 1 ≡ proj₁ (ψ♯ L₅ oL₅ By zero tt βy (proj₁ (Ωt L₅))))
+  v-1 = _ , _ , refl , refl
+
+  G₇ : Tr zero → Tr⁺ zero
+  G₇ c = ψ♯ (hc₅ c) (proj₂ oL₅ c) By zero tt βy (proj₁ (Ωt (hc₅ c)))
+
+  s₇ : Tr zero → Tr zero
+  s₇ c = proj₁ (ψ♯ (hc₅ c) (proj₂ oL₅ c) By zero tt (By zero tt) (proj₁ (Ωt (hc₅ c))))
+
+  v-2 : ψ♯ L₅ oL₅ By zero tt βy (proj₁ (Ωt L₅)) ≡ node⁺ {X = Tr zero} {x₀ = zero} nothing G₇ s₇
+  v-2 = refl
+
+  d₁ : Tr zero
+  d₁ = s₇ zero
+
+  -- 孩子 d₁ 的层号 M₀ = hc₅ d₁; 沿第一孩子下行四层到 M₄ (都是 ℕ 极限形状).
+  M₀ M₁ M₂ M₃ M₄ : L
+  M₀ = hc₅ d₁
+  M₁ = chL M₀ 0
+  M₂ = chL M₁ 0
+  M₃ = chL M₂ 0
+  M₄ = chL M₃ 0
+
+  oM₀ : Ok M₀
+  oM₀ = proj₂ oL₅ d₁
+
+  oM₁ : Ok M₁
+  oM₁ = proj₂ oM₀ 0
+
+  oM₂ : Ok M₂
+  oM₂ = proj₂ oM₁ 0
+
+  oM₃ : Ok M₃
+  oM₃ = proj₂ oM₂ 0
+
+  oM₄ : Ok M₄
+  oM₄ = proj₂ oM₃ 0
+
+  -- M₄ 的孩子 0, 1: A₀ (偏移 Ω₁ 的读回), A₁ (偏移 Ω₁ + Ω₂ 的读回, Ω 形状, 下标层 lvl1 在 tw 1 的孩子 d₁ 里).
+  A₀ A₁ : L
+  A₀ = chL M₄ 0
+  A₁ = chL M₄ 1
+
+  oA₀ : Ok A₀
+  oA₀ = proj₂ oM₄ 0
+
+  oA₁ : Ok A₁
+  oA₁ = proj₂ oM₄ 1
+
+  hA : Tr lvl1 → L
+  hA z = chL A₁ z
+
+  v-shape : A₁ ≡ nd (sΩ lvl1) hA
+  v-shape = refl
+
+  -- 四层下行 (step0 的实例; M_k 的形状 nd sL (chL M_k) 由类型检查核对).
+  v-3a : Σ (ℕ → Tr zero) λ H → Σ _ λ a
+    → (proj₁ (ψ♯ (nd sL (chL M₀)) oM₀ By zero tt βy (proj₁ (Ωt (nd sL (chL M₀))))) ≡ lim H a)
+    × (H 0 ≡ proj₁ (ψ♯ (chL M₀ 0) (proj₂ oM₀ 0) By zero tt βy (proj₁ (Ωt (chL M₀ 0)))))
+  v-3a = step0 (chL M₀) oM₀ By zero tt βy
+
+  v-3b : Σ (ℕ → Tr zero) λ H → Σ _ λ a
+    → (proj₁ (ψ♯ (nd sL (chL M₁)) oM₁ By zero tt βy (proj₁ (Ωt (nd sL (chL M₁))))) ≡ lim H a)
+    × (H 0 ≡ proj₁ (ψ♯ (chL M₁ 0) (proj₂ oM₁ 0) By zero tt βy (proj₁ (Ωt (chL M₁ 0)))))
+  v-3b = step0 (chL M₁) oM₁ By zero tt βy
+
+  v-3c : Σ (ℕ → Tr zero) λ H → Σ _ λ a
+    → (proj₁ (ψ♯ (nd sL (chL M₂)) oM₂ By zero tt βy (proj₁ (Ωt (nd sL (chL M₂))))) ≡ lim H a)
+    × (H 0 ≡ proj₁ (ψ♯ (chL M₂ 0) (proj₂ oM₂ 0) By zero tt βy (proj₁ (Ωt (chL M₂ 0)))))
+  v-3c = step0 (chL M₂) oM₂ By zero tt βy
+
+  v-3d : Σ (ℕ → Tr zero) λ H → Σ _ λ a
+    → (proj₁ (ψ♯ (nd sL (chL M₃)) oM₃ By zero tt βy (proj₁ (Ωt (nd sL (chL M₃))))) ≡ lim H a)
+    × (H 0 ≡ proj₁ (ψ♯ (chL M₃ 0) (proj₂ oM₃ 0) By zero tt βy (proj₁ (Ωt (chL M₃ 0)))))
+  v-3d = step0 (chL M₃) oM₃ By zero tt βy
+
+  -- 实例. 类型由通用引理的陈述实例化得到, 写成 `_`: 逐字写出陈述会让检查器去比较两份展开不同的大项 (6G 堆不够, 退出 251).
+  -- 证据沿形状等式 (refl) 用 subst 搬运, 各步的两端逐字相接.
+  sh₄ : M₄ ≡ nd sL (chL M₄)
+  sh₄ = refl
+
+  oM₄ˢ : Ok (nd sL (chL M₄))
+  oM₄ˢ = subst Ok sh₄ oM₄
+
+  -- (i) v-3d 的右端 (层 M₄ 上的调用) 搬到 nd sL (chL M₄) 上:
+  --     ψ♯ M₄ oM₄ By zero tt βy (Ωt M₄) ≡ ψ♯ (nd sL (chL M₄)) oM₄ˢ By zero tt βy (Ωt (nd sL (chL M₄))).
+  v-4a : _
+  v-4a = tr sh₄ oM₄ By zero tt βy
+
+  -- (ii) step1 的实例: 上式右端是 ℕ 极限 lim H a, H 1 是 "进孩子 1": ψ♯ (chL M₄ 1) (proj₂ oM₄ˢ 1) Bz zero tt βz (Ωt (chL M₄ 1)),
+  --      Bz i oi = ψ♯ (nd sL (chL M₄)) oM₄ˢ By i oi (By i oi) (left (chL M₄)).
+  v-4b : _
+  v-4b = step1 (chL M₄) oM₄ˢ By zero tt βy
+
+  -- (iii) 孩子 1 (A₁) 上的调用搬到 nd (sΩ lvl1) hA 上 (对一切底族与底值).
+  oAˢ : Ok (nd (sΩ lvl1) hA)
+  oAˢ = subst Ok v-shape (proj₂ oM₄ˢ 1)
+
+  v-4c : (B : Base♯) (β : Tr⁺ zero) → _
+  v-4c B β = tr v-shape (proj₂ oM₄ˢ 1) B zero tt β
+
+  -- (iv) top-chain 的实例: 顶结点 (槽位层 lvl1, 在 tw 1 的孩子 d₁ 里) 走链; 回灌的目标是 lvl1, 起点是 B lvl1 _.
+  v-node : (B : Base♯) (β : Tr⁺ zero) → _
+  v-node B β = top-chain lvl1 hA oAˢ B β
+
+  -- (v) left-base 的实例: 取 B = Bz, 起点 Bz lvl1 ok = ψ♯ (chL M₄ 0) (proj₂ oM₄ˢ 0) By lvl1 ok (By lvl1 ok) (Ωt (chL M₄ 0));
+  --     最里面的底值 By lvl1 ok = ψ♯ L₃ oL₃ B♯ lvl1 ok (Ωt lvl1) (Ωt L₃) (by-is), 即 W1Cell.CellN.l3-keeps 那一格.
+  v-base : (ok : Ok lvl1) → _
+  v-base ok = left-base (chL M₄) oM₄ˢ By lvl1 ok (By lvl1 ok)
+
+  -- 目标不在地板上的实例: M₄ 的孩子 2 是 Ω 形状, 下标层 lvl2; 同样的四步, 最里面的底值是 By lvl2 ok.
+  hA₂ : Tr lvl2 → L
+  hA₂ z = chL (chL M₄ 2) z
+
+  v-shape₂ : chL M₄ 2 ≡ nd (sΩ lvl2) hA₂
+  v-shape₂ = refl
+
+  oAˢ₂ : Ok (nd (sΩ lvl2) hA₂)
+  oAˢ₂ = subst Ok v-shape₂ (proj₂ oM₄ˢ 2)
+
+  w-4b : _
+  w-4b = step2 (chL M₄) oM₄ˢ By zero tt βy
+
+  w-4c : (B : Base♯) (β : Tr⁺ zero) → _
+  w-4c B β = tr v-shape₂ (proj₂ oM₄ˢ 2) B zero tt β
+
+  w-node : (B : Base♯) (β : Tr⁺ zero) → _
+  w-node B β = top-chain lvl2 hA₂ oAˢ₂ B β
+
+  w-base : (ok : Ok lvl2) → _
+  w-base ok = left2-base (chL M₄) oM₄ˢ By lvl2 ok (By lvl2 ok)

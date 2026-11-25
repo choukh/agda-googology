@@ -1,0 +1,42 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 实际整塔精确等值于各塔从 1 起算的系数之有限序数乘积。实际反馈孩子也有相同的分解。
+module B19Coefficient where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+open import W4Block hiding (_∙_; lim)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; ≼-trans; ≼l; l≼)
+open import B18Product using (_·_)
+open import B19IdealProduct using (mul; id; _∙_)
+import B12EboRows as B
+import B12Terminal as T
+import B17CellNext as N
+import B17CellPrefix as C
+import B18CellState as D
+import B18Reset as F
+import B19PathValue as V
+open import B14PathHeight using (standard)
+open T.Run
+
+tower : ∀ n → B.child n ≈ᵛ (read (proj₁ (β (F.r n))) · F.fresh n)
+tower n = V.At.scale (tw n) (ok (F.r n)) (bs (F.r n)) (proj₁ (Ωt (tw n))) (standard _) (β (F.r n))
+
+exact : ∀ n → B.child n ≈ᵛ F.product (suc n)
+exact zero = tower zero
+exact (suc n) = tower (suc n) ∙ mul
+  (subst (λ y → y ≈ᵛ F.product (suc n)) (sym (F.previous n)) (exact n)) (id (F.fresh (suc n)))
+
+terminal : read EBOᶜ ≈ᵛ L.lim (λ n → F.product (suc n))
+terminal = N.assemble (λ n → ≼l n (proj₁ (exact n))) , l≼ (λ n → B.into (n , proj₂ (exact n)))
+
+module Cell (n j : ℕ) where
+  module A = D.At n j
+  module P = V.At A.l (ok A.r) A.slots (proj₁ (Ωt A.l))
+  exact-cell : C.cell n j ≈ᵛ (B.child n · A.fresh)
+  exact-cell = subst (λ y → y ≈ᵛ (B.child n · A.fresh)) (sym A.actual)
+    (subst (λ y → A.with-base A.slots (β A.r) ≈ᵛ (y · A.fresh)) A.input (P.scale (standard _) (β A.r)))

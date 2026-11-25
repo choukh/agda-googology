@@ -1,0 +1,53 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24AQueries where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; _×_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; s≼s; ≼l; ≼-refl; ≼-suc; ≼-trans; ≅→≼)
+open import WVOne using (T₀; read)
+open import W4Fold using (EBOᶜ)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Src as A
+import B12LimitSrc as Src
+import B12Omega3Ref as R
+import B12EboRows as B
+import B13Target as P
+import B17Cofinal as E
+import B19RowSecond as Old
+import B22RowSource as Margin
+import B23RShare as First
+import B23NFirst as N
+import B24RExit as X
+
+path : ∀ (q a : Src.Lev₂) → L.ψ⁰ (q L.+ P.pass a) ≼ L.ψ⁰ (q L.+ P.pass (a L.+ Ω₂ᴸ))
+path q a = ≼l 0 (≼l 0 (≼l 1 (≼-refl _)))
+lead : ∀ n q → L.ψ⁰ (q L.+ Old.p) ≼ L.ψ⁰ (q L.+ P.pass (A.ll n))
+lead zero q = ≼-refl _
+lead (suc n) q = ≼-trans (lead n q) (path q (A.ll n))
+recorded = λ n → L.ψ⁰ (P.pass (A.ll n))
+rise : ∀ n → L.suc (recorded n) ≼ recorded (suc n)
+rise n = ≼-trans (Margin.Tail.one q (P.pass-pres (P.refl-left (L.≅-sym (R.matches n)))))
+  (≼-trans (lead n q) (≼-trans (≼l 2 (≼-refl (L.ψ⁰ (q L.+ q)))) (≼l 0 (≼l 0 (≼-refl (L.ψ⁰ (P.pass (L.suc a))))))))
+  where
+  a = A.ll n
+  q = P.pass a
+parts-rise : ∀ n → L.suc (First.parts (suc n)) ≼ First.parts (suc (suc n))
+parts-rise n = ≼-trans (s≼s (≅→≼ (L.ψ⁰-≅ (P.pass-pres (R.matches n)))))
+  (≼-trans (rise n) (≅→≼ (L.ψ⁰-≅ (P.pass-pres (L.≅-sym (R.matches (suc n)))))))
+
+query : ℕ → ℕ → ℕ → T₀
+query k n j = X.Slice.gain k n (X.Slice.iterate k n j)
+in-part : ∀ k n j → query k n j ≼ First.parts (suc k)
+in-part k = X.Slice.necessary k (≅→≼ (L.≅-sym (X.rotate k)))
+margin : ∀ k n j → L.suc (query k n j) ≼ First.oneStep
+margin k n j = ≼l (suc (suc k)) (≼-trans (s≼s (in-part k n j)) (parts-rise k))
+
+Queries : Set
+Queries = ∀ k n j → B.InChild (L.suc (query (suc k) n j))
+localized : ((First.oneStep ≼ read EBOᶜ) → Queries) × (Queries → First.oneStep ≼ read EBOᶜ)
+localized = (λ whole k n j → E.witness (≼-trans (margin (suc k) n j) whole)) , enough
+  where
+  enough : Queries → First.oneStep ≼ read EBOᶜ
+  enough answers = X.sufficient (B.into N.zero-in , λ where
+    zero n j → ≼-trans (in-part 0 n j) (B.into N.one-in)
+    (suc k) n j → ≼-trans (≼-suc (≼-refl _)) (B.into (answers k n j)))

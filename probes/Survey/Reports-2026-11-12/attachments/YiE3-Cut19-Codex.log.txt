@@ -1,0 +1,28 @@
+Checking YiE3Cut19 (<实验目录>/YiE3Cut19.agda).
+agda: Heap exhausted;
+agda: Current maximum heap size is 8589934592 bytes (8192 MB).
+agda: Use `+RTS -M<size>' to increase it.
+ 105,570,894,336 bytes allocated in the heap
+  87,125,340,136 bytes copied during GC
+   8,431,527,920 bytes maximum residency (67 sample(s))
+      19,179,536 bytes maximum slop
+            8298 MiB total memory in use (0 MiB lost due to fragmentation)
+
+                                     Tot time (elapsed)  Avg pause  Max pause
+  Gen  0     24511 colls,     0 par   20.181s  20.383s     0.0008s    0.0048s
+  Gen  1        67 colls,     0 par   114.005s  114.310s     1.7061s    8.9397s
+
+  TASKS: 4 (1 bound, 3 peak workers (3 total), using -N1)
+
+  SPARKS: 0 (0 converted, 0 overflowed, 0 dud, 0 GC'd, 0 fizzled)
+
+  INIT    time    0.001s  (  0.001s elapsed)
+  MUT     time   16.105s  ( 15.621s elapsed)
+  GC      time  134.186s  (134.694s elapsed)
+  EXIT    time    0.033s  (  0.000s elapsed)
+  Total   time  150.325s  (150.316s elapsed)
+
+  Alloc rate    6,555,357,612 bytes per MUT second
+
+  Productivity  10.7% of total user, 10.4% of total elapsed
+

@@ -1,0 +1,143 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B12Update where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym; trans)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; l≼; ≼-refl; ≼-trans; 1≼ψ⁰)
+open import WVOne using (T₀; 𝟏; read)
+open import WVTwo using (T₁; ◃→≼)
+open import WVThree using (Nx)
+open import WSShadow using (Sh; ES; Ω̂; _⨾_; sh; lC; sE)
+open import WSW4 using (module Lem)
+import WKSum
+import WKGen
+import WSLevel as W
+open import WKShape using (Ψ₃)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F; c₁)
+open import YiLAB7Replay using (Match; seed; o₁)
+open import B8PairLevel using (eΩ₂)
+open import B8PairW4 using (Real-up; SumR-up; Real-lim; chain-step)
+open import B9InnerReal using (module RX)
+open import B9InnerSecond using (Real-cΩ₂; Real-cΩ₁; SumR-cNx; SumR-id)
+import B9InnerSecond as I2
+open import B9InnerOuter using (st1; v₁; w2; Ω₂-v₁; Ω₂-cz)
+import YiLAB10Src as T
+import YiLAB11Orbit as O
+import B11OuterCore as C
+import B12Orbit as U
+import B12LimitRef as A
+open import B11PrefixGen using (T₂)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import YiLAB11Target using (body; y; track; prefix; Stage; stage0; state; value; outer; Goal; collect)
+
+open C using (zpath; slot; Str; str; rP; rΩ; sN; st)
+open Lem o₁
+open WKSum.Sum o₁ hiding (prefix)
+open RX o₁
+
+
+record Seeds (P : T₂) (e : ES) (R : Base lvl2) (v : Tr⁺ zero) : Set where
+  constructor seeds
+  field
+    value-bound : LV.ψ⁰ P ≼ read (proj₁ v)
+    slot-bound : LV.ψ⁰ P ≼ read (proj₁ (R zero zpath))
+    structure : Str e R
+open Seeds public
+
+-- K 的同一输出包含 F 的整棵迭代极限。在这个接口上同时传递三个种子。
+module Update (K : Op {lvl2} nil)
+              (contains : (R : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i)
+                → i ⊢ proj₁ (O.child R i t v) ◃ proj₁ (run K R i t v))
+              (P : T₂) (e : ES) (D : A.Described P e) (R : Base lvl2) (H : Str e R) where
+  open C.Inner e R
+  module Rows = A.Rows P e D
+
+  IN : (n : ℕ) → In n
+  IN = inner H
+
+  kidT : ℕ → Tr lvl1
+  kidT n = proj₁ (O.kid n R lvl1 slot (R lvl1 slot))
+
+  kid≡ : (n : ℕ) → kidT n ≡ cn (suc n)
+  kid≡ n = cong proj₁ (trans (O.project-value (suc n) R lvl1 slot (R lvl1 slot)) (C.itV-self (suc n) R lvl1 slot))
+
+  kidReal : (n : ℕ) → Real (kidT n) (e ⨾ track e n)
+  kidReal n = subst (λ X → Real X (e ⨾ track e n)) (sym (kid≡ n)) (Step.first-exp n (IN n))
+
+  childReal : Real (proj₁ (O.child R lvl1 slot (R lvl1 slot))) (A.next e)
+  childReal = Real-lim kidReal
+
+
+  riseK : lvl1 ⊢ c₁ R ◃ c₁ (stepS K R)
+  riseK = inf K R lvl1 slot (R lvl1 slot)
+
+  new-str : Str (A.next e) (stepS K R)
+  new-str = str (Real-up (contains R lvl1 slot (R lvl1 slot)) childReal)
+                (Real-up riseK (rΩ H)) (SumR-up riseK (sN H)) (◃t (st H) riseK)
+
+  module Value (w : zero ≤ lvl2) (β : Tr⁺ zero)
+               (hβ : LV.ψ⁰ P ≼ read (proj₁ β))
+               (hz : LV.ψ⁰ P ≼ read (proj₁ (R zero zpath))) where
+    vv : ℕ → Tr⁺ zero
+    vv n = itV F n R zero w β
+
+    bv : (n : ℕ) → LV.ψ⁰ P ≼ read (proj₁ (vv n))
+    bv zero    = hβ
+    bv (suc n) = ≼-trans (bv n) (◃→≼ (inf F (Rs n) zero w (vv n)))
+
+    bz : (n : ℕ) → LV.ψ⁰ P ≼ read (proj₁ (Rs n zero zpath))
+    bz zero    = hz
+    bz (suc n) = ≼-trans (bz n) (◃→≼ (inf F (Rs n) zero zpath (Rs n zero zpath)))
+
+    one-v : (n : ℕ) → 𝟏 ≼ read (proj₁ (vv n))
+    one-v n = ≼-trans (1≼ψ⁰ P) (bv n)
+
+    one-z : (n : ℕ) → 𝟏 ≼ read (proj₁ (Rs n zero zpath))
+    one-z n = ≼-trans (1≼ψ⁰ P) (bz n)
+
+    module M (n : ℕ) = WKGen.Main ok₂ (Rs n) w (vv n) (inj₂ (st (sT (IN n)))) (one-v n) (one-z n)
+
+    exit : (n : ℕ) {D : T₁} {d : Sh 0} → W.Ld D d → SumR (zz n 2) d → LV.ψ⁰ (Rows.body D) ≼ read (proj₁ (vv (suc n)))
+    exit n al aw =
+      ≼-trans (Rows.sem al a c (bv n) (bz n))
+      (≼-trans (aw (M.B′ n) (WKGen.wd w) (vv n) a c (≼-refl a) (≼-refl c) (one-z n)) (M.Ψg-ge n 2))
+      where
+      a = read (proj₁ (vv n))
+      c = read (proj₁ (Rs n zero zpath))
+
+    -- F 的第 n+1 次 = O.kid n ◃ O.child ◃ 这一轮 G.
+    toK : (n : ℕ) → read (proj₁ (vv (suc n))) ≼ read (proj₁ (run K R zero w β))
+    toK n = subst (λ X → read (proj₁ X) ≼ read (proj₁ (run K R zero w β))) (O.project-value (suc n) R zero w β)
+              (≼-trans (◃→≼ (O.in-child n R zero w β)) (◃→≼ (contains R zero w β)))
+
+    term : (k : ℕ) → LV.ψ⁰ (Rows.body (Rows.y k)) ≼ read (proj₁ (run K R zero w β))
+    term zero    = ≼-trans (exit 0 W.Ld-Ω₁ (SumR-up (◃t (st H) ◃e) (Match.add-w seed))) (toK 0)
+    term (suc n) = ≼-trans (exit n (Rows.lower n) (Step.SumR-z2 n (IN n))) (toK n)
+
+    next-bound : LV.ψ⁰ (P LV.+ Ω₂ᴸ) ≼ read (proj₁ (run K R zero w β))
+    next-bound = l≼ term
+
+
+advance : (K : Op {lvl2} nil)
+        → ((R : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i)
+            → i ⊢ proj₁ (O.child R i t v) ◃ proj₁ (run K R i t v))
+        → (P : T₂) (e : ES) → A.Described P e → (R : Base lvl2) (v : Tr⁺ zero) → Seeds P e R v
+        → Seeds (P LV.+ Ω₂ᴸ) (A.next e) (stepS K R) (run K R zero w2 v)
+advance K contains P e D R v I = seeds (V.next-bound w2 v (value-bound I) (slot-bound I))
+    (V.next-bound zpath (R zero zpath) (slot-bound I) (slot-bound I)) X.new-str
+  where
+  module X = Update K contains P e D R (structure I)
+  module V = X.Value
+
+advanceJ = advance U.J (U.Window.child-in-block F)
+advanceG = advance O.G O.child-in-G

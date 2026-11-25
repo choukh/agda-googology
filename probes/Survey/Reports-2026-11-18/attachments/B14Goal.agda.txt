@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 原始 EBO 参照与 W4 终点之间的准确缺口。各参照行可以直接落在整棵终点；无需预先找到支配整行的某个孩子。
+module B14Goal where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import W4Fold using (EBOᶜ)
+open import WVOne using (T₀; read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; ≅→≼)
+open import OCF.Align.EboLeanTree using (EBO-tree′; hc-tower)
+open import OCF.Lean.YiMonoExit using (toL)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import OCF.Lean.YiEXRow using (labR)
+open import OCF.Align.Stage2 using (Lab-uniq)
+open import OCF.Align.Label using (BTBO-label)
+open import OCF.Align.BTBOFull using (BTBO≈)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.BTBO using (module Ord-Ord)
+import B12XRef as R
+import B12EboRows as E
+import B12Terminal as T
+import B13Target as U
+import B12Omega3Ref as Ref
+import B14FloorBtbo as B
+import B14RefAllRows as A
+
+Goal = toL EBO-tree′ ≼ read EBOᶜ
+BT = tr₀ Ord-Ord.BTBO ≼ read EBOᶜ
+Tail = (n : ℕ) → R.row (suc (suc (suc n))) ≼ read EBOᶜ
+
+row-in : (n : ℕ) → R.row n ≼ toL EBO-tree′
+row-in n = ≼l n (tree-≼ refl (R.H n) (hc-tower n))
+
+need : Goal → BT × Tail
+need g = ≼-trans (proj₁ BTBO≈) (≼-trans (≅→≼ (L.≅-sym (Lab-uniq (labR (R.H 2)) BTBO-label)))
+         (≼-trans (row-in 2) g)) , (λ n → ≼-trans (row-in (suc (suc (suc n)))) g)
+
+enough : BT × Tail → Goal
+enough (b , t) = R.assemble λ where
+  zero → E.into E.zero-row
+  (suc zero) → E.into E.one
+  (suc (suc zero)) → ≼-trans R.row-two (≼-trans (proj₂ BTBO≈) b)
+  (suc (suc (suc n))) → t n
+
+via-tower : B.Remaining → Tail → Goal
+via-tower s t = enough (B.btbo s , t)
+
+-- 对准同一个 Λ 终点的 ψ₀(Ω₃) 中间站，两参数族直接由原参照的实际回灌生成。
+Chains = (m n : ℕ) → L.lim (λ j → A.chain m n (suc j)) ≼ read EBOᶜ
+
+actual-chain : ∀ m n → L.ψ⁰ (U.asked (suc m) n) L.≅ L.lim (λ j → A.chain m n (suc j))
+actual-chain m n = subst (λ t → t L.≅ L.lim (λ j → A.chain m n (suc j))) (A.shape m n) (A.as-chain m n)
+
+omega3 : (Chains → L.ψ⁰ Ref.Ω₃ ≼ read EBOᶜ) × (L.ψ⁰ Ref.Ω₃ ≼ read EBOᶜ → Chains)
+omega3 = (λ h → U.from-asked λ where
+  zero n → ≼-trans (≼l n (≼-refl _)) T.ebo-level
+  (suc m) n → ≼-trans (≅→≼ (actual-chain m n)) (h m n)) ,
+  (λ y m n → ≼-trans (≅→≼ (L.≅-sym (actual-chain m n))) (U.to-asked y (suc m) n))

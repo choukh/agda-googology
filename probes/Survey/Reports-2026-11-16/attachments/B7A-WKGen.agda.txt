@@ -1,0 +1,250 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B7A: B6A 的 ψ₀(Ω₂) 定理对一切 Ok 证明、一切路径、一切底族成立, 只要第 1 层链底在 W4 自己的序里不低于 Ω₁,
+-- 第 0 层链底与底不低于 1. 编译定理, 无前提. 证法同 WSMain; 新的只有 "链底 c ⊒ Ω₁" 经 W4 的 Emono / Itmono / mono 吸收.
+module WKGen where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-refl; ≼-trans; ≼-suc)
+
+open import WVOne using (T₀; 𝟏; read; lvl1; p₁; Mv; Mv-mono; P-read; cumL)
+open import WVTwo using (◃→≼; lvl2; p₂; g₂)
+open import WVThree using (Nx; Nx-infl)
+open import WSShadow
+open import WSLevel using (γ; ε; lvl-γ0; lvl-γS)
+open import WSW4
+
+Ω₁t : Tr lvl1
+Ω₁t = proj₁ (Ωt lvl1)
+
+-- 第 1 层上的弱序: 相等或 W4 的 ◃.
+_⊴_ : Tr lvl1 → Tr lvl1 → Set
+x ⊴ y = (x ≡ y) ⊎ (lvl1 ⊢ x ◃ y)
+
+lift⊴ : (P : Tr lvl1 → Set) → P Ω₁t → ((y : Tr lvl1) → lvl1 ⊢ Ω₁t ◃ y → P y) → (c : Tr lvl1) → Ω₁t ⊴ c → P c
+lift⊴ P p q c (inj₁ refl) = p
+lift⊴ P p q c (inj₂ d)    = q c d
+
+------------------------------------------------------------------------
+-- 第 0 层目标上的结点: Keep 只能是 nothing (Pos zero = ⊥); 链的每一项不高于结点.
+node-ge : ∀ {X : Set} {x₀ : X} (m : Keep zero X x₀) (G : X → Tr⁺ zero) (s : X → X) (k : ℕ)
+        → read (proj₁ (G (iter s x₀ k))) ≼ read (proj₁ (node⁺ m G s))
+node-ge nothing G s k = ≼l k (WVOne.cum-≥ (λ n → proj₁ (G (iter s _ n))) k)
+node-ge (just (() , _)) G s k
+
+module Gen (o : Ok lvl1) where
+  open Lem o hiding (Ω₁t)
+
+  P-read′ : ∀ {o₀ : Ok zero} {Bs : Base zero} (w : zero ≤ zero) (β : Tr⁺ zero) (x : Tr zero)
+          → Mv (read (proj₁ β)) (read x) ≼ read (proj₁ (ψ zero o₀ Bs zero w β x))
+  P-read′ {o₀} {Bs} self β x = P-read {o₀} {Bs} β x
+
+  gΩ : Tr zero → Tr lvl1
+  gΩ z = up zero tt (suc z) (z◃ z ◃s)
+
+  -- WSMain.FΩ, Ok 证明任意.
+  FΩ : (Bs : Base lvl1) (w : zero ≤ lvl1) (β : Tr⁺ zero) (a c : T₀) → a ≼ read (proj₁ β)
+     → c ≼ read (proj₁ (Bs zero (inc tt self))) → 𝟏 ≼ read (proj₁ (Bs zero (inc tt self)))
+     → Nx a c ≼ read (proj₁ (ψ lvl1 o Bs zero w β Ω₁t))
+  FΩ Bs (inu ws) β a c ha hc h1 =
+    NodeG.low (Bs zero (inc tt self)) (λ z → ψ lvl1 o Bs zero (inu ws) β (gΩ z))
+              (λ z → ψ lvl1 o Bs zero (inc tt self) (Bs zero (inc tt self)) (gΩ z))
+              (λ z → mono lvl1 o Bs zero (inc tt self) (Bs zero (inc tt self)) (◃u zero tt (suc z) (z◃ z ◃s)))
+              (λ y a′ c′ → Mv a′ y) a c hc h1
+              (λ y z d → ≼-trans (Mv-mono ha (≼-suc d)) (P-read′ (ws tt) β (suc z)))
+              (λ y z d → ≼-trans (Mv-mono hc (≼-suc d)) (P-read′ self (Bs zero (inc tt self)) (suc z)))
+              (kp lvl1 o p₁ (inu ws))
+  FΩ Bs (inc tt self) β a c ha hc h1 =
+    NodeG.low (Bs zero (inc tt self)) (λ z → ψ lvl1 o Bs zero (inc tt self) β (gΩ z))
+              (λ z → ψ lvl1 o Bs zero (inc tt self) (Bs zero (inc tt self)) (gΩ z))
+              (λ z → mono lvl1 o Bs zero (inc tt self) (Bs zero (inc tt self)) (◃u zero tt (suc z) (z◃ z ◃s)))
+              (λ y a′ c′ → Mv a′ y) a c hc h1
+              (λ y z d → ≼-trans (Mv-mono ha (≼-suc d)) (P-read′ self β (suc z)))
+              (λ y z d → ≼-trans (Mv-mono hc (≼-suc d)) (P-read′ self (Bs zero (inc tt self)) (suc z)))
+              (kp lvl1 o p₁ (inc tt self))
+
+  -- "以 c 为右边的 op" 实现 Nx, 只要 Ω₁ ⊴ c.
+  hFc : (c : Tr lvl1) (nc : lvl1 ⊢ zero ◃ c) → Ω₁t ⊴ c → 𝓡 0 {nil} (inc tt self) (opB lvl1 o c nc) Nx
+  hFc c nc hc =
+    lift⊴ (λ y → (ny : lvl1 ⊢ zero ◃ y) → 𝓡 0 {nil} (inc tt self) (opB lvl1 o y ny) Nx)
+          (λ ny S t v a c′ ha hc′ h1 → FΩ S t v a c′ ha hc′ h1)
+          (λ y d ny → R-cl 0 (opB lvl1 o Ω₁t nbΩ) (opB lvl1 o y ny) (λ S t v a c′ ha hc′ h1 → FΩ S t v a c′ ha hc′ h1)
+                           (λ S i t v → mono lvl1 o S i t v d))
+          c hc nc
+
+  ----------------------------------------------------------------------
+  -- W2 的推广: x 实现 e ⟹ ex c c (suc x) 实现 sh e (Ω₁ ⊴ c).
+  xc : (c : Tr lvl1) → lvl1 ⊢ zero ◃ c → Tr lvl1 → Tr lvl1
+  xc c nc x = ex c c nc (suc x) tt
+
+  -- 第一阶: Ω₁ 的 Kb 实现 kb ⟹ c 的 Kb 也实现 kb.
+  hKbc : (c : Tr lvl1) (nc : lvl1 ⊢ zero ◃ c) → Ω₁t ⊴ c → {X : Cx lvl1} (tv : TV X) (mk : MK X)
+       → 𝓡 1 (mk (inc tt self)) (Kb o (td stop tv mk) c nc) kb
+  hKbc c nc hc tv mk m gm G g rg =
+    lift⊴ (λ y → (ny : lvl1 ⊢ zero ◃ y) → 𝓡 0 (σ m (mk (inc tt self))) (op (E o (trTD m (td stop tv mk)) y G) (Einf o (trTD m (td stop tv mk)) y G)) (sE Ω̂ g))
+          (λ ny → W1E (λ y → tv (π m y)) (λ τ → σ m (mk τ)) G g rg)
+          (λ y d ny → R-cl 0 (op (E o (trTD m (td stop tv mk)) Ω₁t G) (Einf o (trTD m (td stop tv mk)) Ω₁t G))
+                           (op (E o (trTD m (td stop tv mk)) y G) (Einf o (trTD m (td stop tv mk)) y G))
+                           (W1E (λ y′ → tv (π m y′)) (λ τ → σ m (mk τ)) G g rg)
+                           (λ S i t v → Emono o (trTD m (td stop tv mk)) G S i t v d))
+          c hc nc
+
+  W2cE : (c : Tr lvl1) (nc : lvl1 ⊢ zero ◃ c) → Ω₁t ⊴ c → (x : Tr lvl1) (e : ES) → RealI x e → RealE (xc c nc x) (sh e)
+  W2cE c nc hc x e rI {X} tv mk F f hF =
+    R-cl 0 (It 0 o Tᵈ x (Kb o Tᵈ c nc) (op (E o Tᵈ c F) (Einf o Tᵈ c F))) (op (E o Tᵈ (xc c nc x) F) (Einf o Tᵈ (xc c nc x) F))
+           (rI 0 tv mk (Kb o Tᵈ c nc) kb (op (E o Tᵈ c F) (Einf o Tᵈ c F)) f (hKbc c nc hc tv mk) hG′)
+           (Itmono 0 o Tᵈ (Kb o Tᵈ c nc) (op (E o Tᵈ c F) (Einf o Tᵈ c F)) ◃s)
+    where
+    Tᵈ : TD X lvl1
+    Tᵈ = td stop tv mk
+    hG′ : 𝓡 0 (mk (inc tt self)) (op (E o Tᵈ c F) (Einf o Tᵈ c F)) f
+    hG′ = R-cl 0 F (op (E o Tᵈ c F) (Einf o Tᵈ c F)) hF (λ S i t v → Emono o Tᵈ F S i t v nc)
+
+  -- 高阶: Ω₁ 的 Itᴺ 实现 kₑ ⟹ c 的也实现.
+  hKₑc : (c : Tr lvl1) (nc : lvl1 ⊢ zero ◃ c) → Ω₁t ⊴ c → (n : ℕ) {X : Cx lvl1} (tv : TV X) (mk : MK X)
+       → 𝓡 (suc (suc n)) (mk (inc tt self)) (Kₑ n o (td stop tv mk) c nc) (kₑ n)
+  hKₑc c nc hc n tv mk m gm K₁ k₁ r₁ m′ gm′ G₁ g₁ rg₁ =
+    lift⊴ (λ y → (ny : lvl1 ⊢ zero ◃ y)
+                → 𝓡 n (σ m′ (σ m (mk (inc tt self)))) (It n o (trTD m′ (trTD m (td stop tv mk))) y (enter (suc n) m′ K₁) G₁) (sI Ω̂ n k₁ g₁))
+          (λ ny → base)
+          (λ y d ny → R-cl n (It n o (trTD m′ (trTD m (td stop tv mk))) Ω₁t (enter (suc n) m′ K₁) G₁)
+                           (It n o (trTD m′ (trTD m (td stop tv mk))) y (enter (suc n) m′ K₁) G₁) base (Itmono n o (trTD m′ (trTD m (td stop tv mk))) (enter (suc n) m′ K₁) G₁ d))
+          c hc nc
+    where
+    base : 𝓡 n (σ m′ (σ m (mk (inc tt self)))) (It n o (trTD m′ (trTD m (td stop tv mk))) Ω₁t (enter (suc n) m′ K₁) G₁) (sI Ω̂ n k₁ g₁)
+    base = W1I n (λ y → tv (π m (π m′ y))) (λ τ → σ m′ (σ m (mk τ))) (enter (suc n) m′ K₁) k₁ G₁ g₁
+               (R-enter (suc n) m′ gm′ K₁ r₁) rg₁
+
+  W2cI : (c : Tr lvl1) (nc : lvl1 ⊢ zero ◃ c) → Ω₁t ⊴ c → (x : Tr lvl1) (e : ES) → RealI x e → RealI (xc c nc x) (sh e)
+  W2cI c nc hc x e rI n {X} tv mk K k G g hK hG =
+    R-cl (suc n) (It (suc n) o Tᵈ x (Kₑ n o Tᵈ c nc) (Itᴺ n o Tᵈ c K)) (It (suc n) o Tᵈ (suc x) (Kₑ n o Tᵈ c nc) (Itᴺ n o Tᵈ c K))
+                 (rI (suc n) tv mk (Kₑ n o Tᵈ c nc) (kₑ n) (Itᴺ n o Tᵈ c K) (λ g′ → k g′) (hKₑc c nc hc n tv mk) hIa)
+                 (Itmono (suc n) o Tᵈ (Kₑ n o Tᵈ c nc) (Itᴺ n o Tᵈ c K) ◃s)
+         idM refl G g hG
+    where
+    Tᵈ : TD X lvl1
+    Tᵈ = td stop tv mk
+    hIa : 𝓡 (suc n) (mk (inc tt self)) (Itᴺ n o Tᵈ c K) (λ g′ → k g′)
+    hIa m gm G₁ g₁ r₁ =
+      R-cl n _ _ (hK (idM ⊙ m) gm G₁ g₁ r₁) (Itmono n o (trTD m Tᵈ) (enter (suc n) m K) G₁ nc)
+
+  W2c : (c : Tr lvl1) (nc : lvl1 ⊢ zero ◃ c) → Ω₁t ⊴ c → (x : Tr lvl1) (e : ES) → Real x e → Real (xc c nc x) (sh e)
+  W2c c nc hc x e (rE , rI) = W2cE c nc hc x e rI , W2cI c nc hc x e rI
+
+------------------------------------------------------------------------
+-- 主定理的推广: 第 2 层的 Ω 树以任意 Ok 证明 o、底族 B、路径 w、底 β 折到第 0 层.
+-- 前提: 第 1 层链底 B lvl1 (inc tt self) ⊒ Ω₁ (W4 的序), 第 0 层链底与底不低于 1.
+wd : zero ≤ lvl2 → zero ≤ lvl1
+wd (inu ws)   = ws tt
+wd (inc tt v) = v
+
+module Main (o : Ok lvl2) (B : Base lvl2) (w : zero ≤ lvl2) (β : Tr⁺ zero)
+            (hc : Ω₁t ⊴ proj₁ (B lvl1 (inc tt self)))
+            (hβ : 𝟏 ≼ read (proj₁ β)) (h0 : 𝟏 ≼ read (proj₁ (B zero (inc tt (inc tt self))))) where
+
+  o₁ : Ok lvl1
+  o₁ = proj₂ o tt
+
+  open Lem o₁ hiding (Ω₁t)
+  open Gen o₁
+
+  c : Tr lvl1
+  c = proj₁ (B lvl1 (inc tt self))
+
+  nc : lvl1 ⊢ zero ◃ c
+  nc = proj₂ (B lvl1 (inc tt self))
+
+  -- 链 (W4 定义里的 s): 链点就是 ex c c (suc z).
+  s : Tr lvl1 → Tr lvl1
+  s z = fromBr lvl2 p₂ (proj₁ (ψ lvl2 o B (at lvl2 p₂) (posW lvl2 p₂) (B (at lvl2 p₂) (posW lvl2 p₂)) (g₂ z)))
+
+  s-shape : (z : Tr lvl1) → s z ≡ xc c nc z
+  s-shape z = refl
+
+  zs : ℕ → Tr lvl1
+  zs = iter s zero
+
+  B′ : Base lvl1
+  B′ i u = B i (inc tt u)
+
+  fold : ℕ → Tr⁺ zero
+  fold k = ψ lvl1 o₁ B′ zero (wd w) β (zs k)
+
+  Ψg : Tr zero
+  Ψg = proj₁ (ψ lvl2 o B zero w β (proj₁ (Ωt lvl2)))
+
+  G1 : (w₁ : zero ≤ lvl1) (z : Tr lvl1) → read (proj₁ (ψ lvl1 o₁ B′ zero w₁ β z)) ≼ read (proj₁ (ψ lvl1 o₁ B′ zero w₁ β (suc z)))
+  G1 (inc tt self) z = ≼l 0 (≼-refl _)
+  G1 (inu ws)      z = ≼l 0 (≼-refl _)
+
+  -- 分支 g₂ z 折到第 0 层 = 第 1 层的 suc z 折到第 0 层 (按路径的两种形状).
+  G-ge : (w′ : zero ≤ lvl2) (z : Tr lvl1) → read (proj₁ (ψ lvl1 o₁ B′ zero (wd w′) β z)) ≼ read (proj₁ (ψ lvl2 o B zero w′ β (g₂ z)))
+  G-ge (inu ws)   z = G1 (ws tt) z
+  G-ge (inc tt v) z = G1 v z
+
+  -- 第 2 层 Ω 结点折到第 0 层: 链的每一项不高于结点 (按路径的两种形状展开).
+  nodeΩ : (w′ : zero ≤ lvl2) (k : ℕ) → read (proj₁ (ψ lvl2 o B zero w′ β (g₂ (zs k)))) ≼ read (proj₁ (ψ lvl2 o B zero w′ β (proj₁ (Ωt lvl2))))
+  nodeΩ (inu ws)   k = node-ge (kp lvl2 o p₂ (inu ws)) (λ z → ψ lvl2 o B zero (inu ws) β (g₂ z)) s k
+  nodeΩ (inc tt v) k = node-ge (kp lvl2 o p₂ (inc tt v)) (λ z → ψ lvl2 o B zero (inc tt v) β (g₂ z)) s k
+
+  Ψg-ge : (k : ℕ) → read (proj₁ (fold k)) ≼ read Ψg
+  Ψg-ge k = ≼-trans (G-ge w (zs k)) (nodeΩ w k)
+
+  -- 第 1 层的 ex 行折到第 0 层 (按路径的两种形状展开, 都是 refl).
+  ψ-ex : (w₁ : zero ≤ lvl1) (a b : Tr lvl1) (nb : lvl1 ⊢ zero ◃ b) (x : Tr lvl1)
+       → proj₁ (ψ lvl1 o₁ B′ zero w₁ β (ex a b nb x tt))
+         ≡ proj₁ (E o₁ tdNil x (opB lvl1 o₁ b nb) (λ i u → ψ lvl1 o₁ B′ i u (B′ i u) a) zero w₁ (ψ lvl1 o₁ B′ zero w₁ β a))
+  ψ-ex (inc tt self) a b nb x = refl
+  ψ-ex (inu ws)      a b nb x = refl
+
+  Real-z : (n : ℕ) → Real (zs (suc n)) (ε n)
+  Real-z zero    = W2c c nc hc zero zC Real-zero
+  Real-z (suc n) = W2c c nc hc (zs (suc n)) (ε n) (Real-z n)
+
+  F : Op {lvl1} nil
+  F = opB lvl1 o₁ c nc
+
+  S₀ : St {lvl1} nil
+  S₀ i u = ψ lvl1 o₁ B′ i u (B′ i u) c
+
+  v₀ : Tr⁺ zero
+  v₀ = ψ lvl1 o₁ B′ zero (wd w) β c
+
+  Nx-v₀ : Nx 𝟏 𝟏 ≼ read (proj₁ v₀)
+  Nx-v₀ = hFc c nc hc B′ (wd w) β 𝟏 𝟏 hβ h0 h0
+
+  one-v₀ : 𝟏 ≼ read (proj₁ v₀)
+  one-v₀ = ≼-trans (Nx-infl 𝟏 𝟏) Nx-v₀
+
+  one-S₀ : 𝟏 ≼ rd S₀ (inc tt self)
+  one-S₀ = ≼-trans (Nx-infl 𝟏 𝟏) (hFc c nc hc B′ (inc tt self) (B′ zero (inc tt self)) 𝟏 𝟏 h0 h0 h0)
+
+  W4-low : (n : ℕ) → sE (ε n) Nx 𝟏 𝟏 ≼ read (proj₁ (fold (suc (suc n))))
+  W4-low n = subst (λ q → sE (ε n) Nx 𝟏 𝟏 ≼ read q) (sym (ψ-ex (wd w) c c nc (suc (zs (suc n))))) (
+    R-cl 0 (op (E o₁ tdNil (zs (suc n)) F) (Einf o₁ tdNil (zs (suc n)) F))
+           (op (E o₁ tdNil (suc (zs (suc n))) F) (Einf o₁ tdNil (suc (zs (suc n))) F))
+           (proj₁ (Real-z n) (λ t → t) (λ t → t) F Nx (hFc c nc hc))
+           (λ S i t v → Emono o₁ tdNil F S i t v ◃s)
+           S₀ (wd w) v₀ 𝟏 𝟏 one-v₀ one-S₀ one-S₀)
+
+  lvl0-low : LV.ψ⁰ (γ 0) ≼ read (proj₁ (fold 1))
+  lvl0-low = subst (λ q → LV.ψ⁰ (γ 0) ≼ read q) (sym (ψ-ex (wd w) c c nc (suc zero)))
+               (≼-trans lvl-γ0 (≼-trans Nx-v₀ (◃→≼ (Einf o₁ tdNil (suc zero) F S₀ zero (wd w) v₀))))
+
+  main : LV.ψ⁰ (LV.Ω (LV.suc (LV.suc LV.zero))) ≼ read Ψg
+  main = l≼ step
+    where
+    step : (n : ℕ) → LV.ψ⁰ (γ n) ≼ read Ψg
+    step zero    = ≼-trans lvl0-low (Ψg-ge 1)
+    step (suc n) = ≼-trans (lvl-γS n) (≼-trans (W4-low n) (Ψg-ge (suc (suc n))))

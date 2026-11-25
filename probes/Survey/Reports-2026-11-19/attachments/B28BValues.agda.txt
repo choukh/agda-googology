@@ -1,0 +1,63 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实单位重置对其 Ω 枝值取所选内轨的有限序数和再取极限。给所有所选枝同一上界，外值至多为该界的 ω 倍。
+module B28BValues where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; sym; subst)
+import W4Block as W
+import W4Ops as O
+import W4Fold as F
+import W4Path as P
+import WVOne as V
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; ≼-trans; ≼-refl; l≼; ≼l; +-mono)
+import B8FreezeMain as Add
+import B12Terminal as T
+import B15Spine
+import B17CellPrefix as Cells
+import B18Product as M
+import B26PBounds as Mul
+import B28BHead as X
+import B28BBranch as Sub
+
+module Series (raw : ℕ → W.Tr W.zero) (leaf : ℕ → V.T₀) (eq : ∀ i → V.read (raw i) ≡ leaf i) where
+  pre = λ u → V.read (O.cum raw u)
+  sum : ℕ → V.T₀
+  sum zero = leaf 0
+  sum (suc u) = sum u L.+ leaf (suc u)
+
+  prefix : ∀ u → pre u ≈ᵛ sum u
+  prefix zero = subst (λ x → pre 0 ≈ᵛ x) (eq 0) (≼-refl _ , ≼-refl _)
+  prefix (suc u) rewrite sym (eq (suc u)) =
+    ≼-trans {b = pre u L.+ V.read (raw (suc u))} (Add.read-+′ (O.cum raw u) (raw (suc u))) (+-mono (proj₁ (prefix u)) (≼-refl _)) ,
+    ≼-trans {b = pre u L.+ V.read (raw (suc u))} (+-mono (proj₂ (prefix u)) (≼-refl _)) (V.read-+ (O.cum raw u) (raw (suc u)))
+
+  module Whole (outer : V.T₀) (shape : outer ≡ L.lim pre) where
+    exact : outer ≈ᵛ L.lim sum
+    exact = subst (_≈ᵛ L.lim sum) (sym shape) (l≼ (λ u → ≼l u (proj₁ (prefix u))) , l≼ (λ u → ≼l u (proj₂ (prefix u))))
+    cap : ∀ q → (∀ u → leaf u ≼ q) → outer ≼ (q M.· L.ωᶜ)
+    cap q h = ≼-trans {b = L.lim sum} (proj₁ exact) (≼-trans {b = V.Mv q V.𝟏}
+      (l≼ (λ u → ≼l u (part u))) (Mul.one-step q)) where
+      part : ∀ u → sum u ≼ Cells.Bound.scale q u
+      part zero = h 0
+      part (suc u) = ≼-trans (+-mono (part u) (h (suc u))) (Cells.Bound.rotate q u)
+
+module Shape (i : W.L) (h : W.Tr i → W.L) (r : T.Run (W.nd (W.sΩ i) h)) where
+  module S = B15Spine.Cardinal i h r
+  top = W.nd (W.sΩ i) h
+  raw = λ u → T.value (S.child u)
+  law : V.read (T.value r) ≡ L.lim (λ u → V.read (O.cum raw u))
+  law = Cells.lookup (F.kp top (T.Run.ok r) S.p (P.z≤ top)) (λ z → F.ψ top (T.Run.ok r) (T.Run.bs r)
+    W.zero (P.z≤ top) (T.Run.β r) (S.b z)) S.step
+
+module At (m : ℕ) (g : X.At.Branch m) where
+  module A = X.At m
+  open A.Walk g
+  outer = A.free key
+  leaf = λ u → A.free (g (Run.ix u))
+  raw = λ u → T.value (Run.child u)
+  module Vals = Series raw leaf (Sub.At.value m g)
+  open Vals.Whole outer (Shape.law A.i child r) public
+  lower : ∀ u → leaf u ≼ outer
+  lower u = subst (_≼ outer) (Sub.At.value m g u) (Run.lift-value u)

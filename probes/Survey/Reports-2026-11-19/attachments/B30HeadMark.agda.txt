@@ -1,0 +1,43 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意外层后缀在真实正塔折回时都保留同一个显式起点，包括发生保留与走链的两种 Ω 行。
+module B30HeadMark where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit.Base using (tt)
+open import Data.Maybe.Base using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+open import W4Block hiding (R)
+open import W4Path
+open import W4Ops
+import W4Fold as F
+import B28POrbit as O
+import B28PRoute as Route
+import B30Spine as M
+
+module At (m : ℕ) where
+  open O.At m using (head; module Seed; module Step; branch; z₁)
+  k = tw (suc m)
+  ok = Ok-tw (suc m)
+  start = proj₁ head
+  R = M.recorded k ok start
+
+  wrapper : ∀ {X x₀} (mode : F.Keep k X x₀) (G : X → Tr⁺ k) next →
+    R (proj₁ (G x₀)) → R (proj₁ (F.node⁺ mode G next))
+  wrapper (just (slot , conv , e)) G next p = M.down (subst (λ z → R (proj₁ (G z))) (sym e) p)
+  wrapper nothing G next p = M.down p
+
+  unit : ∀ b (e : OkO k b) (env : F.Base (k ⊕ b)) →
+    R (proj₁ (F.ψ (k ⊕ b) (Ok⊕ k b ok e) env k (self ∙ lift k b) head (suc zero)))
+  unit zero e env = M.left-exp k ok start start start _ (suc zero) tt M.here
+  unit (nd s h) e env = M.down M.here
+
+  kept : ∀ b (e : OkO k b) (env : F.Base (k ⊕ b)) →
+    R (proj₁ (F.ψ (k ⊕ b) (Ok⊕ k b ok e) env k (self ∙ lift k b) head (proj₁ (Ωt (k ⊕ b)))))
+  kept zero e env = M.left-exp k ok start start start _ (proj₁ (Ωt k)) tt M.here
+  kept (nd sS h) e env = M.down (unit (h tt) (proj₂ e tt) (λ j w → env j (inc tt w)))
+  kept (nd sL h) e env = M.down (kept (h 0) (proj₂ e 0) (λ j w → env j (inc 0 w)))
+  kept (nd (sΩ i) h) e env = wrapper _ _ _ (kept (h zero) (proj₂ e zero) (λ j w → env j (inc zero w)))
+
+  actual : ∀ j c → R (branch j c)
+  actual 0 c = subst R (sym (Seed.point c)) (kept _ _ _)
+  actual (suc j) c = subst R (sym (Step.point (branch j) c)) (kept _ _ _)

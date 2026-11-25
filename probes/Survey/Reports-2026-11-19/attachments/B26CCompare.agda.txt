@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同一实际输入及端口，普通读法在有限代码上正确，首次极限发生严格跳跃；真实 z 起点处理 ω 加任意有限尾。
+module B26CCompare where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_; _++_)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; trans; subst)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+open import OCF.Align.EboLeanTree using (hc; nf-tower)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; s≼s; ≼-trans; ≼-suc; ≼-refl; ≼l)
+import W4Block as W
+import W4Ops as O
+import W4Path as P
+import W4Fold as F
+open import WVOne using (read; T₀)
+import B19IdealProduct
+open B19IdealProduct using (_∙_; id)
+import B19IdealPowers as Pow
+import B19IdealArithmetic as Ar
+import B22MovingIndex as Move
+import B12XRef as R
+import B12EboRows as End
+import B17Cofinal as C
+import B20StandardInside as Std
+import B21StandardShape as Shape
+import B22TowerCut as K
+import B25DTrack as Tr
+import B26CSuccessor as Succ
+import B26PActual as Real
+import B26PSuffix as S
+import B26CScalar as V
+import B26CJump as J
+open import B26CDecode using (Small; leaf; cons)
+open import B26CLift
+open import B26CForest using (restore)
+
+open import B26CActual using (z-value)
+module Port (s : W.Sh) (f : W.Ch s → W.L) (o : P.Ok (W.nd s f)) (B : F.Base (W.nd s f)) where
+  open B26CActual.Port s f o B using (module U; module Z)
+
+  plain-finite : ∀ n → Rt (J.finite-code n) ≈ᵛ read (proj₁ (U.run (V.code (natT n))))
+  plain-finite n = S.same e (J.finite-code n) h ∙ U.reconstruct {p = []} {t = natT n} (h1 refl (h0 refl)) (id _) (sm n) (J.nat-NF n) (hc (J.nat-NF n) (V.count (sm n))) h
+    where
+    open B19IdealProduct
+    e = cong principal (J.rest-nat n)
+    h = subst HC e (J.finite-code n)
+    sm : ∀ n → Small (natT n)
+    sm zero = leaf
+    sm (suc n) = cons leaf (sm n)
+
+  plain-at-ω : Rt J.bridge-h ≈ᵛ read (proj₁ (U.run (V.code J.ωcode)))
+  plain-at-ω = U.reconstruct {p = []} {t = J.ωcode} (h1 refl (h0 refl)) (B19IdealProduct.id _) sm (nf-tower 0) (R.H 0) J.bridge-h
+    where sm = cons (cons leaf leaf) leaf
+
+  first-jump : (h : HC (Φ J.ωcode)) → L.suc (read (proj₁ (U.run (V.code J.ωcode)))) ≼ Rt h
+  first-jump h = ≼-trans (s≼s (proj₂ plain-at-ω)) (mono<ⁿ J.bridge-normal (nf-tower 1) (c∷ c[]) J.bridge-h h (hd< (ar< (hd< (lv< []<)))))
+
+  no-plain : (h : HC (Φ J.ωcode)) → Rt h ≼ read (proj₁ (U.run (V.code J.ωcode))) → ⊥
+  no-plain h p = s≼-irrefl (read (proj₁ (U.run (V.code J.ωcode)))) (≼-trans (first-jump h) p)
+
+  plus-n : ∀ n → restore (J.ωcode ++ natT n) ≡ ΩTower 1 ++ natT n
+  plus-n n = cong (ψ (natT 1) [] ∷_) (J.rest-nat n)
+
+  raised-finite : ∀ n (h : HC (Φ (J.ωcode ++ natT n))) → Rt h ≈ᵛ read (proj₁ (Z.run (V.code (natT n))))
+  raised-finite n h = S.same e h d ∙ Z.reconstruct {p = ΩTower 1} {t = natT n} (R.H 1) (J.first-limit (R.H 1) ∙ B19IdealProduct.flip z-value) (sm n) (J.nat-NF n) (hc (J.nat-NF n) (V.count (sm n))) d
+    where
+    open B19IdealProduct
+    e = cong principal (plus-n n)
+    d = subst HC e h
+    sm : ∀ n → Small (natT n)
+    sm zero = leaf
+    sm (suc n) = cons leaf (sm n)

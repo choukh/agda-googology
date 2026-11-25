@@ -1,0 +1,27 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 塔第 2 项的顶层链: 第 1 个链点 z₁ 是否在第 2 个链点 step₂ z₁ 的第一位置后代链上 (有限检查).
+module Nest2Base where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import Audit2 using (z₁; step₂)
+
+-- 沿第一位置往下一步: 后继取前驱, 极限取第 0 项, 结点取第 0 支, up 取左项, ex 取左项.
+desc : Tr (tw 1) → Tr (tw 1)
+desc zero             = zero
+desc (suc x)          = x
+desc (lim f a)        = f 0
+desc (Ω p g)          = g (fromBr (tw 1) p zero)
+desc (up x c y e)     = x
+desc (ex a b nb x ε)  = a
+
+descN : ℕ → Tr (tw 1) → Tr (tw 1)
+descN zero    t = t
+descN (suc n) t = descN n (desc t)
+
+z₂ : Tr (tw 1)
+z₂ = step₂ z₁

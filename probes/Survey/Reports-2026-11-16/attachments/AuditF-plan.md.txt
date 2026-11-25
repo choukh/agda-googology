@@ -1,0 +1,32 @@
+# F 路第 1 步: 只读定义后的判断 (封存件)
+
+读过的只有定义体: YiRWBlock/Path/Ops(Ωt, ⊞)/Fold(kp, node⁺), YiTBRow.ψ, YiMTTab.rbᶻ, YiAbsGIface, YiGIInst, YiGIEnd, YiBSBase, YiBSFold.ψ, YiWRZero, YiWREnd, YiGIRel, YiHCRel, EBO(cof, cofψ₊, fsT 签名, γ 链说明), EboLeanDef.fsn.
+污染声明: grep `KeepAt` 时命中了 YiBAEbo 文首第 3–4 行 (判决段), 看到了 "ψ₀ 根上下文下 Below 与 NodeRef 不成立, KeepAt 条件下成立" 一句. 下面 (a) 里 "派发一致" 一条在看到它之前已从 kp 与 cofψ₊ 的定义得出, 但不能排除受它加强. 以下全是判断档, 没有编译.
+
+## (a) LowSlot 要证的是什么, 哪里最难
+
+陈述: 对一切层号 a, 一切状态 s = (o, r, B, β) (只受 Inv s K 约束), 一切槽位 p, 一切满足 Nu a p κ 的 κ, 一切 R a η y:
+R (at a p) (ψ_κ(K ++ η)) (ψ a o r B (at a p) (posW a p) (B (at a p) (posW a p)) y).
+朝第 0 层的那一半 (lowᶻ) 之所以能合上, 是因为 z≤ 在非零层处处是 inu, 嵌入行逐字落进孩子 (fallᶻ′ = refl), 第 0 层没有槽位所以 kp 恒为 nothing. 朝槽位层的路径 posW 由 inc / ink 加 self 组成, 所以 LowSlot 要过折叠的全部行. 按对 R a η y 的推导归纳, 四处:
+
+1. 零树 (y = zero, η = []): 结论是 R (at a p) (ψ_κ(K)) (B (at a p) (posW a p)). Inv₀ 只说 β, Inv₁ 只说 B i u ⊵ Ωt i. ψ_κ(K) 对非空 K 高于 Ω_κ, 而 Ωt 对着 Ω_ν (Leaf). 所以对 W₀, W₁ 这两个实例, LowSlot 在基础情形就缺前提; 我判断它对 Inv₀ 是假的 (取 a = tw 1, p 为下标槽位, κ = [], B = B₀, β 很大, K 非空: 要 R zero (ψ₀(K)) (suc zero)). 这是 "谓词太宽" 一类, 不是数学障碍.
+2. 把 Inv 加强到 "∀ i u κ. R i (ψ_κ K) (B i u)" 才够基础情形; 但 inv-step 要对 stepᶻ 之后的底 B′ i u = ψ a … i (inc c u) (B i (inc c u)) x 证同一条, 这是朝任意层 i, 沿任意路径 inc c u 的保持, 比 LowSlot (只沿 posW) 更宽. 而 Wire 的 inv-step 只给朝第 0 层的结论 q. 所以够用的 Inv 不能由 Wire 现有的参数签名供给: LowSlot 与 Inv 的保持是互递归的, 合起来就是 "一切目标层, 一切路径" 的全域律.
+3. 结点 y = Ω q g (cof η = cΩ κ′): 树一侧按 kp a o q (posW a p) 的字面结果派发 (just: 在目标层的槽位上保留; nothing: 链的部分和极限), 参照一侧按 cmpᵀ (κ′+1) κ 派发 (gt: 余尾 ω, γ 链; lt/eq: 余尾 Ω_{κ′+1}). 两边必须一致. 但 Nu a p κ 与 Nu a q κ′ 只是上界 (Rd = Cl, 有 c0 与向下封闭 cc), κ 不由 p 决定; 例如 κ = [] 对一切 p 都满足 Nu. 树保留而参照取链时, R 的规则里 Ω 结点只经 ◃w 接第一分支, 对不上 γ 链; 树取链而参照保留时, ℕ 极限对着余尾 Ω 的项, 只剩 mc 一条规则可用. 我判断这是最难的一处, 而且在 "∀κ. Nu a p κ" 的量化下陈述本身可能为假. 另: kp (nd (sΩ k) h) _ (inj₂ _) (inc _ _) = nothing 是无条件的, 即使槽位与目标经同一个孩子.
+4. 嵌入 y = up x c y′, a = nd (sΩ k) h, 路径 inc c′ v: 换基行按 r 的 Schema 与 route 分三路: j ≤ floor 进孩子 c (要 stepped 状态上的同一条律, 回到第 2 点); floor ≤ j 给 seen ⊞ ψ₀ y′; r 无 Schema 给 ψ x ⊞ ψ₀ y′. 后两路是加法, 参照一侧是 ψ_κ(K ++ t ++ s), s 随 y′ 无界. LowSlot 对一切 r 量化 (Stᶻ 含 rb-no), 所以加法行在陈述的量化域里.
+
+## (b) 主线全域律卡在哪, 是否同一处
+
+主线 LowKeep 的实例 (domsᵍ) 只管 Wl = z≤ (朝第 0 层), Gx = Ωt ℓ. 按定义看它不能对自己归纳: 结点的链步是朝槽位层 (非零) 的折叠, 嵌入行把状态换成 stepped 的底, 所以证明必须推广到一切树, 一切目标, 一切路径; 推广后就碰到表 rbᶻ 缺项时的加法行与 (a)3 的派发一致. 我判断主线卡在 "朝非零目标的保持没有陈述 + 加法行". LowSlot 把前一半陈述出来了, 是同一条律里原先没写出的那一半, 不是另一条律; 卡点 (a)2, (a)3, (a)4 与主线推广后的卡点是同一组.
+
+## (c) 换基与 ψ_κ 上下文改变了什么
+
+改变: (i) 参照一侧的头从固定的 ψ₀ 换成 ψ_κ, 使朝非零层的结论有了能与 fsT 交换的形状 (chain←slot 的 go (suc k) 只用 fsT++), 朝第 0 层的那半已无条件归约到 LowSlot. (ii) Schema 让 "目标 ≤ floor" 的情形进孩子而不走加法, 比 rbᶻ 表 (只有字面零孩子有条目) 覆盖更多.
+没改变: 状态与底的量化仍是全域; Inv 不约束槽位层的底与 r; κ 仍只是上界; floor ≤ j 与无 Schema 两路仍是加法; kp 的字面派发与记号比较的一致性没有进陈述.
+
+## (d) 更便宜的路
+
+终点只用 folded n, 即 ChainRel 只在从 rootᴮ n 出发, 沿 dom-top (dom-keel n) 这一棵推导实际到达的 (状态, 槽位, κ, g) 上被调用. 候选:
+1. 把 Inv 取成可达谓词 (由 inv-root, inv-step 生成的最小者, 并记下 r = rb-tw 的后代, B 的来历), κ 取槽位层的规范读数而不是 "一切 Nu"; 先在 tw 1, tw 2 上实填, 再定陈述.
+2. 把律改成对结构参数 n 的一步定理: 设 tw n 层上 (一切目标, 路径) 的保持成立, 推 tw (n+1); 只有这一步新用到的字段进前提.
+3. 不经 R 的全域归纳, 只对规范树与规范读法证一步支配 (参照项的每一步基本列被折叠值的一步 ◃ 支配), 链点的支配用 chain-dom 在目标层的推广.
+判断: 直接攻现在的 LowSlot (W₀ 或 W₁) 大概率得到退化反例; 应先换陈述 (候选 1), 并先编译 (a)1 的否定来确认量化域太宽.

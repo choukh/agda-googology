@@ -1,0 +1,33 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B17RefThree where
+open import Data.Nat using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+open import W4Block using (iter)
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼; l≼)
+import B12Omega3Ref as R
+import B14RefFixed as K
+import B14RefRow as Row
+import B15OrbitAction as B
+import B17OrbitTower as T
+import B17RefVector as V
+
+term = λ n → L.ψ⁰ (B.f (T.run (S.iter V.step T.semK n 0) B.base) L.zero)
+three = R.at (Row.node 1) 0
+equal : three L.≅ L.lim term
+equal with K.as-chain 1
+... | L.l≅ h = L.≅-trans (h 0) (V.gain K.one)
+module Physical where
+  stage = λ n → L.ψ⁰ (B.f (T.run (iter V.step T.semK n 0) B.base) L.zero)
+  open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+  same : ∀ n → S.iter V.step T.semK n ≡ iter V.step T.semK n
+  same zero = refl
+  same (suc n) = cong V.step (same n)
+  point : ∀ n → term n L.≅ stage n
+  point n rewrite same n = L.≅-refl⁰ _
+  whole : three L.≅ L.lim stage
+  whole = L.≅-trans equal (L.l≅ point)
+  absorb : ∀ {v : T₀} → (∀ n → stage n ≼ v) → three ≼ v
+  absorb h = ≼-trans (≅→≼ whole) (l≼ h)

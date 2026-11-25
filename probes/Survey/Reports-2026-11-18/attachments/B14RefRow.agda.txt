@@ -1,0 +1,80 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：第 1 行上每个一级回灌点的 Ω 头、其零层实际索引，以及后继号第一支的全部一级起点。
+module B14RefRow where
+open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; trans)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼l; l≼; ≼-trans; ≅→≼)
+open import WVOne using (read; T₀)
+open import WVTwo using (T₁)
+open import W4Fold using (EBOᶜ)
+open import WKShape using (Ψ₃)
+open import WSLevel using (Ω₁ᴸ)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B13Target as P
+import B13Feedback as F
+import B13LiveRow as Live
+
+step : T₁ → T₁
+step y = L.ψ L.zero R.idσ (P.co₁ (P.back y))
+
+feed₁ : ℕ → T₁
+feed₁ = P.feed (P.family 1)
+
+-- 解释一级分支时，back 搬运 Ω₁ 层的分支输入，co₁ 在输出中保留该槽。
+coord : (T₀ → T₁) → T₀ → Lev₂
+coord g x = P.co₁ (P.back (g (L.tr L.z≅ (L.tr⁻ L.z≅ x))))
+
+kids : ℕ → T₀ → T₁
+kids zero x = L.up L.zero x
+kids (suc n) x = L.ψ L.zero R.idσ (coord (kids n) (L.tr⁻ L.z≅ x))
+
+feed-shape : ∀ n → feed₁ n ≡ L.limᵢ L.zero (kids n)
+feed-shape zero = refl
+feed-shape (suc n) rewrite feed-shape n = refl
+
+arg : ℕ → ℕ → T₀
+arg n = S.iter (λ x → L.ψ (L.suc L.zero) R.idσ (coord (kids n) x)) (L.suc L.zero)
+
+node : ℕ → T₀
+node n = R.at (R.at (L.ψ⁰ R.Ω₃) 1) n
+
+node-shape : ∀ n → node n ≡ L.lim (λ j → L.ψ⁰ (coord (kids n) (arg n j)))
+node-shape n rewrite feed-shape n = refl
+
+regular-kids : ∀ n {x y : T₀} → x L.≅ y → kids n x L.≅ kids n y
+regular-kids zero d = L.upˡ (L.upʳ d)
+regular-kids (suc n) d = L.ψ-≅ {p = L.zero} {σ = R.idσ} {p′ = L.zero} {σ′ = R.idσ} (L.≅ᴵ-refl _)
+  (P.co-pres (P.tr-both (L.≅ᴵ-refl _) (regular-kids n (L.≅-trans (L.tr-≅ L.z≅ (P.tr-both L.z≅ (P.tr-both L.z≅ d)))
+          (L.≅-sym (L.tr-≅ L.z≅ (P.refl-left (L.≅-sym (P.tr-both L.z≅ (P.tr-both L.z≅ d))))))))))
+
+regular-coord : ∀ n x → coord (kids n) x L.≅ coord (kids n) x
+regular-coord n x = P.co-pres (P.tr-both (L.≅ᴵ-refl _) (regular-kids n (L.≅-refl⁰ _)))
+
+same-feedback : ∀ n j → R.at (node n) j L.≅ arg n (suc j)
+same-feedback n j rewrite node-shape n = L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (regular-coord n (arg n j))
+
+-- 在每个后继号的第 0 支上，零层输入是 1，因而下层一级起点统一为 ψ₁(left k)。
+start : ℕ → T₁
+start k = L.ψ L.zero R.idσ (R.left k)
+
+ones : ∀ n → kids (suc n) (L.suc L.zero) ≡ L.lim (λ k → S.iter step (start k) n)
+ones zero = refl
+ones (suc n) rewrite ones n = refl
+
+positive-first : ∀ n → R.at (node (suc n)) 0 ≡ L.lim (λ k → L.ψ⁰ (P.co₁ (P.back (S.iter step (start k) n))))
+positive-first n rewrite node-shape (suc n) | ones n = refl
+
+reappears : ∀ n → R.at (R.at (node (suc n)) 0) 0 ≡ node n
+reappears n rewrite positive-first n = refl
+
+previous-in-next : ∀ n → node n ≼ node (suc n)
+previous-in-next n = subst (λ t → t ≼ node (suc n)) (reappears n)
+  (≼-trans (R.at-below (R.at (node (suc n)) 0) 0) (R.at-below (node (suc n)) 0))
+
+previous-at-one : R.at (R.at (node 1) 0) 0 ≼ read EBOᶜ
+previous-at-one = Live.terminal

@@ -1,0 +1,57 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22RowBoundary where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import W4Block
+open import W4Fold
+open import WVOne using (read)
+open import WSLevel using (Ω₁ᴸ)
+open import WKShape using (lvl3)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; _≈ᵛ_; ≼-trans; ≅→≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B13Target as P
+import B19RowSecond as First
+import B20RowPrefix as Reg
+import B21RowPool as Pool
+import B21RowPass as Prefix
+import B22RowWhole as W
+import B22RowSource as S
+import B22RowCountable as C
+
+module Sum = U.Sum First.p Reg.rp
+rotate : ∀ n → Prefix.prefix n L.≅ Sum.left n
+rotate zero = L.z≅
+rotate (suc n) = L.≅-trans (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (rotate n) Reg.rp) (Sum.rotate n)
+successor : W.total L.≅ L.ψ⁰ (P.pass (L.suc Ω₂ᴸ))
+successor = L.l≅ (λ j → L.ψ⁰-≅ (rotate j))
+src : tr₀ S.source ≈ᵛ L.ψ⁰ (P.pass (L.suc Ω₂ᴸ))
+src = ≼-trans (proj₁ S.value) (≅→≼ successor) , ≼-trans (≅→≼ (L.≅-sym successor)) (proj₂ S.value)
+
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  open Pool.At.V.A r cv using (outer)
+  module B = C.At r cv
+  base : B.output zero ≼ read (Tm.value r)
+  base = outer 0
+  one : B.output (suc zero) ≼ read (Tm.value r)
+  one = l≼ outer
+
+needed = P.co₁ Ω₁ᴸ
+first-input : P.asked 2 0 L.≅ P.pass needed
+first-input = P.pass-pres (P.co-pres (L.tr⁻-≅ (L.≅ᴵ-refl _) (L.tr⁻-≅ (L.≅ᴵ-refl _) (L.Ω-refl _))))
+first-child : R.at (L.ψ⁰ (R.X 2)) 0 L.≅ L.ψ⁰ (P.pass needed)
+first-child = L.ψ⁰-≅ first-input
+different-shape : ∀ (z : Tr zero) → C.append Ω₂ᴸ (read z) L.≅ needed → ⊥
+different-shape zero (L.lᵢ≅ () _)
+different-shape (suc z) ()
+different-shape (lim f d) ()
+different-shape (Ω () _)
+different-shape (up _ () _ _)
+different-shape (ex _ _ _ _ ())
+

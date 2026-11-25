@@ -1,0 +1,34 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19IdealPowers where
+open import Data.Product using (_,_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼l; l≼; z≼; s≼s; ≼i; i≼; ≼u; u≼)
+open import WVOne using (𝟏; T₀)
+import B18Product as P
+open import B19IdealProduct
+
+base : ∀ {b d} → b ≼ d → ∀ e → power b e ≼ power d e
+base p L.zero = ≼-refl _
+base p (L.suc e) = P.mono (base p e) p
+base p (L.lim f) = l≼ (λ n → ≼l n (base p (f n)))
+
+base≈ : ∀ {b d} → b ≈ᵛ d → ∀ e → power b e ≈ᵛ power d e
+base≈ (p , q) e = base p e , base q e
+
+positive : ∀ {b} → 𝟏 ≼ b → ∀ e → 𝟏 ≼ power b e
+positive h L.zero = ≼-refl _
+positive h (L.suc e) = ≼-trans (proj₂ (left-one 𝟏)) (P.mono (positive h e) h)
+positive h (L.lim f) = ≼l 0 (positive h (f 0))
+
+expo : ∀ {b x y} → 𝟏 ≼ b → x ≼ y → power b x ≼ power b y
+expo h z≼ = positive h _
+expo h (s≼s p) = P.mono (expo h p) (≼-refl _)
+expo h (≼l n p) = ≼l n (expo h p)
+expo h (l≼ p) = l≼ (λ n → expo h (p n))
+expo h (≼i {p = ()} _ _ _)
+expo h (i≼ {p = ()} _)
+expo h (≼u {r = ()} _)
+expo h (u≼ {r = ()} _)
+
+omega-pos : 𝟏 ≼ L.ωᶜ
+omega-pos = ≼l 1 (≼-refl _)

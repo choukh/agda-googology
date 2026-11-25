@@ -1,0 +1,85 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同一选中反馈单元的名字深度恰为前一整塔与本次单位重置系数的名字深度之最大值，只需前一深度至少二。
+module B27UCell where
+
+open import Data.Nat.Base using (ℕ; _≤_; _<_; _⊔_)
+import Data.Nat.Properties as N
+open import Data.Empty using (⊥-elim)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; subst)
+open import OCF.Align.EboLeanBase using (tri)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans)
+open import WVOne using (𝟏)
+import B26Names as A
+import B26Depth as D
+import B27Arithmetic as Roof
+import B27Threshold as H
+import B12EboRows as Rows
+import B12Terminal as T
+import B17CellNext as Next
+import B17CellPrefix as Cells
+import B18CellState as C
+import B18Product as P
+import B19Coefficient as Coef
+
+private
+  module Common (a b c : A.Name) where
+    cover : A.value a ≼ A.value c → A.value b ≼ A.value c → 2 ≤ D.height c →
+      Σ A.Name (λ r → D.height r ≡ D.height c × (A.value a P.· A.value b) ≼ A.value r)
+    cover p q high = r , Roof.same cap , ≼-trans {b = A.value c P.· A.value c} (P.mono p q) (Roof.square cap)
+      where
+      cap = Roof.build c high
+      r = Roof.b cap
+
+both : ∀ a b → 2 ≤ D.height a →
+  Σ A.Name (λ r → D.height r ≡ (D.height a ⊔ D.height b) × (A.value a P.· A.value b) ≼ A.value r)
+both a b high with tri (A.name a) (A.name b)
+... | inj₁ p = right (H.weak-value a b (inj₁ p))
+  where
+  right : A.value a ≼ A.value b → _
+  right h with Common.cover a b b h (≼-refl _) (N.≤-trans high (D.ordered a b h))
+  ... | r , eq , bound = r , trans eq (sym (N.m≤n⇒m⊔n≡n (D.ordered a b h))) , bound
+... | inj₂ t = left-value (get t)
+  where
+  get : _ → A.value b ≼ A.value a
+  get (inj₁ eq) = H.weak-value b a (inj₂ (sym eq))
+  get (inj₂ gt) = H.weak-value b a (inj₁ gt)
+  left-value : A.value b ≼ A.value a → _
+  left-value h with Common.cover a b a (≼-refl _) h high
+  ... | r , eq , bound = r , trans eq (sym (N.m≥n⇒m⊔n≡m (D.ordered b a h))) , bound
+
+module At (n j : ℕ) (pa : A.Named (Rows.child n)) (pb : A.Named (C.At.fresh n j))
+          (pc : A.Named (Cells.cell n j)) (high : 2 ≤ D.height (proj₁ pa)) where
+  a = proj₁ pa
+  b = proj₁ pb
+  c = proj₁ pc
+  tower = Rows.child n
+  unit = C.At.fresh n j
+  cell = Cells.cell n j
+
+  tower-positive : 𝟏 ≼ tower
+  tower-positive = subst (𝟏 ≼_) (C.At.input n j) (T.Run.oneβ (C.At.r n j))
+
+  first : D.height a ≤ D.height c
+  first = D.ordered a c (≼-trans {b = tower} (proj₁ (proj₂ pa))
+      (≼-trans {b = cell} (Next.previous n j) (proj₂ (proj₂ pc))))
+
+  second : D.height b ≤ D.height c
+  second = D.ordered b c (≼-trans {b = unit} (proj₁ (proj₂ pb))
+    (≼-trans {b = tower P.· unit} (P.pad tower-positive unit)
+      (≼-trans {b = cell} (proj₂ (Coef.Cell.exact-cell n j)) (proj₂ (proj₂ pc)))))
+
+  upper : D.height c ≤ (D.height a ⊔ D.height b)
+  upper with both a b high
+  ... | r , e , h = subst (D.height c ≤_) e (D.ordered c r (≼-trans {b = cell} (proj₁ (proj₂ pc))
+    (≼-trans {b = tower P.· unit} (proj₁ (Coef.Cell.exact-cell n j))
+      (≼-trans {b = A.value a P.· A.value b} (P.mono (proj₂ (proj₂ pa)) (proj₂ (proj₂ pb))) h))))
+
+  exact : D.height c ≡ (D.height a ⊔ D.height b)
+  exact = N.≤-antisym upper (N.⊔-lub first second)
+
+  gain : D.height a < D.height c → D.height c ≡ D.height b
+  gain p with N.≤-total (D.height a) (D.height b)
+  ... | inj₁ le = trans exact (N.m≤n⇒m⊔n≡n le)
+  ... | inj₂ ge = ⊥-elim (N.<-irrefl (sym (trans exact (N.m≥n⇒m⊔n≡m ge))) p)

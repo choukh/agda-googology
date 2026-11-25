@@ -1,0 +1,70 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- BTBO 尚缺的第一个对角项含 ψ₀(Ω_ω)。它对 W4 的可检验预备目标是全部有限层。
+module B12BtboCut where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import WVOne using (read; T₀)
+open import W4Fold using (EBOᶜ)
+import B12Terminal as T
+import B12EboRows as R
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; l≼; ≼l; ≼-refl; ≼-trans; ⊑→≼)
+open import OCF.Align.BTBOValMain using (nat⊑L₁)
+
+omega-cut : T₀
+omega-cut = L.ψ⁰ (L.Ω L.ωᴵ)
+
+finite : ℕ → T₀
+finite n = L.ψ⁰ (L.Ω (L.natᴵ n))
+
+cut-below-first-missing : omega-cut ≼ N.γ 2
+cut-below-first-missing = ⊑→≼ omega-cut (L.Ψ⁰-mono (L.l⊑ nat⊑L₁))
+
+-- 若展开这个预备目标，已实填 n=0,1,2；其余量化恰从 n=3 开始。
+finite-zero : R.InChild (finite 0)
+finite-zero = 1 , ≼-trans (⊑→≼ (finite 0) (L.Ψ⁰0 (L.natᴵ 2))) R.omega₂-in-child
+
+finite-one : R.InChild (finite 1)
+finite-one = 1 , ≼-trans R.epsilon-in-Ω₂ R.omega₂-in-child
+
+finite-two : R.InChild (finite 2)
+finite-two = 1 , R.omega₂-in-child
+
+cut : (∀ k → R.InChild (finite (suc (suc (suc k))))) → omega-cut ≼ read EBOᶜ
+cut tail = l≼ go
+  where
+  go : ∀ n → finite n ≼ read EBOᶜ
+  go zero = R.into finite-zero
+  go (suc zero) = R.into finite-one
+  go (suc (suc zero)) = R.into finite-two
+  go (suc (suc (suc k))) = R.into (tail k)
+
+-- 第一个未闭的 BTBO 对角项再展开一层，其第 0 支与上述切口同值。
+import OCF.Align.BTBOValMain as V
+open import Relation.Binary.PropositionalEquality using (sym; subst)
+
+index : ℕ → L.Ordᴵ
+index n = N.L 1 L.[ n ]ᴵ
+
+finite-index : (m : ℕ) → L.natᴵ m L.≅ᴵ (index 0 L.[ m ]ᴵ)
+finite-index m = L.≅ᴵ-trans (V.toLevel-nat m)
+  (L.toLevel-≅ (L.natᶜ-HS m) (L.hl₁ (L.hl₁ (N.cert 1) 0) m)
+     (subst (λ x → L.natᶜ m L.≅ x) (sym (V.T-nat m)) (L.≅-refl⁰ _)))
+
+index-zero : L.ωᴵ L.≅ᴵ index 0
+index-zero = L.l≅ finite-index
+
+branch : ℕ → T₀
+branch n = L.ψ⁰ (L.Ω (index n))
+
+cut≈first-branch : omega-cut L.≅ branch 0
+cut≈first-branch = L.ψ⁰-≅ (L.Ω-≅ index-zero)
+
+first-missing : (omega-cut ≼ read EBOᶜ)
+              → (∀ k → R.InChild (branch (suc k)))
+              → N.γ 2 ≼ read EBOᶜ
+first-missing bottom positive = l≼ λ
+  { zero → ≼-trans (OCF.Align.Value.≅→≼ (L.≅-sym cut≈first-branch)) bottom
+  ; (suc k) → R.into (positive k) }

@@ -1,0 +1,142 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 任意可数参照系数 y 只要低于真实指数 z 的读回值，E(z) 的一级输出实现 he(y)。
+module B14OrbitReal where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WVThree using (Nx)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; c₁)
+open import YiLAB7Replay using (o₁)
+open import WSW4 using (module Lem; R-sup; R-node)
+open Lem o₁
+open import WSShadow
+import WSLevel as W
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; i≼; u≼; ≼-suc)
+import B11OuterCore as C
+import B12LimitRef as A
+import B13Countable as T
+import B13Update as Step
+import B13Orbit as V
+import B12ActualSlots as Cover
+open import B8PairW4 using (Real-up; SumR-up)
+open import B14OrbitHeight using (he; infl)
+open import B9InnerReal using (module RX)
+open RX o₁ using (Real-pos)
+open import YiLAB7Orbit using (p₁)
+import B13OrbitFeed as O
+import B12Hierarchy as H
+import B12Update as S
+import B14OrbitNode as N
+open H.Prefix using (val; exp; rows)
+
+
+carry : ∀ {e R S} → lvl1 ⊢ c₁ R ◃ c₁ S → C.Str e R → C.Str e S
+carry d h = C.str (Real-up d (C.rP h)) (Real-up d (C.rΩ h)) (SumR-up d (C.sN h)) (◃t (C.st h) d)
+
+real-sup : ∀ {x} (e : ℕ → ES) → (∀ n → Real x (e n)) → Real x (lC e)
+real-sup {x} e h = (λ tv mk F f p S t v a c ha hc h1 → l≼ (λ j → proj₁ (h j) tv mk F f p S t v a c ha hc h1)) ,
+  (λ n tv mk K k G g p q → R-sup n (It n o₁ (td stop tv mk) x K G) _ (λ j → proj₂ (h j) n tv mk K k G g p q))
+
+real-node : (g : Tr zero → Tr lvl1) (e : T₀ → ES) →
+   (∀ y z → y ≼ read z → Real (g z) (e y)) → Real (Ω p₁ g) (nC e)
+real-node g e h =
+  (λ tv mk F f p → R-node 0 (mk (inc tt self)) (λ t → kpT stop o₁ p₁ (tv t))
+       (λ z → op (E o₁ (td stop tv mk) (g z) F) (Einf o₁ (td stop tv mk) (g z) F))
+       (λ y → sE (e y) f) (λ y z d → proj₁ (h y z d) tv mk F f p)) ,
+  (λ n tv mk K k G f p q → R-node n (mk (inc tt self)) (λ t → kpT stop o₁ p₁ (tv t))
+       (λ z → It n o₁ (td stop tv mk) (g z) K G) (λ y → sI (e y) n k f)
+       (λ y z d → proj₂ (h y z d) n tv mk K k G f p q))
+
+module In {X : Cx lvl2} (m : Mor nil X) (D : TD X zero) where
+  rc : St X → Tr lvl1
+  rc S = c₁ (T.pull m S)
+  Holds : ES → St X → Set
+  Holds e S = C.Str e (T.pull m S)
+  Models : Op X → (ES → ES) → Set
+  Models K f = ∀ e S → InflE e → Holds e S → Holds (f e) (stepS K S)
+
+  result : Tr zero → Op X → Op X
+  result z K = op (E ok₂ D z K) (Einf ok₂ D z K)
+
+  upward : ∀ {K K′ f} → Rl K K′ → Models K f → Models K′ f
+  upward {K} {K′} p h e S ie hs = carry {R = T.pull m (stepS K S)} {S = T.pull m (stepS K′ S)}
+    (p S lvl1 (σ m C.slot) (S lvl1 (σ m C.slot))) (h e S ie hs)
+
+  combine : (K : Op X) (f : ℕ → ES → ES) → (∀ n → Models K (f n)) → Models K (λ e → lC (λ n → f n e))
+  combine K f h e S ie hs = C.str (real-sup _ (λ n → C.rP (h n e S ie hs)))
+    (C.rΩ old) (C.sN old) (C.st old)
+    where old = h 0 e S ie hs
+
+  module Succ (z : Tr zero) (y : T₀) (K : Op X) (p : Models (result z K) (he y)) where
+    Q = result z K
+    point : (e : ES) (S : St X) → InflE e → Holds e S → ∀ n → Holds (iter (he y) e n) (itS Q n S)
+    point e S ie hs zero = hs
+    point e S ie hs (suc n) = p _ _ (proved n) (point e S ie hs n)
+      where
+      proved : ∀ k → InflE (iter (he y) e k)
+      proved zero = ie
+      proved (suc k) = infl y _ (proved k)
+
+    same : ∀ n S i t → itS Q n S i t ≡ itV Q n S i t (S i t)
+    same zero S i t = refl
+    same (suc n) S i t = cong (run Q (itS Q n S) i t) (same n S i t)
+
+    action : Models (result (suc z) K) (he (L.suc y))
+    action e S ie hs = C.str (real-sup _ (λ n → Real-up (part n) (C.rP (point e S ie hs n))))
+      (Real-up (part 0) (C.rΩ hs)) (SumR-up (part 0) (C.sN hs)) (◃t (C.st hs) (part 0))
+      where
+      part : ∀ n → lvl1 ⊢ rc (itS Q n S) ◃ rc (stepS (result (suc z) K) S)
+      part zero = Einf ok₂ D (suc z) K S lvl1 (σ m C.slot) (S lvl1 (σ m C.slot))
+      part (suc n) rewrite same n S lvl1 (σ m C.slot) = ◃l n
+
+  eval : ∀ z {y} → y ≼ read z → (K : Op X) → Models K A.next → Models (result z K) (he y)
+  eval (Ω () g)
+  eval (up a () b h)
+  eval (ex a b nb z ())
+  eval zero z≼ K p = p
+  eval (suc z) z≼ K p = upward {K = K} {K′ = result (suc z) K}
+    (λ S i t v → Emono ok₂ D K S i t v (z◃ z ◃s)) p
+  eval (suc z) (s≼s {a = y} d) K p = Succ.action z y K (eval z d K p)
+  eval (lim g a) z≼ K p = upward {K = K} {K′ = result (lim g a) K}
+    (λ S i t v → Emono ok₂ D K S i t v (z◃ (g 0) (◃l 0))) p
+  eval (lim g a) (≼l n d) K p = upward {K = result (g n) K} {K′ = result (lim g a) K}
+    (λ S i t v → Emono ok₂ D K S i t v (◃l n)) (eval (g n) d K p)
+  eval zero (l≼ {f = f} h) K p = combine (result zero K) (λ n → he (f n)) (λ n → eval zero (h n) K p)
+  eval (suc z) (l≼ {f = f} h) K p = combine (result (suc z) K) (λ n → he (f n)) (λ n → eval (suc z) (h n) K p)
+  eval (lim g a) (l≼ {f = f} h) K p = combine (result (lim g a) K) (λ n → he (f n)) (λ n → eval (lim g a) (h n) K p)
+  eval z (i≼ {p = ()} d) K p
+  eval z (u≼ {r = ()} d) K p
+
+empty : ∀ e → InflE e → A.Described L.zero e
+empty e ie = A.described ie (W.Lw W.Ld-Ω₁ (proj₁ ie Nx)) (W.Ew W.Lx-Ω₁sh (W.shZ-le e ie))
+
+module At (c : Tr⁺ lvl2) (cp : Cover._⊴_ (proj₁ (Ωt lvl2)) (proj₁ c))
+          (R : Base lvl2) (v : Tr⁺ zero) (I : S.Seeds (val H.first) (exp H.first) R v) where
+  J = V.Jc c
+  single : ∀ w → T.In.Models idM w J H.add
+  single w x = Step.advanceJc c cp w (val x) (exp x) (rows x)
+  module Core = N.At J single R v I
+  module Frame = In O.m O.D₀
+  open Core using (module Row; module Run)
+
+  act : Frame.Models Row.K₀ A.next
+  act e S ie hs = Step.Update.new-str (V.K c) J (V.standard≤K c cp) (V.contains c cp (V.K c))
+    L.zero e (empty e ie) (T.pull O.m S) hs
+
+  basis : C.Str zC R
+  basis = C.str (Real-pos (c₁ R) (proj₂ (R lvl1 C.slot))) (C.rΩ h) (C.sN h) (C.st h)
+    where h = S.structure I
+
+  branch : ∀ y z → y ≼ read z → Real (Core.curve z) (he y zC)
+  branch y z d = C.rP (Frame.eval (suc z) (≼-suc d) Row.K₀ act zC Run.S₀ Infl-zC basis)
+
+  retained : Real Core.retained (nC (λ y → he y zC))
+  retained = real-node Core.curve _ branch

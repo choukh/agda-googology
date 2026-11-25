@@ -1,0 +1,39 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同一标量律下，低族严格留在 BTBO 下；在任意给定门槛上可另外构造一族。
+module B30MForce where
+open import Data.Nat.Base using (ℕ)
+open import Data.Empty using (⊥)
+import OCF.Align.Level as L
+open import WVOne using (T₀)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import B26Names as A
+import B26Depth as D
+import B27Threshold as T
+open import B30MScalar
+open import B30MSeed using (r; q)
+open import B30MLow using (module Low; low; floor-cut)
+
+module Force (b t : T₀) (h : L.suc r ≼ b) where
+  seed = pair b t
+  ok : L.suc r ≼ seed
+  ok = ≼-trans {a = L.suc r} {b = b} {c = seed} h (left b t)
+  module B = Build (λ _ → seed) ok
+  cover : t ≼ L.lim B.f
+  cover = ≼l {f = B.f} 1 (≼-trans {a = t} {b = seed} {c = B.f 1} (right b t) (B.paid 0))
+
+module High = Force (L.suc q) A.E floor-cut
+cofinal : A.E ≼ L.lim High.B.f
+cofinal = High.cover
+
+above : ∀ (t : T₀) → (∀ f x → Laws f x → L.lim f ≼ t) → ⊥
+above t h = s≼-irrefl t (≼-trans {a = L.suc t} {b = L.lim Y.B.f} {c = t} Y.cover (h Y.B.f Y.B.x Y.B.model))
+  where module Y = Force (L.suc q) (L.suc t) floor-cut
+
+below : ∀ (t : T₀) f x → Laws f x → L.suc (L.lim f) ≼ t → (∀ a b → Laws a b → t ≼ L.lim a) → ⊥
+below t f x m small h = s≼-irrefl (L.lim f) (≼-trans {a = L.suc (L.lim f)} {b = t} {c = L.lim f} small (h f x m))
+
+no-uniform-upper : (∀ f x → Laws f x → L.lim f ≼ T.row 2) → ⊥
+no-uniform-upper = above (T.row 2)
+no-uniform-lower : (∀ f x → Laws f x → T.row 2 ≼ L.lim f) → ⊥
+no-uniform-lower = below (T.row 2) Low.f Low.x Low.model low

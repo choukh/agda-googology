@@ -1,0 +1,86 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 一级槽的 Real 下界对独立给出的显式输入同样成立。可数迭代分别推进显式值和默认状态。
+module B16OrbitWide where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block hiding (Sh; D; lift)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read; T₀)
+open import WSShadow using (Ω̂; ES; InflE; lC)
+open import WSW4 using (module Lem)
+open import YiLAB7Replay using (o₁)
+open Lem o₁ using (Real)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import B8PairW4 using (Real-up; SumR-up)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; l≼; ≼l; i≼; u≼)
+import B11OuterCore as C
+import B12ActualSlots as Cover
+import B13OrbitFeed as O
+import B13Orbit as V
+import B13Countable as T
+import B14OrbitReal as W
+import B15OrbitAction as P
+import B15OrbitModel as M
+import B16OrbitExplicit as B
+import B16OrbitTransform as H
+import B16OrbitEnv as Env
+module At {X : Cx lvl2} (m : Mor M.X₁ X) where
+  module N = M.At m
+  Holds : ES → St X → Set
+  Holds e S = C.Str e (T.pull N.r S)
+  Law : Op X → (ES → ES) → Set
+  Law Q f = ∀ e S → InflE e → Holds e S → (b : Tr⁺ lvl1) → Real (proj₁ b) e → Real (proj₁ b) Ω̂ → Real (proj₁ (run Q S lvl1 N.slot b)) (f e)
+  Wide : Op X → P.Act → Set
+  Wide Q a = Law Q (P.s a)
+  lift : ∀ {Q Q′ f} → Rl Q Q′ → Law Q f → Law Q′ f
+  lift rr law e S ie hs b re ro = Real-up (rr S lvl1 N.slot b) (law e S ie hs b re ro)
+  sup : ∀ Q (f : ℕ → ES → ES) → (∀ n → Law Q (f n)) → Law Q (λ e → lC (λ n → f n e))
+  sup Q f h e S ie hs b re ro = W.real-sup _ (λ n → h n e S ie hs b re ro)
+  canonical : ∀ Q f → Law Q f → ∀ e S → InflE e → Holds e S → Holds (f e) (stepS Q S)
+  canonical Q f law e S ie hs = C.str (law e S ie hs _ (C.rP hs) (C.rΩ hs)) (Real-up u (C.rΩ hs)) (SumR-up u (C.sN hs)) (◃t (C.st hs) u)
+    where u = inf Q S lvl1 N.slot (S lvl1 N.slot)
+
+  module Frame (D : TD X zero) (a : P.Act) where
+    res = λ z K → op (E ok₂ D z K) (Einf ok₂ D z K)
+    module Power (z : Tr zero) (y : T₀) (K : Op X) (law : Law (res z K) (P.he a y)) (e : ES) (S : St X) (ie : InflE e) (hs : Holds e S)
+                 (b : Tr⁺ lvl1) (re : Real (proj₁ b) e) (ro : Real (proj₁ b) Ω̂) where
+      Q = res z K
+      ev = iter (P.he a y) e
+      Rs = λ n → itS Q n S
+      bs = λ n → itV Q n S lvl1 N.slot b
+      positive : ∀ n → InflE (ev n)
+      positive zero = ie
+      positive (suc n) = P.ih a y _ (positive n)
+      next : ∀ n → Holds (ev n) (Rs n)
+      next zero = hs
+      next (suc n) = canonical Q (P.he a y) law (ev n) (Rs n) (positive n) (next n)
+      omg : ∀ n → Real (proj₁ (bs n)) Ω̂
+      omg zero = ro
+      omg (suc n) = Real-up (inf Q (Rs n) lvl1 N.slot (bs n)) (omg n)
+      point : ∀ n → Real (proj₁ (bs n)) (ev n)
+      point zero = re
+      point (suc n) = law (ev n) (Rs n) (positive n) (next n) (bs n) (point n) (omg n)
+      part : ∀ n → lvl1 ⊢ proj₁ (bs n) ◃ proj₁ (run (res (suc z) K) S lvl1 N.slot b)
+      part zero = inf (res (suc z) K) S lvl1 N.slot b
+      part (suc n) = ◃l n
+      collect : Real (proj₁ (run (res (suc z) K) S lvl1 N.slot b)) (P.he a (L.suc y) e)
+      collect = W.real-sup _ (λ n → Real-up (part n) (point n))
+    eval : ∀ z {y} → y ≼ read z → ∀ K → Wide K a → Wide (res z K) (Env.count a y)
+    eval (Ω () g)
+    eval (up p () b d)
+    eval (ex p b nb z ())
+    eval zero z≼ K h = h
+    eval (suc z) z≼ K h = lift {Q = K} {Q′ = res (suc z) K} (λ S i t v → Emono ok₂ D K S i t v (z◃ z ◃s)) h
+    eval (lim g d) z≼ K h = lift {Q = K} {Q′ = res (lim g d) K} (λ S i t v → Emono ok₂ D K S i t v (z◃ (g 0) (◃l 0))) h
+    eval (suc z) (s≼s {a = y} r) K h = Power.collect z y K (eval z r K h)
+    eval (lim g d) (≼l n r) K h = lift {Q = res (g n) K} {Q′ = res (lim g d) K} (λ S i t v → Emono ok₂ D K S i t v (◃l n)) (eval (g n) r K h)
+    eval zero (l≼ {f = g} h) K u = sup (res zero K) _ (λ n → eval zero (h n) K u)
+    eval (suc z) (l≼ {f = g} h) K u = sup (res (suc z) K) _ (λ n → eval (suc z) (h n) K u)
+    eval (lim g d) (l≼ {f = g′} h) K u = sup (res (lim g d) K) _ (λ n → eval (lim g d) (h n) K u)
+    eval z (i≼ {p = ()} _) K h
+    eval z (u≼ {r = ()} _) K h
+
+base : ∀ c (cv : Cover._⊴_ (proj₁ (Ωt lvl2)) (proj₁ c)) → At.Wide (idM {X = M.X₁}) (enterO O.m₁ (V.Jc c)) P.base
+base c cv e S ie hs b = B.Step.result (V.K c) (V.Jc c) (V.standard≤K c cv) (V.contains c cv (V.K c)) e (M.pull S) hs b

@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19RowNode where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-suc; ≼-trans; ≼-refl)
+import B14PathHeight as P
+import B17SlotLevel as C
+import B12ActualSlots as Cover
+import B19OldNodes as O
+import B17RefAllSource as Src
+import B19RowWorld as W
+import B19RowAccept as A
+import B19RowSingle as S
+
+module At {a i} (corr : C.Corr i a) (o : Ok a) (B : Base a) (p : Pos a) (g : Br a p → Tr a)
+  {q} (normal : P.All q) (v : Tr⁺ zero) where
+  module Node = O.At corr o B p g
+  open Node using (k; index; point)
+  seen : T₀
+  seen = read (proj₁ (Node.observe q v))
+  value : ℕ → T₀
+  value j = read (proj₁ (Node.child q v (point (index (suc j)))))
+
+  module Track (m : ℕ) (R : T₁ → Tr k → Set)
+    (zero⁺ : R Ω₁ᴸ (index 1))
+    (second : ∀ j u → R u (index (suc j)) → R (proj₂ (S.both m u)) (index (suc (suc j))))
+    (first : ∀ j u → R u (index (suc j)) → proj₁ (S.both m u) ≼ value j) where
+    chart : S.Trace m seen
+    A.Run.Z chart = ℕ
+    A.Run.z chart = 0
+    A.Run.next chart = suc
+    A.Run.covers chart u j = R u (index (suc j))
+    A.Run.start chart = zero⁺
+    A.Run.advance chart u j h = second j u h
+    A.Run.observe chart j u h = ≼-trans (first ix u h)
+      (≼-trans (≼-suc (≼-refl (value ix))) (Node.outline normal v (suc ix)))
+      where ix = W.O.iter suc zero j
+    entire : Src.branches (suc m) ≼ seen
+    entire = S.onto m chart
+  start : (R : T₁ → Tr k → Set) →
+    (∀ z → Cover._⊴_ (proj₁ (Ωt k)) z → R Ω₁ᴸ z) →
+    Cover._⊴_ (proj₁ (Ωt k)) (proj₁ (B k Node.w)) → R Ω₁ᴸ (index 1)
+  start R launch seed = launch _ (Node.anchor 0 seed)

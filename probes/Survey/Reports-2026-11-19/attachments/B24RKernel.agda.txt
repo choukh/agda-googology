@@ -1,0 +1,72 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24RKernel where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; z≼; s≼s; ≼l; l≼; ≼u; u≼; ≼i; i≼; ≼-trans; ≅→≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import WVOne using (T₀; 𝟏)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Src as Y
+import B12LimitSrc as A
+import B12Omega3Cuts as C
+import B12Omega3Ref as R
+import B13Target as P
+import B14RefFixed as F
+import B17RefAllSource as Ref
+import B22RowCountable as Tail
+import B22RowSource as Cap
+import B23RKernel as Copy
+module S = Ref.S
+
+a = Tail.append Ω₂ᴸ
+q = λ x → P.pass (a x)
+H = λ x → L.ψ⁰ (q x)
+
+regular : ∀ {x y : T₀} → x L.≅ y → q x L.≅ q y
+regular d = P.pass-pres (L.add-≅ {σ = λ ()} {σ′ = λ ()} (L.Ω-refl _) d)
+limit : ∀ f → H (L.lim f) ≡ L.lim (λ n → H (f n))
+limit f = refl
+src-a : S.Ord₀ → A.Src₂
+src-a S.zero = Y.a
+src-a (S.suc x) = S.suc (src-a x)
+src-a (S.lim f) = S.lim (λ j → src-a (f j))
+srcH = λ x → S.ψ₀ (Ref.pass (src-a x))
+step : ∀ {p e} → A.Aligned p e → A.Aligned (S.suc p) (L.suc e)
+step b = A.aligned (U.Ms (A.Aligned.up b)) (D.Rs (A.Aligned.dn b)) (L.s≅ (A.Aligned.regular b))
+coded : ∀ x → A.Aligned (src-a (Copy.copy x)) (a x)
+coded L.zero = A.omega2
+coded (L.suc x) = step (coded x)
+coded (L.lim f) = A.lim _ _ (λ n → coded (f n))
+
+toward : ∀ {x y} → x ≼ y → U.Mh (src-a (Copy.copy x)) (a y)
+toward {y = y} z≼ = U.M-add-r {σ = λ ()} y (A.Aligned.up A.omega2)
+toward (s≼s h) = U.Ms (toward h)
+toward (≼l j h) = U.Mlr j (toward h)
+toward (l≼ h) = U.Mll (λ j → toward (h j))
+toward (≼i {p = ()} _ _ _)
+toward (i≼ {p = ()} _)
+toward (≼u {r = ()} _)
+toward (u≼ {r = ()} _)
+
+monotone : ∀ {x y : T₀} → x ≼ y → H x ≼ H y
+monotone {x} {y} d = C.sandwich {s = Ref.pass (src-a (Copy.copy x))}
+  (Ref.pass-down 1 (A.Aligned.dn (coded x))) (Ref.pass-up 1 (toward d))
+  (regular (L.≅-refl⁰ x)) (regular (L.≅-refl⁰ y))
+src : ∀ s → A.Aligned (src-a s) (a (tr₀ s))
+src S.zero = A.omega2
+src (S.suc s) = step (src s)
+src (S.lim f) = A.lim _ _ (λ j → src (f j))
+agree : ∀ s → tr₀ (srcH s) ≈ᵛ H (tr₀ s)
+agree s = A.fold (A.aligned (Ref.pass-up 1 (A.Aligned.up (src s))) (Ref.pass-down 1 (A.Aligned.dn (src s))) (regular (L.≅-refl⁰ (tr₀ s))))
+
+base-in : ∀ x → F.Select (R.X 1) (q x)
+base-in L.zero = F.here
+base-in (L.suc x) = F.branch 1 (base-in x)
+base-in (L.lim f) = F.branch 0 (base-in (f 0))
+grow : ∀ x → L.suc (H x) ≼ H (L.suc x)
+grow x = ≼-trans (Cap.Tail.one (q x) (regular (L.≅-refl⁰ x))) (≼l 2 (F.value
+    (F.map-select L.ψ⁰ (λ _ → refl) (F.map-select (q x L.+_) (λ _ → refl) (base-in x)))))

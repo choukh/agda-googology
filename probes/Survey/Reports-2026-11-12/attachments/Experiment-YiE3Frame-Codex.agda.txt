@@ -1,0 +1,30 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiE3Frame where
+open import Data.Product using (_,_; proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; sym; trans; cong₂; subst)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiKVRel as K
+import OCF.Lean.YiAbsSimInst as SI
+import OCF.Lean.YiFRStep as FR
+import OCF.Lean.YiLBStart as LS
+import YiE3Base as Q
+import YiE3Objects as A
+open import OCF.Align.Value using (_≼_; ≼-trans)
+
+-- perf: C-9，环境包括层号、合法性、表与底；两项等式留给唯一调用点。
+module Frame (d : Q.Ctx) (d-eq : d ≡ A.ctx)
+  (β : O.Tr⁺ B.zero) (β-eq : β ≡ A.β)
+  (low : (h : SI.E.HC A.target) → A.reference h ≼ K.readRW (proj₁ (Q.collapse d β))) where
+  sealed-low : (h : SI.E.HC A.target) → A.reference h ≼ K.readRW (proj₁ A.output)
+  sealed-low h = subst (λ x → A.reference h ≼ K.readRW (proj₁ x))
+    (trans (cong₂ Q.collapse d-eq β-eq) (sym A.output-def)) (low h)
+  raw-low : (h : SI.E.HC A.target) → SI.E.tree h ≼ K.readRW (proj₁ A.output)
+  raw-low h = subst (λ x → x ≼ K.readRW (proj₁ A.output)) (A.reference-def h) (sealed-low h)
+  actual-low : (h : SI.E.HC A.target) → SI.E.tree h ≼ K.readRW (proj₁ (FR.Step.out 2 (FR.Step.chain 2 1)))
+  actual-low h = subst (λ x → SI.E.tree h ≼ K.readRW (proj₁ x)) A.output-actual (raw-low h)
+  connect : (h : SI.E.HC LS.target) → SI.E.tree h ≼ K.readRW (proj₁ (FR.Step.out 2 (FR.Step.chain 2 1)))
+  connect h = ≼-trans (FR.tree-transport (sym A.target-def) h)
+    (actual-low (subst SI.E.HC (sym A.target-def) h))
+  first-at-one : FR.FirstMissing
+  first-at-one = 1 , connect

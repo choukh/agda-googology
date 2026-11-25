@@ -1,0 +1,38 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 树侧辅助闭项：把第三层的第二个实际折叠值当作第一份系数；以下每步把运行输出回灌到 E 的指数位置。
+module B13FeedbackTree where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Unit using (tt)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import YiLAB7Orbit using (lvl2; ok₂; F)
+
+third : L
+third = nd sS (λ _ → lvl2)
+
+ok₃ : Ok third
+ok₃ = tt , λ _ → ok₂
+
+step₂ : Tr lvl2 → Tr lvl2
+step₂ x = ex (proj₁ (Ωt lvl2)) (proj₁ (Ωt lvl2)) (proj₂ (Ωt lvl2)) (suc x) tt
+
+initial : Tr⁺ zero
+initial = ψ third ok₃ (B₀ third) zero (z≤ third) (Ωt zero) (up zero tt (suc z) (z◃ z ◃s))
+  where z = iter step₂ zero 2
+
+J : Op {lvl2} nil
+J = op (E ok₂ tdNil (proj₁ (Ωt lvl2)) F) (Einf ok₂ tdNil (proj₁ (Ωt lvl2)) F)
+
+update : Tr zero → Tr⁺ zero
+update z = E ok₂ tdNil (ι lvl2 z) J (stepS F (B₀ lvl2)) zero (z≤ lvl2)
+             (ψ lvl2 ok₂ (B₀ lvl2) zero (z≤ lvl2) (Ωt zero) (proj₁ (Ωt lvl2)))
+
+branch : ℕ → Tr⁺ zero
+branch zero = initial
+branch (suc n) = update (proj₁ (branch n))
+
+whole : Tr⁺ zero
+whole = limc⁺ branch

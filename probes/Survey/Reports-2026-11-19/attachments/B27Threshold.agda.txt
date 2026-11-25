@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每个首下标深度有最小可数名字。第 k 行严格在一个已命名值的上方，恰好说明其深度至多 k。
+module B27Threshold where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_; s≤s; z≤n)
+import Data.Nat.Properties as N
+open import Data.List.Base using ([]; _∷_)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Empty using (⊥-elim)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+open import OCF.Align.EboLeanDef using (T; ΩTower; EBOψ; ψ; _<ᵀ_; []<; hd<; tl<; lv<; ar<)
+open import OCF.Align.EboLeanBase using (Ctbl; c[]; c∷; tri; _≤ᵀ_)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (tree-≼)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; s≼s)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import B17Cofinal as C
+import B26Depth as D
+import B26Names as A
+import OCF.Align.Level as L
+
+short : ∀ n {t} → t <ᵀ ΩTower n → C.depth t ≤ n
+short zero []< = z≤n
+short (suc n) []< = z≤n
+short zero (hd< (lv< ()))
+short zero (hd< (ar< ()))
+short zero (tl< ())
+short (suc n) (hd< (lv< lt)) = s≤s (short n lt)
+short (suc n) (hd< (ar< ()))
+short (suc n) (tl< ())
+
+cut : ∀ n {t} (c : Ctbl t) → t <ᵀ EBOψ n → C.cap c ≤ n
+cut n c[] []< = z≤n
+cut n (c∷ _) (hd< (lv< ()))
+cut n (c∷ _) (hd< (ar< lt)) = short n lt
+cut n (c∷ _) (tl< ())
+
+row = λ n → A.value (D.tower n)
+
+below : ∀ n a → D.height a ≤ n → L.suc (A.value a) ≼ row n
+below n a h = mono<ⁿ (A.nt a) (A.nt b) (A.ct b) (A.hcN a) (A.hcN b)
+  (D.tall a b (subst (suc (D.height a) ≤_) (sym (D.calibrate n)) (s≤s h)))
+  where b = D.tower n
+
+strict-name : ∀ a b → L.suc (A.value a) ≼ A.value b → A.name a <ᵀ A.name b
+strict-name a b strict with A.reflect a b (≼-trans {b = L.suc (A.value a)} (≼-suc (≼-refl _)) strict)
+... | inj₁ lt = lt
+... | inj₂ eq = ⊥-elim (s≼-irrefl (A.value a) (≼-trans {b = A.value b} strict
+  (tree-≼ (sym eq) (A.hcN b) (A.hcN a))))
+
+weak-value : ∀ a b → A.name a ≤ᵀ A.name b → A.value a ≼ A.value b
+weak-value a b (inj₁ p) = ≼-trans {b = L.suc (A.value a)} (≼-suc (≼-refl (A.value a)))
+  (mono<ⁿ (A.nt a) (A.nt b) (A.ct b) (A.hcN a) (A.hcN b) p)
+weak-value a b (inj₂ eq) = tree-≼ eq (A.hcN a) (A.hcN b)
+
+small : ∀ n a → L.suc (A.value a) ≼ row n → D.height a ≤ n
+small n a strict = cut n (A.ct a) (strict-name a (D.tower n) strict)
+
+least-name : ∀ k {t} (c : Ctbl t) → suc k ≤ C.cap c → EBOψ k ≤ᵀ t
+least-name k {t} c big with tri t (EBOψ k)
+... | inj₁ p = ⊥-elim (N.1+n≰n (N.≤-trans big (cut k c p)))
+... | inj₂ (inj₁ eq) = inj₂ (sym eq)
+... | inj₂ (inj₂ p) = inj₁ p
+
+minimum : ∀ k a → suc k ≤ D.height a → row k ≼ A.value a
+minimum k a large = weak-value (D.tower k) a (least-name k (A.ct a) large)

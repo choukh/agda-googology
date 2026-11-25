@@ -1,0 +1,110 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiLAB7Replay where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import YiLAB7Orbit
+open import WVOne using (Mv)
+open import WSShadow
+open import WSReal using (Re; re-z; re-s; re-l; re-x; re-Ω; re-u; uC)
+import WSReal
+import WKSum
+import WKStep
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (s≼s)
+
+open WKSum.Sum (proj₂ ok₂ tt)
+open WSReal.Gen (proj₂ ok₂ tt) using (real)
+
+record Describes (y : Tr lvl1) : Set where
+  constructor desc
+  field
+    d : Sh 0
+    e : ES
+    sm : Sm y d
+    re : Re y e
+open Describes
+
+describe : ∀ {y} → Gen y → Describes y
+describe gz = desc _ _ mz re-z
+describe (gs g) with describe g
+... | desc d e r q = desc _ _ (ms r) (re-s q)
+describe (gl g) = desc _ _ (ml (λ n → sm (describe (g n)))) (re-l (λ n → re (describe (g n))))
+describe (go {a} g) with describe g
+... | desc d e r q = desc (nodeS 0 (λ y a₀ c → Mv (d a₀ c) (LV.suc y))) (nC (λ y → uC e (LV.suc y)))
+  (mΩ (λ z → z◃ a (◃u a tt (suc z) (z◃ z ◃s))) (λ y z h → mu (LV.suc y) (s≼s h) r))
+  (re-Ω (λ y z h → re-u q (LV.suc y) (s≼s h) (z◃ z ◃s)))
+describe (gx {nb = nb} ga gb gx′) with describe ga | describe gb | describe gx′
+... | desc da ea ra qa | desc db eb rb qb | desc dx ex′ rx qx =
+  desc _ _ (mx {e = ex′} nb ra (sound rb) (proj₁ (real qx))) (re-x nb qa qb qx)
+
+at-step : (n : ℕ) → Describes (c₁ (itS F n (B₀ lvl2)))
+at-step n = describe (actual n)
+
+-- 以此次更新前的结构证据再消费一次实际状态，影子由旧定理给出。
+lower = λ (n : ℕ) → WKStep.step-sum ok₂ (itS F n (B₀ lvl2)) (sm (at-step n)) (re (at-step n))
+
+-- 两边在同一对描述上接线。公共对象在零层被消费；这是第 4 层的验收关系。
+import WSLevel as L
+open import WVTwo using (T₁)
+open import WVThree using (Nx)
+open import OCF.Align.Value using (_≼_; ≼-suc; ≼-trans; ≼-refl)
+open import WVOne using (read; 𝟏)
+open import OCF.BTBO using (module Ord-Ord)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import WSW4
+open WSW4.Lem (proj₂ ok₂ tt) using (Real; W1)
+
+Ω₂ᴸ = LV.Ω (LV.suc (LV.suc LV.zero))
+body : T₁ → LV.Ordᶜ (LV.suc (LV.suc LV.zero))
+body x = Ω₂ᴸ LV.+ LV.up LV.zero x
+
+Y : ℕ → T₁
+Y = Ord-Ord.iter (λ x → LV.ψ LV.zero (λ q → q) (body x)) L.Ω₁ᴸ
+
+double-shape : LV.ψ⁰ (Ω₂ᴸ LV.+ Ω₂ᴸ) ≡ LV.lim (λ n → LV.ψ⁰ (body (Y n)))
+double-shape = refl
+
+chainW : ℕ → Tr lvl1
+chainW n = c₁ (itS F n (B₀ lvl2))
+
+record Match (x : T₁) (y : Tr lvl1) : Set where
+  constructor together
+  field
+    d₀ : Sh 0
+    e₀ : ES
+    add-w : SumR y d₀
+    exp-w : Real y e₀
+    add-l : L.Ld x d₀
+    exp-l : L.Lx x e₀
+
+seed : Match (Y 0) (chainW 0)
+seed = together Nx Ω̂ (sound (mΩ (λ z → ◃u zero tt (suc z) (z◃ z ◃s))
+  (λ y z h → mu y (≼-suc h) mz)))
+  W1 L.Ld-Ω₁ L.Lx-Ω₁
+
+First : Set
+First = Match (Y 1) (chainW 1)
+
+consume : ∀ {x y} → Match x y → LV.ψ⁰ x ≼ read (proj₁ (ψ lvl1 (proj₂ ok₂ tt) (B₀ lvl1) zero (inc tt self) (Ωt zero) y))
+consume (together d e aw ew al el) = ≼-trans (L.Ld-sem al 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏))
+  (aw (B₀ lvl1) (inc tt self) (Ωt zero) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏) (≼-refl 𝟏))
+
+o₁ = proj₂ ok₂ tt
+Ω₁op : Op {lvl1} nil
+Ω₁op = opB lvl1 o₁ (proj₁ (Ωt lvl1)) (proj₂ (Ωt lvl1))
+
+consume-exp : ∀ {x y} → Match x y → LV.ψ⁰ (L.ψ₁ x) ≼
+  read (proj₁ (E o₁ tdNil y Ω₁op (B₀ lvl1) zero (inc tt self) (Ωt zero)))
+consume-exp (together d e aw ew al el) = ≼-trans
+  (L.Ld-sem (L.shift0 el) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏))
+  (proj₁ ew (λ t → t) (λ t → t) Ω₁op Nx (Match.add-w seed)
+    (B₀ lvl1) (inc tt self) (Ωt zero) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏) (≼-refl 𝟏))
+
+Frozen : Set
+Frozen = Match (Y 1) (chainW 0)

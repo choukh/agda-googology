@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B15RefChildren where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.List using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+import B12Omega3Ref as R
+import B13Target as P
+import B14RefGain as G
+import B14RefRow as Row
+
+parent : T₀
+parent = G.along (0 ∷ 1 ∷ 0 ∷ 0 ∷ []) (Row.node 1)
+
+left : ℕ → T₁
+left = S.iter (Ω₁ᴸ L.+_) L.zero
+
+literal : ∀ n → R.at parent n ≡ L.ψ⁰ (P.co₁ (P.back (left n)))
+literal n = refl
+
+import B15RefRaise as Q
+import B15OrbitAction as O
+import B12Omega3Cuts as U
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≅→≼; ≼l; l≼; ≼-trans)
+open import Data.Product using (_,_)
+
+reg : ∀ n → left n L.≅ left n
+reg zero = L.z≅
+reg (suc n) = L.add-≅ {σ = λ q → q} {σ′ = λ q → q} (L.Ω-refl _) (reg n)
+
+rotate : ∀ n → (left n L.+ Ω₁ᴸ) L.≅ left (suc n)
+rotate zero = U.left-unit (λ q → q) (L.Ω-refl _)
+rotate (suc n) = L.≅-trans (R.assoc {A = Ω₁ᴸ} {B = left n} {C = left (suc n)} (λ q → q) (λ q → q) (reg (suc n)) (L.Ω-refl _))
+  (L.add-≅ {σ = λ q → q} {σ′ = λ q → q} (L.Ω-refl _) (rotate n))
+
+match : ∀ n → Q.coefficient n L.≅ left n
+match zero = L.z≅
+match (suc n) = L.≅-trans (L.add-≅ {σ = λ q → q} {σ′ = λ q → q} (match n) (L.Ω-refl _)) (rotate n)
+
+term = λ n → L.ψ⁰ (O.f (Q.actions n) L.zero)
+
+paired : ∀ n → term n L.≅ R.at parent n
+paired n = L.ψ⁰-≅ (L.≅-trans (Q.arithmetic n L.z≅)
+  (U.left-unit R.idσ (P.co-pres (L.≅-trans (match n) (L.≅-sym (L.tr⁻-≅ (L.≅ᴵ-refl _) (reg n)))))))
+
+whole : parent L.≅ L.lim term
+whole = L.l≅ (λ n → L.≅-sym (paired n))
+
+collect : ∀ {t : T₀} → (∀ n → term n ≼ t) → parent ≼ t
+collect h = ≼-trans (≅→≼ whole) (l≼ h)

@@ -1,0 +1,69 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同一个首下标的任意正规尾都不能填满下一首；中间显式插入 ψ_a(1)，再作原来的 ψ₀(Ω_−)。
+module B28FGap where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.List.Base using ([]; _∷_; _++_)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+open import OCF.Align.EboLean3Base using (nf-suc)
+open import OCF.Align.EBO using (<-sucT)
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; s≼s; l≼)
+import OCF.Align.Level as L
+import B26CForest as F
+import B26CLift as K
+import B26OSparse as S
+import B28FHead as H
+
+module At (a : T) (pa : F.Pure a) (na : NF a) where
+  module R = H.Head pa na
+  mid = ψ a (natT 1) ∷ []
+  upper = S.card (sucT a)
+
+  zero-in : ∀ {u q} → InG u q (natT 1) → q ≡ []
+  zero-in (gp (gh _)) = refl
+  zero-in (gp (gc _ ()))
+  zero-in (gp (gw _ ()))
+  zero-in (gtl ())
+
+  base : ∀ {u} → GB u (natT 1) (natT 1)
+  base h = subst (_<ᵀ natT 1) (sym (zero-in h)) []<
+  one-small : ∀ b → natT 1 <ᵀ (ψ b (natT 1) ∷ [])
+  one-small [] = hd< (ar< []<)
+  one-small (x ∷ xs) = hd< (lv< []<)
+
+  guard-mid : GB [] mid mid
+  guard-mid (gp (gh _)) = one-small a
+  guard-mid (gp (gw _ h)) = subst (_<ᵀ mid) (sym (K.gzero pa h)) []<
+  guard-mid (gp (gc _ h)) = subst (_<ᵀ mid) (sym (zero-in h)) []<
+  guard-mid (gtl ())
+  mid-nf : NF (S.collapse mid)
+  mid-nf = nf-ψ n[] (nf-Ω (nf-ψ na (nf-Ω n[]) base)) (S.admissible guard-mid)
+  pure-suc : ∀ {t} → F.Pure t → F.Pure (sucT t)
+  pure-suc F.empty = F.node F.empty F.empty
+  pure-suc (F.node b bs) = F.node b (pure-suc bs)
+  upper-pure = F.node (pure-suc pa) F.empty
+  upper-nf = nf-Ω (nf-suc na)
+
+  opaque
+    hmid : HC (S.collapse mid)
+    hmid = hc mid-nf (c∷ c[])
+  hup : HC (S.collapse upper)
+  hup = H.response upper-pure upper-nf
+
+  first : ∀ n → L.suc (R.point n) ≼ Rt hmid
+  first n = mono<ⁿ (H.normal-response (H.pure-copies pa (suc n)) (R.normal (suc n))) mid-nf (c∷ c[])
+        (R.at n) hmid (hd< (ar< (hd< (lv< (hd< (ar< []<))))))
+  next : L.suc (Rt hmid) ≼ Rt hup
+  next = mono<ⁿ mid-nf (H.normal-response upper-pure upper-nf) (c∷ c[]) hmid hup
+        (hd< (ar< (hd< (lv< (hd< (lv< (<-sucT a)))))))
+  gap : L.suc R.limit ≼ Rt hup
+  gap = ≼-trans {a = L.suc R.limit} {b = L.suc (Rt hmid)} {c = Rt hup}
+     (s≼s (l≼ {f = R.point} (λ n → ≼-trans {a = R.point n} {b = L.suc (R.point n)} {c = Rt hmid}
+         (≼-suc (≼-refl (R.point n))) (first n)))) next
+

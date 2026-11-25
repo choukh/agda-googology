@@ -1,0 +1,53 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- K 的单次折叠从第一支开始就需覆盖所有有限 Ω 层，且该支与 ψ₀(Ω_ω) 同值。
+module B25PoolFirst where
+
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; subst₂; sym)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≅→≼; ≼-trans; ≼-suc; ≼-refl; ≼l; l≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValMain using (x₂≈BO; ψ₀≈; ω≈; T; T-nat)
+open import OCF.Align.BTBOFullSt using (St-x)
+open import OCF.Align.BTBOFullLv using (St-≅)
+open import OCF.Align.BTBOFullV3 using (Fʸ)
+open import OCF.Align.BTBOValDn using (τ)
+open import WVOne using (read)
+import B12BtboCut as Cut
+import B25DFirst as Samples
+import B16IndexBase as I
+import B18TowerEmb as E
+import B20StandardInside as S₀
+import B22SourceSlots as Slot
+import B25Pool as P
+import B25OneFold as J
+
+same : ∀ n → read (Samples.nth n) L.≅ T (suc n)
+same n = subst (λ t → read (Samples.nth n) L.≅ t) (sym (T-nat (suc n))) (Samples.numeral n)
+
+small : S₀.std 0 ≈ᵛ tr₀ (S.ψⁿ 1)
+small = ≼-trans (l≼ λ n → ≼l (suc n) (≅→≼ (same n))) (proj₂ ω≈) ,
+        ≼-trans (proj₁ ω≈) (l≼ λ n → ≼l n (≼-trans (Lstep n) (≅→≼ (L.≅-sym (same n)))))
+  where
+  Lstep : ∀ n → T n ≼ T (suc n)
+  Lstep n = subst₂ _≼_ (sym (T-nat n)) (sym (T-nat (suc n))) (≼-suc (≼-refl (L.natᶜ n)))
+
+first = Fʸ (τ (P.part 0))
+
+exact : first ≈ᵛ Cut.omega-cut
+exact = ≼-trans (proj₂ (ψ₀≈ (S.ordᴰ y))) (≼-trans (J.monotone {y} {S.ψⁿ 1} sy (St-x 1)
+  (≼-trans (≅→≼ (I.same z)) (proj₁ small))) (proj₁ x₂≈BO)) ,
+  ≼-trans (proj₂ x₂≈BO) (≼-trans (J.monotone {S.ψⁿ 1} {y} (St-x 1) sy
+  (≼-trans (proj₂ small) (≅→≼ (L.≅-sym (I.same z))))) (proj₁ (ψ₀≈ (S.ordᴰ y))))
+  where
+  z = proj₁ (E.standard 0)
+  y = I.cp z
+  sy = St-≅ (I.same z) (Slot.strict z)
+
+entry : Cut.omega-cut ≼ P.folded
+entry = ≼-trans (proj₂ exact) (≼-trans (≼l {f = λ n → Fʸ (τ (P.part n))} 0 (≼-refl first))
+  (proj₂ (ψ₀≈ (S.ordᴰ B25PhysicalFold.pool))))
+  where import B25PhysicalFold

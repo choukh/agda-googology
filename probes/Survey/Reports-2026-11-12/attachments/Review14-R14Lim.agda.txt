@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- review14 试验 E4 (有限测试): ℕ 极限层与 Ωₗ 层上, 同一个结点经两种出现方式 / 两条目标路径得到不同的保留判定.
+-- 折叠用 R14Up (上折); 这里用到的 kp 与 YiFreshFold 是同一个.
+module R14Lim where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiFreshBlock
+open import OCF.Lean.YiFreshFold using (_≤_; self; ins; inl; ink; inb; Base)
+import OCF.Lean.YiFreshFold as OF
+open import R14Up
+
+IsΩ IsLim : ∀ {P B C D} → T P B C D → Set
+IsΩ (Ω _ _) = ⊤
+IsΩ _       = ⊥
+IsLim (lim _) = ⊤
+IsLim _       = ⊥
+
+two : L
+two = suc one
+
+-- 1 ℕ 极限层: g 0 = 1, g 1 = 2. 结点在孩子 0 的 0 层槽位. 目标层 1 有两条路径.
+gL : ℕ → L
+gL zero    = one
+gL (suc n) = suc (gL n)
+
+nodeL : (Tr zero → Tr (lim gL)) → Tr (lim gL)
+nodeL G = Ω (0 , inj₂ (inj₁ tt)) G
+
+pA pB : one ≤ lim gL
+pA = inl 0 self
+pB = inl 1 (ins self)
+
+limA : (B : Base (lim gL)) (G : Tr zero → Tr (lim gL)) → IsΩ (ψs (lim gL) B one pA (nodeL G))
+limA B G = tt
+
+limB : (B : Base (lim gL)) (G : Tr zero → Tr (lim gL)) → IsLim (ψs (lim gL) B one pB (nodeL G))
+limB B G = tt
+
+-- 旧折叠同 (不是上折带来的)
+limA-old : (B : Base (lim gL)) (G : Tr zero → Tr (lim gL)) → IsΩ (OF.ψs (lim gL) B one pA (nodeL G))
+limA-old B G = tt
+
+limB-old : (B : Base (lim gL)) (G : Tr zero → Tr (lim gL)) → IsLim (OF.ψs (lim gL) B one pB (nodeL G))
+limB-old B G = tt
+
+-- 2 Ωₗ 层: tw 1 的第 c₂ = 2 支是层号 2 (定义性).
+c₂ : Tr zero
+c₂ = suc (suc zero)
+
+nodeC : (Tr zero → Tr two) → Tr two
+nodeC G = Ω (inj₂ (inj₁ tt)) G
+
+-- 嵌入时 (在孩子层里折到 1 层): 保留
+omC : (B : Base two) (G : Tr zero → Tr two) → IsΩ (ψs two B one (ins self) (nodeC G))
+omC B G = tt
+
+-- 上折把它摊平进 tw 1: 槽位 inj₂ (c₂ , …)
+flatC : Tr (tw 1) → (Tr zero → Tr two) → Tr (tw 1)
+flatC X G = liftT (tw 1) two (λ q → Ω (inj₂ (c₂ , inj₂ q))) X (nodeC G)
+
+flatC-form : (X : Tr (tw 1)) (G : Tr zero → Tr two) →
+  flatC X G ≡ Ω (inj₂ (c₂ , inj₂ (inj₂ (inj₁ tt)))) (λ z → liftT (tw 1) two (λ q → Ω (inj₂ (c₂ , inj₂ q))) X (G z))
+flatC-form X G = refl
+
+-- 摊平后, 对应目标 (同一支 c₂ 里的 1 层): 折叠, 尽管两个 c₂ 字面相同
+omD : (B : Base (tw 1)) (X : Tr (tw 1)) (G : Tr zero → Tr two) →
+  IsLim (ψs (tw 1) B one (inb c₂ (ins self)) (flatC X G))
+omD B X G = tt
+
+-- 上折确实在 Ωₗ 层的自身行产生这种结点
+self-W : (B : Base (tw 1)) (x : Tr (tw 1)) (G : Tr zero → Tr two) →
+  ψs (tw 1) B (tw 1) self (up x c₂ (nodeC G)) ≡ flatC (ψs (tw 1) B (tw 1) self x) G
+self-W B x G = refl

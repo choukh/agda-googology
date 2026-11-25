@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 可数层号定理的出口: 两条主引理合起来, 无模块参数. bStmt₀ (折叠保持), lowerW : LOWERᵂ (镜像下界, 覆盖条件用 W4 的词汇).
+module KLow where
+
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; subst)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as I
+open import KMir using (IsS; IsS→IsN; IsN-path; Ok-path; code)
+open import KRel
+open import KIface using (CovS; BStmt; OpStmt)
+open import KBTop using (ΩMir)
+open import KBAll using (module All)
+import KOpOp
+open import KLowIface
+
+open All KOpOp.op
+
+-- (Op) 与 (B), 无前提.
+opStmt₀ : (m : L) → OpStmt m
+opStmt₀ = KOpOp.op
+
+bStmt₀ : (m : L) → BStmt m
+bStmt₀ = bStmt
+
+-- W4 步进序下的覆盖推出关系里的覆盖.
+covBase : ∀ {m} (st : IsS m) (o : Ok m) {i} (u : i ≤ m) {ic} → Mirror ic i → Dom i (I.Ω ic) (proj₁ (Ωt i))
+covBase {m} st o u mi = r≅ (I.≅ᴵ-sym e) (I.Ω-≅ e) (ΩMir _ iN oi)
+  where
+  iN = IsN-path u (IsS→IsN m st)
+  oi = Ok-path u o
+  e  = mi iN oi
+
+covStep : ∀ {i ic} {x y : Tr i} → Dom i (I.Ω ic) x → (x ≡ y) ⊎ (i ⊢ x ◃ y) → Dom i (I.Ω ic) y
+covStep {i} {ic} d (inj₁ e) = subst (Dom i (I.Ω ic)) e d
+covStep d (inj₂ p) = r◃ d p
+
+covS : ∀ {m} (st : IsS m) (o : Ok m) (S : Base m) → Cov S → CovS S
+covS st o S cov {i} u mi = covStep (covBase st o u mi) (cov i u)
+
+lowerW : LOWERᵂ
+lowerW m st o S cov β h w = lower′ m st (IsS→IsN m st) o S (covS st o S cov) β h w
+
+-- 前提可满足的实例: 第 0 层的任何树 η 读成的可数层号 h₁ η, 标准的初始状态与底.
+open import Data.Unit using (tt)
+open import Data.Product using (proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Align.Value using (_≼_; ≼-refl)
+open import WVOne using (read; h₁)
+open import KMir using (IsS-⊕↑)
+
+inst : (η : Tr zero) →
+  I.ψ⁰ (I.Ω (code (h₁ η) (IsS→IsN (h₁ η) (IsS-⊕↑ zero tt η)) (proj₂ (Ok-tw 1) η)))
+    ≼ read (proj₁ (ψ₀ (h₁ η) (proj₂ (Ok-tw 1) η) (proj₁ (Ωt (h₁ η)))))
+inst η = lowerW (h₁ η) (IsS-⊕↑ zero tt η) (proj₂ (Ok-tw 1) η) (B₀ (h₁ η)) (λ j u → inj₁ refl) (Ωt zero) (≼-refl _) (z≤ (h₁ η))

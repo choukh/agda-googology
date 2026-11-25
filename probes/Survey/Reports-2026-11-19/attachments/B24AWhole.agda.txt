@@ -1,0 +1,103 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24AWhole where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _×_; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (subst)
+open import W4Block
+open import W4Ops hiding (c₀)
+open import W4Fold
+open import WVOne using (T₀; 𝟏; read)
+open import WVTwo using (g₂; p₂; ◃→≼)
+open import WKGen using (Ω₁t; node-ge)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+open import YiLAB11Orbit using (push)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-suc; ≼-trans; l≼; ≅→≼)
+import B11OuterCore as C
+import B12ActualSlots as Cov
+import B12Terminal as Tm
+import B12Omega3Ref as Ref
+import B13Orbit as Orb
+import B13OrbitFeed as O
+import B13SeedOuter as Seed
+import B15OrbitModel as M
+import B22RowLive as V
+import B22RowWhole as W
+import B23ABlocks as Bl
+import B24AFirst as A
+import B24NScalar as Wk
+import B24ROrbit as R
+import B24RRows as Rows
+
+module Geometry (Q : Op {lvl2} nil) (R₀ : Base lvl2) (cover : lvl1 ⊢ Ω₁t ◃ proj₁ (R₀ lvl1 C.slot))
+                (w : zero ≤ lvl2) (b : Tr⁺ zero) where
+  K = enterO O.m₁ Q
+  S = push R₀
+  c₀ = R₀ lvl1 C.slot
+  own = σ O.m₁ w
+  high = σ O.m₁ C.slot
+  at₀ = M.down-t
+  out₂ = λ z → E ok₂ tdNil (g₂ z) Q R₀ zero w b
+  step₂ = λ z → proj₁ (E ok₂ tdNil (g₂ z) Q R₀ lvl1 C.slot c₀)
+  seq = iter step₂ zero
+  curve : ℕ → Tr zero → Tr lvl1
+  curve zero z = proj₁ (E ok₂ O.D₁ (O.g₁ z) K S lvl1 high c₀)
+  curve (suc k) z = proj₁ (E ok₂ O.D₁ (curve k z) K S lvl1 high c₀)
+  tree = λ k → Ω p₁ (curve k)
+  stored : ∀ k → lvl1 ⊢ tree k ◃ seq (suc (suc k))
+  stored zero = Emono ok₂ O.D₁ K S lvl1 high c₀ {x = Ω₁t} {y = suc (seq 1)}
+    (◃t cover (◃t (Einf ok₂ tdNil (g₂ zero) Q R₀ lvl1 C.slot c₀) ◃s))
+  stored (suc k) = Emono ok₂ O.D₁ K S lvl1 high c₀ {x = tree k} {y = suc (seq (suc (suc k)))} (◃t (stored k) ◃s)
+  module Row (k : ℕ) (g : T₀ → T₀) where
+    evaluated = λ z → E ok₂ O.D₁ (curve k z) K S zero
+    step = λ z → proj₁ (evaluated z at₀ (S zero at₀))
+    z = iter step zero
+    src = Ref.S.iter g 𝟏
+    -- Only the two actual observations of the next scalar matter at each
+    -- physical query. The source tree and the clock are those of the orbit.
+    Test = ∀ j → src j ≼ read (suc (z j)) →
+      (g (src j) ≼ read (step (z j))) × (g (src j) ≼ read (proj₁ (evaluated (z j) own b)))
+    module Has (test : Test) where
+      link : ∀ j → src j ≼ read (suc (z j))
+      link zero = ≼-refl _
+      link (suc j) = ≼-suc (proj₁ (test j (link j)))
+      hull : T₀
+      hull = L.lim (λ j → src (suc j))
+      inner : hull ≼ read (proj₁ (E ok₂ O.D₁ (tree k) K S zero own b))
+      inner = l≼ λ j → ≼-trans (proj₂ (test j (link j)))
+        (node-ge (kpT (fr O.D₁) ok₂ p₁ (tv O.D₁ own)) (λ u → evaluated u own b) step j)
+      standard : hull ≼ read (proj₁ (run (Orb.block (Ωt lvl2) Q) R₀ zero w b))
+      standard = ≼-trans inner (≼-trans (◃→≼ (Emono ok₂ O.D₁ K S zero own b
+        {x = tree k} {y = suc (seq (suc (suc k)))} (◃t (stored k) ◃s)))
+        (node-ge (kp lvl2 ok₂ p₂ w) out₂ step₂ (suc (suc k))))
+      picked : ∀ c → Cov._⊴_ (proj₁ (Ωt lvl2)) (proj₁ c) →
+        hull ≼ read (proj₁ (run (Orb.block c Q) R₀ zero w b))
+      picked c (inj₁ e) = subst (λ a → hull ≼ read (proj₁ (E ok₂ tdNil a Q R₀ zero w b))) e standard
+      picked c (inj₂ ge) = ≼-trans standard (◃→≼ (Emono ok₂ tdNil Q R₀ zero w b ge))
+
+  module Floor (k : ℕ) (hd : 𝟏 ≼ read (proj₁ (S zero at₀))) (hb : 𝟏 ≼ read (proj₁ b)) where
+    module Low = Row k (λ _ → 𝟏)
+    test : Low.Test
+    test j link = ≼-trans hd (◃→≼ (Einf ok₂ O.D₁ (curve k (Low.z j)) K S zero at₀ (S zero at₀))) ,
+                  ≼-trans hb (◃→≼ (Einf ok₂ O.D₁ (curve k (Low.z j)) K S zero own b))
+
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  open Seed.At r using (c⁺; st1; w2; v₁)
+  Q = Orb.block c⁺ (Orb.Jc c⁺)
+  dest = read (proj₁ (run (Orb.block c⁺ Q) st1 zero w2 v₁))
+  module G = Geometry Q st1 (C.st (V.struct (W.At.initial r cv))) w2 v₁
+  module Run (k : ℕ) = G.Row k (Rows.gain (suc k))
+  full : (∀ k → Run.Test k) → R.two ≼ dest
+  full h = l≼ λ where
+    zero → A.At.at-two r cv
+    (suc k) → ≼-trans (≅→≼ (Rows.shape (suc k))) (Run.Has.picked k (h k) c⁺ (Bl.Site.cp r cv))
+  control : ∀ k → G.Row.Test k (λ _ → 𝟏)
+  control k = G.Floor.test k (V.lower (W.At.initial r cv) (proj₂ M.down-t)) (W.At.run-bound r cv 0)
+  module FirstWeak = G.Row 0 Wk.weak
+  first-weak : FirstWeak.Test
+  first-weak j le = Wk.At.Use.part r cv (FirstWeak.src j) (FirstWeak.z j) le G.at₀ (G.S zero G.at₀)
+    (V.lower (W.At.initial r cv) (proj₂ M.down-t)) ,
+    Wk.At.Use.part r cv (FirstWeak.src j) (FirstWeak.z j) le G.own v₁ (W.At.run-bound r cv 0)

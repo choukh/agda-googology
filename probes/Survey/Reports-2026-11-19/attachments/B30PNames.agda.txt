@@ -1,0 +1,100 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 实际自然首次路径所获的提升精确为可数右尾；严格低于旧全局界的种子经整串提升仍严格在该界之下。
+module B30PNames where
+open import Data.List.Base using (_++_)
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≼-suc; s≼s; z≼; l≼; ≼l; ≼lim⁻; +-mono)
+open import OCF.Align.EboLeanDef using (HC)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import WVOne using (T₀; 𝟏)
+open import W4Block using (iter)
+import B12TerminalTail as T
+import B18Product as P
+open P using (_·_)
+import B19IdealProduct as A
+open A using (_∙_)
+import B19IdealArithmetic as N
+import B19IdealPowers as Pow
+import B22MovingIndex as E
+import B25AOrbit as Old
+import B26PSuffix as S
+import B26PBounds as B
+import B27SOriginal as Bound
+import B28BCut as Cut
+import B30PValue as V
+
+ω = L.ωᶜ
+mulω : ∀ q → T.mulω q ≈ᵛ (q · ω)
+mulω q = B.one-step q , l≼ (λ n → ≼l n (≼-trans {b = N.word q n} (proj₁ (N.copies q n)) (grow n)))
+  where
+  grow : ∀ n → N.word q n ≼ iter (q L.+_) q n
+  grow zero = z≼
+  grow (suc n) = +-mono (≼-refl q) (grow n)
+
+copies : ∀ q u → iter T.mulω q u ≈ᵛ (q · N.norm (L.natᶜ u))
+copies q zero = A.flip (A.one q)
+copies q (suc u) = mulω (iter T.mulω q u) ∙ A.mul (copies q u) (A.id ω) ∙ A.assoc q (N.norm (L.natᶜ u)) ω
+
+climb : ∀ q → V.climb q ≈ᵛ (q · N.norm ω)
+climb q = A.lim (copies q)
+
+cut = λ (u : ℕ) → ω · L.natᶜ u
+square = ω · ω
+level : ∀ q u → iter V.climb q u ≈ᵛ (q · N.norm (cut u))
+level q zero = A.flip (A.one q)
+level q (suc u) = climb (iter V.climb q u) ∙ A.mul (level q u) (A.id (N.norm ω)) ∙ A.assoc q (N.norm (cut u)) (N.norm ω) ∙ A.mul (A.id q) (A.flip (A.power-sum ω (cut u) ω))
+span : T₀ → T₀
+span q = L.lim (iter V.climb q)
+formula : ∀ q → span q ≈ᵛ (q · N.norm square)
+formula q = A.lim (level q)
+
+prefix : ∀ p (a : HC (S.φ p)) s (b : HC s) (h : HC (S.φ (p ++ s))) t → Rt b ≼ t → Rt h ≼ Rt a · N.norm t
+prefix p a s b h t d = ≼-trans (proj₁ (S.Low.val p a s b h)) (P.mono (≼-refl (Rt a)) (Pow.expo Pow.omega-pos d))
+
+module Named (j : ℕ) p (a : HC (S.φ p)) (base : Rt a ≼ Cut.Physical.inner 0 j 0) where
+  point : ∀ u s (b : HC s) (h : HC (S.φ (p ++ s))) → Rt b ≼ cut u → Rt h ≼ Cut.Physical.inner 0 j u
+  point u s b h d = ≼-trans {b = Rt a · N.norm (cut u)} (prefix p a s b h (cut u) d)
+    (≼-trans {b = iter V.climb (Rt a) u} (proj₂ (level (Rt a) u)) (V.actual j u (Rt a) base))
+  whole : ∀ s (b : HC s) (h : HC (S.φ (p ++ s))) → Rt b ≼ square → Rt h ≼ Cut.Physical.f 0 j
+  whole s b h d = ≼-trans {b = Rt a · N.norm square} (prefix p a s b h square d)
+    (≼-trans {b = span (Rt a)} (proj₂ (formula (Rt a))) (V.all j (Rt a) base))
+
+square-small : ∀ x → square ≼ E.above x
+square-small x = ≼l 2 (≼-trans {b = N.norm ω} square-ω (Pow.expo Pow.omega-pos at-one))
+  where
+  square-ω : square ≼ N.norm ω
+  square-ω = ≼-trans {b = N.norm (L.natᶜ 2)} (P.mono (P.one-left ω) (≼-refl ω))
+    (Pow.expo Pow.omega-pos (≼l 2 (≼-refl (L.natᶜ 2))))
+  at-one : ω ≼ E.steps x 1
+  at-one = P.pad (Pow.positive Pow.omega-pos x) ω
+
+into-next : ∀ n → E.above (Old.seq n) ≼ Old.seq (suc n)
+into-next n = ≼l 1 (≼l 1 (≼-refl (E.above (Old.seq n))))
+
+at-old : ∀ q n → L.suc q ≼ Old.seq n → L.suc (span q) ≼ Old.whole
+at-old q n d = ≼l (suc (suc n)) (≼-trans {b = E.above w}
+  (≼-trans {b = L.suc (q · N.norm square)} (s≼s (proj₁ (formula q))) (Bound.local-bound w q square left right))
+  (into-next (suc n)))
+  where
+  w = Old.seq (suc n)
+  left : q ≼ w
+  left = ≼-trans {b = L.suc q} (≼-suc (≼-refl q)) (≼-trans {b = Old.seq n} d
+    (≼-trans {b = L.suc (Old.seq n)} (≼-suc (≼-refl (Old.seq n))) (Old.strict-step (Old.seq n))))
+  right : square ≼ w
+  right = ≼-trans {b = E.above (Old.seq n)} (square-small (Old.seq n)) (into-next n)
+
+below-old : ∀ q → L.suc q ≼ Old.whole → L.suc (span q) ≼ Old.whole
+below-old q d = take (≼lim⁻ {a = q} {f = Old.seq} d)
+  where
+  take : Σ ℕ (λ n → L.suc q ≼ Old.seq n) → L.suc (span q) ≼ Old.whole
+  take (n , h) = at-old q n h
+
+strict-start : ∀ q → 𝟏 ≼ q → L.suc q ≼ V.climb q
+strict-start q d = ≼l 1 (≼l 1 (+-mono {a = q} (≼-refl q) d))
+later : ∀ q u → V.climb q ≼ iter V.climb q (suc u)
+later q zero = ≼-refl _
+later q (suc u) = ≼l 0 (later q u)
+
+

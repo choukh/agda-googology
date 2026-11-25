@@ -1,0 +1,173 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B8N: 冻结对照. 判决 no-frozen : Frozen → ⊥ (编译定理, 无前提). 被加项消费者的目标对一切 d 都不成立:
+-- 冻结的第 1 层树 chainW 0 在零层折后的读回 ≼ ψ⁰ Ω₁ (fold-up), 而 suc (ψ⁰ Ω₁) ≼ ψ⁰ (Y 1) (low).
+-- 不否定: 指数一半 (exp-w, exp-l) 单独是否可满足; First. 入口即本文件.
+module B8FreezeMain where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit using (tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-refl; ≼-trans; s≼s⁻; s≼0; ≼lim⁻; 1≼ψ⁰)
+  renaming (+-mono to +ᵛ-mono)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+open import WVOne using (T₀; 𝟏; read; Mv; Mv-mono; Mv-infl)
+open import WSShadow using (Sh)
+import WSLevel as L
+import WKSum
+open import YiLAB7Orbit
+open import YiLAB7Replay using (Y; chainW; Match; Frozen; consume; seed; o₁; Ω₂ᴸ)
+
+open WKSum.Sum o₁ using (SumR)
+
+------------------------------------------------------------------------
+-- 第 0 层的值前序: 后继不低于自身是矛盾.
+irr : (x : T₀) → LV.suc x ≼ x → ⊥
+irr LV.zero h = s≼0 h
+irr (LV.suc x) h = irr x (s≼s⁻ h)
+irr (LV.lim f) h with ≼lim⁻ h
+... | n , q = irr (f n) (≼-trans (s≼s (≼l n (≼-refl (f n)))) q)
+irr (LV.limᵢ () f) h
+irr (LV.up () x) h
+
+------------------------------------------------------------------------
+-- W x = 1·ω^x 的几条算术.
+W : T₀ → T₀
+W = Mv 𝟏
+
+x≼W : (x : T₀) → x ≼ W x
+x≼W LV.zero = z≼
+x≼W (LV.suc x) = ≼l 1 (+ᵛ-mono (x≼W x) (Mv-infl 𝟏 x))
+x≼W (LV.lim f) = l≼ (λ n → ≼l n (x≼W (f n)))
+x≼W (LV.limᵢ () f)
+x≼W (LV.up () x)
+
+sW : (y : T₀) → LV.suc (W y) ≼ W (LV.suc y)
+sW y = ≼l 1 (+ᵛ-mono (≼-refl (W y)) (Mv-infl 𝟏 y))
+
+ssW : (x : T₀) → LV.suc (LV.suc (W (LV.suc x))) ≼ W (LV.suc (LV.suc x))
+ssW x = ≼l 1 (+ᵛ-mono (≼-refl (W (LV.suc x))) (≼-trans (s≼s (Mv-infl 𝟏 x)) (sW x)))
+
+W-sum : {a b : T₀} → a ≼ b → W a LV.+ W b ≼ W (LV.suc b)
+W-sum {b = b} d = ≼l 1 (+ᵛ-mono (Mv-mono (≼-refl 𝟏) d) (≼-refl (W b)))
+
+-- Level 的 ψ (目标第 0 层) 与 ψ⁰ 在第 0 层的树上不低于 W.
+itS′ : {A B : T₀} → A ≼ B → (n : ℕ) → iter (A LV.+_) A n ≼ S.iter (B LV.+_) LV.zero (suc n)
+itS′ e zero    = e
+itS′ e (suc n) = +ᵛ-mono e (itS′ e n)
+
+Wψ : ∀ {ℓ} {p : LV.zero LV.<ᴵ ℓ} {σ : LV.Simᴵ LV.zero ℓ} (x : T₀) → W x ≼ LV.ψ p σ x
+Wψ LV.zero = ≼-refl 𝟏
+Wψ (LV.suc x) = l≼ (λ n → ≼l (suc n) (itS′ (Wψ x) n))
+Wψ (LV.lim f) = l≼ (λ n → ≼l n (Wψ (f n)))
+Wψ (LV.limᵢ () f)
+Wψ (LV.up () x)
+
+Wψ⁰ : (x : T₀) → W x ≼ LV.ψ⁰ x
+Wψ⁰ LV.zero = ≼-refl 𝟏
+Wψ⁰ (LV.suc x) = l≼ (λ n → ≼l (suc n) (itS′ (Wψ⁰ x) n))
+Wψ⁰ (LV.lim f) = l≼ (λ n → ≼l n (Wψ⁰ (f n)))
+Wψ⁰ (LV.limᵢ () f)
+Wψ⁰ (LV.up () x)
+
+------------------------------------------------------------------------
+-- W4 第 0 层读回的上界 (与 WVOne.P-read 反向).
+read-+′ : (a b : Tr zero) → read (a + b) ≼ read a LV.+ read b
+read-+′ a zero = ≼-refl _
+read-+′ a (suc b) = s≼s (read-+′ a b)
+read-+′ a (lim f _) = l≼ (λ n → ≼l n (read-+′ a (f n)))
+read-+′ a (Ω () _)
+read-+′ a (up _ () _ _)
+read-+′ a (ex _ _ _ _ ())
+
+iterR′ : {A : T₀} {b : Tr zero} → read b ≼ A → (n : ℕ) → read (iter (b +_) b n) ≼ iter (A LV.+_) A n
+iterR′ e zero = e
+iterR′ {b = b} e (suc n) = ≼-trans (read-+′ b (iter (b +_) b n)) (+ᵛ-mono e (iterR′ e n))
+
+P-up : ∀ {o₀ : Ok zero} {Bs : Base zero} (w : zero ≤ zero) (β : Tr⁺ zero) (x : Tr zero)
+     → read (proj₁ (ψ zero o₀ Bs zero w β x)) ≼ Mv (read (proj₁ β)) (read x)
+P-up w β zero = ≼-refl _
+P-up {o₀} {Bs} w β (suc x) = l≼ (λ n → ≼l n (iterR′ (P-up {o₀} {Bs} w β x) n))
+P-up {o₀} {Bs} w β (lim f _) = l≼ (λ n → ≼l n (P-up {o₀} {Bs} w β (f n)))
+P-up w β (Ω () _)
+P-up w β (up _ () _ _)
+P-up w β (ex _ _ _ _ ())
+
+------------------------------------------------------------------------
+-- 冻结树 chainW 0 = Ω p₁ (branch zero) 在消费者参数下的折叠: 链底 Ωt zero, 走链.
+Gt : Tr zero → Tr zero
+Gt z = proj₁ (ψ lvl1 o₁ (B₀ lvl1) zero (inc tt self) (Ωt zero) (branch zero z))
+
+Gt-up : (z : Tr zero) → read (Gt z) ≼ W (LV.suc (read z))
+Gt-up z = P-up self (Ωt zero) (suc z)
+
+zs : ℕ → Tr zero
+zs = iter Gt zero
+
+Z : ℕ → T₀
+Z = iter (λ x → W (LV.suc x)) LV.zero
+
+zsZ : (k : ℕ) → read (zs k) ≼ Z k
+zsZ zero = z≼
+zsZ (suc k) = ≼-trans (Gt-up (zs k)) (Mv-mono (≼-refl 𝟏) (s≼s (zsZ k)))
+
+Fz : ℕ → Tr zero
+Fz k = Gt (zs k)
+
+Cb : (n : ℕ) → read (cum Fz n) ≼ W (LV.suc (LV.suc (Z n)))
+Cb zero = ≼-trans (Gt-up zero) (Mv-mono (≼-refl 𝟏) (s≼s z≼))
+Cb (suc n) =
+  ≼-trans (read-+′ (cum Fz n) (Fz (suc n)))
+    (≼-trans (+ᵛ-mono (Cb n) (≼-trans (Gt-up (zs (suc n))) (Mv-mono (≼-refl 𝟏) (s≼s (zsZ (suc n))))))
+             (W-sum (s≼s (x≼W (LV.suc (Z n))))))
+
+-- Level 的 ψ⁰ Ω₁ 的链.
+Eψ : ℕ → T₀
+Eψ = S.iter (λ x → LV.ψ {i = LV.zero} {k = LV.suc LV.zero} {ℓ = LV.suc LV.zero} LV.zero (λ r → r) (LV.up LV.zero x)) (LV.Ω LV.zero)
+
+ZE : (n : ℕ) → LV.suc (LV.suc (Z n)) ≼ Eψ (suc n)
+ZE zero = ≼-trans (sW LV.zero) (Wψ (Eψ zero))
+ZE (suc n) = ≼-trans (ssW (Z n)) (≼-trans (Mv-mono (≼-refl 𝟏) (ZE n)) (Wψ (Eψ (suc n))))
+
+Pε : T₀
+Pε = LV.ψ⁰ L.Ω₁ᴸ
+
+fold-up : read (proj₁ (ψ lvl1 (proj₂ ok₂ tt) (B₀ lvl1) zero (inc tt self) (Ωt zero) (chainW 0))) ≼ Pε
+fold-up = l≼ (λ n → ≼-trans (Cb n) (≼l (suc n) (≼-trans (Mv-mono (≼-refl 𝟏) (ZE n)) (Wψ⁰ (Eψ (suc n))))))
+
+------------------------------------------------------------------------
+-- Level 一侧: ψ⁰ (Y 1) 越过 ψ⁰ Ω₁ + 1. 路径 Y 1 ∋ ψ₁(Ω₂+1) ∋ ψ₁ Ω₂ ∋ ψ₁(Ω₁) ∋ ψ₁⁰ 1 ∋ Ω₁+Ω₁ ∋ Ω₁+1.
+low : LV.suc Pε ≼ LV.ψ⁰ (Y 1)
+low = ≼l 0 (≼l 1 (≼l 0 (≼l 0 (≼l 2 (≼l 0 (≼l 2 (+ᵛ-mono (≼-refl Pε) (1≼ψ⁰ L.Ω₁ᴸ))))))))
+
+------------------------------------------------------------------------
+-- 判决.
+refute : LV.ψ⁰ (Y 1) ≼ read (proj₁ (ψ lvl1 (proj₂ ok₂ tt) (B₀ lvl1) zero (inc tt self) (Ωt zero) (chainW 0))) → ⊥
+refute h = irr Pε (≼-trans low (≼-trans h fold-up))
+
+no-frozen : Frozen → ⊥
+no-frozen m = refute (consume m)
+
+-- 更强: 只看被加项的两个字段, 对一切 d.
+no-add : (d : Sh 0) → SumR (chainW 0) d → L.Ld (Y 1) d → ⊥
+no-add d aw al = refute (≼-trans (L.Ld-sem al 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏))
+  (aw (B₀ lvl1) (inc tt self) (Ωt zero) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏) (≼-refl 𝟏)))
+
+-- 正对照: 同一冻结树在初态参照 Y 0 上有见证 (seed), 两边值相等.
+fold-val : read (proj₁ (ψ lvl1 (proj₂ ok₂ tt) (B₀ lvl1) zero (inc tt self) (Ωt zero) (chainW 0))) ≈ᵛ LV.ψ⁰ (Y 0)
+fold-val = fold-up , consume seed
+
+-- 旁证 (给 First 的纸面判断用): ψ⁰ (Y 1) 不低于 ψ⁰ (ψ₁Ω₂ + ψ₁Ω₂), ψ₁Ω₂ = Level 的 ε_{Ω₁+1} 型链的极限.
+ψ₁Ω₂ : LV.Ordᶜ (LV.suc LV.zero)
+ψ₁Ω₂ = LV.ψ {i = LV.suc LV.zero} {k = LV.suc (LV.suc LV.zero)} {ℓ = LV.suc (LV.suc LV.zero)} LV.zero (λ q → q) Ω₂ᴸ
+
+Y1-big : LV.ψ⁰ (ψ₁Ω₂ LV.+ ψ₁Ω₂) ≼ LV.ψ⁰ (Y 1)
+Y1-big = ≼l 0 (≼l 2 (≼-refl _))

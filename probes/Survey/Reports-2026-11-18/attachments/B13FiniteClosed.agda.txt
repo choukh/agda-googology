@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 3 层的统一 src 校准向所有后续有限层反复推进，在标准塔与 Λ 的实际层号 ω 汇集。
+module B13FiniteClosed where
+
+open import Data.Nat using (ℕ)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block using (sL; sΩ; zero; tw; iter; Λ)
+open import W4Path using (Ok-tw; Ok-Λ)
+open import W4Fold using (twᶜ; EBOᶜ)
+open import WVOne using (read; h₁)
+open import WVTwo using (lvl2)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+import B12Terminal as T
+import B12TerminalSrc as S
+import B12ActualSlots as A
+import B12Arithmetic as H
+import B13Terminal as D
+open import B13FiniteSrc using (module Calibrated; out; stages; omegaω)
+
+module Strong = Calibrated lvl2 2 refl H.source D.Calibrate.src
+
+tower : out (omegaω H.source) ≼ read (twᶜ 1)
+tower = ≼-trans (Strong.omega-level tc
+  (A.enter (sΩ zero) h₁ S.standard (T.index1 S.standard 1) zero (A.initial (tw 1) (Ok-tw 1)))) (T.tower-ge S.standard 1)
+  where tc = T.tower-child S.standard 1
+
+middle-covered : A.Covered S.middle
+middle-covered = A.enter sL _ tc 0 zero (A.enter (sΩ zero) h₁ T.tower1 (T.index1 T.tower1 1) zero
+  (A.enter sL tw T.terminal 1 (T.prefix tw 1) (A.initial Λ Ok-Λ)))
+  where tc = T.tower-child T.tower1 1
+
+root : out (S.plusω (omegaω H.source)) ≼ read (T.value T.tower1)
+root = ≼-trans (S.seal _ (T.tower-child T.tower1 1) 0 (omegaω H.source) (Strong.omega-level S.middle middle-covered))
+                  (T.tower-ge T.tower1 1)
+
+terminal : out (S.plusω (S.plusω (omegaω H.source))) ≼ read EBOᶜ
+terminal = S.seal tw T.terminal 1 (S.plusω (omegaω H.source)) root

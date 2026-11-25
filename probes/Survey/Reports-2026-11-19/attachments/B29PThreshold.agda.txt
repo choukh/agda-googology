@@ -1,0 +1,45 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第一正塔的相邻标量与零返回跨过完全相同的原正规 ψ₀ 主项；这给出第一正塔内部的 EBO 共尾等价判据。
+module B29PThreshold where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Empty using (⊥-elim)
+open import Data.Product using (Σ; _,_; proj₁)
+open import Data.Sum.Base using (inj₁; inj₂)
+import OCF.Align.Level as L
+open import OCF.Align.EboLeanDef using (T; ψ; HC)
+open import OCF.Align.EboLeanBase using (NF)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; s≼s; +-mono; l≼; ≼l)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRVLevel using (LEM)
+import WVOne as V
+import B17ValueDich as D
+import B18Product as Mul
+import B26Names as A
+import B29PMove as M
+import B29PPaid as P
+import B29PPrincipal as Pr
+
+module Gate (lem : LEM) (r a b : V.T₀) (bd : b ≼ (a L.+ a))
+  (cut : ∀ z → L.suc z ≼ r → L.suc (z L.+ z) ≼ r) where
+  reverse : r ≼ b → r ≼ a
+  reverse h with D.Classical.compare lem r a
+  ... | inj₁ yes = yes
+  ... | inj₂ small = ⊥-elim (s≼-irrefl r (≼-trans {b = L.suc (a L.+ a)}
+    (s≼s (≼-trans {b = b} h bd)) (cut a small)))
+
+module Inner (lem : LEM) (j u : ℕ) where
+  module X = M.Actual j
+  module Host = P.Actual j
+  a = Host.v u
+  b = V.read (X.c (suc u))
+  bd : b ≼ (a L.+ a)
+  bd = ≼-trans {a = b} {b = M.Q Mul.· a} {c = a L.+ a} (proj₁ (X.scaled u))
+    (≼-trans {a = M.Q Mul.· a} {b = a L.+ P.e} {c = a L.+ a} (Host.Classical.pad lem a)
+      (+-mono {a = a} {a′ = a} {b = P.e} {b′ = a} (≼-refl a) (Host.floor u)))
+  module Named (p : T) (np : NF (ψ [] p ∷ [])) (hp : HC (ψ [] p ∷ [])) where
+    module N = Pr.Principal p np hp
+    forward : N.r ≼ a → N.r ≼ b
+    forward h = ≼-trans {a = N.r} {b = a} {c = b} h (X.paid u)
+    backward = Gate.reverse lem N.r a b bd N.double
+

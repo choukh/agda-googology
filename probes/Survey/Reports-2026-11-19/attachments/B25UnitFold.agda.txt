@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 用产生整列反馈的同一真实输出作原 src 算子的一个输入。下界无前提；反向校准在子模块中取排中律。
+module B25UnitFold where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≅→≼; ≼-refl; ≼l; l≼; ψ⁰-mono⁰)
+open import OCF.Align.BTBOValBase using (tr₀; fd)
+open import OCF.Align.BTBOValMain using (ψ₀≈)
+open import OCF.Align.BTBOValDn using (τ)
+open import OCF.Align.BTBOValAbsorb using (St; absorb-lim)
+open import OCF.Align.BTBOFullLv using (St-≅; SV-L)
+open import OCF.Align.YiVmConExact using (tri→vm)
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiLowNeg using (HS-forget)
+import B16IndexBase as I
+import B17ValueDich as V
+import B22SourceSlots as Slot
+import B25DTrack as T
+import B25DLimit as D
+open import B25DUnit using (z)
+import B25OneFold as J
+open import B25Pool using (erases)
+
+y = I.cp z
+regular : St (tr₀ y)
+regular = St-≅ (I.same z) (Slot.strict z)
+input : tr₀ y ≈ᵛ N.γ 1
+input = ≼-trans (≅→≼ (I.same z)) (proj₁ D.out-value) ,
+        ≼-trans (proj₂ D.out-value) (≅→≼ (L.≅-sym (I.same z)))
+lower : N.γ 2 ≼ tr₀ (J.J y)
+lower = J.majorant (N.L 1) (SV-L 1) y regular
+  (≼-trans (≅→≼ (L.forget-toLevel (N.γ 1) (N.cert 1))) (proj₂ input))
+
+roundtrip : ∀ a (h : L.HS (L.forget a)) → L.toLevel (L.forget a) h L.≅ᴵ a
+roundtrip L.zero h = L.z≅
+roundtrip (L.suc a) h = L.s≅ (roundtrip a (L.hs⁻ h))
+roundtrip (L.lim f m) h = L.l≅ (λ n → roundtrip (f n) (L.hl₁ h n))
+
+fixed : L.ψ⁰ (N.γ 1) ≼ N.γ 1
+fixed = l≼ (λ n → ≼l (suc n) (ψ⁰-mono⁰ (≅→≼ (T.shift n))))
+
+-- 先把原累加下标的遗忘值限制在 ε₀ 内。只有把这条标量比较提升为一次参照塌缩时使用排中律。
+cap : ∀ f → St (tr₀ (S.lim f)) → tr₀ (S.lim f) ≼ N.γ 1 →
+    L.forget (τ (S.ordᴰ (S.lim f))) ≼ N.γ 1
+cap f sf h = ≼-trans (≅→≼ (erases (S.ordᴰ (S.lim f))))
+  (≼-trans (absorb-lim f sf) (≼-trans (ψ⁰-mono⁰ h) fixed))
+
+module Classical (lem : LEM) where
+  vm = tri→vm (λ a b _ → V.Classical.compare lem b a)
+  upper : tr₀ (J.J y) ≼ N.γ 2
+  upper = ≼-trans (proj₁ (ψ₀≈ (S.ordᴰ y)))
+    (≼-trans (≅→≼ (L.ψ⁰-≅ (L.Ω-≅ (L.≅ᴵ-sym (roundtrip a (HS-forget a))))))
+             (vm (L.forget a) (HS-forget a) (N.γ 1) (N.cert 1) (cap _ regular (proj₁ input))))
+    where a = τ (S.ordᴰ y)
+  exact : tr₀ (J.J y) ≈ᵛ N.γ 2
+  exact = upper , lower
+

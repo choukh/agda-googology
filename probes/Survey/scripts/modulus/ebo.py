@@ -120,12 +120,6 @@ def walk(t,k,cap=20000):
         o.append(t)
         if len(o)>cap: return None
     return o
-def wlen(t,k,cap=20000):
-    n=0
-    while t is not None:
-        t=step(t,k); n+=1
-        if n>cap: return None
-    return n
 @functools.lru_cache(maxsize=None)
 def terms(s):
     "all raw terms of size exactly s (size= number of psi nodes)"

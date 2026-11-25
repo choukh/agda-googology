@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 前缀作用同时变换二层树和描述；Ω 在任意满足这些律的底作用上取对角，仍给同型作用。
+module B15OrbitAction where
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+open import WSShadow using (ES; lC; nC; InflE; Infl-lC; Infl-nC; LeE; LeE-refl; LeE-trans)
+import WSLevel as W
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; l≼; ≼l; ≼i; i≼; ≼u; u≼; ≼-trans)
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+import B12LimitSrc as Z
+import B12LimitRef as A
+import B12Omega3Ref as R
+import B14OrbitHeight as H
+import B14RefDescribed as D
+open import YiLAB7Replay using (Ω₂ᴸ)
+
+record Act : Set where
+  constructor action
+  field
+    f : Z.Lev₂ → Z.Lev₂
+    s : ES → ES
+    rows : ∀ {p e} → A.Described p e → A.Described (f p) (s e)
+    infl : ∀ e → InflE e → InflE (s e)
+    pres : ∀ {p q} → p L.≅ q → f p L.≅ f q
+open Act public
+
+base : Act
+base = action (λ p → p L.+ Ω₂ᴸ) A.next (λ {p} {e} → A.Rows.advance p e) (H.infl L.zero)
+  (λ d → L.add-≅ {σ = R.idσ} {σ′ = R.idσ} d (L.Ω-refl _))
+
+hp : Act → T₀ → Z.Lev₂ → Z.Lev₂
+hp a L.zero = f a
+hp a (L.suc y) p = L.lim (Ord.iter (hp a y) p)
+hp a (L.lim g) p = L.lim (λ n → hp a (g n) p)
+
+he : Act → T₀ → ES → ES
+he a L.zero = s a
+he a (L.suc y) e = lC (iter (he a y) e)
+he a (L.lim g) e = lC (λ n → he a (g n) e)
+
+ih : ∀ a y e → InflE e → InflE (he a y e)
+ih a L.zero = infl a
+ih a (L.suc y) e ie = Infl-lC _ ie
+ih a (L.lim g) e ie = Infl-lC _ (ih a (g 0) e ie)
+
+floor : ∀ a y e → LeE (s a e) (he a y e)
+floor a L.zero e = LeE-refl _
+floor a (L.suc y) e = LeE-trans (floor a y e) (W.lC-ub (iter (he a y) e) 1)
+floor a (L.lim g) e = LeE-trans (floor a (g 0) e) (W.lC-ub (λ n → he a (g n) e) 0)
+
+mixed : ∀ a {x y : T₀} → x ≼ y → ∀ {p e} → A.Described p e → A.Described (hp a x p) (he a y e)
+mixed a {y = y} z≼ {e = e} r = D.weaken (rows a r) (floor a y e) (ih a y e (A.Described.infl r))
+mixed a {L.suc x} {L.suc y} (s≼s d) {p} {e} r = A.limit (Ord.iter (hp a x) p) (iter (he a y) e) (D.iterate (mixed a d) r)
+mixed a {y = L.lim g} (≼l n d) {e = e} r = D.weaken (mixed a d r) (W.lC-ub (λ j → he a (g j) e) n) (ih a (L.lim g) e (A.Described.infl r))
+mixed a {L.lim g} {y} (l≼ h) {p} {e} r = D.weaken (A.limit (λ j → hp a (g j) p) (λ _ → he a y e) (λ j → mixed a (h j) r)) (W.lC-const (he a y e)) (ih a y e (A.Described.infl r))
+mixed a (≼i {p = ()} _ _ _)
+mixed a (i≼ {p = ()} _)
+mixed a (≼u {r = ()} _)
+mixed a (u≼ {r = ()} _)
+
+congr : ∀ a {x y : T₀} → x L.≅ y → ∀ {p q} → p L.≅ q → hp a x p L.≅ hp a y q
+congr a L.z≅ = pres a
+congr a {L.suc x} {L.suc y} (L.s≅ d) r = L.l≅ (L.iter-R L._≅_ {G = hp a x} {G′ = hp a y} (congr a d) r)
+congr a (L.l≅ h) r = L.l≅ (λ n → congr a (h n) r)
+congr a (L.lᵢ≅ {p = ()} d f)
+congr a (L.upˡ {r = ()} g)
+congr a (L.upʳ {r = ()} g)
+
+raise : Act → Act
+f (raise a) p = L.limᵢ (L.suc L.zero) (λ y → hp a y p)
+s (raise a) e = nC (λ y → he a y e)
+rows (raise a) {e = e} r = A.described (Infl-nC (λ y → he a y e) (ih a (L.suc L.zero) e (A.Described.infl r)))
+  (W.Li (λ y y′ d → A.Described.bd (mixed a (≼-trans (W.tr⁻≼ y) d) r)))
+  (W.Ew (W.Ei (λ y y′ d → A.Described.bx (mixed a (≼-trans (W.tr⁻≼ y) d) r))) (LeE-refl _))
+infl (raise a) e ie = Infl-nC (λ y → he a y e) (ih a (L.suc L.zero) e ie)
+pres (raise a) r = L.lᵢ≅ L.z≅ λ x y d → congr a d r

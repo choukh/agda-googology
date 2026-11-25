@@ -1,0 +1,45 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 一族询问按统一自然数深度赋名，严格终点比较只使用原行留量、总上确界和命名界。
+module B31NAssignRule where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_)
+open import Data.Nat.Properties using (≤-refl)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; s≼s)
+
+module Family (Name : Set) (value : Name → T₀) (height : Name → ℕ) (row : ℕ → T₀) (e : T₀)
+  (weak : ∀ k a → height a ≤ k → value a ≼ row k)
+  (room : ∀ k → L.suc (row k) ≼ row (suc (suc k)))
+  (within : ∀ k → row k ≼ e)
+  (names : ∀ y → L.suc y ≼ e → Σ Name (λ a → y ≼ value a))
+  (Addr : ℕ → Set) (ask : ∀ j → Addr j → T₀) (d s : T₀)
+  (occurs : ∀ j p → ask j p ≼ d)
+  (collect : ∀ q → (∀ j p → ask j p ≼ q) → d ≼ q)
+  (included : d ≼ s)
+  (transfer : ∀ k → L.suc d ≼ row (suc (suc k)) → L.suc s ≼ row (suc (suc k))) where
+
+  Pay : ℕ → Set
+  Pay k = ∀ j (p : Addr j) → Σ Name (λ a → height a ≤ k × ask j p ≼ value a)
+  Assigned = Σ ℕ Pay
+
+  module From (k : ℕ) (pay : Pay k) where
+    each : ∀ j p → ask j p ≼ row k
+    each j p with pay j p
+    ... | a , depth , cap = ≼-trans {a = ask j p} {b = value a} {c = row k} cap (weak k a depth)
+
+    all : d ≼ row k
+    all = collect (row k) each
+
+    upper : L.suc s ≼ row (suc (suc k))
+    upper = transfer k (≼-trans {a = L.suc d} {b = L.suc (row k)} {c = row (suc (suc k))}
+      (s≼s all) (room k))
+
+  sound : Assigned → L.suc s ≼ e
+  sound (k , pay) = ≼-trans {a = L.suc s} {b = row (suc (suc k))} {c = e} (From.upper k pay) (within (suc (suc k)))
+
+  capture : L.suc s ≼ e → Assigned
+  capture small with names s small
+  ... | a , cap = height a , λ j p → a , ≤-refl , ≼-trans {a = ask j p} {b = d} {c = value a}
+    (occurs j p) (≼-trans {a = d} {b = s} {c = value a} included cap)

@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 可数项首个 ψ₀ 参数的首下标嵌套深度，是一个保序的自然数。取值无界就能验收整个原 EBO。
+module B26Depth where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_; s≤s; z≤n)
+open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-antisym; n≤1+n; 1+n≰n)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥-elim)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+open import OCF.Align.EboLeanDef using (T; ψ; _<ᵀ_; hd<; ar<; lv<; tl<; []<; ΩTower; EBOψ)
+open import OCF.Align.EboLeanBase using (Ctbl; c[]; c∷; tri)
+open import OCF.Align.EboLeanTree using (nf-tower; hc-tower)
+open import OCF.Lean.YiRefTw2 using (Rt; endpoint)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl; s≼s)
+import B17Cofinal as C
+open import B26Names using (Name; named; name; nt; ct; hcN; value; reflect; T₀; E)
+
+monotone : ∀ {x y} → x <ᵀ y → C.depth x ≤ C.depth y
+monotone []< = z≤n
+monotone (hd< (lv< d)) = s≤s (monotone d)
+monotone (hd< (ar< _)) = ≤-refl
+monotone (tl< {x = ψ u a} _) = ≤-refl
+
+height : Name → ℕ
+height a = C.cap (ct a)
+
+cap-order : ∀ {s t} (cs : Ctbl s) (ct : Ctbl t) → s <ᵀ t → C.cap cs ≤ C.cap ct
+cap-order c[] (c∷ _) []< = z≤n
+cap-order (c∷ _) (c∷ _) (hd< (lv< ()))
+cap-order (c∷ _) (c∷ _) (hd< (ar< p)) = monotone p
+cap-order (c∷ _) (c∷ _) (tl< _) = ≤-refl
+
+cap-same : ∀ {s t} (cs : Ctbl s) (ct : Ctbl t) → s ≡ t → C.cap cs ≡ C.cap ct
+cap-same c[] c[] refl = refl
+cap-same (c∷ _) (c∷ _) refl = refl
+
+ordered : ∀ a b → value a ≼ value b → height a ≤ height b
+ordered a b d with reflect a b d
+... | inj₁ lt = cap-order (ct a) (ct b) lt
+... | inj₂ eq rewrite cap-same (ct a) (ct b) eq = ≤-refl
+
+tower : ℕ → Name
+tower n = named (EBOψ n) (nf-tower n) (c∷ c[]) (hc-tower n)
+
+calibrate : ∀ n → C.depth (ΩTower n) ≡ suc n
+calibrate zero = refl
+calibrate (suc n) rewrite calibrate n = refl
+
+tall : ∀ a b → suc (height a) ≤ height b → name a <ᵀ name b
+tall a b d with tri (name a) (name b)
+... | inj₁ p = p
+... | inj₂ (inj₁ e) = ⊥-elim (1+n≰n (≤-trans d (subst (λ k → k ≤ height a) (cap-same (ct a) (ct b) e) ≤-refl)))
+... | inj₂ (inj₂ p) = ⊥-elim (1+n≰n (≤-trans d (cap-order (ct b) (ct a) p)))
+
+-- 可对不同自然数选择不同的标准形。不用把它同指定塔项逐项对齐。
+escape : ∀ {y : T₀} → (∀ k → Σ Name (λ a → k ≤ height a × value a ≼ y)) → E ≼ y
+escape {y} h = endpoint y λ n → let a , big , below = h (suc (height (tower n))) in
+  ≼-trans {a = value (tower n)} {b = L.suc (value (tower n))} {c = y} (≼-suc (≼-refl _))
+    (≼-trans {a = L.suc (value (tower n))} {b = value a} {c = y}
+      (mono<ⁿ (nt (tower n)) (nt a) (ct a) (hcN (tower n)) (hcN a) (tall (tower n) a big)) below)
+
+bounded : ∀ bound a → value a ≼ value bound → height a ≤ height bound
+bounded bound a = ordered a bound

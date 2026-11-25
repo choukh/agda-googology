@@ -1,0 +1,93 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23AHeight where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (read; T₀)
+open import WVTwo using (◃→≼)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl2; ok₂)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (l≼; ≼-trans)
+import B12LimitSrc as Src
+import B12Omega3Ref as Ref
+import B12Omega3Cuts as U
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B13Target as P
+import B13Orbit as Orb
+import B14RefFixed as K
+import B22RowPrefix as B
+import B22RowLimit as Lim
+import B22RowRule as Ru
+import B22RowLive as V
+import B23ABlocks as Blk
+open Ru.Rule
+
+relabel : ∀ {Q} {u v : Src.Lev₂} → u L.≅ v → Ru.Rule Q u → Ru.Rule Q v
+reg (relabel xy h) = P.refl-left (L.≅-sym xy)
+advance (relabel xy h) l = B.label (P.refl-left (L.≅-sym e)) (B.q k) (B.rq k)
+  (L.≅-trans (proj₁ (B.link k)) (L.ψ⁰-≅ e) , L.≅-trans (proj₂ (B.link k)) (K.pres e))
+  (B.e k) (B.rows k) (B.v k) (B.fits k)
+  where
+  k = advance h l
+  e = L.add-≅ {σ = Ref.idσ} {σ′ = Ref.idσ} (B.rp l) (P.pass-pres xy)
+Ru.state (relabel xy h) = λ l R hR → let s = Ru.state h l R hR in V.present (V.lower s) (V.struct s) (V.index s)
+Ru.value (relabel xy h) = Ru.value h
+
+module Gather (dst : Op {lvl2} nil) (qs : ℕ → Op {lvl2} nil)
+              (xs : ℕ → Src.Lev₂) (hs : ∀ n → Ru.Rule (qs n) (xs n)) (below : ∀ n → Rl (qs n) dst) where
+  module Out {p : Src.Lev₂} (l : B.Label p) where
+    ls = λ n → advance (hs n) l
+    xs′ = λ n → p L.+ P.pass (xs n)
+    module All = Lim.Collect xs′ ls (p L.+ P.pass (L.lim xs)) (L.l≅ (λ n → B.rp (ls n)))
+    module At (R : Base lvl2) (H : V.Present l R) where
+      live = All.At.all (λ n → stepS (qs n) R) (stepS dst R) (λ n → state (hs n) l R H)
+        (λ n i t → below n R i t (R i t))
+      emit = λ t b hb → l≼ (λ n → ≼-trans (Ru.value (hs n) l R H t b hb) (◃→≼ (below n R zero t b)))
+  joined : Ru.Rule dst (L.lim xs)
+  reg joined = L.l≅ (λ n → reg (hs n))
+  advance joined = Out.All.label
+  state joined = Out.At.live
+  Ru.value joined = Out.At.emit
+
+module Raised (c : Tr⁺ lvl2) where
+  F = Kb ok₂ tdNil (proj₁ c) (proj₂ c)
+  act : Tr zero → Op {lvl2} nil → Op {lvl2} nil
+  act z = It 0 ok₂ tdNil (ι lvl2 z) F
+  Shift : Set
+  Shift = ∀ Q u → Ru.Rule Q u → Ru.Rule (Orb.block c Q) (u L.+ Ω₂ᴸ)
+
+  module Step (z : Tr zero) (Q : Op {lvl2} nil) (u : Src.Lev₂)
+              (ih : ∀ A v → Ru.Rule A v → Ru.Rule (act z A) (P.height (read z) v))
+              (start : Ru.Rule Q u) where
+    qs = iter (act z) Q
+    us = Ref.S.iter (P.height (read z)) u
+    rows : ∀ n → Ru.Rule (qs n) (us n)
+    rows zero = start
+    rows (suc n) = ih (qs n) (us n) (rows n)
+    below : ∀ n → Rl (qs n) (act (suc z) Q)
+    below zero = Itinf 0 ok₂ tdNil (ι lvl2 (suc z)) F Q
+    below (suc n) R i t b = ◃l n
+    result = Gather.joined (act (suc z) Q) qs us rows below
+
+  powers : Shift → ∀ z Q u → Ru.Rule Q u → Ru.Rule (act z Q) (P.height (read z) u)
+  powers h zero Q u start = h Q u start
+  powers h (suc z) Q u start = Step.result z Q u (powers h z) start
+  powers h (lim f d) Q u start = Gather.joined (act (lim f d) Q) (λ n → act (f n) Q)
+    (λ n → P.height (read (f n)) u) (λ n → powers h (f n) Q u start) (λ n R i t b → ◃l n)
+
+module Site (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  module S = Blk.Site r cv
+  module Physical = Raised S.A.c⁺
+  -- All source coefficients and arbitrary executable countable readbacks follow
+  -- from a single preservation law for right addition by Ω₂.
+  whole-step : Physical.Shift → ∀ z → Ru.Rule (Physical.act z S.J) (P.co₀ (read z))
+  whole-step h z = relabel
+    (L.≅-trans (P.shift₀ (read z) L.z≅) (U.left-unit Ref.idσ (P.regular₀ (read z))))
+    (Physical.powers h z S.J L.zero S.base)
+  first-instance : Ru.Rule (Orb.block S.A.c⁺ S.J) (L.zero L.+ Ω₂ᴸ)
+  first-instance = relabel (L.≅-sym (U.left-unit Ref.idσ (L.Ω-refl _))) S.once

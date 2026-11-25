@@ -1,0 +1,30 @@
+[
+  {
+    "file": "<repository>/probes/OCF/Lean/YiNDTower.lagda.md",
+    "forbidden_matches": [],
+    "machine_path_matches": [],
+    "options_line": "{-# OPTIONS --safe --without-K --lossy-unification #-}",
+    "checking_count": 1
+  },
+  {
+    "file": "<repository>/probes/OCF/Lean/YiNDTop.lagda.md",
+    "forbidden_matches": [],
+    "machine_path_matches": [],
+    "options_line": "{-# OPTIONS --safe --without-K --lossy-unification #-}",
+    "checking_count": 1
+  },
+  {
+    "file": "<repository>/probes/OCF/Lean/YiNDBridge.lagda.md",
+    "forbidden_matches": [],
+    "machine_path_matches": [],
+    "options_line": "{-# OPTIONS --safe --without-K --lossy-unification #-}",
+    "checking_count": 1
+  },
+  {
+    "file": "<repository>/probes/OCF/Lean/YiNDAccept.lagda.md",
+    "forbidden_matches": [],
+    "machine_path_matches": [],
+    "options_line": "{-# OPTIONS --safe --without-K --lossy-unification #-}",
+    "checking_count": 1
+  }
+]

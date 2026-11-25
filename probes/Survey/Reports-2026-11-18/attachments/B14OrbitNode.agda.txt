@@ -1,0 +1,86 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 一级目标保留 Ω₁ 分支；再次从零层读它时，自身槽的零层结果就是下一孩子的下标。
+module B14OrbitNode where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (◃→≼; p₂; g₂)
+open import WKGen using (Ω₁t; node-ge)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; l≼)
+import B11OuterCore as C
+import B12Orbit as B
+import B12Hierarchy as H
+import B12Update as S
+import B13Countable as T
+import B13OrbitFeed as O
+import B13LiveRow as LR
+import B13Feedback as F
+import B12Omega3Ref as Ref
+open H.Prefix using (val; exp)
+
+module At (J : Op {lvl2} nil) (single : ∀ w → T.In.Models idM w J H.add)
+          (R : Base lvl2) (v : Tr⁺ zero) (I : S.Seeds (val H.first) (exp H.first) R v) where
+  module Row = O.Branch J single
+  module Run = Row.At R v H.first I
+  module Old = LR.Live J single R v I
+  open Run using (S₁; S₀; down-target; step₁; step₂)
+  open Row using (K₁; K₀)
+
+  curve : Tr zero → Tr lvl1
+  curve z = proj₁ (E ok₂ O.D₁ (O.g₁ z) K₁ S₁ lvl1 (σ O.m₁ C.slot) (R lvl1 C.slot))
+
+  retained : Tr lvl1
+  retained = proj₁ (E ok₂ O.D₁ Ω₁t K₁ S₁ lvl1 (σ O.m₁ C.slot) (R lvl1 C.slot))
+
+  shape : retained ≡ Ω p₁ curve
+  shape = refl
+
+  path₁ : lvl1 ⊢ retained ◃ step₂ (step₂ zero)
+  path₁ = Emono ok₂ tdNil J R lvl1 C.slot (R lvl1 C.slot)
+    {x = up zero tt Ω₁t (proj₂ (Ωt lvl1))} {y = g₂ (step₂ zero)}
+    (◃c zero tt (◃t (C.st (S.structure I))
+                 (◃t (Einf ok₂ tdNil (g₂ zero) J R lvl1 C.slot (R lvl1 C.slot)) ◃s)))
+
+  module Target (w : zero ≤ lvl2) where
+    t = σ O.m₁ w
+    feed : Tr zero → Tr zero
+    feed z = proj₁ (E ok₂ O.D₁ (curve z) K₁ S₁ zero down-target (S₁ zero down-target))
+
+    child : (n : ℕ) → Tr zero
+    child n = proj₁ (E ok₂ O.D₁ (curve (iter feed zero n)) K₁ S₁ zero t v)
+
+    next-index : (n : ℕ) → read (child n) ≼ read (proj₁ (run (B.block J) R zero w v))
+    next-index n = ≼-trans
+      (node-ge (kpT (fr O.D₁) ok₂ p₁ (tv O.D₁ t))
+           (λ z → E ok₂ O.D₁ (curve z) K₁ S₁ zero t v) feed n)
+      (≼-trans (◃→≼ (Emono ok₂ tdNil J R zero w v
+          {x = up zero tt retained (z◃ _ ◃w)} {y = g₂ (step₂ (step₂ zero))}
+          (◃c zero tt (◃t path₁ ◃s))))
+        (node-ge (kp lvl2 ok₂ p₂ w) (λ y → E ok₂ tdNil (g₂ y) J R zero w v) step₂ 2))
+
+  module Inside (t : ⟦ cons (down stop tt) nil ⟧ zero)
+                (v′ : Tr⁺ zero) (I′ : S.Seeds (val H.first) (exp H.first) R v′) where
+    sim : T.In.Models O.m (σ O.m₂ t) K₀ H.add
+    sim y S′ b h = single (π O.m₁ t) y (T.pull O.m S′) b h
+
+    old-at : (n : ℕ) → Ref.at F.first-node n ≼ read (proj₁ (E ok₂ O.D₁ (O.g₁ (Old.idx n)) K₁ S₁ zero t v′))
+    old-at n = ≼-trans (Old.reference n (Old.track n)) (S.value-bound
+      (T.In.eval-zero O.m (σ O.m₂ t) O.D₀ (suc (Old.idx n)) K₀ H.add sim H.first S₀ v′ I′))
+
+    old-whole : F.first-node ≼ read (proj₁ (E ok₂ O.D₁ Ω₁t K₁ S₁ zero t v′))
+    old-whole = l≼ (λ n → ≼-trans (old-at n)
+      (node-ge (kpT (fr O.D₁) ok₂ p₁ (tv O.D₁ t)) (λ z → E ok₂ O.D₁ (O.g₁ z) K₁ S₁ zero t v′) step₁ n))
+
+    at-curve : ∀ z → F.first-node ≼ read (proj₁ (E ok₂ O.D₁ (curve z) K₁ S₁ zero t v′))
+    at-curve z = ≼-trans old-whole (◃→≼ (Emono ok₂ O.D₁ K₁ S₁ zero t v′
+      (◃t (C.st (S.structure I)) (Einf ok₂ O.D₁ (O.g₁ z) K₁ S₁ lvl1 (σ O.m₁ C.slot) (R lvl1 C.slot)))))
+
+  module Slot = Inside down-target (R zero C.zpath) (S.seeds (S.slot-bound I) (S.slot-bound I) (S.structure I))

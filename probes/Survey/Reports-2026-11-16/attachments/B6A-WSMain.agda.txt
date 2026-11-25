@@ -1,0 +1,127 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B6A 入口: W4 的 ψ₀(Ω₂) 闭项 Ψ₂ (WVTwo) 不低于 src 的 ψ₀(Ω₂). 编译定理, 无前提, 不用排中律与函数外延.
+-- 证法: 链点 z_{n+1} = ex Ω₁ Ω₁ (suc z_n) 实现影子 ε n (WSW4, 一切阶); Level 的 γ (n+1) 被 ε n 控制 (WSLevel); 经 ψ₀≈ 落到 src.
+module WSMain where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Maybe using (nothing)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-refl; ≼-trans; ≼-suc)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module B = BoundedTrich
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValMain using (ψ₀≈)
+
+open import WVOne using (T₀; 𝟏; read; lvl1; p₁; Mv; Mv-mono; P-read; cumL)
+open import WVTwo using (◃→≼; w₀; lvl2; ok₂; p₂; g₂; s₂; F₂; Ψ₂)
+open import WVThree using (Nx; Nx-infl)
+open import WSShadow
+open import WSLevel using (γ; ε; lvl-γ0; lvl-γS)
+open import WSW4
+
+o₁ : Ok lvl1
+o₁ = proj₂ ok₂ tt
+
+open Lem o₁
+
+------------------------------------------------------------------------
+-- 第 1 层的 Ω₁ 以任意底族、任意路径折到第 0 层: 不低于 Nx.
+P-read′ : ∀ {o : Ok zero} {Bs : Base zero} (w : zero ≤ zero) (β : Tr⁺ zero) (x : Tr zero)
+        → Mv (read (proj₁ β)) (read x) ≼ read (proj₁ (ψ zero o Bs zero w β x))
+P-read′ {o} {Bs} self β x = P-read {o} {Bs} β x
+
+gΩ : Tr zero → Tr lvl1
+gΩ z = up zero tt (suc z) (z◃ z ◃s)
+
+FΩ : (Bs : Base lvl1) (w : zero ≤ lvl1) (β : Tr⁺ zero) (a c : T₀) → a ≼ read (proj₁ β)
+   → c ≼ read (proj₁ (Bs zero (inc tt self))) → 𝟏 ≼ read (proj₁ (Bs zero (inc tt self)))
+   → Nx a c ≼ read (proj₁ (ψ lvl1 o₁ Bs zero w β Ω₁t))
+FΩ Bs (inu ws) β a c ha hc h1 =
+  NodeG.low (Bs zero (inc tt self)) (λ z → ψ lvl1 o₁ Bs zero (inu ws) β (gΩ z))
+            (λ z → ψ lvl1 o₁ Bs zero (inc tt self) (Bs zero (inc tt self)) (gΩ z))
+            (λ z → mono lvl1 o₁ Bs zero (inc tt self) (Bs zero (inc tt self)) (◃u zero tt (suc z) (z◃ z ◃s)))
+            (λ y a′ c′ → Mv a′ y) a c hc h1
+            (λ y z d → ≼-trans (Mv-mono ha (≼-suc d)) (P-read′ (ws tt) β (suc z)))
+            (λ y z d → ≼-trans (Mv-mono hc (≼-suc d)) (P-read′ self (Bs zero (inc tt self)) (suc z)))
+            (kp lvl1 o₁ p₁ (inu ws))
+FΩ Bs (inc tt self) β a c ha hc h1 =
+  NodeG.low (Bs zero (inc tt self)) (λ z → ψ lvl1 o₁ Bs zero (inc tt self) β (gΩ z))
+            (λ z → ψ lvl1 o₁ Bs zero (inc tt self) (Bs zero (inc tt self)) (gΩ z))
+            (λ z → mono lvl1 o₁ Bs zero (inc tt self) (Bs zero (inc tt self)) (◃u zero tt (suc z) (z◃ z ◃s)))
+            (λ y a′ c′ → Mv a′ y) a c hc h1
+            (λ y z d → ≼-trans (Mv-mono ha (≼-suc d)) (P-read′ self β (suc z)))
+            (λ y z d → ≼-trans (Mv-mono hc (≼-suc d)) (P-read′ self (Bs zero (inc tt self)) (suc z)))
+            (kp lvl1 o₁ p₁ (inc tt self))
+
+-- "以 Ω₁ 为右边的 op" (ψ 的 ex 行里的 opB) 实现 Nx.
+hFΩ : 𝓡 0 {nil} (inc tt self) (opB lvl1 o₁ Ω₁t nbΩ) Nx
+hFΩ S t v a c ha hc h1 = FΩ S t v a c ha hc h1
+
+------------------------------------------------------------------------
+-- Ψ₂ 的链点与实现.
+zs : ℕ → Tr lvl1
+zs = iter s₂ zero
+
+-- 链点的形状 (定义上): s₂ z 就是 ex Ω₁ Ω₁ (suc z).
+z-shape : (z : Tr lvl1) → s₂ z ≡ xs z
+z-shape z = refl
+
+Real-z : (n : ℕ) → Real (zs (suc n)) (ε n)
+Real-z zero    = W2 zero zC Real-zero
+Real-z (suc n) = W2 (zs (suc n)) (ε n) (Real-z n)
+
+fold : ℕ → Tr zero
+fold k = proj₁ (ψ lvl1 o₁ (B₀ lvl1) zero w₀ (Ωt zero) (zs k))
+
+Ψ₂-ge : (k : ℕ) → read (fold k) ≼ read Ψ₂
+Ψ₂-ge k = ≼-trans (≼l 0 (≼-refl _)) (cumL F₂ _ k)
+
+S₀ : St {lvl1} nil
+S₀ i u = ψ lvl1 o₁ (B₀ lvl1) i u (B₀ lvl1 i u) Ω₁t
+
+v₀ : Tr⁺ zero
+v₀ = ψ lvl1 o₁ (B₀ lvl1) zero w₀ (Ωt zero) Ω₁t
+
+one-v₀ : 𝟏 ≼ read (proj₁ v₀)
+one-v₀ = ≼-trans (Nx-infl 𝟏 𝟏) (FΩ (B₀ lvl1) w₀ (Ωt zero) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏) (≼-refl 𝟏))
+
+one-S₀ : 𝟏 ≼ rd S₀ (inc tt self)
+one-S₀ = ≼-trans (Nx-infl 𝟏 𝟏) (FΩ (B₀ lvl1) (inc tt self) (Ωt zero) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏) (≼-refl 𝟏))
+
+-- 折 z_{n+2} 不低于 ε n 作用在 Nx 上 (底与链底取 1).
+W4-low : (n : ℕ) → sE (ε n) Nx 𝟏 𝟏 ≼ read (fold (suc (suc n)))
+W4-low n =
+  R-cl 0 (op (E o₁ tdNil (zs (suc n)) F) (Einf o₁ tdNil (zs (suc n)) F))
+         (op (E o₁ tdNil (suc (zs (suc n))) F) (Einf o₁ tdNil (suc (zs (suc n))) F))
+         (proj₁ (Real-z n) (λ t → t) (λ t → t) F Nx hFΩ)
+         (λ S i t v → Emono o₁ tdNil F S i t v ◃s)
+         S₀ w₀ v₀ 𝟏 𝟏 one-v₀ one-S₀ one-S₀
+  where
+  F : Op {lvl1} nil
+  F = opB lvl1 o₁ Ω₁t nbΩ
+
+lvl0-low : LV.ψ⁰ (γ 0) ≼ read (fold 1)
+lvl0-low = ≼-trans lvl-γ0 (≼-trans (FΩ (B₀ lvl1) w₀ (Ωt zero) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏) (≼-refl 𝟏))
+                                    (◃→≼ (Einf o₁ tdNil (suc zero) (opB lvl1 o₁ Ω₁t nbΩ) S₀ zero w₀ v₀)))
+
+------------------------------------------------------------------------
+-- 主定理.
+Ψ₂-Ω₂ : LV.ψ⁰ (LV.Ω (LV.suc (LV.suc LV.zero))) ≼ read Ψ₂
+Ψ₂-Ω₂ = l≼ step
+  where
+  step : (n : ℕ) → LV.ψ⁰ (γ n) ≼ read Ψ₂
+  step zero    = ≼-trans lvl0-low (Ψ₂-ge 1)
+  step (suc n) = ≼-trans (lvl-γS n) (≼-trans (W4-low n) (Ψ₂-ge (suc (suc n))))
+
+srcΩ₂ : tr₀ (Ord-Ord.ψ₀ (Ord-Ord.Ω (B.suc (B.suc B.zero)))) ≼ read Ψ₂
+srcΩ₂ = ≼-trans (proj₁ (ψ₀≈ (B.suc (B.suc B.zero)))) Ψ₂-Ω₂

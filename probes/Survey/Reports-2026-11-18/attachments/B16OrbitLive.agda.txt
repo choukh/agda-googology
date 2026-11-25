@@ -1,0 +1,80 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第二个实际 ex 系数在自己的 Ω₁ 回灌中运行高阶 It。每次取的可数指数由上一项的实际输出给出。
+module B16OrbitLive where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block hiding (Sh; D)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; T₀)
+open import WVTwo using (◃→≼)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+open import WKGen using (Ω₁t; node-ge)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≅→≼; ≼-refl; ≼-trans; ≼-suc)
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+import B11OuterCore as C
+import B12Update as U
+import B12LimitRef as A
+import B12LimitSrc as Z
+import B12Omega3Ref as R
+import B13OrbitFeed as O
+import B15OrbitModel as M
+import B15OrbitAction as P
+import B16OrbitTransform as H
+import B16OrbitEnv as Env
+import B16OrbitIt as I
+module Outer = M.At (idM {X = M.X₁})
+module Inner = M.At O.m₂
+module InnerEnv = Env.Frame O.m₂ (λ _ → refl)
+module OuterEnv = Env.Frame (idM {X = M.X₁}) (λ _ → refl)
+module Count = I.Frame O.m₂ O.D₀
+
+tree : P.Act → Z.Lev₂ → Z.Lev₂
+tree a p = L.limᵢ (L.suc L.zero) (λ y → P.f (H.height y P.raise a) p)
+
+module At (b : Tr lvl1) (nb : lvl1 ⊢ zero ◃ b) (cover : lvl1 ⊢ Ω₁t ◃ b) (G : Op M.X₁) (a : P.Act) (law : Outer.Models G a) where
+  K = Kb ok₂ O.D₁ b nb
+  Exp = λ u → It 0 ok₂ O.D₁ u K G
+  KG = proj₁ K idM G
+  base-law : Outer.Models KG a
+  base-law = Outer.lift-law {Q = G} {Q′ = KG} (proj₂ K idM G) law
+  inG = enterO O.m₂ KG
+  inK = enter 1 O.m₂ (Itᴺ 0 ok₂ O.D₁ zero K)
+  in-law : Inner.Models inG a
+  in-law = OuterEnv.enter-law KG a base-law
+  transform : Count.contract inK P.raise
+  transform Q act h = InnerEnv.Rule.covers Q act h b cover
+
+  module Start (S : St M.X₁) p e (d : A.Described p e) (rr : p L.≅ p)
+               (str : C.Str e (M.pull S))
+               (out : L.ψ⁰ p ≼ read (proj₁ (S zero Outer.zp)))
+               (inside : L.ψ⁰ p ≼ read (proj₁ (S zero Outer.ip))) where
+    S₀ : St M.X₀
+    S₀ j u = S j (proj₂ u)
+    h = λ y → H.height y P.raise a
+    child = λ z → Exp (O.g₁ z)
+    step = λ z → proj₁ (run (child z) S zero Outer.ip (S zero Outer.ip))
+    idx = iter step zero
+    args = Ord.iter (λ y → L.ψ (L.suc L.zero) R.idσ (P.f (h y) p)) (L.suc L.zero)
+
+    scalar : ∀ t v → L.ψ⁰ p ≼ read (proj₁ v) → ∀ y z → y ≼ read (suc z) →
+             L.ψ⁰ (P.f (h y) p) ≼ read (proj₁ (run (child z) S zero t v))
+    scalar t v hv y z q = U.value-bound (Inner.seed output)
+      where
+      v′ = run KG S zero t v
+      h′ = ≼-trans hv (◃→≼ (inf KG S zero t v))
+      input = Inner.packed {S = S₀} {v = v′} (U.seeds h′ out str) inside
+      output = Count.eval (suc z) q inK P.raise transform inG a in-law (σ O.m₂ t) p e d rr S₀ v′ input
+
+    track : ∀ n → args n ≼ read (suc (idx n))
+    track zero = ≼-refl _
+    track (suc n) = ≼-suc (≼-trans (≅→≼ (L.≅-sym (L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (P.pres (h (args n)) rr))))
+                                        (scalar Outer.ip (S zero Outer.ip) inside (args n) (idx n) (track n)))
+    value : ∀ t v → L.ψ⁰ p ≼ read (proj₁ v) → L.ψ⁰ (tree a p) ≼ read (proj₁ (run (Exp Ω₁t) S zero t v))
+    value t v hv = l≼ λ n → ≼-trans (scalar t v hv (args n) (idx n) (track n))
+      (node-ge (kpT (fr O.D₁) ok₂ p₁ (tv O.D₁ t)) (λ z → run (child z) S zero t v) step n)

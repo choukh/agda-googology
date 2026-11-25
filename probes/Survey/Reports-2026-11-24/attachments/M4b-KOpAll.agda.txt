@@ -1,0 +1,7 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 入口: 接口第二版上的 (Op), 出口 KOpMain.op : (m : L) → OpStmt m.
+module KOpAll where
+open import KOpBase
+open import KOpPow
+open import KOpMain
+open import KOpOp

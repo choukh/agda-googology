@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 每一轮都以真正的前一项升阶。用 src 的零、后继、极限与加法写出整串，证明双向校准并接到 W4 的 Λ。
+module B16Closed where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValNeg using (tr₀-+)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼l; l≼; s≼s; +-mono; ≅→≼)
+open import WVOne using (T₀; read; 𝟏)
+open import W4Block using (iter)
+open import W4Fold using (EBOᶜ)
+import B14Height as H
+import B16Feedback as P
+import B16Join as J
+import B16RefFiveSrc as Ref
+import B16RefLimit as Cap
+import B16RefFive as Five
+
+height : S.Ord₀ → S.Ord₀ → S.Ord₀
+height S.zero a = S.lim (S.iter (a S.+_) a)
+height (S.suc x) a = S.lim (S.iter (height x) a)
+height (S.lim f) a = S.lim (λ n → height (f n) a)
+
+pair : (x : T₀) → x ≈ᵛ x
+pair x = ≼-refl x , ≼-refl x
+
+steps : (f : S.Ord₀ → S.Ord₀) (g : T₀ → T₀) →
+  (∀ a b → tr₀ a ≈ᵛ b → tr₀ (f a) ≈ᵛ g b) →
+  ∀ a b → tr₀ a ≈ᵛ b → ∀ n → tr₀ (S.iter f a n) ≈ᵛ iter g b n
+steps f g conv a b e zero = e
+steps f g conv a b e (suc n) = conv _ _ (steps f g conv a b e n)
+
+limit : ∀ {f g : ℕ → T₀} → (∀ n → f n ≈ᵛ g n) → L.lim f ≈ᵛ L.lim g
+limit h = l≼ (λ n → ≼l n (proj₁ (h n))) , l≼ (λ n → ≼l n (proj₂ (h n)))
+
+add : ∀ a b → tr₀ a ≈ᵛ b → ∀ u v → tr₀ u ≈ᵛ v → tr₀ (a S.+ u) ≈ᵛ (b L.+ v)
+add a b (e , r) u v (h , j) =
+  ≼-trans (≅→≼ (tr₀-+ a u)) (+-mono e h) ,
+  ≼-trans (+-mono r j) (≅→≼ (L.≅-sym (tr₀-+ a u)))
+
+same : ∀ x a b → tr₀ a ≈ᵛ b → tr₀ (height x a) ≈ᵛ H.act (tr₀ x) b
+same S.zero a b e = limit (steps (a S.+_) (b L.+_) (add a b e) a b e)
+same (S.suc x) a b e = limit (steps (height x) (H.act (tr₀ x)) (same x) a b e)
+same (S.lim f) a b e = limit (λ n → same (f n) a b e)
+
+next : S.Ord₀ → S.Ord₀
+next x = height (S.suc x) (S.suc S.zero)
+
+convert : ∀ a b → tr₀ a ≈ᵛ b → tr₀ (next a) ≈ᵛ P.next b
+convert a b (e , r) = ≼-trans (proj₁ h) (H.mono (s≼s e) (≼-refl 𝟏)) ,
+                       ≼-trans (H.mono (s≼s r) (≼-refl 𝟏)) (proj₂ h)
+  where h = same (S.suc a) (S.suc S.zero) 𝟏 (pair 𝟏)
+
+stages = S.iter next Ref.closed
+source = S.lim (λ n → S.suc (stages n))
+exact : tr₀ source ≈ᵛ L.lim (λ n → L.suc (J.Run.stages n))
+exact = limit (λ n → s≼s (proj₁ (line n)) , s≼s (proj₂ (line n))) where
+  line = steps next P.next convert Ref.closed Five.five Ref.whole
+lower : tr₀ source ≼ read EBOᶜ
+lower = ≼-trans (proj₁ exact) J.dynamic
+above-five : L.suc (tr₀ Ref.closed) ≼ tr₀ source
+above-five = ≼l 0 (≼-refl _)
+above-old : L.suc (L.suc Cap.source) ≼ tr₀ source
+above-old = ≼-trans (s≼s (≼-trans J.strict (proj₂ Ref.whole))) above-five

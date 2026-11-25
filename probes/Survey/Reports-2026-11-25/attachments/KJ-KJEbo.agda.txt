@@ -1,0 +1,86 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- KJ 第 3 段: 接到闭项. EBOᶜ 的第 2 个成员 (塔第 2 项的运行, Audit2.member₂) 的第 0 个累加项逐字是 tw 1 上的一个运行,
+-- 状态 B₂ (· inc zero ·) 覆盖, 它的第 0 层条目是 β″ ⊞ (塔第 1 项从头折), 值不低于 BTBOᴵ. 编译定理, 无模块参数.
+module KJEbo where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≅→≼; ≼l)
+open import OCF.Align.BTBOValAbsorb using (sts)
+open import OCF.Align.BTBOFullLv using () renaming (ps to psv; pl to plv)
+import OCF.Align.NoCumsum as NC
+open import KLowIface using (Cov)
+open import WVOne using (read; 𝟏; cumL; ≼-+ˡ)
+open import WVTwo using (◃→≼)
+open import KAsBase using (read-+≅)
+open import KBtbo using (tw1-lower)
+open import Audit2 using (seg; pre₂; B₂; v₁; real₂; o₂; h₂; step₂)
+open import KJLevel using (module Chain; St-BTBO; module JB; module JS; sBTBO≼JS; no-sJB)
+open import KJRun using (module RunJ)
+
+-- tw 1 上的那个运行.
+S₂ : Base (tw 1)
+S₂ i u = B₂ i (inc zero u)
+
+zpre : Λ ⊢ zero ◃ pre₂
+zpre = ◃t (◃u zero 0 (proj₁ (Ωt (tw 0))) (proj₂ (Ωt (tw 0)))) (◃u (seg 0) 1 (proj₁ (Ωt (tw 1))) (proj₂ (Ωt (tw 1))))
+
+cv₂ : Cov S₂
+cv₂ j u = inj₂ (mono Λ Ok-Λ (B₀ Λ) j (inc 2 (inc zero u)) (Ωt j) zpre)
+
+h1₂ : 𝟏 ≼ read (proj₁ v₁)
+h1₂ = ◃→≼ (mono Λ Ok-Λ (B₀ Λ) zero (z≤ Λ) (Ωt zero) zpre)
+
+-- 第 0 层条目的形状: 前缀第 0 段折出的 β″, 右边接上塔第 1 项从头折的值 (回退行).
+β″ : Tr⁺ zero
+β″ = ψ Λ Ok-Λ (B₀ Λ) zero (inc 2 (inc zero (ink self))) (Ωt zero) (seg 0)
+
+tw1⁺ : Tr⁺ zero
+tw1⁺ = ψ₀ (tw 1) (Ok-tw 1) (proj₁ (Ωt (tw 1)))
+
+entry-shape : proj₁ (S₂ zero (ink self)) ≡ proj₁ (β″ ⊞ tw1⁺)
+entry-shape = refl
+
+ι-read : (x : Tr zero) → read (ι zero x) LV.≅ read x
+ι-read zero      = LV.z≅
+ι-read (suc x)   = LV.s≅ (ι-read x)
+ι-read (lim f _) = LV.l≅ (λ n → ι-read (f n))
+ι-read (Ω () _)
+ι-read (up _ () _ _)
+ι-read (ex _ _ _ _ ())
+
+tail≼ : (a b : Tr⁺ zero) → read (proj₁ b) ≼ read (proj₁ (a ⊞ b))
+tail≼ a b = ≼-trans (≅→≼ (LV.≅-sym (ι-read (proj₁ b))))
+           (≼-trans (≼-+ˡ (read (proj₁ a)) (read (ι zero (proj₁ b))))
+                    (≅→≼ (LV.≅-sym (read-+≅ (proj₁ a) (ι zero (proj₁ b))))))
+
+entry≥ : NC.BTBOᴵ ≼ read (proj₁ (S₂ zero (ink self)))
+entry≥ = ≼-trans tw1-lower (tail≼ β″ tw1⁺)
+
+module R₂ = RunJ S₂ cv₂ v₁ h1₂
+
+-- 运行的输出是 real₂ 的第 0 个累加项, real₂ 是 EBOᶜ 的第 2 项.
+out≼EBO : read (proj₁ R₂.out) ≼ read EBOᶜ
+out≼EBO = ≼-trans (cumL (λ k → proj₁ (ψ (tw 2) o₂ B₂ zero (z≤ (tw 2)) v₁
+                                   (proj₁ (upz {s = sΩ (tw 1)} {h = h₂} (iter step₂ zero k) (Ωt (h₂ (iter step₂ zero k)))))))
+                          _ 0)
+                  (≼l 2 (≼-refl (read (proj₁ real₂))))
+
+-- 目标: J BTBOᴵ 与 J (suc BTBOᴵ) 都不高于 EBOᶜ.
+JB-EBO : JB.J ≼ read EBOᶜ
+JB-EBO = ≼-trans (R₂.J-x NC.BTBOᴵ NC.BTBO-HS St-BTBO plv entry≥) out≼EBO
+
+JS-EBO : JS.J ≼ read EBOᶜ
+JS-EBO = ≼-trans (R₂.J-sx NC.BTBOᴵ (LV.hs NC.BTBO-HS) (sts St-BTBO) psv entry≥) out≼EBO
+
+-- 越过 BTBO: suc BTBOᴵ ≼ JS.J ≼ read EBOᶜ.
+sBTBO-EBO : LV.suc NC.BTBOᴵ ≼ read EBOᶜ
+sBTBO-EBO = ≼-trans sBTBO≼JS JS-EBO

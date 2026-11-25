@@ -1,0 +1,65 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 单位系数的任意固定上界给真实 Λ 一个显式算术包络；允许从任意塔 i 起，保留该塔继承的实际值。
+module B27UEnvelope where
+
+open import Data.Nat.Base as N using (ℕ; zero; suc; _≤_; s≤s; z≤n)
+open import Data.Nat.Properties as NP using (≤-refl; ≤⇒≤′)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (sym; subst)
+import OCF.Align.EboLeanTree
+import OCF.Lean.YiRefTw2
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-suc; s≼s; ≼-trans; ≼l; l≼; ≼lim⁻)
+open import WVOne using (T₀; Mv; 𝟏; Mv-infl)
+import B12EboRows as B
+import B12XRef as R
+import B14Goal as G
+import B17CellNext as Nxt
+import B17CapFirst as Add
+import B18ResetCell as C
+import B18Reset as F
+import B18Product as P
+import B18RefProduct as Cap
+import B19Coefficient as V
+import B20StandardGoal as St
+import B26PActual as A
+import B26Names as Nm
+import B17Cofinal as CF
+
+U : T₀
+U = L.lim (λ n → L.lim (C.At.fresh n))
+
+component : ∀ n j → C.At.fresh n j ≼ U
+component n j = ≼l n (≼l j (≼-refl _))
+
+into : U ≼ A.Y
+into = l≼ (λ n → l≼ (St.into n))
+
+hull : T₀ → T₀
+hull q = L.lim (P.powers (Mv q 𝟏))
+
+Tail : ℕ → T₀ → Set
+Tail i q = B.child i ≼ q × (∀ n → i ≤ n → ∀ j → C.At.fresh n j ≼ q)
+
+prefix : ∀ i q → Tail i q → ∀ m → F.fresh m ≼ Mv q 𝟏
+prefix i q cap zero = ≼-trans {a = F.fresh 0} {b = B.child 0} {c = Mv q 𝟏} (F.lower 0)
+  (≼-trans {a = B.child 0} {b = B.child i} {c = Mv q 𝟏} (Nxt.walk {0} {i} (≤⇒≤′ z≤n))
+    (≼-trans {a = B.child i} {b = q} {c = Mv q 𝟏} (proj₁ cap) (Mv-infl q 𝟏)))
+prefix i q cap (suc n) with NP.≤-total i n
+... | inj₁ later = C.At.bound n q (proj₂ cap n later)
+... | inj₂ early with NP.m≤n⇒m<n∨m≡n early
+...   | inj₁ before = ≼-trans {a = F.fresh (suc n)} {b = B.child (suc n)} {c = Mv q 𝟏} (F.lower (suc n)) (≼-trans {a = B.child (suc n)} {b = B.child i} {c = Mv q 𝟏} (Nxt.walk {suc n} {i} (≤⇒≤′ before)) (≼-trans (proj₁ cap) (Mv-infl q 𝟏)))
+...   | inj₂ Relation.Binary.PropositionalEquality.refl = C.At.bound n q (proj₂ cap n ≤-refl)
+
+estimate : ∀ i q → Tail i q → A.Y ≼ hull q
+estimate i q cap = ≼-trans {a = A.Y} {b = L.lim (λ n → F.product (suc n))} {c = hull q} (proj₁ V.terminal)
+  (l≼ (λ n → ≼l (suc n) (F.bound (Mv q 𝟏) n (λ j _ → prefix i q cap j))))
+
+whole : ∀ {q} → U ≼ q → A.Y ≼ hull q
+whole {q} p = estimate 0 q (≼-trans {a = B.child 0} {b = U} {c = q} (component 0 0) p ,
+  λ n _ j → ≼-trans {a = C.At.fresh n j} {b = U} {c = q} (component n j) p)
+
+physical-hull : A.Y ≼ hull U
+physical-hull = whole (≼-refl U)
+

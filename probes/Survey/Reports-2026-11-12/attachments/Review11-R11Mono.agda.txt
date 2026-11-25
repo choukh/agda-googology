@@ -1,0 +1,243 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 块内部的模拟前序 Sim (同一层两棵树之间, 不经参照框架, 不读记号),
+-- 与一致折叠 (对任意派发 D) 对它的单调: 一条对结构的归纳, 不按站.
+module R11Mono where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product.Base using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiNextCore
+open import OCF.Lean.YiNextBase using
+  (lev; Way; keep; fold; Ext; nodeAt; chain; Ψn; ΨN; succ; psum; self; ΩT)
+open import OCF.Lean.YiLamFold using
+  (Kfk; nrmk; nrmk-lgl; Wit; none; at; Lw; w0; ws; wl; wΩ; rootW; Pk; pk)
+import OCF.Lean.YiDlFold as W
+open Pk
+
+------------------------------------------------------------------------
+-- 1 关系
+
+module S (K : LF) (Pr : (r : Pre K) → Lay.A (Lo K r) → Lay.A (Lo K r) → Set)
+         (Kd : (i : Kid K) → Lay.A (KS K i) → Lay.A (KS K i) → Set) where
+  infix 4 _⊑_
+  data _⊑_ : Raw K → Raw K → Set where
+    zS : ∀ {b} → G.zero ⊑ b
+    sS : ∀ {a b} → a ⊑ b → G.suc a ⊑ G.suc b
+    wS : ∀ {a b} → a ⊑ b → a ⊑ G.suc b
+    lR : ∀ {a} {F : ℕ → Raw K} n → a ⊑ F n → a ⊑ G.lim F
+    lL : ∀ {F : ℕ → Raw K} {b} → (∀ n → F n ⊑ b) → G.lim F ⊑ b
+    bR : ∀ {a r g} → a ⊑ g (Lay.tp (Lo K r)) → a ⊑ G.lc r g
+    nN : ∀ {r g g′} → (∀ η η′ → Pr r η η′ → g η ⊑ g′ η′) → G.lc r g ⊑ G.lc r g′
+    eE : ∀ {i a a′} → Kd i a a′ → G.em i a ⊑ G.em i a′
+    tT : G.top ⊑ G.top
+
+open S public using (zS; sS; wS; lR; lL; bR; nN; eE; tT)
+
+Sim : (K : LF) → Raw K → Raw K → Set
+SimP : (K : LF) (r : Pre K) → Lay.A (Lo K r) → Lay.A (Lo K r) → Set
+SimK : (K : LF) (i : Kid K) → Lay.A (KS K i) → Lay.A (KS K i) → Set
+Sim K = S._⊑_ K (SimP K) (SimK K)
+SimP zero ()
+SimP (suc k) (inj₁ _) = Sim k
+SimP (suc k) (inj₂ r) = SimP k r
+SimP (lim f) (n , r) = SimP (f n) r
+SimP (lc k g) (η , _ , r) = SimP (g η) r
+SimK zero ()
+SimK (suc k) _ = Sim k
+SimK (lim f) n = Sim (f n)
+SimK (lc k g) (η , _) = Sim (g η)
+
+------------------------------------------------------------------------
+-- 2 加法对 Sim 单调 (两个参数)
+
+record Bok {M k : LF} (B : Bld M k) : Set where
+  field
+    bb : ∀ r {x g} → Sim M x (g (Lay.tp (Lo k r))) → Sim M x (B r g)
+    bn : ∀ r {g g′} → (∀ η η′ → SimP k r η η′ → Sim M (g η) (g′ η′)) → Sim M (B r g) (B r g′)
+open Bok
+
+bok-lc : ∀ {M} → Bok {M} {M} G.lc
+bok-lc = record { bb = λ r h → bR h ; bn = λ r h → nN h }
+
+bok-s : ∀ {M k} {B : Bld M (suc k)} → Bok B → Bok {M} {k} (λ r → B (inj₂ r))
+bok-s ok = record { bb = λ r → bb ok (inj₂ r) ; bn = λ r → bn ok (inj₂ r) }
+
+bok-l : ∀ {M f} {B : Bld M (lim f)} → Bok B → ∀ n → Bok {M} {f n} (λ r → B (n , r))
+bok-l ok n = record { bb = λ r → bb ok (n , r) ; bn = λ r → bn ok (n , r) }
+
+bok-c : ∀ {M j g} {B : Bld M (lc j g)} → Bok B → ∀ η l → Bok {M} {g η} (λ r → B (η , l , r))
+bok-c ok η l = record { bb = λ r → bb ok (η , l , r) ; bn = λ r → bn ok (η , l , r) }
+
+acc₂ : ∀ {A : Set} (Q : A → A → Set) {s s′ : ℕ → A → A} →
+  (∀ n {y y′} → Q y y′ → Q (s n y) (s′ n y′)) → ∀ {x x′} → Q x x′ → ∀ n → Q (acc s x n) (acc s′ x′ n)
+acc₂ Q h q zero = q
+acc₂ Q h q (suc n) = h n (acc₂ Q h q n)
+
+add-wk : ∀ {M} k (B : Bld M k) → Bok B → ∀ {x x′} → Sim M x x′ → ∀ a → Sim M x (add k B x′ a)
+add-wk k B ok h G.zero = h
+add-wk k B ok h (G.suc a) = wS (add-wk k B ok h a)
+add-wk k B ok h (G.lim f) = lR 0 (add-wk k B ok h (f 0))
+add-wk k B ok h (G.lc r g) = bb ok r (add-wk k B ok h (g _))
+add-wk zero B ok h (G.em () a)
+add-wk (suc k) B ok h (G.em _ a) = add-wk k _ (bok-s ok) h a
+add-wk (lim f) B ok h (G.em n a) = add-wk (f n) _ (bok-l ok n) h a
+add-wk (lc j g) B ok h (G.em (η , l) a) = add-wk (g η) _ (bok-c ok η l) h a
+add-wk zero B ok h G.top = wS h
+add-wk (suc k) B ok h G.top = bb ok (inj₁ tt) (add-wk k _ (bok-s ok) h G.top)
+add-wk (lim f) B ok h G.top = lR 0 (add-wk (f 0) _ (bok-l ok 0) h G.top)
+add-wk (lc j g) B ok h G.top = wS h
+
+add-mono : ∀ {M} k (B : Bld M k) → Bok B → ∀ {x x′} → Sim M x x′ → ∀ {a a′} → Sim k a a′ →
+  Sim M (add k B x a) (add k B x′ a′)
+add-mono k B ok h {a′ = a′} zS = add-wk k B ok h a′
+add-mono k B ok h (sS d) = sS (add-mono k B ok h d)
+add-mono k B ok h (wS d) = wS (add-mono k B ok h d)
+add-mono k B ok h (lR n d) = lR n (add-mono k B ok h d)
+add-mono k B ok h (lL f) = lL (λ n → add-mono k B ok h (f n))
+add-mono k B ok h (bR {r = r} d) = bb ok r (add-mono k B ok h d)
+add-mono k B ok h (nN {r = r} f) = bn ok r (λ η η′ p → add-mono k B ok h (f η η′ p))
+add-mono zero B ok h (eE {i = ()} d)
+add-mono (suc k) B ok h (eE d) = add-mono k _ (bok-s ok) h d
+add-mono (lim f) B ok h (eE {i = n} d) = add-mono (f n) _ (bok-l ok n) h d
+add-mono (lc j g) B ok h (eE {i = (η , l)} d) = add-mono (g η) _ (bok-c ok η l) h d
+add-mono zero B ok h tT = sS h
+add-mono (suc k) B ok h tT = bn ok (inj₁ tt) (λ η η′ p → add-mono k _ (bok-s ok) h p)
+add-mono {M} (lim f) B ok h tT = lL (λ n → lR n
+  (acc₂ (Sim M) (λ i p → add-mono (f i) _ (bok-l ok i) p tT) h (suc n)))
+add-mono (lc j g) B ok h tT = sS h
+
+plus-mono : ∀ m {x x′ a a′} → Sim m x x′ → Sim m a a′ → Sim m (plus m x a) (plus m x′ a′)
+plus-mono m h d = add-mono m G.lc bok-lc h d
+
+succ-mono : ∀ m {y y′} → Sim m y y′ → Sim m (succ m y) (succ m y′)
+succ-mono m h = lL (λ n → lR n (acc₂ (Sim m) (λ _ p → plus-mono m h p) h n))
+
+psum-mono : ∀ m {h h′ : ℕ → Raw m} → (∀ n → Sim m (h n) (h′ n)) →
+  Sim m (G.lim (psum m h)) (G.lim (psum m h′))
+psum-mono m q = lL (λ n → lR n (acc₂ (Sim m) (λ i p → plus-mono m p (q (suc i))) (q 0) n))
+
+------------------------------------------------------------------------
+-- 3 结点的两行
+
+nodeAt-bb : ∀ {M} m (p : Pre m) (B : Bld M m) → Bok B → ∀ {x} g → Sim M x (g G.top) →
+  Sim M x (nodeAt m p B g)
+nodeAt-bb (suc k) (inj₁ _) B ok g h = bb ok (inj₁ tt) h
+nodeAt-bb (suc k) (inj₂ p) B ok = nodeAt-bb k p _ (bok-s ok)
+nodeAt-bb (lim f) (n , p) B ok = nodeAt-bb (f n) p _ (bok-l ok n)
+nodeAt-bb (lc j g) (η , l , p) B ok = nodeAt-bb (g η) p _ (bok-c ok η l)
+
+nodeAt-bn : ∀ {M} m (p : Pre m) (B : Bld M m) → Bok B → ∀ g g′ →
+  (∀ η η′ → Sim (lev m p) η η′ → Sim M (g η) (g′ η′)) → Sim M (nodeAt m p B g) (nodeAt m p B g′)
+nodeAt-bn (suc k) (inj₁ _) B ok g g′ h = bn ok (inj₁ tt) h
+nodeAt-bn (suc k) (inj₂ p) B ok = nodeAt-bn k p _ (bok-s ok)
+nodeAt-bn (lim f) (n , p) B ok = nodeAt-bn (f n) p _ (bok-l ok n)
+nodeAt-bn (lc j g) (η , l , p) B ok = nodeAt-bn (g η) p _ (bok-c ok η l)
+
+chain-mono : ∀ j {gk gk′ : Raw j → Raw j} → (∀ η η′ → Sim j η η′ → Sim j (gk η) (gk′ η′)) →
+  ∀ n → Sim j (chain j gk n) (chain j gk′ n)
+chain-mono j h zero = tT
+chain-mono j h (suc n) = plus-mono j (chain-mono j h n) (h _ _ (chain-mono j h n))
+
+Ψn-bb : ∀ m j (w : Way m j) gm gk {x} → Sim m x (gm G.top) → Sim m x (Ψn m j w gm gk)
+Ψn-bb m .(lev m p) (keep p refl) gm gk h = nodeAt-bb m p G.lc bok-lc gm h
+Ψn-bb m j fold gm gk h = lR 0 h
+
+Ψn-nn : ∀ m j (w : Way m j) {gm gm′ : Raw j → Raw m} {gk gk′ : Raw j → Raw j} →
+  (∀ η η′ → Sim j η η′ → Sim m (gm η) (gm′ η′)) → (∀ η η′ → Sim j η η′ → Sim j (gk η) (gk′ η′)) →
+  Sim m (Ψn m j w gm gk) (Ψn m j w gm′ gk′)
+Ψn-nn m .(lev m p) (keep p refl) hm hk = nodeAt-bn m p G.lc bok-lc _ _ hm
+Ψn-nn m j fold hm hk = lL (λ n → lR n (hm _ _ (chain-mono j hk n)))
+
+ΨN-bb : ∀ m k r (w : Way m (lev k r)) gm gk {x} → Sim m x (gm (Lay.tp (Lo k r))) →
+  Sim m x (ΨN m k r w gm gk)
+ΨN-bb m (suc k) (inj₁ _) = Ψn-bb m k
+ΨN-bb m (suc k) (inj₂ r) = ΨN-bb m k r
+ΨN-bb m (lim f) (n , r) = ΨN-bb m (f n) r
+ΨN-bb m (lc j g) (η , _ , r) = ΨN-bb m (g η) r
+
+ΨN-nn : ∀ m k r (w : Way m (lev k r))
+  {gm gm′ : Lay.A (Lo k r) → Raw m} {gk gk′ : Lay.A (Lo k r) → Raw (lev k r)} →
+  (∀ η η′ → SimP k r η η′ → Sim m (gm η) (gm′ η′)) →
+  (∀ η η′ → SimP k r η η′ → Sim (lev k r) (gk η) (gk′ η′)) →
+  Sim m (ΨN m k r w gm gk) (ΨN m k r w gm′ gk′)
+ΨN-nn m (suc k) (inj₁ _) = Ψn-nn m k
+ΨN-nn m (suc k) (inj₂ r) = ΨN-nn m k r
+ΨN-nn m (lim f) (n , r) = ΨN-nn m (f n) r
+ΨN-nn m (lc j g) (η , _ , r) = ΨN-nn m (g η) r
+
+ΩT-bb : ∀ m j (w : Way m j) K o {x} → Sim m x (K G.top) → Sim m x (o 0) → Sim m x (ΩT m j w K o)
+ΩT-bb m .(lev m p) (keep p refl) K o h₁ h₂ = nodeAt-bb m p G.lc bok-lc K h₁
+ΩT-bb m j fold K o h₁ h₂ = lR 0 h₂
+
+ΩT-nn : ∀ m j (w : Way m j) {K K′ : Raw j → Raw m} {o o′ : ℕ → Raw m} →
+  (∀ η η′ → Sim j η η′ → Sim m (K η) (K′ η′)) → Sim m (G.lim o) (G.lim o′) →
+  Sim m (ΩT m j w K o) (ΩT m j w K′ o′)
+ΩT-nn m .(lev m p) (keep p refl) h₁ h₂ = nodeAt-bn m p G.lc bok-lc _ _ h₁
+ΩT-nn m j fold h₁ h₂ = h₂
+
+------------------------------------------------------------------------
+-- 4 折叠对 Sim 单调 (对任意派发 D)
+
+module M (D : ∀ k K → Ext k K) where
+  open W.Fold D
+
+  tb : ∀ m {k} (V : Lw k) (x : Ext m k) ξ → Sim m G.top (Ψ m V x ξ)
+  tb m V x G.zero = tT
+  tb m V x (G.suc a) = lR 0 (tb m V x a)
+  tb m V x (G.lim f) = lR 0 (tb m V x (f 0))
+  tb m {k} V x (G.lc r g) = ΨN-bb m k r (x r) _ _ (tb m V x (g _))
+  tb m w0 x (G.em () a)
+  tb m (ws V) x (G.em _ a) = tb m V _ a
+  tb m (wl V st) x (G.em n a) = tb m (V n) _ a
+  tb m (wΩ V w) x (G.em (η , l) a) = tb m (V η l) _ a
+  tb m w0 x G.top = lR 0 tT
+  tb m {suc k} (ws V) x G.top = Ψn-bb m k (x (inj₁ tt)) _ _ (tb m V _ G.top)
+  tb m (wl V st) x G.top = lR 0 (tb m (V 0) _ G.top)
+  tb m (wΩ {k} {g} V w) x G.top =
+    ΩT-bb m k (rootW m k g w x) _ _ (tb m (V _ _) _ G.top) (tb m (V _ _) _ G.top)
+
+  -- 保留行的分支族: top 在 Ω 结点层号上保留时, 分支是 Kfk k T, T η 是第 nrmk η 支的 top 的像.
+  TK : ∀ m {k g} → (∀ η → Lgl k η → Lw (g η)) → Ext m (lc k g) → Raw k → Raw m
+  TK m {k} V x η = Ψ m (V (nrmk k η) (nrmk-lgl k η)) (λ r → x (nrmk k η , nrmk-lgl k η , r)) G.top
+
+  -- 唯一没有由结构归纳给出的义务: 有根见证的 Ω 结点层号上, 保留行的分支族对下标单调.
+  KeepMono : ∀ {k g} → (∀ η → Lgl k η → Lw (g η)) → Wit k g → Set
+  KeepMono V none = ⊤
+  KeepMono {k} {g} V (at ρ e) = ∀ m (x : Ext m (lc k g)) {η η′} → Sim k η η′ →
+    Sim m (Kfk k (TK m V x) η) (Kfk k (TK m V x) η′)
+
+  data MW : ∀ {k} → Lw k → Set where
+    m0 : MW w0
+    ms : ∀ {k} {V : Lw k} → MW V → MW (ws V)
+    ml : ∀ {f : ℕ → LF} {V : ∀ n → Lw (f n)} {st} → (∀ n → MW (V n)) → MW (wl {f} V st)
+    mΩ : ∀ {k : LF} {g : Raw k → LF} {V : ∀ η → Lgl k η → Lw (g η)} {w : Wit k g} →
+      (∀ η l → MW (V η l)) → KeepMono V w → MW (wΩ V w)
+
+  mono : ∀ m {k} {V : Lw k} → MW V → (x : Ext m k) → ∀ {ξ ξ′} → Sim k ξ ξ′ →
+    Sim m (Ψ m V x ξ) (Ψ m V x ξ′)
+  rt : ∀ m {k} {V : Lw k} → MW V → (x : Ext m k) → Sim m (Ψ m V x G.top) (Ψ m V x G.top)
+
+  mono m {V = V} Q x {ξ′ = ξ′} zS = tb m V x ξ′
+  mono m Q x (sS d) = succ-mono m (mono m Q x d)
+  mono m Q x (wS d) = lR 0 (mono m Q x d)
+  mono m Q x (lR n d) = lR n (mono m Q x d)
+  mono m Q x (lL h) = lL (λ n → mono m Q x (h n))
+  mono m {k} Q x (bR {r = r} d) = ΨN-bb m k r (x r) _ _ (mono m Q x d)
+  mono m {k} {V} Q x (nN {r = r} h) = ΨN-nn m k r (x r)
+    (λ η η′ p → mono m Q x (h η η′ p)) (λ η η′ p → mono (lev k r) Q (cmpw V r) (h η η′ p))
+  mono m m0 x (eE {i = ()} d)
+  mono m (ms Q) x (eE d) = mono m Q _ d
+  mono m (ml Q) x (eE {i = n} d) = mono m (Q n) _ d
+  mono m (mΩ Q kh) x (eE {i = (η , l)} d) = mono m (Q η l) _ d
+  mono m Q x tT = rt m Q x
+
+  rt m m0 x = succ-mono m tT
+  rt m {suc k} (ms Q) x = Ψn-nn m k (x (inj₁ tt))
+    (λ η η′ p → mono m Q _ p) (λ η η′ p → mono k Q (self k) p)
+  rt m (ml Q) x = psum-mono m (λ n → rt m (Q n) _)
+  rt m (mΩ {w = none} Q kh) x = psum-mono m (λ n → rt m (Q _ _) _)
+  rt m (mΩ {k} {g} {w = at ρ e} Q kh) x = ΩT-nn m k (rootW m k g (at ρ e) x)
+    (λ η η′ p → kh m x p) (psum-mono m (λ n → rt m (Q _ _) _))

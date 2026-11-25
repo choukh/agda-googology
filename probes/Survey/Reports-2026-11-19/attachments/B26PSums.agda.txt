@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实终点的两个严格前驱相加仍是严格前驱；排除含两个以上主项的全体可数标准名字。
+module B26PSums where
+
+open import Data.Nat.Base as N using (ℕ; _⊔_; suc)
+open import Data.Nat.Properties using (m≤m⊔n; m≤n⊔m; ≤⇒≤′)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; +-mono; s≼s; ≼l)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Align.EboLeanDef using (T; PT; ψ; HC; _<ᵀ_; []<; tl<)
+open import OCF.Align.EboLeanBase using (NF; n∷; n[]; Ctbl; c∷; c[]; tail<)
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt)
+import B12EboRows as A
+import B17Cofinal as C
+import B17CellNext as Nxt
+import B18Product as P
+import B26PActual as Run
+open Run using (Y; K)
+open import B26PAppend using (split)
+
+child-in : ∀ n → L.suc (A.child n) ≼ Y
+child-in n = ≼-trans (Nxt.strict n 0) (Nxt.actual n 0)
+
+plus : ∀ {x y} → L.suc x ≼ Y → L.suc y ≼ Y → L.suc (x L.+ y) ≼ Y
+plus {x} {y} hx hy with C.witness hx | C.witness hy
+... | i , xi | j , yj = ≼-trans (s≼s (≼-trans (+-mono xl yl)
+    (≼l 2 (+-mono (P.one-right a) (≼-refl a))))) (Run.times-omega {a} (child-in k))
+  where
+  k = i ⊔ j
+  a = A.child k
+  xl : x ≼ a
+  xl = ≼-trans (≼-suc (≼-refl x)) (≼-trans xi (Nxt.walk (≤⇒≤′ (m≤m⊔n i j))))
+  yl : y ≼ a
+  yl = ≼-trans (≼-suc (≼-refl y)) (≼-trans yj (Nxt.walk (≤⇒≤′ (m≤n⊔m i j))))
+
+not-sum : ∀ {p q t} → NF (p ∷ q ∷ t) → Ctbl (p ∷ q ∷ t) → (h : HC (p ∷ q ∷ t)) →
+          Rt h ≈ᵛ Y → ⊥
+not-sum {p} {q} {t} nt@(n∷ np step nf) ct@(c∷ ctail) h (lo , hi) =
+  s≼-irrefl Y (≼-trans (s≼s (≼-trans hi (split a b refl h)))
+    (plus {Rt a} {Rt b}
+       (≼-trans (mono<ⁿ only nt ct a h (tl< []<)) lo)
+       (≼-trans (mono<ⁿ nf nt ct b h (tail< p (q ∷ t) step nf)) lo)))
+  where
+  only = n∷ np tt n[]
+  a = hc only (c∷ c[])
+  b = hc nf ctail

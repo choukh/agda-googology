@@ -1,0 +1,73 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20IdealOne where
+open import Data.Product using (proj₁; _,_)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁)
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiFreshFold as O
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+import OCF.Lean.YiUpBlock as U
+import OCF.Lean.YiUpFold as F
+import OCF.Lean.YiUpLegal as L
+import OCF.Lean.YiPhiBlock as P
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiUpCheck using (one; two)
+open import B13SharpOne using (r₁)
+open import B14SharpStack using (p; oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B20IdealRel
+import B20IdealKeep
+import B16SharpSource
+
+module At (lem : LEM) where
+  open I.Sharp lem
+  open B20IdealKeep.Keep lem
+  open B16SharpSource.Source lem using (leafS; leafV; leafH)
+  after : Base♯ → R.Tr r₁ → Base♯
+  after D x j o = ψ♯ r₁ oR D j o (D j o) x
+  low = λ D → ψ♯ r₁ oR D R.zero tt
+  self = λ D → ψ♯ r₁ oR D r₁ oR
+  high = λ D → ψ♯ r₁ oR D r₂ o₂
+  zp : Y.zero P.≤ one
+  zp = P.ins P.self
+  ep = U.down {j = two} U.stop tt
+
+  high₀ : ∀ D b {a x y} → J a (proj₁ b) → Z x y →
+    J (U.Up Y.zero (U.down ep tt) a x) (proj₁ (ψ♯ R.zero tt D r₂ o₂ b y))
+  high₀ D b h zz = h
+  high₀ D b h (zs q) = nj _ (high₀ D b h q)
+  high₀ D b h (zl q) = jl (λ n → high₀ D b h (q n))
+
+  high₁ : ∀ D b {a x y} → J a (proj₁ b) → H x y → J (U.Up one ep a x) (proj₁ (high D b y))
+  high₁ D b h hz = h
+  high₁ D b h (hs q) = nj _ (high₁ D b h q)
+  high₁ D b h (hl q) = jl (λ n → high₁ D b h (q n))
+  high₁ D b h (hn q) = jb (λ z w t → high₁ D b h (q z _ (τZ _ _ t)))
+  high₁ D b h (hu {y = y} q t) = high₀ (after D y) (high D b y) (high₁ D b h q) t
+
+  self₁ : ∀ D S b {a x y} → H a (proj₁ b) → H x y → H (F.ψs one tt S one P.self a x) (proj₁ (self D b y))
+  self₁ D S b h hz = h
+  self₁ D S b h (hs q) = nh _ (self₁ D S b h q)
+  self₁ D S b h (hl q) = hl (λ n → self₁ D S b h (q n))
+  self₁ D S b h (hn q) = hn (λ z w t → self₁ D S b h (q z _ (τZ _ _ t)))
+  self₁ D S b h (hu {y = y} q t) = leafH (after D y) (self D b y) (self₁ D S b h q) t
+
+  Coord : P.Base one → Base♯ → Set
+  Coord S D = Z (P.bs S Y.zero zp) (proj₁ (D R.zero tt))
+  zero₁ : ∀ D S → Coord S D → ∀ b {a x y} → Z a (proj₁ b) → H x y →
+    Z (F.ψs one tt S Y.zero zp a x) (proj₁ (low D b y))
+  zero₁ D S c b h hz = h
+  zero₁ D S c b h (hs q) = nz _ (zero₁ D S c b h q)
+  zero₁ D S c b h (hl q) = zl (λ n → zero₁ D S c b h (q n))
+  zero₁ D S c b h (hn q) = zl (cums _ _ (λ n → zero₁ D S c b h (q _ _ (it Z zz (λ t → zero₁ D S c (D R.zero tt) c (q _ _ t)) n))))
+  zero₁ D S c b h (hu {x = x} {y = y} q t) = leafS (after D y) (L.dS Y.zero tt S x) (low D b y) (zero₁ D S c b h q) t
+
+  bot₁ : ∀ D S → Coord S D → ∀ b {x y} → Z (P.b⊥ S) (proj₁ b) → H x y →
+    Z (F.ψ⊥ one tt S x) (proj₁ (low D b y))
+  bot₁ D S c b h hz = h
+  bot₁ D S c b h (hs q) = nz _ (bot₁ D S c b h q)
+  bot₁ D S c b h (hl q) = zl (λ n → bot₁ D S c b h (q n))
+  bot₁ D S c b h (hn q) = zl (cums _ _ (λ n → bot₁ D S c b h (q _ _ (it Z zz (λ t → zero₁ D S c (D R.zero tt) c (q _ _ t)) n))))
+  bot₁ D S c b h (hu {x = x} {y = y} q t) = leafV (after D y) (L.dS Y.zero tt S x) (low D b y) (bot₁ D S c b h q) t

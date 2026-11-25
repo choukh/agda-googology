@@ -1,0 +1,66 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiCD0 where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (B₀)
+open import OCF.Lean.YiTBRow using (ψ; h₁)
+open import OCF.Lean.YiMTTab using (rbᶻ)
+import OCF.Lean.YiCLFam as CF
+open import OCF.Lean.YiCLCrit using (ωᶜ)
+
+data Fin : Tr zero → Set where
+  fz : Fin zero
+  fs : ∀ {x} → Fin x → Fin (suc x)
+
+data Canon : Tr zero → Set where
+  cz : Canon zero
+  cs : ∀ {x} → Canon x → Canon (suc x)
+  cl : ∀ {f a} → (∀ n → Fin (f n)) → Canon (lim f a)
+
+fin+ : ∀ {x y} → Fin x → Fin y → Fin (x + y)
+fin+ fx fz = fx
+fin+ fx (fs fy) = fs (fin+ fx fy)
+
+fin-iter : ∀ b → Fin b → ∀ n → Fin (iter (b +_) b n)
+fin-iter b fb zero = fb
+fin-iter b fb (suc n) = fin+ fb (fin-iter b fb n)
+
+fin-canon : ∀ {x} → Fin x → Canon x
+fin-canon fz = cz
+fin-canon (fs f) = cs (fin-canon f)
+
+fin-nat : ∀ n → Fin (CF.nat n)
+fin-nat zero = fz
+fin-nat (suc n) = fs (fin-nat n)
+
+nat-in : ∀ n → Canon (CF.nat n)
+nat-in n = fin-canon (fin-nat n)
+
+omega-in : Canon ωᶜ
+omega-in = cl fin-nat
+
+suc-omega-in : Canon (suc ωᶜ)
+suc-omega-in = cs omega-in
+
+G : Tr zero → Tr (tw 1)
+G c = up zero c (proj₁ (Ωt (h₁ c))) (proj₂ (Ωt (h₁ c)))
+
+feed : Tr zero → Tr zero
+feed c = proj₁ (ψ (tw 1) (Ok-tw 1) (rbᶻ (tw 1)) (B₀ (tw 1)) zero (ink self) (Ωt zero) (G c))
+
+idx : ℕ → Tr zero
+idx = iter feed zero
+
+idx0 : Canon (idx 0)
+idx0 = cz
+
+idx1 : Canon (idx 1)
+idx1 = cl (fin-iter (suc zero) (fs fz))
+
+not-fin-omega : Fin ωᶜ → ⊥
+not-fin-omega ()

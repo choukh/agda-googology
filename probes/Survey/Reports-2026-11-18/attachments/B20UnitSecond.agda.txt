@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20UnitSecond where
+open import Data.Nat.Base using (ℕ)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_)
+open import W4Block
+open import W4Path
+open import W4Fold using (inf)
+open import WVOne using (T₀; read; h₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; s≼s)
+import B12Terminal as T
+import B12ActualSlots as A
+import B12Strict as Strict
+import B13FiniteLift as U
+import B14PathHeight as P
+import B15ReadPaths as R
+import B19OldSlots as G
+import B20OldRoom as H
+import B20OldSecond as O
+import B20Room as Room
+import B20StandardInside as Inside
+import B20UnitFirst as Fin
+open T.Run
+
+module At (r : T.Run (tw 2)) (eq : ok r ≡ Ok-tw 2) (cv : A.Covered r) (q : T₀) (slots : Room.Room r q) where
+  module Top = O.At r eq cv
+  open Top using (module D)
+  k = tw 1
+  take = R.left k Top.trail
+  c = D.C.child 1
+  cc = D.C.cover cv 1
+  high : Room.Room c q
+  high w = slots (inc (D.C.ix 1) w)
+  root : T.Run (U.sc k)
+  root = Room.sub take c
+  cr = Room.cover take c cc
+  hr : Room.Room root q
+  hr = Room.room take c high
+  module Step = H.Step q (sΩ zero) h₁ root (λ _ → z≤ k) (λ _ → P.standard _) cr
+  module J = Step.D
+  module K = J.F.K
+  chosen = J.F.snap 1
+  ch-cover : A.Covered chosen
+  ch-cover = K.cover 1
+  ch-base : L.suc q ≼ read (proj₁ (β chosen))
+  ch-base = ≼-trans (Inside.Capture.result (J.F.snap 0) (K.cover 0) q (Step.slots hr 0)) (J.carry 0)
+  ch-slots : Room.Room chosen (L.suc q)
+  ch-slots w = ≼-trans (s≼s (Step.slots hr 0 w)) (Strict.strict (inf K.K (K.S 0) zero w (K.S 0 zero w)))
+  below : read (T.value chosen) ≼ read (T.value r)
+  below = ≼-trans (G.bound (proj₂ (J.child 1))) (≼-trans (Room.below take c cc) (D.C.lift-value 1))
+
+  module Level (n : ℕ) (clock : ℕ → ℕ) where
+    module F = Fin.At chosen ch-cover (L.suc q) ch-slots ch-base n clock
+    open F public using (run; covered; all; input)
+    value : read (T.value run) ≼ read (T.value r)
+    value = ≼-trans F.value below
+
+  module Three = Level 3 (λ _ → 0)

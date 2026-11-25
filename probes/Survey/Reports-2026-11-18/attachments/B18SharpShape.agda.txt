@@ -1,0 +1,87 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18SharpShape where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Bool.Base using (Bool; false; true)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM; ≼≺; ≺-irrefl)
+open import B13SharpOne using (r₁)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+import B17SharpTwo
+import B17SharpThree
+import B18SharpMacro
+
+up-head : R.Tr r₂ → Bool
+up-head (R.up _ _ _ _) = true
+up-head _ = false
+
+test : R.Tr r₂ → Bool
+test (R.Ω p g) = up-head (g (R.fromBr r₂ p R.zero))
+test _ = true
+
+different : false ≡ true → ⊥
+different ()
+
+module Cut (lem : LEM) where
+  open I.Sharp lem
+  open B17SharpTwo.Two lem using (block₂)
+  open B17SharpThree.Three lem using (step)
+  open B18SharpMacro.Macro lem using (u)
+
+  data Words : R.Tr r₂ → Set where
+    nil : Words R.zero
+    append : ∀ {x} → Words x → Words (block₂ x)
+    limit : ∀ {f d} → (∀ n → Words (f n)) → Words (R.lim f d)
+
+  accepts : ∀ {x} → Words x → test x ≡ true
+  accepts nil = refl
+  accepts (append _) = refl
+  accepts (limit _) = refl
+
+  below-limit : ∀ {f d} → Words (R.lim f d) → ∀ n → Words (f n)
+  below-limit (limit h) = h
+
+  retain : ∀ D a → test (proj₁ (ψ♯ r₂ o₂ D r₂ o₂ a (proj₁ (V.Ωt r₂)))) ≡ false
+  retain D a with Dk r₂ r₁
+  ... | inj₁ p = ⊥-elim (≺-irrefl r₂ (≼≺ r₂ p (I.posLt r₂ o₂ p₂i)))
+  ... | inj₂ lt with slot♯ r₂ r₁ lt
+  ...   | q , e , le = refl
+
+  no-self : ∀ D a → Words (proj₁ (ψ♯ r₂ o₂ D r₂ o₂ a (proj₁ (V.Ωt r₂)))) → ⊥
+  no-self D a h = different (trans (sym (retain D a)) (accepts h))
+
+  first-word : Words (step R.zero)
+  first-word = limit (λ n → from-finite (B17SharpTwo.Two.all-words lem n))
+    where
+    from-finite : ∀ {n x} → B17SharpTwo.Two.Word lem n x → Words x
+    from-finite B17SharpTwo.Two.emp = nil
+    from-finite (B17SharpTwo.Two.add q) = append (from-finite q)
+
+  no-repeat : Words (step (step R.zero)) → ⊥
+  no-repeat h = no-self B♯ (V.Ωt r₂) (below-limit (below-limit h 0) 0)
+
+
+  first-in-second : r₂ R.⊢ step R.zero ◃ step (step R.zero)
+  first-in-second = R.◃t (mono♯ r₂ o₂ B♯ r₂ o₂ (V.Ωt r₂) R.◃w)
+                    (R.◃t (R.◃l zero) (R.◃l zero))
+
+  open import OCF.Lean.YiKVRel using (readRW)
+  open import B18SharpClosed using (strict)
+  open import B14SharpTwo using (i-add)
+  open import WVOne using (≼-+ˡ)
+  import OCF.Align.Level as L
+  open import OCF.Align.Value using (_≼_; ≼-trans; ≼l; ≼-refl; ≅→≼)
+  open B17SharpThree.Three lem using (whole; item; in-whole)
+
+  common : ∀ a → L.suc (readRW (proj₁ (ψ♯ r₂ o₂ B♯ R.zero tt a (step R.zero)))) ≼ whole a
+  common a = ≼-trans (strict (mono♯ r₂ o₂ B♯ R.zero tt a first-in-second))
+    (≼-trans (≼l 0 (≼-refl _)) (≼-trans
+      (≼-+ˡ (readRW (V.cum (item a) 1)) (readRW (item a 2)))
+      (≼-trans (≅→≼ (L.≅-sym (i-add (V.cum (item a) 1) (item a 2)))) (in-whole a 2))))

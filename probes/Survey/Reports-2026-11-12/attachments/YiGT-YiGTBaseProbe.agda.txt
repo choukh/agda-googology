@@ -1,0 +1,36 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiGTBaseProbe where
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥)
+open import Data.Product using (proj₁)
+open import Data.List using ([])
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (B₀)
+open import OCF.Lean.YiLKIface using (OK)
+open import OCF.Lean.YiKVRel using (⊴r)
+open import YiGTBridge using (SlotBase)
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiGIRel as GR
+import OCF.Align.EboLeanDef as E
+open import OCF.Lean.YiLLLeafNeg using (conflict; module Fin)
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+rd₀ : GR.Rd zero []
+rd₀ = GR.c0 refl
+
+base-ok : OK (B₀ (tw 1))
+base-ok i u = ⊴r
+
+base-empty : SlotBase zero h₁ (B₀ (tw 1)) [] []
+base-empty = H.m1 refl H.mz
+
+no-base-one : SlotBase zero h₁ (B₀ (tw 1)) [] (E.natT 1) → ⊥
+no-base-one m = conflict (E.hd< (E.ar< E.[]<)) (Fin.one-ref m)
+
+no-ok→base : (OK (B₀ (tw 1)) → SlotBase zero h₁ (B₀ (tw 1)) [] (E.natT 1)) → ⊥
+no-ok→base f = no-base-one (f base-ok)

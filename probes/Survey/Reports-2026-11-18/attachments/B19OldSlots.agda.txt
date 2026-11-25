@@ -1,0 +1,97 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 可数层号的每个实际位置都容纳一个子层 Ωt 的完整折叠；经过非零后继孩子时可自选实际迭代时刻。
+module B19OldSlots where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; h₁; T₀)
+open import WVTwo using (◃→≼)
+open import WKGen using (node-ge)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B14Tower as W
+import B14PathHeight as P
+open T.Run
+
+record Frame (j : L) : Set where
+  constructor frame
+  field
+    state : T.Run j
+    path : zero ≤ j
+    all : P.All path
+    cover : A.Covered state
+open Frame public
+seed : ∀ {j} → Frame j → T₀
+seed f = read (proj₁ (β (state f)))
+value : ∀ {j} → Frame j → T₀
+value f = W.valueAt (state f) (path f)
+record Inside {a b} (f : Frame a) (g : Frame b) : Set where
+  constructor inside
+  field
+    start : seed f ≼ seed g
+    bound : value g ≼ value f
+open Inside public
+join : ∀ {a b c} {f : Frame a} {g : Frame b} {h : Frame c} → Inside f g → Inside g h → Inside f h
+join p q = inside (≼-trans (start p) (start q)) (≼-trans (bound q) (bound p))
+Reach : ∀ {a} (f : Frame a) (b : L) → Set
+Reach f b = Σ (Frame b) (Inside f)
+
+module Limit (h : ℕ → L) (r : T.Run (nd sL h)) (ws : ∀ n → zero ≤ h n) (ps : ∀ n → P.All (ws n)) (cr : A.Covered r) where
+  root = frame r (inu ws) (P.each ps) cr
+  module F = W.Lim h r ws
+  child : ∀ n → Reach root (h n)
+  child n = frame (F.sub n) (ws n) (ps n) (F.covered cr n) , inside (T.inflate0 _ (ok r) (bs r) (inu ws) (β r) (T.prefix h n)) (F.part n)
+
+module Positive (s : Sh) (h : Ch s → L) (r : T.Run (U.sc (nd s h))) (ws : Ch sS → zero ≤ nd s h)
+                (ps : ∀ k → P.All (ws k)) (cr : A.Covered r) where
+  root = frame r (inu ws) (P.each ps) cr
+  module F = P.Next s h ws (ps tt) (λ a → a) (λ u _ a d → ≼-trans d (T.inflate0 _ (ok u) (bs u) (ws tt) (β u) (proj₁ (Ωt _)))) r cr
+  run-at = λ n → frame (F.snap n) (ws tt) (ps tt) (F.K.cover n)
+  -- 同序列的下一零层底已经包含当前子运行的整个 Ω 折叠。
+  carry : ∀ n → value (run-at n) ≼ seed (run-at (suc n))
+  carry n with cr (nd s h) (inc tt self)
+  ... | inj₁ q = subst (λ t → value (run-at n) ≼ read (proj₁ (ψ _ (ok F.K.r₀) (F.K.S n) zero (ws tt) (F.v n) t))) q (≼-refl _)
+  ... | inj₂ d = ◃→≼ (mono _ (ok F.K.r₀) (F.K.S n) zero (ws tt) (F.v n) d)
+  child : ∀ n → Reach root (nd s h)
+  child n = run-at n , inside (F.low n) (≼-trans (carry n) (F.upper n))
+
+module Bottom (r : T.Run (h₁ (suc zero))) {ws : Ch sS → zero ≤ zero} (ps : ∀ k → P.All (ws k)) (cr : A.Covered r) where
+  root = frame r (inu ws) (P.each ps) cr
+  r₀ = T.enterRun sS (λ _ → zero) r tt zero
+  bottom : ∀ {u : zero ≤ zero} → P.All u → W.valueAt r₀ u ≼ value root
+  bottom P.base = node-ge (kp _ (ok r) p (inu ws)) (λ z → ψ _ (ok r) (bs r) zero (inu ws) (β r) (body z)) advance 0
+    where
+    p : Pos (h₁ (suc zero))
+    p = inj₂ (tt , inj₁ tt)
+    body = λ z → proj₁ (upz {s = sS} {h = λ _ → zero} tt (suc z , z◃ z ◃s))
+    advance = λ z → fromBr _ p (proj₁ (ψ _ (ok r) (bs r) zero (posW _ p) (bs r zero (posW _ p)) (body z)))
+  child : Reach root zero
+  child = frame r₀ self P.base (A.enter sS (λ _ → zero) r tt zero cr) , inside (≼-refl _) (bottom P.base)
+
+successor : (z : Tr zero) → (f : Frame (h₁ (suc z))) → ℕ → Reach f (h₁ z)
+successor zero (frame r .(inu _) (P.each p) cr) n = Bottom.child r p cr
+successor (suc z) (frame r .(inu _) (P.each {ws = ws} p) cr) n = Positive.child sS (λ _ → h₁ z) r ws p cr n
+successor (lim g d) (frame r .(inu _) (P.each {ws = ws} p) cr) n = Positive.child sL (λ i → h₁ (g i)) r ws p cr n
+
+nested : ∀ {a b c} {f : Frame a} → (r : Reach f b) → Reach (proj₁ r) c → Reach f c
+nested (g , p) (h , q) = h , join p q
+
+descend : (z : Tr zero) (p : Pos (h₁ z)) → (f : Frame (h₁ z)) → (ℕ → ℕ) → Reach f (at (h₁ z) p)
+descend zero ()
+descend (suc z) (inj₂ (tt , inj₁ tt)) f t = successor z f (t 0)
+descend (suc z) (inj₂ (tt , inj₂ p)) f t = nested s (descend z p (proj₁ s) (λ k → t (suc k)))
+  where s = successor z f (t 0)
+descend (lim g d) (inj₂ (i , q)) (frame r .(inu _) (P.each {ws = ws} ps) cr) t = follow q
+  where
+  s = Limit.child (λ n → h₁ (g n)) r ws ps cr i
+  follow : ∀ q → Reach _ (proj₁ (sl⁼ (h₁ (g i)) q))
+  follow (inj₁ _) = s
+  follow (inj₂ p) = nested s (descend (g i) p (proj₁ s) (λ k → t (suc k)))

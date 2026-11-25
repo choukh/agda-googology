@@ -1,0 +1,105 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- Ω₃ 参照 [1][0] 的全部分支由同一个真实 Ω₁ 节点中的零层回灌支配。
+-- 对任意覆盖标准槽的三级运行成立，因而同时进入标准 Ψ₃ 和显式 W4 终点。
+module B13LiveRow where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (refl; cong; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; T₀)
+open import WVTwo using (◃→≼)
+open import WKGen using (Ω₁t; node-ge)
+open import WKShape using (lvl3; Ψ₃; ok₃)
+open import YiLAB7Orbit using (lvl2; ok₂; p₁)
+open import B9InnerOuter using (w2)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; ≼l; l≼; ≅→≼)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+import OCF.BTBO as BT
+import YiLAB10Src as Src
+import B11OuterCore as C
+import B12Hierarchy as H
+open H.Prefix using (val; exp; rows)
+import B12Omega3Ref as R
+import B12Omega3Cuts as Cuts
+import B12ActualSlots as Cover
+import B12Terminal as T
+import B12Orbit as B
+import B12Update as S
+import B13Target as P
+import B13Feedback as F
+import B13ActualCoefficient as A
+import B13Countable as Evl
+import B13OrbitFeed as O
+import B13Orbit as V
+import B13Update as Step
+import B13Seeds as Seeds
+import B13SeedOuter as Start
+
+coefficient : (z : Tr zero) (x : T₀) → x ≼ read z →
+              L.ψ⁰ (P.co₀ x) ≼ L.ψ⁰ (val (Evl.effect z H.add H.first))
+coefficient z x d = ≼-trans (≅→≼ (L.ψ⁰-≅ (L.≅-sym lo)))
+  (≼-trans (Cuts.sandwich {s = F.heightS x BT.Ord-Ord.zero} (F.down x D.Rz) (A.above d (U.Mz (U.NZ-Ω _)))
+                (P.refl-left lo) (P.refl-left hi)) (≅→≼ (L.ψ⁰-≅ hi)))
+  where
+  lo = L.≅-trans (P.shift₀ x L.z≅) (Cuts.left-unit R.idσ (P.regular₀ x))
+  hi = A.meaning z {x = H.first} (L.Ω-refl _)
+
+module Live (J : Op {lvl2} nil) (single : ∀ w → Evl.In.Models idM w J H.add)
+            (base : Base lvl2) (v : Tr⁺ zero) (I : S.Seeds (val H.first) (exp H.first) base v) where
+  module Row = O.Branch J single
+  module Run = Row.At base v H.first I
+
+  idx : ℕ → Tr zero
+  idx = iter Run.step₁ zero
+
+  reference : ∀ n {z} → F.feedback n ≼ read z → R.at F.first-node n ≼ L.ψ⁰ (val (Evl.effect z H.add H.first))
+  reference n {z} d = coefficient z _ (≼-trans (≅→≼ (F.transport≅ _)) d)
+
+  incoming : ∀ n → L.ψ⁰ (val (Evl.effect (suc (idx n)) H.add H.first)) ≼ read (idx (suc n))
+  incoming n = S.value-bound (Evl.In.eval-zero O.m (σ O.m₂ Run.down-target) O.D₀ (suc (idx n)) Row.K₀ H.add Run.sim-slot
+    H.first Run.S₀ (base zero C.zpath) (S.seeds (S.slot-bound I) (S.slot-bound I) (S.structure I)))
+
+  track : ∀ n → F.feedback n ≼ read (suc (idx n))
+  track zero = ≼-refl _
+  track (suc n) = ≼-suc (≼-trans (≅→≼ (L.≅-sym (F.feedback-matches n)))
+                               (≼-trans (reference n (track n)) (incoming n)))
+
+  component : ∀ n → R.at F.first-node n ≼ read (proj₁ (E ok₂ O.D₁ (O.g₁ (idx n)) Row.K₁ Run.S₁ zero (σ O.m₁ w2) v))
+  component n = ≼-trans (reference n (track n))
+    (S.value-bound (Evl.In.eval-zero O.m (σ O.m w2) O.D₀ (suc (idx n)) Row.K₀ H.add Run.sim H.first Run.S₀ v I))
+
+  whole : F.first-node ≼ read (proj₁ (run (B.block J) base zero w2 v))
+  whole = ≼-trans (l≼ λ n → ≼-trans (component n)
+      (node-ge (kpT (fr O.D₁) ok₂ p₁ (tv O.D₁ (σ O.m₁ w2)))
+               (λ z → E ok₂ O.D₁ (O.g₁ z) Row.K₁ Run.S₁ zero (σ O.m₁ w2) v) Run.step₁ n))
+      (≼-trans Run.inner-to-outer Run.outer-point)
+
+module Compare (r : T.Run lvl3) (cv : Cover.Covered r) where
+  open Start.At r hiding (w2)
+  module I = Seeds.Seeds r cv
+  cp = cv lvl2 (inc tt self)
+  one : ∀ w → Evl.In.Models idM w (V.Jc c⁺) H.add
+  one w x = Step.advanceJc c⁺ cp w (val x) (exp x) (rows x)
+  module M = Live (V.Jc c⁺) one st1 v₁ (S.seeds I.base I.coord I.structure)
+
+  move : ∀ (d : Tr⁺ lvl2) → Cover._⊴_ (proj₁ (Ωt lvl2)) (proj₁ d) →
+    ∀ Q → read (proj₁ (run (B.block Q) st1 zero w2 v₁)) ≼ read (proj₁ (run (V.block d Q) st1 zero w2 v₁))
+  move d (inj₁ p) Q = subst (λ z → read (proj₁ (run (B.block Q) st1 zero w2 v₁)) ≼ read (proj₁ (E ok₂ tdNil z Q st1 zero w2 v₁))) p (≼-refl _)
+  move d (inj₂ p) Q = ◃→≼ (Emono ok₂ tdNil Q st1 zero w2 v₁ p)
+
+  at-run : F.first-node ≼ read (T.value r)
+  at-run = ≼-trans M.whole (≼-trans (move c⁺ cp (V.Jc c⁺)) (≼-trans (≼l 0 (≼-refl _)) (outer 0)))
+
+standard : F.first-node ≼ read Ψ₃
+standard = Compare.at-run (T.initial lvl3 ok₃) (Cover.initial lvl3 ok₃)
+
+terminal : F.first-node ≼ read EBOᶜ
+terminal = ≼-trans (Compare.at-run (T.finiteRun 2) (Cover.all-finite 2)) (T.finite-ge 2)

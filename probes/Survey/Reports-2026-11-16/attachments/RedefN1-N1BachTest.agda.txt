@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- N1 有限测试 (不是证明): 记号侧的共尾性 (Bach) 在几个样本上成立; 非标准形上不成立的一个样本.
+-- Bach: s, t 是标准形, s < t, cof t = ω, 则有 n 使 s ≤ t[n].
+module N1BachTest where
+
+open import Data.List using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Align.EBO
+
+Ω₁ Ω₂ : T
+Ω₁ = Ωt (natT 1)
+Ω₂ = Ωt (natT 2)
+
+-- 样本 1: t = ψ₀(Ω_{Ω_Ω}), s = ψ₀(Ω_{Ω+1}); s < t, s < t[1].
+t₁ s₁ : T
+t₁ = EBOψ 3
+s₁ = ψ [] (Ωs Ω₁) ∷ []
+
+_ : cmpᵀ s₁ t₁ ≡ lt
+_ = refl
+_ : cmpᵀ s₁ (fsn t₁ 0) ≡ gt
+_ = refl
+_ : cmpᵀ s₁ (fsn t₁ 1) ≡ lt
+_ = refl
+
+-- 样本 2 (规则 6, ν = 1): t = ψ₀(Ω₂), s = ψ₀(ψ₁(ψ₁(Ω₁))); s = t[2].
+t₂ s₂ : T
+t₂ = ψ [] Ω₂ ∷ []
+s₂ = ψ [] (ψ (natT 1) (ψ (natT 1) Ω₁ ∷ []) ∷ []) ∷ []
+
+_ : cmpᵀ s₂ t₂ ≡ lt
+_ = refl
+_ : cmpᵀ s₂ (fsn t₂ 1) ≡ gt
+_ = refl
+_ : cmpᵀ s₂ (fsn t₂ 2) ≡ eq
+_ = refl
+
+-- 样本 3 (精确龙骨的行): t = ψ₀(Ω_{Ω_{Ω+1}}), s = 第 3 站的行 ψ₀(Ω_{Ω_Ω}); s < t[1].
+t₃ : T
+t₃ = ψ [] (Ωt (Ωs Ω₁)) ∷ []
+
+_ : cmpᵀ (EBOψ 3) t₃ ≡ lt
+_ = refl
+_ : cmpᵀ (EBOψ 3) (fsn t₃ 1) ≡ lt
+_ = refl
+
+-- 非标准形: s′ = ψ₀(ψ₁(Ω₂)) (参数里的 Ω₂ 不低于参数本身), 语法上 s′ < t₂, 但 n ≤ 3 时 s′ > t₂[n].
+s′ : T
+s′ = ψ [] (ψ (natT 1) Ω₂ ∷ []) ∷ []
+
+_ : cmpᵀ s′ t₂ ≡ lt
+_ = refl
+_ : cmpᵀ s′ (fsn t₂ 3) ≡ gt
+_ = refl

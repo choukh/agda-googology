@@ -1,0 +1,71 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25ADiagonal where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import W4Block using (iter)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≅→≼; s≼s; l≼; ≼l)
+open import WVOne using (T₀; 𝟏)
+open import WSLevel using (Ω₁ᴸ)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B15RefMonotone as M
+import B15RefAlgebra as A
+import B16RefFive as F
+import B19IdealArithmetic as Ar
+import B19IdealPowers as Pow
+import B19RowSecond as Old
+import B20OldTail as Tail
+import B20OldRanks as Rk
+import B20OldSource as Src
+import B20RowIndex as I
+import B20StandardInside as S
+import B21CrossCut as W
+import B21CrossCoefficient as C
+import B21CrossScalar as Sc
+import B21TowerGrowth as G
+import B21StandardShape as Sh
+import B22MovingIndex as E
+import B22TowerCut as Cut
+import B25ARank as X
+
+module Ref (p : Lev₂) (rp : p L.≅ p) where
+  module V = Sc.At p
+  term : ∀ n → L.natᶜ n ≼ L.ψ⁰ (iter Tail.next p n)
+  term zero = OCF.Align.Value.z≼
+  term (suc n) = ≼-trans (s≼s (term n)) (Src.Actual.strict-step _)
+  k1 : L.ψ⁰ (Tail.block p) L.≅ V.track F.g 1
+  k1 = L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (L.≅-trans (C.operation 1 rp)
+    (L.add-≅ {σ = R.idσ} {σ′ = L.suc} rp (C.known 1)))
+  high : W.omega ≼ V.track F.g 1
+  high = ≼-trans (l≼ (λ n → ≼l n (term n))) (≅→≼ k1)
+  whole : L.lim (λ n → L.ψ⁰ (Rk.threshold n p)) ≼ L.ψ⁰ (G.add p)
+  whole = ≼-trans (≅→≼ (L.ψ⁰-≅ (C.same rp))) (≼-trans (proj₁ (V.both W.coef)) (≼-trans
+    (proj₁ (V.both (M.e₀ M.ω₁ high))) (≼-trans (≼l 1 (≼-refl (V.f (F.g (V.track F.g 1)))))
+    (≼-trans (≼l 0 (≼l 0 (≼l 1 (≼l 0 (≼-refl _)))))
+      (≅→≼ (L.ψ⁰-≅ (L.add-≅ {σ = L.suc} {σ′ = L.suc} rp (L.≅-sym I.collapse))))))))
+  applies : ∀ x → x ≼ L.ψ⁰ p → X.diagonal x ≼ L.ψ⁰ (G.add p)
+  applies x h = ≼-trans (X.all x p rp h) whole
+
+module Stage (n : ℕ) where
+  open G.At n using (k; top; module Standard)
+  go : ∀ x (p : Lev₂) → p L.≅ p → x ≼ L.ψ⁰ p → L.ψ⁰ p ≼ S.std k → X.diagonal x ≼ S.std top
+  go x p rp h d = ≼-trans (Ref.applies p rp x h) (Standard.coefficient p rp d)
+
+embed : T₀ → Lev₂
+embed x = L.up L.zero (L.up L.zero x)
+reg : ∀ x → embed x L.≅ embed x
+reg x = L.upˡ (L.upˡ (L.upʳ (L.upʳ (L.≅-refl⁰ x))))
+norm : ∀ x → L.ψ⁰ (embed x) ≼ E.above x
+norm x = ≼-trans (proj₂ (Ar.normal x)) (≼-trans (Pow.expo Pow.omega-pos (≼-trans
+   (≼-suc (≼-refl _)) (E.strict x))) (proj₁ (E.fix x)))
+infl : ∀ x → x ≼ L.ψ⁰ (embed x)
+infl x = ≼-trans (Ar.up x) (proj₁ (Ar.normal x))
+
+next : ∀ {x} → L.suc x ≼ Cut.cut → Σ ℕ (λ k → X.diagonal x ≼ S.std k)
+next {x} d with Cut.inside {x} d
+... | ≼l n h = G.At.top n , Stage.go n x (embed x) (reg x) (infl x)
+   (≼-trans (norm x) (≼-trans (≼-suc (≼-refl _)) (≼-trans h
+    (≼-trans (≼-suc (≼-refl _)) (≼-trans (Sh.rise n) (≼-trans (≼-suc (≼-refl _)) (Sh.rise (suc n))))))))
+inside : ∀ {x} → L.suc x ≼ Cut.cut → L.suc (X.diagonal x) ≼ Cut.cut
+inside {x} h = let j , d = next {x} h in ≼l (suc j) (≼-trans (s≼s d) (Sh.rise j))

@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 反向改变相同的 Ω 头。只有零分支可以任意大，而全部正序号内零输出相同，从第 2 步起连内下标本身都固定。
+module B28BStationary where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (proj₁)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym; subst)
+import W4Block as W
+import W4Ops as O
+import WVOne as V
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; s≼s)
+import B20Head as Head
+import B27UArbitrary as Any
+import B28BClock as Clock
+import B28BBranch as B
+import B28BFirst as F
+import B28BHead as X
+import B15Spine as S
+
+module At (m : ℕ) where
+  module A = X.At m
+  open A using (i; k; top; Branch; module Walk)
+
+  module Test (y : W.Tr k) (q : V.T₀) where
+    z = W.suc (proj₁ (Any.zrep q))
+    g : Branch
+    g c with O.zl c
+    ... | inj₁ _ = y O.+ O.ι k z
+    ... | inj₂ _ = y
+
+    keep : ∀ c → W._⊢_◃_ i W.zero c → g c ≡ y
+    keep c d with O.zl c
+    ... | inj₁ eq = ⊥-elim (Head.no-zero (subst (W._⊢_◃_ i W.zero) (sym eq) d))
+    ... | inj₂ _ = refl
+
+    open Walk g
+    escape : L.suc q ≼ inner 0
+    escape = ≼-trans {b = V.read z} (s≼s (Any.dominates q))
+      (Clock.At.bound k k (Clock.node _ _) y z (Run.child 0) (Run.cover (A.covered key) 0))
+
+    total : L.suc q ≼ A.free key
+    total = ≼-trans {b = inner 0} escape (Run.lift-value 0)
+
+    stable : ∀ j → inner (suc j) ≡ A.free y
+    stable j = trans (B.At.value m g (suc j)) (cong A.free (keep (Run.ix (suc j)) (picked j)))
+
+    index : ∀ j → Run.ix (suc (suc j)) ≡ F.At.decode₁ m y
+    index j = trans (B.At.step m g (Run.ix (suc j))) (cong (F.At.decode₁ m) (keep (Run.ix (suc j)) (picked j)))

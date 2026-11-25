@@ -1,0 +1,96 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B16SharpOrbit where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import B13SharpOne using (r₁)
+open import B14SharpStack hiding (K)
+open import B15SharpAction
+open import B15SharpLift using (module Lift)
+open import B16SharpModel
+open import B16SharpOmega
+import B12ActualSlots as Cover
+
+module Orbit (lem : LEM) where
+  open I.Sharp lem
+  open Lift lem using (selfFold)
+  open Graded lem
+  open Omega lem
+
+  generator : ∀ n {X mu} (T : F.TD {lvl1} X mu) (b : B.Tr mu) → mu B.⊢ B.zero ◃ b → F.Ca (suc n) X
+  generator zero T b nb = F.Kb oB T b nb
+  generator (suc n) T b nb = F.Kₑ n oB T b nb
+
+  gen-at : ∀ n {X Y mu} (T : F.TD {lvl1} X mu) b nb (m : F.Mor X Y) (G : F.Ca n Y) →
+    proj₁ (generator n T b nb) m G ≡ applyC n (F.trTD m T) b G
+  gen-at zero T b nb m G = refl
+  gen-at (suc n) T b nb m G = refl
+
+  monotone : ∀ n {X mu} (T : F.TD {lvl1} X mu) {x y} → mu B.⊢ x ◃ y → (G : F.Ca n X) →
+    F.Rn n (applyC n T x G) (applyC n T y G)
+  monotone zero T d G S i t v = F.Emono oB T G S i t v d
+  monotone (suc n) T d K m G = F.Itmono n oB (F.trTD m T) (F.enter (suc n) m K) G d
+
+  inflation : ∀ n {X mu} (T : F.TD {lvl1} X mu) {y} → mu B.⊢ B.zero ◃ y → (G : F.Ca n X) →
+    F.Rn n G (applyC n T y G)
+  inflation zero T d G S i t v = F.Emono oB T G S i t v d
+  inflation (suc n) T d K m G = F.Itmono n oB (F.trTD m T) (F.enter (suc n) m K) G d
+
+  raw-step : R.Tr r₁ → R.Tr r₁
+  raw-step u = proj₁ (V.next⁺ (selfFold B♯ (V.Ωt r₁) u))
+
+  base-index : GoodIndex B.zero R.zero
+  base-index zero tv mk D a A G g = g
+  base-index (suc n) tv mk D a A K h m gm = h (F.idM F.⊙ m) gm
+
+  module Vary (c⁺ : W.Tr⁺ lvl1) (above : Cover._⊴_ Ωw (proj₁ c⁺)) where
+    C = proj₁ c⁺
+    nc = proj₂ c⁺
+    actual-step : B.Tr lvl1 → B.Tr lvl1
+    actual-step z = B.ex C C nc (B.suc z) tt
+
+    gen-model : ∀ n {X} (tv : TV X) (mk : MK X) →
+      Rel (suc n) (mk (path slot)) Ωi (generator n (F.td W.stop tv mk) C nc)
+    gen-model n tv mk m gm D a A G g = subst (Rel n (F.σ m (mk (path slot))) (val D a A Ωi))
+      (sym (gen-at n (F.td W.stop tv mk) C nc m G)) (transport n (F.td W.stop (λ t → tv (F.π m t)) (λ t → F.σ m (mk t))) above G
+        (omega n (λ t → tv (F.π m t)) (λ t → F.σ m (mk t)) D a A G g))
+      where
+      transport : ∀ n {X ch u c} (T : F.TD {lvl1} X lvl1) → Cover._⊴_ Ωw c → (H : F.Ca n X) →
+        Rel n ch u (applyC n T Ωw H) → Rel n ch u (applyC n T c H)
+      transport n T (inj₁ refl) H h = h
+      transport n T (inj₂ d) H h = close n _ _ h (monotone n T d H)
+
+    module Advance (z : B.Tr lvl1) (u : R.Tr r₁) (prev : GoodIndex z u) where
+      mid : ∀ n {X} (tv : TV X) (mk : MK X) D a A G →
+        Rel n (mk (path slot)) (val D a A R.zero) G →
+        Rel n (mk (path slot)) (val D a A (raw-step u))
+          (F.It n oB (F.td W.stop tv mk) (B.suc z) (generator n (F.td W.stop tv mk) C nc) (applyC n (F.td W.stop tv mk) C G))
+      mid n tv mk D a A G g = val-lim n D a A _ _ _ _ (λ j → reps n K hK j D a A (applyC n T C G)
+        (close n _ _ g (inflation n T nc G)))
+        where
+        T = F.td W.stop tv mk
+        K = F.Itᴺ n oB T z (generator n T C nc)
+        hK : Rel (suc n) (mk (path slot)) (proj₁ (selfFold B♯ (V.Ωt r₁) u)) K
+        hK = prev (suc n) tv mk B♯ (V.Ωt r₁) id (generator n T C nc) (gen-model n tv mk)
+
+      result : GoodIndex (actual-step z) (raw-step u)
+      result zero tv mk D a A G g = mid zero tv mk D a A G g
+      result (suc n) tv mk D a A K h m gm D′ a′ P G g =
+        mid (suc n) (λ t → tv (F.π m t)) (λ t → F.σ m (mk t)) D a A (F.enter (suc n) m K)
+          (enter (suc n) m gm K h) F.idM refl D′ a′ P G g
+
+    all : ∀ n → GoodIndex (B.iter actual-step B.zero n) (V.iter raw-step R.zero n)
+    all zero = base-index
+    all (suc n) = Advance.result _ _ (all n)
+

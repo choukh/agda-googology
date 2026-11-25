@@ -1,0 +1,35 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21RowCopy where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Unit using (tt)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F)
+open import YiLAB7Replay using (o₁)
+open import WSShadow using (ES; zC; lC)
+open import WSW4 using (module Lem)
+open Lem o₁ using (Real)
+open import B9InnerReal using (module RX)
+open RX o₁ using (Real-pos; RealX)
+open import B8PairW4 using (Real-up)
+import B11OuterCore as C
+import B14OrbitReal as R
+
+copy = λ (b : Tr⁺ lvl1) → ex (proj₁ b) (proj₁ b) (proj₂ b) (suc zero) tt
+shell : ∀ a b {e} → Real (proj₁ b) e → Real (a + copy b) e
+shell a b h = RealX {ea = zC} {eb = _} {ex′ = zC} (proj₂ b)
+  (Real-pos (a + proj₁ b) (z◃ a (+-mono a (proj₂ b)))) h (Real-pos (suc zero) ◃s)
+inside : ∀ R → lvl1 ⊢ copy (R lvl1 C.slot) ◃ proj₁ (run F R lvl1 C.slot (R lvl1 C.slot))
+inside R = ◃l 0
+
+protect : ∀ (x : Tr lvl1) b {e} → lvl1 ⊢ copy b ◃ x → Real (proj₁ b) e → ∀ a → Real (a + x) e
+protect x b path h a = Real-up (+-mono a path) (shell a b h)
+
+module Collect (f : ℕ → Tr⁺ lvl1) (j : ℕ → ℕ) (b : ℕ → Tr⁺ lvl1) (e : ℕ → ES)
+  (path : ∀ k → lvl1 ⊢ copy (b k) ◃ proj₁ (f (suc (j k))))
+  (h : ∀ k → Real (proj₁ (b k)) (e k)) where
+  all : Real (proj₁ (limc⁺ f)) (lC e)
+  all = R.real-sup e (λ k → Real-up (◃l (suc (j k))) (protect _ (b k) (path k) (h k) (cum (λ i → proj₁ (f i)) (j k))))
+

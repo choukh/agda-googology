@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- D 路判定件 3：候选保留判定 kpᶜ（(A)+(C)）在塔第 1 项上，对 "同一孩子、目标就是该孩子的层号、
+-- 槽位就是目标自己的顶槽位（层号 h₁ 2，非零）" 仍给 nothing，对一切来源表 ot。不读记号。
+module AuditDCand where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (kp)
+open import OCF.Lean.YiTBRow using (nat; h₁)
+open import OCF.Lean.YiKTSlot using (IsNothing; IsJust)
+open import OCF.Lean.YiKFKeep using (Org; pvT; kpᶜ; kpʳ)
+
+three : Tr zero
+three = nat 3
+
+p : Pos (tw 1)
+p = inj₂ (three , inj₂ (inj₂ (tt , inj₁ tt)))
+
+lvl : at (tw 1) p ≡ h₁ (nat 2)
+lvl = refl
+
+-- 目标层 h₁ 3 自己有这个槽位（在自身路径下保留）。
+own-slot : IsJust (kp (h₁ three) (proj₂ (Ok-tw 1) three) (inj₂ (tt , inj₁ tt)) self)
+own-slot = tt
+
+-- 现行判定与候选判定在这一格都走链。
+cur : IsNothing (kp (tw 1) (Ok-tw 1) p (inc three self))
+cur = tt
+
+cand : (ot : Org (h₁ three) (tw 1)) → IsNothing (kpᶜ (tw 1) (Ok-tw 1) (pvT 1) p (inc three self) ot)
+cand ot = tt

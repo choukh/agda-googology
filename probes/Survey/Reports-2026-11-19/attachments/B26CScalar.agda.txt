@@ -1,0 +1,101 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- ε₀ 全部有限幂和代码编成真正的 W4 树；同一棵树放进任一正层折叠，按输入精确给出右乘 ω 的幂。
+module B26CScalar where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_; _++_)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import OCF.Align.YiVmConExact using (reflˣ; ˣ→≼)
+open import WVOne using (read; T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼l; l≼; z≼; ≅→≼; ψ⁰-mono⁰)
+import W4Block as W
+import W4Ops as O
+import W4Path as Path
+import W4Fold as F
+import B16IndexBase as I
+open import B18Product using (_·_)
+open import B19IdealProduct using (_∙_; id; flip; left-one; add; mul; one; lim; assoc)
+import B19IdealArithmetic as Ar
+import B25DExactFold as E
+import B25DTrack as Tr
+import B26PSuffix as S
+import B26PAppend as A
+open import B26CDecode using (Small; leaf; cons; physical-image)
+open import B26CForest using (small)
+open import B26CLift using (Inside; principal)
+
+code : T → W.Tr W.zero
+code [] = W.zero
+code (ψ _ a ∷ xs) = E.fold (code a) O.+ code xs
+
+count : ∀ {t} → Small t → Ctbl t
+count leaf = c[]
+count (cons a t) = c∷ (count t)
+
+ωcong : ∀ {x y : T₀} → x ≈ᵛ y → Ar.norm x ≈ᵛ Ar.norm y
+ωcong {x} {y} (p , q) = Ar.normal x ∙ (ψ⁰-mono⁰ p , ψ⁰-mono⁰ q) ∙ flip (Ar.normal y)
+
+read-code : ∀ {t} → Small t → NF t → (h : HC t) → Rt h ≈ᵛ read (code t)
+read-code leaf nt h = S.same refl h (h0 refl)
+read-code (cons {b = b} {xs} pb pt) nt h = A.both head tail refl h ∙ add head-eq (read-code pt (nf-tl nt) tail)
+  ∙ (≅→≼ (I.plus (E.fold (code b)) (code xs)) , ≅→≼ (L.≅-sym (I.plus (E.fold (code b)) (code xs))))
+  where
+  n = nf-hd nt
+  arg = hc (nfp-a n) (count pb)
+  head = hc (nf-ψ n[] (nfp-a n) (nfp-g n)) (c∷ c[])
+  tail = hc (nf-tl nt) (count pt)
+  p = E.paired (code b)
+  head-eq : Rt head ≈ᵛ read (E.fold (code b))
+  head-eq = S.Low.val [] (h1 refl (h0 refl)) b arg head ∙ left-one (Ar.norm (Rt arg))
+       ∙ ωcong (read-code pb (nfp-a n) arg) ∙ Ar.normal (read (code b)) ∙ (ˣ→≼ (proj₁ p) , ˣ→≼ (proj₂ p))
+
+small-form : ∀ t → Small (small t)
+small-form [] = leaf
+small-form (ψ u a ∷ t) = cons (small-form u) (small-form t)
+
+inside-small : Inside Small
+inside-small n c h hi with physical-image n c h hi
+... | u , _ , _ , e = subst Small e (small-form u)
+
+inside-code : Inside (λ t → (h : HC t) → Rt h ≈ᵛ read (code t))
+inside-code n c h hi = read-code (inside-small n c h hi) n
+
+repeat : ∀ (b : O.Tr⁺ W.zero) → read (proj₁ (O.next⁺ b)) ≈ᵛ (read (proj₁ b) · L.ωᶜ)
+repeat (b , w) = (l≼ (λ n → ≼l (suc n) (proj₂ (seg n)))) ,
+  l≼ (λ { zero → z≼ ; (suc n) → ≼l n (proj₁ (seg n)) })
+  where
+  x = read b
+  seg : ∀ n → (x · L.natᶜ (suc n)) ≈ᵛ read (W.iter (b O.+_) b n)
+  seg n = Ar.copies x (suc n) ∙ (ˣ→≼ (proj₁ p) , ˣ→≼ (proj₂ p))
+    where p = E.copies {x = x} {a = b} (reflˣ x , reflˣ x) n
+
+module Positive (s : W.Sh) (f : W.Ch s → W.L) (o : Path.Ok (W.nd s f))
+  (B : F.Base (W.nd s f)) (β : O.Tr⁺ W.zero) where
+  ℓ = W.nd s f
+  floor = W.inu (λ j → Path.z≤ (f j))
+  run : W.Tr W.zero → O.Tr⁺ W.zero
+  run x = F.ψ ℓ o B W.zero floor β (O.ι ℓ x)
+
+  exact : ∀ x → read (proj₁ (run x)) ≈ᵛ (read (proj₁ β) · Ar.norm (read x))
+  exact W.zero = flip (one (read (proj₁ β)))
+  exact (W.suc x) = repeat (run x) ∙ mul (exact x) (id L.ωᶜ) ∙ assoc (read (proj₁ β)) (Ar.norm (read x)) L.ωᶜ
+  exact (W.lim f xs) = lim (λ n → exact (f n))
+  exact (W.Ω () _)
+  exact (W.up _ () _ _)
+  exact (W.ex _ _ _ _ ())
+
+  reconstruct : ∀ {p t} (ph : HC (principal p)) → Rt ph ≈ᵛ read (proj₁ β)
+    → Small t → NF t → (th : HC t) (d : HC (principal (p ++ t))) → Rt d ≈ᵛ read (proj₁ (run (code t)))
+  reconstruct {p} {t} ph b sm nt th d = S.Low.val p ph t th d ∙ mul b (ωcong (read-code sm nt th))
+                                      ∙ flip (exact (code t))
+
+  all-inputs : ∀ {p} (ph : HC (principal p)) → Rt ph ≈ᵛ read (proj₁ β)
+    → Inside (λ t → (d : HC (principal (p ++ t))) → Rt d ≈ᵛ read (proj₁ (run (code t))))
+  all-inputs ph b nt ct th hi = reconstruct ph b (inside-small nt ct th hi) nt th
+

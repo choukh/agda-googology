@@ -1,0 +1,131 @@
+# section	path	evidence/note
+untracked-dead?	probes/Survey/W4-EBO-独立审计材料.zip	未跟踪, 5704703 字节, 1638 个条目 (仓库文件在 2026-11-24 的打包副本: AGENTS.md, LOG.md, src/... 等). (a) 全仓库按文件名、不带扩展名的名字、"独立审计材料" 检索 0 命中. (b) 不严格成立: 不是仓库脚本的生成物 (仓库内无写 zip 的脚本), 也不与某个文件逐字相同; 列出供作者定, 判断
+untracked-dead?	probes/Survey/Reports-2026-11-24/attachments/M4-KOpPow.agda.txt; M2-KIface.agda.txt	未跟踪, 在 attachments (不碰). 与 M4b-KOpPow / M2v2-KIface 逐字节相同 (sha1 相同), materialize 用的是 M4b/M2v2; 但被 W4-可数层号定理-纸面.md 与 Hyg 回报提到, (a) 不成立, 不算死文件, 只记录
+untracked-not-deleted	src/.DS_Store; archive/probes/OCF/PastBTBO/.DS_Store	未跟踪的 .DS_Store, 但在 src/ 与 archive/ 下, 硬约束不碰, 没删
+not-dead-referenced	probes/OCF/Align/BoundedCompletionStageWfLabel.lagda.md	被跟踪; 文首自称草案 (6G 退出 251); 全名未被引用, 但 LOG.md:2943 与 HANDOFF-2026-11-07.md:400 以缩写 StageWfLabel 提到, (a) 不成立; 且自述失败是 251 不是 42. 不删, 没有编译
+agda-dead-code	probes/OCF/Align/Uniform5Head.lagda.md:43	private 引理 lνk (= ≅ᴵ-sym ek) 在本文件只出现于签名与定义两行, 未使用; 同一处在机械克隆 ScafLadderZUniform5Head.lagda.md:45 与 LadderLabZUniform5Head.lagda.md:47
+agda-dead-code	probes/OCF/Align/VerdictSpecEvid.lagda.md:42	private 定义 𝟎 = Tree.zero 只有签名与定义两行, 未使用
+agda-dead-code?	probes/OCF/Align/JiaRound5.lagda.md:80-85	agda 块里 6 行注释掉的伪代码 (target/p/out/f/keep 的类型与 keep 的定义); 判断: 多半是有意的说明性注释
+agda-private-refl-tests	probes/OCF/Lean/Fold1.lagda.md:178-185; OCF/Align/PathOut.lagda.md:164-170; X2Inst.lagda.md:328-334; X1Up.lagda.md:146-149; TreeJudgeBase.lagda.md:212; TySup.lagda.md:144; Fab3Typed.lagda.md:285-288	private 块里没有被使用的 refl 检验 (d₀, d₁, l11-pt, lv-two, dec-above, ok-above, cls-*, root1, keepΩ, lvY). 判断: 不是死代码, 是类型检查时执行的有限测试, 文中多处点名为 [有限测试]; 只记录
+agda-unclosed-fence	probes/OCF/Align/DiagK3One.lagda.md:126	最后一个 ```agda 围栏没有闭合 (Hyg 已报); Agda 代码不改
+script-dead-code-not-removed	probes/Survey/scripts/mnot.py:74-75	@cache def inP 从未使用; 没删: CodeGuide.md:63, OrdinalNotationsGuide.md:119, code/MahloLevelRules.md:193,221 按行号引用 mnot.py:112-113, :113, :171, 删两行会让这些引用错位
+dangling-import	Mahlo.Inacc.BoolLemmas	3 处: probes/OCF/Align/WfScoutPull.lagda.md; probes/OCF/Align/WfScoutTau.lagda.md; probes/OCF/Align/WfTauNF.lagda.md. 模块只在 archive/src/Mahlo/Inacc/ 下有源文件 (要 -i archive/src 才能编译; LEMAudit-2026-11-18.md 记过 EboLeanCmp 因缺 Mahlo.Inacc.Syntax 退出 42)
+dangling-import	Mahlo.Inacc.Closure	4 处: probes/OCF/Align/WfScoutPull.lagda.md; probes/OCF/Align/WfScoutTau.lagda.md; probes/OCF/Align/WfTauNF.lagda.md; probes/Survey/scripts/eboi/SetzerTest.agda. 模块只在 archive/src/Mahlo/Inacc/ 下有源文件 (要 -i archive/src 才能编译; LEMAudit-2026-11-18.md 记过 EboLeanCmp 因缺 Mahlo.Inacc.Syntax 退出 42)
+dangling-import	Mahlo.Inacc.FactsImpl	3 处: probes/OCF/Align/WfScoutPull.lagda.md; probes/OCF/Align/WfScoutTau.lagda.md; probes/OCF/Align/WfTauNF.lagda.md. 模块只在 archive/src/Mahlo/Inacc/ 下有源文件 (要 -i archive/src 才能编译; LEMAudit-2026-11-18.md 记过 EboLeanCmp 因缺 Mahlo.Inacc.Syntax 退出 42)
+dangling-import	Mahlo.Inacc.Lex	2 处: probes/OCF/Align/WfScoutTau.lagda.md; probes/OCF/Align/WfTauNF.lagda.md. 模块只在 archive/src/Mahlo/Inacc/ 下有源文件 (要 -i archive/src 才能编译; LEMAudit-2026-11-18.md 记过 EboLeanCmp 因缺 Mahlo.Inacc.Syntax 退出 42)
+dangling-import	Mahlo.Inacc.Linear	2 处: probes/OCF/Align/WfScoutTau.lagda.md; probes/OCF/Align/WfTauNF.lagda.md. 模块只在 archive/src/Mahlo/Inacc/ 下有源文件 (要 -i archive/src 才能编译; LEMAudit-2026-11-18.md 记过 EboLeanCmp 因缺 Mahlo.Inacc.Syntax 退出 42)
+dangling-import	Mahlo.Inacc.Order	3 处: probes/OCF/Align/WfScoutTau.lagda.md; probes/OCF/Align/WfTauNF.lagda.md; probes/Survey/scripts/eboi/SetzerTest.agda. 模块只在 archive/src/Mahlo/Inacc/ 下有源文件 (要 -i archive/src 才能编译; LEMAudit-2026-11-18.md 记过 EboLeanCmp 因缺 Mahlo.Inacc.Syntax 退出 42)
+dangling-import	Mahlo.Inacc.OrderProps	1 处: probes/OCF/Align/WfScoutTau.lagda.md. 模块只在 archive/src/Mahlo/Inacc/ 下有源文件 (要 -i archive/src 才能编译; LEMAudit-2026-11-18.md 记过 EboLeanCmp 因缺 Mahlo.Inacc.Syntax 退出 42)
+dangling-import	Mahlo.Inacc.Syntax	3 处: probes/OCF/Align/WfScoutTau.lagda.md; probes/OCF/Align/WfTauNF.lagda.md; probes/Survey/scripts/eboi/SetzerTest.agda. 模块只在 archive/src/Mahlo/Inacc/ 下有源文件 (要 -i archive/src 才能编译; LEMAudit-2026-11-18.md 记过 EboLeanCmp 因缺 Mahlo.Inacc.Syntax 退出 42)
+dangling-import	Mahlo.Inacc.Theorem	1 处: probes/OCF/Align/WfScoutTau.lagda.md. 模块只在 archive/src/Mahlo/Inacc/ 下有源文件 (要 -i archive/src 才能编译; LEMAudit-2026-11-18.md 记过 EboLeanCmp 因缺 Mahlo.Inacc.Syntax 退出 42)
+dangling-import	Mahlo.Inacc.Trans	1 处: probes/OCF/Align/WfScoutTau.lagda.md. 模块只在 archive/src/Mahlo/Inacc/ 下有源文件 (要 -i archive/src 才能编译; LEMAudit-2026-11-18.md 记过 EboLeanCmp 因缺 Mahlo.Inacc.Syntax 退出 42)
+dangling-import	Mahlo.Inacc.Unfold	1 处: probes/OCF/Align/WfScoutTau.lagda.md. 模块只在 archive/src/Mahlo/Inacc/ 下有源文件 (要 -i archive/src 才能编译; LEMAudit-2026-11-18.md 记过 EboLeanCmp 因缺 Mahlo.Inacc.Syntax 退出 42)
+dangling-import	Mahlo.Inacc.WO.Main	3 处: probes/OCF/Align/WfScoutPull.lagda.md; probes/OCF/Align/WfScoutTau.lagda.md; probes/OCF/Align/WfTauNF.lagda.md. 模块只在 archive/src/Mahlo/Inacc/ 下有源文件 (要 -i archive/src 才能编译; LEMAudit-2026-11-18.md 记过 EboLeanCmp 因缺 Mahlo.Inacc.Syntax 退出 42)
+dangling-import	YiLAB7Orbit	5 处: probes/Survey/W4LeadReturnPair.lagda.md; probes/Survey/W4LeadReturnRow.lagda.md; probes/Survey/W4LeadReturnState.lagda.md; probes/Survey/W4PTOSeededQuery.lagda.md; probes/Survey/W4ThreeReturn.lagda.md. 仓库里没有对应的 .agda/.lagda.md, 也没有对应的 *.agda.txt 附件; 模块源码只以代码块形式出现在 probes/Survey/Lead/指令-01.md (第 59, 128 行 module 头); 三个 materialize 脚本都不抄它
+dangling-import	YiLAB7Replay	13 处: probes/Survey/W4ClockCeiling.lagda.md; probes/Survey/W4FourthLiftCeiling.lagda.md; probes/Survey/W4IteratedCap.lagda.md; probes/Survey/W4LeadCapExit.lagda.md; probes/Survey/W4LeadCapMeaning.lagda.md; probes/Survey/W4LeadCapPositive.lagda.md; probes/Survey/W4LeadCapPrograms.lagda.md; probes/Survey/W4LeadCapStrict.lagda.md; probes/Survey/W4LeadReturnPositive.lagda.md; probes/Survey/W4LeadReturnRow.lagda.md; probes/Survey/W4PTOFirstQuery.lagda.md; probes/Survey/W4PTOSeededQuery.lagda.md; probes/Survey/W4ThreeCopies.lagda.md. 仓库里没有对应的 .agda/.lagda.md, 也没有对应的 *.agda.txt 附件; 模块源码只以代码块形式出现在 probes/Survey/Lead/指令-01.md (第 59, 128 行 module 头); 三个 materialize 脚本都不抄它
+import-note	Agda.Primitive, Agda.Builtin.*	Agda 自带的内建模块, 不算悬空 (20+5 处, 含 src/Veblen, src/WellFormed)
+import-note	*.agda.txt 附件	1339 处导入只由留档附件 *.agda.txt 满足 (materialize 脚本抄成实验目录后编译), 按简报不算悬空
+unfixed-link	probes/OCF/Align/TLOpsDW.lagda.md:597	TLOpsDForce.lagda.md -> 同名文件 0 个: 
+unfixed-link	probes/OCF/Align/LadderLabZNFWForce.lagda.md:7	Lab/NotFree.lagda.md -> 不改: 机械克隆 (laddernf/mk_w.py 由 OCF/Free/Force 生成; ladderlab/mkworld.py 再克隆), LOG 记"重新生成逐字节相同"; 唯一正确目标是 probes/OCF/Free/Lab/NotFree.lagda.md (该行原文在 OCF/Free/Force.lagda.md, 在那里能解析), 改克隆会让逐字节一致的记录失真
+unfixed-link	probes/OCF/Align/LadderNFWForce.lagda.md:5	Lab/NotFree.lagda.md -> 不改: 机械克隆 (laddernf/mk_w.py 由 OCF/Free/Force 生成; ladderlab/mkworld.py 再克隆), LOG 记"重新生成逐字节相同"; 唯一正确目标是 probes/OCF/Free/Lab/NotFree.lagda.md (该行原文在 OCF/Free/Force.lagda.md, 在那里能解析), 改克隆会让逐字节一致的记录失真
+unfixed-link	probes/Survey/scripts/monoport9/two_header.md:3	MonoPort9.lagda.md -> 不改: 这是拼进 OCF/Align 生成文件的头部模板, 链接按生成文件所在目录写, 在生成文件里能解析 (如 MonoPort7Rel.lagda.md 第 3 行); 改模板会让重新生成的文件断链
+unfixed-link	probes/Survey/scripts/monoport9/two_header.md:3	MonoPort8Sim.lagda.md -> 不改: 这是拼进 OCF/Align 生成文件的头部模板, 链接按生成文件所在目录写, 在生成文件里能解析 (如 MonoPort7Rel.lagda.md 第 3 行); 改模板会让重新生成的文件断链
+unfixed-link	probes/Survey/scripts/monoport9/two_header.md:8	MonoPort9Walk.lagda.md -> 不改: 这是拼进 OCF/Align 生成文件的头部模板, 链接按生成文件所在目录写, 在生成文件里能解析 (如 MonoPort7Rel.lagda.md 第 3 行); 改模板会让重新生成的文件断链
+unfixed-link	probes/Survey/scripts/monoport7/rel_header.md:3	MonoPort7.lagda.md -> 不改: 这是拼进 OCF/Align 生成文件的头部模板, 链接按生成文件所在目录写, 在生成文件里能解析 (如 MonoPort7Rel.lagda.md 第 3 行); 改模板会让重新生成的文件断链
+unfixed-link	probes/Survey/scripts/monoport7/rel_header.md:3	MonoPort6Rel.lagda.md -> 不改: 这是拼进 OCF/Align 生成文件的头部模板, 链接按生成文件所在目录写, 在生成文件里能解析 (如 MonoPort7Rel.lagda.md 第 3 行); 改模板会让重新生成的文件断链
+unfixed-link	probes/Survey/scripts/monoport7/lay_header.md:3	MonoPort7.lagda.md -> 不改: 这是拼进 OCF/Align 生成文件的头部模板, 链接按生成文件所在目录写, 在生成文件里能解析 (如 MonoPort7Rel.lagda.md 第 3 行); 改模板会让重新生成的文件断链
+unfixed-link	probes/Survey/scripts/monoport7/lay_header.md:3	MonoPort6Lay.lagda.md -> 不改: 这是拼进 OCF/Align 生成文件的头部模板, 链接按生成文件所在目录写, 在生成文件里能解析 (如 MonoPort7Rel.lagda.md 第 3 行); 改模板会让重新生成的文件断链
+unfixed-link	probes/Survey/scripts/monoport7/int_header.md:3	MonoPort7.lagda.md -> 不改: 这是拼进 OCF/Align 生成文件的头部模板, 链接按生成文件所在目录写, 在生成文件里能解析 (如 MonoPort7Rel.lagda.md 第 3 行); 改模板会让重新生成的文件断链
+unfixed-link	probes/Survey/scripts/monoport7/int_header.md:3	MonoPort6Int.lagda.md -> 不改: 这是拼进 OCF/Align 生成文件的头部模板, 链接按生成文件所在目录写, 在生成文件里能解析 (如 MonoPort7Rel.lagda.md 第 3 行); 改模板会让重新生成的文件断链
+unfixed-link	probes/Survey/scripts/monoport7/snd_header.md:3	MonoPort7.lagda.md -> 不改: 这是拼进 OCF/Align 生成文件的头部模板, 链接按生成文件所在目录写, 在生成文件里能解析 (如 MonoPort7Rel.lagda.md 第 3 行); 改模板会让重新生成的文件断链
+unfixed-link	probes/Survey/scripts/monoport7/snd_header.md:3	MonoPort6Snd.lagda.md -> 不改: 这是拼进 OCF/Align 生成文件的头部模板, 链接按生成文件所在目录写, 在生成文件里能解析 (如 MonoPort7Rel.lagda.md 第 3 行); 改模板会让重新生成的文件断链
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:107	<实验目录>/YiPFCover.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:108	<实验目录>/YiPFDom.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:109	<实验目录>/YiPFReach.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:110	<实验目录>/YiPFReachCover.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:111	<实验目录>/YiPFReachFold.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:112	<实验目录>/YiPFReduce.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:341	<实验目录>/YiPFCheck.agda -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:342	<实验目录>/YiPFCheck.agdai -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:343	<实验目录>/YiPFCheck.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:344	<实验目录>/YiPFCover.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:345	<实验目录>/YiPFCover.first.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:346	<实验目录>/YiPFDom.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:347	<实验目录>/YiPFDom.extend.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:348	<实验目录>/YiPFDom.first.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:349	<实验目录>/YiPFReach.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:350	<实验目录>/YiPFReachCheck.agda -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:351	<实验目录>/YiPFReachCheck.agdai -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:352	<实验目录>/YiPFReachCheck.fixed.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:353	<实验目录>/YiPFReachCheck.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:354	<实验目录>/YiPFReachCover.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:355	<实验目录>/YiPFReachCover.first.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:356	<实验目录>/YiPFReachFold.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:357	<实验目录>/YiPFReachFold.first.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:358	<实验目录>/YiPFReduce.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:359	<实验目录>/YiPFReduce.first.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:360	<实验目录>/YiPFRestrict.agda -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:361	<实验目录>/YiPFRestrict.agdai -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:362	<实验目录>/YiPFRestrict.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:363	<实验目录>/YiPFWeakFold.agda -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:364	<实验目录>/YiPFWeakFold.agdai -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:365	<实验目录>/YiPFWeakFold.explicit.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:366	<实验目录>/YiPFWeakFold.fixed.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:367	<实验目录>/YiPFWeakFold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:368	<实验目录>/forbidden-scan.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:369	<实验目录>/importclosure.final.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:370	<实验目录>/importclosure.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:371	<实验目录>/libraries -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:372	<实验目录>/make-report.py -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:539	<实验目录>/YiPF-report.initial.md -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:540	<实验目录>/YiPFReachTotal.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:541	<实验目录>/YiPFReachTotal.first.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:542	<实验目录>/YiPFWTotalCheck.agda -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:543	<实验目录>/YiPFWTotalCheck.agdai -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:544	<实验目录>/YiPFWTotalCheck.fixed.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:545	<实验目录>/YiPFWTotalCheck.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:546	<实验目录>/forbidden-scan.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:547	<实验目录>/importclosure.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:548	<实验目录>/libraries -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:549	<实验目录>/make-total-report.py -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:595	<初始实验目录>/YiPFCover.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:596	<初始实验目录>/YiPFDom.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:597	<初始实验目录>/YiPFReach.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:598	<初始实验目录>/YiPFReachCover.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:599	<初始实验目录>/YiPFReachFold.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:600	<初始实验目录>/YiPFReduce.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:829	<初始实验目录>/YiPFCheck.agda -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:830	<初始实验目录>/YiPFCheck.agdai -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:831	<初始实验目录>/YiPFCheck.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:832	<初始实验目录>/YiPFCover.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:833	<初始实验目录>/YiPFCover.first.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:834	<初始实验目录>/YiPFDom.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:835	<初始实验目录>/YiPFDom.extend.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:836	<初始实验目录>/YiPFDom.first.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:837	<初始实验目录>/YiPFReach.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:838	<初始实验目录>/YiPFReachCheck.agda -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:839	<初始实验目录>/YiPFReachCheck.agdai -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:840	<初始实验目录>/YiPFReachCheck.fixed.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:841	<初始实验目录>/YiPFReachCheck.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:842	<初始实验目录>/YiPFReachCover.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:843	<初始实验目录>/YiPFReachCover.first.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:844	<初始实验目录>/YiPFReachFold.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:845	<初始实验目录>/YiPFReachFold.first.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:846	<初始实验目录>/YiPFReduce.cold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:847	<初始实验目录>/YiPFReduce.first.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:848	<初始实验目录>/YiPFRestrict.agda -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:849	<初始实验目录>/YiPFRestrict.agdai -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:850	<初始实验目录>/YiPFRestrict.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:851	<初始实验目录>/YiPFWeakFold.agda -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:852	<初始实验目录>/YiPFWeakFold.agdai -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:853	<初始实验目录>/YiPFWeakFold.explicit.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:854	<初始实验目录>/YiPFWeakFold.fixed.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:855	<初始实验目录>/YiPFWeakFold.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:856	<初始实验目录>/forbidden-scan.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:857	<初始实验目录>/importclosure.final.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:858	<初始实验目录>/importclosure.log -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:859	<初始实验目录>/libraries -> 目标是仓库外的实验目录占位, 无从换算
+unfixed-link	probes/Survey/Reports-2026-11-12/YiPF.md:860	<初始实验目录>/make-report.py -> 目标是仓库外的实验目录占位, 无从换算
+record-path-note	probes/Survey/RR3-Backward.md:39,189,204; RR3-Design.md:7,51,62,154; RR12-ScopeBlock.md:7; LEMAudit-2026-11-18.md:120,127; EBOHandbook.md:633,645	反引号里提到的 rr3backward/, rr3design/RR3*.agda, R12Scope.agda, results.tsv, run.py, extra.tsv, FsnPart.agda, digest 输出 human.md 等: 都是仓库外实验目录里的文件, 文中就是这样说的, 无从换算, 不改
+record-path-note	probes/Survey/CodeGuide.md, OrdinalNotationsGuide.md, OrdinalNotationsFS.md, NotationWF.md, AgdaStrength.md, CommunityCubical.md	反引号里的路径大多是外部项目的路径 (lean/..., Googology/..., isabelle/...), 不是仓库内路径, 不算悬空
+record-path-note	probes/Survey/RR3-Evidence.md, SkeletonAudit.md, IdeaLedger.md, RouteReview*.md, W4-EBO-独立审计交接.md	反引号里的 A/B/C 形式是模块名或定理名的缩写列表 (如 LvRdIf/Pkg/World), 不是路径

@@ -1,0 +1,84 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21IdealContext where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; subst₂; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B14SharpBound using (data≤)
+open import OCF.Align.Value using (≼-refl; ≼-trans; l≼; ≼l)
+import B12ActualSlots as C
+import B17SharpFeed as Link
+import B17SharpUpdate as U
+import B17SharpTwo as T
+import B18SharpMacro as M
+import B13Orbit as Orb
+import B12Orbit as Win
+
+data Pref : Set where
+  empty : Pref
+  push : Pref → R.Tr r₂ → Pref
+plug : Pref → R.Tr r₂ → R.Tr r₂
+plug empty x = x
+plug (push p y) x = plug p (y V.+ x)
+
+module At (lem : LEM) where
+  open I.Sharp lem
+  open U.Update lem
+  open T.Two lem using (w₀; block₂; module Zero; module Seq)
+  open M.Macro lem using (State; pair; after)
+  open Link.Feed lem using (Linked; lim-gen)
+
+  block : ∀ p x → plug p (block₂ x) ≡ block₂ (plug p x)
+  block empty x = refl
+  block (push p y) x = block p (y V.+ x)
+
+  nextState = λ D p x → after D (plug p x)
+  out = λ D a p x → ψ♯ r₂ o₂ D R.zero tt a (plug p x)
+  record Model (x : R.Tr r₂) (K : F.Op {lvl2} F.nil) : Set where
+    constructor model
+    field
+      state : ∀ D p S → State (nextState D p R.zero) S → State (nextState D p x) (F.stepS K S)
+      value : ∀ D a p S → State (nextState D p R.zero) S → ∀ t b → data≤ (proj₁ (out D a p R.zero)) (proj₁ b) →
+        data≤ (proj₁ (out D a p x)) (proj₁ (F.run K S B.zero t b))
+
+  module Base (c : W.Tr⁺ lvl2) (big : C._⊴_ wΩ₂ (proj₁ c)) where
+    K = Orb.K c
+    module Start (D : Base♯) (p : Pref) (S : F.Base lvl2) (h : State (nextState D p R.zero) S) where
+      b = plug p R.zero
+      append₀ : ∀ a → proj₁ (ψ♯ r₂ o₂ D R.zero tt a (block₂ b)) ≡ proj₁ (ψ♯ r₂ o₂ (after D b) R.zero tt (out D a p R.zero) iΩ₂)
+      append₀ a rewrite empty-slot (kp♯ r₂ o₂ p₂i R.zero tt) = refl
+      append₁ : proj₁ (after D (block₂ b) r₁ oR) ≡ proj₁ (ψ♯ r₂ o₂ (after D b) r₁ oR (after D b r₁ oR) iΩ₂)
+      append₁ rewrite vacant = refl
+      module Low = Zero (after D b) ok₂ S (State.one h) (State.bot h)
+      module Mid = Level (after D b) ok₂ S c big (State.one h)
+      sec : ∀ a t v → data≤ (proj₁ (out D a p R.zero)) (proj₁ v) →
+        data≤ (proj₁ (out D a p iΩ₂)) (proj₁ (F.run K S B.zero t v))
+      sec a t v hv = subst (λ x → data≤ (proj₁ (ψ♯ r₂ o₂ D R.zero tt a x)) (proj₁ (F.run K S B.zero t v))) (sym (block p R.zero))
+        (subst (λ x → data≤ x (proj₁ (F.run K S B.zero t v))) (sym (append₀ a)) (inc big))
+        where
+        inc : ∀ {x} → C._⊴_ wΩ₂ x → data≤ (proj₁ (ψ♯ r₂ o₂ (after D b) R.zero tt (out D a p R.zero) iΩ₂))
+          (proj₁ (F.ψ lvl2 ok₂ S B.zero t v x))
+        inc (Data.Sum.inj₁ refl) = Low.At.fold (out D a p R.zero) v hv t
+        inc (inj₂ e) = ≼-trans (Low.At.fold (out D a p R.zero) v hv t) (◃→≼ (F.mono lvl2 ok₂ S B.zero t v e))
+      fed : State (nextState D p iΩ₂) (F.stepS K S)
+      fed = pair
+        (subst (λ x → Linked (proj₁ (F.stepS K S lvl1 w₁)) (proj₁ (after D x r₁ oR))) (sym (block p R.zero))
+          (subst (Linked (proj₁ (F.stepS K S lvl1 w₁))) (sym append₁) Mid.change))
+        (sec (D R.zero tt) w₀ (S B.zero w₀) (State.bot h))
+    basis : Model iΩ₂ K
+    basis = model Start.fed (λ D a p S h → Start.sec D p S h a)
+

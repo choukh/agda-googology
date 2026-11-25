@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同一棵树、同一整族槽，只替换显式零层起点。起点至多在左侧乘上自己的值。
+module B18Scale where
+open import Data.Product using (proj₁)
+open import W4Block hiding (R)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; 𝟏; read; read-+)
+open import B8FreezeMain using (read-+′)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; l≼; ≼l) renaming (+-mono to add-mono)
+import B18Product as P
+open import B18BaseRel using (Laws)
+import B18BaseFold as F
+
+order : Laws
+Laws.R order a b = read a ≼ read b
+Laws.same order a = ≼-refl (read a)
+Laws.plus order {a} {b} {c} {d} h k = ≼-trans (read-+′ a c) (≼-trans (add-mono h k) (read-+ b d))
+Laws.limit order f g h = l≼ (λ n → ≼l n (h n))
+
+scale : (q : T₀) → 𝟏 ≼ q → Laws
+Laws.R (scale q p) a b = read a ≼ q P.· read b
+Laws.same (scale q p) a = P.pad p (read a)
+Laws.plus (scale q p) {a} {b} {c} {d} h k = ≼-trans (read-+′ a c)
+  (≼-trans (add-mono h k) (≼-trans (P.sum q (read b) (read d)) (P.mono (≼-refl q) (read-+ b d))))
+Laws.limit (scale q p) f g h = l≼ (λ n → ≼l n (h n))
+
+module At (l : W4Block.L) (o : Ok l) (B : Base l) (w : zero ≤ l) (x : Tr l) (a : Tr⁺ zero) (p : 𝟏 ≼ read (proj₁ a)) where
+  val = λ v → read (proj₁ (ψ l o B zero w v x))
+  fresh = val (Ωt zero)
+  q = read (proj₁ a)
+  lower : fresh ≼ val a
+  lower = F.Check.fold order l o B w x (Ωt zero) a p
+  upper : val a ≼ q P.· fresh
+  upper = F.Check.fold (scale q p) l o B w x a (Ωt zero) (P.one-right q)

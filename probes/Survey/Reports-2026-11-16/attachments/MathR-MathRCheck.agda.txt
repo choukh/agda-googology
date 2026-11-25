@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- R 路形状核对: 简报给的那一格 (具体的 W, 状态 stepˢ (rootˢ 2) W zero 自带的合法证据) 上 kp 是 nothing.
+module MathRCheck where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (kp)
+open import OCF.Lean.YiGIBlock using (chLᵍ)
+open import OCF.Lean.YiSOLow using (Stˢ; stepˢ)
+open import OCF.Lean.YiSOEnd using (rootˢ)
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+two : Tr zero
+two = suc (suc zero)
+
+W : Tr (tw 1)
+W = proj₁ (Up (h₁ two) (down stop two) (Ωt (tw 1)) (proj₁ (Ωt (h₁ two))))
+
+N : L
+N = tw 1 ⊕ ↑ (tw 1) W
+
+-- 状态的层号就是 N.
+lvl : chLᵍ (tw 2) W ≡ N
+lvl = refl
+
+st : Stˢ N
+st = stepˢ (rootˢ 2) W zero
+
+-- 顶槽位的层是第 1 层.
+slot1 : at N (inj₁ (inj₁ tt)) ≡ nd sS (λ _ → zero)
+slot1 = refl
+
+-- A 路的路径 (一致下到地板, 再 inc 2 self): nothing.
+cellA : kp N (proj₁ st) (inj₁ (inj₁ tt)) (inc two self ∙ lift (tw 1) (↑ (tw 1) W)) ≡ nothing
+cellA = refl
+
+-- 另一条路径: 顶上取指定孩子 zero (inc), 其下一致: 仍是 nothing.
+cellB : kp N (proj₁ st) (inj₁ (inj₁ tt))
+          (inc zero (inc two self ∙ lift (tw 1) (↑ (tw 1) (proj₁ (next⁺ (Up (nd sS (λ _ → zero)) (down (down stop two) tt) (Ωt (tw 1)) zero))))))
+        ≡ nothing
+cellB = refl

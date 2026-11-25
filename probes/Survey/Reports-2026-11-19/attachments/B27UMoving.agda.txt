@@ -1,0 +1,76 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实反馈输入层自身所保留的槽若在本次环境重复读回，其值确切是单位重置系数乘以有限层累积的同一普通 ω 幂。
+module B27UMoving where
+
+open import Data.Nat.Base as N using (ℕ; zero; suc; _≤_; s≤s)
+open import Data.Nat.Properties using (≤-refl; m≤n⇒m≤1+n)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst)
+import W4Block as W
+import W4Ops as O
+import W4Path as Path
+import W4Fold as F
+import WVOne
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; ≼-refl; ≼-trans; ≼-suc; z≼)
+open import B18Product using (_·_; mono)
+open import B19IdealProduct using (id; _∙_; one; mul; assoc; power-sum; flip)
+import B19IdealPowers as Pow
+import B19IdealArithmetic as Ar
+import B12Terminal as T
+import B18CellState as C
+import B18TowerSlots as S
+import B18TowerEmb as Emb
+import B20StandardInside as St
+import B20StandardGoal as G
+import B22MovingIndex as E
+import B27UEpsilon as ε
+import B27URetained as V
+
+word : ℕ → WVOne.T₀
+word zero = L.zero
+word (suc n) = word n L.+ St.std n
+
+module Any (l k : W.L) (w : k W.≤ l) (o : Path.Ok k) (B : F.Base k) (β : O.Tr⁺ W.zero) where
+  val : ℕ → WVOne.T₀
+  val n = V.eval k o B β (proj₁ (S.slots l n k w))
+  b = V.eval k o B β (proj₁ (O.Ωt k))
+
+  product : ∀ n → val n ≈ᵛ (b · Ar.norm (word n))
+  product zero = flip (one b)
+  product (suc n) = V.At.extension k o B β (proj₁ (S.slots l n k w)) (proj₁ (Emb.standard n))
+    ∙ mul (product n) (id (Ar.norm (St.std n)))
+    ∙ assoc b (Ar.norm (word n)) (Ar.norm (St.std n))
+    ∙ mul (id b) (flip (power-sum L.ωᶜ (word n) (St.std n)))
+
+module At (n j : ℕ) where
+  module A = C.At n j
+  l = A.l
+  o = T.Run.ok A.r
+  bs = T.Run.bs A.r
+  β = O.Ωt W.zero
+  inspect : F.Base l → WVOne.T₀
+  inspect b = V.eval l o b β (proj₁ (b l W.self))
+  own = inspect bs
+
+  module Canon = Any l l W.self o A.slots β
+  real : own ≈ᵛ (A.fresh · Ar.norm (word (suc n)))
+  real = subst (_≈ᵛ (A.fresh · Ar.norm (word (suc n)))) (sym (cong inspect (S.At.all n A.c))) (Canon.product (suc n))
+
+  lower : A.fresh ≼ own
+  lower = ≼-trans {b = A.fresh · Ar.norm (word (suc n))}
+    (≼-trans {b = A.fresh · WVOne.𝟏} (proj₂ (one A.fresh)) (mono (≼-refl A.fresh) (Pow.positive Pow.omega-pos (word (suc n)))))
+    (proj₂ real)
+
+module Limit (n j : ℕ) where
+  module A = At (suc n) j
+  s = C.At.fresh (suc n) j
+  module Cap = ε.At s
+  prior : ∀ k → k ≤ suc n → St.std k ≼ s
+  prior k h = ≼-trans {b = L.suc (St.std k)} (≼-suc (≼-refl _)) (G.At.child n j k h)
+
+  sum : ∀ k → k ≤ suc (suc n) → Cap.In (word k)
+  sum zero h = Cap.down {x = L.zero} {y = s} z≼ Cap.seed
+  sum (suc k) (s≤s h) = Cap.sumC (sum k (m≤n⇒m≤1+n h)) (Cap.down (prior k h) Cap.seed)
+  cap : L.suc A.own ≼ E.above s
+  cap = Cap.finite (Cap.down (proj₁ A.real) (Cap.mulC Cap.seed (Cap.expC (sum _ ≤-refl))))

@@ -1,0 +1,25 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module ScopeSucLim where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Bool.Base using (Bool; true; false; _∨_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiScopeCore
+open import OCF.Lean.YiScopeFold
+open import OCF.Lean.YiScopeE3 using (θ; b0)
+
+-- 有界搜索: 零层的树里是否有 "后继套在 ℕ 极限上" 的结点 (只沿极限的第 0, 1 项走).
+find : ℕ → Raw zero → Bool
+find zero    _               = false
+find (suc d) (G.suc (G.lim _)) = true
+find (suc d) (G.suc a)       = find d a
+find (suc d) (G.lim f)       = find d (f 0) ∨ find d (f 1)
+find (suc d) _               = false
+
+-- 对照: θ 0 (= top zero G.zero) 里没有.
+none0 : find 6 (θ 0) ≡ false
+none0 = refl
+
+-- θ 1 里有: Br (θ 1) 经 Kf 的后继行会取下标为无穷树的孩子.
+has1 : find 12 (θ 1) ≡ true
+has1 = refl

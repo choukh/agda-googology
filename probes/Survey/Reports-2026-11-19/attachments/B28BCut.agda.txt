@@ -1,0 +1,63 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 选中正塔 Ω 尾轨上的所有内返回给出终点的无层差上界判据。每条外轨使用一份共同预算，包住其全部外步和全部选中内步。
+module B28BCut where
+
+open import Data.Nat.Base using (ℕ; suc; zero; _≤_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; cong; trans; sym; subst)
+import WVOne as V
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans)
+import B18Product as Mul
+import B18CellState as C
+import B26PActual as End
+import B26PBounds as Pad
+import B27RunCut as Direct
+import B27CutArithmetic as Ar
+import B28BHead as F
+import B28BOrbit as Keys
+import B28BValues as Values
+import B28POrbit as Branch
+
+module Physical (m j : ℕ) where
+  module Fm = F.At m
+  module Key = Keys.At.Original m j
+  module Vj = Values.At m Key.g
+  f = C.At.fresh (suc m) (suc (suc j))
+  same : f ≡ Vj.outer
+  same = trans (sym (Fm.real (suc (suc j)))) (cong Fm.free Key.genuine)
+  inner = Vj.leaf
+  into : ∀ u → inner u ≼ f
+  into u = subst (inner u ≼_) (sym same) (Vj.lower u)
+  cap : ∀ q → (∀ u → inner u ≼ q) → f ≼ (q Mul.· L.ωᶜ)
+  cap q h = subst (_≼ (q Mul.· L.ωᶜ)) (sym same) (Vj.cap q h)
+
+up : ∀ q → q ≼ (q Mul.· L.ωᶜ)
+up q = ≼-trans {b = V.Mv q V.𝟏} (V.Mv-infl q V.𝟏) (Pad.one-step q)
+
+module At (k : ℕ) (two : 2 ≤ k) where
+  module D = Direct.At k two
+  module A = Ar.At k two
+  Pieces : (m : ℕ) → Set
+  Pieces m = Σ V.T₀ (λ q → A.Small q × C.At.fresh (suc m) 0 ≼ q × C.At.fresh (suc m) 1 ≼ q
+       × (∀ j u → Physical.inner m j u ≼ q))
+  Budget = D.Cap 0 × (∀ m → Pieces m)
+
+  downward : ∀ m → D.Cap (suc m) → Pieces m
+  downward m (q , inside , h) = q , inside , h 0 , h 1 , λ j u →
+    ≼-trans {b = Physical.f m j} (Physical.into m j u) (h (suc (suc j)))
+
+  upward : ∀ m → Pieces m → D.Cap (suc m)
+  upward m (q , inside , x , y , h) = q Mul.· L.ωᶜ , A.product q L.ωᶜ inside A.omega , row
+    where
+    row : ∀ j → C.At.fresh (suc m) j ≼ (q Mul.· L.ωᶜ)
+    row zero = ≼-trans {b = q} x (up q)
+    row (suc zero) = ≼-trans {b = q} y (up q)
+    row (suc (suc j)) = Physical.cap m j q (h j)
+
+  necessary : End.Y ≼ A.Q → Budget
+  necessary cap = D.necessary cap 0 , λ m → downward m (D.necessary cap (suc m))
+  sufficient : Budget → End.Y ≼ A.Q
+  sufficient (start , higher) = D.sufficient λ where
+    zero → start
+    (suc m) → upward m (higher m)

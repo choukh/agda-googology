@@ -1,0 +1,41 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 整首塔与较低层自反馈询问在每一条编号至少为二的原行有同一严格切。
+module B31OrbitRank where
+open import Data.Nat.Base using (ℕ)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (sym; subst)
+import OCF.Align.Level as L
+import WVOne
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼)
+import B18ResetCellGoal as Init
+import B18Product as M
+import B22MovingIndex as E
+import B27UEpsilon as Theory
+import B27UArbitrary as U
+import B29SFirst as S
+import B31First as Front
+import B31Cost as Cost
+
+pieces = λ j → Cost.cost (U.index j) (U.run (U.index j))
+D : WVOne.T₀
+D = L.lim pieces
+part : ∀ j → pieces j ≼ D
+part j = ≼l {f = pieces} j (≼-refl _)
+seed : L.ωᶜ ≼ D
+seed = ≼-trans {b = pieces 0} (subst (L.ωᶜ ≼_) (sym (U.real 0)) (proj₂ Init.First.omega)) (part 0)
+included : D ≼ Front.Γ
+included = l≼ {f = pieces} λ j → ≼-trans {b = Front.pieces j}
+  (Cost.inside (U.index j) (U.run (U.index j))) (Front.here j)
+low : D ≼ S.S
+low = ≼-trans {b = Front.Γ} included Front.below
+paid : Front.Γ ≼ Cost.width D
+paid = l≼ {f = Front.pieces} λ j → Cost.cover D (U.index j) (U.run (U.index j)) (part j)
+module K = Theory.At D
+ω-in : K.In L.ωᶜ
+ω-in = K.down {x = L.ωᶜ} {y = D} seed K.seed
+strict : L.suc Front.Γ ≼ E.above D
+strict = K.finite {x = Front.Γ} (K.down {x = Front.Γ} {y = Cost.width D} paid
+  (K.mulC {x = D M.· L.ωᶜ} {y = L.ωᶜ} (K.mulC {x = D} {y = L.ωᶜ} K.seed ω-in) ω-in))
+high : S.S ≼ E.above D
+high = ≼-trans {b = E.above Front.Γ} Front.Actual.Steps.cap (E.least Front.Γ (E.above D) strict (proj₁ (E.fix D)))
+module Original = Front.Gate D S.S low high

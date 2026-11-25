@@ -1,0 +1,27 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module Step0b where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.List using (_++_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; twᶜ)
+open import OCF.Lean.YiRBSib
+import OCF.Align.EboLeanDef as E
+open import OCF.Lean.YiANFam using (ψᴺ)
+open import OCF.Lean.YiCLFam using (nat; fn)
+open import OCF.Lean.YiCLLow using (Sb; pth)
+open import OCF.Lean.YiHCFam using (M)
+open import OCF.Lean.YiKPRel
+open import OCF.Lean.YiKPInst
+
+-- 陈述 (未证): 折到第 j 层, 路径经指定孩子 nat n
+module _ (r : Rb ℓ¹) (t₀ : E.T) where
+  open Fin r t₀
+  Stmtʲ : Set
+  Stmtʲ = ∀ n {j} (s : Sb n j) (B : Base ℓ¹) → GB¹ B → (β : Tr⁺ (fn j)) → M j (ψᴺ j t₀) (proj₁ β)
+        → ∀ {a x} (m : M¹ a x) → Sp m → M j (ψᴺ j (t₀ ++ a)) (proj₁ (ψ ℓ¹ o¹ r B (fn j) (inc (nat n) (pth s)) β x))
+

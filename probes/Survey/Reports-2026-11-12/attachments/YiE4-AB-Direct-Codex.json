@@ -1,0 +1,29 @@
+{
+  "name": "ab-direct",
+  "file": "<实验目录>/YiE4ABDirect.agda",
+  "command": [
+    "timeout",
+    "600",
+    "agda",
+    "+RTS",
+    "-M8G",
+    "-s",
+    "-RTS",
+    "--library-file=<实验目录>/libraries",
+    "-i",
+    "src",
+    "-i",
+    "probes",
+    "-i",
+    "<实验目录>",
+    "-l",
+    "standard-library",
+    "<实验目录>/YiE4ABDirect.agda"
+  ],
+  "start_utc": "2026-11-15T09:04:29Z",
+  "exit": 251,
+  "external_wall_seconds": 146.753066792,
+  "maximum_residency_bytes": 8431556536.0,
+  "rts_total_memory_MiB": 8298.0,
+  "rts_elapsed_seconds": 146.634
+}

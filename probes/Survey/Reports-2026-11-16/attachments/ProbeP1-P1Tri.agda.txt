@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 探针 P1 的小实验: 排中律作模块参数时, 主线块的值 V (YiVWVal) 上任意两棵树可比.
+-- 结论是条件的 (前提 LEM). 不改仓库.
+module P1Tri where
+
+open import Data.Nat using (ℕ)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_)
+open import Data.Empty using (⊥-elim)
+open import Relation.Nullary using (¬_)
+
+open import OCF.Lean.YiRWBlock using (L; Pos; Br)
+open import OCF.Lean.YiVWVal using (V; zero; suc; lim; Ω; _≼_; z≼; s≼s; ≼l; l≼; ≼Ω; Ω≼; ≼-refl; ≼-trans)
+
+LEM : Set₁
+LEM = (A : Set) → A ⊎ ¬ A
+
+module Classical (lem : LEM) where
+
+  notAll : {I : Set} {P : I → Set} → ¬ ((i : I) → P i) → Σ I (λ i → ¬ P i)
+  notAll {I} {P} na with lem (Σ I (λ i → ¬ P i))
+  ... | inj₁ e  = e
+  ... | inj₂ ne = ⊥-elim (na dn)
+    where
+    dn : (i : I) → P i
+    dn i with lem (P i)
+    ... | inj₁ p  = p
+    ... | inj₂ np = ⊥-elim (ne (i , np))
+
+  -- 跨层的值前序是全的 (条件: LEM)
+  tri : ∀ {ℓ₁ ℓ₂ : L} (a : V ℓ₁) (b : V ℓ₂) → (a ≼ b) ⊎ (b ≼ a)
+  tri zero b = inj₁ z≼
+  tri (lim f) b with lem ((n : ℕ) → f n ≼ b)
+  ... | inj₁ h  = inj₁ (l≼ h)
+  ... | inj₂ nh with notAll nh
+  ...   | n , nf with tri (f n) b
+  ...     | inj₁ x = ⊥-elim (nf x)
+  ...     | inj₂ y = inj₂ (≼-trans y (≼l n (≼-refl (f n))))
+  tri (Ω p g) b with lem ((z : Br _ p) → g z ≼ b)
+  ... | inj₁ h  = inj₁ (Ω≼ h)
+  ... | inj₂ nh with notAll nh
+  ...   | z , nz with tri (g z) b
+  ...     | inj₁ x = ⊥-elim (nz x)
+  ...     | inj₂ y = inj₂ (≼-trans y (≼Ω z (≼-refl (g z))))
+  tri (suc a) zero = inj₂ z≼
+  tri (suc a) (suc b) with tri a b
+  ... | inj₁ x = inj₁ (s≼s x)
+  ... | inj₂ y = inj₂ (s≼s y)
+  tri (suc a) (lim g) with lem ((n : ℕ) → g n ≼ suc a)
+  ... | inj₁ h  = inj₂ (l≼ h)
+  ... | inj₂ nh with notAll nh
+  ...   | n , ng with tri (suc a) (g n)
+  ...     | inj₁ x = inj₁ (≼l n x)
+  ...     | inj₂ y = ⊥-elim (ng y)
+  tri (suc a) (Ω p g) with lem ((z : Br _ p) → g z ≼ suc a)
+  ... | inj₁ h  = inj₂ (Ω≼ h)
+  ... | inj₂ nh with notAll nh
+  ...   | z , nz with tri (suc a) (g z)
+  ...     | inj₁ x = inj₁ (≼Ω z x)
+  ...     | inj₂ y = ⊥-elim (nz y)

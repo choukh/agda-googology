@@ -1,0 +1,61 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23ASelected where
+open import Data.Nat.Base using (zero)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (ok₂; lvl2)
+open import YiLAB11Orbit using (push)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼)
+import B12ActualSlots as Cov
+import B12Terminal as T
+import B12Omega3Ref as Ref
+import B12Omega3Cuts as U
+import B13Target as P
+import B13SeedOuter as Seed
+import B13OrbitFeed as O
+import B18OrbitRows as Rows
+import B20Room as Room
+import B22RowPrefix as B
+import B22RowLive as V
+import B22RowWhole as Start
+import B23ARepeat as Rep
+import B23ACoeff as Co
+import B23LClock as Clock
+
+module Generic (r : T.Run lvl3) (cv : Cov.Covered r) (R : Base lvl2) (h : V.Present B.empty R)
+               (y : T₀) (z : Tr zero) (low : y ≼ read (suc z)) where
+  open Rows.At.I r cv using (K₁)
+  module C = Co.Add {p = L.zero} B.empty y
+  opaque
+    scalar : ∀ t b → L.ψ⁰ (B.q B.empty) ≼ read (proj₁ b) → L.ψ⁰ (P.co₀ y) ≼
+      read (proj₁ (E ok₂ O.D₁ (O.g₁ z) K₁ (push R) zero (σ O.m₁ t) b))
+    scalar t b hb = ≼-trans (≅→≼ (L.ψ⁰-≅ (L.≅-sym (L.≅-trans C.sum (U.left-unit Ref.idσ (P.regular₀ y))))))
+      (Co.Add.At.Emit.lower {p = L.zero} B.empty y r cv R h z low t b hb)
+
+module At (r : T.Run lvl3) (cv : Cov.Covered r) (q : T₀) (room : Room.Room r q) where
+  open Seed.At r using (st1; w2; v₁; outer)
+  open Rows.At.I r cv using (K₁; module Previous; module E₀)
+  open Previous.Proof.Core.Run using (zeta; inner-point; inner-to-outer; outer-point)
+  opaque
+    initial : V.Present {p = L.zero} B.empty st1
+    initial = Start.At.initial r cv
+    hit : q ≼ read (suc zeta)
+    hit = Clock.At.bound r cv {q = q} room
+    exit : read (proj₁ (E ok₂ O.D₁ (O.g₁ zeta) K₁ (push st1) zero (σ O.m₁ w2) v₁)) ≼ read (T.value r)
+    exit = ≼-trans inner-point (≼-trans inner-to-outer (≼-trans outer-point (≼-trans (E₀.inG st1 w2 v₁) (outer 0))))
+  module Use (y : T₀) (le : y ≼ q) where
+    low : y ≼ read (suc zeta)
+    low = ≼-trans le hit
+    open Rep.Twice {p = L.zero} B.empty y r cv st1 initial zeta low public
+      using (first; first-live; state₁; label₂; state₂; twice)
+    scalar : L.ψ⁰ (P.co₀ y) ≼ read (T.value r)
+    scalar = ≼-trans (Generic.scalar r cv st1 initial y zeta low w2 v₁ (Start.At.run-bound r cv 0)) exit
+  shared₁ : ∀ y y′ le le′ → Use.state₁ y le ≡ Use.state₁ y′ le′
+  shared₁ y y′ le le′ = refl
+  shared₂ : ∀ y y′ le le′ → Use.state₂ y le ≡ Use.state₂ y′ le′
+  shared₂ y y′ le le′ = refl

@@ -1,0 +1,63 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 将前缀余量代入原参照和真实 W4 加法。每个固定低于 EBO 的后缀程序都有高首反例。
+module B26OUValue where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym)
+open import OCF.Align.EboLeanDef using (ψ; _<ᵀ_; hd<; lv<; ar<; HC; ΩTower; EBOψ; natT)
+open import OCF.Align.EboLeanBase using (_≤ᵀ_; nf-hd; nfp-a; nfp-g; c∷; c[])
+open import OCF.Align.EboLeanTree using (nf-tower; hc; hc-tower; EBO-tree′; pos-tower)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiMonoExit using (toL)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; s≼s; ≅→≼; +-mono; ≼lim⁻)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import WVOne using (T₀; read)
+import W4Ops as O
+import B12XRef as Base
+import B16IndexBase as I
+import B17Cofinal as Cof
+import B26ORank as R
+open import B26OArgument as A using (Argument; argument; raw)
+import B26OGame as G
+import B26OUContext as C
+
+opaque
+  ref : Argument → T₀
+  ref a = R.ref (A.principal a)
+
+  step : A.Strict ref
+  step a b p = R.ref-strict (A.principal a) (A.principal b) (hd< (ar< p))
+
+  same : ∀ a b → raw a ≡ raw b → ref a ≼ ref b
+  same a b p = tree-≼ (cong (λ t → ψ [] t ∷ []) p)
+    (hc (R.normal (A.principal a)) (R.countable (A.principal a)))
+    (hc (R.normal (A.principal b)) (R.countable (A.principal b)))
+
+  from-tree : ∀ a (h : HC (R.term (A.principal a))) → Rt h ≼ ref a
+  from-tree a h = tree-≼ refl h (hc (R.normal (A.principal a)) (R.countable (A.principal a)))
+
+  to-tree : ∀ a (h : HC (R.term (A.principal a))) → ref a ≼ Rt h
+  to-tree a h = tree-≼ refl (hc (R.normal (A.principal a)) (R.countable (A.principal a))) h
+
+module At (i : Argument) (high : natT 1 ≤ᵀ raw i) where
+  module H = C.At i high
+  B = ref H.H
+  pay : ∀ a → raw a ≡ raw H.H → B ≼ ref a
+  pay a p = same H.H a (sym p)
+  module K = H.Rank ref step B pay
+
+  charge : L.suc (B L.+ B) ≼ ref H.roof
+  charge = ≼-trans (s≼s (+-mono (≼-refl B) (to-tree H.H h))) (K.charge h)
+    where h = hc (R.normal H.P) (R.countable H.P)
+
+  fail : ∀ (x z : G.Tree) → read x ≼ B → read z ≼ B → ref H.roof ≼ read (x O.+ z) → ⊥
+  fail x z hx hz roof = s≼-irrefl (B L.+ B) (≼-trans charge
+    (≼-trans roof (≼-trans (≅→≼ (L.≅-sym (I.plus x z))) (+-mono hx hz))))
+
+  descend : ∀ z → ref H.roof ≼ read z → Σ (G.Choice z) (λ j → B L.+ B ≼ read (G.child z j))
+  descend z p = G.take (B L.+ B) z (≼-trans charge p)

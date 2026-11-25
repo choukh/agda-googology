@@ -1,0 +1,58 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 只要 ψ₀ 的参数含一个非零、严格小于 K 的可数后缀，整项就不能命名真实终点。
+module B26PLowTail where
+
+open import Data.List.Base using ([]; _∷_; _++_)
+open import Data.List.Properties using (++-identityʳ)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Product using (_×_; _,_; proj₁)
+
+open import Relation.Binary.PropositionalEquality using (cong; trans; subst; _≡_; refl)
+open import OCF.Align.EboLeanDef using (T; HC; h0; h1; hω; fsn; pred)
+open import OCF.Align.EboLeanView using (ne; cof0)
+open import OCF.Lean.YiMENote using (cof++1; pred++; cof++ω; fsn++; cofψ1; fsnψ1; cofψω; fsnψω)
+open import OCF.Lean.YiRefTw2 using (Rt; hω-inv)
+open import OCF.Align.EboLeanBase using (NF; Ctbl; n[]; c[])
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Align.EboLeanDef using ([]<)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; s≼s; ≼l; ≼-suc)
+open import B19IdealProduct using (_∙_; flip; left-one)
+import B19IdealArithmetic as Ar
+import B19IdealPowers as P
+import B22TowerCut as Cut
+import B26PActual as W
+import B26PSuffix as S
+open S using (φ)
+import B26PDivisor as D
+
+prefix : ∀ t s → HC s → HC (φ (t ++ s)) → HC (φ t)
+prefix t [] (h0 _) h = subst (λ v → HC (φ v)) (++-identityʳ t) h
+prefix t (x ∷ xs) (h0 e) h = ⊥-elim (cof0 _ ne e)
+prefix t s (h1 e c) h = prefix t (pred s) c (subst HC eq (hω-inv h (cofψ1 [] (t ++ s) e′) 1))
+  where
+  e′ = cof++1 t s e
+  eq : fsn (φ (t ++ s)) 1 ≡ φ (t ++ pred s)
+  eq = trans (fsnψ1 [] (t ++ s) 1 e′) (cong φ (pred++ t s e))
+prefix t s (hω e c) h = prefix t (fsn s 0) (c 0) (subst HC eq (hω-inv h (cofψω [] (t ++ s) e′) 0))
+  where
+  e′ = cof++ω t s e
+  eq = trans (fsnψω [] (t ++ s) 0 e′) (cong φ (fsn++ t s 0 e))
+
+exclude : ∀ t s (c : HC s) (h : HC (φ (t ++ s))) →
+  𝟏 ≼ Rt c → L.suc (Rt c) ≼ W.K → Rt h ≈ᵛ W.Y → ⊥
+exclude t s c h pos right eq = D.exclude (Rt a) (Ar.norm (Rt c)) two room (flip (S.Low.val t a s c h) ∙ eq)
+  where
+  a = prefix t s c h
+  two : L.natᶜ 2 ≼ Ar.norm (Rt c)
+  two = ≼-trans {a = L.natᶜ 2} {b = Ar.norm 𝟏} {c = Ar.norm (Rt c)}
+     (≼l 2 (≼-refl (L.natᶜ 2))) (P.expo P.omega-pos pos)
+  room : L.suc (Ar.norm (Rt c)) ≼ W.K
+  room = ≼-trans (s≼s (≼l 1 (P.expo P.omega-pos (≼-suc (≼-refl (Rt c)))))) (Cut.inside {Rt c} right)
+
+normal : ∀ t x xs → (ns : NF (x ∷ xs)) (cs : Ctbl (x ∷ xs))
+  (c : HC (x ∷ xs)) (h : HC (φ (t ++ x ∷ xs))) →
+  L.suc (Rt c) ≼ W.K → Rt h ≈ᵛ W.Y → ⊥
+normal t x xs ns cs c h = exclude t (x ∷ xs) c h (mono<ⁿ n[] ns cs (h0 refl) c []<)
+

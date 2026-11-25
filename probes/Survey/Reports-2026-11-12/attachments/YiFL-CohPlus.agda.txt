@@ -1,0 +1,39 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module CohPlus where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong)
+
+open import OCF.Lean.YiFreshBlock
+open import OCF.Lean.YiFreshFold using (_+_; iter; next; cum; Ωt; ι)
+open import OCF.Lean.YiFreshLegal using (_⊢_◃_; ◃s; ◃l; ◃w; ◃u; ◃c; ◃t; +-mono; Ωt-nz; Ωt-leg; seq)
+open import CohTry
+
+mutual
+  +-Eᶜ : ∀ {ℓ} (a b : Tr ℓ) → Eᶜ ℓ a → Eᶜ ℓ b → Eᶜ ℓ (a + b)
+  +-Eᶜ a zero       ea eb = ea
+  +-Eᶜ a (suc b)    ea eb = +-Eᶜ a b ea eb
+  +-Eᶜ a (lim f)    ea (ef , A) = (λ n → +-Eᶜ a (f n) ea (ef n)) , +A a f ea ef A
+  +-Eᶜ a (Ω p g)    ea (ep , eg) = ep , λ z ez → +-Eᶜ a (g z) ea (eg z ez)
+  +-Eᶜ a (up y c w) ea (ey , ei , ew) = +-Eᶜ a y ea ey , ei , ew
+
+  +A : ∀ {ℓ} (a : Tr ℓ) (f : ℕ → Tr ℓ) (ea : Eᶜ ℓ a) (ef : (n : ℕ) → Eᶜ ℓ (f n))
+     → Maybe (Σ ((n : ℕ) → ℓ ⊢ f n ◃ f (suc n)) λ d → (n : ℕ) → ef n ≡ dn (d n) (ef (suc n)))
+     → Maybe (Σ ((n : ℕ) → ℓ ⊢ a + f n ◃ a + f (suc n)) λ d →
+               (n : ℕ) → +-Eᶜ a (f n) ea (ef n) ≡ dn (d n) (+-Eᶜ a (f (suc n)) ea (ef (suc n))))
+  +A a f ea ef nothing        = nothing
+  +A a f ea ef (just (d , C)) =
+    just ((λ n → +-mono a (d n)) , λ n → trans (cong (+-Eᶜ a (f n) ea) (C n)) (+-dn a (d n) ea (ef (suc n))))
+
+  +-dn : ∀ {ℓ} (c : Tr ℓ) {x y : Tr ℓ} (d : ℓ ⊢ x ◃ y) (ec : Eᶜ ℓ c) (ey : Eᶜ ℓ y)
+       → +-Eᶜ c x ec (dn d ey) ≡ dn (+-mono c d) (+-Eᶜ c y ec ey)
+  +-dn c ◃s       ec ey = refl
+  +-dn c (◃l n)   ec ey = refl
+  +-dn c ◃w       ec ey = refl
+  +-dn c (◃u z)   ec ey = refl
+  +-dn c (◃c d)   ec ey = refl
+  +-dn c (◃t d e) ec ez = trans (+-dn c d ec (dn e ez)) (cong (dn (+-mono c d)) (+-dn c e ec ez))

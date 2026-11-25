@@ -1,0 +1,52 @@
+# 后继结果的实例与最小表闭项
+验收文件；编译定理。q-even 实例为 0,2,4,… 的合法极限；closed-bound 为最小比较表闭项的 M⁰ 下界。
+GBB 的空底实例 gb₀ 表明有限保持接口前提可满足。这里不声称整棵塔第 1 项的 EBO 下界。
+来源：YiPJQ、YiPJLimStep 与既有 ΩJ；不改树、折叠、合法性。
+
+```agda
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+module OCF.Lean.YiPJCheck where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import Data.List using ([])
+open import OCF.Lean.YiRWFold using (B₀)
+open import OCF.Lean.YiTBRow hiding (nat; fn)
+open import OCF.Lean.YiCLFam using (fn)
+open import OCF.Lean.YiCLCrit using (dbl; ωᶜ; ωᵉ)
+open import OCF.Lean.YiCLPhi using (ωᵀ)
+open import OCF.Lean.YiLRBridge using (Sᶜ)
+open import OCF.Lean.YiLTLift using (Q; zp-z)
+open import OCF.Lean.YiHCRel using (M⁰; m1; mz)
+open import OCF.Lean.YiHCBridge using (GBB; mkGBB)
+open import OCF.Lean.YiHCFam using (ΩJ)
+open import OCF.Lean.YiKVRel using (⊴r)
+open import OCF.Lean.YiANFam using (ψᴺ; Ωᴺ)
+open import OCF.Lean.YiMTTab using (rbᶻ)
+open import OCF.Lean.YiPJQ using (qω+1)
+open import OCF.Lean.YiPJLimStep using (module FinLim)
+import OCF.Align.EboLeanDef as E
+
+d : ℕ → ℕ
+d zero = zero
+d (suc n) = suc (suc (d n))
+eG : ∀ n → h₁ (dbl n) ≡ fn (d n)
+eG zero = refl
+eG (suc n) = cong (λ z → Sᶜ (Sᶜ z)) (eG n)
+
+q-even : Q (ψᴺ 0 (E.Ωt (E.sucT ωᵀ))) (h₁ (suc ωᵉ))
+q-even = FinLim.step dbl (λ n → ◃t ◃s ◃s) d eG
+
+closed : Tr zero
+closed = proj₁ (ψ (h₁ (suc ωᶜ)) (proj₂ (Ok-tw 1) (suc ωᶜ)) (rbᶻ (h₁ (suc ωᶜ)))
+  (B₀ (h₁ (suc ωᶜ))) zero (z≤ (h₁ (suc ωᶜ))) (Ωt zero) (proj₁ (Ωt (h₁ (suc ωᶜ)))))
+closed-bound : M⁰ (ψᴺ 0 (E.Ωt (E.sucT ωᵀ))) closed
+closed-bound = qω+1 (proj₂ (Ok-tw 1) (suc ωᶜ)) (rbᶻ (h₁ (suc ωᶜ))) (z≤ (h₁ (suc ωᶜ)))
+  (zp-z (h₁ (suc ωᶜ))) (B₀ (h₁ (suc ωᶜ))) (λ i u → ⊴r) (Ωt zero) (m1 refl mz)
+
+gb₀ : ∀ n → GBB (fn n) refl (B₀ (fn n)) []
+gb₀ n = mkGBB (fn n) refl (B₀ (fn n)) [] (λ {i} si u q → ⊴r , ΩJ i (Ωt (fn i)) ⊴r)
+```

@@ -1,0 +1,46 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在一个 Ω 孩子内，跨其根的已处理段对全部子槽同时右加一棵独立零树；零树直接取自原先较早的源层。
+module B31PCard where
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Nat.Base as N using (ℕ)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import B12Terminal as T
+import B31PPrefix as F
+
+cert : ∀ l (o : Ok l) {a} → a ≤ l → Ok a
+cert l o self = o
+cert (nd s h) o (inc c u) = cert (h c) (proj₂ o c) u
+cert (nd s h) o (inu u) = cert (h (c₀ s)) (proj₂ o (c₀ s)) (u (c₀ s))
+cert (nd (sΩ k) h) o (ink u) = cert (h zero) (proj₂ o zero) (u ∙ proj₂ (proj₁ o) zero)
+
+independent : ∀ a → Ok a → Tr⁺ a → Tr⁺ zero
+independent a o y = ψ a o (B₀ a) zero (z≤ a) (Ωt zero) (proj₁ y)
+strip : ∀ l (o : Ok l) {a} (p : a ≤ l) y → independent l o (emb l o p y) ≡ independent a (cert l o p) y
+strip l o self y = refl
+strip (nd s h) o (inc c p) y = strip (h c) (proj₂ o c) p y
+strip (nd s h) o (inu p) y = strip (h (c₀ s)) (proj₂ o (c₀ s)) (p (c₀ s)) y
+strip (nd (sΩ k) h) o (ink p) y = strip (h zero) (proj₂ o zero) (p ∙ proj₂ (proj₁ o) zero) y
+
+data Cross {a j : L} : ∀ {l} → a ≤ l → j ≤ l → Set where
+  child : ∀ {k} {h : Tr k → L} c {p : a ≤ h c} e (t : j ≤ h e) → Cross (inc {s = sΩ k} c p) (inc e t)
+  every : ∀ {k} {h : Tr k → L} {p : (c : Tr k) → a ≤ h c} e (t : j ≤ h e) → Cross (inu {s = sΩ k} p) (inc e t)
+  index : ∀ {k} {h : Tr k → L} {p : a ≤ k} e (t : j ≤ h e) → Cross (ink {h = h} p) (inc e t)
+
+reset : ∀ {a j l p w} → Cross {a} {j} {l} p w → (o : Ok l) (b : Base l) (v : Tr⁺ j) (y : Tr⁺ a) →
+  ψ l o b j w v (proj₁ (emb l o p y)) ≡ (v ⊞ independent a (cert l o p) y)
+reset (child {h = h} c {p} e t) o b v y = cong (v ⊞_) (strip (h c) (proj₂ o c) p y)
+reset (every {h = h} {p} e t) o b v y = cong (v ⊞_) (strip (h zero) (proj₂ o zero) (p zero) y)
+reset (index {h = h} {p} e t) o b v y = cong (v ⊞_) (strip (h zero) (proj₂ o zero) (p ∙ proj₂ (proj₁ o) zero) y)
+
+module Triangle (g : ℕ → L) (r : T.Run (nd sL g)) where
+  module H = F.At g r
+  unit : ∀ m n → m N.< n → Tr⁺ zero
+  unit m n d = independent (g m) (cert (g n) (H.ok n) (H.picked m n d)) (Ωt (g m))
+  step : ∀ m n (d : m N.< n) j (w : j ≤ g n) → Cross (H.picked m n d) w → ∀ v →
+    H.fix n (N.suc m) j w v ≡ H.fix n m j w v ⊞ unit m n d
+  step m n d j w cross v = trans (cong (λ f → f j w v) (H.step m n d))
+    (reset cross (H.ok n) (F.apply (H.rest n) (H.fix n m)) (H.fix n m j w v) (Ωt (g m)))

@@ -1,0 +1,100 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18ResetCell where
+
+open import Data.Nat.Base as N using (ℕ; zero; suc)
+open import Data.Nat.Properties as NP using (≤-refl; m≤n⇒m≤1+n)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; read; read-+; cum-≥; Mv; 𝟏)
+open import B8FreezeMain using (read-+′; irr)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼l; ≼-suc; ≼-refl; ≼-trans) renaming (+-mono to add-mono)
+import B12Terminal as T
+import B12XRef as R
+import B14Goal as G
+import B17CellPrefix as P
+import B17CapFirst as Cap
+import B17Single as Search
+import B17ValueDich as D
+import B18TowerSlots as Slots
+import B18CellState as C
+import B18Reset as Tower
+import B12EboRows as B
+
+module At (n : ℕ) where
+  open P.At n using (r; module S)
+  raw : ℕ → Tr zero
+  raw j = proj₁ (ψ _ (T.Run.ok r) (T.Run.bs r) zero (z≤ _) (Ωt zero) (S.b (S.ix j)))
+  fresh = C.At.fresh n
+  branch : ∀ j → read (raw j) ≡ fresh j
+  branch j = cong (λ b → C.At.with-base n j b (Ωt zero)) (Slots.At.all n (S.ix j))
+
+  pre = λ j → read (cum raw j)
+  shape : Tower.fresh (suc n) ≡ L.lim pre
+  shape = P.lookup (kp _ (T.Run.ok r) S.p (z≤ _))
+     (λ z → ψ _ (T.Run.ok r) (T.Run.bs r) zero (z≤ _) (Ωt zero) (S.b z)) S.step
+
+  sum : ℕ → T₀
+  sum zero = fresh zero
+  sum (suc j) = sum j L.+ fresh (suc j)
+  below : ∀ j → pre j ≼ sum j
+  below zero = subst (pre 0 ≼_) (branch 0) (≼-refl _)
+  below (suc j) = ≼-trans (read-+′ (cum raw j) (raw (suc j)))
+    (add-mono (below j) (subst (read (raw (suc j)) ≼_) (branch (suc j)) (≼-refl _)))
+  above : ∀ j → sum j ≼ pre j
+  above zero = subst (_≼ pre 0) (branch 0) (≼-refl _)
+  above (suc j) = ≼-trans (add-mono (above j) (subst (_≼ read (raw (suc j))) (branch (suc j)) (≼-refl _)))
+    (read-+ (cum raw j) (raw (suc j)))
+
+  exact : (Tower.fresh (suc n) ≼ L.lim sum) × (L.lim sum ≼ Tower.fresh (suc n))
+  exact = subst (_≼ L.lim sum) (sym shape) (l≼ (λ j → ≼l j (below j))) ,
+          subst (L.lim sum ≼_) (sym shape) (l≼ (λ j → ≼l j (above j)))
+  into : ∀ j → fresh j ≼ Tower.fresh (suc n)
+  into j = subst (_≼ Tower.fresh (suc n)) (branch j)
+    (subst (read (raw j) ≼_) (sym shape) (≼l j (cum-≥ raw j)))
+
+  through : ∀ Q j → (∀ i → i N.≤ j → fresh i ≼ Q) → sum j ≼ P.Bound.scale Q j
+  through Q zero h = h 0 ≤-refl
+  through Q (suc j) h = ≼-trans
+    (add-mono (through Q j (λ i d → h i (m≤n⇒m≤1+n d))) (h (suc j) ≤-refl)) (P.Bound.rotate Q j)
+  bound : ∀ Q → (∀ j → fresh j ≼ Q) → Tower.fresh (suc n) ≼ Mv Q 𝟏
+  bound Q h = ≼-trans (proj₁ exact) (l≼ λ j → ≼l j (through Q j (λ i _ → h i)))
+  cap : ∀ k → (∀ j → fresh j ≼ R.row k) → L.suc (Tower.fresh (suc n)) ≼ R.row (suc k)
+  cap k h = ≼-trans (OCF.Align.Value.s≼s (bound (R.row k) h)) (Cap.mul-strict k)
+
+first : Tower.fresh zero ≡ C.At.fresh 0 0
+first = refl
+
+Hit : T₀ → Set
+Hit x = Σ ℕ (λ n → Σ ℕ (λ j → x ≼ C.At.fresh n j))
+
+enough : (∀ k → Hit (R.row k)) → G.Goal
+enough h = R.assemble λ k → let n , j , p = h k in B.into (suc n , ≼-trans p (≼-trans (At.into n j) (Tower.lower (suc n))))
+
+invert : ∀ {x : T₀} (f : ℕ → T₀) → L.suc x ≼ L.lim f → Σ ℕ (λ m → L.suc x ≼ f m)
+invert f (≼l m h) = m , h
+
+module Local (k : ℕ) where
+  Q : T₀
+  Q = R.row k
+  high : T₀
+  high = L.suc (Mv Q 𝟏)
+  pin : ∀ n → high ≼ Tower.fresh (suc n) → Σ ℕ (λ m → high ≼ At.sum n m)
+  pin n d = invert (At.sum n) (≼-trans d (proj₁ (At.exact n)))
+
+  select : ∀ n → high ≼ Tower.fresh n →
+    (∀ i j → (C.At.fresh i j ≼ Q) Data.Sum.Base.⊎ (L.suc Q ≼ C.At.fresh i j)) → Hit (L.suc Q)
+  select zero d dec = 0 , 0 , subst (L.suc Q ≼_) first
+    (≼-trans (OCF.Align.Value.s≼s (WVOne.Mv-infl Q 𝟏)) d)
+  select (suc n) d dec with pin n d
+  ... | m , p with Search.search m (λ j → C.At.fresh n j ≼ Q) (λ j → L.suc Q ≼ C.At.fresh n j) (λ j _ → dec n j)
+  ...   | inj₂ (j , _ , h) = n , j , h
+  ...   | inj₁ h = ⊥-elim (irr (Mv Q 𝟏) (≼-trans p (≼-trans (At.through n Q m h) (≼l m (≼-refl _)))))
+

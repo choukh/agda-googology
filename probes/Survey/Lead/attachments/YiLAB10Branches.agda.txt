@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiLAB10Branches where
+
+open import Data.Nat using (ℕ; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import YiLAB7Orbit using (F; lvl1; lvl2; c₁)
+
+-- 从第一次更新以后编号；每一步用当前底族自己的槽值。
+states : ℕ → Base lvl2
+states n = itS F n (stepS F (B₀ lvl2))
+
+c : ℕ → Tr lvl1
+c n = c₁ (states n)
+
+nc : (n : ℕ) → lvl1 ⊢ zero ◃ c n
+nc n = proj₂ (states n lvl1 (inc tt self))
+
+z : ℕ → ℕ → Tr lvl1
+z n = iter (λ x → ex (c n) (c n) (nc n) (suc x) tt) zero
+
+U : ℕ → ℕ → Tr lvl1
+U n = cum (λ j → z n (suc j))
+
+part : (n : ℕ) → lvl1 ⊢ U n 1 ◃ c (suc n)
+part n = ◃l 1
+
+expand : (n : ℕ) → U n 1 ≡ ex (z n 1 + c n) (c n) (nc n) (suc (z n 1)) tt
+expand n = refl
+
+rise : (n : ℕ) → lvl1 ⊢ c n ◃ c (suc n)
+rise n = inf F (states n) lvl1 (inc tt self) (states n lvl1 (inc tt self))

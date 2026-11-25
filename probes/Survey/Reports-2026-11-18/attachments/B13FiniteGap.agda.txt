@@ -1,0 +1,29 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 在显式 EBOᶜ 上，Ω₂ 后的准确 Ω₃ 缺口是参照实际问到的每一行系数。
+module B13FiniteGap where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_)
+open import WVOne using (T₀; read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; ≅→≼; ≼-refl; ≼-trans)
+open import W4Fold using (EBOᶜ)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import B12Omega3Ref as R
+import B12Terminal as T
+import B13Target as P
+
+Rows : T₀ → Set
+Rows t = ∀ m n → L.ψ⁰ (P.height₂ (P.argument m n) L.zero) ≼ t
+
+sufficient : ∀ {t} → L.ψ⁰ Ω₂ᴸ ≼ t → Rows t → L.ψ⁰ R.Ω₃ ≼ t
+sufficient h r = P.from-asked λ where
+  zero n → ≼-trans (≼l n (≼-refl _)) h
+  (suc m) n → ≼-trans (≅→≼ (L.ψ⁰-≅ (L.≅-sym (P.all-arithmetic m n)))) (r m n)
+
+necessary : ∀ {t} → L.ψ⁰ R.Ω₃ ≼ t → Rows t
+necessary h m n = ≼-trans (≅→≼ (L.ψ⁰-≅ (P.all-arithmetic m n))) (P.to-asked h (suc m) n)
+
+terminal-gap : (Rows (read EBOᶜ) → L.ψ⁰ R.Ω₃ ≼ read EBOᶜ) ×
+               (L.ψ⁰ R.Ω₃ ≼ read EBOᶜ → Rows (read EBOᶜ))
+terminal-gap = sufficient T.ebo-level , necessary

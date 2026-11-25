@@ -1,0 +1,107 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 将带描述与同余的前缀变换抬为迭代对象。保留节点可在一个变换处、或在一个变换族处取。
+module B17OrbitOperator where
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+open import WSShadow using (nC; Infl-nC; LeE-refl; LeE; LeE-trans)
+import WSLevel as W
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-trans; ≼-refl)
+import B12LimitRef as A
+import B14RefDescribed as D
+import B15OrbitAction as P
+open P using (Act; f; s; rows; infl; pres)
+import B16OrbitTransform as H
+import B16OrbitAction as B
+open B using (Bridge; Same; iter-rel)
+
+Rmap : (Act → Act) → (Act → Act) → Set
+Rmap F G = ∀ a b → Bridge a b → Bridge (F a) (G b)
+Smap : (Act → Act) → (Act → Act) → Set
+Smap F G = ∀ a b → Same a b → Same (F a) (G b)
+
+record Trans : Set where
+  constructor transform
+  field
+    app : Act → Act
+    monotone : Rmap app app
+    congruent : Smap app app
+open Trans public
+Rel : Trans → Trans → Set
+Rel F G = Rmap (app F) (app G)
+Eq : Trans → Trans → Set
+Eq F G = Smap (app F) (app G)
+
+raiseT : Trans
+raiseT = transform P.raise (λ a b → B.raised {a} {b}) (λ a b → B.raised-same {a} {b})
+supT : (ℕ → Trans) → Trans
+app (supT g) a = H.sup (λ n → app (g n) a)
+monotone (supT g) a b r {p} {e} d = A.limit _ _ (λ n → monotone (g n) a b r d)
+congruent (supT g) a b r d = L.l≅ (λ n → congruent (g n) a b r d)
+
+height₁ : T₀ → (Trans → Trans) → Trans → Trans
+height₁ L.zero F = F
+height₁ (L.suc y) F a = supT (iter (height₁ y F) a)
+height₁ (L.lim g) F a = supT (λ n → height₁ (g n) F a)
+
+node : (g : T₀ → Act) → (∀ {x y} → x ≼ y → Bridge (g x) (g y)) → (∀ {x y} → x L.≅ y → Same (g x) (g y)) → Act
+f (node g r q) p = L.limᵢ (L.suc L.zero) (λ y → f (g y) p)
+s (node g r q) e = nC (λ y → s (g y) e)
+rows (node g r q) {e = e} d = A.described (Infl-nC (λ y → s (g y) e) (infl (g (L.suc L.zero)) e (A.Described.infl d)))
+  (W.Li (λ y y′ h → A.Described.bd (r (≼-trans (W.tr⁻≼ y) h) d)))
+  (W.Ew (W.Ei (λ y y′ h → A.Described.bx (r (≼-trans (W.tr⁻≼ y) h) d))) (LeE-refl _))
+infl (node g r q) e ie = Infl-nC (λ y → s (g y) e) (infl (g (L.suc L.zero)) e ie)
+pres (node g r q) h = L.lᵢ≅ L.z≅ (λ y z u → q u h)
+
+node-rel : ∀ (g h : T₀ → Act) (rg : ∀ {x y} → x ≼ y → Bridge (g x) (g y)) (qg : ∀ {x y} → x L.≅ y → Same (g x) (g y)) (rh : ∀ {x y} → x ≼ y → Bridge (h x) (h y)) (qh : ∀ {x y} → x L.≅ y → Same (h x) (h y)) → (∀ {x y} → x ≼ y → Bridge (g x) (h y)) → Bridge (node g rg qg) (node h rh qh)
+node-rel g h rg qg rh qh u {e = e} d = A.described (infl (node h rh qh) e (A.Described.infl d))
+  (W.Li (λ y y′ t → A.Described.bd (u (≼-trans (W.tr⁻≼ y) t) d)))
+  (W.Ew (W.Ei (λ y y′ t → A.Described.bx (u (≼-trans (W.tr⁻≼ y) t) d))) (LeE-refl _))
+node-eq : ∀ (g h : T₀ → Act) (rg : ∀ {x y} → x ≼ y → Bridge (g x) (g y)) (qg : ∀ {x y} → x L.≅ y → Same (g x) (g y)) (rh : ∀ {x y} → x ≼ y → Bridge (h x) (h y)) (qh : ∀ {x y} → x L.≅ y → Same (h x) (h y)) → (∀ {x y} → x L.≅ y → Same (g x) (h y)) → Same (node g rg qg) (node h rh qh)
+node-eq g h rg qg rh qh u pq = L.lᵢ≅ L.z≅ (λ x y t → u t pq)
+
+module Lower (F G : Trans) where
+  aH = λ y → H.height y (app F)
+  bH = λ y → H.height y (app G)
+  floor : ∀ y b e → LeE (s (app G b) e) (s (bH y b) e)
+  floor L.zero b e = LeE-refl _
+  floor (L.suc y) b e = LeE-trans (floor y b e) (W.lC-ub (λ n → s (iter (bH y) b n) e) 1)
+  floor (L.lim g) b e = LeE-trans (floor (g 0) b e) (W.lC-ub (λ n → s (bH (g n) b) e) 0)
+  mix : Rel F G → ∀ {x y : T₀} → x ≼ y → Rmap (aH x) (bH y)
+  mix m {y = y} z≼ a b r {e = e} d = D.weaken (m a b r d) (floor y b e) (infl (bH y b) e (A.Described.infl d))
+  mix m {L.suc x} {L.suc y} (s≼s u) a b r {p} {e} d = A.limit _ _ (λ n → iter-rel Bridge (aH x) (bH y) (mix m u) a b r n d)
+  mix m {y = L.lim g} (≼l n u) a b r {e = e} d = D.weaken (mix m u a b r d) (W.lC-ub (λ j → s (bH (g j) b) e) n) (infl (bH (L.lim g) b) e (A.Described.infl d))
+  mix m {L.lim g} {y} (l≼ u) a b r {p} {e} d = D.weaken (A.limit _ (λ _ → s (bH y b) e) (λ n → mix m (u n) a b r d)) (W.lC-const (s (bH y b) e)) (infl (bH y b) e (A.Described.infl d))
+  mix m (≼i {p = ()} _ _ _)
+  mix m (i≼ {p = ()} _)
+  mix m (≼u {r = ()} _)
+  mix m (u≼ {r = ()} _)
+  eqv : Eq F G → ∀ {x y : T₀} → x L.≅ y → Smap (aH x) (bH y)
+  eqv m L.z≅ a b = m a b
+  eqv m {L.suc x} {L.suc y} (L.s≅ u) a b r d = L.l≅ (λ n → iter-rel Same (aH x) (bH y) (eqv m u) a b r n d)
+  eqv m (L.l≅ u) a b r d = L.l≅ (λ n → eqv m (u n) a b r d)
+  eqv m (L.lᵢ≅ {p = ()} _ _)
+  eqv m (L.upˡ {r = ()} _)
+  eqv m (L.upʳ {r = ()} _)
+
+module Arg (F : Trans) (a : Act) where
+  g = λ y → H.height y (app F) a
+  r : ∀ {x y} → x ≼ y → Bridge (g x) (g y)
+  r {x} {y} d = Lower.mix F F (monotone F) d a a (rows a)
+  q : ∀ {x y} → x L.≅ y → Same (g x) (g y)
+  q {x} {y} d = Lower.eqv F F (congruent F) d a a (pres a)
+  out = node g r q
+
+phi : Trans → Trans
+app (phi F) a = Arg.out F a
+monotone (phi F) a b d = node-rel (Arg.g F a) (Arg.g F b) (Arg.r F a) (Arg.q F a) (Arg.r F b) (Arg.q F b)
+                               (λ u → Lower.mix F F (monotone F) u a b d)
+congruent (phi F) a b d = node-eq (Arg.g F a) (Arg.g F b) (Arg.r F a) (Arg.q F a) (Arg.r F b) (Arg.q F b)
+                               (λ u → Lower.eqv F F (congruent F) u a b d)
+phi-rel : ∀ F G → Rel F G → Rel (phi F) (phi G)
+phi-rel F G t a b d = node-rel (Arg.g F a) (Arg.g G b) (Arg.r F a) (Arg.q F a) (Arg.r G b) (Arg.q G b)
+                             (λ u → Lower.mix F G t u a b d)
+phi-eq : ∀ F G → Eq F G → Eq (phi F) (phi G)
+phi-eq F G t a b d = node-eq (Arg.g F a) (Arg.g G b) (Arg.r F a) (Arg.q F a) (Arg.r G b) (Arg.q G b)
+                             (λ u → Lower.eqv F G t u a b d)

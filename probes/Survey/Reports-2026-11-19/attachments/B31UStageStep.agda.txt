@@ -1,0 +1,53 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 把实际一级算子的每次作用放入原参照 G 的下一段；两次取上方 ε 已足够。
+module B31UStageStep where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; ≼l; l≼; s≼s; z≼)
+open import WVOne using (T₀; 𝟏; Mv)
+import B9UpperRel as U
+import B9UpperTop as T
+import B18Product as P
+import B19IdealArithmetic as A
+import B22MovingIndex as E
+import B23NDomain as G
+import B25ARank as Raw
+import B25ABounds as R
+import B27UEpsilon as Env
+import B30UCut as K
+import B31UStageOp as Op
+
+module At (x a c : T₀) (da : a ≼ x) (dc : c ≼ x) where
+  module H = K.At x
+  h : T₀ → T₀ → T₀ → T₀
+  h = λ y a c → Mv a (L.suc y)
+  z = U.chU h c
+  from : ∀ n → H.Small (z n)
+  from zero = H.down {L.zero} {x} z≼ (E.strict x)
+  from (suc n) = H.fold {c} {L.suc (z n)} (H.down {c} {x} dc (E.strict x)) (H.successor {z n} (from n))
+  piece : ∀ n → H.Small (h (z n) a c)
+  piece n = H.fold {a} {L.suc (z n)} (H.down {a} {x} da (E.strict x)) (H.successor {z n} (from n))
+  sums : ∀ n → H.Small (U.sumU h a c n)
+  sums zero = piece zero
+  sums (suc n) = H.sum {U.sumU h a c n} {h (z (suc n)) a c} (sums n) (piece (suc n))
+  first : T.fΩ a c ≼ E.above x
+  first = l≼ (λ n → ≼-trans {a = U.sumU h a c n} {b = L.suc (U.sumU h a c n)} {c = E.above x}
+    (≼-suc (≼-refl (U.sumU h a c n))) (sums n))
+  e = E.above x
+  module S = Env.At e
+  one : S.In 𝟏
+  one = S.sucC {L.zero} (S.down {L.zero} {e} z≼ S.seed)
+  omega : S.In L.ωᶜ
+  omega = S.down {L.ωᶜ} {A.norm 𝟏} (P.one-left L.ωᶜ) (S.expC {𝟏} one)
+  next : Op.f a c ≼ E.above e
+  next = ≼-trans {b = L.suc (Op.f a c)} (≼-suc (≼-refl (Op.f a c))) (S.finite {Op.f a c}
+    (S.mulC {T.fΩ a c} {A.norm L.ωᶜ} (S.down {T.fΩ a c} {e} first S.seed) (S.expC {L.ωᶜ} omega)))
+
+reserve : ∀ t → E.above (E.above (G.G t)) ≼ G.G (L.suc t)
+reserve t = ≼-trans {b = Raw.diagonal (G.G t)} (≼l 1 (≼l 2 (≼-refl (E.above (E.above (G.G t))))))
+  (R.Step.nextG t (G.G t) (≼-refl (G.G t)))
+
+advance : ∀ t a c → a ≼ G.G t → c ≼ G.G t → Op.f a c ≼ G.G (L.suc t)
+advance t a c da dc = ≼-trans {b = E.above (E.above (G.G t))} (At.next (G.G t) a c da dc) (reserve t)
+

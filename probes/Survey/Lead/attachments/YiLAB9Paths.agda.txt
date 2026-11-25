@@ -1,0 +1,59 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiLAB9Paths where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼l; l≼; s≼s; ≼-trans; ≼-refl; 1≼ψ⁰) renaming (+-mono to plus-mono)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValMain using (ψ₀≈)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+open import WKGen using (node-ge)
+open import WKShape using (Ψ₃; lvl3; ok₃; p₃; s₃; g₃)
+open import WVOne using (read; read-+; 𝟏)
+open import WVTwo using (◃→≼)
+open import YiLAB7Orbit using (F; lvl2; ok₂)
+open import YiLAB7Replay using (Y; body; Ω₂ᴸ; double-shape)
+open import B9InnerOuter using (st1; v₁; w2; Ω₂-v₁; Ω₂-cz)
+
+-- 从外层 E 的实际起点同时迭代底族和底，保留目标路径。
+S : ℕ → Base lvl2
+S n = itS F n st1
+v : ℕ → Tr⁺ zero
+v n = itV F n st1 zero w2 v₁
+cz : ℕ → Tr⁺ zero
+cz n = S n zero (inc tt (inc tt self))
+
+v-bound : (n : ℕ) → LV.ψ⁰ Ω₂ᴸ ≼ read (proj₁ (v n))
+v-bound zero = Ω₂-v₁
+v-bound (suc n) = ≼-trans (v-bound n) (◃→≼ (inf F (S n) zero w2 (v n)))
+
+cz-bound : (n : ℕ) → LV.ψ⁰ Ω₂ᴸ ≼ read (proj₁ (cz n))
+cz-bound zero = Ω₂-cz
+cz-bound (suc n) = ≼-trans (cz-bound n) (◃→≼ (inf F (S n) zero (inc tt (inc tt self)) (cz n)))
+
+end-branch = node-ge (kp lvl3 ok₃ p₃ (z≤ lvl3)) (λ z → ψ lvl3 ok₃ (B₀ lvl3) zero (z≤ lvl3) (Ωt zero) (g₃ z)) s₃ 1
+
+approx : (n : ℕ) → read (proj₁ (v (suc n))) ≼ read Ψ₃
+approx n = ≼-trans (≼l 0 (≼l n (≼-refl _))) end-branch
+
+finish : ((n : ℕ) → LV.ψ⁰ (body (Y n)) ≼ read Ψ₃) → LV.ψ⁰ (Ω₂ᴸ LV.+ Ω₂ᴸ) ≼ read Ψ₃
+finish = l≼
+
+-- next⁺ 的第 1 支是 b + b。Agda 的 Ω₂ 参照来自 src 已有的出口定理。
+b = proj₁ (E ok₂ tdNil (suc zero) F st1 zero w2 v₁)
+P₂ = LV.ψ⁰ Ω₂ᴸ
+P-b : P₂ ≼ read b
+P-b = ≼l 0 (v-bound 1)
+strict-level : LV.suc P₂ ≼ read Ψ₃
+strict-level = ≼-trans (≼l 1 (≼-trans (plus-mono P-b (≼-trans (1≼ψ⁰ Ω₂ᴸ) P-b)) (read-+ b b))) end-branch
+
+module BT = BoundedTrich
+src₂ = tr₀ (Ord-Ord.ψ₀ (Ord-Ord.Ω (BT.suc (BT.suc BT.zero))))
+strict-src : LV.suc src₂ ≼ read Ψ₃
+strict-src = ≼-trans (s≼s (proj₁ (ψ₀≈ (BT.suc (BT.suc BT.zero))))) strict-level

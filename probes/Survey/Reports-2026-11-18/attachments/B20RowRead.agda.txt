@@ -1,0 +1,50 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20RowRead where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (read; 𝟏)
+open import WVTwo using (◃→≼; p₂; g₂)
+open import WVThree using (Nx)
+open import WKShape using (lvl3)
+open import WKGen using (node-ge)
+open import YiLAB7Orbit using (F; lvl1; lvl2; ok₂)
+open import B9InnerOuter using (w2)
+open import WSShadow using (zC; sE; Infl-Ω̂)
+import WSLevel as W
+import WKGen as Gen
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; 1≼ψ⁰; ≅→≼)
+import B11OuterCore as C
+import B11PrefixGen as Pr
+import B12LimitRef as D
+import B12ActualSlots as Cover
+import B12Terminal as Tm
+import B12Update as U
+import B13Orbit as K
+import B13OrbitFeed as O
+import B13SeedOuter as Seed
+import B14RefDescribed as Rows
+import B14RefFixed as Fix
+import B15OrbitAction as Act
+import B15OrbitModel as M
+import B17OrbitModel as B
+import B17OrbitVector as V
+import B18OrbitRows as Old
+import B19RowSecond as Src
+import B20RowIndex as I
+import B20RowPrefix as P
+
+module Read (p q : Pr.T₂) (e : WSShadow.ES) (d : D.Described q e) (R : Base lvl2) (h : C.Str e R)
+   (b : Tr⁺ zero) (hb : L.ψ⁰ p ≼ read (proj₁ b)) (hz : L.ψ⁰ p ≼ read (proj₁ (R zero C.zpath))) where
+  module J = C.Inner e R
+  module G = Gen.Main ok₂ R w2 b (inj₂ (C.st h)) (≼-trans (1≼ψ⁰ p) hb) (≼-trans (1≼ψ⁰ p) hz)
+  larger = W.Lw (D.Described.bd d) (proj₁ Infl-Ω̂ (sE e Nx))
+  source = Pr.Sem.sem p larger (read (proj₁ b)) (read (proj₁ (R zero C.zpath))) hb hz
+  value : L.ψ⁰ (p L.+ L.up L.zero (Fix.collapse q)) ≼ read (proj₁ (run F R zero w2 b))
+  value = ≼-trans source (≼-trans (J.Step.SumR-z2 0 (J.inner h 0) G.B′ (Gen.wd w2) b _ _ (≼-refl _) (≼-refl _) (≼-trans (1≼ψ⁰ p) hz)) (G.Ψg-ge 2))
+

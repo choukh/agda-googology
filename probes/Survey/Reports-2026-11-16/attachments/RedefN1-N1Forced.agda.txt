@@ -1,0 +1,74 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- N1 检查件: (1) ψ♯ 的保留判定由值序证据决定, 与排中律怎么答无关 (keep-forced, chain-forced);
+-- (2) 塔第 2 项的层号严格高于 "tw 1 的 Ω 树读成的层号" 的后继 (gap₁, gap₂);
+-- (3) 退回逐格时的第一格: 树侧保留 (tree-keeps), 参照行同一步是规则 6 (ref-*).
+module N1Forced where
+
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (tt)
+open import Data.Bool using (true)
+open import Data.Maybe using (just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Induction.WellFounded using (Acc; acc)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Keep)
+open import S1Sharp
+import OCF.Align.EBO as E
+
+≺-irr′ : ∀ {a} → Acc _≺ᴸ_ a → a ≺ᴸ a → ⊥
+≺-irr′ (acc r) lt = ≺-irr′ (r lt) lt
+
+≺-irr : ∀ a → a ≺ᴸ a → ⊥
+≺-irr a = ≺-irr′ (wfL a)
+
+module _ (lem : LEM) where
+  open Sharp lem
+
+  pick-just : ∀ ℓ o p j oj (lt : at ℓ p ≺ᴸ j)
+    → Σ _ λ K → pickK ℓ o p j oj (inj₂ lt) ≡ just K
+  pick-just ℓ o p j oj lt with slot♯ j (at ℓ p) lt
+  ... | q , e , _ = _ , refl
+
+  keep-forced : ∀ ℓ o p j oj → at ℓ p ≺ᴸ j → Σ _ λ K → kp♯ ℓ o p j oj ≡ just K
+  keep-forced ℓ o p j oj lt with Dk j (at ℓ p)
+  ... | inj₁ le  = ⊥-elim (≺-irr (at ℓ p) (≺≼ j (at ℓ p) lt le))
+  ... | inj₂ lt′ = pick-just ℓ o p j oj lt′
+
+  chain-forced : ∀ ℓ o p j oj → j ≼ᴸ at ℓ p → kp♯ ℓ o p j oj ≡ nothing
+  chain-forced ℓ o p j oj le with Dk j (at ℓ p)
+  ... | inj₁ _  = refl
+  ... | inj₂ lt = ⊥-elim (≺-irr (at ℓ p) (≺≼ j (at ℓ p) lt le))
+
+c₁ : Tr (tw 1)
+c₁ = proj₁ (Ωt (tw 1))
+
+LΩΩ LΩΩ⁺ : L
+LΩΩ  = tw 1 ⊕ ↑ (tw 1) c₁
+LΩΩ⁺ = tw 1 ⊕ ↑ (tw 1) (suc c₁)
+
+gap₁ : LΩΩ ≺ᴸ LΩΩ⁺
+gap₁ = tt , ≼-refl LΩΩ
+
+gap₂ : LΩΩ⁺ ≺ᴸ tw 2
+gap₂ = suc c₁ , ≼-refl LΩΩ⁺
+
+module FirstCell (lem : LEM) where
+  open Sharp lem
+
+  tree-keeps : Σ _ λ K → kp♯ (tw 1) (Ok-tw 1) (inj₁ (inj₁ tt)) (tw 1) (Ok-tw 1) ≡ just K
+  tree-keeps = keep-forced lem (tw 1) (Ok-tw 1) (inj₁ (inj₁ tt)) (tw 1) (Ok-tw 1) (zero , z≼)
+
+ref-cof₃ : E.cof (E.ΩTower 3) ≡ E.cΩ []
+ref-cof₃ = refl
+
+ref-chains : E.cmpᵀ (E.sucT []) [] ≡ E.gt
+ref-chains = refl
+
+ref-γ₁ : E.γT (E.ΩTower 3) [] 1 ≡ E.EBOψ 2
+ref-γ₁ = refl

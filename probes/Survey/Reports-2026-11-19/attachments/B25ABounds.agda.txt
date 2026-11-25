@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25ABounds where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≅→≼; ≺→s≼; s≼s; ≼l; 1≼ψ⁰)
+open import OCF.Align.BTBOFullV3 using (Fstep)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import B12BtboCut as Bt
+import B12Omega3Ref as R
+import B13Target as P
+import B14RefFixed as K
+import B19RowSecond as Old
+import B20StandardInside as S
+import B21StandardShape as Shape
+import B22MovingIndex as E
+import B22RowSource as Cap
+import B22TowerCut as T
+import B23NDomain as D
+import B23RKernel as M
+import B24ROrbit as O
+import B25ARank as X
+import B25ACap as H
+import B25ADiagonal as Dia
+
+module Step (y : T₀) where
+  open D.Growth y
+  add = λ a → L.ψ⁰ (q L.+ L.up L.zero (K.collapse a))
+  coeff : add Old.p ≼ add q
+  coeff = K.value (K.map-select add (λ f → refl) in-q)
+  in-cardinal : add q ≼ L.ψ⁰ (q L.+ Ω₂ᴸ)
+  in-cardinal = ≼l 1 (≼l 0 (≼l 1 (≼-refl _)))
+  nextG : ∀ x → x ≼ D.G y → X.diagonal x ≼ D.G (L.suc y)
+  nextG x h = ≼-trans (Dia.Ref.applies q q-regular x h) (≼-trans coeff (≼-trans in-cardinal
+    (≼-trans (≼l 1 (≼-refl _)) (≼-trans (Cap.Tail.lower q q-regular)
+      (≼-trans (≼l 2 (K.value (K.map-select L.ψ⁰ (λ _ → refl) (K.map-select (q L.+_) (λ _ → refl) in-q))))
+        (≼-trans sub (≼l 2 (K.value (K.map-select (λ z → L.ψ⁰ (P.pass z)) (λ _ → refl) (K.map-select (p L.+_) (λ _ → refl) in-p))))))))))
+
+starts : O.D ≼ D.G 𝟏
+starts = ≼-trans (R.at-below O.two 0) (≼l 2 (≼-refl _))
+improves : L.suc O.D ≼ X.diagonal O.D
+improves = ≼l 1 (≼l 1 (E.strict O.D))
+closed : (L.suc O.D ≼ X.diagonal O.D) × (X.diagonal O.D ≼ S.std 2)
+closed = improves , X.in-second
+inside : L.suc (X.diagonal O.D) ≼ T.cut
+inside = ≼l 3 (≼-trans (s≼s X.in-second) (Shape.rise 2))
+
+two : X.diagonal O.D ≼ D.G (L.suc 𝟏)
+two = Step.nextG 𝟏 O.D starts
+second : L.suc 𝟏 ≼ D.G 𝟏
+second = ≼-trans (s≼s (1≼ψ⁰ (D.Growth.q L.zero))) (D.Growth.next L.zero)
+child : X.diagonal O.D ≼ D.child
+child = ≼-trans two (≼-trans (M.At.monotone 1 0 {L.suc 𝟏} {D.G 𝟏} second) (D.in-child 1))
+three : X.diagonal O.D ≼ Bt.finite 3
+three = ≼-trans child (≼-trans (R.at-below (R.at (L.ψ⁰ R.Ω₃) 2) 0) (R.at-below (L.ψ⁰ R.Ω₃) 2))
+strict-omega : L.suc (X.diagonal O.D) ≼ Bt.omega-cut
+strict-omega = ≼l 4 (≼-trans (s≼s three) (≺→s≼ (Fstep (L.natᴵ 3))))
+strict-gamma : L.suc (X.diagonal O.D) ≼ N.γ 2
+strict-gamma = ≼-trans strict-omega Bt.cut-below-first-missing

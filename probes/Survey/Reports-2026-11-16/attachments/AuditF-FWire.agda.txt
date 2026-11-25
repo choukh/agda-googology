@@ -1,0 +1,59 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- F 路判定件: 把 "槽位层的底对着 ψ_κ(K)" 记进不变式 (Inv⁺) 之后, YiWREnd.Wire 的三个参数可以实填,
+-- 其中 inv-step 用 LowSlot⁺ 自己 (孩子的槽位路径就是本层的槽位路径). 条件定理 ebo⁺ 的前提:
+-- LeafSlot (塔各项槽位层上 Ω_κ 对着 Ω 树), LowSlot⁺, 出口条件.
+module FWire where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_; _++_)
+
+open import OCF.Lean.YiRWBlock hiding (R)
+import OCF.Lean.YiRWOps as O
+open import OCF.Lean.YiRWPath using (Ok; _≤_; inc; posW; Ok-Λ)
+open import OCF.Lean.YiRWFold using (Base; B₀)
+open import OCF.Lean.YiBSBase using (Rb)
+import OCF.Lean.YiBSFold as BS
+import OCF.Align.EboLeanDef as E
+import OCF.Align.EboLeanTree as ET
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiGIRel as GR
+import OCF.Lean.YiKVRel as K
+open import OCF.Align.Value using (_≼_)
+open import OCF.Lean.YiMonoExit using (toL)
+open import OCF.Lean.YiGTGen using (weakenᴿ)
+open import OCF.Lean.YiGIInst using (pre)
+open import OCF.Lean.YiWRZero using (Stᶻ; Φᶻ; stepᶻ; slotFold)
+import OCF.Lean.YiWREnd as W
+
+Inv⁺ : ∀ {a} → Stᶻ a → E.T → Set
+Inv⁺ {a} (o , r , B , β) K = GR.R zero (E.ψ [] K ∷ []) (proj₁ β)
+  × ((p : Pos a) → ∀ {κ} → GR.Nu a p κ → GR.R (at a p) (E.ψ κ K ∷ []) (proj₁ (B (at a p) (posW a p))))
+
+LowSlot⁺ : Set
+LowSlot⁺ = ∀ {a} (s : Stᶻ a) K → Inv⁺ s K → (p : Pos a) → ∀ {κ} → GR.Nu a p κ
+  → ∀ {η y} → GR.R a η y → GR.R (at a p) (E.ψ κ (K ++ η) ∷ []) (slotFold s p y)
+
+LeafSlot : Set
+LeafSlot = ∀ n (p : Pos (tw n)) {κ} → GR.Nu (tw n) p κ → GR.R (at (tw n) p) (E.Ωt κ) (proj₁ (O.Ωt (at (tw n) p)))
+
+inv-step⁺ : LowSlot⁺ → ∀ {a} (s : Stᶻ a) K → Inv⁺ s K → (c : CH a) → ∀ {t x} → GR.R a t x
+  → GR.R zero (W.apᴱ K t) (proj₁ (Φᶻ s x)) → Inv⁺ (stepᶻ s c x) (K ++ t)
+inv-step⁺ ls {nd s′ h} (o , r , B , β) K iv c rx q =
+  q , λ p′ nu → ls (o , r , B , β) K iv (inj₂ (c , inj₂ p′)) nu rx
+
+inv-root⁺ : LeafSlot → ∀ n → Inv⁺ (W.rootᴮ n) []
+inv-root⁺ lf n = H.pos⁰ (proj₁ (W.betaᴮ n)) (proj₂ (W.betaᴮ n))
+  , λ p nu → weakenᴿ (at (tw n) p) (lf n p nu)
+      (W.ψ-⊵ᴮ Λ Ok-Λ W.rbΛ (B₀ Λ) (at (tw n) p) (inc n (posW (tw n) p)) (O.Ωt (at (tw n) p)) (pre n))
+
+module Plus (lf : LeafSlot) (ls : LowSlot⁺) where
+  module W⁺ = W.Wire Inv⁺ (λ o r B β bd → proj₁ bd) (inv-step⁺ ls) (inv-root⁺ lf)
+
+  -- Wire 里的 LowSlot 逐字就是 LowSlot⁺.
+  same : W⁺.LowSlot → LowSlot⁺
+  same x = x
+
+  ebo⁺ : W⁺.ExitCondition (W⁺.chain←slot ls) → toL ET.EBO-tree′ ≼ K.readRW W.EBOᴮ
+  ebo⁺ = W⁺.ebo-endˢ ls

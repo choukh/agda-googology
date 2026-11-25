@@ -1,0 +1,74 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 一级 E 换底的代数恒等式，允许两侧结构相关的实参，也容许单侧嵌入。
+module B17RefExp where
+open import Data.Nat using (ℕ; zero; suc)
+import OCF.Align.Level as L
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+import WSLevel as W
+import B13Target as P
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B15RefAlgebra as A
+
+small : ∀ {a b} → a L.≅ b → ∀ {x y : T₀} → x L.≅ y → A.E₀ a x L.≅ A.E₀ b y
+small h L.z≅ = h
+small h (L.s≅ d) = A.pow-pres (small h d)
+small h (L.l≅ d) = L.l≅ (λ j → small h (d j))
+small h (L.upˡ {r = ()} _)
+small h (L.upʳ {r = ()} _)
+small h (L.lᵢ≅ {p = ()} _ _)
+
+lift₀ : ∀ {a b} → a L.≅ b → ∀ {x : T₀} {y : T₁} → x L.≅ y → A.E₀ a x L.≅ A.E b y
+lift₀ h L.z≅ = h
+lift₀ h (L.s≅ d) = A.pow-pres (lift₀ h d)
+lift₀ h (L.l≅ d) = L.l≅ λ n → lift₀ h (d n)
+lift₀ h (L.upˡ {r = ()} _)
+lift₀ h (L.upʳ {r = L.zero} d) = small h d
+lift₀ h (L.lᵢ≅ {p = ()} _ _)
+
+wide : ∀ {a b x y} → a L.≅ b → x L.≅ y → A.E a x L.≅ A.E b y
+wide h L.z≅ = h
+wide h (L.s≅ d) = A.pow-pres (wide h d)
+wide h (L.l≅ d) = L.l≅ λ n → wide h (d n)
+wide h (L.upˡ {r = L.zero} d) = lift₀ h d
+wide h (L.upʳ {r = L.zero} d) = L.≅-sym (lift₀ (L.≅-sym h) (L.≅-sym d))
+wide h (L.lᵢ≅ {p = L.zero} {q = L.zero} L.z≅ d) = L.lᵢ≅ L.z≅ λ x y r → wide h (d x y r)
+
+module Shift (u a v : T₁) (h : v L.≅ A.E u a) where
+  suffix = L.add a (λ q → L.suc q)
+  tiny : ∀ {x y : T₀} → x L.≅ y → A.E₀ v x L.≅ A.E u (suffix y)
+  tiny L.z≅ = h
+  tiny (L.s≅ d) = A.pow-pres (tiny d)
+  tiny (L.l≅ d) = L.l≅ (λ n → tiny (d n))
+  tiny (L.upˡ {r = ()} _)
+  tiny (L.upʳ {r = ()} _)
+  tiny (L.lᵢ≅ {p = ()} _ _)
+
+  lift : ∀ {x : T₀} {y : T₁} → x L.≅ y → A.E₀ v x L.≅ A.E u (a L.+ y)
+  lift L.z≅ = h
+  lift (L.s≅ d) = A.pow-pres (lift d)
+  lift (L.l≅ d) = L.l≅ (λ n → lift (d n))
+  lift (L.upˡ {r = ()} _)
+  lift (L.upʳ {r = L.zero} d) = tiny d
+  lift (L.lᵢ≅ {p = ()} _ _)
+
+  drop : ∀ {x : T₁} {y : T₀} → x L.≅ y → A.E v x L.≅ A.E u (suffix y)
+  drop L.z≅ = h
+  drop (L.s≅ d) = A.pow-pres (drop d)
+  drop (L.l≅ d) = L.l≅ (λ n → drop (d n))
+  drop (L.upˡ {r = L.zero} d) = tiny d
+  drop (L.upʳ {r = ()} _)
+  drop (L.lᵢ≅ {q = ()} _ _)
+
+  compose : ∀ {x y : T₁} → x L.≅ y → A.E v x L.≅ A.E u (a L.+ y)
+  compose L.z≅ = h
+  compose (L.s≅ d) = A.pow-pres (compose d)
+  compose (L.l≅ d) = L.l≅ (λ n → compose (d n))
+  compose (L.upˡ {r = L.zero} d) = lift d
+  compose (L.upʳ {r = L.zero} d) = drop d
+  compose (L.lᵢ≅ {p = L.zero} {q = L.zero} L.z≅ d) = L.lᵢ≅ L.z≅ (λ x y r → compose (d x y r))
+
+psi : ∀ {x y} → x L.≅ y → W.ψ₁ x L.≅ A.E W.Ω₁ᴸ y
+psi {x} d = L.≅-trans (L.ψ-≅ {p = L.zero} {σ = λ q → L.suc q} {p′ = L.zero} {σ′ = R.idσ} (L.≅ᴵ-refl _)
+  (L.≅-sym (U.left-unit (λ q → L.suc q) (P.refl-left d)))) (A.explain L.zero (L.Ω-refl _) d)

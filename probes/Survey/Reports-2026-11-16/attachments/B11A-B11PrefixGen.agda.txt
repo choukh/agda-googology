@@ -1,0 +1,106 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B11A: 把 B8PairLevel 的 LdQ/LxQ 与 B9InnerLevel2 的 L2-sem 对任意第 2 层前缀 P 参数化.
+-- 描述侧只要 P 的指数影子 e 膨胀, 以及 ψ P 的两个基例描述; 语义侧对 P 无前提. 编译定理, 第 4 层验收.
+module B11PrefixGen where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-refl; ≼-trans)
+open import WVOne using (T₀; 𝟏; Mv; Mv-mono; iterS)
+open import WVTwo using (T₁)
+open import WVThree using (Nx; Nx-infl)
+open import WSShadow
+open import WSLevel using (Ld; Lz; Ls; Ll; Li; Lu; Lw; Lx; Ez; Es; El; Ei; Eu; Ew; Lx-infl; sumLim; sumLimH;
+  tr⁻≼; lC-ub; lC-const; ⨾-mono; sh-mono)
+open import B9InnerLevel2 using (ψ≼ψ⁰)
+
+T₂ : Set
+T₂ = LV.Ordᶜ (LV.suc (LV.suc LV.zero))
+
+ψP : T₂ → T₁
+ψP P = LV.ψ LV.zero (λ r → r) P
+
+------------------------------------------------------------------------
+-- 描述侧. P 固定, e 是它的指数影子; 基例是 ψ P 自己的两个描述.
+module Desc (P : T₂) (e : ES) (ie : InflE e)
+            (bd : Ld (ψP P) (sE e Nx)) (bx : Lx (ψP P) (sh e)) where
+
+  QB : T₁ → T₁
+  QB X = LV.ψ LV.zero (λ r → r) (P LV.+ LV.up LV.zero X)
+
+  Pz : T₀ → T₁
+  Pz y = LV.ψ LV.zero (λ q → q) (LV.add P (λ q → LV.suc (LV.suc q)) y)
+
+  infl-d : (e′ : ES) → InflE e′ → (a c : T₀) → a ≼ sE (e ⨾ e′) Nx a c
+  infl-d e′ ie′ a c = ≼-trans (Nx-infl a c) (proj₁ (Infl-⨾ e e′ ie ie′) Nx a c)
+
+  e⨾-lv : (y′ : T₀) → LeE e (e ⨾ lv y′)
+  e⨾-lv y′ = (λ f → proj₁ (Infl-lv y′) (sE e f)) , (λ n k g → proj₂ (Infl-lv y′) n (λ g′ → sI e n k g′) g)
+
+  -- 第 0 层尾巴: 零号行从 P 的两个基例开始.
+  LdP : (y y′ : T₀) → y ≼ y′ → Ld (Pz y) (sE (e ⨾ lv y′) Nx)
+  LdP _ y′ z≼ = Lw bd (proj₁ (Infl-lv y′) (sE e Nx))
+  LdP (LV.suc y) (LV.suc y′) (s≼s d) = sumLim (LdP y y′ d) (infl-d (lv y′) (Infl-lv y′))
+  LdP y (LV.lim f′) (≼l n d) = Lw (LdP y (f′ n) d) (λ a c → ≼l n (≼-refl _))
+  LdP (LV.lim f) y′ (l≼ h) = Lw (Ll (λ k → LdP (f k) y′ (h k))) (λ a c → l≼ (λ j → ≼-refl _))
+  LdP _ _ (≼i {p = ()} x e d)
+  LdP _ _ (i≼ {p = ()} h)
+  LdP _ _ (≼u {r = ()} d)
+  LdP _ _ (u≼ {r = ()} d)
+
+  LxP : (y y′ : T₀) → y ≼ y′ → Lx (Pz y) (sh (e ⨾ lv y′))
+  LxP _ y′ z≼ = Ew bx (sh-mono (e⨾-lv y′))
+  LxP (LV.suc y) (LV.suc y′) (s≼s d) =
+    Ew (sumLimH (LxP y y′ d) (Infl-⨾ e (lv y′) ie (Infl-lv y′))) (LeE-refl _)
+  LxP y (LV.lim f′) (≼l n d) = Ew (LxP y (f′ n) d) (sh-mono (⨾-mono e (lC-ub (λ j → lv (f′ j)) n)))
+  LxP (LV.lim f) y′ (l≼ h) = Ew (El (λ k → LxP (f k) y′ (h k))) (lC-const (sh (e ⨾ lv y′)))
+  LxP _ _ (≼i {p = ()} x e d)
+  LxP _ _ (i≼ {p = ()} h)
+  LxP _ _ (≼u {r = ()} d)
+  LxP _ _ (u≼ {r = ()} d)
+
+  -- 主定理: 按输入的指数描述 Lx X h 归纳, 六个构造子与 B8PairLevel 一一对应.
+  LdQ : ∀ {X h} → Lx X h → Ld (QB X) (sE (e ⨾ h) Nx)
+  LdQ Ez = bd
+  LdQ (Es {e = h} r) = sumLim (LdQ r) (infl-d h (Lx-infl r))
+  LdQ (El hh) = Ll (λ k → LdQ (hh k))
+  LdQ (Ei hh) = Li (λ y y′ d → LdQ (hh (LV.tr⁻ LV.z≅ y) y′ (≼-trans (tr⁻≼ y) d)))
+  LdQ (Eu y y′ d) = LdP y y′ d
+  LdQ (Ew r p) = Lw (LdQ r) (proj₁ (⨾-mono e p) Nx)
+
+  LxQ : ∀ {X h} → Lx X h → Lx (QB X) (sh (e ⨾ h))
+  LxQ Ez = bx
+  LxQ (Es {e = h} r) = Ew (sumLimH (LxQ r) (Infl-⨾ e h ie (Lx-infl r))) (LeE-refl _)
+  LxQ (El hh) = Ew (El (λ k → LxQ (hh k))) (LeE-refl _)
+  LxQ (Ei hh) = Ew (Ei (λ y y′ d → LxQ (hh (LV.tr⁻ LV.z≅ y) y′ (≼-trans (tr⁻≼ y) d)))) (LeE-refl _)
+  LxQ (Eu y y′ d) = LxP y y′ d
+  LxQ (Ew r p) = Ew (LxQ r) (sh-mono (⨾-mono e p))
+
+------------------------------------------------------------------------
+-- 语义侧. 对任意 P: Ld D d 且 a, c 都不低于 ψ⁰ P 时, ψ⁰ (P + D) ≼ d a c. 同 B9InnerLevel2.L2-sem.
+module Sem (P : T₂) where
+
+  bodyP : T₁ → T₂
+  bodyP x = P LV.+ LV.up LV.zero x
+
+  Pu : ∀ {σ : LV.Simᴵ LV.zero (LV.suc (LV.suc LV.zero))} (a : T₀) → LV.ψ⁰ P ≼ a → (y : T₀) → LV.ψ⁰ (LV.add P σ y) ≼ Mv a y
+  Pu a ha LV.zero = ha
+  Pu {σ} a ha (LV.suc y) = l≼ (λ n → ≼l n (iterS (Pu {σ} a ha y) n))
+  Pu {σ} a ha (LV.lim f) = l≼ (λ n → ≼l n (Pu {σ} a ha (f n)))
+  Pu a ha (LV.limᵢ () f)
+  Pu a ha (LV.up () x)
+
+  mutual
+    sem : ∀ {D d} → Ld D d → (a c : T₀) → LV.ψ⁰ P ≼ a → LV.ψ⁰ P ≼ c → LV.ψ⁰ (bodyP D) ≼ d a c
+    sem Lz a c ha hc = ha
+    sem (Ls r) a c ha hc = l≼ (λ n → ≼l n (iterS (sem r a c ha hc) n))
+    sem (Ll h) a c ha hc = l≼ (λ k → ≼l k (sem (h k) a c ha hc))
+    sem (Li {g = g} {h = h} hh) a c ha hc = l≼ (λ k → ≼l k (sem (hh _ _ (ch g h hh c hc k)) a c ha hc))
+    sem (Lu y y′ d) a c ha hc = ≼-trans (Pu a ha y) (Mv-mono (≼-refl a) d)
+    sem (Lw r p) a c ha hc = ≼-trans (sem r a c ha hc) (p a c)
+
+    ch : (g : T₀ → T₁) (h : T₀ → Sh 0) → (∀ y y′ → y ≼ y′ → Ld (g y) (h y′)) → (c : T₀) → LV.ψ⁰ P ≼ c
+       → (k : ℕ) → S.iter (λ x → LV.ψ (LV.suc LV.zero) (λ r → r) (bodyP (g x))) 𝟏 k ≼ chS h c k
+    ch g h hh c hc zero    = ≼-refl 𝟏
+    ch g h hh c hc (suc k) = ≼-trans (ψ≼ψ⁰ (bodyP (g _))) (sem (hh _ _ (ch g h hh c hc k)) c c hc hc)

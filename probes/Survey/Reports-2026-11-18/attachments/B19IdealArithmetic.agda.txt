@@ -1,0 +1,72 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19IdealArithmetic where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≼l; l≼; s≼s; z≼; +-mono)
+import B18Product as P
+open P using (_·_)
+open import B19IdealProduct
+open import B19IdealPowers
+
+norm = power L.ωᶜ
+word = λ (a : T₀) → WVOne.S.iter (a L.+_) L.zero
+roll : ∀ a n → (a L.+ word a n) ≈ᵛ (word a n L.+ a)
+roll a zero = flip (plus-id a)
+roll a (suc n) = add (id a) (roll a n) ∙ flip (assoc+ a (word a n) a)
+copies : ∀ a n → (a · L.natᶜ n) ≈ᵛ word a n
+copies a zero = id _
+copies a (suc n) = add (copies a n) (id a) ∙ flip (roll a n)
+
+normal : ∀ x → norm x ≈ᵛ L.ψ⁰ x
+normal L.zero = id _
+normal (L.suc x) = mul (normal x) (id L.ωᶜ) ∙ lim (copies (L.ψ⁰ x))
+normal (L.lim f) = lim (λ n → normal (f n))
+
+up : ∀ x → x ≼ norm x
+up L.zero = z≼
+up (L.suc x) = ≼-trans (s≼s (up x)) (≼l 2 (+-mono {a = norm x} (proj₂ (one (norm x))) (positive omega-pos x)))
+up (L.lim f) = l≼ λ n → ≼l n (up (f n))
+
+pow-pow : ∀ a b c → power (power a b) c ≈ᵛ power a (b · c)
+pow-pow a b L.zero = id _
+pow-pow a b (L.suc c) = mul (pow-pow a b c) (id (power a b)) ∙ flip (power-sum a (b · c) b)
+pow-pow a b (L.lim f) = lim (λ n → pow-pow a b (f n))
+
+level product exponent : T₀ → T₀
+level x = norm (L.suc x)
+product x = norm (level x)
+exponent x = norm (product x)
+plusBound : ∀ x → (x L.+ x) ≼ level x
+plusBound x = ≼l 2 (+-mono (≼-trans (up x) (proj₂ (one (norm x)))) (up x))
+mulBound : ∀ x → x · x ≼ product x
+mulBound x = ≼-trans (P.mono (up x) (up x))
+  (≼-trans (proj₂ (power-sum L.ωᶜ x x)) (expo omega-pos (plusBound x)))
+powerBound : ∀ x → power x x ≼ exponent x
+powerBound x = ≼-trans (base (up x) x) (≼-trans (proj₁ (pow-pow L.ωᶜ x x)) (expo omega-pos (mulBound x)))
+
+module Under (g : T₀) (suc-closed : ∀ {x : T₀} → L.suc x ≼ g → L.suc (L.suc x) ≼ g)
+  (normal-closed : ∀ {x : T₀} → L.suc x ≼ g → L.suc (L.ψ⁰ x) ≼ g) where
+  small = λ (x : T₀) → L.suc x ≼ g
+  move : ∀ {x y : T₀} → x ≼ y → small y → small x
+  move p = ≼-trans (s≼s p)
+  normal-small : ∀ {x : T₀} → small x → small (norm x)
+  normal-small {x} q = move (proj₁ (normal x)) (normal-closed q)
+  product-small : ∀ {x : T₀} → small x → small (product x)
+  product-small q = normal-small (normal-small (suc-closed q))
+  exponent-small : ∀ {x : T₀} → small x → small (exponent x)
+  exponent-small q = normal-small (product-small q)
+
+  -- A common bound suffices even for bases equal to zero.
+  bound : ∀ (a b x : T₀) → a ≼ x → b ≼ x → small x → small (a · power b (norm x))
+  bound a b x qa qb q = move (≼-trans (P.mono a₁ pow₁) (mulBound v)) (product-small (exponent-small (normal-small q)))
+    where
+    w = norm x
+    v = exponent w
+    w≤v : w ≼ v
+    w≤v = ≼-trans (OCF.Align.Value.≼-suc (≼-refl w)) (≼-trans (up (L.suc w)) (≼-trans (up (level w)) (up (product w))))
+    a₁ : a ≼ v
+    a₁ = ≼-trans qa (≼-trans (up x) w≤v)
+    pow₁ : power b w ≼ v
+    pow₁ = ≼-trans (base (≼-trans qb (up x)) w) (powerBound w)

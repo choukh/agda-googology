@@ -1,0 +1,23 @@
+5a6,7
+> open import Data.Maybe using (Maybe; just; nothing)
+> 
+67c69
+<   OkS (sΩ k) h = Ok k × ((c : Tr k) → k ≤ h c)
+---
+>   OkS (sΩ k) h = Ok k × ((c : Tr k) → (k ≤ h c) × Maybe (h zero ≤ h c))
+90c92
+< OkS⊕ a (sΩ k) h (v , ok) = ok , λ c → v ∙ lift a (h c)
+---
+> OkS⊕ a (sΩ k) h (v , ok) = ok , λ c → v ∙ lift a (h c) , nothing
+131c133
+< Ok-tw (suc n) = (Ok-tw n , λ c → lift (tw n) (↑ (tw n) c)) , λ c →
+---
+> Ok-tw (suc n) = (Ok-tw n , λ c → lift (tw n) (↑ (tw n) c) , just (lift (tw n) (↑ (tw n) c))) , λ c →
+163c165
+< emb (nd (sΩ k) h) o (ink v)   y = upz zero (emb (h zero) (proj₂ o zero) (v ∙ proj₂ (proj₁ o) zero) y)
+---
+> emb (nd (sΩ k) h) o (ink v)   y = upz zero (emb (h zero) (proj₂ o zero) (v ∙ proj₁ (proj₂ (proj₁ o) zero)) y)
+170c172
+< emb-mono (nd (sΩ k) h) o (ink v)   d = ◃c zero zero (emb-mono (h zero) (proj₂ o zero) (v ∙ proj₂ (proj₁ o) zero) d)
+---
+> emb-mono (nd (sΩ k) h) o (ink v)   d = ◃c zero zero (emb-mono (h zero) (proj₂ o zero) (v ∙ proj₁ (proj₂ (proj₁ o) zero)) d)

@@ -1,0 +1,91 @@
+# 主线分级实例、标准龙骨与终点各支的龙骨
+
+> 验收文件（读记号）。`Graded`、`Doms`、`Exit₀` 与两份 `Keel⁻` 均为闭项；出口照 `YiExInst`，调用 `YiHCRel.exitᴴ`。
+> `Gx`、`Gl` 限 Ω 树，`Wl` 限标准零层路径；底的范围是主线比较表与 Ω 树的逐点下界。
+> 终点各支的底照 `YiMTValue` 的第 1 支推广，界引用 `YiTBFam.ψ-⊵`；尚未实填三条保持律。
+```agda
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+module OCF.Lean.YiGIInst where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_; _++_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiRWFold as F
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiKVRel as K
+open import OCF.Lean.YiKVRel using (_⊴_; ⊴r)
+open import OCF.Lean.YiTBFam using (ψ-⊵)
+import OCF.Lean.YiTBRow as TB
+import OCF.Align.EboLeanDef as E
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import OCF.Lean.YiAbsSimInst using (𝕍)
+open import OCF.Lean.YiAbsGEbo using (refᴱ)
+open import OCF.Lean.YiAbsGIface
+open import OCF.Lean.YiGIBlock
+import OCF.Lean.YiGIRel as GR
+open import OCF.Lean.YiExInst using (back; tree-back)
+open import OCF.Lean.YiExSuff
+open B hiding (R)
+
+Bdᵍ : ∀ {ℓ j} → Bsᵍ ℓ → j P.≤ ℓ → O.Tr⁺ j → E.T → Set
+Bdᵍ {ℓ} {j} (o , r , b) w β t₀ = GR.R j (E.ψ [] t₀ ∷ []) (proj₁ β) × (∀ i u → proj₁ (O.Ωt i) ⊴ proj₁ (b i u))
+
+gradedᵍ : Graded blkᵍ foldᵍ rowsᵍ refᴱ 𝕍
+gradedᵍ = record
+  { ℓ₀ = zero ; v = K.readRW ; R = GR.R ; Rd = GR.Rd ; Nu = GR.Nu ; bt = proj₁
+  ; cl = λ _ t → E.ψ [] t ∷ [] ; Cx = λ _ _ → E.T ; app = λ t₀ a → E.ψ [] (t₀ ++ a) ∷ [] ; Bd = Bdᵍ }
+
+data Wlᵍ : ∀ {j ℓ} → j P.≤ ℓ → Set where
+  wz : ∀ {ℓ} → Wlᵍ (P.z≤ ℓ)
+
+domsᵍ : Doms blkᵍ foldᵍ
+domsᵍ = record
+  { Gx = λ ℓ x → x ≡ proj₁ (O.Ωt ℓ) ; Gb = λ ℓ b → proj₁ (proj₂ b) ≡ MT.rbᶻ ℓ
+  ; Wl = Wlᵍ ; Gl = λ k x → x ≡ proj₁ (O.Ωt k) }
+
+open ExSuff gradedᵍ domsᵍ
+
+exitᵍ : Exit₀
+exitᵍ = record
+  { Ex = H.Exᴴ
+  ; exit = λ r ex h → ≼-trans (tree-back h) (H.exitᴴ r ex (back h)) }
+
+keelᵍ : Keel⁻
+keelᵍ = record
+  { tw = tw ; κ₀ = [] ; rd-tw0 = GR.rd-tw0 ; tw-step = GR.tw-step ; gl = λ _ → refl
+  ; b₀ = λ n → P.Ok-tw n , MT.rbᶻ (tw n) , F.B₀ (tw n)
+  ; w₀ = λ n → P.z≤ (tw n) ; β₀ = λ _ → O.Ωt zero ; K₀ = λ _ → []
+  ; gb = λ _ → refl ; wl = λ _ → wz ; bd = λ _ → H.pos⁰ (proj₁ (O.Ωt zero)) (proj₂ (O.Ωt zero)) , λ _ _ → ⊴r ; gx = λ _ → refl }
+
+-- 典范起点：关系及出口条件均非空。
+startᴿ : GR.R zero (E.natT 1) (proj₁ (O.Ωt zero))
+startᴿ = H.m1 refl H.mz
+
+start-ex : H.Exᴴ startᴿ
+start-ex = tt
+
+FΛ : ℕ → Tr Λ
+FΛ n = proj₁ (O.upz {s = sL} {h = tw} n (O.Ωt (tw n)))
+
+pre : ℕ → Tr Λ
+pre zero = zero
+pre (suc n) = O.cum FΛ n
+
+baseᴱ : ∀ n → F.Base (tw n)
+baseᴱ n i u = TB.ψ Λ P.Ok-Λ (MT.rbᶻ Λ) (F.B₀ Λ) i (P.inc n u) (O.Ωt i) (pre n)
+
+betaᴱ : ∀ n → O.Tr⁺ zero
+betaᴱ n = TB.ψ Λ P.Ok-Λ (MT.rbᶻ Λ) (F.B₀ Λ) zero (P.z≤ Λ) (O.Ωt zero) (pre n)
+
+keelᴱ : Keel⁻
+keelᴱ = record keelᵍ
+  { b₀ = λ n → P.Ok-tw n , MT.rbᶻ (tw n) , baseᴱ n
+  ; β₀ = betaᴱ
+  ; bd = λ n → H.pos⁰ (proj₁ (betaᴱ n)) (proj₂ (betaᴱ n))
+               , λ i u → ψ-⊵ Λ P.Ok-Λ (MT.rbᶻ Λ) (F.B₀ Λ) i (P.inc n u) (O.Ωt i) (pre n) }
+```

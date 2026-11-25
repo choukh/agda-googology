@@ -1,0 +1,77 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 把带有严格下端的各块合并为累加层号的前驱嵌入。分块来自 YiLSBtbo，这里取任意严格输出列。
+module B16IndexBlocks where
+
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Empty using (⊥-elim)
+open import Data.Product using (Σ; proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.BTBO using (module BoundedTrich)
+module B = BoundedTrich
+import OCF.Align.Level as L
+open import OCF.Align.BTBOFullQ using (<ᴰ-irrefl; clash-lt)
+open import OCF.Align.BTBOFullEb using (module Blocks; Inv; inl; inr; inv)
+open import OCF.Align.BTBOFullV3 using (𝕋₀; ≺→⊑₀)
+open import WVOne using (T₀)
+module WT = Blocks 𝕋₀
+Marked : B.Ordᴰ → T₀ → T₀ → Set
+Marked i b top = Σ (WT.Eb i top) (λ e → ∀ {c} (p : c B.< i) → b L.≺ WT.map e p)
+
+prior : T₀ → (ℕ → T₀) → ℕ → T₀
+prior a E zero = a
+prior a E (suc n) = E n
+
+lift≺ : ∀ {a b : T₀} → a L.≺ b → L.suc a L.⊑ b
+lift≺ d (L.≺z e) = L.≺-respˡ (L.≅-sym e) d
+lift≺ d (L.≺s h) = ≺→⊑₀ d h
+
+module Merge (O : ℕ → B.Ordᴰ) (base : T₀) (E : ℕ → T₀)
+  (start : base L.≺ E 0) (step : ∀ n → E n L.≺ E (suc n))
+  (eN : ∀ n → Marked (O n) (prior base E n) (E n)) where
+  T∞ : T₀
+  T∞ = L.lim E
+  below : ∀ n → base L.≺ E n
+  below zero = start
+  below (suc n) = ≺→⊑₀ (step n) (below n)
+  Bd : ℕ → T₀
+  Bd zero    = E zero
+  Bd (suc n) = L.suc (E (suc n))
+  N′ : ∀ n {d} → d B.< B.suc (O (suc n)) → T₀
+  N′ n B.zero    = E (suc n)
+  N′ n (B.suc p) = WT.map (proj₁ (eN (suc n))) p
+  Nb : ∀ n {d} (p : d B.< B.suc (O (suc n))) → N′ n p L.≺ Bd (suc n)
+  Nb n B.zero    = L.≺z (L.≅-refl⁰ (E (suc n)))
+  Nb n (B.suc p) = L.≺s (WT.below (proj₁ (eN (suc n))) p)
+  Nm : ∀ n {d₁ d₂} (p : d₁ B.< B.suc (O (suc n))) (q : d₂ B.< B.suc (O (suc n))) → d₁ B.< d₂ → N′ n p L.≺ N′ n q
+  Nm n B.zero    B.zero    r = ⊥-elim (<ᴰ-irrefl r)
+  Nm n B.zero    (B.suc q) r = ⊥-elim (clash-lt r q)
+  Nm n (B.suc p) B.zero    r = WT.below (proj₁ (eN (suc n))) p
+  Nm n (B.suc p) (B.suc q) r = WT.mono (proj₁ (eN (suc n))) p q r
+  Nc : ∀ n {d₁ d₂} (p : d₁ B.< B.suc (O (suc n))) (q : d₂ B.< B.suc (O (suc n))) → d₁ ≡ d₂ → N′ n p L.≅ N′ n q
+  Nc n B.zero    B.zero    r = L.≅-refl⁰ _
+  Nc n B.zero    (B.suc q) refl = ⊥-elim (<ᴰ-irrefl q)
+  Nc n (B.suc p) B.zero    refl = ⊥-elim (<ᴰ-irrefl p)
+  Nc n (B.suc p) (B.suc q) r = WT.coh (proj₁ (eN (suc n))) p q r
+  fl : ∀ n {x : T₀} → x L.≺ Bd n → ∀ {d} (p : d B.< B.suc (O (suc n))) → x L.≺ N′ n p
+  fl zero    h B.zero    = ≺→⊑₀ (step zero) h
+  fl zero    h (B.suc p) = ≺→⊑₀ (proj₂ (eN (suc zero)) p) h
+  fl (suc n) h B.zero    = lift≺ (step (suc n)) h
+  fl (suc n) h (B.suc p) = lift≺ (proj₂ (eN (suc (suc n))) p) h
+  sp : ∀ n {x : T₀} → x L.≺ Bd n → x L.≺ T∞
+  sp zero    h = L.≺l 0 h
+  sp (suc n) h = L.≺l (suc (suc n)) (lift≺ (step (suc n)) h)
+  module BL = WT.Blk O Bd T∞ (proj₁ (eN zero)) N′ Nb Nm Nc fl sp
+  nzN : ∀ n {d} (p : d B.< B.suc (O (suc n))) → base L.≺ N′ n p
+  nzN n B.zero    = below (suc n)
+  nzN n (B.suc p) = ≺→⊑₀ (proj₂ (eN (suc n)) p) (below n)
+  nzD : ∀ n {c} (m₀ : ∀ {c′} → c′ B.< BL.Σs n → T₀) → (∀ {c′} (q : c′ B.< BL.Σs n) → base L.≺ m₀ q)
+    → (i : Inv (BL.Σs n) (B.suc (O (suc n))) c) → base L.≺ BL.disp n m₀ i
+  nzD n m₀ h (inl q)     = h q
+  nzD n m₀ h (inr d r e) = nzN n r
+  nzE : ∀ n {c} (p : c B.< BL.Σs n) → base L.≺ WT.map (BL.En n) p
+  nzE zero    p = proj₂ (eN zero) p
+  nzE (suc n) p = nzD n (WT.map (BL.En n)) (nzE n) (inv {BL.Σs n} {B.suc (O (suc n))} p)
+  nzL : ∀ {c} (p : c B.< B.lim (B.cumsum O) (B.cumsum-mono O)) → base L.≺ WT.map BL.Lim p
+  nzL (B.lim n p) = nzE n p
+  result : Marked (B.lim (B.cumsum O) (B.cumsum-mono O)) base T∞
+  result = BL.Lim , nzL

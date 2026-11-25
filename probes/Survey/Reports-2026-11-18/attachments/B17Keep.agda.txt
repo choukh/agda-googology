@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 实际 kp 在有共同可数上界的路径上精确判别严格层序。保留分支接受的每一个树下标，经换槽后仍是原来的输入。
+module B17Keep where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym; subst)
+open import W4Block
+open import W4Ops using (c₀)
+
+open import W4Path
+open import W4Fold using (Keep; kp; kp⁼; mapK)
+import OCF.Align.Level as V
+open import B17SlotLevel
+
+Port : Set → Set
+Port X = Σ L (λ a → Tr a → X)
+data Pass {X Y : Set} (f : X → Y) : Port X → Port Y → Set where
+  exact : ∀ {a} {x : Tr a → X} {y : Tr a → Y} → (∀ z → f (x z) ≡ y z) → Pass f (a , x) (a , y)
+loc : ∀ {X Y f} {u : Port X} {v : Port Y} → Pass f u v → proj₁ u ≡ proj₁ v
+loc (exact h) = refl
+compose : ∀ {X Y Z} {f : X → Y} {g : Y → Z} {u v w} → Pass f u v → Pass g v w → Pass (λ x → g (f x)) u w
+compose {g = g} (exact h) (exact k) = exact (λ z → trans (cong g (h z)) (k z))
+
+push : ∀ {a b} (w : a ≤ b) (t : Pos⁼ a) → Pass (pshBr w t) (sl⁼ b (psh w t)) (sl⁼ a t)
+push self t = exact (λ _ → refl)
+push (inc c w) t = push w t
+push {b = nd s h} (inu ws) t = push (ws (c₀ s)) t
+push (ink w) t = push w t
+
+classify : ∀ {j X x₀} → Port X → Keep j X x₀ → Set
+classify {j} u nothing = ∀ {i k} → Corr i (proj₁ u) → Corr k j → i V.≺ᴵ k → ⊥
+classify {j} u (just (q , f , _)) = Pass f (sl j q) u
+
+move : ∀ {j X Y} {x₀ : X} {y₀ : Y} {u : Port X} {v : Port Y} (f : X → Y) (b : f x₀ ≡ y₀)
+  (k : Keep j X x₀) → Pass f u v → classify u k → classify v (mapK f b k)
+move f b nothing p no ci ck = no (subst (Corr _) (sym (loc p)) ci) ck
+move f b (just (q , cv , h)) p keep = compose keep p
+
+mutual
+  run : ∀ {a i j} (c : Corr i a) (o : Ok a) (p : Pos a) (w : j ≤ a) → classify (sl a p) (kp a o p w)
+  run c o p self = exact (λ _ → refl)
+  run (cs c) o (inj₁ ()) (inc t w)
+  run (cs c) o (inj₁ ()) (inu ws)
+  run (cs c) o (inj₂ (t , p)) (inc t′ w) = here (c t) (proj₂ o t) p w
+  run (cs c) o (inj₂ (t , p)) (inu ws) = here (c t) (proj₂ o t) p (ws t)
+  run (cl c s) o (inj₁ ()) (inc n w)
+  run (cl c s) o (inj₁ ()) (inu ws)
+  run (cl {g = g} c s) o (inj₂ (m , p)) (inc n w) = cW-ind (classify (sl⁼ (g m) p)) (way g (proj₁ o) m n)
+    (λ v → move (pshBr v p) (pshFirst v p) (kp⁼ (g n) (proj₂ o n) (psh v p) w)
+           (push v p) (here (c n) (proj₂ o n) (psh v p) w))
+    (λ v → here (c m) (proj₂ o m) p (w ∙ v))
+  run (cl c s) o (inj₂ (m , p)) (inu ws) = here (c m) (proj₂ o m) p (ws m)
+
+  here : ∀ {a i j} (c : Corr i a) (o : Ok a) (p : Pos⁼ a) (w : j ≤ a) → classify (sl⁼ a p) (kp⁼ a o p w)
+  here c o (inj₁ _) w ci cj e = notAbove ci cj w e
+  here c o (inj₂ p) w = run c o p w

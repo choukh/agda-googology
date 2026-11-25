@@ -1,0 +1,57 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原 EBO 下界只需校准每座塔从 1 开始的值；反向有构造性的有限不可封顶见证。有局部二分就可取出其中一项。
+module B18ResetGoal where
+open import Data.Nat.Base using (ℕ; suc; _≤_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≼l; l≼)
+open import WVOne using (T₀; read)
+open import W4Fold using (EBOᶜ)
+open import B8FreezeMain using (irr)
+import B12XRef as R
+import B12EboRows as B
+import B14Goal as G
+import B17Cofinal as C
+import B17Single as D
+import B17ValueDich as V
+import B18Product as P
+import B18RefProduct as Cap
+import B18Reset as T
+
+Hit : T₀ → Set
+Hit x = Σ ℕ (λ n → x ≼ T.fresh n)
+enough : (∀ k → Hit (R.row k)) → G.Goal
+enough h = R.assemble λ k → let n , d = h k in B.into (n , ≼-trans d (T.lower n))
+
+module At (k : ℕ) where
+  Q : T₀
+  Q = R.row k
+  O : T₀
+  O = L.lim (P.powers Q)
+  high : G.Goal → B.InChild (L.suc O)
+  high g = C.witness (≼-trans (Cap.cap k) (≼-trans (G.row-in (ℕ.suc (ℕ.suc (ℕ.suc k)))) g))
+  conflict : ∀ n → L.suc O ≼ B.child n → (∀ j → j ≤ n → T.fresh j ≼ Q) → ⊥
+  conflict n d h = irr O (≼-trans d (≼-trans (T.factor n) (≼-trans (T.bound Q n h) (≼l (suc n) (≼-refl (P.powers Q (suc n)))))))
+  necessary : G.Goal → Σ ℕ λ n → (∀ j → j ≤ n → T.fresh j ≼ Q) → ⊥
+  necessary g = let n , h = high g in n , conflict n h
+  select : G.Goal → (∀ n → (T.fresh n ≼ Q) ⊎ (L.suc Q ≼ T.fresh n)) → Hit (L.suc Q)
+  select g dec = pick (necessary g)
+    where
+    cases : ∀ n → (∀ j → j ≤ n → T.fresh j ≼ Q) ⊎ Σ ℕ (λ j → (j ≤ n) × (L.suc Q ≼ T.fresh j))
+    cases n = D.search n (λ j → T.fresh j ≼ Q) (λ j → L.suc Q ≼ T.fresh j) (λ j _ → dec j)
+    pick : (Σ ℕ λ n → (∀ j → j ≤ n → T.fresh j ≼ Q) → ⊥) → Hit (L.suc Q)
+    pick (n , no) with cases n
+    ... | inj₁ h = ⊥-elim (no h)
+    ... | inj₂ (j , p , d) = j , d
+
+module Classical (lem : LEM) where
+  necessary : G.Goal → ∀ k → Hit (L.suc (R.row k))
+  necessary g k = At.select k g (λ n → V.Classical.compare lem (T.fresh n) (R.row k))
+  iff : (G.Goal → ∀ k → Hit (R.row k)) × ((∀ k → Hit (R.row k)) → G.Goal)
+  iff = (λ g k → weaken (R.row k) (necessary g k)) , enough
+    where
+    weaken : ∀ q → Hit (L.suc q) → Hit q
+    weaken q (n , e) = n , ≼-trans (≼-suc (≼-refl q)) e

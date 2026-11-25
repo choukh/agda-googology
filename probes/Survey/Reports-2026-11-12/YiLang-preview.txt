@@ -1,0 +1,33 @@
+preview (2026-11-12): 读完 AGENTS, YiNextCore/YiReadCore, YiNextBase, YiLamFold, YiDlFold(+YiLamNFuel 的 dlev), YiNextTower,
+BTBO 的 Ord-Ord/ψ</ordᴰ/cumsum, EBO §1-§5 之后, 读定理陈述与账之前的看法. 尚未看任何回报.
+
+切片 (自己生成 html, 主审脚本): TΛ+TΛ-legal = 568 行, 与简报一致 (YiLamFold 239, YiNextBase 154, YiNextCore 114, YiNextTower 61).
+
+一. 我对 Ψ 各行来源的读法
+- Ψ zero = top (ψ_m(0)=Ω_m), Ψ suc = succ = ·ω (规则 4), Ψ lim = 逐点 (规则 5ω), Ψ lc = ΨN/Ψn:
+  keep (目标层里有该层号的位置) = 规则 5Ω / BTBO 的 j<i 行; fold = 规则 6 的 γ 链 (经 ψ_j 自身层号), BTBO 的 i≤j 两行合并.
+  这四行与 BTBO ψ< 同形, BTBO 本身就读自 Buchholz 基本列. 归 (a).
+- top 的四行 (w0, ws, wl, wΩ) 可以由 upT 的展开推出: 把 top 按 upT 读成 suc zero / lc k (up k) / lim (upT∘f) / lc k (upT∘g),
+  再套 zero/suc/lim/lc 四行. ws 行与 "lc (inj₁ tt) (em tt)" 上的 lc 行逐字相同 (我手算核对过); w0 行 = Ψ (suc zero).
+  所以 top 四行的 "形状" 是树侧推得出的 (Ψ 与读回交换), 与 EBO 的叶规则 (Ω_u[η]=η, Ω_u[η]=Ω_{u[η]}) 重合.
+  偏离展开的地方: wl 行用 psum (ℕ 极限相邻项要第一位置, 各支 top 互不为第一位置), wΩ 行用 Kfk∘nrmk (Ω 结点的分支要对下标单调且全定义),
+  以及 wΩ 行的根位置 Pre (lc k g) 里不存在 → 要 Wit/rootW 从 top 支里找回层号 k 的位置.
+- add 在 lc 层号上 x+top = suc x: 树里写不出 "x + Ω_{lc}" (没有根位置), 是哑值. 影响值不影响合法.
+- 链里的 "+": 链点要第一位置递增 (Lgl lim). psum 同理. BTBO 的 ordᴰ 用 cumsum 是同一机制.
+
+二. 初步分类 (待定理陈述核对)
+(a) 读自记号: Way, Ψn, ΨN 的派发, chain 的迭代形状, succ, ptsΩ 的迭代形状, ΩT, Ψ 主体, self.
+(b) 为了翻译 (保留/逼近值) 的脚手架: Wit/rootW/witU/witT/selfU/sxU (根保留), dfin/dfin₀/slotFin/eqFin/finOf/fin (有限层号的字面判等),
+    Kfk/KfN/nrmk 的具体形状 (保留行的单调化). 注意: dfin 与 Wit 对合法性不必要 (全折叠也合法), 只为保留.
+(c) 树逼出: 第一位置与合法性 (Dn, Cp, Le, Lgl, Legal, CP), 合法性证明全体, Lw 的 ws/wl (字面公共上界, Shift), cmpw 在 wΩ 上折叠 (壁垒),
+    psum 与链的 "+", Pre/Kid 里的 Lgl 字段.
+(d) 中性: acc, iter, Lay, R, Pk, acc-ind, shiftw, cps, lev, nodeAt, ΨN 的位置分派.
+树的语言 (不看记号能写出): G.R, LF, Pre/Lo/Kid/KS/Raw/layer, Dn/Lgl, up/upN/upT, tw/Λ (Ω̂ 的 lfp), add/plus, Legal-Ω̂/Lw-Ω̂ 闭包.
+
+三. 第 3 问的猜测 (要编译核对)
+- ψ₀(Ω_{Λ+1}) = Ψ zero (ws VΛ) fold top: 应直接合法.
+- Λ₂ (下一个不动点): 朴素塔 suc Λ, upT (suc Λ), ... 不是第一位置递增: upT (suc Λ) = lc Λ (up Λ) 的 top 支是 upT Λ = lim (tw∘suc),
+  第一位置后代只有塔的项, 没有 suc Λ. 塔 tw 能递增全靠 upT zero = suc zero (Ω₀ = 1).
+  猜测: 在层号上定义加法 ⊕ (逐构造子, lc 处逐支), 取 s 0 = suc a, s (n+1) = s n ⊕ upT (s n) (层号上的 cumsum),
+  CP 步进由 ⊕ 的弱化给出, Legal/Lw 由 ⊕ 的闭包给出 (Wit 取 none). 若成立, Λ₂, Λ_ω, α ↦ Λ_α 的不动点都写得出且合法, 折叠不加情形.
+- 更强的对角化 (I 一类) 要层号的分支域是 "层号本身" 而不是某层的树, 以及把层号极限折叠下来; 现在的语言里没有.

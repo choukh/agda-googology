@@ -1,0 +1,29 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- Good 是对推导的真限制: 一条把第 1 层的零经 r≅ 当作第 0 层的零的推导不满足 Good (r≅ 跨到更高的层).
+-- 不否定 OpStmt 本身 (这条推导的结论对 (Op) 无害), 只说明 KOpMain 多出的前提不是空的.
+module KOpGood where
+
+open import Data.Unit using (tt)
+open import Data.Product using (_,_)
+open import Relation.Nullary using (¬_)
+
+open import W4Block
+import OCF.Align.Level as I
+open import KRel
+open import KOpBase using (Good; SimW)
+
+lift0 : ∀ {m : L} {x : Tr m} → Dom m {I.zero} I.zero x
+lift0 = r≅ {k = I.zero} {k′ = I.suc I.zero} {A = I.zero} {A′ = I.zero} I.z≅ rz
+
+notGood : ∀ {m : L} {x : Tr m} → ¬ Good (lift0 {m} {x})
+notGood (I.s⊑ _ () , _)
+
+good-same : ∀ {m : L} {x : Tr m} → Good (r≅ {k = I.zero} {k′ = I.zero} {A = I.zero} {A′ = I.zero} {t = x} I.z≅ rz)
+good-same = I.z⊑ , tt
+
+-- 在 lift0 的 r≅ 处, 归纳假设要的嵌入 SimW k′ k (k′ = 1, k = 0) 是空的.
+no≺0 : ∀ {a} → ¬ (a I.≺ᴵ I.zero)
+no≺0 (I.via _ ())
+
+noSimW : ¬ SimW (I.suc I.zero) I.zero
+noSimW ρ = no≺0 (ρ I.zero)

@@ -1,0 +1,43 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对每个塔号，独立的有限段同层乘幂精确重现了 Λ 为反馈准备的高层槽。
+module B20HeadActual where
+open import Data.Nat.Base as N using (ℕ; zero; suc)
+import Data.Nat.Properties as Nat
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Empty using (⊥-elim)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import B18TowerEmb as E
+import B12Terminal as T
+import B20Head as H
+
+peel : ∀ n m {p} (d : m N.< suc n) (w : E.Walk tw E.spine m (suc n) p)
+  (b : Base (tw (suc n))) (v : Tr⁺ (tw n)) →
+  ψ (tw (suc n)) (Ok-tw (suc n)) b (tw n) (ink self) v (proj₁ (emb _ (Ok-tw (suc n)) p (Ωt (tw m))))
+    ≡ H.push n v (H.last n m d w (Ωt (tw m)))
+peel n .(suc n) d E.start b v = ⊥-elim (Nat.<-irrefl refl d)
+peel zero .zero d (E.step E.start) b v = refl
+peel (suc n) m d (E.step {p = p} w) b v =
+  H.same n _ v (emb (tw (suc n)) (Ok-tw (suc n)) p (Ωt (tw m)))
+
+module At (n : ℕ) where
+  k = tw n
+  end = suc n
+  family : Tr Λ → Tr⁺ k
+  family x = ψ Λ Ok-Λ (B₀ Λ) k (inc end (ink self)) (Ωt k) x
+  append : ∀ m (d : m N.< end) (t : Tr Λ) →
+    family (up t m (proj₁ (Ωt (tw m))) (proj₂ (Ωt (tw m)))) ≡ H.push n (family t) (H.body n m d)
+  append m d t with E.choose tw E.spine m end d
+  ... | p , eq , w rewrite eq = peel n m d w (λ i v → ψ Λ Ok-Λ (B₀ Λ) i (inc end v) (Ωt i) t) (family t)
+  entry : ∀ m (d : m N.< end) →
+    family (T.prefix tw (suc m)) ≡ H.push n (family (T.prefix tw m)) (H.body n m d)
+  entry zero d = append 0 d zero
+  entry (suc m) d = append (suc m) d (T.prefix tw (suc m))
+  prefix : ∀ m (d : m N.≤ end) → family (T.prefix tw m) ≡ H.headAt n m d
+  prefix zero d = refl
+  prefix (suc m) d = trans (entry m d) (cong (λ a → H.push n a (H.body n m d)) (prefix m (Nat.<⇒≤ d)))
+  slot : T.Run.bs (T.limRun tw T.terminal end) k (ink self) ≡ H.head n
+  slot = prefix end Nat.≤-refl

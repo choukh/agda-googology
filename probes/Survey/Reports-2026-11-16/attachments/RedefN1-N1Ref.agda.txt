@@ -1,0 +1,41 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- N1 检查件 (三): 参照侧在 "精确龙骨" (tw 2 读作 Ω_{Ω+1}) 上第一格的判定, 全是 refl.
+module N1Ref where
+
+open import Data.List using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Align.EBO
+
+Ω₁ ν₂ b₂ : T
+Ω₁ = Ωt (natT 1)            -- Ω_1, tw 1 的精确名字
+ν₂ = Ωs Ω₁                  -- Ω_{Ω_1+1}, tw 2 的精确名字
+b₂ = Ωt ν₂                  -- Ω_{Ω_{Ω_1+1}}, Ωt (tw 2) 的名字
+
+-- 顶结点: 余尾下标恰是 Ω_1 (树侧槽位层 tw 1), 朝第 0 层走链 (规则 6, ν = Ω_1).
+top-cof : cof b₂ ≡ cΩ Ω₁
+top-cof = refl
+
+top-chains : cmpᵀ (sucT Ω₁) [] ≡ gt
+top-chains = refl
+
+-- 第一次回灌 γ₁ = ψ_{Ω_1}(b₂[γ₀]), γ₀ = Ω_{Ω_1}; b₂[γ₀] = Ω_{Ω_{Ω_1}}.
+γ₁-is : γT b₂ Ω₁ 1 ≡ ψ Ω₁ (ΩTower 3) ∷ []
+γ₁-is = refl
+
+-- 回灌里面: Ω_{Ω_{Ω_1}} 余尾下标 0, 朝 Ω_1 层是保留 (规则 5Ω), 与树侧 tree-keeps 一致.
+inner-cof : cof (ΩTower 3) ≡ cΩ []
+inner-cof = refl
+
+inner-keeps : cmpᵀ (sucT []) Ω₁ ≡ lt
+inner-keeps = refl
+
+γ₁-cof : cof (γT b₂ Ω₁ 1) ≡ cΩ []
+γ₁-cof = refl
+
+-- 对照: 松龙骨 (tw 2 对 Ω_{Ω_1}) 的同一步朝第 0 层, 参照走链 (N1Forced.ref-chains).
+-- 记号序: 第 3 站的行低于精确龙骨的行.
+row-lt : cmpᵀ (EBOψ 3) (ψ [] b₂ ∷ []) ≡ lt
+row-lt = refl
+
+row-lt′ : cmpᵀ (ψ [] b₂ ∷ []) (EBOψ 4) ≡ lt
+row-lt′ = refl

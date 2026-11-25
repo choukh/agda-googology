@@ -1,0 +1,46 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第十二批的 src 参照已经落入 Ψ₃ 的第 2 个累加项，因此其后继仍是 Ψ₃ 的下界。
+module B12StrictExit where
+
+open import Data.Nat using (ℕ)
+open import Data.Empty using (⊥)
+open import Data.Product using (proj₁)
+open import W4Block using (Tr; zero; iter; _⊢_◃_; ◃l)
+open import W4Path using (z≤)
+open import W4Ops using (Ωt; cum)
+open import W4Fold using (ψ; B₀; inf)
+open import WVOne using (read; cum-≥)
+open import WVTwo using (◃→≼)
+open import WKShape using (lvl3; ok₃; Ψ₃; g₃; s₃)
+open import B9InnerOuter using (w2)
+open import OCF.BTBO using (module Ord-Ord)
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼l; ≼-refl; s≼s; ≅→≼; ≼-trans)
+open import B8FreezeMain using (irr)
+open import B12Strict using (strict)
+import B12Update as U
+import B12Hierarchy as H
+import B12Arithmetic as A
+import B12LimitSrc as Z
+import YiLAB10Src as T
+import YiLAB11Target as Y
+import YiLAB11Orbit as O
+
+raw : ℕ → Tr zero
+raw n = proj₁ (ψ lvl3 ok₃ (B₀ lvl3) zero (z≤ lvl3) (Ωt zero) (g₃ (iter s₃ zero n)))
+
+inside : L.ψ⁰ (H.Prefix.val H.endpoint) ≼ read (raw 2)
+inside = l≼ (λ n → ≼-trans (U.value-bound (H.at n))
+           (≼-trans (◃→≼ (inf O.G (Y.state n) zero w2 (Y.value n))) (≼l 0 (≼l n (≼-refl _)))))
+
+reference-inside : tr₀ (Ord-Ord.ψ₀ A.source) ≼ read (cum raw 2)
+reference-inside = ≼-trans (proj₁ (Z.fold (Z.Closure.sup A.dS A.dL A.dr Z.omega2)))
+  (≼-trans (≅→≼ (L.ψ⁰-≅ (L.l≅ (λ n → A.pointwise A.diag-agree n H.first (T.regular 0)))))
+           (≼-trans inside (cum-≥ raw 2)))
+
+above : L.suc (tr₀ (Ord-Ord.ψ₀ A.source)) ≼ read Ψ₃
+above = ≼-trans (s≼s reference-inside) (strict {x = cum raw 2} {y = Ψ₃} (◃l 2))
+
+no-upper : read Ψ₃ ≼ tr₀ (Ord-Ord.ψ₀ A.source) → ⊥
+no-upper u = irr _ (≼-trans above u)

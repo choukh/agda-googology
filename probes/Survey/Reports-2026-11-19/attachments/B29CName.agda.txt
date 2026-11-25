@@ -1,0 +1,72 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任一足够高的实际孙返回都严格超过 ψ₀(Ω₂+1)，并超出以标准第一塔限制的全部原可数后缀。
+module B29CName where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_; s≤s; z≤n)
+open import Data.List.Base using ([]; _∷_; _++_)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym; trans; cong)
+open import OCF.Align.EboLeanBase using (nf-Ω; nf-ψ; n[]; c∷; c[])
+open import OCF.Align.EboLean3Base using (nf-suc)
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Align.EboLeanDef using (T; Ωt; natT; HC; h1; h0)
+open import OCF.Lean.YiRefTw2 using (Rt)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; s≼s; ≼-suc; z≼)
+import W4Block as W
+import W4Ops as O
+import WVOne as V
+import B18Product as M
+import B19IdealArithmetic as Ar
+import B20TowerValues as TV
+import B20StandardInside as St
+import B22MovingIndex as E
+import B21StandardShape as Shape
+import B22TowerCut as K
+import B26CForest as Pure
+import B26CLift as Guard
+import B26PSuffix as Orig
+import B27SOriginal as Comp
+import B28PReference as Ref
+import B28Branches as Source
+import B28BBranch as Decode
+import B28BSlot as Slot
+import B29CRelay as R
+import B29CKeys as Key
+import B29CValue as Bound
+
+arg = Ωt (natT 2)
+base : HC (Orig.φ arg)
+base = Source.At.Head.at 0 1
+term = Orig.φ (arg ++ natT 1)
+opaque
+  named : HC term
+  named = hc (nf-ψ n[] (nf-suc (nf-Ω (nf-suc (nf-suc n[]))))
+    (Guard.fit (Pure.node (Pure.node Pure.empty (Pure.node Pure.empty Pure.empty)) (Pure.node Pure.empty Pure.empty)))) (c∷ c[])
+
+suffix : ∀ s (b : HC s) (h : HC (Orig.φ (arg ++ s))) → Rt b ≼ St.std 1 → L.suc (Rt h) ≼ St.std 4
+suffix s b h sb = ≼-trans {b = E.above (St.std 1)}
+  (≼-trans {b = L.suc (Rt base M.· Ar.norm (Rt b))} (s≼s (proj₁ (Orig.Low.val arg base s b h)))
+   (Comp.local-bound (St.std 1) (Rt base) (Rt b) (Ref.two base) sb)) (K.up 1)
+
+module At (n : ℕ) (enough : 4 ≤ suc (suc n)) where
+  open R.At n
+  high : ∀ x → L.suc (St.std 4) ≼ H.free x
+  high x = subst (L.suc (St.std 4) ≼_) (sym e) (St.At.canonical m x 4 enough)
+    where
+    e : H.free x ≡ St.At.value m x
+    e = trans (Decode.At.canon m x) (cong (λ b → V.read (X.K.evaluate x b (O.Ωt W.zero))) (TV.slots (X.K.ℓ x) (suc (suc m))))
+  factor : ∀ p x (h : Root p x) v → L.suc (St.std 4) ≼ Bound.At.family n p x h v
+  factor p ._ (read-head g) v = high (Slot.At.Node.selected m p g v)
+
+  original : ∀ s (b : HC s) (h : HC (Orig.φ (arg ++ s))) → Rt b ≼ St.std 1 →
+    ∀ j u v → L.suc (Rt h) ≼ Bound.At.Real.leaves n j u v
+  original s b h low j u v = ≼-trans {b = St.std 4} (suffix s b h low)
+    (≼-trans {b = L.suc (St.std 4)} (≼-suc (≼-refl _)) (factor (node (G.c u) (G.actual u)) (G.x u) (G.positive u) v))
+    where module G = Key.At.Real n j
+
+  one = h1 {natT 1} refl (h0 refl)
+  small : Rt one ≼ St.std 1
+  small = ≼-trans {b = L.suc (St.std 0)} (s≼s z≼) (Shape.rise 0)
+  specific : ∀ j u v → L.suc (Rt named) ≼ Bound.At.Real.leaves n j u v
+  specific = original (natT 1) one named small

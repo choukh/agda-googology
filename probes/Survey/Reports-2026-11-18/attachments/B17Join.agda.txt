@@ -1,0 +1,49 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 用整个二位父节点作真实回灌的初值。纯 src 新界至少比上一批完整动态界高一个后继。
+module B17Join where
+open import Data.Nat.Base using (ℕ)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; s≼s; ≼l; l≼)
+open import W4Block using (◃l)
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read; 𝟏)
+import B12Terminal as T
+import B12Strict as K
+import B14Height as H
+import B14Tower as W
+import B14RefRow as Row
+import B14RefGain as G
+import B15RefSource as Ref
+import B16Closed as Old
+import B16Feedback as P
+import B16Join as Last
+import B17OrbitRow as New
+
+seed : L.suc (Row.node 1) ≼ read (W.Actual.idx 2)
+seed = ≼-trans (s≼s (New.At.whole (W.Inner.sub 2) (W.Inner.covered (W.Outer.covered W.hA 0) 2)))
+  (≼-trans (Last.Inner.part 2) (W.Outer.part 0))
+module Run = Last.Track.From 1 (Row.node 1) seed
+
+stages = S.iter Old.next Ref.closed
+dynamic = S.lim (λ n → S.suc (stages n))
+line = Old.steps Old.next P.next Old.convert Ref.closed (Row.node 1) Ref.whole
+exact : tr₀ dynamic ≈ᵛ L.lim (λ n → L.suc (Run.stages n))
+exact = Old.limit (λ n → s≼s (proj₁ (line n)) , s≼s (proj₂ (line n)))
+source = S.suc dynamic
+lower : tr₀ source ≼ read EBOᶜ
+lower = ≼-trans (s≼s (≼-trans (proj₁ exact) Run.closed))
+  (K.strict {x = T.value T.tower1} {y = EBOᶜ} (◃l 1))
+
+past : ∀ n → Last.Run.stages n ≼ Run.stages n
+past = H.iteration {f = P.next} {g = P.next} (λ e → H.mono (s≼s e) (≼-refl 𝟏))
+  (G.path-bound (0 ∷ 1 ∷ 0 ∷ []) (Row.node 1))
+strict-improvement : L.suc (tr₀ Old.source) ≼ tr₀ source
+strict-improvement = s≼s (≼-trans (proj₁ Old.exact)
+  (≼-trans (l≼ (λ n → ≼l n (s≼s (past n)))) (proj₂ exact)))
+above-row : L.suc (Row.node 1) ≼ tr₀ dynamic
+above-row = ≼-trans (≼l 0 (≼-refl _)) (proj₂ exact)

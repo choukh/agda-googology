@@ -1,0 +1,43 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25FFloor where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ⊑→≼; ≅→≼)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.BTBOFullLv using (SV; svl; SV-L)
+import B14Btbo as B
+import B16IndexBase as I
+import B22SourceSlots as Src
+import B12BtboCut as Cut
+import B25FActual as Act
+import B25FShortcut as Shortcut
+import B25FFirst as H
+open import B25FZero using (IsLim; islim; chart; module Cofinal; module Chart)
+
+module Included {f : ℕ → L.Ordᴵ} {s : ∀ n → f n L.⊑ᴵ f (suc n)} where
+  growing : ∀ n → B.α (f 0) ≼ B.α (f n)
+  growing zero = ≼-refl (B.α (f 0))
+  growing (suc n) = ≼-trans {a = B.α (f 0)} {b = B.α (f n)} {c = B.α (f (suc n))}
+    (growing n) (⊑→≼ (B.α (f n)) (L.Ψ⁰-mono (s n)))
+
+all : ∀ {a} (root : IsLim a) (v : SV a) n →
+  B.α (a L.[ 0 ]ᴵ) ≼ B.α (Chart.index (chart root v) n)
+all {L.lim f s} islim (svl vf st) n = ≼-trans
+  {a = B.α (f 0)} {b = B.α (f n)} {c = B.α (C.floor n)}
+  (Included.growing {f = f} {s = s} n) (C.covers n)
+  where module C = Cofinal {f = f} {s = s} vf st
+
+module Targets (m : ℕ) where
+  module T = Shortcut.Target m
+  floor = T.C.index
+  min : ∀ n → H.Selected.target m ≼ B.α (floor n)
+  min = all {a = I.κ (Src.Level.Std.z m)} (Shortcut.limit-index (Act.Actual.shape m)) (Src.valid (Src.Level.Std.z m))
+
+opaque
+  whole-finite : ∀ n → Cut.omega-cut ≼ B.α (Shortcut.Gamma.index n)
+  whole-finite n = ≼-trans {a = Cut.omega-cut} {b = Cut.branch 0} {c = B.α (Shortcut.Gamma.index n)}
+    (≅→≼ Cut.cut≈first-branch) (all {a = N.L 1} islim (SV-L 1) n)
+
+  whole-diagonal : ∀ n → N.γ 2 ≼ B.α (Targets.floor 0 n)
+  whole-diagonal n = ≼-trans {a = N.γ 2} {b = H.Selected.target 0} {c = B.α (Targets.floor 0 n)} H.initial (Targets.min 0 n)

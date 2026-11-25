@@ -1,0 +1,130 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 同一 Ψ₃ 的 Ω₂ 实际链点包含一次 Ω₁ 行。Ω₁ 行用自己的零层输出作下一次 E 的指数。
+module B13OrbitFeed where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum using (inj₁)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (refl; _≡_; cong; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (p₂; g₂; ◃→≼)
+open import WKGen using (node-ge; Ω₁t)
+open import WKShape using (Ψ₃)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁; c₁)
+open import B9InnerOuter using (w2; st1; v₁)
+import YiLAB11Target as Y
+import YiLAB11Orbit as O
+import B11OuterCore as C
+import B12Orbit as B
+import B12LimitRef as LR
+import YiLAB10Src as Src
+open import YiLAB7Replay using (Ω₂ᴸ)
+import B12Hierarchy as H
+open H.Prefix using (val; exp; rows; src; aligned)
+import B12LimitSrc as Z
+import B12Update as A
+import B13Update as V
+import B13Countable as T
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼; ≼l; ≼-refl; ≼-suc)
+open import OCF.BTBO using (module Ord-Ord)
+open import OCF.Align.BTBOValBase using (tr₀)
+
+D₁ = chTD (tdNil {lvl2}) tt
+D₀ = chTD D₁ tt
+m₁ = O.m
+m₂ = chMT D₁ tt
+m = m₂ ⊙ m₁
+
+g₁ : Tr zero → Tr lvl1
+g₁ z = up zero tt (suc z) (z◃ z ◃s)
+
+data IsLim : Tr zero → Set where
+  literal : ∀ {f a} → IsLim (lim f a)
+
+module Branch (J : Op {lvl2} nil) (single : (w : zero ≤ lvl2) → T.In.Models idM w J H.add) where
+  K₁ = enterO m₁ J
+  K₀ = enterO m₂ K₁
+
+  module At (R : Base lvl2) (v : Tr⁺ zero) (x : H.Prefix) (I : A.Seeds (val x) (exp x) R v) where
+    S₁ = O.push R
+    S₀ : St (cons (down (fr D₁) tt) (cons (down stop tt) nil))
+    S₀ i t = S₁ i (proj₂ t)
+
+    -- 外部 Ω₂ 行的一级回灌，内部 Ω₁ 行的零级回灌。
+    step₂ : Tr lvl1 → Tr lvl1
+    step₂ y = fromBr lvl2 p₂ (proj₁ (E ok₂ tdNil (g₂ y) J R lvl1 (posW lvl2 p₂) (R lvl1 (posW lvl2 p₂))))
+
+    down-target = mk D₁ (hereT (fr D₁) (posW lvl1 p₁))
+    step₁ : Tr zero → Tr zero
+    step₁ z = fromBr lvl1 p₁ (proj₁ (E ok₂ D₁ (g₁ z) K₁ S₁ zero down-target (S₁ zero down-target)))
+
+    zeta : Tr zero
+    zeta = step₁ zero
+
+    nonfinite : IsLim zeta
+    nonfinite = literal
+
+    sim : T.In.Models m (σ m w2) K₀ H.add
+    sim y S b h = single w2 y (T.pull m S) b h
+
+    -- 回灌来自零层的真实槽。把它的值与其外形的极限见证分别保存。
+    sim-slot : T.In.Models m (σ m₂ down-target) K₀ H.add
+    sim-slot y S b h = single C.zpath y (T.pull m S) b h
+
+    index-bound : L.ψ⁰ (val (T.effect (suc zero) H.add x)) ≼ read zeta
+    index-bound = A.value-bound (T.In.eval-zero m (σ m₂ down-target) D₀ (suc zero) K₀ H.add sim-slot x S₀
+      (R zero C.zpath) (A.seeds (A.slot-bound I) (A.slot-bound I) (A.structure I)))
+
+    iterated : L.ψ⁰ (val (T.effect (suc zeta) H.add x)) ≼
+               read (proj₁ (E ok₂ D₁ (g₁ zeta) K₁ S₁ zero (σ m₁ w2) v))
+    iterated = A.value-bound (T.In.eval-zero m (σ m w2) D₀ (suc zeta) K₀ H.add sim x S₀ v I)
+
+    inner-point : read (proj₁ (E ok₂ D₁ (g₁ zeta) K₁ S₁ zero (σ m₁ w2) v)) ≼
+                  read (proj₁ (E ok₂ D₁ Ω₁t K₁ S₁ zero (σ m₁ w2) v))
+    inner-point = node-ge (kpT (fr D₁) ok₂ p₁ (tv D₁ (σ m₁ w2)))
+                   (λ z → E ok₂ D₁ (g₁ z) K₁ S₁ zero (σ m₁ w2) v) step₁ 1
+
+    inner-to-outer : read (proj₁ (E ok₂ D₁ Ω₁t K₁ S₁ zero (σ m₁ w2) v)) ≼
+                     read (proj₁ (E ok₂ tdNil (g₂ (step₂ zero)) J R zero w2 v))
+    inner-to-outer = ◃→≼ (Emono ok₂ tdNil J R zero w2 v
+      {x = up zero tt Ω₁t (proj₂ (Ωt lvl1))} {y = g₂ (step₂ zero)}
+      (◃c zero tt (◃t (C.st (A.structure I)) (◃t (Einf ok₂ tdNil (g₂ zero) J R lvl1 C.slot (R lvl1 C.slot)) ◃s))))
+
+    outer-point : read (proj₁ (E ok₂ tdNil (g₂ (step₂ zero)) J R zero w2 v)) ≼
+                  read (proj₁ (run (B.block J) R zero w2 v))
+    outer-point = node-ge (kp lvl2 ok₂ p₂ w2) (λ y → E ok₂ tdNil (g₂ y) J R zero w2 v) step₂ 1
+
+    block-bound : L.ψ⁰ (val (T.effect (suc zeta) H.add x)) ≼ read (proj₁ (run (B.block J) R zero w2 v))
+    block-bound = ≼-trans iterated (≼-trans inner-point (≼-trans inner-to-outer outer-point))
+
+
+standard : (w : zero ≤ lvl2) → T.In.Models idM w B.J H.add
+standard w y = V.advanceJc (Ωt lvl2) (inj₁ refl) w (val y) (exp y) (rows y)
+
+module Standard = Branch B.J standard
+module Closed = Standard.At st1 v₁ H.first H.initial
+result : H.Prefix
+result = T.effect (suc Closed.zeta) H.add H.first
+
+level : L.ψ⁰ (val result) ≼ read Ψ₃
+level = ≼-trans Closed.block-bound (≼-trans (◃→≼ (B.block-in-G st1 zero w2 v₁)) (Y.outer 0))
+
+source : tr₀ (Ord-Ord.ψ₀ (src result)) ≼ read Ψ₃
+source = ≼-trans (proj₁ (Z.fold (aligned result))) level
+
+finite≡ : (n : ℕ) → val (iter H.add H.first n) ≡ Src.ll n
+finite≡ zero = refl
+finite≡ (suc n) = cong (λ z → z L.+ Ω₂ᴸ) (finite≡ n)
+
+feedback-size : L.ψ⁰ LR.P∞ ≼ read Closed.zeta
+feedback-size = ≼-trans (l≼ (λ n → ≼l n (advance n))) Closed.index-bound
+  where
+  advance : ∀ n → L.ψ⁰ (Src.ll n) ≼ L.ψ⁰ (val (iter H.add H.first (suc n)))
+  advance n = subst (λ z → L.ψ⁰ z ≼ L.ψ⁰ (val (iter H.add H.first (suc n)))) (finite≡ n)
+    (≼-trans (≼-suc (≼-refl _)) (LR.strict-step (val (iter H.add H.first n))))

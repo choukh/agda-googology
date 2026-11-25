@@ -1,0 +1,103 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 任意有 Ω 槽位覆盖的第三层运行：首次真实 K 更新后的第 1 层结构种子和两个第 0 层值种子。
+module B13Seeds where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (refl; cong; subst; sym)
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans)
+import OCF.Align.Level as L
+open import WVOne using (lvl1; 𝟏; read)
+open import WVTwo using (◃→≼)
+open import WSW4 using (module Lem)
+open import WSShadow using (Ω̂; zC)
+open import WSLevel using (ε)
+import WKSum
+open import WKGen using (module Main)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl2; ok₂; F; c₁)
+open import YiLAB7Replay using (o₁; Ω₂ᴸ)
+open import B8PairLevel using (eΩ₂)
+open import B8PairW4 using (Real-up; SumR-up; Real-lim; Sm-Ω₁)
+open import B9InnerReal using (module RX)
+open import B11OuterCore using (Str; str; slot; zpath)
+open import YiLAB11Target using (prefix)
+import B12Terminal as T
+open T.Run
+import B12ActualSlots as A
+open import B13SeedOuter using (module At)
+
+open Lem o₁
+open RX o₁
+open WKSum.Sum o₁ using (sound)
+
+real-lift : ∀ {x y e} → A._⊴_ x y → Real x e → Real y e
+real-lift (inj₁ refl) p = p
+real-lift (inj₂ d) p = Real-up d p
+
+module BaseFirst (S : Base lvl2) (hb : A._⊴_ Ω₁t (c₁ S)) where
+  b⁺ = S lvl1 slot
+  b = proj₁ b⁺
+  nb = proj₂ b⁺
+
+  bΩ : Real b Ω̂
+  bΩ = real-lift hb W1
+
+  z : ℕ → Tr lvl1
+  z = iter (λ x → ex b b nb (suc x) tt) zero
+
+  U : ℕ → Tr lvl1
+  U = cum (λ k → z (suc k))
+
+  raw : (n : ℕ) → Real (z (suc n)) (ε n)
+  raw zero = RealX nb (Real-pos b nb) bΩ (Real-up ◃s Real-zero)
+  raw (suc n) = RealX nb (Real-pos b nb) bΩ (Real-up ◃s (raw n))
+
+  sums : (n : ℕ) → Real (U n) (ε n)
+  sums zero = raw zero
+  sums (suc n) = RealX nb (Real-pos (U n + b) (z◃ (U n) (+-mono (U n) nb))) bΩ (Real-up ◃s (raw n))
+
+  seedΩ₂ : Real (c₁ (stepS F S)) eΩ₂
+  seedΩ₂ = Real-lim sums
+
+module Seeds (r : T.Run lvl3) (H : A.Covered r) where
+  open At r
+  private
+    h₂ = H lvl2 (inc tt self)
+    h₁ = H lvl1 (inc tt slot)
+
+  right : (S : Base lvl2) (i : W4Block.L) (w : i ≤ lvl2) (v : Tr⁺ i) →
+    A._⊴_ (proj₁ (run F S i w v)) (proj₁ (run K S i w v))
+  right S i w v with h₂
+  ... | inj₁ eq = inj₁ (cong (λ y → proj₁ (ψ lvl2 ok₂ S i w v y)) eq)
+  ... | inj₂ d = inj₂ (mono lvl2 ok₂ S i w v d)
+
+  private
+    val-lift : ∀ {x y} → A._⊴_ x y → read x ≼ read y
+    val-lift (inj₁ refl) = ≼-refl _
+    val-lift (inj₂ d) = ◃→≼ d
+
+    strict : lvl1 ⊢ Ω₁t ◃ c₁ st1
+    strict with h₁
+    ... | inj₁ eq = subst (λ x → lvl1 ⊢ x ◃ c₁ st1) (sym eq) (inf K S₀ lvl1 slot (S₀ lvl1 slot))
+    ... | inj₂ d = ◃t d (inf K S₀ lvl1 slot (S₀ lvl1 slot))
+
+  structure : Str (prefix 0) st1
+  structure = str (real-lift (right S₀ lvl1 slot (S₀ lvl1 slot)) (BaseFirst.seedΩ₂ S₀ h₁))
+                  (Real-up strict W1) (SumR-up strict (sound Sm-Ω₁)) strict
+
+  base : L.ψ⁰ Ω₂ᴸ ≼ read (proj₁ v₁)
+  base = ≼-trans (Main.main ok₂ S₀ w2 (β r) h₁ (oneβ r) (oneB r (inc tt zpath)))
+                 (val-lift (right S₀ zero w2 (β r)))
+
+  coord : L.ψ⁰ Ω₂ᴸ ≼ read (proj₁ (st1 zero zpath))
+  coord = ≼-trans (Main.main ok₂ S₀ zpath (S₀ zero zpath) h₁ (oneB r (inc tt zpath)) (oneB r (inc tt zpath)))
+                  (val-lift (right S₀ zero zpath (S₀ zero zpath)))
+
+module Actual = Seeds (T.finiteRun 2) (A.all-finite 2)

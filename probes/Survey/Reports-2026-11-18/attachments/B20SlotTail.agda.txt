@@ -1,0 +1,46 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第一正塔只需反馈槽大，显式零层起点可重置为 1。真实下标的值另沿标准零路径从同座塔取回。
+module B20SlotTail where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import WVOne using (read; h₁; Mv)
+open import WSLevel using (Ω₁ᴸ)
+open import B12LimitSrc using (Lev₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼)
+import B12Terminal as T
+import B12ActualSlots as A
+import B14Tower as W
+import B14PathHeight as P
+import B16ReadIndex as R
+import B19RowSecondParent as S
+import B20Room as H
+open T.Run
+
+module At (p : Lev₂) (r : T.Run (tw 1)) (cv : A.Covered r)
+          (paths : ∀ z → P.All (W.At.path r z))
+          (high : L.ψ⁰ p ≼ read (proj₁ (W.At.slot r))) where
+  module X = W.At r
+  module Q = S.Raw p
+  module Real = R.FirstTower r cv
+  next : ∀ j → Q.ix j ≼ read (X.idx (suc j)) → Mv Q.a (Q.ix j) ≼ read (X.idx (suc (suc j)))
+  next j h = ≼-trans (S.scale _ Q.a) (P.compare z (paths z) h (X.chain z)
+    (W.chain-covered r cv z) Q.a high)
+    where z = X.idx (suc j)
+  track : ∀ j → Q.ix j ≼ read (X.idx (suc j))
+  track zero = X.start
+  track (suc j) = ≼-trans (Q.feeds _) (next j (track j))
+  points : ∀ j → Q.point j ≼ read (X.idx (suc (suc j)))
+  points j = ≼-trans (Q.right _) (next j (track j))
+  full : L.ψ⁰ (p L.+ L.up L.zero Ω₁ᴸ) ≼ read (T.value r)
+  full = l≼ λ j → ≼-trans (points j) (Real.indices (suc (suc j)))
+
+apply : ∀ p (r : T.Run (tw 1)) → T.Run.ok r ≡ Ok-tw 1 → A.Covered r → H.Room r (L.ψ⁰ p) →
+  L.ψ⁰ (p L.+ L.up L.zero Ω₁ᴸ) ≼ read (T.value r)
+apply p r eq cr high = At.full p r cr paths (high (ink self)) where
+  paths : ∀ z → P.All (W.At.path r z)
+  paths z rewrite eq = P.through (↑ zero z)

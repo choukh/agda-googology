@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第一级自然变换的参数可以随每次迭代改变；Ω 节点从 It₀ 产生同型变换。
+module B17OrbitOmega where
+open import Data.Nat using (zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block hiding (D)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import WKGen using (Ω₁t)
+open import OCF.Align.Value using (_≼_)
+import B13OrbitFeed as O
+import B15OrbitModel as M
+import B15OrbitAction as P
+import B16OrbitNode as N
+import B16OrbitTransform as H
+import B17OrbitOperator as T
+import B17OrbitCount as Count
+import B17OrbitModel as B
+open B using (Both; One; Two; good)
+
+module Frame {X : Cx lvl2} (m : Mor M.X₁ X) (ret : N.Left m) where
+  module Base = B.Frame m ret
+  open Base using (φ; dm)
+  D = Base.Old.D
+  module Out = B.At m
+  module In = B.At dm
+  module C₀ = Count.For 0 (chTD D tt) P.Act H.sup (Both dm) In.lift₀ In.sup₀ H.height (λ _ _ → refl) (λ _ _ _ → refl) (λ _ _ _ → refl)
+  module C₁ = Count.For 1 (chTD D tt) T.Trans T.supT (One dm) In.lift₁ In.sup₁ T.height₁ (λ _ _ → refl) (λ _ _ _ → refl) (λ _ _ _ → refl)
+
+  module Zero (K : Ca 1 X) (F : T.Trans) (tk : One m K F) (G : Op X) (a : P.Act) (ug : Both m G a) where
+    KG = proj₁ K idM G
+    kg : Both m KG a
+    kg = Out.lift₀ G KG (proj₂ K idM G) a ug
+    K′ = enter 1 φ (Itᴺ 0 ok₂ D zero K)
+    G′ = enterO φ KG
+    ds : C₀.contract K′ (T.app F)
+    ds Q b qc = tk φ (λ _ → refl) Q b qc
+    child = λ z → It 0 ok₂ D (O.g₁ z) K G
+    pieces : ∀ y z → y ≼ read (suc z) → Both m (child z) (H.height y (T.app F) a)
+    pieces y z low = Base.leave KG (It 0 ok₂ (chTD D tt) (suc z) K′ G′) _
+         (C₀.eval (suc z) low K′ (T.app F) ds G′ a (Base.upward KG a kg))
+    omega : Both m (It 0 ok₂ D Ω₁t K G) (T.app (T.phi F) a)
+    omega = Base.node child (T.Arg.g F a) (T.Arg.r F a) (T.Arg.q F a) pieces
+
+  keep : ∀ b (nb : lvl1 ⊢ zero ◃ b) → lvl1 ⊢ Ω₁t ◃ b → One m (Kb ok₂ D b nb) T.raiseT
+  keep b nb cov u ru Q a qa = Base′.Uf.Rule.covers Q a (proj₁ qa) b cov , Base′.Vf.Rule.covers Q a (proj₂ qa) b cov
+    where module Base′ = B.Frame (u ⊙ m) (good m u ret ru)
+
+module Increase {X : Cx lvl2} (m : Mor M.X₁ X) (ret : N.Left m) where
+  D = trTD m O.D₁
+  module Out = B.At m
+  covers : ∀ b → lvl1 ⊢ Ω₁t ◃ b → ∀ K F → One m K F → One m (Itᴺ 0 ok₂ D b K) (T.phi F)
+  covers b cov K F tk u ru G a ug = B.At.lift₀ (u ⊙ m) (It 0 ok₂ (trTD u D) Ω₁t (enter 1 u K) G)
+       (It 0 ok₂ (trTD u D) b (enter 1 u K) G) (Itmono 0 ok₂ (trTD u D) (enter 1 u K) G cov) _
+       (Frame.Zero.omega (u ⊙ m) (good m u ret ru) (enter 1 u K) F (Out.enter₁ u ru K F tk) G a ug)
+  typed : ∀ b (nb : lvl1 ⊢ zero ◃ b) → lvl1 ⊢ Ω₁t ◃ b → Two m (Kₑ 0 ok₂ D b nb) T.phi
+  typed b nb cov u ru = IncreaseAt
+    where
+    IncreaseAt : ∀ Q a → One (u ⊙ m) Q a → One (u ⊙ m) (Itᴺ 0 ok₂ (trTD u D) b Q) (T.phi a)
+    IncreaseAt Q a h v rv G c hh =
+      B.At.lift₀ (v ⊙ u ⊙ m) (It 0 ok₂ (trTD v (trTD u D)) Ω₁t (enter 1 v Q) G) (It 0 ok₂ (trTD v (trTD u D)) b (enter 1 v Q) G)
+        (Itmono 0 ok₂ (trTD v (trTD u D)) (enter 1 v Q) G cov) _
+        (Frame.Zero.omega _ (good (u ⊙ m) v (good m u ret ru) rv) (enter 1 v Q) a (B.At.enter₁ (u ⊙ m) v rv Q a h) G c hh)

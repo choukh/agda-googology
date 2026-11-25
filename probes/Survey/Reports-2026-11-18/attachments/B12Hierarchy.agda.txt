@@ -1,0 +1,124 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层。实际 G 的第 k 个孩子允许 k+1 次取迭代极限。
+-- 在各孩子的同一状态上保留两个零层界与一层指数，再取整个 G 的极限。
+module B12Hierarchy where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-trans)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import W4Block using (zero; iter; ◃t)
+open import W4Ops using (Tr⁺)
+open import W4Fold using (Base; nil; Op; run; inf; stepS; itS; itV)
+open import WVOne using (read)
+open import WSShadow using (ES; lC)
+open import YiLAB7Orbit using (lvl1; lvl2)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B9InnerOuter using (w2)
+open import WKShape using (Ψ₃)
+open import B8PairW4 using (Real-lim; Real-up; SumR-up)
+open import WVTwo using (◃→≼)
+import YiLAB10Src as T
+import YiLAB11Target as Y
+import YiLAB11Orbit as O
+import B11OuterCore as C
+import B12LimitRef as A
+import B12LimitSrc as Z
+import B12Update as U
+import B12Orbit as B
+import B12Gather as G
+
+record Prefix : Set where
+  constructor pref
+  field
+    src : Z.Src₂
+    val : Z.Lev₂
+    exp : ES
+    rows : A.Described val exp
+    aligned : Z.Aligned src val
+open Prefix
+
+first : Prefix
+first = pref T.a Ω₂ᴸ (Y.prefix 0) (A.finite 0) Z.omega2
+
+add : Prefix → Prefix
+add x = pref (src x S.+ T.a) (val x L.+ Ω₂ᴸ) (A.next (exp x))
+             (A.Rows.advance (val x) (exp x) (rows x)) (Z.plus (aligned x) Z.omega2)
+
+sup : (ℕ → Prefix) → Prefix
+sup f = pref (S.lim s) (L.lim p) (lC e) (A.limit p e (λ n → rows (f n)))
+             (Z.lim s p (λ n → aligned (f n)))
+  where
+  s = λ n → src (f n)
+  p = λ n → val (f n)
+  e = λ n → exp (f n)
+
+-- 若操作 K 每次实现 f，则折叠 Ω₂ 于 K 后，整棵输出实现 f 的 ω 次迭代。
+Realizes : Op {lvl2} nil → (Prefix → Prefix) → Set
+Realizes K f = (x : Prefix) (R : Base lvl2) (v : Tr⁺ zero) →
+  U.Seeds (val x) (exp x) R v →
+  U.Seeds (val (f x)) (exp (f x)) (stepS K R) (run K R zero w2 v)
+
+repeatω : (Prefix → Prefix) → Prefix → Prefix
+repeatω f x = sup (iter f x)
+
+module Lift (K : Op {lvl2} nil) (f : Prefix → Prefix) (h : Realizes K f)
+            (x : Prefix) (R : Base lvl2) (v : Tr⁺ zero) (i : U.Seeds (val x) (exp x) R v) where
+  along : (n : ℕ) → U.Seeds (val (iter f x n)) (exp (iter f x n))
+                             (itS K n R) (itV K n R zero w2 v)
+  along zero = i
+  along (suc n) = h (iter f x n) (itS K n R) (itV K n R zero w2 v) (along n)
+
+  closed : U.Seeds (val (repeatω f x)) (exp (repeatω f x)) (stepS (B.block K) R)
+                   (run (B.block K) R zero w2 v)
+  closed = G.gather K (B.block K) (B.Window.child-in-block K) R v
+                    (λ n → val (iter f x n)) (λ n → exp (iter f x n)) along
+
+-- op k 的定义与 G 中 iter 的递归方程相同。
+operator : ℕ → Op {lvl2} nil
+operator = iter B.block B.J
+
+height : ℕ → Prefix → Prefix
+height zero = add
+height (suc k) = repeatω (height k)
+
+realizes : (k : ℕ) → Realizes (operator k) (height k)
+realizes zero x = U.advanceJ (val x) (exp x) (rows x)
+realizes (suc k) = Lift.closed (operator k) (height k) (realizes k)
+
+diagonal : Prefix → Prefix
+diagonal x = sup (λ n → height (suc n) x)
+
+diagonal-step : Realizes O.G diagonal
+diagonal-step x R v i =
+  U.seeds (l≼ (λ n → ≼l n (U.value-bound (child n))))
+          (l≼ (λ n → ≼l n (U.slot-bound (child n))))
+          (C.str (Real-lim (λ n → C.rP (U.structure (child n))))
+                 (Real-up rise (C.rΩ s)) (SumR-up rise (C.sN s)) (◃t (C.st s) rise))
+  where
+  child = λ n → realizes (suc n) x R v i
+  s = U.structure i
+  rise = inf O.G R lvl1 C.slot (R lvl1 C.slot)
+
+initial : U.Seeds (val first) (exp first) (Y.state 0) (Y.value 0)
+initial = U.seeds C.sv0 C.sz0 C.str0
+
+-- 同一个外链允许 G 重复任意次，再把每个实际值放入 Ψ₃。
+prefix-at : ℕ → Prefix
+prefix-at = iter diagonal first
+
+at : (n : ℕ) → U.Seeds (val (prefix-at n)) (exp (prefix-at n)) (Y.state n) (Y.value n)
+at zero = initial
+at (suc n) = diagonal-step (prefix-at n) (Y.state n) (Y.value n) (at n)
+
+endpoint : Prefix
+endpoint = sup prefix-at
+
+level-bound : L.ψ⁰ (val endpoint) ≼ read Ψ₃
+level-bound = l≼ (λ n → ≼-trans (U.value-bound (at n)) (≼-trans (◃→≼ (inf O.G (Y.state n) zero w2 (Y.value n))) (Y.outer n)))
+
+src-bound : tr₀ (S.ψ₀ (src endpoint)) ≼ read Ψ₃
+src-bound = ≼-trans (proj₁ (Z.fold (aligned endpoint))) level-bound

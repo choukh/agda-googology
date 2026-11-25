@@ -1,0 +1,49 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对 Λ 每一正塔、每一个随后子槽实填 Ω 截断与此前独立单位，因而前缀界可由独立标准塔的名与旧槽名直接传下。
+module B31PSeats where
+open import Data.Nat.Base as N using (ℕ; suc)
+import Data.Nat.Properties as NP
+open import Data.Product using (proj₁; proj₂)
+open import Data.Empty using (⊥-elim)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym; trans)
+import W4Block as W
+import W4Ops as O
+import W4Path as Path
+import W4Fold as F
+import B12Terminal as T
+import B15Spine as S
+import B18TowerEmb as E
+import B26Names as Names
+import B26Depth as D
+import B30OutputRank as Rank
+import B31PCard as C
+import B31PRank as R
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_)
+open import WVOne using (read)
+module H = C.Triangle W.tw T.terminal
+earlier : ∀ m n d → H.unit m n d ≡ E.standard m
+earlier m n d = trans (sym (C.strip (W.tw n) (Path.Ok-tw n) (H.H.picked m n d) (O.Ωt (W.tw m))))
+  (E.pres {m = m} {k = n} {p = H.H.picked m n d} (proj₂ (proj₂ (E.choose W.tw E.spine m n d))) (O.Ωt (W.tw m)))
+
+module At (t : ℕ) (c : W.Tr (W.tw t)) (j : W.L) (w : j W.≤ S.branch (W.tw t) c) where
+  n = suc t
+  seat : j W.≤ W.tw n
+  seat = W.inc c w
+  crosses : ∀ {m p} → m N.< n → E.Walk W.tw E.spine m n p → C.Cross p seat
+  crosses small E.start = ⊥-elim (NP.<-irrefl refl small)
+  crosses small (E.step h) = C.index c w
+  real : ∀ m d → C.Cross (H.H.picked m n d) seat
+  real m d = crosses d (proj₂ (proj₂ (E.choose W.tw E.spine m n d)))
+  module Value = R.Observe W.tw T.terminal n j seat real
+
+  module Bind (o : Path.Ok j) (b : F.Base j) (β : O.Tr⁺ W.zero) (v : O.Tr⁺ j) where
+    module Obs = Value o b β v
+    module Named (a : Names.Name) (deep : 2 N.≤ D.height a) (ω-in : L.ωᶜ ≼ Names.value a)
+      (initial : Obs.seed ≼ Names.value a)
+      (standard : ∀ m → m N.< n → read (proj₁ (E.standard m)) ≼ Names.value a) where
+      independent : ∀ m d → Obs.unit m d ≼ Names.value a
+      independent m d = subst (λ z → read (proj₁ z) ≼ Names.value a) (sym (earlier m n d)) (standard m d)
+      module Applied = Obs.Named a deep ω-in initial independent
+      assigned : ∀ m (d : m N.≤ n) → Rank.Label (Obs.output m) Applied.R.result
+      assigned = Applied.assigned

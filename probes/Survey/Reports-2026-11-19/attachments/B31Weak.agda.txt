@@ -1,0 +1,57 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 判定整首塔弱低于同一原行时，每轮的全部询问可以分别留出余量。
+module B31Weak where
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; s≼s; ≼l; l≼)
+open import WVOne using (T₀; 𝟏)
+import B18Product as M
+import B19IdealArithmetic as A
+import B19IdealPowers as P
+import B22MovingIndex as E
+import B27Threshold as R
+import B27CutArithmetic as C
+import B27EpsilonCut as EC
+import B29SFirst as S
+import B29SUnit as V
+import B31Moving as B
+import B31FirstExact as X
+import B31OrbitRank as K
+
+module Finite (r : T₀) (times : ∀ a b → L.suc a ≼ r → L.suc b ≼ r → L.suc (a M.· b) ≼ r)
+  (exp : ∀ a → L.suc a ≼ r → L.suc (A.norm a) ≼ r) where
+  pair : ∀ a b → L.suc a ≼ r → L.suc b ≼ r → L.suc (B.join a b) ≼ r
+  pair a b ha hb = ≼-trans {b = L.suc u} (s≼s {a = B.join a b} {b = u} (l≼ {f = B.two a b} λ
+    { zero → first ; (suc _) → second })) (times (A.norm a) (A.norm b) (exp a ha) (exp b hb))
+    where
+    u = A.norm a M.· A.norm b
+    first : a ≼ u
+    first = ≼-trans {b = A.norm a} (A.up a) (≼-trans {b = A.norm a M.· 𝟏}
+      (M.one-right (A.norm a)) (M.mono (≼-refl (A.norm a)) (P.positive P.omega-pos b)))
+    second : b ≼ u
+    second = ≼-trans {b = A.norm b} (A.up b) (M.pad (P.positive P.omega-pos a) (A.norm b))
+
+module Local (p f q : ℕ → T₀) (r : T₀)
+  (first : L.suc (p 0) ≼ r → L.suc (q 0) ≼ r)
+  (next : ∀ j → L.suc (q j) ≼ r → L.suc (p (suc j)) ≼ r → L.suc (q (suc j)) ≼ r)
+  (closed : ∀ a → L.suc a ≼ r → L.suc (E.above a) ≼ r)
+  (upper : L.lim f ≼ L.lim (λ j → E.above (q j)))
+  (cost : ∀ j → p j ≼ f j) (rise : ∀ j → L.suc (f j) ≼ f (suc j)) where
+  inside : L.lim f ≼ r → ∀ j → L.suc (p j) ≼ r
+  inside h j = ≼-trans {b = L.suc (f j)} (s≼s (cost j))
+    (≼-trans {b = f (suc j)} (rise j) (≼-trans {b = L.lim f} (≼l {f = f} (suc j) (≼-refl _)) h))
+  cap : (∀ j → L.suc (p j) ≼ r) → L.lim f ≼ r
+  cap h = ≼-trans {b = L.lim (λ j → E.above (q j))} upper (l≼ λ j →
+    ≼-trans {b = L.suc (E.above (q j))} (≼-suc (≼-refl _)) (closed (q j) (all j)))
+    where
+    all : ∀ j → L.suc (q j) ≼ r
+    all zero = first (h zero)
+    all (suc j) = next j (all j) (h (suc j))
+
+module Row (k : ℕ) (d : 2 ≤ k) where
+  module A′ = Finite (R.row k) (C.At.product k d) (C.At.powω k d)
+  module Actual = Local K.pieces S.f X.Actual.q (R.row k) (λ h → h)
+    (λ j → A′.pair (X.Actual.q j) (K.pieces (suc j))) (EC.At.closed k d)
+    (proj₁ X.Actual.exact) X.back V.unit
+  open Actual public using (inside; cap)

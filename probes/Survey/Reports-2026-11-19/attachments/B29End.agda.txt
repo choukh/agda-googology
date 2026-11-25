@@ -1,0 +1,52 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 整个终点严格低于原 EBO 等价于三个实际值各自严格低于它，三份上界可独立寻找。以排中律反推正向时，至少一个完整分量须达到原 EBO。
+module B29End where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_; _⊔_; s≤s)
+import Data.Nat.Properties as N
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Empty using (⊥-elim)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl; s≼s; ≼l; l≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRVLevel using (LEM)
+import B14Goal as G
+import B26Names as A
+import B26Depth as D
+import B26PActual as W
+import B27Endpoint as E
+import B27Threshold as R
+import B17ValueDich as Order
+import B29Common as CommonRows
+import B29Channels as Ch
+import B20StandardGoal as St
+import B18CellState as Cell
+import B28BCut as Leaf
+import B29Three as Core
+
+Small : A.T₀ → Set
+Small a = L.suc a ≼ A.E
+
+first-in : Ch.first ≼ W.Y
+first-in = l≼ {f = Cell.At.fresh 0} (St.into 0)
+starts-in : Ch.starts ≼ W.Y
+starts-in = l≼ {f = Ch.second} (λ m → St.into (suc m) 1)
+total-in : Ch.total ≼ W.Y
+total-in = l≼ {f = Ch.each} λ m → l≼ {f = Ch.one m} λ j → l≼ {f = Leaf.Physical.inner m j} λ u →
+  ≼-trans {a = Leaf.Physical.inner m j u} {b = Leaf.Physical.f m j} {c = W.Y}
+    (Leaf.Physical.into m j u) (St.into (suc m) (suc (suc j)))
+
+move : ∀ i j → i ≤ j → R.row i ≼ R.row j
+move i j p = R.minimum i (D.tower j) (subst (suc i ≤_) (sym (D.calibrate j)) (s≤s p))
+
+points : ∀ (v : ℕ → A.T₀) (q : A.T₀) → L.suc (L.lim v) ≼ q → ∀ m → L.suc (v m) ≼ q
+points v q p m = ≼-trans {a = L.suc (v m)} {b = L.suc (L.lim v)} {c = q} (s≼s (≼l {f = v} m (≼-refl (v m)))) p
+
+close : ∀ k → 2 ≤ k → L.suc Ch.first ≼ R.row k → L.suc Ch.starts ≼ R.row k → L.suc Ch.total ≼ R.row k → W.Y ≼ R.row k
+close k two h p q = Ch.Row.sufficient k two (h , λ m → points Ch.second (R.row k) p m , points Ch.each (R.row k) q m)
+
+module Common = CommonRows.Family A.E R.row E.small-index move E.room
+module Actual = Core.Three A.E R.row Common.row-for (λ k → A.strict (D.tower k))
+  Ch.first Ch.starts Ch.total W.Y first-in starts-in total-in close

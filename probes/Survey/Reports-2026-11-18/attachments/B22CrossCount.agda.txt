@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22CrossCount where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (⊤; tt)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import B14PathHeight using (All; base; each)
+open import B19PathShape using (Shape; ident; l; law; read-shape)
+import B19PathRel as P
+import B22CrossEager as N
+
+module _ {k} (o : Ok k) (B : Base k) {w : zero ≤ k} (normal : All w) (β : Tr⁺ zero) where
+  out : Tr k → Tr zero
+  out a = proj₁ (ψ k o B zero w β a)
+
+limit : ∀ {k} (o : Ok k) (B : Base k) {w : zero ≤ k} (normal : All w) (β : Tr⁺ zero) →
+        ∀ f d {g : ℕ → Tr zero} {e} → (∀ n → Shape (out o B normal β (f n)) (g n)) → Shape (out o B normal β (lim f d)) (lim g e)
+limit o B base β f d h = l h
+limit o B (each _) β f d h = l h
+
+module _ {k} (o : Ok k) (B : Base k) {w : zero ≤ k} (normal : All w) (β : Tr⁺ zero) where
+  module _ {ℓ : L} {X : Cx ℓ} (t : ⟦ X ⟧ zero) where
+    Fits : OpA (N.tree k) → Op X → Set
+    Fits K F = ∀ u S v → Shape (out o B normal β u) (proj₁ v) → Shape (out o B normal β (proj₁ K u)) (proj₁ (run F S zero t v))
+
+    chain : ∀ K F → Fits K F → ∀ n u S v → Shape (out o B normal β u) (proj₁ v) →
+            Shape (out o B normal β (iter (proj₁ K) u n)) (proj₁ (itV F n S zero t v))
+    chain K F h zero u S v p = p
+    chain K F h (suc n) u S v p = h _ (itS F n S) _ (chain K F h n u S v p)
+
+    count : ∀ {m} (d : Dn k m) (T : TD X m) (o′ : Ok ℓ) (z : Tr zero) K F → Fits K F →
+            Fits (Eh (N.tree k) d (ι m z) K) (op (E o′ T (ι m z) F) (Einf o′ T (ι m z) F))
+    count d T o′ zero K F h = h
+    count {m} d T o′ (suc z) K F h u S v p = limit o B normal β _ _ (λ n → chain (Eh (N.tree k) d (ι m z) K) (op (E o′ T (ι m z) F) (Einf o′ T (ι m z) F)) (count d T o′ z K F h) (suc n) u S v p)
+    count d T o′ (lim f e) K F h u S v p = limit o B normal β _ _ (λ n → count d T o′ (f n) K F h u S v p)
+
+pure : ∀ {k} (o : Ok k) (B : Base k) {w : zero ≤ k} (normal : All w) (β : Tr⁺ zero)
+       (b : Tr zero) (u : Tr k) (S : Base k) (v : Tr⁺ zero) → Shape (out o B normal β u) (proj₁ v) →
+       Shape (out o B normal β (u + ι k b)) (proj₁ (ψ k o S zero w v (ι k b)))
+pure o B w β zero u S v p = p
+pure o B base β (suc b) u S v p = P.Test.next law (pure o B base β b u S v p)
+pure o B (each ws) β (suc b) u S v p = P.Test.next law (pure o B (each ws) β b u S v p)
+pure o B base β (lim f e) u S v p = l (λ n → pure o B base β (f n) u S v p)
+pure o B (each ws) β (lim f e) u S v p = l (λ n → pure o B (each ws) β (f n) u S v p)
+
+module _ {k} (o : Ok k) (B : Base k) {w : zero ≤ k} (normal : All w) (β : Tr⁺ zero) where
+  -- Arbitrary original trunk a. The exponent and stride are literal zero-level inputs
+  -- and may have arbitrarily nested limits. The state is updated after each positive iteration.
+  suspend : (a : Tr k) (b z : Tr zero) (e : k ⊢ zero ◃ ι k b) →
+            Shape (out o B normal β (proj₁ (Eh (N.tree k) stop (ι k z) (N.right (ι k b) e)) a))
+              (proj₁ (E o tdNil (ι k z) (opB k o (ι k b) e)
+                (λ i u → ψ k o B i u (B i u) a) zero w (ψ k o B zero w β a)))
+  suspend a b z e = count o B normal β {X = nil} w stop tdNil o z
+    (N.right (ι k b) e) (opB k o (ι k b) e) (pure o B normal β b) a _ _ (ident _)
+
+module At (s : Sh) (h : Ch s → L) where
+  k = nd s h
+  value : (o : Ok k) (B : Base k) {w : zero ≤ k} (normal : All w) (β : Tr⁺ zero)
+        (a : Tr k) (b z : Tr zero) (e : k ⊢ zero ◃ ι k b) →
+        Shape (out o B normal β (proj₁ (Eh (N.tree k) stop (ι k z) (N.right (ι k b) e)) a))
+              (out o B normal β (ex a (ι k b) e (ι k z) tt))
+  value o B (each ws) β a b z e = suspend o B (each ws) β a b z e
+

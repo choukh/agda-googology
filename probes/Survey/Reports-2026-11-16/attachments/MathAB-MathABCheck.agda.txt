@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- MathAB: 换基折叠 YiBSFold.ψ 在 tw 1 上、目标经指定孩子时三处行的形状 (只是形状, 不是值).
+module MathABCheck where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀)
+import OCF.Lean.YiRBSib as R
+open import OCF.Lean.YiBSBase
+import OCF.Lean.YiBSFold as BS
+open import OCF.Lean.YiTBRow using (nat)
+
+one : L
+one = nd sS (λ _ → zero)
+
+S₁ : Schema zero (λ c → zero ⊕ ↑ zero c)
+S₁ = schema zero (↑ zero) tt self (OkO↑ zero zero tt self) (λ c → refl)
+
+w : one ≤ tw 1
+w = inc (nat 2) (inc tt self)
+
+-- (1) 上折把孩子层的结点搬成孩子侧槽位 (对一切层号).
+up-side : ∀ {s h} (c : Ch s) (b : Tr⁺ (nd s h)) (p : Pos (h c)) (g : Br (h c) p → Tr (h c))
+  → Σ (Br (nd s h) (inj₂ (c , inj₂ p)) → Tr (nd s h)) λ G
+  → proj₁ (Up (h c) (down stop c) b (Ω p g)) ≡ Ω (inj₂ (c , inj₂ p)) G
+up-side c b p g = _ , refl
+
+-- (2) K6: 换基折叠里, 孩子侧槽位上的结点朝指定孩子里的层折, 输出是 ℕ 极限 (对一切孩子侧槽位).
+k6-lim : ∀ (B : Base (tw 1)) (β : Tr⁺ one) c t (g : Br (tw 1) (inj₂ (c , t)) → Tr (tw 1))
+  → Σ (ℕ → Tr one) λ G → Σ _ λ a
+  → proj₁ (BS.ψ (tw 1) (Ok-tw 1) (rb-tw 1) B one w β (Ω (inj₂ (c , t)) g)) ≡ lim G a
+k6-lim B β c t g = _ , _ , refl
+
+-- (3) 嵌入行: 目标 (第 1 层) 不低于地板 (第 0 层) 时, 孩子树 y 只进入可数尾项;
+--     换基部分是 seen, 而 seen 逐字用默认底 B₀ (内部的链不带上下文).
+seen-row : ∀ (B : Base (tw 1)) (β : Tr⁺ one) x c y e
+  → BS.ψ (tw 1) (Ok-tw 1) (rb-tw 1) B one w β (up x c y e)
+  ≡ seen S₁ one (tt , λ _ → tt) (lift zero one) (BS.ψ (tw 1) (Ok-tw 1) (rb-tw 1) B one w β x) c
+    ⊞ BS.ψ (zero ⊕ ↑ zero c) (proj₂ (Ok-tw 1) c) (proj₂ (rb-tw 1) c) (B₀ _) zero (z≤ _) (Ωt zero) y
+seen-row B β x c y e = refl
+
+seen-B₀ : ∀ (β : Tr⁺ one) c
+  → seen S₁ one (tt , λ _ → tt) (lift zero one) β c
+  ≡ R.ψ (one ⊕ ↑ zero c) (Ok⊕ one (↑ zero c) (tt , λ _ → tt) (raiseO zero one (↑ zero c) (lift zero one) (OkO↑ zero zero tt self c)))
+      (R.rb-no _) (B₀ _) one (lift one (↑ zero c)) β (proj₁ (Ωt (one ⊕ ↑ zero c)))
+seen-B₀ β c = refl
+
+-- (4) 下标侧结点在同一目标下保留 (输出是 Ω 结点).
+idx-keep : ∀ (B : Base (tw 1)) (β : Tr⁺ one) (g : Br (tw 1) (inj₁ (inj₁ tt)) → Tr (tw 1))
+  → Σ (Pos one) λ q → Σ (Br one q → Tr one) λ G
+  → proj₁ (BS.ψ (tw 1) (Ok-tw 1) (rb-tw 1) B one w β (Ω (inj₁ (inj₁ tt)) g)) ≡ Ω q G
+idx-keep B β g = _ , _ , refl

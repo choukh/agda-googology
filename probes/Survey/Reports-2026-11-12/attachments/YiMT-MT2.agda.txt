@@ -1,0 +1,39 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module MT2 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤; tt)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀)
+open import OCF.Lean.YiTBRow using (Rb; ψ)
+open import OCF.Lean.YiMTTab
+import OCF.Lean.YiLegBlock as F
+import OCF.Lean.YiLegOps as F
+import OCF.Lean.YiLegPath as F
+import OCF.Lean.YiLegFold as F
+open import OCF.Lean.YiBRRel
+
+x₁ : Tr (tw 1)
+x₁ = up zero zero (suc zero) ◃s
+
+x₁′ : F.Tr (F.tw 1)
+x₁′ = F.up F.zero F.zero (F.suc F.zero) F.◃s
+
+new : Tr zero
+new = proj₁ (ψ (tw 1) (Ok-tw 1) (rbᶻ (tw 1)) (B₀ (tw 1)) zero (inc zero self) (Ωt zero) x₁)
+
+old′ : F.Tr F.zero
+old′ = F.ψs (F.tw 1) (F.Ev-tw 1) (F.Rt-tw 1) (F.B₀ (F.tw 1)) F.zero (F.inb F.zero F.self) (F.Ωt F.zero) (F.Ωt-nz F.zero) x₁′
+
+rx : RelT (tw 1) (F.tw 1) x₁ x₁′
+rx = iu (iz , (iz , is iz , ds))
+
+norel : RelT zero F.zero new old′ → ⊥
+norel (il (rf , _)) with rf 0
+... | is ()

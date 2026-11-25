@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 可数层号的统一 W4 下界恰为 a·ω^(ω^x)，对任意起点及任意可数树 x 均成立。
+module B22HeightValue where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import W4Block using (iter)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼l; l≼; z≼)
+open import B18Product using (_·_; pad)
+open import B19IdealProduct
+import B19IdealArithmetic as A
+import B19IdealPowers as P
+import B14Height as H
+
+copies : ∀ a n → iter (a L.+_) a n ≈ᵛ a · L.natᶜ (suc n)
+copies a zero = flip (one a)
+copies a (suc n) = add (id a) (copies a n) ∙ (add (id a) (A.copies a (suc n)) ∙ flip (A.copies a (suc (suc n))))
+
+zero-rule : ∀ a → H.act L.zero a ≈ᵛ a · L.ωᶜ
+zero-rule a = l≼ (λ n → ≼l (suc n) (proj₁ (copies a n))) ,
+  l≼ λ where
+    zero → z≼
+    (suc n) → ≼l n (proj₂ (copies a n))
+
+module Advance (f : T₀ → T₀) (b : T₀) (law : ∀ a → f a ≈ᵛ a · A.norm b) where
+  repeated : ∀ a n → iter f a n ≈ᵛ a · A.norm (b · L.natᶜ n)
+  repeated a zero = flip (one a)
+  repeated a (suc n) = law (iter f a n) ∙ mul (repeated a n) (id _) ∙ assoc a (A.norm (b · L.natᶜ n)) (A.norm b) ∙ mul (id a) (flip (power-sum _ (b · L.natᶜ n) b))
+
+exact : ∀ x a → H.act x a ≈ᵛ a · A.norm (A.norm x)
+exact L.zero a = zero-rule a ∙ mul (id a) (flip (left-one L.ωᶜ))
+exact (L.suc x) a = lim (Advance.repeated (H.act x) (A.norm x) (exact x) a)
+exact (L.lim f) a = lim (λ j → exact (f j) a)
+
+normal : ∀ x a → 𝟏 ≼ a → A.norm x ≼ H.act x a
+normal x a pos = ≼-trans (P.expo P.omega-pos (A.up x)) (≼-trans (pad pos _) (proj₂ (exact x a)))

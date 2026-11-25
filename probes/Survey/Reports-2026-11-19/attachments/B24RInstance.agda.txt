@@ -1,0 +1,40 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24RInstance where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; s≼s; ≼l; ≼-trans; ≼-refl; ≅→≼; 1≼ψ⁰)
+open import WVOne using (T₀; 𝟏)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import B12EboRows as End
+import B13Target as P
+import B24RKernel as K
+import B24ROrbit as O
+import B24RExit as X
+import B24RCompare as C
+import B24RFixed as F
+import B24AClosed as Actual
+import B24AQueries as A
+
+module Part = X.Slice 1
+module Fix = F.At 1 0
+placed : O.D ≼ End.child 1
+placed = ≼-trans (proj₂ X.both) Actual.first-tower
+prefixed : Σ T₀ (λ b → 𝟏 ≼ b × Part.gain 0 b ≼ b × b ≼ End.child 1)
+prefixed = O.D , Fix.base , proj₁ Fix.fixed , placed
+
+matches : ∀ x → Part.gain 0 x L.≅ K.H x
+matches x = L.ψ⁰-≅ (P.pass-pres (L.add-≅ {σ = λ q → L.suc (L.suc q)} {σ′ = λ ()} (L.Ω-refl _) (L.≅-refl⁰ x)))
+grow : ∀ x → L.suc (Part.gain 0 x) ≼ Part.gain 0 (L.suc x)
+grow x = ≼-trans (s≼s (≅→≼ (matches x))) (≼-trans (K.grow x) (≅→≼ (L.≅-sym (matches (L.suc x)))))
+go = Part.iterate 0
+gap : ∀ j → L.suc (go j) ≼ go (suc j)
+gap zero = ≼-trans (s≼s (1≼ψ⁰ (Part.kernel 0 L.zero))) (grow L.zero)
+gap (suc j) = ≼-trans (grow (go j)) (C.monotone 1 0 {L.suc (go j)} {go (suc j)} (gap j))
+
+inside : ∀ j → L.suc (A.query 1 0 j) ≼ O.D
+inside j = ≼-trans (gap (suc j)) (≼-trans (≼l (suc j) (≼-refl (go (suc (suc j))))) (≅→≼ (L.≅-sym (Part.shape 0))))
+all : ∀ j → L.suc (A.query 1 0 j) ≼ End.child 1
+all j = ≼-trans (inside j) placed
+located : ∀ j → End.InChild (L.suc (A.query 1 0 j))
+located j = 1 , all j

@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 保留同一零槽的一级比较，在任意共同二层前缀之后同时控制零层输出及真实对角下标。
+module B21CrossScalar where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_×_; proj₁; proj₂; _,_)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; s≼s; l≼; ≼l; z≼; +-mono)
+open import WVOne using (T₀; 𝟏)
+open import WVTwo using (T₁)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B15RefMonotone as M
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+
+pow : ∀ {a b : T₀} → a ≼ b → L.lim (S.iter (a L.+_) L.zero) ≼ L.lim (S.iter (b L.+_) L.zero)
+pow h = l≼ (λ j → ≼l j (L.iter-R _≼_ (+-mono h) z≼ j))
+
+module At (p : Lev₂) where
+  add = L.add p L.suc
+  f : T₁ → T₀
+  f x = L.ψ⁰ (add x)
+  g : T₁ → T₀
+  g x = L.ψ (L.suc L.zero) R.idσ (add x)
+  Result = λ x y → (f x ≼ f y) × (g x ≼ g y)
+  uk : T₀ → T₁
+  uk = L.up {ℓ = L.suc L.zero} L.zero
+  bare : ∀ y → Result (uk L.zero) (uk y)
+  bare L.zero = ≼-refl _ , ≼-refl _
+  bare (L.suc y) = ≼l 1 (proj₁ (bare y)) , ≼l 1 (proj₂ (bare y))
+  bare (L.lim h) = ≼l 0 (proj₁ (bare (h 0))) , ≼l 0 (proj₂ (bare (h 0)))
+  small : ∀ {x y} → x ≼ y → Result (uk x) (uk y)
+  small (z≼ {b = y}) = bare y
+  small (s≼s h) = pow (proj₁ (small h)) , pow (proj₂ (small h))
+  small (≼l n e) = ≼l n (proj₁ (small e)) , ≼l n (proj₂ (small e))
+  small (l≼ h) = l≼ (λ j → proj₁ (small (h j))) , l≼ (λ j → proj₂ (small (h j)))
+  small (OCF.Align.Value.≼i {p = ()} _ _ _)
+  small (OCF.Align.Value.i≼ {p = ()} _)
+  small (OCF.Align.Value.≼u {r = ()} _)
+  small (OCF.Align.Value.u≼ {r = ()} _)
+
+  track = λ (u : T₀ → T₁) → S.iter (λ y → g (u y)) 𝟏
+  both : ∀ {x y} → M.Below x y → Result x y
+  both M.zz = ≼-refl _ , ≼-refl _
+  both (M.ss h) = pow (proj₁ (both h)) , pow (proj₂ (both h))
+  both (M.to-s h) = ≼l 1 (proj₁ (both h)) , ≼l 1 (proj₂ (both h))
+  both (M.right j h) = ≼l j (proj₁ (both h)) , ≼l j (proj₂ (both h))
+  both (M.left h) = l≼ (λ n → proj₁ (both (h n))) , l≼ (λ n → proj₂ (both (h n)))
+  both (M.slot {f = u} {g = v} h) = l≼ (λ n → ≼l n (proj₁ (hit n))) , l≼ (λ n → ≼l n (proj₂ (hit n)))
+    where
+    follow : ∀ n → track u n ≼ track v n
+    follow zero = ≼-refl _
+    follow (suc n) = proj₂ (both (h _ _ (follow n)))
+    hit : ∀ n → Result (u (track u n)) (v (track v n))
+    hit n = both (h _ _ (follow n))
+  both (M.lifted h) = small h

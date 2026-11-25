@@ -1,0 +1,43 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiUPActualAttempt where
+open import Data.Product using (proj₁)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiRWFold as F
+import OCF.Lean.YiTBRow as TB
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiGIInst as GI
+import OCF.Lean.YiFRStep as FR
+import OCF.Lean.YiBRRel as R
+import OCF.Lean.YiMTValue as MV
+import OCF.Lean.YiEBShape as EB
+import OCF.Lean.YiLegBlock as S
+import OCF.Lean.YiLSTw1 as T1
+open import YiUPPartial using (p₀)
+
+-- 第二个实际继承起点的桥，沿用现成表折叠/旧块的已实填实例。
+beta2-R : R.RelT B.zero S.zero (proj₁ (GI.betaᴱ 2)) (EB.Fn 1 MV.Bᶻᶠ)
+beta2-R = MV.br1-Rᶻ
+
+-- 本路真正需要控制的 betaᴱ3，不是 betaᴱ1/2。
+beta3-form : GI.betaᴱ 3 ≡ TB.ψ (B.tw 2) (P.Ok-tw 2) (MT.rbᶻ (B.tw 2))
+  (GI.baseᴱ 2) B.zero (P.z≤ (B.tw 2)) (GI.betaᴱ 2) (proj₁ (O.Ωt (B.tw 2)))
+beta3-form = refl
+
+-- 原 q=0 第 0 部分和的确切调用。两次零孩子限制不能改成标准底。
+m0-base : F.Base (B.tw 1)
+m0-base i u = GI.baseᴱ 3 i (P.inc B.zero (P.inc B.zero u))
+m0-form : p₀ 0 ≡ proj₁ (TB.ψ (B.tw 1) (P.Ok-tw 1) (MT.rbᶻ (B.tw 1)) m0-base
+  B.zero (P.z≤ (B.tw 1)) (GI.betaᴱ 3) (proj₁ (O.Ωt (B.tw 1))))
+m0-form = refl
+
+-- ReadCap/Countable 的源层 h₁ x 不能作这两个原调用的逐层读回。
+no-m0-read-source-layer : (x : S.Tr S.zero) → R.RelL (B.tw 1) (T1.h₁ x) → ⊥
+no-m0-read-source-layer S.zero ()
+no-m0-read-source-layer (S.suc x) ()
+no-m0-read-source-layer (S.lim f a) ()
+no-m0-read-source-layer (S.Ω () g)
+no-m0-read-source-layer (S.up x () y e)

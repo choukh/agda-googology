@@ -1,0 +1,19 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B14OrbitHeight where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+open import WSShadow using (ES; lC; InflE; Infl-lC; Infl-⨾; Infl-Ω̂)
+import B12LimitRef as A
+
+he : T₀ → ES → ES
+he L.zero e = A.next e
+he (L.suc y) e = lC (iter (he y) e)
+he (L.lim f) e = lC (λ n → he (f n) e)
+
+infl : ∀ y e → InflE e → InflE (he y e)
+infl L.zero e ie = Infl-lC _ (Infl-⨾ e _ ie Infl-Ω̂)
+infl (L.suc y) e ie = Infl-lC _ ie
+infl (L.lim f) e ie = Infl-lC _ (infl (f 0) e ie)

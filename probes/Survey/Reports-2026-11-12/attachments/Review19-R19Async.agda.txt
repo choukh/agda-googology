@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- R19 scratch (有限测试, 主线折叠, 只有后继形状): Ω₃ (第 3 层) 折到第 2 层, 树一侧对角 (槽位层 2 = 目标).
+-- 输出的第 1 个部分和的第 0 项的第 0 项是第 1 层槽位上的 Ω 结点 (被保留的结点出现在对角链的前驱里).
+module R19Async where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Bool using (Bool; true; false)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold
+
+l1 l2 l3 : L
+l1 = nd sS (λ _ → zero)
+l2 = nd sS (λ _ → l1)
+l3 = nd sS (λ _ → l2)
+
+ok3 : Ok l3
+ok3 = tt , λ _ → tt , λ _ → tt , λ _ → tt
+
+O : Tr l2
+O = proj₁ (ψ l3 ok3 (B₀ l3) l2 (inc tt self) (Ωt l2) (proj₁ (Ωt l3)))
+
+el : ∀ {ℓ} → Tr ℓ → ℕ → Tr ℓ
+el (lim f a) n = f n
+el x         n = x
+
+slot : ∀ {ℓ} → Tr ℓ → Maybe (Pos ℓ)
+slot (Ω p g) = just p
+slot _       = nothing
+
+isLim : ∀ {ℓ} → Tr ℓ → Bool
+isLim (lim f a) = true
+isLim _         = false
+
+-- 树一侧对角: 头部是 ℕ 极限.
+O-lim : isLim O ≡ true
+O-lim = refl
+
+-- 第 0 个部分和 (链的第 0 项) 里没有到结点: 它是 β·ω.
+O0 : isLim (el O 0) ≡ true
+O0 = refl
+
+-- 第 1 个部分和的第 0 项的第 0 项: 第 1 层槽位上的 Ω 结点.
+O1 : slot (el (el (el O 1) 0) 0) ≡ just (inj₂ (tt , inj₁ tt))
+O1 = refl
+
+at1 : at l2 (inj₂ (tt , inj₁ tt)) ≡ l1
+at1 = refl

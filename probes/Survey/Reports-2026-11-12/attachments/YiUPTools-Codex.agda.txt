@@ -1,0 +1,44 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiUPTools where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiGIInst as GI
+import OCF.Lean.YiFRStep as FR
+import OCF.Lean.YiBRRel as R
+import OCF.Lean.YiBROps as RO
+import OCF.Lean.YiBRValue as RV
+import OCF.Lean.YiKVRel as K
+import OCF.Lean.YiKQSuff as KQ
+import OCF.Lean.YiLegBlock as S
+import OCF.Lean.YiLegOps as SO
+import OCF.Lean.YiLSTw1 as T1
+import OCF.Lean.YiCeilRead as C
+open import OCF.Lean.YiNRHit using (NoΩ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≅→≼)
+
+-- 实际继承起点递推的最小参数，接旧 next 上界，非另造底。
+beta1-R : R.RelT B.zero S.zero (proj₁ (GI.betaᴱ 1))
+  (SO.next (S.suc S.zero) S.◃s)
+beta1-R = proj₁ (RO.next-R (O.Ωt B.zero) (R.is R.iz) R.ds)
+beta1-upper : K.readRW (proj₁ (GI.betaᴱ 1)) ≼ C.ωx C.𝟏
+beta1-upper = ≼-trans (KQ.read≤ (proj₁ (GI.betaᴱ 1)))
+  (≼-trans (≅→≼ (RV.rel≅ beta1-R)) (C.next≼ (S.suc S.zero) S.◃s (≼-refl C.𝟏)))
+
+-- 精确测试现有 MTRel.A/topΩ 的结构前提在原调用处能否填。
+no-A-on-prefix : NoΩ B.Λ → ⊥
+no-A-on-prefix h = h 1
+no-topΩ-on-out0 : ((c : B.Tr (B.tw 1)) → NoΩ (FR.Step.child 1 c)) → ⊥
+no-topΩ-on-out0 h = h B.zero
+
+-- 原 out0 层号不能通过现有逐层关系重索引到 ReadCap 工具的可数源层。
+no-read-source-layer : (x : S.Tr S.zero) → R.RelL (B.tw 2) (T1.h₁ x) → ⊥
+no-read-source-layer S.zero ()
+no-read-source-layer (S.suc x) ()
+no-read-source-layer (S.lim f a) ()
+no-read-source-layer (S.Ω () g)
+no-read-source-layer (S.up x () y e)

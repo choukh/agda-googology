@@ -1,0 +1,14 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 入口: (B) 与顶层的镜像下界, 以 OpStmt 与三行确切陈述 (AddR≅, BR≅, BRu) 为参数. ru 行在孩子镜像前提下成立见 KBRu.ruRow′.
+module KBAll where
+
+open import KIface using (OpStmt; BStmt)
+open import W4Block using (L)
+open import KBAdd using (AddR≅)
+open import KBMain using (BR≅; BRu; module Main)
+open import KBTop using (module Top)
+import KBRu
+
+module All (opS : (m : L) → OpStmt m) (ar≅ : AddR≅) (br≅ : BR≅) (bru : BRu) where
+  open Main opS ar≅ br≅ bru public using (bInd; bStmt)
+  open Top bStmt public using (lower; lower′)

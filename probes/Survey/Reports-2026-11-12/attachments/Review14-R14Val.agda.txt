@@ -1,0 +1,300 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- review14 试验 E5 (值): 上折 (R14Up) 下, 第 2 层的 ψ₀(Ω) 不低于参照的 ψ⁰(Ω₂) (无前提).
+-- 办法: 参照第 1 层的树与空白页第 1 层的树之间的结构模拟 _⊴_; 到 0 层的折叠把它送到值序 (A⊥, As),
+-- 折到自身 (上折) 保持它 (PresB).
+module R14Val where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiFreshBlock renaming (L to LF)
+open import OCF.Lean.YiFreshFold using (_+_; iter; next; cum; Ωt; _≤_; self; ins; Base; base; b⊥; bs; B₀)
+open import OCF.Lean.YiFreshValRead using (read; next≽; next≼; limcum≽)
+open import R14Up
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-refl; ≼-trans; ≼-suc; ψ⁰-mono⁰)
+open import OCF.BTBO using (module Ord-Ord)
+open Ord-Ord using () renaming (iter to iterᴸ)
+
+O0 O1 : Set
+O0 = L.Ordᶜ L.zero
+O1 = L.Ordᶜ (L.suc L.zero)
+
+𝟙 : O0
+𝟙 = L.suc L.zero
+
+two : LF
+two = suc one
+
+-- 参照的折叠: 1 层到 0 层, 1 层到 1 层 (环境 2 层)
+Ψ₀ : O1 → O0
+Ψ₀ = L.ψ {L.zero} {L.suc L.zero} {L.suc L.zero} L.zero (λ r → r)
+
+Φ : O1 → O1
+Φ = L.ψ {L.suc L.zero} {L.suc L.zero} {L.suc (L.suc L.zero)} L.zero (λ r → L.suc r)
+
+bd₁ : Build one zero
+bd₁ = λ q → Ω (inj₂ q)
+
+-- 结构模拟
+infix 4 _⊴_
+data _⊴_ : O1 → Tr one → Set where
+  zR  : ∀ {t} → L.zero ⊴ t
+  sR  : ∀ {x t} → x ⊴ t → L.suc x ⊴ suc t
+  lL  : ∀ {f t} → (∀ n → f n ⊴ t) → L.lim f ⊴ t
+  lR  : ∀ {x g} n → x ⊴ g n → x ⊴ lim g
+  wR  : ∀ {f : O0 → O1} {g : Tr zero → Tr one} → (∀ c c′ → c ≼ read c′ → f c ⊴ g c′)
+      → L.limᵢ L.zero f ⊴ Ω (inj₁ tt) g
+  uR  : ∀ {c : O0} {t c′} → c ≼ read c′ → L.up L.zero c ⊴ up t tt c′
+  usR : ∀ {x t c′} → x ⊴ up t tt c′ → L.suc x ⊴ up t tt (suc c′)
+  ulR : ∀ {x t g} n → x ⊴ up t tt (g n) → x ⊴ up t tt (lim g)
+  wkS : ∀ {x t} → x ⊴ t → x ⊴ suc t
+  wkU : ∀ {x t c′} → x ⊴ t → x ⊴ up t tt c′
+  wkΩ : ∀ {x} {g : Tr zero → Tr one} → x ⊴ g zero → x ⊴ Ω (inj₁ tt) g
+
+-- 0 层: 底不超过折叠值
+base≼⊥ : (B′ : Base zero) (c′ : Tr zero) → read (b⊥ B′) ≼ read (ψ⊥ zero B′ c′)
+base≼⊥ B′ zero        = ≼-refl _
+base≼⊥ B′ (suc c)     = next≼ _ (base≼⊥ B′ c)
+base≼⊥ B′ (lim f)     = ≼l 0 (base≼⊥ B′ (f 0))
+base≼⊥ B′ (Ω () _)
+base≼⊥ B′ (up _ () _)
+
+base≼s : (B′ : Base zero) (c′ : Tr zero) → read (bs B′ zero self) ≼ read (ψs zero B′ zero self c′)
+base≼s B′ zero        = ≼-refl _
+base≼s B′ (suc c)     = next≼ _ (base≼s B′ c)
+base≼s B′ (lim f)     = ≼l 0 (base≼s B′ (f 0))
+base≼s B′ (Ω () _)
+base≼s B′ (up _ () _)
+
+ge1⊥ : (B : Base one) → 𝟙 ≼ read (b⊥ B) → (t : Tr one) → 𝟙 ≼ read (ψ⊥ one B t)
+ge1⊥ B h zero        = h
+ge1⊥ B h (suc t)     = next≼ _ (ge1⊥ B h t)
+ge1⊥ B h (lim f)     = ≼l 0 (ge1⊥ B h (f 0))
+ge1⊥ B h (Ω (inj₁ tt) g) = limcum≽ _ 0 (ge1⊥ B h (g zero))
+ge1⊥ B h (Ω (inj₂ ()) g)
+ge1⊥ B h (up t tt c′) = ≼-trans (ge1⊥ B h t) (base≼⊥ (dS zero B t) c′)
+
+ge1s : (B : Base one) → 𝟙 ≼ read (bs B zero (ins self)) → (t : Tr one) → 𝟙 ≼ read (ψs one B zero (ins self) t)
+ge1s B h zero        = h
+ge1s B h (suc t)     = next≼ _ (ge1s B h t)
+ge1s B h (lim f)     = ≼l 0 (ge1s B h (f 0))
+ge1s B h (Ω (inj₁ tt) g) = limcum≽ _ 0 (ge1s B h (g zero))
+ge1s B h (Ω (inj₂ ()) g)
+ge1s B h (up t tt c′) = ≼-trans (ge1s B h t) (base≼s (dS zero B t) c′)
+
+F⊥g : (B′ : Base zero) → 𝟙 ≼ read (b⊥ B′) → (c′ : Tr zero) → L.ψ⁰ (read c′) ≼ read (ψ⊥ zero B′ c′)
+F⊥g B′ h zero        = h
+F⊥g B′ h (suc c)     = next≽ _ (F⊥g B′ h c)
+F⊥g B′ h (lim f)     = l≼ (λ n → ≼l n (F⊥g B′ h (f n)))
+F⊥g B′ h (Ω () _)
+F⊥g B′ h (up _ () _)
+
+-- 参照的 ψ 作用在嵌入的 0 层树上, 对值序单调地落进空白页孩子层的折叠
+U0s : (σ : L.Simᴵ L.zero (L.suc L.zero)) (B′ : Base zero) → 𝟙 ≼ read (bs B′ zero self)
+  → {c r : O0} → c ≼ r → (c′ : Tr zero) → r ≡ read c′
+  → L.ψ {L.zero} {L.zero} {L.suc L.zero} L.zero σ c ≼ read (ψs zero B′ zero self c′)
+U0s σ B′ h z≼ c′ eq = ≼-trans h (base≼s B′ c′)
+U0s σ B′ h (s≼s e) zero ()
+U0s σ B′ h (s≼s e) (suc c′) refl = next≽ _ (U0s σ B′ h e c′ refl)
+U0s σ B′ h (s≼s e) (lim g) ()
+U0s σ B′ h (s≼s e) (Ω () _) eq
+U0s σ B′ h (s≼s e) (up _ () _) eq
+U0s σ B′ h (≼l n e) zero ()
+U0s σ B′ h (≼l n e) (suc c′) ()
+U0s σ B′ h (≼l n e) (lim g) refl = ≼l n (U0s σ B′ h e (g n) refl)
+U0s σ B′ h (≼l n e) (Ω () _) eq
+U0s σ B′ h (≼l n e) (up _ () _) eq
+U0s σ B′ h (l≼ k) c′ eq = l≼ (λ n → U0s σ B′ h (k n) c′ eq)
+U0s σ B′ h (≼i {p = ()} x ex e) c′ eq
+U0s σ B′ h (i≼ {p = ()} k) c′ eq
+U0s σ B′ h (≼u {r = ()} e) c′ eq
+U0s σ B′ h (u≼ {r = ()} e) c′ eq
+
+-- 到 0 层的折叠把 ⊴ 送到值序
+As : (B : Base one) → 𝟙 ≼ read (bs B zero (ins self)) → ∀ {x t} → x ⊴ t
+  → Ψ₀ x ≼ read (ψs one B zero (ins self) t)
+As B hs {t = t} zR = ge1s B hs t
+As B hs (sR d)   = next≽ _ (As B hs d)
+As B hs (lL k)   = l≼ (λ n → As B hs (k n))
+As B hs (lR n d) = ≼l n (As B hs d)
+As B hs (wR {f} {g} k) =
+  l≼ (λ n → limcum≽ (λ m → ψs one B zero (ins self) (g (Z m))) (suc n) (As B hs (k (γ n) (Z (suc n)) (chain n))))
+  where
+  γ : ℕ → O0
+  γ = iterᴸ (λ x → Ψ₀ (f x)) 𝟙
+  Z : ℕ → Tr zero
+  Z = iter (λ z → ψs one B zero (ins self) (g z)) zero
+  chain : ∀ n → γ n ≼ read (Z (suc n))
+  chain zero    = ge1s B hs (g zero)
+  chain (suc n) = As B hs (k (γ n) (Z (suc n)) (chain n))
+As B hs (uR {t = t} {c′ = c′} e) = U0s (λ q → L.suc q) (dS zero B t) (ge1s B hs t) e c′ refl
+As B hs (usR d)  = next≽ _ (As B hs d)
+As B hs (ulR n d) = ≼l n (As B hs d)
+As B hs (wkS d)  = next≼ _ (As B hs d)
+As B hs (wkU {t = t} {c′ = c′} d) = ≼-trans (As B hs d) (base≼s (dS zero B t) c′)
+As B hs (wkΩ {g = g} d) = limcum≽ (λ m → ψs one B zero (ins self) (g (iter (λ z → ψs one B zero (ins self) (g z)) zero m))) 0 (As B hs d)
+
+A⊥ : (B : Base one) → 𝟙 ≼ read (b⊥ B) → 𝟙 ≼ read (bs B zero (ins self)) → ∀ {x t} → x ⊴ t
+  → L.ψ⁰ x ≼ read (ψ⊥ one B t)
+A⊥ B h hs {t = t} zR = ge1⊥ B h t
+A⊥ B h hs (sR d)   = next≽ _ (A⊥ B h hs d)
+A⊥ B h hs (lL k)   = l≼ (λ n → A⊥ B h hs (k n))
+A⊥ B h hs (lR n d) = ≼l n (A⊥ B h hs d)
+A⊥ B h hs (wR {f} {g} k) =
+  l≼ (λ n → limcum≽ (λ m → ψ⊥ one B (g (Z m))) (suc n) (A⊥ B h hs (k (γ n) (Z (suc n)) (chain n))))
+  where
+  γ : ℕ → O0
+  γ = iterᴸ (λ x → Ψ₀ (f x)) 𝟙
+  Z : ℕ → Tr zero
+  Z = iter (λ z → ψs one B zero (ins self) (g z)) zero
+  chain : ∀ n → γ n ≼ read (Z (suc n))
+  chain zero    = ge1s B hs (g zero)
+  chain (suc n) = As B hs (k (γ n) (Z (suc n)) (chain n))
+A⊥ B h hs (uR {t = t} {c′ = c′} e) = ≼-trans (ψ⁰-mono⁰ e) (F⊥g (dS zero B t) (ge1⊥ B h t) c′)
+A⊥ B h hs (usR d)  = next≽ _ (A⊥ B h hs d)
+A⊥ B h hs (ulR n d) = ≼l n (A⊥ B h hs d)
+A⊥ B h hs (wkS d)  = next≼ _ (A⊥ B h hs d)
+A⊥ B h hs (wkU {t = t} {c′ = c′} d) = ≼-trans (A⊥ B h hs d) (base≼⊥ (dS zero B t) c′)
+A⊥ B h hs (wkΩ {g = g} d) = limcum≽ (λ m → ψ⊥ one B (g (iter (λ z → ψs one B zero (ins self) (g z)) zero m))) 0 (A⊥ B h hs d)
+
+-- 加法与 next 保持 ⊴
+wk+ : ∀ {a b} → a ⊴ b → (b′ : Tr one) → a ⊴ b + b′
+wk+ d zero        = d
+wk+ d (suc b′)    = wkS (wk+ d b′)
+wk+ d (lim f)     = lR 0 (wk+ d (f 0))
+wk+ d (Ω (inj₁ tt) g) = wkΩ (wk+ d (g zero))
+wk+ d (Ω (inj₂ ()) g)
+wk+ d (up t tt c′) = wkU (wk+ d t)
+
+flatu : ∀ {a : O1} {T : Tr one} (σ : L.Simᴵ L.zero (L.suc L.zero)) → a ⊴ T
+  → {c r : O0} → c ≼ r → (c′ : Tr zero) → r ≡ read c′ → L.add a σ c ⊴ up T tt c′
+flatu σ d z≼ c′ eq = wkU d
+flatu σ d (s≼s e) zero ()
+flatu σ d (s≼s e) (suc c′) refl = usR (flatu σ d e c′ refl)
+flatu σ d (s≼s e) (lim g) ()
+flatu σ d (s≼s e) (Ω () _) eq
+flatu σ d (s≼s e) (up _ () _) eq
+flatu σ d (≼l n e) zero ()
+flatu σ d (≼l n e) (suc c′) ()
+flatu σ d (≼l n e) (lim g) refl = ulR n (flatu σ d e (g n) refl)
+flatu σ d (≼l n e) (Ω () _) eq
+flatu σ d (≼l n e) (up _ () _) eq
+flatu σ d (l≼ k) c′ eq = lL (λ n → flatu σ d (k n) c′ eq)
+flatu σ d (≼i {p = ()} x ex e) c′ eq
+flatu σ d (i≼ {p = ()} k) c′ eq
+flatu σ d (≼u {r = ()} e) c′ eq
+flatu σ d (u≼ {r = ()} e) c′ eq
+
+plusR : ∀ {a b a′ b′} → a ⊴ b → a′ ⊴ b′ → (a L.+ a′) ⊴ (b + b′)
+plusR {b′ = b′} d zR = wk+ d b′
+plusR d (sR d′)   = sR (plusR d d′)
+plusR d (lL k)    = lL (λ n → plusR d (k n))
+plusR d (lR n d′) = lR n (plusR d d′)
+plusR d (wR k)    = wR (λ c c′ e → plusR d (k c c′ e))
+plusR {b} d (uR {t = t} {c′ = c′} e) = flatu (λ q → L.suc q) (wk+ d t) e c′ refl
+plusR d (usR d′)  = usR (plusR d d′)
+plusR d (ulR n d′) = ulR n (plusR d d′)
+plusR d (wkS d′)  = wkS (plusR d d′)
+plusR d (wkU d′)  = wkU (plusR d d′)
+plusR d (wkΩ d′)  = wkΩ (plusR d d′)
+
+iterR : ∀ {a b} → a ⊴ b → ∀ n → iterᴸ (a L.+_) L.zero (suc n) ⊴ iter (b +_) b n
+iterR d zero    = d
+iterR d (suc n) = plusR d (iterR d n)
+
+nextR : ∀ {a b} → a ⊴ b → L.lim (iterᴸ (a L.+_) L.zero) ⊴ next b
+nextR d = lL (λ { zero → zR ; (suc n) → lR n (iterR d n) })
+
+-- 上折保持 ⊴
+wkLift : ∀ {x X} → x ⊴ X → (c′ : Tr zero) → x ⊴ liftT one zero bd₁ X c′
+wkLift d zero        = d
+wkLift d (suc c′)    = lR 0 (wkLift d c′)
+wkLift d (lim f)     = lR 0 (wkLift d (f 0))
+wkLift d (Ω () _)
+wkLift d (up _ () _)
+
+liftu : (σ : L.Simᴵ L.zero (L.suc (L.suc L.zero))) {X : Tr one} → L.Ω (L.suc L.zero) ⊴ X
+  → {c r : O0} → c ≼ r → (c′ : Tr zero) → r ≡ read c′
+  → L.ψ {L.suc L.zero} {L.zero} {L.suc (L.suc L.zero)} L.zero σ c ⊴ liftT one zero bd₁ X c′
+liftu σ hX z≼ c′ eq = wkLift hX c′
+liftu σ hX (s≼s e) zero ()
+liftu σ hX (s≼s e) (suc c′) refl = nextR (liftu σ hX e c′ refl)
+liftu σ hX (s≼s e) (lim g) ()
+liftu σ hX (s≼s e) (Ω () _) eq
+liftu σ hX (s≼s e) (up _ () _) eq
+liftu σ hX (≼l n e) zero ()
+liftu σ hX (≼l n e) (suc c′) ()
+liftu σ hX (≼l n e) (lim g) refl = lR n (liftu σ hX e (g n) refl)
+liftu σ hX (≼l n e) (Ω () _) eq
+liftu σ hX (≼l n e) (up _ () _) eq
+liftu σ hX (l≼ k) c′ eq = lL (λ n → liftu σ hX (k n) c′ eq)
+liftu σ hX (≼i {p = ()} x ex e) c′ eq
+liftu σ hX (i≼ {p = ()} k) c′ eq
+liftu σ hX (≼u {r = ()} e) c′ eq
+liftu σ hX (u≼ {r = ()} e) c′ eq
+
+tr⁻≼ : ∀ {e : L.zero L.≅ᴵ L.zero} (c : O0) → L.tr⁻ e c ≼ c
+tr⁻≼ L.zero        = z≼
+tr⁻≼ (L.suc c)     = s≼s (tr⁻≼ c)
+tr⁻≼ (L.lim f)     = l≼ (λ n → ≼l n (tr⁻≼ (f n)))
+tr⁻≼ (L.limᵢ () f)
+tr⁻≼ (L.up () x)
+
+module Pres (B : Base one) (hB : L.Ω (L.suc L.zero) ⊴ bs B one self) where
+  S : Tr one → Tr one
+  S = ψs one B one self
+
+  Zlem : (t : Tr one) → L.Ω (L.suc L.zero) ⊴ S t
+  Zlem zero        = hB
+  Zlem (suc t)     = lR 0 (Zlem t)
+  Zlem (lim f)     = lR 0 (Zlem (f 0))
+  Zlem (Ω (inj₁ tt) g) = wkΩ (Zlem (g zero))
+  Zlem (Ω (inj₂ ()) g)
+  Zlem (up t tt c′) = wkLift (Zlem t) c′
+
+  PresB : ∀ {x t} → x ⊴ t → Φ x ⊴ S t
+  PresB {t = t} zR = Zlem t
+  PresB (sR d)   = nextR (PresB d)
+  PresB (lL k)   = lL (λ n → PresB (k n))
+  PresB (lR n d) = lR n (PresB d)
+  PresB (wR k)   = wR (λ c c′ e → PresB (k _ c′ (≼-trans (tr⁻≼ c) e)))
+  PresB (uR {t = t} {c′ = c′} e) = liftu (λ q → L.suc (L.suc q)) (Zlem t) e c′ refl
+  PresB (usR d)  = nextR (PresB d)
+  PresB (ulR n d) = lR n (PresB d)
+  PresB (wkS d)  = lR 0 (PresB d)
+  PresB (wkU {c′ = c′} d) = wkLift (PresB d) c′
+  PresB (wkΩ d)  = wkΩ (PresB d)
+
+Ω1⊴Ωt : L.Ω (L.suc L.zero) ⊴ Ωt one
+Ω1⊴Ωt = wR (λ c c′ e → uR (≼-suc e))
+
+open Pres (B₀ one) Ω1⊴Ωt
+
+-- 链: 参照 γ₀ = Ω₁, γₙ₊₁ = ψ₁(γₙ); 空白页 Z₀ = 0, Zₙ₊₁ = next (ψ_1(Zₙ))
+Γ : ℕ → O1
+Γ = iterᴸ Φ (L.Ω (L.suc L.zero))
+
+Zc : ℕ → Tr one
+Zc = iter (λ z → next (S z)) zero
+
+chainR : ∀ n → Γ n ⊴ Zc (suc n)
+chainR zero    = lR 0 Ω1⊴Ωt
+chainR (suc n) = lR 0 (PresB (chainR n))
+
+G2 : Tr zero
+G2 = ψ₀ two (Ωt two)
+
+G2-form : G2 ≡ lim (cum (λ n → next (ψ⊥ one (B₀ one) (Zc n))))
+G2-form = refl
+
+h1 : 𝟙 ≼ 𝟙
+h1 = ≼-refl 𝟙
+
+-- 参照的 ψ⁰(Ω₂) (读作 BHO) 不高于上折下第 2 层的 ψ₀(Ω)
+bho-lower : L.ψ⁰ (L.Ω (L.suc (L.suc L.zero))) ≼ read G2
+bho-lower = l≼ (λ n → limcum≽ (λ m → next (ψ⊥ one (B₀ one) (Zc m))) (suc n)
+  (next≼ _ (A⊥ (B₀ one) h1 h1 (chainR n))))

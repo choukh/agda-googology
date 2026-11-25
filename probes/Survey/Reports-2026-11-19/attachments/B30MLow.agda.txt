@@ -1,0 +1,50 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每一步都以 ψ₀(Ω_ω)+1 为种子时，所得比较族满足首塔标量律，其上确界严格小于原 BTBO。
+module B30MLow where
+open import Data.Nat.Base using (ℕ; zero; suc)
+import Data.Nat.Properties as N
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; s≼s; ≼l; l≼; z≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRefTw2 using (tree-≼; endpoint)
+import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanTree using (hc-tower)
+import OCF.Align.Level as L
+open import WVOne using (T₀; 𝟏)
+import B18Product as M
+import B19IdealArithmetic as Ar
+import B22MovingIndex as Eps
+import B12Omega3Ref as Three
+import B19IdealRow as Old
+import B12BtboCut as Fin
+import B17Calibration as Orig
+import B12XRef as Ref
+import B26Names as A
+import B26Depth as D
+import B27Threshold as T
+import B27CutArithmetic as Row
+import B27EpsilonCut as ER
+import B27UEpsilon as Env
+import B27Endpoint as End
+import B29LimitCut as Lim
+open import B30MScalar
+
+open import B30MSeed using (q; r; base; rq; small-q)
+
+open import B30MBudget using (module Budget)
+
+open import B30MLocal using (module Local; one-more)
+abstract
+  floor-cut : L.suc r ≼ L.suc q
+  floor-cut = s≼s {a = r} {b = q} rq
+module Low = Build (λ _ → L.suc q) floor-cut
+module Lw = Local q (L.suc q) floor-cut (one-more q q (≼-refl q))
+open import Data.Nat.Base using (_≤_)
+narrow : ∀ k → 2 ≤ k → ∀ (a b : T₀) → a ≼ Eps.above b → L.suc b ≼ T.row k → L.suc a ≼ T.row k
+narrow k two a b ab p = ≼-trans {a = L.suc a} {b = L.suc (Eps.above b)} {c = T.row k}
+  (s≼s {a = a} {b = Eps.above b} ab) (ER.At.closed k two b p)
+abstract
+  low : L.suc (L.lim Low.f) ≼ T.row 2
+  low = narrow 2 N.≤-refl (L.lim Low.f) q Lw.under small-q

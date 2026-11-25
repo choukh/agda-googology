@@ -1,0 +1,335 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B9N: WSW4 的上界镜像. 影子与 W4 的 op 之间对一切阶 n 的上界逻辑关系 𝓤 n; limC / nodeC / upC / enter 各行;
+-- 第 0 层指数 (E 与 It n); 指数实现 RealU: zero, suc, Ω₁ (Ω̂U), ex Ω₁ Ω₁ (suc x) (shU). 编译定理, 无前提.
+-- 与下界版的差: 结点是累加 (sumU), 链从 0 起; up 行是两段的复合 (compU); 第 0 层分支取 lv (suc y).
+module B9UpperRel where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym; trans)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-refl; ≼-trans)
+  renaming (+-mono to +ᵛ-mono)
+open import WVOne using (T₀; 𝟏; read; lvl1; p₁)
+open import WSShadow
+open import WSW4 using (Good)
+open import B8FreezeMain using (read-+′)
+
+------------------------------------------------------------------------
+-- 关系.
+rd : {X : Cx lvl1} → St X → ⟦ X ⟧ zero → T₀
+rd S ch = read (proj₁ (S zero ch))
+
+U0 : {X : Cx lvl1} → ⟦ X ⟧ zero → (St X → ⟦ X ⟧ zero → Tr⁺ zero → Tr⁺ zero) → Sh 0 → Set
+U0 {X} ch rn f = (S : St X) (t : ⟦ X ⟧ zero) (v : Tr⁺ zero) (a c : T₀)
+               → read (proj₁ v) ≼ a → rd S ch ≼ c → read (proj₁ (rn S t v)) ≼ f a c
+
+𝓤 : (n : ℕ) {X : Cx lvl1} → ⟦ X ⟧ zero → Ca n X → Sh n → Set
+𝓤 zero    ch F f = U0 ch (λ S t v → run F S zero t v) f
+𝓤 (suc n) {X} ch K k = ∀ {Y : Cx lvl1} (m : Mor X Y) → Good m ch → (G : Ca n Y) (g : Sh n)
+                     → 𝓤 n (σ m ch) G g → 𝓤 n (σ m ch) (proj₁ K m G) (k g)
+
+U-sh : (n : ℕ) {X : Cx lvl1} {ch : ⟦ X ⟧ zero} {G : Ca n X} {g g′ : Sh n} → 𝓤 n ch G g → Le n g g′ → 𝓤 n ch G g′
+U-sh zero    r p S t v a c ha hc = ≼-trans (r S t v a c ha hc) (p a c)
+U-sh (suc n) r p m gm G g rg     = U-sh n (r m gm G g rg) (p g)
+
+U-limC : (n : ℕ) {X : Cx lvl1} {ch : ⟦ X ⟧ zero} (F : ℕ → Ca n X) (a : (j : ℕ) → Rn n (F j) (F (suc j))) (h : ℕ → Sh n)
+       → (∀ j → 𝓤 n ch (F j) (h j)) → 𝓤 n ch (limC n F a) (limS n h)
+U-limC zero    F a h r S t v x c hx hc = l≼ (λ j → ≼l j (r j S t v x c hx hc))
+U-limC (suc n) F a h r m gm G g rg =
+  U-limC n (λ j → proj₁ (F j) m G) (λ j → a j m G) (λ j → h j g) (λ j → r j m gm G g rg)
+
+U-enter : (n : ℕ) {X Y : Cx lvl1} {ch : ⟦ X ⟧ zero} (m : Mor X Y) → Good m ch → (G : Ca n X) {g : Sh n}
+        → 𝓤 n ch G g → 𝓤 n (σ m ch) (enter n m G) g
+U-enter zero    m gm G₀ r S t v a c ha hc = r (λ i′ x → S i′ (σ m x)) (π m t) v a c ha hc
+U-enter (suc n) m gm G₀ r m′ gm′ G g rg  = r (m′ ⊙ m) (trans (cong (π m) gm′) gm) G g rg
+
+------------------------------------------------------------------------
+-- 上界结点: 链从 0 起, 输出是逐项累加.
+chU : (T₀ → Sh 0) → T₀ → ℕ → T₀
+chU h c = iter (λ y → h y c c) LV.zero
+
+sumU : (T₀ → Sh 0) → T₀ → T₀ → ℕ → T₀
+sumU h a c zero    = h (chU h c zero) a c
+sumU h a c (suc k) = sumU h a c k LV.+ h (chU h c (suc k)) a c
+
+nodeU : (n : ℕ) → (T₀ → Sh n) → Sh n
+nodeU zero    h = λ a c → LV.lim (sumU h a c)
+nodeU (suc n) h = λ g → nodeU n (λ y → h y g)
+
+module NodeU (Bv Bc : Tr zero → Tr⁺ zero) (h : T₀ → Sh 0) (a c : T₀)
+             (hypv : ∀ y z → read z ≼ y → read (proj₁ (Bv z)) ≼ h y a c)
+             (hypc : ∀ y z → read z ≼ y → read (proj₁ (Bc z)) ≼ h y c c) where
+
+  zs : ℕ → Tr zero
+  zs = iter (λ z → proj₁ (Bc z)) zero
+
+  chain : (k : ℕ) → read (zs k) ≼ chU h c k
+  chain zero    = z≼
+  chain (suc k) = hypc _ _ (chain k)
+
+  sums : (k : ℕ) → read (cum (λ n → proj₁ (Bv (zs n))) k) ≼ sumU h a c k
+  sums zero    = hypv _ _ (chain zero)
+  sums (suc k) = ≼-trans (read-+′ (cum (λ n → proj₁ (Bv (zs n))) k) (proj₁ (Bv (zs (suc k)))))
+                         (+ᵛ-mono (sums k) (hypv _ _ (chain (suc k))))
+
+  upb : (m : Keep zero (Tr zero) zero) → read (proj₁ (node⁺ m Bv (λ z → proj₁ (Bc z)))) ≼ nodeU 0 h a c
+  upb nothing          = l≼ (λ k → ≼l k (sums k))
+  upb (just (() , _))
+
+U-node : (n : ℕ) {X : Cx lvl1} (ch : ⟦ X ⟧ zero) (jd : ∀ {i} → ⟦ X ⟧ i → Keep i (Br lvl1 p₁) (fromBr lvl1 p₁ zero))
+       (G : Tr zero → Ca n X) (h : T₀ → Sh n) → (∀ y z → read z ≼ y → 𝓤 n ch (G z) (h y))
+       → 𝓤 n ch (nodeC n {mu = lvl1} p₁ jd ch G) (nodeU n h)
+U-node zero ch jd G h hyp S t v a c ha hc =
+  NodeU.upb (λ z → run (G z) S zero t v) (λ z → run (G z) S zero ch (S zero ch)) h a c
+           (λ y z d → hyp y z d S t v a c ha hc) (λ y z d → hyp y z d S ch (S zero ch) c c hc hc) (jd t)
+U-node (suc n) ch jd G h hyp m gm G′ g rg =
+  U-node n (σ m ch) (λ t → jd (π m t)) (λ z → proj₁ (G z) m G′) (λ y → h y g) (λ y z d → hyp y z d m gm G′ g rg)
+
+------------------------------------------------------------------------
+-- up 行: 先 A, 再在孩子语境里跑 R′; 影子是复合.
+compU : (n : ℕ) → Sh n → Sh n → Sh n
+compU zero    α r = λ a c → r (α a c) c
+compU (suc n) α r = λ g → compU n (α g) (r g)
+
+U-up : (n : ℕ) {X : Cx lvl1} {mw : L} (w : Dn lvl1 mw) (ι : ∀ {i} → ⟦ X ⟧ i → Tg w i) (ch : ⟦ X ⟧ zero)
+     (A : Ca n X) (R′ : Ca n (cons w X)) (α r : Sh n) → 𝓤 n ch A α → 𝓤 n {cons w X} (ι ch , ch) R′ r
+     → 𝓤 n ch (upC n w ι A R′) (compU n α r)
+U-up zero w ι ch A R′ α r hA hr S t v a c ha hc =
+  hr (λ i′ y → S i′ (proj₂ y)) (ι t , t) (run A S zero t v) (α a c) c (hA S t v a c ha hc) hc
+U-up (suc n) {X} w ι ch A R′ α r hA hr {Y} m gm G g rg =
+  U-up n w (λ y → ι (π m y)) (σ m ch) (proj₁ A m G)
+       (proj₁ R′ (liftM w m) (enter n (chM w (λ y → ι (π m y))) G)) (α g) (r g)
+       (hA m gm G g rg)
+       (subst (λ z → 𝓤 n {cons w Y} (ι z , σ m ch) (proj₁ R′ (liftM w m) (enter n (chM w (λ y → ι (π m y))) G)) (r g))
+              (sym gm)
+              (hr (liftM w m) (cong (λ z → ι ch , z) gm) (enter n (chM w (λ y → ι (π m y))) G) g
+                  (subst (λ z → 𝓤 n {cons w Y} (ι z , σ m ch) (enter n (chM w (λ y → ι (π m y))) G) g) gm
+                         (U-enter n (chM w (λ y → ι (π m y))) refl G rg))))
+
+------------------------------------------------------------------------
+-- 上界的 Ω₁ 指数与 ex 行.
+Ω̂U : ES
+sE Ω̂U f = nodeU 0 (λ y → sE (lv (LV.suc y)) f)
+sI Ω̂U n k g = nodeU n (λ y → compU n (k g) (sI (lv (LV.suc y)) n k (k g)))
+
+kbU : Sh 1
+kbU g = sE Ω̂U g
+
+kₑU : (n : ℕ) → Sh (suc (suc n))
+kₑU n k₁ g = sI Ω̂U n k₁ g
+
+shU : ES → ES
+sE (shU e) f = sI (sC e) 0 kbU (sE Ω̂U f)
+sI (shU e) n k g = sI (sC e) (suc n) (kₑU n) (λ g′ → sI Ω̂U n k g′) g
+
+------------------------------------------------------------------------
+module Lem (o : Ok lvl1) where
+
+  -- 第 0 层指数 (It n), 放宽 read y ≼ y′.
+  L0I : (n : ℕ) {X : Cx lvl1} (ch : ⟦ X ⟧ zero) (T0 : TD X zero) (y : Tr zero) (y′ : T₀) → read y ≼ y′
+      → (K : Ca (suc n) X) (k : Sh (suc n)) (G : Ca n X) (g : Sh n) → 𝓤 (suc n) ch K k → 𝓤 n ch G g
+      → 𝓤 n ch (It n o T0 y K G) (sI (lv y′) n k g)
+  L0I n ch T0 (Ω () _) y′ d K k G g hK hG
+  L0I n ch T0 (up _ () _ _) y′ d K k G g hK hG
+  L0I n ch T0 (ex _ _ _ _ ()) y′ d K k G g hK hG
+  L0I n ch T0 zero y′ d K k G g hK hG = U-sh n (hK idM refl G g hG) (proj₂ (Infl-lv y′) n k g)
+  L0I n ch T0 (suc y) (LV.suc y′) (s≼s d) K k G g hK hG =
+    U-limC n _ _ _ (λ j → itU (suc j))
+    where
+    itU : (j : ℕ) → 𝓤 n ch (iter (It n o T0 y K) G j) (S.iter (sI (lv y′) n k) g j)
+    itU zero    = hG
+    itU (suc j) = L0I n ch T0 y y′ d K k _ _ hK (itU j)
+  L0I n ch T0 (suc y) (LV.lim f′) (≼l j d) K k G g hK hG =
+    U-sh n (L0I n ch T0 (suc y) (f′ j) d K k G g hK hG) (limS-ub n (λ i → sI (lv (f′ i)) n k g) j)
+  L0I n ch T0 (suc y) _ (≼i {p = ()} x e d) K k G g hK hG
+  L0I n ch T0 (suc y) _ (≼u {r = ()} d) K k G g hK hG
+  L0I n ch T0 (lim f a) y′ (l≼ h) K k G g hK hG =
+    U-sh n (U-limC n _ _ (λ _ → sI (lv y′) n k g) (λ j → L0I n ch T0 (f j) y′ (h j) K k G g hK hG))
+           (limS-lub n (λ _ → sI (lv y′) n k g) _ (λ j → Le-refl n _))
+  L0I n ch T0 (lim f a) (LV.lim f′) (≼l j d) K k G g hK hG =
+    U-sh n (L0I n ch T0 (lim f a) (f′ j) d K k G g hK hG) (limS-ub n (λ i → sI (lv (f′ i)) n k g) j)
+  L0I n ch T0 (lim f a) _ (≼i {p = ()} x e d) K k G g hK hG
+  L0I n ch T0 (lim f a) _ (≼u {r = ()} d) K k G g hK hG
+
+  -- 第 0 层指数 (E), 底与链底两轨同步.
+  L0E : {X : Cx lvl1} (ch : ⟦ X ⟧ zero) (T0 : TD X zero) (y : Tr zero) (y′ : T₀) → read y ≼ y′
+      → (F : Op X) (f : Sh 0) → 𝓤 0 ch F f → 𝓤 0 ch (op (E o T0 y F) (Einf o T0 y F)) (sE (lv y′) f)
+  L0E ch T0 (Ω () _) y′ d F f hF
+  L0E ch T0 (up _ () _ _) y′ d F f hF
+  L0E ch T0 (ex _ _ _ _ ()) y′ d F f hF
+  L0E ch T0 zero y′ d F f hF S t v a c ha hc = ≼-trans (hF S t v a c ha hc) (proj₁ (Infl-lv y′) f a c)
+  L0E {X} ch T0 (suc y) (LV.suc y′) (s≼s d) F f hF S t v a c ha hc =
+    l≼ (λ j → ≼l j (proj₁ (J (suc j))))
+    where
+    G′ : Op X
+    G′ = op (E o T0 y F) (Einf o T0 y F)
+    d0 : Sh 0
+    d0 = sE (lv y′) f
+    hG : 𝓤 0 ch G′ d0
+    hG = L0E ch T0 y y′ d F f hF
+    J : (j : ℕ) → (read (proj₁ (itV G′ j S zero t v)) ≼ proj₁ (S.iter (pr d0) (a , c) j))
+                × (rd (itS G′ j S) ch ≼ proj₂ (S.iter (pr d0) (a , c) j))
+    J zero = ha , hc
+    J (suc j) with J j
+    ... | (q₁ , q₂) =
+        hG (itS G′ j S) t (itV G′ j S zero t v) _ _ q₁ q₂
+      , hG (itS G′ j S) ch (itS G′ j S zero ch) _ _ q₂ q₂
+  L0E ch T0 (suc y) (LV.lim f′) (≼l j d) F f hF S t v a c ha hc =
+    ≼l j (L0E ch T0 (suc y) (f′ j) d F f hF S t v a c ha hc)
+  L0E ch T0 (suc y) _ (≼i {p = ()} x e d) F f hF
+  L0E ch T0 (suc y) _ (≼u {r = ()} d) F f hF
+  L0E ch T0 (lim g a) y′ (l≼ h) F f hF S t v x c hx hc =
+    l≼ (λ j → L0E ch T0 (g j) y′ (h j) F f hF S t v x c hx hc)
+  L0E ch T0 (lim g a) (LV.lim f′) (≼l j d) F f hF S t v x c hx hc =
+    ≼l j (L0E ch T0 (lim g a) (f′ j) d F f hF S t v x c hx hc)
+  L0E ch T0 (lim g a) _ (≼i {p = ()} x e d) F f hF
+  L0E ch T0 (lim g a) _ (≼u {r = ()} d) F f hF
+
+  ----------------------------------------------------------------------
+  -- 指数的上界实现: 对一切语境 X 与树框架为 stop 的 TD; 链点 mk (inc tt self).
+  TV : Cx lvl1 → Set
+  TV X = ∀ {i} → ⟦ X ⟧ i → i ≤ lvl1
+  MK : Cx lvl1 → Set
+  MK X = ∀ {i} → i ≤ lvl1 → ⟦ X ⟧ i
+
+  RealE : Tr lvl1 → ES → Set
+  RealE x e = ∀ {X : Cx lvl1} (tv : TV X) (mk : MK X) (F : Op X) (f : Sh 0)
+            → 𝓤 0 (mk (inc tt self)) F f
+            → 𝓤 0 (mk (inc tt self)) (op (E o (td stop tv mk) x F) (Einf o (td stop tv mk) x F)) (sE e f)
+
+  RealI : Tr lvl1 → ES → Set
+  RealI x e = ∀ (n : ℕ) {X : Cx lvl1} (tv : TV X) (mk : MK X) (K : Ca (suc n) X) (k : Sh (suc n)) (G : Ca n X) (g : Sh n)
+            → 𝓤 (suc n) (mk (inc tt self)) K k → 𝓤 n (mk (inc tt self)) G g
+            → 𝓤 n (mk (inc tt self)) (It n o (td stop tv mk) x K G) (sI e n k g)
+
+  Real : Tr lvl1 → ES → Set
+  Real x e = RealE x e × RealI x e
+
+  Real-zero : Real zero zC
+  Real-zero = (λ tv mk F f hF → hF) , (λ n tv mk K k G g hK hG → hK idM refl G g hG)
+
+  -- 第 1 层的 suc 行: E 两轨同步迭代, It 逐点极限.
+  RsucE : (x : Tr lvl1) (e : ES) → RealE x e → RealE (suc x) (sC e)
+  RsucE x e rE {X} tv mk F f hF S t v a c ha hc = l≼ (λ j → ≼l j (proj₁ (J (suc j))))
+    where
+    ch : ⟦ X ⟧ zero
+    ch = mk (inc tt self)
+    G′ : Op X
+    G′ = op (E o (td stop tv mk) x F) (Einf o (td stop tv mk) x F)
+    d0 : Sh 0
+    d0 = sE e f
+    hG : 𝓤 0 ch G′ d0
+    hG = rE tv mk F f hF
+    J : (j : ℕ) → (read (proj₁ (itV G′ j S zero t v)) ≼ proj₁ (S.iter (pr d0) (a , c) j))
+                × (rd (itS G′ j S) ch ≼ proj₂ (S.iter (pr d0) (a , c) j))
+    J zero = ha , hc
+    J (suc j) with J j
+    ... | (q₁ , q₂) =
+        hG (itS G′ j S) t (itV G′ j S zero t v) _ _ q₁ q₂
+      , hG (itS G′ j S) ch (itS G′ j S zero ch) _ _ q₂ q₂
+
+  RsucI : (x : Tr lvl1) (e : ES) → RealI x e → RealI (suc x) (sC e)
+  RsucI x e rI n {X} tv mk K k G g hK hG = U-limC n _ _ _ (λ j → itU (suc j))
+    where
+    itU : (j : ℕ) → 𝓤 n (mk (inc tt self)) (iter (It n o (td stop tv mk) x K) G j) (S.iter (sI e n k) g j)
+    itU zero    = hG
+    itU (suc j) = rI n tv mk K k _ _ hK (itU j)
+
+  Rsuc : (x : Tr lvl1) (e : ES) → Real x e → Real (suc x) (sC e)
+  Rsuc x e (rE , rI) = RsucE x e rE , RsucI x e rI
+
+  Ω₁t : Tr lvl1
+  Ω₁t = proj₁ (Ωt lvl1)
+
+  nbΩ : lvl1 ⊢ zero ◃ Ω₁t
+  nbΩ = proj₂ (Ωt lvl1)
+
+  -- U1: Ω₁ 的上界实现 Ω̂U.
+  U1E : RealE Ω₁t Ω̂U
+  U1E {X} tv mk F f hF S t v a c ha hc =
+    NodeU.upb (λ z → Bᵉ z S t v) (λ z → Bᵉ z S ch (S zero ch))
+             (λ y → sE (lv (LV.suc y)) f) a c
+             (λ y z d → br y z d S t v a c ha hc) (λ y z d → br y z d S ch (S zero ch) c c hc hc)
+             (kpT stop o p₁ (tv t))
+    where
+    Tᵈ : TD X lvl1
+    Tᵈ = td stop tv mk
+    ch : ⟦ X ⟧ zero
+    ch = mk (inc tt self)
+    g : Tr zero → Tr lvl1
+    g z = up zero tt (suc z) (z◃ z ◃s)
+    Bᵉ : Tr zero → St X → ⟦ X ⟧ zero → Tr⁺ zero → Tr⁺ zero
+    Bᵉ z S t v = E o Tᵈ (g z) F S zero t v
+    br : ∀ y z → read z ≼ y → U0 ch (Bᵉ z) (sE (lv (LV.suc y)) f)
+    br y z d S t v a c ha hc =
+      L0E (inj₂ (tv ch) , ch) (chTD Tᵈ tt) (suc z) (LV.suc y) (s≼s d) (enterO (chMT Tᵈ tt) F) f
+          (U-enter 0 (chMT Tᵈ tt) refl F hF) (λ i′ y′ → S i′ (proj₂ y′)) (inj₂ (tv t) , t) v a c ha hc
+
+  U1I : RealI Ω₁t Ω̂U
+  U1I n {X} tv mk K k G g hK hG =
+    U-node n ch (λ t → kpT stop o p₁ (tv t)) (λ z → It n o Tᵈ (gz z) K G)
+           (λ y → compU n (k g) (sI (lv (LV.suc y)) n k (k g))) br
+    where
+    Tᵈ : TD X lvl1
+    Tᵈ = td stop tv mk
+    ch : ⟦ X ⟧ zero
+    ch = mk (inc tt self)
+    gz : Tr zero → Tr lvl1
+    gz z = up zero tt (suc z) (z◃ z ◃s)
+    hI0 : 𝓤 (suc n) ch (Itᴺ n o Tᵈ zero K) k
+    hI0 m gm G₁ g₁ r₁ = hK (idM ⊙ m) gm G₁ g₁ r₁
+    hA : 𝓤 n ch (It n o Tᵈ zero K G) (k g)
+    hA = hK idM refl G g hG
+    br : ∀ y z → read z ≼ y → 𝓤 n ch (It n o Tᵈ (gz z) K G) (compU n (k g) (sI (lv (LV.suc y)) n k (k g)))
+    br y z d =
+      U-up n (down stop tt) (λ t → inj₂ (tv t)) ch (It n o Tᵈ zero K G) _ (k g) (sI (lv (LV.suc y)) n k (k g)) hA
+        (L0I n (inj₂ (tv ch) , ch) (chTD Tᵈ tt) (suc z) (LV.suc y) (s≼s d)
+             (enter (suc n) (chMT Tᵈ tt) (Itᴺ n o Tᵈ zero K)) k
+             (enter n (chMT Tᵈ tt) (It n o Tᵈ zero K G)) (k g)
+             (U-enter (suc n) (chMT Tᵈ tt) refl _ hI0)
+             (U-enter n (chMT Tᵈ tt) refl _ hA))
+
+  U1 : Real Ω₁t Ω̂U
+  U1 = U1E , U1I
+
+  -- U2: x 实现 e ⟹ ex Ω₁ Ω₁ (suc x) 实现 shU e.
+  xs : Tr lvl1 → Tr lvl1
+  xs x = ex Ω₁t Ω₁t nbΩ (suc x) tt
+
+  U2E : (x : Tr lvl1) (e : ES) → RealI x e → RealE (xs x) (shU e)
+  U2E x e rI {X} tv mk F f hF =
+    RsucI x e rI 0 tv mk (Kb o Tᵈ Ω₁t nbΩ) kbU (op (E o Tᵈ Ω₁t F) (Einf o Tᵈ Ω₁t F)) (sE Ω̂U f) hKb
+          (U1E tv mk F f hF)
+    where
+    Tᵈ : TD X lvl1
+    Tᵈ = td stop tv mk
+    hKb : 𝓤 1 (mk (inc tt self)) (Kb o Tᵈ Ω₁t nbΩ) kbU
+    hKb m gm G g rg = U1E (λ y → tv (π m y)) (λ τ → σ m (mk τ)) G g rg
+
+  U2I : (x : Tr lvl1) (e : ES) → RealI x e → RealI (xs x) (shU e)
+  U2I x e rI n {X} tv mk K k G g hK hG =
+    RsucI x e rI (suc n) tv mk (Kₑ n o Tᵈ Ω₁t nbΩ) (kₑU n) (Itᴺ n o Tᵈ Ω₁t K) (λ g′ → sI Ω̂U n k g′) hKₑ hIa
+          idM refl G g hG
+    where
+    Tᵈ : TD X lvl1
+    Tᵈ = td stop tv mk
+    hKₑ : 𝓤 (suc (suc n)) (mk (inc tt self)) (Kₑ n o Tᵈ Ω₁t nbΩ) (kₑU n)
+    hKₑ m gm K₁ k₁ r₁ m′ gm′ G₁ g₁ rg₁ =
+      U1I n (λ y → tv (π m (π m′ y))) (λ τ → σ m′ (σ m (mk τ))) (enter (suc n) m′ K₁) k₁ G₁ g₁
+          (U-enter (suc n) m′ gm′ K₁ r₁) rg₁
+    hIa : 𝓤 (suc n) (mk (inc tt self)) (Itᴺ n o Tᵈ Ω₁t K) (λ g′ → sI Ω̂U n k g′)
+    hIa m gm G₁ g₁ r₁ =
+      U1I n (λ y → tv (π m y)) (λ τ → σ m (mk τ)) (enter (suc n) m K) k G₁ g₁ (U-enter (suc n) m gm K hK) r₁
+
+  U2 : (x : Tr lvl1) (e : ES) → Real x e → Real (xs x) (shU e)
+  U2 x e (rE , rI) = U2E x e rI , U2I x e rI

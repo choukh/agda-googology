@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意起点之上的最小 ε 不动点严格向下闭于和、后继与零层折叠。供一级运行逐项使用。
+module B30UCut where
+open import Data.Nat.Base as N using (ℕ; zero; suc; _⊔_; _≤_; _≤′_; ≤′-refl; ≤′-step)
+import Data.Nat.Properties as NP
+open import Data.Product using (Σ; _,_; _×_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≼l; l≼; s≼s; z≼; +-mono; ≼lim⁻)
+open import WVOne using (T₀; 𝟏; Mv)
+import B18Product as M
+import B19IdealArithmetic as A
+import B19IdealProduct as Law
+import B19IdealPowers as P
+import B22MovingIndex as E
+import B26PBounds as PB
+import B27SOriginal as Old
+
+mul-upper : ∀ a x → Mv a x ≼ (a M.· A.norm x)
+mul-upper a L.zero = M.one-right a
+mul-upper a (L.suc x) = ≼-trans {b = Mv a x M.· L.ωᶜ} (PB.one-step (Mv a x))
+  (≼-trans {b = (a M.· A.norm x) M.· L.ωᶜ} (M.mono (mul-upper a x) (≼-refl L.ωᶜ))
+    (proj₁ (Law.assoc a (A.norm x) L.ωᶜ)))
+mul-upper a (L.lim g) = l≼ λ n → ≼l n (mul-upper a (g n))
+
+module At (c : T₀) where
+  e = E.above c
+  seq = E.steps c
+  Small : T₀ → Set
+  Small x = L.suc x ≼ e
+
+  down : ∀ {x y} → x ≼ y → Small y → Small x
+  down {x} {y} p = ≼-trans {a = L.suc x} {b = L.suc y} {c = e} (s≼s p)
+  stage : ∀ n → Small (seq n)
+  stage n = ≼l {f = seq} (suc n) (Old.more c n)
+  walk : ∀ {i j} → i ≤′ j → seq i ≼ seq j
+  walk {i} ≤′-refl = ≼-refl (seq i)
+  walk (≤′-step {n = j} h) = ≼-trans {b = seq j} (walk h) (A.up (seq j))
+  successor : ∀ {x} → Small x → Small (L.suc x)
+  successor {x} h with ≼lim⁻ {a = x} {f = seq} h
+  ... | n , p = down {L.suc x} {seq n} p (stage n)
+  normal : ∀ {x} → Small x → Small (A.norm x)
+  normal {x} h with ≼lim⁻ {a = x} {f = seq} h
+  ... | n , p = ≼l {f = seq} (suc n) (≼-trans {b = A.norm (L.suc x)} (Old.raise x) (P.expo P.omega-pos p))
+  common : ∀ {x y} → Small x → Small y → Σ T₀ (λ q → x ≼ q × y ≼ q × Small q)
+  common {x} {y} hx hy with ≼lim⁻ {a = x} {f = seq} hx | ≼lim⁻ {a = y} {f = seq} hy
+  ... | i , p | j , r = seq (i ⊔ j) , get x i (NP.m≤m⊔n i j) p , get y j (NP.m≤n⊔m i j) r , stage (i ⊔ j) where
+    get : ∀ a k → k ≤ i ⊔ j → L.suc a ≼ seq k → a ≼ seq (i ⊔ j)
+    get a k d h = ≼-trans {b = L.suc a} (≼-suc (≼-refl a)) (≼-trans {b = seq k} h (walk (NP.≤⇒≤′ d)))
+  sum : ∀ {x y} → Small x → Small y → Small (x L.+ y)
+  sum {x} {y} hx hy with common {x} {y} hx hy
+  ... | q , a , b , s = down {x L.+ y} {A.level q}
+    (≼-trans {b = q L.+ q} (+-mono a b) (A.plusBound q)) (normal {L.suc q} (successor {q} s))
+  fold : ∀ {b x} → Small b → Small x → Small (Mv b x)
+  fold {b} {x} hb hx with common {b} {x} hb hx
+  ... | q , a , d , s = down {Mv b x} {b M.· A.norm x} (mul-upper b x)
+    (≼-trans {b = E.above q} (Old.local-bound q b x a d) (E.least q e s (proj₁ (E.fix c))))

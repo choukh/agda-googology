@@ -1,0 +1,71 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 在任一真实可数层上，src 的字面前驱给出实际 W4 槽。反过来，每个实际槽都来自严格更低的参照层。
+module B17SlotLevel where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Empty using (⊥)
+open import W4Block
+open import WVOne using (h₁; read)
+import OCF.Align.Level as V
+import B16IndexBase as I
+
+data Corr : V.Ordᴵ → L → Set where
+  cz : Corr V.zero zero
+  cs : ∀ {i g} → ((c : Ch sS) → Corr i (g c)) → Corr (V.suc i) (nd sS g)
+  cl : ∀ {f d g} → ((n : ℕ) → Corr (f n) (g n)) → (∀ n → f n V.≺ᴵ f (suc n)) → Corr (V.lim f d) (nd sL g)
+
+same : ∀ {i j a} → Corr i a → Corr j a → i V.≅ᴵ j
+same cz cz = V.z≅
+same (cs h) (cs g) = V.s≅ (same (h tt) (g tt))
+same (cl h _) (cl g _) = V.l≅ (λ n → same (h n) (g n))
+
+respect : ∀ {i j a} → i V.≅ᴵ j → Corr j a → Corr i a
+respect V.z≅ cz = cz
+respect (V.s≅ e) (cs h) = cs (λ c → respect e (h c))
+respect (V.l≅ e) (cl h s) = cl (λ n → respect (e n) (h n))
+  (λ n → V.≺ᴵ-respˡ (e n) (V.≺ᴵ-respʳ (s n) (V.≅ᴵ-sym (e (suc n)))))
+
+real : ∀ z → Corr (I.κ z) (h₁ z)
+real zero = cz
+real (suc z) = cs (λ _ → real z)
+real (lim f d) = cl (λ n → real (f n)) (λ n → V.toLevel-≺ (I.hs _) (I.hs _) (I.pred (d n)))
+real (Ω () _)
+real (up _ () _ _)
+real (ex _ _ _ _ ())
+
+slot : ∀ {i j a} → Corr i a → j V.<ᴵ i → Σ (Pos a) (λ p → Corr j (at a p))
+slot cz ()
+slot (cs h) V.zero = inj₂ (tt , inj₁ tt) , h tt
+slot (cs h) (V.suc p) with slot (h tt) p
+... | q , e = inj₂ (tt , inj₂ q) , e
+slot (cl h _) (V.lim n p) with slot (h n) p
+... | q , e = inj₂ (n , inj₂ q) , e
+
+find : ∀ {i j a} → Corr i a → j V.≺ᴵ i → Σ (Pos a) (λ p → Corr j (at a p))
+find c (V.via e v) with slot c v
+... | q , h = q , respect e h
+
+rank : ∀ {i a} → Corr i a → (p : Pos a) → Σ V.Ordᴵ (λ j → Corr j (at a p))
+rank (cs h) (inj₁ ())
+rank (cs h) (inj₂ (c , inj₁ _)) = _ , h c
+rank (cs h) (inj₂ (c , inj₂ p)) = rank (h c) p
+rank (cl h _) (inj₁ ())
+rank (cl h _) (inj₂ (c , inj₁ _)) = _ , h c
+rank (cl h _) (inj₂ (c , inj₂ p)) = rank (h c) p
+
+below : ∀ {j i a} (h : Corr i a) (p : Pos a) → Corr j (at a p) → j V.≺ᴵ i
+below (cs h) (inj₁ ())
+below (cs h) (inj₂ (c , inj₁ _)) r = V.via (same r (h c)) V.zero
+below (cs h) (inj₂ (c , inj₂ p)) r = V.≺-suc (below (h c) p r)
+below (cl h s) (inj₁ ())
+below (cl h s) (inj₂ (n , inj₁ _)) r = V.≺-lim (suc n) (V.≺ᴵ-respˡ (same r (h n)) (s n))
+below (cl h s) (inj₂ (n , inj₂ p)) r = V.≺-lim n (below (h n) p r)
+
+notAbove : ∀ {a k i j} → Corr i a → Corr j k → k ≤ a → i V.≺ᴵ j → ⊥
+notAbove h k self e = V.≺ᴵ-irrefl (V.≺ᴵ-respˡ (same k h) e)
+notAbove (cs h) k (inc c w) e = notAbove (h c) k w (V.≺ᴵ-trans (V.via (V.≅ᴵ-refl _) V.zero) e)
+notAbove (cs h) k (inu ws) e = notAbove (h tt) k (ws tt) (V.≺ᴵ-trans (V.via (V.≅ᴵ-refl _) V.zero) e)
+notAbove (cl h s) k (inc c w) e = notAbove (h c) k w (V.≺ᴵ-trans (V.≺-lim (suc c) (s c)) e)
+notAbove (cl h s) k (inu ws) e = notAbove (h 0) k (ws 0) (V.≺ᴵ-trans (V.≺-lim 1 (s 0)) e)

@@ -1,0 +1,65 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 已恢复的单条实际轨道在原 EBO 下严格共尾。第一个正询问就是 BTBO，各项有明确的原行上下界。
+module B28OrbitValue where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_; s≤s; z≤n)
+import Data.Nat.Properties as N
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst; cong)
+open import OCF.Align.EboLeanDef using (T; ψ; ΩTower; EBOψ; HC; _<ᵀ_; hd<; tl<; lv<; ar<; []<)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼; endpoint)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≼-suc; ≼l; l≼; ≼lim⁻; ≅→≼)
+open import OCF.Align.Level as L using ()
+import B17Cofinal as C
+import B26Depth as D
+import B26Names as A
+import B27Threshold as H
+import B12XRef as Orig
+import B28Orbit as O
+
+depth : ∀ n → C.depth (O.forest (suc n)) ≡ suc (suc n)
+depth zero = refl
+depth (suc n) = cong suc (depth n)
+
+height : ∀ n → D.height (O.target (suc n)) ≡ suc (suc (suc n))
+height n = cong suc (depth n)
+
+lower : ∀ n → H.row (suc (suc n)) ≼ O.value (suc n)
+lower n = H.minimum (suc (suc n)) (O.target (suc n))
+  (subst (suc (suc (suc n)) ≤_) (sym (height n)) N.≤-refl)
+
+upper : ∀ n → L.suc (O.value (suc n)) ≼ H.row (suc (suc (suc n)))
+upper n = H.below (suc (suc (suc n))) (O.target (suc n))
+  (subst (_≤ suc (suc (suc n))) (sym (height n)) N.≤-refl)
+
+all : ∀ k → H.row k ≼ O.value (suc k)
+all k = H.minimum k (O.target (suc k)) (subst (suc k ≤_) (sym (height k))
+  (N.≤-trans (N.n≤1+n (suc k)) (N.n≤1+n (suc (suc k)))))
+
+complete : A.E ≈ᵛ L.lim O.value
+complete = endpoint (L.lim O.value) (λ k → ≼l (suc k) (all k)) ,
+  l≼ (λ n → ≼-trans {b = L.suc (O.value n)} (≼-suc (≼-refl (O.value n))) (A.strict (O.target n)))
+
+first : O.out 1 ≡ EBOψ 2
+first = refl
+
+first-value : O.value 1 ≈ᵛ Orig.row 2
+first-value = tree-≼ first (O.out-h 1) (Orig.H 2) , tree-≼ (sym first) (Orig.H 2) (O.out-h 1)
+
+-- 从第二个正询问起，旧行和目标之间也有严格余量。
+beyond : ∀ n → ΩTower (suc (suc n)) <ᵀ O.forest (suc (suc n))
+beyond zero = hd< (lv< (tl< []<))
+beyond (suc n) = hd< (lv< (append (O.forest (suc (suc n))) (beyond n)))
+  where
+  append : ∀ {a} (t : T) → a <ᵀ t → a <ᵀ O.plus t
+  append [] ()
+  append (x ∷ xs) []< = []<
+  append (x ∷ xs) (hd< h) = hd< h
+  append (x ∷ xs) (tl< h) = tl< (append xs h)
+
+strict-lower : ∀ n → L.suc (H.row (suc (suc (suc n)))) ≼ O.value (suc (suc n))
+strict-lower n = mono<ⁿ (A.nt a) (A.nt b) (A.ct b) (A.hcN a) (A.hcN b)
+  (hd< (ar< (hd< (lv< (beyond n)))))
+  where a = D.tower (suc (suc (suc n))); b = O.target (suc (suc n))

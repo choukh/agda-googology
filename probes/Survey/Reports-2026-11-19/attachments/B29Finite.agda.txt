@@ -1,0 +1,30 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 逐塔严格预算只须在有限乘积中合并便给出极限的非严格上界。
+module B29Finite where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼-trans; ≼-suc; ≼-refl)
+import WVOne as V
+
+module Assemble (e y a : V.T₀) (h i unit p : ℕ → V.T₀)
+  (first : L.suc a ≼ e → L.suc (unit 0) ≼ e)
+  (one : L.suc a ≼ e → L.suc (unit 1) ≼ e)
+  (more : ∀ m → L.suc (h m) ≼ e → L.suc (i m) ≼ e → L.suc (unit (suc (suc m))) ≼ e)
+  (init : L.suc (p 0) ≼ e)
+  (mult : ∀ n → L.suc (p n) ≼ e → L.suc (unit n) ≼ e → L.suc (p (suc n)) ≼ e)
+  (collect : y ≼ L.lim (λ n → p (suc n))) where
+  Small : V.T₀ → Set
+  Small v = L.suc v ≼ e
+  module From (s : Small a) (t : ∀ m → Small (h m) × Small (i m)) where
+    factor : ∀ n → Small (unit n)
+    factor zero = first s
+    factor (suc zero) = one s
+    factor (suc (suc m)) = more m (proj₁ (t m)) (proj₂ (t m))
+    finite : ∀ n → Small (p n)
+    finite zero = init
+    finite (suc n) = mult n (finite n) (factor n)
+    whole : y ≼ e
+    whole = ≼-trans {a = y} {b = L.lim (λ n → p (suc n))} {c = e} collect
+      (l≼ {f = λ n → p (suc n)} λ n → ≼-trans {a = p (suc n)} {b = L.suc (p (suc n))} {c = e}
+        (≼-suc (≼-refl (p (suc n)))) (finite (suc n)))

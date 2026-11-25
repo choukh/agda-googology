@@ -1,0 +1,52 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在固定前塔 Ω 头下，内反馈每一个下标 c 的零返回与正步进分别精确等于两个与上层枝族无关的程序作用于 g(c)。
+module B28BBranch where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; cong; cong₂; trans; sym)
+import W4Block as W
+import W4Ops as O
+import W4Path as P
+import W4Fold as F
+import WVOne as V
+import B12Terminal as T
+import B18TowerSlots as B
+import B28BHead as X
+import B28BFirst as First
+
+module At (m : ℕ) where
+  module A = X.At m
+  module Z = First.At m
+  open A using (n; i; k; Branch; top; free; module Walk)
+  open Z using (depth; lev; cert; β; decode₀; decode₁; start; route)
+
+  canon : ∀ x → free x ≡ decode₀ x
+  canon x = cong (λ b → V.read (proj₁ (F.ψ (lev x) (cert x) b W.zero (P.z≤ _) β (proj₁ (O.Ωt (lev x))))))
+    (B.At.all n x)
+
+  module Call (g : Branch) (c : W.Tr i) where
+    open Walk g
+    x = g c
+    parent = W.nd (W.sΩ i) child
+    bs = T.Run.bs r
+    incoming = λ j w → bs j (W.inc c w)
+    inner-state = T.enterRun (W.sΩ i) child r c W.zero
+
+    narrow : incoming ≡ B.slots (lev x) depth
+    narrow = trans (cong (λ b → λ j w → b j (W.inc c w)) (B.At.all n key))
+      (First.restrict {W.sΩ i} child c depth)
+
+    zero-return : V.read (T.value inner-state) ≡ free x
+    zero-return = trans (cong (λ b → V.read (proj₁ (F.ψ (lev x) (cert x) b W.zero (P.z≤ _) β (proj₁ (O.Ωt (lev x)))))) narrow)
+      (sym (canon x))
+
+    positive-step : Run.step c ≡ decode₁ x
+    positive-step = cong₂ (λ b v → proj₁ (F.ψ (lev x) (cert x) b i (route x) v (proj₁ (O.Ωt (lev x)))))
+      narrow (Z.Read.anchor g)
+
+  value : ∀ g u → Walk.inner g u ≡ free (g (Walk.Run.ix g u))
+  value g u = Call.zero-return g (Walk.Run.ix g u)
+
+  step : ∀ g c → Walk.Run.step g c ≡ decode₁ (g c)
+  step = Call.positive-step

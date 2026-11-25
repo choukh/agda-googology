@@ -1,0 +1,53 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24RExit where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼l; l≼; ≅→≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import WVOne using (T₀)
+open import WSLevel using (Ω₁ᴸ)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Src as Y
+import B12LimitSrc as A
+import B12Omega3Ref as R
+import B12Omega3Cuts as C
+import B13Target as P
+import B15RefSource as Old
+import B17RefAllSource as F
+import B19OldSource as Sync
+import B23RExit as Prior
+import B23RShare as First
+import B24RRows as Rows
+import B24ROrbit as O
+module S = F.S
+module B = F.B
+
+passed : ∀ {s p} → A.Aligned s p → A.Aligned (F.pass s) (P.pass p)
+passed b = A.aligned (F.pass-up 1 (A.Aligned.up b)) (F.pass-down 1 (A.Aligned.dn b)) (P.pass-pres (A.Aligned.regular b))
+closed = S.ψ₀ (F.pass (Y.a S.+ S.↑ B.zero (S.Ω Old.one)))
+d = Rows.from-live (L.Ω-refl (L.suc L.zero))
+input : O.D L.≅ L.ψ⁰ (Rows.T Ω₁ᴸ)
+input = L.ψ⁰-≅ d
+old = A.fold (passed (A.plus A.omega2 Sync.omega-one))
+both : tr₀ closed ≈ᵛ O.D
+both = ≼-trans (proj₁ old) (≅→≼ (L.≅-sym input)) , ≼-trans (≅→≼ input) (proj₂ old)
+strict : L.suc (tr₀ Prior.source) ≼ tr₀ closed
+strict = ≼-trans O.strict (≼-trans (proj₁ O.both) (proj₂ both))
+
+two = S.ψ₀ (F.pass (Y.a S.+ Y.a))
+whole : tr₀ two ≈ᵛ O.two
+whole = A.fold (passed (A.plus A.omega2 A.omega2))
+module Sum = C.Sum Ω₂ᴸ (L.Ω-refl _)
+module Slice (m : ℕ) = Rows.At (R.left m) (R.reg m)
+rotate : ∀ m → First.parts (suc m) L.≅ L.ψ⁰ (P.pass (R.left m L.+ Ω₂ᴸ))
+rotate m = L.ψ⁰-≅ (P.pass-pres (L.≅-sym (Sum.rotate m)))
+Test : T₀ → Set
+Test bound = (First.parts 0 ≼ bound) × (∀ m → Slice.Test m bound)
+sufficient : ∀ {bound} → Test bound → First.oneStep ≼ bound
+sufficient (start , h) = l≼ λ where
+  zero → start
+  (suc m) → ≼-trans (≅→≼ (rotate m)) (Slice.sufficient m (h m))
+necessary : ∀ {bound} → First.oneStep ≼ bound → Test bound
+necessary h = ≼-trans (≼l 0 (≼-refl _)) h , λ m → Slice.necessary m
+   (≼-trans (≅→≼ (L.≅-sym (rotate m))) (≼-trans (≼l (suc m) (≼-refl _)) h))

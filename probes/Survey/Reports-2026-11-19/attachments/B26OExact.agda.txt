@@ -1,0 +1,43 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 严格进入实值以后，可沿实际构造子找到精确同值的节点。只有在后继处选停还是再下行用排中律。
+module B26OExact where
+
+open import Data.Product using (Σ; _×_; _,_)
+open import Data.Empty using (⊥-elim)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Unit.Base using (tt)
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Align.EboLeanDef using (_<ᵀ_)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; s≼s⁻; s≼0; ≼lim⁻)
+open import WVOne using (T₀; read)
+import W4Block as W
+import B17ValueDich as D
+import B26OArgument as A
+import B26OGame as G
+
+data Path : G.Tree → G.Tree → Set where
+  one : ∀ {z} i → Path (G.child z i) z
+  more : ∀ {x z} i → Path x (G.child z i) → Path x z
+
+actual-edge : ∀ {a z} → Path a z → W._⊢_◃_ W.zero a z
+actual-edge (one i) = G.edge _ i
+actual-edge (more i p) = W.◃t (actual-edge p) (G.edge _ i)
+
+Located = λ (x : T₀) z → Σ G.Tree (λ a → Path a z × (read a ≈ᵛ x))
+
+module Classical (lem : LEM) where
+  exact : ∀ x z → L.suc x ≼ read z → Located x z
+  exact x W.zero d = ⊥-elim (s≼0 d)
+  exact x (W.suc z) d with D.Classical.compare lem (read z) x
+  ... | inj₁ p = z , one tt , p , s≼s⁻ d
+  ... | inj₂ p = let w , path , h = exact x z p in w , more tt path , h
+  exact x (W.lim f e) d with ≼lim⁻ {f = λ n → read (f n)} d
+  ... | n , h = let w , path , eq = exact x (f n) h in w , more n path , eq
+  exact x (W.Ω () _)
+  exact x (W.up _ () _ _)
+  exact x (W.ex _ _ _ _ ())
+
+  continue : ∀ (r : A.Argument → T₀) → A.Strict r → ∀ a z →
+             r a ≼ read z → ∀ b → A.raw b <ᵀ A.raw a → Located (r b) z
+  continue r strict a z bound b p = exact (r b) z (≼-trans (strict b a p) bound)

@@ -68,8 +68,6 @@ s=s.replace('ψ⁰Q H H′ Q (oc x f) (oc y f′) gu gu′ m gm um tm am is m′
 a=s.index('ψ⁰Q {p} {a} {q = q} {t} {t′} H H′ Q (oi')
 b=s.index('ψ⁰Q H H′ Q (oc x f) (oc y f′)')
 blk=s[a:b]
-def fix_blk(blk,kind):
-    return blk
 blk=blk.replace('with ◁-dec p q','with trH H | trH H′').replace('with ◁-dec h₀ q','with trH (hk◁ j H) | trH (hk◁ j′ H′)')
 blk=blk.replace('ψ⁰Q {p} {a} {q = q} {t} {t′} H H′ Q (oi','ψ⁰Q {p} {a} {q = q} {t = t} {t′ = t′} H H′ Q (oi')
 blk=blk.replace('ψ⁰Q {q = q} {t} {t′} H H′ Q (od','ψ⁰Q {q = q} {t = t} {t′ = t′} H H′ Q (od')

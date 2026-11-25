@@ -1,0 +1,96 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- tw n 上任意树的读回层号不超过 n 重原生 Ω 下标；其反馈孩子 tw n ⊕ ↑z 的原生深度恰为 n。
+module B27SLevel where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Product using (proj₁; proj₂; _,_; _×_)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import W4Block
+
+data Bounded : ℕ → L → Set where
+  z : ∀ {n} → Bounded n zero
+  s : ∀ {n h} → (∀ c → Bounded n (h c)) → Bounded n (nd sS h)
+  l : ∀ {n h} → (∀ c → Bounded n (h c)) → Bounded n (nd sL h)
+  o : ∀ {n k h} → Bounded n k → (∀ c → Bounded (suc n) (h c)) → Bounded (suc n) (nd (sΩ k) h)
+
+loosen : ∀ {n k} → Bounded n k → Bounded (suc n) k
+loosen z = z
+loosen (s f) = s (λ c → loosen (f c))
+loosen (l f) = l (λ c → loosen (f c))
+loosen (o p f) = o (loosen p) (λ c → loosen (f c))
+
+join : ∀ {n a b} → Bounded n a → Bounded n b → Bounded n (a ⊕ b)
+join qa z = qa
+join qa (s f) = s (λ c → join qa (f c))
+join qa (l f) = l (λ c → join qa (f c))
+join qa (o p f) = o p (λ c → join qa (f c))
+
+mutual
+  position : ∀ {n k} → Bounded n k → (p : Pos k) → Bounded n (at k p)
+  position z ()
+  position (s f) (inj₂ (c , t)) = member (f c) t
+  position (l f) (inj₂ (c , t)) = member (f c) t
+  position (o p f) (inj₁ i) = loosen (member p i)
+  position (o p f) (inj₂ (c , t)) = member (f c) t
+
+  member : ∀ {n k} → Bounded n k → (p : Pos⁼ k) → Bounded n (proj₁ (sl⁼ k p))
+  member h (inj₁ _) = h
+  member h (inj₂ p) = position h p
+
+Tag : ℕ → L → Set
+Tag zero k = ⊥
+Tag (suc n) k = Bounded n k
+
+Allowed : ℕ → L → Set
+Allowed n k = (p : Pos k) → Tag n (at k p)
+
+under : ∀ {n s h} → Allowed n (nd s h) → ∀ c → Allowed n (h c)
+under e c p = e (inj₂ (c , inj₂ p))
+
+node : ∀ n {a h} → Tag n a → (∀ c → Bounded n (h c)) → Bounded n (nd (sΩ a) h)
+node zero () f
+node (suc n) p f = o p f
+
+test : ℕ → PS AL
+Pr (test n) = Bounded n
+Gd (test n) {m} _ = Allowed n m
+Gd-dn (test n) {s = sh} {h} c good = under {n} {sh} {h} good c
+limP (test n) f e H = l H
+nodeP (test n) {m} _ p f g H = node n (g p) (λ i → H (fromBr m p i))
+
+read-level : ∀ {n} k → Allowed n k → (x : Tr k) → Bounded n (↑ k x)
+read-level k a zero = z
+read-level k a (suc x) = s (λ _ → read-level k a x)
+read-level k a (lim f d) = l (λ i → read-level k a (f i))
+read-level {n} k a (Ω p f) = node n (a p) (λ i → read-level k a (f (fromBr k p i)))
+read-level {n} (nd sh h) a (up x c y e) = join (read-level (nd sh h) a x) (read-level (h c) (under {n} {sh} {h} a c) y)
+read-level {n} k a (ex x y ny u e) = EP AL (test n) {m = k} tt a u (opR (↑ k y))
+  (λ v h → join h (read-level k a y)) (↑ k x) (read-level k a x)
+
+mutual
+  tower : ∀ n → Bounded n (tw n)
+  tower zero = z
+  tower (suc n) = o (tower n) (λ c → join (loosen (tower n)) (loosen (read-level (tw n) (all n) c)))
+
+  all : ∀ n → Allowed n (tw n)
+  all zero ()
+  all (suc n) (inj₁ t) = member (tower n) t
+  all (suc n) (inj₂ (c , t)) = member (join (tower n) (read-level (tw n) (all n) c)) t
+
+indexed : ∀ n (x : Tr (tw n)) → Bounded n (tw n ⊕ ↑ (tw n) x)
+indexed n x = join (tower n) (read-level (tw n) (all n) x)
+
+base : ∀ {n} a b → Bounded n (a ⊕ b) → Bounded n a
+base a zero q = q
+base a (nd sS f) (s h) = base a (f tt) (h tt)
+base a (nd sL f) (l h) = base a (f 0) (h 0)
+base a (nd (sΩ k) f) (o _ h) = base a (f zero) (h zero)
+
+sharp : ∀ n → Bounded n (tw (suc n)) → ⊥
+sharp zero ()
+sharp (suc n) (o q h) = sharp n q
+
+exact : ∀ n (x : Tr (tw (suc n))) → Bounded n (tw (suc n) ⊕ ↑ (tw (suc n)) x) → ⊥
+exact n x q = sharp n (base (tw (suc n)) (↑ (tw (suc n)) x) q)

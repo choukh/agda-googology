@@ -1,0 +1,139 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiE3Objects where
+open import Data.Nat using (ℕ; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; cong₂; sym; trans; subst)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiRWFold as F
+import OCF.Lean.YiTBRow as TB
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiFRStep as FR
+import OCF.Lean.YiGIInst as GI
+import OCF.Lean.YiLBStart as LS
+import OCF.Lean.YiAbsSimInst as SI
+import OCF.Align.EboLeanDef as E
+import OCF.Align.Level as L
+import YiE3Base as Q
+
+-- perf: S-1，实际链点及其分支在出生处封装；规格同块检查。
+opaque
+  c₁ : B.Tr (B.tw 2)
+  c₁ = FR.Step.chain 2 1
+  c₁-def : c₁ ≡ FR.Step.chain 2 1
+  c₁-def = refl
+  base₀ : F.Base (B.tw 2)
+  base₀ i u = GI.baseᴱ 3 i (P.inc B.zero u)
+  base₀-def : base₀ ≡ (λ i u → GI.baseᴱ 3 i (P.inc B.zero u))
+  base₀-def = refl
+  branch : B.Tr (B.tw 1) → B.Tr (B.tw 2)
+  branch d = proj₁ (TB.ψ (B.tw 2) (P.Ok-tw 2) (MT.rbᶻ (B.tw 2)) base₀
+    (B.tw 2) P.self (GI.baseᴱ 3 (B.tw 2) (P.ink P.self)) (FR.Step.g 1 d))
+  branch-def : branch ≡ (λ d → proj₁ (TB.ψ (B.tw 2) (P.Ok-tw 2) (MT.rbᶻ (B.tw 2)) base₀
+    (B.tw 2) P.self (GI.baseᴱ 3 (B.tw 2) (P.ink P.self)) (FR.Step.g 1 d)))
+  branch-def = refl
+  c₁-shape : c₁ ≡ B.Ω (inj₁ (inj₁ tt)) branch
+  c₁-shape = refl
+
+-- perf: S-1/C-10，封装整个依赖环境；c₁ 在本块保持不透明。
+opaque
+  ctx : Q.Ctx
+  ctx = Q.make c₁
+  ctx-def : ctx ≡ Q.make c₁
+  ctx-def = refl
+  h₁ : B.L
+  h₁ = Q.level ctx
+  h₁-def : h₁ ≡ FR.Step.child 2 c₁
+  h₁-def = refl
+  o₁ : P.Ok h₁
+  o₁ = Q.okay ctx
+  o₁-def : subst P.Ok h₁-def o₁ ≡ proj₂ (P.Ok-tw 3) c₁
+  o₁-def = refl
+  r₁ : TB.Rb h₁
+  r₁ = Q.table ctx
+  r₁-def : subst TB.Rb h₁-def r₁ ≡ MT.rbᶻ (FR.Step.child 2 c₁)
+  r₁-def = refl
+  base₁ : F.Base h₁
+  base₁ = Q.base ctx
+  base₁-def : subst F.Base h₁-def base₁ ≡ (λ i u → GI.baseᴱ 3 i (P.inc c₁ u))
+  base₁-def = refl
+
+-- perf: S-1，形状通过命题等式导出，不向消费者开放 c₁。
+opaque
+  a : B.Tr (B.tw 1) → B.L
+  a d = B.tw 2 B.⊕ B.↑ (B.tw 2) (branch d)
+  a-def : a ≡ (λ d → B.tw 2 B.⊕ B.↑ (B.tw 2) (branch d))
+  a-def = refl
+  h₁-shape : h₁ ≡ B.nd (B.sΩ (B.tw 1)) a
+  h₁-shape = trans h₁-def (cong (FR.Step.child 2) c₁-shape)
+  β : O.Tr⁺ B.zero
+  β = GI.betaᴱ 3
+  β-def : β ≡ GI.betaᴱ 3
+  β-def = refl
+
+-- perf: S-1，输出按环境变量构造；接线只复合已证等式。
+opaque
+  output : O.Tr⁺ B.zero
+  output = Q.collapse ctx β
+  output-def : output ≡ Q.collapse ctx β
+  output-def = refl
+  output-actual : output ≡ FR.Step.out 2 (FR.Step.chain 2 1)
+  output-actual = trans output-def (trans (cong₂ Q.collapse ctx-def β-def)
+    (trans (cong (λ c → Q.collapse (Q.make c) (GI.betaᴱ 3)) c₁-def) (Q.raw-wire 1)))
+
+-- perf: S-1/S-3，目标、HC 及参照族分块封装，避免沿证书重算。
+opaque
+  target : E.T
+  target = LS.target
+  target-def : target ≡ LS.target
+  target-def = refl
+opaque
+  hc : SI.E.HC target
+  hc = subst SI.E.HC (sym target-def) LS.hc-target
+  hc-def : hc ≡ subst SI.E.HC (sym target-def) LS.hc-target
+  hc-def = refl
+  reference : SI.E.HC target → L.Ordᶜ L.zero
+  reference h = SI.E.tree h
+  reference-def : ∀ h → reference h ≡ SI.E.tree h
+  reference-def h = refl
+  target-tree : L.Ordᶜ L.zero
+  target-tree = reference hc
+  target-tree-def : target-tree ≡ reference hc
+  target-tree-def = refl
+
+-- perf: C-9，形状通过输运提供；不对具体大项做 with 或归约。
+opaque
+  slot : B.tw 1 P.≤ h₁
+  slot = subst (λ h → B.tw 1 P.≤ h) (sym h₁-shape) (P.ink P.self)
+  slot-def : slot ≡ subst (λ h → B.tw 1 P.≤ h) (sym h₁-shape) (P.ink P.self)
+  slot-def = refl
+  inner-g : B.Tr (B.tw 1) → B.Tr h₁
+  inner-g d = subst B.Tr (sym h₁-shape)
+    (proj₁ (O.upz {s = B.sΩ (B.tw 1)} {h = a} d (O.Ωt (a d))))
+  inner-g-def : ∀ d → inner-g d ≡ subst B.Tr (sym h₁-shape)
+    (proj₁ (O.upz {s = B.sΩ (B.tw 1)} {h = a} d (O.Ωt (a d))))
+  inner-g-def d = refl
+  inner-feed : B.Tr (B.tw 1) → B.Tr (B.tw 1)
+  inner-feed d = proj₁ (TB.ψ h₁ o₁ r₁ base₁ (B.tw 1) slot (base₁ (B.tw 1) slot) (inner-g d))
+  inner-feed-def : ∀ d → inner-feed d ≡ proj₁
+    (TB.ψ h₁ o₁ r₁ base₁ (B.tw 1) slot (base₁ (B.tw 1) slot) (inner-g d))
+  inner-feed-def d = refl
+  inner-out : B.Tr (B.tw 1) → O.Tr⁺ B.zero
+  inner-out d = TB.ψ h₁ o₁ r₁ base₁ B.zero (P.z≤ h₁) β (inner-g d)
+  inner-out-def : ∀ d → inner-out d ≡ TB.ψ h₁ o₁ r₁ base₁ B.zero (P.z≤ h₁) β (inner-g d)
+  inner-out-def d = refl
+-- perf: S-1/C-9，迭代在出生处封装，等式调用变量引理。
+opaque
+  inner-chain : ℕ → B.Tr (B.tw 1)
+  inner-chain = O.iter inner-feed B.zero
+  inner-chain-def : inner-chain ≡ O.iter inner-feed B.zero
+  inner-chain-def = refl
+  inner-zero : inner-chain 0 ≡ B.zero
+  inner-zero = refl
+  inner-step : ∀ n → inner-chain (suc n) ≡ inner-feed (inner-chain n)
+  inner-step n = refl
+  inner-two : inner-chain 2 ≡ inner-feed (inner-feed B.zero)
+  inner-two = Q.iter-two inner-feed B.zero

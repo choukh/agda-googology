@@ -1,0 +1,57 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 审计用形状核对 (全是 refl): Ω 形层号 tw 1 上, 经指定孩子寻址的状态条目.
+module Audit1 where  -- 留档名 AuditFable52-Shape; 与 B4W4-W4*.agda.txt 同目录编译, 6G, 退出 0
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+lvl1 lvl2 : L
+lvl1 = nd sS (λ _ → zero)
+lvl2 = nd sS (λ _ → lvl1)
+
+o₁ : Ok (tw 1)
+o₁ = Ok-tw 1
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+c₂ : Tr zero
+c₂ = suc (suc zero)
+
+-- 目标: 孩子 2 (层 lvl2) 里的第 1 层, 路径经指定孩子 2.
+w₁ : lvl1 ≤ tw 1
+w₁ = inc c₂ (inc tt self)
+
+q₁ : Pos lvl1
+q₁ = inj₂ (tt , inj₁ tt)
+
+b : Tr⁺ (tw 1)
+b = Ωt (tw 1)
+
+-- (1) "右边接上 Ω_Ω" 在条目 (lvl1, 经孩子 2) 上: 对任意状态 S 与当前值 v,
+--     结果是保留的 Ω₁ 结点, 分支 z ↦ v ⊞ ψ₀(Ω_z) (从头折, 标准底). 右边不含 S.
+blind : (S : St {tw 1} nil) (v : Tr⁺ lvl1)
+      → proj₁ (run (opB (tw 1) o₁ (proj₁ b) (proj₂ b)) S lvl1 w₁ v)
+      ≡ Ω q₁ (λ z → proj₁ (v ⊞ ψ₀ (h₁ z) (proj₂ o₁ z) (proj₁ (Ωt (h₁ z)))))
+blind S v = refl
+
+-- (2) 同一条目上折 "x + (孩子 c 里的 y)": 对任意底族, 任意 c, 逐字是回退 ψ x ⊞ ψ₀ y.
+fallback : (B : Base (tw 1)) (β : Tr⁺ lvl1) (x : Tr (tw 1)) (c : Tr zero) (y : Tr (h₁ c)) (e : h₁ c ⊢ zero ◃ y)
+         → ψ (tw 1) o₁ B lvl1 w₁ β (up x c y e)
+         ≡ ψ (tw 1) o₁ B lvl1 w₁ β x ⊞ ψ₀ (h₁ c) (proj₂ o₁ c) y
+fallback B β x c y e = refl
+
+-- (3) 孩子一侧槽位 (孩子 2 里层号为第 0 层的槽位) 朝同一孩子里的第 1 层: 判定为空 (走链, 不保留).
+slot : Pos (tw 1)
+slot = inj₂ (c₂ , inj₂ (inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))))
+
+open import Data.Maybe using (nothing)
+flat : kp (tw 1) o₁ slot w₁ ≡ nothing
+flat = refl

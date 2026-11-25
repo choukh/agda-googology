@@ -1,0 +1,116 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module MT0 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀; Keep; kp; node⁺)
+open import OCF.Lean.YiTBRow using (Rb; RbS; ψ)
+
+lo : (a b : L) → Maybe ((b ≤ a) ⊎ (a ≤ b))
+lo zero     b = just (inj₂ (z≤ b))
+lo (nd _ _) b = nothing
+
+hi : (a b : L) → Maybe ((b ≤ a) ⊎ (a ≤ b))
+hi a zero     = just (inj₁ (z≤ a))
+hi a (nd _ _) = nothing
+
+tbᶻ : (k : L) (h : Tr k → L) (c c′ : Tr k) → Maybe ((h c′ ≤ h c) ⊎ (h c ≤ h c′))
+tbᶻ k h zero zero = just (inj₁ self)
+tbᶻ k h zero c′   = lo (h zero) (h c′)
+tbᶻ k h c    zero = hi (h c) (h zero)
+tbᶻ k h _    _    = nothing
+
+rbᶻ : (ℓ : L) → Rb ℓ
+rbᶻ zero          = tt
+rbᶻ (nd sS h)     = tt , λ c → rbᶻ (h c)
+rbᶻ (nd sL h)     = tt , λ c → rbᶻ (h c)
+rbᶻ (nd (sΩ k) h) = tbᶻ k h , λ c → rbᶻ (h c)
+
+Ent : (k : L) (h : Tr k → L) (c′ c : Tr k) → Set
+Ent k h c′ c = Maybe ((h c′ ≤ h c) ⊎ (h c ≤ h c′))
+
+cW₁ : ∀ {A B : Set} → A ⊎ B → (A → Set) → (B → Set) → Set
+cW₁ (inj₁ a) F G = F a
+cW₁ (inj₂ b) F G = G b
+
+HN : ∀ {j X x₀} → Keep j X x₀ → (X → Set) → (X → X) → (X → Set) → Set
+HN (just (q , cv , _)) G s C = Σ _ λ z → G (cv z)
+HN {x₀ = x₀} nothing G s C = Σ ℕ λ n → G (iter s x₀ n) ⊎ C (iter s x₀ n)
+
+Site : Set₁
+Site = (k : L) (h : Tr k → L) (j : L) (c′ c : Tr k) → Ent k h c′ c → Set
+
+Hit : Site → (ℓ : L) → Ok ℓ → Rb ℓ → Base ℓ → ((i : L) → i ≤ ℓ → Set) → (j : L) → j ≤ ℓ → Tr⁺ j → Set → Tr ℓ → Set
+Hit P ℓ o r B HB j w β Hβ zero      = Hβ
+Hit P ℓ o r B HB j w β Hβ (suc x)   = Hit P ℓ o r B HB j w β Hβ x
+Hit P ℓ o r B HB j w β Hβ (lim f a) = Σ ℕ λ n → Hit P ℓ o r B HB j w β Hβ (f n)
+Hit P ℓ o r B HB j w β Hβ (Ω p g)   = HN (kp ℓ o p w) (λ z → Hit P ℓ o r B HB j w β Hβ (g z))
+  (λ z → fromBr ℓ p (proj₁ (ψ ℓ o r B (at ℓ p) (posW ℓ p) (B (at ℓ p) (posW ℓ p)) (g z))))
+  (λ z → Hit P ℓ o r B HB (at ℓ p) (posW ℓ p) (B (at ℓ p) (posW ℓ p)) (HB (at ℓ p) (posW ℓ p)) (g z))
+Hit P (nd s h) o r B HB _ self β Hβ (up x c y e) = Hit P (nd s h) o r B HB _ self β Hβ x
+Hit P (nd s h) o r B HB j (inu ws) β Hβ (up x c y e) =
+  Hit P (h c) (proj₂ o c) (proj₂ r c) (λ i u → ψ (nd s h) o r B i (inc c u) (B i (inc c u)) x)
+      (λ i u → Hit P (nd s h) o r B HB i (inc c u) (B i (inc c u)) (HB i (inc c u)) x)
+      j (ws c) (ψ (nd s h) o r B j (inu ws) β x) (Hit P (nd s h) o r B HB j (inu ws) β Hβ x) y
+Hit P (nd (sΩ k) h) o r B HB j (ink v) β Hβ (up x c y e) =
+  Hit P (h c) (proj₂ o c) (proj₂ r c) (λ i u → ψ (nd (sΩ k) h) o r B i (inc c u) (B i (inc c u)) x)
+      (λ i u → Hit P (nd (sΩ k) h) o r B HB i (inc c u) (B i (inc c u)) (HB i (inc c u)) x)
+      j (v ∙ proj₂ (proj₁ o) c) (ψ (nd (sΩ k) h) o r B j (ink v) β x) (Hit P (nd (sΩ k) h) o r B HB j (ink v) β Hβ x) y
+Hit P (nd sS h) o r B HB j (inc c′ v) β Hβ (up x c y e) =
+  Hit P (h c) (proj₂ o c) (proj₂ r c) (λ i u → ψ (nd sS h) o r B i (inc c u) (B i (inc c u)) x)
+      (λ i u → Hit P (nd sS h) o r B HB i (inc c u) (B i (inc c u)) (HB i (inc c u)) x)
+      j v (ψ (nd sS h) o r B j (inc c′ v) β x) (Hit P (nd sS h) o r B HB j (inc c′ v) β Hβ x) y
+Hit P (nd sL g) o r B HB j (inc n v) β Hβ (up x m y e) = cW₁ (way g (proj₁ o) m n)
+  (λ u → Hit P (g n) (proj₂ o n) (proj₂ r n) (λ i u′ → ψ (nd sL g) o r B i (inc n u′) (B i (inc n u′)) x)
+           (λ i u′ → Hit P (nd sL g) o r B HB i (inc n u′) (B i (inc n u′)) (HB i (inc n u′)) x) j v
+           (ψ (nd sL g) o r B j (inc n v) β x) (Hit P (nd sL g) o r B HB j (inc n v) β Hβ x)
+           (proj₁ (emb (g n) (proj₂ o n) u (y , e))))
+  (λ u → Hit P (g m) (proj₂ o m) (proj₂ r m) (λ i u′ → ψ (nd sL g) o r B i (inc m u′) (B i (inc m u′)) x)
+           (λ i u′ → Hit P (nd sL g) o r B HB i (inc m u′) (B i (inc m u′)) (HB i (inc m u′)) x) j (v ∙ u)
+           (ψ (nd sL g) o r B j (inc n v) β x) (Hit P (nd sL g) o r B HB j (inc n v) β Hβ x) y)
+Hit P (nd (sΩ k) h) o r B HB j (inc c′ v) β Hβ (up x c y e) = P k h j c′ c (proj₁ r c c′)
+
+HitTw : Site → ℕ → Set
+HitTw P n = Hit P (tw n) (Ok-tw n) (rbᶻ (tw n)) (B₀ (tw n)) (λ _ _ → ⊥) zero (z≤ (tw n)) (Ωt zero) ⊥ (proj₁ (Ωt (tw n)))
+
+HitΛ : Site → Set
+HitΛ P = Hit P Λ Ok-Λ (rbᶻ Λ) (B₀ Λ) (λ _ _ → ⊥) zero (z≤ Λ) (Ωt zero) ⊥ (proj₁ (Ωt Λ))
+
+data Is₁ {A B : Set} : Maybe (A ⊎ B) → Set where
+  is₁ : (a : A) → Is₁ (just (inj₁ a))
+data Is₂ {A B : Set} : Maybe (A ⊎ B) → Set where
+  is₂ : (b : B) → Is₂ (just (inj₂ b))
+
+b₁ : Tr (tw 1)
+b₁ = proj₁ (Ωt (tw 1))
+
+P₂ : Site
+P₂ k h j c′ c m = (nd (sΩ k) h ≡ tw 1 ⊕ ↑ (tw 1) (b₁ + b₁)) × (j ≡ tw 1 ⊕ ↑ (tw 1) b₁)
+              × (_≡_ {A = Σ L Tr} (k , c′) (zero , zero)) × (_≡_ {A = Σ L Tr} (k , c) (zero , zero)) × Is₁ m
+
+hit-tw2 : HitTw P₂ 2
+hit-tw2 = 1 , inj₂ (zero , (1 , (zero , (0 , inj₂ (refl , refl , refl , refl , is₁ self)))))
+
+PΛ2 : Site
+PΛ2 k h j c′ c m = (nd (sΩ k) h ≡ tw 2) × (j ≡ zero)
+               × (_≡_ {A = Σ L Tr} (k , c′) (tw 1 , zero)) × (_≡_ {A = Σ L Tr} (k , c) (tw 1 , zero)) × Is₁ m
+
+hit-Λ2 : HitΛ PΛ2
+hit-Λ2 = 2 , (0 , inj₁ (0 , inj₂ (refl , refl , refl , refl , is₁ self)))
+
+PΛ1 : Site
+PΛ1 k h j c′ c m = (nd (sΩ k) h ≡ tw 1) × (j ≡ zero)
+               × (_≡_ {A = Σ L Tr} (k , c′) (zero , proj₁ (next⁺ (next⁺ (Ωt zero)))))
+               × (_≡_ {A = Σ L Tr} (k , c) (zero , zero)) × Is₂ m
+
+hit-Λ1 : HitΛ PΛ1
+hit-Λ1 = 1 , (1 , inj₁ (0 , (0 , (0 , inj₂ (refl , refl , refl , refl , is₂ _)))))

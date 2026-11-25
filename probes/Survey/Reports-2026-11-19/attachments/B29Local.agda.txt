@@ -1,0 +1,41 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 首塔和每座指定正塔的两部分都严格小于真实终点。任一固定塔若独自达到原 EBO，终点将严格超过它。
+module B29Local where
+
+open import Data.Nat.Base using (ℕ; suc)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼-trans; s≼s)
+import B12EboRows as Row
+import B18Reset as Tower
+import B18ResetCell as U
+import B26Names as A
+import B26PActual as W
+import B26PSums as Strict
+import B28BCut as V
+import B29Channels as Ch
+
+module InTower (n : ℕ) where
+  host = Tower.fresh (suc n)
+  inside : L.suc host ≼ W.Y
+  inside = ≼-trans {a = L.suc host} {b = L.suc (Row.child (suc n))} {c = W.Y}
+    (s≼s (Tower.lower (suc n))) (Strict.child-in (suc n))
+
+first : L.suc Ch.first ≼ W.Y
+first = ≼-trans {a = L.suc Ch.first} {b = L.suc (InTower.host 0)} {c = W.Y}
+  (s≼s (l≼ (U.At.into 0))) (InTower.inside 0)
+
+module At (m : ℕ) where
+  n = suc m
+  open InTower n
+  start : L.suc (Ch.second m) ≼ W.Y
+  start = ≼-trans {a = L.suc (Ch.second m)} {b = L.suc host} {c = W.Y}
+    (s≼s (U.At.into n 1)) inside
+  sub : Ch.each m ≼ host
+  sub = l≼ {f = Ch.one m} λ j → l≼ {f = V.Physical.inner m j} λ u →
+    ≼-trans {a = V.Physical.inner m j u} {b = V.Physical.f m j} {c = host}
+      (V.Physical.into m j u) (U.At.into n (suc (suc j)))
+  tail : L.suc (Ch.each m) ≼ W.Y
+  tail = ≼-trans {a = L.suc (Ch.each m)} {b = L.suc host} {c = W.Y} (s≼s sub) inside
+
+past : ∀ (x : A.T₀) → L.suc x ≼ W.Y → A.E ≼ x → L.suc A.E ≼ W.Y
+past x h p = ≼-trans {a = L.suc A.E} {b = L.suc x} {c = W.Y} (s≼s p) h

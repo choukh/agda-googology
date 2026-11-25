@@ -1,0 +1,47 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 若一个谓词包含 ω 和每一步的种子，且对后继、ω 幂、乘法及二元上确界封闭，则比较族的每项均满足该谓词。
+module B30MBudget where
+open import Data.Nat.Base using (ℕ; zero; suc)
+import Data.Nat.Properties as N
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; s≼s; ≼l; l≼; z≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRefTw2 using (tree-≼; endpoint)
+import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanTree using (hc-tower)
+import OCF.Align.Level as L
+open import WVOne using (T₀; 𝟏)
+import B18Product as M
+import B19IdealArithmetic as Ar
+import B22MovingIndex as Eps
+import B12Omega3Ref as Three
+import B19IdealRow as Old
+import B12BtboCut as Fin
+import B17Calibration as Orig
+import B12XRef as Ref
+import B26Names as A
+import B26Depth as D
+import B27Threshold as T
+import B27CutArithmetic as Row
+import B27EpsilonCut as ER
+import B27UEpsilon as Env
+import B27Endpoint as End
+import B29LimitCut as Lim
+open import B30MScalar
+
+open import B30MSeed using (q; r; base; rq; small-q)
+
+module Budget {s : ℕ → T₀} (h : L.suc r ≼ s 0) (In : T₀ → Set)
+  (ω : In L.ωᶜ) (sc : ∀ a → In a → In (L.suc a)) (pw : ∀ a → In a → In (Ar.norm a))
+  (pr : ∀ a b → In a → In b → In (a M.· b)) (join : ∀ a b → In a → In b → In (pair a b))
+  (seeds : ∀ j → In (s j)) where
+  module B = Build s h
+  inside : ∀ j → In (B.f j)
+  inside zero = ω
+  inside (suc j) = join (s j) _ (seeds j) (join (L.suc v) (grow v) (sc v prev) (pw _ (pw _ (pr L.ωᶜ v ω prev))))
+    where
+    v = B.f j
+    prev = inside j
+

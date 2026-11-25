@@ -1,0 +1,70 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21RowX2 where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import W4Block
+open import W4Fold
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+open import WKShape using (lvl3)
+open import WKGen using (Ω₁t)
+open import YiLAB7Orbit using (lvl1)
+import OCF.Align.Level as L
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+import B11OuterCore as C
+import B12ActualSlots as Cov
+import B12Terminal as Tm
+import B12Omega3Ref as Base
+import B13Target as Src
+import B18RefRows as Rows
+import B18RefDepth as H
+import B19RowAction as A
+import B19RowSecond as Old
+import B20RowPrefix as P
+import B21RowTheta as T
+import B21RowDynamics as D
+import B21RowPool
+import B12Update
+import B18RefDelta
+import B18RefCong
+import B18OrbitWorld
+import B18OrbitLevels
+import B14RefFixed as K
+
+ref = A.D₂ Old.p Ω₁ᴸ
+source : K.collapse (Base.X 2) L.≅ ref
+source = A.at-zero P.rp
+point : T₁ → ℕ → T₁
+point (L.lim f) n = f n
+point (L.limᵢ L.zero f) n = f (L.natᶜ n)
+point _ n = L.zero
+layer = point (point (point (point (point ref 0) 1) 2) 0) 1
+steps = Ord.iter T.theta Ω₁ᴸ
+shape : ∀ j → point layer j L.≅ steps j
+shape j = L.iter-R L._≅_ {G = T.theta} {G′ = T.theta} stable (L.Ω-refl _) j
+  where
+  stable : ∀ {x y} → x L.≅ y → T.theta x L.≅ T.theta y
+  stable uv = L.l≅ λ n → L.iter-R L._≅_ {G = λ t → B18RefDelta.δ t _} {G′ = λ t → B18RefDelta.δ t _} (λ d → B18RefCong.δ-pres d uv) (L.Ω-refl _) (suc n)
+vec : ℕ → T.Vec
+vec zero = H.initial
+vec (suc n) = T.Program.build (vec n)
+regular : ∀ n → steps n L.≅ steps n
+regular zero = L.Ω-refl _
+regular (suc n) = L.l≅ λ j → L.iter-R L._≅_ {G = λ t → B18RefDelta.δ t _} {G′ = λ t → B18RefDelta.δ t _} (λ uv → B18RefCong.δ-pres uv (regular n)) (L.Ω-refl _) (suc j)
+fits : ∀ n → T.Fits (vec n) (steps n)
+fits zero = Rows.seed
+fits (suc n) = T.Program.Meaning.fit (vec n) (steps n) (regular n) (fits n)
+
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  module S = B21RowPool.At r cv
+  open S.V.R.I using (module E₀)
+  open S.V.A using (G; st1)
+  state = E₀.state
+  b = λ n → state n lvl1 C.slot
+  cover : ∀ n → lvl1 ⊢ Ω₁t ◃ proj₁ (b n)
+  cover n = C.st (B12Update.structure (E₀.seeds n))
+  index : ∀ n → D.Index (b n) (vec n)
+  index zero d = B18OrbitWorld.start (B18OrbitLevels.world d) (b 0) (cover 0)
+  index (suc n) = D.At.next r cv (state n) (vec n) (cover n) (index n)
+

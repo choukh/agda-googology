@@ -1,0 +1,11 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module SC4Row where
+open import Data.List using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Align.EboLeanDef as E
+open import OCF.Lean.YiExSuff
+open import OCF.Lean.YiGIInst
+open ExSuff gradedᵍ domsᵍ using (Keel⁻)
+
+probe3 : E.fsn (Keel⁻.row keelᴱ 3) 1 ≡ []
+probe3 = refl

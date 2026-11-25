@@ -1,0 +1,77 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每次升阶把一级增量右乘 ω，有限个增量之和在原前缀右侧以一棵一级树表示。
+module B21CrossCoefficient where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≅→≼; ≼-trans)
+open import WVTwo using (T₁)
+open import WVOne using (read)
+open import WSLevel using (Ω₁ᴸ)
+open import W4Block using (iter)
+open import W4Fold using (EBOᶜ)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B12Omega3Cuts as C
+import B16RefFive as F
+import B19RowSecond as Y
+import B20OldAddress as Old
+import B20OldRanks as K
+import B21CrossTower as V
+
+unit : Lev₂
+unit = L.up L.zero Ω₁ᴸ
+d : ℕ → Lev₂
+d zero = unit
+d (suc n) = L.lim (S.iter (d n L.+_) L.zero)
+k : ℕ → T₁
+k n = F.g (L.natᶜ n)
+known : ∀ n → d n L.≅ k n
+known zero = L.upˡ (L.Ω-refl _)
+known (suc n) = L.l≅ (L.iter-R L._≅_ {G = d n L.+_} {G′ = k n L.+_}
+  (L.add-≅ {σ = R.idσ} {σ′ = λ q → q} (known n)) L.z≅)
+good : ∀ n → d n L.≅ d n
+good n = L.≅-trans (known n) (L.≅-sym (known n))
+
+module Repeat (c : Lev₂) (rc : c L.≅ c) (f : Lev₂ → Lev₂)
+  (step : ∀ {x y} → x L.≅ y → f x L.≅ (y L.+ c)) where
+  mod = S.iter (c L.+_) L.zero
+  module U = C.Sum c rc
+  along : ∀ {x y} → x L.≅ y → ∀ j → iter f x j L.≅ (y L.+ mod j)
+  along e zero = e
+  along {y = y} e (suc j) = L.≅-trans (step (along e j))
+    (L.≅-trans (R.assoc {A = y} {B = mod j} {C = y L.+ mod j} R.idσ R.idσ
+      (L.add-≅ {σ = R.idσ} {σ′ = λ q → q} (L.≅-trans (L.≅-sym e) e) (U.reg j)) rc)
+      (L.add-≅ {σ = R.idσ} {σ′ = λ q → q} (L.≅-trans (L.≅-sym e) e) (U.rotate j)))
+
+operation : ∀ n {x y : Lev₂} → x L.≅ y → K.op n x L.≅ (y L.+ d n)
+operation zero e = L.add-≅ {σ = R.idσ} {σ′ = λ q → q} e (good 0)
+operation (suc n) e = L.l≅ (Repeat.along (d n) (good n) (K.op n) (operation n) e)
+
+sum₂ : ℕ → Lev₂
+sum₂ zero = L.zero
+sum₂ (suc n) = sum₂ n L.+ d (suc n)
+sum₁ : ℕ → T₁
+sum₁ zero = L.zero
+sum₁ (suc n) = sum₁ n L.+ k (suc n)
+match : ∀ n → sum₂ n L.≅ sum₁ n
+match zero = L.z≅
+match (suc n) = L.add-≅ {σ = R.idσ} {σ′ = λ q → q} (match n) (known (suc n))
+
+parts : ∀ n {x y : Lev₂} → x L.≅ y → K.threshold n x L.≅ (y L.+ sum₂ n)
+parts zero e = e
+parts (suc n) {y = y} e = L.≅-trans (operation (suc n) (parts n e))
+  (R.assoc {A = y} {B = sum₂ n} {C = y L.+ sum₂ n} R.idσ R.idσ
+     (L.add-≅ {σ = R.idσ} {σ′ = λ q → q} (L.≅-trans (L.≅-sym e) e) (L.≅-trans (match n) (L.≅-sym (match n)))) (good (suc n)))
+
+coeff : T₁
+coeff = L.lim sum₁
+same : ∀ {p q : Lev₂} → p L.≅ q → L.lim (λ n → K.threshold n p) L.≅ (q L.+ L.up L.zero coeff)
+same {p} {q} e = L.l≅ (λ n → L.≅-trans (parts n e)
+  (L.add-≅ {σ = R.idσ} {σ′ = λ r → L.suc r} (L.≅-trans (L.≅-sym e) e) (match n)))
+ordinal : WVOne.T₀
+ordinal = L.ψ⁰ (Y.p L.+ L.up L.zero coeff)
+exact : V.Actual.row L.≅ ordinal
+exact = L.ψ⁰-≅ (same Old.reg)

@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真孙返回的共同上确界 Γ 夹出整个内返回族。第一正塔使用有限乘积上确界，其余正塔使用一次右乘 ω。
+module B29CArithmetic where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst; cong)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; z≼; ≼-refl; s≼s; ≼l; l≼)
+import WVOne as V
+import B18Product as M
+
+
+cost : V.T₀ → ℕ → V.T₀
+cost q zero = L.lim (M.powers q)
+cost q (suc _) = q M.· L.ωᶜ
+hull : V.T₀ → V.T₀
+hull q = L.lim (cost q)
+
+module Levels (f : ℕ → ℕ → ℕ → ℕ → V.T₀) (a : ℕ → ℕ → ℕ → V.T₀)
+  (low : ∀ m j u v → f m j u v ≼ a m j u)
+  (first : ∀ j u q → (∀ v → f 0 j u v ≼ q) → a 0 j u ≼ L.lim (M.powers q))
+  (rest : ∀ m j u q → (∀ v → f (suc m) j u v ≼ q) → a (suc m) j u ≼ (q M.· L.ωᶜ)) where
+  branch : ℕ → ℕ → ℕ → V.T₀
+  branch = λ m j u → L.lim (f m j u)
+  sub : ℕ → ℕ → V.T₀
+  sub = λ m j → L.lim (branch m j)
+  single : ℕ → V.T₀
+  single = λ m → L.lim (sub m)
+  Γ : V.T₀
+  Γ = L.lim single
+  row : ℕ → ℕ → V.T₀
+  row = λ m j → L.lim (a m j)
+  tower : ℕ → V.T₀
+  tower = λ m → L.lim (row m)
+  I : V.T₀
+  I = L.lim tower
+
+  inside : ∀ m j u v → f m j u v ≼ Γ
+  inside m j u v = ≼l {f = single} m (≼l {f = sub m} j (≼l {f = branch m j} u (≼l {f = f m j u} v (≼-refl _))))
+  lower : Γ ≼ I
+  lower = l≼ {f = single} λ m → l≼ {f = sub m} λ j → l≼ {f = branch m j} λ u → l≼ {f = f m j u} λ v →
+    ≼l {f = tower} m (≼l {f = row m} j (≼l {f = a m j} u (low m j u v)))
+
+
+  cap : ∀ q → (∀ m j u v → f m j u v ≼ q) → I ≼ hull q
+  cap q below = l≼ {f = tower} λ m → l≼ {f = row m} λ j → l≼ {f = a m j} λ u →
+    ≼l {f = cost q} m (each m j u)
+    where
+    each : ∀ m j u → a m j u ≼ cost q m
+    each zero j u = first j u q (below 0 j u)
+    each (suc m) j u = rest m j u q (below (suc m) j u)
+  bounded : I ≼ hull Γ
+  bounded = cap Γ inside

@@ -1,0 +1,12 @@
+234c234
+<   kdLem (nd (sΩ k) h) ((_ , kh) , oc) (inj₂ (c , t)) (ink v)   = kdLem⁼ (h c) (oc c) t (v ∙ kh c)
+---
+>   kdLem (nd (sΩ k) h) ((_ , kh) , oc) (inj₂ (c , t)) (ink v)   = kdLem⁼ (h c) (oc c) t (v ∙ proj₁ (kh c))
+243c243
+<     KD-map (kh c) t (kp⁼ (h c) (oc c) (psh (kh c) t) v) (kdLem⁼ (h c) (oc c) (psh (kh c) t) v)
+---
+>     KD-map (proj₁ (kh c)) t (kp⁼ (h c) (oc c) (psh (proj₁ (kh c)) t) v) (kdLem⁼ (h c) (oc c) (psh (proj₁ (kh c)) t) v)
+245c245
+<     KD-map (kh zero) t (kp⁼ (h zero) (oc zero) (psh (kh zero) t) (vs zero)) (kdLem⁼ (h zero) (oc zero) (psh (kh zero) t) (vs zero))
+---
+>     KD-map (proj₁ (kh zero)) t (kp⁼ (h zero) (oc zero) (psh (proj₁ (kh zero)) t) (vs zero)) (kdLem⁼ (h zero) (oc zero) (psh (proj₁ (kh zero)) t) (vs zero))

@@ -1,0 +1,48 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对标准塔极限给出单次原折叠的实际输入，并把其各个上界条件接回 W4。
+module B25PhysicalFold where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+import W4Block as W
+open import WVOne using (read)
+open import W4Fold using (EBOᶜ)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼; ≼-refl; s≼s; ≼l; ≼lim⁻)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValAbsorb using (St; stl)
+open import OCF.Align.BTBOFullLv using (St-≅)
+open import OCF.Align.BTBOFull using (BTBO≈)
+import B16IndexBase as I
+import B18TowerEmb as E
+import B20StandardInside as Std
+import B21StandardShape as Shape
+import B22SourceSlots as Slots
+import B22TowerCut as K
+import B25OneFold as J
+import B25Least as C
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import Data.Empty using (⊥)
+
+actual : ∀ z → read z ≼ read EBOᶜ → tr₀ (J.J (I.cp z)) ≼ read z → tr₀ S.BTBO ≼ read EBOᶜ
+actual z bound p = J.sufficient (I.cp z , St-≅ (I.same z) (Slots.strict z) ,
+  ≼-trans p (≅→≼ (L.≅-sym (I.same z))) , ≼-trans (≅→≼ (I.same z)) bound)
+
+pool = S.lim (λ n → I.cp (proj₁ (E.standard n)))
+exact : tr₀ pool L.≅ K.cut
+exact = L.l≅ (λ n → I.same (proj₁ (E.standard n)))
+
+regular : St (tr₀ pool)
+regular = St-≅ exact (stl (λ n → Slots.strict (proj₁ (E.standard n))) Shape.rise)
+
+pool-enough : tr₀ (J.J pool) ≼ K.cut → tr₀ S.BTBO ≼ read EBOᶜ
+pool-enough p = J.sufficient (pool , regular , ≼-trans p (≅→≼ (L.≅-sym exact)) ,
+  ≼-trans (≅→≼ exact) K.terminal)
+
+-- 任何已知只到某个有限对角项的候选，都不能通过这次单值测试。
+outside : ∀ y → St (tr₀ y) → ∀ n → tr₀ y ≼ N.γ n → tr₀ (J.J y) ≼ tr₀ y → ⊥
+outside y sy n low p = s≼-irrefl (N.γ n) (≼-trans (C.interior n)
+  (≼-trans (proj₂ BTBO≈) (≼-trans (J.From.least y sy p) low)))

@@ -1,0 +1,156 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22CrossTest where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+import B19Canonical as K
+import Data.Sum
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym; cong)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (lvl1; read)
+open import WVTwo using (lvl2; ok₂; p₂)
+open import B12Strict using (strict)
+open import B19PathShape using (Shape; ident; l; law; read-shape)
+import B19PathRel as Path
+import B19OldNodes as Node
+import B22CrossEager as N
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≅→≼; s≼s; l≼; ≼l; z≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+
+one : ∀ {k} → Tr⁺ k
+one = suc zero , ◃s
+data Quiet : Tr lvl1 → Set where
+  successor : ∀ {x} → Quiet (suc x)
+  limit : ∀ {f e} → Quiet (lim f e)
+  node : ∀ {p g} → Quiet (Ω p g)
+  lifted : ∀ {a c y e} → Quiet (up a c y e)
+
+module For (slots : Base lvl2) (β : Tr⁺ zero) (quiet : Quiet (proj₁ (slots lvl1 (posW lvl2 p₂)))) where
+  low : Tr lvl2 → Tr⁺ zero
+  low = ψ lvl2 ok₂ slots zero (z≤ lvl2) β
+  high : Tr lvl2 → Tr lvl1
+  high x = proj₁ (ψ lvl2 ok₂ slots lvl1 (posW lvl2 p₂) (slots lvl1 (posW lvl2 p₂)) x)
+
+  u : Tr lvl1
+  u = ex zero (suc zero) ◃s zero tt
+  first : Tr lvl2
+  first = up zero tt u ◃e
+
+  row : ℕ → Tr⁺ zero
+  row zero = next⁺ β
+  row (suc _) = β
+  small : Tr zero
+  small = proj₁ (limc⁺ row)
+
+  large : Tr lvl2
+  large = ι lvl2 small
+
+  data Detect : Set where original explicit : Detect
+  branch : Detect → Tr lvl1 → Tr lvl2
+  branch t zero = first
+  branch original (ex a b e (ex c d f x ε) ε′) = large
+  branch explicit (ex a b e (suc x) ε′) = large
+  branch _ _ = zero
+
+  calm : ∀ d {x} → Quiet x → branch d x ≡ zero
+  calm d successor = refl
+  calm d limit = refl
+  calm d node = refl
+  calm d lifted = refl
+
+  base-bound : ∀ z → read z ≼ read (proj₁ (low (ι lvl2 z)))
+  base-bound zero = z≼
+  base-bound (suc z) = ≼-trans (s≼s (base-bound z)) (strict (mono lvl2 ok₂ slots zero (z≤ lvl2) β {ι lvl2 z} ◃s))
+  base-bound (lim f e) = l≼ (λ n → ≼l n (base-bound (f n)))
+
+  exp-bound : ∀ z → read z ≼ read (proj₁ (low (N.expand lvl2 (ι lvl2 z))))
+  exp-bound zero = z≼
+  exp-bound (suc z) = ≼-trans (s≼s (exp-bound z)) (strict (mono lvl2 ok₂ slots zero (z≤ lvl2) β {N.expand lvl2 (ι lvl2 z)} ◃s))
+  exp-bound (lim f e) = l≼ (λ n → ≼l n (exp-bound (f n)))
+
+  module Family (f : Tr lvl1 → Tr lvl2) where
+    term = Ω p₂ f
+    index = iter (λ z → high (f z)) zero
+    item = λ n → low (f (index n))
+    result = proj₁ (low term)
+
+    shape : (∀ n → Shape (proj₁ (item n)) (proj₁ (row n))) → Shape result small
+    shape h = l (Path.Test.cum-pair law _ _ h)
+
+    big : read small ≼ read (proj₁ (item 1)) → L.suc (read small) ≼ read result
+    big b = ≼-trans (s≼s b) (Node.strict-node nothing (λ z → low (f z)) (λ z → high (f z)) 1)
+
+  expand-branch : Detect → Tr lvl1 → Tr lvl2
+  expand-branch d z = N.expand lvl2 (branch d z)
+  module Before = Family (branch original)
+  module After = Family (expand-branch original)
+  module Before′ = Family (branch explicit)
+  module After′ = Family (expand-branch explicit)
+
+  late : ∀ n → After.index (suc (suc n)) ≡ proj₁ (slots lvl1 (posW lvl2 p₂))
+  late zero = refl
+  late (suc n) rewrite late n | calm original quiet = refl
+
+  late′ : ∀ n → Before′.index (suc (suc n)) ≡ proj₁ (slots lvl1 (posW lvl2 p₂))
+  late′ zero = refl
+  late′ (suc n) rewrite late′ n | calm explicit quiet = refl
+
+  low-side : ∀ n → Shape (proj₁ (After.item n)) (proj₁ (row n))
+  low-side zero = ident _
+  low-side (suc zero) = ident _
+  low-side (suc (suc n)) rewrite late n | calm original quiet = ident _
+
+  low-side′ : ∀ n → Shape (proj₁ (Before′.item n)) (proj₁ (row n))
+  low-side′ zero = ident _
+  low-side′ (suc zero) = ident _
+  low-side′ (suc (suc n)) rewrite late′ n | calm explicit quiet = ident _
+
+  shrinks : L.suc (read (proj₁ (low (N.expand lvl2 Before.term)))) ≼ read Before.result
+  shrinks = ≼-trans (s≼s (≅→≼ (read-shape (After.shape low-side)))) (Before.big (base-bound small))
+
+  grows : L.suc (read Before′.result) ≼ read (proj₁ (low (N.expand lvl2 Before′.term)))
+  grows = ≼-trans (s≼s (≅→≼ (read-shape (Before′.shape low-side′)))) (After′.big (exp-bound small))
+
+  no-lower : (∀ x → read (proj₁ (low x)) ≼ read (proj₁ (low (N.expand lvl2 x)))) → ⊥
+  no-lower h = s≼-irrefl _ (≼-trans shrinks (h Before.term))
+
+  no-upper : (∀ x → read (proj₁ (low (N.expand lvl2 x))) ≼ read (proj₁ (low x))) → ⊥
+  no-upper h = s≼-irrefl _ (≼-trans grows (h Before′.term))
+
+
+module Unit = For (λ _ _ → one) one successor
+module FirstTower = For (K.slots lvl2) K.seed limit
+open Unit public using (shrinks; grows; no-lower; no-upper)
+
+-- Both walks at the actual cardinal node over a positive successor level.
+module Cardinal (s : Sh) (h : Ch s → W4Block.L) where
+  j = nd s h
+  k = nd sS (λ _ → j)
+  p : Pos k
+  p = Data.Sum.inj₂ (tt , Data.Sum.inj₁ tt)
+
+  module _ (o : Ok k) (B : Base k) where
+    b = B j (posW k p)
+    read-index : Tr k → Tr j
+    read-index a = proj₁ (ψ k o B j (posW k p) b a)
+    g : Tr j → Tr k
+    g z = up zero tt (suc z) (z◃ z ◃s)
+    raw = iter (λ z → read-index (g z)) zero
+    full = iter (λ z → read-index (N.expand k (g z))) zero
+
+    raw-next : ∀ n → raw (suc n) ≡ ex (proj₁ b) (proj₁ b) (proj₂ b) (suc (raw n)) tt
+    raw-next n = refl
+    full-next : ∀ n → full (suc n) ≡ ex (proj₁ b) (proj₁ b) (proj₂ b) (suc (N.expand j (full n))) tt
+    full-next n = refl
+    starts : raw 1 ≡ full 1
+    starts = refl
+
+    raw-node : proj₁ (Ωt k) ≡ Ω p g
+    raw-node = refl

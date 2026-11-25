@@ -1,0 +1,68 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B15SharpRank where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import OCF.Align.Value using (≼l)
+open import B13SharpOne using (r₁)
+open import B14SharpStack
+open import B15SharpAction
+open import B15SharpLift
+
+module Rank (lem : LEM) where
+  open I.Sharp lem
+  open Action lem
+  open Lift lem
+
+  O = F.Op {lvl1} F.nil
+
+  Rank₁ : R.Tr r₁ → (O → O) → Set
+  Rank₁ x Φ = ∀ D a A G → Model ch (proj₁ (selfFold D a (plug A R.zero))) G →
+    Model ch (proj₁ (selfFold D a (plug A x))) (Φ G)
+
+  omega : Rank₁ Ωi (eop F.tdNil Ωw)
+  omega D a A G h = subst (λ y → Model ch (proj₁ (selfFold D a y)) (eop F.tdNil Ωw G))
+    (sym (block-plug A R.zero)) (lift-block D a (plug A R.zero) G h)
+
+  powers : ∀ {x Φ} → Rank₁ x Φ → ∀ n → Rank₁ (V.iter (x V.+_) x n) (λ H → B.iter Φ H (suc n))
+  powers h zero D a A G g = h D a A G g
+  powers {x} {Φ} h (suc n) D a A G g =
+    subst (λ H → Model ch (proj₁ (selfFold D a (plug (addL A x) (V.iter (x V.+_) x n)))) H)
+      (shift (suc n) G) (powers h n D a (addL A x) (Φ G) (h D a A G g))
+    where
+    shift : ∀ i G → B.iter Φ (Φ G) i ≡ B.iter Φ G (suc i)
+    shift zero G = refl
+    shift (suc i) G = Relation.Binary.PropositionalEquality.cong Φ (shift i G)
+
+  limit : ∀ {f} d (Φ : ℕ → O → O) (grow : ∀ n G → F.Rl (Φ n G) (Φ (suc n) G)) →
+    (∀ n → Rank₁ (f n) (Φ n)) → Rank₁ (R.lim f d) (λ G → F.limO (λ n → Φ n G) (λ n → grow n G))
+  limit d Φ grow hs D a A G h = go A _ d (λ n → hs n D a A G h)
+    where
+    go : ∀ A′ f e → (∀ n → Model ch (proj₁ (selfFold D a (plug A′ (f n)))) (Φ n G)) →
+      Model ch (proj₁ (selfFold D a (plug A′ (R.lim f e)))) (F.limO (λ n → Φ n G) (λ n → grow n G))
+    go id f e ys D′ a′ A′ S t v hv hc = lim-out D′ a′ A′ _ _ (λ n → ≼l n (ys n D′ a′ A′ S t v hv hc))
+    go (addL A′ x) f e ys = go A′ (λ n → x V.+ f n) (λ n → V.+-mono x (e n)) ys
+
+  next : ∀ (x : V.Tr⁺ r₁) (Φ : O → O) (grow : ∀ G → F.Rl G (Φ G)) → Rank₁ (proj₁ x) Φ →
+    Rank₁ (proj₁ (V.next⁺ x)) (λ G → F.limO (λ n → B.iter Φ G (suc n)) (λ n → grow (B.iter Φ G (suc n))))
+  next x Φ grow h = limit _ (λ n G → B.iter Φ G (suc n)) (λ n G → grow (B.iter Φ G (suc n))) (powers h)
+
+  Ω-transform = eop F.tdNil Ωw
+
+  Ω-grow : ∀ G → F.Rl G (Ω-transform G)
+  Ω-grow G S i t v = F.Emono oB F.tdNil G S i t v (proj₂ (W.Ωt lvl1))
+
+  first-index : Rank₁ (proj₁ (V.next⁺ (V.Ωt r₁)))
+    (λ G → F.limO (λ n → B.iter Ω-transform G (suc n)) (λ n → Ω-grow (B.iter Ω-transform G (suc n))))
+  first-index = next (V.Ωt r₁) Ω-transform Ω-grow omega
+

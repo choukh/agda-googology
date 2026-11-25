@@ -1,0 +1,83 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20RowAcross where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (◃→≼; p₂; g₂)
+open import WKShape using (lvl3)
+open import WKGen using (node-ge; Ω₁t)
+open import YiLAB7Orbit using (F; lvl1; lvl2; ok₂)
+open import B9InnerOuter using (w2)
+open import WSShadow using (zC)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; ≅→≼)
+import B11OuterCore as C
+import B11PrefixGen as Pr
+import B12ActualSlots as Cover
+import B12Terminal as Tm
+import B12Update as U
+import B13Orbit as K
+import B13OrbitFeed as O
+import B13SeedOuter as Seed
+import B14RefDescribed as Rows
+import B14RefFixed as Fix
+import B15OrbitAction as Act
+import B15OrbitModel as M
+import B17OrbitModel as B
+import B17OrbitVector as V
+import B18OrbitRows as Old
+import B19RowSecond as Src
+import B20RowIndex as I
+import B20RowPrefix as P
+import B20RowRead as RD
+open Tm.Run
+
+import B20RowRun as Run
+
+weak-read : ∀ {x y : Tr zero} → Cover._⊴_ x y → read x ≼ read y
+weak-read (inj₁ refl) = ≼-refl _
+weak-read (inj₂ d) = ◃→≼ d
+
+module At (p : Pr.T₂) (RP : p L.≅ p) (r : Tm.Run lvl3) (cv : Cover.Covered r)
+ (hb : L.ψ⁰ p ≼ read (proj₁ (β r))) (hz : ∀ w → L.ψ⁰ p ≼ read (proj₁ (bs r zero w))) where
+  open Run.At p RP r cv hb hz
+  open R.I using (module Previous; module E₀; K₁; J; initial)
+  open Previous.Proof.Core.Run using (S₁; step₂)
+  open A using (st1; c⁺; v₁; outer)
+  h : ∀ n → C.Str (P.e n) (st n)
+  h = λ n → U.structure (Old.Out.seed (proj₁ (model n) Previous.t L.zero zC Rows.zero-row L.z≅ S₁ v₁ initial))
+  high : L.ψ⁰ p ≼ read (proj₁ v₁)
+  high = ≼-trans hb (◃→≼ (inf A.K A.S₀ zero w2 (β r)))
+  top : ∀ w → L.ψ⁰ p ≼ read (proj₁ (st1 zero w))
+  top w = ≼-trans (hz (inc tt w)) (◃→≼ (inf A.K A.S₀ zero w (A.S₀ zero w)))
+  hh : ∀ n → L.ψ⁰ p ≼ read (proj₁ (b′ n))
+  hh n = ≼-trans high (◃→≼ (inf (opₙ n) S₁ zero Previous.t v₁))
+  zz : ∀ n → L.ψ⁰ p ≼ read (proj₁ (st n zero C.zpath))
+  zz n = ≼-trans (top C.zpath) (◃→≼ (inf (opₙ n) S₁ zero Old.Out.zp (S₁ zero Old.Out.zp)))
+  module X (n : ℕ) = RD.Read p (P.stage n) (P.e n) (Act.rows (P.a n) Rows.zero-row) (st n) (h n) (b′ n) (hh n) (zz n)
+  embed : ∀ n → lvl1 ⊢ zero ◃ proj₁ (clock n)
+  embed n = proj₂ (clock n)
+  weak : ∀ n → read (proj₁ (run F (st n) zero w2 (b′ n))) ≼ read (proj₁ (run A.K (st n) zero w2 (b′ n)))
+  weak n = weak-read (K.standard≤K c⁺ E₀.cp (st n) zero w2 (b′ n))
+  nextQ : ∀ n → read (proj₁ (run A.K (st n) zero w2 (b′ n))) ≼ read (proj₁ (run (opₙ n) (S′ n) zero Previous.t (b′ n)))
+  nextQ n = ≼-trans {b = read (proj₁ (run J (st n) zero w2 (b′ n)))}
+     (◃→≼ (Emono ok₂ tdNil A.K (st n) zero w2 (b′ n) (proj₂ c⁺)))
+     (◃→≼ (Emono ok₂ O.D₁ K₁ (S′ n) zero Previous.t (b′ n) (embed n)))
+  replay : ∀ n → read (proj₁ (run (opₙ n) (S′ n) zero Previous.t (b′ n))) ≼ read (proj₁ (E ok₂ tdNil (g₂ (proj₁ (clock n))) J st1 zero w2 v₁))
+  replay n = ≼l 1 (≼-refl _)
+  into : ∀ n → read (proj₁ (E ok₂ tdNil (g₂ (proj₁ (clock n))) J st1 zero w2 v₁)) ≼ read (Tm.value r)
+  into n = ≼-trans
+    (node-ge (kp lvl2 ok₂ p₂ w2) (λ z → E ok₂ tdNil (g₂ z) J st1 zero w2 v₁) step₂ (suc (suc (k-of n))))
+    (≼-trans (E₀.inG st1 w2 v₁) (outer 0))
+  in-r : ∀ n → L.ψ⁰ (p L.+ L.up L.zero (Fix.collapse (P.stage n))) ≼ read (Tm.value r)
+  in-r n = ≼-trans (X.value n) (≼-trans (weak n) (≼-trans (nextQ n) (≼-trans (replay n) (into n))))
+  all : L.ψ⁰ (p L.+ L.up L.zero (Fix.collapse Src.p)) ≼ read (Tm.value r)
+  all = l≼ (λ n → ≼-trans (≅→≼ (L.ψ⁰-≅ (L.add-≅ {σ = L.suc} {σ′ = L.suc} RP (L.≅-sym (Fix.pres (P.source-stage n)))))) (in-r n))
+
+

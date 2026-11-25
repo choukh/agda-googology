@@ -1,0 +1,61 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18BaseFold where
+
+open import Data.Product using (_,_; proj₁; proj₂)
+open import W4Block hiding (R)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import B18BaseRel
+
+module Check (s : Laws) where
+  open Laws s
+  open Test s
+
+  fold : (ℓ : L) (o : Ok ℓ) (B : Base ℓ) (w : zero ≤ ℓ) (x : Tr ℓ)
+    (a b : Tr⁺ zero) → a ∼ b → ψ ℓ o B zero w a x ∼ ψ ℓ o B zero w b x
+  fold ℓ o B w zero a b q = q
+  fold zero o B self (suc x) a b q = next {a = ψ zero o B zero self a x} {b = ψ zero o B zero self b x} (fold zero o B self x a b q)
+  fold zero o B self (lim f d) a b q = limit _ _ (λ n → fold zero o B self (f n) a b q)
+  fold ℓ o B w@(inc _ _) (suc x) a b q = next {a = ψ ℓ o B zero w a x} {b = ψ ℓ o B zero w b x} (fold ℓ o B w x a b q)
+  fold ℓ o B w@(inc _ _) (lim f d) a b q = limit _ _ (λ n → fold ℓ o B w (f n) a b q)
+  fold ℓ o B w@(inc _ _) (Ω p g) a b q = node (kp ℓ o p w) _ _
+      (λ z → fromBr ℓ p (proj₁ (ψ ℓ o B (at ℓ p) (posW ℓ p) (B (at ℓ p) (posW ℓ p)) (g z))))
+      (λ z → fold ℓ o B w (g z) a b q)
+  fold ℓ o B w@(inc _ _) (ex u v nv x ε) a b q = eval o tdNil x (opB ℓ o v nv) (λ S t a′ b′ h → fold ℓ o S t v a′ b′ h)
+      (λ i t → ψ ℓ o B i t (B i t) u) w _ _ (fold ℓ o B w u a b q)
+  fold ℓ o B w@(inu _) (suc x) a b q = next {a = ψ ℓ o B zero w a x} {b = ψ ℓ o B zero w b x} (fold ℓ o B w x a b q)
+  fold ℓ o B w@(inu _) (lim f d) a b q = limit _ _ (λ n → fold ℓ o B w (f n) a b q)
+  fold ℓ o B w@(inu _) (Ω p g) a b q = node (kp ℓ o p w) _ _
+      (λ z → fromBr ℓ p (proj₁ (ψ ℓ o B (at ℓ p) (posW ℓ p) (B (at ℓ p) (posW ℓ p)) (g z))))
+      (λ z → fold ℓ o B w (g z) a b q)
+  fold ℓ o B w@(inu _) (ex u v nv x ε) a b q = eval o tdNil x (opB ℓ o v nv) (λ S t a′ b′ h → fold ℓ o S t v a′ b′ h)
+      (λ i t → ψ ℓ o B i t (B i t) u) w _ _ (fold ℓ o B w u a b q)
+  fold ℓ o B w@(ink _) (suc x) a b q = next {a = ψ ℓ o B zero w a x} {b = ψ ℓ o B zero w b x} (fold ℓ o B w x a b q)
+  fold ℓ o B w@(ink _) (lim f d) a b q = limit _ _ (λ n → fold ℓ o B w (f n) a b q)
+  fold ℓ o B w@(ink _) (Ω p g) a b q = node (kp ℓ o p w) _ _
+      (λ z → fromBr ℓ p (proj₁ (ψ ℓ o B (at ℓ p) (posW ℓ p) (B (at ℓ p) (posW ℓ p)) (g z))))
+      (λ z → fold ℓ o B w (g z) a b q)
+  fold ℓ o B w@(ink _) (ex u v nv x ε) a b q = eval o tdNil x (opB ℓ o v nv) (λ S t a′ b′ h → fold ℓ o S t v a′ b′ h)
+      (λ i t → ψ ℓ o B i t (B i t) u) w _ _ (fold ℓ o B w u a b q)
+  fold zero o B self (Ω () g) a b q
+  fold zero o B self (up x () y e) a b q
+  fold zero o B self (ex u v nv x ()) a b q
+  fold (nd s₀ h) o B w@(inu ws) (up x c y e) a b q =
+    fold (h c) (proj₂ o c) (λ i u → ψ (nd s₀ h) o B i (inc c u) (B i (inc c u)) x)
+      (ws c) y _ _ (fold (nd s₀ h) o B w x a b q)
+  fold (nd (sΩ k) h) o B w@(ink v) (up x c y e) a b q =
+    fold (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x)
+      (v ∙ proj₂ (proj₁ o) c) y _ _ (fold (nd (sΩ k) h) o B w x a b q)
+  fold (nd sS h) o B w@(inc c′ v) (up x c y e) a b q =
+    fold (h c) (proj₂ o c) (λ i u → ψ (nd sS h) o B i (inc c u) (B i (inc c u)) x)
+      v y _ _ (fold (nd sS h) o B w x a b q)
+  fold (nd sL g) o B w@(inc n v) (up x m y e) a b q =
+    cW-ind₂ _∼_ (way g (proj₁ o) m n)
+      (λ u → fold (g n) (proj₂ o n) (λ i t → ψ (nd sL g) o B i (inc n t) (B i (inc n t)) x)
+        v (proj₁ (emb (g n) (proj₂ o n) u (y , e))) _ _ (fold (nd sL g) o B w x a b q))
+      (λ u → fold (g m) (proj₂ o m) (λ i t → ψ (nd sL g) o B i (inc m t) (B i (inc m t)) x)
+        (v ∙ u) y _ _ (fold (nd sL g) o B w x a b q))
+  fold (nd (sΩ k) h) o B w@(inc c′ v) (up x c y e) a b q =
+    plus (fold (nd (sΩ k) h) o B w x a b q)
+      (same (ι zero (proj₁ (ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y))))

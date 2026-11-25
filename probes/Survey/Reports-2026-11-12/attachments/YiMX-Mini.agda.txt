@@ -1,0 +1,59 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module Mini where
+open import Data.Nat using (ℕ)
+open import Data.Empty using (⊥)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst)
+open import OCF.Align.EboLeanDef using (HC)
+open import OCF.Align.EboLeanBase using (_≤ᵀ_; <ᵀ-asym)
+open import OCF.Align.Value using (_≼_)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import OCF.Lean.YiNXNote using (W; N; hW; hN; W<N; W≼N; N≼W)
+Mono : Set
+Mono = ∀ {s t} → s ≤ᵀ t → (h : HC s) (h′ : HC t) → Rt h ≼ Rt h′
+forward : ∀ k → W k ≤ᵀ N k
+forward k = inj₁ (W<N k)
+reverse-impossible : ∀ k → N k ≤ᵀ W k → ⊥
+reverse-impossible k (inj₁ p) = <ᵀ-asym (W<N k) p
+reverse-impossible k (inj₂ ())
+small-forward : Rt (hW 1) ≼ Rt (hN 1)
+small-forward = W≼N 1 (hW 1) (hN 1)
+small-backward : Rt (hN 1) ≼ Rt (hW 1)
+small-backward = N≼W 1 (hN 1) (hW 1)
+
+open import Data.Nat using (suc)
+open import Data.Nat.Properties using (n≤1+n)
+open import OCF.Lean.YiCFMono using (mono≤ⁿ)
+open import OCF.Lean.YiDCRel using (nat≤)
+open import Data.List using ([]; _∷_)
+open import OCF.Align.EboLeanDef using (T; ψ; 𝟏; natT; fsn; h1; hω; _<ᵀ_; hd<; ar<; []<)
+open import OCF.Align.EboLeanBase using (c∷; c[])
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiANEnd using (natB)
+open import OCF.Lean.YiMHLean using (ctN)
+open import OCF.Lean.YiCLPhi using (ωᵀ; rep1)
+open import OCF.Lean.YiRefTw2 using (tree-≼)
+open import OCF.Align.Value using (s≼s; z≼; ≼l; l≼; ≼-trans)
+open import OCF.Lean.YiNFO using (s≼-irrefl)
+import OCF.Align.Level as L
+bad pre : T
+pre = 𝟏 ∷ ψ [] (natT 1) ∷ []
+bad = 𝟏 ∷ ψ [] (natT 1) ∷ 𝟏 ∷ []
+hnat : ∀ n → HC (natT n)
+hnat n = hc (natB n) (ctN n)
+hpre : HC pre
+hpre = hω refl (λ n → subst HC (sym (cong (𝟏 ∷_) (rep1 n))) (hnat (suc n)))
+hbad : HC bad
+hbad = h1 refl hpre
+hωt : HC ωᵀ
+hωt = hω refl (λ n → subst HC (sym (rep1 n)) (hnat n))
+bad<ω : bad <ᵀ ωᵀ
+bad<ω = hd< (ar< []<)
+ω≼pre : Rt hωt ≼ Rt hpre
+ω≼pre = l≼ (λ n → ≼l n
+  (≼-trans (tree-≼ (rep1 n) _ (hnat n))
+    (≼-trans (mono≤ⁿ (natB n) (natB (suc n)) (ctN (suc n)) (hnat n) (hnat (suc n)) (nat≤ (n≤1+n n)))
+      (tree-≼ (sym (cong (𝟏 ∷_) (rep1 n))) (hnat (suc n)) _))))
+
+¬Mono : Mono → ⊥
+¬Mono m = s≼-irrefl (Rt hωt) (≼-trans (s≼s ω≼pre) (m (inj₁ bad<ω) hbad hωt))

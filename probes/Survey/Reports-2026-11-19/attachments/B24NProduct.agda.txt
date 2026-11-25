@@ -1,0 +1,61 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24NProduct where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl)
+import B17OrbitTower as T
+import B18OrbitWorld as W
+import B18OrbitSpace as Spaces
+import B18OrbitLevels as A
+import B18RefDepth as H
+import B21RowTheta as Th
+import B21RowDynamics as Dy
+open T.Space
+open T.Arr
+space : T.Space
+space = Spaces.Product H.S
+point : T.Arr space
+run point a d = T.run (H.grad d) (a d)
+rm point a b h d = T.rm (H.grad d) (a d) (b d) (h d)
+em point a b h d = T.em (H.grad d) (a d) (b d) (h d)
+world : W.World
+W.space world = space
+W.initial world = H.initial
+W.grad world = point
+W.Index world = Dy.Index
+W.start world b cover d = W.start (A.world d) b cover
+W.rise world b c bc v h d = W.rise (A.world d) b c bc (v d) (h d)
+W.gather world b f h d = W.gather (A.world d) b (λ n → f n d) (λ n → h n d)
+W.retain world g pos f rf ef h d = W.retain (A.world d) g pos (λ x → f x d)
+  (λ p → rf p d) (λ p → ef p d) (λ y z p → h y z p d)
+W.advance world Q ge S b v cover ci bi d = W.advance (A.world d) Q ge S b (v d) cover (ci d) (bi d)
+module Compare (v w : Th.Vec) where
+  module V = Th.Program v
+  module Z = Th.Program w
+  module R (vw : T.Rel space v w) where
+    eval : ∀ d k {x y} → x ≼ y → T.Rel (H.S d) (V.eval d k x) (Z.eval d k y)
+    eval d zero xy = T.Compare.rel (H.S d) (H.grad d) (H.grad d) (rm (H.grad d)) xy (v d) (w d) (vw d)
+    eval d (suc k) xy = eval (suc d) k xy 0 (H.grad d) (H.grad d) (rm (H.grad d)) (v d) (w d) (vw d)
+    term : ∀ d n → T.Rel (H.S d) (V.term d n) (Z.term d n)
+    term d zero = T.rr (H.S d) _
+    term d (suc k) = T.nr (H.S d) _ _ _ _ _ _ (eval d k)
+    read : ∀ d n → T.Rel (H.S d) (V.read d n) (Z.read d n)
+    read d n = term (suc d) n 0 (H.grad d) (H.grad d) (rm (H.grad d)) (v d) (w d) (vw d)
+    build : T.Rel space V.build Z.build
+    build d = T.sl (H.S d) (V.read d) _ (λ n → T.sr (H.S d) _ (Z.read d) n (read d n))
+  module E (vw : T.Eq space v w) where
+    eval : ∀ d k {x y} → x L.≅ y → T.Eq (H.S d) (V.eval d k x) (Z.eval d k y)
+    eval d zero xy = T.Compare.eq (H.S d) (H.grad d) (H.grad d) (em (H.grad d)) xy (v d) (w d) (vw d)
+    eval d (suc k) xy = eval (suc d) k xy 0 (H.grad d) (H.grad d) (em (H.grad d)) (v d) (w d) (vw d)
+    term : ∀ d n → T.Eq (H.S d) (V.term d n) (Z.term d n)
+    term d zero = T.ee (H.S d) _
+    term d (suc k) = T.ne (H.S d) _ _ _ _ _ _ (eval d k)
+    read : ∀ d n → T.Eq (H.S d) (V.read d n) (Z.read d n)
+    read d n = term (suc d) n 0 (H.grad d) (H.grad d) (em (H.grad d)) (v d) (w d) (vw d)
+    build : T.Eq space V.build Z.build
+    build d = T.ss (H.S d) (V.read d) (Z.read d) (read d)
+theta : T.Arr space
+run theta = Th.Program.build
+rm theta = Compare.R.build
+em theta = Compare.E.build

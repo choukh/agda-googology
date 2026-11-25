@@ -1,0 +1,91 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 合格参数低于 Ω₁ 时，整个语法中每个 ψ 的下标皆为零。普通 ω 幂解释在此域严格保序。
+module B26OCountable where
+
+open import Data.List.Base using ([]; _∷_; List)
+open import Data.List.Relation.Unary.All using (All; []; _∷_)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Align.EboLeanDef using (T; ψ; Ωs; _<ᵀ_; []<; hd<; tl<; lv<; ar<)
+open import OCF.Align.EboLeanBase using (NF; n[]; n∷; nψ; GB; InG; gp; gh; gw; gc; gtl; <ᵀ-trans; _≤ᵀ_; ≤-trans′; <sucT; HdLe; tail<)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; ≼-+ʳ; s≼s; z≼; +-mono; ψ⁰-mono⁰; 1≼ψ⁰; ≅→≼)
+open import WVOne using (T₀; read)
+import W4Block as W
+import W4Ops as O
+import B16IndexBase as I
+open import OCF.Align.YiVmConExact using (ˣ→≼)
+import B19IdealArithmetic as A
+import B22MovingIndex as E
+import B25DExactFold as F
+import B26OWords as V
+open import B26OArgument using (Argument; raw; valid; admissible)
+
+data Pure : T → Set where
+  p[] : Pure []
+  p∷ : ∀ {a xs} → Pure a → Pure xs → Pure (ψ [] a ∷ xs)
+
+all-zero : ∀ {t} → NF t → t <ᵀ Ωs [] → GB [] t (Ωs []) → Pure t
+all-zero n[] small g = p[]
+all-zero {ψ u a ∷ xs} (n∷ (nψ nu na ga) le nxs) (hd< (lv< p)) g with <sucT [] p
+... | inj₁ ()
+... | inj₂ refl = p∷ (all-zero na (g (gp (gh (inj₂ refl)))) (λ h → g (gp (gc (inj₂ refl) h))))
+  (all-zero nxs (<ᵀ-trans (tail< _ _ le nxs) (hd< (lv< p))) (λ h → g (gtl h)))
+all-zero (n∷ _ _ _) (hd< (ar< ()))
+all-zero (n∷ _ _ _) (tl< ())
+
+pure : ∀ a → raw a <ᵀ Ωs [] → Pure (raw a)
+pure a p = all-zero (valid a) p (λ h → <ᵀ-trans (admissible a h) p)
+
+powers : T → List T₀
+powers [] = []
+powers (ψ _ a ∷ xs) = V.value (powers a) ∷ powers xs
+
+val : T → T₀
+val t = V.value (powers t)
+
+Head : T → T → Set
+Head [] b = ⊤
+Head (ψ _ a ∷ xs) b = a ≤ᵀ b
+
+next : ∀ {a xs b} → Pure xs → HdLe (ψ [] a) xs → a ≤ᵀ b → Head xs b
+next p[] _ _ = tt
+next (p∷ _ _) (inj₁ (lv< ()))
+next (p∷ _ _) (inj₁ (ar< p)) q = ≤-trans′ (inj₁ p) q
+next (p∷ _ _) (inj₂ refl) q = q
+
+mutual
+  below : ∀ {t u} → NF t → Pure t → NF u → Pure u → t <ᵀ u → L.suc (val t) ≼ val u
+  below n[] p[] _ (p∷ {a} {xs} _ _) []< = ≼-trans (1≼ψ⁰ (val a)) (≼-+ʳ _ (val xs))
+  below _ (p∷ _ _) _ (p∷ _ _) (hd< (lv< ()))
+  below nt@(n∷ (nψ _ na _) _ _) pt@(p∷ {a} pa _) (n∷ (nψ _ nb _) _ _) (p∷ {a = b} {xs = ys} pb _) (hd< (ar< p)) =
+    ≼-trans (V.bound (val a) (cap nt pt na pa (inj₂ refl)))
+      (≼-trans (ψ⁰-mono⁰ (below na pa nb pb p)) (≼-+ʳ (L.ψ⁰ (val b)) (val ys)))
+  below (n∷ _ _ nx) (p∷ {a} _ px) (n∷ _ _ ny) (p∷ _ py) (tl< p) =
+    +-mono (≼-refl (L.ψ⁰ (val a))) (below nx px ny py p)
+
+  cap : ∀ {t u} → NF t → Pure t → NF u → Pure u → Head t u → All (_≼ val u) (powers t)
+  cap n[] p[] _ _ _ = []
+  cap (n∷ (nψ _ na _) le nt) (p∷ {a} pa pt) nu pu (inj₁ p) =
+    ≼-trans (≼-suc (≼-refl (val a))) (below na pa nu pu p) ∷ cap nt pt nu pu (next pt le (inj₁ p))
+  cap (n∷ (nψ _ na _) le nt) (p∷ {a} pa pt) nu pu (inj₂ refl) =
+    ≼-refl (val a) ∷ cap nt pt nu pu (next pt le (inj₂ refl))
+
+inside : ∀ {t} → NF t → Pure t → L.suc (val t) ≼ E.above L.zero
+inside n[] p[] = E.strict L.zero
+inside nt@(n∷ (nψ _ na _) _ _) pt@(p∷ {a} pa _) = ≼-trans (V.bound (val a) (cap nt pt na pa (inj₂ refl)))
+  (≼-trans (ψ⁰-mono⁰ (inside na pa)) (≼-trans (proj₂ (A.normal _)) (proj₁ (E.fix L.zero))))
+
+exec : T → W.Tr W.zero
+exec [] = W.zero
+exec (ψ _ a ∷ xs) = F.fold (exec a) O.+ exec xs
+
+aligned : ∀ t → read (exec t) ≈ᵛ val t
+aligned [] = z≼ , z≼
+aligned (ψ _ a ∷ xs) =
+  ≼-trans (≅→≼ (L.≅-sym (I.plus (F.fold (exec a)) (exec xs)))) (+-mono
+    (≼-trans (ˣ→≼ (proj₂ (F.paired (exec a)))) (ψ⁰-mono⁰ (proj₁ (aligned a)))) (proj₁ (aligned xs))) ,
+  ≼-trans (+-mono (≼-trans (ψ⁰-mono⁰ (proj₂ (aligned a))) (ˣ→≼ (proj₁ (F.paired (exec a)))))
+                   (proj₂ (aligned xs))) (≅→≼ (I.plus (F.fold (exec a)) (exec xs)))

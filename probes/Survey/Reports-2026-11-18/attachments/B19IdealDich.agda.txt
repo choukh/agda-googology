@@ -1,0 +1,30 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19IdealDich where
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥-elim)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; s≼s; ≅→≈ᵛ)
+open import WVOne using (T₀)
+open import B18Product using (_·_; mono)
+open import B19IdealProduct using (power)
+open import B19IdealArithmetic using (norm; mulBound; product)
+import B17ValueDich as D
+import B8FreezeMain as I
+import B19IdealGammaCut as C
+
+Γ = N.γ 2
+module With (lem : LEM) (x y a b : T₀) (pa : a ≼ x) (pb : b ≼ x)
+  (h : x ≼ y) (eq : y ≈ᵛ (a · power b (norm x))) where
+  strict : L.suc x ≼ Γ → L.suc y ≼ Γ
+  strict e = ≼-trans (s≼s (proj₁ eq)) (C.closed a b x pa pb e)
+
+  necessary : Γ ≼ y → Γ ≼ x
+  necessary q with D.Classical.compare lem Γ x
+  ... | inj₁ d = d
+  ... | inj₂ d = ⊥-elim (I.irr Γ (≼-trans (s≼s q) (strict d)))
+
+  sufficient : Γ ≼ x → Γ ≼ y
+  sufficient q = ≼-trans q h

@@ -1,0 +1,69 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20IdealPhysical where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiFreshFold as O
+import OCF.Lean.YiFreshValRead as V
+import OCF.Lean.YiUpFold as F
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+open import OCF.Lean.YiUpCheck using (two)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; ≅→≼; s≼s; ≼l; +-mono)
+open import WVOne using (𝟏; read; T₀)
+open import W4Fold using (EBOᶜ)
+import B12EboRows as B
+import B14SharpTwo as R2
+import B17SharpThree as S
+import B17Cofinal as E
+import B18RefHeight as Pos
+open import B20IdealRel using (Z; zs; zz; Ω¹; value)
+import B20IdealTwo as Two
+import B20IdealThree as A
+import B20IdealSource as C
+import B20IdealTower as T
+
+tree = λ n → F.ψ⊥ two tt A.model (A.yi n)
+raw = λ n → V.read (tree n)
+module Series = T.Packet tree
+
+module At (lem : LEM) where
+  open I.Sharp lem
+  open A.At lem using (ri; indexes)
+  open Two.At lem using (bot₂)
+  whole = C.At.whole lem
+  ideal = λ n → ψ♯ R2.r₂ R2.o₂ B♯ R.zero tt A.unit (ri n)
+  point : ∀ n → Z (tree n) (proj₁ (ideal n))
+  point n = bot₂ B♯ A.model Ω¹ (zs zz) A.unit (zs zz) (indexes n)
+  positive : ∀ n → 𝟏 ≼ raw n
+  positive n = ≼-trans (Pos.◃s≼ (proj₂ (ideal n))) (≅→≼ (L.≅-sym (value (point n))))
+  necessary : whole ≼ read EBOᶜ → ∀ n → B.InChild (raw n)
+  necessary p = Series.necessary positive (C.At.reverse lem p)
+  sufficient : (∀ n → B.InChild (raw n)) → whole ≼ read EBOᶜ
+  sufficient h = C.At.transfer lem (Series.sufficient h)
+
+  -- Each bare coefficient fits strictly in its own next-prefix.
+  strict-term : ∀ n → L.suc (raw n) ≼ V.read (Series.term n)
+  strict-term n = ≼l 1 (≼-trans (+-mono {a = raw n} (≼-refl (raw n)) (positive n))
+    (≅→≼ (L.≅-sym (V.read-+ (tree n) (tree n)))))
+
+  strict-one : L.suc (raw 1) ≼ read EBOᶜ
+  strict-one = ≼-trans (V.cum≽ Series.term 1 (strict-term 1))
+    (≼-trans (≅→≼ (value {a = O.cum Series.term 1} {b = OCF.Lean.YiRWOps.cum (S.Three.item lem A.unit) 1}
+      (B20IdealRel.cums _ _ (A.At.each lem) 1))) (S.Three.closed lem))
+
+  initial : B.InChild (raw 0)
+  initial = T.under (≼-trans (≼-suc (≼-refl 𝟏)) (s≼s (positive 1))) (E.witness strict-one)
+  first : B.InChild (raw 1)
+  first = T.under (≼-suc (≼-refl (raw 1))) (E.witness strict-one)
+
+  after-first : (∀ n → B.InChild (raw (suc (suc n)))) → whole ≼ read EBOᶜ
+  after-first tail = sufficient λ where
+    zero → initial
+    (suc zero) → first
+    (suc (suc n)) → tail n

@@ -1,0 +1,84 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意有可数层号共同上界的 Ω 节点：零层与分支层沿同一个真实反馈序列取值，保留槽对每个原输入给出其实际孩子。
+module B19OldNodes where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Maybe using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; cum-≥)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; s≼s; l≼)
+import B12Strict as St
+import B14PathHeight as P
+import B17Keep as K
+import B17SlotLevel as C
+import B17ActualSlots as A
+
+onto : ∀ {X Y f} {u : K.Port X} {v : K.Port Y} → K.Pass f u v → (z : Tr (proj₁ v)) → Σ (Tr (proj₁ u)) (λ w → f (proj₂ u w) ≡ proj₂ v z)
+onto (K.exact k) z = z , k z
+
+import B12ActualSlots as Cover
+import B12Terminal as Terminal
+
+at-node : ∀ {a} (o : Ok a) (B : Base a) (p q : Pos a) v g →
+  ψ a o B (at a q) (posW a q) v (Ω p g) ≡ node⁺ (kp a o p (posW a q))
+    (λ z → ψ a o B (at a q) (posW a q) v (g z)) (λ z → fromBr a p (proj₁ (ψ a o B (at a p) (posW a p) (B _ (posW a p)) (g z))))
+at-node {nd s h} o B p (inj₂ _) v g = refl
+at-node {nd (sΩ k) h} o B p (inj₁ _) v g = refl
+
+at-zero : ∀ {a} (o : Ok a) (B : Base a) (p : Pos a) {w} → P.All w → ∀ v g →
+  ψ a o B zero w v (Ω p g) ≡ node⁺ (kp a o p w)
+    (λ z → ψ a o B zero w v (g z)) (λ z → fromBr a p (proj₁ (ψ a o B (at a p) (posW a p) (B _ (posW a p)) (g z))))
+at-zero o B () P.base v g
+at-zero o B p (P.each _) v g = refl
+
+strict-node : ∀ {X : Set} {x : X} (q : Keep zero X x) (g : X → Tr⁺ zero) s n → L.suc (read (proj₁ (g (iter s x n)))) ≼ read (proj₁ (node⁺ q g s))
+strict-node {x = x} nothing g s n = ≼-trans (s≼s (cum-≥ (λ m → proj₁ (g (iter s x m))) n)) (St.strict (◃l n))
+strict-node (just (() , _)) g s n
+
+module At {a i} (corr : C.Corr i a) (o : Ok a) (B : Base a) (p : Pos a) (g : Br a p → Tr a) where
+  k = at a p
+  point = fromBr a p
+  w = posW a p
+  F = λ z → ψ a o B k w (B k w) (g z)
+  feedback = λ x → proj₁ (F (point x))
+  index = iter feedback zero
+  next = λ z → point (proj₁ (F z))
+  ids : ∀ n → iter next (point zero) n ≡ point (index n)
+  ids zero = refl
+  ids (suc n) = cong next (ids n)
+  observe : ∀ {j} (q : j ≤ a) (v : Tr⁺ j) → Tr⁺ j
+  observe {j} q v = ψ a o B j q v (Ω p g)
+  child : ∀ {j} (q : j ≤ a) (v : Tr⁺ j) → Br a p → Tr⁺ j
+  child {j} q v z = ψ a o B j q v (g z)
+  rank = C.rank corr p
+  module Same = A.Check corr (proj₂ rank) p (proj₂ rank) o w
+  no-same = Same.chain L.≺ᴵ-irrefl
+  same-level : observe w (B k w) ≡ limc⁺ (λ n → F (iter next (point zero) n))
+  same-level = trans (at-node o B p p (B k w) g) (cong (λ d → node⁺ d F next) no-same)
+  branch-level : ∀ n → proj₁ (F (iter next (point zero) n)) ≡ index (suc n)
+  branch-level n = cong (λ z → proj₁ (F z)) (ids n)
+  enclosed : ∀ {v} → Cover._⊴_ (proj₁ (Ωt k)) (proj₁ (B k w)) → Cover._⊴_ (proj₁ (Ωt k)) (proj₁ (F v))
+  enclosed {v} cv with Cover.preserve a o B k w (B k w) (g v)
+  ... | inj₁ q = subst (Cover._⊴_ (proj₁ (Ωt k))) q cv
+  ... | inj₂ q = Cover.extend cv q
+  anchor : ∀ n → Cover._⊴_ (proj₁ (Ωt k)) (proj₁ (B k w)) → Cover._⊴_ (proj₁ (Ωt k)) (index (suc n))
+  anchor n = enclosed {point (index n)}
+  outline : ∀ {q} (normal : P.All q) v n → L.suc (read (proj₁ (child q v (point (index n))))) ≼ read (proj₁ (observe q v))
+  outline {q} normal v n = subst₂-order (ids n) (sym (at-zero o B p normal v g)) (strict-node (kp a o p q) (child q v) next n)
+    where
+    subst₂-order : ∀ {x y : Br a p} {s t : Tr⁺ zero} → x ≡ y → s ≡ t → L.suc (read (proj₁ (child q v x))) ≼ read (proj₁ s) → L.suc (read (proj₁ (child q v y))) ≼ read (proj₁ t)
+    subst₂-order refl refl h = h
+  module Kept (q : Pos a) (v : Tr⁺ (at a q)) (h : A.Kept p (kp a o p (posW a q))) where
+    field-pos = A.Kept.q h
+    G = λ z → child (posW a q) v (A.Kept.cv h z)
+    shape : observe (posW a q) v ≡ Ω⁺ field-pos G
+    shape = trans (at-node o B p q v g) (cong (λ d → node⁺ d (child (posW a q) v) next) (A.Kept.decision h))
+    all : ∀ z → Σ (Tr (at _ field-pos)) (λ t → G (fromBr _ field-pos t) ≡ child (posW a q) v (point z))
+    all z = proj₁ witness , cong (child (posW a q) v) (proj₂ witness)
+      where witness = onto (A.Kept.every-input h) z

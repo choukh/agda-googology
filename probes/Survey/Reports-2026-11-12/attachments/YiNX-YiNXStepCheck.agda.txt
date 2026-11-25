@@ -1,0 +1,25 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiNXStepCheck where
+open import Data.Nat using (ℕ; zero; suc; z≤n; s≤s)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
+open import OCF.Align.EboLeanDef using (cof; cω; fsn; natT)
+open import OCF.Lean.YiANFam using (cofΩ; cmp-gt; fsTΩ; Ωᴺ; ψᴺ)
+open import OCF.Lean.YiMENote using (fsnψω)
+open import OCF.Lean.YiNXLow using (A)
+
+cofA : ∀ n → cof (A n) ≡ cω
+cofA zero = refl
+cofA (suc zero) = refl
+cofA (suc (suc zero)) = refl
+cofA (suc (suc (suc n))) rewrite cofΩ (suc (suc n)) | cmp-gt {b = 2} {a = suc (suc n)} (s≤s (s≤s z≤n)) = refl
+
+cofAbove : ∀ n → cof (ψᴺ 2 (Ωᴺ (suc (suc (suc n))))) ≡ cω
+cofAbove n rewrite cofΩ (suc (suc n)) | cmp-gt {b = 2} {a = suc (suc n)} (s≤s (s≤s z≤n)) = refl
+
+fsAbove0 : ∀ n → fsn (ψᴺ 2 (Ωᴺ (suc (suc (suc n))))) 0 ≡ ψᴺ 2 (Ωᴺ (suc (suc n)))
+fsAbove0 n rewrite cofΩ (suc (suc n)) | cmp-gt {b = 2} {a = suc (suc n)} (s≤s (s≤s z≤n)) = cong (ψᴺ 2) (fsTΩ (suc (suc n)) (Ωᴺ (suc (suc n))))
+
+down : ∀ n → fsn (A (suc n)) 0 ≡ A n
+down zero = refl
+down (suc zero) = refl
+down (suc (suc n)) = trans (fsnψω (natT 0) (ψᴺ 2 (Ωᴺ (suc (suc (suc n))))) 0 (cofAbove n)) (cong (ψᴺ 0) (fsAbove0 n))

@@ -1,0 +1,98 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18SharpHead where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import OCF.Align.Value using (≼-trans; l≼; ≼l)
+open import B13SharpOne using (r₁)
+open import B14SharpStack using (oR)
+open import B14SharpBound using (data≤)
+open import B14SharpTwo using (r₂; o₂)
+import B12ActualSlots as A
+import B12Orbit as Window
+import B13Orbit as Physical
+import B17SharpFeed
+import B17SharpUpdate
+import B17SharpTwo
+import B18SharpMacro
+import B18SharpEffect
+
+module Head (lem : LEM) where
+  open I.Sharp lem
+  open B17SharpFeed.Feed lem
+  open B17SharpUpdate.Update lem
+  open B17SharpTwo.Two lem
+  open B18SharpMacro.Macro lem
+  open B18SharpEffect.Effects lem
+
+  seed : Action
+  seed = action (λ D j o a → ψ♯ r₂ o₂ D j o a u)
+    (λ D j o a → mono♯ r₂ o₂ D j o a (proj₂ (V.next⁺ (V.Ωt r₂))))
+
+  stage = V.iter Orbit.star seed
+  diagonal : Action
+  diagonal = action (λ D j o a → V.lim⁺ (λ n → Action.run (stage n) D j o a) (λ n → R.◃l zero))
+    (λ D j o a → R.◃t (Action.gain seed D j o a) (R.◃l zero))
+
+  module At (c : W.Tr⁺ lvl2) (big : A._⊴_ wΩ₂ (proj₁ c)) where
+    K = Physical.K c
+    E = Physical.block c
+    J = E K
+    module Win = Window.Window K
+    module First (D : Base♯) (S : F.Base lvl2) (h : State D S) where
+      module Words = Seq D ok₂ S c big (State.one h) (State.bot h)
+      leaf : ∀ n → Linked (proj₁ (Win.kid n S lvl1 w₁ (S lvl1 w₁)))
+        (proj₁ (after D (V.iter (iΩ₂ V.+_) iΩ₂ n) r₁ oR))
+      leaf n = subst (λ z → Linked (proj₁ z) _) (sym (trans (Win.project-value (suc n) S lvl1 w₁ (S lvl1 w₁)) (Win.self-value (suc n) S lvl1 w₁))) (Words.feed (all-words n))
+      one : Linked (proj₁ (F.stepS J S lvl1 w₁)) (proj₁ (after D u r₁ oR))
+      one = matched _ _ _ (lim-gen _ _ leaf) (inj₂ (Physical.contains c big K S lvl1 w₁ (S lvl1 w₁)))
+      value : ∀ a t b → data≤ (proj₁ a) (proj₁ b) → data≤ (proj₁ (Action.run seed D R.zero tt a)) (proj₁ (F.run J S B.zero t b))
+      value a t b hv = l≼ (λ n → ≼-trans (Words.output (all-words n) a t b hv)
+        (◃→≼ (subst (λ z → B.zero B.⊢ proj₁ z ◃ proj₁ (F.run J S B.zero t b)) (Win.project-value (suc n) S B.zero t b)
+          (B.◃t (Win.in-child n S B.zero t b) (Physical.contains c big K S B.zero t b)))))
+      state : State (Orbit.advance seed D) (F.stepS J S)
+      state = pair one (value (D R.zero tt) w₀ (S B.zero w₀) (State.bot h))
+
+    basis : Models J seed
+    basis = models First.state First.value
+
+    ops = B.iter E J
+    levels : ∀ n → Models (ops n) (stage n)
+    levels zero = basis
+    levels (suc n) = Raise.raised c big (ops n) (stage n) (levels n)
+
+    G = F.op (F.E ok₂ F.tdNil (Coeff.y ok₂ c big) K) (F.Einf ok₂ F.tdNil (Coeff.y ok₂ c big) K)
+    climb : ∀ n → F.Rl (ops n) (ops (suc n))
+    climb n S i t v = F.Emono ok₂ F.tdNil (ops n) S i t v (proj₂ c)
+    part : ∀ n → F.Rl (ops (suc n)) G
+    part n S i t v = B.◃l n
+    in-G : ∀ n → Models G (stage n)
+    in-G n = weak {K = ops n} {J = G} (λ S i t v → B.◃t (climb n S i t v) (part n S i t v)) (levels n)
+
+    module All (D : Base♯) (S : F.Base lvl2) (h : State D S) where
+      branches : ∀ n → Linked (proj₁ (F.stepS (ops (suc n)) S lvl1 w₁))
+        (proj₁ (Orbit.advance (stage n) D r₁ oR))
+      branches n = matched _ _ _ (State.one (Models.change (levels n) D S h))
+        (inj₂ (climb n S lvl1 w₁ (S lvl1 w₁)))
+      one : Linked (proj₁ (F.stepS G S lvl1 w₁)) (proj₁ (Orbit.advance diagonal D r₁ oR))
+      one = lim-gen _ _ branches
+      value : ∀ a t b → data≤ (proj₁ a) (proj₁ b) → data≤ (proj₁ (Action.run diagonal D R.zero tt a)) (proj₁ (F.run G S B.zero t b))
+      value a t b hb = l≼ (λ n → Models.output (in-G n) D S h a t b hb)
+      state : State (Orbit.advance diagonal D) (F.stepS G S)
+      state = pair one (value (D R.zero tt) w₀ (S B.zero w₀) (State.bot h))
+
+    whole : Models G diagonal
+    whole = models All.state All.value
+

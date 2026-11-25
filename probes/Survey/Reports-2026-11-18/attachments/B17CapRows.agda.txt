@@ -1,0 +1,107 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B17CapRows where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _+_)
+open import Data.List.Base using ([]; _∷_; _++_; replicate)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; s≼s; l≼; +-mono)
+open import OCF.Align.EboLeanDef using (T; PT; ψ; ΩTower; EBOψ; _<ᵀ_; hd<; ar<; HC)
+open import OCF.Align.EboLeanBase using (NF; nf-hd; nf-rep; Ctbl; c[]; c∷)
+open import OCF.Align.EboLeanTree using (nf-tower; hc)
+open import OCF.Align.EboLean3Base using (<Ωt)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import B12XRef using (row; H)
+open import B17CapAppend using (append)
+open import W4Block using (iter)
+open import WVOne using (T₀; Mv; 𝟏)
+
+data Shape : Set where
+  leaf : Shape
+  _⊕_ : Shape → Shape → Shape
+
+count : Shape → ℕ
+count leaf = 0
+count (a ⊕ b) = count a + suc (count b)
+
+sum : T₀ → Shape → T₀
+sum x leaf = x
+sum x (a ⊕ b) = sum x a L.+ sum x b
+
+split : (p : PT) (m n : ℕ) → replicate (m + n) p ≡ replicate m p ++ replicate n p
+split p zero n = refl
+split p (suc m) n = cong (p ∷_) (split p m n)
+
+letter : ℕ → PT
+letter k = ψ [] (ΩTower k)
+
+word : ℕ → ℕ → T
+word k n = replicate n (letter k)
+
+normal : ∀ k n → NF (word k n)
+normal k = nf-rep (nf-hd (nf-tower k))
+
+ct : ∀ k n → Ctbl (word k n)
+ct k zero = c[]
+ct k (suc n) = c∷ (ct k n)
+
+opaque
+  cert : ∀ k n → HC (word k n)
+  cert k n = hc (normal k n) (ct k n)
+
+eval : ∀ k a (h : HC (word k (suc (count a)))) → sum (row k) a ≼ Rt h
+eval k leaf h = tree-≼ refl (H k) h
+eval k (a ⊕ b) h =
+  ≼-trans (+-mono (eval k a ha) (eval k b hb))
+    (append ha hb (split (letter k) (suc (count a)) (suc (count b))) h)
+  where
+  ha = cert k (suc (count a))
+  hb = cert k (suc (count b))
+
+word-less : ∀ k n → word k (suc n) <ᵀ EBOψ (suc k)
+word-less k n = hd< (ar< (<Ωt (ΩTower k)))
+
+finite : ∀ k a → L.suc (sum (row k) a) ≼ row (suc k)
+finite k a = ≼-trans (s≼s (eval k a h))
+  (mono<ⁿ (normal k (suc (count a))) (nf-tower (suc k)) (c∷ c[])
+    h (H (suc k)) (word-less k (count a)))
+  where h = cert k (suc (count a))
+
+limit : ∀ k (f : ℕ → Shape) → L.lim (λ n → sum (row k) (f n)) ≼ row (suc k)
+limit k f = l≼ (λ n → ≼-trans (≼-suc (≼-refl _)) (finite k (f n)))
+
+strict-limit : ∀ k (f : ℕ → Shape) → L.suc (L.lim (λ n → sum (row k) (f n))) ≼ row (suc (suc k))
+strict-limit k f = ≼-trans (s≼s (limit k f)) (finite (suc k) leaf)
+
+left right : ℕ → Shape
+left zero = leaf
+left (suc n) = leaf ⊕ left n
+right zero = leaf
+right (suc n) = right n ⊕ leaf
+
+left-fit : ∀ x n → iter (x L.+_) x n ≡ sum x (left n)
+left-fit x zero = refl
+left-fit x (suc n) = cong (x L.+_) (left-fit x n)
+
+right-fit : ∀ x n → iter (L._+ x) x n ≡ sum x (right n)
+right-fit x zero = refl
+right-fit x (suc n) = cong (L._+ x) (right-fit x n)
+
+at-eq : ∀ {x y : T₀} → x ≡ y → x ≼ y
+at-eq refl = ≼-refl _
+
+mul-limit : ∀ k → Mv (row k) 𝟏 ≼ row (suc k)
+mul-limit k = l≼ (λ n → ≼-trans (at-eq (left-fit (row k) n))
+                  (≼-trans (≼-suc (≼-refl _)) (finite k (left n))))
+
+mul-strict : ∀ k → L.suc (Mv (row k) 𝟏) ≼ row (suc (suc k))
+mul-strict k = ≼-trans (s≼s (mul-limit k)) (finite (suc k) leaf)
+
+right-limit : ∀ k → L.lim (iter (L._+ row k) (row k)) ≼ row (suc k)
+right-limit k = l≼ (λ n → ≼-trans (at-eq (right-fit (row k) n))
+                  (≼-trans (≼-suc (≼-refl _)) (finite k (right n))))
+
+right-strict : ∀ k → L.suc (L.lim (iter (L._+ row k) (row k))) ≼ row (suc (suc k))
+right-strict k = ≼-trans (s≼s (right-limit k)) (finite (suc k) leaf)
+

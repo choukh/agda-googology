@@ -1,0 +1,167 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B6A: 影子 (第 0 层上的函数, 无语境) 与指数影子的组合子; 逐点序与无条件膨胀. 纸面 §1.
+module WSShadow where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst)
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼-refl; ≼-trans)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+open import WVOne using (T₀; 𝟏)
+
+Sh : ℕ → Set
+Sh zero    = T₀ → T₀ → T₀
+Sh (suc n) = Sh n → Sh n
+
+limS : (n : ℕ) → (ℕ → Sh n) → Sh n
+limS zero    F = λ a c → LV.lim (λ j → F j a c)
+limS (suc n) F = λ g → limS n (λ j → F j g)
+
+chS : (T₀ → Sh 0) → T₀ → ℕ → T₀
+chS h c = S.iter (λ y → h y c c) 𝟏
+
+nodeS : (n : ℕ) → (T₀ → Sh n) → Sh n
+nodeS zero    h = λ a c → LV.lim (λ k → h (chS h c k) a c)
+nodeS (suc n) h = λ g → nodeS n (λ y → h y g)
+
+pr : Sh 0 → T₀ × T₀ → T₀ × T₀
+pr f (a , c) = f a c , f c c
+
+record ES : Set where
+  field
+    sE : Sh 0 → Sh 0
+    sI : (n : ℕ) → Sh (suc n) → Sh n → Sh n
+open ES public
+
+zC : ES
+sE zC f = f
+sI zC n k g = k g
+
+sC : ES → ES
+sE (sC e) f = λ a c → LV.lim (λ j → proj₁ (S.iter (pr (sE e f)) (a , c) (suc j)))
+sI (sC e) n k g = limS n (λ j → S.iter (sI e n k) g (suc j))
+
+lC : (ℕ → ES) → ES
+sE (lC h) f = λ a c → LV.lim (λ j → sE (h j) f a c)
+sI (lC h) n k g = limS n (λ j → sI (h j) n k g)
+
+nC : (T₀ → ES) → ES
+sE (nC h) f = nodeS 0 (λ y → sE (h y) f)
+sI (nC h) n k g = nodeS n (λ y → sI (h y) n k g)
+
+-- 第 0 层指数 y 的影子.
+lv : T₀ → ES
+lv LV.zero         = zC
+lv (LV.suc y)      = sC (lv y)
+lv (LV.lim f)      = lC (λ j → lv (f j))
+lv (LV.limᵢ () f)
+lv (LV.up () x)
+
+-- Level 的 Ω₁ 作指数.
+Ω̂ : ES
+Ω̂ = nC lv
+
+-- "0 + Ω₁·ω^x" 的 ex 行 (x 的影子 e).
+kb : Sh 1
+kb g = sE Ω̂ g
+
+kₑ : (n : ℕ) → Sh (suc (suc n))
+kₑ n k₁ g = sI Ω̂ n k₁ g
+
+sh : ES → ES
+sE (sh e) f = sI e 0 kb f
+sI (sh e) n k g = sI e (suc n) (kₑ n) (λ g′ → k g′) g
+
+-- 指数相加.
+infixl 6 _⨾_
+_⨾_ : ES → ES → ES
+sE (a ⨾ b) f = sE b (sE a f)
+sI (a ⨾ b) n k g = sI b n (λ g′ → sI a n k g′) g
+
+------------------------------------------------------------------------
+-- 逐点序.
+Le : (n : ℕ) → Sh n → Sh n → Set
+Le zero    f f′ = ∀ a c → f a c ≼ f′ a c
+Le (suc n) k k′ = ∀ g → Le n (k g) (k′ g)
+
+Le-refl : (n : ℕ) (f : Sh n) → Le n f f
+Le-refl zero    f a c = ≼-refl _
+Le-refl (suc n) k g   = Le-refl n (k g)
+
+Le-trans : (n : ℕ) {f g h : Sh n} → Le n f g → Le n g h → Le n f h
+Le-trans zero    p q a c = ≼-trans (p a c) (q a c)
+Le-trans (suc n) p q x   = Le-trans n (p x) (q x)
+
+LeE : ES → ES → Set
+LeE e e′ = (∀ f → Le 0 (sE e f) (sE e′ f)) × (∀ n k g → Le n (sI e n k g) (sI e′ n k g))
+
+LeE-refl : (e : ES) → LeE e e
+LeE-refl e = (λ f → Le-refl 0 _) , (λ n k g → Le-refl n _)
+
+LeE-trans : {a b c : ES} → LeE a b → LeE b c → LeE a c
+LeE-trans p q = (λ f → Le-trans 0 (proj₁ p f) (proj₁ q f)) , (λ n k g → Le-trans n (proj₂ p n k g) (proj₂ q n k g))
+
+limS-ub : (n : ℕ) (F : ℕ → Sh n) (j : ℕ) → Le n (F j) (limS n F)
+limS-ub zero    F j a c = ≼l j (≼-refl _)
+limS-ub (suc n) F j g   = limS-ub n (λ i → F i g) j
+
+limS-mono : (n : ℕ) {F F′ : ℕ → Sh n} → (∀ j → Le n (F j) (F′ j)) → Le n (limS n F) (limS n F′)
+limS-mono zero    h a c = l≼ (λ j → ≼l j (h j a c))
+limS-mono (suc n) h g   = limS-mono n (λ j → h j g)
+
+limS-lub : (n : ℕ) (F : ℕ → Sh n) (f : Sh n) → (∀ j → Le n (F j) f) → Le n (limS n F) f
+limS-lub zero    F f h a c = l≼ (λ j → h j a c)
+limS-lub (suc n) F f h g   = limS-lub n (λ j → F j g) (f g) (λ j → h j g)
+
+nodeS-ub : (n : ℕ) (h : T₀ → Sh n) → Le n (h 𝟏) (nodeS n h)
+nodeS-ub zero    h a c = ≼l 0 (≼-refl _)
+nodeS-ub (suc n) h g   = nodeS-ub n (λ y → h y g)
+
+-- 无条件膨胀.
+InflE : ES → Set
+InflE e = (∀ f → Le 0 f (sE e f)) × (∀ n k g → Le n (k g) (sI e n k g))
+
+Infl-zC : InflE zC
+Infl-zC = (λ f → Le-refl 0 f) , (λ n k g → Le-refl n (k g))
+
+Infl-sC : (e : ES) → InflE e → InflE (sC e)
+Infl-sC e ie = (λ f a c → ≼l 0 (proj₁ ie f a c))
+             , (λ n k g → Le-trans n (proj₂ ie n k g) (limS-ub n (λ j → S.iter (sI e n k) g (suc j)) 0))
+
+Infl-lC : (h : ℕ → ES) → InflE (h 0) → InflE (lC h)
+Infl-lC h ie = (λ f a c → ≼l 0 (proj₁ ie f a c))
+             , (λ n k g → Le-trans n (proj₂ ie n k g) (limS-ub n (λ j → sI (h j) n k g) 0))
+
+Infl-nC : (h : T₀ → ES) → InflE (h 𝟏) → InflE (nC h)
+Infl-nC h ie = (λ f → Le-trans 0 (proj₁ ie f) (nodeS-ub 0 (λ y → sE (h y) f)))
+             , (λ n k g → Le-trans n (proj₂ ie n k g) (nodeS-ub n (λ y → sI (h y) n k g)))
+
+Infl-lv : (y : T₀) → InflE (lv y)
+Infl-lv LV.zero         = Infl-zC
+Infl-lv (LV.suc y)      = Infl-sC (lv y) (Infl-lv y)
+Infl-lv (LV.lim f)      = Infl-lC (λ j → lv (f j)) (Infl-lv (f 0))
+Infl-lv (LV.limᵢ () f)
+Infl-lv (LV.up () x)
+
+Infl-Ω̂ : InflE Ω̂
+Infl-Ω̂ = Infl-nC lv (Infl-lv 𝟏)
+
+Infl-sh : (e : ES) → InflE e → InflE (sh e)
+Infl-sh e ie =
+    (λ f → Le-trans 0 (proj₁ Infl-Ω̂ f) (proj₂ ie 0 kb f))
+  , (λ n k g → Le-trans n (proj₂ Infl-Ω̂ n (λ g′ → k g′) g) (proj₂ ie (suc n) (kₑ n) (λ g′ → k g′) g))
+
+Infl-⨾ : (a b : ES) → InflE a → InflE b → InflE (a ⨾ b)
+Infl-⨾ a b ia ib = (λ f → Le-trans 0 (proj₁ ia f) (proj₁ ib (sE a f)))
+                 , (λ n k g → Le-trans n (proj₂ ia n k g) (proj₂ ib n (λ g′ → sI a n k g′) g))
+
+Infl-LeE : {e e′ : ES} → InflE e → LeE e e′ → InflE e′
+Infl-LeE ie p = (λ f → Le-trans 0 (proj₁ ie f) (proj₁ p f)) , (λ n k g → Le-trans n (proj₂ ie n k g) (proj₂ p n k g))
+
+-- 迭代的换序.
+iter-comm : {A : Set} (f : A → A) (x : A) (j : ℕ) → S.iter f (f x) j ≡ f (S.iter f x j)
+iter-comm f x zero    = refl
+iter-comm f x (suc j) = cong f (iter-comm f x j)

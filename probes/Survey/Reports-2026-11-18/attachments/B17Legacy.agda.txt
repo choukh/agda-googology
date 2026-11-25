@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 在 W4 自己选出的任意可数下标上运行旧合法块。其输出无条件覆盖该下标的原参照折叠，正好给出实际变层比较的左端。
+module B17Legacy where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_; Σ)
+open import W4Block
+open import W4Path
+open import WVOne using (read; T₀; h₁)
+open import W4Fold using (EBOᶜ)
+import OCF.Lean.YiLegBlock as O
+import OCF.Lean.YiLSRead as V
+import OCF.Lean.YiLSTw1 as P
+import OCF.Lean.YiLSBtbo as Q
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≅→≼; l≼; z≼; ≼l; s≼s)
+open import OCF.Align.BTBOFull using (BTBO≈)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.BTBO using (module Ord-Ord)
+import B12Terminal as T
+import B14Tower as W
+import B14Btbo as D
+import B16IndexBase as I
+import B16GammaRows as G
+
+mutual
+  copy : Tr zero → O.Tr O.zero
+  copy zero = O.zero
+  copy (suc x) = O.suc (copy x)
+  copy (lim f d) = O.lim (λ n → copy (f n)) (λ n → step (d n))
+  copy (Ω () _)
+  copy (up _ () _ _)
+  copy (ex _ _ _ _ ())
+  step : ∀ {x y : Tr zero} → zero ⊢ x ◃ y → O._⊢_◃_ O.zero (copy x) (copy y)
+  step ◃s = O.◃s
+  step (◃l n) = O.◃l n
+  step (◃w {p = ()})
+  step (◃u x () y e)
+  step (◃c x () d)
+  step (◃e {ε = ()})
+  step (◃x {ε = ()} e)
+  step (◃t e d) = O.◃t (step e) (step d)
+
+pres : ∀ z → read z L.≅ V.read (copy z)
+pres zero = L.z≅
+pres (suc z) = L.s≅ (pres z)
+pres (lim f d) = L.l≅ λ n → pres (f n)
+pres (Ω () _)
+pres (up _ () _ _)
+pres (ex _ _ _ _ ())
+
+named : (z : Tr zero) → D.α (I.κ z) ≼ V.read (P.K (copy z))
+named z = ≼-trans (≅→≼ (L.ψ⁰-≅ (L.Ω-≅ (L.toLevel-≅ (I.hs z) (V.HSr _) (pres z)))))
+                  (≼-trans (P.lower-↑ (copy z)) (≅→≼ (L.≅-sym (P.KG (copy z)))))
+
+-- 任意好的抽样皆可。以真实 W4 的下标或 λ 的实际输出覆盖旧链，不需令两边的第 n 步相等。
+btbo : (∀ n → V.read (P.pt n) ≼ read EBOᶜ) → tr₀ Ord-Ord.BTBO ≼ read EBOᶜ
+btbo h = ≼-trans (proj₁ BTBO≈) (l≼ λ n → ≼-trans (proj₂ (Q.chainV (suc n))) (h (proj₁ (Q.chainV (suc n)))))
+
+cohere : (∀ n → Σ ℕ (λ m → V.read (P.pt n) ≼ read (W.Actual.idx m))) → tr₀ Ord-Ord.BTBO ≼ read EBOᶜ
+cohere h = btbo λ n → ≼-trans (proj₂ (h n))
+  (≼-trans (G.Recover.indices (proj₁ (h n))) (T.lim-child tw T.terminal 1))
+
+module Via (stepwise : ∀ n → V.read (P.K (copy (W.Actual.idx (suc (G.at n)))) )
+                             ≼ read (W.Actual.idx (G.at (suc n)))) where
+  incoming : G.Incoming
+  incoming n = ≼-trans (named _) (stepwise n)
+  module Result = G.From incoming

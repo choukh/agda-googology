@@ -1,0 +1,112 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 条件（排中律）。真实 z 下任一 W4 零树唯一恢复其 Ω 森林；跨层参照返回按值严格保序并以原 EBO 为上确界。
+module B26CMeaning where
+
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Empty using (⊥-elim)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; trans; subst)
+open import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanBase
+open import OCF.Align.EboLeanTree using (hc; nf-tower)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼)
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import WVOne using (read; T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; s≼s)
+import W4Block as W
+import B12XRef as R
+import B14Goal as G
+import B25DTrack as Tr
+open import B19IdealProduct using (_∙_; flip; id)
+import B26Names as A
+open import B26CForest
+import B26CDecode as D
+import B26CScalar as S
+import B26CCardinal as M
+import B26PActual as End
+
+Tree = W.Tr W.zero
+Fits : Tree → Set
+Fits x = L.suc (read x) ≼ Tr.unit-output
+
+same-response : (a b : A.Name) → A.value a ≈ᵛ A.value b
+  → (da : HC (M.response (A.name a))) (db : HC (M.response (A.name b))) → Rt da ≈ᵛ Rt db
+same-response a b e da db = tree-≼ p da db , tree-≼ (sym p) db da
+  where p = cong M.response (A.unique a b e)
+
+module Classical (lem : LEM) where
+  module At (x : Tree) (w : Fits x) where
+    opaque
+      chosen : A.Named (read x)
+      chosen = A.Classical.descend lem {t = EBOψ 1} (nf-tower 1) (c∷ c[]) (R.H 1) (read x)
+        (≼-trans {a = L.suc (read x)} {b = Tr.unit-output} {c = R.row 1} w D.read-bound)
+    input = proj₁ chosen
+    exact = proj₂ chosen
+    term = A.name input
+    inside : L.suc (A.value input) ≼ Tr.unit-output
+    inside = ≼-trans (s≼s (proj₁ exact)) w
+    little : D.Small term
+    little = S.inside-small (A.nt input) (A.ct input) (A.hcN input) inside
+
+    forest = restore term
+    pure : Pure forest
+    pure = pure-restore term
+    normal-forest : NF forest
+    normal-forest = D.back-NF little (A.nt input)
+    decoded : small forest ≡ term
+    decoded = D.roundtrip little
+
+    forest-unique : ∀ {u} (pu : Pure u) (cu : A.Name) → small u ≡ A.name cu → A.value cu ≈ᵛ read x → u ≡ forest
+    forest-unique pu cu e fits = D.only pu pure (trans e (A.unique cu input (fits ∙ flip exact))) decoded
+
+    out = M.response term
+    out-normal : NF out
+    out-normal = M.normal-response (A.nt input) (A.ct input) (A.hcN input) inside
+    opaque
+      out-tree : HC out
+      out-tree = hc out-normal (c∷ c[])
+    result = Rt out-tree
+
+  meaning : (x : Tree) → Fits x → T₀
+  meaning = At.result
+
+  selected : ∀ x w a → A.value a ≈ᵛ read x → (d : HC (M.response (A.name a))) → meaning x w ≈ᵛ Rt d
+  selected x w a fits d = same-response (At.input x w) a (At.exact x w ∙ flip fits) (At.out-tree x w) d
+
+  extensional : ∀ x y w v → read x ≈ᵛ read y → meaning x w ≈ᵛ meaning y v
+  extensional x y w v e = selected x w (At.input y v) (At.exact y v ∙ flip e) (At.out-tree y v)
+
+  strict : ∀ x y w v → L.suc (read x) ≼ read y → L.suc (meaning x w) ≼ meaning y v
+  strict x y w v less = go (A.reflect a b (≼-trans (≼-suc (≼-refl _)) strict-ab))
+    where
+    a = At.input x w
+    b = At.input y v
+    strict-ab : L.suc (A.value a) ≼ A.value b
+    strict-ab = ≼-trans (s≼s (proj₁ (At.exact x w))) (≼-trans less (proj₂ (At.exact y v)))
+    go : (A.name a <ᵀ A.name b) Data.Sum.Base.⊎ (A.name a ≡ A.name b) → L.suc (meaning x w) ≼ meaning y v
+    go (inj₁ d) = mono<ⁿ (At.out-normal x w) (At.out-normal y v) (c∷ c[]) (At.out-tree x w) (At.out-tree y v)
+      (hd< (ar< (hd< (lv< (D.back-order (At.little x w) (At.little y v) d)))))
+    go (inj₂ e) = ⊥-elim (s≼-irrefl (A.value a) (≼-trans strict-ab (tree-≼ (sym e) (A.hcN b) (A.hcN a))))
+
+  code-fits : ∀ {t} (nt : NF t) (ct : Ctbl t) (h : HC t) → L.suc (Rt h) ≼ Tr.unit-output → Fits (S.code t)
+  code-fits nt ct h hi = ≼-trans (s≼s (proj₂ (S.inside-code nt ct h hi h))) hi
+
+  on-code : ∀ {t} (nt : NF t) (ct : Ctbl t) (h : HC t) (hi : L.suc (Rt h) ≼ Tr.unit-output)
+    → (w : Fits (S.code t)) (d : HC (M.response t)) → meaning (S.code t) w ≈ᵛ Rt d
+  on-code nt ct h hi w d = selected _ w (A.named _ nt ct h) (S.inside-code nt ct h hi h) d
+
+  sufficient : ∀ {Y : T₀} → (∀ x w → meaning x w ≼ Y) → A.E ≼ Y
+  sufficient all = M.sufficient (λ nt ct h hi d → let w = code-fits nt ct h hi in
+    ≼-trans (proj₂ (on-code nt ct h hi w d)) (all _ w))
+
+  necessary : ∀ {Y : T₀} → A.E ≼ Y → ∀ x w → meaning x w ≼ Y
+  necessary g x w = M.necessary g (A.nt a) (A.ct a) (A.hcN a) (At.inside x w) (At.out-tree x w)
+    where a = At.input x w
+
+  terminal : (∀ (x : Tree) (w : Fits x) → meaning x w ≼ End.Y) → G.Goal
+  terminal = sufficient
+

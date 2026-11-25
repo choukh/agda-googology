@@ -1,0 +1,108 @@
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+-- 临时试验 (第六次独立审查), 不是成果.
+-- (1) TopBranch 的同形记录, 两处不同: 分支域取目标所在一支的坐标 η₀ 之上的尾部, 守卫相关.
+--     保留律与折叠律都有不要神谕的模型 (tail-model).
+-- (2) 在现在的块里把 Ω 结点的下界抬高 (只取尾部), 结点仍 Legal (tail-legal); 实例是 tw 3.
+module R6Tail where
+
+open import Data.Empty using (⊥)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Product.Base using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Align.RR5IrrCore
+open import OCF.Align.RR5IrrCheck
+open import OCF.Align.YiIrrIf
+open import OCF.Align.YiLvIf
+open import OCF.Align.YiLvNegCompare using (At; no-both; no-same)
+open import OCF.Align.YiRawIf using (IsLim)
+open import OCF.Align.YiRawNegOmega
+  using (K₂ω; br; compare-up; placeᵒ; placeᵒ-kept; placeᵒ-lim)
+open import OCF.Align.YiIrrFbRaw using (Cp-tr)
+open import OCF.Align.YiIrrNegLegal using (Legal-tw)
+
+-- (1) ---------------------------------------------------------------
+
+lift : ∀ η₀ → Gd zero raw1 η₀ → ∀ η → Gd zero η₀ η → Gd zero raw1 η
+lift η₀ e₀ η e = Cp-tr zero (proj₁ e₀) (proj₁ e) , proj₂ e
+
+decide : ∀ {i j} → Tri i j → At i j ⊎ (At i j → ⊥)
+decide (below s e) = inj₁ (s , e)
+decide (above s e) = inj₂ (λ a → no-both a (s , e))
+decide (same e) = inj₂ (λ a → no-same a e)
+
+record TailBranch : Set where
+  field
+    branch : (η₀ : R) (e₀ : Gd zero raw1 η₀) (r₀ : Pre (read0 η₀)) (η : R) →
+      Gd zero η₀ η → Raw (lev K₂ω (br η₀ e₀ r₀))
+    branch-keep : ∀ η₀ e₀ r₀ s (e : Gd zero η₀ (G.suc s)) →
+      At (lev K₂ω (br η₀ e₀ r₀)) (read0 s) →
+      Kept (lev K₂ω (br η₀ e₀ r₀)) (read0 s) (branch η₀ e₀ r₀ (G.suc s) e)
+    branch-fold : ∀ η₀ e₀ r₀ s (e : Gd zero η₀ (G.suc s)) →
+      (At (lev K₂ω (br η₀ e₀ r₀)) (read0 s) → ⊥) →
+      IsLim (branch η₀ e₀ r₀ (G.suc s) e)
+
+at? : ∀ η₀ (e₀ : Gd zero raw1 η₀) (r₀ : Pre (read0 η₀)) s → Gd zero η₀ (G.suc s) →
+  At (lev K₂ω (br η₀ e₀ r₀)) (read0 s) ⊎ (At (lev K₂ω (br η₀ e₀ r₀)) (read0 s) → ⊥)
+at? η₀ e₀ r₀ s e =
+  decide (compare-up η₀ (G.suc s) e₀ (lift η₀ e₀ (G.suc s) e) r₀ (inj₁ tt) (proj₁ e))
+
+branchᵗ : (η₀ : R) (e₀ : Gd zero raw1 η₀) (r₀ : Pre (read0 η₀)) (η : R) →
+  Gd zero η₀ η → Raw (lev K₂ω (br η₀ e₀ r₀))
+branchᵗ η₀ e₀ r₀ (G.suc s) e =
+  placeᵒ (lev K₂ω (br η₀ e₀ r₀)) (read0 s) (at? η₀ e₀ r₀ s e)
+branchᵗ η₀ e₀ r₀ G.zero e = G.zero
+branchᵗ η₀ e₀ r₀ (G.lim f) e = G.zero
+branchᵗ η₀ e₀ r₀ (G.lc () c t g) e
+branchᵗ η₀ e₀ r₀ (G.em () T) e
+branchᵗ η₀ e₀ r₀ G.top e = G.zero
+
+tail-model : TailBranch
+tail-model = record
+  { branch = branchᵗ
+  ; branch-keep = λ η₀ e₀ r₀ s e a →
+      placeᵒ-kept (lev K₂ω (br η₀ e₀ r₀)) (read0 s) (at? η₀ e₀ r₀ s e) a
+  ; branch-fold = λ η₀ e₀ r₀ s e no →
+      placeᵒ-lim (lev K₂ω (br η₀ e₀ r₀)) (read0 s) (at? η₀ e₀ r₀ s e) no }
+
+-- (2) ---------------------------------------------------------------
+
+tail : ∀ k (c c′ : Raw k) .(w′ : Lgl k c′) .(b′ : Nested k c′) → .(Cp k c c′) →
+  (t : LF) (g : (η : Raw k) → .(Gd k c η) → LF) → LF
+tail k c c′ w′ b′ p t g =
+  lc k c′ w′ b′ t (λ η e → g η (Cp-tr k p (proj₁ e) , proj₂ e))
+
+tail-legal : ∀ k c c′ (w : Lgl k c) (b : Nested k c) (w′ : Lgl k c′) (b′ : Nested k c′)
+  (p : Cp k c c′) t (g : (η : Raw k) → .(Gd k c η) → LF) →
+  Legal (lc k c w b t g) → Legal (tail k c c′ w′ b′ p t g)
+tail-legal k c c′ w b w′ b′ p t g (lk , tg , dir , irr , lt , lg) =
+  lk ,
+  (λ η e → tg η (dn e)) ,
+  (λ η e η′ e′ d → dir η (dn e) η′ (dn e′) d) ,
+  (λ η e e′ → refl) ,
+  lt ,
+  (λ η e → lg η (dn e))
+  where
+  dn : ∀ {η} → Gd k c′ η → Gd k c η
+  dn e = Cp-tr k p (proj₁ e) , proj₂ e
+
+-- 第一位置只穿过主干: 尾部结点与原结点有同一个主干.
+tail-first : ∀ k c c′ .(w′ : Lgl k c′) .(b′ : Nested k c′) .(p : Cp k c c′) t g {a} →
+  CP a t → CP a (tail k c c′ w′ b′ p t g)
+tail-first k c c′ w′ b′ p t g q = fst q
+
+-- 实例: tw 3 的分支族从坐标 3 起.
+three : R
+three = G.suc (G.suc one)
+
+tw3-tail : LF
+tw3-tail = tail zero raw1 three tt tt (inj₂ (inj₂ (inj₁ refl))) (tw 2)
+  (λ η e → Ω̂ (up zero η (proj₂ (proj₂ e))))
+
+tw3-tail-legal : Legal tw3-tail
+tw3-tail-legal =
+  tail-legal zero raw1 three tt tt tt tt (inj₂ (inj₂ (inj₁ refl))) (tw 2)
+    (λ η e → Ω̂ (up zero η (proj₂ (proj₂ e)))) (Legal-tw 3)
+
+tw2-first : CP (tw 2) tw3-tail
+tw2-first = fst self

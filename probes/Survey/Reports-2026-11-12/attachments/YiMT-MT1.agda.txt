@@ -1,0 +1,32 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module MT1 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀; twᶜ; EBOᶜ)
+open import OCF.Lean.YiTBRow using (Rb; RbS; ψ)
+open import MT0 using (rbᶻ)
+
+twᶻ : ℕ → Tr zero
+twᶻ n = proj₁ (ψ (tw n) (Ok-tw n) (rbᶻ (tw n)) (B₀ (tw n)) zero (z≤ (tw n)) (Ωt zero) (proj₁ (Ωt (tw n))))
+
+EBOᶻ : Tr zero
+EBOᶻ = proj₁ (ψ Λ Ok-Λ (rbᶻ Λ) (B₀ Λ) zero (z≤ Λ) (Ωt zero) (proj₁ (Ωt Λ)))
+
+a1 : twᶻ 1 ≡ twᶜ 1
+a1 = refl
+
+seq : Tr zero → ℕ → Tr zero
+seq (lim f a) n = f n
+seq _ n = zero
+
+s0 : seq (twᶻ 2) 0 ≡ seq (twᶜ 2) 0
+s0 = refl
+
+s1 : seq (twᶻ 2) 1 ≡ seq (twᶜ 2) 1
+s1 = refl

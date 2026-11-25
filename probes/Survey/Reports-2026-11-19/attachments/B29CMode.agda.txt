@@ -1,0 +1,41 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 每个真正内步的所选坐标，下一次仍回到前前塔 Ω；两个槽位可能位于不同的实际孩子中。
+module B29CMode where
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Unit.Base using (tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Maybe.Base using (just)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold hiding (run)
+import B28PPull as P
+import B28BBranch as Direct
+import B29CRelay as Relay
+
+module At (n : ℕ) where
+  open Relay.At n
+  
+  yes : Keep i (Tr d) W4Block.zero
+  yes = just (base , (λ z → z) , refl)
+  lift-id : ∀ mode → mode ≡ yes → mapK (λ z → z) refl mode ≡ yes
+  lift-id .yes refl = refl
+
+  mode : ∀ (c : Tr i) (q : Key c) (g : Br k (node c q) → Tr k) → Set
+  mode ._ start g = kp (D.lev x) (D.cert x) (inj₁ (inj₁ tt)) (D.route x) ≡ yes
+    where x = Ω (node zero start) g
+  mode ._ (again h) g = kp (D.lev x) (D.cert x) (inj₁ (inj₁ tt)) (D.route x) ≡ yes
+    where x = Ω (node (Ω base h) (again h)) g
+
+  first : ∀ (g : Tr d → Tr k) → mode zero start g
+  first g = Relay.pull k (Ok-tw (suc m)) (inc zero (ink self)) (inj₁ tt) (ink self) (↑ k (g zero))
+    (OkO↑ k k (Ok-tw (suc m)) self (g zero))
+
+  follow : ∀ (h : Tr d → Tr i) (g : Tr d → Tr k) → mode (Ω base h) (again h) g
+  follow h g = trans (Relay.pull k (Ok-tw (suc m)) (inc c (ink self)) (inj₁ tt) (ink self) (↑ k (g zero))
+    (OkO↑ k k (Ok-tw (suc m)) self (g zero))) (lift-id _ (P.Positive.label n (λ z → ↑ i (h z))
+      (λ z → OkO↑ i i (Ok-tw m) self (h z))))
+    where c = Ω base h
+

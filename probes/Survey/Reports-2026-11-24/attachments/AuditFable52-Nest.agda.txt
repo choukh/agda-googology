@@ -1,0 +1,84 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 链点是否字面嵌套: 塔第 1 项的顶层链 zt (WVOne). 每条都是让检查器核一个具体的等式或步进推导.
+module Nest1 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (zt; st)
+
+-- 取极限的第 0 项 (不是极限就原样).
+first : Tr zero → Tr zero
+first (lim f a) = f 0
+first zero      = zero
+first (suc x)   = suc x
+first (Ω () _)
+first (up _ () _ _)
+first (ex _ _ _ _ ())
+
+-- 第 1 个链点是极限, 第 0 项是 1.
+z1-first : first (zt 1) ≡ suc zero
+z1-first = refl
+
+n01 : zero ⊢ zt 0 ◃ zt 1
+n01 = ◃t ◃s (◃l 0)
+
+-- 第 2 个链点: 第 0 项的第 0 项逐字就是第 1 个链点.
+z2-first : first (first (zt 2)) ≡ zt 1
+z2-first = refl
+
+n12 : zero ⊢ zt 1 ◃ zt 2
+n12 = ◃t (◃l 0) (◃l 0)
+
+-- 一般的一步: 对极限树 lim f, st (lim f) 的第 0 项逐字是 st (f 0) (层号的第 0 个孩子上, 状态与底都没有变).
+first-st : (f : ℕ → Tr zero) (a : (n : ℕ) → zero ⊢ f n ◃ f (suc n)) → first (st (lim f a)) ≡ st (f 0)
+first-st f a = refl
+
+-- 第 2、3 个链点同样嵌套.
+z3-first : first (first (zt 3)) ≡ zt 2
+z3-first = refl
+
+n23 : zero ⊢ zt 2 ◃ zt 3
+n23 = ◃t (◃l 0) (◃l 0)
+
+------------------------------------------------------------------------
+-- 对一切 n: 第 n+1 个链点字面地在第 n+2 个链点之下 (沿两次 "取第 0 项").
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Product using (_×_; _,_)
+open import Relation.Binary.PropositionalEquality using (cong; subst; sym; trans)
+
+IsLim : Tr zero → Set
+IsLim (lim f a) = ⊤
+IsLim zero      = ⊥
+IsLim (suc x)   = ⊥
+IsLim (Ω () _)
+IsLim (up _ () _ _)
+IsLim (ex _ _ _ _ ())
+
+first-lt : (t : Tr zero) → IsLim t → zero ⊢ first t ◃ t
+first-lt (lim f a) _ = ◃l 0
+
+-- st 把极限变成极限, 并与 "取第 0 项" 交换.
+aux : (u : Tr zero) → IsLim u → IsLim (st u) × (first (st u) ≡ st (first u))
+aux (lim f a) _ = tt , refl
+
+Inv : ℕ → Set
+Inv n = IsLim (zt (suc (suc n))) × IsLim (first (zt (suc (suc n)))) × (first (first (zt (suc (suc n)))) ≡ zt (suc n))
+
+inv : (n : ℕ) → Inv n
+inv zero    = tt , tt , refl
+inv (suc n) with inv n
+... | l , l′ , e with aux (zt (suc (suc n))) l | aux (first (zt (suc (suc n)))) l′
+...   | m , q | m′ , q′ =
+  m , subst IsLim (sym q) m′ ,
+  trans (cong first q) (trans q′ (cong st e))
+
+nest : (n : ℕ) → zero ⊢ zt (suc n) ◃ zt (suc (suc n))
+nest n with inv n
+... | l , l′ , e = subst (λ x → zero ⊢ x ◃ zt (suc (suc n))) e
+                     (◃t (first-lt (first (zt (suc (suc n)))) l′) (first-lt (zt (suc (suc n))) l))

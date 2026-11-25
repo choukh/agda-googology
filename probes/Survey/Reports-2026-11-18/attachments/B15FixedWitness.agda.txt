@@ -1,0 +1,80 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 保留给定合法性证书的值传递。沿折叠的实际中间状态，证书按子件投影。
+module B15FixedWitness where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; z≼)
+import OCF.Align.Level as LV
+open import WVOne using (T₀; read)
+open import WVTwo using (◃→≼)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B15ReadPaths as R
+import B15Spine as S
+open T.Run
+
+At : (j : L) → Ok j → (T₀ → T₀) → Set
+At j o f = (r : T.Run j) → ok r ≡ o → A.Covered r → ∀ a → a ≼ read (proj₁ (β r)) → f a ≼ read (T.value r)
+
+module Lift (s : Sh) (h : Ch s → L) (p : T.Run (U.sc (nd s h))) (hp : A.Covered p) where
+  module V = U.Lift s h (λ _ → LV.zero) (λ _ _ _ _ → z≼) p hp
+  open V using (j; c; w; S; K; v; snap; cover; v₁)
+  o = ok V.r₀
+
+  grow : ∀ {f} → At j o f → (r : T.Run j) → ok r ≡ o → A.Covered r →
+    ∀ a → a ≼ read (proj₁ (β r)) → f a ≼ read (proj₁ (ψ j (ok r) (bs r) zero w (β r) c))
+  grow {f} u r eq hr a d with hp j (inc tt self)
+  ... | inj₁ e = subst (λ x → f a ≼ read (proj₁ (ψ j (ok r) (bs r) zero w (β r) x))) e (u r eq hr a d)
+  ... | inj₂ e = ≼-trans (u r eq hr a d) (◃→≼ (mono j (ok r) (bs r) zero w (β r) e))
+
+  start : ∀ {f} → At j o f → ∀ a → a ≼ read (proj₁ v₁) → U.repeatω f a ≼ read (T.value p)
+  start {f} u a d = l≼ (λ n → ≼-trans (orbit n) (≼-trans (◃→≼ (inf K (S n) zero w (v n))) (V.outer n)))
+    where
+    orbit : ∀ n → iter f a n ≼ read (proj₁ (v n))
+    orbit zero = d
+    orbit (suc n) = grow u (snap n) refl (cover n) _ (orbit n)
+
+liftU : ∀ s h {o f} → At (nd s h) (proj₂ o tt) f → At (U.sc (nd s h)) o (U.repeatω f)
+liftU s h u p refl hp a e = M.start u a (≼-trans e (M.V.lowv 0))
+  where module M = Lift s h p hp
+
+liftQ : ∀ s h {o f Q} → At (nd s h) (proj₂ o tt) f → At (nd s h) (proj₂ o tt) (λ _ → Q) →
+  At (U.sc (nd s h)) o (λ _ → U.repeatω f Q)
+liftQ s h {Q = Q} u q p refl hp _ _ = M.start u Q (M.grow q M.V.r₀ refl M.V.sub-covered LV.zero z≼)
+  where module M = Lift s h p hp
+
+pull : ∀ {j k} → R.Reach j k → Ok k → Ok j
+pull R.here o = o
+pull R.succ o = proj₂ o tt
+pull (R.limit n) o = proj₂ o n
+pull R.omega o = proj₂ o zero
+pull (R.via p q) o = pull p (pull q o)
+
+upOne : ∀ j {o f} → At j (proj₂ o tt) f → At (U.sc j) o f
+upOne zero u p refl hp a e = ≼-trans
+  (u (T.enterRun sS (λ _ → zero) p tt zero) refl (A.enter sS (λ _ → zero) p tt zero hp) a e)
+  (◃→≼ (mono _ (ok p) (bs p) zero (z≤ _) (β p) {y = proj₁ (Ωt (U.sc zero))} ◃w))
+upOne (nd t g) {f = f} u p refl hp a e = ≼-trans (≼l 1 (≼-refl (f a))) (liftU t g u p refl hp a e)
+
+send : ∀ {j k f} (d : R.Reach j k) {o} → At j (pull d o) f → At k o f
+send R.here u = u
+send (R.succ {h}) u = upOne (h tt) u
+send (R.limit {h} n) u p refl hp a e = ≼-trans
+  (u (T.limRun h p n) refl (A.enter sL h p n (T.prefix h n) hp) a
+    (≼-trans e (T.inflate0 _ (ok p) (bs p) (z≤ _) (β p) (T.prefix h n))))
+  (T.lim-child h p n)
+send (R.omega {k} {h}) u p refl hp a e = ≼-trans (u (C.child 0) refl (C.cover hp 0) a e) (C.lift-value 0)
+  where module C = S.Cardinal k h p
+send (R.via d e) u = send e (send d u)
+
+any : ∀ {j k f} → R.Reach j k → U.Uniform j f → U.Uniform k f
+any d u r = send d (λ p _ → u p) r refl

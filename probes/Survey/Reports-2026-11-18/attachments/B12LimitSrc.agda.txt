@@ -1,0 +1,68 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：二层的 src/Level 结构对应在加法和可数极限下封闭。
+-- 对应可直接折出双向的值比较。第二重极限从一份 Ω₂ 起算，读作 Ω₂·ω²。
+module B12LimitSrc where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_)
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Src as T
+
+Src₂ = S.Ord T.two
+Lev₂ = L.Ordᶜ (D.τ T.two)
+
+record Aligned (s : Src₂) (P : Lev₂) : Set where
+  constructor aligned
+  field
+    up : U.Mh s P
+    dn : D.Dn P s
+    regular : P L.≅ P
+open Aligned
+
+fold : ∀ {s P} → Aligned s P → tr₀ (S.ψ₀ s) ≈ᵛ L.ψ⁰ P
+fold A = T.at-fold (up A) (dn A) (regular A)
+
+omega2 : Aligned T.a Ω₂ᴸ
+omega2 = aligned (T.up-rel 0) (T.dn-rel 0) (T.regular 0)
+
+plus : ∀ {s t P Q} → Aligned s P → Aligned t Q → Aligned (s S.+ t) (P L.+ Q)
+plus A B = aligned (U.M-add {σ = λ r → r} (up A) (up B))
+                   (D.Dn-add {σ = λ r → r} (dn A) (dn B))
+                   (L.add-≅ {σ = λ r → r} {σ′ = λ r → r} (regular A) (regular B))
+
+lim : (f : ℕ → Src₂) (g : ℕ → Lev₂) → (∀ n → Aligned (f n) (g n)) → Aligned (S.lim f) (L.lim g)
+lim f g a = aligned (U.Mll (λ n → U.Mlr n (up (a n)))) (D.Rll (λ n → D.Rlr n (dn (a n))))
+                    (L.l≅ (λ n → regular (a n)))
+
+module Closure (f : Src₂ → Src₂) (g : Lev₂ → Lev₂) (step : ∀ {s P} → Aligned s P → Aligned (f s) (g P)) where
+  iterated : ∀ {s P} → Aligned s P → (n : ℕ) → Aligned (S.iter f s n) (S.iter g P n)
+  iterated a zero = a
+  iterated a (suc n) = step (iterated a n)
+
+  sup : ∀ {s P} → Aligned s P → Aligned (S.lim (S.iter f s)) (L.lim (S.iter g P))
+  sup a = lim _ _ (iterated a)
+
+blockS : Src₂ → Src₂
+blockS s = S.lim (S.iter (λ x → x S.+ T.a) s)
+blockL : Lev₂ → Lev₂
+blockL P = L.lim (S.iter (λ x → x L.+ Ω₂ᴸ) P)
+
+block : ∀ {s P} → Aligned s P → Aligned (blockS s) (blockL P)
+block = Closure.sup (λ x → x S.+ T.a) (λ x → x L.+ Ω₂ᴸ) (λ a → plus a omega2)
+
+squareS : Src₂
+squareS = S.lim (S.iter blockS T.a)
+squareL : Lev₂
+squareL = L.lim (S.iter blockL Ω₂ᴸ)
+
+square-aligned : Aligned squareS squareL
+square-aligned = Closure.sup blockS blockL block omega2
+
+square-bridge : tr₀ (S.ψ₀ squareS) ≈ᵛ L.ψ⁰ squareL
+square-bridge = fold square-aligned

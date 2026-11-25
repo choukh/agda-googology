@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- (F) 的样本: 空白页块 YiBPBlock / YiBPFold 的 side. 塔第 1 项那一支朝第 2 层 (z ⊞ 1) 的形状. 只查类型.
+module RCF where
+
+open import Data.Unit using (⊤; tt)
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiBPBlock
+open import OCF.Lean.YiBPFold
+
+n1 n2 : Tr z
+n1 = suc zero
+n2 = suc n1
+
+L2 : Lv
+L2 = z ⊞ n1
+
+a′ : Ch (Ωₗ z)
+a′ = inj₂ (n2 , inj₁ tt)
+
+-- 目标: 孩子 n2 (层 z ⊞ n2, 读作层 3) 里的第 2 层
+T2 : Tg (Ωₗ z) L2
+T2 = inch a′ (pos (inj₂ (inj₁ tt)))
+
+blk : (c : Tr z) → Tr (Ωₗ z)
+blk c = ex zero (inj₂ (c , inj₁ tt)) (topP z c)
+
+gF : Tr z → Tr L2
+gF c = ψ (Ωₗ z) T2 (blk c)
+
+-- 整棵 Ω 树的折叠是保留的结点, 各支是 gF
+whole : Σ (Pos L2) λ q → Σ (TrAt L2 q → Tr z) λ cv → ψ (Ωₗ z) T2 (top (Ωₗ z)) ≡ Ω q (λ e → gF (cv e))
+whole = _ , _ , refl
+
+-- 那一支: 目标搬进孩子 c 时一律成 side (不比较 c 与 n2), 底是默认的 (左项为零)
+f-shape : (c : Tr z) → gF c ≡ ψc (z ⊞ c) (side sd) (λ {B} T″ → top B) (topP z c)
+f-shape c = refl
+
+-- side 目标下的保留: 基底部分的位置保留, 增量部分的位置不保留
+keep-base : ∀ (c : Tr z) (b : Pos⁺ z) → cmpT (z ⊞ c) {A = L2} (side sd) (inj₁ b) ≡ below (inj₁ b) (λ x → x)
+keep-base c b = refl
+
+drop-inc : ∀ (c : Tr z) (ip : IPos z c) → cmpT (z ⊞ c) {A = L2} (side sd) (inj₂ ip) ≡ other
+drop-inc c ip = refl
+
+-- 孩子是后继时, 那一支是 ℕ 极限 (对角链), 不是 Ω 结点
+f-suc : (c : Tr z) → Σ (ℕ → Tr L2) λ F → gF (suc c) ≡ lim F
+f-suc c = _ , refl

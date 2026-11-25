@@ -1,0 +1,70 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24RRows where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; l≼; ≼l; ≅→≼)
+open import WVOne using (T₀; 𝟏)
+open import WVTwo using (T₁)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import B12LimitSrc as A
+import B12Omega3Ref as R
+import B13Target as P
+import B14RefFixed as F
+import B14RefAllRows as Proto
+import B23NFirst as First
+import B24RKernel as K
+module S = R.S
+
+module At (p : A.Lev₂) (rp : p L.≅ p) where
+
+  T : T₁ → A.Lev₂
+  T y = P.pass (L.add p L.suc y)
+  respects : ∀ {x y} → x L.≅ y → T x L.≅ T y
+  respects d = P.pass-pres (L.add-≅ {σ = L.suc} {σ′ = L.suc} rp d)
+  live : T₁ → A.Lev₂
+  live y = T (P.back y)
+  raw : P.pass (p L.+ Ω₂ᴸ) ≡ L.limᵢ L.zero live
+  raw = refl
+  y = P.feed live
+  node = λ n → R.at (L.ψ⁰ (P.pass (p L.+ Ω₂ᴸ))) n
+  part : ∀ n → node n ≡ L.ψ⁰ (live (y n))
+  part n = refl
+
+  kid : ℕ → T₀ → T₁
+  kid zero x = L.up L.zero x
+  kid (suc n) x = F.collapse (T (kid n x))
+  kernel = λ n x → T (kid n x)
+  gain = λ n x → L.ψ⁰ (kernel n x)
+  iterate = λ n → S.iter (gain n) 𝟏
+
+  regular : ∀ n → Proto.Regular (kid n)
+  regular zero h = L.upˡ (L.upʳ h)
+  regular (suc n) h = F.pres (respects (regular n h))
+  from-live : ∀ {x y₁} → x L.≅ y₁ → live x L.≅ T y₁
+  from-live d = respects (L.tr⁻-≅ (L.≅ᴵ-refl _) d)
+  lift : ∀ (f : T₀ → T₁) → Proto.Regular f → T (L.limᵢ L.zero f) L.≅ L.limᵢ (L.suc L.zero) (λ x → T (f x))
+  lift f reg = L.lᵢ≅ L.z≅ (λ x y₁ d → respects (reg (L.tr⁻-≅ L.z≅ d)))
+  feed : ∀ n → y n L.≅ L.limᵢ L.zero (kid n)
+  feed zero = L.Ω-refl _
+  feed (suc n) = L.≅-trans (F.pres (L.≅-trans (from-live (feed n)) (lift (kid n) (regular n))))
+    (L.lᵢ≅ L.z≅ (λ x y₁ d → F.pres (respects (regular n (L.tr⁻-≅ L.z≅ d)))))
+  ask : ∀ n → live (y n) L.≅ L.limᵢ (L.suc L.zero) (kernel n)
+  ask n = L.≅-trans (from-live (feed n)) (lift (kid n) (regular n))
+  shape : ∀ n → node n L.≅ L.lim (λ j → iterate n (suc j))
+  shape n = L.≅-trans (L.ψ⁰-≅ (ask n)) (L.l≅ (λ j → L.ψ⁰-≅ (respects (regular n (indices j))))) where
+    row = λ x → L.ψ (L.suc L.zero) R.idσ (kernel n x)
+    indices : ∀ j → S.iter row 𝟏 j L.≅ iterate n j
+    indices = L.iter-R L._≅_ {G = row} {G′ = gain n}
+       (λ d → L.≅-sym (L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (L.≅-sym (respects (regular n d))))) (L.s≅ L.z≅)
+  Test : T₀ → Set
+  Test bound = ∀ n j → gain n (iterate n j) ≼ bound
+  sufficient : ∀ {bound} → Test bound → L.ψ⁰ (P.pass (p L.+ Ω₂ᴸ)) ≼ bound
+  sufficient h = l≼ (λ n → ≼-trans (≅→≼ (shape n)) (l≼ (h n)))
+  necessary : ∀ {bound} → L.ψ⁰ (P.pass (p L.+ Ω₂ᴸ)) ≼ bound → Test bound
+  necessary d n j = ≼-trans (≼l j (≼-refl (iterate n (suc j))))
+    (≼-trans (≅→≼ (L.≅-sym (shape n))) (≼-trans (R.at-below (L.ψ⁰ (P.pass (p L.+ Ω₂ᴸ))) n) d))
+
+module Two = At Ω₂ᴸ (L.Ω-refl _)
+open Two public

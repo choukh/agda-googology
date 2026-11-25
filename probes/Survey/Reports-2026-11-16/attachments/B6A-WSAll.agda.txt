@@ -1,0 +1,5 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B6A 入口 (只导入): WSMain.srcΩ₂ (W4 的 Ψ₂ ≽ src 的 ψ₀(Ω₂)); WSReal.Gen.real (E / It 对一切阶, 第 1 层一切指数树).
+module WSAll where
+import WSMain
+import WSReal

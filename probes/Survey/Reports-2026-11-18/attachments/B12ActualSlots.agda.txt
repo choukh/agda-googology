@@ -1,0 +1,63 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 实际 Λ 有限层运行的任意槽，均在 W4 的结构步进下覆盖本层的标准 Ω 树。
+module B12ActualSlots where
+
+open import Data.Nat using (ℕ)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold hiding (enter)
+open import YiLAB7Orbit using (lvl2)
+open import WVOne using (h₁)
+import B12Terminal as T
+open T.Run
+
+_⊴_ : ∀ {i} → Tr i → Tr i → Set
+_⊴_ {i} x y = (x ≡ y) ⊎ (i ⊢ x ◃ y)
+
+extend : ∀ {i} {x y z : Tr i} → x ⊴ y → i ⊢ y ◃ z → x ⊴ z
+extend (inj₁ refl) p = inj₂ p
+extend (inj₂ q) p = inj₂ (◃t q p)
+
+preserve : (ℓ : L) (o : Ok ℓ) (r : Base ℓ) (i : L) (w : i ≤ ℓ) (v : Tr⁺ i) (x : Tr ℓ)
+         → proj₁ v ⊴ proj₁ (ψ ℓ o r i w v x)
+preserve ℓ o r i w v x with zl x
+... | inj₁ refl = inj₁ refl
+... | inj₂ p = inj₂ (mono ℓ o r i w v p)
+
+Covered : ∀ {ℓ} → T.Run ℓ → Set
+Covered {ℓ} r = (i : L) (w : i ≤ ℓ) → proj₁ (Ωt i) ⊴ proj₁ (bs r i w)
+
+initial : (ℓ : L) (o : Ok ℓ) → Covered (T.initial ℓ o)
+initial ℓ o i w = inj₁ refl
+
+enter : (s : Sh) (h : Ch s → L) (r : T.Run (nd s h)) (c : Ch s) (x : Tr (nd s h)) →
+        Covered r → Covered (T.enterRun s h r c x)
+enter s h r c x H i w with preserve (nd s h) (ok r) (bs r) i (inc c w) (bs r i (inc c w)) x
+... | inj₁ q = Relation.Binary.PropositionalEquality.subst (λ t → proj₁ (Ωt i) ⊴ t) q (H i (inc c w))
+... | inj₂ p = extend (H i (inc c w)) p
+
+along : ∀ {j ℓ} (p : T.Visit j ℓ) (r : T.Run ℓ) → Covered r → Covered (T.follow p r)
+along T.here r H = H
+along (T.child {g} n p) r H = along p (T.limRun g r n) (enter sL g r n (T.prefix g n) H)
+
+all-finite : (n : ℕ) → Covered (T.finiteRun n)
+all-finite n = along (T.visit n) (T.tower-child T.tower1 1)
+  (enter (sΩ zero) h₁ T.tower1 (T.index1 T.tower1 1) zero
+    (enter sL tw T.terminal 1 (T.prefix tw 1) (initial Λ Ok-Λ)))
+
+c : Tr⁺ lvl2
+c = bs (T.finiteRun 2) lvl2 (inc tt self)
+
+o₂ : Ok lvl2
+o₂ = proj₂ (ok (T.finiteRun 2)) tt
+
+right-step : (S : Base lvl2) (i : L) (w : i ≤ lvl2) (v : Tr⁺ i) →
+  proj₁ (ψ lvl2 o₂ S i w v (proj₁ (Ωt lvl2))) ⊴ proj₁ (ψ lvl2 o₂ S i w v (proj₁ c))
+right-step S i w v with all-finite 2 lvl2 (inc tt self)
+... | inj₁ q = inj₁ (Relation.Binary.PropositionalEquality.cong (λ x → proj₁ (ψ lvl2 o₂ S i w v x)) q)
+... | inj₂ p = inj₂ (mono lvl2 o₂ S i w v p)

@@ -1,0 +1,92 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 条件（排中律）。标准理想 Ω₂ 的首个变化前缀不高于任一带覆盖槽的实际 W4 第二层运行，含 Λ。
+module B14SharpLive where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Maybe using (nothing; just)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+import W4Path as P
+open import WVOne using (read; lvl1; 𝟏)
+open import WVTwo using (◃→≼; lvl2; p₂; g₂)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼)
+open import B13SharpOne using (r₁)
+open import B14SharpStack
+open import B14SharpTwo using (r₂; o₂; g₂i; module CompareTwo)
+open import B14SharpBound
+import B12Terminal as T
+open T.Run
+
+cumulative : ∀ {X x} (m : F.Keep B.zero X x) (g : X → W.Tr⁺ B.zero) (f : X → X) (n : ℕ) →
+  read (W.cum (λ k → proj₁ (g (B.iter f x k))) n) ≼ read (proj₁ (F.node⁺ m g f))
+cumulative nothing g f n = ≼l n (≼-refl _)
+cumulative (just (() , _)) g f n
+
+module Live (lem : LEM) where
+  open I.Sharp lem
+  open Sim lem using (fold)
+  open CompareTwo lem using (zi)
+
+  item : ℕ → R.Tr R.zero
+  item n = proj₁ (ψ♯ r₂ o₂ B♯ R.zero tt (V.Ωt R.zero) (g₂i (V.iter step R.zero n)))
+    where step = λ z → R.fromBr r₂ B14SharpTwo.p₂i (proj₁ (ψ♯ r₂ o₂ B♯ r₁ oR (V.Ωt r₁) (g₂i z)))
+
+  module Actual (r : T.Run lvl2) where
+    S : F.Base lvl1
+    S i w = bs r i (B.inc tt w)
+    b = β r
+    c⁺ = bs r lvl1 (B.inc tt B.self)
+    C = proj₁ c⁺
+    nc = proj₂ c⁺
+    module Op = Low.Vary lem c⁺ (omegaB r (B.inc tt B.self))
+    op = Op.op
+    v : ℕ → W.Tr⁺ B.zero
+    v n = F.itV op n S B.zero (path base) b
+    v₁ = v 1
+    S₁ = F.stepS op S
+
+    state-shift : (n : ℕ) → F.itS op n S₁ ≡ F.itS op (suc n) S
+    state-shift zero = refl
+    state-shift (suc n) = cong (F.stepS op) (state-shift n)
+
+    val-shift : (n : ℕ) → F.itV op n S₁ B.zero (path base) v₁ ≡ v (suc n)
+    val-shift zero = refl
+    val-shift (suc n) rewrite state-shift n | val-shift n = refl
+
+    step : B.Tr lvl1 → B.Tr lvl1
+    step z = B.ex C C nc (B.suc z) tt
+
+    output : ℕ → W.Tr⁺ B.zero
+    output n = ψ-at (g₂ (B.iter step B.zero n))
+      where ψ-at = F.ψ lvl2 (ok r) (bs r) B.zero (P.z≤ lvl2) b
+
+    actual-head = F.ψ lvl1 oB S B.zero (path base) b (step B.zero)
+
+    head≤ : data≤ (proj₁ (fold B♯ (V.Ωt R.zero) zi)) (proj₁ actual-head)
+    head≤ = l≼ (λ n → ≼l n (subst (data≤ (proj₁ (fold B♯ (V.Ωt R.zero) (sums n))))
+               (sym (cong proj₁ (val-shift (suc n))))
+               (≼-trans (Op.Sequence.run B♯ S (oneB r (B.inc tt (path slot))) (finite n) base _ b (oneβ r))
+                        (◃→≼ (F.inf op (F.itS op (suc n) S) B.zero (path base) (v (suc n)))))))
+
+    first : data≤ (item 1) (proj₁ (output 1))
+    first = next≤ _ actual-head head≤
+
+    prefix : data≤ (V.cum item 1) (W.cum (λ n → proj₁ (output n)) 1)
+    prefix = add≤ (next≤ _ b (oneβ r)) first
+
+    lower : readRW (V.cum item 1) ≼ read (T.value r)
+    lower = ≼-trans prefix (cumulative (F.kp lvl2 (ok r) p₂ (P.z≤ lvl2))
+      (λ z → F.ψ lvl2 (ok r) (bs r) B.zero (P.z≤ lvl2) b (g₂ z)) step 1)
+
+  terminal : readRW (V.cum item 1) ≼ read F.EBOᶜ
+  terminal = ≼-trans (Actual.lower (T.finiteRun 1)) (T.finite-ge 1)

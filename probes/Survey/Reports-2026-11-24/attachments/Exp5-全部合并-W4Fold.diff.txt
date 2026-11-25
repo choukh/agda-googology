@@ -1,0 +1,120 @@
+368c368
+<     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y)
+---
+>     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y)
+371c371
+<     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y)
+---
+>     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y)
+374c374
+<     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y)
+---
+>     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y)
+377c377
+<     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y)
+---
+>     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y)
+380c380
+<     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y)
+---
+>     ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y)
+387c387
+<     (mW (loc j (h zero)) (λ p → ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j p (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) y) ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y))
+---
+>     (mW (loc j (h zero)) (λ p → ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j p (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) y) ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y))
+390c390
+<     (mW (loc j (h zero)) (λ p → ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j p (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) y) ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y))
+---
+>     (mW (loc j (h zero)) (λ p → ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j p (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) y) ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y))
+393c393
+<     (mW (loc j (h zero)) (λ p → ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j p (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) y) ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y))
+---
+>     (mW (loc j (h zero)) (λ p → ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j p (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) y) ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y))
+396c396
+<     (mW (loc j (h zero)) (λ p → ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j p (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) y) ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y))
+---
+>     (mW (loc j (h zero)) (λ p → ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j p (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) y) ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y))
+399c399
+<     (mW (loc j (h zero)) (λ p → ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j p (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) y) ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y))
+---
+>     (mW (loc j (h zero)) (λ p → ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) j p (ψ (nd (sΩ k) h) o B j (inc c′ v) β x) y) ((ψ (nd (sΩ k) h) o B j (inc c′ v) β x) ⊞ ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y))
+453c453
+<       (+-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y))))
+---
+>       (+-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y))))
+456c456
+<       (+-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y))))
+---
+>       (+-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y))))
+459c459
+<       (+-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y))))
+---
+>       (+-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y))))
+462c462
+<       (+-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y))))
+---
+>       (+-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y))))
+465c465
+<       (+-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y))))
+---
+>       (+-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y))))
+472c472
+<         (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y)))))
+---
+>         (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y)))))
+477c477
+<         (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y)))))
+---
+>         (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y)))))
+482c482
+<         (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y)))))
+---
+>         (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y)))))
+487c487
+<         (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y)))))
+---
+>         (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y)))))
+492c492
+<         (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) y)))))
+---
+>         (+-mono _ (ι-mono j (proj₂ (ψ (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y)))))
+508c508
+<       (+-mono _ (ι-mono j (mono (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) r)))
+---
+>       (+-mono _ (ι-mono j (mono (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) r)))
+511c511
+<       (+-mono _ (ι-mono j (mono (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) r)))
+---
+>       (+-mono _ (ι-mono j (mono (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) r)))
+514c514
+<       (+-mono _ (ι-mono j (mono (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) r)))
+---
+>       (+-mono _ (ι-mono j (mono (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) r)))
+517c517
+<       (+-mono _ (ι-mono j (mono (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) r)))
+---
+>       (+-mono _ (ι-mono j (mono (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) r)))
+520c520
+<       (+-mono _ (ι-mono j (mono (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) r)))
+---
+>       (+-mono _ (ι-mono j (mono (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) r)))
+527c527
+<         (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) r))))
+---
+>         (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) r))))
+532c532
+<         (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) r))))
+---
+>         (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) r))))
+537c537
+<         (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) r))))
+---
+>         (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) r))))
+542c542
+<         (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) r))))
+---
+>         (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) r))))
+547c547
+<         (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (B₀ (h zero)) zero (z≤ (h zero)) (Ωt zero) r))))
+---
+>         (+-mono _ (ι-mono j (mono (h zero) (proj₂ o zero) (λ i u → ψ (nd (sΩ k) h) o B i (inc zero u) (B i (inc zero u)) x) zero (z≤ (h zero)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) r))))

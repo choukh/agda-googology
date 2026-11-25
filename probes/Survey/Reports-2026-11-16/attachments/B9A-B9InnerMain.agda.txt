@@ -1,0 +1,44 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B9A 入口. 编译定理, 无前提, 不用排中律与函数外延 (第 4 层值验收).
+-- (1) second : Second, 经 at1 : AtPart 1 (整棵 Y 1 与第二次更新的累加分支 U 1); 对一切 k ≥ 1 有 AtPart k.
+-- (2) 外层: ψ⁰ (body (Y 1)) ≼ read Ψ₃, 经原始内链 z 2 (以一次更新后的状态为底族). 不否定任何东西.
+module B9InnerMain where
+
+open import Data.Nat using (ℕ; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_)
+open import WVOne using (read)
+import WSLevel as WL
+open import WKShape using (Ψ₃)
+open import YiLAB7Orbit using (lvl1; ok₂)
+open import YiLAB7Replay using (Y; body; chainW; o₁; Ω₁op)
+open import YiLAB8Split using (AtPart; Second)
+import YiLAB9Orbit as O
+import B9InnerSecond as S2
+import B9InnerOuter as Out
+
+second : Second
+second = S2.second
+
+at1 : AtPart 1
+at1 = S2.at1
+
+at-suc : (k : ℕ) → AtPart (suc k)
+at-suc = S2.at-suc
+
+-- 两个消费者在第二次更新的状态分量上 (左: Level 参照; 右: W4 的实际计算).
+add-2 : LV.ψ⁰ (Y 1) ≼ read (proj₁ (ψ lvl1 (proj₂ ok₂ tt) (B₀ lvl1) zero (inc tt self) (Ωt zero) (chainW 2)))
+add-2 = S2.add-2
+
+exp-2 : LV.ψ⁰ (WL.ψ₁ (Y 1)) ≼ read (proj₁ (E o₁ tdNil (chainW 2) Ω₁op (B₀ lvl1) zero (inc tt self) (Ωt zero)))
+exp-2 = S2.exp-2
+
+-- 外层下界.
+outer : LV.ψ⁰ (body (Y 1)) ≼ read Ψ₃
+outer = Out.outer

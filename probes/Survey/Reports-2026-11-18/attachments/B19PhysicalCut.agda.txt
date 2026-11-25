@@ -1,0 +1,76 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- γ₂ 的严格初段对有限乘积封闭。实际下标越过此界时，指定反馈孩子从 1 起算的系数也须越界。
+module B19PhysicalCut where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Empty using (⊥-elim)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≼-suc; s≼s; ≅→≼)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Align.EboLeanBase using (n[]; c∷; c[])
+open import OCF.Align.EboLeanDef using (h0; []<)
+open import Relation.Binary.PropositionalEquality using (refl; subst; sym)
+open import WVOne using (read; T₀; 𝟏)
+open import W4Fold using (EBOᶜ)
+import B18Product as P
+open P using (_·_)
+import B19IdealProduct as V
+import B19IdealPowers as Pow
+import B19IdealMulCut as M
+import B19IdealGammaCut as G
+import B17Calibration as NF
+import B17ValueDich as Dic
+import B8FreezeMain as I
+import B19FirstTower as C
+import B18CellState as S
+import B18Reset as F
+import B17CellNext as Cells
+import B17Cofinal as O
+import B12EboRows as B
+import B19Coefficient as E
+import B19Canonical as K
+import B14Tower as W
+
+Γ = N.γ 2
+small : T₀ → Set
+small x = L.suc x ≼ Γ
+
+small-unit : small 𝟏
+small-unit = ≼-trans (G.At.R.succ-closed (mono<ⁿ n[] (NF.normal 1) (c∷ c[]) (h0 refl) (NF.h 1) []<)) (≅→≼ (L.≅-sym (NF.same 1)))
+
+small-omega : small L.ωᶜ
+small-omega = ≼-trans (s≼s (proj₂ (V.left-one L.ωᶜ))) (≼-trans
+  (G.At.Cap.normal-small (≼-trans small-unit (≅→≼ (NF.same 1)))) (≅→≼ (L.≅-sym (NF.same 1))))
+
+module With (lem : LEM) where
+  compare = Dic.Classical.compare lem
+
+  first-tower : ∀ j → (Γ ≼ read (W.Actual.idx (suc j))) → Γ ≼ S.At.fresh 0 j
+  first-tower j hits with compare Γ (S.At.fresh 0 j)
+  ... | inj₁ yes = yes
+  ... | inj₂ below = ⊥-elim (I.irr Γ (≼-trans (s≼s (≼-trans hits (proj₁ eq))) (M.closed lem L.ωᶜ (S.At.fresh 0 j) small-omega below))) where
+    eq = subst (λ x → read x ≈ᵛ (L.ωᶜ · S.At.fresh 0 j)) (sym (K.indices (suc j))) (C.index-factor j)
+
+  Witness = Σ ℕ (λ n → Γ ≼ F.fresh n)
+  scan : ∀ n → Witness ⊎ small (F.product n)
+  scan zero = inj₂ small-unit
+  scan (suc n) with scan n | compare Γ (F.fresh n)
+  ... | inj₁ h | _ = inj₁ h
+  ... | inj₂ _ | inj₁ h = inj₁ (n , h)
+  ... | inj₂ h | inj₂ q = inj₂ (M.closed lem (F.product n) (F.fresh n) h q)
+
+  take : L.suc Γ ≼ read EBOᶜ → Witness
+  take h with O.witness h
+  ... | n , e with scan (suc n)
+  ...   | inj₁ w = w
+  ...   | inj₂ s = ⊥-elim (I.irr Γ (≼-trans e (≼-trans (proj₁ (E.exact n)) (≼-trans (≼-suc (≼-refl _)) s))))
+
+first-sufficient : ∀ j → Γ ≼ S.At.fresh 0 j → Γ ≼ read (W.Actual.idx (suc j))
+first-sufficient j h = subst (λ x → Γ ≼ read x) (sym (K.indices (suc j)))
+  (≼-trans h (≼-trans (proj₂ (V.left-one (S.At.fresh 0 j))) (≼-trans (P.mono Pow.omega-pos (≼-refl _)) (proj₂ (C.index-factor j)))))
+
+realize : (Σ ℕ (λ n → Γ ≼ F.fresh n)) → L.suc Γ ≼ read EBOᶜ
+realize (n , h) = ≼-trans (s≼s (≼-trans h (F.lower n))) (≼-trans (Cells.strict n 0) (Cells.actual n 0))

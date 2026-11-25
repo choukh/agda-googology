@@ -1,0 +1,191 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- Level 侧的乘幂 pwb (读作 V·ω^X) 与只到 ≅ 的恒等式.
+module KPow where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym)
+
+open import OCF.BTBO using (module Ord-Ord)
+open Ord-Ord using (iter)
+open import OCF.Align.Level
+
+-- 小工具: 沿 ≡ 改写 ≅ 的一侧; 由异质的 ≅ 取自反.
+≡ˡ : ∀ {ℓ₁ ℓ₂} {a b : Ordᶜ ℓ₁} {c : Ordᶜ ℓ₂} → a ≡ b → b ≅ c → a ≅ c
+≡ˡ refl e = e
+
+≡ʳ : ∀ {ℓ₁ ℓ₂} {a : Ordᶜ ℓ₁} {b c : Ordᶜ ℓ₂} → b ≡ c → a ≅ b → a ≅ c
+≡ʳ refl e = e
+
+reflˡ : ∀ {ℓ₁ ℓ₂} {a : Ordᶜ ℓ₁} {b : Ordᶜ ℓ₂} → a ≅ b → a ≅ a
+reflˡ e = ≅-trans e (≅-sym e)
+
+reflʳ : ∀ {ℓ₁ ℓ₂} {a : Ordᶜ ℓ₁} {b : Ordᶜ ℓ₂} → a ≅ b → b ≅ b
+reflʳ e = ≅-trans (≅-sym e) e
+
+iter-shift : ∀ {T : Set} (G : T → T) (a : T) n → iter G (G a) n ≡ G (iter G a n)
+iter-shift G a zero    = refl
+iter-shift G a (suc n) = cong G (iter-shift G a n)
+
+------------------------------------------------------------------------
+-- 1. 乘幂
+
+pwb : ∀ {k ℓ} → Ordᶜ ℓ → Simᴵ k ℓ → Ordᶜ k → Ordᶜ ℓ
+pwb V σ zero            = V
+pwb V σ (suc X)         = lim (iter (pwb V σ X +_) zero)
+pwb V σ (lim f)         = lim (λ n → pwb V σ (f n))
+pwb V σ (limᵢ q f)      = limᵢ (σ q) (λ y → pwb V σ (f (coe (<→◃ (σ q)) (<→◃ q) y)))
+pwb V σ (up zero x)     = pwb V (λ q → σ (suc q)) x
+pwb V σ (up (self n) x) = pwb V (λ q → σ (lim n q)) x
+
+------------------------------------------------------------------------
+-- 2. pwb 尊重 ≅ (照 add-≅)
+
+pwb-≅ : ∀ {k₁ ℓ₁ k₂ ℓ₂} {σ : Simᴵ k₁ ℓ₁} {σ′ : Simᴵ k₂ ℓ₂} {V : Ordᶜ ℓ₁} {V′ : Ordᶜ ℓ₂} {X : Ordᶜ k₁} {X′ : Ordᶜ k₂} →
+        V ≅ V′ → X ≅ X′ → pwb V σ X ≅ pwb V′ σ′ X′
+pwb-≅ eV z≅     = eV
+pwb-≅ eV (s≅ e) = l≅ (iter-R _≅_ (λ e′ → add-≅ (pwb-≅ eV e) e′) z≅)
+pwb-≅ eV (l≅ h) = l≅ (λ n → pwb-≅ eV (h n))
+pwb-≅ eV (upˡ {r = zero} e)   = pwb-≅ eV e
+pwb-≅ eV (upˡ {r = self n} e) = pwb-≅ eV e
+pwb-≅ eV (upʳ {r = zero} e)   = pwb-≅ eV e
+pwb-≅ eV (upʳ {r = self n} e) = pwb-≅ eV e
+pwb-≅ {σ = σ} {σ′ = σ′} {V = V} {V′ = V′} eV (lᵢ≅ {p = q} {q = q′} {f = f} {g = g} e h) = lᵢ≅ e λ x y d →
+  ≡ˡ (cong (λ w → pwb V σ (f (into (<→◃ q) w))) (out-into (<→◃ (σ q)) x))
+     (≡ʳ (cong (λ w → pwb V′ σ′ (g (into (<→◃ q′) w))) (sym (out-into (<→◃ (σ′ q′)) y)))
+         (pwb-≅ eV (h x y (R-conv (<→◃ (σ q)) (<→◃ q) d))))
+
+------------------------------------------------------------------------
+-- 3. 自身层折叠的形状: ψ (a + x) ≅ ψ a · ω^x
+
+ψadd≅ : ∀ {ℓ k k′ ℓ′} {a : Ordᶜ ℓ} {σ : Simᴵ k ℓ} {V : Ordᶜ ℓ′} {σ′ : Simᴵ k′ ℓ′} {x : Ordᶜ k} {x′ : Ordᶜ k′} →
+  ψ {i = ℓ} {k = ℓ} {ℓ = suc ℓ} zero (λ q → suc q) a ≅ V → x ≅ x′ →
+  ψ {i = ℓ} {k = ℓ} {ℓ = suc ℓ} zero (λ q → suc q) (add a σ x) ≅ pwb V σ′ x′
+ψadd≅ eV z≅     = eV
+ψadd≅ eV (s≅ d) = l≅ (iter-R _≅_ (λ e′ → add-≅ (ψadd≅ eV d) e′) z≅)
+ψadd≅ eV (l≅ h) = l≅ (λ n → ψadd≅ eV (h n))
+ψadd≅ eV (upˡ {r = zero} d)   = ψadd≅ eV d
+ψadd≅ eV (upˡ {r = self n} d) = ψadd≅ eV d
+ψadd≅ eV (upʳ {r = zero} d)   = ψadd≅ eV d
+ψadd≅ eV (upʳ {r = self n} d) = ψadd≅ eV d
+ψadd≅ {ℓ} {a = a} {σ = σ} {V = V} {σ′ = σ′} eV (lᵢ≅ {j = j} {p = q} {q = q′} {f = f} {g = g} e h) = lᵢ≅ e λ x y d →
+  ≡ˡ (cong (λ w → ψ {i = ℓ} {k = ℓ} {ℓ = suc ℓ} zero (λ q → suc q)
+                     (add a σ (f (into (<→◃ q) (out (<→◃ (σ q)) (into (<→◃ (σ q)) (tr⁻ (≅ᴵ-refl j) w)))))))
+           (out-into (<→◃ (σ q)) x))
+  (≡ˡ (cong (λ w → ψ {i = ℓ} {k = ℓ} {ℓ = suc ℓ} zero (λ q → suc q) (add a σ (f (into (<→◃ q) w))))
+            (out-into (<→◃ (σ q)) (tr⁻ (≅ᴵ-refl j) x)))
+  (≡ʳ (cong (λ w → pwb V σ′ (g (into (<→◃ q′) w))) (sym (out-into (<→◃ (σ′ q′)) y)))
+      (ψadd≅ eV (h (tr⁻ (≅ᴵ-refl j) x) y (≅→R (<→◃ q) (tr⁻-≅ (≅ᴵ-refl j) (R→≅ (<→◃ (σ q)) d)))))))
+
+ψ-add : ∀ {k ℓ} (a : Ordᶜ ℓ) (σ : Simᴵ k ℓ) (x : Ordᶜ k) → a ≅ a → x ≅ x →
+  ψ {i = ℓ} {k = ℓ} {ℓ = suc ℓ} zero (λ q → suc q) (add a σ x) ≅ pwb (ψ zero (λ q → suc q) a) σ x
+ψ-add {ℓ = ℓ} a σ x ea ex = ψadd≅ (ψ-≅ (≅ᴵ-refl ℓ) ea) ex
+
+------------------------------------------------------------------------
+-- 4. 加法: 结合, 零是左单位
+
+add-assoc≅ : ∀ {m k ℓ m′ ℓ′} {a : Ordᶜ ℓ} {σ : Simᴵ k ℓ} {b : Ordᶜ k} {τ : Simᴵ m k} {A : Ordᶜ ℓ′} {ρ : Simᴵ m′ ℓ′}
+  {c : Ordᶜ m} {c′ : Ordᶜ m′} → add a σ b ≅ A → c ≅ c′ → add a σ (add b τ c) ≅ add A ρ c′
+add-assoc≅ E z≅     = E
+add-assoc≅ E (s≅ d) = s≅ (add-assoc≅ E d)
+add-assoc≅ E (l≅ h) = l≅ (λ n → add-assoc≅ E (h n))
+add-assoc≅ E (upˡ {r = zero} d)   = add-assoc≅ E d
+add-assoc≅ E (upˡ {r = self n} d) = add-assoc≅ E d
+add-assoc≅ E (upʳ {r = zero} d)   = add-assoc≅ E d
+add-assoc≅ E (upʳ {r = self n} d) = add-assoc≅ E d
+add-assoc≅ {a = a} {σ = σ} {b = b} {τ = τ} {A = A} {ρ = ρ} E (lᵢ≅ {p = q} {q = q′} {f = f} {g = g} e h) = lᵢ≅ e λ x y d →
+  ≡ˡ (cong (λ w → add a σ (add b τ (f (into (<→◃ q) (out (<→◃ (τ q)) (into (<→◃ (τ q)) w))))))
+           (out-into (<→◃ (σ (τ q))) x))
+  (≡ˡ (cong (λ w → add a σ (add b τ (f (into (<→◃ q) w)))) (out-into (<→◃ (τ q)) x))
+  (≡ʳ (cong (λ w → add A ρ (g (into (<→◃ q′) w))) (sym (out-into (<→◃ (ρ q′)) y)))
+      (add-assoc≅ E (h x y (R-conv (<→◃ (σ (τ q))) (<→◃ q) d)))))
+
+add-assoc : ∀ {m k ℓ} (a : Ordᶜ ℓ) (σ : Simᴵ k ℓ) (b : Ordᶜ k) (τ : Simᴵ m k) (c : Ordᶜ m) →
+  a ≅ a → b ≅ b → c ≅ c → add a σ (add b τ c) ≅ add (add a σ b) (λ q → σ (τ q)) c
+add-assoc a σ b τ c ea eb ec = add-assoc≅ (add-≅ ea eb) ec
+
+add-zeroˡ≅ : ∀ {k ℓ k′} {σ : Simᴵ k ℓ} {x : Ordᶜ k} {x′ : Ordᶜ k′} → x ≅ x′ → add zero σ x ≅ x′
+add-zeroˡ≅ z≅     = z≅
+add-zeroˡ≅ (s≅ d) = s≅ (add-zeroˡ≅ d)
+add-zeroˡ≅ (l≅ h) = l≅ (λ n → add-zeroˡ≅ (h n))
+add-zeroˡ≅ (upˡ {r = zero} d)   = add-zeroˡ≅ d
+add-zeroˡ≅ (upˡ {r = self n} d) = add-zeroˡ≅ d
+add-zeroˡ≅ (upʳ {r = zero} d)   = upʳ (add-zeroˡ≅ d)
+add-zeroˡ≅ (upʳ {r = self n} d) = upʳ (add-zeroˡ≅ d)
+add-zeroˡ≅ {σ = σ} (lᵢ≅ {p = q} {f = f} e h) = lᵢ≅ e λ x y d →
+  ≡ˡ (cong (λ w → add zero σ (f (into (<→◃ q) w))) (out-into (<→◃ (σ q)) x))
+     (add-zeroˡ≅ (h x y (R-conv (<→◃ (σ q)) (<→◃ q) d)))
+
+add-zeroˡ : ∀ {k ℓ} (σ : Simᴵ k ℓ) (x : Ordᶜ k) → x ≅ x → add zero σ x ≅ x
+add-zeroˡ σ x ex = add-zeroˡ≅ ex
+
+------------------------------------------------------------------------
+-- 5. 先 ω^A 再 ω^Z
+
+pwb-add≅ : ∀ {m k ℓ m′ ℓ′} {V : Ordᶜ ℓ} {σ : Simᴵ k ℓ} {A : Ordᶜ k} {τ : Simᴵ m k} {W : Ordᶜ ℓ′} {ρ : Simᴵ m′ ℓ′}
+  {Z : Ordᶜ m} {Z′ : Ordᶜ m′} → pwb V σ A ≅ W → Z ≅ Z′ → pwb V σ (add A τ Z) ≅ pwb W ρ Z′
+pwb-add≅ E z≅     = E
+pwb-add≅ E (s≅ d) = l≅ (iter-R _≅_ (λ e′ → add-≅ (pwb-add≅ E d) e′) z≅)
+pwb-add≅ E (l≅ h) = l≅ (λ n → pwb-add≅ E (h n))
+pwb-add≅ E (upˡ {r = zero} d)   = pwb-add≅ E d
+pwb-add≅ E (upˡ {r = self n} d) = pwb-add≅ E d
+pwb-add≅ E (upʳ {r = zero} d)   = pwb-add≅ E d
+pwb-add≅ E (upʳ {r = self n} d) = pwb-add≅ E d
+pwb-add≅ {V = V} {σ = σ} {A = A} {τ = τ} {W = W} {ρ = ρ} E (lᵢ≅ {p = q} {q = q′} {f = f} {g = g} e h) = lᵢ≅ e λ x y d →
+  ≡ˡ (cong (λ w → pwb V σ (add A τ (f (into (<→◃ q) (out (<→◃ (τ q)) (into (<→◃ (τ q)) w))))))
+           (out-into (<→◃ (σ (τ q))) x))
+  (≡ˡ (cong (λ w → pwb V σ (add A τ (f (into (<→◃ q) w)))) (out-into (<→◃ (τ q)) x))
+  (≡ʳ (cong (λ w → pwb W ρ (g (into (<→◃ q′) w))) (sym (out-into (<→◃ (ρ q′)) y)))
+      (pwb-add≅ E (h x y (R-conv (<→◃ (σ (τ q))) (<→◃ q) d)))))
+
+pwb-add : ∀ {m k ℓ} (V : Ordᶜ ℓ) (σ : Simᴵ k ℓ) (A : Ordᶜ k) (τ : Simᴵ m k) (Z : Ordᶜ m) →
+  V ≅ V → A ≅ A → Z ≅ Z → pwb V σ (add A τ Z) ≅ pwb (pwb V σ A) (λ q → σ (τ q)) Z
+pwb-add V σ A τ Z eV eA eZ = pwb-add≅ (pwb-≅ eV eA) eZ
+
+------------------------------------------------------------------------
+-- 6. 一阶迭代: 把 κ 从 W 起迭代 ω^X 次
+
+it0 : ∀ {k ℓ} → Simᴵ k ℓ → Ordᶜ k → (Ordᶜ ℓ → Ordᶜ ℓ) → Ordᶜ ℓ → Ordᶜ ℓ
+it0 σ zero            κ W = κ W
+it0 σ (suc X)         κ W = lim (λ j → iter (it0 σ X κ) W j)
+it0 σ (lim f)         κ W = lim (λ n → it0 σ (f n) κ W)
+it0 σ (limᵢ q f)      κ W = limᵢ (σ q) (λ y → it0 σ (f (coe (<→◃ (σ q)) (<→◃ q) y)) κ W)
+it0 σ (up zero x)     κ W = it0 (λ q → σ (suc q)) x κ W
+it0 σ (up (self n) x) κ W = it0 (λ q → σ (lim n q)) x κ W
+
+-- 目标层 ℓ 两边相同; 指数一侧的层与 Sim 可以不同.
+pwb-pwb≅ : ∀ {m k ℓ m′} {σ : Simᴵ k ℓ} {B : Ordᶜ k} {τ : Simᴵ m k} {ρ : Simᴵ m′ ℓ} {κ : Ordᶜ ℓ → Ordᶜ ℓ} →
+  B ≅ B → (∀ {W W′ : Ordᶜ ℓ} → W ≅ W′ → pwb W σ B ≅ κ W′) →
+  ∀ {X : Ordᶜ m} {X′ : Ordᶜ m′} → X ≅ X′ → ∀ {W W′ : Ordᶜ ℓ} → W ≅ W′ → pwb W σ (pwb B τ X) ≅ it0 ρ X′ κ W′
+pwb-pwb≅ eB K z≅     eW = K eW
+pwb-pwb≅ {σ = σ} {B = B} {τ = τ} {ρ = ρ} {κ = κ} eB K (s≅ {a = X₀} {b = X₀′} d) eW = l≅ (λ n → go n eW)
+  where
+  P = pwb B τ X₀
+  g = iter (P +_) zero
+  PP : P ≅ P
+  PP = pwb-≅ eB (reflˡ d)
+  gg : ∀ n → g n ≅ g n
+  gg = iter-R _≅_ (λ e′ → add-≅ PP e′) z≅
+  go : ∀ n {W W′} → W ≅ W′ → pwb W σ (g n) ≅ iter (it0 ρ X₀′ κ) W′ n
+  go zero    e = e
+  go (suc n) {W} {W′} e =
+    ≡ʳ (iter-shift (it0 ρ X₀′ κ) W′ n)
+       (≅-trans (pwb-add≅ {τ = λ q → q} {ρ = σ} IH (gg n)) (go n (reflʳ IH)))
+    where
+    IH : pwb W σ P ≅ it0 ρ X₀′ κ W′
+    IH = pwb-pwb≅ eB K d e
+pwb-pwb≅ eB K (l≅ h) eW = l≅ (λ n → pwb-pwb≅ eB K (h n) eW)
+pwb-pwb≅ eB K (upˡ {r = zero} d)   eW = pwb-pwb≅ eB K d eW
+pwb-pwb≅ eB K (upˡ {r = self n} d) eW = pwb-pwb≅ eB K d eW
+pwb-pwb≅ eB K (upʳ {r = zero} d)   eW = pwb-pwb≅ eB K d eW
+pwb-pwb≅ eB K (upʳ {r = self n} d) eW = pwb-pwb≅ eB K d eW
+pwb-pwb≅ {σ = σ} {B = B} {τ = τ} {ρ = ρ} {κ = κ} eB K (lᵢ≅ {p = q} {q = q′} {f = f} {g = g} e h) {W} {W′} eW = lᵢ≅ e λ x y d →
+  ≡ˡ (cong (λ w → pwb W σ (pwb B τ (f (into (<→◃ q) (out (<→◃ (τ q)) (into (<→◃ (τ q)) w))))))
+           (out-into (<→◃ (σ (τ q))) x))
+  (≡ˡ (cong (λ w → pwb W σ (pwb B τ (f (into (<→◃ q) w)))) (out-into (<→◃ (τ q)) x))
+  (≡ʳ (cong (λ w → it0 ρ (g (into (<→◃ q′) w)) κ W′) (sym (out-into (<→◃ (ρ q′)) y)))
+      (pwb-pwb≅ eB K (h x y (R-conv (<→◃ (σ (τ q))) (<→◃ q) d)) eW)))
+
+pwb-pwb : ∀ {m k ℓ} (W : Ordᶜ ℓ) (σ : Simᴵ k ℓ) (B : Ordᶜ k) (τ : Simᴵ m k) (X : Ordᶜ m) →
+  W ≅ W → B ≅ B → X ≅ X →
+  pwb W σ (pwb B τ X) ≅ it0 (λ q → σ (τ q)) X (λ W′ → pwb W′ σ B) W
+pwb-pwb W σ B τ X eW eB eX = pwb-pwb≅ eB (λ e → pwb-≅ e eB) eX eW

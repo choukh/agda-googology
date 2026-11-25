@@ -1,0 +1,64 @@
+# 任意有限路径的保留分派
+验收文件；编译定理。源、目标带等式，对任意实际 self/inc/inu 路径直接归纳分派 kp⁼。
+两端在 self 相合用有限端点证书的证据无关；没有路径等于 Sb 的前提。
+来源：YiHCFold.kcase 的两种效果与 YiHCBridge 的等式换型；后续用于新折叠的保持。
+
+```agda
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+module OCF.Lean.YiPJCase where
+open import Data.Nat using (ℕ; zero; suc) renaming (_≤_ to _≤ⁿ_)
+open import Data.Nat.Properties using (≤-refl)
+open import Data.Unit using (tt)
+open import Data.Maybe using (just; nothing)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Keep; kp⁼)
+open import OCF.Lean.YiCLFam using (fn; lev; levP)
+open import OCF.Lean.YiHCBridge using (LwB)
+import OCF.Align.EboLeanDef as E
+open import OCF.Lean.YiPJPath using (bound)
+open import OCF.Lean.YiPJPoint using (index-eq; proof-irrel)
+
+FinPoint : L → Set
+FinPoint ℓ = Σ ℕ (λ n → ℓ ≡ fn n)
+unique : ∀ ℓ (p q : FinPoint ℓ) → p ≡ q
+unique ℓ (n , e) (j , e′) with index-eq n j ℓ e e′
+... | refl = cong (λ q → n , q) (proof-irrel n ℓ e e′)
+
+levB : ∀ N ℓ → ℓ ≡ fn N → Pos⁼ ℓ → ℕ
+levB N _ refl = lev N
+levPB : ∀ N ℓ → ℓ ≡ fn N → Pos ℓ → ℕ
+levPB N _ refl = levP N
+
+Case : (N : ℕ) (ℓ : L) (e : ℓ ≡ fn N) (j : ℕ) (j′ : L) (e′ : j′ ≡ fn j)
+     → (o : Ok ℓ) (t : Pos⁼ ℓ) (v : j′ ≤ ℓ) → Set₁
+Case N ℓ e j j′ e′ o t v = (Q : Keep j′ (Br⁼ ℓ t) (bz⁼ ℓ t) → Set)
+  → (j ≤ⁿ levB N ℓ e t → Q nothing)
+  → ((q : Pos j′) (cv : Br j′ q → Br⁼ ℓ t) (eq : cv (fromBr j′ q zero) ≡ bz⁼ ℓ t)
+      → levPB j j′ e′ q ≡ levB N ℓ e t
+      → (∀ η c → LwB j′ e′ (inj₂ q) η c → LwB ℓ e t η (cv c))
+      → Q (just (q , cv , eq)))
+  → Q (kp⁼ ℓ o t v)
+
+same : ∀ N ℓ (e : ℓ ≡ fn N) o t → Case N ℓ e N ℓ e o t self
+same N _ refl o (inj₁ tt) Q dr kc = dr ≤-refl
+same N _ refl o (inj₂ p) Q dr kc = kc p (λ z → z) refl refl (λ η c l → l)
+selfCase : ∀ N ℓ (e : ℓ ≡ fn N) j (e′ : ℓ ≡ fn j) o t → Case N ℓ e j ℓ e′ o t self
+selfCase N ℓ e j e′ o t = subst (λ p → Case N ℓ e (proj₁ p) ℓ (proj₂ p) o t self)
+  (unique ℓ (N , e) (j , e′)) (same N ℓ e o t)
+
+cases : ∀ N ℓ (e : ℓ ≡ fn N) j j′ (e′ : j′ ≡ fn j) o t v → Case N ℓ e j j′ e′ o t v
+cases N ℓ e j .ℓ e′ o t self = selfCase N ℓ e j e′ o t
+cases zero (nd s h) () j j′ e′ o t v
+cases (suc N) (nd sL h) () j j′ e′ o t v
+cases (suc N) (nd (sΩ k) h) () j j′ e′ o t v
+cases (suc N) _ refl j j′ e′ o (inj₂ (inj₁ ())) v
+cases (suc N) _ refl j j′ e′ o (inj₁ tt) (inc tt v) Q dr kc = dr (bound (suc N) _ refl j j′ e′ (inc tt v))
+cases (suc N) _ refl j j′ e′ o (inj₂ (inj₂ (tt , t))) (inc tt v) = cases N _ refl j j′ e′ (proj₂ o tt) t v
+cases (suc N) _ refl j j′ e′ o (inj₁ tt) (inu vs) Q dr kc = dr (bound (suc N) _ refl j j′ e′ (inu vs))
+cases (suc N) _ refl j j′ e′ o (inj₂ (inj₂ (tt , t))) (inu vs) = cases N _ refl j j′ e′ (proj₂ o tt) t (vs tt)
+```

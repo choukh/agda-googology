@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 每次用上一次的零层输出作可数升阶指数。真实选层链的每个正号下标是有步进证书的极限。
+module B16Feedback where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Maybe using (nothing; just)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import W4Block
+open import W4Fold
+open import W4Path
+open import W4Ops
+open import WVOne using (read; T₀; 𝟏; h₁)
+open import OCF.Align.Value using (_≼_; ≼l; l≼; s≼s; ≼-refl; ≼-trans; ≼-suc)
+import OCF.Align.Level as L
+import B12Terminal as T
+import B12ActualSlots as A
+import B12Strict as K
+import B14Tower as W
+import B14PathHeight as P
+import B14Height as H
+import B16ReadIndex as J
+
+data LimitTree : Tr zero → Set where
+  root : ∀ {f d} → LimitTree (lim f d)
+room : ∀ {x : T₀} {z : Tr zero} → LimitTree z → L.suc x ≼ read z → L.suc (L.suc x) ≼ read z
+room (root {d = ord}) (≼l n p) = ≼l (suc n) (≼-trans (s≼s p) (K.strict (ord n)))
+
+shape : ∀ z (r : T.Run (h₁ z)) (w : zero ≤ h₁ z) → P.All w →
+  LimitTree (proj₁ (ψ _ (T.Run.ok r) (T.Run.bs r) zero w (T.Run.β r) (proj₁ (Ωt (h₁ z)))))
+shape zero r .self P.base = root
+shape (suc z) r (inu ws) (P.each normal) = root
+shape (lim f d) r (inu ws) (P.each normal) = root
+shape (Ω () _) r w p
+shape (up _ () _ _) r w p
+shape (ex _ _ _ _ ()) r w p
+
+next : T₀ → T₀
+next x = H.act (L.suc x) 𝟏
+next-strict : ∀ x → L.suc x ≼ next x
+next-strict x = J.index (L.suc x)
+
+module Trace (r : T.Run (tw 1)) (hr : A.Covered r) (all : ∀ z → P.All (W.At.path r z)) where
+  open W.At r hiding (next)
+  module End = J.FirstTower r hr
+  is-limit : ∀ m → LimitTree (idx (suc m))
+  is-limit m = shape (idx m) (chain (idx m)) (path (idx m)) (all (idx m))
+
+  feedback : ∀ m x → L.suc x ≼ read (idx (suc m)) → L.suc (next x) ≼ read (idx (suc (suc m)))
+  feedback m x e = ≼-trans (J.strict (L.suc x) 𝟏 (≼-refl _))
+    (P.compare z (all z) (room (is-limit m) e) (chain z) (W.chain-covered r hr z) 𝟏 (T.Run.oneβ (chain z)))
+    where z = idx (suc m)
+
+  module From (m : ℕ) (Q : T₀) (seed : L.suc Q ≼ read (idx (suc m))) where
+    stages = iter next Q
+    loc = iter suc m
+    tracked : ∀ n → L.suc (stages n) ≼ read (idx (suc (loc n)))
+    tracked zero = seed
+    tracked (suc n) = feedback (loc n) (stages n) (tracked n)
+    closed : L.lim (λ n → L.suc (stages n)) ≼ read (T.value r)
+    closed = l≼ (λ n → ≼-trans (tracked n) (End.indices (suc (loc n))))

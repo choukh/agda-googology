@@ -1,0 +1,29 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21CrossNode where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read)
+import B12Terminal as T
+import B13FiniteLift as U
+import B15Spine as S
+import B21CrossFront as Fr
+import B21CrossPath as Z
+open T.Run
+
+feed : ∀ l → l ≡ U.sc Fr.k → ∀ o b (w : zero ≤ l) v → v ≡ Ωt zero →
+  Fr.Head (proj₁ (ψ l o b zero w v (proj₁ (Ωt l))))
+feed .(U.sc Fr.k) refl o b w .(Ωt zero) refl = Fr.At.own o b w
+
+module At (h : Tr zero → W4Block.L) (same : h zero ≡ U.sc Fr.k)
+          (r : T.Run (nd (sΩ zero) h)) (bs1 : Z.Ones r) where
+  module C = S.Cardinal zero h r
+  front : Fr.Head (C.ix 1)
+  front = feed (h zero) same (proj₂ (ok r) zero) (λ i w → bs r i (inc zero w))
+    (self ∙ proj₂ (proj₁ (ok r)) zero) (bs r zero (ink self)) (bs1 _)
+  ready : ∀ j → Z.Ones (C.child j)
+  ready j w = bs1 (inc (C.ix j) w)

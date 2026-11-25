@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- sc(tw 1) 的真实变底迭代同时更新两个零层输入，允许前一项的 Ω₁ 尾继续用作下一项的前缀。
+module B20OldTail where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; 𝟏; read; h₁)
+open import WVTwo using (◃→≼)
+open import WSLevel using (Ω₁ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; l≼; z≼; ≅→≼)
+open import B12LimitSrc using (Lev₂)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B14Tower as W
+import B14PathHeight as P
+import B15FixedWitness as H
+import B19RowSecondParent as Prev
+import B20OldInk as Ink
+open T.Run
+
+next : Lev₂ → Lev₂
+next p = p L.+ L.up L.zero Ω₁ᴸ
+block : Lev₂ → Lev₂
+block p = L.lim (iter next p)
+open import B13FiniteLift using (sc)
+k = tw 1
+port : zero ≤ k
+port = ink self
+out : zero ≤ k
+out = z≤ k
+type : Lev₂ → Set
+type = λ p → H.At k (Ok-tw 1) (λ _ → L.ψ⁰ p)
+
+module At (r : T.Run (sc k)) (cv : A.Covered r) (same : proj₂ (ok r) tt ≡ Ok-tw 1) where
+  module Lf = H.Lift (sΩ zero) h₁ r cv
+  open Lf.V using (K; S; v; snap; r₀; c; cover; outer)
+  top = cv k (inc tt self)
+  weak : ∀ (B : Base k) (w : zero ≤ k) (v : Tr⁺ zero) →
+       read (proj₁ (ψ k (ok r₀) B zero w v (proj₁ (Ωt k)))) ≼ read (proj₁ (ψ k (ok r₀) B zero w v c))
+  weak B w b with top
+  ... | inj₁ e = subst (λ y → _ ≼ read (proj₁ (ψ k (ok r₀) B zero w b y))) e (≼-refl _)
+  ... | inj₂ d = ◃→≼ (mono k (ok r₀) B zero w b d)
+
+  module From (s : T.Run k) (eq : ok s ≡ ok r₀) (cs : A.Covered s) where
+    ordinary = λ w b → read (proj₁ (ψ k (ok s) (bs s) zero w b (proj₁ (Ωt k))))
+    update = λ w b → read (proj₁ (ψ k (ok s) (bs s) zero w b c))
+    adapt : ∀ {x : T₀} w b → x ≼ ordinary w b → x ≼ update w b
+    adapt w b q = ≼-trans q (subst (λ o → read (proj₁ (ψ k o (bs s) zero w b (proj₁ (Ωt k)))) ≼ read (proj₁ (ψ k o (bs s) zero w b c))) (Relation.Binary.PropositionalEquality.sym eq) (weak (bs s) w b))
+    norm : ok s ≡ Ok-tw 1
+    norm = Relation.Binary.PropositionalEquality.trans eq same
+    slots : ∀ {x : T₀} → x ≼ ordinary out (bs s zero port) → x ≼ ordinary port (bs s zero port)
+    slots {x} h = ≼-trans h (fix (ok s) norm)
+      where
+      fix : ∀ o → o ≡ Ok-tw 1 → read (proj₁ (ψ k o (bs s) zero out (bs s zero port) (proj₁ (Ωt k)))) ≼
+                                read (proj₁ (ψ k o (bs s) zero port (bs s zero port) (proj₁ (Ωt k))))
+      fix .(Ok-tw 1) refl = ≅→≼ (Ink.At.value (bs s) (bs s zero port))
+    refill = W.reset s (bs s zero port) (oneB s port)
+    starts : ∀ p → type p → (L.ψ⁰ p ≼ update port (bs s zero port)) × (L.ψ⁰ p ≼ update out (β s))
+    starts p high = adapt port _ (slots (high refill norm cs 𝟏 (oneB s port))) , adapt out _ (high s norm cs 𝟏 (oneβ s))
+    advance : ∀ p → L.ψ⁰ p ≼ read (proj₁ (bs s zero port)) → L.ψ⁰ p ≼ read (proj₁ (β s)) →
+          (L.ψ⁰ (next p) ≼ update port (bs s zero port)) × (L.ψ⁰ (next p) ≼ update out (β s))
+    advance p left right = adapt port _ (slots (Prev.Orbit.full p refill cs paths left left)) ,
+                           adapt out _ (Prev.Orbit.full p s cs paths left right)
+      where
+      paths : ∀ z → P.All (W.At.path s z)
+      paths z = subst (λ o → P.All (self ∙ proj₂ (proj₁ o) z)) (Relation.Binary.PropositionalEquality.sym norm) (P.through (↑ zero z))
+
+  module Start = From r₀ refl Lf.V.sub-covered
+  module Stage (j : ℕ) = From (snap j) refl (cover j)
+  pair : ∀ p → type p → (j : ℕ) → (L.ψ⁰ (iter next p j) ≼ read (proj₁ (S j zero port))) × (L.ψ⁰ (iter next p j) ≼ read (proj₁ (v j)))
+  pair p h zero = Start.starts p h
+  pair p h (suc n) = Stage.advance n (iter next p n) (proj₁ (pair p h n)) (proj₂ (pair p h n))
+  complete : ∀ p → type p → L.ψ⁰ (block p) ≼ read (T.value r)
+  complete p h = l≼ (λ n → ≼-trans (proj₂ (pair p h n)) (≼-trans (◃→≼ (inf K (S n) zero out (v n))) (outer n)))

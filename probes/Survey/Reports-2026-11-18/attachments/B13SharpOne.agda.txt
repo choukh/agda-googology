@@ -1,0 +1,99 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 路线对照。ψ♯ 使用排中律。在第一层 Ω 上，匹配的两个零层底给出逐支相同的输出结构。
+module B13SharpOne where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; _,_)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Maybe using (nothing; just)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiRWFold as RF
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+import W4Path as P
+open import WVOne using (read; lvl1)
+import OCF.Align.Level as L
+
+data Match : R.Tr R.zero → B.Tr B.zero → Set where
+  z : Match R.zero B.zero
+  s : ∀ {a b} → Match a b → Match (R.suc a) (B.suc b)
+  l : ∀ {f g r u} → (∀ n → Match (f n) (g n)) → Match (R.lim f r) (B.lim g u)
+
+shape : ∀ {a b} → Match a b → readRW a L.≅ read b
+shape z = L.z≅
+shape (s h) = L.s≅ (shape h)
+shape (l h) = L.l≅ (λ n → shape (h n))
+
+add : ∀ {a b u v} → Match a b → Match u v → Match (a V.+ u) (b W.+ v)
+add p z = p
+add p (s h) = s (add p h)
+add p (l h) = l (λ n → add p (h n))
+
+iters : ∀ {f g a b} → (∀ {u v} → Match u v → Match (f u) (g v)) →
+        Match a b → ∀ n → Match (V.iter f a n) (B.iter g b n)
+iters step p zero = p
+iters step p (suc n) = step (iters step p n)
+
+next : ∀ (a : V.Tr⁺ R.zero) (b : W.Tr⁺ B.zero) → Match (proj₁ a) (proj₁ b) →
+       Match (proj₁ (V.next⁺ a)) (proj₁ (W.next⁺ b))
+next a b h = l (iters (add h) h)
+
+sums : ∀ {f g} → (∀ n → Match (f n) (g n)) → ∀ n → Match (V.cum f n) (W.cum g n)
+sums h zero = h zero
+sums h (suc n) = add (sums h n) (h (suc n))
+
+empty-slot : ∀ {X : Set} {x : X} (k : RF.Keep R.zero X x) → k ≡ nothing
+empty-slot nothing = refl
+empty-slot (just (() , _))
+
+r₁ : R.L
+r₁ = R.nd R.sS (λ _ → R.zero)
+
+module Compare (lem : LEM) where
+  open I.Sharp lem
+
+  leaf : (bs : Base♯) (w : F.Base B.zero) (a : V.Tr⁺ R.zero) (b : W.Tr⁺ B.zero) →
+         Match (proj₁ a) (proj₁ b) → ∀ {x y} → Match x y →
+         Match (proj₁ (ψ♯ R.zero tt bs R.zero tt a x)) (proj₁ (F.ψ B.zero tt w B.zero B.self b y))
+  leaf bs w a b h z = h
+  leaf bs w a b h (s p) = next _ _ (leaf bs w a b h p)
+  leaf bs w a b h (l q) = l (λ n → leaf bs w a b h (q n))
+
+  module One (bs : Base♯) (w : F.Base lvl1) (a : V.Tr⁺ R.zero) (b : W.Tr⁺ B.zero)
+             (ha : Match (proj₁ a) (proj₁ b))
+             (hc : Match (proj₁ (bs R.zero tt)) (proj₁ (w B.zero (B.inc tt B.self)))) where
+
+    left : V.Tr⁺ R.zero → R.Tr R.zero → V.Tr⁺ R.zero
+    left β x = ψ♯ R.zero tt bs R.zero tt β (R.suc x)
+
+    right : W.Tr⁺ B.zero → B.Tr B.zero → W.Tr⁺ B.zero
+    right β x = F.ψ B.zero tt (λ i u → w i (B.inc tt u)) B.zero B.self β (B.suc x)
+
+    step : ∀ {u v} → Match u v →
+      Match (proj₁ (left (bs R.zero tt) u)) (proj₁ (right (w B.zero (B.inc tt B.self)) v))
+    step p = leaf bs _ _ _ hc (s p)
+
+    zs : ℕ → R.Tr R.zero
+    zs = V.iter (λ x → proj₁ (left (bs R.zero tt) x)) R.zero
+
+    ws : ℕ → B.Tr B.zero
+    ws = B.iter (λ x → proj₁ (right (w B.zero (B.inc tt B.self)) x)) B.zero
+
+    items : ∀ n → Match (proj₁ (left a (zs n))) (proj₁ (right b (ws n)))
+    items n = leaf bs _ a b ha (s (iters step z n))
+
+    omega : Match (proj₁ (ψ♯ r₁ (tt , (λ _ → tt)) bs R.zero tt a (proj₁ (V.Ωt r₁))))
+                  (proj₁ (F.ψ lvl1 (tt , (λ _ → tt)) w B.zero (P.z≤ lvl1) b (proj₁ (W.Ωt lvl1))))
+    omega rewrite empty-slot (kp♯ r₁ (tt , (λ _ → tt)) (inj₂ (tt , inj₁ tt)) R.zero tt)
+          = l (sums items)
+
+  standard : readRW (proj₁ (ψ♯ r₁ (tt , (λ _ → tt)) B♯ R.zero tt (V.Ωt R.zero) (proj₁ (V.Ωt r₁))))
+             L.≅ read (proj₁ (F.ψ₀ lvl1 (tt , (λ _ → tt)) (proj₁ (W.Ωt lvl1))))
+  standard = shape (One.omega B♯ (F.B₀ lvl1) (V.Ωt R.zero) (W.Ωt B.zero) (s z) (s z))

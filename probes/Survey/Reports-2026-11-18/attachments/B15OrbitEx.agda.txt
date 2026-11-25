@@ -1,0 +1,94 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 同一实际指数含 ex b b (suc 0)，故同一个 Q 在任意已描述状态上实现所有有限阶 raise。
+module B15OrbitEx where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import W4Block hiding (at; R)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (◃→≼; p₂; g₂)
+open import WKGen using (Ω₁t; node-ge)
+open import WKShape using (lvl3; Ψ₃; ok₃)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; c₁)
+open import B9InnerOuter using (w2)
+open import WSShadow using (ES; zC)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-trans; 1≼ψ⁰)
+import B11OuterCore as C
+import B12LimitSrc as Z
+import B12Update as U
+import B12ActualSlots as Cover
+import B12Terminal as T
+import B13SeedOuter as St
+import B13Orbit as V
+import B13Update as Step
+import B13OrbitFeed as O
+import B14OrbitRise as Rise
+import B14OrbitPrefix as Pre
+import B14RefDescribed as D
+import B15OrbitAction as A
+import B15OrbitModel as X
+import B15OrbitRaise as H
+open H using (module Outer)
+
+shift : ∀ {B : Set} (f : B → B) b n → iter f b (suc n) ≡ iter f (f b) n
+shift f b zero = refl
+shift f b (suc n) = cong f (shift f b n)
+
+module Ex (b : Tr lvl1) (nb : lvl1 ⊢ zero ◃ b) (cover : lvl1 ⊢ Ω₁t ◃ b) (K : Op X.X₁) (a : A.Act) (h : Outer.Models K a) where
+  R : Op X.X₁ → Op X.X₁
+  R F = op (E ok₂ O.D₁ b F) (Einf ok₂ O.D₁ b F)
+  opn = iter R K
+  actn = iter A.raise a
+  law : ∀ n → Outer.Models (opn n) (actn n)
+  law zero = h
+  law (suc n) = H.Rule.covers (opn n) (actn n) (law n) b cover
+
+  head = ex b b nb (suc zero) tt
+  into : ∀ n → Rl (opn n) (op (E ok₂ O.D₁ head K) (Einf ok₂ O.D₁ head K))
+  into n S i t v = ◃t (climb (opn n) S i t v) (◃t (climb (opn (suc n)) S i t v) part)
+    where
+    climb : ∀ F → Rl F (R F)
+    climb F S′ i′ t′ v′ = Emono ok₂ O.D₁ F S′ i′ t′ v′ nb
+    part : i ⊢ proj₁ (run (opn (suc (suc n))) S i t v) ◃ proj₁ (E ok₂ O.D₁ head K S i t v)
+    part = subst (λ F → i ⊢ proj₁ (run F S i t v) ◃ proj₁ (E ok₂ O.D₁ head K S i t v)) (sym (shift R K (suc n))) (◃l n)
+
+  bounded : ∀ n → Outer.Models (op (E ok₂ O.D₁ head K) (Einf ok₂ O.D₁ head K)) (actn n)
+  bounded n = Outer.lift-law {Q = opn n} {Q′ = op (E ok₂ O.D₁ head K) (Einf ok₂ O.D₁ head K)} (into n) (law n)
+
+module At (r : T.Run lvl3) (cv : Cover.Covered r) where
+  module E₀ = Rise.Compare r cv
+  open St.At r hiding (w2)
+  module Previous = Pre.At c⁺ E₀.cp st1 v₁ (E₀.seeds 0)
+  open Previous.Proof.Core.Run using (S₁; step₂)
+  J = V.Jc c⁺
+  K₁ = enterO O.m₁ J
+  module Inn = Step.Inner (V.K c⁺) (V.standard≤K c⁺ E₀.cp) zC st1
+  module All = Ex (c₁ st1) (proj₂ (st1 lvl1 C.slot)) (C.st (U.structure (E₀.seeds 0))) K₁ A.base (H.protected c⁺ E₀.cp)
+
+  picked : lvl1 ⊢ All.head ◃ Previous.y
+  picked = ◃t (Inn.first 0) (◃t (Emono ok₂ tdNil (V.K c⁺) st1 lvl1 C.slot (st1 lvl1 C.slot) (proj₂ c⁺)) (◃l 0))
+
+  all : ∀ n → Outer.Models Previous.Q (iter A.raise A.base n)
+  all n = Outer.lift-law {Q = op (E ok₂ O.D₁ All.head K₁) (Einf ok₂ O.D₁ All.head K₁)} {Q′ = Previous.Q}
+          (λ S i t v → Emono ok₂ O.D₁ K₁ S i t v picked) (All.bounded n)
+
+  initial : Outer.Pack L.zero zC S₁ v₁
+  initial = Outer.packed (U.seeds (≼-trans (1≼ψ⁰ _) (U.value-bound seed)) low Previous.Proof.basis) low
+    where seed = E₀.seeds 0
+          low = ≼-trans (1≼ψ⁰ _) (U.slot-bound seed)
+
+  branch : ∀ n → L.ψ⁰ (A.f (iter A.raise A.base n) L.zero) ≼ read (T.value r)
+  branch n = ≼-trans (U.value-bound (Outer.seed (all n Previous.t L.zero zC D.zero-row L.z≅ S₁ v₁ initial)))
+             (≼-trans (≼-trans (≼l 0 (OCF.Align.Value.≼-refl _)) (node-ge (kp lvl2 ok₂ p₂ w2) (λ z → E ok₂ tdNil (g₂ z) J st1 zero w2 v₁) step₂ 1)) (≼-trans (E₀.inG st1 w2 v₁) (outer 0)))
+
+height : Z.Lev₂
+height = L.lim (λ n → A.f (iter A.raise A.base n) L.zero)
+standard : L.ψ⁰ height ≼ read Ψ₃
+standard = l≼ (At.branch (T.initial lvl3 ok₃) (Cover.initial lvl3 ok₃))
+terminal : L.ψ⁰ height ≼ read EBOᶜ
+terminal = ≼-trans (l≼ (At.branch (T.finiteRun 2) (Cover.all-finite 2))) (T.finite-ge 2)

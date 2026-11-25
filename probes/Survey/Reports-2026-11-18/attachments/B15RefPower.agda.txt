@@ -1,0 +1,16 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B15RefPower where
+open import Data.Nat using (ℕ)
+open import Data.List using (_∷_; [])
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+import B14RefGain as G
+import B14RefRow as Row
+import B12Omega3Ref as R
+
+piece : T₀
+piece = G.along (0 ∷ 1 ∷ 0 ∷ 0 ∷ 2 ∷ 0 ∷ []) (Row.node 1)
+
+full : piece ≡ L.ψ⁰ (R.power G.C)
+full = refl

@@ -1,0 +1,158 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 默认槽 c 决定 ex 的反馈指数，实际显式输入 b 决定 ex 的两个基数。两棵树只需实现同一个系数。
+module B18OrbitLift where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block hiding (D; R)
+open import W4Ops
+open import W4Fold hiding (mono)
+open import WKGen using (Ω₁t)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F)
+import B11OuterCore as Core
+import B13OrbitFeed as O
+import B13Orbit as K
+import B15OrbitModel as M
+import B16OrbitNode as N
+import B17OrbitModel as B
+import B18OrbitNatural as R₀
+import B17OrbitCount as Count
+import B18OrbitBase as F₀
+import B17OrbitVector as V
+import B17OrbitTower as T
+import B18OrbitWorld as W
+import B18OrbitSpace as Sp
+open import WVOne using (read)
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+open import OCF.Align.Value using (_≼_)
+open V using (oper)
+import OCF.Align.Level as L
+open import YiLAB7Orbit using (p₁)
+open import Data.Product using (_,_)
+
+module For (world : W.World) where
+  module S = Sp.Next (W.space world)
+  module R = R₀.For world
+  module F₀′ = F₀.For world
+  open R using (R; closed; enterR)
+  module At (n : ℕ) {X : Cx lvl2} (m : Mor M.X₁ X) (ret : N.Left m) where
+    D = trTD m O.D₁
+    φ = chMT D tt
+    dm = φ ⊙ m
+    Spc = S.tower n
+    module C = Count.For n (chTD D tt) (T.Carrier Spc) (T.sup Spc) (R n dm) (closed n dm) (R.sup n dm) (T.height Spc)
+                  (λ _ _ → refl) (λ _ _ _ → refl) (λ _ _ _ → refl)
+
+    module Inner (K : Ca (suc n) X) (F : T.Arr Spc) (tk : R (suc n) m K F)
+               (G : Ca n X) (a : T.Carrier Spc) (rg : R n m G a) where
+      KG = proj₁ K idM G
+      kg : R n m KG a
+      kg = closed n m G KG (proj₂ K idM G) a rg
+      G′ = enter n φ KG
+      K′ = enter (suc n) φ (Itᴺ n ok₂ D zero K)
+      ds : C.contract K′ (T.run F)
+      ds Q b h = tk φ (λ _ → refl) Q b h
+      child = λ z → It n ok₂ D (O.g₁ z) K G
+      pieces : ∀ y z → y ≼ read (suc z) → R n m (child z) (T.height Spc y (T.run F) a)
+      pieces y z d = R.leave n m (down (fr D) tt) (λ t → proj₁ (σ φ t)) KG (It n ok₂ (chTD D tt) (suc z) K′ G′) _
+           (C.eval (suc z) d K′ (T.run F) ds G′ a (enterR n m φ (λ _ → refl) KG a kg))
+      omega : R n m (It n ok₂ D Ω₁t K G) (T.run (T.run (T.Φ Spc) F) a)
+      omega = R.node n m ret child (T.Diag.f Spc F a) (T.Diag.r Spc F a) (T.Diag.q Spc F a) pieces
+
+  Index : Tr⁺ lvl1 → T.Carrier S.vectors → Set
+  Index b v = ∀ {X : Cx lvl2} (m : Mor M.X₁ X) → N.Left m → ∀ n → R (suc n) m (oper (trTD m O.D₁) b n) (v n)
+
+  initial : ∀ b → lvl1 ⊢ Ω₁t ◃ proj₁ b → Index b S.seed
+  initial b cv m rm zero u ru G a rg = closed 0 (u ⊙ m) small big (λ Z i t w → Emono ok₂ D G Z i t w cv) (T.run (T.Φ (W.space world)) a) (F₀′.Raise.full (u ⊙ m) (B.good m u rm ru) G a rg)
+    where D = trTD (u ⊙ m) O.D₁
+          small = op (E ok₂ D Ω₁t G) (Einf ok₂ D Ω₁t G)
+          big = op (E ok₂ D (proj₁ b) G) (Einf ok₂ D (proj₁ b) G)
+  initial b cv m rm (suc n) u ru K F rk v rv G a rg = closed n dm (It n ok₂ D Ω₁t K′ G) (It n ok₂ D (proj₁ b) K′ G)
+      (Itmono n ok₂ D K′ G cv) _ (At.Inner.omega n dm dr K′ F (enterR (suc n) (u ⊙ m) v rv K F rk) G a rg)
+    where
+    dm = v ⊙ u ⊙ m
+    dr = B.good (u ⊙ m) v (B.good m u rm ru) rv
+    D = trTD dm O.D₁
+    K′ = enter (suc n) v K
+
+  mono : ∀ b c → lvl1 ⊢ proj₁ b ◃ proj₁ c → ∀ v → Index b v → Index c v
+  mono b c t v h m rm zero = R.closed 1 m (oper D b 0) (oper D c 0)
+     (λ u G S i w a → Emono ok₂ (trTD u D) G S i w a t) (v 0) (h m rm 0)
+    where D = trTD m O.D₁
+  mono b c t v h m rm (suc n) = R.closed (suc (suc n)) m (oper D b (suc n)) (oper D c (suc n))
+     (λ u K w G → Itmono n ok₂ (trTD w (trTD u D)) (enter (suc n) w K) G t) (v (suc n)) (h m rm (suc n))
+    where D = trTD m O.D₁
+
+  combine : ∀ b (seq : ℕ → T.Carrier S.vectors) → (∀ n → Index b (seq n)) → Index b (T.sup S.vectors seq)
+  combine b s h m rm n = R.sup (suc n) m (oper (trTD m O.D₁) b n) (λ k → s k n) (λ k → h k m rm n)
+
+  keep : ∀ (g : Tr zero → Tr⁺ lvl1) (pos : lvl1 ⊢ zero ◃ Ω p₁ (λ z → proj₁ (g z))) f (rf : ∀ {x y} → x ≼ y → T.Rel S.vectors (f x) (f y)) (ef : ∀ {x y} → x L.≅ y → T.Eq S.vectors (f x) (f y)) → (∀ y z → y ≼ read (suc z) → Index (g z) (f y)) → Index (Ω p₁ (λ z → proj₁ (g z)) , pos) (T.node S.vectors f rf ef)
+  keep g pos f rr eq h m rm zero u ru Q a qa =
+    R.node 0 (u ⊙ m) (B.good m u rm ru) (λ z → op (E ok₂ D (proj₁ (g z)) Q) (Einf ok₂ D (proj₁ (g z)) Q)) (λ y → T.run (f y 0) a)
+          (λ d → rr d 0 a a (T.rr (S.tower 0) a)) (λ d → eq d 0 a a (T.ee (S.tower 0) a)) (λ y z low → h y z low m rm 0 u ru Q a qa)
+    where D = trTD (u ⊙ m) O.D₁
+  keep g pos f rr eq h m rm (suc n) u ru Q F′ t v rv G a qa =
+    R.node n (v ⊙ u ⊙ m) (B.good (u ⊙ m) v (B.good m u rm ru) rv) (λ z → It n ok₂ D (proj₁ (g z)) (enter (suc n) v Q) G)
+          (λ y → T.run (T.run (f y (suc n)) F′) a)
+          (λ d → rr d (suc n) F′ F′ (T.rm F′) a a (T.rr (S.tower n) a)) (λ d → eq d (suc n) F′ F′ (T.em F′) a a (T.ee (S.tower n) a))
+          (λ y z low → h y z low m rm (suc n) u ru Q F′ t v rv G a qa)
+    where D = trTD (v ⊙ u ⊙ m) O.D₁
+  module Step (c b out : Tr⁺ lvl1) (cv : lvl1 ⊢ Ω₁t ◃ proj₁ c) (v : T.Carrier S.vectors) (ci : Index c v) (bi : Index b v) where
+    z = iter (λ q → ex (proj₁ c) (proj₁ c) (proj₂ c) (suc q) tt) zero
+    vec = Ord.iter (S.push v) S.seed
+    g = λ j → ex (proj₁ b) (proj₁ b) (proj₂ b) (suc (z j)) tt
+    branch = cum g
+    front = λ j → branch j + proj₁ b
+    pos = λ j → z◃ (branch j) (+-mono (branch j) (proj₂ b))
+
+    module In {X : Cx lvl2} (m : Mor M.X₁ X) (rm : N.Left m) where
+      D = trTD m O.D₁
+      extend : ∀ n K → R (suc n) m K (v n) → R (suc n) m (Itᴺ n ok₂ D (proj₁ c) K) (v n)
+      extend n K h u ru G a rg = closed n (u ⊙ m) (proj₁ K u G) _ (Itmono n ok₂ (trTD u D) (enter (suc n) u K) G (proj₂ c)) _ (h u ru G a rg)
+      mixed : ∀ n j K → R (suc n) m K (v n) → ∀ G a → R n m G a → R n m (It n ok₂ D (suc (z (suc j))) K G) (T.run (vec (suc j) n) a)
+      mixed n zero K h G a rg = closed n m (It n ok₂ D Ω₁t K G) _ (Itmono n ok₂ D K G {x = Ω₁t} {y = suc (z 1)} (◃t cv (◃t ◃e ◃s))) _
+                    (At.Inner.omega n m rm K (v n) h G a rg)
+      mixed n (suc j) K h G a rg = closed n m (It n ok₂ D (z (suc (suc j))) K G) _ (Itmono n ok₂ D K G {x = z (suc (suc j))} {y = suc (z (suc (suc j)))} ◃s) _
+                    (mixed (suc n) j (oper D c (suc n)) (ci m rm (suc n)) (Itᴺ n ok₂ D (proj₁ c) K) (v n) (extend n K h) idM (λ _ → refl) G a rg)
+    module Collect (hit : ∀ j → lvl1 ⊢ branch (suc j) ◃ proj₁ out) where
+      term : ∀ {X : Cx lvl2} (m : Mor M.X₁ X) (rm : N.Left m) n j → R (suc n) m (oper (trTD m O.D₁) out n) (vec (suc j) n)
+      term m rm zero j u ru G a rg = closed 0 dm (op (E ok₂ D (branch (suc j)) G) (Einf ok₂ D (branch (suc j)) G)) (op (E ok₂ D (proj₁ out) G) (Einf ok₂ D (proj₁ out) G)) (λ S i t w → Emono ok₂ D G S i t w (hit j)) (T.run (vec (suc j) 0) a)
+          (In.mixed dm dr 0 j (oper D b 0) (bi dm dr 0) G′ a (closed 0 dm G G′ (λ S i t w → Emono ok₂ D G S i t w (pos j)) a rg))
+        where
+        dm = u ⊙ m
+        dr = B.good m u rm ru
+        D = trTD dm O.D₁
+        G′ = op (E ok₂ D (front j) G) (Einf ok₂ D (front j) G)
+      term m rm (suc n) j u ru K F rk w rw G a rg = closed n dm (It n ok₂ D (branch (suc j)) K′ G) _ (Itmono n ok₂ D K′ G (hit j)) _
+         (In.mixed dm dr (suc n) j (oper D b (suc n)) (bi dm dr (suc n)) frontK F (closed (suc n) dm K′ frontK raise F (enterR (suc n) (u ⊙ m) w rw K F rk)) idM (λ _ → refl) G a rg)
+        where
+        dm = w ⊙ u ⊙ m
+        dr = B.good (u ⊙ m) w (B.good m u rm ru) rw
+        D = trTD dm O.D₁
+        K′ = enter (suc n) w K
+        frontK = Itᴺ n ok₂ D (front j) K′
+        raise : Rn (suc n) K′ frontK
+        raise s H = Itmono n ok₂ (trTD s D) (enter (suc n) s K′) H (pos j)
+      whole : Index out (T.run S.step v)
+      whole m rm n = R.sup (suc n) m (oper (trTD m O.D₁) out n) (λ j → vec (suc j) n) (term m rm n)
+
+  advance : ∀ K′ → K.WeakOp F K′ → ∀ S b v → lvl1 ⊢ Ω₁t ◃ proj₁ (S lvl1 Core.slot) → Index (S lvl1 Core.slot) v → Index b v →
+            Index (run K′ S lvl1 Core.slot b) (T.run S.step v)
+  advance K′ cover S b v cv ci bi = Push.Collect.whole hit
+    where
+    module Push = Step (S lvl1 Core.slot) b (run K′ S lvl1 Core.slot b) cv v ci bi
+    hit : ∀ j → lvl1 ⊢ Push.branch (suc j) ◃ proj₁ (run K′ S lvl1 Core.slot b)
+    hit j = K.push-path {y = proj₁ (run F S lvl1 Core.slot b)} (◃l (suc j)) (cover S lvl1 Core.slot b)
+
+next : W.World → W.World
+W.space (next w) = Sp.Next.vectors (W.space w)
+W.initial (next w) = Sp.Next.seed (W.space w)
+W.grad (next w) = Sp.Next.step (W.space w)
+W.Index (next w) = For.Index w
+W.start (next w) = For.initial w
+W.rise (next w) = For.mono w
+W.gather (next w) = For.combine w
+W.retain (next w) = For.keep w
+W.advance (next w) = For.advance w

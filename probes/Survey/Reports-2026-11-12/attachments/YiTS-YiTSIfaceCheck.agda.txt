@@ -1,0 +1,58 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiTSIfaceCheck where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Bool using (false)
+open import Data.Product using (proj₁)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base)
+open import OCF.Lean.YiTBRow using (Rb; ψ)
+import OCF.Lean.YiAbsFrame as A
+import OCF.Lean.YiAbsSim as V
+import OCF.Lean.YiAbsGIface as G
+import OCF.Lean.YiAbsGSuff as S
+
+unitVal : V.Val
+unitVal = record
+  { V = ⊤ ; _≼_ = λ _ _ → ⊤ ; ≼-refl = tt ; ≼-trans = λ _ _ → tt
+  ; vz = tt ; vs = λ _ → tt ; vl = λ _ → tt ; z≼ = tt ; s≼s = λ _ → tt ; l≼ = λ _ → tt ; ≼s = tt }
+
+module Machine (ℓ : L) (o : Ok ℓ) (r : Rb ℓ) (B : Base ℓ) where
+  block : A.Block
+  block = record
+    { Lv = ⊤ ; Tr = λ _ → Tr ℓ ; Ch = λ _ → ⊥ ; chL = λ _ () ; ChT = λ _ () ; chT = λ _ ()
+    ; _⊑_ = λ _ _ → ⊤ ; self = tt ; inc = λ _ () ; incU = λ _ ()
+    ; up = λ _ () ; hd = λ _ → false ; _◃_ = λ x y → ℓ ⊢ x ◃ y ; Leg = λ _ → ⊤ }
+
+  fold : A.Fold block
+  fold = record
+    { Bs = λ _ → ⊤ ; LegB = λ _ _ → ⊤ ; Bt = λ _ → Tr⁺ ℓ ; LegT = λ _ _ → ⊤
+    ; ψ = λ _ _ _ _ β x → proj₁ (ψ ℓ o r B ℓ self β x)
+    ; ψβ = λ _ _ _ _ β x → ψ ℓ o r B ℓ self β x ; dn = λ _ _ () }
+
+  rows : G.Rows block fold
+  rows = record
+    { sc = suc ; Sl = λ _ → ⊥ ; slL = λ _ () ; SlT = λ _ () ; slT = λ _ () ; nd = λ ()
+    ; Ωt = λ _ → proj₁ (Ωt ℓ) ; Dn = λ _ _ → ⊥ ; upf = λ ()
+    ; sucL = λ _ → tt ; ΩL = λ _ _ → tt ; lift = λ _ _ → tt }
+
+  doms : G.Doms block fold
+  doms = record { Gx = λ _ _ → ⊤ ; Gb = λ _ _ → ⊤ ; Wl = λ _ → ⊤ ; Gl = λ _ _ → ⊤ }
+
+  module Keep (ref : G.Ref) (R : G.Ref.T ref → Tr ℓ → Set) (cl : G.Ref.T ref → G.Ref.T ref) where
+    graded : G.Graded block fold rows ref unitVal
+    graded = record
+      { ℓ₀ = tt ; v = λ _ → tt ; R = λ _ → R ; Rd = λ _ _ → ⊤ ; Nu = λ _ () ; bt = λ β → proj₁ β
+      ; cl = λ _ → cl ; Cx = λ _ _ → ⊤ ; app = λ _ t → t ; Bd = λ _ _ _ _ → ⊤ }
+    open G.Laws graded doms public using (SelfKeep; Weak)
+
+    module Orbit (sk : SelfKeep) (wk : Weak) (β : Tr⁺ ℓ) (P g₀ : G.Ref.T ref) where
+      z : ℕ → Tr ℓ
+      z k = iter (λ x → proj₁ (next⁺ (ψ ℓ o r B ℓ self β x))) zero (suc k)
+      zs : ∀ k → ℓ ⊢ proj₁ (ψ ℓ o r B ℓ self β (z k)) ◃ z (suc k)
+      zs k = ◃l zero
+      module Chain = S.Suff.Chain graded doms sk wk tt β tt P g₀ z zs
+      open Chain public using (γ; chain)

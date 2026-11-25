@@ -1,0 +1,26 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20IdealOldCut where
+open import Data.Nat.Base using (ℕ)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁)
+open import OCF.Lean.YiUpCheck using (two)
+open import OCF.Lean.YiUpVal using (⊴→≼)
+open import OCF.Lean.YiUpSimFold using (ψ⊥-⊵)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import OCF.Align.BTBOValMain using (ψ₀≈)
+open import WVOne using (𝟏; read)
+open import W4Fold using (EBOᶜ)
+import B12EboRows as B
+import B20IdealThree as A
+import B20IdealSource as S
+import B20IdealPhysical as P
+
+positive : ∀ n → 𝟏 ≼ P.raw n
+positive n = ⊴→≼ (ψ⊥-⊵ two tt A.model (A.yi n))
+Input = ∀ n → B.InChild (P.raw n)
+necessary : A.old ≼ read EBOᶜ → Input
+necessary = P.Series.necessary positive
+sufficient : Input → A.old ≼ read EBOᶜ
+sufficient = P.Series.sufficient
+source : Input → S.src ≼ read EBOᶜ
+source q = ≼-trans (proj₁ (ψ₀≈ S.index)) (≼-trans S.old-lower (sufficient q))

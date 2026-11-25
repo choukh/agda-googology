@@ -1,0 +1,75 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 形状核对 (不读记号, 不改仓库): design.md 第 2 节的 "框架行" kpF.
+-- 槽位层 k 与目标 j 都带着到同一个字面层号 m (框架) 的路径时, 在 m 里用现有的 kp⁼ 判定.
+-- 这里只核: (1) kpF 用现有定义就写得出; (2) 在 A 路那一格与 D 型的格 (框架是 ℕ 极限形状) 上给 just;
+-- (3) 槽位层高于目标时给 nothing; (4) 同样的两条路径经 tw 1 的孩子进来时, 现行 kp 给 nothing.
+module MathKShape where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Keep; kp; kp⁼; mapK)
+
+IsJust : ∀ {A : Set} → Maybe A → Set
+IsJust (just _) = ⊤
+IsJust nothing  = ⊥
+
+-- 框架行: m 是框架, u′ 是槽位所在层 k 到框架的路径, u 是目标到框架的路径. 不出现任何孩子下标.
+kpF : (m : L) → Ok m → ∀ {k} (u′ : k ≤ m) (t : Pos⁼ k) {j} → j ≤ m → Keep j (Br⁼ k t) (bz⁼ k t)
+kpF m om u′ t u = mapK (pshBr u′ t) (pshFirst u′ t) (kp⁼ m om (psh u′ t) u)
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+ok₁ : (c : Tr zero) → Ok (h₁ c)
+ok₁ c = Ok⊕ zero (↑ zero c) tt (OkO↑ zero zero tt self c)
+
+n1 n2 n3 n4 : Tr zero
+n1 = suc zero
+n2 = suc n1
+n3 = suc n2
+n4 = suc n3
+
+-- (A) A 路那一格: 框架 m = h₁ 2, 槽位层第 1 层 (路径 inc tt self), 目标第 2 层 (= 框架自身).
+cellA : IsJust (kpF (h₁ n2) (ok₁ n2) {k = h₁ n1} (inc tt self) (inj₁ tt) {j = h₁ n2} self)
+cellA = tt
+
+-- (D) 框架是 ℕ 极限形状: m = h₁ ωᵉ, 孩子 n 是第 2n 层.
+dbl : ℕ → Tr zero
+dbl zero    = zero
+dbl (suc n) = suc (suc (dbl n))
+
+ωᵉ : Tr zero
+ωᵉ = lim dbl (λ n → ◃t ◃s ◃s)
+
+-- 槽位层第 1 层, 在孩子 1 (第 2 层) 里; 目标第 3 层, 在孩子 2 (第 4 层) 里.
+sl₁ : h₁ n1 ≤ h₁ ωᵉ
+sl₁ = inc 1 (inc tt self)
+
+tg₃ : h₁ n3 ≤ h₁ ωᵉ
+tg₃ = inc 2 (inc tt self)
+
+cellD : IsJust (kpF (h₁ ωᵉ) (ok₁ ωᵉ) sl₁ (inj₁ tt) tg₃)
+cellD = tt
+
+-- 反过来 (槽位层第 3 层, 目标第 1 层): 不保留.
+cellD-high : kpF (h₁ ωᵉ) (ok₁ ωᵉ) tg₃ (inj₁ tt) sl₁ ≡ nothing
+cellD-high = refl
+
+-- 同层 (槽位层 = 目标 = 第 3 层): 不保留 (对角, 走链).
+cellD-diag : kpF (h₁ ωᵉ) (ok₁ ωᵉ) tg₃ (inj₁ tt) tg₃ ≡ nothing
+cellD-diag = refl
+
+-- 对照: 同样两条路径接上 inc ωᵉ 经 tw 1 进来, 现行 kp 给 nothing (R77).
+cellD-cur : kp⁼ (tw 1) (Ok-tw 1) (psh (inc ωᵉ sl₁) (inj₁ tt)) (inc ωᵉ tg₃) ≡ nothing
+cellD-cur = refl
+
+-- kpF 的结果不依赖 "经哪个孩子进地板": 它的参数里没有 tw 1 的孩子下标 (类型即陈述).

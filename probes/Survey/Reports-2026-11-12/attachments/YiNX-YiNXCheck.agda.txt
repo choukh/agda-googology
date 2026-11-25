@@ -1,0 +1,75 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiNXCheck where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Nat.Properties using (≤-refl)
+open import Data.List using ([]; _∷_)
+open import Data.Product using (_,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Align.EboLeanDef using (T; HC; h0; h1; hω; fsn; natT; _<ᵀ_; hd<; ar<; lv<; tl<; []<)
+open import OCF.Align.EboLeanBase using (NF; nf-ψ; nf-Ω; n[]; _≤ᵀ_; c∷; c[]; ≤-<; <-≤)
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiANFam using (ψᴺ; Ωᴺ)
+open import OCF.Lean.YiANEnd using (natB)
+open import OCF.Lean.YiDCExit using (nf-low; pre[])
+open import OCF.Lean.YiRefTw2 using (Rt; hω-inv; tree-≼; fs≼)
+open import OCF.Lean.YiCFMono using (mono≤ⁿ)
+open import OCF.Align.EboLeanClosure using (cl-fsn-NF; Ctbl-fsn)
+open import OCF.Align.Value using (_≼_; l≼; ≼l; ≼-trans)
+
+u : T
+u = ψᴺ 0 (Ωᴺ 3)
+
+t : T
+t = ψᴺ 0 (ψᴺ 2 (Ωᴺ 3))
+
+nu : NF u
+nu = nf-low (pre[] 3) ≤-refl
+
+opaque
+  hu : HC u
+  hu = hc nu (c∷ c[])
+
+ht : HC t
+ht = hω refl (λ n → hω-inv hu refl (suc n))
+
+shift : ∀ n → fsn t n ≡ fsn u (suc n)
+shift n = refl
+
+Wanted : Set
+Wanted = ∀ {s} → NF s → s ≤ᵀ t → (h : HC s) → Rt h ≼ Rt ht
+
+s : T
+s = ψᴺ 0 (Ωᴺ 2)
+
+ns : NF s
+ns = nf-low (pre[] 2) ≤-refl
+
+st : s ≤ᵀ t
+st = inj₁ (hd< (ar< (hd< (ar< []<))))
+
+hs : HC s
+hs = hc ns (c∷ c[])
+
+p01 : fsn u 0 <ᵀ fsn u 1
+p01 = hd< (ar< (hd< (ar< []<)))
+
+u≤t : (h : HC u) (h′ : HC t) → Rt h ≼ Rt h′
+u≤t (h0 ()) h′
+u≤t (h1 () _) h′
+u≤t (hω _ hs) h′ = l≼ λ where
+  zero → ≼-trans (mono≤ⁿ (cl-fsn-NF nu refl 0) (cl-fsn-NF nu refl 1)
+                           (Ctbl-fsn (c∷ c[]) refl 1) (hs 0) (hs 1) (inj₁ p01))
+                  (≼-trans (tree-≼ refl (hs 1) (hω-inv h′ refl 0)) (fs≼ h′ refl 0))
+  (suc n) → ≼-trans (tree-≼ refl (hs (suc n)) (hω-inv h′ refl n)) (fs≼ h′ refl n)
+
+t<u : t <ᵀ u
+t<u = hd< (ar< (hd< (lv< (tl< (tl< []<)))))
+
+wanted : Wanted
+wanted ns le h = ≼-trans (mono≤ⁿ ns nu (c∷ c[]) h hu (inj₁ (≤-< le t<u))) (u≤t hu ht)
+
+instance-result : Rt hs ≼ Rt ht
+instance-result = wanted ns st hs

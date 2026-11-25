@@ -1,0 +1,52 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原 EBO 的 ψ₀ 名字。在旧正轨道的独立重启上确界以下可同时取任意前缀折叠与可数尾，拼接后的原值严格落入第二次重置零观测。
+module B27SOriginal where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using (_++_)
+open import Data.Product using (proj₁)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; ≼l; s≼s; +-mono)
+open import OCF.Align.EboLeanDef using (HC)
+open import OCF.Lean.YiRefTw2 using (Rt)
+import B18Product as Mul
+import B19IdealArithmetic as Ar
+import B19IdealPowers as Pow
+import B22MovingIndex as E
+import B26PSuffix as Orig
+import B27SSeal as Seal
+import B27SRestart as Restart
+
+raise : ∀ x → L.suc (Ar.norm x) ≼ Ar.norm (L.suc x)
+raise x = ≼l 2 (+-mono {a = Ar.norm x} (Mul.one-right (Ar.norm x)) (Pow.positive Pow.omega-pos x))
+
+first : ∀ x → L.suc (L.suc x) ≼ Ar.norm (L.suc x)
+first x = ≼l 3 (+-mono {a = L.suc x} (+-mono {a = x} (≼-trans (Ar.up x) (Mul.one-right (Ar.norm x))) pos) pos)
+  where pos = Pow.positive Pow.omega-pos x
+
+more : ∀ x n → L.suc (E.steps x n) ≼ E.steps x (suc n)
+more x zero = first x
+more x (suc n) = ≼-trans (raise (E.steps x n)) (Pow.expo Pow.omega-pos (more x n))
+
+local-bound : ∀ q a b → a ≼ q → b ≼ q → L.suc (a Mul.· Ar.norm b) ≼ E.above q
+local-bound q a b la lb = ≼l 5 (≼-trans (s≼s lift) (more q 4))
+  where
+  u = E.steps q 1
+  weak = ≼-suc (≼-refl q)
+  to-u : q ≼ u
+  to-u = ≼-trans weak (Ar.up (L.suc q))
+  factor : Ar.norm b ≼ u
+  factor = Pow.expo Pow.omega-pos (≼-trans lb weak)
+  lift : a Mul.· Ar.norm b ≼ E.steps q 4
+  lift = ≼-trans (Mul.mono (≼-trans la to-u) factor) (≼-trans (Ar.mulBound u)
+    (Pow.expo Pow.omega-pos (Pow.expo Pow.omega-pos (more q 1))))
+
+module At (m : ℕ) r eq cr (t j : ℕ) where
+  module F = Seal.At m r eq cr t j
+  module Q = Restart.At.Pass m r eq cr t
+  module Z = Q.AtIndex j
+  suffix : ∀ p (a : HC (Orig.φ p)) s (b : HC s) (h : HC (Orig.φ (p ++ s))) →
+    Rt a ≼ Q.q → Rt b ≼ Q.q → L.suc (Rt h) ≼ Z.unit
+  suffix p a s b h la lb = ≼-trans {a = L.suc (Rt h)} {b = E.above Q.q} {c = Z.unit}
+    (≼-trans {a = L.suc (Rt h)} {b = L.suc (Rt a Mul.· Ar.norm (Rt b))} {c = E.above Q.q}
+      (s≼s (proj₁ (Orig.Low.val p a s b h))) (local-bound Q.q (Rt a) (Rt b) la lb)) F.epsilon

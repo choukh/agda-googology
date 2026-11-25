@@ -1,0 +1,129 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 首个非零实际下标对应的完整单位 f(0,1)，严格越过每个 R^(ω^n)；R 是 ψ₀(Ω₃) 的基本列第 1 项。
+module B30UFirst where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; subst)
+import W4Block as W
+import W4Path as Path
+import WVOne as V
+open V using (T₀; 𝟏; h₁; read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; s≼s; ≼l; l≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import B12Terminal as T
+import B12ActualSlots as Slot
+import B14Floor as F
+import B14Tower as Run
+import B14PathHeight as H
+import B16Join as J
+import WKTower as WT
+import B18ResetCellGoal as Form
+import B18Product as M
+import B19IdealProduct as Law
+import B19Canonical as K
+import B19OldPowers as Old
+import B27UArbitrary as U
+import B29SFirst as True
+
+module Iterate (δ e : T₀) (f : T₀ → T₀) (paid : ∀ a → (a M.· Law.power δ e) ≼ f a) where
+  exp : ∀ a n → (a M.· Law.power δ (e M.· L.natᶜ n)) ≼ W.iter f a n
+  exp a zero = proj₁ (Law.one a)
+  exp a (suc n) = ≼-trans {b = a M.· (Law.power δ (e M.· L.natᶜ n) M.· Law.power δ e)}
+    (M.mono (≼-refl a) (proj₁ (Law.power-sum δ (e M.· L.natᶜ n) e)))
+    (≼-trans {b = (a M.· Law.power δ (e M.· L.natᶜ n)) M.· Law.power δ e}
+      (proj₂ (Law.assoc a (Law.power δ (e M.· L.natᶜ n)) (Law.power δ e)))
+      (≼-trans {b = W.iter f a n M.· Law.power δ e}
+        (M.mono (exp a n) (≼-refl (Law.power δ e))) (paid (W.iter f a n))))
+ωⁿ : ℕ → T₀
+ωⁿ n = Law.power L.ωᶜ (L.natᶜ n)
+arith : ∀ n a → (a M.· Law.power Old.b (ωⁿ n)) ≼ Old.op n a
+arith zero a = M.mono (≼-refl a) (proj₁ (Law.left-one Old.b))
+arith (suc n) a = l≼ (λ j → ≼l j (Iterate.exp Old.b (ωⁿ n) (Old.op n) (arith n) a j))
+
+numeral : ∀ n → Form.First.finite n ≡ F.num n
+numeral zero = refl
+numeral (suc n) = cong W.suc (numeral n)
+level : ∀ n → WT.gL (suc (suc n)) ≡ Old.level n
+level n = cong h₁ (trans (Form.First.add-one (suc (suc n))) (numeral (Old.point n)))
+
+module First (r : T.Run (h₁ (K.seq 1))) (cr : Slot.Covered r) where
+  module Outer = Run.Lim _ r (λ n → Path.z≤ _)
+  module Inner = Run.Lim WT.gL (Outer.sub 0) (λ n → Path.z≤ _)
+  module Strict = J.Cumulative WT.gL (Outer.sub 0) (λ n → Path.z≤ _)
+  pay : ∀ n ℓ → ℓ ≡ Old.level n → (q : T.Run ℓ) → Slot.Covered q → Old.op n 𝟏 ≼ read (T.value q)
+  pay n .(Old.level n) refl q cq = Old.law n (H.standard (Old.level n)) q cq 𝟏 (T.Run.oneβ q)
+  inside : ∀ n → L.suc (Old.op n 𝟏) ≼ read (T.value r)
+  inside n = ≼-trans {b = L.suc (read (T.value (Inner.sub k)))} (s≼s (pay n (WT.gL k) (level n)
+    (Inner.sub k) (Inner.covered (Outer.covered cr 0) k))) (≼-trans {b = read (T.value (Outer.sub 0))}
+      (Strict.part k) (Outer.part 0)) where k = suc (suc n)
+
+module Real = First (U.run (U.index 1)) (U.all (U.index 1))
+power : ℕ → T₀
+power n = Law.power Old.b (ωⁿ n)
+strict : ∀ n → L.suc (power n) ≼ True.f 1
+strict n = subst (L.suc (power n) ≼_) (U.real 1)
+  (≼-trans {b = L.suc (Old.op n 𝟏)} (s≼s (≼-trans {b = 𝟏 M.· power n} (M.one-left (power n)) (arith n 𝟏)))
+    (Real.inside n))
+no-cap : ∀ n → True.f 1 ≼ power n → ⊥
+no-cap n h = s≼-irrefl (power n) (≼-trans {b = True.f 1} (strict n) h)
+
+import B29SUnit as Next
+
+supremum = Law.power Old.b (Law.power L.ωᶜ L.ωᶜ)
+all-finite : supremum ≼ True.f 1
+all-finite = l≼ {f = power} (λ n → ≼-trans {b = L.suc (power n)}
+  (OCF.Align.Value.≼-suc (≼-refl (power n))) (strict n))
+beyond : L.suc supremum ≼ True.f 2
+beyond = ≼-trans {b = L.suc (True.f 1)} (s≼s all-finite) (Next.unit 1)
+import OCF.Align.BTBOValBase as Convert
+import B22RowSource as Source
+import B23RExit as Exit
+import B24ROrbit as Seed
+import B25AOrbit as Global
+import B25ARank as Rank
+import B22MovingIndex as E
+import B30UCut as Bounds
+import B19IdealArithmetic as Ar
+import B19IdealPowers as Pow
+import B27SOriginal as Closure
+
+abstract
+  early : Old.b ≼ Convert.tr₀ Source.source
+  early = ≼-trans {a = Old.b} {b = L.ψ⁰ (L.lim Source.lev)} {c = Convert.tr₀ Source.source}
+    (≼l 0 (≼-refl Old.b)) (proj₂ Source.lim-both)
+  seed : Old.b ≼ Seed.D
+  seed = ≼-trans {a = Old.b} {b = Convert.tr₀ Source.source} {c = Seed.D} early
+    (≼-trans {a = Convert.tr₀ Source.source} {b = Convert.tr₀ Exit.source} {c = Seed.D}
+      (≼-trans {a = Convert.tr₀ Source.source} {b = L.suc (Convert.tr₀ Source.source)} {c = Convert.tr₀ Exit.source}
+        (OCF.Align.Value.≼-suc (≼-refl (Convert.tr₀ Source.source))) Exit.strict)
+      (≼-trans {a = Convert.tr₀ Exit.source} {b = Convert.tr₀ Seed.source} {c = Seed.D}
+        (≼-trans {a = Convert.tr₀ Exit.source} {b = L.suc (Convert.tr₀ Exit.source)} {c = Convert.tr₀ Seed.source}
+          (OCF.Align.Value.≼-suc (≼-refl (Convert.tr₀ Exit.source))) Seed.strict) (proj₁ Seed.both)))
+  epsilon-in : E.above Seed.D ≼ Global.whole
+  epsilon-in = ≼-trans {a = E.above Seed.D} {b = Rank.diagonal Seed.D} {c = Global.whole}
+    (≼l {f = λ n → Rank.height n Seed.D} 1 (≼l {f = W.iter E.above Seed.D} 1 (≼-refl (E.above Seed.D))))
+    (≼l {f = Global.seq} 1 (≼-refl (Rank.diagonal Seed.D)))
+
+module Closed (q : T₀) where
+  module C = Bounds.At q
+  pow : ∀ a b → C.Small a → C.Small b → C.Small (Law.power a b)
+  pow a b sa sb with C.common {a} {b} sa sb
+  ... | m , a≤ , b≤ , sm = C.down {Law.power a b} {Ar.exponent (Ar.norm m)}
+    (≼-trans {a = Law.power a b} {b = Law.power (Ar.norm m) m} {c = Ar.exponent (Ar.norm m)}
+      (≼-trans {a = Law.power a b} {b = Law.power (Ar.norm m) b} {c = Law.power (Ar.norm m) m}
+        (Pow.base (≼-trans {b = m} a≤ (Ar.up m)) b) (Pow.expo (Pow.positive Pow.omega-pos m) b≤)) (≼-trans {b = Law.power (Ar.norm m) (Ar.norm m)} (Pow.expo (Pow.positive Pow.omega-pos m) (Ar.up m)) (Ar.powerBound (Ar.norm m))))
+    (C.normal {Ar.product (Ar.norm m)} (C.normal {Ar.level (Ar.norm m)} (C.normal {L.suc (Ar.norm m)} (C.successor {Ar.norm m} (C.normal {m} sm)))))
+  omega : C.Small L.ωᶜ
+  omega = C.down {L.ωᶜ} {Ar.norm 𝟏} (M.one-left L.ωᶜ) (C.normal {𝟏}
+    (C.successor {L.zero} (C.down {L.zero} {q} OCF.Align.Value.z≼ (E.strict q))))
+
+abstract
+  below-known : L.suc supremum ≼ Global.whole
+  below-known = ≼-trans {a = L.suc supremum} {b = E.above Seed.D} {c = Global.whole}
+    (Closed.pow Seed.D Old.b (Ar.norm L.ωᶜ) (Bounds.At.down Seed.D {Old.b} {Seed.D} seed (E.strict Seed.D))
+      (Bounds.At.normal Seed.D {L.ωᶜ} (Closed.omega Seed.D))) epsilon-in
+  reference-below-known : L.suc Old.b ≼ Global.whole
+  reference-below-known = ≼-trans {a = L.suc Old.b} {b = E.above Seed.D} {c = Global.whole}
+    (Bounds.At.down Seed.D {Old.b} {Seed.D} seed (E.strict Seed.D)) epsilon-in

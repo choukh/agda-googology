@@ -1,0 +1,198 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- KLp: 有限层上完全的层号定位器 (编译定理, 无前提). locF 先认 j 是不是 lvl n, 再对 a 结构递归找 lvl n:
+-- sS 结点先试自身再进孩子, sL 结点只看第 n 个孩子, sΩ 结点放弃. 完全性靠: 合法极限 lim f 的第 n 项字面地含 sucⁿ zero.
+module KLpFin where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Product using (Σ; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
+
+open import W4Block
+open import WVOne using (h₁)
+open import KLoc
+open import OCF.Lean.YiAbsObs using (IsJust)
+
+------------------------------------------------------------------------
+-- Maybe 上的小工具.
+mapM : {A B : Set} → (A → B) → Maybe A → Maybe B
+mapM f (just x) = just (f x)
+mapM f nothing  = nothing
+
+orM : {A : Set} → Maybe A → Maybe A → Maybe A
+orM (just x) _ = just x
+orM nothing  m = m
+
+mapM-id : {A : Set} (m : Maybe A) → mapM (λ x → x) m ≡ m
+mapM-id (just x) = refl
+mapM-id nothing  = refl
+
+IJ-map : {A B : Set} (f : A → B) (m : Maybe A) → IsJust m → IsJust (mapM f m)
+IJ-map f (just x) _ = tt
+
+IJ-orˡ : {A : Set} (m m′ : Maybe A) → IsJust m → IsJust (orM m m′)
+IJ-orˡ (just x) _ _ = tt
+
+IJ-orʳ : {A : Set} (m m′ : Maybe A) → IsJust m′ → IsJust (orM m m′)
+IJ-orʳ (just x) _ _ = tt
+IJ-orʳ nothing  _ h = h
+
+------------------------------------------------------------------------
+-- 认有限层 (sS 的孩子类型是 ⊤, η 给出 h ≡ λ _ → h tt).
+sucF : {h : ⊤ → L} → Σ ℕ (λ n → h tt ≡ lvl n) → Σ ℕ (λ n → nd sS h ≡ lvl n)
+sucF (m , e) = suc m , cong (λ y → nd sS (λ _ → y)) e
+
+finQ : (j : L) → Maybe (Σ ℕ λ n → j ≡ lvl n)
+finQ zero           = just (zero , refl)
+finQ (nd sS h)      = mapM sucF (finQ (h tt))
+finQ (nd sL _)      = nothing
+finQ (nd (sΩ _) _)  = nothing
+
+finQ-lvl : (n : ℕ) → finQ (lvl n) ≡ just (n , refl)
+finQ-lvl zero    = refl
+finQ-lvl (suc n) = cong (mapM sucF) (finQ-lvl n)
+
+-- a 是不是 lvl n.
+isLvl : (n : ℕ) (a : L) → Maybe (a ≡ lvl n)
+isLvl zero    zero           = just refl
+isLvl zero    (nd _ _)       = nothing
+isLvl (suc n) zero           = nothing
+isLvl (suc n) (nd sS h)      = mapM (cong (λ y → nd sS (λ _ → y))) (isLvl n (h tt))
+isLvl (suc n) (nd sL _)      = nothing
+isLvl (suc n) (nd (sΩ _) _)  = nothing
+
+isLvl-lvl : (n : ℕ) → IsJust (isLvl n (lvl n))
+isLvl-lvl zero    = tt
+isLvl-lvl (suc n) = IJ-map _ (isLvl n (lvl n)) (isLvl-lvl n)
+
+selfP : (n : ℕ) (a : L) → Maybe (lvl n ≤ a)
+selfP n a = mapM (λ e → subst (λ x → x ≤ a) e self) (isLvl n a)
+
+selfP-ok : (n : ℕ) (a : L) → a ≡ lvl n → IsJust (selfP n a)
+selfP-ok n .(lvl n) refl = IJ-map _ (isLvl n (lvl n)) (isLvl-lvl n)
+
+------------------------------------------------------------------------
+-- 在 a 里找 lvl n: 对 a 结构递归, 有限搜索.
+find : (n : ℕ) (a : L) → Maybe (lvl n ≤ a)
+find n zero          = selfP n zero
+find n (nd sS h)     = orM (selfP n (nd sS h)) (mapM (inc {h = h} tt) (find n (h tt)))
+find n (nd sL g)     = mapM (inc {h = g} n) (find n (g n))
+find n (nd (sΩ _) _) = nothing
+
+locG : (j a : L) → Maybe (Σ ℕ λ n → j ≡ lvl n) → Maybe (j ≤ a)
+locG j a nothing        = nothing
+locG j a (just (n , e)) = mapM (subst (λ x → x ≤ a) (sym e)) (find n a)
+
+-- 定位器: 定义里不用任何证明作输入.
+locF : Locator
+locF j a = locG j a (finQ j)
+
+locF-find : (n : ℕ) (a : L) → locF (lvl n) a ≡ find n a
+locF-find n a = trans (cong (locG (lvl n) a) (finQ-lvl n)) (mapM-id (find n a))
+
+------------------------------------------------------------------------
+-- 第 0 层树上的字面子项 (含自身) 与真子项.
+nat : ℕ → Tr zero
+nat zero    = zero
+nat (suc n) = suc (nat n)
+
+data Sb : Tr zero → Tr zero → Set where
+  sb-r : ∀ {x} → Sb x x
+  sb-s : ∀ {x y} → Sb x y → Sb x (suc y)
+  sb-l : ∀ {x f a} (k : ℕ) → Sb x (f k) → Sb x (lim f a)
+
+data Ps : Tr zero → Tr zero → Set where
+  ps-s : ∀ {x y} → Sb x y → Ps x (suc y)
+  ps-l : ∀ {x f a} (k : ℕ) → Sb x (f k) → Ps x (lim f a)
+
+sb-trans : ∀ {x y z} → Sb x y → Sb y z → Sb x z
+sb-trans p sb-r       = p
+sb-trans p (sb-s q)   = sb-s (sb-trans p q)
+sb-trans p (sb-l k q) = sb-l k (sb-trans p q)
+
+ps→sb : ∀ {x y} → Ps x y → Sb x y
+ps→sb (ps-s p)   = sb-s p
+ps→sb (ps-l k p) = sb-l k p
+
+sb-ps : ∀ {x y z} → Sb x y → Ps y z → Ps x z
+sb-ps p (ps-s q)   = ps-s (sb-trans p q)
+sb-ps p (ps-l k q) = ps-l k (sb-trans p q)
+
+-- 第 0 层的步进证据就是字面的真子项.
+lt→ps : ∀ {x y} → zero ⊢ x ◃ y → Ps x y
+lt→ps ◃s              = ps-s sb-r
+lt→ps (◃l n)          = ps-l n sb-r
+lt→ps (◃w {p = ()})
+lt→ps (◃u _ () _ _)
+lt→ps (◃c _ () _)
+lt→ps (◃e {ε = ()})
+lt→ps (◃x {ε = ()} _)
+lt→ps (◃t r r′)       = sb-ps (ps→sb (lt→ps r)) (lt→ps r′)
+
+-- 字面地严格高于 u 的树里有 suc u (对树结构归纳; 极限一支用相邻项的步进).
+up1 : (t : Tr zero) {u : Tr zero} → Ps u t → Sb (suc u) t
+up1 (suc y)   (ps-s sb-r)       = sb-r
+up1 (suc y)   (ps-s (sb-s p))   = sb-s (up1 y (ps-s p))
+up1 (suc y)   (ps-s (sb-l k p)) = sb-s (up1 y (ps-l k p))
+up1 (lim f a) (ps-l k p)        = sb-l (suc k) (up1 (f (suc k)) (sb-ps p (lt→ps (a k))))
+up1 zero ()
+up1 (Ω () _) _
+up1 (up _ () _ _) _
+up1 (ex _ _ _ _ ()) _
+
+zero-sb : (t : Tr zero) → Sb zero t
+zero-sb zero        = sb-r
+zero-sb (suc t)     = sb-s (zero-sb t)
+zero-sb (lim f a)   = sb-l 0 (zero-sb (f 0))
+zero-sb (Ω () _)
+zero-sb (up _ () _ _)
+zero-sb (ex _ _ _ _ ())
+
+-- 合法极限的第 n 项字面地含 sucⁿ zero.
+limN : (f : ℕ → Tr zero) (a : (n : ℕ) → zero ⊢ f n ◃ f (suc n)) (n : ℕ) → Sb (nat n) (f n)
+limN f a zero    = zero-sb (f 0)
+limN f a (suc n) = up1 (f (suc n)) (sb-ps (limN f a n) (lt→ps (a n)))
+
+sb→pth : ∀ {s t} → Sb s t → h₁ s ≤ h₁ t
+sb→pth sb-r       = self
+sb→pth (sb-s p)   = inc tt (sb→pth p)
+sb→pth (sb-l k p) = inc k (sb→pth p)
+
+h₁-nat : (n : ℕ) → h₁ (nat n) ≡ lvl n
+h₁-nat zero    = refl
+h₁-nat (suc n) = cong (λ y → nd sS (λ _ → y)) (h₁-nat n)
+
+-- 副产品: 合法极限树的读回字面地含一切有限层.
+lim-all : (f : ℕ → Tr zero) (a : (n : ℕ) → zero ⊢ f n ◃ f (suc n)) (n : ℕ) → lvl n ≤ h₁ (lim f a)
+lim-all f a n = inc n (subst (λ x → x ≤ h₁ (f n)) (h₁-nat n) (sb→pth (limN f a n)))
+
+------------------------------------------------------------------------
+-- 完全性.
+compl : (n : ℕ) (t : Tr zero) {j : L} → j ≡ lvl n → j ≤ h₁ t → IsJust (find n (h₁ t))
+compl n zero      e self       = selfP-ok n zero e
+compl n (suc x)   e self       = IJ-orˡ _ _ (selfP-ok n _ e)
+compl n (suc x)   e (inc c p)  = IJ-orʳ (selfP n (h₁ (suc x))) _ (IJ-map _ (find n (h₁ x)) (compl n x e p))
+compl n (suc x)   e (inu ps)   = IJ-orʳ (selfP n (h₁ (suc x))) _ (IJ-map _ (find n (h₁ x)) (compl n x e (ps tt)))
+compl n (lim f a) _ _          =
+  IJ-map _ (find n (h₁ (f n))) (compl n (f n) (h₁-nat n) (sb→pth (limN f a n)))
+compl n (Ω () _) _ _
+compl n (up _ () _ _) _ _
+compl n (ex _ _ _ _ ()) _ _
+
+cFin : CompleteFin locF
+cFin n z p = subst IsJust (sym (locF-find n (h₁ z))) (compl n z refl p)
+
+pos : PosStmt
+pos = locF , cFin
+
+------------------------------------------------------------------------
+-- 便于折叠使用的形式.
+locZ : (n : ℕ) (z : Tr zero) → Maybe (lvl n ≤ h₁ z)
+locZ n z = find n (h₁ z)
+
+locZ-locF : (n : ℕ) (z : Tr zero) → locF (lvl n) (h₁ z) ≡ locZ n z
+locZ-locF n z = locF-find n (h₁ z)
+
+locZ-ok : (n : ℕ) (z : Tr zero) → lvl n ≤ h₁ z → IsJust (locZ n z)
+locZ-ok n z p = compl n z refl p

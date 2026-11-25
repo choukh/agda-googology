@@ -1,0 +1,38 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiE3Cut12 where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiRWFold as F
+import OCF.Lean.YiTBRow as TB
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiFRStep as FR
+import OCF.Lean.YiGIInst as GI
+import OCF.Lean.YiLBActual as LA
+import OCF.Lean.YiKVRel as K
+import OCF.Lean.YiAbsSimInst as SI
+import OCF.Lean.YiLBStart as LS
+open import OCF.Align.Value using (_≼_)
+
+k = B.tw 2
+c₁ = FR.Step.chain 2 1
+h₁ = FR.Step.child 2 c₁
+o₁ = proj₂ (P.Ok-tw 3) c₁
+base₁ : F.Base h₁
+base₁ i u = GI.baseᴱ 3 i (P.inc c₁ u)
+base₀ : F.Base k
+base₀ i u = GI.baseᴱ 3 i (P.inc B.zero u)
+branch : B.Tr (B.tw 1) → B.Tr k
+branch d = proj₁ (TB.ψ k (P.Ok-tw 2) (MT.rbᶻ k) base₀ k P.self
+  (GI.baseᴱ 3 k (P.ink P.self)) (FR.Step.g 1 d))
+a : B.Tr (B.tw 1) → B.L
+a d = k B.⊕ B.↑ k (branch d)
+c₁-shape : c₁ ≡ B.Ω (inj₁ (inj₁ tt)) branch
+c₁-shape = refl
+h₁-shape : h₁ ≡ B.nd (B.sΩ (B.tw 1)) a
+h₁-shape = refl

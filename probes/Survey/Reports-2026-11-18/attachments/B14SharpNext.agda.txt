@@ -1,0 +1,65 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 实际第二反馈点取两次零号孩子，已离开首个变化点使用的有限 Ω₁ 和文法。
+module B14SharpNext where
+
+open import Data.Nat using (ℕ; zero; suc)
+import Data.Unit
+open import Data.Product using (_,_; proj₁)
+open import Data.Maybe using (nothing; just)
+open import Data.Bool using (Bool; true; false)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiRWFold as RF
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import B13SharpOne using (r₁)
+open import B14SharpStack
+open import B14SharpTwo using (r₂; o₂; p₂i; g₂i)
+
+up-head : R.Tr r₁ → Bool
+up-head (R.up _ _ _ _) = true
+up-head _ = false
+
+word-head : R.Tr r₁ → Bool
+word-head R.zero = true
+word-head (R.Ω q g) = up-head (g (R.fromBr r₁ q R.zero))
+word-head _ = false
+
+words : ∀ {n x} → Blocks n x → word-head x ≡ true
+words emp = refl
+words (add w) = refl
+
+child0 : R.Tr r₁ → R.Tr r₁
+child0 (R.lim f _) = f 0
+child0 x = x
+
+false-true : false ≡ true → ⊥
+false-true ()
+
+module Next (lem : LEM) where
+  open I.Sharp lem
+
+  step : R.Tr r₁ → R.Tr r₁
+  step z = R.fromBr r₂ p₂i (proj₁ (ψ♯ r₂ o₂ B♯ r₁ oR (V.Ωt r₁) (g₂i z)))
+
+  next-index = step (step R.zero)
+
+  sub = proj₁ (ψ♯ r₁ oR B♯ r₁ oR (V.Ωt r₁) Ωi)
+
+  address : child0 (child0 next-index) ≡ sub
+  address = refl
+
+  body : R.Tr R.zero → V.Tr⁺ r₁
+  body z = ψ♯ r₁ oR B♯ r₁ oR (V.Ωt r₁) (R.up R.zero Data.Unit.tt (R.suc z) (V.z◃ z R.◃s))
+
+  probe : (k : RF.Keep r₁ (R.Tr R.zero) R.zero) (f : R.Tr R.zero → R.Tr R.zero) →
+          word-head (proj₁ (RF.node⁺ k body f)) ≡ false
+  probe nothing f = refl
+  probe (just (q , cv , e)) f = refl
+
+  outside : (n : ℕ) → Blocks n (child0 (child0 next-index)) → ⊥
+  outside n w = false-true (trans (sym (probe (kp♯ r₁ oR p r₁ oR)
+    (λ z → R.fromBr r₁ p (proj₁ (ψ♯ r₁ oR B♯ R.zero Data.Unit.tt (V.Ωt R.zero)
+                                   (R.up R.zero Data.Unit.tt (R.suc z) (V.z◃ z R.◃s))))))) (words w))

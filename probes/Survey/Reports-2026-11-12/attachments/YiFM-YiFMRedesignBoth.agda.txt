@@ -1,0 +1,12 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiFMRedesignBoth where
+open import Data.Product using (proj₁)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+import OCF.Align.EboLeanDef as E
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiHCFam as F
+open import OCF.Lean.YiFMNode using (t; both↑; g)
+
+branch-mc : ∀ η c → F.M 2 (E.fsT t η) (g c) → F.M 2 (E.fsT both↑ η) (g c)
+branch-mc η c m = H.mc (inj₂ refl) m

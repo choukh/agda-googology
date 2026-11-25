@@ -1,0 +1,101 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 用三个指定槽的实际位置搬运零阶种子。前进、退回写法只需逐点相等。
+module B17OrbitChange where
+open import Data.Nat using (zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst)
+open import W4Block hiding (D)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (◃→≼)
+open import YiLAB7Orbit using (lvl1; lvl2; c₁)
+open import YiLAB7Replay using (o₁)
+open import WSW4 using (module Lem)
+open Lem o₁ using (Real)
+open import B8PairW4 using (Real-up)
+open import OCF.Align.Value using (≼-trans; _≼_)
+import OCF.Align.Level as L
+import WKSum
+import WVThree
+import WKGen
+import B11OuterCore as C
+import B12Update as U
+import B12LimitRef as A
+import B13OrbitFeed as O
+import B13Countable as Co
+import B15OrbitAction as P
+import B15OrbitModel as M
+import B16OrbitNode as N
+import B16OrbitWide as V
+import B17OrbitModel as B
+open B using (Both)
+
+Forward : ∀ {X : Cx lvl2} → Mor M.X₁ X → Mor M.X₁ X → Set
+Forward m n = ∀ {i} (t : ⟦ M.X₁ ⟧ i) → σ m t ≡ σ n t
+
+structure : ∀ {R S e} → c₁ R ≡ c₁ S → C.Str e R → C.Str e S
+structure d hs = C.str (subst (λ z → Real z _) d (C.rP hs)) (subst (λ z → Real z _) d (C.rΩ hs))
+                       (subst (λ z → WKSum.Sum.SumR o₁ z WVThree.Nx) d (C.sN hs)) (subst (λ z → lvl1 ⊢ WKGen.Ω₁t ◃ z) d (C.st hs))
+
+module Change {X : Cx lvl2} (m n : Mor M.X₁ X) (q : Forward m n) where
+  module U₁ = M.At m
+  module U₂ = M.At n
+  slot = q (σ O.m₁ C.slot)
+  to : ∀ p e S v → U₁.Pack p e S v → U₂.Pack p e S v
+  to p e S v i = U₂.packed (U.seeds (U.value-bound h) (subst (λ t → L.ψ⁰ p ≼ read (proj₁ (S zero t))) (q (σ O.m₁ C.zpath)) (U.slot-bound h))
+     (structure {R = Co.pull U₁.r S} {S = Co.pull U₂.r S} (cong (λ t → proj₁ (S lvl1 t)) slot) (U.structure h)))
+     (subst (λ t → L.ψ⁰ p ≼ read (proj₁ (S zero t))) (q M.down-t) (U₁.inner i))
+    where h = U₁.seed i
+
+change : ∀ {X : Cx lvl2} (m n : Mor M.X₁ X) → Forward m n → ∀ Q a → Both m Q a → Both n Q a
+change m n q Q a h = us , wd
+  where
+  module Old = M.At m
+  module New = M.At n
+  module Vn = V.At n
+  module F = Change m n q
+  module G = Change n m (λ t → sym (q t))
+  us : New.Models Q a
+  us t p e d rr S v i = F.to _ _ _ _ (proj₁ h t p e d rr S v (G.to p e S v i))
+  wd : Vn.Wide Q a
+  wd e S ie hs v re ro = subst (λ t → Real (proj₁ (run Q S lvl1 t v)) (P.s a e)) F.slot
+     (proj₂ h e S ie (structure {R = Co.pull New.r S} {S = Co.pull Old.r S} (cong (λ t → proj₁ (S lvl1 t)) G.slot) hs) v re ro)
+
+module Relative {X Y : Cx lvl2} (m : Mor M.X₁ X) (u : Mor X Y) (ret : N.Left u) where
+  module Old = M.At m
+  module New = M.At (u ⊙ m)
+  module Wnew = V.At (u ⊙ m)
+  enter₀ : ∀ Q a → Both m Q a → Both (u ⊙ m) (enterO u Q) a
+  enter₀ Q a h = us , wd
+    where
+    Q′ = enterO u Q
+    wd : Wnew.Wide Q′ a
+    wd e S ie hs v re ro = subst (λ t → Real (proj₁ (run Q (λ j w → S j (σ u w)) lvl1 t v)) (P.s a e)) (sym (ret Old.slot))
+                              (proj₂ h e (λ j w → S j (σ u w)) ie hs v re ro)
+    us : New.Models Q′ a
+    us t p e d rr S v i = New.packed (U.seeds (val t v (U.value-bound s₀)) (val New.zp (S zero New.zp) (U.slot-bound s₀))
+       (Wnew.canonical Q′ (P.s a) wd e S (A.Described.infl d) (U.structure s₀))) (val New.ip (S zero New.ip) (New.inner i))
+      where
+      s₀ = New.seed i
+      val = λ t′ b low → U.value-bound (Old.seed (proj₁ h (π u t′) p e d rr (λ j w → S j (σ u w)) b (Old.packed (U.seeds low (U.slot-bound s₀) (U.structure s₀)) (New.inner i))))
+
+module Leave {X : Cx lvl2} (m : Mor M.X₁ X) {mw : L} (w : Dn lvl2 mw) (ι : ∀ {i} → ⟦ X ⟧ i → Tg w i) where
+  φ = chM w ι
+  module In = M.At (φ ⊙ m)
+  module Out = M.At m
+  module Wout = V.At m
+  leave₀ : ∀ A₀ R a → Both (φ ⊙ m) R a → Both m (upC 0 w ι A₀ R) a
+  leave₀ A₀ R a h = us , wd
+    where
+    Q = upC 0 w ι A₀ R
+    wd : Wout.Wide Q a
+    wd e S ie hs v re ro = proj₂ h e (λ j u → S j (proj₂ u)) ie hs (run A₀ S lvl1 Out.slot v) (Real-up t re) (Real-up t ro)
+      where t = inf A₀ S lvl1 Out.slot v
+    us : Out.Models Q a
+    us t p e d rr S v i = Out.packed (U.seeds (val t v (U.value-bound seed)) (val Out.zp (S zero Out.zp) (U.slot-bound seed))
+          (Wout.canonical Q (P.s a) wd e S (A.Described.infl d) (U.structure seed))) (val Out.ip (S zero Out.ip) (Out.inner i))
+      where
+      seed = Out.seed i
+      val = λ t′ v′ hv → U.value-bound (In.seed (proj₁ h (σ φ t′) p e d rr (λ j u → S j (proj₂ u)) (run A₀ S zero t′ v′)
+             (In.packed (U.seeds (≼-trans hv (◃→≼ (inf A₀ S zero t′ v′))) (U.slot-bound seed) (U.structure seed)) (Out.inner i))))

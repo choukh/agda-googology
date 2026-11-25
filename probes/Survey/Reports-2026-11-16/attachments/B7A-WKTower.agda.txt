@@ -1,0 +1,91 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B7A: 塔第 1 项 twᶜ 1 不低于 src 的 ψ₀(Ω₂) (B5D 编译到 ψ₀(Ω₁)). 编译定理, 无前提.
+-- 位置: twᶜ 1 的第 1 个累加项 Ftw 1 是层号 ω 的 Ω 树的折叠, 它的第 1 个近似项里出现第 2 层的 Ω 树,
+-- 底族由第 0 个被加项 (Ω₁ 嵌入) 给出, 第 1 层链底是 ex Ω₁ Ω₁ Ω₁ (定义上, refl). 再用 WKGen.Main.
+module WKTower where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼l; ≼-refl; ≼-trans)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module B = BoundedTrich
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValMain using (ψ₀≈)
+
+open import WVOne using (T₀; 𝟏; read; lvl1; zt; h₁; Ftw; cumL)
+open import WVTwo using (lvl2; ok₂; Ψ₂)
+open import WVThree using (Nx-infl)
+open import WKGen
+
+------------------------------------------------------------------------
+-- 塔第 1 项里的层号 ω (定义上): zt 1 = lim (1, 1+1, ...), 子层号 gL 1 = 第 2 层.
+f₁ : ℕ → Tr zero
+f₁ = iter (suc zero +_) (suc zero)
+
+zt1-shape : zt 1 ≡ lim f₁ (nextA (suc zero) ◃s)
+zt1-shape = refl
+
+gL : ℕ → L
+gL n = zero ⊕ ↑ zero (f₁ n)
+
+Lω : L
+Lω = nd sL gL
+
+Lω-shape : h₁ (zt 1) ≡ Lω
+Lω-shape = refl
+
+gL1 : gL 1 ≡ lvl2
+gL1 = refl
+
+oω : Ok Lω
+oω = proj₂ (Ok-tw 1) (zt 1)
+
+F₀ : Tr Lω
+F₀ = proj₁ (upz {s = sL} {h = gL} 0 (Ωt (gL 0)))
+
+-- 第 1 个近似项里第 2 层 Ω 树的底族与底.
+Bω : Base lvl2
+Bω i u = ψ Lω oω (B₀ Lω) i (inc 1 u) (B₀ Lω i (inc 1 u)) F₀
+
+βω : Tr⁺ zero
+βω = ψ Lω oω (B₀ Lω) zero (z≤ Lω) (Ωt zero) F₀
+
+-- 第 1 层链底 (定义上): ex Ω₁ Ω₁ Ω₁.
+cω-shape : proj₁ (Bω lvl1 (inc tt self)) ≡ ex Ω₁t Ω₁t (proj₂ (Ωt lvl1)) Ω₁t tt
+cω-shape = refl
+
+hcω : Ω₁t ⊴ proj₁ (Bω lvl1 (inc tt self))
+hcω = inj₂ ◃e
+
+hβω : 𝟏 ≼ read (proj₁ βω)
+hβω = ≼-trans (Nx-infl 𝟏 𝟏)
+  (Gen.FΩ (proj₂ oω 0) (λ i _ → Ωt i) (z≤ lvl1) (Ωt zero) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏) (≼-refl 𝟏))
+
+h0ω : 𝟏 ≼ read (proj₁ (Bω zero (inc tt (inc tt self))))
+h0ω = ≼-trans (Nx-infl 𝟏 𝟏)
+  (Gen.FΩ (proj₂ (proj₂ oω 1) tt) (λ i _ → Ωt i) (inc tt self) (Ωt zero) 𝟏 𝟏 (≼-refl 𝟏) (≼-refl 𝟏) (≼-refl 𝟏))
+
+open Main (proj₂ oω 1) Bω (z≤ lvl2) βω hcω hβω h0ω using () renaming (main to mainω)
+
+------------------------------------------------------------------------
+tw1-Ω₂ : LV.ψ⁰ (LV.Ω (LV.suc (LV.suc LV.zero))) ≼ read (twᶜ 1)
+tw1-Ω₂ = ≼-trans (≼l 1 mainω) (cumL Ftw _ 1)
+
+srcΩ₂-tw : tr₀ (Ord-Ord.ψ₀ (Ord-Ord.Ω (B.suc (B.suc B.zero)))) ≼ read (twᶜ 1)
+srcΩ₂-tw = ≼-trans (proj₁ (ψ₀≈ (B.suc (B.suc B.zero)))) tw1-Ω₂
+
+-- 对照: WKGen 在 B₀ 上重新给出 B6A 的 WSMain.srcΩ₂.
+open Main ok₂ (B₀ lvl2) (z≤ lvl2) (Ωt zero) (inj₁ refl) (≼-refl 𝟏) (≼-refl 𝟏) using () renaming (main to main₀)
+
+srcΩ₂-again : tr₀ (Ord-Ord.ψ₀ (Ord-Ord.Ω (B.suc (B.suc B.zero)))) ≼ read Ψ₂
+srcΩ₂-again = ≼-trans (proj₁ (ψ₀≈ (B.suc (B.suc B.zero)))) main₀

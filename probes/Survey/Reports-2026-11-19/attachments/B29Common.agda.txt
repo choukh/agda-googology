@@ -1,0 +1,42 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原行上三个分别取得的严格界可构造性合并；同一固定原行可选为三行最大值的后两行。
+module B29Common where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_; _⊔_; s≤s)
+import Data.Nat.Properties as N
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Empty using (⊥-elim)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl; s≼s; ≼l; l≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRVLevel using (LEM)
+import B14Goal as G
+import B26Names as A
+import B26Depth as D
+import B26PActual as W
+import B27Endpoint as E
+import B27Threshold as R
+import B17ValueDich as Order
+import B20StandardGoal as St
+import B18CellState as Cell
+import B28BCut as Leaf
+
+module Family (e : A.T₀) (r : ℕ → A.T₀)
+  (pick : ∀ x → L.suc x ≼ e → Σ ℕ (λ n → x ≼ r (suc (suc n))))
+  (move : ∀ i j → i ≤ j → r i ≼ r j) (gap : ∀ i → L.suc (r i) ≼ r (suc (suc i))) where
+  Small : A.T₀ → Set
+  Small x = L.suc x ≼ e
+  row-for : ∀ (a b c : A.T₀) → Small a → Small b → Small c →
+    Σ ℕ (λ k → 2 ≤ k × L.suc a ≼ r k × L.suc b ≼ r k × L.suc c ≼ r k)
+  row-for a b c sa sb sc with pick a sa | pick b sb | pick c sc
+  ... | i , h | j , p | t , q = suc (suc k) , E.two k , widen {a} i h (N.m≤m⊔n i (j ⊔ t)) ,
+    widen {b} j p (N.≤-trans (N.m≤m⊔n j t) (N.m≤n⊔m i (j ⊔ t))) ,
+    widen {c} t q (N.≤-trans (N.m≤n⊔m j t) (N.m≤n⊔m i (j ⊔ t)))
+    where
+    base = i ⊔ (j ⊔ t)
+    k = suc (suc base)
+    widen : ∀ {z : A.T₀} v → z ≼ r (suc (suc v)) → v ≤ base → L.suc z ≼ r (suc (suc k))
+    widen {z} v low d = ≼-trans {a = L.suc z} {b = L.suc (r k)} {c = r (suc (suc k))}
+      (s≼s (≼-trans {a = z} {b = r (suc (suc v))} {c = r k} low (move (suc (suc v)) k (s≤s (s≤s d))))) (gap k)

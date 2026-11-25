@@ -1,0 +1,65 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 实际下标的值已在原塔。共尾多个参照值一旦返回 K，每个参照值都能整体返回单塔。
+module B25Return where
+
+open import Data.Nat.Base using (ℕ; suc; s≤s; _≤_)
+open import Data.Nat.Properties using (≤⇒≤′; ≤-refl)
+open import Data.Product using (Σ; _,_; _×_; proj₁)
+open import WVOne using (read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≼l; ≼lim⁻; ≺→s≼; ≅→≼; s≼s)
+open import OCF.Align.BTBOFullLv using (SV; svs)
+open import OCF.Align.BTBOFullV3 using (Fʸ; Fstep)
+import B16IndexBase as I
+import B16ReadIndex as Index
+import B20StandardInside as S
+import B21StandardShape as H
+import B22ResetBridge as Bridge
+import B22TowerCut as K
+import B22TowerDiagonal as D
+import B22SourceSlots as Slot
+import QBtboCofinal as Q
+import B25Least as Least
+
+up : ∀ {i j} → i ≤ j → S.std i ≼ S.std j
+up {i} {j} p = Q.Use.tower {i} {j} (≤⇒≤′ p)
+
+opaque
+  unfolding D.target
+  reserve : ∀ m a → SV a → L.forget a ≼ S.std (suc m) → L.suc (Fʸ a) ≼ D.target m
+  reserve m a va low = ≼-trans {a = L.suc (Fʸ a)} {b = Fʸ (L.suc a)} {c = D.target m}
+    (≺→s≼ (Fstep a)) (Slot.Level.Std.named m {a = L.suc a} (svs va) (s≼s low))
+
+module Source (i : ℕ) where
+  module X = Bridge.Level.Standard i
+  z = Slot.Level.Std.z i
+  a = I.κ z
+  upper = suc (suc (suc i))
+  low : L.forget a ≼ S.std upper
+  low = ≼-trans {b = read z} (≅→≼ (L.forget-toLevel (read z) (I.hs z)))
+    (≼-trans (Index.FirstTower.indices X.first X.cv 2) X.outer)
+
+  opaque
+    unfolding D.target
+    later : ∀ m → upper ≤ suc m → L.suc (D.target i) ≼ D.target m
+    later m d = reserve m a (Slot.valid z) (≼-trans {a = L.forget a} {b = S.std upper} {c = S.std (suc m)} low (up d))
+
+    return : Least.Closed K.cut → L.suc (D.target i) ≼ K.cut
+    return step = step a (Slot.valid z) (≼l {f = S.std} (suc upper)
+      (≼-trans (s≼s low) (H.rise upper)))
+
+collect : Q.Cofinal → Least.Closed K.cut
+collect co a va inside with ≼lim⁻ {f = S.std} inside
+... | j , hit with co j
+... | m , le , bound = ≼-trans (reserve m a va (≼-trans {b = L.suc (L.forget a)}
+  (≼-suc (≼-refl (L.forget a))) (≼-trans {b = S.std j} hit
+  (≼-trans {b = S.std m} (up le) (≼-trans (≼-suc (≼-refl (S.std m))) (H.rise m)))))) bound
+
+home : Least.Closed K.cut → D.Home
+home c i = Q.Use.extract {x = D.target i} (Source.return i c)
+
+equiv : (D.Home → Q.Cofinal) × (Q.Cofinal → D.Home)
+equiv = Q.from-home , λ co → home (collect co)
+
+two : ∀ i → L.suc (D.target i) ≼ D.target (suc (suc i))
+two i = Source.later i (suc (suc i)) ≤-refl

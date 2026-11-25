@@ -1,0 +1,77 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原 EBO 参照构造性地实现可数标准形序的最小严格秩；最小性只使用沿遗传基本列及其前驱的局部律。
+module B26ORank where
+
+open import Data.Nat.Base using (ℕ)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; s≼s; l≼; z≼; ≼l)
+open import OCF.Align.EboLeanDef using (T; EBOψ; HC; h0; h1; hω; _<ᵀ_; pred; fsn; cof; c1; cω)
+open import OCF.Align.EboLeanBase using (NF; Ctbl; c[]; c∷; nf-pred; Ctbl-pred)
+open import OCF.Align.EboLeanClosure using (cl-fsn-NF; Ctbl-fsn; trian-fsn)
+open import OCF.Align.EboLeanTrian using (T-pred; t<)
+open import OCF.Align.EboLeanTree using (hc; nf-tower; hc-tower; EBO-tree′)
+open import OCF.Lean.YiRefTw2 using (Rt; endpoint)
+open import OCF.Lean.YiMonoExit using (toL)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import WVOne using (T₀)
+import B17Cofinal as C
+
+record Name : Set where
+  constructor name
+  field
+    term : T
+    normal : NF term
+    countable : Ctbl term
+open Name public
+
+_≪_ : Name → Name → Set
+a ≪ b = term a <ᵀ term b
+
+P : (a : Name) → cof (term a) ≡ c1 → Name
+P a _ = name (pred (term a)) (nf-pred (normal a)) (Ctbl-pred (countable a))
+
+B : (a : Name) → cof (term a) ≡ cω → ℕ → Name
+B a e n = name (fsn (term a) n) (cl-fsn-NF (normal a) e n) (Ctbl-fsn (countable a) e n)
+
+Pred = λ (f : Name → T₀) → ∀ a e → L.suc (f (P a e)) ≼ f a
+Branch = λ (f : Name → T₀) → ∀ a e n → f (B a e n) ≼ f a
+Strict = λ (f : Name → T₀) → ∀ a b → a ≪ b → L.suc (f a) ≼ f b
+
+least : ∀ {f} → Pred f → Branch f → ∀ a (h : HC (term a)) → Rt h ≼ f a
+least pp bb a (h0 _) = z≼
+least pp bb a (h1 e h) = ≼-trans (s≼s (least pp bb (P a e) h)) (pp a e)
+least pp bb a (hω e h) = l≼ (λ n → ≼-trans (least pp bb (B a e n) (h n)) (bb a e n))
+
+pred-law : ∀ {f} → Strict f → Pred f
+pred-law s a e = s (P a e) a (t< (T-pred (term a) e))
+
+branch-law : ∀ {f} → Strict f → Branch f
+branch-law {f} s a e n = ≼-trans (≼-suc (≼-refl (f (B a e n)))) (s (B a e n) a (t< (trian-fsn (normal a) e n)))
+
+floor : ∀ {f} → Strict f → ∀ a (h : HC (term a)) → Rt h ≼ f a
+floor {f} s = least {f} (pred-law {f} s) (branch-law {f} s)
+
+ref : Name → T₀
+ref a = Rt (hc (normal a) (countable a))
+
+ref-strict : Strict ref
+ref-strict a b = mono<ⁿ (normal a) (normal b) (countable b) (hc (normal a) (countable a)) (hc (normal b) (countable b))
+
+row : ℕ → Name
+row n = name (EBOψ n) (nf-tower n) (c∷ c[])
+
+inside : ∀ a → L.suc (ref a) ≼ toL EBO-tree′
+inside a = ≼-trans (ref-strict a (row (C.cap (countable a))) (C.below (countable a)))
+  (≼l (C.cap (countable a)) (≼-refl (ref (row (C.cap (countable a))))))
+
+OrderModel = λ (Y : T₀) → Σ (Name → T₀) (λ f → Strict f × (∀ a → L.suc (f a) ≼ Y))
+
+universal : ∀ {Y} → OrderModel Y → toL EBO-tree′ ≼ Y
+universal (f , s , bounded) = endpoint _ (λ n → ≼-trans (floor {f} s (row n) (hc-tower n))
+  (≼-trans (≼-suc (≼-refl (f (row n)))) (bounded (row n))))
+
+model : ∀ {Y} → toL EBO-tree′ ≼ Y → OrderModel Y
+model h = ref , ref-strict , (λ a → ≼-trans (inside a) h)

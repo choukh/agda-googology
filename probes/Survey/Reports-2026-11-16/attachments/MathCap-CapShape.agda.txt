@@ -1,0 +1,68 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 形状判定 (审核用, 不进仓库): 一致路径上的嵌入行把 "左项经指定孩子朝各层的折叠" 作为底族交给孩子层的折叠.
+module CapShape where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀)
+import OCF.Lean.YiTBRow as M
+open import OCF.Lean.YiMTTab using (rbᶻ)
+import OCF.Lean.YiBSBase as BB
+import OCF.Lean.YiBSFold as BS
+
+o₁ : Ok (tw 1)
+o₁ = Ok-tw 1
+
+r₁ : M.Rb (tw 1)
+r₁ = rbᶻ (tw 1)
+
+rᴮ : BB.Rb (tw 1)
+rᴮ = BB.rb-tw 1
+
+-- (1) 主线: 朝第 0 层 (一致路径) 折 up x c y, 孩子层折叠的底族在 i 层是 "朝 i 层经 inc c 折左项 x".
+base-inc : (B : Base (tw 1)) (β : Tr⁺ zero) (x : Tr (tw 1)) (c : Tr zero) (y : Tr (M.h₁ c)) (e : M.h₁ c ⊢ zero ◃ y)
+  → M.ψ (tw 1) o₁ r₁ B zero (z≤ (tw 1)) β (up x c y e)
+  ≡ M.ψ (M.h₁ c) (proj₂ o₁ c) (proj₂ r₁ c)
+      (λ i u → M.ψ (tw 1) o₁ r₁ B i (inc c u) (B i (inc c u)) x)
+      zero (z≤ (M.h₁ c)) (M.ψ (tw 1) o₁ r₁ B zero (z≤ (tw 1)) β x) y
+base-inc B β x c y e = refl
+
+-- (1′) 下标侧路径 (主链的回灌 ink self) 同样.
+base-ink : (B : Base (tw 1)) (β : Tr⁺ zero) (x : Tr (tw 1)) (c : Tr zero) (y : Tr (M.h₁ c)) (e : M.h₁ c ⊢ zero ◃ y)
+  → M.ψ (tw 1) o₁ r₁ B zero (ink self) β (up x c y e)
+  ≡ M.ψ (M.h₁ c) (proj₂ o₁ c) (proj₂ r₁ c)
+      (λ i u → M.ψ (tw 1) o₁ r₁ B i (inc c u) (B i (inc c u)) x)
+      zero (self ∙ proj₂ (proj₁ o₁) c) (M.ψ (tw 1) o₁ r₁ B zero (ink self) β x) y
+base-ink B β x c y e = refl
+
+-- (2) 主线: 那个底族里, 左项的嵌入 (孩子与路径孩子都是后继) 是回退.
+base-fb : (B : Base (tw 1)) (j : L) (c′ c : Tr zero) (v : j ≤ M.h₁ (suc c′)) (β : Tr⁺ j)
+  (x : Tr (tw 1)) (y : Tr (M.h₁ (suc c))) (e : M.h₁ (suc c) ⊢ zero ◃ y)
+  → M.ψ (tw 1) o₁ r₁ B j (inc (suc c′) v) β (up x (suc c) y e)
+  ≡ M.ψ (tw 1) o₁ r₁ B j (inc (suc c′) v) β x ⊞ M.ψ₀ʳ (M.h₁ (suc c)) (proj₂ o₁ (suc c)) (proj₂ r₁ (suc c)) y
+base-fb B j c′ c v β x y e = refl
+
+-- (3) 主线: 朝孩子 3 里的第 2 层, 下标侧结点保留, 分支逐个折.
+L₂ : L
+L₂ = M.h₁ (M.nat 2)
+
+q₂ : Pos L₂
+q₂ = inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))
+
+idx-kept : (B : Base (tw 1)) (β : Tr⁺ L₂) (g : Tr zero → Tr (tw 1))
+  → proj₁ (M.ψ (tw 1) o₁ r₁ B L₂ (inc (M.nat 3) (inc tt self)) β (Ω (inj₁ (inj₁ tt)) g))
+  ≡ Ω q₂ (λ z → proj₁ (M.ψ (tw 1) o₁ r₁ B L₂ (inc (M.nat 3) (inc tt self)) β (g z)))
+idx-kept B β g = refl
+
+-- (4) 换基候选: 一致路径上的嵌入行同形.
+base-incᴮ : (B : Base (tw 1)) (β : Tr⁺ zero) (x : Tr (tw 1)) (c : Tr zero) (y : Tr (M.h₁ c)) (e : M.h₁ c ⊢ zero ◃ y)
+  → BS.ψ (tw 1) o₁ rᴮ B zero (z≤ (tw 1)) β (up x c y e)
+  ≡ BS.ψ (M.h₁ c) (proj₂ o₁ c) (proj₂ rᴮ c)
+      (λ i u → BS.ψ (tw 1) o₁ rᴮ B i (inc c u) (B i (inc c u)) x)
+      zero (z≤ (M.h₁ c)) (BS.ψ (tw 1) o₁ rᴮ B zero (z≤ (tw 1)) β x) y
+base-incᴮ B β x c y e = refl

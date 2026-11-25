@@ -1,0 +1,4 @@
+44c44
+<   kh z = proj₂ (proj₁ o₁) z
+---
+>   kh z = proj₁ (proj₂ (proj₁ o₁) z)

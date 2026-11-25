@@ -1,0 +1,100 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 比较同一运行的两个外部零层起点。指数和高阶操作看到相同状态，两个外部起点仅经加法、极限和复合传递。
+module B18BaseRel where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₂)
+open import Data.Maybe.Base using (just; nothing)
+open import W4Block hiding (R)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+record Laws : Set₁ where
+  field
+    R : Tr zero → Tr zero → Set
+    same : ∀ a → R a a
+    plus : ∀ {a b c d} → R a b → R c d → R (a + c) (b + d)
+    limit : ∀ (f g : ℕ → Tr zero) {d e} → (∀ n → R (f n) (g n)) → R (lim f d) (lim g e)
+
+module Test (s : Laws) where
+  open Laws s
+  _∼_ : Tr⁺ zero → Tr⁺ zero → Set
+  x ∼ y = R (proj₁ x) (proj₁ y)
+  times : ∀ {a b : Tr zero} → R a b → ∀ n → R (iter (a +_) a n) (iter (b +_) b n)
+  times h zero = h
+  times h (suc n) = plus h (times h n)
+  next : ∀ {a b : Tr⁺ zero} → a ∼ b → next⁺ a ∼ next⁺ b
+  next h = limit _ _ (times h)
+  cum-pair : ∀ (f g : ℕ → Tr zero) → (∀ n → R (f n) (g n)) → ∀ n → R (cum f n) (cum g n)
+  cum-pair f g h zero = h 0
+  cum-pair f g h (suc n) = plus (cum-pair f g h n) (h (suc n))
+  node : ∀ {X : Set} {x : X} (k : Keep zero X x) (f g : X → Tr⁺ zero) (step : X → X) →
+    (∀ z → f z ∼ g z) → node⁺ k f step ∼ node⁺ k g step
+  node nothing f g step all = limit _ _ (cum-pair _ _ (λ n → all (iter step _ n)))
+  node (just (() , _)) f g step all
+
+  Good : ∀ {ℓ} (n : ℕ) {X : Cx ℓ} → Ca n X → Set
+  Good zero F = ∀ S t (a b : Tr⁺ zero) → a ∼ b → run F S zero t a ∼ run F S zero t b
+  Good (suc n) {X} K = ∀ {Y} (m : Mor X Y) G → Good n G → Good n (proj₁ K m G)
+  along : ∀ {ℓ X} (F : Op {ℓ} X) → Good 0 F → ∀ n S t a b → a ∼ b → itV F n S zero t a ∼ itV F n S zero t b
+  along F law zero S t a b h = h
+  along F law (suc n) S t a b h = law (itS F n S) t _ _ (along F law n S t a b h)
+  repeat : ∀ {A : Set} (f : A → A) (P : A → Set) → (∀ x → P x → P (f x)) → ∀ x → P x → ∀ n → P (iter f x n)
+  repeat f P h x hx zero = hx
+  repeat f P h x hx (suc n) = h _ (repeat f P h x hx n)
+  enter-good : ∀ {ℓ} n {X Y : Cx ℓ} (m : Mor X Y) G → Good n G → Good n (enter n m G)
+  enter-good zero m G g S t a b h = g (λ i u → S i (σ m u)) (π m t) a b h
+  enter-good (suc n) m G g m′ = g (m′ ⊙ m)
+
+  limit-good : ∀ {ℓ} n {X : Cx ℓ} (F : ℕ → Ca n X) d → (∀ k → Good n (F k)) → Good n (limC n F d)
+  limit-good zero F d g S t a b h = limit _ _ (λ k → g k S t a b h)
+  limit-good (suc n) F d g m G q = limit-good n _ _ (λ k → g k m G q)
+  node-good : ∀ {ℓ} n {X : Cx ℓ} {mu} (p : Pos mu) (jd : ∀ {i} → ⟦ X ⟧ i → Keep i (Br mu p) (fromBr mu p zero))
+    (ch : ⟦ X ⟧ (at mu p)) (G : Br mu p → Ca n X) →
+    (∀ z → Good n (G z)) → Good n (nodeC n p jd ch G)
+  node-good zero {mu = mu} p jd ch G g S t a b h = node (jd t) _ _
+    (λ z → fromBr mu p (proj₁ (run (G z) S (at mu p) ch (S (at mu p) ch)))) (λ z → g z S t a b h)
+  node-good (suc n) p jd ch G g m G′ q = node-good n p _ _ _ (λ z → g z m G′ q)
+  up-good : ∀ {ℓ} n {X : Cx ℓ} {mw} (w : Dn ℓ mw) (ι : ∀ {i} → ⟦ X ⟧ i → Tg w i) (A : Ca n X) (R′ : Ca n (cons w X)) →
+    Good n A → Good n R′ → Good n (upC n w ι A R′)
+  up-good zero w ι A R′ a r S t v z h = r (λ i y → S i (proj₂ y)) (ι t , t) _ _ (a S t v z h)
+  up-good (suc n) w ι A R′ a r m G g = up-good n w _ _ _
+    (a m G g) (r (liftM w m) (enter n (chM w (λ y → ι (π m y))) G) (enter-good n _ G g))
+
+  mutual
+    eval : ∀ {ℓ mu X} (o : Ok ℓ) (T : TD X mu) (x : Tr mu) (F : Op X) →
+      Good 0 F → Good 0 (op (E o T x F) (Einf o T x F))
+    eval o T zero F g = g
+    eval o T (suc x) F g S t a b h = limit _ _ (λ n →
+      along (op (E o T x F) (Einf o T x F)) (eval o T x F g) (suc n) S t a b h)
+    eval o T (lim f d) F g S t a b h = limit _ _ (λ n → eval o T (f n) F g S t a b h)
+    eval {mu = mu} o T (Ω p f) F g S t a b h = node (kpT (fr T) o p (tv T t)) _ _
+      (λ z → fromBr mu p (proj₁ (E o T (f z) F S (at mu p) (mk T (hereT (fr T) (posW mu p))) (S _ _))))
+      (λ z → eval o T (f z) F g S t a b h)
+    eval {mu = zero} o T (up x () y e) F g
+    eval {mu = nd s h₀} o T (up x c y e) F g = apply where
+      h = enter-good 0 (chMT T c) (op (E o T x F) (Einf o T x F)) (eval o T x F g)
+      apply : Good 0 (op (E o T (up x c y e) F) (Einf o T (up x c y e) F))
+      apply S t a b p = eval o (chTD T c) y _ h (λ i v → S i (proj₂ v)) (inj₂ (tv T t) , t) a b p
+    eval o T (ex a b nb x ε) F g = index 0 o T x (Kb o T b nb) (op (E o T a F) (Einf o T a F))
+      (λ m G u → eval o (trTD m T) b G u) (eval o T a F g)
+
+    index : ∀ {ℓ mu X} n (o : Ok ℓ) (T : TD X mu) (x : Tr mu) (K : Ca (suc n) X) G →
+      Good (suc n) K → Good n G → Good n (It n o T x K G)
+    index n o T zero K G k g = k idM G g
+    index n o T (suc x) K G k g = limit-good n _ _ (λ i →
+      repeat (It n o T x K) (Good n) (λ a → index n o T x K a k) G g (suc i))
+    index n o T (lim f d) K G k g = limit-good n _ _ (λ i → index n o T (f i) K G k g)
+    index n o T (Ω p f) K G k g = node-good n p _ _ _ (λ z → index n o T (f z) K G k g)
+    index {mu = zero} n o T (up x () y e) K G k g
+    index {mu = nd s h₀} n o T (up x c y e) K G k g = up-good n (down (fr T) c) _ _ _
+      (index n o T x K G k g)
+      (index n o (chTD T c) y (enter (suc n) (chMT T c) (Itᴺ n o T x K)) (enter n (chMT T c) (It n o T x K G))
+        (enter-good (suc n) (chMT T c) (Itᴺ n o T x K)
+          (λ m A a → index n o (trTD m T) x (enter (suc n) m K) A (enter-good (suc n) m K k) a))
+        (enter-good n (chMT T c) (It n o T x K G) (index n o T x K G k g)))
+    index n o T (ex a b nb x ε) K G k g =
+      index (suc n) o T x (Kₑ n o T b nb) (Itᴺ n o T a K)
+        (λ m M h m′ A u → index n o (trTD m′ (trTD m T)) b _ A (enter-good (suc n) m′ M h) u)
+        (λ m A u → index n o (trTD m T) a _ A (enter-good (suc n) m K k) u) idM G g

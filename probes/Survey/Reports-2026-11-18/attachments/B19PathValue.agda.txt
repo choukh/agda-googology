@@ -1,0 +1,29 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 统一零路径上的折叠是关于显式起点的左乘；从 1 起算的系数与全部这样选出的路径无关。
+module B19PathValue where
+open import Data.Product using (_,_; proj₁; proj₂)
+open import W4Block hiding (R; _∙_; lim)
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; ≅→≈ᵛ)
+open import WVOne using (read; T₀; 𝟏)
+open import B18Product using (_·_)
+open import B19IdealProduct using (_∙_; flip; id; mul; add; distrib; lim; one)
+open import B14PathHeight using (All; standard)
+import B16IndexBase as I
+open import B19PathRel using (Laws)
+open import B19PathFold using (module Check)
+
+law : T₀ → Laws
+Laws.R (law q) x y = read x ≈ᵛ (q · read y)
+Laws.plus (law q) {a} {b} {c} {d} p h =
+  flip (≅→≈ᵛ (I.plus a c)) ∙ add p h ∙ flip (distrib q (read b) (read d)) ∙ mul (id q) (≅→≈ᵛ (I.plus b d))
+Laws.limit (law q) f g p = lim p
+
+module At (ℓ : W4Block.L) (o : Ok ℓ) (B : Base ℓ) (x : Tr ℓ) where
+  val = λ w a → read (proj₁ (ψ ℓ o B zero w a x))
+  coefficient = val (z≤ ℓ) (Ωt zero)
+  scale : ∀ {w} → All w → (a : Tr⁺ zero) → val w a ≈ᵛ (read (proj₁ a) · coefficient)
+  scale h a = Check.fold (law (read (proj₁ a))) ℓ o B h (standard ℓ) x a (Ωt zero) (flip (one (read (proj₁ a))))

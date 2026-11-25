@@ -1,0 +1,75 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在规范槽中选择右加层的零支直到地板，证书、全族槽和显式起点都回复到底层原值。每座正塔的零号启动值因而受任一真实内返回支配。
+module B29Floor where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Unit.Base using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; cong₂; trans; sym; subst)
+import W4Block as W
+import W4Fold as F
+import W4Path as P
+import W4Ops as O
+import WVOne as V
+open import OCF.Align.Value using (_≼_)
+import B12Terminal as T
+import B12ActualSlots as Cov
+import B15ReadPaths as Path
+import B20Room as Room
+import B20StandardInside as St
+import B28BFirst as Slot
+import B18TowerSlots as S
+import B28BHead as Head
+import B28BBranch as Rule
+import B28BCut as Phys
+import B18CellState as Cell
+open T.Run
+
+child : ∀ s (h : W.Ch s → W.L) c (r : T.Run (W.nd s h)) a →
+  bs r ≡ S.slots (W.nd s h) a → bs (T.enterRun s h r c W.zero) ≡ S.slots (h c) a
+child s h c r a e = trans (cong (λ B → λ i w → B i (W.inc c w)) e) (Slot.restrict {s} h c a)
+
+sub : ∀ k b → T.Run (k W.⊕ b) → T.Run k
+
+sub = λ k b → Room.sub (Path.base k b)
+slots : ∀ k b (r : T.Run (k W.⊕ b)) a → bs r ≡ S.slots (k W.⊕ b) a →
+  bs (sub k b r) ≡ S.slots k a
+slots k W.zero r a e = e
+slots k (W.nd W.sS h) r a e = slots k (h tt) _ a (child W.sS (λ c → k W.⊕ h c) tt r a e)
+slots k (W.nd W.sL h) r a e = slots k (h 0) _ a (child W.sL (λ c → k W.⊕ h c) 0 r a e)
+slots k (W.nd (W.sΩ i) h) r a e = slots k (h W.zero) _ a (child (W.sΩ i) (λ c → k W.⊕ h c) W.zero r a e)
+
+seed : ∀ k b (r : T.Run (k W.⊕ b)) → β (sub k b r) ≡ β r
+seed k W.zero r = refl
+seed k (W.nd W.sS h) r = seed k (h tt) _
+seed k (W.nd W.sL h) r = seed k (h 0) _
+seed k (W.nd (W.sΩ i) h) r = seed k (h W.zero) _
+
+eval : ∀ k → P.Ok k → F.Base k → O.Tr⁺ W.zero → V.T₀
+eval k o s b = V.read (proj₁ (F.ψ k o s W.zero (P.z≤ k) b (proj₁ (O.Ωt k))))
+
+module Drop (k b : W.L) (o : P.Ok k) (w : P.OkO k b) (r : T.Run (k W.⊕ b))
+  (cert : ok r ≡ P.Ok⊕ k b o w) (covered : Cov.Covered r) (a : ℕ) (original : bs r ≡ S.slots (k W.⊕ b) a) where
+  c = sub k b r
+  proof : ok c ≡ o
+  proof = trans (Room.cert (Path.base k b) r) (trans (cong _ cert) (St.root-ok k b o w))
+  exact : V.read (T.value c) ≡ eval k o (S.slots k a) (β r)
+  exact rewrite proof | slots k b r a original | seed k b r = refl
+  floor : eval k o (S.slots k a) (β r) ≼ V.read (T.value r)
+  floor = subst (_≼ V.read (T.value r)) exact (Room.below (Path.base k b) r covered)
+
+module At (m : ℕ) where
+  module A = Head.At m
+  open A using (k; n; free)
+  first = eval k (P.Ok-tw n) (S.slots k (suc n)) (O.Ωt W.zero)
+  identity : free W.zero ≡ first
+  identity = Rule.At.canon m W.zero
+  minimal : ∀ (x : W.Tr k) → first ≼ free x
+  minimal x = M.floor
+    where
+    module M = Drop k (W.↑ k x) (P.Ok-tw n) (P.OkO↑ k k (P.Ok-tw n) W.self x)
+      (A.restart x) refl (A.covered x) (suc n) (S.At.all n x)
+  zero-value : first ≡ Cell.At.fresh n 0
+  zero-value = trans (sym identity) (A.real 0)
+  selected : ∀ j u → Cell.At.fresh n 0 ≼ Phys.Physical.inner m j u
+  selected j u = subst (_≼ Phys.Physical.inner m j u) zero-value (minimal _)

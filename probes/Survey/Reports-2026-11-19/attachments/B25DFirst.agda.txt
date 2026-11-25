@@ -1,0 +1,48 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真正第一个未闭的命名询问恰是原 ψ₀(Ω_ω)，也恰是旧第二个链点。
+module B25DFirst where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≅→≼; ⊑→≼; l≼; ≼l; s≼s; ≼-suc)
+open import OCF.Align.BTBOValMain using (toLevel-nat)
+import OCF.Lean.YiLSRead as Legacy
+import W4Block as W
+import W4Ops as O
+open import WVOne using (𝟏; read)
+import B16IndexBase as I
+import B12BtboCut as C
+import B12EboRows as Rows
+import B20StandardInside as S
+import B25DOld as Old
+open import B25DTrack
+open import B25DSize using (at-one)
+
+one : W.Tr W.zero
+one = W.suc W.zero
+nth : ℕ → W.Tr W.zero
+nth = W.iter (one O.+_) one
+
+shifted : ∀ n → (𝟏 L.+ L.natᶜ n) L.≅ L.natᶜ (suc n)
+shifted zero = L.s≅ L.z≅
+shifted (suc n) = L.s≅ (shifted n)
+
+numeral : ∀ n → read (nth n) L.≅ L.natᶜ (suc n)
+numeral zero = L.s≅ L.z≅
+numeral (suc n) = L.≅-trans (L.≅-sym (I.plus one (nth n)))
+  (L.≅-trans (L.add-≅ (L.s≅ L.z≅) (numeral n)) (shifted (suc n)))
+
+part : ∀ n → (index 1 L.[ n ]ᴵ) L.≅ᴵ L.natᴵ (suc n)
+part n = L.≅ᴵ-trans (L.toLevel-≅ (I.hs (nth n)) (L.natᶜ-HS (suc n)) (numeral n)) (L.≅ᴵ-sym (toLevel-nat (suc n)))
+
+first : name 1 ≈ᵛ C.omega-cut
+first = (l≼ λ n → ≼l (suc n) (≅→≼ (L.ψ⁰-≅ (L.Ω-≅ (part n)))))
+      , (l≼ λ n → ≼l n (≼-trans {a = C.finite n} {b = C.finite (suc n)} {c = L.ψ⁰ (L.Ω (index 1 L.[ n ]ᴵ))}
+           (⊑→≼ (C.finite n) (L.Ψ⁰-suc (L.natᴵ n))) (≅→≼ (L.ψ⁰-≅ (L.Ω-≅ (L.≅ᴵ-sym (part n)))))))
+
+legacy : name 1 ≈ᵛ Old.point 2
+legacy = ≼-trans (proj₁ first) (proj₁ Old.point₂) , ≼-trans (proj₂ Old.point₂) (proj₂ first)
+
+zero-real : name 0 ≼ S.std 1
+zero-real = ≼-trans {a = name 0} {b = C.finite 2} {c = S.std 1}
+  (⊑→≼ (C.finite 0) (L.Ψ⁰0 (L.natᴵ 2))) at-one

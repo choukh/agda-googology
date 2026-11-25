@@ -1,0 +1,66 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实 χ(suc n) 的各个直接极限孩子恰编码若干份同一 Ω 主项；全部孩子的恢复值仍严格低于父回应。
+module B28Branches where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; trans)
+open import OCF.Align.EboLeanDef using (T; ψ)
+open import OCF.Lean.YiRefTw2 using (Rt; tree-≼; endpoint)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≼-suc; ≼l; l≼; s≼s)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import Data.Empty using (⊥)
+import OCF.Align.Level as L
+import OCF.Align.EboLeanBase
+import Data.Nat.Properties
+import W4Block as W
+import W4Ops as Plus
+import B25DTrack as R
+import B25DExactFold as E
+import B26CScalar as S
+import B26CForest as F
+import B26Names as A
+import B26Depth as D
+import B27Threshold as Th
+import B28Orbit as O
+import B28OrbitValue as V
+import B28FHead as H
+import B28FGap as G
+
+module At (n : ℕ) where
+  a = O.forest n
+  module Gap = G.At a (O.pure n) (O.regular n)
+  module Head = Gap.R
+  keys = λ j → F.small (H.copies a (suc j))
+  init = E.fold (R.χ n)
+  branches = W.iter (init Plus.+_) init
+  chosen : Σ (∀ j → W._⊢_◃_ W.zero (branches j) (branches (suc j))) (λ d → R.χ (suc n) ≡ W.lim branches d)
+  chosen = _ , refl
+  literal : ∀ j → S.code (keys j) ≡ branches j
+  literal zero = cong E.fold (O.literal n)
+  literal (suc j) = Relation.Binary.PropositionalEquality.cong₂ Plus._+_ (cong E.fold (O.literal n)) (literal j)
+
+  -- 同一个中间名适用于这个父结点的全部 j。
+  gap : L.suc (L.lim Head.point) ≼ O.value (suc n)
+  gap = ≼-trans {b = Rt Gap.hup} Gap.gap (tree-≼ refl Gap.hup (O.out-h (suc n)))
+
+  no-limit : O.value (suc n) ≼ L.lim Head.point → ⊥
+  no-limit h = s≼-irrefl (L.lim Head.point) (≼-trans {b = O.value (suc n)} gap h)
+
+  sub = A.named _ (H.normal-response (H.pure-copies (O.pure n) 1) (Head.normal 1))
+          (OCF.Align.EboLeanBase.c∷ OCF.Align.EboLeanBase.c[]) (Head.at 0)
+
+  -- 第零孩子已经在首下标上比旧询问多一层。
+  gain : D.height sub ≡ suc (D.height (O.target n))
+  gain = refl
+
+cover : ∀ k → Th.row k ≼ At.Head.point (suc k) 0
+cover k = Th.minimum k (At.sub (suc k))
+  (subst (suc k Data.Nat.Base.≤_) (sym (cong suc (V.height k)))
+    (Data.Nat.Properties.≤-trans (Data.Nat.Properties.n≤1+n (suc k))
+      (Data.Nat.Properties.≤-trans (Data.Nat.Properties.n≤1+n (suc (suc k))) (Data.Nat.Properties.n≤1+n (suc (suc (suc k)))))))
+
+zero-cofinal : A.E ≈ᵛ L.lim (λ n → At.Head.point n 0)
+zero-cofinal = endpoint _ (λ k → ≼l (suc k) (cover k)) ,
+  l≼ (λ n → ≼-trans {b = L.suc (At.Head.point n 0)} (≼-suc (≼-refl _)) (A.strict (At.sub n)))

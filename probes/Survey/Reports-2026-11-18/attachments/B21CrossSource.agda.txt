@@ -1,0 +1,46 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 全部有限升阶在纯 src 前缀上的同值式，并与上批两个整块的闭界比较。
+module B21CrossSource where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+open import W4Block using (iter)
+open import WVOne using (read)
+open import W4Fold using (EBOᶜ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼l; ≼-trans; ≼-refl; s≼s)
+open import OCF.Align.BTBOValBase using (tr₀)
+import B12LimitSrc as A
+import B19RowSecond as R
+import B19OldSource as Seed
+import B20OldSource as Prev
+import B20OldRanks as P
+import B20OldTail as T
+import B21CrossTower as X
+
+op : ℕ → A.Src₂ → A.Src₂
+op zero = Prev.source-step
+op (suc n) a = S.lim (iter (op n) a)
+parameter : ℕ → A.Src₂ → A.Src₂
+parameter zero a = a
+parameter (suc n) a = op (suc n) (parameter n a)
+along : ∀ (f : A.Src₂ → A.Src₂) (g : A.Lev₂ → A.Lev₂) →
+  (∀ {a p} → A.Aligned a p → A.Aligned (f a) (g p)) → ∀ {a p} → A.Aligned a p → ∀ n →
+  A.Aligned (iter f a n) (iter g p n)
+along f g step h zero = h
+along f g step h (suc n) = step (along f g step h n)
+pres : ∀ n {a p} → A.Aligned a p → A.Aligned (op n a) (P.op n p)
+pres zero h = A.plus h Seed.omega-one
+pres (suc n) h = A.lim _ _ (along (op n) (P.op n) (pres n) h)
+initial : ∀ n {a p} → A.Aligned a p → A.Aligned (parameter n a) (P.threshold n p)
+initial zero h = h
+initial (suc n) h = pres (suc n) (initial n h)
+
+source = S.ψ₀ (S.lim (λ n → parameter n Seed.src-prefix))
+exact : tr₀ source ≈ᵛ X.Actual.row
+exact = A.fold (A.lim _ _ (λ n → initial n Seed.prefix))
+larger : L.suc (L.ψ⁰ (T.block (T.block R.p))) ≼ X.Actual.row
+larger = ≼l 2 (≼l 2 (≼l 1 (Prev.Actual.strict-step (T.block (T.block R.p)))))
+closed : L.suc (tr₀ source) ≼ read EBOᶜ
+closed = ≼-trans (s≼s (proj₁ exact)) X.Actual.terminal

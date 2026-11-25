@@ -1,0 +1,112 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 若终点低于 EBO，其所有实际孩子都有唯一的标准项名字，名字的首下标深度从某个真实孩子起恒定。
+module B26Profile where
+
+open import Data.Nat.Base as N using (ℕ; zero; suc; _≤_; z≤n; s≤s)
+open import Data.Nat.Properties using (≤-refl; ≤-trans; ≤-antisym; n≤1+n; ≤⇒≤′; 1+n≰n; ≰⇒>; ≤-pred)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-suc; ≼-refl; s≼s; ≼l; l≼; ≼lim⁻)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import WVOne using (read)
+open import W4Fold using (EBOᶜ)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+import B12EboRows as B
+import B17Cofinal as C
+import B17CellNext as Next
+import B26Names as A
+import B26Depth as D
+
+
+
+module Chain (v : ℕ → A.T₀) where
+  Y : A.T₀
+  Y = L.lim v
+  Profile = ∀ n → A.Named (v n)
+  at : Profile → ℕ → ℕ
+  at p n = D.height (proj₁ (p n))
+
+  ordered : ∀ (p : Profile) {m n} → v m ≼ v n → at p m ≤ at p n
+  ordered p {m} {n} le = D.ordered (proj₁ (p m)) (proj₁ (p n))
+    (≼-trans {b = v m} (proj₁ (proj₂ (p m))) (≼-trans {b = v n} le (proj₂ (proj₂ (p n)))))
+
+  assemble : ∀ {x : A.T₀} → (∀ n → v n ≼ x) → Y ≼ x
+  assemble p = l≼ p
+
+  ceiling : Profile → Y ≼ A.E
+  ceiling p = assemble λ n → let a , low , high = p n in
+    ≼-trans {a = v n} {b = A.value a} {c = A.E} high
+      (≼-trans {b = L.suc (A.value a)} (≼-suc (≼-refl _)) (A.strict a))
+
+  Unbounded = λ (p : Profile) → ∀ k → Σ ℕ (λ j → k ≤ at p j)
+  Peak = λ (p : Profile) → Σ ℕ (λ i → ∀ j → at p j ≤ at p i)
+  Advance = λ (p : Profile) → ∀ i → Σ ℕ (λ j → suc (at p i) ≤ at p j)
+
+  reach : ∀ p → Unbounded p → A.E ≼ Y
+  reach p u = D.escape {y = Y} λ k → let j , big = u k ; a , low , _ = p j in
+    a , big , ≼l {f = v} j low
+
+  necessary : A.E ≼ Y → ∀ p → Unbounded p
+  necessary g p k = take (≼lim⁻ {a = A.value (D.tower k)} {f = v} (≼-trans {b = A.E} (A.strict (D.tower k)) g))
+    where
+    a = D.tower k
+    take : Σ ℕ (λ j → L.suc (A.value a) ≼ v j) → Σ ℕ (λ j → k ≤ at p j)
+    take (j , h) = j , ≤-trans (subst (k ≤_) (sym (D.calibrate k)) (n≤1+n k))
+      (D.ordered a (proj₁ (p j)) (≼-trans {b = L.suc (A.value a)} (≼-suc (≼-refl _))
+        (≼-trans {b = v j} h (proj₂ (proj₂ (p j))))))
+
+  advance : A.E ≼ Y → ∀ p → Advance p
+  advance ge p i = necessary ge p (suc (at p i))
+
+  from-peak : ∀ p → Peak p → L.suc Y ≼ A.E
+  from-peak p (i , bound) = ≼-trans {b = L.suc (A.value b)} (s≼s (assemble each)) (A.strict b)
+    where
+    k = at p i
+    b = D.tower k
+    each : ∀ j → v j ≼ A.value b
+    each j = let a , _ , hi = p j
+                 lt = D.tall a b (subst (suc (at p j) ≤_) (sym (D.calibrate k)) (s≤s (bound j)))
+             in ≼-trans {b = A.value a} hi (≼-trans {b = L.suc (A.value a)} (≼-suc (≼-refl _))
+                   (mono<ⁿ (A.nt a) (A.nt b) (A.ct b) (A.hcN a) (A.hcN b) lt))
+
+  stable : ∀ p i → (∀ j → at p j ≤ at p i) → ∀ j → v i ≼ v j → at p j ≡ at p i
+  stable p i hi j below = ≤-antisym (hi j) (ordered p {i} {j} below)
+
+  module Classical (lem : LEM) where
+    module C₀ = A.Classical lem
+    maximum : ∀ k (f : ℕ → ℕ) → (∀ n → f n ≤ k) → Σ ℕ (λ i → ∀ j → f j ≤ f i)
+    maximum zero f hi = zero , λ n → ≤-trans (hi n) z≤n
+    maximum (suc k) f hi with lem (Σ ℕ (λ n → suc k ≤ f n))
+    ... | inj₁ (i , big) = i , λ j → ≤-trans (hi j) big
+    ... | inj₂ missing = maximum k f (λ n → ≤-pred (≰⇒> (λ h → missing (n , h))))
+
+    from-name : A.Named Y → Σ Profile Peak
+    from-name (b , low , high) = p , maximum (D.height b) (at p) cap
+      where
+      u : ∀ n → v n ≼ A.value b
+      u n = ≼-trans {b = Y} (≼l {f = v} n (≼-refl _)) high
+      p : Profile
+      p n = C₀.decode {v n} (≼-trans {b = L.suc (A.value b)} (s≼s (u n)) (A.strict b))
+      cap : ∀ n → at p n ≤ D.height b
+      cap n = D.ordered (proj₁ (p n)) b (≼-trans {b = v n} (proj₁ (proj₂ (p n))) (u n))
+
+    collect : ∀ {Z : Set} → (Z ⊎ A.Named Y) → Z ⊎ Σ Profile Peak
+    collect (inj₁ z) = inj₁ z
+    collect (inj₂ h) = inj₂ (from-name h)
+
+    alternative : (A.E ≼ Y) ⊎ Σ Profile Peak
+    alternative = collect {Z = A.E ≼ Y} (C₀.split Y)
+
+-- 在真实 Λ 上，逐 n 拆开可将根的分支与实际子运行对齐。
+module Actual = Chain B.child
+
+up : ∀ {i j} → i ≤ j → B.child i ≼ B.child j
+up h = Next.walk (≤⇒≤′ h)
+
+actual-both : read EBOᶜ ≈ᵛ Actual.Y
+actual-both = Next.assemble {q = Actual.Y} (λ n → ≼l {f = B.child} n (≼-refl (B.child n))) ,
+              l≼ {f = B.child} (λ n → B.into {x = B.child n} (n , ≼-refl _))

@@ -1,0 +1,29 @@
+{
+  "name": "ab-sealed",
+  "file": "<实验目录>/YiE4ABSealed.agda",
+  "command": [
+    "timeout",
+    "600",
+    "agda",
+    "+RTS",
+    "-M8G",
+    "-s",
+    "-RTS",
+    "--library-file=<实验目录>/libraries",
+    "-i",
+    "src",
+    "-i",
+    "probes",
+    "-i",
+    "<实验目录>",
+    "-l",
+    "standard-library",
+    "<实验目录>/YiE4ABSealed.agda"
+  ],
+  "start_utc": "2026-11-15T09:07:35Z",
+  "exit": 0,
+  "external_wall_seconds": 16.4149785,
+  "maximum_residency_bytes": 1494526184.0,
+  "rts_total_memory_MiB": 2612.0,
+  "rts_elapsed_seconds": 16.324
+}

@@ -1,0 +1,75 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18RefDelta where
+open import Data.Nat using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+import WSLevel as W
+import OCF.Align.Level as L
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B13Target as P
+import B14RefFixed as K
+import B15RefAlgebra as A
+import B17RefVector as V
+
+δ : T₁ → T₁ → T₁
+δ L.zero u = A.Γ u
+δ (L.suc y) u = L.lim (S.iter (δ y) u)
+δ (L.lim g) u = L.lim (λ j → δ (g j) u)
+δ (L.up L.zero y) u = A.H y u
+δ (L.limᵢ L.zero g) u = L.limᵢ L.zero (λ z → δ (g z) u)
+
+-- 混合层嵌入只影响高度参数。不同输入经同值证据在同一槽相遇。
+Rₚ : Lev₂ → T₁ → Set
+Rₚ p u = K.collapse p L.≅ u
+small : ∀ {x y : T₀} → x L.≅ y → ∀ {p u} → Rₚ p u → Rₚ (P.height x p) (A.H y u)
+small L.z≅ h = A.add-Ω h
+small (L.s≅ {a = x} {b = y} d) h = L.l≅ (L.iter-R Rₚ {G = P.height x} {G′ = A.H y} (small d) h)
+small (L.l≅ d) h = L.l≅ (λ n → small (d n) h)
+small (L.upˡ {r = ()} _)
+small (L.upʳ {r = ()} _)
+small (L.lᵢ≅ {p = ()} _ _)
+
+lift : ∀ {x : T₀} {y : T₁} → x L.≅ y → ∀ {p u} → Rₚ p u → Rₚ (P.height x p) (δ y u)
+lift L.z≅ h = A.add-Ω h
+lift (L.s≅ {a = x} {b = y} d) h = L.l≅ (L.iter-R Rₚ {G = P.height x} {G′ = δ y} (lift d) h)
+lift (L.l≅ d) h = L.l≅ (λ n → lift (d n) h)
+lift (L.upˡ {r = ()} _)
+lift (L.upʳ {r = L.zero} d) h = small d h
+lift (L.lᵢ≅ {p = ()} _ _)
+
+drop : ∀ {x : T₁} {y : T₀} → x L.≅ y → ∀ {p u} → Rₚ p u → Rₚ (P.height₁ x p) (A.H y u)
+drop L.z≅ h = A.add-Ω h
+drop (L.s≅ {a = x} {b = y} d) h = L.l≅ (L.iter-R Rₚ {G = P.height₁ x} {G′ = A.H y} (drop d) h)
+drop (L.l≅ d) h = L.l≅ (λ n → drop (d n) h)
+drop (L.upˡ {r = L.zero} d) h = small d h
+drop (L.upʳ {r = ()} _)
+drop (L.lᵢ≅ {q = ()} _ _)
+
+inside : ∀ {x y : T₁} → x L.≅ y → ∀ {p u} → Rₚ p u → Rₚ (P.height₁ x p) (δ y u)
+inside L.z≅ h = A.add-Ω h
+inside (L.s≅ {a = x} {b = y} d) h = L.l≅ (L.iter-R Rₚ {G = P.height₁ x} {G′ = δ y} (inside d) h)
+inside (L.l≅ d) h = L.l≅ (λ n → inside (d n) h)
+inside (L.upˡ {r = L.zero} d) h = lift d h
+inside (L.upʳ {r = L.zero} d) h = drop d h
+inside (L.lᵢ≅ {p = L.zero} {q = L.zero} L.z≅ ds) h = L.lᵢ≅ L.z≅ (λ x y d →
+  inside (ds (L.tr⁻ L.z≅ (L.tr⁻ L.z≅ x)) y (L.tr⁻-≅ L.z≅ (L.tr⁻-≅ L.z≅ d))) h)
+
+increment : ∀ {p u x y} → p L.≅ p → x L.≅ y → Rₚ p u → Rₚ (p L.+ P.co₁ x) (δ y u)
+increment {p} {u} {x} rp xy h = L.≅-trans (K.pres (L.≅-sym (P.shift₁ x (P.refl-left xy) rp))) (inside xy h)
+
+at-zero : ∀ {x y} → x L.≅ y → Rₚ (P.co₁ x) (δ y W.Ω₁ᴸ)
+at-zero {x} d = L.≅-trans (K.pres (L.≅-sym (U.left-unit R.idσ (P.co-pres (P.refl-left d))))) (increment {p = L.zero} L.z≅ d (L.Ω-refl _))
+
+coeff : ℕ → T₀ → T₁
+coeff zero x = L.up L.zero x
+coeff (suc n) x = δ (coeff n x) W.Ω₁ᴸ
+family : ∀ n x → K.kernel n x L.≅ P.co₁ (coeff n x)
+family zero x = K.co₀-pres (L.≅-refl⁰ x)
+family (suc n) x = P.co-pres (L.≅-trans (K.pres (family n x)) (at-zero (regular n x))) where
+  regular : ∀ j y → coeff j y L.≅ coeff j y
+  regular zero y = L.upˡ (L.upʳ (L.≅-refl⁰ y))
+  regular (suc j) y = P.refl-left (L.≅-sym (at-zero (regular j y)))

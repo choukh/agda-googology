@@ -1,0 +1,49 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第十三次审查的临时试验: 作用域块上, Ω 结点层号 (raw k, k ≠ 0) 的根结点的链步是 col 全折:
+-- 孩子层恰等于下标层 k 的那一支里的结点也被折成 ℕ 极限. 与空白页的 step₂ (k 侧回退) 是同一处退让.
+module R13ScopeStep where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product.Base using (_,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiScopeCore
+open import OCF.Lean.YiScopeFold
+
+L1 : Level
+L1 = sucᴸ zero
+
+-- Ω̂ (sucᴸ L1): 下标层 L1 的 Ω 结点层号, 孩子 c 的层号是 c 的读回.
+K : Level
+K = Ω̂ (sucᴸ L1)
+
+K-form : K ≡ sup (raw L1) (rb L1 root)
+K-form = refl
+
+c : Raw L1
+c = G.suc G.zero
+
+child-is-k : rb L1 root c ≡ L1
+child-is-k = refl
+
+isLim isNd : ∀ {X Sc rt Root Dom Kid sub s} → G.T X Sc rt Root Dom Kid sub s → Set
+isLim (G.lim _) = ⊤
+isLim _ = ⊥
+isNd (G.nd _ _) = ⊤
+isNd _ = ⊥
+
+-- 孩子 c (层号 L1 = 下标层) 里嵌入的 L1 的 top (一个结点).
+emb : Raw K
+emb = G.into c (un (raw L1) (rb L1 root) c ⊥-elim root (top L1 G.zero))
+
+src-is-node : isNd (top L1 G.zero)
+src-is-node = tt
+
+-- 根结点的链步 (RlD 的 raw 行) 作用在它上面: 折成 ℕ 极限.
+step-on-emb : RlD ⊥-elim K tt (top L1 G.zero) emb ≡ F ⊥-elim K L1 col (top L1 G.zero) emb
+step-on-emb = refl
+
+step-collapses : isLim (RlD ⊥-elim K tt (top L1 G.zero) emb)
+step-collapses = tt

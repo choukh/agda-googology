@@ -1,0 +1,84 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- Ω₃ 每个正号外行的真实一级回灌，以统一的零层核逐支表示；保留槽的每次搬运均由结构对应消去。
+module B14RefAllRows where
+open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≅→≼; ≼-trans)
+open import WVOne using (T₀; read)
+open import WVTwo using (T₁)
+open import WKShape using (Ψ₃)
+import B12Omega3Ref as R
+open import B12LimitSrc using (Lev₂)
+import B13Target as P
+import B14RefFixed as F
+
+passⁿ : ℕ → Lev₂ → Lev₂
+passⁿ zero a = a
+passⁿ (suc m) a = P.pass (passⁿ m a)
+
+norm : ℕ → T₁ → Lev₂
+norm m y = passⁿ m (P.co₁ y)
+
+pres : ∀ m {x y} → x L.≅ y → norm m x L.≅ norm m y
+pres zero d = P.co-pres d
+pres (suc m) d = P.pass-pres (pres m d)
+
+family : ∀ m {x y} → x L.≅ y → P.family (suc m) x L.≅ norm m y
+family zero d = P.co-pres (L.tr⁻-≅ (L.≅ᴵ-refl _) d)
+family (suc m) d = P.pass-pres (family m (L.tr⁻-≅ (L.≅ᴵ-refl _) d))
+
+Regular : ∀ {i} → (T₀ → L.Ordᶜ i) → Set
+Regular f = ∀ {x y} → x L.≅ y → f x L.≅ f y
+
+lifted : ∀ m (f : T₀ → T₁) → Regular f →
+  norm m (L.limᵢ L.zero f) L.≅ L.limᵢ (L.suc L.zero) (λ x → norm m (f x))
+lifted zero f p = L.lᵢ≅ L.z≅ (λ x y d → P.co-pres (p (L.tr⁻-≅ L.z≅ d)))
+lifted (suc m) f p = L.≅-trans (P.pass-pres (lifted m f p))
+  (L.lᵢ≅ L.z≅ (λ x y d → P.pass-pres (pres m (p (L.tr⁻-≅ L.z≅ d)))))
+
+kid : ℕ → ℕ → T₀ → T₁
+kid m zero x = L.up L.zero x
+kid m (suc n) x = F.collapse (norm m (kid m n x))
+
+kernel : ℕ → ℕ → T₀ → Lev₂
+kernel m n x = norm m (kid m n x)
+
+gain : ℕ → ℕ → T₀ → T₀
+gain m n x = L.ψ⁰ (kernel m n x)
+
+regular : ∀ m n → Regular (kid m n)
+regular m zero d = L.upˡ (L.upʳ d)
+regular m (suc n) d = F.pres (pres m (regular m n d))
+
+feed : ∀ m n → P.feed (P.family (suc m)) n L.≅ L.limᵢ L.zero (kid m n)
+feed m zero = L.Ω-refl _
+feed m (suc n) = L.≅-trans (F.pres (L.≅-trans (family m (feed m n)) (lifted m (kid m n) (regular m n))))
+  (L.lᵢ≅ L.z≅ (λ x y d → F.pres (pres m (regular m n (L.tr⁻-≅ L.z≅ d)))))
+
+asked : ∀ m n → P.asked (suc m) n L.≅ L.limᵢ (L.suc L.zero) (kernel m n)
+asked m n = L.≅-trans (family m (feed m n)) (lifted m (kid m n) (regular m n))
+
+chain : ℕ → ℕ → ℕ → T₀
+chain m n = S.iter (gain m n) F.one
+
+node : ℕ → ℕ → T₀
+node m n = R.at (R.at (L.ψ⁰ R.Ω₃) (suc m)) n
+
+shape : ∀ m n → node m n ≡ L.ψ⁰ (P.asked (suc m) n)
+shape m n = cong (λ x → R.at x n) (P.row (suc m))
+
+as-chain : ∀ m n → node m n L.≅ L.lim (λ j → chain m n (suc j))
+as-chain m n rewrite shape m n = L.≅-trans (L.ψ⁰-≅ (asked m n))
+  (L.l≅ (λ k → L.ψ⁰-≅ (pres m (regular m n (indices k))))) where
+  row = λ x → L.ψ (L.suc L.zero) R.idσ (kernel m n x)
+  indices : ∀ j → S.iter row F.one j L.≅ chain m n j
+  indices = L.iter-R L._≅_ {G = row} {G′ = gain m n}
+    (λ d → L.≅-sym (L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (L.≅-sym (pres m (regular m n d))))) (L.s≅ L.z≅)
+
+lower : (∀ m n → L.lim (λ j → chain m n (suc j)) ≼ read Ψ₃) → L.ψ⁰ R.Ω₃ ≼ read Ψ₃
+lower h = P.from-asked λ where
+  zero n → P.seed-row n
+  (suc m) n → ≼-trans (≅→≼ (subst (λ t → t L.≅ L.lim (λ j → chain m n (suc j))) (shape m n) (as-chain m n))) (h m n)

@@ -1,0 +1,64 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B16RefRaise where
+open import Data.Nat using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≅→≼)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B13Target as P
+import B15RefRaise as V
+import B16OrbitTransform as O
+import B16RefFive as F
+open import B12LimitSrc using (Lev₂)
+
+module Sum (d : T₁) (rd : d L.≅ d) (u : T₁) (ru : u L.≅ u) where
+  left = S.iter (d L.+_) L.zero
+  terms = iter (λ x → x L.+ d) u
+  reg : ∀ n → left n L.≅ left n
+  reg = L.iter-R L._≅_ {G = d L.+_} {G′ = d L.+_} (L.add-≅ {σ = λ q → q} {σ′ = λ q → q} rd) L.z≅
+  regular : ∀ n → terms n L.≅ terms n
+  regular zero = ru
+  regular (suc n) = L.add-≅ {σ = λ q → q} {σ′ = λ q → q} (regular n) rd
+
+  rotate : ∀ n → (left n L.+ d) L.≅ left (suc n)
+  rotate zero = U.left-unit (λ q → q) rd
+  rotate (suc n) = L.≅-trans (R.assoc {A = d} {B = left n} {C = left (suc n)} (λ q → q) (λ q → q) (reg (suc n)) rd)
+    (L.add-≅ {σ = λ q → q} {σ′ = λ q → q} rd (rotate n))
+  fit : ∀ n → terms n L.≅ (u L.+ left n)
+  fit zero = ru
+  fit (suc n) = L.≅-trans (R.assoc {A = u} {B = left n} {C = terms n} (λ q → q) (λ q → q) (fit n) rd)
+    (L.add-≅ {σ = λ q → q} {σ′ = λ q → q} ru (rotate n))
+
+Carry : (O.Act → O.Act) → T₁ → Set
+Carry h d = ∀ a u → u L.≅ u → V.Fit a u → V.Fit (h a) (u L.+ d)
+
+arith : ∀ y → Carry (O.height y O.raise) (F.g y)
+arith L.zero = V.raise
+arith (L.suc y) a u ru given {p} {q} pq = L.l≅ (λ n → L.≅-trans (one n pq)
+  (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (P.refl-left (L.≅-sym pq)) (P.co-pres (T.fit n)))) where
+  module T = Sum (F.g y) (F.regular (L.≅-refl⁰ y)) u ru
+  one : ∀ n → V.Fit (iter (O.height y O.raise) a n) (T.terms n)
+  one zero = given
+  one (suc n) = arith y _ _ (T.regular n) (one n)
+arith (L.lim f) a u ru old pq = L.l≅ (λ n → arith (f n) a u ru old pq)
+
+arg : T₀ → Lev₂
+arg x = O.f (O.height x O.raise O.base) L.zero
+meaning : ∀ {x y} → x L.≅ y → arg x L.≅ F.F y
+meaning {x} d = L.≅-trans (arith x O.base L.zero L.z≅ (V.arithmetic 0) L.z≅)
+  (U.left-unit R.idσ (P.co-pres (U.left-unit (λ q → q) (F.regular d))))
+
+tree : Lev₂
+tree = L.limᵢ (L.suc L.zero) arg
+
+five : F.five L.≅ L.ψ⁰ tree
+five = L.ψ⁰-≅ (L.≅-trans F.normalized (L.lᵢ≅ L.z≅ (λ x y d → L.≅-sym (meaning (L.≅-sym d)))))
+
+to-orbit : F.five ≼ L.ψ⁰ tree
+to-orbit = ≅→≼ five

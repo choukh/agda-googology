@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在 Flat 分支中，每个足够晚的反馈点同时提供精确最大值律所需的三个原名与前塔深度证据。
+module B27SWitness where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_; _⊔_)
+import Data.Nat.Properties as N
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import WVOne using (𝟏)
+import B12EboRows as Rows
+import B12XRef as Ref
+import B12Terminal as T
+import B17CellNext as Next
+import B17CellPrefix as Cells
+import B18CellState as C
+import B18Product as P
+import B19Coefficient as Coef
+import B26Names as A
+import B26Depth as D
+import B26Flat as F
+import B27UCell as U
+
+abstract
+  calibrated : ∀ k (a : A.Name) → Rows.row k ≼ A.value a → suc k ≤ D.height a
+  calibrated k a h = subst (_≤ D.height a) (D.calibrate k)
+    (D.ordered (D.tower k) a (≼-trans {a = A.value (D.tower k)} {b = Rows.row k} {c = A.value a} (Ref.original k) h))
+
+  one-fits : Rows.row 1 ≼ Rows.child 1
+  one-fits = proj₂ Rows.one
+
+  height-from-row : ∀ n → 1 ≤ n → (p : A.Named (Rows.child n)) → 2 ≤ D.height (proj₁ p)
+  height-from-row n late p = calibrated 1 (proj₁ p)
+    (≼-trans {a = Rows.row 1} {b = Rows.child 1} {c = A.value (proj₁ p)} one-fits
+    (≼-trans {a = Rows.child 1} {b = Rows.child n} {c = A.value (proj₁ p)}
+      (Next.walk {k = 1} {n = n} (N.≤⇒≤′ late)) (proj₂ (proj₂ p))))
+
+record Witness (n j : ℕ) : Set where
+  field
+    previous : A.Named (Rows.child n)
+    unit : A.Named (C.At.fresh n j)
+    selected : A.Named (Cells.cell n j)
+    high : 2 ≤ D.height (proj₁ previous)
+    exact : D.height (proj₁ selected) ≡ (D.height (proj₁ previous) ⊔ D.height (proj₁ unit))
+
+module Classical (lem : LEM) where
+  from-cell : ∀ n j → 1 ≤ n → A.Named (Cells.cell n j) → Witness n j
+  from-cell n j late pc = record { previous = pa ; unit = pb ; selected = pc ; high = high ; exact = U.At.exact n j pa pb pc high }
+    where
+    a = proj₁ pc
+    cap = proj₂ (proj₂ pc)
+    x = Rows.child n
+    y = C.At.fresh n j
+    c = Cells.cell n j
+    one : 𝟏 ≼ x
+    one = subst (𝟏 ≼_) (C.At.input n j) (T.Run.oneβ (C.At.r n j))
+    fits : y ≼ c
+    fits = ≼-trans {a = y} {b = x P.· y} {c = c} (P.pad one y) (proj₂ (Coef.Cell.exact-cell n j))
+    pa = F.Classical.downward lem a x (≼-trans {a = x} {b = c} {c = A.value a} (Next.previous n j) cap)
+    pb = F.Classical.downward lem a y (≼-trans {a = y} {b = c} {c = A.value a} fits cap)
+    high = height-from-row n late pa
+
+  actual : ∀ (flat : F.Flat) n → (proj₁ flat ⊔ 1) ≤ n → ∀ j →
+    Σ (Witness n j) (λ w → D.height (proj₁ (Witness.selected w)) ≡ proj₁ (proj₂ flat))
+  actual (i , k , names) n late j = from-cell n j (N.≤-trans (N.m≤n⊔m i 1) late) (proj₁ entry) , proj₂ entry
+    where entry = names n (N.≤-trans (N.m≤m⊔n i 1) late) j

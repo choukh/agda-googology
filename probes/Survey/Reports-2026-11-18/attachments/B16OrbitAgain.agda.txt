@@ -1,0 +1,72 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 实际 Ω₂ 行中同一个 Q 的所有正次运行。每一项用上一项的前缀、状态和显式值。
+module B16OrbitAgain where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import W4Block hiding (at)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (p₂; g₂)
+open import WKGen using (node-ge; Ω₁t)
+open import WKShape using (lvl3; Ψ₃; ok₃)
+open import YiLAB7Orbit using (lvl2; ok₂)
+open import B9InnerOuter using (w2)
+open import WSShadow using (zC)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-trans)
+import B12Update as U
+import B12LimitRef as A
+import B12LimitSrc as Z
+import B12ActualSlots as Cover
+import B12Terminal as T
+import B13OrbitFeed as O
+import B13SeedOuter as St
+import B14RefDescribed as D
+import B15OrbitAction as P
+import B15OrbitEx as B
+import B16OrbitAction as H
+import B16OrbitExit as X
+import B16OrbitReuse as N
+import B16OrbitWide as V
+open N using (module Outer; module Vout)
+
+a = H.higher P.base
+p = iter (P.f a) L.zero
+e = iter (P.s a) zC
+described : ∀ n → A.Described (p n) (e n)
+described zero = D.zero-row
+described (suc n) = P.rows a (described n)
+preserved : ∀ n → p n L.≅ p n
+preserved zero = L.z≅
+preserved (suc n) = P.pres a (preserved n)
+
+module At (r : T.Run lvl3) (cv : Cover.Covered r) where
+  module Old = X.At r cv
+  open B.At r cv using (module Previous; module E₀; initial; J; K₁)
+  open Previous.Proof.Core.Run using (S₁; step₂)
+  open St.At r using (c⁺; st1; v₁; outer)
+  open Old using (b; nb; cover; pre; G; g-law; into)
+  gw : Vout.Wide G P.base
+  gw = Vout.lift {Q = K₁} {Q′ = G} (λ S i t v → Emono ok₂ O.D₁ K₁ S i t v (z◃ Old.z₁ (+-mono Old.z₁ nb))) (V.base c⁺ E₀.cp)
+  module Physical = N.Rule b nb cover G P.base g-law gw
+  Q = Previous.Q
+  rule : Outer.Models Q a
+  rule = Outer.lift-law {Q = Old.A.Exp Ω₁t} {Q′ = Q} into Physical.whole
+  wide : Vout.Wide Q a
+  wide = Vout.lift {Q = Old.A.Exp Ω₁t} {Q′ = Q} into Physical.wide-whole
+
+  point : ∀ n → Outer.Pack (p n) (e n) (itS Q n S₁) (itV Q n S₁ zero Previous.t v₁)
+  point zero = initial
+  point (suc n) = rule Previous.t (p n) (e n) (described n) (preserved n) _ _ (point n)
+  term : ∀ n → L.ψ⁰ (p (suc n)) ≼ read (T.value r)
+  term n = ≼-trans (≼l n (U.value-bound (Outer.seed (point (suc n)))))
+    (≼-trans (node-ge (kp lvl2 ok₂ p₂ w2) (λ z → E ok₂ tdNil (g₂ z) J st1 zero w2 v₁) step₂ 1)
+             (≼-trans (E₀.inG st1 w2 v₁) (outer 0)))
+
+limit : Z.Lev₂
+limit = L.lim (λ n → p (suc n))
+standard : L.ψ⁰ limit ≼ read Ψ₃
+standard = l≼ (At.term (T.initial lvl3 ok₃) (Cover.initial lvl3 ok₃))
+terminal : L.ψ⁰ limit ≼ read EBOᶜ
+terminal = ≼-trans (l≼ (At.term (T.finiteRun 2) (Cover.all-finite 2))) (T.finite-ge 2)

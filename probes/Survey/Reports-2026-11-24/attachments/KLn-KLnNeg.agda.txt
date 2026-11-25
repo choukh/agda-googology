@@ -1,0 +1,138 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- KLn: 固定被找的层号为 h₁ (lim sucⁿ) 时, 对一切 z 完全的定位器推出 LPO (编译定理, 无前提).
+-- 探针 z α = lim (bα α): 前缀全 false 时第 n 项是 sucⁿ⁺¹ zero (有限, 层号是有限链), 一旦出现 true 第 n 项是 t + n.
+module KLnNeg where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Bool using (Bool; true; false; _∨_)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
+
+open import W4Block
+open import WVOne using (h₁)
+open import OCF.Lean.YiAbsObs using (LPO; IsJust; Found; sig→lpo)
+open import KLoc using (Locator; CompleteAt; NegStmt)
+
+------------------------------------------------------------------------
+-- 被找的树 t = lim (n ↦ sucⁿ zero), 及 t + n.
+sn : ℕ → Tr zero
+sn zero    = zero
+sn (suc n) = suc (sn n)
+
+t : Tr zero
+t = lim sn (λ n → ◃s)
+
+pl : ℕ → Tr zero
+pl zero    = t
+pl (suc n) = suc (pl n)
+
+lt-pl : (n : ℕ) → zero ⊢ t ◃ pl (suc n)
+lt-pl zero    = ◃s
+lt-pl (suc n) = ◃t (lt-pl n) ◃s
+
+------------------------------------------------------------------------
+-- 探针.
+any : (ℕ → Bool) → ℕ → Bool
+any α zero    = α zero
+any α (suc n) = any α n ∨ α (suc n)
+
+sel : Bool → ℕ → Tr zero
+sel true  n = pl n
+sel false n = sn (suc n)
+
+bα : (ℕ → Bool) → ℕ → Tr zero
+bα α n = sel (any α n) n
+
+step′ : (b c : Bool) (n : ℕ) → zero ⊢ sel b n ◃ sel (b ∨ c) (suc n)
+step′ true  c     n = ◃s
+step′ false true  n = ◃t (◃l (suc n)) (lt-pl n)
+step′ false false n = ◃s
+
+z : (ℕ → Bool) → Tr zero
+z α = lim (bα α) (λ n → step′ (any α n) (α (suc n)) n)
+
+------------------------------------------------------------------------
+-- 有限检查.
+∨-t : (b : Bool) → b ∨ true ≡ true
+∨-t true  = refl
+∨-t false = refl
+
+anyT : (α : ℕ → Bool) (k : ℕ) → α k ≡ true → any α k ≡ true
+anyT α zero    e = e
+anyT α (suc k) e = subst (λ c → any α k ∨ c ≡ true) (sym e) (∨-t (any α k))
+
+anyF : (α : ℕ → Bool) (n : ℕ) → any α n ≡ true → Found α
+anyF α zero    e = zero , e
+anyF α (suc n) e = go (any α n) (α (suc n)) refl refl e
+  where
+  go : (b c : Bool) → any α n ≡ b → α (suc n) ≡ c → b ∨ c ≡ true → Found α
+  go true  c     p q r = anyF α n p
+  go false true  p q r = suc n , q
+  go false false p q ()
+
+------------------------------------------------------------------------
+-- 路径.
+path-pl : (n : ℕ) → h₁ t ≤ h₁ (pl n)
+path-pl zero    = self
+path-pl (suc n) = inc tt (path-pl n)
+
+path-sel : (b : Bool) → b ≡ true → (n : ℕ) → h₁ t ≤ h₁ (sel b n)
+path-sel true refl n = path-pl n
+
+-- 无穷层号 (ℕ 极限结点) 进不了有限链.
+noInf : (F : ℕ → L) (m : ℕ) → nd sL F ≤ h₁ (sn m) → ⊥
+noInf F zero    ()
+noInf F (suc m) (inc c v) = noInf F m v
+noInf F (suc m) (inu vs)  = noInf F m (vs tt)
+
+back : (α : ℕ → Bool) (n : ℕ) (b : Bool) → any α n ≡ b → h₁ t ≤ h₁ (sel b n) → Found α
+back α n true  e v = anyF α n e
+back α n false e v = ⊥-elim (noInf _ (suc n) v)
+
+-- self 不可能: 两个层号的第 0 个孩子一个是 zero, 一个不是.
+isZ : L → Bool
+isZ zero     = true
+isZ (nd _ _) = false
+
+first0 : L → Bool
+first0 (nd sL h) = isZ (h zero)
+first0 _         = false
+
+notZ : (b : Bool) → isZ (h₁ (sel b zero)) ≡ false
+notZ true  = refl
+notZ false = refl
+
+t≢f : true ≡ false → ⊥
+t≢f ()
+
+found : (α : ℕ → Bool) {a : L} → h₁ t ≤ a → a ≡ h₁ (z α) → Found α
+found α self      e    = ⊥-elim (t≢f (trans (cong first0 e) (notZ (α zero))))
+found α (inc c v) refl = back α c (any α c) refl v
+found α (inu vs)  refl = back α zero (any α zero) refl (vs zero)
+found α (ink v)   ()
+
+------------------------------------------------------------------------
+-- 主定理.
+isJ : ∀ {A : Set} → Maybe A → Bool
+isJ (just _) = true
+isJ nothing  = false
+
+ij : ∀ {A : Set} (m : Maybe A) → IsJust m → isJ m ≡ true
+ij (just _) _ = refl
+ij nothing  ()
+
+ji : ∀ {A : Set} (m : Maybe A) → isJ m ≡ true → A
+ji (just x) _ = x
+ji nothing  ()
+
+hit : (α : ℕ → Bool) → Found α → h₁ t ≤ h₁ (z α)
+hit α (k , e) = inc k (path-sel (any α k) (anyT α k e) k)
+
+neg : NegStmt
+neg = t , λ loc cpl → sig→lpo (λ α → isJ (loc (h₁ t) (h₁ (z α))))
+        (λ α f → ij (loc (h₁ t) (h₁ (z α))) (cpl (z α) (hit α f)))
+        (λ α e → found α (ji (loc (h₁ t) (h₁ (z α))) e) refl)

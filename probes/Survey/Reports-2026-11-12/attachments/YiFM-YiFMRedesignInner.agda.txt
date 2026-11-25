@@ -1,0 +1,8 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiFMRedesignInner where
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Align.EboLeanDef as E
+open import OCF.Lean.YiFMNode using (inner↑)
+
+cof-for-old-slot : E.cof inner↑ ≡ E.cΩ (E.natT 1)
+cof-for-old-slot = refl

@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- KJ 第 2 段: KAsTw.Run 的推广. tw 1 上任一覆盖的运行, 链从任一带证书的 y 起步: y ≼ read (c m₀) 则 J y ≼ 输出.
+-- 推论: x ≼ read β′ (状态的第 0 层条目) 时 J x 与 J (suc x) 都不高于输出 (第 1 个链点是 β′ 上的 next⁺, 严格高于 β′).
+-- 编译定理, 无模块参数 (lower 取 KLow.lowerW).
+module KJRun where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; s≼s; ≼-refl; ≼-trans; ≅→≼; l≼; ≺→s≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOValAbsorb using () renaming (St to Stᵛ)
+open import OCF.Align.BTBOFullV3 using (bkᴵ)
+open import OCF.Align.BTBOFullV1 using (V1; PW₁; PW₂; PW₃)
+open import OCF.Align.BTBOFullLv using () renaming (Pos to Psv)
+open import OCF.Align.BTBOFull using (St-bk)
+open import OCF.Align.BTBOFullEmb using (PEmb; Ψ-emb)
+open import OCF.Align.YiMonoEmb using (PEmb-∘)
+open import OCF.Lean.YiBtboV2 using (V2′)
+open import KLowIface using (Cov)
+open import KMir using (IsS→IsN; IsS-tw1)
+open import WVOne using (read; 𝟏; h₁)
+open import WVTwo using (◃→≼)
+open import KAsBase
+open import KAsV3 using (V3w)
+open import KLow using (lowerW)
+import KAsTw
+open import KJLevel using (module Chain)
+
+module As = KAsTw lowerW
+open As using (o₁)
+
+module RunJ (S : Base (tw 1)) (cv : Cov S) (β : Tr⁺ zero) (h1 : 𝟏 ≼ read (proj₁ β)) where
+  open As.Run S cv β h1 public
+
+  module _ (y : LV.Ordᶜ LV.zero) (hy : LV.HS y) (sy : Stᵛ y) (py : Psv (LV.toLevel y hy)) where
+    module C = Chain y hy sy py
+
+    embJ : ∀ n m → C.δ n ≼ read (c m) → PEmb (C.Lδ n) (κ (c (suc m)))
+    embJ n m w =
+      PEmb-≅
+        (PEmb-∘ (PW₃ (V1 (C.SV-δ n)))
+        (PEmb-∘ (PW₁ (V2′ (bkᴵ (C.Lδ n)) (cp η) (St-bk (C.SV-δ n)) (Mono-cp η) w′))
+                (PW₂ (HS-read (c (suc m)))
+                     (proj₁ (V3w η (proj₂ o₁ η) (Sz η) (cvz η) β′ (self ∙ kh η) (Ulift (↑ zero η)))))))
+        (LV.≅ᴵ-sym (code-read (c (suc m)) (IsS→IsN (h₁ (c (suc m))) (IsS-tw1 (c (suc m)))) (proj₂ o₁ (c (suc m))) (HS-read (c (suc m)))))
+      where
+      η : Tr zero
+      η = c m
+      w′ : tr₀ (bkᴵ (C.Lδ n)) ≼ tr₀ (cp η)
+      w′ = ≼-trans (≅→≼ (C.bk≅δ n)) (≼-trans w (≅→≼ (LV.≅-sym (cp≅ η))))
+
+    chainJ : (m₀ : ℕ) → y ≼ read (c m₀) → ∀ n → Σ ℕ (λ m → C.δ n ≼ read (c m))
+    chainJ m₀ st zero    = m₀ , st
+    chainJ m₀ st (suc n) = suc (suc m) , ≼-trans (Ψ-emb (embJ n m w)) (lowStep (c (suc m)))
+      where
+      m = proj₁ (chainJ m₀ st n)
+      w = proj₂ (chainJ m₀ st n)
+
+    Jrun : (m₀ : ℕ) → y ≼ read (c m₀) → C.J ≼ read (proj₁ out)
+    Jrun m₀ st = l≼ (λ n → ≼-trans (Ψ-emb (embJ n (proj₁ (chainJ m₀ st n)) (proj₂ (chainJ m₀ st n))))
+                          (≼-trans (lowG (c (suc (proj₁ (chainJ m₀ st n))))) (out-cum (suc (proj₁ (chainJ m₀ st n))))))
+
+  -- 第 1 个链点严格高于 β′.
+  β′≺c₁ : read (proj₁ β′) LV.≺ read (c 1)
+  β′≺c₁ = ◃→≺ (baseLt (h₁ zero) (proj₂ o₁ zero) (Sz zero) zero (self ∙ kh zero) β′)
+
+  J-x : (x : LV.Ordᶜ LV.zero) (hx : LV.HS x) (sx : Stᵛ x) (px : Psv (LV.toLevel x hx))
+      → x ≼ read (proj₁ β′) → Chain.J x hx sx px ≼ read (proj₁ out)
+  J-x x hx sx px le = Jrun x hx sx px 1 (≼-trans le (◃→≼ (baseLt (h₁ zero) (proj₂ o₁ zero) (Sz zero) zero (self ∙ kh zero) β′)))
+
+  J-sx : (x : LV.Ordᶜ LV.zero) (hx : LV.HS (LV.suc x)) (sx : Stᵛ (LV.suc x)) (px : Psv (LV.toLevel (LV.suc x) hx))
+       → x ≼ read (proj₁ β′) → Chain.J (LV.suc x) hx sx px ≼ read (proj₁ out)
+  J-sx x hx sx px le = Jrun (LV.suc x) hx sx px 1 (≼-trans (s≼s le) (≺→s≼ β′≺c₁))

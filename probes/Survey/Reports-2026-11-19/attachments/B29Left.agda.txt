@@ -1,0 +1,36 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 条件（排中律）。K 的任意严格前驱左乘 Y 的严格前驱仍在 Y 之内，正左因子在整棵 Y 处将其保持为同值。
+module B29Left where
+
+open import Data.Nat.Base using (ℕ)
+open import Data.Product using (proj₁; _,_)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; s≼s; z≼; ≼-refl; ≼-trans; ≼-suc; l≼; ≼l)
+open import OCF.Lean.YiRVLevel using (LEM)
+import WVOne as V
+import B29PPad as Pad
+import B22MovingIndex as Eps
+import B22TowerCut as Cut
+import B26PActual as W
+import B26PSums as Sum
+import B18Product as P
+import B12EboRows as Row
+import B17CellNext as Next
+
+module At (lem : LEM) (q : V.T₀) (low : L.suc q ≼ W.K) where
+  e = Eps.above q
+  one : V.𝟏 ≼ e
+  one = ≼-trans {a = V.𝟏} {b = L.suc q} {c = e} (s≼s z≼) (Eps.strict q)
+  room : L.suc e ≼ W.Y
+  room = ≼-trans {a = L.suc e} {b = W.K} {c = W.Y} (Cut.inside {x = q} low) Cut.terminal
+  module M = Pad.Round lem q e one (Pad.hold q)
+  interior : ∀ x → L.suc x ≼ W.Y → L.suc (q P.· x) ≼ W.Y
+  interior x h = ≼-trans {a = L.suc (q P.· x)} {b = L.suc (x L.+ e)} {c = W.Y} (s≼s (M.apply x))
+    (Sum.plus {x = x} {y = e} h room)
+  bound : (q P.· W.Y) ≼ W.Y
+  bound = ≼-trans {a = q P.· W.Y} {b = q P.· L.lim Row.child} {c = W.Y}
+    (P.mono (≼-refl q) (Next.assemble {q = L.lim Row.child} (λ n → ≼l {f = Row.child} n (≼-refl _))))
+    (l≼ {f = λ n → q P.· Row.child n} λ n → ≼-trans {a = q P.· Row.child n} {b = L.suc (q P.· Row.child n)} {c = W.Y}
+      (≼-suc (≼-refl _)) (interior (Row.child n) (Sum.child-in n)))
+  exact : V.𝟏 ≼ q → (q P.· W.Y) ≈ᵛ W.Y
+  exact pos = bound , P.pad pos W.Y

@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意有限 Ω 森林的编码坐标是每次正反馈内的一个真分支；一头、两头的真实正树分支类型逐层对齐。
+module B28PForest where
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+import W4Block as W
+import B20Towers as J
+import B20TowerValues as V
+import B17CellPrefix as D
+import B27NPlaces as P
+import B26CForest as F
+import B28PPull
+import B28POrbit as O
+open import B28PProgram using (Places; module At)
+
+module AtPlace (a : P.Place) (j : ℕ) where
+  n = P.floor a
+  k = W.tw (suc n)
+  module X = O.At n
+  input = P.key a
+  real = D.At.S.ix (suc n) (suc (suc j))
+  root : real ≡ W.Ω (B28PPull.Positive.p n) (X.branch j)
+  root = Relation.Binary.PropositionalEquality.trans (V.At.index (suc n) (suc (suc j))) (X.same j)
+  output = X.branch j input
+  all : Places (P.level a) output
+  all = At.inside n j input
+
+module Forest {t} (u : F.Pure t) (j : ℕ) = AtPlace (P.encode u) j
+module One (a : P.Place) (j : ℕ) where
+  module Prog = P.One a
+  module Actual = AtPlace Prog.result j
+  p = proj₁ Actual.all
+  tag : W.at Actual.k p ≡ P.level a
+  tag = proj₁ (proj₂ Actual.all)
+  branches = proj₁ (proj₂ (proj₂ Actual.all))
+  result : Actual.output ≡ W.Ω p branches
+  result = proj₁ (proj₂ (proj₂ (proj₂ Actual.all)))
+
+module Two (a b : P.Place) (j : ℕ) where
+  module Prog = P.Two a b
+  module Actual = AtPlace Prog.result j
+  open Actual using (k; output)
+  zero = Actual.all
+  p = proj₁ zero
+  tag : W.at k p ≡ P.level a
+  tag = Relation.Binary.PropositionalEquality.trans (proj₁ (proj₂ zero)) Prog.first
+  g = proj₁ (proj₂ (proj₂ zero))
+  result : output ≡ W.Ω p g
+  result = proj₁ (proj₂ (proj₂ (proj₂ zero)))
+  ops = proj₂ (proj₂ (proj₂ (proj₂ zero)))
+  choose = proj₁ ops
+  inspect = proj₁ (proj₂ ops)
+  -- 次节点对实际正树的每个原始分支都出现；其槽指向原后缀层。
+  inside : ∀ y → Places (Prog.children (inspect y)) (g y)
+  inside = proj₂ (proj₂ (proj₂ (proj₂ ops)))
+  second : ∀ y → Σ (W.Pos k) (λ q → W.at k q ≡ P.level b × Σ (W.Br k q → W.Tr k) (λ f → g y ≡ W.Ω q f))
+  second y = q , Relation.Binary.PropositionalEquality.trans (proj₁ (proj₂ here)) Prog.suffix ,
+    proj₁ (proj₂ (proj₂ here)) , proj₁ (proj₂ (proj₂ (proj₂ here)))
+    where
+    here = inside y
+    q = proj₁ here

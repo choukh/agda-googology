@@ -1,0 +1,126 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 任意底作用的实现同时保存外零槽和 Ω₁ 内零槽，使变换可在不同框架路径上迭代。
+module B15OrbitModel where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WVTwo using (◃→≼)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+open import B8PairW4 using (Real-up; SumR-up)
+open import WSShadow using (ES; lC)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; i≼; u≼; ≼-trans; ≼-refl)
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+import B11OuterCore as C
+import B12Update as U
+import B12LimitRef as A
+import B12LimitSrc as Z
+import B13Countable as T
+import B13OrbitFeed as O
+import B14OrbitReal as W
+open import B15OrbitAction as Act using (Act; f; s; he; hp; mixed; pres; congr)
+
+X₁ = cons (down {s = sS} {h = λ _ → lvl1} stop tt) nil
+X₀ = cons (down (fr O.D₁) tt) X₁
+down-t = mk O.D₁ (hereT (fr O.D₁) (posW lvl1 p₁))
+pull = T.pull O.m₁
+
+module At {X : Cx lvl2} (m : Mor X₁ X) where
+  r = m ⊙ O.m₁
+  slot = σ r C.slot
+  zp = σ r C.zpath
+  ip = σ m down-t
+
+  record Pack (p : Z.Lev₂) (e : ES) (S : St X) (v : Tr⁺ zero) : Set where
+    constructor packed
+    field
+      seed : U.Seeds p e (T.pull r S) v
+      inner : L.ψ⁰ p ≼ read (proj₁ (S zero ip))
+  open Pack public
+
+  Models : Op X → Act → Set
+  Models Q a = ∀ t p e → A.Described p e → p L.≅ p → ∀ S v → Pack p e S v →
+               Pack (f a p) (s a e) (stepS Q S) (run Q S zero t v)
+
+  Law : Op X → (Z.Lev₂ → Z.Lev₂) → (ES → ES) → Set
+  Law Q F H = ∀ t p e → A.Described p e → p L.≅ p → ∀ S v → Pack p e S v → Pack (F p) (H e) (stepS Q S) (run Q S zero t v)
+
+  lift-law : ∀ {Q Q′ F H} → Rl Q Q′ → Law Q F H → Law Q′ F H
+  lift-law {Q} {Q′} rise h t p e D rr S v input = packed
+    (U.seeds (≼-trans (U.value-bound (seed old)) (◃→≼ (rise S zero t v)))
+             (≼-trans (U.slot-bound (seed old)) (◃→≼ (rise S zero zp (S zero zp))))
+             (W.carry {R = T.pull r (stepS Q S)} {S = T.pull r (stepS Q′ S)}
+                      (rise S lvl1 slot (S lvl1 slot)) (U.structure (seed old))))
+    (≼-trans (inner old) (◃→≼ (rise S zero ip (S zero ip))))
+    where old = h t p e D rr S v input
+
+  sup : ∀ Q (F : ℕ → Z.Lev₂ → Z.Lev₂) (H : ℕ → ES → ES) → (∀ n → Law Q (F n) (H n)) →
+    Law Q (λ p → L.lim (λ n → F n p)) (λ e → lC (λ n → H n e))
+  sup Q F H law t p e D rr S v input = packed
+    (U.seeds (l≼ (λ n → U.value-bound (seed (out n)))) (l≼ (λ n → U.slot-bound (seed (out n))))
+             (C.str (W.real-sup _ (λ n → C.rP (U.structure (seed (out n))))) (C.rΩ str) (C.sN str) (C.st str)))
+    (l≼ (λ n → inner (out n)))
+    where out = λ n → law n t p e D rr S v input
+          str = U.structure (seed (out 0))
+
+  module Frame (D₀ : TD X zero) (a : Act) where
+    result : Tr zero → Op X → Op X
+    result z K = op (E ok₂ D₀ z K) (Einf ok₂ D₀ z K)
+
+    module Power (z : Tr zero) (y : T₀) (K : Op X) (law : Law (result z K) (hp a y) (he a y))
+       (t : ⟦ X ⟧ zero) (p : Z.Lev₂) (e : ES) (D : A.Described p e) (rr : p L.≅ p)
+       (S : St X) (v : Tr⁺ zero) (input : Pack p e S v) where
+      Q = result z K
+      pv = Ord.iter (hp a y) p
+      ev = iter (he a y) e
+      desc : ∀ n → A.Described (pv n) (ev n)
+      desc zero = D
+      desc (suc n) = mixed a (≼-refl y) (desc n)
+      regular : ∀ n → pv n L.≅ pv n
+      regular = L.iter-R L._≅_ {G = hp a y} {G′ = hp a y} (congr a (L.≅-refl⁰ y)) rr
+
+      point : ∀ n → Pack (pv n) (ev n) (itS Q n S) (itV Q n S zero t v)
+      point zero = input
+      point (suc n) = law t (pv n) (ev n) (desc n) (regular n) (itS Q n S) (itV Q n S zero t v) (point n)
+
+      same : ∀ n i u → itS Q n S i u ≡ itV Q n S i u (S i u)
+      same zero i u = refl
+      same (suc n) i u = cong (run Q (itS Q n S) i u) (same n i u)
+
+      part : ∀ n i u → i ⊢ proj₁ (itS Q n S i u) ◃ proj₁ (run (result (suc z) K) S i u (S i u))
+      part zero i u = Einf ok₂ D₀ (suc z) K S i u (S i u)
+      part (suc n) i u rewrite same n i u = ◃l n
+      vpart : ∀ n → zero ⊢ proj₁ (itV Q n S zero t v) ◃ proj₁ (run (result (suc z) K) S zero t v)
+      vpart zero = Einf ok₂ D₀ (suc z) K S zero t v
+      vpart (suc n) = ◃l n
+
+      output : Pack (hp a (L.suc y) p) (he a (L.suc y) e) (stepS (result (suc z) K) S) (run (result (suc z) K) S zero t v)
+      output = packed (U.seeds (l≼ (λ n → ≼-trans (U.value-bound (seed (point n))) (◃→≼ (vpart n))))
+                            (l≼ (λ n → ≼-trans (U.slot-bound (seed (point n))) (◃→≼ (part n zero zp))))
+                            (C.str (W.real-sup _ (λ n → Real-up (part n lvl1 slot) (C.rP (U.structure (seed (point n))))))
+                              (Real-up (part 0 lvl1 slot) (C.rΩ str)) (SumR-up (part 0 lvl1 slot) (C.sN str)) (◃t (C.st str) (part 0 lvl1 slot))))
+                      (l≼ (λ n → ≼-trans (inner (point n)) (◃→≼ (part n zero ip))))
+        where str = U.structure (seed input)
+
+    eval : ∀ z {y} → y ≼ read z → (K : Op X) → Models K a → Law (result z K) (hp a y) (he a y)
+    eval (Ω () g)
+    eval (up p () b d)
+    eval (ex p b nb z ())
+    eval zero z≼ K q = q
+    eval (suc z) z≼ K q = lift-law {Q = K} {Q′ = result (suc z) K} (λ S i u v → Emono ok₂ D₀ K S i u v (z◃ z ◃s)) q
+    eval (lim g d) z≼ K q = lift-law {Q = K} {Q′ = result (lim g d) K} (λ S i u v → Emono ok₂ D₀ K S i u v (z◃ (g 0) (◃l 0))) q
+    eval (suc z) (s≼s {a = y} d) K q = Power.output z y K (eval z d K q)
+    eval (lim g d) (≼l n h) K q = lift-law {Q = result (g n) K} {Q′ = result (lim g d) K}
+                          (λ S i u v → Emono ok₂ D₀ K S i u v (◃l n)) (eval (g n) h K q)
+    eval zero (l≼ {f = g} h) K q = sup (result zero K) (λ n → hp a (g n)) (λ n → he a (g n)) (λ n → eval zero (h n) K q)
+    eval (suc z) (l≼ {f = g} h) K q = sup (result (suc z) K) (λ n → hp a (g n)) (λ n → he a (g n)) (λ n → eval (suc z) (h n) K q)
+    eval (lim g d) (l≼ {f = g′} h) K q = sup (result (lim g d) K) (λ n → hp a (g′ n)) (λ n → he a (g′ n)) (λ n → eval (lim g d) (h n) K q)
+    eval z (i≼ {p = ()} d) K q
+    eval z (u≼ {r = ()} d) K q

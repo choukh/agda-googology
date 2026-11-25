@@ -1,0 +1,31 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原 ψ₀(Ω₃) 首个正分支的内部极限统摄自 ψ₀(Ω₂) 以下出发的全部有限次上方 ε 跳跃。
+module B31NInside where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼; ≅→≼)
+import B12Omega3Ref as Ref
+import B12Terminal as T
+import B25ACap as Cap
+import B22TowerCut as K
+import B22MovingIndex as E
+import B19OldPowers as Old
+open import YiLAB7Replay using (Ω₂ᴸ)
+
+hull : T₀ → T₀
+hull a = L.lim (iter E.above a)
+
+module At (a : T₀) (h : a ≼ T.Ω₂ref) where
+  track : ∀ n → iter E.above a n ≼ L.ψ⁰ (Ref.left (suc n))
+  track zero = h
+  track (suc n) = ≼-trans {b = E.above (L.ψ⁰ p)} (K.advance {iter E.above a n} {L.ψ⁰ p} (track n))
+    (≼-trans {b = L.ψ⁰ (p L.+ Ω₂ᴸ)} (Cap.Start.omega₂ p (Ref.reg (suc n)))
+             (≅→≼ (L.ψ⁰-≅ (L.≅-sym (Ref.split n)))))
+    where p = Ref.left (suc n)
+  inside : hull a ≼ Ref.inside
+  inside = l≼ {f = iter E.above a} (λ n → ≼l {f = λ k → L.ψ⁰ (Ref.left k)} (suc n) (track n))
+  bounded : hull a ≼ Old.b
+  bounded = ≼-trans {b = Ref.inside} inside Ref.inside-below-one

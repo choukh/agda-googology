@@ -1,0 +1,69 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18RefRows where
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+open import WSLevel using (Ω₁ᴸ)
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼; l≼)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B13Target as P
+import B14RefRow as Row
+import B14RefFixed as K
+import B15RefAlgebra as A
+import B15OrbitAction as Act
+import B15RefRaise as Q
+import B17RefTower as H
+import B17RefVector as V
+import B17OrbitTower as T
+import B18OrbitSpace as O
+import B18RefModel as M
+import B18RefTower as G
+open import B18RefDepth
+open import B18RefCong using (δ-pres)
+open import B18RefDelta using (δ; coeff; family)
+open M using (Model; fit; conv; sup; node)
+
+meaning : ∀ d → Model (S d)
+meaning zero = M.old
+meaning (suc d) = G.Lift.vec (S d) (meaning d)
+seed : ∀ d → fit (meaning d) (initial d) Ω₁ᴸ
+seed zero = H.sem
+seed (suc d) = G.Lift.universal (S d) (meaning d)
+step : ∀ d → fit (M.Operators.Action (S d) (meaning d)) (grad d) L.zero
+step zero b u ru v = V.Generate.all u ru b v
+step (suc d) b u ru v = G.Lift.Generate.step (S d) (meaning d) u ru b v
+
+height : ∀ d x b u → u L.≅ u → fit (meaning d) b u →
+  fit (meaning d) (T.height (S d) x (T.run (grad d)) b) (A.H x u)
+height d L.zero = step d
+height d (L.suc x) b u ru v = sup (meaning d) _ _ regs terms where
+  regs = L.iter-R L._≅_ {G = A.H x} {G′ = A.H x} (V.regularH x) ru
+  terms : ∀ j → fit (meaning d) (iter (T.height (S d) x (T.run (grad d))) b j) (Ord.iter (A.H x) u j)
+  terms zero = v
+  terms (suc j) = height d x _ _ (regs j) (terms j)
+height d (L.lim g) b u ru v = sup (meaning d) _ _ (λ j → V.regularH (g j) ru) (λ j → height d (g j) b u ru v)
+
+reg : ∀ k x → coeff k x L.≅ coeff k x
+reg zero x = L.upˡ (L.upʳ (L.≅-refl⁰ x))
+reg (suc k) x = δ-pres (reg k x) (L.Ω-refl _)
+
+compute : ∀ d k x → fit (meaning d) (value d k x) (coeff (suc k) x)
+compute d zero x = height d x (initial d) Ω₁ᴸ (L.Ω-refl _) (seed d)
+compute d (suc k) x = conv (meaning d) (prior 0 (grad d) L.zero L.z≅ (step d) (initial d) Ω₁ᴸ (L.Ω-refl _) (seed d))
+  (δ-pres (U.left-unit (λ t → t) (reg (suc k) x)) (L.Ω-refl _))
+  where prior = compute (suc d) k x
+
+prefix = λ k x → Act.f (T.run (value 0 k x 0) Act.base) L.zero
+target : ∀ k x → prefix k x L.≅ K.kernel (suc k) x
+target k x = L.≅-trans (compute 0 k x 0 Act.base L.zero L.z≅ (Q.arithmetic 0) L.z≅)
+  (L.≅-trans (U.left-unit R.idσ (P.co-pres (U.left-unit (λ t → t) (reg (suc k) x))))
+    (L.≅-sym (family (suc k) x)))
+gain : ∀ k x → K.gain (suc k) x L.≅ L.ψ⁰ (prefix k x)
+gain k x = L.ψ⁰-≅ (L.≅-sym (target k x))
+accept : ∀ k {t : T₀} → (∀ j → L.ψ⁰ (prefix k (K.chain (suc k) j)) ≼ t) → Row.node (suc k) ≼ t
+accept k h = ≼-trans (≅→≼ (K.as-chain (suc k))) (l≼ λ j → ≼-trans (≅→≼ (gain k _)) (h j))

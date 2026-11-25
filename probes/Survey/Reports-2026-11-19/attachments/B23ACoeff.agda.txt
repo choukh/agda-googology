@@ -1,0 +1,83 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23ACoeff where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import W4Block hiding (D)
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WKShape using (lvl3; ok₃)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import YiLAB11Orbit using (push)
+open import OCF.BTBO using (module Ord-Ord)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≅→≼; ≼-trans)
+import B11OuterCore as Core
+import B12LimitSrc as Src
+import B12Omega3Ref as Ref
+import B12Omega3Cuts as U
+import B12Update as Seeds
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B13Target as P
+import B13OrbitFeed as O
+import B14RefFixed as K
+import B15OrbitAction as A
+import B15OrbitModel as M
+import B15OrbitRaise as Raise
+import B15RefAlgebra as Ar
+import B17OrbitTower as T
+import B18RefModel as Model
+import B18RefDepth as H
+import B18RefDelta as D
+import B18RefRows as Rows
+import B18OrbitRows as Old
+import B19RowPair as Pair
+import B21RowDynamics as Dy
+import B21RowTheta as Th
+import B22RowPrefix as B
+import B22RowLive as Live
+import B22RowWhole as Start
+import B22RowVariable as Var
+open B.Label
+
+height : ∀ (y : T₀) {p q : Src.Lev₂} → p L.≅ q → A.hp A.base y p L.≅ P.height y q
+height L.zero d = L.add-≅ {σ = Ref.idσ} {σ′ = Ref.idσ} d (L.Ω-refl _)
+height (L.suc y) d = L.l≅ (L.iter-R L._≅_ {G = A.hp A.base y} {G′ = P.height y} (height y) d)
+height (L.lim f) d = L.l≅ (λ n → height (f n) d)
+
+module Add {p : Src.Lev₂} (l : B.Label p) (y : T₀) where
+  rep = A.hp A.base y (q l)
+  ry = L.≅-refl⁰ y
+  sh = height y (rq l)
+  sum : rep L.≅ (q l L.+ P.co₀ y)
+  sum = L.≅-trans sh (P.shift₀ y (rq l))
+  link′ : Pair.PairFit (B.project rep) (p L.+ P.co₀ y)
+  link′ = L.≅-trans (L.ψ⁰-≅ sum) (proj₁ joined) , L.≅-trans (K.pres sum) (proj₂ joined)
+    where joined = B.Step.same l (L.up L.zero y) (L.upˡ (L.upʳ ry))
+  upper : K.collapse rep L.≅ Ar.H y (K.collapse (q l))
+  upper = L.≅-trans (K.pres sh) (D.small ry (K.pres (rq l)))
+  vec = λ d → T.height (H.S d) y (T.run (H.grad d)) (v l d)
+  label′ : B.Label (p L.+ P.co₀ y)
+  label′ = B.label (L.add-≅ {σ = Ref.idσ} {σ′ = Ref.idσ} (rp l) (P.regular₀ y))
+    rep (P.refl-left sh) link′ (A.he A.base y (e l)) (A.mixed A.base (≼-refl y) (rows l)) vec
+    (λ d → Model.conv (Rows.meaning d) (Rows.height d y (v l d) (K.collapse (q l)) (K.pres (rq l)) (fits l d)) (L.≅-sym upper))
+
+  module At (r : Tm.Run lvl3) (cv : Cov.Covered r) (R : Base lvl2) (hr : Live.Present l R)
+            (z : Tr zero) (low : y ≼ read (suc z)) where
+    module Orig = Old.At r cv
+    open Orig.I using (K₁)
+    module Y = Dy.At r cv R (v l) (Core.st (Live.struct hr)) (Live.index hr)
+    S₁ = push R
+    effect = op (E ok₂ O.D₁ (O.g₁ z) K₁) (Einf ok₂ O.D₁ (O.g₁ z) K₁)
+    state = M.pull (stepS effect S₁)
+    module Raise₁ = Raise.Rule K₁ A.base (proj₁ Orig.OldRow.K₁-law)
+    module Input = Raise₁.Start S₁ (q l) (e l) (rows l) (rq l) (Live.struct hr) (Live.lower hr Core.zpath) (Live.lower hr (proj₂ Old.Out.ip))
+    module Emit (t : zero ≤ lvl2) (b : Tr⁺ zero) (hb : L.ψ⁰ (q l) ≼ read (proj₁ b)) where
+      module Entry = Input.Entry (σ O.m₁ t) b hb
+      result = Entry.branch y z low
+      lower = Seeds.value-bound (Raise.Inner.seed result)
+    present : Live.Present label′ state
+    present = Live.present (λ t → Emit.lower t (R zero t) (Live.lower hr t))
+      (Seeds.structure (Raise.Inner.seed (Emit.result Core.zpath (R zero Core.zpath) (Live.lower hr Core.zpath))))
+      (λ d → Y.idx d 0 y z low)

@@ -1,0 +1,168 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- review14 试验 E3: "嵌入的孩子" 与 "摊平进父层的结点" 两种出现方式, 在以后的折叠下是否一致.
+-- (1) 上折 (R14Up) 下, 层号是有限后继 (FinL) 时两者对一切目标逐字相等 (条件: 函数外延作前提).
+-- (2) 旧自身行 (YiFreshFold) 下两者不等: 有限测试 (形状, refl).
+module R14Flat where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; cong₂)
+
+open import OCF.Lean.YiFreshBlock
+open import OCF.Lean.YiFreshFold using (_+_; iter; next; cum; Ωt; ι; _≤_; self; ins; inl; ink; inb; posW; posW⁼; kp; kp⁼; Base; base; b⊥; bs; B₀)
+import OCF.Lean.YiFreshFold as OF
+open import R14Up
+
+Funext : Set₁
+Funext = {A : Set} {B : A → Set} {f g : (x : A) → B x} → (∀ x → f x ≡ g x) → f ≡ g
+
+-- 摊平的加法 (后继是后继); 旧块的 addWithBuilder 同形
+fl : (ℓ j : L) → Build ℓ j → Tr ℓ → Tr j → Tr ℓ
+fl ℓ j bd X zero    = X
+fl ℓ j bd X (suc y) = suc (fl ℓ j bd X y)
+fl ℓ j bd X (lim f) = lim (λ n → fl ℓ j bd X (f n))
+fl ℓ j bd X (Ω q g) = bd q (λ z → fl ℓ j bd X (g z))
+fl ℓ (suc a)  bd X (up y _ w) = fl ℓ a (λ q → bd (inj₂ q)) (fl ℓ (suc a) bd X y) w
+fl ℓ (lim g)  bd X (up y n w) = fl ℓ (g n) (λ q → bd (n , inj₂ q)) (fl ℓ (lim g) bd X y) w
+fl ℓ (Ωₗ k h) bd X (up y c w) = fl ℓ (h c) (λ q → bd (inj₂ (c , inj₂ q))) (fl ℓ (Ωₗ k h) bd X y) w
+fl ℓ zero     bd X (up y () w)
+
+data FinL : L → Set where
+  fz : FinL zero
+  fs : ∀ {a} → FinL a → FinL (suc a)
+
+-- s 由 ℓ 逐次取后继的前驱得到
+data Dn (ℓ : L) : L → Set where
+  here : Dn ℓ ℓ
+  dn   : ∀ {a} → Dn ℓ (suc a) → Dn ℓ a
+
+cvD : ∀ {ℓ s j} → Dn ℓ s → j ≤ s → j ≤ ℓ
+cvD here   w = w
+cvD (dn D) w = cvD D (ins w)
+
+bdD : ∀ {ℓ s} → Dn ℓ s → Build ℓ s
+bdD here   = Ω
+bdD (dn D) = λ q → bdD D (inj₂ q)
+
+BD : ∀ {ℓ s} → Dn ℓ s → Base ℓ → Tr ℓ → Base s
+BD {ℓ} D B Z = base (ψ⊥ ℓ B Z) (λ j w → ψs ℓ B j (cvD D w) Z)
+
+stD : ∀ {ℓ s} (D : Dn ℓ s) (B : Base ℓ) (q : Pos s) (g : Br s q → Tr ℓ) → Br s q → Br s q
+stD {ℓ} {s} D B q g z = fromBr s q (ψs ℓ B (at s q) (cvD D (posW s q)) (g z))
+
+N⊥ : ∀ {ℓ s} (D : Dn ℓ s) (B : Base ℓ) (q : Pos s) (g : Br s q → Tr ℓ) →
+  ψ⊥ ℓ B (bdD D q g) ≡ lim (cum (λ n → ψ⊥ ℓ B (g (iter (stD D B q g) (fromBr s q zero) n))))
+N⊥ here   B q g = refl
+N⊥ (dn D) B q g = N⊥ D B (inj₂ q) g
+
+Ns : ∀ {ℓ s} (D : Dn ℓ s) (B : Base ℓ) {j} (w : j ≤ s) (q : Pos s) (g : Br s q → Tr ℓ) →
+  ψs ℓ B j (cvD D w) (bdD D q g) ≡
+  kp s q w (λ q′ cv → Ω q′ (λ z → ψs ℓ B j (cvD D w) (g (cv z))))
+           (lim (cum (λ n → ψs ℓ B j (cvD D w) (g (iter (stD D B q g) (fromBr s q zero) n)))))
+Ns here   B w q g = refl
+Ns (dn D) B w q g = Ns D B (ins w) (inj₂ q) g
+
+-- 目标是 s 自身时, 更低层 t 摊平进来的结点全部保留: 折叠与摊平交换, 后继变 next
+RL : Funext → ∀ {ℓ s} (D : Dn ℓ s) (B : Base ℓ) (t : L) → FinL t → (bℓ : Build ℓ t) (bs′ : Build s t)
+  → ((q : Pos t) (g : Br t q → Tr ℓ) → ψs ℓ B s (cvD D self) (bℓ q g) ≡ bs′ q (λ z → ψs ℓ B s (cvD D self) (g z)))
+  → (Z : Tr ℓ) (y : Tr t)
+  → ψs ℓ B s (cvD D self) (fl ℓ t bℓ Z y) ≡ liftT s t bs′ (ψs ℓ B s (cvD D self) Z) y
+RL fe D B t F bℓ bs′ H Z zero    = refl
+RL fe D B t F bℓ bs′ H Z (suc y) = cong next (RL fe D B t F bℓ bs′ H Z y)
+RL fe D B t F bℓ bs′ H Z (lim f) = cong lim (fe (λ n → RL fe D B t F bℓ bs′ H Z (f n)))
+RL fe D B t F bℓ bs′ H Z (Ω q g) =
+  trans (H q _) (cong (bs′ q) (fe (λ z → RL fe D B t F bℓ bs′ H Z (g z))))
+RL fe {ℓ} {s} D B (suc t) (fs F) bℓ bs′ H Z (up y₁ _ y₂) =
+  trans (RL fe D B t F (λ q → bℓ (inj₂ q)) (λ q → bs′ (inj₂ q)) (λ q → H (inj₂ q)) (fl ℓ (suc t) bℓ Z y₁) y₂)
+        (cong (λ V → liftT s t (λ q → bs′ (inj₂ q)) V y₂) (RL fe D B (suc t) (fs F) bℓ bs′ H Z y₁))
+
+mutual
+  FJ⊥ : Funext → ∀ {ℓ s} (D : Dn ℓ s) → FinL s → (B : Base ℓ) (Z : Tr ℓ) (y : Tr s) →
+    ψ⊥ ℓ B (fl ℓ s (bdD D) Z y) ≡ ψ⊥ s (BD D B Z) y
+  FJ⊥ fe D F B Z zero    = refl
+  FJ⊥ fe D F B Z (suc y) = cong next (FJ⊥ fe D F B Z y)
+  FJ⊥ fe D F B Z (lim f) = cong lim (fe (λ n → FJ⊥ fe D F B Z (f n)))
+  FJ⊥ fe {ℓ} {s} D F B Z (Ω q g) =
+    trans (N⊥ D B q (λ z → fl ℓ s (bdD D) Z (g z)))
+    (trans (cong (λ S → lim (cum (λ n → ψ⊥ ℓ B (fl ℓ s (bdD D) Z (g (iter S (fromBr s q zero) n))))))
+                 (fe (λ z → cong (fromBr s q) (FJs fe D F B Z (posW s q) (g z)))))
+           (cong (λ G → lim (cum G))
+                 (fe (λ n → FJ⊥ fe D F B Z
+                   (g (iter (λ z → fromBr s q (ψs s (BD D B Z) (at s q) (posW s q) (g z))) (fromBr s q zero) n))))))
+  FJ⊥ fe {ℓ} D (fs {a} F) B Z (up y₁ _ y₂) =
+    trans (FJ⊥ fe (dn D) F B (fl ℓ (suc a) (bdD D) Z y₁) y₂)
+          (cong (λ Bx → ψ⊥ a Bx y₂)
+            (cong₂ base (FJ⊥ fe D (fs F) B Z y₁)
+                        (fe (λ j → fe (λ w → FJs fe D (fs F) B Z (ins w) y₁)))))
+
+  FJs : Funext → ∀ {ℓ s} (D : Dn ℓ s) → FinL s → (B : Base ℓ) (Z : Tr ℓ) {j : L} (w : j ≤ s) (y : Tr s) →
+    ψs ℓ B j (cvD D w) (fl ℓ s (bdD D) Z y) ≡ ψs s (BD D B Z) j w y
+  FJs fe D F B Z w zero    = refl
+  FJs fe D F B Z w (suc y) = cong next (FJs fe D F B Z w y)
+  FJs fe D F B Z w (lim f) = cong lim (fe (λ n → FJs fe D F B Z w (f n)))
+  FJs fe {ℓ} {s} D F B Z {j} w (Ω q g) =
+    trans (Ns D B w q (λ z → fl ℓ s (bdD D) Z (g z)))
+      (cong₂ (λ K d → kp s q w K d)
+        (fe (λ q′ → fe (λ cv → cong (Ω q′) (fe (λ z → FJs fe D F B Z w (g (cv z)))))))
+        (trans (cong (λ S → lim (cum (λ n → ψs ℓ B j (cvD D w) (fl ℓ s (bdD D) Z (g (iter S (fromBr s q zero) n))))))
+                     (fe (λ z → cong (fromBr s q) (FJs fe D F B Z (posW s q) (g z)))))
+               (cong (λ G → lim (cum G))
+                     (fe (λ n → FJs fe D F B Z w
+                       (g (iter (λ z → fromBr s q (ψs s (BD D B Z) (at s q) (posW s q) (g z))) (fromBr s q zero) n)))))))
+  FJs fe {ℓ} D (fs {a} F) B Z self (up y₁ _ y₂) =
+    trans (RL fe D B a F (λ q → bdD D (inj₂ q)) (λ q → Ω (inj₂ q)) (λ q g → Ns D B self (inj₂ q) g)
+              (fl ℓ (suc a) (bdD D) Z y₁) y₂)
+          (cong (λ V → liftT (suc a) a (λ q → Ω (inj₂ q)) V y₂) (FJs fe D (fs F) B Z self y₁))
+  FJs fe {ℓ} D (fs {a} F) B Z {j} (ins w) (up y₁ _ y₂) =
+    trans (FJs fe (dn D) F B (fl ℓ (suc a) (bdD D) Z y₁) w y₂)
+          (cong (λ Bx → ψs a Bx j w y₂)
+            (cong₂ base (FJ⊥ fe D (fs F) B Z y₁)
+                        (fe (λ j′ → fe (λ w′ → FJs fe D (fs F) B Z (ins w′) y₁)))))
+
+-- 推论: 后继层上, 嵌入 up Z tt y 与摊平 fl Z y 对一切目标折叠相同 (上折下)
+flatS : (a : L) → Tr (suc a) → Tr a → Tr (suc a)
+flatS a Z y = fl (suc a) a (λ q → Ω (inj₂ q)) Z y
+
+same-low : Funext → (a : L) → FinL a → (B : Base (suc a)) (Z : Tr (suc a)) (y : Tr a) {j : L} (w : j ≤ a) →
+  ψs (suc a) B j (ins w) (up Z tt y) ≡ ψs (suc a) B j (ins w) (flatS a Z y)
+same-low fe a F B Z y w = sym (FJs fe (dn here) F B Z w y)
+
+same-⊥ : Funext → (a : L) → FinL a → (B : Base (suc a)) (Z : Tr (suc a)) (y : Tr a) →
+  ψ⊥ (suc a) B (up Z tt y) ≡ ψ⊥ (suc a) B (flatS a Z y)
+same-⊥ fe a F B Z y = sym (FJ⊥ fe (dn here) F B Z y)
+
+same-self : Funext → (a : L) → FinL a → (B : Base (suc a)) (Z : Tr (suc a)) (y : Tr a) →
+  ψs (suc a) B (suc a) self (up Z tt y) ≡ ψs (suc a) B (suc a) self (flatS a Z y)
+same-self fe a F B Z y =
+  sym (RL fe here B a F (λ q → Ω (inj₂ q)) (λ q → Ω (inj₂ q)) (λ q g → refl) Z y)
+
+-- (2) 旧自身行: 同一对 (嵌入, 摊平) 折到 1 层, 输出不同 (有限测试)
+two : L
+two = suc one
+
+t-emb t-flat : Tr two
+t-emb  = up zero tt (Ωt one)
+t-flat = flatS one zero (Ωt one)
+
+old-emb : OF.ψs two (B₀ two) one (ins self) t-emb ≡ Ω (inj₁ tt) (λ c → up (Ωt one) tt (suc c))
+old-emb = refl
+
+old-flat : OF.ψs two (B₀ two) one (ins self) t-flat
+  ≡ Ω (inj₁ tt) (λ c → next (OF.ψs two (B₀ two) one (ins self) (fl two zero (λ q → Ω (inj₂ (inj₂ q))) zero c)))
+old-flat = refl
+
+-- 旧行下第 0 支 (c = 0): 嵌入给 up Ω₁ tt 1 (读作 Ω₁+1), 摊平给 next Ω₁ (读作 Ω₁·ω)
+old-emb-0 : (c : Tr zero) → c ≡ zero → up (Ωt one) tt (suc c) ≡ up (Ωt one) tt (suc zero)
+old-emb-0 c refl = refl
+
+old-flat-0 : next (OF.ψs two (B₀ two) one (ins self) (fl two zero (λ q → Ω (inj₂ (inj₂ q))) zero zero)) ≡ next (Ωt one)
+old-flat-0 = refl
+
+new-emb : ψs two (B₀ two) one (ins self) t-emb
+  ≡ Ω (inj₁ tt) (λ c → next (liftT one zero (λ q → Ω (inj₂ q)) (Ωt one) c))
+new-emb = refl
+
+new-same : Funext → ψs two (B₀ two) one (ins self) t-emb ≡ ψs two (B₀ two) one (ins self) t-flat
+new-same fe = same-low fe one (fs fz) (B₀ two) zero (Ωt one) self

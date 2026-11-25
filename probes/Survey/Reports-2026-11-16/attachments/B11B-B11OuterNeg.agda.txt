@@ -1,0 +1,92 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B11B 反查. (a) 参照的具体低分支: ψ⁰(ll m) ≼ ψ⁰(ll (suc m)) 且严格 (无前提). (b) 下一站的零层底字段换成初态 Ωt zero:
+-- 对一切 m 不可满足 (无前提). (c) 只换第 0 层槽 (底族 Bh R): 结构字段与 WKGen.Main 的三个前提照样成立, 首先丢失的是 sz.
+-- 不涉及 "在旧底族上重跑 G" (没有定理, 见回报).
+module B11OuterNeg where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼l; ≼-refl; ≼-trans; 1≼ψ⁰) renaming (+-mono to plus-mono)
+open import WVOne using (T₀; 𝟏; read)
+open import WSShadow using (ES)
+import WKGen
+import WSLevel as W
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; c₁)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B8FreezeMain using (irr)
+open import B10ExitTwo using (no-Ω₂≼1)
+open import B9InnerOuter using (w2)
+import YiLAB10Src as T
+open import YiLAB11Target using (body; y; prefix; state; value)
+open import B11OuterCore
+
+------------------------------------------------------------------------
+-- (a) ψ⁰(ll (suc m)) 的第 0 支 ψ⁰(ll m + Ω₁) 的第 0 支是 ψ⁰(suc (ll m)); 其第 1, 2 项给出 ≼ 与严格.
+low : (m : ℕ) → LV.ψ⁰ (T.ll m) ≼ LV.ψ⁰ (T.ll (suc m))
+low m = ≼l 0 (≼l 0 (≼l 1 (≼-refl _)))
+
+strict : (m : ℕ) → LV.suc (LV.ψ⁰ (T.ll m)) ≼ LV.ψ⁰ (T.ll (suc m))
+strict m = ≼l 0 (≼l 0 (≼l 2 (plus-mono (≼-refl (LV.ψ⁰ (T.ll m))) (1≼ψ⁰ (T.ll m)))))
+
+Ω₂-low : (m : ℕ) → LV.ψ⁰ Ω₂ᴸ ≼ LV.ψ⁰ (T.ll m)
+Ω₂-low zero    = ≼-refl _
+Ω₂-low (suc m) = ≼-trans (Ω₂-low m) (low m)
+
+------------------------------------------------------------------------
+-- (b) 零层底读回是 1 (初态); 任一站的界在 1 处为假.
+no-init : (m : ℕ) → LV.ψ⁰ (T.ll m) ≼ read (proj₁ (Ωt zero)) → ⊥
+no-init m h = no-Ω₂≼1 (≼-trans (Ω₂-low m) h)
+
+-- 下一站 (m = 1) 的记录, 零层底换成初态: 不可满足.
+no-inv1-base : (R : Base lvl2) → InvR 1 R (Ωt zero) → ⊥
+no-inv1-base R I = no-init 1 (sv I)
+
+------------------------------------------------------------------------
+-- (c) 只更换第 0 层槽的值 (第 1 层分量照旧), 不在旧底族上重跑.
+module Slot (R : Base lvl2) where
+  Bh : Base lvl2
+  Bh zero     u = Ωt zero
+  Bh (nd s h) u = R (nd s h) u
+
+  slot-same : c₁ Bh ≡ c₁ R
+  slot-same = refl
+
+  chainbase-init : Bh zero zpath ≡ Ωt zero
+  chainbase-init = refl
+
+  keep : {e : ES} → Str e R → Str e Bh
+  keep (str a b c d) = str a b c d
+
+  -- 第一个内链 (F 尚未作用) 逐字相同.
+  chain-same : (P : ES) (j : ℕ) → Inner.zz P Bh 0 j ≡ Inner.zz P R 0 j
+  chain-same P j = refl
+
+  -- WKGen.Main 照样实例化: 链底 ⊐ Ω₁ 与两处 1 ≼ 都在.
+  module Mh {e : ES} (H : Str e R) = WKGen.Main ok₂ Bh w2 (Ωt zero) (inj₂ (st H)) (≼-refl 𝟏) (≼-refl 𝟏)
+
+  -- 首个不能满足的字段是 sz (零层链底).
+  lost-sz : (m : ℕ) (v : Tr⁺ zero) → InvR m Bh v → ⊥
+  lost-sz m v I = no-init m (sz I)
+
+-- 实例: 第 1 站的真实状态换掉零层槽. 结构字段与零层底 value 1 仍在, sz 不可满足.
+module S1 = Slot (state 1)
+
+str1-kept : Str (prefix 1) S1.Bh
+str1-kept = S1.keep (ss inv1)
+
+sv1-kept : LV.ψ⁰ (T.ll 1) ≼ read (proj₁ (value 1))
+sv1-kept = sv inv1
+
+no-inv1-slot : InvR 1 S1.Bh (value 1) → ⊥
+no-inv1-slot = S1.lost-sz 1 (value 1)

@@ -2,7 +2,7 @@
 
 > **EboLean 删节拷贝 (记号侧验收工作, 读 Setzer 的记号 OT_I).** 归档 `Mahlo.Inacc.Syntax` 的拷贝, 只改了模块名, 并删去了 EBO 路线 ([EboLean](../../EboLean.lagda.md)) 用不到的定义 (由定义级切片判定, 删后从头编译核对). 讲解文字照旧, 可能提到已删的定义; 归档原文未动.
 
-方案 A 的第一块（[../DECISION.md](../DECISION.md)、[../ROADMAP.md](../ROADMAP.md) B1）。转写 Setzer, *Well-ordering proofs for Martin-Löf type theory* (1998) §2.1 的项系统 T′——ML₁W（一个宇宙 + W）的记号系统，端点 ψ_{Ω₁}Ω_{I+ω}。来源 `../Sources/setzer1998-wellordering.txt` 行 458–560，**文本可抽取，逐字对照**。
+方案 A 的第一块（[../DECISION.md](../../../../../archive/src/Mahlo/DECISION.md)、[../ROADMAP.md](../../../../../archive/src/Mahlo/ROADMAP.md) B1）。转写 Setzer, *Well-ordering proofs for Martin-Löf type theory* (1998) §2.1 的项系统 T′——ML₁W（一个宇宙 + W）的记号系统，端点 ψ_{Ω₁}Ω_{I+ω}。来源 `../Sources/setzer1998-wellordering.txt` 行 458–560，**文本可抽取，逐字对照**。
 
 设计：
 
@@ -165,7 +165,7 @@ isRR IR     = true
 
 `length`：0 与 I 为 1；和为分量之和；φ′_a b 为 `len a + len b`；ψ_π b 为 `len π + len b`；Ω′_a 为 `len a + 1`。`length(0) = 1` 不能改成 0：否则 `length(φ′_0 0) = 0` 不比分量大，Remark 2.12 (c) 失效。
 
-BCW 范数 `N`（[../Notation/ExtOT](../Notation/ExtOT.lagda.md) 的做法）：非和函数符号与非零常量的出现次数。两者线性互控（常数 2）——这里只定义，互控留到需要时证。
+BCW 范数 `N`（[../Notation/ExtOT](../../../../../archive/src/Mahlo/Notation/ExtOT.lagda.md) 的做法）：非和函数符号与非零常量的出现次数。两者线性互控（常数 2）——这里只定义，互控留到需要时证。
 
 ```agda
 mutual

@@ -1,0 +1,89 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21RowRepeat where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import W4Block
+open import W4Fold
+open import WVOne using (read)
+open import WKShape using (lvl3; ok₃; Ψ₃)
+open import YiLAB7Orbit using (F; lvl1; lvl2; ok₂)
+open import YiLAB7Replay using (Ω₂ᴸ; o₁)
+open import WSW4 using (module Lem)
+open Lem o₁ using (Real)
+open import WSShadow using (ES)
+import WSLevel as W
+open import YiLAB11Target using (track)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼; s≼s; ≅→≼)
+open import B11PrefixGen using (T₂)
+import B11OuterCore as C
+import B12LimitRef as Desc
+import B12LimitSrc as Src
+import B12Omega3Ref as Base
+import B12Terminal as T
+import B12ActualSlots as Cov
+import B12Update as U
+import B13Orbit as Op
+import B13Target as Target
+import B13Update as Step
+import B19RowPair as Pair
+import B19RowWorld as World
+import B19RowSecond as Orig
+import B20RowPrefix as P
+import B21RowPool as Pool
+import B21RowWhole as One
+open T.Run
+
+tail : T₂ → ℕ → T₂
+tail p zero = p
+tail p (suc n) = tail p n L.+ Ω₂ᴸ
+accurate : ∀ {p q} → p L.≅ q → ∀ n → tail p n L.≅ tail q n
+accurate h zero = h
+accurate h (suc n) = L.add-≅ {σ = Base.idσ} {σ′ = Base.idσ} (accurate h n) (L.Ω-refl _)
+e : ℕ → ES
+e zero = P.shadow
+e (suc n) = Desc.next (e n)
+d : ∀ n → Desc.Described (tail P.q n) (e n)
+d zero = P.rows
+d (suc n) = Desc.Rows.advance (tail P.q n) (e n) (d n)
+sig : ℕ → Pair.Pair
+sig zero = P.sig
+sig (suc n) = World.Higher.Start Pair.W (sig n)
+both : ∀ p → p L.≅ p → Pair.PairFit P.sig p → ∀ n → Pair.PairFit (sig n) (tail p n)
+both p rp s zero = s
+both p rp s (suc n) = World.Higher.start Pair.W {a = sig n} {p = tail p n} (accurate rp n) (both p rp s n)
+same : ∀ n → L.ψ⁰ (tail Orig.p n) L.≅ L.ψ⁰ (tail P.q n)
+same n = L.≅-trans (L.≅-sym (proj₁ (both Orig.p P.rp P.same n))) (proj₁ (both P.q P.rq P.self n))
+
+module At (r : T.Run lvl3) (cv : Cov.Covered r) where
+  module Sites = Pool.At r cv
+  open Sites.V.R.I using (module E₀; J)
+  open Sites.V.A using (K; G; c⁺; t₁; outer; w2)
+  contain : Op.Contains K G
+  contain st i t b = ◃t (Op.contains c⁺ E₀.cp K st i t b)
+      (Emono ok₂ tdNil K st i t b {x = proj₁ c⁺} {y = t₁} ◃e)
+  state = λ n → E₀.state (suc n)
+  val = λ n → E₀.value (suc n)
+  seeds : ∀ n → U.Seeds (tail P.q n) (e n) (state n) (val n)
+  seeds zero = One.At.before r cv
+  seeds (suc n) = Step.advance K G (Op.standard≤K c⁺ E₀.cp) contain w2 (tail P.q n) (e n) (d n) (state n) (val n) (seeds n)
+  value : ∀ n → L.ψ⁰ (tail Orig.p n) ≼ read (T.value r)
+  value n = ≼-trans (≅→≼ (same n)) (≼-trans (U.value-bound (seeds n)) (outer n))
+  all : L.lim (λ n → L.ψ⁰ (tail Orig.p n)) ≼ read (T.value r)
+  all = l≼ value
+  module Row (n : ℕ) where
+    module H = Step.Inner K (Op.standard≤K c⁺ E₀.cp) (e n) (state n)
+    module Ck = Step.Update K G (Op.standard≤K c⁺ E₀.cp) contain (tail P.q n) (e n) (d n) (state n) (U.structure (seeds n))
+    Y = Ck.Rows.y
+    track-source : ∀ j → W.Lx (Y j) (track (e n) j)
+    track-source = Ck.Rows.chain
+    track-real : ∀ j → Real (H.cn j) (track (e n) j)
+    track-real j = H.rY (Ck.IN j)
+    readout : ∀ j → L.ψ⁰ (tail P.q n L.+ L.up L.zero (Y j)) ≼ read (proj₁ (val (suc n)))
+    readout = Ck.Value.term w2 (val n) (U.value-bound (seeds n)) (U.slot-bound (seeds n))
+
+standard : L.lim (λ n → L.ψ⁰ (tail Orig.p n)) ≼ read Ψ₃
+standard = At.all (T.initial lvl3 ok₃) (Cov.initial lvl3 ok₃)
+terminal : L.lim (λ n → L.ψ⁰ (tail Orig.p n)) ≼ read EBOᶜ
+terminal = ≼-trans (At.all (T.finiteRun 2) (Cov.all-finite 2)) (T.finite-ge 2)
+

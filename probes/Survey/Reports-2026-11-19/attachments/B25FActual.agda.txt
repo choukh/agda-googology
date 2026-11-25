@@ -1,0 +1,42 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25FActual where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; _×_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Fold
+open import W4Path
+open import W4Ops
+open import WVOne using (h₁; read)
+open import B21StandardShape using (Limit; root; erase)
+import B12Terminal as T
+import B12ActualSlots as A
+import B14PathHeight as P
+import B14Tower as W
+import B22ResetBridge as Reset
+import B22MovingIndex as Moving
+import B22SourceSlots as Src
+open T.Run
+
+omega-at : ∀ (z : Tr zero) (r : T.Run (h₁ z)) {w : zero ≤ h₁ z} → P.All w →
+  Limit (proj₁ (ψ (h₁ z) (ok r) (bs r) zero w (β r) (proj₁ (Ωt (h₁ z)))))
+omega-at zero r P.base = root
+omega-at (suc z) r (P.each {ws = ws} lo) rewrite erase (kp (h₁ (suc z)) (ok r) (inj₂ (tt , inj₁ tt)) (inu ws)) = root
+omega-at (lim f d) r (P.each lo) = root
+
+module All (r : T.Run (tw 1)) (eq : ok r ≡ Ok-tw 1) (cv : A.Covered r) where
+  module At = W.At r
+  module M = Moving.First r eq cv
+  positive : ∀ z → Limit (At.next z)
+  positive z = omega-at z (At.chain z) (M.checked z)
+  two : Limit (At.idx 2)
+  two = positive (At.idx 1)
+
+module Actual (m : ℕ) where
+  module X = Reset.Level.Standard m
+  module Run = All X.first X.checked X.cv
+  shape : Limit (Src.Level.Std.z m)
+  shape = Run.two

@@ -1,0 +1,84 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：零层系数按值弱化后仍有描述。由各分支的描述构成保留 Ω₀ 槽的二层前缀，并再右加 Ω₂。
+module B14RefDescribed where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; _≈ᵛ_; ≅→≼; ≼-refl; ≼-trans)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+open import WVThree using (Nx)
+open import WSShadow using (ES; LeE; LeE-refl; LeE-trans; InflE; Infl-zC; Infl-nC; lC; nC; zC)
+import WSLevel as W
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B12LimitSrc using (Lev₂)
+import B12LimitRef as A
+open A.Described using (infl; bx; bd)
+import B12Omega3Cuts as U
+import B13Target as P
+import B13Feedback as F
+import B14OrbitHeight as O
+import B14RefGain as G
+import B14RefFixed as K
+
+weaken : ∀ {a e e′} → A.Described a e → LeE e e′ → InflE e′ → A.Described a e′
+weaken r p ie = A.described ie (W.Lw (bd r) (proj₁ p Nx)) (W.Ew (bx r) (W.sh-mono p))
+
+bottom : ∀ y e → LeE (A.next e) (O.he y e)
+bottom L.zero e = LeE-refl _
+bottom (L.suc y) e = LeE-trans (bottom y e) (W.lC-ub (iter (O.he y) e) 1)
+bottom (L.lim f) e = LeE-trans (bottom (f 0) e) (W.lC-ub (λ n → O.he (f n) e) 0)
+
+iterate : ∀ {f : Lev₂ → Lev₂} {g : ES → ES} → (∀ {a e} → A.Described a e → A.Described (f a) (g e)) →
+  ∀ {a e} → A.Described a e → ∀ n → A.Described (S.iter f a n) (iter g e n)
+iterate h D zero = D
+iterate h D (suc n) = h (iterate h D n)
+
+height : ∀ {x y : T₀} → x ≼ y → ∀ {a e} → A.Described a e → A.Described (P.height x a) (O.he y e)
+height {y = y} z≼ {a} {e} r = weaken (A.Rows.advance a e r) (bottom y e) (O.infl y e (infl r))
+height {L.suc x} {L.suc y} (s≼s d) {a} {e} r = A.limit (S.iter (P.height x) a) (iter (O.he y) e) (iterate (height d) r)
+height {y = L.lim f} (≼l n d) {e = e} r = weaken (height d r) (W.lC-ub (λ j → O.he (f j) e) n) (O.infl (L.lim f) e (infl r))
+height {L.lim f} {y} (l≼ h) {a} {e} r = weaken (A.limit (λ j → P.height (f j) a) (λ _ → O.he y e) (λ j → height (h j) r)) (W.lC-const _) (O.infl y e (infl r))
+height (≼i {p = ()} _ _ _)
+height (i≼ {p = ()} _)
+height (≼u {r = ()} _)
+height (u≼ {r = ()} _)
+
+zero-row : A.Described L.zero zC
+zero-row = A.described Infl-zC W.Ld-Ω₁ W.Lx-Ω₁sh
+
+C′ : Lev₂
+C′ = L.limᵢ (L.suc L.zero) (λ y → P.height y L.zero)
+
+shadow : ES
+shadow = nC (λ y → O.he y zC)
+
+C′-rows : A.Described C′ shadow
+C′-rows = A.described (Infl-nC (λ y → O.he y zC) (O.infl (L.suc L.zero) zC Infl-zC))
+  (W.Li (λ y y′ d → bd (height (≼-trans (W.tr⁻≼ y) d) zero-row)))
+  (W.Ew (W.Ei (λ y y′ d → bx (height (≼-trans (W.tr⁻≼ y) d) zero-row))) (LeE-refl _))
+
+same : C′ L.≅ G.C
+same = L.lᵢ≅ L.z≅ λ x y d → L.≅-trans (P.shift₀ x L.z≅)
+  (U.left-unit (λ q → q) (K.co₀-pres (L.≅-trans d (L.≅-sym (F.transport≅ y)))))
+
+next : A.Described (C′ L.+ Ω₂ᴸ) (A.next shadow)
+next = A.Rows.advance C′ shadow C′-rows
+
+same-next : (C′ L.+ Ω₂ᴸ) L.≅ (G.C L.+ Ω₂ᴸ)
+same-next = L.add-≅ {σ = λ r → r} {σ′ = λ r → r} same (L.Ω-refl _)
+
+open import Data.List using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import B14RefRow as Row
+
+piece : T₀
+piece = G.along (0 ∷ 1 ∷ 0 ∷ 0 ∷ 2 ∷ 0 ∷ 2 ∷ 0 ∷ 1 ∷ []) (Row.node 1)
+
+literal : piece ≡ L.ψ⁰ (G.C L.+ Ω₂ᴸ)
+literal = refl
+
+into-model : piece ≼ L.ψ⁰ (C′ L.+ Ω₂ᴸ)
+into-model = ≅→≼ (L.ψ⁰-≅ (L.≅-sym same-next))

@@ -1,0 +1,72 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第十八次审查的临时试验 (三): "换基" 的行对规范家族可以用主线已有的一致行写出.
+-- Ω 形状层号 (下标层 k, 孩子 c 的层是 a ⊕ ↑ k c) 的 Ω 树, 从目标层 j (k ≤ j) 看:
+-- 孩子 c 的那一块换成 j ⊕ ↑ k c 上的 Ω 树, 沿字面路径 lift 折到 j. 不比较 c 与任何别的孩子.
+module R18Rebase where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold
+
+-- 一块: 对一切 k, j, c 可写 (类型检查即是 "不需要比较" 的证据).
+seen : (k : L) → Ok k → (j : L) → Ok j → k ≤ j → Tr k → Tr⁺ j
+seen k ok j oj v c =
+  ψ (j ⊕ ↑ k c) (Ok⊕ j (↑ k c) oj (OkO↑ j k ok v c)) (B₀ (j ⊕ ↑ k c)) j (lift j (↑ k c)) (Ωt j)
+    (proj₁ (Ωt (j ⊕ ↑ k c)))
+
+-- 整棵 Ω 树从 j 看: 在 j 里 "第 k 层的树作分支" 的槽位 q 上逐分支取上面的块.
+seenΩ : (k : L) → Ok k → (j : L) → Ok j → k ≤ j → (q : Pos j) → (Br j q → Tr k) → Tr⁺ j
+seenΩ k ok j oj v q cv = Ω⁺ q (λ z → seen k ok j oj v (cv z))
+
+-- 小例子: tw 1 (k = 第 0 层), 目标是孩子 3 的层.
+data Hd : Set where
+  hz hs hl hΩ hu : Hd
+
+hd : ∀ {S} → T S → Hd
+hd zero         = hz
+hd (suc _)      = hs
+hd (lim _ _)    = hl
+hd (Ω _ _)      = hΩ
+hd (up _ _ _ _) = hu
+
+n̂ : ℕ → Tr zero
+n̂ zero    = zero
+n̂ (suc n) = suc (n̂ n)
+
+hc : Tr zero → L
+hc c = zero ⊕ ↑ zero c
+
+j3 : L
+j3 = hc (n̂ 3)
+
+o3 : Ok j3
+o3 = proj₂ (Ok-tw 1) (n̂ 3)
+
+s3 : Tr zero → Tr j3
+s3 z = proj₁ (seen zero tt j3 o3 (z≤ j3) z)
+
+-- 换基后层号逐字是孩子 3 + z 的层.
+lvl : (j3 ⊕ ↑ zero (n̂ 2)) ≡ hc (n̂ 5)
+lvl = refl
+
+-- 头部: z = 0 是 Ω 结点 (Ω₃ 本身, 顶槽位层 2 低于目标); z ≥ 1 顶槽位层 ≥ 3 = 目标, 走链.
+R0 : hd (s3 (n̂ 0)) ≡ hΩ
+R0 = refl
+R1 : hd (s3 (n̂ 1)) ≡ hl
+R1 = refl
+R2 : hd (s3 (n̂ 2)) ≡ hl
+R2 = refl
+
+-- 与 "在孩子 5 的层内部朝第 3 层折 Ω₅" 逐字比较 (路径写法不同: lift 给 inu, 内部给 inc).
+inner : Tr j3
+inner = proj₁ (ψ (hc (n̂ 5)) (proj₂ (Ok-tw 1) (n̂ 5)) (B₀ (hc (n̂ 5))) j3 (inc tt (inc tt self)) (Ωt j3) (proj₁ (Ωt (hc (n̂ 5)))))
+
+Rin : hd inner ≡ hl
+Rin = refl

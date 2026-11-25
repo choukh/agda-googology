@@ -1,0 +1,90 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21IdealRepeat where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst; subst₂; trans)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (lvl1)
+open import WVTwo using (lvl2; ok₂; ◃→≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B14SharpBound using (data≤)
+open import OCF.Align.Value using (≼-refl; ≼-trans; l≼; ≼l)
+import B12ActualSlots as C
+import B17SharpFeed as Link
+import B17SharpUpdate as U
+import B17SharpTwo as T
+import B18SharpMacro as M
+import B13Orbit as Orb
+import B12Orbit as Win
+
+import B21IdealContext as Context
+open Context using (Pref; plug; empty; push)
+
+module At (lem : LEM) where
+  open I.Sharp lem
+  open U.Update lem
+  open T.Two lem using (w₀)
+  open M.Macro lem using (State; pair; after)
+  open Link.Feed lem using (Linked; lim-gen)
+  open Context.At lem using (Model; model; nextState; out)
+
+  link-limit : ∀ D p (f : ℕ → R.Tr r₂) d (g : ℕ → B.Tr lvl1) e →
+    (∀ i → Linked (g i) (proj₁ (nextState D p (f i) r₁ oR))) →
+    Linked (B.lim g e) (proj₁ (nextState D p (R.lim f d) r₁ oR))
+  link-limit D empty f d g e h = lim-gen e _ h
+  link-limit D (push p x) f d g e = link-limit D p (λ i → x V.+ f i) _ g e
+  out-limit : ∀ D a p (f : ℕ → R.Tr r₂) d y → (∀ i → data≤ (proj₁ (out D a p (f i))) y) →
+    data≤ (proj₁ (out D a p (R.lim f d))) y
+  out-limit D a empty f d y h = l≼ h
+  out-limit D a (push p x) f d y = out-limit D a p (λ i → x V.+ f i) _ y
+
+  module Rep (x : R.Tr r₂) (K : F.Op {lvl2} F.nil) (hK : Model x K) where
+    word = V.iter (x V.+_) x
+    shiftS : ∀ n S → F.itS K n (F.stepS K S) ≡ F.itS K (suc n) S
+    shiftS zero S = refl
+    shiftS (suc n) S = cong (F.stepS K) (shiftS n S)
+    shiftV : ∀ n S t b → F.itV K n (F.stepS K S) B.zero t (F.run K S B.zero t b) ≡ F.itV K (suc n) S B.zero t b
+    shiftV zero S t b = refl
+    shiftV (suc n) S t b rewrite shiftS n S | shiftV n S t b = refl
+
+    stage : ∀ n D p S → State (nextState D p R.zero) S → State (nextState D p (word n)) (F.itS K (suc n) S)
+    stage zero = Model.state hK
+    stage (suc n) D p S h = subst (State (nextState D (push p x) (word n))) (shiftS (suc n) S)
+      (stage n D (push p x) (F.stepS K S) (Model.state hK D p S h))
+    val : ∀ n D a p S → State (nextState D p R.zero) S → ∀ t b → data≤ (proj₁ (out D a p R.zero)) (proj₁ b) →
+      data≤ (proj₁ (out D a p (word n))) (proj₁ (F.itV K (suc n) S B.zero t b))
+    val zero = Model.value hK
+    val (suc n) D a p S h t b hv = subst (λ v → data≤ (proj₁ (out D a (push p x) (word n))) (proj₁ v)) (shiftV (suc n) S t b)
+      (val n D a (push p x) (F.stepS K S) (Model.state hK D p S h) t (F.run K S B.zero t b) (Model.value hK D a p S h t b hv))
+
+    module Take (d : r₂ R.⊢ R.zero ◃ x) where
+      mark = proj₁ (V.next⁺ (x , d))
+      star = F.op (F.E ok₂ F.tdNil (B.suc B.zero) K) (F.Einf ok₂ F.tdNil (B.suc B.zero) K)
+      value : ∀ D a p S → State (nextState D p R.zero) S → ∀ t b → data≤ (proj₁ (out D a p R.zero)) (proj₁ b) →
+        data≤ (proj₁ (out D a p mark)) (proj₁ (F.run star S B.zero t b))
+      value D a p S h t b hv = out-limit D a p word _ _ (λ n → ≼l n (val n D a p S h t b hv))
+      state : ∀ D p S → State (nextState D p R.zero) S → State (nextState D p mark) (F.stepS star S)
+      state D p S h = pair (link-limit D p word _ _ _ (λ n → subst (λ v → Linked (proj₁ v) (proj₁ (nextState D p (word n) r₁ oR))) (sym (Win.Window.self-value K (suc n) S lvl1 w₁))
+        (State.one (stage n D p S h)))) (value D (D R.zero tt) p S h w₀ (S B.zero w₀) (State.bot h))
+      raised : Model mark star
+      raised = model state value
+
+  weak : ∀ {x} (K J : F.Op {lvl2} F.nil) → F.Rl K J → Model x K → Model x J
+  weak K J d m = model state value
+    where
+    value = λ D a p S h t b hv → ≼-trans (Model.value m D a p S h t b hv) (◃→≼ (d S B.zero t b))
+    state = λ D p S h → pair
+      (matched _ _ _ (State.one (Model.state m D p S h)) (inj₂ (d S lvl1 w₁ (S lvl1 w₁))))
+      (value D (D R.zero tt) p S h w₀ (S B.zero w₀) (State.bot h))
+

@@ -1,0 +1,138 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24AFrame where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl; _≡_; cong; subst; sym)
+open import W4Block hiding (lift)
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WVTwo using (◃→≼)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼-trans; ≼l; z≼; s≼s; i≼; u≼)
+import B11OuterCore as C
+import B12LimitSrc as Src
+import B12Omega3Ref as Ref
+import B12Omega3Cuts as U
+import B13Countable as CP
+import B13Target as P
+import B13OrbitFeed as O
+import B14OrbitReal as Real
+import B18OrbitWorld as Ix
+import B18OrbitLevels as All
+import B22RowPrefix as B
+import B22RowLive as V
+import B22RowLimit as Lim
+import B22RowRule as Ru
+import B22RowCountable as Co
+
+module Frame {X : Cx lvl2} (m : Mor nil X) (D : TD X zero) where
+  pull = CP.pull m
+  E′ = λ z K → op (E ok₂ D z K) (Einf ok₂ D z K)
+  record Rule (Q : Op X) (x : Src.Lev₂) : Set where
+    field
+      reg : x L.≅ x
+      advance : ∀ {p} → B.Label p → B.Label (p L.+ P.pass x)
+      state : ∀ {p} (l : B.Label p) (S : St X) → V.Present l (pull S) →
+        V.Present (advance l) (pull (stepS Q S))
+      value : ∀ {p} (l : B.Label p) (S : St X) → V.Present l (pull S) →
+        ∀ t b → L.ψ⁰ (B.q l) ≼ read (proj₁ b) → L.ψ⁰ (B.q (advance l)) ≼ read (proj₁ (run Q S zero t b))
+  open Rule public
+  module Weak {Q Q′ : Op X} (ge : Rl Q Q′) {x : Src.Lev₂} (h : Rule Q x) where
+    module At {p : Src.Lev₂} (l : B.Label p) (S : St X) (input : V.Present l (pull S)) where
+      a = advance h l
+      old = state h l S input
+      s = pull (stepS Q S)
+      s′ = pull (stepS Q′ S)
+      strict : ∀ i t → i ⊢ proj₁ (s i t) ◃ proj₁ (s′ i t)
+      strict i t = ge S i (σ m t) (S i (σ m t))
+      live : V.Present a s′
+      live = V.present (λ t → ≼-trans (V.lower old t) (◃→≼ (strict zero t)))
+        (Real.carry {e = B.e a} {R = s} {S = s′} (strict lvl1 C.slot) (V.struct old))
+        (λ d → Ix.rise (All.world d) (s lvl1 C.slot) (s′ lvl1 C.slot) (strict lvl1 C.slot) (B.v a d) (V.index old d))
+    lift : Rule Q′ x
+    reg lift = reg h
+    advance lift = advance h
+    state lift = At.live
+    value lift l S H t b hb = ≼-trans (value h l S H t b hb) (◃→≼ (ge S zero t b))
+  module Gather (Q : Op X) (xs : ℕ → Src.Lev₂) (h : ∀ n → Rule Q (xs n)) where
+    module At {p : Src.Lev₂} (l : B.Label p) where
+      ls = λ n → advance (h n) l
+      module A = Lim.Collect (λ n → p L.+ P.pass (xs n)) ls (p L.+ P.pass (L.lim xs)) (L.l≅ (λ n → B.rp (ls n)))
+      module Run (S : St X) (I : V.Present l (pull S)) where
+        mid = pull (stepS Q S)
+        holds = λ n → state (h n) l S I
+        keep = V.struct (holds 0)
+        joined : V.Present A.label mid
+        joined = V.present (λ t → l≼ (λ n → V.lower (holds n) t))
+          (C.str (Real.real-sup _ (λ n → C.rP (V.struct (holds n)))) (C.rΩ keep) (C.sN keep) (C.st keep))
+          (λ d → Ix.gather (All.world d) (mid lvl1 C.slot) (λ n → B.v (ls n) d) (λ n → V.index (holds n) d))
+    join : Rule Q (L.lim xs)
+    reg join = L.l≅ (λ n → reg (h n))
+    advance join = At.A.label
+    state join = At.Run.joined
+    value join l S I t b hb = l≼ (λ n → value (h n) l S I t b hb)
+
+  module Power (z : Tr zero) (K : Op X) (x : Src.Lev₂) (h : Rule (E′ z K) x) where
+    Q = E′ z K
+    Q′ = E′ (suc z) K
+    q = P.pass x
+    rq = P.pass-pres (reg h)
+    module Sum = U.Sum q rq
+    module Along = Sum.Prefix (λ p → p L.+ q) (λ xy → L.add-≅ {σ = Ref.idσ} {σ′ = Ref.idσ} xy rq)
+    module At {p : Src.Lev₂} (l : B.Label p) where
+      xs = Ref.S.iter (λ p → p L.+ q) p
+      ls : ∀ n → B.Label (xs n)
+      ls zero = l
+      ls (suc n) = advance h (ls n)
+      module A = Lim.Collect xs ls (p L.+ P.pass (L.suc x)) (L.l≅ (Along.along (B.rp l)))
+      module Run (S : St X) (initial : V.Present l (pull S)) where
+        st = λ n → itS Q n S
+        hs : ∀ n → V.Present (ls n) (pull (st n))
+        hs zero = initial
+        hs (suc n) = state h (ls n) (st n) (hs n)
+        same : ∀ n i t → st n i t ≡ itV Q n S i t (S i t)
+        same zero i t = refl
+        same (suc n) i t = cong (run Q (st n) i t) (same n i t)
+        weak : ∀ n i t → i ⊢ proj₁ (pull (st n) i t) ◃ proj₁ (pull (stepS Q′ S) i t)
+        weak zero i t = inf Q′ S i (σ m t) (S i (σ m t))
+        weak (suc n) i t rewrite same n i (σ m t) = ◃l n
+        live = A.At.all (λ n → pull (st n)) (pull (stepS Q′ S)) hs weak
+        module Emit (t : ⟦ X ⟧ zero) (b : Tr⁺ zero) (hb : L.ψ⁰ (B.q l) ≼ read (proj₁ b)) where
+          bs = λ n → itV Q n S zero t b
+          part : ∀ n → L.ψ⁰ (B.q (ls n)) ≼ read (proj₁ (bs n))
+          part zero = hb
+          part (suc n) = value h (ls n) (st n) (hs n) t (bs n) (part n)
+          below : ∀ n → zero ⊢ proj₁ (bs n) ◃ proj₁ (run Q′ S zero t b)
+          below zero = inf Q′ S zero t b
+          below (suc n) = ◃l n
+          out = l≼ (λ n → ≼-trans (part n) (◃→≼ (below n)))
+    lift : Rule Q′ (L.suc x)
+    reg lift = L.s≅ (reg h)
+    advance lift = At.A.label
+    state lift = At.Run.live
+    value lift = At.Run.Emit.out
+
+  module Count (K : Op X) (x : Src.Lev₂) (h : Rule K x) where
+    eval : ∀ z {y : T₀} → y ≼ read z → Rule (E′ z K) (Co.append x y)
+    eval (Ω () g)
+    eval (up t () b e)
+    eval (ex a b nb t ())
+    eval zero z≼ = h
+    eval (suc z) z≼ = Weak.lift {Q = K} {Q′ = E′ (suc z) K} (λ S i t b → Emono ok₂ D K S i t b (z◃ z ◃s)) h
+    eval (lim f d) z≼ = Weak.lift {Q = K} {Q′ = E′ (lim f d) K} (λ S i t b → Emono ok₂ D K S i t b (z◃ (f 0) (◃l 0))) h
+    eval (suc z) (s≼s {a = y} le) = Power.lift z K (Co.append x y) (eval z le)
+    eval (lim f d) (≼l n le) = Weak.lift {Q = E′ (f n) K} {Q′ = E′ (lim f d) K} (λ S i t b → ◃l n) (eval (f n) le)
+    eval zero (l≼ {f = f} h) = Gather.join (E′ zero K) (λ n → Co.append x (f n)) (λ n → eval zero (h n))
+    eval (suc z) (l≼ {f = f} h) = Gather.join (E′ (suc z) K) (λ n → Co.append x (f n)) (λ n → eval (suc z) (h n))
+    eval (lim g d) (l≼ {f = f} h) = Gather.join (E′ (lim g d) K) (λ n → Co.append x (f n)) (λ n → eval (lim g d) (h n))
+    eval z (i≼ {p = ()} _)
+    eval z (u≼ {r = ()} _)
+
+module Deep = Frame O.m O.D₀
+enter-rule : ∀ {Q x} → Ru.Rule Q x → Deep.Rule (enterO O.m₂ (enterO O.m₁ Q)) x
+Deep.reg (enter-rule h) = Ru.reg h
+Deep.advance (enter-rule h) = Ru.advance h
+Deep.state (enter-rule h) l S = Ru.state h l (CP.pull O.m S)
+Deep.value (enter-rule h) l S input t = Ru.value h l (CP.pull O.m S) input (π O.m t)

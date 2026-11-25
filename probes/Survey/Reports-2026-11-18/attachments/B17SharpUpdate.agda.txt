@@ -1,0 +1,89 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B17SharpUpdate where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂; _×_)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥-elim)
+open import Data.Maybe using (nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM; ≺-irrefl)
+import W4Block as B
+import W4Ops as W
+import W4Path as P
+import W4Fold as F
+open import WVOne using (read; lvl1)
+open import WVTwo using (lvl2; ◃→≼)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import B13SharpOne using (r₁)
+open import B14SharpStack hiding (K; sums)
+open import B14SharpTwo using (r₂; o₂; p₂i)
+open import B15SharpAction
+open import B16SharpModel
+open import B16SharpOmega
+open import B16SharpOrbit
+open import B17SharpFeed
+import B15SharpLift
+import B15SharpSecond as Second
+import B12ActualSlots as A
+
+module Update (lem : LEM) where
+  open I.Sharp lem
+  open Feed lem
+  open Graded lem
+  open Omega lem
+  open Orbit lem
+  iΩ₂ = proj₁ (V.Ωt r₂)
+  wΩ₂ = proj₁ (W.Ωt lvl2)
+  w₁ : lvl1 B.≤ lvl2
+  w₁ = B.inc tt B.self
+
+  matched : ∀ w u v → Linked w u → A._⊴_ w v → Linked v u
+  matched w u .w h (inj₁ refl) = h
+  matched w u v (index , out) (inj₂ d) = go , λ D a A S t b ha hc → ≼-trans (out D a A S t b ha hc) (◃→≼ (F.mono lvl1 oB S B.zero t b d))
+    where
+    go : GoodIndex v u
+    go n tv mk D a A G g = close n _ _ (index n tv mk D a A G g) (monotone n (F.td W.stop tv mk) d G)
+
+  canonical : (c⁺ : W.Tr⁺ lvl1) → A._⊴_ Ωw (proj₁ c⁺) → Linked (proj₁ c⁺) Ωi
+  canonical c⁺ p = matched Ωw Ωi _ (omega , B15SharpLift.Lift.canon lem) p
+
+  vacant : kp♯ r₂ o₂ p₂i r₁ oR ≡ nothing
+  vacant with Dk r₁ r₁
+  ... | inj₁ _ = refl
+  ... | inj₂ lt = ⊥-elim (≺-irrefl r₁ lt)
+
+  module Level (D : Base♯) (o : P.Ok lvl2) (S : F.Base lvl2) (c₂ : W.Tr⁺ lvl2) (big : A._⊴_ wΩ₂ (proj₁ c₂))
+    (start : Linked (proj₁ (S lvl1 w₁)) (proj₁ (D r₁ oR))) where
+    module G = Pair D (D r₁ oR) (S lvl1 w₁) start
+    nextI : Base♯
+    nextI j oj = ψ♯ r₂ o₂ D j oj (D j oj) iΩ₂
+    nextW : F.Base lvl2
+    nextW = F.stepS (F.opB lvl2 o (proj₁ c₂) (proj₂ c₂)) S
+
+    both : Linked (proj₁ (F.ψ lvl2 o S lvl1 w₁ (S lvl1 w₁) wΩ₂)) (proj₁ (nextI r₁ oR))
+    both rewrite vacant = lim-gen _ _ G.sums
+
+    change : Linked (proj₁ (nextW lvl1 w₁)) (proj₁ (nextI r₁ oR))
+    change = matched _ _ _ both (promote big)
+      where
+      promote : ∀ {x} → A._⊴_ wΩ₂ x → A._⊴_ (proj₁ (F.ψ lvl2 o S lvl1 w₁ (S lvl1 w₁) wΩ₂)) (proj₁ (F.ψ lvl2 o S lvl1 w₁ (S lvl1 w₁) x))
+      promote (inj₁ refl) = inj₁ refl
+      promote (inj₂ d) = inj₂ (F.mono lvl2 o S lvl1 w₁ (S lvl1 w₁) d)
+
+  module Orbit₂ (D : Base♯) (o : P.Ok lvl2) (S : F.Base lvl2) (c₂ : W.Tr⁺ lvl2) (big : A._⊴_ wΩ₂ (proj₁ c₂))
+    (start : Linked (proj₁ (S lvl1 w₁)) (proj₁ (D r₁ oR))) where
+    advanceI : Base♯ → Base♯
+    advanceI d j oj = ψ♯ r₂ o₂ d j oj (d j oj) iΩ₂
+    stateI = V.iter advanceI D
+    op = F.opB lvl2 o (proj₁ c₂) (proj₂ c₂)
+    stateW = λ n → F.itS op n S
+
+    invariant : ∀ n → Linked (proj₁ (stateW n lvl1 w₁)) (proj₁ (stateI n r₁ oR))
+    invariant zero = start
+    invariant (suc n) = Level.change (stateI n) o (stateW n) c₂ big (invariant n)
+

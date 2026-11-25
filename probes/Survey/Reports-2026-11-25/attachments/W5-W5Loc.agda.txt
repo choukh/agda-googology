@@ -1,0 +1,125 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 试验: 在层号 a 里找有限层 lvl n 的一个出现 (可靠由类型保证; 完全性不在这里证).
+module W5Loc where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Product using (Σ; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym; trans)
+open import W4Block
+
+lvl : ℕ → L
+lvl zero    = zero
+lvl (suc n) = nd sS (λ _ → lvl n)
+
+mapM : ∀ {A B : Set} → (A → B) → Maybe A → Maybe B
+mapM f (just a) = just (f a)
+mapM f nothing  = nothing
+
+orElse : ∀ {A : Set} → Maybe A → Maybe A → Maybe A
+orElse (just a) _ = just a
+orElse nothing  m = m
+
+-- j 是不是有限层.
+fin? : (j : L) → Maybe (Σ ℕ λ n → j ≡ lvl n)
+fin? zero          = just (0 , refl)
+fin? (nd sS h)     = mapM (λ { (n , e) → suc n , cong (λ a → nd sS (λ _ → a)) e }) (fin? (h tt))
+fin? (nd sL g)     = nothing
+fin? (nd (sΩ k) h) = nothing
+
+-- a 是不是就是 lvl n.
+eqL : (n : ℕ) (a : L) → Maybe (lvl n ≡ a)
+eqL zero    zero      = just refl
+eqL (suc n) (nd sS h) = mapM (cong (λ x → nd sS (λ _ → x))) (eqL n (h tt))
+eqL zero    (nd _ _)  = nothing
+eqL (suc n) zero      = nothing
+eqL (suc n) (nd sL _) = nothing
+eqL (suc n) (nd (sΩ _) _) = nothing
+
+sn : ℕ → Tr zero
+sn zero    = zero
+sn (suc n) = suc (sn n)
+
+mutual
+  find : (n : ℕ) (a : L) → Maybe (lvl n ≤ a)
+  find n a = orElse (mapM (λ e → subst (λ x → lvl n ≤ x) e self) (eqL n a)) (down n a)
+
+  down : (n : ℕ) (a : L) → Maybe (lvl n ≤ a)
+  down n zero          = nothing
+  down n (nd sS h)     = mapM (inc tt) (find n (h tt))
+  down n (nd sL g)     = mapM (inc (suc n)) (find n (g (suc n)))
+  -- Ω 形层号: 下标层是第 0 层时先看孩子 sucⁿ zero (塔第 1 项上它的层号就是 lvl n), 再看孩子 zero.
+  down n (nd (sΩ zero) h)     = orElse (mapM (inc (sn n)) (find n (h (sn n)))) (mapM (inc zero) (find n (h zero)))
+  down n (nd (sΩ (nd s g)) h) = mapM (inc zero) (find n (h zero))
+
+loc : (j a : L) → Maybe (j ≤ a)
+loc j a = go (fin? j)
+  where
+  go : Maybe (Σ ℕ λ n → j ≡ lvl n) → Maybe (j ≤ a)
+  go (just (n , e)) = mapM (subst (λ x → x ≤ a) (sym e)) (find n a)
+  go nothing        = nothing
+
+------------------------------------------------------------------------
+-- 保留判定 kp 用的辅助 (KKp): 目标层 j 与槽位层 a 都是有限层且 a 严格更低时, 给 j 里槽位层与 a 相同的那个位置.
+-- Lo m n: m < n 的见证 (第 n 层里第 m 层所在的位置).
+data Lo (m : ℕ) : ℕ → Set where
+  here  : Lo m (suc m)
+  there : ∀ {n} → Lo m n → Lo m (suc n)
+
+loZ : (n : ℕ) → Lo zero (suc n)
+loZ zero    = here
+loZ (suc n) = there (loZ n)
+
+loS : ∀ {m n} → Lo m n → Lo (suc m) (suc n)
+loS here      = here
+loS (there l) = there (loS l)
+
+lo? : (m n : ℕ) → Maybe (Lo m n)
+lo? zero    zero    = nothing
+lo? zero    (suc n) = just (loZ n)
+lo? (suc m) zero    = nothing
+lo? (suc m) (suc n) = mapM loS (lo? m n)
+
+posLo : ∀ {m n} → Lo m n → Pos (lvl n)
+posLo here      = inj₂ (tt , inj₁ tt)
+posLo (there l) = inj₂ (tt , inj₂ (posLo l))
+
+brLo : ∀ {m n} (l : Lo m n) → Br (lvl n) (posLo l) → Tr (lvl m)
+brLo here      z = z
+brLo (there l) z = brLo l z
+
+brLo-zero : ∀ {m n} (l : Lo m n) → brLo l (fromBr (lvl n) (posLo l) zero) ≡ zero
+brLo-zero here      = refl
+brLo-zero (there l) = brLo-zero l
+
+atLo : ∀ {m n} (l : Lo m n) → at (lvl n) (posLo l) ≡ lvl m
+atLo here      = refl
+atLo (there l) = atLo l
+
+subst-zero : ∀ {a b : L} (e : a ≡ b) → subst Tr e zero ≡ zero
+subst-zero refl = refl
+
+-- Keep (W5Fold) 的展开写法.
+KeepTy : L → (X : Set) → X → Set
+KeepTy j X x₀ = Maybe (Σ (Pos j) λ q → Σ (Br j q → X) λ cv → cv (fromBr j q zero) ≡ x₀)
+
+keepLo : ∀ {m n} (l : Lo m n) {a : L} {X : Set} (fb : Tr a → X) → a ≡ lvl m
+       → Σ (Pos (lvl n)) λ q → Σ (Br (lvl n) q → X) λ cv → cv (fromBr (lvl n) q zero) ≡ fb zero
+keepLo l fb ea = posLo l , (λ z → fb (subst Tr (sym ea) (brLo l z))) ,
+  cong fb (trans (cong (subst Tr (sym ea)) (brLo-zero l)) (subst-zero (sym ea)))
+
+keepL : (n m : ℕ) {a : L} {X : Set} (fb : Tr a → X) → a ≡ lvl m → Maybe (Lo m n) → KeepTy (lvl n) X (fb zero)
+keepL n m fb ea (just l) = just (keepLo l fb ea)
+keepL n m fb ea nothing  = nothing
+
+keepN : (j a : L) {X : Set} (fb : Tr a → X)
+      → Maybe (Σ ℕ λ n → j ≡ lvl n) → Maybe (Σ ℕ λ m → a ≡ lvl m) → KeepTy j X (fb zero)
+keepN j a fb (just (n , ej)) (just (m , ea)) = subst (λ i → KeepTy i _ (fb zero)) (sym ej) (keepL n m fb ea (lo? m n))
+keepN j a fb (just _)        nothing         = nothing
+keepN j a fb nothing         _               = nothing
+
+-- 目标层 j, 槽位层 a, 槽位的分支嵌入 fb.
+keepFin : (j a : L) {X : Set} (fb : Tr a → X) → KeepTy j X (fb zero)
+keepFin j a fb = keepN j a fb (fin? j) (fin? a)

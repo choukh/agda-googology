@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24ROrbit where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; z≼; ≼l; l≼; ≼-trans; ≼-refl; s≼s; ≅→≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import WVOne using (T₀; 𝟏)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import B12Omega3Ref as R
+import B13Target as P
+import B13Feedback as FB
+import B14RefGain as Path
+import B23LOriginal as Old
+import B23RExit as Exit
+import B23NFirst as N
+import B23RShare as G
+import B24RKernel as K
+module S = K.S
+
+two = L.ψ⁰ (P.pass N.two)
+D = R.at two 0
+place : Path.along (2 ∷ 0 ∷ []) G.oneStep ≡ D
+place = refl
+
+raw = λ (x : T₀) → P.pass (L.add Ω₂ᴸ (λ t → L.suc (L.suc t)) (R.transports x))
+counter = S.iter (λ (x : T₀) → L.ψ (L.suc L.zero) R.idσ (raw x)) 𝟏
+literal : D ≡ L.lim (λ n → L.ψ⁰ (raw (counter n)))
+literal = refl
+correct : ∀ {x y : T₀} → x L.≅ y → raw x L.≅ K.q y
+correct {x} h = P.pass-pres (L.add-≅ {σ = λ t → L.suc (L.suc t)} {σ′ = λ ()}
+  (L.Ω-refl _) (L.≅-trans (FB.transport≅ x) h))
+
+orbit = S.iter K.H 𝟏
+indices : ∀ n → counter n L.≅ orbit n
+indices = L.iter-R L._≅_ {G = λ x → L.ψ (L.suc L.zero) R.idσ (raw x)} {G′ = K.H}
+  (λ h → L.≅-sym (L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (L.≅-sym (correct h)))) (L.s≅ L.z≅)
+shape : D L.≅ L.lim (λ n → orbit (suc n))
+shape = L.l≅ (λ n → L.ψ⁰-≅ (correct (indices n)))
+src-chain = S.iter K.srcH (S.suc S.zero)
+source = S.lim (λ n → src-chain (suc n))
+sync : ∀ n → tr₀ (src-chain n) ≈ᵛ orbit n
+sync zero = ≼-refl _ , ≼-refl _
+sync (suc n) = ≼-trans (proj₁ (K.agree (src-chain n))) (K.monotone {tr₀ (src-chain n)} {orbit n} (proj₁ (sync n))) ,
+                ≼-trans (K.monotone {orbit n} {tr₀ (src-chain n)} (proj₂ (sync n))) (proj₂ (K.agree (src-chain n)))
+both : tr₀ source ≈ᵛ D
+both = ≼-trans (l≼ (λ n → ≼l n (proj₁ (sync (suc n))))) (≅→≼ (L.≅-sym shape)) ,
+       ≼-trans (≅→≼ shape) (l≼ (λ n → ≼l n (proj₂ (sync (suc n)))))
+
+omega : T₀
+omega = L.lim R.numeral
+height : ∀ n → K.a (R.numeral n) ≡ Old.height n
+height zero = refl
+height (suc n) = cong L.suc (height n)
+old-cut : Old.cut ≼ K.H omega
+old-cut = l≼ (λ n → ≼l n (subst (_≼ K.H (R.numeral n)) (cong (λ p → L.ψ⁰ (P.pass p)) (height n)) (≼-refl _)))
+w₀ : omega ≼ K.H L.zero
+w₀ = ≼-trans (l≼ (λ n → ≼l n (subst (R.numeral n ≼_) (sym (R.index n)) (≼-refl _))))
+     (Path.path-bound (0 ∷ 0 ∷ 1 ∷ 0 ∷ 0 ∷ []) (K.H L.zero))
+w₁ : L.suc omega ≼ K.H 𝟏
+w₁ = ≼-trans (s≼s w₀) (K.grow L.zero)
+strict : L.suc (tr₀ Exit.source) ≼ tr₀ source
+strict = ≼-trans (s≼s (≼-trans (proj₁ Exit.same) old-cut))
+  (≼-trans (K.grow omega) (≼-trans (K.monotone {L.suc omega} {K.H 𝟏} w₁)
+   (≼-trans (≼l 1 (≼-refl (orbit 2))) (≼-trans (≅→≼ (L.≅-sym shape)) (proj₂ both)))))

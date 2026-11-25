@@ -1,0 +1,104 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 塔算下一个下标所用的路径逐层走入全部孩子。高度定理在这条实际路径上也成立，不需路径的函数外延相等。
+module B14PathHeight where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (h₁; T₀; 𝟏; read; Mv-mono)
+open import WVTwo using (◃→≼)
+open import WKGen using (node-ge)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B14Tower as W
+import B14Height as H
+open T.Run
+
+data All : {j : W4Block.L} → zero ≤ j → Set where
+  base : All self
+  each : ∀ {s : Sh} {h : Ch s → W4Block.L} {ws : (c : Ch s) → zero ≤ h c} → ((c : Ch s) → All (ws c)) → All (inu ws)
+
+standard : (j : W4Block.L) → All (z≤ j)
+standard zero = base
+standard (nd s h) = each (λ c → standard (h c))
+
+through : (j : W4Block.L) → All (self ∙ lift zero j)
+through zero = base
+through (nd s h) = each (λ c → through (h c))
+
+Law : ∀ {j} → zero ≤ j → (T₀ → T₀) → Set
+Law {j} w f = (r : T.Run j) → A.Covered r → (a : T₀) → a ≼ read (proj₁ (β r)) → f a ≼ W.valueAt r w
+
+module Next (s : Sh) (h : Ch s → W4Block.L) (ws : (c : Ch sS) → zero ≤ nd s h) (normal : All (ws tt))
+  (f : T₀ → T₀) (u : Law (ws tt) f) (p : T.Run (U.sc (nd s h))) (hp : A.Covered p) where
+  j = nd s h
+  w = ws tt
+  -- 初始右参数、每次更新之后的底族及其覆盖，与输出沿哪条零路径无关。
+  module K = U.Lift s h (λ x → x) (λ r hr a d → ≼-trans d (T.inflate0 _ (ok r) (bs r) (z≤ _) (β r) (proj₁ (Ωt j)))) p hp
+  v₁ = run K.K (bs K.r₀) zero w (β p)
+  v : ℕ → Tr⁺ zero
+  v n = itV K.K n K.S₁ zero w v₁
+
+  low : (n : ℕ) → read (proj₁ (β p)) ≼ read (proj₁ (v n))
+  low zero = ◃→≼ (inf K.K (bs K.r₀) zero w (β p))
+  low (suc n) = ≼-trans (low n) (◃→≼ (inf K.K (K.S n) zero w (v n)))
+
+  snap : ℕ → T.Run j
+  snap n = T.makeRun (ok K.r₀) (K.S n) (v n) (K.lowS n) (K.cover n _) (≼-trans (oneβ p) (low n))
+
+  grow : (n : ℕ) {a : T₀} → a ≼ read (proj₁ (v n)) → f a ≼ read (proj₁ (v (suc n)))
+  grow n {a} e with hp j (inc tt self)
+  ... | inj₁ q = subst (λ t → f a ≼ read (proj₁ (ψ j (ok K.r₀) (K.S n) zero w (v n) t))) q (u (snap n) (K.cover n) a e)
+  ... | inj₂ d = ≼-trans (u (snap n) (K.cover n) a e) (◃→≼ (mono j (ok K.r₀) (K.S n) zero w (v n) d))
+
+  along : (a : T₀) → a ≼ read (proj₁ (β p)) → (n : ℕ) → iter f a n ≼ read (proj₁ (v n))
+  along a e zero = ≼-trans e (low zero)
+  along a e (suc n) = grow n (along a e n)
+
+  upper : (n : ℕ) → read (proj₁ (v (suc n))) ≼ W.valueAt p (inu ws)
+  upper n = ≼-trans (local w normal)
+    (node-ge (kp (U.sc j) (ok p) K.pos (inu ws)) (λ z → ψ (U.sc j) (ok p) (bs p) zero (inu ws) (β p) (K.body z)) K.step 1)
+    where
+    local : (u : zero ≤ j) → All u →
+      read (proj₁ (itV K.K (suc n) K.S₁ zero u (run K.K (bs K.r₀) zero u (β p)))) ≼
+      read (proj₁ (ψ j (ok K.r₀) (bs K.r₀) zero u (β p) (suc (K.step zero))))
+    local .(inu _) (each _) = ≼l 0 (≼l n (≼-refl _))
+
+  result : (a : T₀) → a ≼ read (proj₁ (β p)) → U.repeatω f a ≼ W.valueAt p (inu ws)
+  result a e = l≼ (λ n → ≼-trans (along a e n) (≼-trans (◃→≼ (inf K.K (K.S n) zero w (v n))) (upper n)))
+
+-- 第一级的 uniform 路径在零层孩子上只有 self。对任意 ws 判断只需观察 ws tt。
+first : {ws : (c : Ch sS) → zero ≤ W4Block.zero} → ((c : Ch sS) → All (ws c)) →
+        Law (inu ws) (H.act (L.suc L.zero))
+first {ws} v r hr a d with ws tt | v tt
+... | .self | base = H.first r hr a d
+
+law : (z : Tr zero) {w : zero ≤ h₁ z} → All w → Law w (H.act (read z))
+law zero base = H.law zero
+law (suc zero) (each lower) = first lower
+law (suc (suc z)) (each {ws = ws} lower) r hr = Next.result sS (λ _ → h₁ z) ws (lower tt) _ (law (suc z) (lower tt)) r hr
+law (suc (lim f d)) (each {ws = ws} lower) r hr = Next.result sL (λ n → h₁ (f n)) ws (lower tt) _ (law (lim f d) (lower tt)) r hr
+law (suc (Ω () _))
+law (suc (up _ () _ _))
+law (suc (ex _ _ _ _ ()))
+law (lim f d) (each {ws = ws} lower) r hr a ha = l≼ (λ n → ≼-trans
+  (law (f n) (lower n) (M.sub n) (M.covered hr n) a (≼-trans ha (T.inflate0 _ (ok r) (bs r) (inu ws) (β r) (T.prefix g n))))
+  (M.part n))
+  where
+  g = λ n → h₁ (f n)
+  module M = W.Lim g r ws
+law (Ω () _)
+law (up _ () _ _)
+law (ex _ _ _ _ ())
+
+compare : (z : Tr zero) {w : zero ≤ h₁ z} → All w → ∀ {x} → x ≼ read z → Law w (H.act x)
+compare z h low r hr a d = ≼-trans (H.mono low (≼-refl a)) (law z h r hr a d)

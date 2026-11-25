@@ -1,0 +1,47 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20IdealRel where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; _,_)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiFreshFold as O
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+open import OCF.Lean.YiUpCheck using (one; two)
+open import B13SharpOne using (r₁)
+open import B14SharpStack using (p)
+open import B14SharpTwo using (r₂; p₂i)
+open import B16SharpSource public using (H; Z; zz; zs; zl; hz; hs; hl; hn; hu; it; nh; nz; za; ha; cums; Ω¹; value)
+
+p₂₀ : R.Pos r₂
+p₂₀ = inj₂ (tt , inj₂ p)
+pt : Y.Pos two
+pt = inj₁ tt
+pb : Y.Pos two
+pb = inj₂ (inj₁ tt)
+
+data J : Y.Tr two → R.Tr r₂ → Set where
+  jz : J Y.zero R.zero
+  js : ∀ {x y} → J x y → J (Y.suc x) (R.suc y)
+  jl : ∀ {f g d} → (∀ n → J (f n) (g n)) → J (Y.lim f) (R.lim g d)
+  jt : ∀ {f g} → (∀ z w → H z w → J (f z) (g w)) → J (Y.Ω pt f) (R.Ω p₂i g)
+  jb : ∀ {f g} → (∀ z w → Z z w → J (f z) (g w)) → J (Y.Ω pb f) (R.Ω p₂₀ g)
+  ju : ∀ {x y b a d} → J x y → H b a → J (Y.up x tt b) (R.up y tt a d)
+
+ja : ∀ {x y a b} → J x y → J a b → J (x O.+ a) (y V.+ b)
+ja h jz = h
+ja h (js e) = js (ja h e)
+ja h (jl e) = jl (λ n → ja h (e n))
+ja h (jt e) = jt (λ z w t → ja h (e z w t))
+ja h (jb e) = jb (λ z w t → ja h (e z w t))
+ja h (ju e t) = ju (ja h e) t
+
+nj : ∀ {x} (b : V.Tr⁺ r₂) → J x (proj₁ b) → J (O.next x) (proj₁ (V.next⁺ b))
+nj b h = jl (it J h (ja h))
+cumH : ∀ f g → (∀ n → H (f n) (g n)) → ∀ n → H (O.cum f n) (V.cum g n)
+cumH f g q zero = q zero
+cumH f g q (suc n) = ha (cumH f g q n) (q (suc n))
+
+Ω² : J (O.Ωt two) (proj₁ (V.Ωt r₂))
+Ω² = jt (λ z w h → ju jz (hs h))

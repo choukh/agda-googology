@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：正规二层前缀只要折到零层可比，就能在加入 Ω₁ 后保持可比，包括实际询问的全部零层系数。
+module B14RefSuffix where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.List using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼; ≼-refl; ≼-trans; ≅→≼; ψ⁰-suc-≼)
+open import WVOne using (T₀)
+open import WSLevel using (Ω₁ᴸ)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B13Target as P
+import B13Feedback as F
+import B14RefRow as W
+import B14RefFixed as K
+import B14RefGain as G
+
+suffix : Lev₂ → T₀ → Lev₂
+suffix a = L.add a (λ q → L.suc (L.suc q))
+
+extend : Lev₂ → Lev₂
+extend a = a L.+ L.up L.zero Ω₁ᴸ
+
+floor : ∀ a y → L.ψ⁰ a ≼ L.ψ⁰ (suffix a y)
+floor a L.zero = ≼-refl _
+floor a (L.suc y) = ≼l 1 (floor a y)
+floor a (L.lim f) = ≼l 0 (floor a (f 0))
+
+tails : ∀ a b → L.ψ⁰ a ≼ L.ψ⁰ b → ∀ {x y : T₀} → x ≼ y → L.ψ⁰ (suffix a x) ≼ L.ψ⁰ (suffix b y)
+tails a b p {y = y} z≼ = ≼-trans p (floor b y)
+tails a b p {L.suc x} {L.suc y} (s≼s d) = ψ⁰-suc-≼ {a = suffix a x} {b = suffix b y} (tails a b p d)
+tails a b p (≼l j d) = ≼l j (tails a b p d)
+tails a b p (l≼ h) = l≼ (λ j → tails a b p (h j))
+tails a b p (≼i {p = ()} _ _ _)
+tails a b p (i≼ {p = ()} _)
+tails a b p (≼u {r = ()} _)
+tails a b p (u≼ {r = ()} _)
+
+with-path : Lev₂ → T₀
+with-path = L.ψ (L.suc L.zero) R.idσ
+
+coincide : ∀ {a} → a L.≅ a → ∀ x → L.ψ⁰ (suffix a x) L.≅ with-path (suffix a x)
+coincide aa x = L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (L.add-≅ {σ = λ q → L.suc (L.suc q)} {σ′ = λ q → L.suc (L.suc q)} aa (L.≅-refl⁰ x))
+
+asked : Lev₂ → ℕ → T₀
+asked a = S.iter (λ x → with-path (suffix a x)) (L.suc L.zero)
+
+expand : ∀ a → L.ψ⁰ (extend a) ≡ L.lim (λ n → L.ψ⁰ (suffix a (asked a n)))
+expand a = refl
+
+preserves : ∀ {a b} → a L.≅ a → b L.≅ b → L.ψ⁰ a ≼ L.ψ⁰ b → L.ψ⁰ (extend a) ≼ L.ψ⁰ (extend b)
+preserves {a} {b} aa bb p = l≼ (λ n → ≼l n (tails a b p (related n)))
+  where
+  related : ∀ n → asked a n ≼ asked b n
+  related zero = ≼-refl _
+  related (suc n) = ≼-trans (≅→≼ (L.≅-sym (coincide aa (asked a n))))
+                    (≼-trans (tails a b p (related n)) (≅→≼ (coincide bb (asked b n))))
+
+-- 移去原路径的最末一个编号，便同时计入该节点所问的所有尾参数。
+whole : T₀
+whole = G.along (0 ∷ 1 ∷ 0 ∷ 0 ∷ 2 ∷ 0 ∷ 2 ∷ 0 ∷ 1 ∷ 0 ∷ []) (W.node 1)
+
+literal : whole ≡ L.ψ⁰ (extend G.C)
+literal = refl
+
+closed-base : G.C L.≅ G.C
+closed-base = P.co-pres (P.tr-both (L.≅ᴵ-refl _) (L.Ω-refl _))
+
+to-orbit : whole ≼ L.ψ⁰ (P.co₀ (L.suc F.first-node))
+to-orbit = ≼-trans (preserves closed-base (P.regular₀ F.first-node) (proj₂ (K.fixed 0)))
+        (≼l 2 (≼-trans (≼l 0 (≼-refl (L.ψ⁰ (extend a)))) (K.value (K.map-select L.ψ⁰ (λ _ → refl) (K.map-select (a L.+_) (λ _ → refl) (K.omega-in F.first-node))))))
+  where a = P.co₀ F.first-node
+
+piece-in : G.piece ≼ whole
+piece-in = ≼l 0 (≼-refl G.piece)
+
+strict : L.suc F.first-node ≼ whole
+strict = ≼-trans G.strict piece-in

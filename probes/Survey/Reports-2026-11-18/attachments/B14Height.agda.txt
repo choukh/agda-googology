@@ -1,0 +1,84 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 以任意可数树作层号：后继把本层统一作用迭代到极限，极限逐支，直接用于塔实际问到的下标。
+module B14Height where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold hiding (mono)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; z≼; s≼s; ≼-suc; ≼i; i≼; ≼u; u≼)
+open import WVOne using (T₀; read; 𝟏; h₁; lvl1; Mv; Mv-mono; s₁; G-row; wc; wu; Φ-cum)
+import B12Terminal as T
+import B12ActualSlots as A
+open import B12TerminalTail using (mulω)
+open import B13FiniteLift using (Uniform; repeatω; lift-uniform)
+open import B13FiniteTower using (timesω)
+open T.Run
+
+act : T₀ → T₀ → T₀
+act L.zero = mulω
+act (L.suc x) = repeatω (act x)
+act (L.lim f) a = L.lim (λ n → act (f n) a)
+
+seed : (x a : T₀) → mulω a ≼ act x a
+seed L.zero a = ≼-refl _
+seed (L.suc x) a = ≼l 1 (seed x a)
+seed (L.lim f) a = ≼l 0 (seed (f 0) a)
+
+iteration : {f g : T₀ → T₀} → (∀ {u v} → u ≼ v → f u ≼ g v) → ∀ {a b} → a ≼ b →
+  (n : ℕ) → iter f a n ≼ iter g b n
+iteration h p zero = p
+iteration h p (suc n) = h (iteration h p n)
+
+mono : ∀ {x y a b : T₀} → x ≼ y → a ≼ b → act x a ≼ act y b
+mono {y = y} z≼ d = ≼-trans (Mv-mono d (≼-refl 𝟏)) (seed y _)
+mono (s≼s h) d = l≼ (λ n → ≼l n (iteration (mono h) d n))
+mono (≼l n h) d = ≼l n (mono h d)
+mono (l≼ h) d = l≼ (λ n → mono (h n) d)
+mono (≼i {p = ()} _ _ _)
+mono (i≼ {p = ()} _)
+mono (≼u {r = ()} _)
+mono (u≼ {r = ()} _)
+
+first : Uniform lvl1 (repeatω mulω)
+first r hr a d = l≼ (λ n → ≼-trans (at-n n)
+  (≼-trans (Mv-mono d (≼-suc (≼-trans (in-omega n) lower)))
+    (≼-trans (G-row (ok r) (bs r) wu (β r) p) (Φ-cum (ok r) (bs r) wu (β r) 1))))
+  where
+  p = s₁ (ok r) (bs r) zero
+  lower : mulω 𝟏 ≼ read p
+  lower = ≼-trans (Mv-mono (oneB r _) (≼-refl 𝟏)) (G-row (ok r) (bs r) wc (bs r zero _) zero)
+  one-plus : (n : ℕ) → 𝟏 L.+ L.natᶜ n ≡ L.suc (L.natᶜ n)
+  one-plus zero = refl
+  one-plus (suc n) = cong L.suc (one-plus n)
+  eq : (n : ℕ) → iter (𝟏 L.+_) 𝟏 n ≡ L.suc (L.natᶜ n)
+  eq zero = refl
+  eq (suc n) rewrite eq n = cong L.suc (one-plus n)
+  in-omega : (n : ℕ) → L.natᶜ n ≼ mulω 𝟏
+  in-omega n = ≼l n (subst (L.natᶜ n ≼_) (Relation.Binary.PropositionalEquality.sym (eq n)) (≼-suc (≼-refl _)))
+  at-n : (n : ℕ) → iter mulω a n ≼ Mv a (L.natᶜ n)
+  at-n zero = ≼-refl _
+  at-n (suc n) = Mv-mono {b = iter mulω a n} {b′ = Mv a (L.natᶜ n)} {y = 𝟏} {y′ = 𝟏} (at-n n) (≼-refl 𝟏)
+
+law : (z : Tr zero) → Uniform (h₁ z) (act (read z))
+law zero = timesω zero
+law (suc zero) = first
+law (suc (suc z)) = lift-uniform sS (λ _ → h₁ z) (act (read (suc z))) (law (suc z))
+law (suc (lim f d)) = lift-uniform sL (λ n → h₁ (f n)) (act (read (lim f d))) (law (lim f d))
+law (suc (Ω () _))
+law (suc (up _ () _ _))
+law (suc (ex _ _ _ _ ()))
+law (lim f d) r hr a ha = l≼ (λ n → ≼-trans (law (f n) (T.limRun g r n)
+  (A.enter sL g r n (T.prefix g n) hr) a (≼-trans ha (T.inflate0 _ (ok r) (bs r) (z≤ _) (β r) (T.prefix g n))))
+  (T.lim-child g r n))
+  where g = λ n → h₁ (f n)
+law (Ω () _)
+law (up _ () _ _)
+law (ex _ _ _ _ ())
+
+calibrate : ∀ (z : Tr zero) {x : T₀} → x ≼ read z → Uniform (h₁ z) (act x)
+calibrate z low r hr a d = ≼-trans (mono low (≼-refl a)) (law z r hr a d)

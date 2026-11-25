@@ -1,0 +1,63 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25ACap where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≅→≼; 1≼ψ⁰; l≼; ≼l; z≼; s≼s; +-mono)
+open import WVOne using (T₀; 𝟏)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B13Target as P
+import B19RowSecondParent as Old
+import B19IdealArithmetic as A
+import B19IdealPowers as Pow
+import B20OldTail as Tail
+import B20OldSource as Next
+import B22MovingIndex as E
+import B22TowerCut as K
+import B22RowSource as Cap
+import B23RShare as Share
+import B24ROrbit as O
+import B24AQueries as Q
+import YiLAB10Src as Y
+import B25AEpsilon as H
+open import W4Block using (iter)
+
+module Start (p : Lev₂) (rp : p L.≅ p) where
+  module F = Old.Raw p
+  scalar : ∀ x → L.ψ⁰ x ≼ L.ψ⁰ (F.body x)
+  scalar L.zero = 1≼ψ⁰ p
+  scalar (L.suc x) = l≼ λ n → ≼l n (L.iter-R _≼_ (+-mono (scalar x)) z≼ n)
+  scalar (L.lim f) = l≼ λ n → ≼l n (scalar (f n))
+  regular : ∀ x → F.body x L.≅ F.body x
+  regular x = L.add-≅ {σ = λ t → L.suc (L.suc t)} {σ′ = λ t → L.suc (L.suc t)} rp (L.≅-refl⁰ x)
+  related : ∀ x → L.ψ⁰ (F.body x) L.≅ F.step x
+  related x = L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ} (regular x)
+  initial : L.suc (L.ψ⁰ p) ≼ F.ix 1
+  initial = ≼-trans (≼l 2 (+-mono (≼-refl _) (1≼ψ⁰ p))) (≅→≼ (related 𝟏))
+  follow : ∀ n → E.steps (L.ψ⁰ p) n ≼ F.ix (suc n)
+  follow zero = initial
+  follow (suc n) = ≼-trans (Pow.expo Pow.omega-pos (follow n))
+     (≼-trans (proj₁ (A.normal (F.ix (suc n)))) (≼-trans (scalar (F.ix (suc n))) (≅→≼ (related (F.ix (suc n))))))
+  upper : E.above (L.ψ⁰ p) ≼ L.ψ⁰ (Tail.next p)
+  upper = l≼ λ n → ≼l n (≼-trans (follow n) (≅→≼ (L.≅-sym (related (F.ix n)))))
+  omega₂ : E.above (L.ψ⁰ p) ≼ L.ψ⁰ (p L.+ Ω₂ᴸ)
+  omega₂ = ≼-trans upper (≼l 0 (≼-refl _))
+
+one : ∀ n → E.above (Q.recorded n) ≼ Q.recorded (suc n)
+one n = ≼-trans (Start.omega₂ q rq) (≼-trans (≼l 1 (≼-refl _)) (≼-trans
+      (Cap.Tail.lower q rq) (≼-trans (Q.lead n q)
+        (≼l 0 (≼l 0 (≼l 2 (≼-refl _)))))))
+  where
+  q = P.pass (Y.ll n)
+  rq = P.pass-pres (P.refl-left (L.≅-sym (R.matches n)))
+
+start : O.D ≼ Q.recorded 1
+start = R.at-below O.two 0
+track : ∀ n → iter E.above O.D n ≼ Q.recorded (suc n)
+track zero = start
+track (suc n) = ≼-trans (K.advance (track n)) (one (suc n))
+
+bounded : H.hull O.D ≼ Share.oneStep
+bounded = l≼ λ n → ≼l (suc (suc n)) (≼-trans (track n) (≅→≼ (L.ψ⁰-≅ (P.pass-pres (L.≅-sym (R.matches (suc n)))))))

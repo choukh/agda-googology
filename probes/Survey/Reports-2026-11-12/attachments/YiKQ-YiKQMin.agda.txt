@@ -1,0 +1,113 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiKQMin where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_; _++_; replicate)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym; trans; cong)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀)
+open import OCF.Lean.YiTBRow using (Rb; ψ; mono)
+open import OCF.Lean.YiMTTab using (rbᶻ; twᶻ)
+open import OCF.Lean.YiTBFam using (ψ-⊵)
+open import OCF.Lean.YiKVRel using (_⊴_; ⊴r; ++[])
+open import OCF.Lean.YiKCStep using (⊴-trans)
+open import OCF.Lean.YiHCRel using (Mᴴ; M⁰; mz; m1; mL; mΩ; mU; mw; mc; module G⁰; module Gen)
+open import OCF.Lean.YiRBFam using (OKB)
+open import OCF.Align.EboLeanBase using (_≤ᵀ_)
+import OCF.Lean.YiLTKid as One
+import OCF.Align.EboLeanDef as E
+open import OCF.Lean.YiANFam using (ψᴺ)
+module A = One.Sem (rbᶻ (tw 1))
+module G¹ = Gen {Sig (tw 1)} {A.Low¹} {A.Kdˢ} {A.Nu¹}
+ℓ² : L
+ℓ² = tw 2
+h₂ : Tr (tw 1) → L
+h₂ c = tw 1 ⊕ ↑ (tw 1) c
+o² : Ok ℓ²
+o² = Ok-tw 2
+r² : Rb ℓ²
+r² = rbᶻ ℓ²
+Pc : (c : Tr (tw 1)) → zero ≤ h₂ c → Set
+Pc c v = (v ≡ z≤ (h₂ c)) ⊎ (v ≡ z≤ (tw 1) ∙ proj₂ (proj₁ o²) c)
+record Kid₂ : Set₁ where
+  field
+    Kd : (c : Tr (tw 1)) → E.T → Tr (h₂ c) → Set
+    foldᶜ : ∀ c v → Pc c v → (B : Base (h₂ c)) → OKB B
+      → (β : Tr⁺ zero) → M⁰ (ψᴺ 0 []) (proj₁ β)
+      → ∀ {s y} → Kd c s y
+      → M⁰ (ψᴺ 0 s) (proj₁ (ψ (h₂ c) (proj₂ o² c) (rbᶻ (h₂ c)) B zero v β y))
+module Top (K : Kid₂) where
+  open Kid₂ K public
+  Low² : (p : Pos ℓ²) → E.T → Br ℓ² p → Set
+  Low² (inj₁ (inj₁ tt)) η c = A.M¹ (E.Ωt η) c
+  Low² (inj₁ (inj₂ p)) η c = ⊥
+  Low² (inj₂ _) η c = ⊥
+  Nu² : Pos ℓ² → E.T → Set
+  Nu² (inj₁ (inj₁ tt)) ν = ν ≡ []
+  Nu² (inj₁ (inj₂ p)) ν = ⊥
+  Nu² (inj₂ _) ν = ⊥
+  M² : E.T → Tr ℓ² → Set
+  M² = Mᴴ (Sig ℓ²) Low² Kd Nu²
+  IsZ : ∀ {a x} → M² a x → Set
+  IsZ mz = ⊤
+  IsZ _ = ⊥
+  Sp : ∀ {a x} → M² a x → Set
+  Sp mz = ⊤
+  Sp (m1 _ m) = Sp m
+  Sp (mL _ h) = ∀ n → Sp (h n)
+  Sp (mΩ _ _ h) = ∀ η c l → Sp (h η c l)
+  Sp (mU m _) = IsZ m
+  Sp (mw m _) = Sp m
+  Sp (mc _ m) = Sp m
+  data Pw : zero ≤ ℓ² → Set where
+    wu : Pw (z≤ ℓ²)
+    wi : Pw (ink (z≤ (tw 1)))
+  record GB² (B : Base ℓ²) : Set where
+    constructor mkGB²
+    field
+      bK : A.M¹ One.ΩΩ (proj₁ (B (tw 1) (ink self)))
+      bC : ∀ c → OKB (λ i u → B i (inc c u))
+  open GB² public
+  Pres : Set
+  Pres = (B : Base ℓ²) → GB² B → ∀ {w} → Pw w
+    → (β : Tr⁺ zero) → M⁰ (ψᴺ 0 []) (proj₁ β)
+    → ∀ {s x} (m : M² s x) → Sp m
+    → M⁰ (ψᴺ 0 s) (proj₁ (ψ ℓ² o² r² B zero w β x))
+  Lift₂ : Set
+  Lift₂ = ∀ {η c} → A.M¹ η c → Kd c (E.Ωt η) (proj₁ (Ωt (h₂ c)))
+  leaf² : Lift₂ → M² (E.ΩTower 3) (proj₁ (Ωt ℓ²))
+  leaf² lf = mΩ {ν = []} refl refl (λ η c l → mU mz (lf l))
+  leafSp : (lf : Lift₂) → Sp (leaf² lf)
+  leafSp lf η c l = tt
+  gb₀ : A.Lift₁ → GB² (B₀ ℓ²)
+  gb₀ lf = mkGB² (A.leaf¹ lf) (λ c i u → ⊴r)
+Kdˢ : (c : Tr (tw 1)) → E.T → Tr (h₂ c) → Set
+Kdˢ c s y = ∀ v → Pc c v → (B : Base (h₂ c)) → OKB B
+  → (β : Tr⁺ zero) → M⁰ (ψᴺ 0 []) (proj₁ β)
+  → M⁰ (ψᴺ 0 s) (proj₁ (ψ (h₂ c) (proj₂ o² c) (rbᶻ (h₂ c)) B zero v β y))
+kid : Kid₂
+kid = record { Kd = Kdˢ ; foldᶜ = λ c v pc B ok β hβ k → k v pc B ok β hβ }
+child-zero : ∀ c → Kdˢ c [] zero
+child-zero c v pc B ok β hβ = hβ
+child-one : ∀ c → Kdˢ c (E.natT 1) (suc zero)
+child-one c v pc B ok β hβ = G⁰.m-next β refl (λ n → refl) hβ
+nonempty : Top.M² kid (E.natT 1) (suc zero)
+nonempty = m1 refl mz
+sample : M⁰ (ψᴺ 0 (E.natT 1))
+  (proj₁ (ψ ℓ² o² r² (B₀ ℓ²) zero (z≤ ℓ²) (Ωt zero) (suc zero)))
+sample = G⁰.m-next (Ωt zero) refl (λ n → refl) (m1 refl mz)
+γΩ≤ : ∀ a k → E.Ωt (E.γT a [] k) ≤ᵀ One.ΩΩ
+γΩ≤ a zero = inj₁ (E.hd< (E.lv< (E.hd< (E.lv< E.[]<))))
+γΩ≤ a (suc k) = inj₁ (E.hd< (E.lv< (E.hd< (E.lv< E.[]<))))
+module Feed (K : Kid₂) (B : Base ℓ²) (gb : Top.GB² K B) where
+  open Top K
+  F¹ : Tr ℓ² → Tr (tw 1)
+  F¹ x = proj₁ (ψ ℓ² o² r² B (tw 1) (ink self) (B (tw 1) (ink self)) x)
+  feedΩ : ∀ a k x → A.M¹ (E.Ωt (E.γT a [] k)) (F¹ x)
+  feedΩ a k x = mc (γΩ≤ a k)
+    (G¹.m⊴ (bK gb) (ψ-⊵ ℓ² o² r² B (tw 1) (ink self) (B (tw 1) (ink self)) x))

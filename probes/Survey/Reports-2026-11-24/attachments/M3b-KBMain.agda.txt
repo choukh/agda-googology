@@ -1,0 +1,131 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- (B) 折叠保持 (接口第二版): 对 Dom 的推导归纳, 结论对 A 的一切好代表元; 模块参数只有 OpStmt.
+module KBMain where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as I
+open I using (Ordᴵ; Ordᶜ; Simᴵ; _<ᴵ_; _≅_; _≅ᴵ_; add; add-≅; ≅-trans; ≅-sym; into; out; <→◃; out-into; tr⁻; tr⁻-≅)
+open import KPow
+open import KMir
+open import KRel
+open import KIface
+open import KEmb
+open import KBBase
+open import KBAdd using (addC′; ≅zero)
+open import KBRows
+open import KBRu using (ruRow)
+
+-- 输出层同层换代表元.
+conv′ : ∀ {m j} {S : Base m} {β : Tr⁺ j} {kP jc k₁ k₂} {P : Ordᶜ kP} {r : jc <ᴵ I.suc kP} {σ₁ : Simᴵ k₁ kP} {σ₂ : Simᴵ k₂ kP}
+          {A₁ : Ordᶜ k₁} {A₂ : Ordᶜ k₂} {T : Tr j}
+      → Pre {m} S β P r → A₁ ≅ A₂ → Dom j (ψ̂ r (add P σ₂ A₂)) T → Dom j (ψ̂ r (add P σ₁ A₁)) T
+conv′ pre e d = r≅ (I.≅ᴵ-refl _) (I.ψ-≅ (I.≅ᴵ-refl _) (add-≅ (reP pre) e)) d
+
+SelfH : ∀ {s h k} → Ordᶜ k → Tr (nd s h) → Set
+SelfH {s} {h} A t = (st : IsS (nd s h)) (o : Ok (nd s h)) {kP k″ : Ordᴵ} (P : Ordᶜ kP) (A″ : Ordᶜ k″) → A″ ≅ A
+                  → Mirror k″ (nd s h) → (σ : Simᴵ k″ kP) (S : Base (nd s h)) (β : Tr⁺ (nd s h)) {jc : Ordᴵ} (r : jc <ᴵ I.suc kP)
+                  → Pre S β P r → Dom (nd s h) (ψ̂ r (add P σ A″)) (ex (proj₁ β) (proj₁ β) (proj₂ β) t tt)
+
+splitB : ∀ {s h k} {A : Ordᶜ k} {t : Tr (nd s h)}
+       → (∀ {o S β k′} {D : Ordᶜ k′} → Dom (nd s h) D (ex (proj₁ β) (proj₁ β) (proj₂ β) t tt) → Dom (nd s h) D (proj₁ (ψ (nd s h) o S (nd s h) self β t)))
+       → SelfH A t → BForNS (nd s h) A t → BFor (nd s h) A t
+splitB cv hs hn st o P A″ e mk σ S self        β r pre = cv (hs st o P A″ e mk σ S β r pre)
+splitB cv hs hn st o P A″ e mk σ S w@(inc _ _) β r pre = hn st o P A″ e mk σ S w tt β r pre
+splitB cv hs hn st o P A″ e mk σ S w@(inu _)   β r pre = hn st o P A″ e mk σ S w tt β r pre
+splitB cv hs hn st o P A″ e mk σ S w@(ink _)   β r pre = hn st o P A″ e mk σ S w tt β r pre
+
+-- 自身行 (路径 self): 结点界由好代表元的镜像与目标镜像给出.
+selfH : ∀ {s h k} {A : Ordᶜ k} {t : Tr (nd s h)} → Dom (nd s h) A t → SelfH A t
+selfH d st o P A″ e″ mir″ σ S β r pre =
+  selfRowG (IsS→IsN _ st) o S β P σ r (bdMir (IsS→IsN _ st) o mir″ (mj pre)) pre e″ d
+
+convS : ∀ {s h j} (w : j ≤ nd s h) → NS w → ∀ {o S β t₀ k} {D : Ordᶜ k}
+      → Dom j D (proj₁ (next⁺ (ψ (nd s h) o S j w β t₀))) → Dom j D (proj₁ (ψ (nd s h) o S j w β (suc t₀)))
+convS (inc _ _) _ d = d
+convS (inu _)   _ d = d
+convS (ink _)   _ d = d
+
+convΩ : ∀ {s h j} (w : j ≤ nd s h) → NS w → ∀ {o S β p g k} {D : Ordᶜ k}
+      → Dom j D (proj₁ (node⁺ (kp (nd s h) o p w) (λ z → ψ (nd s h) o S j w β (g z))
+                   (λ z → fromBr (nd s h) p (proj₁ (ψ (nd s h) o S (at (nd s h) p) (posW (nd s h) p) (S (at (nd s h) p) (posW (nd s h) p)) (g z))))))
+      → Dom j D (proj₁ (ψ (nd s h) o S j w β (Ω p g)))
+convΩ (inc _ _) _ d = d
+convΩ (inu _)   _ d = d
+convΩ (ink _)   _ d = d
+
+convE : ∀ {s h j} (w : j ≤ nd s h) → NS w → ∀ {o S β a v nb x ε k} {D : Ordᶜ k}
+      → Dom j D (proj₁ (E o tdNil x (opB (nd s h) o v nb) (λ i u → ψ (nd s h) o S i u (S i u) a) j w (ψ (nd s h) o S j w β a)))
+      → Dom j D (proj₁ (ψ (nd s h) o S j w β (ex a v nb x ε)))
+convE (inc _ _) _ d = d
+convE (inu _)   _ d = d
+convE (ink _)   _ d = d
+
+module Main (opS : (m : L) → OpStmt m) where
+
+  bInd : (m : L) → ∀ {k} {A : Ordᶜ k} {t : Tr m} → Dom m A t → BFor m A t
+  bInd m (rz mk) st o P A″ e″ mir″ σ S w β r pre =
+    r≅ (I.≅ᴵ-refl _) (I.ψ-≅ (I.≅ᴵ-refl _) (add-≅ {σ′ = σ} (reP pre) (≅zero e″))) (infl m o S _ w β _ (base pre))
+  bInd m d@(rl {f = f} h) st o P A″ e″ mir″ σ S w β r pre =
+    conv′ pre (≅-trans e″ (≅-sym (embW-≅ ρ (Dom→refl d))))
+      (rl (λ n → bInd m (h n) st o P (embW ρ (f n)) (embW-≅ ρ (Dom→refl (h n))) mir″ σ S w β r pre))
+    where ρ = ≅W (mirEq (IsS→IsN m st) o (Dom→Mir d) mir″)
+  bInd m (r◃ d lt) st o P A″ e″ mir″ σ S w β r pre =
+    r◃ (bInd m d st o P A″ e″ mir″ σ S w β r pre) (mono m o S _ w β lt)
+  bInd m (r≅ kk e d) st o P A″ e″ mir″ σ S w β r pre = bInd m d st o P A″ (≅-trans e″ e) mir″ σ S w β r pre
+  bInd zero d@(rs {A = A₀} d₀) st o P A″ e″ mir″ σ S self β r pre =
+    conv′ pre (≅-trans e″ (≅-sym (embW-≅ ρ (Dom→refl d))))
+      (rowS zero o S zero self β _ _ (addC′ tt tt)
+            (bInd zero d₀ st o P (embW ρ A₀) (embW-≅ ρ (Dom→refl d₀)) mir″ σ S self β r pre))
+    where ρ = ≅W (mirEq tt o (Dom→Mir d) mir″)
+  bInd (nd s h) d@(rs {A = A₀} d₀) = splitB (λ x → x) (selfH d)
+    (λ st o P A″ e″ mir″ σ S w ns β r pre →
+      let ρ = ≅W (mirEq (IsS→IsN _ st) o (Dom→Mir d) mir″) in
+      convS w ns (conv′ pre (≅-trans e″ (≅-sym (embW-≅ ρ (Dom→refl d))))
+        (rowS (nd s h) o S _ w β _ _ (addC′ (IsN-path w (IsS→IsN _ st)) (Ok-path w o))
+              (bInd (nd s h) d₀ st o P (embW ρ A₀) (embW-≅ ρ (Dom→refl d₀)) mir″ σ S w β r pre))))
+  bInd zero (rΩ {p = ()} _ _ _ _)
+  bInd (nd s h) d@(rΩ {q = q} {F = F} {p = p} {g = g} mk mp e hb) = splitB (λ x → x) (selfH d)
+    (λ st o P A″ e″ mir″ σ S w ns β r pre →
+      let ρ  = ≅W (mirEq (IsS→IsN _ st) o (Dom→Mir d) mir″)
+          e₁ = ≺e (ρ q)
+          q₁ = ≺l (ρ q)
+          F₁ = λ y → embW ρ (F (into (<→◃ q) (tr⁻ e₁ (out (<→◃ q₁) y))))
+          eF₁ = embW-refl ρ e
+      in convΩ w ns (conv′ pre (≅-trans e″ (≅-sym (embW-≅ ρ (Dom→refl d))))
+        (rowΩ (nd s h) st o S w β {q = q₁} {F = F₁} P σ r pre (λ i o′ → I.≅ᴵ-trans (I.≅ᴵ-sym e₁) (mp i o′)) eF₁
+              (I.ψ-≅ (I.≅ᴵ-refl _) (add-≅ (reP pre) eF₁))
+              (λ Y z sb →
+                let sb′ = Sub-≅ (nd s h) p (I.≅ᴵ-sym e₁) (tr⁻-≅ e₁ (Sub→refl (nd s h) p sb)) sb
+                    db  = hb (tr⁻ e₁ Y) z sb′
+                in bInd (nd s h) db st o P (F₁ (into (<→◃ q₁) Y))
+                        (≡ˡ (cong (λ w′ → embW ρ (F (into (<→◃ q) (tr⁻ e₁ w′)))) (out-into (<→◃ q₁) Y)) (embW-≅ ρ (Dom→refl db)))
+                        mir″ σ))))
+  bInd zero (ru {c = ()} _ _ _ _)
+  bInd (nd s h) d@(ru {c = c} d₀ kd σr eA) = splitB (λ x → x) (selfH d)
+    (ruRow d₀ (bInd (nd s h) d₀) kd (bInd (h c) kd) σr eA)
+  bInd zero (re {ε = ()} _ _ _ _)
+  bInd (nd s h) d@(re {A₀ = A₀} {V = V} {X = X} d₀ dv dx eA) = splitB (λ x → x) (selfH d)
+    (λ st o P A″ e″ mir″ σ S w ns β r pre →
+      let eKK = mirEq (IsS→IsN _ st) o (Dom→Mir d) mir″
+          ρ   = ≅W eKK
+          eA₀″ = embW-≅ ρ (Dom→refl d₀)
+          eV″  = embW-≅ ρ (Dom→refl dv)
+          eX″  = embW-≅ ρ (Dom→refl dx)
+      in convE w ns
+        (rowE opS (nd s h) st o S w β {A = A″} {A₀ = embW ρ A₀} {V = embW ρ V} {X = embW ρ X} P σ r mir″ pre
+              (reflˡ eA₀″) (bInd (nd s h) d₀ st o P (embW ρ A₀) eA₀″ mir″ σ)
+              (reflˡ eV″) (λ P′ σ′ → bInd (nd s h) dv st o P′ (embW ρ V) eV″ mir″ σ′)
+              (r≅ eKK eX″ dx)
+              (≅-trans e″ (≅-trans eA (add-≅ (≅-sym eA₀″) (pwb-≅ (≅-sym eV″) (≅-sym eX″)))))))
+
+  -- 主定理.
+  bStmt : (m : L) → BStmt m
+  bStmt m st o S w β t P σ A r mir pre d = bInd m d st o P A (Dom→refl d) mir σ S w β r pre

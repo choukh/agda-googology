@@ -1,0 +1,46 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 同一 Ψ₃ 上，第一轮 G 回传 Ω₂·ω 的三个种子，第二轮 G 再加 Ω₂。
+module B12Omega where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import OCF.BTBO using (module Ord-Ord)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WKShape using (Ψ₃)
+open import YiLAB7Orbit using (lvl2)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B9InnerOuter using (w2; st1; v₁)
+open import YiLAB11Target using (state; value; prefix; outer)
+import YiLAB10Src as T
+import YiLAB11Orbit as O
+import B11OuterCore as C
+import B12LimitRef as A
+import B12Orbit as U
+open import B12Update using (Seeds; seeds; value-bound; advanceJ; advanceG)
+open import B12Gather using (gather)
+
+initial : Seeds (T.ll 0) (prefix 0) st1 v₁
+initial = seeds C.sv0 C.sz0 C.str0
+
+-- 每个 n 都对应同一子极限的一个实际分支。
+finite : (n : ℕ) → Seeds (T.ll n) (prefix n) (itS U.J n st1) (itV U.J n st1 zero w2 v₁)
+finite zero = initial
+finite (suc n) = advanceJ (T.ll n) (prefix n) (A.finite n) (itS U.J n st1) (itV U.J n st1 zero w2 v₁) (finite n)
+
+omega : Seeds A.P∞ A.e∞ (state 1) (value 1)
+omega = gather U.J O.G U.window-in-G st1 v₁ T.ll prefix finite
+
+successor : Seeds (A.P∞ L.+ Ω₂ᴸ) (A.next A.e∞) (state 2) (value 2)
+successor = advanceG A.P∞ A.e∞ A.limit-inv (state 1) (value 1) omega
+
+level : L.ψ⁰ (A.P∞ L.+ Ω₂ᴸ) ≼ read Ψ₃
+level = ≼-trans (value-bound successor) (outer 1)
+
+src : tr₀ (Ord-Ord.ψ₀ A.srcNext) ≼ read Ψ₃
+src = ≼-trans (proj₁ A.src-bridge) level

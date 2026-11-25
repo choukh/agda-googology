@@ -1,0 +1,73 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 所有阶都用同一个真实 Ω₁ 节点和出入环境律。各级基变换可用实际 ex 含有的任意大于 Ω₁ 的指数。
+module B17OrbitAll where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block hiding (D; R)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import WKGen using (Ω₁t)
+open import OCF.Align.Value using (_≼_)
+import B13OrbitFeed as O
+import B15OrbitModel as M
+import B16OrbitNode as N
+import B17OrbitModel as B
+import B17OrbitCount as Count
+import B17OrbitOperator as Op
+import B17OrbitOmega as Z
+import B17OrbitTower as T
+import B17OrbitNatural as R
+import B17OrbitLadder as Chain
+open R using (R; closed; enterR)
+
+module At (n : ℕ) {X : Cx lvl2} (m : Mor M.X₁ X) (ret : N.Left m) where
+  D = trTD m O.D₁
+  φ = chMT D tt
+  dm = φ ⊙ m
+  S = T.Twr n
+  module C = Count.For n (chTD D tt) (T.Carrier S) (T.sup S) (R n dm) (closed n dm) (R.sup n dm) (T.height S)
+                (λ _ _ → refl) (λ _ _ _ → refl) (λ _ _ _ → refl)
+
+  module For (K : Ca (suc n) X) (F : T.Arr S) (tk : R (suc n) m K F)
+             (G : Ca n X) (a : T.Carrier S) (rg : R n m G a) where
+    KG = proj₁ K idM G
+    kg : R n m KG a
+    kg = closed n m G KG (proj₂ K idM G) a rg
+    G′ = enter n φ KG
+    K′ = enter (suc n) φ (Itᴺ n ok₂ D zero K)
+    ds : C.contract K′ (T.run F)
+    ds Q b h = tk φ (λ _ → refl) Q b h
+    child = λ z → It n ok₂ D (O.g₁ z) K G
+    pieces : ∀ y z → y ≼ read (suc z) → R n m (child z) (T.height S y (T.run F) a)
+    pieces y z d = R.leave n m (down (fr D) tt) (λ t → proj₁ (σ φ t)) KG (It n ok₂ (chTD D tt) (suc z) K′ G′) _
+         (C.eval (suc z) d K′ (T.run F) ds G′ a (enterR n m φ (λ _ → refl) KG a kg))
+    omega : R n m (It n ok₂ D Ω₁t K G) (T.run (T.run (T.Φ S) F) a)
+    omega = R.node n m ret child (T.Diag.f S F a) (T.Diag.r S F a) (T.Diag.q S F a) pieces
+
+module Hierarchy {X : Cx lvl2} (m : Mor M.X₁ X) (ret : N.Left m) (b : Tr lvl1) (nb : lvl1 ⊢ zero ◃ b)
+         (cov : lvl1 ⊢ Ω₁t ◃ b) (pre : Op X) (pr : R 0 m pre (T.basis 0)) where
+  D = trTD m O.D₁
+  module Ld = Chain.Ladder D b nb cov pre
+  opK : ∀ n → R (suc n) m (Ld.opK n) (T.semK n)
+  opK zero u ru Q a qa = Z.Frame.keep m ret b nb cov u ru Q a qa
+  opK (suc n) u ru K F rk v rv G a rg = closed n dm (It n ok₂ D′ Ω₁t K′ G) (It n ok₂ D′ b K′ G)
+    (Itmono n ok₂ D′ K′ G cov) _ (At.For.omega n dm dr K′ F k′ G a rg)
+    where
+    dm = v ⊙ u ⊙ m
+    dr = B.good (u ⊙ m) v (B.good m u ret ru) rv
+    D′ = trTD v (trTD u D)
+    K′ = enter (suc n) v K
+    k′ = enterR (suc n) (u ⊙ m) v rv K F rk
+
+  initial : ∀ n → R n m (Ld.basis n) (T.basis n)
+  initial zero = pr
+  initial (suc n) u ru G a rg = closed n (u ⊙ m) (proj₁ (Ld.opK n) u G) (proj₁ (Ld.basis (suc n)) u G)
+    (Itmono n ok₂ (trTD u D) (enter (suc n) u (Ld.opK n)) G nb) _ (opK n u ru G a rg)
+
+  models : ∀ n k → R n m (Ld.program n k) (T.value n k)
+  models n zero = At.For.omega n m ret (Ld.opK n) (T.semK n) (opK n) (Ld.basis n) (T.basis n) (initial n)
+  models n (suc k) = models (suc n) k idM (λ _ → refl) (Ld.basis n) (T.basis n) (initial n)

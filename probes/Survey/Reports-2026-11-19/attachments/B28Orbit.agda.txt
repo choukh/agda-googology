@@ -1,0 +1,79 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 一级真实反馈树有逐项可算的精确森林。回灌一步恰将旧森林接 1 后外套一个 Ω，无须排中律解码。
+module B28Orbit where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_; _++_)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym; subst)
+open import OCF.Align.EboLeanDef using (T; ψ; HC; natT)
+open import OCF.Align.EboLeanBase using (NF; nf-ψ; nf-Ω; n[]; c∷; c[])
+open import OCF.Align.EboLean3Base using (nf-suc)
+open import OCF.Align.EboLeanTree using (hc)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import OCF.Align.Value using (_≈ᵛ_)
+open import WVOne using (read)
+import W4Block as W
+import B25DTrack as R
+import B25DExactFold as E
+import B26CForest as F
+import B26CScalar as S
+import B26CLift as P
+import B26CCardinal as C
+import B27NOrbit as O
+import B26Names as A
+
+plus = λ t → t ++ natT 1
+card = C.Ω-argument
+
+pure-plus : ∀ {t} → F.Pure t → F.Pure (plus t)
+pure-plus F.empty = F.node F.empty F.empty
+pure-plus (F.node p t) = F.node p (pure-plus t)
+
+small-plus : ∀ t → F.small (plus t) ≡ plus (F.small t)
+small-plus [] = refl
+small-plus (ψ v a ∷ t) = cong (ψ [] (F.small v) ∷_) (small-plus t)
+
+forest : ℕ → T
+forest zero = []
+forest (suc n) = card (plus (forest n))
+
+pure : ∀ n → F.Pure (forest n)
+pure zero = F.empty
+pure (suc n) = F.node (pure-plus (pure n)) F.empty
+
+regular : ∀ n → NF (forest n)
+regular zero = n[]
+regular (suc n) = nf-Ω (nf-suc (regular n))
+
+term = λ n → F.small (forest n)
+regular-term = λ n → F.normal (pure n) (regular n)
+count = λ n → F.count (forest n)
+opaque
+  input-h : ∀ n → HC (term n)
+  input-h n = hc (regular-term n) (count n)
+input = λ n → A.named (term n) (regular-term n) (count n) (input-h n)
+inside = λ n → F.entry (pure n) (regular n) (input-h n)
+
+step : ∀ t → S.code (F.small (card (plus t))) ≡ E.fold (W.suc (S.code (F.small t)))
+step t = cong E.fold (trans (cong S.code (small-plus t)) (O.trailing (F.small t)))
+
+literal : ∀ n → S.code (term n) ≡ R.χ n
+literal zero = refl
+literal (suc n) = trans (step (forest n)) (cong (λ z → E.fold (W.suc z)) (literal n))
+
+identified : ∀ n → A.value (input n) ≈ᵛ read (R.χ n)
+identified n = subst (λ z → A.value (input n) ≈ᵛ read z) (literal n)
+  (S.inside-code (regular-term n) (count n) (input-h n) (inside n) (input-h n))
+
+out = λ n → P.principal (card (forest n))
+out-nf : ∀ n → NF (out n)
+out-nf n = nf-ψ n[] (nf-Ω (regular n)) (P.fit (F.node (pure n) F.empty))
+opaque
+  out-h : ∀ n → HC (out n)
+  out-h n = hc (out-nf n) (c∷ c[])
+target = λ n → A.named (out n) (out-nf n) (c∷ c[]) (out-h n)
+value = λ n → A.value (target n)
+
+recovery : ∀ n → C.response (term n) ≡ out n
+recovery n = cong (λ a → P.principal (card a)) (F.undo (pure n))

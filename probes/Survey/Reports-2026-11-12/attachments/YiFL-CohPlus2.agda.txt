@@ -1,0 +1,52 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module CohPlus2 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong)
+
+open import OCF.Lean.YiFreshBlock
+open import OCF.Lean.YiFreshFold using (_+_; iter; next; cum; Ωt; ι)
+open import OCF.Lean.YiFreshLegal using (_⊢_◃_; ◃s; ◃l; ◃w; ◃u; ◃c; ◃t; +-mono; Ωt-nz; Ωt-leg; seq)
+open import CohTry
+
+-- 第二种写法: 自然性先对抽象的 op 证明 (块外), 原子情形作前提.
+module Nat {ℓ : L} (c : Tr ℓ) (op : (x : Tr ℓ) → Eᶜ ℓ x → Eᶜ ℓ (c + x))
+  (as : ∀ {x} (ey : Eᶜ ℓ (suc x)) → op x ey ≡ op (suc x) ey)
+  (al : ∀ {f} (n : ℕ) (ey : Eᶜ ℓ (lim f)) → op (f n) (dn (◃l n) ey) ≡ dn (◃l n) (op (lim f) ey))
+  (aw : ∀ {p g} (ey : Eᶜ ℓ (Ω p g)) → op _ (dn (◃w {p = p} {g = g}) ey) ≡ dn ◃w (op (Ω p g) ey))
+  (au : ∀ {x k y} (z : chL ℓ k ⊢ zero ◃ chT ℓ k y) (ey : Eᶜ ℓ (up x k y)) → op x (dn (◃u z) ey) ≡ dn (◃u z) (op (up x k y) ey))
+  (ac : ∀ {x k y′ y} (d : chL ℓ k ⊢ chT ℓ k y′ ◃ chT ℓ k y) (ey : Eᶜ ℓ (up x k y))
+      → op (up x k y′) (dn (◃c d) ey) ≡ dn (◃c d) (op (up x k y) ey))
+  where
+  nat : {x y : Tr ℓ} (d : ℓ ⊢ x ◃ y) (ey : Eᶜ ℓ y) → op x (dn d ey) ≡ dn (+-mono c d) (op y ey)
+  nat ◃s       ey = as ey
+  nat (◃l n)   ey = al n ey
+  nat ◃w       ey = aw ey
+  nat (◃u z)   ey = au z ey
+  nat (◃c d)   ey = ac d ey
+  nat (◃t d e) ez = trans (nat d (dn e ez)) (cong (dn (+-mono c d)) (nat e ez))
+
+mapΣ : {A : Set} {B : A → Set} {A′ : Set} {B′ : A′ → Set} (φ : A → A′) → ((x : A) → B x → B′ (φ x))
+     → Maybe (Σ A B) → Maybe (Σ A′ B′)
+mapΣ φ ψ nothing        = nothing
+mapΣ φ ψ (just (x , y)) = just (φ x , ψ x y)
+
+mutual
+  +-Eᶜ : ∀ {ℓ} (a b : Tr ℓ) → Eᶜ ℓ a → Eᶜ ℓ b → Eᶜ ℓ (a + b)
+  +-Eᶜ a zero       ea eb = ea
+  +-Eᶜ a (suc b)    ea eb = +-Eᶜ a b ea eb
+  +-Eᶜ a (lim f)    ea e = (λ n → +-Eᶜ a (f n) ea (proj₁ e n)) ,
+    mapΣ (λ d n → +-mono a (d n)) (λ d C n → +C a f ea (proj₁ e) d C n) (proj₂ e)
+  +-Eᶜ a (Ω p g)    ea (ep , eg) = ep , λ z ez → +-Eᶜ a (g z) ea (eg z ez)
+  +-Eᶜ a (up y c w) ea (ey , ei , ew) = +-Eᶜ a y ea ey , ei , ew
+
+  +C : ∀ {ℓ} (a : Tr ℓ) (f : ℕ → Tr ℓ) (ea : Eᶜ ℓ a) (ef : (n : ℕ) → Eᶜ ℓ (f n))
+     (d : (n : ℕ) → ℓ ⊢ f n ◃ f (suc n)) → ((n : ℕ) → ef n ≡ dn (d n) (ef (suc n)))
+     → (n : ℕ) → +-Eᶜ a (f n) ea (ef n) ≡ dn (+-mono a (d n)) (+-Eᶜ a (f (suc n)) ea (ef (suc n)))
+  +C a f ea ef d C n = trans (cong (+-Eᶜ a (f n) ea) (C n))
+    (Nat.nat a (λ x e′ → +-Eᶜ a x ea e′) (λ _ → refl) (λ _ _ → refl) (λ _ → refl) (λ _ _ → refl) (λ _ _ → refl)
+      (d n) (ef (suc n)))

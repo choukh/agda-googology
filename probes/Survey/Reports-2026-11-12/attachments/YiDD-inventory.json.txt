@@ -1,0 +1,4945 @@
+[
+  {
+    "source": "YiVTLSTw1",
+    "target": "YiPMLSTw1.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "h₁",
+        "kind": "declaration",
+        "line": "h₁ : Tr zero → LF"
+      },
+      {
+        "name": "εh",
+        "kind": "declaration",
+        "line": "εh : (x : Tr zero) → Ev (h₁ x)"
+      },
+      {
+        "name": "ρh",
+        "kind": "declaration",
+        "line": "ρh : (x : Tr zero) → Rt (h₁ x)"
+      },
+      {
+        "name": "wh",
+        "kind": "declaration",
+        "line": "wh : (x : Tr zero) → zero ≤ h₁ x"
+      },
+      {
+        "name": "G",
+        "kind": "declaration",
+        "line": "G : Tr zero → Tr zero"
+      },
+      {
+        "name": "G-nz",
+        "kind": "declaration",
+        "line": "G-nz : (x : Tr zero) → zero ⊢ zero ◃ G x"
+      },
+      {
+        "name": "K",
+        "kind": "declaration",
+        "line": "K : Tr zero → Tr zero"
+      },
+      {
+        "name": "pt",
+        "kind": "declaration",
+        "line": "pt : ℕ → Tr zero"
+      },
+      {
+        "name": "tw1-form",
+        "kind": "declaration",
+        "line": "tw1-form : twᶜ 1 ≡ limc (λ n → G (pt n)) (λ n → G-nz (pt n))"
+      },
+      {
+        "name": "nl-↑",
+        "kind": "declaration",
+        "line": "nl-↑ : (x : Tr zero) → NL (h₁ x)"
+      },
+      {
+        "name": "corr-↑",
+        "kind": "declaration",
+        "line": "corr-↑ : (x : Tr zero) (h : L.HS (read x)) → Corr (L.toLevel (read x) h) (h₁ x)"
+      },
+      {
+        "name": "lvl",
+        "kind": "declaration",
+        "line": "lvl : Tr zero → L.Ordᴵ"
+      },
+      {
+        "name": "lower-↑",
+        "kind": "declaration",
+        "line": "lower-↑ : (x : Tr zero) → L.ψ⁰ (L.Ω (lvl x)) ≼ read (G x)"
+      },
+      {
+        "name": "κ",
+        "kind": "declaration",
+        "line": "κ : ℕ → L.Ordᴵ"
+      },
+      {
+        "name": "LOWER",
+        "kind": "declaration",
+        "line": "LOWER : ∀ m → L.ψ⁰ (L.Ω (κ m)) ≼ read (G (pt m))"
+      },
+      {
+        "name": "ω-tw1",
+        "kind": "declaration",
+        "line": "ω-tw1 : L.ψ⁰ (L.Ω (κ 1)) ≼ read (twᶜ 1)"
+      },
+      {
+        "name": "E",
+        "kind": "datatype",
+        "line": "data E : Tr zero → Tr zero → Set where"
+      },
+      {
+        "name": "ez",
+        "kind": "declaration",
+        "line": "ez : E zero zero"
+      },
+      {
+        "name": "es",
+        "kind": "declaration",
+        "line": "es : ∀ {a b} → E a b → E (suc a) (suc b)"
+      },
+      {
+        "name": "el",
+        "kind": "declaration",
+        "line": "el : ∀ {f g a b} → (∀ n → E (f n) (g n)) → E (lim f a) (lim g b)"
+      },
+      {
+        "name": "E-+",
+        "kind": "declaration",
+        "line": "E-+ : ∀ {a a′ b b′} → E a a′ → E b b′ → E (a + b) (a′ + b′)"
+      },
+      {
+        "name": "E-next",
+        "kind": "declaration",
+        "line": "E-next : ∀ {b b′} {nb : zero ⊢ zero ◃ b} {nb′ : zero ⊢ zero ◃ b′} → E b b′ → E (next b nb) (next b′ nb′)"
+      },
+      {
+        "name": "E-cum",
+        "kind": "declaration",
+        "line": "E-cum : (F F′ : ℕ → Tr zero) {a : ∀ n → zero ⊢ cum F n ◃ cum F (suc n)} {b : ∀ n → zero ⊢ cum F′ n ◃ cum F′ (suc n)}"
+      },
+      {
+        "name": "LiftP",
+        "kind": "declaration",
+        "line": "LiftP : ∀ {j ℓ} → j ≤ ℓ → Set"
+      },
+      {
+        "name": "LiftP-∙",
+        "kind": "declaration",
+        "line": "LiftP-∙ : ∀ {ℓ} (a b : LF) (w : ℓ ≤ a) → LiftP w → LiftP (w ∙ lift a b)"
+      },
+      {
+        "name": "eq0",
+        "kind": "declaration",
+        "line": "eq0 : (ℓ : LF) (ε : Ev ℓ) (ρ : Rt ℓ) (B : Base ℓ) (w : zero ≤ ℓ) → LiftP w"
+      },
+      {
+        "name": "KG",
+        "kind": "declaration",
+        "line": "KG : (x : Tr zero) → read (K x) L.≅ read (G x)"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEBBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTEBShape.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md",
+      "probes/OCF/Lean/YiVTEmb.lagda.md",
+      "probes/OCF/Lean/YiVTHi.lagda.md",
+      "probes/OCF/Lean/YiVTLSBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTT2Frame.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEBBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTEBShape.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md",
+      "probes/OCF/Lean/YiVTEmb.lagda.md",
+      "probes/OCF/Lean/YiVTHi.lagda.md",
+      "probes/OCF/Lean/YiVTLSBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTLSTw1.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTT2Frame.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTLSTw1.lagda.md"
+    ],
+    "sha256": "b71732576d4daf34f1cd053540c56acefe2474694a05a81eab7ec0b3355209f2",
+    "bytes": 6092,
+    "code_lines": 115,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTEBShape",
+    "target": "YiPMEBShape.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "pre",
+        "kind": "declaration",
+        "line": "pre : ℕ → Tr Λ"
+      },
+      {
+        "name": "dB",
+        "kind": "declaration",
+        "line": "dB : (n : ℕ) → Base (tw n)"
+      },
+      {
+        "name": "Fn",
+        "kind": "declaration",
+        "line": "Fn : (n : ℕ) → Base (tw n) → Tr zero"
+      },
+      {
+        "name": "br",
+        "kind": "declaration",
+        "line": "br : ℕ → Tr zero"
+      },
+      {
+        "name": "EBO-lim",
+        "kind": "declaration",
+        "line": "EBO-lim : EBOᶜ ≡ lim (λ n → ψ⊥ Λ Ev-Λ Rt-Λ (B₀ Λ) (cumΩ tw n))"
+      },
+      {
+        "name": "branch-eq",
+        "kind": "declaration",
+        "line": "branch-eq : (n : ℕ) → ψ⊥ Λ Ev-Λ Rt-Λ (B₀ Λ) (cumΩ tw n) ≡ br n"
+      },
+      {
+        "name": "br≼",
+        "kind": "declaration",
+        "line": "br≼ : (n : ℕ) → read (br n) ≼ read EBOᶜ"
+      },
+      {
+        "name": "sup≼",
+        "kind": "declaration",
+        "line": "sup≼ : (Y : T₀) → ((n : ℕ) → read (br n) ≼ Y) → read EBOᶜ ≼ Y"
+      },
+      {
+        "name": "EBO≅sup",
+        "kind": "declaration",
+        "line": "EBO≅sup : read EBOᶜ L.≅ L.lim (λ n → read (br n))"
+      },
+      {
+        "name": "ok-dB",
+        "kind": "declaration",
+        "line": "ok-dB : (n : ℕ) → OKB (tw n) (dB n)"
+      },
+      {
+        "name": "b⊥-dB",
+        "kind": "declaration",
+        "line": "b⊥-dB : (n : ℕ) → b⊥ (dB (suc n)) ≡ br n"
+      },
+      {
+        "name": "transfer",
+        "kind": "declaration",
+        "line": "transfer : (X : T₀) (n : ℕ) → ((B : Base (tw n)) → OKB (tw n) B → X ≼ read (Fn n B)) → X ≼ read EBOᶜ"
+      },
+      {
+        "name": "transferP",
+        "kind": "declaration",
+        "line": "transferP : (X : T₀) (n : ℕ) (P : Base (tw n) → Set) → P (dB n)"
+      },
+      {
+        "name": "start-dB2",
+        "kind": "declaration",
+        "line": "start-dB2 : bs (dB 2) (tw 1) (ink self)"
+      },
+      {
+        "name": "start-B₀2",
+        "kind": "declaration",
+        "line": "start-B₀2 : bs (B₀ (tw 2)) (tw 1) (ink self) ≡ Ω (inj₁ (inj₁ tt)) (λ c → up zero c (Ωt (h₁ c)) (Ωt-nz (h₁ c)))"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEBBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEBBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTEBShape.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTEBShape.lagda.md"
+    ],
+    "sha256": "924e3b801690cf15c5b423be80cbab72defb203c100b8cb6f80765f9a91cc326",
+    "bytes": 3275,
+    "code_lines": 61,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTLSBtbo",
+    "target": "YiPMLSBtbo.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "S",
+        "kind": "module",
+        "line": "module S = Ord-Ord"
+      },
+      {
+        "name": "B",
+        "kind": "module",
+        "line": "module B = BoundedTrich"
+      },
+      {
+        "name": "WT",
+        "kind": "module",
+        "line": "module WT = Blocks 𝕋₀"
+      },
+      {
+        "name": "cp",
+        "kind": "declaration",
+        "line": "cp : Tr zero → S.Ord₀"
+      },
+      {
+        "name": "cp≅",
+        "kind": "declaration",
+        "line": "cp≅ : (x : Tr zero) → tr₀ (cp x) L.≅ read x"
+      },
+      {
+        "name": "Mono-cp",
+        "kind": "declaration",
+        "line": "Mono-cp : (x : Tr zero) → Mono (tr₀ (cp x))"
+      },
+      {
+        "name": "lift≺",
+        "kind": "declaration",
+        "line": "lift≺ : ∀ {a b : T₀} → a L.≺ b → ∀ {x : T₀} → x L.≺ L.suc a → x L.≺ b"
+      },
+      {
+        "name": "OKs",
+        "kind": "declaration",
+        "line": "OKs : (ℓ : LF) → Base ℓ → Set"
+      },
+      {
+        "name": "mono⊥⊑",
+        "kind": "declaration",
+        "line": "mono⊥⊑ : (ℓ : LF) (ε : Ev ℓ) (ρ : Rt ℓ) (Bb : Base ℓ) {x y : Tr ℓ} → ℓ ⊢ x ⊴ y"
+      },
+      {
+        "name": "b◃next",
+        "kind": "declaration",
+        "line": "b◃next : (b : Tr zero) (nb : zero ⊢ zero ◃ b) → zero ⊢ b ◃ next b nb"
+      },
+      {
+        "name": "V3",
+        "kind": "declaration",
+        "line": "V3 : (x : Tr zero) (ε : Ev (h₁ x)) (ρ : Rt (h₁ x)) (Bb : Base (h₁ x)) → OKs (h₁ x) Bb"
+      },
+      {
+        "name": "V3F",
+        "kind": "declaration",
+        "line": "V3F : ∀ m → WT.Eb (ordᴰ (cp (pt m))) (read (G (pt m)))"
+      },
+      {
+        "name": "shift",
+        "kind": "declaration",
+        "line": "shift : ∀ x → PEmb (L.toLevel (read (G x)) (HSr (G x))) (lvl (K x))"
+      },
+      {
+        "name": "emb",
+        "kind": "declaration",
+        "line": "emb : ∀ n m → D.γ n ≼ read (pt m) → PEmb (D.L n) (κ (suc m))"
+      },
+      {
+        "name": "lowc",
+        "kind": "declaration",
+        "line": "lowc : ∀ k → L.ψ⁰ (L.Ω (κ k)) ≼ read (pt (suc k))"
+      },
+      {
+        "name": "chainV",
+        "kind": "declaration",
+        "line": "chainV : ∀ n → Σ ℕ (λ m → D.γ n ≼ read (pt m))"
+      },
+      {
+        "name": "btbo-tw1",
+        "kind": "declaration",
+        "line": "btbo-tw1 : D.BTBOᴵ ≼ read (twᶜ 1)"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTEBBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTEBBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md",
+      "probes/OCF/Lean/YiVTLSBtbo.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTLSBtbo.lagda.md"
+    ],
+    "sha256": "0c751cee61eb2202d9e5d080956105f11107880eb6ca374136401128fd3b22b5",
+    "bytes": 10546,
+    "code_lines": 189,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTEBBtbo",
+    "target": "YiPMEBBtbo.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "S",
+        "kind": "module",
+        "line": "module S = Ord-Ord"
+      },
+      {
+        "name": "B",
+        "kind": "module",
+        "line": "module B = BoundedTrich"
+      },
+      {
+        "name": "WT",
+        "kind": "module",
+        "line": "module WT = Blocks 𝕋₀"
+      },
+      {
+        "name": "Start",
+        "kind": "declaration",
+        "line": "Start : Base (tw 1) → Set"
+      },
+      {
+        "name": "Chain",
+        "kind": "module",
+        "line": "module Chain (B : Base (tw 1)) where"
+      },
+      {
+        "name": "Chain.β",
+        "kind": "declaration",
+        "line": "β : Tr zero"
+      },
+      {
+        "name": "Chain.nβ",
+        "kind": "declaration",
+        "line": "nβ : zero ⊢ zero ◃ β"
+      },
+      {
+        "name": "Chain.Bc",
+        "kind": "declaration",
+        "line": "Bc : (x : Tr zero) → Base (h₁ x)"
+      },
+      {
+        "name": "Chain.G",
+        "kind": "declaration",
+        "line": "G : Tr zero → Tr zero"
+      },
+      {
+        "name": "Chain.G-nz",
+        "kind": "declaration",
+        "line": "G-nz : (x : Tr zero) → zero ⊢ zero ◃ G x"
+      },
+      {
+        "name": "Chain.K",
+        "kind": "declaration",
+        "line": "K : Tr zero → Tr zero"
+      },
+      {
+        "name": "Chain.pt",
+        "kind": "declaration",
+        "line": "pt : ℕ → Tr zero"
+      },
+      {
+        "name": "Chain.form",
+        "kind": "declaration",
+        "line": "form : Fn 1 B ≡ limc (λ n → G (pt n)) (λ n → G-nz (pt n))"
+      },
+      {
+        "name": "Lemmas",
+        "kind": "module",
+        "line": "module Lemmas (B : Base (tw 1)) (ok : OKB (tw 1) B) where"
+      },
+      {
+        "name": "Lemmas.okc",
+        "kind": "declaration",
+        "line": "okc : (x : Tr zero) → OKB (h₁ x) (Bc x)"
+      },
+      {
+        "name": "Lemmas.κ",
+        "kind": "declaration",
+        "line": "κ : ℕ → L.Ordᴵ"
+      },
+      {
+        "name": "Lemmas.LOWER",
+        "kind": "declaration",
+        "line": "LOWER : ∀ m → L.ψ⁰ (L.Ω (κ m)) ≼ read (G (pt m))"
+      },
+      {
+        "name": "Lemmas.V3F",
+        "kind": "declaration",
+        "line": "V3F : ∀ m → WT.Eb (ordᴰ (cp (pt m))) (read (G (pt m)))"
+      },
+      {
+        "name": "Lemmas.pt1",
+        "kind": "declaration",
+        "line": "pt1 : L.suc L.zero ≼ read (pt 1)"
+      },
+      {
+        "name": "Btbo",
+        "kind": "module",
+        "line": "module Btbo (B : Base (tw 1)) (ok : OKB (tw 1) B) (st : Start B) where"
+      },
+      {
+        "name": "Btbo.KG",
+        "kind": "declaration",
+        "line": "KG : (x : Tr zero) → read (K x) L.≅ read (G x)"
+      },
+      {
+        "name": "Btbo.shift",
+        "kind": "declaration",
+        "line": "shift : ∀ x → PEmb (L.toLevel (read (G x)) (HSr (G x))) (lvl (K x))"
+      },
+      {
+        "name": "Btbo.emb",
+        "kind": "declaration",
+        "line": "emb : ∀ n m → D.γ n ≼ read (pt m) → PEmb (D.L n) (κ (suc m))"
+      },
+      {
+        "name": "Btbo.lowc",
+        "kind": "declaration",
+        "line": "lowc : ∀ k → L.ψ⁰ (L.Ω (κ k)) ≼ read (pt (suc k))"
+      },
+      {
+        "name": "Btbo.chainV",
+        "kind": "declaration",
+        "line": "chainV : ∀ n → Σ ℕ (λ m → D.γ n ≼ read (pt m))"
+      },
+      {
+        "name": "Btbo.btbo-B",
+        "kind": "declaration",
+        "line": "btbo-B : D.BTBOᴵ ≼ read (Fn 1 B)"
+      },
+      {
+        "name": "start-dB1",
+        "kind": "declaration",
+        "line": "start-dB1 : Start (dB 1)"
+      },
+      {
+        "name": "start-dB1≡",
+        "kind": "declaration",
+        "line": "start-dB1≡ : bs (dB 1) zero (ink self) ≡ b⊥ (dB 1)"
+      },
+      {
+        "name": "btbo-dB1",
+        "kind": "declaration",
+        "line": "btbo-dB1 : D.BTBOᴵ ≼ read (Fn 1 (dB 1))"
+      },
+      {
+        "name": "btbo-EBO",
+        "kind": "declaration",
+        "line": "btbo-EBO : D.BTBOᴵ ≼ read EBOᶜ"
+      },
+      {
+        "name": "btbo-EBO′",
+        "kind": "declaration",
+        "line": "btbo-EBO′ : D.BTBOᴵ ≼ read EBOᶜ"
+      },
+      {
+        "name": "btbo-B₀",
+        "kind": "declaration",
+        "line": "btbo-B₀ : D.BTBOᴵ ≼ read (twᶜ 1)"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEXRow.lagda.md",
+      "probes/OCF/Lean/YiVTHi.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTEBBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEXRow.lagda.md",
+      "probes/OCF/Lean/YiVTHi.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTEBBtbo.lagda.md"
+    ],
+    "sha256": "c33f910cd4e746542eda648bb021d8f7e46e25a9533c2c289dfec51eed9f55af",
+    "bytes": 5559,
+    "code_lines": 104,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTMEAnchor",
+    "target": "YiPMMEAnchor.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "one",
+        "kind": "declaration",
+        "line": "one two : L"
+      },
+      {
+        "name": "two",
+        "kind": "declaration",
+        "line": "one two : L"
+      },
+      {
+        "name": "Low¹",
+        "kind": "declaration",
+        "line": "Low¹ : (p : Pos one) → E.T → Br one p → Set"
+      },
+      {
+        "name": "Nu¹",
+        "kind": "declaration",
+        "line": "Nu¹ : Pos one → E.T → Set"
+      },
+      {
+        "name": "M¹",
+        "kind": "declaration",
+        "line": "M¹ : E.T → Tr one → Set"
+      },
+      {
+        "name": "G⁰",
+        "kind": "module",
+        "line": "module G⁰ = Gen {Sig zero} {λ ()} {λ ()} {λ ()}"
+      },
+      {
+        "name": "G¹",
+        "kind": "module",
+        "line": "module G¹ = Gen {Sig one} {Low¹} {λ _ → M⁰} {Nu¹}"
+      },
+      {
+        "name": "u₀",
+        "kind": "declaration",
+        "line": "u₀ u₁ : E.T"
+      },
+      {
+        "name": "u₁",
+        "kind": "declaration",
+        "line": "u₀ u₁ : E.T"
+      },
+      {
+        "name": "ψ₀ᵗ",
+        "kind": "declaration",
+        "line": "ψ₀ᵗ ψ₁ᵗ : E.T → E.T"
+      },
+      {
+        "name": "ψ₁ᵗ",
+        "kind": "declaration",
+        "line": "ψ₀ᵗ ψ₁ᵗ : E.T → E.T"
+      },
+      {
+        "name": "++[]",
+        "kind": "declaration",
+        "line": "++[] : (Z : E.T → Set) (t : E.T) → Z t → Z (t ++ [])"
+      },
+      {
+        "name": "Pu",
+        "kind": "declaration",
+        "line": "Pu : ∀ {t} (b : Tr one) (nb : one ⊢ zero ◃ b) → M¹ (ψ₁ᵗ t) b"
+      },
+      {
+        "name": "Qu",
+        "kind": "declaration",
+        "line": "Qu : ∀ {t} (B : Base zero) (b : Tr zero) (nb : zero ⊢ zero ◃ b) → M⁰ (ψ₀ᵗ t) b"
+      },
+      {
+        "name": "Vu",
+        "kind": "declaration",
+        "line": "Vu : ∀ {t} (B : Base zero) → M⁰ (ψ₀ᵗ t) (b⊥ B)"
+      },
+      {
+        "name": "Ω₁ᵗ",
+        "kind": "declaration",
+        "line": "Ω₁ᵗ Ω₂ᵗ t₂ : E.T"
+      },
+      {
+        "name": "Ω₂ᵗ",
+        "kind": "declaration",
+        "line": "Ω₁ᵗ Ω₂ᵗ t₂ : E.T"
+      },
+      {
+        "name": "t₂",
+        "kind": "declaration",
+        "line": "Ω₁ᵗ Ω₂ᵗ t₂ : E.T"
+      },
+      {
+        "name": "At",
+        "kind": "module",
+        "line": "module At (B₂ : Base two)"
+      },
+      {
+        "name": "At.Bᵃ",
+        "kind": "declaration",
+        "line": "Bᵃ : Base one"
+      },
+      {
+        "name": "At.β₁",
+        "kind": "declaration",
+        "line": "β₁ : Tr one"
+      },
+      {
+        "name": "At.nβ₁",
+        "kind": "declaration",
+        "line": "nβ₁ : one ⊢ zero ◃ β₁"
+      },
+      {
+        "name": "At.β₀",
+        "kind": "declaration",
+        "line": "β₀ : Tr zero"
+      },
+      {
+        "name": "At.nβ₀",
+        "kind": "declaration",
+        "line": "nβ₀ : zero ⊢ zero ◃ β₀"
+      },
+      {
+        "name": "At.F",
+        "kind": "declaration",
+        "line": "F : Tr one → Tr one"
+      },
+      {
+        "name": "At.nzF",
+        "kind": "declaration",
+        "line": "nzF : (x : Tr one) → one ⊢ zero ◃ F x"
+      },
+      {
+        "name": "At.H",
+        "kind": "declaration",
+        "line": "H : Tr one → Tr zero"
+      },
+      {
+        "name": "At.nzH",
+        "kind": "declaration",
+        "line": "nzH : (x : Tr one) → zero ⊢ zero ◃ H x"
+      },
+      {
+        "name": "At.W",
+        "kind": "declaration",
+        "line": "W : Tr one → Tr zero"
+      },
+      {
+        "name": "At.nzW",
+        "kind": "declaration",
+        "line": "nzW : (x : Tr one) → zero ⊢ zero ◃ W x"
+      },
+      {
+        "name": "At.PF",
+        "kind": "declaration",
+        "line": "PF : ∀ {a x} → M¹ a x → M¹ (ψ₁ᵗ a) (F x)"
+      },
+      {
+        "name": "At.vch",
+        "kind": "declaration",
+        "line": "vch : (Tr zero → Tr one) → ℕ → Tr zero"
+      },
+      {
+        "name": "At.QH",
+        "kind": "declaration",
+        "line": "QH : ∀ {a x} → M¹ a x → M⁰ (ψ₀ᵗ a) (H x)"
+      },
+      {
+        "name": "At.chain",
+        "kind": "declaration",
+        "line": "chain : ∀ {a} {g : Tr zero → Tr one} → (∀ η c → M⁰ η c → M¹ (fsT a η) (g c))"
+      },
+      {
+        "name": "At.VW",
+        "kind": "declaration",
+        "line": "VW : ∀ {a x} → M¹ a x → M⁰ (ψ₀ᵗ a) (W x)"
+      },
+      {
+        "name": "At.γ",
+        "kind": "declaration",
+        "line": "γ : ℕ → E.T"
+      },
+      {
+        "name": "At.z",
+        "kind": "declaration",
+        "line": "z : ℕ → Tr one"
+      },
+      {
+        "name": "At.form",
+        "kind": "declaration",
+        "line": "form : ψ⊥ two tt tt B₂ (Ωt two)"
+      },
+      {
+        "name": "At.sγ",
+        "kind": "declaration",
+        "line": "sγ : ∀ n → M¹ (γ n) (z (suc n))"
+      },
+      {
+        "name": "At.lowerM",
+        "kind": "declaration",
+        "line": "lowerM : M⁰ t₂ (ψ⊥ two tt tt B₂ (Ωt two))"
+      },
+      {
+        "name": "Mβ₀",
+        "kind": "declaration",
+        "line": "Mβ₀ : M¹ Ω₁ᵗ (Ωt one)"
+      },
+      {
+        "name": "bho-M",
+        "kind": "declaration",
+        "line": "bho-M : M⁰ t₂ (ψ₀ two tt tt (Ωt two))"
+      },
+      {
+        "name": "bho-lowerᴹ",
+        "kind": "declaration",
+        "line": "bho-lowerᴹ : (h : HC t₂) → Rt h ≼ read (ψ₀ two tt tt (Ωt two))"
+      },
+      {
+        "name": "nf₂",
+        "kind": "declaration",
+        "line": "nf₂ : NF t₂"
+      },
+      {
+        "name": "h₂",
+        "kind": "declaration",
+        "line": "h₂ : HC t₂"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANFam.lagda.md",
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md",
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md",
+      "probes/OCF/Lean/YiVTMEStep.lagda.md",
+      "probes/OCF/Lean/YiVTMWPre.lagda.md",
+      "probes/OCF/Lean/YiVTPHBase.lagda.md",
+      "probes/OCF/Lean/YiVTPHCtx.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTT2Desc.lagda.md",
+      "probes/OCF/Lean/YiVTT2Frame.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANFam.lagda.md",
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md",
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md",
+      "probes/OCF/Lean/YiVTMEAnchor.lagda.md",
+      "probes/OCF/Lean/YiVTMEStep.lagda.md",
+      "probes/OCF/Lean/YiVTMWPre.lagda.md",
+      "probes/OCF/Lean/YiVTPHBase.lagda.md",
+      "probes/OCF/Lean/YiVTPHCtx.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTT2Desc.lagda.md",
+      "probes/OCF/Lean/YiVTT2Frame.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTMEAnchor.lagda.md"
+    ],
+    "sha256": "975969e55a76064e093d7572036f96c8b14a9340bca43048e2f6ac8c42a56901",
+    "bytes": 10403,
+    "code_lines": 204,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTMEStep",
+    "target": "YiPMMEStep.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "Lev",
+        "kind": "module",
+        "line": "module Lev (Ix : L → E.T → Set) where"
+      },
+      {
+        "name": "Lev.Mᴸ",
+        "kind": "declaration",
+        "line": "Mᴸ : (j : L) → E.T → Tr j → Set"
+      },
+      {
+        "name": "Lev.Lowᴸ",
+        "kind": "declaration",
+        "line": "Lowᴸ : (j : L) (p : Pos j) → E.T → Br j p → Set"
+      },
+      {
+        "name": "Lev.Low⁼",
+        "kind": "declaration",
+        "line": "Low⁼ : (a : L) (t : Pos⁼ a) → E.T → Br⁼ a t → Set"
+      },
+      {
+        "name": "Lev.Chdᴸ",
+        "kind": "declaration",
+        "line": "Chdᴸ : (j : L) (c : Ch j) → E.T → ChT j c → Set"
+      },
+      {
+        "name": "t₊",
+        "kind": "declaration",
+        "line": "t₊ : E.T"
+      },
+      {
+        "name": "Step₂⁺ᴸ",
+        "kind": "declaration",
+        "line": "Step₂⁺ᴸ : Set"
+      },
+      {
+        "name": "h₂",
+        "kind": "declaration",
+        "line": "h₂ : Tr (tw 1) → L"
+      },
+      {
+        "name": "G₂",
+        "kind": "declaration",
+        "line": "G₂ : Tr (tw 1) → Tr (tw 2)"
+      },
+      {
+        "name": "c₂",
+        "kind": "declaration",
+        "line": "c₂ : ℕ → Tr (tw 1)"
+      },
+      {
+        "name": "row",
+        "kind": "declaration",
+        "line": "row : ℕ → Tr zero"
+      },
+      {
+        "name": "nzrow",
+        "kind": "declaration",
+        "line": "nzrow : ∀ n → zero ⊢ zero ◃ row n"
+      },
+      {
+        "name": "form₂",
+        "kind": "declaration",
+        "line": "form₂ : twᶜ 2 ≡ limc row nzrow"
+      },
+      {
+        "name": "γ₊",
+        "kind": "declaration",
+        "line": "γ₊ : ℕ → E.T"
+      },
+      {
+        "name": "step⁺-red",
+        "kind": "declaration",
+        "line": "step⁺-red : (∀ n → M⁰ (ψ₀ᵗ (γ₊ n)) (row (suc n))) → Step₂⁺ᴸ"
+      },
+      {
+        "name": "row-form",
+        "kind": "declaration",
+        "line": "row-form : ∀ n → row n ≡ ψ⊥ (h₂ (c₂ n)) (proj₂ (proj₂ (Ev-tw 2) (c₂ n))) (proj₂ (Rt-tw 2) (c₂ n))"
+      },
+      {
+        "name": "row₀-btbo",
+        "kind": "declaration",
+        "line": "row₀-btbo : M⁰ (E.EBOψ 2) (row 1) → (h : HC (E.EBOψ 2)) → Rt h ≼ read (twᶜ 2)"
+      },
+      {
+        "name": "h₁",
+        "kind": "declaration",
+        "line": "h₁ : Tr zero → L"
+      },
+      {
+        "name": "c₁-form",
+        "kind": "declaration",
+        "line": "c₁-form : c₂ 1 ≡ Ω (inj₁ (inj₁ tt)) (λ z → Upc (tw 1) z (Ωt (tw 1)) (Ωt-nz (tw 1)) (Ωt (h₁ z)))"
+      },
+      {
+        "name": "lev₁-form",
+        "kind": "declaration",
+        "line": "lev₁-form : h₂ (c₂ 1) ≡ Ωₗ zero (λ z → tw 1 ⊕ ↑ (tw 1) (Upc (tw 1) z (Ωt (tw 1)) (Ωt-nz (tw 1)) (Ωt (h₁ z))))"
+      },
+      {
+        "name": "drop-same",
+        "kind": "declaration",
+        "line": "drop-same : (k : L) (h : Tr k → L) (ε : Ev (Ωₗ k h)) (ρ : Rtᴾ (Ωₗ k h)) (B : Base (Ωₗ k h)) (j : L)"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTT2Desc.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTMEStep.lagda.md",
+      "probes/OCF/Lean/YiVTT2Desc.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTMEStep.lagda.md"
+    ],
+    "sha256": "e206a955d95feef59f7aa8de3cdd38e488b9b0837fcf2c171d9cebce800a3b49",
+    "bytes": 4834,
+    "code_lines": 80,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTT2Desc",
+    "target": "YiPMT2Desc.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "_⊑¹_",
+        "kind": "datatype",
+        "line": "data _⊑¹_ (j : L) : L → Set where"
+      },
+      {
+        "name": "r¹",
+        "kind": "declaration",
+        "line": "r¹ : j ⊑¹ j"
+      },
+      {
+        "name": "s¹",
+        "kind": "declaration",
+        "line": "s¹ : ∀ {a} → j ⊑¹ a → j ⊑¹ suc a"
+      },
+      {
+        "name": "l¹",
+        "kind": "declaration",
+        "line": "l¹ : ∀ {g} → j ⊑¹ g zero → j ⊑¹ lim g"
+      },
+      {
+        "name": "w¹",
+        "kind": "declaration",
+        "line": "w¹ : ∀ {k h} → j ⊑¹ h zero → j ⊑¹ Ωₗ k h"
+      },
+      {
+        "name": "ev¹",
+        "kind": "declaration",
+        "line": "ev¹ : ∀ {j ℓ} → j ⊑¹ ℓ → Ev ℓ → Ev j"
+      },
+      {
+        "name": "rt¹",
+        "kind": "declaration",
+        "line": "rt¹ : ∀ {j ℓ} → j ⊑¹ ℓ → Rt ℓ → Rt j"
+      },
+      {
+        "name": "lift¹",
+        "kind": "declaration",
+        "line": "lift¹ : (a b : L) → a ⊑¹ a ⊕ b"
+      },
+      {
+        "name": "cS",
+        "kind": "declaration",
+        "line": "cS : ℕ → Tr a"
+      },
+      {
+        "name": "FS",
+        "kind": "declaration",
+        "line": "FS : ℕ → Tr zero"
+      },
+      {
+        "name": "nzS",
+        "kind": "declaration",
+        "line": "nzS : ∀ n → zero ⊢ zero ◃ FS n"
+      },
+      {
+        "name": "S-form",
+        "kind": "declaration",
+        "line": "S-form : ψ₀ (suc a) ε ρ (Ωt (suc a)) ≡ limc FS nzS"
+      },
+      {
+        "name": "cS-step",
+        "kind": "declaration",
+        "line": "cS-step : ∀ n → cS (suc n) ≡ next (ψs a ε ρ (B₀ a) a self (Ωt a) (Ωt-nz a) (cS n))"
+      },
+      {
+        "name": "FS-step",
+        "kind": "declaration",
+        "line": "FS-step : ∀ n → FS n ≡ next (ψ₀ a ε ρ (cS n)) (nz⊥ a ε ρ (B₀ a) (cS n))"
+      },
+      {
+        "name": "suc-first",
+        "kind": "declaration",
+        "line": "suc-first : zero ⊢ ψ₀ a ε ρ (Ωt a) ◃ FS 1"
+      },
+      {
+        "name": "suc-step",
+        "kind": "declaration",
+        "line": "suc-step : read (ψ₀ a ε ρ (Ωt a)) ≼ read (ψ₀ (suc a) ε ρ (Ωt (suc a)))"
+      },
+      {
+        "name": "lim-step",
+        "kind": "declaration",
+        "line": "lim-step : (g : ℕ → L) (ε : Ev (lim g)) (ρ : Rt (lim g))"
+      },
+      {
+        "name": "Ω-step",
+        "kind": "declaration",
+        "line": "Ω-step : (k : L) (h : Tr k → L) (ε : Ev (Ωₗ k h)) (ρ : Rt (Ωₗ k h))"
+      },
+      {
+        "name": "desc",
+        "kind": "declaration",
+        "line": "desc : ∀ {j ℓ} (p : j ⊑¹ ℓ) (ε : Ev ℓ) (ρ : Rt ℓ)"
+      },
+      {
+        "name": "ε₁",
+        "kind": "declaration",
+        "line": "ε₁ : Ev (h₂ (c₂ 1))"
+      },
+      {
+        "name": "ρ₁",
+        "kind": "declaration",
+        "line": "ρ₁ : Rt (h₂ (c₂ 1))"
+      },
+      {
+        "name": "row1-form",
+        "kind": "declaration",
+        "line": "row1-form : row 1 ≡ ψ₀ (h₂ (c₂ 1)) ε₁ ρ₁ (Ωt (h₂ (c₂ 1)))"
+      },
+      {
+        "name": "path⁺",
+        "kind": "declaration",
+        "line": "path⁺ : suc (tw 1) ⊑¹ h₂ (c₂ 1)"
+      },
+      {
+        "name": "ev-form",
+        "kind": "declaration",
+        "line": "ev-form : ev¹ path⁺ ε₁ ≡ Ev-tw 1"
+      },
+      {
+        "name": "rt-form",
+        "kind": "declaration",
+        "line": "rt-form : rt¹ path⁺ ρ₁ ≡ Rt-tw 1"
+      },
+      {
+        "name": "T⁺",
+        "kind": "declaration",
+        "line": "T⁺ : Tr zero"
+      },
+      {
+        "name": "sucΩ≼tw2",
+        "kind": "declaration",
+        "line": "sucΩ≼tw2 : read T⁺ ≼ read (twᶜ 2)"
+      },
+      {
+        "name": "d⁺",
+        "kind": "declaration",
+        "line": "d⁺ : ℕ → Tr (tw 1)"
+      },
+      {
+        "name": "R⁺",
+        "kind": "declaration",
+        "line": "R⁺ : ℕ → Tr zero"
+      },
+      {
+        "name": "nzR⁺",
+        "kind": "declaration",
+        "line": "nzR⁺ : ∀ n → zero ⊢ zero ◃ R⁺ n"
+      },
+      {
+        "name": "T⁺-form",
+        "kind": "declaration",
+        "line": "T⁺-form : T⁺ ≡ limc R⁺ nzR⁺"
+      },
+      {
+        "name": "d⁺1",
+        "kind": "declaration",
+        "line": "d⁺1 : d⁺ 1 ≡ next (Ωt (tw 1)) (Ωt-nz (tw 1))"
+      },
+      {
+        "name": "rdLM",
+        "kind": "declaration",
+        "line": "rdLM : (x : Tr zero) → read x ≼ MB.read x"
+      },
+      {
+        "name": "rdML",
+        "kind": "declaration",
+        "line": "rdML : (x : Tr zero) → MB.read x ≼ read x"
+      },
+      {
+        "name": "step⁺-suc",
+        "kind": "declaration",
+        "line": "step⁺-suc : (∀ n → Σ ℕ λ k → M⁰ (ψ₀ᵗ (γ₊ n)) (R⁺ k)) → Step₂⁺ᴸ"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTT2Frame.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTT2Desc.lagda.md",
+      "probes/OCF/Lean/YiVTT2Frame.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTT2Desc.lagda.md"
+    ],
+    "sha256": "b7685bef56bdc619a51a54440102b0b6c86c0b4c32d3ec2f8b6e7d210810ae0a",
+    "bytes": 6106,
+    "code_lines": 114,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTEXRow",
+    "target": "YiPMEXRow.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "fsn≡",
+        "kind": "declaration",
+        "line": "fsn≡  : ∀ t n → fsn t n ≡ E.fsn t n"
+      },
+      {
+        "name": "fsn≡ˣ",
+        "kind": "declaration",
+        "line": "fsn≡ˣ : ∀ x xs n → fsn (x ∷ xs) n ≡ E.trm (E.fsn↓ x xs n)"
+      },
+      {
+        "name": "fsn≡0",
+        "kind": "declaration",
+        "line": "fsn≡0 : ∀ w ws c (e : cof (w ∷ ws) ≡ c) n → fsn0 (w ∷ ws) c n ≡ E.trm (E.fsn↓0 w ws c e n)"
+      },
+      {
+        "name": "fsn≡₊",
+        "kind": "declaration",
+        "line": "fsn≡₊ : ∀ u y ys c (e : cof (y ∷ ys) ≡ c) n → fsn₊ u (y ∷ ys) c n ≡ E.trm (E.fsn↓₊ u y ys c e n)"
+      },
+      {
+        "name": "fsn≡c",
+        "kind": "declaration",
+        "line": "fsn≡c : ∀ u y ys ν (e : cof (y ∷ ys) ≡ cΩ ν) m n → fsnc u (y ∷ ys) ν m n ≡ E.trm (E.fsn↓c u y ys ν e m n)"
+      },
+      {
+        "name": "labR",
+        "kind": "declaration",
+        "line": "labR : ∀ {t} (h : HC t) → Lab (Rt h) t"
+      },
+      {
+        "name": "Rt≼Lab",
+        "kind": "declaration",
+        "line": "Rt≼Lab : ∀ {t X} (h : HC t) → Lab X t → Rt h ≼ X"
+      },
+      {
+        "name": "row₂-btbo",
+        "kind": "declaration",
+        "line": "row₂-btbo : Rt (hc-tower 2) ≼ D.BTBOᴵ"
+      },
+      {
+        "name": "row₂",
+        "kind": "declaration",
+        "line": "row₂ : Rt (hc-tower 2) ≼ read EBOᶜ"
+      },
+      {
+        "name": "down₁",
+        "kind": "declaration",
+        "line": "down₁ : Rt (hc-tower 1) ≼ Rt (hc-tower 2)"
+      },
+      {
+        "name": "down₀",
+        "kind": "declaration",
+        "line": "down₀ : Rt (hc-tower 0) ≼ Rt (hc-tower 1)"
+      },
+      {
+        "name": "row₁",
+        "kind": "declaration",
+        "line": "row₁ : Rt (hc-tower 1) ≼ read EBOᶜ"
+      },
+      {
+        "name": "row₀",
+        "kind": "declaration",
+        "line": "row₀ : Rt (hc-tower 0) ≼ read EBOᶜ"
+      },
+      {
+        "name": "rows",
+        "kind": "declaration",
+        "line": "rows : ∀ k → k ≤ 2 → Rt (hc-tower k) ≼ read EBOᶜ"
+      },
+      {
+        "name": "endpoint-at",
+        "kind": "declaration",
+        "line": "endpoint-at : (∀ k → Rt (hc-tower k) ≼ read EBOᶜ) → toL EBO-tree′ ≼ read EBOᶜ"
+      },
+      {
+        "name": "endpoint-from",
+        "kind": "declaration",
+        "line": "endpoint-from : (∀ k → Rt (hc-tower (suc (suc (suc k)))) ≼ read EBOᶜ) → toL EBO-tree′ ≼ read EBOᶜ"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEXRow.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTEXRow.lagda.md"
+    ],
+    "sha256": "d8f70b6d14f9d8474f7801ab0898ad2e9812a682402f9d4c07269b4efee30de2",
+    "bytes": 4853,
+    "code_lines": 83,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTMWPre",
+    "target": "YiPMMWPre.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "inv-suc",
+        "kind": "declaration",
+        "line": "inv-suc : (x : Tr zero) {a : T₀} → O.suc a ≼ read x → Σ (Tr zero) λ x′ → (suc x′ ⊴ x) × (a ≼ read x′)"
+      },
+      {
+        "name": "M⁰-≼",
+        "kind": "declaration",
+        "line": "M⁰-≼ : ∀ {t x} → M⁰ t x → (y : Tr zero) → read x ≼ read y → M⁰ t y"
+      },
+      {
+        "name": "cof++Ω",
+        "kind": "declaration",
+        "line": "cof++Ω : ∀ t s {ν} → cof s ≡ cΩ ν → cof (t ++ s) ≡ cΩ ν"
+      },
+      {
+        "name": "fsT++′",
+        "kind": "declaration",
+        "line": "fsT++′ : ∀ t y ys η → fsT (t ++ y ∷ ys) η ≡ t ++ fsT (y ∷ ys) η"
+      },
+      {
+        "name": "fsT++",
+        "kind": "declaration",
+        "line": "fsT++ : ∀ t s η {ν} → cof s ≡ cΩ ν → fsT (t ++ s) η ≡ t ++ fsT s η"
+      },
+      {
+        "name": "Pre",
+        "kind": "module",
+        "line": "module Pre (B₂ : Base two) (hβ : M¹ Ω₁ᵗ (bs B₂ one (ins self))) (t : E.T)"
+      },
+      {
+        "name": "open At B₂ hβ (pos⁰ (bs B₂ zero (ins (ins self))) (ns B₂ zero (ins (ins self)))) (pos⁰ (b⊥ B₂) (n⊥ B₂)) public",
+        "kind": "public-open",
+        "line": "open At B₂ hβ (pos⁰ (bs B₂ zero (ins (ins self))) (ns B₂ zero (ins (ins self)))) (pos⁰ (b⊥ B₂) (n⊥ B₂)) public"
+      },
+      {
+        "name": "Pre.QHp",
+        "kind": "declaration",
+        "line": "QHp : ∀ {a x} → M¹ a x → M⁰ (ψ₀ᵗ (t ++ a)) (H x)"
+      },
+      {
+        "name": "Pre.chainp",
+        "kind": "declaration",
+        "line": "chainp : ∀ {a} {g : Tr zero → Tr one} → cof a ≡ cΩ [] → (∀ η c → M⁰ η c → M¹ (fsT a η) (g c))"
+      },
+      {
+        "name": "Pre.VWp",
+        "kind": "declaration",
+        "line": "VWp : ∀ {a x} → M¹ a x → M⁰ (ψ₀ᵗ (t ++ a)) (W x)"
+      },
+      {
+        "name": "Pre.rowp",
+        "kind": "declaration",
+        "line": "rowp : ∀ n → M⁰ (ψ₀ᵗ (t ++ ψ₁ᵗ (γ n))) (ψ⊥ two tt tt B₂ (Ωt two))"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANFam.lagda.md",
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md",
+      "probes/OCF/Lean/YiVTEVReach.lagda.md",
+      "probes/OCF/Lean/YiVTPHBase.lagda.md",
+      "probes/OCF/Lean/YiVTPHCtx.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANFam.lagda.md",
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md",
+      "probes/OCF/Lean/YiVTEVReach.lagda.md",
+      "probes/OCF/Lean/YiVTMWPre.lagda.md",
+      "probes/OCF/Lean/YiVTPHBase.lagda.md",
+      "probes/OCF/Lean/YiVTPHCtx.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTMWPre.lagda.md"
+    ],
+    "sha256": "696cc1a08489d683587b910c26c057306f75e04eea7df86ef946df063fc456df",
+    "bytes": 7255,
+    "code_lines": 115,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTEVReach",
+    "target": "YiPMEVReach.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "Hi",
+        "kind": "declaration",
+        "line": "Hi : (ℓ : LF) → Base ℓ → Set"
+      },
+      {
+        "name": "hi-dS",
+        "kind": "declaration",
+        "line": "hi-dS : (a : LF) (ε : Ev (suc a)) (ρ : Rt (suc a)) (B : Base (suc a)) → Hi (suc a) B"
+      },
+      {
+        "name": "hi-dL",
+        "kind": "declaration",
+        "line": "hi-dL : (g : ℕ → LF) (ε : Ev (lim g)) (ρ : Rt (lim g)) (B : Base (lim g)) → Hi (lim g) B"
+      },
+      {
+        "name": "hi-dW",
+        "kind": "declaration",
+        "line": "hi-dW : (k : LF) (h : Tr k → LF) (ε : Ev (Ωₗ k h)) (ρ : Rt (Ωₗ k h)) (B : Base (Ωₗ k h)) → Hi (Ωₗ k h) B"
+      },
+      {
+        "name": "preΩ",
+        "kind": "declaration",
+        "line": "preΩ : (g : ℕ → LF) → ℕ → Tr (lim g)"
+      },
+      {
+        "name": "lim≽",
+        "kind": "declaration",
+        "line": "lim≽ : (g : ℕ → LF) (ε : Ev (lim g)) (ρ : Rt (lim g)) (B : Base (lim g)) (n : ℕ)"
+      },
+      {
+        "name": "Ω≽0",
+        "kind": "declaration",
+        "line": "Ω≽0 : (k : LF) (h : Tr k → LF) (ε : Ev (Ωₗ k h)) (ρ : Rt (Ωₗ k h)) (B : Base (Ωₗ k h))"
+      },
+      {
+        "name": "c1Ω",
+        "kind": "declaration",
+        "line": "c1Ω : (k : LF) (h : Tr k → LF) (ε : Ev (Ωₗ k h)) (ρ : Rt (Ωₗ k h)) (B : Base (Ωₗ k h)) → Tr k"
+      },
+      {
+        "name": "Ω≽1",
+        "kind": "declaration",
+        "line": "Ω≽1 : (k : LF) (h : Tr k → LF) (ε : Ev (Ωₗ k h)) (ρ : Rt (Ωₗ k h)) (B : Base (Ωₗ k h))"
+      },
+      {
+        "name": "suc≽",
+        "kind": "declaration",
+        "line": "suc≽ : (a : LF) (ε : Ev (suc a)) (ρ : Rt (suc a)) (B : Base (suc a)) → OKB (suc a) B"
+      },
+      {
+        "name": "cv⊴",
+        "kind": "declaration",
+        "line": "cv⊴ : ∀ {ℓ} {x y : Tr ℓ} → ℓ ⊢ x ⊴ y → MB._⊴_ x y"
+      },
+      {
+        "name": "Lo",
+        "kind": "declaration",
+        "line": "Lo : (ℓ : LF) → Ev ℓ → Rt ℓ → Base ℓ → Set"
+      },
+      {
+        "name": "AtTwo",
+        "kind": "module",
+        "line": "module AtTwo (B₂ : Base two) (ok : OKB two B₂) (hi : Hi two B₂) where"
+      },
+      {
+        "name": "AtTwo.hβ",
+        "kind": "declaration",
+        "line": "hβ : M¹ Ω₁ᵗ (bs B₂ one (ins self))"
+      },
+      {
+        "name": "AtTwo.P",
+        "kind": "module",
+        "line": "module P = Pre B₂ hβ tΩ (sem0 (bs B₂ zero (ins (ins self))) (proj₂ hi (ins (ins self)))) (sem0 (b⊥ B₂) (proj₁ hi))"
+      },
+      {
+        "name": "AtTwo.atTwo",
+        "kind": "declaration",
+        "line": "atTwo : Lo two tt tt B₂"
+      },
+      {
+        "name": "_⇐_",
+        "kind": "datatype",
+        "line": "data _⇐_ (j : LF) : LF → Set where"
+      },
+      {
+        "name": "⇐r",
+        "kind": "declaration",
+        "line": "⇐r : j ⇐ j"
+      },
+      {
+        "name": "⇐s",
+        "kind": "declaration",
+        "line": "⇐s : ∀ {a} → j ⇐ a → j ⇐ suc a"
+      },
+      {
+        "name": "⇐l",
+        "kind": "declaration",
+        "line": "⇐l : ∀ {g} (n : ℕ) → j ⇐ g n → j ⇐ lim g"
+      },
+      {
+        "name": "⇐w",
+        "kind": "declaration",
+        "line": "⇐w : ∀ {k h} → j ⇐ h zero → j ⇐ Ωₗ k h"
+      },
+      {
+        "name": "reach",
+        "kind": "declaration",
+        "line": "reach : ∀ {ℓ} → two ⇐ ℓ → (ε : Ev ℓ) (ρ : Rt ℓ) (B : Base ℓ) → OKB ℓ B → Hi ℓ B → Lo ℓ ε ρ B"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md",
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md",
+      "probes/OCF/Lean/YiVTPHCtx.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md",
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md",
+      "probes/OCF/Lean/YiVTPHCtx.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTEVReach.lagda.md"
+    ],
+    "sha256": "ab89cd2120202a544bcd8c00ea4124a5332790e3331d27f7664f10b941403eeb",
+    "bytes": 6483,
+    "code_lines": 89,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTPHBase",
+    "target": "YiPMPHBase.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "three",
+        "kind": "declaration",
+        "line": "three : L"
+      },
+      {
+        "name": "u₂",
+        "kind": "declaration",
+        "line": "u₂ : E.T"
+      },
+      {
+        "name": "ψ₂ᵗ",
+        "kind": "declaration",
+        "line": "ψ₂ᵗ : E.T → E.T"
+      },
+      {
+        "name": "Low²",
+        "kind": "declaration",
+        "line": "Low² : (p : Pos two) → E.T → Br two p → Set"
+      },
+      {
+        "name": "Nu²",
+        "kind": "declaration",
+        "line": "Nu² : Pos two → E.T → Set"
+      },
+      {
+        "name": "M²",
+        "kind": "declaration",
+        "line": "M² : E.T → Tr two → Set"
+      },
+      {
+        "name": "G²",
+        "kind": "module",
+        "line": "module G² = Gen {Sig two} {Low²} {λ _ → M¹} {Nu²}"
+      },
+      {
+        "name": "Mβ₂",
+        "kind": "declaration",
+        "line": "Mβ₂ : M² Ω₂ᵗ (Ωt two)"
+      },
+      {
+        "name": "Pu⁰",
+        "kind": "declaration",
+        "line": "Pu⁰ : ∀ {t} (d : Dn two zero) (b : Tr two) (nb : two ⊢ zero ◃ b) → M² (ψ₂ᵗ t) b"
+      },
+      {
+        "name": "Pu¹",
+        "kind": "declaration",
+        "line": "Pu¹ : ∀ {t} (b : Tr two) (nb : two ⊢ zero ◃ b) → M² (ψ₂ᵗ t) b"
+      },
+      {
+        "name": "P2",
+        "kind": "module",
+        "line": "module P2 (B₃ : Base three) (hβ₂ : M² Ω₂ᵗ (bs B₃ two (ins self))) where"
+      },
+      {
+        "name": "P2.Bᵃ",
+        "kind": "declaration",
+        "line": "Bᵃ : Base two"
+      },
+      {
+        "name": "P2.β₂",
+        "kind": "declaration",
+        "line": "β₂ : Tr two"
+      },
+      {
+        "name": "P2.nβ₂",
+        "kind": "declaration",
+        "line": "nβ₂ : two ⊢ zero ◃ β₂"
+      },
+      {
+        "name": "P2.F²",
+        "kind": "declaration",
+        "line": "F² : Tr two → Tr two"
+      },
+      {
+        "name": "P2.nzF²",
+        "kind": "declaration",
+        "line": "nzF² : (x : Tr two) → two ⊢ zero ◃ F² x"
+      },
+      {
+        "name": "P2.monoF²",
+        "kind": "declaration",
+        "line": "monoF² : {x y : Tr two} → two ⊢ x ◃ y → two ⊢ F² x ◃ F² y"
+      },
+      {
+        "name": "P2.P²",
+        "kind": "declaration",
+        "line": "P² : ∀ {a x} → M² a x → M² (ψ₂ᵗ a) (F² x)"
+      },
+      {
+        "name": "P2.z",
+        "kind": "declaration",
+        "line": "z : ℕ → Tr two"
+      },
+      {
+        "name": "P2.γ³",
+        "kind": "declaration",
+        "line": "γ³ : ℕ → E.T"
+      },
+      {
+        "name": "P2.sγ³",
+        "kind": "declaration",
+        "line": "sγ³ : ∀ n → M² (γ³ n) (z (suc n))"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTPHCtx.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTPHBase.lagda.md",
+      "probes/OCF/Lean/YiVTPHCtx.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTPHBase.lagda.md"
+    ],
+    "sha256": "17b8e15a73271163b73aaeb419884b9a925854ee1990e2b3b5c6a06555bc6e66",
+    "bytes": 6317,
+    "code_lines": 113,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTPHCtx",
+    "target": "YiPMPHCtx.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "Ctx",
+        "kind": "datatype",
+        "line": "data Ctx : Set where"
+      },
+      {
+        "name": "ε",
+        "kind": "declaration",
+        "line": "ε   : Ctx"
+      },
+      {
+        "name": "_▸_",
+        "kind": "declaration",
+        "line": "_▸_ : Ctx → Tr two → Ctx"
+      },
+      {
+        "name": "⟦_⟧",
+        "kind": "declaration",
+        "line": "⟦_⟧ : Ctx → Tr two → Tr two"
+      },
+      {
+        "name": "cm",
+        "kind": "declaration",
+        "line": "cm : ∀ C {x y : Tr two} → two ⊢ x ◃ y → two ⊢ ⟦ C ⟧ x ◃ ⟦ C ⟧ y"
+      },
+      {
+        "name": "c⊴",
+        "kind": "declaration",
+        "line": "c⊴ : ∀ C {x y : Tr two} → x ⊴ y → ⟦ C ⟧ x ⊴ ⟦ C ⟧ y"
+      },
+      {
+        "name": "eΩ",
+        "kind": "declaration",
+        "line": "eΩ : ∀ C (p : Pos two) (g : Br two p → Tr two) → ⟦ C ⟧ (Ω p g) ≡ Ω p (λ c → ⟦ C ⟧ (g c))"
+      },
+      {
+        "name": "eΩt",
+        "kind": "declaration",
+        "line": "eΩt : ∀ C (x₀ : Tr two) → ⟦ C ⟧ (Ω (inj₁ tt) (λ c → up x₀ tt (suc c) (z◃s c)))"
+      },
+      {
+        "name": "up⊵",
+        "kind": "declaration",
+        "line": "up⊵ : ∀ {ℓ} (j : L) (d : Dn ℓ j) (b : Tr ℓ) (nb : ℓ ⊢ zero ◃ b) (y : Tr j) → b ⊴ Up j d b nb y"
+      },
+      {
+        "name": "L1",
+        "kind": "module",
+        "line": "module L1 (D : Base one) where"
+      },
+      {
+        "name": "L1.F¹",
+        "kind": "declaration",
+        "line": "F¹ : Tr one → Tr one"
+      },
+      {
+        "name": "L1.nzF¹",
+        "kind": "declaration",
+        "line": "nzF¹ : (y : Tr one) → one ⊢ zero ◃ F¹ y"
+      },
+      {
+        "name": "L1.monoF¹",
+        "kind": "declaration",
+        "line": "monoF¹ : {x y : Tr one} → one ⊢ x ◃ y → one ⊢ F¹ x ◃ F¹ y"
+      },
+      {
+        "name": "L1.PFp",
+        "kind": "declaration",
+        "line": "PFp : ∀ {A} → M¹ (ψ₁ᵗ A) (bs D one self) → ∀ {s y} → M¹ s y → M¹ (ψ₁ᵗ (A ++ s)) (F¹ y)"
+      },
+      {
+        "name": "L1.lbs",
+        "kind": "declaration",
+        "line": "lbs : (j : L) → j ≤ two → Tr j"
+      },
+      {
+        "name": "L1.lns",
+        "kind": "declaration",
+        "line": "lns : (j : L) (w : j ≤ two) → j ⊢ zero ◃ lbs j w"
+      },
+      {
+        "name": "L1.lift",
+        "kind": "declaration",
+        "line": "lift : Base two"
+      },
+      {
+        "name": "Ctx3",
+        "kind": "module",
+        "line": "module Ctx3 (B₃ : Base three)"
+      },
+      {
+        "name": "open P2 B₃ hβ₂ public",
+        "kind": "public-open",
+        "line": "open P2 B₃ hβ₂ public"
+      },
+      {
+        "name": "Ctx3.β₁",
+        "kind": "declaration",
+        "line": "β₁ : Tr one"
+      },
+      {
+        "name": "Ctx3.nβ₁",
+        "kind": "declaration",
+        "line": "nβ₁ : one ⊢ zero ◃ β₁"
+      },
+      {
+        "name": "Ctx3.β₀",
+        "kind": "declaration",
+        "line": "β₀ : Tr zero"
+      },
+      {
+        "name": "Ctx3.nβ₀",
+        "kind": "declaration",
+        "line": "nβ₀ : zero ⊢ zero ◃ β₀"
+      },
+      {
+        "name": "Ctx3.F₁",
+        "kind": "declaration",
+        "line": "F₁ : Tr two → Tr one"
+      },
+      {
+        "name": "Ctx3.nzF₁",
+        "kind": "declaration",
+        "line": "nzF₁ : (x : Tr two) → one ⊢ zero ◃ F₁ x"
+      },
+      {
+        "name": "Ctx3.H",
+        "kind": "declaration",
+        "line": "H : Tr two → Tr zero"
+      },
+      {
+        "name": "Ctx3.nzH",
+        "kind": "declaration",
+        "line": "nzH : (x : Tr two) → zero ⊢ zero ◃ H x"
+      },
+      {
+        "name": "Ctx3.W",
+        "kind": "declaration",
+        "line": "W : Tr two → Tr zero"
+      },
+      {
+        "name": "Ctx3.nzW",
+        "kind": "declaration",
+        "line": "nzW : (x : Tr two) → zero ⊢ zero ◃ W x"
+      },
+      {
+        "name": "Ctx3.F²⊵",
+        "kind": "declaration",
+        "line": "F²⊵ : (x : Tr two) → Ωt two ⊴ F² x"
+      },
+      {
+        "name": "Ctx3.m1F",
+        "kind": "declaration",
+        "line": "m1F : (X : Tr two) → M¹ Ω₁ᵗ (F₁ X)"
+      },
+      {
+        "name": "Ctx3.m0H",
+        "kind": "declaration",
+        "line": "m0H : (X : Tr two) → M⁰ (ψ₀ᵗ t) (H X)"
+      },
+      {
+        "name": "Ctx3.m0W",
+        "kind": "declaration",
+        "line": "m0W : (X : Tr two) → M⁰ (ψ₀ᵗ t) (W X)"
+      },
+      {
+        "name": "Ctx3.Cl",
+        "kind": "datatype",
+        "line": "record Cl (q : E.T) (V : Tr two) : Set where"
+      },
+      {
+        "name": "Ctx3.Cl.cF",
+        "kind": "declaration",
+        "line": "cF : M¹ q (F₁ V)"
+      },
+      {
+        "name": "Ctx3.Cl.cH",
+        "kind": "declaration",
+        "line": "cH : M⁰ (ψ₀ᵗ (t ++ q)) (H V)"
+      },
+      {
+        "name": "Ctx3.Cl.cW",
+        "kind": "declaration",
+        "line": "cW : M⁰ (ψ₀ᵗ (t ++ q)) (W V)"
+      },
+      {
+        "name": "Ctx3.Cl-up◃",
+        "kind": "declaration",
+        "line": "Cl-up◃ : ∀ {q V V′} → Cl q V → two ⊢ V ◃ V′ → Cl q V′"
+      },
+      {
+        "name": "Ctx3.Cl-up⊴",
+        "kind": "declaration",
+        "line": "Cl-up⊴ : ∀ {q V V′} → Cl q V → V ⊴ V′ → Cl q V′"
+      },
+      {
+        "name": "Ctx3.Cl-lim",
+        "kind": "declaration",
+        "line": "Cl-lim : ∀ {q V} → cof q ≡ cω → (∀ n → Cl (fsn q n) V) → Cl q V"
+      },
+      {
+        "name": "Ctx3.Nd1",
+        "kind": "module",
+        "line": "module Nd1 (G : Tr one → Tr two) where"
+      },
+      {
+        "name": "Ctx3.Nd1.vch",
+        "kind": "declaration",
+        "line": "vch : ℕ → Tr one"
+      },
+      {
+        "name": "Ctx3.Nd1.nodeF",
+        "kind": "declaration",
+        "line": "nodeF : ∀ {s} k → M¹ s (F₁ (G (vch k))) → M¹ s (F₁ (Ω (inj₁ tt) G))"
+      },
+      {
+        "name": "Ctx3.Nd1.nodeH",
+        "kind": "declaration",
+        "line": "nodeH : ∀ {s} k → M⁰ s (H (G (vch k))) → M⁰ s (H (Ω (inj₁ tt) G))"
+      },
+      {
+        "name": "Ctx3.Nd1.nodeW",
+        "kind": "declaration",
+        "line": "nodeW : ∀ {s} k → M⁰ s (W (G (vch k))) → M⁰ s (W (Ω (inj₁ tt) G))"
+      },
+      {
+        "name": "Ctx3.Nd1.nodeCl",
+        "kind": "declaration",
+        "line": "nodeCl : ∀ {q} k → Cl q (G (vch k)) → Cl q (Ω (inj₁ tt) G)"
+      },
+      {
+        "name": "Ctx3.Nd0",
+        "kind": "module",
+        "line": "module Nd0 (G : Tr zero → Tr two) where"
+      },
+      {
+        "name": "Ctx3.Nd0.wch",
+        "kind": "declaration",
+        "line": "wch : ℕ → Tr zero"
+      },
+      {
+        "name": "Ctx3.Nd0.nodeH",
+        "kind": "declaration",
+        "line": "nodeH : ∀ {s} k → M⁰ s (H (G (wch k))) → M⁰ s (H (Ω (inj₂ (inj₁ tt)) G))"
+      },
+      {
+        "name": "Ctx3.Nd0.nodeW",
+        "kind": "declaration",
+        "line": "nodeW : ∀ {s} k → M⁰ s (W (G (wch k))) → M⁰ s (W (Ω (inj₂ (inj₁ tt)) G))"
+      },
+      {
+        "name": "Ctx3.Leaf",
+        "kind": "module",
+        "line": "module Leaf (C : Ctx) (A₀ : E.T) (k1 : M¹ (ψ₁ᵗ A₀) (F₁ (⟦ C ⟧ zero))) where"
+      },
+      {
+        "name": "Ctx3.Leaf.X₀",
+        "kind": "declaration",
+        "line": "X₀ : Tr two"
+      },
+      {
+        "name": "Ctx3.Leaf.D₁",
+        "kind": "declaration",
+        "line": "D₁ : Base one"
+      },
+      {
+        "name": "Ctx3.Leaf.PL",
+        "kind": "module",
+        "line": "module PL = Pre lift (m1F X₀) t (m0H X₀) (m0W X₀)"
+      },
+      {
+        "name": "Ctx3.Leaf.gL",
+        "kind": "declaration",
+        "line": "gL : Tr one → Tr two"
+      },
+      {
+        "name": "Ctx3.Leaf.Q",
+        "kind": "declaration",
+        "line": "Q : E.T"
+      },
+      {
+        "name": "Ctx3.Leaf.cQ",
+        "kind": "declaration",
+        "line": "cQ : cof Q ≡ cΩ u₁"
+      },
+      {
+        "name": "Ctx3.Leaf.fQ",
+        "kind": "declaration",
+        "line": "fQ : ∀ η → fsT Q η ≡ A₀ ++ η"
+      },
+      {
+        "name": "Ctx3.Leaf.γ",
+        "kind": "declaration",
+        "line": "γ : ℕ → E.T"
+      },
+      {
+        "name": "Ctx3.Leaf.sγ",
+        "kind": "declaration",
+        "line": "sγ : ∀ n → M¹ (γ n) (vch (suc n))"
+      },
+      {
+        "name": "Ctx3.Leaf.lfH",
+        "kind": "declaration",
+        "line": "lfH : ∀ n → M⁰ (ψ₀ᵗ (t ++ γ n)) (H (Ω (inj₁ tt) gL))"
+      },
+      {
+        "name": "Ctx3.Leaf.lfW",
+        "kind": "declaration",
+        "line": "lfW : ∀ n → M⁰ (ψ₀ᵗ (t ++ γ n)) (W (Ω (inj₁ tt) gL))"
+      },
+      {
+        "name": "Ctx3.Leaf.leafΩ₁",
+        "kind": "declaration",
+        "line": "leafΩ₁ : Cl Ω₁ᵗ (⟦ C ⟧ (Ωt two))"
+      },
+      {
+        "name": "Ctx3.Leaf.leafCl",
+        "kind": "declaration",
+        "line": "leafCl : Cl (ψ₁ᵗ Q) (⟦ C ⟧ (Ωt two))"
+      },
+      {
+        "name": "Ctx3.Kn",
+        "kind": "datatype",
+        "line": "record Kn (C : Ctx) (A₀ : E.T) : Set where"
+      },
+      {
+        "name": "Ctx3.Kn.k1",
+        "kind": "declaration",
+        "line": "k1 : M¹ (ψ₁ᵗ A₀) (F₁ (⟦ C ⟧ zero))"
+      },
+      {
+        "name": "Ctx3.Kn.k0",
+        "kind": "declaration",
+        "line": "k0 : (y : Tr two) → Ωt two ⊴ y → Cl (ψ₁ᵗ A₀) (⟦ C ⟧ y)"
+      },
+      {
+        "name": "Ctx3.kn₀",
+        "kind": "declaration",
+        "line": "kn₀ : Kn ε []"
+      },
+      {
+        "name": "Ctx3.TC",
+        "kind": "declaration",
+        "line": "TC : E.T → Tr two → Set"
+      },
+      {
+        "name": "Ctx3.ext",
+        "kind": "declaration",
+        "line": "ext : ∀ {C A₀ p Y} → Kn C A₀ → TC p Y → Kn (C ▸ Y) (A₀ ++ p)"
+      },
+      {
+        "name": "Ctx3.TC-up◃",
+        "kind": "declaration",
+        "line": "TC-up◃ : ∀ {p Y Y′} → TC p Y → two ⊢ Y ◃ Y′ → TC p Y′"
+      },
+      {
+        "name": "Ctx3.TC-up⊴",
+        "kind": "declaration",
+        "line": "TC-up⊴ : ∀ {p Y Y′} → TC p Y → Y ⊴ Y′ → TC p Y′"
+      },
+      {
+        "name": "Ctx3.leafTC",
+        "kind": "declaration",
+        "line": "leafTC : TC Ω₂ᵗ (Ωt two)"
+      },
+      {
+        "name": "Ctx3.limTC",
+        "kind": "declaration",
+        "line": "limTC : ∀ {b Y} → cof b ≡ cω → (∀ n → TC (ψ₂ᵗ (fsn b n)) Y) → TC (ψ₂ᵗ b) Y"
+      },
+      {
+        "name": "Ctx3.Next",
+        "kind": "module",
+        "line": "module Next (b : E.T) (e : cof b ≡ c1) (Y : Tr two) (nz : two ⊢ zero ◃ Y) (hY : Ωt two ⊴ Y)"
+      },
+      {
+        "name": "Ctx3.Next.p′",
+        "kind": "declaration",
+        "line": "p′ : E.PT"
+      },
+      {
+        "name": "Ctx3.Next.stepN",
+        "kind": "declaration",
+        "line": "stepN : ∀ m C A₀ → Kn C A₀ → Cl (ψ₁ᵗ (A₀ ++ replicate (suc m) p′)) (⟦ C ⟧ (iter (Y +_) Y m))"
+      },
+      {
+        "name": "Ctx3.Next.nextL",
+        "kind": "declaration",
+        "line": "nextL : TC (ψ₂ᵗ b) (next Y nz)"
+      },
+      {
+        "name": "Ctx3.Node0",
+        "kind": "module",
+        "line": "module Node0 (b : E.T) (e : cof b ≡ cΩ []) (G₀ : Tr zero → Tr two)"
+      },
+      {
+        "name": "Ctx3.Node0.G",
+        "kind": "declaration",
+        "line": "G : Tr zero → Tr two"
+      },
+      {
+        "name": "Ctx3.Node0.Q",
+        "kind": "declaration",
+        "line": "Q : E.T"
+      },
+      {
+        "name": "Ctx3.Node0.cQ",
+        "kind": "declaration",
+        "line": "cQ : cof Q ≡ cΩ []"
+      },
+      {
+        "name": "Ctx3.Node0.fQ",
+        "kind": "declaration",
+        "line": "fQ : ∀ η → fsT Q η ≡ A₀ ++ ψ₂ᵗ (fsT b η)"
+      },
+      {
+        "name": "Ctx3.Node0.B′",
+        "kind": "declaration",
+        "line": "B′ : E.T"
+      },
+      {
+        "name": "Ctx3.Node0.cB",
+        "kind": "declaration",
+        "line": "cB : cof B′ ≡ cΩ []"
+      },
+      {
+        "name": "Ctx3.Node0.fB",
+        "kind": "declaration",
+        "line": "fB : ∀ η → fsT B′ η ≡ t ++ ψ₁ᵗ (A₀ ++ ψ₂ᵗ (fsT b η))"
+      },
+      {
+        "name": "Ctx3.Node0.atη",
+        "kind": "declaration",
+        "line": "atη : ∀ η c → M⁰ η c → Cl (ψ₁ᵗ (A₀ ++ ψ₂ᵗ (fsT b η))) (G c)"
+      },
+      {
+        "name": "Ctx3.Node0.chain",
+        "kind": "declaration",
+        "line": "chain : ∀ n → M⁰ (γT B′ [] n) (wch (suc n))"
+      },
+      {
+        "name": "Ctx3.Node0.node",
+        "kind": "declaration",
+        "line": "node : Cl (ψ₁ᵗ Q) (⟦ C ⟧ (Ω (inj₂ (inj₁ tt)) G₀))"
+      },
+      {
+        "name": "Ctx3.Node1",
+        "kind": "module",
+        "line": "module Node1 (b : E.T) (e : cof b ≡ cΩ u₁) (G₀ : Tr one → Tr two)"
+      },
+      {
+        "name": "Ctx3.Node1.G",
+        "kind": "declaration",
+        "line": "G : Tr one → Tr two"
+      },
+      {
+        "name": "Ctx3.Node1.Q",
+        "kind": "declaration",
+        "line": "Q : E.T"
+      },
+      {
+        "name": "Ctx3.Node1.cQ",
+        "kind": "declaration",
+        "line": "cQ : cof Q ≡ cΩ u₁"
+      },
+      {
+        "name": "Ctx3.Node1.fQ",
+        "kind": "declaration",
+        "line": "fQ : ∀ η → fsT Q η ≡ A₀ ++ ψ₂ᵗ (fsT b η)"
+      },
+      {
+        "name": "Ctx3.Node1.γ",
+        "kind": "declaration",
+        "line": "γ : ℕ → E.T"
+      },
+      {
+        "name": "Ctx3.Node1.atη",
+        "kind": "declaration",
+        "line": "atη : ∀ η c → M¹ η c → Cl (ψ₁ᵗ (A₀ ++ ψ₂ᵗ (fsT b η))) (G c)"
+      },
+      {
+        "name": "Ctx3.Node1.chain",
+        "kind": "declaration",
+        "line": "chain : ∀ n → M¹ (γ n) (vch (suc n))"
+      },
+      {
+        "name": "Ctx3.Node1.node",
+        "kind": "declaration",
+        "line": "node : Cl (ψ₁ᵗ Q) (⟦ C ⟧ (Ω (inj₁ tt) G₀))"
+      },
+      {
+        "name": "Ctx3.Tu⁰",
+        "kind": "declaration",
+        "line": "Tu⁰ : ∀ {t′} (d : Dn two zero) (b : Tr two) (nb : two ⊢ zero ◃ b) → Ωt two ⊴ b → TC (ψ₂ᵗ t′) b"
+      },
+      {
+        "name": "Ctx3.Tu¹",
+        "kind": "declaration",
+        "line": "Tu¹ : ∀ {t′} (b : Tr two) (nb : two ⊢ zero ◃ b) → Ωt two ⊴ b → TC (ψ₂ᵗ t′) b"
+      },
+      {
+        "name": "Ctx3.T²",
+        "kind": "declaration",
+        "line": "T² : ∀ {a x} → M² a x → TC (ψ₂ᵗ a) (F² x)"
+      },
+      {
+        "name": "Ctx3.Ω₃ᵗ",
+        "kind": "declaration",
+        "line": "Ω₃ᵗ : E.T"
+      },
+      {
+        "name": "Ctx3.form³",
+        "kind": "declaration",
+        "line": "form³ : ψ⊥ three tt tt B₃ (Ωt three)"
+      },
+      {
+        "name": "Ctx3.rowW",
+        "kind": "declaration",
+        "line": "rowW : ∀ n → M⁰ (ψ₀ᵗ (t ++ ψ₁ᵗ (γ³ n))) (W (F² (z n)))"
+      },
+      {
+        "name": "Ctx3.row³",
+        "kind": "declaration",
+        "line": "row³ : ∀ n → M⁰ (ψ₀ᵗ (t ++ ψ₁ᵗ (γ³ n))) (ψ⊥ three tt tt B₃ (Ωt three))"
+      },
+      {
+        "name": "Ctx3.cΩ₃",
+        "kind": "declaration",
+        "line": "cΩ₃ : cof (ψ₁ᵗ Ω₃ᵗ) ≡ cω"
+      },
+      {
+        "name": "Ctx3.anchor³",
+        "kind": "declaration",
+        "line": "anchor³ : M⁰ (ψ₀ᵗ (t ++ ψ₁ᵗ Ω₃ᵗ)) (ψ⊥ three tt tt B₃ (Ωt three))"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md",
+      "probes/OCF/Lean/YiVTPHCtx.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTPHCtx.lagda.md"
+    ],
+    "sha256": "26209270ee068ab6287d7148c8fac8d15efd2c893f37cc5493911169af56dc24",
+    "bytes": 21526,
+    "code_lines": 367,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTANFam",
+    "target": "YiPMANFam.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "fin",
+        "kind": "declaration",
+        "line": "fin : ℕ → L"
+      },
+      {
+        "name": "slot",
+        "kind": "declaration",
+        "line": "slot : (n : ℕ) → Pos (fin (suc n)) → ℕ"
+      },
+      {
+        "name": "slot≤",
+        "kind": "declaration",
+        "line": "slot≤ : ∀ n p → slot n p ≤ⁿ n"
+      },
+      {
+        "name": "Nw",
+        "kind": "declaration",
+        "line": "Nw : (n : ℕ) → Pos (fin (suc n)) → E.T → Set"
+      },
+      {
+        "name": "M",
+        "kind": "declaration",
+        "line": "M : (n : ℕ) → E.T → Tr (fin n) → Set"
+      },
+      {
+        "name": "Lw",
+        "kind": "declaration",
+        "line": "Lw : (n : ℕ) (p : Pos (fin (suc n))) → E.T → Br (fin (suc n)) p → Set"
+      },
+      {
+        "name": "GM",
+        "kind": "module",
+        "line": "module GM (n : ℕ) = Gen {Sig (fin (suc n))} {Lw n} {λ _ → M n} {Nw n}"
+      },
+      {
+        "name": "mwN",
+        "kind": "declaration",
+        "line": "mwN : ∀ n {s x x′} → M n s x → fin n ⊢ x ◃ x′ → M n s x′"
+      },
+      {
+        "name": "m⊴N",
+        "kind": "declaration",
+        "line": "m⊴N : ∀ n {s x x′} → M n s x → x ⊴ x′ → M n s x′"
+      },
+      {
+        "name": "mzN",
+        "kind": "declaration",
+        "line": "mzN : ∀ n {x} → M n [] x"
+      },
+      {
+        "name": "mLN",
+        "kind": "declaration",
+        "line": "mLN : ∀ n {s x} → cof s ≡ cω → (∀ k → M n (fsn s k) x) → M n s x"
+      },
+      {
+        "name": "cumN",
+        "kind": "declaration",
+        "line": "cumN : ∀ n {s} (G : ℕ → Tr (fin n)) (nz : ∀ k → fin n ⊢ zero ◃ G k) (k : ℕ) → M n s (G k) → M n s (limc G nz)"
+      },
+      {
+        "name": "to¹",
+        "kind": "declaration",
+        "line": "to¹ : ∀ {s y} → M 1 s y → M¹ s y"
+      },
+      {
+        "name": "ψᴺ",
+        "kind": "declaration",
+        "line": "ψᴺ : ℕ → E.T → E.T"
+      },
+      {
+        "name": "Ωᴺ",
+        "kind": "declaration",
+        "line": "Ωᴺ : ℕ → E.T"
+      },
+      {
+        "name": "cof-nat",
+        "kind": "declaration",
+        "line": "cof-nat : ∀ i → cof (natT (suc i)) ≡ c1"
+      },
+      {
+        "name": "pred-nat",
+        "kind": "declaration",
+        "line": "pred-nat : ∀ i → pred (natT (suc i)) ≡ natT i"
+      },
+      {
+        "name": "cofΩ",
+        "kind": "declaration",
+        "line": "cofΩ : ∀ i → cof (Ωᴺ (suc i)) ≡ cΩ (natT i)"
+      },
+      {
+        "name": "fsTΩ",
+        "kind": "declaration",
+        "line": "fsTΩ : ∀ i η → fsT (Ωᴺ (suc i)) η ≡ η"
+      },
+      {
+        "name": "Pen",
+        "kind": "declaration",
+        "line": "Pen : E.Cmp → Set"
+      },
+      {
+        "name": "cmp-gt",
+        "kind": "declaration",
+        "line": "cmp-gt : ∀ {b a} → b ≤ⁿ a → cmpᵀ (sucT (natT a)) (natT b) ≡ gt"
+      },
+      {
+        "name": "cmp-pen",
+        "kind": "declaration",
+        "line": "cmp-pen : ∀ {a b} → suc a ≤ⁿ b → Pen (cmpᵀ (sucT (natT a)) (natT b))"
+      },
+      {
+        "name": "cofK",
+        "kind": "declaration",
+        "line": "cofK : ∀ u b {ν} → Pen (cmpᵀ (sucT ν) u) → cof b ≡ cΩ ν → cof (ψ u b ∷ []) ≡ cΩ ν"
+      },
+      {
+        "name": "fsTK",
+        "kind": "declaration",
+        "line": "fsTK : ∀ u b {ν} η → Pen (cmpᵀ (sucT ν) u) → cof b ≡ cΩ ν → fsT (ψ u b ∷ []) η ≡ ψ u (fsT b η) ∷ []"
+      },
+      {
+        "name": "cofG",
+        "kind": "declaration",
+        "line": "cofG : ∀ u b {ν} → cmpᵀ (sucT ν) u ≡ gt → cof b ≡ cΩ ν → cof (ψ u b ∷ []) ≡ cω"
+      },
+      {
+        "name": "fsnG",
+        "kind": "declaration",
+        "line": "fsnG : ∀ u b {ν} k → cmpᵀ (sucT ν) u ≡ gt → cof b ≡ cΩ ν → fsn (ψ u b ∷ []) k ≡ ψ u (fsT b (γT b ν k)) ∷ []"
+      },
+      {
+        "name": "penN",
+        "kind": "declaration",
+        "line": "penN : ∀ n p {ν} → Nw n p ν → Pen (cmpᵀ (sucT ν) (natT (suc n)))"
+      },
+      {
+        "name": "Mβ",
+        "kind": "declaration",
+        "line": "Mβ : ∀ n → M (suc n) (Ωᴺ (suc n)) (Ωt (fin (suc n)))"
+      },
+      {
+        "name": "FD",
+        "kind": "datatype",
+        "line": "data FD (N : ℕ) : ℕ → Set where"
+      },
+      {
+        "name": "fd0",
+        "kind": "declaration",
+        "line": "fd0 : FD N N"
+      },
+      {
+        "name": "fds",
+        "kind": "declaration",
+        "line": "fds : ∀ {j} → FD N (suc j) → FD N j"
+      },
+      {
+        "name": "dn",
+        "kind": "declaration",
+        "line": "dn : ∀ {N j} → FD N j → Dn (fin N) (fin j)"
+      },
+      {
+        "name": "mvS",
+        "kind": "declaration",
+        "line": "mvS : ∀ {N j} (d : FD (suc N) (suc j)) (p : Pos (fin (suc j))) → slot N (mv (dn d) p) ≡ slot j p"
+      },
+      {
+        "name": "mvN",
+        "kind": "declaration",
+        "line": "mvN : ∀ {N j} (d : FD (suc N) (suc j)) (p : Pos (fin (suc j))) {ν} → Nw j p ν → Nw N (mv (dn d) p) ν"
+      },
+      {
+        "name": "mvL",
+        "kind": "declaration",
+        "line": "mvL : ∀ {N j} (d : FD (suc N) (suc j)) (p : Pos (fin (suc j))) {η} (c : Br (fin (suc N)) (mv (dn d) p))"
+      },
+      {
+        "name": "Pu⁰",
+        "kind": "declaration",
+        "line": "Pu⁰ : ∀ {N} (d : FD (suc N) zero) (b : Tr (fin (suc N))) (nb : fin (suc N) ⊢ zero ◃ b) {t}"
+      },
+      {
+        "name": "Pu",
+        "kind": "declaration",
+        "line": "Pu : ∀ {N} j (d : FD (suc N) j) (b : Tr (fin (suc N))) (nb : fin (suc N) ⊢ zero ◃ b) {t}"
+      },
+      {
+        "name": "Puˢ",
+        "kind": "declaration",
+        "line": "Puˢ : ∀ {N} j (d : FD (suc N) (suc j)) (b : Tr (fin (suc N))) (nb : fin (suc N) ⊢ zero ◃ b) {t}"
+      },
+      {
+        "name": "Self",
+        "kind": "module",
+        "line": "module Self (N : ℕ) (ε : Ev (fin (suc N))) (ρ : Rt (fin (suc N))) (B : Base (fin (suc N)))"
+      },
+      {
+        "name": "Self.F",
+        "kind": "declaration",
+        "line": "F : Tr (fin (suc N)) → Tr (fin (suc N))"
+      },
+      {
+        "name": "Self.nzF",
+        "kind": "declaration",
+        "line": "nzF : (x : Tr (fin (suc N))) → fin (suc N) ⊢ zero ◃ F x"
+      },
+      {
+        "name": "Self.monoF",
+        "kind": "declaration",
+        "line": "monoF : {x y : Tr (fin (suc N))} → fin (suc N) ⊢ x ◃ y → fin (suc N) ⊢ F x ◃ F y"
+      },
+      {
+        "name": "Self.PF",
+        "kind": "declaration",
+        "line": "PF : ∀ {P₀} → M (suc N) (ψᴺ (suc N) P₀) β → ∀ {a x} → M (suc N) a x → M (suc N) (ψᴺ (suc N) (P₀ ++ a)) (F x)"
+      },
+      {
+        "name": "Self.z",
+        "kind": "declaration",
+        "line": "z : ℕ → Tr (fin (suc N))"
+      },
+      {
+        "name": "Self.gch",
+        "kind": "declaration",
+        "line": "gch : E.T → ℕ → E.T"
+      },
+      {
+        "name": "Self.sγ",
+        "kind": "declaration",
+        "line": "sγ : ∀ {P₀} → M (suc N) (Ωᴺ (suc N)) β → M (suc N) (ψᴺ (suc N) P₀) β → ∀ k → M (suc N) (gch P₀ k) (z (suc k))"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANFam.lagda.md",
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTANFam.lagda.md"
+    ],
+    "sha256": "b1ee1e4c1b46fedda306beccb4824a68378755f8b4d1a2072079c32b8348ba96",
+    "bytes": 12738,
+    "code_lines": 214,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTANKp",
+    "target": "YiPMANKp.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "≤ⁿ-refl",
+        "kind": "declaration",
+        "line": "≤ⁿ-refl : ∀ a → a ≤ⁿ a"
+      },
+      {
+        "name": "≤ⁿ-trans",
+        "kind": "declaration",
+        "line": "≤ⁿ-trans : ∀ {a b c} → a ≤ⁿ b → b ≤ⁿ c → a ≤ⁿ c"
+      },
+      {
+        "name": "≤ⁿ-step",
+        "kind": "declaration",
+        "line": "≤ⁿ-step : ∀ {a b} → a ≤ⁿ b → a ≤ⁿ suc b"
+      },
+      {
+        "name": "≤ⁿ-pred",
+        "kind": "declaration",
+        "line": "≤ⁿ-pred : ∀ {a b} → suc a ≤ⁿ b → a ≤ⁿ b"
+      },
+      {
+        "name": "¬s≤",
+        "kind": "declaration",
+        "line": "¬s≤ : ∀ {a} → suc a ≤ⁿ a → ⊥"
+      },
+      {
+        "name": "cmpℕ",
+        "kind": "declaration",
+        "line": "cmpℕ : ∀ a b → (suc a ≤ⁿ b) ⊎ (b ≤ⁿ a)"
+      },
+      {
+        "name": "Ctx",
+        "kind": "datatype",
+        "line": "data Ctx (m : ℕ) : Set where"
+      },
+      {
+        "name": "•",
+        "kind": "declaration",
+        "line": "•   : Ctx m"
+      },
+      {
+        "name": "_▸_",
+        "kind": "declaration",
+        "line": "_▸_ : Ctx m → Tr (fin m) → Ctx m"
+      },
+      {
+        "name": "⟦_⟧",
+        "kind": "declaration",
+        "line": "⟦_⟧ : ∀ {m} → Ctx m → Tr (fin m) → Tr (fin m)"
+      },
+      {
+        "name": "cm",
+        "kind": "declaration",
+        "line": "cm : ∀ {m} (K : Ctx m) {x y : Tr (fin m)} → fin m ⊢ x ◃ y → fin m ⊢ ⟦ K ⟧ x ◃ ⟦ K ⟧ y"
+      },
+      {
+        "name": "c⊴",
+        "kind": "declaration",
+        "line": "c⊴ : ∀ {m} (K : Ctx m) {x y : Tr (fin m)} → x ⊴ y → ⟦ K ⟧ x ⊴ ⟦ K ⟧ y"
+      },
+      {
+        "name": "eΩ",
+        "kind": "declaration",
+        "line": "eΩ : ∀ {m} (K : Ctx m) (p : Pos (fin m)) (g : Br (fin m) p → Tr (fin m)) → ⟦ K ⟧ (Ω p g) ≡ Ω p (λ c → ⟦ K ⟧ (g c))"
+      },
+      {
+        "name": "eΩt",
+        "kind": "declaration",
+        "line": "eΩt : ∀ {n} (K : Ctx (suc n)) (x₀ : Tr (fin (suc n)))"
+      },
+      {
+        "name": "z⊴",
+        "kind": "declaration",
+        "line": "z⊴ : ∀ {S : Sg} (x : T S) → zero ⊴ x"
+      },
+      {
+        "name": "atP",
+        "kind": "declaration",
+        "line": "atP : (Fam : (i : ℕ) → Tr (fin i) → Set) (n : ℕ) (p : Pos (fin (suc n))) → Tr (at (fin (suc n)) p) → Set"
+      },
+      {
+        "name": "atP-map",
+        "kind": "declaration",
+        "line": "atP-map : ∀ {Fam Fam′ : (i : ℕ) → Tr (fin i) → Set} → (∀ i {x} → Fam i x → Fam′ i x)"
+      },
+      {
+        "name": "atP-up",
+        "kind": "declaration",
+        "line": "atP-up : ∀ {Fam : (i : ℕ) → Tr (fin i) → Set} → (∀ i {x x′} → Fam i x → fin i ⊢ x ◃ x′ → Fam i x′)"
+      },
+      {
+        "name": "atP-cum",
+        "kind": "declaration",
+        "line": "atP-cum : ∀ {Fam : (i : ℕ) → Tr (fin i) → Set}"
+      },
+      {
+        "name": "toLw",
+        "kind": "declaration",
+        "line": "toLw : ∀ n p (f : ℕ → E.T) {x} → atP (λ i y → M i (f i) y) n p x → Lw n p (f (slot n p)) (fromBr (fin (suc n)) p x)"
+      },
+      {
+        "name": "fo",
+        "kind": "declaration",
+        "line": "fo : (p : Pos ℓ) → Tr ℓ → Tr (at ℓ p)"
+      },
+      {
+        "name": "fo-nz",
+        "kind": "declaration",
+        "line": "fo-nz : (p : Pos ℓ) (V : Tr ℓ) → at ℓ p ⊢ zero ◃ fo p V"
+      },
+      {
+        "name": "fo-mono",
+        "kind": "declaration",
+        "line": "fo-mono : (p : Pos ℓ) {V V′ : Tr ℓ} → ℓ ⊢ V ◃ V′ → at ℓ p ⊢ fo p V ◃ fo p V′"
+      },
+      {
+        "name": "fo-⊴",
+        "kind": "declaration",
+        "line": "fo-⊴ : (p : Pos ℓ) {V V′ : Tr ℓ} → V ⊴ V′ → fo p V ⊴ fo p V′"
+      },
+      {
+        "name": "fo⊵",
+        "kind": "declaration",
+        "line": "fo⊵ : (p : Pos ℓ) (V : Tr ℓ) → bs D (at ℓ p) (posW ℓ p) ⊴ fo p V"
+      },
+      {
+        "name": "vch",
+        "kind": "declaration",
+        "line": "vch : (p₀ : Pos ℓ) (G : Br ℓ p₀ → Tr ℓ) → ℕ → Br ℓ p₀"
+      },
+      {
+        "name": "⊥-⊴",
+        "kind": "declaration",
+        "line": "⊥-⊴ : {V V′ : Tr ℓ} → V ⊴ V′ → ψ⊥ ℓ ε ρ D V ⊴ ψ⊥ ℓ ε ρ D V′"
+      },
+      {
+        "name": "kpDrop",
+        "kind": "declaration",
+        "line": "kpDrop : ∀ n (ε : Ev (fin (suc n))) (ρ : Rt (fin (suc n))) (p₀ p : Pos (fin (suc n))) → slot n p ≤ⁿ slot n p₀"
+      },
+      {
+        "name": "kpKeep",
+        "kind": "declaration",
+        "line": "kpKeep : (FamH : E.T → (i : ℕ) → Tr (fin i) → Set) (Fam : (i : ℕ) → Tr (fin i) → Set) (nB : ℕ) (ν : E.T)"
+      },
+      {
+        "name": "Tm",
+        "kind": "module",
+        "line": "module Tm (t : E.T) where"
+      },
+      {
+        "name": "Tm.trmS",
+        "kind": "declaration",
+        "line": "trmS : ℕ → E.T → E.T"
+      },
+      {
+        "name": "Tm.trmKS",
+        "kind": "declaration",
+        "line": "trmKS : ℕ → E.T → E.T"
+      },
+      {
+        "name": "Tm.ĉ",
+        "kind": "declaration",
+        "line": "ĉ : ℕ → E.T → ℕ → E.T"
+      },
+      {
+        "name": "Tm.lCof",
+        "kind": "declaration",
+        "line": "lCof : ∀ i q → cof q ≡ cω → cof (trmS i q) ≡ cω"
+      },
+      {
+        "name": "Tm.lFsn",
+        "kind": "declaration",
+        "line": "lFsn : ∀ i q k → cof q ≡ cω → fsn (trmS i q) k ≡ trmS i (fsn q k)"
+      },
+      {
+        "name": "Tm.γ≡ĉ",
+        "kind": "declaration",
+        "line": "γ≡ĉ : ∀ i₀ q k → γT q (natT (suc i₀)) k ≡ ĉ (suc i₀) q k"
+      },
+      {
+        "name": "Tm.gCof",
+        "kind": "declaration",
+        "line": "gCof : ∀ i i₀ q → i ≤ⁿ i₀ → cof q ≡ cΩ (natT i₀) → cof (trmS i q) ≡ cω"
+      },
+      {
+        "name": "Tm.gFsn",
+        "kind": "declaration",
+        "line": "gFsn : ∀ i i₀ q k → i ≤ⁿ i₀ → cof q ≡ cΩ (natT i₀) → fsn (trmS i q) k ≡ trmS i (fsT q (ĉ i₀ q k))"
+      },
+      {
+        "name": "Tm.Gd",
+        "kind": "datatype",
+        "line": "record Gd (n : ℕ) (D : Base (fin (suc n))) : Set where"
+      },
+      {
+        "name": "Tm.Gd.gok",
+        "kind": "declaration",
+        "line": "gok : OKB (fin (suc n)) D"
+      },
+      {
+        "name": "Tm.Gd.g⊥",
+        "kind": "declaration",
+        "line": "g⊥  : M⁰ (ψᴺ 0 t) (b⊥ D)"
+      },
+      {
+        "name": "Tm.Gd.g0",
+        "kind": "declaration",
+        "line": "g0  : (w : zero ≤ fin (suc n)) → M⁰ (ψᴺ 0 t) (bs D zero w)"
+      },
+      {
+        "name": "open Gd public",
+        "kind": "public-open",
+        "line": "open Gd public"
+      },
+      {
+        "name": "Tm.gd-dS",
+        "kind": "declaration",
+        "line": "gd-dS : ∀ n (ε : Ev (fin (suc (suc n)))) (ρ : Rt (fin (suc (suc n)))) (D : Base (fin (suc (suc n))))"
+      },
+      {
+        "name": "Tm.GF",
+        "kind": "declaration",
+        "line": "GF : (i : ℕ) → Tr (fin i) → Set"
+      },
+      {
+        "name": "Tm.gB′",
+        "kind": "declaration",
+        "line": "gB′ : ∀ {ℓ′} (B′ : Base ℓ′) → OKB ℓ′ B′ → ((w : zero ≤ ℓ′) → M⁰ (ψᴺ 0 t) (bs B′ zero w))"
+      },
+      {
+        "name": "Tm.gBs",
+        "kind": "declaration",
+        "line": "gBs : ∀ n (D : Base (fin (suc n))) → Gd n D → (p : Pos (fin (suc n)))"
+      },
+      {
+        "name": "Tm.ΩR",
+        "kind": "declaration",
+        "line": "ΩR : ∀ n p {b x} → atP GF n p b → b ⊴ x → at (fin (suc n)) p ⊢ zero ◃ x"
+      },
+      {
+        "name": "Tm.One",
+        "kind": "module",
+        "line": "module One (ε : Ev (fin 1)) (ρ : Rt (fin 1)) (D : Base (fin 1)) (g : Gd 0 D) where"
+      },
+      {
+        "name": "Tm.One.QH1",
+        "kind": "declaration",
+        "line": "QH1 : ∀ {s y} → M 1 s y → M⁰ (ψᴺ 0 (t ++ s)) (fo 0 ε ρ D (inj₁ tt) y)"
+      },
+      {
+        "name": "Tm.One.VW1",
+        "kind": "declaration",
+        "line": "VW1 : ∀ {s y} → M 1 s y → M⁰ (ψᴺ 0 (t ++ s)) (ψ⊥ (fin 1) ε ρ D y)"
+      },
+      {
+        "name": "MβC",
+        "kind": "declaration",
+        "line": "MβC : ∀ n (K : Ctx (suc n)) → M (suc n) (Ωᴺ (suc n)) (⟦ K ⟧ (Ωt (fin (suc n))))"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANLv.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTANKp.lagda.md"
+    ],
+    "sha256": "2d5423ee5f5027fbb58d7257e1dcb27f7f0887a7c47ef610e31694d6505f1808",
+    "bytes": 14357,
+    "code_lines": 226,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTANLv",
+    "target": "YiPMANLv.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "split≤",
+        "kind": "declaration",
+        "line": "split≤ : ∀ {j m} → j ≤ⁿ m → (j ≡ m) ⊎ (suc j ≤ⁿ m)"
+      },
+      {
+        "name": "Lv",
+        "kind": "module",
+        "line": "module Lv (t : E.T) where"
+      },
+      {
+        "name": "Lv.Bot",
+        "kind": "declaration",
+        "line": "Bot : E.T → (i : ℕ) → Tr (fin i) → Set"
+      },
+      {
+        "name": "Lv.bot-up",
+        "kind": "declaration",
+        "line": "bot-up : ∀ q i {x x′} → Bot q i x → fin i ⊢ x ◃ x′ → Bot q i x′"
+      },
+      {
+        "name": "Lv.bot-cum",
+        "kind": "declaration",
+        "line": "bot-cum : ∀ q i (Z : ℕ → Tr (fin i)) (nz : ∀ k → fin i ⊢ zero ◃ Z k) k → Bot q i (Z k) → Bot q i (limc Z nz)"
+      },
+      {
+        "name": "Lv.B0",
+        "kind": "declaration",
+        "line": "B0 : ∀ n (ε : Ev (fin (suc n))) (ρ : Rt (fin (suc n))) (D : Base (fin (suc n))) → E.T → Tr (fin (suc n)) → Set"
+      },
+      {
+        "name": "Lv.B0-up",
+        "kind": "declaration",
+        "line": "B0-up : ∀ n ε ρ D {q V V′} → B0 n ε ρ D q V → V ⊴ V′ → B0 n ε ρ D q V′"
+      },
+      {
+        "name": "Lv.rootΩ",
+        "kind": "declaration",
+        "line": "rootΩ : ∀ n ε ρ D → Gd n D → (K : Ctx (suc n)) (V : Tr (fin (suc n))) → ⟦ K ⟧ (Ωt (fin (suc n))) ⊴ V"
+      },
+      {
+        "name": "Lv.Her",
+        "kind": "declaration",
+        "line": "Her : (i : ℕ) → E.T → Tr (fin i) → Set"
+      },
+      {
+        "name": "Lv.RelP",
+        "kind": "declaration",
+        "line": "RelP : (n : ℕ) (p : Pos (fin (suc n))) → (ℕ → E.T) → Tr (at (fin (suc n)) p) → Set"
+      },
+      {
+        "name": "Lv.Cl",
+        "kind": "declaration",
+        "line": "Cl : ∀ n (ε : Ev (fin (suc n))) (ρ : Rt (fin (suc n))) (D : Base (fin (suc n))) → E.T → Tr (fin (suc n)) → Set"
+      },
+      {
+        "name": "Lv.Kn",
+        "kind": "declaration",
+        "line": "Kn : ∀ n (ε : Ev (fin (suc n))) (ρ : Rt (fin (suc n))) (D : Base (fin (suc n))) → Ctx (suc n) → E.T → Set"
+      },
+      {
+        "name": "Lv.TC",
+        "kind": "declaration",
+        "line": "TC : ∀ n (ε : Ev (fin (suc n))) (ρ : Rt (fin (suc n))) (D : Base (fin (suc n))) → E.T → Tr (fin (suc n)) → Set"
+      },
+      {
+        "name": "Lv.toAt",
+        "kind": "declaration",
+        "line": "toAt : ∀ n p (f : ℕ → E.T) {x} → RelP n p f x → atP (λ i y → M i (f i) y × Her i (f i) y) n p x"
+      },
+      {
+        "name": "Lv.fromAt",
+        "kind": "declaration",
+        "line": "fromAt : ∀ n p (f : ℕ → E.T) {x} → atP (λ i y → M i (f i) y × Her i (f i) y) n p x → RelP n p f x"
+      },
+      {
+        "name": "Lv.relM",
+        "kind": "declaration",
+        "line": "relM : ∀ n p (f : ℕ → E.T) {x} → RelP n p f x → atP (λ i y → M i (f i) y) n p x"
+      },
+      {
+        "name": "Lv.relBot",
+        "kind": "declaration",
+        "line": "relBot : ∀ n p q {x} → RelP n p (λ i → trmS i q) x → atP (Bot q) n p x"
+      },
+      {
+        "name": "Lv.Th",
+        "kind": "datatype",
+        "line": "record Th (m : ℕ) : Set where"
+      },
+      {
+        "name": "Lv.Th.tcUp",
+        "kind": "declaration",
+        "line": "tcUp   : ∀ ε ρ D → Gd (suc m) D → ∀ {p Y Y′} → TC (suc m) ε ρ D p Y → fin (suc (suc m)) ⊢ Y ◃ Y′"
+      },
+      {
+        "name": "Lv.Th.tcLim",
+        "kind": "declaration",
+        "line": "tcLim  : ∀ ε ρ D → Gd (suc m) D → ∀ {b Y} → cof b ≡ cω → (∀ k → TC (suc m) ε ρ D (fsn b k) Y)"
+      },
+      {
+        "name": "Lv.Th.tcLimc",
+        "kind": "declaration",
+        "line": "tcLimc : ∀ ε ρ D → Gd (suc m) D → ∀ {b} (Z : ℕ → Tr (fin (suc (suc m))))"
+      },
+      {
+        "name": "Lv.Th.tcNode",
+        "kind": "declaration",
+        "line": "tcNode : ∀ ε ρ D → Gd (suc m) D → ∀ {b ν} (p₀ : Pos (fin (suc (suc m))))"
+      },
+      {
+        "name": "Lv.Th.tcLeaf",
+        "kind": "declaration",
+        "line": "tcLeaf : ∀ ε ρ D → Gd (suc m) D → TC (suc m) ε ρ D (Ωᴺ (suc (suc m))) (Ωt (fin (suc (suc m))))"
+      },
+      {
+        "name": "Lv.Th.tcMain",
+        "kind": "declaration",
+        "line": "tcMain : ∀ ε ρ D → Gd (suc m) D → ∀ ε₀ ρ₀ D₀ β nβ → Ωt (fin (suc (suc m))) ⊴ β"
+      },
+      {
+        "name": "Lv.Low",
+        "kind": "declaration",
+        "line": "Low : ℕ → Set"
+      },
+      {
+        "name": "Lv.SubRow",
+        "kind": "declaration",
+        "line": "SubRow : ℕ → Set"
+      },
+      {
+        "name": "Lv.subOf",
+        "kind": "declaration",
+        "line": "subOf : ∀ m → Low m → SubRow m"
+      },
+      {
+        "name": "Lv.Level",
+        "kind": "module",
+        "line": "module Level (m : ℕ) (low : Low m) where"
+      },
+      {
+        "name": "Lv.Level.herUp",
+        "kind": "declaration",
+        "line": "herUp : ∀ i → i ≤ⁿ suc m → ∀ {p x x′} → Her i p x → fin i ⊢ x ◃ x′ → Her i p x′"
+      },
+      {
+        "name": "Lv.Level.herLim",
+        "kind": "declaration",
+        "line": "herLim : ∀ i → i ≤ⁿ suc m → ∀ {p x} → cof p ≡ cω → (∀ k → Her i (fsn p k) x) → Her i p x"
+      },
+      {
+        "name": "Lv.Level.herLimc",
+        "kind": "declaration",
+        "line": "herLimc : ∀ i → i ≤ⁿ suc m → ∀ {p} (Z : ℕ → Tr (fin i)) (nz : ∀ k → fin i ⊢ zero ◃ Z k) (κ : ℕ → ℕ)"
+      },
+      {
+        "name": "Lv.Level.herNode",
+        "kind": "declaration",
+        "line": "herNode : ∀ i → suc i ≤ⁿ suc m → ∀ {p ν} (q : Pos (fin (suc i))) (Z : Br (fin (suc i)) q → Tr (fin (suc i)))"
+      },
+      {
+        "name": "Lv.Level.relUp",
+        "kind": "declaration",
+        "line": "relUp : ∀ n′ → n′ ≤ⁿ suc m → ∀ p f {x x′} → RelP n′ p f x → at (fin (suc n′)) p ⊢ x ◃ x′ → RelP n′ p f x′"
+      },
+      {
+        "name": "Lv.Level.relUp⊴",
+        "kind": "declaration",
+        "line": "relUp⊴ : ∀ n′ → n′ ≤ⁿ suc m → ∀ p f {x x′} → RelP n′ p f x → x ⊴ x′ → RelP n′ p f x′"
+      },
+      {
+        "name": "Lv.Level.relLim",
+        "kind": "declaration",
+        "line": "relLim : ∀ n′ → n′ ≤ⁿ suc m → ∀ p (f : ℕ → E.T) (fk : ℕ → ℕ → E.T) {x}"
+      },
+      {
+        "name": "Lv.Level.relLimc",
+        "kind": "declaration",
+        "line": "relLimc : ∀ n′ → n′ ≤ⁿ suc m → ∀ p (f : ℕ → E.T) (fk : ℕ → ℕ → E.T)"
+      },
+      {
+        "name": "Lv.Level.rootRel",
+        "kind": "declaration",
+        "line": "rootRel : ∀ {ℓ′} (B′ : Base ℓ′) → OKB ℓ′ B′"
+      },
+      {
+        "name": "Lv.Level.Bs",
+        "kind": "module",
+        "line": "module Bs (ε : Ev ℓ) (ρ : Rt ℓ) (D : Base ℓ) (g : Gd (suc m) D) where"
+      },
+      {
+        "name": "Lv.Level.Bs.ClD",
+        "kind": "declaration",
+        "line": "ClD : E.T → Tr ℓ → Set"
+      },
+      {
+        "name": "Lv.Level.Bs.KnD",
+        "kind": "declaration",
+        "line": "KnD : Ctx N → E.T → Set"
+      },
+      {
+        "name": "Lv.Level.Bs.TCD",
+        "kind": "declaration",
+        "line": "TCD : E.T → Tr ℓ → Set"
+      },
+      {
+        "name": "Lv.Level.Bs.fo′",
+        "kind": "declaration",
+        "line": "fo′ : (p : Pos ℓ) → Tr ℓ → Tr (at ℓ p)"
+      },
+      {
+        "name": "Lv.Level.Bs.Cl-up◃",
+        "kind": "declaration",
+        "line": "Cl-up◃ : ∀ {q V V′} → ClD q V → ℓ ⊢ V ◃ V′ → ClD q V′"
+      },
+      {
+        "name": "Lv.Level.Bs.Cl-up⊴",
+        "kind": "declaration",
+        "line": "Cl-up⊴ : ∀ {q V V′} → ClD q V → V ⊴ V′ → ClD q V′"
+      },
+      {
+        "name": "Lv.Level.Bs.Cl-lim",
+        "kind": "declaration",
+        "line": "Cl-lim : ∀ {q V} → cof q ≡ cω → (∀ k → ClD (fsn q k) V) → ClD q V"
+      },
+      {
+        "name": "Lv.Level.Bs.tcUp◃",
+        "kind": "declaration",
+        "line": "tcUp◃ : ∀ {p Y Y′} → TCD p Y → ℓ ⊢ Y ◃ Y′ → TCD p Y′"
+      },
+      {
+        "name": "Lv.Level.Bs.tcUp⊴",
+        "kind": "declaration",
+        "line": "tcUp⊴ : ∀ {p Y Y′} → TCD p Y → Y ⊴ Y′ → TCD p Y′"
+      },
+      {
+        "name": "Lv.Level.Bs.tcLim",
+        "kind": "declaration",
+        "line": "tcLim : ∀ {b Y} → cof b ≡ cω → (∀ k → TCD (fsn b k) Y) → TCD b Y"
+      },
+      {
+        "name": "Lv.Level.Bs.knRoot",
+        "kind": "declaration",
+        "line": "knRoot : KnD • []"
+      },
+      {
+        "name": "Lv.Level.Bs.ext",
+        "kind": "declaration",
+        "line": "ext : ∀ {K A₀ p Y} → KnD K A₀ → TCD p Y → KnD (K ▸ Y) (A₀ ++ p)"
+      },
+      {
+        "name": "Lv.Level.Bs.knJunk",
+        "kind": "declaration",
+        "line": "knJunk : ∀ {K A₀} → KnD K A₀ → (a : Tr ℓ) → KnD (K ▸ a) A₀"
+      },
+      {
+        "name": "Lv.Level.Bs.knCl",
+        "kind": "declaration",
+        "line": "knCl : ∀ {K A₀} → KnD K A₀ → (V : Tr ℓ) → ⟦ K ⟧ zero ⊴ V → B0 (suc m) ε ρ D [] V → ClD A₀ V"
+      },
+      {
+        "name": "Lv.Level.Bs.tcLimc",
+        "kind": "declaration",
+        "line": "tcLimc : ∀ {b} (Z : ℕ → Tr ℓ) (nz : ∀ k → ℓ ⊢ zero ◃ Z k) (κ : ℕ → ℕ) → cof b ≡ cω"
+      },
+      {
+        "name": "Lv.Level.Bs.Nd",
+        "kind": "module",
+        "line": "module Nd (p₀ : Pos ℓ) (s : E.T) (e : cof s ≡ cΩ (natT (slot (suc m) p₀))) (G : Br ℓ p₀ → Tr ℓ) where"
+      },
+      {
+        "name": "Lv.Level.Bs.Nd.i₀",
+        "kind": "declaration",
+        "line": "i₀ : ℕ"
+      },
+      {
+        "name": "Lv.Level.Bs.Nd.vc",
+        "kind": "declaration",
+        "line": "vc : ℕ → Br ℓ p₀"
+      },
+      {
+        "name": "Lv.Level.Bs.Nd.sk",
+        "kind": "declaration",
+        "line": "sk : ℕ → E.T"
+      },
+      {
+        "name": "Lv.Level.Bs.Nd.dropP",
+        "kind": "declaration",
+        "line": "dropP : ∀ p → slot (suc m) p ≤ⁿ i₀ → (κ : ℕ → ℕ)"
+      },
+      {
+        "name": "Lv.Level.Bs.Nd.bot⊥",
+        "kind": "declaration",
+        "line": "bot⊥ : (κ : ℕ → ℕ) → (∀ k → M⁰ (trmS 0 (sk k)) (ψ⊥ ℓ ε ρ D (G (vc (κ k)))))"
+      },
+      {
+        "name": "Lv.Level.Bs.nodeCl",
+        "kind": "declaration",
+        "line": "nodeCl : (p₀ : Pos ℓ) (s : E.T) {ν : E.T} → cof s ≡ cΩ ν → Nw (suc m) p₀ ν → (G : Br ℓ p₀ → Tr ℓ)"
+      },
+      {
+        "name": "Lv.Level.Bs.tcNode",
+        "kind": "declaration",
+        "line": "tcNode : ∀ {b ν} (p₀ : Pos ℓ) (G₀ : Br ℓ p₀ → Tr ℓ) → cof b ≡ cΩ ν → Nw (suc m) p₀ ν"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf",
+        "kind": "module",
+        "line": "module Leaf (K : Ctx N) (A₀ : E.T) (kn : KnD K A₀) where"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.X₀",
+        "kind": "declaration",
+        "line": "X₀ : Tr ℓ"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.gL",
+        "kind": "declaration",
+        "line": "gL : Tr (fin (suc m)) → Tr ℓ"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.D₀",
+        "kind": "declaration",
+        "line": "D₀ : Base (fin (suc m))"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.g₀",
+        "kind": "declaration",
+        "line": "g₀ : Gd m D₀"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.βX",
+        "kind": "declaration",
+        "line": "βX : Tr (fin (suc m))"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.nβX",
+        "kind": "declaration",
+        "line": "nβX : fin (suc m) ⊢ zero ◃ βX"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.s",
+        "kind": "declaration",
+        "line": "s : E.T"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.e",
+        "kind": "declaration",
+        "line": "e : cof s ≡ cΩ (natT (suc m))"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.fs",
+        "kind": "declaration",
+        "line": "fs : ∀ η → fsT s η ≡ A₀ ++ η"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.hΩ",
+        "kind": "declaration",
+        "line": "hΩ : Ωt (fin (suc m)) ⊴ βX"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.hΩM",
+        "kind": "declaration",
+        "line": "hΩM : M (suc m) (Ωᴺ (suc m)) βX"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.hP",
+        "kind": "declaration",
+        "line": "hP : M (suc m) (ψᴺ (suc m) A₀) βX × Her (suc m) (ψᴺ (suc m) A₀) βX"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.kb₀",
+        "kind": "declaration",
+        "line": "kb₀ : (V′ : Tr (fin (suc m))) → zero ⊴ V′ → B0 m ε ρ D₀ [] V′ → B0 m ε ρ D₀ A₀ V′"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.kn₀",
+        "kind": "declaration",
+        "line": "kn₀ : Kn m ε ρ D₀ • A₀"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.sub",
+        "kind": "declaration",
+        "line": "sub : (∀ k → Σ ℕ λ k′ → Cl m ε ρ D₀ (A₀ ++ gch A₀ k) (z k′))"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.ĉ≡",
+        "kind": "declaration",
+        "line": "ĉ≡ : ∀ k → ĉ (suc m) s k ≡ gch A₀ k"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.skq",
+        "kind": "declaration",
+        "line": "skq : ∀ k → sk k ≡ A₀ ++ gch A₀ k"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.κ",
+        "kind": "declaration",
+        "line": "κ : Pos ℓ → ℕ → ℕ"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.rows",
+        "kind": "declaration",
+        "line": "rows : ∀ p k → RelP (suc m) p (λ i → trmS i (sk k)) (fo′ p (gL (vc (κ p k))))"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.rows⊥",
+        "kind": "declaration",
+        "line": "rows⊥ : ∀ k → M⁰ (trmS 0 (sk k)) (ψ⊥ ℓ ε ρ D (gL (vc (proj₁ (proj₁ sub k)))))"
+      },
+      {
+        "name": "Lv.Level.Bs.Leaf.leafCl",
+        "kind": "declaration",
+        "line": "leafCl : ClD s (Ω (inj₁ tt) gL)"
+      },
+      {
+        "name": "Lv.Level.Bs.tcLeaf",
+        "kind": "declaration",
+        "line": "tcLeaf : TCD (Ωᴺ N) (Ωt ℓ)"
+      },
+      {
+        "name": "Lv.Level.Bs.Nx",
+        "kind": "module",
+        "line": "module Nx (b : E.T) (e : cof b ≡ c1) (Y : Tr ℓ) (nz : ℓ ⊢ zero ◃ Y) (hY : Ωt ℓ ⊴ Y)"
+      },
+      {
+        "name": "Lv.Level.Bs.Nx.p′",
+        "kind": "declaration",
+        "line": "p′ : E.PT"
+      },
+      {
+        "name": "Lv.Level.Bs.Nx.stepN",
+        "kind": "declaration",
+        "line": "stepN : ∀ j K A₀ → KnD K A₀ → ClD (A₀ ++ replicate (suc j) p′) (⟦ K ⟧ (iter (Y +_) Y j))"
+      },
+      {
+        "name": "Lv.Level.Bs.Nx.nextL",
+        "kind": "declaration",
+        "line": "nextL : TCD (ψᴺ N b) (next Y nz)"
+      },
+      {
+        "name": "Lv.Level.Bs.Tu⁰",
+        "kind": "declaration",
+        "line": "Tu⁰ : (d : FD N zero) (b : Tr ℓ) (nb : ℓ ⊢ zero ◃ b) → Ωt ℓ ⊴ b → ∀ {t′} → TCD (ψᴺ N t′) b"
+      },
+      {
+        "name": "Lv.Level.Bs.Tu",
+        "kind": "declaration",
+        "line": "Tu : ∀ j (d : FD N j) (b : Tr ℓ) (nb : ℓ ⊢ zero ◃ b) → Ωt ℓ ⊴ b → ∀ {t′} → TCD (ψᴺ N t′) b"
+      },
+      {
+        "name": "Lv.Level.Bs.Tuˢ",
+        "kind": "declaration",
+        "line": "Tuˢ : ∀ j (d : FD N (suc j)) (b : Tr ℓ) (nb : ℓ ⊢ zero ◃ b) → Ωt ℓ ⊴ b → ∀ {t′} → TCD (ψᴺ N t′) b"
+      },
+      {
+        "name": "Lv.Level.Bs.Mn",
+        "kind": "module",
+        "line": "module Mn (ε₀ : Ev ℓ) (ρ₀ : Rt ℓ) (D₀ : Base ℓ) (β : Tr ℓ) (nβ : ℓ ⊢ zero ◃ β) (hβ : Ωt ℓ ⊴ β) where"
+      },
+      {
+        "name": "Lv.Level.Bs.Mn.F⊵",
+        "kind": "declaration",
+        "line": "F⊵ : (x : Tr ℓ) → Ωt ℓ ⊴ F x"
+      },
+      {
+        "name": "Lv.Level.Bs.Mn.main",
+        "kind": "declaration",
+        "line": "main : ∀ {P₀} → TCD (ψᴺ N P₀) β → ∀ {a x} → M N a x → TCD (ψᴺ N (P₀ ++ a)) (F x)"
+      },
+      {
+        "name": "Lv.Level.mk",
+        "kind": "declaration",
+        "line": "mk : Th m"
+      },
+      {
+        "name": "Lv.thB",
+        "kind": "declaration",
+        "line": "thB : ∀ m → Low m"
+      },
+      {
+        "name": "Lv.th",
+        "kind": "declaration",
+        "line": "th : ∀ m → Th m"
+      },
+      {
+        "name": "Lv.Anchor",
+        "kind": "module",
+        "line": "module Anchor (m : ℕ) (ε : Ev (fin (suc (suc (suc m))))) (ρ : Rt (fin (suc (suc (suc m)))))"
+      },
+      {
+        "name": "Lv.Anchor.Dᵃ",
+        "kind": "declaration",
+        "line": "Dᵃ : Base ℓ"
+      },
+      {
+        "name": "Lv.Anchor.gᵃ",
+        "kind": "declaration",
+        "line": "gᵃ : Gd (suc m) Dᵃ"
+      },
+      {
+        "name": "Lv.Anchor.β",
+        "kind": "declaration",
+        "line": "β : Tr ℓ"
+      },
+      {
+        "name": "Lv.Anchor.nβ",
+        "kind": "declaration",
+        "line": "nβ : ℓ ⊢ zero ◃ β"
+      },
+      {
+        "name": "Lv.Anchor.hβ",
+        "kind": "declaration",
+        "line": "hβ : Ωt ℓ ⊴ β"
+      },
+      {
+        "name": "open Self (suc m) ε ρ Dᵃ β nβ public",
+        "kind": "public-open",
+        "line": "open Self (suc m) ε ρ Dᵃ β nβ public"
+      },
+      {
+        "name": "Lv.Anchor.W",
+        "kind": "declaration",
+        "line": "W : Tr ℓ → Tr zero"
+      },
+      {
+        "name": "Lv.Anchor.nzW",
+        "kind": "declaration",
+        "line": "nzW : (x : Tr ℓ) → zero ⊢ zero ◃ W x"
+      },
+      {
+        "name": "Lv.Anchor.tcβ",
+        "kind": "declaration",
+        "line": "tcβ : TCD (ψᴺ N []) β"
+      },
+      {
+        "name": "Lv.Anchor.hΩM",
+        "kind": "declaration",
+        "line": "hΩM : M N (Ωᴺ N) β"
+      },
+      {
+        "name": "Lv.Anchor.rowW",
+        "kind": "declaration",
+        "line": "rowW : ∀ k → M⁰ (ψᴺ 0 (t ++ ψᴺ 1 (gch [] k))) (W (F (z k)))"
+      },
+      {
+        "name": "Lv.Anchor.form",
+        "kind": "declaration",
+        "line": "form : ψ⊥ (suc ℓ) ε ρ B′ (Ωt (suc ℓ))"
+      },
+      {
+        "name": "Lv.Anchor.row",
+        "kind": "declaration",
+        "line": "row : ∀ k → M⁰ (ψᴺ 0 (t ++ ψᴺ 1 (gch [] k))) (ψ⊥ (suc ℓ) ε ρ B′ (Ωt (suc ℓ)))"
+      },
+      {
+        "name": "Lv.Anchor.γ≡",
+        "kind": "declaration",
+        "line": "γ≡ : ∀ k → γT (Ωᴺ (suc N)) (natT N) k ≡ gch [] k"
+      },
+      {
+        "name": "Lv.Anchor.cΩ₁",
+        "kind": "declaration",
+        "line": "cΩ₁ : cof (ψᴺ 1 (Ωᴺ (suc N))) ≡ cω"
+      },
+      {
+        "name": "Lv.Anchor.fΩ₁",
+        "kind": "declaration",
+        "line": "fΩ₁ : ∀ k → fsn (ψᴺ 1 (Ωᴺ (suc N))) k ≡ ψᴺ 1 (gch [] k)"
+      },
+      {
+        "name": "Lv.Anchor.anchor",
+        "kind": "declaration",
+        "line": "anchor : M⁰ (ψᴺ 0 (t ++ ψᴺ 1 (Ωᴺ (suc N)))) (ψ⊥ (suc ℓ) ε ρ B′ (Ωt (suc ℓ)))"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTANLv.lagda.md"
+    ],
+    "sha256": "523f1fecbceebbdfe326f7b9eb81b6b1bd338de44bca2c5d8e9bf3ac94476a92",
+    "bytes": 39499,
+    "code_lines": 588,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTANReach",
+    "target": "YiPMANReach.F tbᶠ",
+    "category": "import-only-copy",
+    "exports": [
+      {
+        "name": "Reach",
+        "kind": "module",
+        "line": "module Reach (n₀ : LF) (t : E.T) where"
+      },
+      {
+        "name": "Reach.LoG",
+        "kind": "declaration",
+        "line": "LoG : (ℓ : LF) → Ev ℓ → Rt ℓ → Base ℓ → Set"
+      },
+      {
+        "name": "Reach.Anchor",
+        "kind": "declaration",
+        "line": "Anchor : Set"
+      },
+      {
+        "name": "Reach.reachG",
+        "kind": "declaration",
+        "line": "reachG : Anchor → ∀ {ℓ} → n₀ ⇐ ℓ → (ε : Ev ℓ) (ρ : Rt ℓ) (B : Base ℓ) → OKB ℓ B → Hi ℓ B → LoG ℓ ε ρ B"
+      },
+      {
+        "name": "reach₂",
+        "kind": "declaration",
+        "line": "reach₂ : ∀ {ℓ} → two ⇐ ℓ → (ε : Ev ℓ) (ρ : Rt ℓ) (B : Base ℓ) → OKB ℓ B → Hi ℓ B → Lo ℓ ε ρ B"
+      },
+      {
+        "name": "reach₃",
+        "kind": "declaration",
+        "line": "reach₃ : ∀ {ℓ} → three ⇐ ℓ → (ε : Ev ℓ) (ρ : Rt ℓ) (B : Base ℓ) → OKB ℓ B → Hi ℓ B → Lo³ ℓ ε ρ B"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTANReach.lagda.md"
+    ],
+    "sha256": "bf195d5b33f044139491666a092b9a6779d766f92f77b052c577516e6e99d323",
+    "bytes": 2803,
+    "code_lines": 40,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTLSFold",
+    "target": "YiPMLSFold.F tbᶠ",
+    "category": "hand-edited-copy",
+    "exports": [
+      {
+        "name": "+ι⊴",
+        "kind": "declaration",
+        "line": "+ι⊴ : ∀ {j} (b : Tr j) (c : Tr zero) → j ⊢ b ⊴ b + ι j c"
+      },
+      {
+        "name": "Up-⊵",
+        "kind": "declaration",
+        "line": "Up-⊵ : ∀ {ℓ} (j : LF) (d : Dn ℓ j) (b : Tr ℓ) (nb : ℓ ⊢ zero ◃ b) (y : Tr j) → ℓ ⊢ b ⊴ Up j d b nb y"
+      },
+      {
+        "name": "Upc-⊵",
+        "kind": "declaration",
+        "line": "Upc-⊵ : (ℓ : LF) (c : Ch ℓ) (b : Tr ℓ) (nb : ℓ ⊢ zero ◃ b) (y : ChT ℓ c) → ℓ ⊢ b ⊴ Upc ℓ c b nb y"
+      },
+      {
+        "name": "ψ⊥-⊵",
+        "kind": "declaration",
+        "line": "ψ⊥-⊵ : (ℓ : LF) (ε : Ev ℓ) (ρ : Rt ℓ) (B : Base ℓ) (x : Tr ℓ) → zero ⊢ b⊥ B ⊴ ψ⊥ ℓ ε ρ B x"
+      },
+      {
+        "name": "ψs-⊵",
+        "kind": "declaration",
+        "line": "ψs-⊵ : (ℓ : LF) (ε : Ev ℓ) (ρ : Rt ℓ) (B : Base ℓ) (j : LF) (w : j ≤ ℓ) (β : Tr j) (nβ : j ⊢ zero ◃ β) (x : Tr ℓ)"
+      },
+      {
+        "name": "OKB",
+        "kind": "declaration",
+        "line": "OKB : (ℓ : LF) → Base ℓ → Set"
+      },
+      {
+        "name": "ok-B₀",
+        "kind": "declaration",
+        "line": "ok-B₀ : (ℓ : LF) → OKB ℓ (B₀ ℓ)"
+      },
+      {
+        "name": "ok-dS",
+        "kind": "declaration",
+        "line": "ok-dS : ∀ {a} (ε : Ev (suc a)) (ρ : Rt (suc a)) (B : Base (suc a)) → OKB (suc a) B → (t : Tr (suc a))"
+      },
+      {
+        "name": "ok-dL",
+        "kind": "declaration",
+        "line": "ok-dL : (g : ℕ → LF) (ε : Ev (lim g)) (ρ : Rt (lim g)) (B : Base (lim g)) → OKB (lim g) B → (n : ℕ) (t : Tr (lim g))"
+      },
+      {
+        "name": "NL",
+        "kind": "datatype",
+        "line": "data NL : LF → Set where"
+      },
+      {
+        "name": "n0",
+        "kind": "declaration",
+        "line": "n0 : NL zero"
+      },
+      {
+        "name": "n+",
+        "kind": "declaration",
+        "line": "n+ : ∀ {a} → NL a → NL (suc a)"
+      },
+      {
+        "name": "nω",
+        "kind": "declaration",
+        "line": "nω : ∀ {g} → ((n : ℕ) → NL (g n)) → NL (lim g)"
+      },
+      {
+        "name": "nlW",
+        "kind": "declaration",
+        "line": "nlW : ∀ {j ℓ} → j ≤ ℓ → NL ℓ → NL j"
+      },
+      {
+        "name": "nl-at",
+        "kind": "declaration",
+        "line": "nl-at : ∀ {ℓ} → NL ℓ → (p : Pos ℓ) → NL (at ℓ p)"
+      },
+      {
+        "name": "nl-at⁼",
+        "kind": "declaration",
+        "line": "nl-at⁼ : ∀ {a} → NL a → (t : Pos⁼ a) → NL (at⁼ a t)"
+      },
+      {
+        "name": "POS",
+        "kind": "declaration",
+        "line": "POS : ∀ {m} → NL m → (s : Pos m) → ∀ {j i} → Corr j (at m s) → Corr i m → j ≺ᴵ i"
+      },
+      {
+        "name": "notBelow",
+        "kind": "declaration",
+        "line": "notBelow : ∀ {j a} (w : j ≤ a) → NL a → ∀ {i i′} → Corr i j → Corr i′ a → ¬ (i′ ≺ᴵ i)"
+      },
+      {
+        "name": "psh-at",
+        "kind": "declaration",
+        "line": "psh-at : ∀ {k a} (v : k ≤ a) (t : Pos⁼ k) → at⁼ a (pshP v t) ≡ at⁼ k t"
+      },
+      {
+        "name": "psh-rel",
+        "kind": "declaration",
+        "line": "psh-rel : ∀ {k a} (v : k ≤ a) (t : Pos⁼ k) → ∀ {i} {y : L.Ordᶜ i} {z : Br⁼ a (pshP v t)}"
+      },
+      {
+        "name": "Keep",
+        "kind": "datatype",
+        "line": "record Keep (lv : LF) (BrT : Set) (RP : ∀ {i} → L.Ordᶜ i → BrT → Set)"
+      },
+      {
+        "name": "Keep.lev",
+        "kind": "declaration",
+        "line": "lev   : at j q ≡ lv"
+      },
+      {
+        "name": "Keep.conv",
+        "kind": "declaration",
+        "line": "conv  : ∀ {i} {y : L.Ordᶜ i} {c : Br j q} → RelP j q y c → RP y (cv c)"
+      },
+      {
+        "name": "Keep.below",
+        "kind": "declaration",
+        "line": "below : ∀ {i′ i} → Corr i′ lv → Corr i j → i′ ≺ᴵ i"
+      },
+      {
+        "name": "Dflt",
+        "kind": "declaration",
+        "line": "Dflt : LF → LF → Set"
+      },
+      {
+        "name": "keep-psh",
+        "kind": "declaration",
+        "line": "keep-psh : ∀ {k a} (v : k ≤ a) (t : Pos⁼ k) {j : LF} {q : Pos j} {cv : Br j q → Br⁼ a (pshP v t)}"
+      },
+      {
+        "name": "dflt-psh",
+        "kind": "declaration",
+        "line": "dflt-psh : ∀ {k a} (v : k ≤ a) (t : Pos⁼ k) {j : LF} → Dflt (at⁼ a (pshP v t)) j → Dflt (at⁼ k t) j"
+      },
+      {
+        "name": "kpF",
+        "kind": "declaration",
+        "line": "kpF : ∀ {ℓ} (f : NL ℓ) (ε : Ev ℓ) (ρ : Rt ℓ) (p : Pos ℓ) {j : LF} (w : j ≤ ℓ) {X : Set} (R : X → Set)"
+      },
+      {
+        "name": "kpF⁼",
+        "kind": "declaration",
+        "line": "kpF⁼ : ∀ {a} (f : NL a) (ε : Ev a) (ρ : Rt a) (p : Pos⁼ a) {j : LF} (w : j ≤ a) {X : Set} (R : X → Set)"
+      },
+      {
+        "name": "at-chP",
+        "kind": "declaration",
+        "line": "at-chP : (j : LF) (c : Ch j) (p : Pos (chL j c)) → at j (chP j c p) ≡ at (chL j c) p"
+      },
+      {
+        "name": "at-mv",
+        "kind": "declaration",
+        "line": "at-mv : ∀ {j jd} (d : Dn j jd) (p : Pos jd) → at j (mv d p) ≡ at jd p"
+      },
+      {
+        "name": "chRel",
+        "kind": "declaration",
+        "line": "chRel : (j : LF) (c : Ch j) (p : Pos (chL j c)) → ∀ {i} {y : L.Ordᶜ i} {z : Br j (chP j c p)}"
+      },
+      {
+        "name": "mvRel",
+        "kind": "declaration",
+        "line": "mvRel : ∀ {j jd} (d : Dn j jd) (p : Pos jd) → ∀ {i} {y : L.Ordᶜ i} {z : Br j (mv d p)}"
+      },
+      {
+        "name": "toSl",
+        "kind": "declaration",
+        "line": "toSl : (ℓ : LF) {jd : LF} (d : Dc ℓ jd) (p : Pos jd) → ∀ {i} {y : L.Ordᶜ i} {c : Br jd p}"
+      },
+      {
+        "name": "relFrom",
+        "kind": "declaration",
+        "line": "relFrom : (ℓ : LF) (p : Pos ℓ) → ∀ {i} {y : L.Ordᶜ i} {c : Tr (at ℓ p)}"
+      },
+      {
+        "name": "relFrom⁼",
+        "kind": "declaration",
+        "line": "relFrom⁼ : (a : LF) (p : Pos⁼ a) → ∀ {i} {y : L.Ordᶜ i} {c : Tr (at⁼ a p)}"
+      },
+      {
+        "name": "Rel-⊴",
+        "kind": "declaration",
+        "line": "Rel-⊴ : ∀ {j k} {X : L.Ordᶜ k} {t t′ : Tr j} → Rel j X t → j ⊢ t ⊴ t′ → Rel j X t′"
+      },
+      {
+        "name": "START",
+        "kind": "declaration",
+        "line": "START : ∀ {m i} → NL m → Corr i m → Rel m (L.Ω i) (Ωt m)"
+      },
+      {
+        "name": "Cfg",
+        "kind": "declaration",
+        "line": "Cfg : LF → Set"
+      },
+      {
+        "name": "St",
+        "kind": "datatype",
+        "line": "data St (j jd : LF) : Set where"
+      },
+      {
+        "name": "fo",
+        "kind": "declaration",
+        "line": "fo : Cfg jd → j ≤ jd → (β : Tr j) → j ⊢ zero ◃ β → St j jd"
+      },
+      {
+        "name": "uf",
+        "kind": "declaration",
+        "line": "uf : Dn j jd → (b : Tr j) → j ⊢ zero ◃ b → St j jd"
+      },
+      {
+        "name": "run",
+        "kind": "declaration",
+        "line": "run : ∀ {j jd} → St j jd → Tr jd → Tr j"
+      },
+      {
+        "name": "run-nz",
+        "kind": "declaration",
+        "line": "run-nz : ∀ {j jd} (s : St j jd) (y : Tr jd) → j ⊢ zero ◃ run s y"
+      },
+      {
+        "name": "run-mono",
+        "kind": "declaration",
+        "line": "run-mono : ∀ {j jd} (s : St j jd) {y y′ : Tr jd} → jd ⊢ y ◃ y′ → j ⊢ run s y ◃ run s y′"
+      },
+      {
+        "name": "stβ",
+        "kind": "declaration",
+        "line": "stβ : ∀ {j jd} → St j jd → Tr j"
+      },
+      {
+        "name": "run-⊵",
+        "kind": "declaration",
+        "line": "run-⊵ : ∀ {j jd} (s : St j jd) (y : Tr jd) → j ⊢ stβ s ⊴ run s y"
+      },
+      {
+        "name": "can",
+        "kind": "declaration",
+        "line": "can : ∀ {j a} → Cfg a → j ≤ a → St j a"
+      },
+      {
+        "name": "nxt",
+        "kind": "declaration",
+        "line": "nxt : ∀ {jd} → NL jd → ∀ {j} → St j jd → Tr jd → (c : Ch jd) → St j (chL jd c)"
+      },
+      {
+        "name": "nxtW",
+        "kind": "declaration",
+        "line": "nxtW : ∀ {g} (f : (n : ℕ) → NL (g n)) (C : Cfg (lim g)) (t : Tr (lim g)) (m n : ℕ) → Way g m n"
+      },
+      {
+        "name": "thru",
+        "kind": "declaration",
+        "line": "thru : ∀ {a} → NL a → ∀ {k} → k ≤ a → ∀ {j} → St j a → St j k"
+      },
+      {
+        "name": "run-up",
+        "kind": "declaration",
+        "line": "run-up : ∀ {jd} (f : NL jd) {j} (s : St j jd) (t : Tr jd) (c : Ch jd) (y : ChT jd c) (e : RCh jd c (chZ jd c) y)"
+      },
+      {
+        "name": "run-upW",
+        "kind": "declaration",
+        "line": "run-upW : ∀ {g} (f : (n : ℕ) → NL (g n)) (ε : Ev (lim g)) (ρ : Rt (lim g)) (B : Base (lim g)) (t : Tr (lim g))"
+      },
+      {
+        "name": "run-thru",
+        "kind": "declaration",
+        "line": "run-thru : ∀ {a} (f : NL a) (ε : Ev a) {k} (v : k ≤ a) {j} (s : St j a) (y : Tr k) (nz : k ⊢ zero ◃ y)"
+      },
+      {
+        "name": "nxtβ",
+        "kind": "declaration",
+        "line": "nxtβ : ∀ {jd} (f : NL jd) {j} (s : St j jd) (t : Tr jd) (c : Ch jd) → j ⊢ run s t ⊴ stβ (nxt f s t c)"
+      },
+      {
+        "name": "nxtWβ",
+        "kind": "declaration",
+        "line": "nxtWβ : ∀ {g} (f : (n : ℕ) → NL (g n)) (C : Cfg (lim g)) (t : Tr (lim g)) (m n : ℕ) (W : Way g m n)"
+      },
+      {
+        "name": "thruβ",
+        "kind": "declaration",
+        "line": "thruβ : ∀ {a} (f : NL a) {k} (v : k ≤ a) {j} (s : St j a) → j ⊢ stβ s ⊴ stβ (thru f v s)"
+      },
+      {
+        "name": "nxt-⊵",
+        "kind": "declaration",
+        "line": "nxt-⊵ : ∀ {jd} (f : NL jd) {j} (s : St j jd) (t : Tr jd) (c : Ch jd) (y : Tr (chL jd c))"
+      },
+      {
+        "name": "OKst",
+        "kind": "declaration",
+        "line": "OKst : ∀ {j jd} → St j jd → Set"
+      },
+      {
+        "name": "ok-nxt",
+        "kind": "declaration",
+        "line": "ok-nxt : ∀ {jd} (f : NL jd) {j} (s : St j jd) (t : Tr jd) (c : Ch jd) → OKst s → OKst (nxt f s t c)"
+      },
+      {
+        "name": "ok-nxtW",
+        "kind": "declaration",
+        "line": "ok-nxtW : ∀ {g} (f : (n : ℕ) → NL (g n)) (C : Cfg (lim g)) → OKB (lim g) (proj₂ (proj₂ C)) → (t : Tr (lim g))"
+      },
+      {
+        "name": "ok-thru",
+        "kind": "declaration",
+        "line": "ok-thru : ∀ {a} (f : NL a) {k} (v : k ≤ a) {j} (s : St j a) → OKst s → OKst (thru f v s)"
+      },
+      {
+        "name": "cfgOf",
+        "kind": "declaration",
+        "line": "cfgOf : ∀ {j jd} → St j jd → Maybe (Cfg jd)"
+      },
+      {
+        "name": "no-nj",
+        "kind": "declaration",
+        "line": "no-nj : ∀ {A Z : Set} {x : A} → nothing ≡ just x → Z"
+      },
+      {
+        "name": "Gd",
+        "kind": "datatype",
+        "line": "record Gd {a k : LF} (Φ : ∀ {j} → St j a → St j k) : Set where"
+      },
+      {
+        "name": "Gd.g-uf",
+        "kind": "declaration",
+        "line": "g-uf : ∀ {j} (s : St j a) → cfgOf s ≡ nothing → cfgOf (Φ s) ≡ nothing"
+      },
+      {
+        "name": "Gd.g-fo",
+        "kind": "declaration",
+        "line": "g-fo : ∀ {j} (C : Cfg a) (w : j ≤ a) (β : Tr j) (nβ : j ⊢ zero ◃ β) {C′ : Cfg k}"
+      },
+      {
+        "name": "good-id",
+        "kind": "declaration",
+        "line": "good-id : ∀ {a} → Gd {a} {a} (λ s → s)"
+      },
+      {
+        "name": "good-∘",
+        "kind": "declaration",
+        "line": "good-∘ : ∀ {a k k′} {Φ : ∀ {j} → St j a → St j k} {Ψ : ∀ {j} → St j k → St j k′}"
+      },
+      {
+        "name": "nxt-same",
+        "kind": "declaration",
+        "line": "nxt-same : ∀ {g} (f : (n : ℕ) → NL (g n)) (ε : Ev (lim g)) (ρ : Rt (lim g)) (B : Base (lim g)) (t : Tr (lim g))"
+      },
+      {
+        "name": "good-nxt",
+        "kind": "declaration",
+        "line": "good-nxt : ∀ {jd} (f : NL jd) (t : Tr jd) (c : Ch jd) → Gd (λ s → nxt f s t c)"
+      },
+      {
+        "name": "goodW",
+        "kind": "declaration",
+        "line": "goodW : ∀ {g} (f : (n : ℕ) → NL (g n)) (ε : Ev (lim g)) (ρ : Rt (lim g)) (B : Base (lim g)) (t : Tr (lim g))"
+      },
+      {
+        "name": "good-thru",
+        "kind": "declaration",
+        "line": "good-thru : ∀ {a} (f : NL a) {k} (v : k ≤ a) → Gd (λ s → thru f v s)"
+      },
+      {
+        "name": "stOf",
+        "kind": "declaration",
+        "line": "stOf : ∀ {ℓ j} → NL ℓ → St j ℓ → ∀ {jd} {d : Dc ℓ jd} → Ctx ℓ d → St j jd"
+      },
+      {
+        "name": "finD",
+        "kind": "declaration",
+        "line": "finD : ∀ {ℓ} → NL ℓ → ∀ {jd} {d : Dc ℓ jd} → Ctx ℓ d → NL jd"
+      },
+      {
+        "name": "stOf-▹",
+        "kind": "declaration",
+        "line": "stOf-▹ : ∀ {ℓ j jd} (f : NL ℓ) (s : St j ℓ) {d : Dc ℓ jd} (Γ : Ctx ℓ d) (t : Tr jd) (c : Ch jd)"
+      },
+      {
+        "name": "good-stOf",
+        "kind": "declaration",
+        "line": "good-stOf : ∀ {ℓ} (f : NL ℓ) {jd} {d : Dc ℓ jd} (Γ : Ctx ℓ d) → Gd (λ s → stOf f s Γ)"
+      },
+      {
+        "name": "ok-stOf",
+        "kind": "declaration",
+        "line": "ok-stOf : ∀ {ℓ j} (f : NL ℓ) (s : St j ℓ) → OKst s → ∀ {jd} {d : Dc ℓ jd} (Γ : Ctx ℓ d) → OKst (stOf f s Γ)"
+      },
+      {
+        "name": "stepD",
+        "kind": "declaration",
+        "line": "stepD : ∀ {jd} → NL jd → Cfg jd → Tr jd → (c : Ch jd) → Cfg (chL jd c)"
+      },
+      {
+        "name": "ψ⊥c",
+        "kind": "declaration",
+        "line": "ψ⊥c : ∀ {jd} → Cfg jd → Tr jd → Tr zero"
+      },
+      {
+        "name": "ψ⊥-up",
+        "kind": "declaration",
+        "line": "ψ⊥-up : ∀ {jd} (f : NL jd) (C : Cfg jd) (t : Tr jd) (c : Ch jd) (y : ChT jd c) (e : RCh jd c (chZ jd c) y)"
+      },
+      {
+        "name": "stepD-⊵",
+        "kind": "declaration",
+        "line": "stepD-⊵ : ∀ {jd} (f : NL jd) (C : Cfg jd) (t : Tr jd) (c : Ch jd) (y : Tr (chL jd c))"
+      },
+      {
+        "name": "deepOf",
+        "kind": "declaration",
+        "line": "deepOf : ∀ {ℓ} → NL ℓ → Cfg ℓ → ∀ {jd} {d : Dc ℓ jd} → Ctx ℓ d → Cfg jd"
+      },
+      {
+        "name": "deepOf-▹",
+        "kind": "declaration",
+        "line": "deepOf-▹ : ∀ {ℓ jd} (f : NL ℓ) (C : Cfg ℓ) {d : Dc ℓ jd} (Γ : Ctx ℓ d) (t : Tr jd) (c : Ch jd)"
+      },
+      {
+        "name": "ok-step",
+        "kind": "declaration",
+        "line": "ok-step : ∀ {jd} (f : NL jd) (C : Cfg jd) → OKB jd (proj₂ (proj₂ C)) → (t : Tr jd) (c : Ch jd)"
+      },
+      {
+        "name": "ok-deep",
+        "kind": "declaration",
+        "line": "ok-deep : ∀ {ℓ} (f : NL ℓ) (C : Cfg ℓ) → OKB ℓ (proj₂ (proj₂ C)) → ∀ {jd} {d : Dc ℓ jd} (Γ : Ctx ℓ d)"
+      },
+      {
+        "name": "liftW",
+        "kind": "declaration",
+        "line": "liftW : ∀ {ℓ} → NL ℓ → ∀ {jd} {d : Dc ℓ jd} → Ctx ℓ d → ∀ {j} → j ≤ jd → j ≤ ℓ"
+      },
+      {
+        "name": "stOf-can",
+        "kind": "declaration",
+        "line": "stOf-can : ∀ {ℓ} (f : NL ℓ) (C : Cfg ℓ) {jd} {d : Dc ℓ jd} (Γ : Ctx ℓ d) {j} (w′ : j ≤ jd)"
+      },
+      {
+        "name": "J′",
+        "kind": "declaration",
+        "line": "J′ : (ℓ : LF) → ∀ {j} {d : Dc ℓ j} → Ctx ℓ d → ∀ {k} → L.Ordᶜ k → Tr j → Set"
+      },
+      {
+        "name": "Wch",
+        "kind": "declaration",
+        "line": "Wch : ∀ {i′ K′} (q : i′ <ᴵ K′) (f′ : L.U i′ (L.<→◃ q) → L.Ordᶜ K′) → ℕ → L.Ordᶜ i′"
+      },
+      {
+        "name": "Dref",
+        "kind": "declaration",
+        "line": "Dref : ∀ {i′ K′ L⁺ i} (p₀ : i <ᴵ L⁺) (σ : L.Simᴵ K′ L⁺) (q : i′ <ᴵ K′) (f′ : L.U i′ (L.<→◃ q) → L.Ordᶜ K′)"
+      },
+      {
+        "name": "Vch",
+        "kind": "declaration",
+        "line": "Vch : ∀ {jd} (C : Cfg jd) (p : Pos jd) (g : Br jd p → Tr jd) → ℕ → Br jd p"
+      },
+      {
+        "name": "run-ss",
+        "kind": "declaration",
+        "line": "run-ss : ∀ {j jd} (s : St j jd) {k} {X : L.Ordᶜ k} {y : Tr jd}"
+      },
+      {
+        "name": "ok-cfg",
+        "kind": "declaration",
+        "line": "ok-cfg : ∀ {j jd} (s : St j jd) → OKst s → {C′ : Cfg jd} → cfgOf s ≡ just C′ → OKB jd (proj₂ (proj₂ C′))"
+      },
+      {
+        "name": "M",
+        "kind": "module",
+        "line": "module M {ℓ : LF} (f : NL ℓ) (C₀ : Cfg ℓ) (ok : OKB ℓ (proj₂ (proj₂ C₀))) where"
+      },
+      {
+        "name": "M.top",
+        "kind": "declaration",
+        "line": "top : ∀ {j} → j ≤ ℓ → St j ℓ"
+      },
+      {
+        "name": "M.ReC",
+        "kind": "declaration",
+        "line": "ReC : ∀ {jd} {d : Dc ℓ jd} → Ctx ℓ d → Cfg jd → Set"
+      },
+      {
+        "name": "M.top-zr",
+        "kind": "declaration",
+        "line": "top-zr : ∀ {j} (w : j ≤ ℓ) {i} → Corr i j → (y : Tr ℓ) → Rel j (L.Ω i) (run (top w) y)"
+      },
+      {
+        "name": "M.MS",
+        "kind": "declaration",
+        "line": "MS : ∀ {j} (w : j ≤ ℓ) {jd} {d : Dc ℓ jd} {Γ : Ctx ℓ d} (s : St j jd) → s ≡ stOf f (top w) Γ"
+      },
+      {
+        "name": "M.Mdef",
+        "kind": "declaration",
+        "line": "Mdef : ∀ {j} (w : j ≤ ℓ) {jd} {d : Dc ℓ jd} (Γ : Ctx ℓ d) (C′ : Cfg jd) (w′ : j ≤ jd)"
+      },
+      {
+        "name": "M.chainS",
+        "kind": "declaration",
+        "line": "chainS : ∀ {jd} {d : Dc ℓ jd} (Γ : Ctx ℓ d) (C′ : Cfg jd) → ReC Γ C′ → OKB jd (proj₂ (proj₂ C′))"
+      },
+      {
+        "name": "M.okD",
+        "kind": "declaration",
+        "line": "okD : ∀ {jd} {d : Dc ℓ jd} (Γ : Ctx ℓ d) (C′ : Cfg jd) → deepOf f C₀ Γ ≡ C′ → OKB jd (proj₂ (proj₂ C′))"
+      },
+      {
+        "name": "M.rcD",
+        "kind": "declaration",
+        "line": "rcD : ∀ {jd} {d : Dc ℓ jd} (Γ : Ctx ℓ d) (C′ : Cfg jd) → deepOf f C₀ Γ ≡ C′ → ReC Γ C′"
+      },
+      {
+        "name": "M.VS",
+        "kind": "declaration",
+        "line": "VS : ∀ {jd} {d : Dc ℓ jd} {Γ : Ctx ℓ d} (C′ : Cfg jd) → deepOf f C₀ Γ ≡ C′"
+      },
+      {
+        "name": "lower",
+        "kind": "declaration",
+        "line": "lower : ∀ {ℓ i} (f : NL ℓ) (ε : Ev ℓ) (ρ : Rt ℓ) (B : Base ℓ) → OKB ℓ B → Corr i ℓ"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md",
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTEBBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTEBShape.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md",
+      "probes/OCF/Lean/YiVTEmb.lagda.md",
+      "probes/OCF/Lean/YiVTHi.lagda.md",
+      "probes/OCF/Lean/YiVTLSBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTLSTw1.lagda.md",
+      "probes/OCF/Lean/YiVTPHCtx.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTT2Frame.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANKp.lagda.md",
+      "probes/OCF/Lean/YiVTANLv.lagda.md",
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTEBBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTEBShape.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md",
+      "probes/OCF/Lean/YiVTEmb.lagda.md",
+      "probes/OCF/Lean/YiVTHi.lagda.md",
+      "probes/OCF/Lean/YiVTLSBtbo.lagda.md",
+      "probes/OCF/Lean/YiVTLSFold.lagda.md",
+      "probes/OCF/Lean/YiVTLSTw1.lagda.md",
+      "probes/OCF/Lean/YiVTPHCtx.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTT2Frame.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTLSFold.lagda.md"
+    ],
+    "sha256": "86c82d57102642d6247b15e9f1582e9287de061a1d5bc6a3ad0542453cd99b34",
+    "bytes": 47019,
+    "code_lines": 678,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTT2Frame",
+    "target": "YiPMT2Frame.F tbᶠ",
+    "category": "hand-edited-copy",
+    "exports": [
+      {
+        "name": "ok-dW",
+        "kind": "declaration",
+        "line": "ok-dW : (k : LF) (h : Tr k → LF) (ε : Ev (Ωₗ k h)) (ρ : Rt (Ωₗ k h)) (B : Base (Ωₗ k h)) → OKB (Ωₗ k h) B"
+      },
+      {
+        "name": "up-lower",
+        "kind": "declaration",
+        "line": "up-lower : (k : LF) (h : Tr k → LF) (ε : Ev (Ωₗ k h)) (ρ : Rt (Ωₗ k h)) (B : Base (Ωₗ k h)) → OKB (Ωₗ k h) B"
+      },
+      {
+        "name": "fallback",
+        "kind": "declaration",
+        "line": "fallback : (k : LF) (h : Tr k → LF) (ε : Ev (Ωₗ k h)) (ρ : Rt (Ωₗ k h)) (B : Base (Ωₗ k h)) (j : LF)"
+      },
+      {
+        "name": "inner-base",
+        "kind": "declaration",
+        "line": "inner-base : (k : LF) (h : Tr k → LF) (ε : Ev (Ωₗ k h)) (ρ : Rt (Ωₗ k h)) (B : Base (Ωₗ k h))"
+      },
+      {
+        "name": "eqk",
+        "kind": "declaration",
+        "line": "eqk : (k : LF) (h : Tr k → LF) (ε : Ev (Ωₗ k h)) (ρ : Rt (Ωₗ k h)) (B : Base (Ωₗ k h)) (w : zero ≤ k)"
+      },
+      {
+        "name": "ε¹",
+        "kind": "declaration",
+        "line": "ε¹ : Ev (tw 1)"
+      },
+      {
+        "name": "ρ¹",
+        "kind": "declaration",
+        "line": "ρ¹ : Rt (tw 1)"
+      },
+      {
+        "name": "β",
+        "kind": "declaration",
+        "line": "β : Tr (tw 1)"
+      },
+      {
+        "name": "gβ",
+        "kind": "declaration",
+        "line": "gβ : Tr zero → Tr (tw 1)"
+      },
+      {
+        "name": "zc",
+        "kind": "declaration",
+        "line": "zc : ℕ → Tr zero"
+      },
+      {
+        "name": "rowβ",
+        "kind": "declaration",
+        "line": "rowβ : ℕ → Tr zero"
+      },
+      {
+        "name": "nzβ",
+        "kind": "declaration",
+        "line": "nzβ : ∀ n → zero ⊢ zero ◃ rowβ n"
+      },
+      {
+        "name": "ββ-form",
+        "kind": "declaration",
+        "line": "ββ-form : ψ₀ (tw 1) ε¹ ρ¹ (β + β) ≡ limc rowβ nzβ"
+      },
+      {
+        "name": "row-lower",
+        "kind": "declaration",
+        "line": "row-lower : ∀ n → L.ψ⁰ (L.Ω (lvl (zc n))) ≼ read (rowβ n)"
+      },
+      {
+        "name": "lw¹",
+        "kind": "declaration",
+        "line": "lw¹ : (c : Tr zero) → LiftP (self ∙ proj₁ (proj₂ ε¹ c))"
+      },
+      {
+        "name": "zc-row",
+        "kind": "declaration",
+        "line": "zc-row : ∀ n → E (zc (suc n)) (rowβ n)"
+      },
+      {
+        "name": "row0-form",
+        "kind": "declaration",
+        "line": "row0-form : rowβ 0 ≡ next (twᶜ 1) (nz⊥ (tw 1) ε¹ ρ¹ (B₀ (tw 1)) β)"
+      },
+      {
+        "name": "tw1◃row0",
+        "kind": "declaration",
+        "line": "tw1◃row0 : zero ⊢ twᶜ 1 ◃ rowβ 0"
+      },
+      {
+        "name": "chain-closed",
+        "kind": "declaration",
+        "line": "chain-closed : ∀ n → L.ψ⁰ (L.Ω (lvl (zc n))) ≼ read (zc (suc n))"
+      },
+      {
+        "name": "ββ◃R1",
+        "kind": "declaration",
+        "line": "ββ◃R1 : zero ⊢ ψ₀ (tw 1) ε¹ ρ¹ (β + β) ◃ R⁺ 1"
+      },
+      {
+        "name": "ββ≼tw2",
+        "kind": "declaration",
+        "line": "ββ≼tw2 : read (ψ₀ (tw 1) ε¹ ρ¹ (β + β)) ≼ read (twᶜ 2)"
+      },
+      {
+        "name": "named",
+        "kind": "declaration",
+        "line": "named : ∀ n → L.ψ⁰ (L.Ω (lvl (zc n))) ≼ read (twᶜ 2)"
+      },
+      {
+        "name": "one",
+        "kind": "declaration",
+        "line": "one two : Tr zero"
+      },
+      {
+        "name": "two",
+        "kind": "declaration",
+        "line": "one two : Tr zero"
+      },
+      {
+        "name": "self-slot",
+        "kind": "declaration",
+        "line": "self-slot : (b : Tr (tw 1)) (nb : tw 1 ⊢ zero ◃ b)"
+      },
+      {
+        "name": "IsLim",
+        "kind": "declaration",
+        "line": "IsLim IsΩ : {ℓ : LF} → Tr ℓ → Set"
+      },
+      {
+        "name": "IsΩ",
+        "kind": "declaration",
+        "line": "IsLim IsΩ : {ℓ : LF} → Tr ℓ → Set"
+      },
+      {
+        "name": "flat-in",
+        "kind": "declaration",
+        "line": "flat-in : IsΩ (Upc (tw 1) one β (Ωt-nz (tw 1)) (Ωt (h₁ one)))"
+      },
+      {
+        "name": "flat-lim",
+        "kind": "declaration",
+        "line": "flat-lim : IsLim (ψs (tw 1) ε¹ ρ¹ (B₀ (tw 1)) (suc zero) (inb one self) (Ωt (suc zero)) (Ωt-nz (suc zero))"
+      },
+      {
+        "name": "note-cof",
+        "kind": "declaration",
+        "line": "note-cof : E.cof (E.ψ u₁ (E.ψ Ω₁ᵗ Ω₁ᵗ ∷ []) ∷ []) ≡ E.cΩ []"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md",
+      "probes/OCF/Lean/YiVTEmb.lagda.md",
+      "probes/OCF/Lean/YiVTHi.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVReach.lagda.md",
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md",
+      "probes/OCF/Lean/YiVTEmb.lagda.md",
+      "probes/OCF/Lean/YiVTHi.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTT2Frame.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTT2Frame.lagda.md"
+    ],
+    "sha256": "5476072df015f81b81bfcc4f2de7c94312e610d54a29d81ff159567d6f4a2e5c",
+    "bytes": 7269,
+    "code_lines": 112,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTEVTw2",
+    "target": "YiPMMinEVTw2",
+    "category": "hand-edited-copy",
+    "exports": [
+      {
+        "name": "Kβ",
+        "kind": "declaration",
+        "line": "Kβ : (c : Tr zero) (w : zero ≤ h₁ c) (q : Pos zero) → (Br zero q → Tr zero) → Tr zero"
+      },
+      {
+        "name": "compβ",
+        "kind": "declaration",
+        "line": "compβ : (c : Tr zero) → IsLim c → (w : zero ≤ h₁ c)"
+      },
+      {
+        "name": "BWc",
+        "kind": "declaration",
+        "line": "BWc : Base (h₁ (zc 1))"
+      },
+      {
+        "name": "row1-form",
+        "kind": "declaration",
+        "line": "row1-form : rowβ 1 ≡ ψ⊥ (h₁ (zc 1)) (εh (zc 1)) (ρh (zc 1)) BWc (Ωt (h₁ (zc 1)))"
+      },
+      {
+        "name": "okW",
+        "kind": "declaration",
+        "line": "okW : OKB (h₁ (zc 1)) BWc"
+      },
+      {
+        "name": "hiW",
+        "kind": "declaration",
+        "line": "hiW : Hi (h₁ (zc 1)) BWc"
+      },
+      {
+        "name": "path₁",
+        "kind": "declaration",
+        "line": "path₁ : two ⇐ h₁ (zc 1)"
+      },
+      {
+        "name": "low1",
+        "kind": "declaration",
+        "line": "low1 : Lo (h₁ (zc 1)) (εh (zc 1)) (ρh (zc 1)) BWc"
+      },
+      {
+        "name": "tA≼tw2",
+        "kind": "declaration",
+        "line": "tA≼tw2 : (h : HC tA) → R2.Rt h ≼ read (twᶜ 2)"
+      },
+      {
+        "name": "tA≼tw2ᴿ",
+        "kind": "declaration",
+        "line": "tA≼tw2ᴿ : (h : HC tA) → R2.Rt h ≼ readRW (twᶻ 2)   -- 改: 搬到新主线的闭项"
+      },
+      {
+        "name": "inst-tw2",
+        "kind": "declaration",
+        "line": "inst-tw2 : R2.Rt hA ≼ readRW (twᶻ 2)"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTEVTw2.lagda.md"
+    ],
+    "sha256": "15ab70dc0bbe191148c8a6a3bf63d842411e4a7bce24bd21f65963a63786a3b0",
+    "bytes": 3591,
+    "code_lines": 54,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTEVEnd",
+    "target": "YiPMMinEVEnd",
+    "category": "hand-edited-copy",
+    "exports": [
+      {
+        "name": "h₂",
+        "kind": "declaration",
+        "line": "h₂ : Tr (tw 1) → LF"
+      },
+      {
+        "name": "Br0",
+        "kind": "declaration",
+        "line": "Br0 : Base (tw 1)"
+      },
+      {
+        "name": "ε′",
+        "kind": "declaration",
+        "line": "ε′ : Ev (tw 1)"
+      },
+      {
+        "name": "ρ′",
+        "kind": "declaration",
+        "line": "ρ′ : Rt (tw 1)"
+      },
+      {
+        "name": "ok0",
+        "kind": "declaration",
+        "line": "ok0 : OKB (tw 1) Br0"
+      },
+      {
+        "name": "c₁",
+        "kind": "declaration",
+        "line": "c₁ : Tr zero"
+      },
+      {
+        "name": "c₁-form",
+        "kind": "declaration",
+        "line": "c₁-form : c₁ ≡ next (bs Br0 zero (ink self)) (ns Br0 zero (ink self))"
+      },
+      {
+        "name": "B₁",
+        "kind": "declaration",
+        "line": "B₁ : Base (h₁ c₁)"
+      },
+      {
+        "name": "B′",
+        "kind": "declaration",
+        "line": "B′ : Base (tw 1)"
+      },
+      {
+        "name": "okB′",
+        "kind": "declaration",
+        "line": "okB′ : OKB (tw 1) B′"
+      },
+      {
+        "name": "stB′",
+        "kind": "declaration",
+        "line": "stB′ : Start B′"
+      },
+      {
+        "name": "hi1",
+        "kind": "declaration",
+        "line": "hi1 : Hi (h₁ c₁) B₁"
+      },
+      {
+        "name": "path₂",
+        "kind": "declaration",
+        "line": "path₂ : two ⇐ h₁ c₁"
+      },
+      {
+        "name": "low2",
+        "kind": "declaration",
+        "line": "low2 : Lo (h₁ c₁) (proj₂ (proj₂ ε′ c₁)) (proj₂ ρ′ c₁) B₁"
+      },
+      {
+        "name": "tA≼br2",
+        "kind": "declaration",
+        "line": "tA≼br2 : (h : HC tA) → R2.Rt h ≼ read (br 2)"
+      },
+      {
+        "name": "tA≼EBO",
+        "kind": "declaration",
+        "line": "tA≼EBO : (h : HC tA) → R2.Rt h ≼ read EBOᶜ"
+      },
+      {
+        "name": "tA≼EBOᴿ",
+        "kind": "declaration",
+        "line": "tA≼EBOᴿ : (h : HC tA) → R2.Rt h ≼ readRW EBOᶻ"
+      },
+      {
+        "name": "btbo≼row₂",
+        "kind": "declaration",
+        "line": "btbo≼row₂ : D.BTBOᴵ ≼ R2.Rt (hc-tower 2)"
+      },
+      {
+        "name": "btbo≺EBOᴿ",
+        "kind": "declaration",
+        "line": "btbo≺EBOᴿ : L.suc D.BTBOᴵ ≼ readRW EBOᶻ"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTEVEnd.lagda.md"
+    ],
+    "sha256": "9388562a8126260f21127aa2f8af5b3d47a4640c07206abd9501e84fcc7b2764",
+    "bytes": 4430,
+    "code_lines": 73,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTPHEnd",
+    "target": "YiPMMinPHEnd",
+    "category": "hand-edited-copy",
+    "exports": [
+      {
+        "name": "Ω₃",
+        "kind": "declaration",
+        "line": "Ω₃ : E.PT"
+      },
+      {
+        "name": "ψ₁Ω₃",
+        "kind": "declaration",
+        "line": "ψ₁Ω₃ : E.PT"
+      },
+      {
+        "name": "arg₃",
+        "kind": "declaration",
+        "line": "arg₃ : E.T"
+      },
+      {
+        "name": "t₃",
+        "kind": "declaration",
+        "line": "t₃ : E.T"
+      },
+      {
+        "name": "f3",
+        "kind": "declaration",
+        "line": "f3 : Flat (natT 3)"
+      },
+      {
+        "name": "fΩ₃",
+        "kind": "declaration",
+        "line": "fΩ₃ : Flat (Ω₃ ∷ [])"
+      },
+      {
+        "name": "nf3₁",
+        "kind": "declaration",
+        "line": "nf3₁ : NF₁ (natT 3)"
+      },
+      {
+        "name": "nΩ₃₁",
+        "kind": "declaration",
+        "line": "nΩ₃₁ : NF₁ (Ω₃ ∷ [])"
+      },
+      {
+        "name": "bnd₃",
+        "kind": "declaration",
+        "line": "bnd₃ : Bnd₁ [] arg₃"
+      },
+      {
+        "name": "n₃₁",
+        "kind": "declaration",
+        "line": "n₃₁ : NF₁ t₃"
+      },
+      {
+        "name": "n3ᴮ",
+        "kind": "declaration",
+        "line": "n3ᴮ : B.NF (natT 3)"
+      },
+      {
+        "name": "nΩ₃ᴮ",
+        "kind": "declaration",
+        "line": "nΩ₃ᴮ : B.NFP Ω₃"
+      },
+      {
+        "name": "g₃",
+        "kind": "declaration",
+        "line": "g₃ : B.GB [] arg₃ arg₃"
+      },
+      {
+        "name": "n₃ᴮ",
+        "kind": "declaration",
+        "line": "n₃ᴮ : B.NF t₃"
+      },
+      {
+        "name": "h₃",
+        "kind": "declaration",
+        "line": "h₃ : HC t₃"
+      },
+      {
+        "name": "A<3",
+        "kind": "declaration",
+        "line": "A<3 : tA <ᵀ t₃"
+      },
+      {
+        "name": "3<B1",
+        "kind": "declaration",
+        "line": "3<B1 : t₃ <ᵀ fsn tB 1"
+      },
+      {
+        "name": "A≺3",
+        "kind": "declaration",
+        "line": "A≺3 : (h : HC tA) (h′ : HC t₃) → O.suc (R2.Rt h) ≼ R2.Rt h′"
+      },
+      {
+        "name": "3≺B1",
+        "kind": "declaration",
+        "line": "3≺B1 : (h : HC t₃) (h′ : HC (fsn tB 1)) → O.suc (R2.Rt h) ≼ R2.Rt h′"
+      },
+      {
+        "name": "Lo³",
+        "kind": "declaration",
+        "line": "Lo³ : (ℓ : LF) → Ev ℓ → Rt ℓ → Base ℓ → Set"
+      },
+      {
+        "name": "AtThree",
+        "kind": "module",
+        "line": "module AtThree (B₃ : Base three) (ok : OKB three B₃) (hi : Hi three B₃) where"
+      },
+      {
+        "name": "AtThree.C",
+        "kind": "module",
+        "line": "module C = Ctx3 B₃ (G².m⊴ Mβ₂ (cv⊴ (proj₂ ok two (ins self)))) (cv⊴ (proj₂ ok two (ins self)))"
+      },
+      {
+        "name": "AtThree.atThree",
+        "kind": "declaration",
+        "line": "atThree : Lo³ three tt tt B₃"
+      },
+      {
+        "name": "reach³",
+        "kind": "declaration",
+        "line": "reach³ : ∀ {ℓ} → three ⇐ ℓ → (ε : Ev ℓ) (ρ : Rt ℓ) (B : Base ℓ) → OKB ℓ B → Hi ℓ B → Lo³ ℓ ε ρ B"
+      },
+      {
+        "name": "path₃",
+        "kind": "declaration",
+        "line": "path₃ : three ⇐ h₁ c₁"
+      },
+      {
+        "name": "low3",
+        "kind": "declaration",
+        "line": "low3 : Lo³ (h₁ c₁) (proj₂ (proj₂ ε′ c₁)) (proj₂ ρ′ c₁) B₁"
+      },
+      {
+        "name": "t₃≼br2",
+        "kind": "declaration",
+        "line": "t₃≼br2 : (h : HC t₃) → R2.Rt h ≼ read (br 2)"
+      },
+      {
+        "name": "t₃≼EBO",
+        "kind": "declaration",
+        "line": "t₃≼EBO : (h : HC t₃) → R2.Rt h ≼ read EBOᶜ"
+      },
+      {
+        "name": "t₃≼EBOᴿ",
+        "kind": "declaration",
+        "line": "t₃≼EBOᴿ : (h : HC t₃) → R2.Rt h ≼ readRW EBOᶻ"
+      },
+      {
+        "name": "inst₃",
+        "kind": "declaration",
+        "line": "inst₃ : R2.Rt h₃ ≼ readRW EBOᶻ"
+      },
+      {
+        "name": "tA≺EBOᴿ′",
+        "kind": "declaration",
+        "line": "tA≺EBOᴿ′ : (h : HC tA) → O.suc (R2.Rt h) ≼ readRW EBOᶻ"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANReach.lagda.md",
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTPHEnd.lagda.md"
+    ],
+    "sha256": "4941a10e090f5967b367eb5ec7e4cb4c54f4584643dc1c36e91519a65604c6f9",
+    "bytes": 7174,
+    "code_lines": 128,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTANEnd",
+    "target": "YiPMMinANEnd",
+    "category": "hand-edited-copy",
+    "exports": [
+      {
+        "name": "ΩN",
+        "kind": "declaration",
+        "line": "ΩN : ℕ → E.PT"
+      },
+      {
+        "name": "argN",
+        "kind": "declaration",
+        "line": "argN : ℕ → E.T"
+      },
+      {
+        "name": "tN",
+        "kind": "declaration",
+        "line": "tN : ℕ → E.T"
+      },
+      {
+        "name": "flatN",
+        "kind": "declaration",
+        "line": "flatN : ∀ n → Flat (natT n)"
+      },
+      {
+        "name": "fΩN",
+        "kind": "declaration",
+        "line": "fΩN : ∀ n → Flat (ΩN n ∷ [])"
+      },
+      {
+        "name": "natNF₁",
+        "kind": "declaration",
+        "line": "natNF₁ : ∀ n → NF₁ (natT n)"
+      },
+      {
+        "name": "ctblN",
+        "kind": "declaration",
+        "line": "ctblN : ∀ n → Ctbl (natT n)"
+      },
+      {
+        "name": "nΩN₁",
+        "kind": "declaration",
+        "line": "nΩN₁ : ∀ n → NF₁ (ΩN n ∷ [])"
+      },
+      {
+        "name": "bndN",
+        "kind": "declaration",
+        "line": "bndN : ∀ m → Bnd₁ [] (argN m)"
+      },
+      {
+        "name": "nN₁",
+        "kind": "declaration",
+        "line": "nN₁ : ∀ m → NF₁ (tN m)"
+      },
+      {
+        "name": "natB",
+        "kind": "declaration",
+        "line": "natB : ∀ n → B.NF (natT n)"
+      },
+      {
+        "name": "nΩNᴮ",
+        "kind": "declaration",
+        "line": "nΩNᴮ : ∀ n → B.NFP (ΩN n)"
+      },
+      {
+        "name": "gN",
+        "kind": "declaration",
+        "line": "gN : ∀ m → B.GB [] (argN m) (argN m)"
+      },
+      {
+        "name": "nNᴮ",
+        "kind": "declaration",
+        "line": "nNᴮ : ∀ m → B.NF (tN m)"
+      },
+      {
+        "name": "hN",
+        "kind": "declaration",
+        "line": "hN : ∀ m → HC (tN m)"
+      },
+      {
+        "name": "nat<",
+        "kind": "declaration",
+        "line": "nat< : ∀ n → natT n <ᵀ natT (suc n)"
+      },
+      {
+        "name": "A<N",
+        "kind": "declaration",
+        "line": "A<N : ∀ m → tA <ᵀ tN m"
+      },
+      {
+        "name": "N<N",
+        "kind": "declaration",
+        "line": "N<N : ∀ m → tN m <ᵀ tN (suc m)"
+      },
+      {
+        "name": "A≺N",
+        "kind": "declaration",
+        "line": "A≺N : ∀ m (h : HC tA) (h′ : HC (tN m)) → O.suc (R2.Rt h) ≼ R2.Rt h′"
+      },
+      {
+        "name": "N≺N",
+        "kind": "declaration",
+        "line": "N≺N : ∀ m (h : HC (tN m)) (h′ : HC (tN (suc m))) → O.suc (R2.Rt h) ≼ R2.Rt h′"
+      },
+      {
+        "name": "AtN",
+        "kind": "module",
+        "line": "module AtN (m : ℕ) (ε : Ev (fin (suc (suc (suc m))))) (ρ : Rt (fin (suc (suc (suc m)))))"
+      },
+      {
+        "name": "AtN.A",
+        "kind": "module",
+        "line": "module A = Lv.Anchor tΩ m ε ρ B₃ ok (sem0 (b⊥ B₃) (proj₁ hi)) (λ w → sem0 (bs B₃ zero w) (proj₂ hi w))"
+      },
+      {
+        "name": "AtN.atN",
+        "kind": "declaration",
+        "line": "atN : (h : HC (tN m)) → R2.Rt h ≼ read (ψ⊥ (fin (suc (suc (suc m)))) ε ρ B₃ (Ωt (fin (suc (suc (suc m))))))"
+      },
+      {
+        "name": "kid",
+        "kind": "declaration",
+        "line": "kid : LF → ℕ → LF"
+      },
+      {
+        "name": "pre",
+        "kind": "declaration",
+        "line": "pre : LF → LF"
+      },
+      {
+        "name": "G",
+        "kind": "declaration",
+        "line": "G : ℕ → LF"
+      },
+      {
+        "name": "one",
+        "kind": "declaration",
+        "line": "one : Tr zero"
+      },
+      {
+        "name": "num",
+        "kind": "declaration",
+        "line": "num : ℕ → Tr zero"
+      },
+      {
+        "name": "shape",
+        "kind": "declaration",
+        "line": "shape : ∀ k → G k ≡ zero ⊕ ↑ zero (iter (one +_) one k)"
+      },
+      {
+        "name": "one+",
+        "kind": "declaration",
+        "line": "one+ : ∀ j → one + num j ≡ num (suc j)"
+      },
+      {
+        "name": "I≡",
+        "kind": "declaration",
+        "line": "I≡ : ∀ k → iter (one +_) one k ≡ num (suc k)"
+      },
+      {
+        "name": "ι-num",
+        "kind": "declaration",
+        "line": "ι-num : ∀ j → ι zero (num j) ≡ num j"
+      },
+      {
+        "name": "↑num",
+        "kind": "declaration",
+        "line": "↑num : ∀ j → ↑ zero (num j) ≡ fin j"
+      },
+      {
+        "name": "0⊕",
+        "kind": "declaration",
+        "line": "0⊕ : ∀ j → zero ⊕ fin j ≡ fin j"
+      },
+      {
+        "name": "gk",
+        "kind": "declaration",
+        "line": "gk : ∀ k → G k ≡ fin (suc k)"
+      },
+      {
+        "name": "pathN",
+        "kind": "declaration",
+        "line": "pathN : ∀ m → fin (suc (suc (suc m))) ⇐ h₁ c₁"
+      },
+      {
+        "name": "lowN",
+        "kind": "declaration",
+        "line": "lowN : LoG (h₁ c₁) (proj₂ (proj₂ ε′ c₁)) (proj₂ ρ′ c₁) B₁"
+      },
+      {
+        "name": "tN≼br2",
+        "kind": "declaration",
+        "line": "tN≼br2 : (h : HC (tN m)) → R2.Rt h ≼ read (br 2)"
+      },
+      {
+        "name": "tN≼EBO",
+        "kind": "declaration",
+        "line": "tN≼EBO : (h : HC (tN m)) → R2.Rt h ≼ read EBOᶜ"
+      },
+      {
+        "name": "tN≼EBOᴿ",
+        "kind": "declaration",
+        "line": "tN≼EBOᴿ : (h : HC (tN m)) → R2.Rt h ≼ readRW EBOᶻ"
+      },
+      {
+        "name": "instN",
+        "kind": "declaration",
+        "line": "instN : R2.Rt (hN m) ≼ readRW EBOᶻ"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTANLim.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md",
+      "probes/OCF/Lean/YiVTANLim.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTANEnd.lagda.md"
+    ],
+    "sha256": "502eef54ac1dcf1e0455176372d234fa6765f90d774025a5dfd6d8c8fbcb5f02",
+    "bytes": 8164,
+    "code_lines": 164,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTANLim",
+    "target": "YiPMMinANLim",
+    "category": "hand-edited-copy",
+    "exports": [
+      {
+        "name": "ω′",
+        "kind": "declaration",
+        "line": "ω′ : E.T"
+      },
+      {
+        "name": "Ωω",
+        "kind": "declaration",
+        "line": "Ωω : E.PT"
+      },
+      {
+        "name": "argω",
+        "kind": "declaration",
+        "line": "argω : E.T"
+      },
+      {
+        "name": "tω",
+        "kind": "declaration",
+        "line": "tω : E.T"
+      },
+      {
+        "name": "rep<",
+        "kind": "declaration",
+        "line": "rep< : ∀ n → replicate n 𝟏 <ᵀ natT (suc (suc (suc n)))"
+      },
+      {
+        "name": "lt",
+        "kind": "declaration",
+        "line": "lt : ∀ n → fsn tω n <ᵀ tN n"
+      },
+      {
+        "name": "N<ω",
+        "kind": "declaration",
+        "line": "N<ω : ∀ m → tN m <ᵀ tω"
+      },
+      {
+        "name": "nfω′",
+        "kind": "declaration",
+        "line": "nfω′ : NF₁ ω′"
+      },
+      {
+        "name": "nΩω₁",
+        "kind": "declaration",
+        "line": "nΩω₁ : NF₁ (Ωω ∷ [])"
+      },
+      {
+        "name": "bndΩω",
+        "kind": "declaration",
+        "line": "bndΩω : Bnd₁ (natT 1) (Ωω ∷ [])"
+      },
+      {
+        "name": "bndω",
+        "kind": "declaration",
+        "line": "bndω : Bnd₁ [] argω"
+      },
+      {
+        "name": "nω₁",
+        "kind": "declaration",
+        "line": "nω₁ : NF₁ tω"
+      },
+      {
+        "name": "nfω",
+        "kind": "declaration",
+        "line": "nfω : ∀ n → NF₁ (fsn tω n)"
+      },
+      {
+        "name": "nω′ᴮ",
+        "kind": "declaration",
+        "line": "nω′ᴮ : B.NF ω′"
+      },
+      {
+        "name": "nΩωᴮ",
+        "kind": "declaration",
+        "line": "nΩωᴮ : B.NFP Ωω"
+      },
+      {
+        "name": "gΩω",
+        "kind": "declaration",
+        "line": "gΩω : B.GB (natT 1) (Ωω ∷ []) (Ωω ∷ [])"
+      },
+      {
+        "name": "gω",
+        "kind": "declaration",
+        "line": "gω : B.GB [] argω argω"
+      },
+      {
+        "name": "nωᴮ",
+        "kind": "declaration",
+        "line": "nωᴮ : B.NF tω"
+      },
+      {
+        "name": "hΩω",
+        "kind": "declaration",
+        "line": "hΩω : HC tω"
+      },
+      {
+        "name": "N≺ω",
+        "kind": "declaration",
+        "line": "N≺ω : ∀ m (h : HC (tN m)) (h′ : HC tω) → O.suc (R2.Rt h) ≼ R2.Rt h′"
+      },
+      {
+        "name": "tω≼EBOᴿ",
+        "kind": "declaration",
+        "line": "tω≼EBOᴿ : (h : HC tω) → R2.Rt h ≼ readRW EBOᶻ"
+      },
+      {
+        "name": "instω",
+        "kind": "declaration",
+        "line": "instω : R2.Rt hΩω ≼ readRW EBOᶻ"
+      }
+    ],
+    "direct_importers": [
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTANLim.lagda.md",
+      "probes/OCF/Lean/YiVTTw2Hi.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTANLim.lagda.md"
+    ],
+    "sha256": "ea8b26dd5b8108e3693acf61341817468a7c555399ca898bdbd8864745be061d",
+    "bytes": 5570,
+    "code_lines": 116,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  },
+  {
+    "source": "YiVTTWEnd",
+    "target": "YiPMMinTWEnd",
+    "category": "hand-edited-copy",
+    "exports": [
+      {
+        "name": "kid0",
+        "kind": "declaration",
+        "line": "kid0 : LF → LF"
+      },
+      {
+        "name": "strictL",
+        "kind": "declaration",
+        "line": "strictL : (ℓ : LF) (ε : Ev ℓ) (ρ : Rt ℓ) (B : Base ℓ) → OKB ℓ B → Hi ℓ B → two ⇐ kid0 ℓ"
+      },
+      {
+        "name": "path₁",
+        "kind": "declaration",
+        "line": "path₁ : two ⇐ kid0 (h₁ c₁)"
+      },
+      {
+        "name": "tA≺br2",
+        "kind": "declaration",
+        "line": "tA≺br2 : (h : HC tA) → O.suc (R2.Rt h) ≼ read (br 2)"
+      },
+      {
+        "name": "tA≺EBO",
+        "kind": "declaration",
+        "line": "tA≺EBO : (h : HC tA) → O.suc (R2.Rt h) ≼ read EBOᶜ"
+      },
+      {
+        "name": "tA≺EBOᴿ",
+        "kind": "declaration",
+        "line": "tA≺EBOᴿ : (h : HC tA) → O.suc (R2.Rt h) ≼ readRW EBOᶻ"
+      },
+      {
+        "name": "inst",
+        "kind": "declaration",
+        "line": "inst : O.suc (R2.Rt hA) ≼ readRW EBOᶻ"
+      }
+    ],
+    "direct_importers": [],
+    "rg_hits": [
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md"
+    ],
+    "rg_nonimport_references": [
+      "probes/OCF/Lean/YiVTTWEnd.lagda.md"
+    ],
+    "sha256": "f917ad9072c661b56cd26e1d30dc79206acd6410c04a92268c50d8474b77764b",
+    "bytes": 3062,
+    "code_lines": 48,
+    "actual_status": "unmodified; compatibility unverified except YiVTLSFold failed"
+  }
+]

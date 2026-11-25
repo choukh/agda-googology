@@ -1,0 +1,255 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- D1: D1Block 上的值 (仿 YiVWVal: V ℓ 只有零, 后继, ℕ 极限, 本层槽位上的 Ω 极限; up 经孩子嵌入摊平).
+-- 新行: val (ex a b x) = Ev (val x) (_⊹ val b) (val a), 即 "右边接上 val b" 迭代 ω^{val x} 次.
+-- 编译定理: ≼ 自反传递; Ev 对底单调, 对指数 ≼ 单调 (故对指数 ≈ 相合), 对指数 ◁ 严格单调, 严格膨胀; val 保 ◃ 为 ◁.
+module D1Val where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+
+open import D1Block
+
+chL : (ℓ : L) → CH ℓ → L
+chL (nd s h) c = h c
+
+chP : (ℓ : L) (c : CH ℓ) → Pos (chL ℓ c) → Pos ℓ
+chP (nd s h) c p = inj₂ (c , inj₂ p)
+
+chBr : (ℓ : L) (c : CH ℓ) (p : Pos (chL ℓ c)) → Br ℓ (chP ℓ c p) → Br (chL ℓ c) p
+chBr (nd s h) c p z = z
+
+br0 : (ℓ : L) (p : Pos ℓ) → Br ℓ p
+br0 ℓ p = fromBr ℓ p zero
+
+data V (ℓ : L) : Set where
+  zero : V ℓ
+  suc  : V ℓ → V ℓ
+  lim  : (ℕ → V ℓ) → V ℓ
+  Ω    : (p : Pos ℓ) → (Br ℓ p → V ℓ) → V ℓ
+
+infixl 6 _⊹_
+_⊹_ : ∀ {ℓ} → V ℓ → V ℓ → V ℓ
+a ⊹ zero  = a
+a ⊹ suc b = suc (a ⊹ b)
+a ⊹ lim f = lim (λ n → a ⊹ f n)
+a ⊹ Ω p g = Ω p (λ z → a ⊹ g z)
+
+emb : (ℓ : L) (c : CH ℓ) → V (chL ℓ c) → V ℓ
+emb ℓ c zero    = zero
+emb ℓ c (suc v) = suc (emb ℓ c v)
+emb ℓ c (lim f) = lim (λ n → emb ℓ c (f n))
+emb ℓ c (Ω p g) = Ω (chP ℓ c p) (λ z → emb ℓ c (g (chBr ℓ c p z)))
+
+-- 迭代子: F 迭代 ω^x 次 (x 是值).
+Ev : ∀ {ℓ} → V ℓ → (V ℓ → V ℓ) → V ℓ → V ℓ
+Ev zero    F u = F u
+Ev (suc x) F u = lim (λ n → iter (Ev x F) u (suc n))
+Ev (lim f) F u = lim (λ n → Ev (f n) F u)
+Ev (Ω p g) F u = Ω p (λ z → Ev (g z) F u)
+
+mutual
+  val : (ℓ : L) → Tr ℓ → V ℓ
+  val ℓ zero           = zero
+  val ℓ (suc x)        = suc (val ℓ x)
+  val ℓ (lim f _)      = lim (λ n → val ℓ (f n))
+  val ℓ (Ω p g)        = Ω p (λ z → val ℓ (g z))
+  val ℓ (up x c y _)   = val ℓ x ⊹ valCh ℓ c y
+  val ℓ (ex a b _ x _) = Ev (val ℓ x) (_⊹ val ℓ b) (val ℓ a)
+
+  valCh : (ℓ : L) (c : CH ℓ) → ChT ℓ c → V ℓ
+  valCh zero     () y
+  valCh (nd s h) c y = emb (nd s h) c (val (h c) y)
+
+infix 4 _≼_ _≈_
+data _≼_ : {ℓ₁ ℓ₂ : L} → V ℓ₁ → V ℓ₂ → Set where
+  z≼  : ∀ {ℓ₁ ℓ₂} {b : V ℓ₂} → zero {ℓ₁} ≼ b
+  s≼s : ∀ {ℓ₁ ℓ₂} {a : V ℓ₁} {b : V ℓ₂} → a ≼ b → suc a ≼ suc b
+  ≼l  : ∀ {ℓ₁ ℓ₂} {a : V ℓ₁} {f : ℕ → V ℓ₂} (n : ℕ) → a ≼ f n → a ≼ lim f
+  l≼  : ∀ {ℓ₁ ℓ₂} {f : ℕ → V ℓ₁} {b : V ℓ₂} → ((n : ℕ) → f n ≼ b) → lim f ≼ b
+  ≼Ω  : ∀ {ℓ₁ ℓ₂} {a : V ℓ₁} {p : Pos ℓ₂} {g : Br ℓ₂ p → V ℓ₂} (z : Br ℓ₂ p) → a ≼ g z → a ≼ Ω p g
+  Ω≼  : ∀ {ℓ₁ ℓ₂} {p : Pos ℓ₁} {g : Br ℓ₁ p → V ℓ₁} {b : V ℓ₂} → ((z : Br ℓ₁ p) → g z ≼ b) → Ω p g ≼ b
+
+_≈_ : ∀ {ℓ₁ ℓ₂} → V ℓ₁ → V ℓ₂ → Set
+a ≈ b = (a ≼ b) × (b ≼ a)
+
+≼-refl : ∀ {ℓ} (a : V ℓ) → a ≼ a
+≼-refl zero    = z≼
+≼-refl (suc a) = s≼s (≼-refl a)
+≼-refl (lim f) = l≼ (λ n → ≼l n (≼-refl (f n)))
+≼-refl (Ω p g) = Ω≼ (λ z → ≼Ω z (≼-refl (g z)))
+
+lim⁻ : ∀ {ℓ₁ ℓ₂} {f : ℕ → V ℓ₁} {c : V ℓ₂} (n : ℕ) → lim f ≼ c → f n ≼ c
+lim⁻ n (≼l m e)  = ≼l m (lim⁻ n e)
+lim⁻ n (l≼ h)    = h n
+lim⁻ n (≼Ω z e)  = ≼Ω z (lim⁻ n e)
+
+Ω⁻ : ∀ {ℓ₁ ℓ₂ p} {g : Br ℓ₁ p → V ℓ₁} {c : V ℓ₂} (z : Br ℓ₁ p) → Ω p g ≼ c → g z ≼ c
+Ω⁻ z (≼l m e)   = ≼l m (Ω⁻ z e)
+Ω⁻ z (≼Ω z′ e)  = ≼Ω z′ (Ω⁻ z e)
+Ω⁻ z (Ω≼ h)     = h z
+
+mutual
+  ≼-trans : ∀ {ℓ₁ ℓ₂ ℓ₃} {a : V ℓ₁} {b : V ℓ₂} {c : V ℓ₃} → a ≼ b → b ≼ c → a ≼ c
+  ≼-trans z≼        e = z≼
+  ≼-trans (s≼s d)   e = sucT d e
+  ≼-trans (≼l n d)  e = ≼-trans d (lim⁻ n e)
+  ≼-trans (l≼ h)    e = l≼ (λ n → ≼-trans (h n) e)
+  ≼-trans (≼Ω z d)  e = ≼-trans d (Ω⁻ z e)
+  ≼-trans (Ω≼ h)    e = Ω≼ (λ z → ≼-trans (h z) e)
+
+  sucT : ∀ {ℓ₁ ℓ₂ ℓ₃} {a : V ℓ₁} {b : V ℓ₂} {c : V ℓ₃} → a ≼ b → suc b ≼ c → suc a ≼ c
+  sucT d (s≼s e)   = s≼s (≼-trans d e)
+  sucT d (≼l n e)  = ≼l n (sucT d e)
+  sucT d (≼Ω z e)  = ≼Ω z (sucT d e)
+
+≈-refl : ∀ {ℓ} (a : V ℓ) → a ≈ a
+≈-refl a = ≼-refl a , ≼-refl a
+
+≈-trans : ∀ {ℓ₁ ℓ₂ ℓ₃} {a : V ℓ₁} {b : V ℓ₂} {c : V ℓ₃} → a ≈ b → b ≈ c → a ≈ c
+≈-trans (d , d′) (e , e′) = ≼-trans d e , ≼-trans e′ d′
+
+≼-suc : ∀ {ℓ₁ ℓ₂} {a : V ℓ₁} {b : V ℓ₂} → a ≼ b → a ≼ suc b
+≼-suc z≼        = z≼
+≼-suc (s≼s d)   = s≼s (≼-suc d)
+≼-suc (≼l n d)  = ≼-trans (≼-suc d) (s≼s (≼l n (≼-refl _)))
+≼-suc (l≼ h)    = l≼ (λ n → ≼-suc (h n))
+≼-suc (≼Ω z d)  = ≼-trans (≼-suc d) (s≼s (≼Ω z (≼-refl _)))
+≼-suc (Ω≼ h)    = Ω≼ (λ z → ≼-suc (h z))
+
+≼⊹ : ∀ {ℓ} (a b : V ℓ) → a ≼ a ⊹ b
+≼⊹ a zero    = ≼-refl a
+≼⊹ a (suc b) = ≼-suc (≼⊹ a b)
+≼⊹ a (lim f) = ≼l 0 (≼⊹ a (f 0))
+≼⊹ {ℓ} a (Ω p g) = ≼Ω (br0 ℓ p) (≼⊹ a (g _))
+
+⊹-mono : ∀ {ℓ} (a : V ℓ) {b b′ : V ℓ} → b ≼ b′ → a ⊹ b ≼ a ⊹ b′
+⊹-mono a {b′ = b′} z≼ = ≼⊹ a b′
+⊹-mono a (s≼s d)   = s≼s (⊹-mono a d)
+⊹-mono a (≼l n d)  = ≼l n (⊹-mono a d)
+⊹-mono a (l≼ h)    = l≼ (λ n → ⊹-mono a (h n))
+⊹-mono a (≼Ω z d)  = ≼Ω z (⊹-mono a d)
+⊹-mono a (Ω≼ h)    = Ω≼ (λ z → ⊹-mono a (h z))
+
+⊹-monoˡ : ∀ {ℓ} {a a′ : V ℓ} → a ≼ a′ → (b : V ℓ) → a ⊹ b ≼ a′ ⊹ b
+⊹-monoˡ d zero    = d
+⊹-monoˡ d (suc b) = s≼s (⊹-monoˡ d b)
+⊹-monoˡ d (lim f) = l≼ (λ n → ≼l n (⊹-monoˡ d (f n)))
+⊹-monoˡ d (Ω p g) = Ω≼ (λ z → ≼Ω z (⊹-monoˡ d (g z)))
+
+⊹≈ : ∀ {ℓ} (a : V ℓ) {b b′ : V ℓ} → b ≈ b′ → a ⊹ b ≈ a ⊹ b′
+⊹≈ a (d , e) = ⊹-mono a d , ⊹-mono a e
+
+emb-mono : (ℓ : L) (c : CH ℓ) {v w : V (chL ℓ c)} → v ≼ w → emb ℓ c v ≼ emb ℓ c w
+emb-mono zero     ()
+emb-mono ℓ        c z≼        = z≼
+emb-mono ℓ        c (s≼s d)   = s≼s (emb-mono ℓ c d)
+emb-mono ℓ        c (≼l n d)  = ≼l n (emb-mono ℓ c d)
+emb-mono ℓ        c (l≼ h)    = l≼ (λ n → emb-mono ℓ c (h n))
+emb-mono (nd s h) c (≼Ω z d) = ≼Ω z (emb-mono (nd s h) c d)
+emb-mono (nd s h) c (Ω≼ e) = Ω≼ (λ z → emb-mono (nd s h) c (e z))
+
+F≈ : (ℓ : L) (c : CH ℓ) (a : V ℓ) {v w : V (chL ℓ c)} → v ≈ w → a ⊹ emb ℓ c v ≈ a ⊹ emb ℓ c w
+F≈ ℓ c a (d , e) = ⊹-mono a (emb-mono ℓ c d) , ⊹-mono a (emb-mono ℓ c e)
+
+s≈ : ∀ {ℓ₁ ℓ₂} {a : V ℓ₁} {b : V ℓ₂} → a ≈ b → suc a ≈ suc b
+s≈ (d , e) = s≼s d , s≼s e
+
+infix 4 _◁_
+data _◁_ {ℓ : L} : V ℓ → V ℓ → Set where
+  ◁s : ∀ {x} → x ◁ suc x
+  ◁l : ∀ {f} (n : ℕ) → f n ◁ lim f
+  ◁w : ∀ {p g} → g (br0 ℓ p) ◁ Ω p g
+  ◁t : ∀ {x y z} → x ◁ y → y ◁ z → x ◁ z
+
+⊹-mono◁ : ∀ {ℓ} (a : V ℓ) {b b′ : V ℓ} → b ◁ b′ → a ⊹ b ◁ a ⊹ b′
+⊹-mono◁ a ◁s       = ◁s
+⊹-mono◁ a (◁l n)   = ◁l n
+⊹-mono◁ a ◁w       = ◁w
+⊹-mono◁ a (◁t d e) = ◁t (⊹-mono◁ a d) (⊹-mono◁ a e)
+
+emb-mono◁ : (ℓ : L) (c : CH ℓ) {v w : V (chL ℓ c)} → v ◁ w → emb ℓ c v ◁ emb ℓ c w
+emb-mono◁ zero     ()
+emb-mono◁ ℓ        c ◁s       = ◁s
+emb-mono◁ ℓ        c (◁l n)   = ◁l n
+emb-mono◁ (nd s h) c ◁w = ◁w
+emb-mono◁ ℓ        c (◁t d e) = ◁t (emb-mono◁ ℓ c d) (emb-mono◁ ℓ c e)
+
+------------------------------------------------------------------------
+-- 迭代子 Ev 的律. Mono F: F 对 ≼ 单调 (同层).
+Mono : ∀ {ℓ} → (V ℓ → V ℓ) → Set
+Mono {ℓ} F = {u u′ : V ℓ} → u ≼ u′ → F u ≼ F u′
+
+iter-mono : ∀ {ℓ} (G : V ℓ → V ℓ) → Mono G → {u u′ : V ℓ} → u ≼ u′ → (n : ℕ) → iter G u n ≼ iter G u′ n
+iter-mono G mG d zero    = d
+iter-mono G mG d (suc n) = mG (iter-mono G mG d n)
+
+iter-le : ∀ {ℓ} (G H : V ℓ → V ℓ) → ((v : V ℓ) → G v ≼ H v) → Mono H → (u : V ℓ) (n : ℕ) → iter G u n ≼ iter H u n
+iter-le G H le mH u zero    = ≼-refl u
+iter-le G H le mH u (suc n) = ≼-trans (le (iter G u n)) (mH (iter-le G H le mH u n))
+
+Ev-monoᵘ : ∀ {ℓ} (x : V ℓ) (F : V ℓ → V ℓ) → Mono F → Mono (Ev x F)
+Ev-monoᵘ zero    F mF d = mF d
+Ev-monoᵘ (suc x) F mF d = l≼ (λ n → ≼l n (iter-mono (Ev x F) (Ev-monoᵘ x F mF) d (suc n)))
+Ev-monoᵘ (lim f) F mF d = l≼ (λ n → ≼l n (Ev-monoᵘ (f n) F mF d))
+Ev-monoᵘ (Ω p g) F mF d = Ω≼ (λ z → ≼Ω z (Ev-monoᵘ (g z) F mF d))
+
+Ev-F≼ : ∀ {ℓ} (x : V ℓ) (F : V ℓ → V ℓ) (u : V ℓ) → F u ≼ Ev x F u
+Ev-F≼ zero    F u = ≼-refl (F u)
+Ev-F≼ (suc x) F u = ≼l 0 (Ev-F≼ x F u)
+Ev-F≼ (lim f) F u = ≼l 0 (Ev-F≼ (f 0) F u)
+Ev-F≼ {ℓ} (Ω p g) F u = ≼Ω (br0 ℓ p) (Ev-F≼ (g _) F u)
+
+-- 对指数单调 (按 ≼ 的推导归纳; 两边同层).
+Ev-monoˣ : ∀ {ℓ} (F : V ℓ → V ℓ) → Mono F → {x y : V ℓ} → x ≼ y → (u : V ℓ) → Ev x F u ≼ Ev y F u
+Ev-monoˣ F mF {y = y} z≼ u = Ev-F≼ y F u
+Ev-monoˣ F mF {suc a} {suc b} (s≼s d) u =
+  l≼ (λ n → ≼l n (iter-le (Ev a F) (Ev b F) (Ev-monoˣ F mF d) (Ev-monoᵘ b F mF) u (suc n)))
+Ev-monoˣ F mF (≼l n d) u = ≼l n (Ev-monoˣ F mF d u)
+Ev-monoˣ F mF (l≼ h)   u = l≼ (λ n → Ev-monoˣ F mF (h n) u)
+Ev-monoˣ F mF (≼Ω z d) u = ≼Ω z (Ev-monoˣ F mF d u)
+Ev-monoˣ F mF (Ω≼ h)   u = Ω≼ (λ z → Ev-monoˣ F mF (h z) u)
+
+Ev≈ : ∀ {ℓ} (F : V ℓ → V ℓ) → Mono F → {x y : V ℓ} → x ≈ y → (u : V ℓ) → Ev x F u ≈ Ev y F u
+Ev≈ F mF (d , e) u = Ev-monoˣ F mF d u , Ev-monoˣ F mF e u
+
+-- 严格膨胀与对指数的严格单调 (F 严格膨胀时).
+Ev-infl : ∀ {ℓ} (x : V ℓ) (F : V ℓ → V ℓ) → ((u : V ℓ) → u ◁ F u) → (u : V ℓ) → u ◁ Ev x F u
+Ev-infl zero    F hF u = hF u
+Ev-infl (suc x) F hF u = ◁t (Ev-infl x F hF u) (◁l 0)
+Ev-infl (lim f) F hF u = ◁t (Ev-infl (f 0) F hF u) (◁l 0)
+Ev-infl {ℓ} (Ω p g) F hF u = ◁t (Ev-infl (g (br0 ℓ p)) F hF u) ◁w
+
+Ev-step : ∀ {ℓ} (F : V ℓ → V ℓ) → ((u : V ℓ) → u ◁ F u) → {x y : V ℓ} → x ◁ y → (u : V ℓ) → Ev x F u ◁ Ev y F u
+Ev-step F hF ◁s       u = ◁l 0
+Ev-step F hF (◁l n)   u = ◁l n
+Ev-step F hF ◁w       u = ◁w
+Ev-step F hF (◁t d e) u = ◁t (Ev-step F hF d u) (Ev-step F hF e u)
+
+-- "右边接上 w" 单调; w 非零时严格膨胀.
+⊹r-mono : ∀ {ℓ} (w : V ℓ) → Mono (_⊹ w)
+⊹r-mono w d = ⊹-monoˡ d w
+
+⊹r-infl : ∀ {ℓ} {w : V ℓ} → zero ◁ w → (u : V ℓ) → u ◁ u ⊹ w
+⊹r-infl zw u = ⊹-mono◁ u zw
+
+mutual
+  val-mono : (ℓ : L) {x y : Tr ℓ} → ℓ ⊢ x ◃ y → val ℓ x ◁ val ℓ y
+  val-mono ℓ ◃s             = ◁s
+  val-mono ℓ (◃l n)         = ◁l n
+  val-mono ℓ ◃w             = ◁w
+  val-mono ℓ (◃u x c y e)   = ⊹-mono◁ (val ℓ x) (valCh-mono₀ ℓ c y e)
+  val-mono ℓ (◃c x c d)     = ⊹-mono◁ (val ℓ x) (valCh-mono ℓ c d)
+  val-mono ℓ (◃e {a} {b} {nb} {x}) = Ev-infl (val ℓ x) (_⊹ val ℓ b) (⊹r-infl (val-mono ℓ nb)) (val ℓ a)
+  val-mono ℓ (◃x {a} {b} {nb} d)   = Ev-step (_⊹ val ℓ b) (⊹r-infl (val-mono ℓ nb)) (val-mono ℓ d) (val ℓ a)
+  val-mono ℓ (◃t d e)       = ◁t (val-mono ℓ d) (val-mono ℓ e)
+
+  valCh-mono₀ : (ℓ : L) (c : CH ℓ) (y : ChT ℓ c) → RCh ℓ c (chZ ℓ c) y → zero ◁ valCh ℓ c y
+  valCh-mono₀ zero     () y d
+  valCh-mono₀ (nd s h) c y d = emb-mono◁ (nd s h) c (val-mono (h c) d)
+
+  valCh-mono : (ℓ : L) (c : CH ℓ) {y′ y : ChT ℓ c} → RCh ℓ c y′ y → valCh ℓ c y′ ◁ valCh ℓ c y
+  valCh-mono zero     () d
+  valCh-mono (nd s h) c d = emb-mono◁ (nd s h) c (val-mono (h c) d)

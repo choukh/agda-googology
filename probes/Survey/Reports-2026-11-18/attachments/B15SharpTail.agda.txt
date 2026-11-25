@@ -1,0 +1,76 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B15SharpTail where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁)
+open import Data.Unit using (tt)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+import W4Path as P
+open import WVOne using (read; lvl1)
+open import WVTwo using (◃→≼; lvl2; p₂; g₂)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼)
+open import B13SharpOne using (r₁)
+open import B14SharpStack
+open import B14SharpBound
+open import B15SharpAction
+open import B15SharpLift
+import B14SharpNext as N
+import B14SharpLive as Live
+import B14SharpStation as Station
+import B12Terminal as T
+import B15SharpSecond as Second
+
+module Tail (lem : LEM) where
+  open I.Sharp lem
+  open Action lem
+  open Lift lem
+  open Live.Live lem using (item; module Actual)
+  open T.Run
+
+  module Run (r : T.Run lvl2) where
+    open Actual r using (S; b; c⁺; S₁; op; v₁; output; step; first)
+    module St = Second.Second.Stage lem c⁺ (omegaB r (B.inc tt B.self))
+
+    ideal = V.iter (N.Next.step lem) R.zero
+    real = B.iter step B.zero
+
+    Compare : ℕ → Set
+    Compare n = Model ch (proj₁ (selfFold B♯ (V.Ωt r₁) (ideal n))) (eop F.tdNil (real n) op)
+
+    first-row : Compare 0
+    first-row = St.start≤
+
+    second-row : Compare 1
+    second-row = St.internal-model
+
+    next-item : ∀ n → Compare n → data≤ (item (suc n)) (proj₁ (output (suc n)))
+    next-item n d = next≤ _ _ (lim-out B♯ (V.Ωt R.zero) id _ _
+      (λ k → ≼l k (power d k B♯ (V.Ωt R.zero) id S₁ (path base) v₁
+        (≼-trans (oneβ r) (◃→≼ (F.inf op S B.zero (path base) b)))
+        (≼-trans (oneB r (B.inc tt (path slot))) (◃→≼ (F.inf op S B.zero (path slot) (S B.zero (path slot))))))))
+
+    module From (advance : ∀ n → Compare (suc n) → Compare (suc (suc n))) where
+      rows : ∀ n → Compare (suc n)
+      rows zero = second-row
+      rows (suc n) = advance n (rows n)
+
+      items : ∀ n → data≤ (item n) (proj₁ (output n))
+      items zero = next≤ _ b (oneβ r)
+      items (suc zero) = first
+      items (suc (suc n)) = next-item (suc n) (rows n)
+
+      prefix : ∀ n → readRW (V.cum item n) ≼ read (T.value r)
+      prefix n = ≼-trans (sum≤ _ _ items n) (Live.cumulative (F.kp lvl2 (ok r) p₂ (P.z≤ lvl2))
+        (λ z → F.ψ lvl2 (ok r) (bs r) B.zero (P.z≤ lvl2) b (g₂ z)) step n)
+
+  module Terminal (advance : ∀ n → Run.Compare (T.finiteRun 1) (suc n) → Run.Compare (T.finiteRun 1) (suc (suc n))) where
+    whole : Station.Station.whole lem ≼ read F.EBOᶜ
+    whole = Station.Station.from-tail lem (λ n → ≼-trans (Run.From.prefix (T.finiteRun 1) advance (suc (suc n))) (T.finite-ge 1))
+

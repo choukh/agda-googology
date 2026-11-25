@@ -1,0 +1,71 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第三层在任意覆盖标准 Ω 槽的运行上成立，同一参照可直接投入塔与 Λ 的实际累加孩子。
+module B13Terminal where
+
+open import Data.Unit using (tt)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import W4Block using (tw; self; inc; sL; sΩ; zero)
+open import W4Path using (Ok-tw)
+open import W4Fold using (twᶜ; EBOᶜ)
+open import WVOne using (read; h₁)
+open import YiLAB7Orbit using (lvl2)
+open import WKShape using (lvl3)
+import WKTower as W
+import B12Arithmetic as A
+import B12Hierarchy as H
+import B12ActualSlots as Slots
+import B12Update as U
+import B12Terminal as T
+import B12TerminalSrc as Tail
+import B12Omega3Tail as Cut
+import B13SeedOuter as Seed
+import B13Seeds as SeedProof
+import B13Update as Step
+import B13Orbit as B
+import B13Flow as F
+
+module Calibrate (r : T.Run lvl3) (cv : Slots.Covered r) where
+  open Seed.At r
+  private
+    cp = cv lvl2 (inc tt self)
+    module Init = SeedProof.Seeds r cv
+
+    single : H.Realizes (B.Jc c⁺) H.add
+    single x = Step.advanceJc c⁺ cp w2 (H.Prefix.val x) (H.Prefix.exp x) (H.Prefix.rows x)
+
+    module Chain = F.Flow c⁺ cp single
+    module Exit = Chain.Exit st1 v₁ (U.seeds Init.base Init.coord Init.structure) (read (T.value r)) outer
+
+  open Exit using (src; level) public
+
+  cut : Cut.tail ≼ read (T.value r)
+  cut = ≼-trans Cut.tail-to-main level
+
+module Actual = Calibrate (T.finiteRun 2) (Slots.all-finite 2)
+
+finite-three : tr₀ (S.ψ₀ A.source) ≼ read (T.value (T.finiteRun 2))
+finite-three = Actual.src
+
+actual-cut : Cut.tail ≼ read EBOᶜ
+actual-cut = ≼-trans Actual.cut (T.finite-ge 2)
+
+tower : tr₀ (S.ψ₀ (Tail.plusω A.source)) ≼ read (twᶜ 1)
+tower = ≼-trans (Tail.seal W.gL tc 2 A.source (Calibrate.src r covered)) (T.tower-ge Tail.standard 1)
+  where
+  tc = T.tower-child Tail.standard 1
+  r = T.limRun W.gL tc 2
+  covered : Slots.Covered r
+  covered = Slots.enter sL W.gL tc 2 (T.prefix W.gL 2)
+    (Slots.enter (sΩ zero) h₁ Tail.standard (T.index1 Tail.standard 1) zero
+      (Slots.initial (tw 1) (Ok-tw 1)))
+
+root-child : tr₀ (S.ψ₀ (Tail.plusω (Tail.plusω A.source))) ≼ read (T.value T.tower1)
+root-child = ≼-trans (Tail.seal _ (T.tower-child T.tower1 1) 0 (Tail.plusω A.source)
+  (Tail.seal W.gL Tail.middle 2 A.source finite-three)) (T.tower-ge T.tower1 1)
+
+terminal : tr₀ (S.ψ₀ (Tail.plusω (Tail.plusω (Tail.plusω A.source)))) ≼ read EBOᶜ
+terminal = Tail.seal tw T.terminal 1 (Tail.plusω (Tail.plusω A.source)) root-child

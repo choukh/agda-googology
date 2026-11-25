@@ -1,0 +1,39 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 整个正规森林及其首项参数、非空或空后缀在同一个选定的 χ 输入中有嵌套字面位置。
+module B28Fork where
+
+open import Data.Nat.Base using (ℕ; _≤_)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import OCF.Align.EboLeanDef using (T; ψ; HC)
+open import OCF.Align.EboLeanBase using (NF; nfp-u; nf-hd; nf-tl; nf-le; tail<)
+open import OCF.Align.EboLeanTree using (hc)
+import B25DTrack as R
+import B26Names as A
+import B26CForest as F
+import B26CScalar as S
+import B28CodePath as P
+import B28Located as X
+
+module Node {u t : T} (pu : F.Pure u) (pt : F.Pure t) (regular : NF (ψ u [] ∷ t)) where
+  both = F.node pu pt
+  target = F.small (ψ u [] ∷ t)
+  nt = F.normal both regular
+  c = F.count (ψ u [] ∷ t)
+  opaque
+    hc-node : OCF.Align.EboLeanDef.HC target
+    hc-node = hc nt c
+  parent = S.code target
+  head = S.code (F.small u)
+  rest = S.code (F.small t)
+  children : P.Path head parent × P.Path rest parent
+  children = P.descend (F.normal pu (OCF.Align.EboLeanBase.nfp-u (OCF.Align.EboLeanBase.nf-hd regular))) nt
+    (F.belowε (ψ u [] ∷ t)) hc-node (F.below-head pu (F.small t))
+    , P.descend (nf-tl nt) nt (F.belowε (ψ u [] ∷ t)) hc-node (tail< _ _ (nf-le nt) (nf-tl nt))
+
+  locations : Σ ℕ (λ start → ∀ n → start ≤ n →
+    P.Path parent (R.χ n) × P.Path head (R.χ n) × P.Path rest (R.χ n))
+  locations = proj₁ all , λ n h → let pos = proj₂ all n h in pos , P.join (proj₁ children) pos , P.join (proj₂ children) pos
+    where
+    code = X.witness (A.named target nt c hc-node) (F.entry both regular hc-node)
+    all = X.At.all-later code

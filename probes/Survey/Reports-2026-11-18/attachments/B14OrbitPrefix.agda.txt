@@ -1,0 +1,97 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- E(suc y) 的第一次 Q 更新在实际一级槽有完整的 Ω₁ 描述，下次 Q 在该状态含 Jc。
+module B14OrbitPrefix where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+open import W4Block hiding (at)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WVTwo using (◃→≼; p₂; g₂)
+open import WKGen using (Ω₁t; node-ge)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; c₁)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import B9InnerOuter using (w2)
+open import B8PairW4 using (Real-up; SumR-up)
+open import WSShadow using (nC; zC)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼)
+import B11OuterCore as C
+import B12Orbit as B
+import B12Hierarchy as H
+import B12LimitRef as A
+import B12Update as S
+import B13Countable as T
+import B13OrbitFeed as O
+import B13Feedback as F
+import B13Orbit as V
+import B13Update as Step
+import B12ActualSlots as Cover
+import B12LimitSrc as Z
+import B14OrbitReal as W
+import B14OrbitHeight as Height
+open H.Prefix using (val; exp; rows)
+
+shadow = nC (λ y → Height.he y zC)
+
+module At (c : Tr⁺ lvl2) (cp : Cover._⊴_ (proj₁ (Ωt lvl2)) (proj₁ c))
+          (R : Base lvl2) (v : Tr⁺ zero) (I : S.Seeds (val H.first) (exp H.first) R v) where
+  module Proof = W.At c cp R v I
+  open Proof using (J; module Core)
+  open Core.Run using (S₁; step₂)
+  open Core.Row using (K₁)
+  y = step₂ zero
+  Q = op (E ok₂ O.D₁ y K₁) (Einf ok₂ O.D₁ y K₁)
+  t = σ O.m₁ w2
+  baseAt = λ n → T.pull O.m₁ (itS Q n S₁)
+  valueAt = λ n → itV Q n S₁ zero t v
+
+  path : lvl1 ⊢ Ω₁t ◃ y
+  path = ◃t (C.st (S.structure I)) (Einf ok₂ tdNil (g₂ zero) J R lvl1 C.slot (R lvl1 C.slot))
+
+  first-real = Real-up (Emono ok₂ O.D₁ K₁ S₁ lvl1 (σ O.m₁ C.slot) (R lvl1 C.slot) path) Proof.retained
+
+  module For (p : Z.Lev₂) (d : A.Described p shadow) (low : L.ψ⁰ p ≼ F.first-node) where
+    module Local (u : zero ≤ lvl2) (b : Tr⁺ zero) (h : S.Seeds (val H.first) (exp H.first) R b) where
+      module Inside = Core.Inside (σ O.m₁ u) b h
+      start : L.ψ⁰ p ≼ read (proj₁ (run Q S₁ zero (σ O.m₁ u) b))
+      start = ≼-trans low (≼-trans Inside.old-whole (◃→≼ (Emono ok₂ O.D₁ K₁ S₁ zero (σ O.m₁ u) b path)))
+
+    module Out = Local w2 v I
+    module Slot = Local C.zpath (R zero C.zpath) (S.seeds (S.slot-bound I) (S.slot-bound I) (S.structure I))
+
+    first : S.Seeds p shadow (baseAt 1) (valueAt 1)
+    first = S.seeds Out.start Slot.start
+      (C.str first-real (Real-up rise (C.rΩ h)) (SumR-up rise (C.sN h)) (◃t (C.st h) rise))
+      where
+      h = S.structure I
+      rise = inf Q S₁ lvl1 (σ O.m₁ C.slot) (R lvl1 C.slot)
+
+    terms = iter (λ u → u L.+ Ω₂ᴸ) p
+    exps = iter A.next shadow
+    desc : ∀ n → A.Described (terms n) (exps n)
+    desc zero = d
+    desc (suc n) = A.Rows.advance _ _ (desc n)
+
+    contained : Rl K₁ Q
+    contained S i u b = Emono ok₂ O.D₁ K₁ S i u b (z◃ Ω₁t path)
+
+    at : ∀ n → S.Seeds (terms n) (exps n) (baseAt (suc n)) (valueAt (suc n))
+    at zero = first
+    at (suc n) = S.seeds (≼-trans (S.value-bound next) (◃→≼ (contained state zero t b)))
+      (≼-trans (S.slot-bound next) (◃→≼ (contained state zero (σ O.m₁ C.zpath) (state zero (σ O.m₁ C.zpath)))))
+      (W.carry {R = stepS J (baseAt (suc n))} {S = baseAt (suc (suc n))} rise (S.structure next))
+      where
+      state = itS Q (suc n) S₁
+      b = valueAt (suc n)
+      rise = contained state lvl1 (σ O.m₁ C.slot) (state lvl1 (σ O.m₁ C.slot))
+      next = Step.advanceJc c cp w2 (terms n) (exps n) (desc n) (baseAt (suc n)) b (at n)
+
+    to-block : ∀ n → L.ψ⁰ (terms n) ≼ read (proj₁ (run (B.block J) R zero w2 v))
+    to-block n = ≼-trans (S.value-bound (at n)) (≼-trans (≼l n (≼-refl _))
+      (node-ge (kp lvl2 ok₂ p₂ w2) (λ z → E ok₂ tdNil (g₂ z) J R zero w2 v) step₂ 1))
+
+    collect : L.ψ⁰ (L.lim terms) ≼ read (proj₁ (run (B.block J) R zero w2 v))
+    collect = l≼ to-block

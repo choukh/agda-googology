@@ -1,0 +1,211 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B5A: W4 的跨孩子格 D-tail 的构造性证明 (编译定理, 无排中律, 无函数外延).
+-- 用到的不是跨层单调, 是规范族的自界: 层号 h c 的 Ω 树折向零的输出 Ψ c 按值不低于 c (self-bound).
+-- 右边是 Ω 结点 (对一切零层树取上确界), 左支 c 取右边的下标 Ψ c 即被支配 (cof).
+-- 另给规范域上跨层单调的后继一步 (Ψ-step) 与极限的首支 (Ψ-lim0); 极限的其余支未证.
+module DTTail where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import W4Val as V
+open V using (_≼_; _≈_; _◁_; val; _⊹_)
+open import W4Check using (o₁; n2; lvl2)
+open import W4Local using (h₁; shift; shift-dom; add-dom; q₂; G₂; D-tail; d-back)
+
+------------------------------------------------------------------------
+-- 值的小工具.
+
+◁→≼ : ∀ {ℓ} {x y : V.V ℓ} → x ◁ y → x ≼ y
+◁→≼ V.◁s       = V.≼-suc (V.≼-refl _)
+◁→≼ (V.◁l n)   = V.≼l n (V.≼-refl _)
+◁→≼ V.◁w       = V.≼Ω _ (V.≼-refl _)
+◁→≼ (V.◁t d e) = V.≼-trans (◁→≼ d) (◁→≼ e)
+
+no◁0 : ∀ {ℓ} {x : V.V ℓ} → x ◁ V.zero → ⊥
+no◁0 (V.◁t d e) = no◁0 e
+
+one₀ : V.V zero
+one₀ = V.suc V.zero
+
+-- 零层的正树至少是 1.
+pos : (y : Tr zero) → zero ⊢ zero ◃ y → one₀ ≼ val zero y
+pos zero              d = ⊥-elim (no◁0 (V.val-mono zero d))
+pos (suc y)           d = V.s≼s V.z≼
+pos (lim f a)         d = V.≼l 1 (pos (f 1) (z◃ (f 0) (a 0)))
+pos (Ω () g)          d
+pos (up x () y e)     d
+pos (ex a b nb x ())  d
+
+lim≈ : ∀ {ℓ₁ ℓ₂} {f : ℕ → V.V ℓ₁} {g : ℕ → V.V ℓ₂} → ((n : ℕ) → f n ≈ g n) → V.lim f ≈ V.lim g
+lim≈ e = V.l≼ (λ n → V.≼l n (proj₁ (e n))) , V.l≼ (λ n → V.≼l n (proj₂ (e n)))
+
++≈₀ : (x y : Tr zero) → val zero (x + y) ≈ val zero x ⊹ val zero y
++≈₀ x zero             = V.≈-refl _
++≈₀ x (suc y)          = V.s≈ (+≈₀ x y)
++≈₀ x (lim f a)        = lim≈ (λ n → +≈₀ x (f n))
++≈₀ x (Ω () g)
++≈₀ x (up _ () _ _)
++≈₀ x (ex _ _ _ _ ())
+
+ι≈ : (ℓ : L) (y : Tr zero) → val ℓ (ι ℓ y) ≈ val zero y
+ι≈ ℓ zero             = V.z≼ , V.z≼
+ι≈ ℓ (suc y)          = V.s≈ (ι≈ ℓ y)
+ι≈ ℓ (lim f a)        = lim≈ (λ n → ι≈ ℓ (f n))
+ι≈ ℓ (Ω () g)
+ι≈ ℓ (up _ () _ _)
+ι≈ ℓ (ex _ _ _ _ ())
+
++ι≈ : (ℓ : L) (b : Tr ℓ) (y : Tr zero) → val ℓ (b + ι ℓ y) ≈ val ℓ b ⊹ val ℓ (ι ℓ y)
++ι≈ ℓ b zero             = V.≈-refl _
++ι≈ ℓ b (suc y)          = V.s≈ (+ι≈ ℓ b y)
++ι≈ ℓ b (lim f a)        = lim≈ (λ n → +ι≈ ℓ b (f n))
++ι≈ ℓ b (Ω () g)
++ι≈ ℓ b (up _ () _ _)
++ι≈ ℓ b (ex _ _ _ _ ())
+
+-- 右接零层树对零层值单调 (两边零层树的值跨层比较).
++ι-mono : (ℓ : L) (b : Tr ℓ) {y y′ : Tr zero} → val zero y ≼ val zero y′ → val ℓ (b + ι ℓ y) ≼ val ℓ (b + ι ℓ y′)
++ι-mono ℓ b {y} {y′} d =
+  V.≼-trans (proj₁ (+ι≈ ℓ b y))
+    (V.≼-trans (V.⊹-mono (val ℓ b) (V.≼-trans (proj₁ (ι≈ ℓ y)) (V.≼-trans d (proj₂ (ι≈ ℓ y′)))))
+      (proj₂ (+ι≈ ℓ b y′)))
+
+nextsuc : (b : Tr⁺ zero) → V.suc (val zero (proj₁ b)) ≼ val zero (proj₁ (next⁺ b))
+nextsuc (b , nb) = V.≼l 1 (V.≼-trans (V.⊹-mono (val zero b) (pos b nb)) (proj₂ (+≈₀ b b)))
+
+-- 折向零层时后继行严格加一 (层为零或非零两种都走 next⁺).
+ψsuc : (ℓ : L) (o : Ok ℓ) (B : Base ℓ) (β : Tr⁺ zero) (x : Tr ℓ)
+     → V.suc (val zero (proj₁ (ψ ℓ o B zero (z≤ ℓ) β x))) ≼ val zero (proj₁ (ψ ℓ o B zero (z≤ ℓ) β (suc x)))
+ψsuc zero     o B β x = nextsuc (ψ zero o B zero self β x)
+ψsuc (nd s h) o B β x = nextsuc (ψ (nd s h) o B zero (z≤ (nd s h)) β x)
+
+------------------------------------------------------------------------
+-- 底族的条件: 每个底值在 ◃ 的自反闭包里不低于该层的 Ω 树 (B₀ 以相等满足).
+
+Le : (ℓ : L) → Tr ℓ → Tr ℓ → Set
+Le ℓ x y = (x ≡ y) ⊎ (ℓ ⊢ x ◃ y)
+
+le-lt : ∀ {ℓ} {x y z : Tr ℓ} → Le ℓ x y → ℓ ⊢ y ◃ z → ℓ ⊢ x ◃ z
+le-lt (inj₁ refl) d = d
+le-lt (inj₂ d′)   d = ◃t d′ d
+
+PB : (ℓ : L) → Base ℓ → Set
+PB ℓ B = (i : L) (u : i ≤ ℓ) → Le i (proj₁ (Ωt i)) (proj₁ (B i u))
+
+-- 层号的零层读数: 后继加一, ℕ 极限取极限, Ω 形不计.
+lv : L → V.V zero
+lv zero           = V.zero
+lv (nd sS h)      = V.suc (lv (h tt))
+lv (nd sL g)      = V.lim (λ n → lv (g n))
+lv (nd (sΩ k) h)  = V.zero
+
+-- 后继层: 孩子层 Ω 树的折后值严格低于本层 Ω 树的折后值 (经链的第 1 项).
+stepSS : (h : ⊤ → L) (o : Ok (nd sS h)) (B : Base (nd sS h)) → PB (nd sS h) B → (β : Tr⁺ zero)
+  → V.suc (val zero (proj₁ (ψ (h tt) (proj₂ o tt) (λ i u → B i (inc tt u)) zero (z≤ (h tt)) β (proj₁ (Ωt (h tt))))))
+    ≼ val zero (proj₁ (ψ (nd sS h) o B zero (z≤ (nd sS h)) β (proj₁ (Ωt (nd sS h)))))
+stepSS h o B P β =
+  V.≼l 1 (V.≼-trans (V.s≼s (◁→≼ (V.val-mono zero lt)))
+           (V.≼-trans (ψsuc (h tt) (proj₂ o tt) B′ β s0) (add-dom (G zero) (G s0))))
+  where
+    B′ : Base (h tt)
+    B′ i u = B i (inc tt u)
+    β₁ : Tr⁺ (h tt)
+    β₁ = B (h tt) (inc tt self)
+    G : Tr (h tt) → Tr zero
+    G z = proj₁ (ψ (nd sS h) o B zero (z≤ (nd sS h)) β (up zero tt (suc z) (z◃ z ◃s)))
+    s0 : Tr (h tt)
+    s0 = proj₁ (ψ (nd sS h) o B (h tt) (inc tt self) β₁ (up zero tt (suc zero) (z◃ zero ◃s)))
+    lt : zero ⊢ proj₁ (ψ (h tt) (proj₂ o tt) B′ zero (z≤ (h tt)) β (proj₁ (Ωt (h tt))))
+                ◃ proj₁ (ψ (h tt) (proj₂ o tt) B′ zero (z≤ (h tt)) β s0)
+    lt = mono (h tt) (proj₂ o tt) B′ zero (z≤ (h tt)) β
+           (le-lt (P (h tt) (inc tt self)) (mono (nd sS h) o B (h tt) (inc tt self) β₁ (◃u zero tt (suc zero) (z◃ zero ◃s))))
+
+-- 自界的一般形: 对一切层号, 合法证明, 满足 PB 的底族与非零底值.
+lb : (ℓ : L) (o : Ok ℓ) (B : Base ℓ) → PB ℓ B → (β : Tr⁺ zero)
+   → lv ℓ ≼ val zero (proj₁ (ψ ℓ o B zero (z≤ ℓ) β (proj₁ (Ωt ℓ))))
+lb zero o B P β = V.z≼
+lb (nd sS h) o B P β =
+  V.≼-trans (V.s≼s (lb (h tt) (proj₂ o tt) (λ i u → B i (inc tt u)) (λ i u → P i (inc tt u)) β)) (stepSS h o B P β)
+lb (nd sL g) o B P β = V.l≼ (λ n → V.≼l n (lbc n))
+  where
+    F : ℕ → Tr (nd sL g)
+    F n = up zero n (proj₁ (Ωt (g n))) (proj₂ (Ωt (g n)))
+    zc : (n : ℕ) → nd sL g ⊢ zero ◃ cum F n
+    zc zero    = ◃u zero zero _ _
+    zc (suc n) = ◃t (zc n) (◃u (cum F n) (suc n) _ _)
+    lbc : (n : ℕ) → lv (g n) ≼ val zero (proj₁ (ψ (nd sL g) o B zero (z≤ (nd sL g)) β (cum F n)))
+    lbc zero    = lb (g zero) (proj₂ o zero) (λ i u → B i (inc zero u)) (λ i u → P i (inc zero u)) β
+    lbc (suc n) = lb (g (suc n)) (proj₂ o (suc n))
+      (λ i u → ψ (nd sL g) o B i (inc (suc n) u) (B i (inc (suc n) u)) (cum F n))
+      (λ i u → inj₂ (le-lt (P i (inc (suc n) u)) (mono (nd sL g) o B i (inc (suc n) u) (B i (inc (suc n) u)) (zc n))))
+      (ψ (nd sL g) o B zero (z≤ (nd sL g)) β (cum F n))
+lb (nd (sΩ k) h) o B P β = V.z≼
+
+------------------------------------------------------------------------
+-- 规范族 Ψ c: 塔第 1 项的孩子 c 层号上的 Ω 树折向零.
+
+Ψ : Tr zero → Tr zero
+Ψ c = proj₁ (ψ₀ (h₁ c) (proj₂ o₁ c) (proj₁ (Ωt (h₁ c))))
+
+c≼lv : (c : Tr zero) → val zero c ≼ lv (h₁ c)
+c≼lv zero             = V.z≼
+c≼lv (suc c)          = V.s≼s (c≼lv c)
+c≼lv (lim f a)        = V.l≼ (λ n → V.≼l n (c≼lv (f n)))
+c≼lv (Ω () g)
+c≼lv (up _ () _ _)
+c≼lv (ex _ _ _ _ ())
+
+self-bound : (c : Tr zero) → val zero c ≼ val zero (Ψ c)
+self-bound c = V.≼-trans (c≼lv c) (lb (h₁ c) (proj₂ o₁ c) (B₀ (h₁ c)) (λ i u → inj₁ refl) (Ωt zero))
+
+-- 上确界的支配: 自界的族, 经任何按值膨胀的换号都不降值. 左支 c 取右边的下标 F c.
+cof : (A : Tr lvl2) (F ρ : Tr zero → Tr zero)
+    → ((x : Tr zero) → val zero x ≼ val zero (ρ x)) → ((x : Tr zero) → val zero x ≼ val zero (F x))
+    → val lvl2 (Ω q₂ (λ c → A + ι lvl2 (F c))) ≼ val lvl2 (Ω q₂ (λ c → A + ι lvl2 (F (ρ c))))
+cof A F ρ hρ hF = V.Ω≼ (λ c → V.≼Ω (F c) (+ι-mono lvl2 A (V.≼-trans (hρ (F c)) (hF (ρ (F c))))))
+
+d-tail : D-tail
+d-tail = cof (proj₁ (Ωt lvl2)) Ψ (shift n2) (shift-dom n2) self-bound
+
+-- 与 W4Local.d-back 合起来, 两个结点值互相支配.
+d-equiv : val lvl2 (Ω q₂ G₂) ≈ val lvl2 (Ω q₂ (λ c → G₂ (shift n2 c)))
+d-equiv = d-tail , d-back
+
+-- 对一切按值膨胀的换号都成立.
+d-any : (ρ : Tr zero → Tr zero) → ((x : Tr zero) → val zero x ≼ val zero (ρ x))
+      → val lvl2 (Ω q₂ G₂) ≼ val lvl2 (Ω q₂ (λ c → G₂ (ρ c)))
+d-any ρ hρ = cof (proj₁ (Ωt lvl2)) Ψ ρ hρ self-bound
+
+------------------------------------------------------------------------
+-- 规范域上的跨层单调: 后继一步与极限的首支.
+
+Ψ-step : (c : Tr zero) → val zero (Ψ c) ≼ val zero (Ψ (suc c))
+Ψ-step c = V.≼-trans (V.≼-suc (V.≼-refl _))
+  (stepSS (λ _ → h₁ c) (proj₂ o₁ (suc c)) (B₀ (h₁ (suc c))) (λ i u → inj₁ refl) (Ωt zero))
+
+Ψ-lim0 : (f : ℕ → Tr zero) (a : (n : ℕ) → zero ⊢ f n ◃ f (suc n)) → val zero (Ψ (f 0)) ≼ val zero (Ψ (lim f a))
+Ψ-lim0 f a = V.≼l 0 (V.≼-refl _)
+
+-- 首个被跳过的非零分支 G₂ 1, 用 "自然" 下标 1 (换号后是 3): Ψ 1 ≼ Ψ 2 ≼ Ψ 3.
+d-one : val lvl2 (G₂ (suc zero)) ≼ val lvl2 (Ω q₂ (λ c → G₂ (shift n2 c)))
+d-one = V.≼Ω (suc zero) (+ι-mono lvl2 (proj₁ (Ωt lvl2))
+          (V.≼-trans (Ψ-step (suc zero)) (Ψ-step (suc (suc zero)))))
+
+-- 未证的陈述 (只是定义): 极限的其余支, 与规范域上跨层单调的一般形 (后者蕴含前者).
+Ψ-lim-all : Set
+Ψ-lim-all = (f : ℕ → Tr zero) (a : (n : ℕ) → zero ⊢ f n ◃ f (suc n)) (n : ℕ) → val zero (Ψ (f n)) ≼ val zero (Ψ (lim f a))
+
+Ψ-mono : Set
+Ψ-mono = (c d : Tr zero) → val zero c ≼ val zero d → val zero (Ψ c) ≼ val zero (Ψ d)
+
+mono→lim : Ψ-mono → Ψ-lim-all
+mono→lim m f a n = m (f n) (lim f a) (V.≼l n (V.≼-refl _))

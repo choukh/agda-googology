@@ -1,0 +1,41 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20UnitFirst where
+open import Data.Nat.Base using (ℕ)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (subst)
+open import W4Block
+open import W4Path
+open import WVOne using (T₀; read; h₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans)
+import B12Terminal as T
+import B12ActualSlots as A
+import B14Floor as F
+import B14PathHeight as P
+import B14Tower as W
+import B15TowerSeed as I
+import B19OldSlots as G
+import B19OldFinite as E
+import B20OldRoom as H
+import B20Room as U
+open T.Run
+
+-- Both witnesses retain their original values on every requested finite layer.
+module At (r : T.Run (tw 1)) (cv : A.Covered r) (q : T₀) (slots : U.Room r q)
+    (base : q ≼ read (proj₁ (β r))) (n : ℕ) (clock : ℕ → ℕ) where
+  z = T.index1 r 1
+  inner = T.tower-child r 1
+  top = G.frame inner (z≤ _) (P.standard _) (A.enter (sΩ zero) h₁ r z zero cv)
+  local = E.seek n z (I.First.finite r cv n) top clock
+  found = proj₁ local
+  run = G.state found
+  covered : A.Covered run
+  covered = G.cover found
+  all : U.Room run q
+  all = H.seek q n z (I.First.finite r cv n) top clock (λ w → slots (inc z w))
+  input : q ≼ read (proj₁ (β run))
+  input = ≼-trans base (G.start (proj₂ local))
+  value : read (T.value run) ≼ read (T.value r)
+  value = subst (λ p → W.valueAt run p ≼ read (T.value r)) (F.normal n (G.all found))
+    (≼-trans (G.bound (proj₂ local)) (T.tower-ge r 1))

@@ -1,0 +1,47 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同一次 W4 一级零运行的实际回灌点，对所有森林输入值构造性地共尾。代码字面并不能在该链中逐个收到。
+module B27NOrbit where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_; _++_)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; trans)
+open import OCF.Align.EboLeanDef using (T; ψ; natT)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≼lim⁻; ≺→s≼)
+import W4Block as W
+import W4Ops as O
+open import WVOne using (read)
+import B16IndexBase as I
+import B25DTrack as R
+import B25DUnit as U
+import B25DLimit as V
+import B25DExactFold as E
+import B26CScalar as S
+import B26CMeaning as M
+import B26CForest as F
+import B26CLift as H
+
+point : ∀ n → M.Fits (R.χ n)
+point n = ≼-trans {b = read (R.χ (suc n))} (≺→s≼ (I.pred (U.rise n 0))) (R.in-fold n)
+
+after : ∀ x → M.Fits x → Σ ℕ (λ n → L.suc (read x) ≼ read (R.χ n))
+after x p = ≼lim⁻ {a = read x} {f = λ j → read (R.χ j)} (≼-trans {b = R.unit-output} p
+  (≼-trans (proj₁ V.out-value) (proj₂ R.input-value)))
+
+not-successor : ∀ n z → R.χ n ≡ W.suc z → ⊥
+not-successor zero z ()
+not-successor (suc n) z ()
+
+trailing : ∀ t → S.code (t ++ natT 1) ≡ W.suc (S.code t)
+trailing [] = refl
+trailing (ψ u a ∷ t) = cong (E.fold (S.code a) O.+_) (trailing t)
+
+miss : ∀ t n → R.χ n ≡ S.code (t ++ natT 1) → ⊥
+miss t n e = not-successor n (S.code t) (trans e (trailing t))
+
+-- 任何深度的 Ω 森林主项都可附这个尾标。
+forest-miss : ∀ k n → R.χ n ≡ S.code (F.small (OCF.Align.EboLeanDef.ΩTower k) ++ natT 1) → ⊥
+forest-miss k = miss _
+

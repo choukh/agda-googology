@@ -1,0 +1,50 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25FShortcut where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; _×_; proj₁; proj₂)
+open import W4Block using (Tr; zero; lim)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≼lim⁻; ≼l)
+open import OCF.Align.BTBOFullLv using (SV-L)
+open import WVOne using (T₀)
+open import B21StandardShape using (Limit; root)
+open import B25FZero using (IsLim; islim; Chart; chart)
+import B25FActual as A
+import B14Btbo as B
+import B20StandardInside as S
+import B22TowerCut as K
+import B22TowerDiagonal as D
+import B22SourceSlots as Src
+import B16IndexBase as I
+
+limit-index : ∀ {z : Tr zero} → Limit z → IsLim (I.κ z)
+limit-index root = islim
+
+module Route {b} (ch : Chart b) where
+  open Chart ch public
+  Visits = ∀ n → Σ ℕ (λ j → L.suc (B.α (index n)) ≼ S.std j)
+  necessary : B.α b ≼ K.cut → Visits
+  necessary h n = ≼lim⁻ (≼-trans (bound n) h)
+  sufficient : Visits → B.α b ≼ K.cut
+  sufficient h = assemble λ n → let j , d = h n in ≼l j (≼-trans (≼-suc (≼-refl _)) d)
+
+module Target (m : ℕ) where
+  z = Src.Level.Std.z m
+  layout : Chart (I.κ z)
+  layout = chart (limit-index (A.Actual.shape m)) (Src.valid z)
+  module C = Route layout
+  opaque
+    unfolding D.target
+    to-target : C.Visits → D.target m ≼ K.cut
+    to-target = C.sufficient
+    from-target : D.target m ≼ K.cut → C.Visits
+    from-target = C.necessary
+
+module Gamma = Route (chart {N.L 1} islim (SV-L 1))
+
+to-γ₂ : Gamma.Visits → N.γ 2 ≼ K.cut
+to-γ₂ = Gamma.sufficient
+from-γ₂ : N.γ 2 ≼ K.cut → Gamma.Visits
+from-γ₂ = Gamma.necessary

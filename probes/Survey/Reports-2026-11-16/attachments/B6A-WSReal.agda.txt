@@ -1,0 +1,138 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B6A: E / It 对一切阶 n 的值定理, 对第 1 层的一切指数树 (目标层 0): 结构关系 Re x e (逐行对着影子组合子) ⟹ Real x e.
+-- 每一行只用 WSW4 的逐行不等式与 W4 的 inf / Einf; 不用影子的单调性. 编译定理, 无前提.
+module WSReal where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-refl; ≼-trans)
+open import WVOne using (T₀; 𝟏; read; lvl1; p₁)
+open import WVTwo using (◃→≼)
+open import WSShadow
+open import WSW4
+
+-- up 行 (x 之后接第 0 层的 y′) 与一般的 ex 行的影子.
+uC : ES → T₀ → ES
+sE (uC e y′) f = sE (lv y′) (sE e f)
+sI (uC e y′) n k g = sI (lv y′) n (λ g′ → sI e n k g′) (sI e n k g)
+
+xC : ES → ES → ES → ES
+sE (xC ea eb eₓ) f = sI eₓ 0 (λ g → sE eb g) (sE ea f)
+sI (xC ea eb eₓ) n k g = sI eₓ (suc n) (λ k₁ g′ → sI eb n k₁ g′) (λ g′ → sI ea n k g′) g
+
+data Re : Tr lvl1 → ES → Set where
+  re-z : Re zero zC
+  re-s : ∀ {x e} → Re x e → Re (suc x) (sC e)
+  re-l : ∀ {f : ℕ → Tr lvl1} {a} {h : ℕ → ES} → (∀ j → Re (f j) (h j)) → Re (lim f a) (lC h)
+  re-Ω : ∀ {g : Tr zero → Tr lvl1} {h : T₀ → ES} → (∀ y z → y ≼ read z → Re (g z) (h y)) → Re (Ω p₁ g) (nC h)
+  re-u : ∀ {x e} {y : Tr zero} → Re x e → (y′ : T₀) → y′ ≼ read y
+       → (r : zero ⊢ zero ◃ y) → Re (up x tt y r) (uC e y′)
+  re-x : ∀ {a b x ea eb eₓ} (nb : lvl1 ⊢ zero ◃ b) → Re a ea → Re b eb → Re x eₓ → Re (ex a b nb x tt) (xC ea eb eₓ)
+
+module Gen (o : Ok lvl1) where
+  open Lem o
+
+  -- Itᴺ n x K 实现 "λ g → x 的影子作用在 k, g 上".
+  hItᴺ : (x : Tr lvl1) (e : ES) → RealI x e → (n : ℕ) {X : Cx lvl1} (tv : TV X) (mk : MK X)
+       (K : Ca (suc n) X) (k : Sh (suc n)) → 𝓡 (suc n) (mk (inc tt self)) K k
+       → 𝓡 (suc n) (mk (inc tt self)) (Itᴺ n o (td stop tv mk) x K) (λ g′ → sI e n k g′)
+  hItᴺ x e rI n tv mk K k hK m gm G₁ g₁ r₁ =
+    rI n (λ y → tv (π m y)) (λ τ → σ m (mk τ)) (enter (suc n) m K) k G₁ g₁ (R-enter (suc n) m gm K hK) r₁
+
+  mutual
+    realE : ∀ {x e} → Re x e → RealE x e
+    realE re-z tv mk F f hF = hF
+    realE (re-s {x} {e} r) {X} tv mk F f hF S t v a c ha hc h1 = l≼ (λ j → ≼l j (proj₁ (J (suc j))))
+      where
+      Tᵈ : TD X lvl1
+      Tᵈ = td stop tv mk
+      ch : ⟦ X ⟧ zero
+      ch = mk (inc tt self)
+      G′ : Op X
+      G′ = op (E o Tᵈ x F) (Einf o Tᵈ x F)
+      d0 : Sh 0
+      d0 = sE e f
+      hG : 𝓡 0 ch G′ d0
+      hG = realE r tv mk F f hF
+      J : (j : ℕ) → (proj₁ (S.iter (pr d0) (a , c) j) ≼ read (proj₁ (itV G′ j S zero t v)))
+                  × (proj₂ (S.iter (pr d0) (a , c) j) ≼ rd (itS G′ j S) ch) × (𝟏 ≼ rd (itS G′ j S) ch)
+      J zero = ha , hc , h1
+      J (suc j) with J j
+      ... | (q₁ , q₂ , q₃) =
+          hG (itS G′ j S) t (itV G′ j S zero t v) _ _ q₁ q₂ q₃
+        , hG (itS G′ j S) ch (itS G′ j S zero ch) _ _ q₂ q₂ q₃
+        , ≼-trans q₃ (◃→≼ (inf G′ (itS G′ j S) zero ch (itS G′ j S zero ch)))
+    realE (re-l {f} {a} {h} hh) tv mk F f′ hF S t v x c hx hc h1 =
+      l≼ (λ j → ≼l j (realE (hh j) tv mk F f′ hF S t v x c hx hc h1))
+    realE (re-Ω {g} {h} hh) {X} tv mk F f hF S t v a c ha hc h1 =
+      NodeG.low (S zero ch) (λ z → E o Tᵈ (g z) F S zero t v) (λ z → E o Tᵈ (g z) F S zero ch (S zero ch))
+                (λ z → Einf o Tᵈ (g z) F S zero ch (S zero ch)) (λ y → sE (h y) f) a c hc h1
+                (λ y z d → realE (hh y z d) tv mk F f hF S t v a c ha hc h1)
+                (λ y z d → realE (hh y z d) tv mk F f hF S ch (S zero ch) c c hc hc h1)
+                (kpT stop o p₁ (tv t))
+      where
+      Tᵈ : TD X lvl1
+      Tᵈ = td stop tv mk
+      ch : ⟦ X ⟧ zero
+      ch = mk (inc tt self)
+    realE (re-u {x} {e} {y} r y′ d e′) {X} tv mk F f hF S t v a c ha hc h1 =
+      L0E (inj₂ (tv ch) , ch) (chTD Tᵈ tt) y y′ d (enterO (chMT Tᵈ tt) (op (E o Tᵈ x F) (Einf o Tᵈ x F))) (sE e f)
+          (R-enter 0 (chMT Tᵈ tt) refl (op (E o Tᵈ x F) (Einf o Tᵈ x F)) (realE r tv mk F f hF))
+          (λ i′ y″ → S i′ (proj₂ y″)) (inj₂ (tv t) , t) v a c ha hc h1
+      where
+      Tᵈ : TD X lvl1
+      Tᵈ = td stop tv mk
+      ch : ⟦ X ⟧ zero
+      ch = mk (inc tt self)
+    realE (re-x {a} {b} {x} {ea} {eb} {eₓ} nb ra rb rx) {X} tv mk F f hF =
+      realI rx 0 tv mk (Kb o Tᵈ b nb) (λ g → sE eb g) (op (E o Tᵈ a F) (Einf o Tᵈ a F)) (sE ea f)
+            (λ m gm G g rg → realE rb (λ y → tv (π m y)) (λ τ → σ m (mk τ)) G g rg)
+            (realE ra tv mk F f hF)
+      where
+      Tᵈ : TD X lvl1
+      Tᵈ = td stop tv mk
+
+    realI : ∀ {x e} → Re x e → RealI x e
+    realI re-z n tv mk K k G g hK hG = hK idM refl G g hG
+    realI (re-s {x} {e} r) n {X} tv mk K k G g hK hG = R-limC n _ _ _ (λ j → itR (suc j))
+      where
+      itR : (j : ℕ) → 𝓡 n (mk (inc tt self)) (iter (It n o (td stop tv mk) x K) G j) (S.iter (sI e n k) g j)
+      itR zero    = hG
+      itR (suc j) = realI r n tv mk K k _ _ hK (itR j)
+    realI (re-l {f} {a} {h} hh) n tv mk K k G g hK hG = R-limC n _ _ _ (λ j → realI (hh j) n tv mk K k G g hK hG)
+    realI (re-Ω {g = g₀} {h} hh) n {X} tv mk K k G g hK hG =
+      R-node n (mk (inc tt self)) (λ t → kpT stop o p₁ (tv t)) (λ z → It n o (td stop tv mk) (g₀ z) K G)
+             (λ y → sI (h y) n k g) (λ y z d → realI (hh y z d) n tv mk K k G g hK hG)
+    realI (re-u {x} {e} {y} r y′ d e′) n {X} tv mk K k G g hK hG =
+      R-up n (down stop tt) (λ t → inj₂ (tv t)) ch (It n o Tᵈ x K G) _ _
+        (L0I n (inj₂ (tv ch) , ch) (chTD Tᵈ tt) y y′ d
+             (enter (suc n) (chMT Tᵈ tt) (Itᴺ n o Tᵈ x K)) (λ g′ → sI e n k g′)
+             (enter n (chMT Tᵈ tt) (It n o Tᵈ x K G)) (sI e n k g)
+             (R-enter (suc n) (chMT Tᵈ tt) refl _ (hItᴺ x e (realI r) n tv mk K k hK))
+             (R-enter n (chMT Tᵈ tt) refl _ (realI r n tv mk K k G g hK hG)))
+      where
+      Tᵈ : TD X lvl1
+      Tᵈ = td stop tv mk
+      ch : ⟦ X ⟧ zero
+      ch = mk (inc tt self)
+    realI (re-x {a} {b} {x} {ea} {eb} {eₓ} nb ra rb rx) n {X} tv mk K k G g hK hG =
+      realI rx (suc n) tv mk (Kₑ n o Tᵈ b nb) (λ k₁ g′ → sI eb n k₁ g′) (Itᴺ n o Tᵈ a K) (λ g′ → sI ea n k g′)
+            (λ m gm K₁ k₁ r₁ → hItᴺ b eb (realI rb) n (λ y → tv (π m y)) (λ τ → σ m (mk τ)) K₁ k₁ r₁)
+            (hItᴺ a ea (realI ra) n tv mk K k hK)
+            idM refl G g hG
+      where
+      Tᵈ : TD X lvl1
+      Tᵈ = td stop tv mk
+
+  real : ∀ {x e} → Re x e → Real x e
+  real r = realE r , realI r

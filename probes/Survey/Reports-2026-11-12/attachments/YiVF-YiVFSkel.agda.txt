@@ -1,0 +1,26 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiVFSkel where
+
+open import Data.Product using (_,_; proj₁; proj₂)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps using (Tr⁺)
+open import OCF.Lean.YiRWPath using (_≤_; Ok; z≤)
+open import OCF.Lean.YiRWFold using (Base)
+open import OCF.Lean.YiTBRow using (Rb; ψ)
+
+-- 新主线的参数骨架；先检查，不定义新接口。
+ψ⊥ᵀ : (ℓ : L) → Ok ℓ → Rb ℓ → Base ℓ → Tr ℓ → Tr zero
+ψ⊥ᵀ ℓ o r B x = proj₁ (ψ ℓ o r B zero (z≤ ℓ) (B zero (z≤ ℓ)) x)
+
+ψsᵀ : (ℓ : L) → Ok ℓ → Rb ℓ → Base ℓ → (j : L) → j ≤ ℓ
+    → (β : Tr j) → j ⊢ zero ◃ β → Tr ℓ → Tr j
+ψsᵀ ℓ o r B j w β nβ x = proj₁ (ψ ℓ o r B j w (β , nβ) x)
+
+nz⊥ᵀ : (ℓ : L) (o : Ok ℓ) (r : Rb ℓ) (B : Base ℓ) (x : Tr ℓ)
+     → zero ⊢ zero ◃ ψ⊥ᵀ ℓ o r B x
+nz⊥ᵀ ℓ o r B x = proj₂ (ψ ℓ o r B zero (z≤ ℓ) (B zero (z≤ ℓ)) x)
+
+nzsᵀ : (ℓ : L) (o : Ok ℓ) (r : Rb ℓ) (B : Base ℓ) (j : L) (w : j ≤ ℓ)
+     → (β : Tr j) (nβ : j ⊢ zero ◃ β) (x : Tr ℓ)
+     → j ⊢ zero ◃ ψsᵀ ℓ o r B j w β nβ x
+nzsᵀ ℓ o r B j w β nβ x = proj₂ (ψ ℓ o r B j w (β , nβ) x)

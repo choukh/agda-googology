@@ -1,0 +1,65 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module QBtboCofinal where
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_; s≤s; _≤′_; ≤′-refl; ≤′-step)
+open import Data.Nat.Properties using (≤⇒≤′; ≤-refl)
+open import Data.Product using (Σ; _×_; _,_; proj₁)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.BTBO using (module Ord-Ord)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; ≼l; l≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOFull using (BTBO≈)
+open import WVOne using (T₀; read)
+open import W4Fold using (EBOᶜ)
+import B12BtboCut as C
+import B18OldBridge as O
+import B20StandardInside as S
+import B21StandardShape as H
+import B22TowerCut as K
+import B22TowerDiagonal as D
+
+open import QBtboReserve public using (target; reserve)
+
+module Schedule (row height ref : ℕ → T₀)
+  (seed : row 1 ≼ height 1)
+  (grows : ∀ j → L.suc (height j) ≼ height (suc j))
+  (strict : ∀ m k → row k ≼ height (suc m) → L.suc (row (suc k)) ≼ ref m) where
+  tower : ∀ {i j} → i ≤′ j → height i ≼ height j
+  tower {i} ≤′-refl = ≼-refl (height i)
+  tower {i} (≤′-step {n = j} p) = ≼-trans {a = height i} {b = height j} {c = height (suc j)}
+      (tower {i} {j} p) (≼-trans (≼-suc (≼-refl (height j))) (grows j))
+
+  Hit : T₀ → Set
+  Hit x = Σ ℕ (λ j → x ≼ height (suc j))
+  extract : ∀ {x : T₀} → L.suc x ≼ (L.lim height) → Hit x
+  extract {x} (≼l j h) = j , ≼-trans {a = x} {b = L.suc x} {c = height (suc j)} (≼-suc (≼-refl x))
+      (≼-trans h (≼-trans (≼-suc (≼-refl (height j))) (grows j)))
+  next : ∀ m k → row k ≼ height (suc m) → ref m ≼ (L.lim height) → Hit (row (suc k))
+  next m k from bound = extract {row (suc k)} (≼-trans {a = L.suc (row (suc k))} {b = ref m} {c = (L.lim height)} (strict m k from) bound)
+  Cofinal : Set
+  Cofinal = ∀ i → Σ ℕ (λ m → (i ≤ m) × ref m ≼ (L.lim height))
+  advance : Cofinal → ∀ k → Hit (row k) → Hit (row (suc k))
+  advance co k (i , hi) with co i
+  ... | m , le , hm = next m k (≼-trans {a = row k} {b = height (suc i)} {c = height (suc m)} hi (tower {suc i} {suc m} (≤⇒≤′ (s≤s le)))) hm
+  walk : Cofinal → ∀ k → Hit (row (suc k))
+  walk co zero = 0 , seed
+  walk co (suc k) = advance co (suc k) (walk co k)
+  all : Cofinal → L.lim (λ n → row (suc n)) ≼ L.lim height
+  all co = l≼ λ k → let j , d = walk co k in ≼l (suc j) d
+
+module Use = Schedule N.γ S.std target D.first H.rise reserve
+open Use public using (Hit; next; Cofinal; walk)
+second : target 0 ≼ K.cut → Hit (N.γ 2)
+second = Use.next 0 1 D.first
+
+finite-together : target 0 ≼ K.cut → Σ ℕ (λ j → ∀ k → C.finite k ≼ S.std (suc j))
+finite-together h = let j , s = second h in j , O.finite-from (S.std (suc j)) s
+terminal₂ : target 0 ≼ K.cut → N.γ 2 ≼ read EBOᶜ
+terminal₂ h = ≼-trans {a = N.γ 2} {b = K.cut} {c = read EBOᶜ} (let j , d = second h in ≼l (suc j) d) K.terminal
+
+from-home : D.Home → Cofinal
+from-home h i = let j , d = h i in i , ≤-refl , ≼l (suc j) d
+btbo-cut : Cofinal → tr₀ Ord-Ord.BTBO ≼ K.cut
+btbo-cut co = ≼-trans {a = tr₀ Ord-Ord.BTBO} {b = N.BTBOᴵ} {c = K.cut} (proj₁ BTBO≈) (Use.all co)
+btbo : Cofinal → tr₀ Ord-Ord.BTBO ≼ read EBOᶜ
+btbo co = ≼-trans {a = tr₀ Ord-Ord.BTBO} {b = K.cut} {c = read EBOᶜ} (btbo-cut co) K.terminal

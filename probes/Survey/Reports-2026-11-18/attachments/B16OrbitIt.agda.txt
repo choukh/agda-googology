@@ -1,0 +1,58 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 可数指数上的 It 迭代操作变换；底作用和输入包均可变，参照指数只需在真实指数的值以下。
+module B16OrbitIt where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; read)
+open import YiLAB7Orbit using (lvl2; ok₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; l≼; ≼l; i≼; u≼)
+import B15OrbitModel as M
+open import B16OrbitTransform using (Act; f; s; sup; height)
+
+module Frame {X : Cx lvl2} (m : Mor M.X₁ X) (D : TD X zero) where
+  module N = M.At m
+  contract : Ca 1 X → (Act → Act) → Set
+  contract K F = ∀ G a → N.Models G a → N.Models (proj₁ K idM G) (F a)
+
+  all : (Q : Op X) (h : ℕ → Act) → (∀ n → N.Models Q (h n)) → N.Models Q (sup h)
+  all Q h = N.sup Q (λ n → f (h n)) (λ n → s (h n))
+
+  apply : Tr zero → Ca 1 X → Op X → Op X
+  apply z K = It 0 ok₂ D z K
+
+  module Power (z : Tr zero) (F : Act → Act) (K : Ca 1 X)
+               (p : ∀ G a → N.Models G a → N.Models (apply z K G) (F a))
+               (G : Op X) (a : Act) (h : N.Models G a) where
+    fn = apply z K
+    model : ∀ n → N.Models (iter fn G n) (iter F a n)
+    model zero = h
+    model (suc n) = p _ _ (model n)
+    part : ∀ n → Rl (iter fn G n) (apply (suc z) K G)
+    part zero S i t v = ◃t (Itinf 0 ok₂ D z K G S i t v) (◃l 0)
+    part (suc n) S i t v = ◃l n
+
+    closed : N.Models (apply (suc z) K G) (sup (iter F a))
+    closed = all (apply (suc z) K G) (iter F a) (λ n → N.lift-law {Q = iter fn G n} {Q′ = apply (suc z) K G} (part n) (model n))
+
+  eval : ∀ z {y} → y ≼ read z → ∀ K F → contract K F →
+         ∀ G a → N.Models G a → N.Models (apply z K G) (height y F a)
+  eval (Ω () g)
+  eval (up p () b d)
+  eval (ex p b nb z ())
+  eval zero z≼ K F sim = sim
+  eval (suc z) z≼ K F sim G a h = N.lift-law {Q = proj₁ K idM G} {Q′ = apply (suc z) K G}
+      (Itmono 0 ok₂ D K G (z◃ z ◃s)) (sim G a h)
+  eval (lim g d) z≼ K F sim G a h = N.lift-law {Q = proj₁ K idM G} {Q′ = apply (lim g d) K G}
+      (Itmono 0 ok₂ D K G (z◃ (g 0) (◃l 0))) (sim G a h)
+  eval (suc z) (s≼s {a = y} d) K F sim = Power.closed z (height y F) K (eval z d K F sim)
+  eval (lim g d) (≼l n h) K F sim G a u = N.lift-law {Q = apply (g n) K G} {Q′ = apply (lim g d) K G}
+       (Itmono 0 ok₂ D K G (◃l n)) (eval (g n) h K F sim G a u)
+  eval zero (l≼ {f = g} h) K F sim G a u = all (apply zero K G) (λ n → height (g n) F a) (λ n → eval zero (h n) K F sim G a u)
+  eval (suc z) (l≼ {f = g} h) K F sim G a u = all (apply (suc z) K G) (λ n → height (g n) F a) (λ n → eval (suc z) (h n) K F sim G a u)
+  eval (lim g d) (l≼ {f = g′} h) K F sim G a u = all (apply (lim g d) K G) (λ n → height (g′ n) F a) (λ n → eval (lim g d) (h n) K F sim G a u)
+  eval z (i≼ {p = ()} d) K F sim
+  eval z (u≼ {r = ()} d) K F sim

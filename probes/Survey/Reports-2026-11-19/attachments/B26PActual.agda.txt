@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实终点的任意严格前驱可右乘标准塔极限的任意严格前驱，结果仍严格留在终点。
+module B26PActual where
+
+open import Data.Nat.Base as Nat using (ℕ; zero; suc; _⊔_; _≤_)
+open import Data.Nat.Properties using (≤⇒≤′; m≤m⊔n; m≤n⊔m; m≤n⇒m≤1+n)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-suc; ≼-trans; ≼-refl; ≼l; l≼; ≼lim⁻; s≼s; +-mono; ≅→≼)
+import OCF.Align.Level as L
+open import WVOne using (T₀; read)
+open import W4Fold using (EBOᶜ)
+import B12EboRows as A
+import B17CellNext as N
+import B17CellPrefix
+import B17Cofinal as C
+import B18Product as P
+import B18ResetCell as Cell
+import B19Coefficient as Fold
+import B20StandardInside as S
+import B20StandardGoal as G
+import B21StandardShape as Shape
+import B22TowerCut as Cut
+import B25DFirst as Small
+
+Y = read EBOᶜ
+K = Cut.cut
+
+-- 两个输入落在不同的塔也可合并。乘积在同一座较晚塔的每个反馈孩子内实现。
+cell : ∀ {x q : T₀} i m → x ≼ A.child i → q ≼ S.std m →
+       let n = suc (i ⊔ m) in ∀ j → x P.· q ≼ B17CellPrefix.cell n j
+cell {x} {q} i m xi qm j = ≼-trans (P.mono left right) (proj₂ (Fold.Cell.exact-cell n j))
+  where
+  n = suc (i ⊔ m)
+  left : x ≼ A.child n
+  left = ≼-trans xi (N.walk (≤⇒≤′ (m≤n⇒m≤1+n (m≤m⊔n i m))))
+  right : q ≼ Cell.At.fresh n j
+  right = ≼-trans qm (≼-trans (≼-suc (≼-refl (S.std m)))
+    (G.At.child (i ⊔ m) j m (m≤n⇒m≤1+n (m≤n⊔m i m))))
+
+interior : ∀ {x q} → L.suc x ≼ Y → L.suc q ≼ K → L.suc (x P.· q) ≼ Y
+interior {x} {q} hx hq with C.witness hx | ≼lim⁻ {a = q} {f = S.std} hq
+... | i , xi | m , qm = ≼-trans (s≼s p) (≼-trans (s≼s into) (≼-trans (N.strict (suc n) 0) (N.actual (suc n) 0)))
+  where
+  n = suc (i ⊔ m)
+  p = cell {x} {q} i m (≼-trans (≼-suc (≼-refl x)) xi) (≼-trans (≼-suc (≼-refl q)) qm) 0
+  into = B17CellPrefix.At.S.lift-value n 0
+
+bound : ∀ {x} → L.suc x ≼ Y → x P.· K ≼ Y
+bound {x} h = l≼ (λ m → ≼-trans (≼-suc (≼-refl _))
+  (interior {x} {S.std m} h (≼l (suc m) (Shape.rise m))))
+
+times-omega : ∀ {x} → L.suc x ≼ Y → L.suc (x P.· L.ωᶜ) ≼ Y
+times-omega {x} h = interior {x} {L.ωᶜ} h (≼l 1 (≼-trans
+    (s≼s (≼-trans (≼-refl L.ωᶜ) (l≼ (λ n → ≼l n (≼-trans (≼-suc (≼-refl _)) (≅→≼ (L.≅-sym (Small.numeral n)))))))) (Shape.rise 0)))

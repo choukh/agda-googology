@@ -1,0 +1,37 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原 ψ₀(Ωᵤ) 在可数下标的 Bachmann 验收类上有直接参照。u=2 的原父严格落入每一座正塔的全部单位重置系数。
+module B28PReference where
+open import Data.Nat.Base as N using (ℕ; suc; _≤_; s≤s; z≤n)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (refl)
+import OCF.Align.EboLeanDef as Not
+import OCF.Align.Bachmann as B
+open import OCF.Align.Correspond using (Lab)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≅→≼; s≼s)
+open import OCF.Lean.YiEXRow using (Rt≼Lab)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import OCF.Align.Stage2 using (Lab-uniq)
+open import OCF.Lean.YiEXRow using (labR)
+import B12Terminal as T
+import B20StandardInside as St
+import B20StandardGoal as G
+import B25DSize as Size
+import B27Joint as J
+
+parent = λ u → Not.ψ [] (Not.Ωt u) ∷ []
+module At {u : Not.T} (s : B.NF u) where
+  target = L.ψ⁰ (L.Ω (B.lvN s))
+  term : B.G.𝔸 (parent u)
+  term = B.G.a∷ (B.G.aψ B.s₀ (B.G.a∷ (B.G.aψ s B.G.a[]) B.G.a[])) B.G.a[]
+  label : Lab target (parent u)
+  label = B.G.lab target term (B.top (B.inA₀ B.s₀) (B.G.Ω-node (B.inA₀ s) (L.≅ᴵ-refl _)))
+  exact : ∀ (d : Not.HC (parent u)) → Rt d ≈ᵛ target
+  exact d = Rt≼Lab d label , ≅→≼ (Lab-uniq label (labR d))
+  child : ∀ t j m → m ≤ suc t → target ≼ St.std m → (d : Not.HC (parent u)) → L.suc (Rt d) ≼ J.f (suc t) j
+  child t j m low hi d = ≼-trans {a = L.suc (Rt d)} {b = L.suc (St.std m)} {c = J.f (suc t) j}
+    (s≼s (≼-trans {a = Rt d} {b = target} {c = St.std m} (proj₁ (exact d)) hi)) (G.At.child t j m low)
+
+two : ∀ (d : Not.HC (parent (Not.natT 2))) → Rt d ≼ St.std 1
+two d = ≼-trans {a = Rt d} {b = T.Ω₂ref} {c = St.std 1} (proj₁ (At.exact (B.snat 2) d)) Size.at-one

@@ -1,0 +1,48 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20RowBound where
+open import Data.Product using (proj₁; proj₂)
+open import Data.List.Base using ([]; _∷_)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module S = Ord-Ord
+module B = BoundedTrich
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans)
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.BTBOValUp as Up
+import OCF.Align.BTBOValDn as Dn
+open import W4Fold using (EBOᶜ)
+open import WVOne using (read)
+import B12LimitSrc as A
+import B12Omega3Ref as R
+import B12EboRows as T
+import B14RefFixed as F
+import B14RefGain as G
+open import B15RefSource using (one)
+import B19OldSource as Src
+import B19RowSecond as Q
+import B19RowSecondParent as B19
+import B20RowPrefix as P
+import B20RowAcross as Across
+import B20OldRoom as Room
+import B20OldAddress as Addr
+
+s = Src.src-prefix
+item = S.ψ₀ (s S.+ S.↑ B.zero (S.ψ< {i = one} B.zero s))
+co : A.Aligned (S.↑ B.zero (S.ψ< {i = one} B.zero s)) (L.up L.zero (F.collapse Q.p))
+co = A.aligned (Up.Mur (Up.M-↑ B.zero (Up.M-ψ {i = one} (L.≅ᴵ-refl _) L.zero R.idσ B.zero (A.Aligned.up Src.prefix))))
+   (Dn.Rul (Dn.Dn-↑ B.zero (Dn.Dn-ψ {i = one} (L.≅ᴵ-refl _) L.zero R.idσ B.zero (A.Aligned.dn Src.prefix))))
+   (L.upˡ (L.upʳ (F.pres P.rp)))
+source : tr₀ item ≈ᵛ L.ψ⁰ (Q.p L.+ L.up L.zero (F.collapse Q.p))
+source = A.fold (A.plus Src.prefix co)
+module X = Across.At Q.p P.rp Room.Three.actual Room.Three.covered Room.Three.input Room.Three.all
+actual : L.ψ⁰ (Q.p L.+ L.up L.zero (F.collapse Q.p)) ≼ T.child 2
+actual = ≼-trans X.all Room.Three.value
+at-address : Addr.positive-entry ≼ T.child 2
+at-address = actual
+contains : Addr.piece ≼ Addr.positive-entry
+contains = G.path-bound (0 ∷ 0 ∷ 1 ∷ 0 ∷ 0 ∷ []) Addr.positive-entry
+strict : L.suc B19.piece ≼ Addr.positive-entry
+strict = ≼-trans Addr.strict contains
+terminal : tr₀ item ≼ read EBOᶜ
+terminal = T.into (2 Data.Product., ≼-trans (proj₁ source) actual)
+

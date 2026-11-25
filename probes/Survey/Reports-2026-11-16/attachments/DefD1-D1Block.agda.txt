@@ -1,0 +1,288 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- D1: 与 E2Block 相同 (只改模块名). E2: N2Block 的改写. (1) 第 0 层禁掉 ex (Sg 加字段 Ex, 第 0 层为 ⊥), 最终输出按类型是纯布劳威尔树;
+-- (2) 迭代子抽象成带序的结果代数 RA 上的 Eh (高一阶代数 pt A 取逐点序, ex 行多态递归);
+-- (3) 读回 ↑ 的 ex 行取 X = 层号: ↑ (ex a b x) = Eh AL x (_⊕ ↑b) (↑a), 不再用粗写法.
+module D1Block where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤; tt)
+open import Data.Bool using (Bool; true; false)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+
+record Sg : Set₁ where
+  constructor sg
+  field
+    P  : Set
+    B  : P → Set
+    C  : Set
+    D  : C → Set
+    b₀ : (p : P) → B p
+    z₀ : (c : C) → D c
+    R  : (c : C) → D c → D c → Set
+    Ex : Set
+open Sg public
+
+mutual
+  data T (S : Sg) : Set where
+    zero : T S
+    suc  : T S → T S
+    lim  : (f : ℕ → T S) → ((n : ℕ) → Lt S (f n) (f (suc n))) → T S
+    Ω    : (p : P S) → (B S p → T S) → T S
+    up   : T S → (c : C S) (y : D S c) → R S c (z₀ S c) y → T S
+    ex   : (a b : T S) → Lt S zero b → T S → Ex S → T S
+
+  data Lt (S : Sg) : T S → T S → Set where
+    ◃s : ∀ {x} → Lt S x (suc x)
+    ◃l : ∀ {f a} (n : ℕ) → Lt S (f n) (lim f a)
+    ◃w : ∀ {p g} → Lt S (g (b₀ S p)) (Ω p g)
+    ◃u : (x : T S) (c : C S) (y : D S c) (e : R S c (z₀ S c) y) → Lt S x (up x c y e)
+    ◃c : (x : T S) (c : C S) {y′ y : D S c} {e′ : R S c (z₀ S c) y′} {e : R S c (z₀ S c) y}
+       → R S c y′ y → Lt S (up x c y′ e′) (up x c y e)
+    ◃e : ∀ {a b nb x ε} → Lt S a (ex a b nb x ε)
+    ◃x : ∀ {a b nb x x′ ε} → Lt S x x′ → Lt S (ex a b nb x ε) (ex a b nb x′ ε)
+    ◃t : ∀ {x y z} → Lt S x y → Lt S y z → Lt S x z
+
+mutual
+  data L : Set
+  data Sh : Set
+  Ch : Sh → Set
+  Sig : L → Sg
+  Tr : L → Set
+  Tr ℓ = T (Sig ℓ)
+
+  data L where
+    zero : L
+    nd   : (s : Sh) → (Ch s → L) → L
+
+  data Sh where
+    sS sL : Sh
+    sΩ    : L → Sh
+
+  Ch sS     = ⊤
+  Ch sL     = ℕ
+  Ch (sΩ k) = Tr k
+
+  PK : Sh → Set
+  PK (sΩ k) = Pos⁼ k
+  PK _      = ⊥
+
+  Pos : L → Set
+  Pos zero     = ⊥
+  Pos (nd s h) = PK s ⊎ Σ (Ch s) λ c → Pos⁼ (h c)
+
+  Pos⁼ : L → Set
+  Pos⁼ a = ⊤ ⊎ Pos a
+
+  Br : (ℓ : L) → Pos ℓ → Set
+  Br (nd s h)      (inj₂ (c , t)) = Br⁼ (h c) t
+  Br (nd (sΩ k) h) (inj₁ t)       = Br⁼ k t
+
+  Br⁼ : (a : L) → Pos⁼ a → Set
+  Br⁼ a (inj₁ _) = Tr a
+  Br⁼ a (inj₂ p) = Br a p
+
+  sl : (ℓ : L) (p : Pos ℓ) → Σ L λ a → Tr a → Br ℓ p
+  sl (nd s h)      (inj₂ (c , t)) = sl⁼ (h c) t
+  sl (nd (sΩ k) h) (inj₁ t)       = sl⁼ k t
+
+  sl⁼ : (a : L) (t : Pos⁼ a) → Σ L λ b → Tr b → Br⁼ a t
+  sl⁼ a (inj₁ _) = a , λ x → x
+  sl⁼ a (inj₂ p) = sl a p
+
+  CH : L → Set
+  CH zero     = ⊥
+  CH (nd s h) = Ch s
+
+  ChT : (ℓ : L) → CH ℓ → Set
+  ChT (nd s h) c = Tr (h c)
+
+  chZ : (ℓ : L) (c : CH ℓ) → ChT ℓ c
+  chZ (nd s h) c = zero
+
+  RCh : (ℓ : L) (c : CH ℓ) → ChT ℓ c → ChT ℓ c → Set
+  RCh (nd s h) c = Lt (Sig (h c))
+
+  -- 第 0 层没有 ex: 最终输出 Tr zero 只有 zero/suc/lim 可居.
+  EX : L → Set
+  EX zero     = ⊥
+  EX (nd s h) = ⊤
+
+  Sig ℓ = sg (Pos ℓ) (Br ℓ) (CH ℓ) (ChT ℓ) (λ p → proj₂ (sl ℓ p) zero) (chZ ℓ) (RCh ℓ) (EX ℓ)
+
+infix 4 _⊢_◃_
+_⊢_◃_ : (ℓ : L) → Tr ℓ → Tr ℓ → Set
+ℓ ⊢ x ◃ y = Lt (Sig ℓ) x y
+
+at : (ℓ : L) → Pos ℓ → L
+at ℓ p = proj₁ (sl ℓ p)
+
+fromBr : (ℓ : L) (p : Pos ℓ) → Tr (at ℓ p) → Br ℓ p
+fromBr ℓ p = proj₂ (sl ℓ p)
+
+infixl 6 _⊕_
+_⊕_ : L → L → L
+a ⊕ zero   = a
+a ⊕ nd s h = nd s λ c → a ⊕ h c
+
+iter : {A : Set} → (A → A) → A → ℕ → A
+iter f a zero    = a
+iter f a (suc n) = f (iter f a n)
+
+-- 层号上的路径 (原在 N2Path; 读回的序要用, 移到这里).
+data Pth : Bool → L → L → Set where
+  self : ∀ {b ℓ} → Pth b ℓ ℓ
+  inc  : ∀ {b j s h} (c : Ch s) → Pth b j (h c) → Pth b j (nd s h)
+  inu  : ∀ {b j s h} → ((c : Ch s) → Pth b j (h c)) → Pth b j (nd s h)
+  ink  : ∀ {j k h} → Pth true j k → Pth true j (nd (sΩ k) h)
+
+infix 4 _≤_ _⊑_
+_≤_ _⊑_ : L → L → Set
+j ≤ ℓ = Pth true j ℓ
+j ⊑ ℓ = Pth false j ℓ
+
+infixl 6 _∙_
+_∙_ : ∀ {b i j ℓ} → Pth b i j → Pth b j ℓ → Pth b i ℓ
+w ∙ self    = w
+w ∙ inc c v = inc c (w ∙ v)
+w ∙ inu vs  = inu (λ c → w ∙ vs c)
+w ∙ ink v   = ink (w ∙ v)
+
+lift : ∀ {b} (a c : L) → Pth b a (a ⊕ c)
+lift a zero     = self
+lift a (nd s h) = inu (λ c → lift a (h c))
+
+------------------------------------------------------------------------
+-- 带序的结果代数. Ctx 是树层号上的语境 (读回: ⊤; 折叠的高阶: 从框架层下行的链),
+-- Car 上有序 Rel, ℕ 极限要相邻步进的证据, 结点在语境里按槽位分支.
+record RA : Set₁ where
+  field
+    Ctx    : L → Set
+    dn     : ∀ {s h} → Ctx (nd s h) → (c : Ch s) → Ctx (h c)
+    Car    : Set
+    Rel    : Car → Car → Set
+    trn    : ∀ {u v w} → Rel u v → Rel v w → Rel u w
+    limA   : (F : ℕ → Car) → ((n : ℕ) → Rel (F n) (F (suc n))) → Car
+    limUB  : (F : ℕ → Car) (a : (n : ℕ) → Rel (F n) (F (suc n))) (n : ℕ) → Rel (F n) (limA F a)
+    nodeA  : ∀ {m} → Ctx m → (p : Pos m) → (Br m p → Car) → Car
+    nodeUB : ∀ {m} (κ : Ctx m) (p : Pos m) (G : Br m p → Car) → Rel (G (fromBr m p zero)) (nodeA κ p G)
+open RA public
+
+-- 膨胀的 op.
+OpA : RA → Set
+OpA A = Σ (Car A → Car A) λ f → (u : Car A) → Rel A u (f u)
+
+-- 高一阶: 载体是膨胀的 op, 序取逐点序.
+pt : RA → RA
+Ctx (pt A) = Ctx A
+dn (pt A) = dn A
+Car (pt A) = OpA A
+Rel (pt A) f g = (u : Car A) → Rel A (proj₁ f u) (proj₁ g u)
+trn (pt A) r r′ = λ u → trn A (r u) (r′ u)
+limA (pt A) F a =
+  (λ u → limA A (λ n → proj₁ (F n) u) (λ n → a n u)) , (λ u → trn A (proj₂ (F zero) u) (limUB A _ _ zero))
+limUB (pt A) F a n = λ u → limUB A _ _ n
+nodeA (pt A) {m} κ p G =
+  (λ u → nodeA A κ p (λ z → proj₁ (G z) u)) , (λ u → trn A (proj₂ (G (fromBr m p zero)) u) (nodeUB A κ p _))
+nodeUB (pt A) κ p G = λ u → nodeUB A κ p _
+
+-- 迭代子: Eh x F 是 F 迭代 ω^x 次. up 行沿语境下行; ex 行在高一阶代数上调用自己 (多态递归).
+mutual
+  Eh : (A : RA) {m : L} → Ctx A m → Tr m → OpA A → OpA A
+  Eh A κ zero F = F
+  Eh A κ (suc x) F =
+    (λ u → limA A (λ n → iter (proj₁ (Eh A κ x F)) u (suc n)) (λ n → proj₂ (Eh A κ x F) _)) ,
+    (λ u → trn A (proj₂ (Eh A κ x F) u) (limUB A _ _ zero))
+  Eh A κ (lim f a) F =
+    (λ u → limA A (λ n → proj₁ (Eh A κ (f n) F) u) (λ n → Emh A κ F u (a n))) ,
+    (λ u → trn A (proj₂ (Eh A κ (f zero) F) u) (limUB A _ _ zero))
+  Eh A {m} κ (Ω p g) F =
+    (λ u → nodeA A κ p (λ z → proj₁ (Eh A κ (g z) F) u)) ,
+    (λ u → trn A (proj₂ (Eh A κ (g (fromBr m p zero)) F) u) (nodeUB A κ p _))
+  Eh A {nd s h} κ (up x c y e) F = Eh A (dn A κ c) y (Eh A κ x F)
+  Eh A κ (ex a b nb x ε) F = proj₁ (Eh (pt A) κ x (opE A κ b nb)) (Eh A κ a F)
+
+  -- "迭代 ω^b 次" 作为高一阶的 op; 膨胀律是 b 非零时的单调 (Eh zero G = G).
+  opE : (A : RA) {m : L} → Ctx A m → (b : Tr m) → m ⊢ zero ◃ b → OpA (pt A)
+  opE A κ b nb = (λ G → Eh A κ b G) , (λ G u → Emh A κ G u nb)
+
+  Emh : (A : RA) {m : L} (κ : Ctx A m) (F : OpA A) (u : Car A) {x y : Tr m} → m ⊢ x ◃ y
+      → Rel A (proj₁ (Eh A κ x F) u) (proj₁ (Eh A κ y F) u)
+  Emh A κ F u ◃s = limUB A _ _ zero
+  Emh A κ F u (◃l n) = limUB A _ _ n
+  Emh A κ F u ◃w = nodeUB A κ _ _
+  Emh A {nd s h} κ F u (◃u x c y e) = Emh A (dn A κ c) (Eh A κ x F) u e
+  Emh A {nd s h} κ F u (◃c x c r) = Emh A (dn A κ c) (Eh A κ x F) u r
+  Emh A κ F u (◃e {a} {b} {nb} {x}) = proj₂ (Eh (pt A) κ x (opE A κ b nb)) (Eh A κ a F) u
+  Emh A κ F u (◃x {a} {b} {nb} r) = Emh (pt A) κ (opE A κ b nb) (Eh A κ a F) r u
+  Emh A κ F u (◃t r r′) = trn A (Emh A κ F u r) (Emh A κ F u r′)
+
+-- 结果代数上的不变式: 载体上的谓词 Pr, 语境上的守卫 Gd; 对极限与结点封闭.
+record PS (A : RA) : Set₁ where
+  field
+    Pr    : Car A → Set
+    Gd    : ∀ {m} → Ctx A m → Set
+    Gd-dn : ∀ {s h} {κ : Ctx A (nd s h)} (c : Ch s) → Gd κ → Gd (dn A κ c)
+    limP  : (F : ℕ → Car A) (a : (n : ℕ) → Rel A (F n) (F (suc n))) → ((n : ℕ) → Pr (F n)) → Pr (limA A F a)
+    nodeP : ∀ {m} (κ : Ctx A m) (p : Pos m) (G : Br m p → Car A) → Gd κ → ((z : Br m p) → Pr (G z))
+          → Pr (nodeA A κ p G)
+open PS public
+
+Opp : ∀ {A} → PS A → OpA A → Set
+Opp {A} S F = (u : Car A) → Pr S u → Pr S (proj₁ F u)
+
+-- 高一阶的不变式: 保持 Pr 的 op.
+ptP : ∀ {A} → PS A → PS (pt A)
+Pr (ptP S) = Opp S
+Gd (ptP S) = Gd S
+Gd-dn (ptP S) = Gd-dn S
+limP (ptP S) F a Q = λ u q → limP S _ _ (λ n → Q n u q)
+nodeP (ptP S) κ p G g Q = λ u q → nodeP S κ p _ g (λ z → Q z u q)
+
+iterP : ∀ {X : Set} (Q : X → Set) (f : X → X) → ((u : X) → Q u → Q (f u)) → (u : X) → Q u → (n : ℕ) → Q (iter f u n)
+iterP Q f hf u q zero    = q
+iterP Q f hf u q (suc n) = hf _ (iterP Q f hf u q n)
+
+-- Eh 保持不变式 (对 x 归纳, ex 行在高一阶不变式上用归纳假设).
+EP : (A : RA) (S : PS A) {m : L} (κ : Ctx A m) → Gd S κ → (x : Tr m) (F : OpA A) → Opp S F → Opp S (Eh A κ x F)
+EP A S κ g zero F hF = hF
+EP A S κ g (suc x) F hF = λ u q → limP S _ _ (λ n → iterP (Pr S) _ (EP A S κ g x F hF) u q (suc n))
+EP A S κ g (lim f a) F hF = λ u q → limP S _ _ (λ n → EP A S κ g (f n) F hF u q)
+EP A S κ g (Ω p k) F hF = λ u q → nodeP S κ p _ g (λ z → EP A S κ g (k z) F hF u q)
+EP A S {nd s h} κ g (up x c y e) F hF = EP A S (dn A κ c) (Gd-dn S c g) y (Eh A κ x F) (EP A S κ g x F hF)
+EP A S κ g (ex a b nb x ε) F hF =
+  EP (pt A) (ptP S) κ g x (opE A κ b nb) (λ G hG → EP A S κ g b G hG) (Eh A κ a F) (EP A S κ g a F hF)
+
+------------------------------------------------------------------------
+-- X = 层号的结果代数: 序是 ⊑, ℕ 极限是 nd sL, 结点是 nd (sΩ (at m p)).
+AL : RA
+Ctx AL _ = ⊤
+dn AL _ _ = tt
+Car AL = L
+Rel AL = _⊑_
+trn AL = _∙_
+limA AL F _ = nd sL F
+limUB AL F _ n = inc n self
+nodeA AL {m} _ p G = nd (sΩ (at m p)) (λ c → G (fromBr m p c))
+nodeUB AL _ p G = inc zero self
+
+-- "右边接上 w".
+opR : L → OpA AL
+opR w = (λ u → u ⊕ w) , (λ u → lift u w)
+
+-- 读回. ex 行: ↑a 之后接上 ↑b, 迭代 ω^x 次 (x 是本层的树).
+↑ : (k : L) → Tr k → L
+↑ k        zero         = zero
+↑ k        (suc x)      = nd sS λ _ → ↑ k x
+↑ k        (lim f _)    = nd sL λ n → ↑ k (f n)
+↑ k        (Ω p g)      = nd (sΩ (at k p)) λ c → ↑ k (g (fromBr k p c))
+↑ (nd s h) (up x c y _) = ↑ (nd s h) x ⊕ ↑ (h c) y
+↑ k        (ex a b _ x _) = proj₁ (Eh AL tt x (opR (↑ k b))) (↑ k a)
+
+tw : ℕ → L
+tw zero    = zero
+tw (suc n) = nd (sΩ (tw n)) λ c → tw n ⊕ ↑ (tw n) c
+
+Λ : L
+Λ = nd sL tw

@@ -1,0 +1,74 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 两次相邻真实操作：第 t 轮整条正层反馈的任意有限前缀写入 t+1 轮同一槽，并决定下一轮真实子运行的层号。
+module B27STrace where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B14PathHeight as Height
+import B15ReadPaths as R
+import B20Room as Room
+import B15Spine as Spine
+import B19OldSlots as Frame
+import B27SRelay as Relay
+open T.Run
+
+weaken : ∀ {k} {a b c : Tr k} → k ⊢ a ◃ b → A._⊴_ b c → k ⊢ a ◃ c
+weaken p (inj₁ refl) = p
+weaken p (inj₂ q) = ◃t p q
+
+fold-in : ∀ k (o : Ok k) B j w v {x y} → A._⊴_ x y →
+  A._⊴_ (proj₁ (ψ k o B j w v x)) (proj₁ (ψ k o B j w v y))
+fold-in k o B j w v (inj₁ refl) = inj₁ refl
+fold-in k o B j w v (inj₂ p) = inj₂ (mono k o B j w v p)
+
+through : ∀ {k} {a b c : Tr k} → A._⊴_ a b → k ⊢ b ◃ c → k ⊢ a ◃ c
+through (inj₁ refl) p = p
+through (inj₂ d) p = ◃t d p
+
+module Row (m : ℕ) (r : T.Run (tw (suc (suc m)))) where
+  k = tw (suc m)
+  top = tw (suc (suc m))
+  h = Spine.branch k
+  module C = Spine.Cardinal k h r
+  current = bs r k (ink self)
+  events = λ j → C.ix (suc j)
+  prefix = cum events
+  whole = ψ top (ok r) (bs r) k (ink self) current (proj₁ (Ωt top))
+  raw : ∀ i → k ⊢ prefix i ◃ proj₁ whole
+  raw i = ◃l i
+  shape : (k ⊕ ↑ k (proj₁ whole)) ≡ nd sL (λ i → k ⊕ ↑ k (prefix i))
+  shape = refl
+
+module Pair (m : ℕ) (a b : T.Run (tw (suc (suc m)))) (eb : ok b ≡ Ok-tw (suc (suc m))) (cb : A.Covered b)
+  (link : A._⊴_ (proj₁ (Row.whole m a)) (proj₁ (Row.current m b))) where
+  module X = Row m a
+  module Y = Relay.At m b eb cb
+  open X using (k; top; h; events; prefix; whole)
+  write : ∀ i → k ⊢ prefix i ◃ Y.s
+  write i = weaken (X.raw i) link
+  read-back : ∀ i j → k ⊢ prefix i ◃ Y.C.ix (suc j)
+  read-back i j = ◃t (write i) (Y.put (Y.C.ix j))
+
+  module Observation (i : ℕ) = Y.Point (prefix i) (write i)
+
+  whole-level = k ⊕ ↑ k (proj₁ whole)
+  whole-path : ∀ j → R.Reach whole-level (h (Y.C.ix (suc j)))
+  whole-path j = R.left k (R.read-step k (through link (Y.put (Y.C.ix j))))
+  whole-site : ∀ j → T.Run whole-level
+  whole-site j = Room.sub (whole-path j) (Y.C.child (suc j))
+  whole-cover : ∀ j → A.Covered (whole-site j)
+  whole-cover j = Room.cover (whole-path j) (Y.C.child (suc j)) (Y.C.cover cb (suc j))
+  paid : ∀ j → read (T.value (whole-site j)) ≼ read (T.value b)
+  paid j = ≼-trans (Room.below (whole-path j) (Y.C.child (suc j)) (Y.C.cover cb (suc j))) (Y.C.lift-value (suc j))

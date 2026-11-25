@@ -1,0 +1,284 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- M0: W4 的 ℕ-层号翻成 Level 的层号码 (code), 槽位与路径的序, 保留判定 kp/kpT 与 <ᴵ-dec 一致 (引理 K).
+-- 判决: 在简报的 IsN 上第 3, 4, 5 条不成立 (退化极限层 nd sL (λ _ → zero), 见 KMirNeg); 加 "极限层相邻项不最终常值" (IsS) 后全部成立.
+module KMir where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Relation.Nullary using (¬_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as I
+open I using (Ordᴵ; _<ᴵ_; _≅ᴵ_; _⊑ᴵ_; _≺ᴵ_; via)
+open import OCF.BTBO using (injᵃ; injᵇ; injᶜ)
+
+------------------------------------------------------------------------
+-- 1. ℕ-层号.
+IsN : L → Set
+IsN zero          = ⊤
+IsN (nd sS h)     = IsN (h tt)
+IsN (nd sL g)     = (n : ℕ) → IsN (g n)
+IsN (nd (sΩ _) _) = ⊥
+
+kid : (m : L) → CH m → L
+kid (nd s h) c = h c
+
+IsN-ch : (m : L) → IsN m → (c : CH m) → IsN (kid m c)
+IsN-ch (nd sS h)     i c = i
+IsN-ch (nd sL g)     i n = i n
+IsN-ch (nd (sΩ _) _) () c
+
+IsN-path : ∀ {j m} → j ≤ m → IsN m → IsN j
+IsN-path self i = i
+IsN-path {m = nd s h} (inc c v) i = IsN-path v (IsN-ch (nd s h) i c)
+IsN-path {m = nd s h} (inu vs)  i = IsN-path (vs (c₀ s)) (IsN-ch (nd s h) i (c₀ s))
+IsN-path (ink v) ()
+
+Ok-path : ∀ {j m} → j ≤ m → Ok m → Ok j
+Ok-path self o = o
+Ok-path (inc c v) o = Ok-path v (proj₂ o c)
+Ok-path {m = nd s h} (inu vs) o = Ok-path (vs (c₀ s)) (proj₂ o (c₀ s))
+Ok-path (ink v) o = Ok-path v (proj₁ (proj₁ o))
+
+IsN-at : (m : L) → IsN m → (p : Pos m) → IsN (at m p)
+IsN-at (nd s h) i (inj₂ (c , inj₁ _)) = IsN-ch (nd s h) i c
+IsN-at (nd s h) i (inj₂ (c , inj₂ p)) = IsN-at (h c) (IsN-ch (nd s h) i c) p
+IsN-at (nd (sΩ _) _) () (inj₁ _)
+
+------------------------------------------------------------------------
+-- 2. 层号码. 极限行的相邻证据由 Ok 的路径经 pth⊑ 给出; 不同的证明给出 ≅ᴵ 的码 (code-irr).
+≅⊑ : ∀ {a b} → a ≅ᴵ b → a ⊑ᴵ b
+≅⊑ I.z≅     = I.z⊑
+≅⊑ (I.s≅ e) = I.s⊑ e I.zero
+≅⊑ (I.l≅ h) = I.l⊑ (λ n → I.⊑ᴵ-trans (≅⊑ (h n)) (I.Sim→⊑ᴵ (λ q → I.lim n q)))
+
+mutual
+  code : (m : L) → IsN m → Ok m → Ordᴵ
+  code zero          _ _ = I.zero
+  code (nd sS h)     i o = I.suc (code (h tt) i (proj₂ o tt))
+  code (nd sL g)     i o = I.lim (λ n → code (g n) (i n) (proj₂ o n))
+    (λ n → pth⊑ (g n) (g (suc n)) (proj₁ o n) (i n) (proj₂ o n) (i (suc n)) (proj₂ o (suc n)))
+  code (nd (sΩ _) _) () _
+
+  code-irr : (m : L) (i i′ : IsN m) (o o′ : Ok m) → code m i o ≅ᴵ code m i′ o′
+  code-irr zero          _ _  _ _  = I.z≅
+  code-irr (nd sS h)     i i′ o o′ = I.s≅ (code-irr (h tt) i i′ (proj₂ o tt) (proj₂ o′ tt))
+  code-irr (nd sL g)     i i′ o o′ = I.l≅ (λ n → code-irr (g n) (i n) (i′ n) (proj₂ o n) (proj₂ o′ n))
+  code-irr (nd (sΩ _) _) () _ _ _
+
+  -- 路径给出 ⊑ᴵ (不要求严格).
+  pth⊑ : (j m : L) → j ≤ m → (ij : IsN j) (oj : Ok j) (im : IsN m) (om : Ok m) → code j ij oj ⊑ᴵ code m im om
+  pth⊑ j .j self ij oj im om = ≅⊑ (code-irr j ij im oj om)
+  pth⊑ j (nd sS h) (inc c v) ij oj im om = I.⊑ᴵ-trans (pth⊑ j (h tt) v ij oj im (proj₂ om tt)) (I.Sim→⊑ᴵ (λ q → I.suc q))
+  pth⊑ j (nd sL g) (inc n v) ij oj im om = I.⊑ᴵ-trans (pth⊑ j (g n) v ij oj (im n) (proj₂ om n)) (I.Sim→⊑ᴵ (λ q → I.lim n q))
+  pth⊑ j (nd sS h) (inu vs) ij oj im om = I.⊑ᴵ-trans (pth⊑ j (h tt) (vs tt) ij oj im (proj₂ om tt)) (I.Sim→⊑ᴵ (λ q → I.suc q))
+  pth⊑ j (nd sL g) (inu vs) ij oj im om = I.⊑ᴵ-trans (pth⊑ j (g zero) (vs zero) ij oj (im zero) (proj₂ om zero)) (I.Sim→⊑ᴵ (λ q → I.lim zero q))
+  pth⊑ j (nd (sΩ _) _) (inc _ _) ij oj () om
+  pth⊑ j (nd (sΩ _) _) (inu _)   ij oj () om
+  pth⊑ j (nd (sΩ _) _) (ink _)   ij oj () om
+
+------------------------------------------------------------------------
+-- 严格的 ℕ-层号: 极限层的每一项都严格低于后面某一项 (相邻项不最终常值). 第 3–6 条的前提.
+infix 4 _<ₙ_
+_<ₙ_ : L → L → Set
+j <ₙ zero   = ⊥
+j <ₙ nd s h = Σ (Ch s) λ c → j ≤ h c
+
+IsS : L → Set
+IsS zero          = ⊤
+IsS (nd sS h)     = IsS (h tt)
+IsS (nd sL g)     = ((n : ℕ) → IsS (g n)) × ((n : ℕ) → Σ ℕ λ k → g n <ₙ g k)
+IsS (nd (sΩ _) _) = ⊥
+
+IsS→IsN : (m : L) → IsS m → IsN m
+IsS→IsN zero          _ = tt
+IsS→IsN (nd sS h)     s = IsS→IsN (h tt) s
+IsS→IsN (nd sL g)     s = λ n → IsS→IsN (g n) (proj₁ s n)
+IsS→IsN (nd (sΩ _) _) ()
+
+IsS-ch : (m : L) → IsS m → (c : CH m) → IsS (kid m c)
+IsS-ch (nd sS h)     s c = s
+IsS-ch (nd sL g)     s n = proj₁ s n
+IsS-ch (nd (sΩ _) _) () c
+
+IsS-path : ∀ {j m} → j ≤ m → IsS m → IsS j
+IsS-path self s = s
+IsS-path {m = nd s h} (inc c v) st = IsS-path v (IsS-ch (nd s h) st c)
+IsS-path {m = nd s h} (inu vs)  st = IsS-path (vs (c₀ s)) (IsS-ch (nd s h) st (c₀ s))
+IsS-path (ink v) ()
+
+lelt : ∀ {a b c} → (a ≅ᴵ b) ⊎ (a ≺ᴵ b) → b ≺ᴵ c → a ≺ᴵ c
+lelt (inj₁ e) r = I.≺ᴵ-respˡ e r
+lelt (inj₂ r′) r = I.≺ᴵ-trans r′ r
+
+limk : ∀ {a} {f : ℕ → Ordᴵ} {s : ∀ n → f n ⊑ᴵ f (suc n)} (k : ℕ) → a ≺ᴵ f k → a ≺ᴵ I.lim f s
+limk k (via e q) = via e (I.lim k q)
+
+-- 孩子低于父亲 (chlt), 严格路径 (below), 路径对序 (pathle, 第 4 条).
+mutual
+  chlt : (m : L) → IsS m → (c : CH m) (ic : IsN (kid m c)) (oc : Ok (kid m c)) (im : IsN m) (om : Ok m)
+       → code (kid m c) ic oc ≺ᴵ code m im om
+  chlt (nd sS h) st c ic oc im om = via (code-irr (h tt) ic im oc (proj₂ om tt)) I.zero
+  chlt (nd sL g) st n ic oc im om =
+    limk (proj₁ (proj₂ st n))
+      (below (g n) (g (proj₁ (proj₂ st n))) (proj₂ (proj₂ st n)) (proj₁ st (proj₁ (proj₂ st n)))
+             ic oc (im (proj₁ (proj₂ st n))) (proj₂ om (proj₁ (proj₂ st n))))
+  chlt (nd (sΩ _) _) () c ic oc im om
+
+  below : (j a : L) → j <ₙ a → IsS a → (ij : IsN j) (oj : Ok j) (ia : IsN a) (oa : Ok a) → code j ij oj ≺ᴵ code a ia oa
+  below j zero () sa ij oj ia oa
+  below j (nd s h) (c , v) sa ij oj ia oa =
+    lelt (pathle j (h c) v (IsS-ch (nd s h) sa c) ij oj (IsN-ch (nd s h) ia c) (proj₂ oa c))
+         (chlt (nd s h) sa c (IsN-ch (nd s h) ia c) (proj₂ oa c) ia oa)
+
+  pathle : (j m : L) → j ≤ m → IsS m → (ij : IsN j) (oj : Ok j) (im : IsN m) (om : Ok m)
+         → (code j ij oj ≅ᴵ code m im om) ⊎ (code j ij oj ≺ᴵ code m im om)
+  pathle j .j self _ ij oj im om = inj₁ (code-irr j ij im oj om)
+  pathle j (nd s h) (inc c v) sm ij oj im om =
+    inj₂ (lelt (pathle j (h c) v (IsS-ch (nd s h) sm c) ij oj (IsN-ch (nd s h) im c) (proj₂ om c))
+               (chlt (nd s h) sm c (IsN-ch (nd s h) im c) (proj₂ om c) im om))
+  pathle j (nd s h) (inu vs) sm ij oj im om =
+    inj₂ (lelt (pathle j (h (c₀ s)) (vs (c₀ s)) (IsS-ch (nd s h) sm (c₀ s)) ij oj (IsN-ch (nd s h) im (c₀ s)) (proj₂ om (c₀ s)))
+               (chlt (nd s h) sm (c₀ s) (IsN-ch (nd s h) im (c₀ s)) (proj₂ om (c₀ s)) im om))
+  pathle j (nd (sΩ _) _) (ink _) () ij oj im om
+
+------------------------------------------------------------------------
+-- 3. 槽位对证明 (到 ≺ᴵ; 字面 <ᴵ 的反例见 KMirNeg).
+slot : (m : L) → IsS m → (p : Pos m) (ia : IsN (at m p)) (oa : Ok (at m p)) (im : IsN m) (om : Ok m)
+     → code (at m p) ia oa ≺ᴵ code m im om
+slot (nd (sΩ _) _) () p ia oa im om
+slot (nd sS h) st (inj₁ ()) ia oa im om
+slot (nd sL g) st (inj₁ ()) ia oa im om
+slot (nd s h) st (inj₂ (c , inj₁ _)) ia oa im om = chlt (nd s h) st c ia oa im om
+slot (nd s h) st (inj₂ (c , inj₂ p)) ia oa im om =
+  I.≺ᴵ-trans (slot (h c) (IsS-ch (nd s h) st c) p ia oa (IsN-ch (nd s h) im c) (proj₂ om c))
+             (chlt (nd s h) st c (IsN-ch (nd s h) im c) (proj₂ om c) im om)
+
+------------------------------------------------------------------------
+-- 5. 引理 K. Ag a j r: r 是 just 时 a ≺ᴵ j, 是 nothing 时 j ≅ᴵ a 或 j ≺ᴵ a (对一切 IsN/Ok 证明).
+Ag : (a j : L) {Z : Set} → Maybe Z → Set
+Ag a j (just _) = (ia : IsN a) (oa : Ok a) (ij : IsN j) (oj : Ok j) → code a ia oa ≺ᴵ code j ij oj
+Ag a j nothing  = (ia : IsN a) (oa : Ok a) (ij : IsN j) (oj : Ok j) → (code j ij oj ≅ᴵ code a ia oa) ⊎ (code j ij oj ≺ᴵ code a ia oa)
+
+Ag-map : ∀ {a j : L} {X Y : Set} {x₀ : X} {y₀ : Y} (f : X → Y) (e : f x₀ ≡ y₀) (k : Keep j X x₀) → Ag a j k → Ag a j (mapK f e k)
+Ag-map f e (just _) h = h
+Ag-map f e nothing  h = h
+
+at-psh : ∀ {k a} (u : k ≤ a) (t : Pos⁼ k) → proj₁ (sl⁼ a (psh u t)) ≡ proj₁ (sl⁼ k t)
+at-psh self t = refl
+at-psh (inc c v) t = at-psh v t
+at-psh {a = nd s h} (inu vs) t = at-psh (vs (c₀ s)) t
+at-psh (ink v) t = at-psh v t
+
+mutual
+  K : (m : L) → IsS m → (o : Ok m) (p : Pos m) {j : L} (w : j ≤ m) → Ag (at m p) j (kp m o p w)
+  K m st o p self = λ ia oa ij oj → slot m st p ia oa ij oj
+  K (nd s h) st o (inj₂ (c , t)) (inu vs) = K⁼ (h c) (IsS-ch (nd s h) st c) (proj₂ o c) t (vs c)
+  K (nd sS h) st o (inj₂ (c , t)) (inc _ v) = K⁼ (h c) st (proj₂ o c) t v
+  K (nd sL g) st o (inj₂ (m , t)) {j} (inc n v) =
+    cW-ind (Ag (proj₁ (sl⁼ (g m) t)) j) (way g (proj₁ o) m n)
+      (λ u → Ag-map (pshBr u t) (pshFirst u t) (kp⁼ (g n) (proj₂ o n) (psh u t) v)
+               (subst (λ a → Ag a j (kp⁼ (g n) (proj₂ o n) (psh u t) v)) (at-psh u t)
+                      (K⁼ (g n) (proj₁ st n) (proj₂ o n) (psh u t) v)))
+      (λ u → K⁼ (g m) (proj₁ st m) (proj₂ o m) t (v ∙ u))
+  K (nd sS h) st o (inj₁ ()) w
+  K (nd sL g) st o (inj₁ ()) w
+  K (nd (sΩ _) _) () o p w
+
+  K⁼ : (a : L) → IsS a → (o : Ok a) (t : Pos⁼ a) {j : L} (w : j ≤ a) → Ag (proj₁ (sl⁼ a t)) j (kp⁼ a o t w)
+  K⁼ a sa o (inj₁ _) {j} w = λ ia oa ij oj → pathle j a w sa ij oj ia oa
+  K⁼ a sa o (inj₂ p) w = K a sa o p w
+
+K-just : (m : L) → IsS m → (o : Ok m) (p : Pos m) {j : L} (w : j ≤ m) {x : _} → kp m o p w ≡ just x
+       → (ia : IsN (at m p)) (oa : Ok (at m p)) (ij : IsN j) (oj : Ok j) → code (at m p) ia oa ≺ᴵ code j ij oj
+K-just m st o p {j} w e = subst (Ag (at m p) j) e (K m st o p w)
+
+K-nothing : (m : L) → IsS m → (o : Ok m) (p : Pos m) {j : L} (w : j ≤ m) → kp m o p w ≡ nothing
+          → (ia : IsN (at m p)) (oa : Ok (at m p)) (ij : IsN j) (oj : Ok j)
+          → (code j ij oj ≅ᴵ code (at m p) ia oa) ⊎ (code j ij oj ≺ᴵ code (at m p) ia oa)
+K-nothing m st o p {j} w e = subst (Ag (at m p) j) e (K m st o p w)
+
+-- 与 Level 的判定一致: 在任一公共上界 c 下, <ᴵ-dec 给第一种 (保留) 当且仅当 kp 给 just.
+Keeps : ∀ {a b : Ordᴵ} → (a ≺ᴵ b) ⊎ (b ≺ᴵ a) ⊎ (a ≅ᴵ b) → Set
+Keeps (injᵃ _) = ⊤
+Keeps (injᵇ _) = ⊥
+Keeps (injᶜ _) = ⊥
+
+Same : {Z : Set} → Maybe Z → Set → Set
+Same (just _) P = P
+Same nothing  P = ¬ P
+
+agree : ∀ {a j : L} {Z : Set} (r : Maybe Z) → Ag a j r → (ia : IsN a) (oa : Ok a) (ij : IsN j) (oj : Ok j)
+      → {c : Ordᴵ} (pa : code a ia oa <ᴵ c) (pj : code j ij oj <ᴵ c) → Same r (Keeps (I.<ᴵ-dec pa pj))
+agree (just _) h ia oa ij oj pa pj = go (I.<ᴵ-dec pa pj) where
+  go : (d : _) → Keeps d
+  go (injᵃ _) = tt
+  go (injᵇ r) = I.≺ᴵ-irrefl (I.≺ᴵ-trans (h ia oa ij oj) r)
+  go (injᶜ e) = I.≺ᴵ-irrefl (I.≺ᴵ-respʳ (h ia oa ij oj) (I.≅ᴵ-sym e))
+agree nothing h ia oa ij oj pa pj = go (I.<ᴵ-dec pa pj) where
+  go : (d : _) → ¬ Keeps d
+  go (injᵃ r) k with h ia oa ij oj
+  ... | inj₁ e  = I.≺ᴵ-irrefl (I.≺ᴵ-respʳ r e)
+  ... | inj₂ r′ = I.≺ᴵ-irrefl (I.≺ᴵ-trans r r′)
+  go (injᵇ _) ()
+  go (injᶜ _) ()
+
+K-dec : (m : L) → IsS m → (o : Ok m) (p : Pos m) {j : L} (w : j ≤ m)
+      → (ia : IsN (at m p)) (oa : Ok (at m p)) (ij : IsN j) (oj : Ok j)
+      → {c : Ordᴵ} (pa : code (at m p) ia oa <ᴵ c) (pj : code j ij oj <ᴵ c) → Same (kp m o p w) (Keeps (I.<ᴵ-dec pa pj))
+K-dec m st o p w ia oa ij oj pa pj = agree (kp m o p w) (K m st o p w) ia oa ij oj pa pj
+
+------------------------------------------------------------------------
+-- 6. 框架版: 环境层号 ℓ 严格时, 框架链上的层号都严格; kpT 与 kp 同判.
+IsS-dn : ∀ {ℓ m} → Dn ℓ m → IsS ℓ → IsS m
+IsS-dn stop s = s
+IsS-dn (down {s = s} {h} d c) st = IsS-ch (nd s h) (IsS-dn d st) c
+
+KT : ∀ {ℓ m} (d : Dn ℓ m) → IsS ℓ → (o : Ok ℓ) (p : Pos m) {i : L} (t : Tg d i) → Ag (at m p) i (kpT d o p t)
+KT stop       sℓ o p u        = K _ sℓ o p u
+KT (down d c) sℓ o p (inj₁ τ) = K _ (IsS-dn (down d c) sℓ) (okD (down d c) o) p τ
+KT (down d c) sℓ o p (inj₂ t) = KT d sℓ o (inj₂ (c , inj₂ p)) t
+
+KT-dec : ∀ {ℓ m} (d : Dn ℓ m) → IsS ℓ → (o : Ok ℓ) (p : Pos m) {i : L} (t : Tg d i)
+       → (ia : IsN (at m p)) (oa : Ok (at m p)) (ii : IsN i) (oi : Ok i)
+       → {c : Ordᴵ} (pa : code (at m p) ia oa <ᴵ c) (pi : code i ii oi <ᴵ c) → Same (kpT d o p t) (Keeps (I.<ᴵ-dec pa pi))
+KT-dec d sℓ o p t ia oa ii oi pa pi = agree (kpT d o p t) (KT d sℓ o p t) ia oa ii oi pa pi
+
+------------------------------------------------------------------------
+-- 前提可满足: 塔第 1 项 tw 1 的孩子 zero ⊕ ↑ zero c 都严格 (更一般: 严格的 a 接上任一第 0 层树的读回).
+lt→le : ∀ {j} (b : L) → j <ₙ b → j ≤ b
+lt→le zero     ()
+lt→le (nd s h) (c , v) = inc c v
+
+le-lt : ∀ {j a} (b : L) → j ≤ a → a <ₙ b → j <ₙ b
+le-lt zero     w ()
+le-lt (nd s h) w (c , v) = c , (w ∙ v)
+
+strict↑ : (a : L) {x y : Tr zero} → zero ⊢ x ◃ y → a ⊕ ↑ zero x <ₙ a ⊕ ↑ zero y
+strict↑ a ◃s               = tt , self
+strict↑ a (◃l n)           = n , self
+strict↑ a (◃w {p = ()})
+strict↑ a (◃u _ () _ _)
+strict↑ a (◃c _ () _)
+strict↑ a (◃e {ε = ()})
+strict↑ a (◃x {ε = ()} _)
+strict↑ a {y = y} (◃t {y = m} d e) = le-lt (a ⊕ ↑ zero y) (lt→le (a ⊕ ↑ zero m) (strict↑ a d)) (strict↑ a e)
+
+IsS-⊕↑ : (a : L) → IsS a → (x : Tr zero) → IsS (a ⊕ ↑ zero x)
+IsS-⊕↑ a s zero          = s
+IsS-⊕↑ a s (suc x)       = IsS-⊕↑ a s x
+IsS-⊕↑ a s (lim f r)     = (λ n → IsS-⊕↑ a s (f n)) , (λ n → suc n , strict↑ a (r n))
+IsS-⊕↑ a s (Ω () g)
+IsS-⊕↑ a s (up x () y e)
+IsS-⊕↑ a s (ex _ _ _ _ ())
+
+IsS-tw1 : (c : Tr zero) → IsS (zero ⊕ ↑ (tw 0) c)
+IsS-tw1 = IsS-⊕↑ zero tt

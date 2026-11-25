@@ -1,0 +1,75 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 形状核对 (不读记号): 层号 tw 1 ⊕ ↑(Ω p g), p 是 tw 1 的孩子侧槽位, 其 Ω 树朝
+-- "tw 1 的某个孩子里的层" 折叠 (路径先一致地下到地板 tw 1, 再 inc d′) 时, 保留判定是 nothing, 折叠值是部分和极限.
+module MathAShape where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; kp; kp⁼; mapK; node⁺)
+open import OCF.Lean.YiBSBase using (Rb)
+import OCF.Lean.YiBSFold as BS
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+-- (1) tw 1 上: 孩子侧槽位, 目标经指定孩子: nothing (R77 的子句).
+cross₁ : (o : Ok (tw 1)) (d : Tr zero) (t : Pos⁼ (h₁ d)) (d′ : Tr zero) {j : L} (v : j ≤ h₁ d′)
+       → kp (tw 1) o (inj₂ (d , t)) (inc d′ v) ≡ nothing
+cross₁ o d t d′ v = refl
+
+-- (2) 沿偏移的第一孩子脊一致下行, 保留判定不变.
+spine : (a b : L) (oa : Ok a) (ob : OkO a b) {k : L} (u : k ≤ a) (t : Pos⁼ k) {j : L} (w : j ≤ a)
+      → kp⁼ a oa (psh u t) w ≡ nothing
+      → kp⁼ (a ⊕ b) (Ok⊕ a b oa ob) (psh (u ∙ lift a b) t) (w ∙ lift a b) ≡ nothing
+spine a zero     oa ob u t w e = e
+spine a (nd s h) oa ob u t w e = spine a (h (c₀ s)) oa (proj₂ ob (c₀ s)) u t w e
+
+-- (3) Ω 形状偏移的顶上: 下标侧顶槽位.
+top : (a k : L) (h : Tr k → L) (oa : Ok a) (ob : OkO a (nd (sΩ k) h)) (t : Pos⁼ k) {j : L} (w : j ≤ a)
+    → kp⁼ a oa (psh (proj₁ (proj₁ ob)) t) w ≡ nothing
+    → kp (a ⊕ nd (sΩ k) h) (Ok⊕ a (nd (sΩ k) h) oa ob) (inj₁ t) (w ∙ lift a (nd (sΩ k) h)) ≡ nothing
+top a k h oa ob t w e =
+  cong (mapK _ _) (spine a (h zero) oa (proj₂ ob zero) (proj₁ (proj₁ ob)) t w e)
+
+-- (4) 实例: 层号 N = tw 1 ⊕ ↑(Ω p g), p = inj₂ (d , t′) 是孩子侧槽位; 目标路径 inc d′ v 再接 lift.
+module _ (d : Tr zero) (t′ : Pos⁼ (h₁ d)) (g : Br (tw 1) (inj₂ (d , t′)) → Tr (tw 1)) where
+  W : Tr (tw 1)
+  W = Ω (inj₂ (d , t′)) g
+
+  N : L
+  N = tw 1 ⊕ ↑ (tw 1) W
+
+  oN : Ok N
+  oN = Ok⊕ (tw 1) (↑ (tw 1) W) (Ok-tw 1) (OkO↑ (tw 1) (tw 1) (Ok-tw 1) self W)
+
+  crossN : (d′ : Tr zero) {j : L} (v : j ≤ h₁ d′)
+         → kp N oN (inj₁ (inj₁ tt)) (inc d′ v ∙ lift (tw 1) (↑ (tw 1) W)) ≡ nothing
+  crossN d′ v = top (tw 1) _ _ (Ok-tw 1) (OkO↑ (tw 1) (tw 1) (Ok-tw 1) self W) (inj₁ tt) (inc d′ v) refl
+
+  -- 结点行在这一格上是部分和极限 (对一切分支折叠 G 与回灌 S); 换基折叠的 Ω 行按定义就是 node⁺ (kp …) G S.
+  foldN : (d′ : Tr zero) {j : L} (v : j ≤ h₁ d′) {X : Set} (G : Br N (inj₁ (inj₁ tt)) → Tr⁺ j)
+          (S : Br N (inj₁ (inj₁ tt)) → Br N (inj₁ (inj₁ tt)))
+        → node⁺ (kp N oN (inj₁ (inj₁ tt)) (inc d′ v ∙ lift (tw 1) (↑ (tw 1) W))) G S
+          ≡ limc⁺ (λ n → G (iter S (fromBr N (inj₁ (inj₁ tt)) zero) n))
+  foldN d′ v G S = cong (λ m → node⁺ m G S) (crossN d′ v)
+
+  -- 换基折叠的 Ω 行: 定义等式.
+  rowΩ : (r : Rb N) (B : Base N) {j : L} (w : j ≤ N) (β : Tr⁺ j)
+       → BS.ψ N oN r B j w β (proj₁ (Ωt N))
+         ≡ node⁺ (kp N oN (inj₁ (inj₁ tt)) w) (λ z → BS.ψ N oN r B j w β (proj₁ (upz z (Ωt (tw 1 ⊕ ↑ (tw 1) (g (fromBr (tw 1) (inj₂ (d , t′)) z)))))))
+             (λ z → fromBr N (inj₁ (inj₁ tt)) (proj₁ (BS.ψ N oN r B (at N (inj₁ (inj₁ tt))) (posW N (inj₁ (inj₁ tt))) (B (at N (inj₁ (inj₁ tt))) (posW N (inj₁ (inj₁ tt)))) (proj₁ (upz z (Ωt (tw 1 ⊕ ↑ (tw 1) (g (fromBr (tw 1) (inj₂ (d , t′)) z)))))))))
+  rowΩ r B w β = refl
+
+-- (5) 上折把孩子层的结点搬成 tw 1 的孩子侧槽位.
+up-slot : (d : Tr zero) (b : Tr⁺ (tw 1)) (p : Pos (h₁ d)) (g : Br (h₁ d) p → Tr (h₁ d))
+        → Σ (Br (tw 1) (inj₂ (d , inj₂ p)) → Tr (tw 1)) λ G
+            → proj₁ (Up (h₁ d) (down stop d) b (Ω p g)) ≡ Ω (inj₂ (d , inj₂ p)) G
+up-slot d b p g = _ , refl

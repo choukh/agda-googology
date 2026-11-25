@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原外部生成器迭代任意久，每次的完整零号分支、内零号读回、内第一正下标全相同时，单位重置值依然可以无界。
+module B28BOrbit where
+
+open import Data.Nat.Base as N using (ℕ; zero; suc; _+_)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; trans; subst)
+import W4Block as W
+import WVOne as V
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+import B17CellPrefix as C
+import B20Towers as Gen
+import B20TowerValues as Survey
+import B20StandardGoal as In
+import B26PActual as End
+import B28POrbit as Pos
+import B28BHead as Fresh
+import B28BFirst as First
+
+module At (m : ℕ) where
+  module A = Fresh.At m
+  module Z = First.At m
+  module P = Pos.At m
+  module G = Gen.At (suc m)
+  open A using (n; k; Branch; top; module Walk)
+  make : Branch → W.Tr k
+  make g = W.Ω top g
+
+  branches : Branch → ℕ → Branch
+  branches g zero = g
+  branches g (suc t) = P.Step.sub (branches g t)
+
+  raw : ∀ g t → W.iter G.next (make g) t ≡ make (branches g t)
+  raw g zero = refl
+  raw g (suc t) = trans (cong G.next (raw g t)) (P.Step.shape (branches g t))
+
+  map-point : ∀ g t c → branches g t c ≡ W.iter G.next (g c) t
+  map-point g zero c = refl
+  map-point g (suc t) c = trans (P.Step.point (branches g t) c) (cong G.next (map-point g t c))
+
+  Trace : Branch → Branch → Set
+  Trace g h = ∀ t → let a = branches g t ; b = branches h t in
+    a W.zero ≡ b W.zero × Walk.inner a 0 ≡ Walk.inner b 0 × Walk.Run.ix a 1 ≡ Walk.Run.ix b 1
+
+  tracks : ∀ g h → g W.zero ≡ h W.zero → Trace g h
+  tracks g h e t = same , Z.returns a b same , Z.picks a b same
+    where
+    a = branches g t
+    b = branches h t
+    same = trans (map-point g t W.zero) (trans (cong (λ z → W.iter G.next z t) e) (sym (map-point h t W.zero)))
+
+  module Extension (g : Branch) (q : V.T₀) where
+    module X = A.Exceeds g q
+    h = X.Change.alter
+    indistinguishable : Trace g h
+    indistinguishable = tracks g h (sym X.Change.first)
+    escape : L.suc q ≼ A.free (make h)
+    escape = X.beyond
+    inside : ∀ t → L.suc q ≼ Walk.inner h (suc t)
+    inside = X.inside
+
+  no-bound : ∀ g q → (∀ h → Trace g h → A.free (make h) ≼ q) → ⊥
+  no-bound g q bound = s≼-irrefl q (≼-trans {b = A.free (make E.h)} E.escape (bound E.h E.indistinguishable))
+    where module E = Extension g q
+
+  module Original (j : ℕ) where
+    g = P.branch j
+    genuine : C.At.S.ix n (suc (suc j)) ≡ make g
+    genuine = trans (Survey.At.index n (suc (suc j))) (P.same j)
+
+    subsequent : ∀ t → branches g t ≡ P.branch (t + j)
+    subsequent zero = refl
+    subsequent (suc t) = cong (λ b → P.Step.sub b) (subsequent t)
+
+    module Over = Extension g End.Y
+    outside : ∀ v → make Over.h ≡ C.At.S.ix n v → ⊥
+    outside v e = s≼-irrefl End.Y (≼-trans {b = A.free (C.At.S.ix n v)}
+      (subst (λ z → L.suc End.Y ≼ A.free z) e Over.escape)
+      (subst (_≼ End.Y) (sym (A.real v)) (In.into n v)))

@@ -1,0 +1,26 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19IdealRow where
+
+open import Data.Nat.Base using (ℕ; suc)
+open import Data.Product using (proj₁; proj₂)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; s≼s)
+import W4Block as B
+open import WVOne using (read)
+import B12Terminal as T
+import B12Omega3Ref as Ref
+import B14PathHeight as PH
+import B14Tower as Tw
+import B14Btbo as D
+import B16Join as J
+import B18OrbitRows as Row
+
+
+row = Ref.at (L.ψ⁰ Ref.Ω₃) 1
+
+row-seed : L.suc row ≼ read (Tw.Actual.idx 2)
+row-seed = ≼-trans (s≼s (Row.At.whole (Tw.Inner.sub 2) (Tw.Inner.covered (Tw.Outer.covered Tw.hA 0) 2)))
+  (≼-trans (J.Inner.part 2) (Tw.Outer.part 0))
+
+

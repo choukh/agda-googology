@@ -1,0 +1,86 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 高塔的从 1 起算系数可用所承接的标准塔值，启动任意前缀的一整个 Ω₁ 尾块。
+module B20OldBlocks where
+open import Data.Nat.Base as N using (ℕ; zero; suc; s≤s; z≤n)
+open import Data.Unit using (tt)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong; subst; sym)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold using (ψ; EBOᶜ)
+open import WVOne using (read)
+open import WVTwo using (◃→≼)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl)
+open import B12LimitSrc using (Lev₂)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B15ReadPaths as R
+import B15FixedWitness as H
+import B18ResetCell as Cell
+import B19RowSecond as Row
+import B20OldTail as Tail
+import B20OldSecond as Prev
+import B20OldRanks as Rank
+import B20Room as Room
+import B20StandardInside as D
+import B20StandardGoal as Goal
+import B20Towers as J
+import B20TowerValues as V
+open T.Run
+
+module Start (r : T.Run (U.sc (tw 1))) (eq : proj₂ (ok r) tt ≡ Ok-tw 1) (cr : A.Covered r)
+             (p : Lev₂) (high : Room.Room r (L.ψ⁰ p)) where
+  module Slot = Rank.At 0 r eq cr
+  module B = Slot.Branch Tail.out Rank.start
+  module M = Slot.M
+  module M₀ = D.Capture M.r₀ M.sub-covered (L.ψ⁰ p) (λ w → high (inc tt w))
+  ready : L.ψ⁰ p ≼ read (proj₁ (β (B.st 0)))
+  ready = ≼-trans (≼-suc (≼-refl _)) (≼-trans M₀.result (M.weaken _ Tail.out _))
+  value : L.ψ⁰ (Tail.block p) ≼ read (T.value r)
+  value = B.collect (M.every refl) Tail.next Rank.base p (B.left p (λ w _ → high w) , ready)
+
+module Second (r : T.Run (tw 2)) (eq : ok r ≡ Ok-tw 2) (cr : A.Covered r) where
+  module P = Prev.At r eq cr
+  open P using (module D)
+  module To = Prev.Tower.P
+  trail = R.left (tw 1) P.trail
+  child = D.C.child 1
+  cc = D.C.cover cr 1
+  s = Room.sub trail child
+  cs = Room.cover trail child cc
+  keep : proj₂ (ok s) tt ≡ Ok-tw 1
+  keep = trans (cong (λ o → proj₂ o tt) (Room.cert trail child)) (To.descend P.trail D.certified tt)
+  value : ∀ p → Room.Room r (L.ψ⁰ p) → L.ψ⁰ (Tail.block p) ≼ read (T.value r)
+  value p slots = ≼-trans (Start.value s keep cs p (Room.room trail child (λ w → slots (inc (D.C.ix 1) w))))
+    (≼-trans (Room.below trail child cc) (D.C.lift-value 1))
+
+toward : ∀ n → R.Reach (tw 2) (tw (suc (suc n)))
+toward zero = R.here
+toward (suc n) = R.via (toward n) R.omega
+good : ∀ n → H.pull (toward n) (Ok-tw (suc (suc n))) ≡ Ok-tw 2
+good zero = refl
+good (suc n) = good n
+
+module At (n j : ℕ) where
+  k : ℕ
+  k = suc (suc n)
+  z : Tr (tw k)
+  z = J.At.index k j
+  module I = D.At (suc n) z
+  path = R.via (toward n) I.basepath
+  s = Room.sub path I.r
+  okay : ok s ≡ Ok-tw 2
+  okay = trans (Room.cert path I.r) (trans (cong (H.pull (toward n)) (D.root-ok (tw k) (↑ (tw k) z) (Ok-tw k) _)) (good n))
+  run : ∀ p m → m N.≤ k → L.ψ⁰ p ≼ D.std m → L.ψ⁰ (Tail.block p) ≼ Cell.At.fresh k j
+  run p m d a = subst (L.ψ⁰ (Tail.block p) ≼_) (sym (V.At.fresh k j)) (≼-trans
+    (Second.value s okay (Room.cover path I.r I.cr) p (Room.room path I.r (λ w →
+        ≼-trans a (D.append _ (suc k) m (s≤s d) w)))) (Room.below path I.r I.cr))
+
+double : ∀ j → L.ψ⁰ (Tail.block (Tail.block Row.p)) ≼ Cell.At.fresh 2 j
+double j = At.run 0 j (Tail.block Row.p) 2 (s≤s (s≤s z≤n)) Prev.standard
+
+terminal : L.ψ⁰ (Tail.block (Tail.block Row.p)) ≼ read EBOᶜ
+terminal = ≼-trans (double 0) (Goal.into 2 0)

@@ -2,7 +2,7 @@
 
 > **EboLean 删节拷贝 (记号侧验收工作, 读 Setzer 的记号 OT_I).** 归档 `Mahlo.Inacc.Order` 的拷贝, 只改了模块名, 并删去了 EBO 路线 ([EboLean](../../EboLean.lagda.md)) 用不到的定义 (由定义级切片判定, 删后从头编译核对). 讲解文字照旧, 可能提到已删的定义; 归档原文未动.
 
-(≺′1)–(≺′11) 逐字转写。原文按 `length(a) + length(b)` 递归；这里用燃料索引的结构递归（与 [../Notation/ExtOrd](../Notation/ExtOrd.lagda.md) 同法），每个递归调用传 `n < suc n`，Agda 直接通过终止检查。燃料充分性（`n ≥ fuel a b` 时结果稳定）与线序（Lemma 2.4，原文"easy, but tedious"）是 [../ROADMAP.md](../ROADMAP.md) 的 P1，本文件不证。
+(≺′1)–(≺′11) 逐字转写。原文按 `length(a) + length(b)` 递归；这里用燃料索引的结构递归（与 [../Notation/ExtOrd](../../../../../archive/src/Mahlo/Notation/ExtOrd.lagda.md) 同法），每个递归调用传 `n < suc n`，Agda 直接通过终止检查。燃料充分性（`n ≥ fuel a b` 时结果稳定）与线序（Lemma 2.4，原文"easy, but tedious"）是 [../ROADMAP.md](../../../../../archive/src/Mahlo/ROADMAP.md) 的 P1，本文件不证。
 
 原文 (≺′11)「其余情形 a ≺′ b :⟺ ¬(b ⪯′ a)」：这里把它**内联**——反向那一对落在 (≺′3)–(≺′10) 的哪条显式子句里，就把那条子句的否定直接写出（形状不同，等号不会成立）。这样每次递归调用都严格减小 `length(a) + length(b)`（原文按此递归；若照抄成 `not (ltP n q p)`，交换后的一对度量不减，燃料充分性就要多绕一步）。
 

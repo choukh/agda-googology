@@ -1,0 +1,296 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B11B 外层: 在 Ψ₃ 外链的真实状态 state m 上, 每次 G 更新把前缀 prefix m 换成 prefix (suc m).
+-- 编译定理. step 以 Stage m 为参数 (A 路交付); inv0 / inv1 无前提. 不用排中律与函数外延 (第 4 层值验收).
+-- run-stages : ((m : ℕ) → Stage m) → Goal. 不否定任何东西; 反查在 B11OuterNeg.
+module B11OuterCore where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym; trans)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; l≼; ≼-refl; ≼-trans; 1≼ψ⁰)
+open import WVOne using (T₀; 𝟏; read)
+open import WVTwo using (T₁; ◃→≼)
+open import WVThree using (Nx)
+open import WSShadow using (Sh; ES; Ω̂; _⨾_; sh; lC; sE)
+open import WSW4 using (module Lem)
+import WKSum
+import WKGen
+import WSLevel as W
+open import WKShape using (Ψ₃)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F; c₁)
+open import YiLAB7Replay using (Match; seed; o₁)
+open import B8PairLevel using (eΩ₂)
+open import B8PairW4 using (Real-up; SumR-up; Real-lim; chain-step)
+open import B9InnerReal using (module RX)
+open import B9InnerSecond using (Real-cΩ₂; Real-cΩ₁; SumR-cNx; SumR-id)
+import B9InnerSecond as I2
+open import B9InnerOuter using (st1; v₁; w2; Ω₂-v₁; Ω₂-cz)
+import YiLAB10Src as T
+import YiLAB11Orbit as O
+open import YiLAB11Target using (body; y; track; prefix; Stage; stage0; state; value; outer; Goal; collect)
+
+open Lem o₁
+open WKSum.Sum o₁ hiding (prefix)
+open RX o₁
+
+zpath : zero ≤ lvl2
+zpath = inc tt (inc tt self)
+
+slot : lvl1 ≤ lvl2
+slot = inc tt self
+
+-- F 在自己槽上: itV 从槽值起跑等于 itS (对 n 归纳, 非逐 n 的 refl).
+itV-self : (n : ℕ) (S : Base lvl2) (i : L) (t : i ≤ lvl2) → itV F n S i t (S i t) ≡ itS F n S i t
+itV-self zero    S i t = refl
+itV-self (suc n) S i t = cong (run F (itS F n S) i t) (itV-self n S i t)
+
+------------------------------------------------------------------------
+-- 第 1 层槽 c₁ R 的结构不变量: 前缀指数 e, Ω₁ 指数, 被加项 Nx, Ω₁ ◃ c₁ R.
+record Str (e : ES) (R : Base lvl2) : Set where
+  constructor str
+  field
+    rP : Real (c₁ R) e
+    rΩ : Real (c₁ R) Ω̂
+    sN : SumR (c₁ R) Nx
+    st : lvl1 ⊢ Ω₁t ◃ c₁ R
+open Str public
+
+------------------------------------------------------------------------
+-- 一轮 G 内部: 以 R 为底族的 F 正迭代. 第 n 个状态的槽 cn n 实现 track P n (B10 的 eY n 换成任意前缀 P).
+module Inner (P : ES) (R : Base lvl2) where
+  Rs : ℕ → Base lvl2
+  Rs n = itS F n R
+
+  cn : ℕ → Tr lvl1
+  cn n = c₁ (Rs n)
+
+  ncn : (n : ℕ) → lvl1 ⊢ zero ◃ cn n
+  ncn n = proj₂ (Rs n lvl1 slot)
+
+  -- 原始内链与累加分支.
+  zz : ℕ → ℕ → Tr lvl1
+  zz n = iter (λ x → ex (cn n) (cn n) (ncn n) (suc x) tt) zero
+
+  U : ℕ → ℕ → Tr lvl1
+  U n = cum (λ j → zz n (suc j))
+
+  part : (n : ℕ) → lvl1 ⊢ U n 1 ◃ cn (suc n)
+  part n = ◃l 1
+
+  first : (n : ℕ) → lvl1 ⊢ zz n 1 ◃ cn (suc n)
+  first n = ◃l 0
+
+  rise : (n : ℕ) → lvl1 ⊢ cn n ◃ cn (suc n)
+  rise n = inf F (Rs n) lvl1 slot (Rs n lvl1 slot)
+
+  record In (n : ℕ) : Set where
+    constructor inn
+    field
+      rY : Real (cn n) (track P n)
+      sT : Str P (Rs n)
+  open In public
+
+  module Step (n : ℕ) (H : In n) where
+    -- z n 1 = ex c c (suc 0): 左槽 c 取前缀 P, 底槽 c 取 track P n.
+    Real-z1 : Real (zz n 1) (P ⨾ track P n)
+    Real-z1 = RealX (ncn n) (rP (sT H)) (rY H) (Real-pos (suc zero) ◃s)
+
+    Real-sz1 : Real (suc (zz n 1)) (P ⨾ track P n)
+    Real-sz1 = Real-up ◃s Real-z1
+
+    -- 原始第 2 项 z n 2 = ex c c (suc (z n 1)) 供被加项消费.
+    SumR-z2 : SumR (zz n 2) (sE (P ⨾ track P n) Nx)
+    SumR-z2 = SumR-x {da = λ a c′ → a} {db = Nx} {e = P ⨾ track P n} (ncn n) (SumR-id (cn n)) (sN (sT H)) (proj₁ Real-sz1)
+
+    pos-pre : lvl1 ⊢ zero ◃ (zz n 1 + cn n)
+    pos-pre = z◃ (zz n 1) (+-mono (zz n 1) (ncn n))
+
+    -- 累加分支 1: U n 1 = ex (z n 1 + c) c (suc (z n 1)) 实现 track P (suc n), 传给下一次 F.
+    Real-U1 : Real (U n 1) (track P (suc n))
+    Real-U1 = RealX (ncn n) (Real-pos (zz n 1 + cn n) pos-pre) (rΩ (sT H)) Real-sz1
+
+    -- 累加分支 0: 第 1 项的指数进入这次 F 更新的结果.
+    first-exp : Real (cn (suc n)) (P ⨾ track P n)
+    first-exp = Real-up (first n) Real-z1
+
+    next : In (suc n)
+    next = inn (Real-up (part n) Real-U1)
+               (str (Real-up (rise n) (rP (sT H))) (Real-up (rise n) (rΩ (sT H)))
+                    (SumR-up (rise n) (sN (sT H))) (◃t (st (sT H)) (rise n)))
+
+  inner : Str P R → (n : ℕ) → In n
+  inner H zero    = inn (rΩ H) H
+  inner H (suc n) = Step.next n (inner H n)
+
+------------------------------------------------------------------------
+-- 第 1 层: 子极限 O.child 的第 n 支 (= F 第 n+1 次) 带第 1 项指数, 取极限得新前缀, 再沿 child-in-G 上传.
+module Up (m : ℕ) (R : Base lvl2) (H : Str (prefix m) R) where
+  open Inner (prefix m) R
+
+  IN : (n : ℕ) → In n
+  IN = inner H
+
+  kidT : ℕ → Tr lvl1
+  kidT n = proj₁ (O.kid n R lvl1 slot (R lvl1 slot))
+
+  kid≡ : (n : ℕ) → kidT n ≡ cn (suc n)
+  kid≡ n = cong proj₁ (trans (O.project-value (suc n) R lvl1 slot (R lvl1 slot)) (itV-self (suc n) R lvl1 slot))
+
+  kidReal : (n : ℕ) → Real (kidT n) (prefix m ⨾ track (prefix m) n)
+  kidReal n = subst (λ X → Real X (prefix m ⨾ track (prefix m) n)) (sym (kid≡ n)) (Step.first-exp n (IN n))
+
+  childReal : Real (proj₁ (O.child R lvl1 slot (R lvl1 slot))) (prefix (suc m))
+  childReal = Real-lim kidReal
+
+  riseG : lvl1 ⊢ c₁ R ◃ c₁ (stepS O.G R)
+  riseG = inf O.G R lvl1 slot (R lvl1 slot)
+
+  newP : Real (c₁ (stepS O.G R)) (prefix (suc m))
+  newP = Real-up (O.child-in-G R lvl1 slot (R lvl1 slot)) childReal
+
+  str′ : Str (prefix (suc m)) (stepS O.G R)
+  str′ = str newP (Real-up riseG (rΩ H)) (SumR-up riseG (sN H)) (◃t (st H) riseG)
+
+------------------------------------------------------------------------
+-- 第 0 层: 任一路径 w 与底 β (ψ⁰(ll m) ≼ β), 链底 zpath 上 ψ⁰(ll m) ≼; G 一轮的输出 ≽ ψ⁰(ll (suc m)).
+module Exit (m : ℕ) (Sg : Stage m) (R : Base lvl2) (H : Str (prefix m) R)
+            (w : zero ≤ lvl2) (β : Tr⁺ zero)
+            (hβ : LV.ψ⁰ (T.ll m) ≼ read (proj₁ β))
+            (hz : LV.ψ⁰ (T.ll m) ≼ read (proj₁ (R zero zpath))) where
+  open Inner (prefix m) R
+
+  IN : (n : ℕ) → In n
+  IN = inner H
+
+  vv : ℕ → Tr⁺ zero
+  vv n = itV F n R zero w β
+
+  bv : (n : ℕ) → LV.ψ⁰ (T.ll m) ≼ read (proj₁ (vv n))
+  bv zero    = hβ
+  bv (suc n) = ≼-trans (bv n) (◃→≼ (inf F (Rs n) zero w (vv n)))
+
+  bz : (n : ℕ) → LV.ψ⁰ (T.ll m) ≼ read (proj₁ (Rs n zero zpath))
+  bz zero    = hz
+  bz (suc n) = ≼-trans (bz n) (◃→≼ (inf F (Rs n) zero zpath (Rs n zero zpath)))
+
+  one-v : (n : ℕ) → 𝟏 ≼ read (proj₁ (vv n))
+  one-v n = ≼-trans (1≼ψ⁰ (T.ll m)) (bv n)
+
+  one-z : (n : ℕ) → 𝟏 ≼ read (proj₁ (Rs n zero zpath))
+  one-z n = ≼-trans (1≼ψ⁰ (T.ll m)) (bz n)
+
+  module M (n : ℕ) = WKGen.Main ok₂ (Rs n) w (vv n) (inj₂ (st (sT (IN n)))) (one-v n) (one-z n)
+
+  -- 核对: Main 的链点是原始内链, Ψg 是 F 的下一次输出.
+  zs≡ : (n j : ℕ) → M.zs n j ≡ zz n j
+  zs≡ n j = refl
+
+  Ψg≡ : (n : ℕ) → M.Ψg n ≡ proj₁ (vv (suc n))
+  Ψg≡ n = refl
+
+  chainbase : (n : ℕ) → M.B′ n zero (inc tt self) ≡ Rs n zero zpath
+  chainbase n = refl
+
+  exit : (n : ℕ) {D : T₁} {d : Sh 0} → W.Ld D d → SumR (zz n 2) d → LV.ψ⁰ (body m D) ≼ read (proj₁ (vv (suc n)))
+  exit n al aw =
+    ≼-trans (Stage.sem Sg al a c (bv n) (bz n))
+    (≼-trans (aw (M.B′ n) (WKGen.wd w) (vv n) a c (≼-refl a) (≼-refl c) (one-z n)) (M.Ψg-ge n 2))
+    where
+    a = read (proj₁ (vv n))
+    c = read (proj₁ (Rs n zero zpath))
+
+  -- F 的第 n+1 次 = O.kid n ◃ O.child ◃ 这一轮 G.
+  toG : (n : ℕ) → read (proj₁ (vv (suc n))) ≼ read (proj₁ (run O.G R zero w β))
+  toG n = subst (λ X → read (proj₁ X) ≼ read (proj₁ (run O.G R zero w β))) (O.project-value (suc n) R zero w β)
+            (≼-trans (◃→≼ (O.in-child n R zero w β)) (◃→≼ (O.child-in-G R zero w β)))
+
+  term : (k : ℕ) → LV.ψ⁰ (body m (y m k)) ≼ read (proj₁ (run O.G R zero w β))
+  term zero    = ≼-trans (exit 0 W.Ld-Ω₁ (SumR-up (◃t (st H) ◃e) (Match.add-w seed))) (toG 0)
+  term (suc n) = ≼-trans (exit n (Stage.lower Sg n) (Step.SumR-z2 n (IN n))) (toG n)
+
+  next-bound : LV.ψ⁰ (T.ll (suc m)) ≼ read (proj₁ (run O.G R zero w β))
+  next-bound = l≼ term
+
+------------------------------------------------------------------------
+-- 外层归纳.
+-- perf: 记录字段里直接写 state m / value m 时, 记录声明本身在 6G 耗尽; 改成对变量 R, v 的记录, 再由函数实例化.
+record InvR (m : ℕ) (R : Base lvl2) (v : Tr⁺ zero) : Set where
+  constructor iv
+  field
+    sv : LV.ψ⁰ (T.ll m) ≼ read (proj₁ v)
+    sz : LV.ψ⁰ (T.ll m) ≼ read (proj₁ (R zero zpath))
+    ss : Str (prefix m) R
+open InvR public
+
+Inv : ℕ → Set
+Inv m = InvR m (state m) (value m)
+
+-- 首站: 第一次 F 更新后的槽 (B9 的 c). perf: Real 两边写法不同时检查器会展开整个 E, 6G 耗尽; 先证树相等 (refl) 再 subst.
+base-c : c₁ (state 0) ≡ I2.c
+base-c = refl
+
+rP0 : Real (c₁ (state 0)) (prefix 0)
+rP0 = subst (λ X → Real X eΩ₂) (sym base-c) Real-cΩ₂
+
+rΩ0 : Real (c₁ (state 0)) Ω̂
+rΩ0 = subst (λ X → Real X Ω̂) (sym base-c) Real-cΩ₁
+
+sN0 : SumR (c₁ (state 0)) Nx
+sN0 = SumR-cNx
+
+st0 : lvl1 ⊢ Ω₁t ◃ c₁ (state 0)
+st0 = chain-step 0
+
+sv0 : LV.ψ⁰ (T.ll 0) ≼ read (proj₁ (value 0))
+sv0 = Ω₂-v₁
+
+sz0 : LV.ψ⁰ (T.ll 0) ≼ read (proj₁ (state 0 zero zpath))
+sz0 = Ω₂-cz
+
+str0 : Str (prefix 0) (state 0)
+str0 = str rP0 rΩ0 sN0 st0
+
+inv0 : Inv 0
+inv0 = iv sv0 sz0 str0
+
+step : (m : ℕ) → Stage m → Inv m → Inv (suc m)
+step m Sg I =
+  iv (Exit.next-bound m Sg (state m) (ss I) w2 (value m) (sv I) (sz I))
+     (Exit.next-bound m Sg (state m) (ss I) zpath (state m zero zpath) (sz I) (sz I))
+     (Up.str′ m (state m) (ss I))
+
+invs : ((m : ℕ) → Stage m) → (m : ℕ) → Inv m
+invs S zero    = inv0
+invs S (suc m) = step m (S m) (invs S m)
+
+at-Ψ₃ : (m : ℕ) → Inv m → LV.ψ⁰ (T.ll m) ≼ read Ψ₃
+at-Ψ₃ m I = ≼-trans (sv I) (≼-trans (◃→≼ (inf O.G (state m) zero w2 (value m))) (outer m))
+
+run-stages : ((m : ℕ) → Stage m) → Goal
+run-stages S = collect (λ m → at-Ψ₃ m (invs S m))
+
+------------------------------------------------------------------------
+-- 有实例的换站 (无前提): stage0 推出第 1 站的两个零层界与新前缀指数.
+inv1 : Inv 1
+inv1 = step 0 stage0 inv0
+
+new-base : LV.ψ⁰ (T.ll 1) ≼ read (proj₁ (value 1))
+new-base = sv inv1
+
+new-chainbase : LV.ψ⁰ (T.ll 1) ≼ read (proj₁ (state 1 zero zpath))
+new-chainbase = sz inv1
+
+new-prefix : Real (c₁ (state 1)) (prefix 1)
+new-prefix = rP (ss inv1)
+
+double₁ : LV.ψ⁰ (T.ll 1) ≼ read Ψ₃
+double₁ = at-Ψ₃ 1 inv1

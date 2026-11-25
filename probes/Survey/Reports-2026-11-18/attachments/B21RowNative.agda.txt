@@ -1,0 +1,22 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21RowNative where
+
+open import Data.Nat.Base using (ℕ)
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+import OCF.Align.Level as L
+import B12Omega3Ref as Ref
+import B14RefFixed as K
+import B21RowX2 as X
+import B21RowPass as Pass
+
+nth : ∀ {f g : ℕ → T₁} → L.lim f L.≅ L.lim g → ∀ n → f n L.≅ g n
+nth (L.l≅ h) = h
+ret : ∀ {f g : T₀ → T₁} → L.limᵢ L.zero f L.≅ L.limᵢ L.zero g → ∀ n → f (L.natᶜ n) L.≅ g (L.natᶜ n)
+ret (L.lᵢ≅ _ h) n = h _ _ (L.≅-refl⁰ (L.natᶜ n))
+target = K.collapse (Ref.X 2)
+follow = λ t → X.point (X.point (X.point (X.point (X.point t 0) 1) 2) 0) 1
+at-source : ∀ n → X.point (follow target) n L.≅ K.collapse (Pass.prefix n)
+at-source n = L.≅-trans (nth (ret (nth (nth (ret (nth X.source 0) 1) 2) 0) 1) n)
+  (L.≅-trans (X.shape n) (L.≅-sym (Pass.exact n)))
+

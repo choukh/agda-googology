@@ -1,0 +1,36 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在原 W4 零层输出树上，严格的原行上界等价于可沿输出逐步检查的原名标号；只在第四层使用。
+module B30OutputRank where
+open import Data.Nat.Base as N using (ℕ)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit.Base using (⊤; tt)
+open import Relation.Binary.PropositionalEquality using (refl)
+import W4Block as W
+open import WVOne using (read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; z≼; s≼s)
+open import OCF.Align.EboLeanDef using (_<ᵀ_)
+open import OCF.Align.EboLeanBase using (_≤ᵀ_)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRVLevel using (LEM)
+import B26Names as A
+import B26Depth as D
+import B27CutArithmetic as C
+import B27Threshold as R
+import B27Endpoint as E
+import B17ValueDich as O
+
+import B30RankRules as Core
+
+strict : ∀ a b → A.name a <ᵀ A.name b → L.suc (A.value a) ≼ A.value b
+strict a b d = mono<ⁿ (A.nt a) (A.nt b) (A.ct b) (A.hcN a) (A.hcN b) d
+smaller : ∀ b x → L.suc x ≼ A.value b → Σ A.Name (λ a → x ≼ A.value a × A.name a <ᵀ A.name b)
+smaller b x d with C.approx b x d
+... | a , cap , down = a , cap , R.strict-name a b down
+module Original = Core.Rules A.Name A.value (λ a b → A.name a <ᵀ A.name b) (λ a b → A.name a ≤ᵀ A.name b)
+  (λ b → inj₂ refl) R.weak-value strict smaller
+open Original public
+Ranked : W.Tr W.zero → Set
+Ranked x = Σ A.Name (Label x)

@@ -1,0 +1,70 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 单个首标 1 的所有非空 Ω 森林，原响应上确界等于实际 χ₁ 对应的旧折叠 ψ₀(Ω_ω)；两份首标的原响应被所有正塔反馈的单位值实付。
+module B28FFinite where
+open import Data.Nat.Base using (ℕ; zero; suc; s≤s; z≤n)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+import OCF.Align.EboLeanDef as E
+import OCF.Align.EboLeanBase as NF
+import OCF.Align.Standard as St
+import OCF.Align.Label as Q
+import OCF.Align.Level as L
+open import OCF.Align.BTBOValMain using (toLevel-nat)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≅→≼; ≼-trans; ≼-suc; ≼-refl; s≼s; ≼l; l≼; ⊑→≼)
+import B12BtboCut as Cut
+import B12Terminal as T
+import B20StandardInside as Stv
+import B20StandardGoal as Actual
+import B18CellState as Cell
+import B25DSize as Size
+import B25DFirst as First
+import B25DTrack as D
+import B26OSparse as S
+import B26CForest as P
+import B28FHead as H
+import B28FCalibration as C
+
+module R = H.Head P.empty NF.n[]
+module A = Q.GS Q.triv
+module V = Q.Tree Q.triv
+word = H.copies []
+native : ∀ n → A.𝔸 (word n)
+native zero = A.a[]
+native (suc n) = A.a∷ (A.aψ refl A.a[]) (native n)
+
+normal : ∀ n → St.NF (word n)
+normal = St.NF-rep (St.nψ St.n[] St.c[] St.n[] St.bnd[])
+count : ∀ n → St.Ctbl (word n)
+count zero = St.c[]
+count (suc n) = St.c∷ (count n)
+
+canonical : ∀ n → V.T⟦ native n ⟧ L.≅ L.natᶜ n
+canonical zero = L.z≅
+canonical (suc n) = L.≅-trans (L.add-≅ (L.s≅ L.z≅) (canonical n)) (First.shifted n)
+
+module Fin (n : ℕ) where
+  module Vn = C.Named Q.triv (word n) (native n) (normal n) (count n)
+  index : L.natᴵ n L.≅ᴵ Vn.k
+  index = L.≅ᴵ-trans (toLevel-nat n)
+      (L.toLevel-≅ (L.natᶜ-HS n) (V.certT (native n)) (L.≅-sym (canonical n)))
+  same = Vn.At.same index
+
+point : ∀ n → R.point n L.≅ Cut.finite (suc n)
+point n = Fin.same (suc n) (R.at n)
+up : R.limit ≼ Cut.omega-cut
+up = l≼ (λ n → ≼l (suc n) (≅→≼ (point n)))
+down : Cut.omega-cut ≼ R.limit
+down = l≼ (λ where
+  zero → ≼l {f = R.point} 0 (≼-trans {a = Cut.finite 0} {b = Cut.finite 1} {c = R.point 0}
+    (⊑→≼ (Cut.finite 0) (L.Ψ⁰0 (L.natᴵ 1))) (≅→≼ (L.≅-sym (point 0))))
+  (suc n) → ≼l {f = R.point} n (≅→≼ (L.≅-sym (point n))))
+old : R.limit ≈ᵛ D.name 1
+old = ≼-trans {b = Cut.omega-cut} up (proj₂ First.first) , ≼-trans {b = Cut.omega-cut} (proj₁ First.first) down
+
+paid : ∀ n j (h : E.HC (S.collapse (word 2))) → L.suc (Rt h) ≼ Cell.At.fresh (suc n) j
+paid n j h = ≼-trans {a = L.suc (Rt h)} {b = L.suc (Stv.std 1)} {c = Cell.At.fresh (suc n) j}
+   (s≼s (≼-trans {a = Rt h} {b = T.Ω₂ref} {c = Stv.std 1} (≅→≼ (Fin.same 2 h)) Size.at-one))
+   (Actual.At.child n j 1 (s≤s z≤n))
+

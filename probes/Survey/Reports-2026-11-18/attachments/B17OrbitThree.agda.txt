@@ -1,0 +1,93 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 每次 K 的实际一级状态得到完整的 Γ 系数。Ω₂ 自身的正迭代窗口容纳所有这些指数，再交给同一个 Q。
+module B17OrbitThree where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (refl; _≡_; cong; sym; trans; subst)
+open import W4Block hiding (D)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (p₂; g₂)
+open import WKGen using (node-ge; Ω₁t)
+open import WKShape using (Ψ₃; lvl3; ok₃)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; F; c₁)
+open import B9InnerOuter using (w2)
+open import WSShadow using (zC)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼l; ≼-refl)
+import B11OuterCore as C
+import B12ActualSlots as Cover
+import B12Terminal as T
+import B12Update as U
+import B12Orbit as Win
+import B13Orbit as K
+import B13OrbitFeed as O
+import B13SeedOuter as St
+import B14RefDescribed as D
+import B15OrbitAction as P
+import B15OrbitModel as M
+import B15OrbitEx as E
+import B15OrbitRaise as H
+import B16OrbitExit as Old
+import B16OrbitWide as Wide
+import B17OrbitModel as B
+import B17OrbitTower as S
+import B17OrbitVector as V
+import B17RefVector as A
+import B17RefThree as Ref
+open V using (Index)
+m = idM {X = M.X₁}
+module Out = M.At m
+module Closed = B.At m
+
+module Regular (K′ : Op {lvl2} nil) (le : K.WeakOp F K′) (R : Base lvl2) where
+  b = R lvl1 C.slot
+  next = stepS K′ R lvl1 C.slot
+  advance : ∀ v → lvl1 ⊢ Ω₁t ◃ proj₁ b → Index b v → Index next (A.step v)
+  advance v cover h = Stage.Gather.complete hit
+    where
+    module Stage = V.Step b next cover v h
+    hit : ∀ j → lvl1 ⊢ Stage.branch (suc j) ◃ proj₁ next
+    hit j = K.push-path {y = c₁ (stepS F R)} (◃l (suc j)) (le R lvl1 C.slot b)
+
+module At (r : T.Run lvl3) (cv : Cover.Covered r) where
+  module I = E.At r cv
+  module Prev = Old.At r cv
+  open I using (module Previous; module E₀; module Inn; K₁; J; initial)
+  open Prev using (cover)
+  open St.At r using (st1; c⁺; v₁; outer)
+  open Previous.Proof.Core.Run using (S₁; step₂)
+  opK = K.K c⁺
+  module Window = Win.Window opK
+  base = λ n → Inn.Rs n lvl1 C.slot
+  vec = iter A.step S.semK
+  contains : ∀ n → lvl1 ⊢ Ω₁t ◃ proj₁ (base n)
+  contains zero = cover
+  contains (suc n) = ◃t (contains n) (Inn.rise n)
+  index : ∀ n → Index (base n) (vec n)
+  index zero = V.initial (base 0) cover
+  index (suc n) = Regular.advance opK (K.standard≤K c⁺ E₀.cp) (Inn.Rs n) (vec n) (contains n) (index n)
+
+  into : ∀ n → lvl1 ⊢ proj₁ (base n) ◃ Previous.y
+  into zero = ◃t (inf J st1 lvl1 C.slot (st1 lvl1 C.slot)) (◃l 0)
+  into (suc n) = subst (λ z → lvl1 ⊢ z ◃ Previous.y) eq (◃t (Window.in-child n st1 lvl1 C.slot (base 0))
+               (◃t (K.contains c⁺ E₀.cp opK st1 lvl1 C.slot (base 0)) (◃l 0)))
+    where
+    eq : proj₁ (Window.kid n st1 lvl1 C.slot (base 0)) ≡ proj₁ (base (suc n))
+    eq = cong proj₁ (trans (Window.project-value (suc n) st1 lvl1 C.slot (base 0)) (Window.self-value (suc n) st1 lvl1 C.slot))
+
+  selected : ∀ n → B.Both m Previous.Q (S.run (vec n 0) P.base)
+  selected n = Closed.lift₀ (op (E ok₂ O.D₁ (proj₁ (base n)) K₁) (Einf ok₂ O.D₁ (proj₁ (base n)) K₁)) Previous.Q
+      (λ R i t v → Emono ok₂ O.D₁ K₁ R i t v (into n)) _
+      (index n m (λ _ → refl) 0 idM (λ _ → refl) K₁ P.base (H.protected c⁺ E₀.cp , Wide.base c⁺ E₀.cp))
+  level : ∀ n → Ref.Physical.stage n ≼ read (T.value r)
+  level n = ≼-trans (U.value-bound (Out.seed (proj₁ (selected n) Previous.t L.zero zC D.zero-row L.z≅ S₁ v₁ initial)))
+      (≼-trans (≼l 0 (≼-refl _)) (≼-trans (node-ge (kp lvl2 ok₂ p₂ w2) (λ z → E ok₂ tdNil (g₂ z) J st1 zero w2 v₁) step₂ 1)
+                      (≼-trans (E₀.inG st1 w2 v₁) (outer 0))))
+  whole : Ref.three ≼ read (T.value r)
+  whole = Ref.Physical.absorb level
+standard : Ref.three ≼ read Ψ₃
+standard = At.whole (T.initial lvl3 ok₃) (Cover.initial lvl3 ok₃)
+terminal : Ref.three ≼ read EBOᶜ
+terminal = ≼-trans (At.whole (T.finiteRun 2) (Cover.all-finite 2)) (T.finite-ge 2)

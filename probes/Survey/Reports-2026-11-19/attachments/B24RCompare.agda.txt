@@ -1,0 +1,91 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24RCompare where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; z≼; s≼s; ≼l; l≼; ≼u; u≼; ≼i; i≼; ≅→≼)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import WVOne using (T₀)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Src as Y
+import B12LimitSrc as A
+import B12Omega3Ref as R
+import B12Omega3Cuts as C
+import B13Target as P
+import B14RefFixed as Fix
+import B14RefAllRows as Older
+import B15RefSource as Old
+import B17RefAllSource as F
+import B23RKernel as Reverse
+import B24RRows as Rows
+import B24RExit as E
+module S = F.S
+module B = F.B
+
+module Regular (p : A.Lev₂) (rp : p L.≅ p) where
+  module Q = Rows.At p rp
+  kernel-lim : ∀ n (f : ℕ → T₀) → Q.kernel n (L.lim f) ≡ L.lim (λ j → Q.kernel n (f j))
+  kernel-lim zero f = refl
+  kernel-lim (suc n) f rewrite kernel-lim n f = refl
+  limit : ∀ n (f : ℕ → T₀) → Q.gain n (L.lim f) ≡ L.lim (λ j → Q.gain n (f j))
+  limit n f rewrite kernel-lim n f = refl
+
+module Model {p : A.Lev₂} (rp : p L.≅ p) (s : A.Src₂) (align : A.Aligned s p) where
+  module Q = Rows.At p rp
+  inject = λ x → L.add p (λ t → L.suc (L.suc t)) x
+  prefix : T₀ → A.Src₂
+  prefix L.zero = s
+  prefix (L.suc x) = S.suc (prefix x)
+  prefix (L.lim f) = S.lim (λ n → prefix (f n))
+  base-up : ∀ {x y} → x ≼ y → U.Mh (prefix x) (inject y)
+  base-up {y = y} z≼ = U.M-add-r {σ = λ t → L.suc (L.suc t)} y (A.Aligned.up align)
+  base-up (s≼s d) = U.Ms (base-up d)
+  base-up (≼l j d) = U.Mlr j (base-up d)
+  base-up (l≼ h) = U.Mll (λ j → base-up (h j))
+  base-up (≼i {p = ()} _ _ _)
+  base-up (i≼ {p = ()} _)
+  base-up (≼u {r = ()} _)
+  base-up (u≼ {r = ()} _)
+  base-down : ∀ x → D.Dn (inject x) (prefix x)
+  base-down L.zero = A.Aligned.dn align
+  base-down (L.suc x) = D.Rs (base-down x)
+  base-down (L.lim f) = D.Rll (λ j → D.Rlr j (base-down (f j)))
+  represent : ℕ → T₀ → A.Src₂
+  represent zero x = F.pass (prefix x)
+  represent (suc n) x = F.pass (s S.+ S.↑ {ℓ₁ = Old.one} B.zero (S.ψ< B.zero (represent n x)))
+  up : ∀ n {x y} → x ≼ y → U.Mh (represent n x) (Q.kernel n y)
+  up zero d = F.pass-up 1 (base-up d)
+  up (suc n) d = F.pass-up 1 (U.M-add {σ = L.suc} (A.Aligned.up align)
+    (U.M-↑ B.zero (U.M-ψ {i = Old.one} (L.≅ᴵ-refl _) L.zero R.idσ B.zero (up n d))))
+  dn : ∀ n x → D.Dn (Q.kernel n x) (represent n x)
+  dn zero x = F.pass-down 1 (base-down x)
+  dn (suc n) x = F.pass-down 1 (D.Dn-add {σ = L.suc} (A.Aligned.dn align)
+    (D.Dn-↑ B.zero (D.Dn-ψ {i = Old.one} (L.≅ᴵ-refl _) L.zero R.idσ B.zero (dn n x))))
+  monotone : ∀ n {x y} → x ≼ y → Q.gain n x ≼ Q.gain n y
+  monotone n {x} {y} d = C.sandwich {s = represent n x} (dn n x) (up n d)
+     (Q.respects (Q.regular n (L.≅-refl⁰ x))) (Q.respects (Q.regular n (L.≅-refl⁰ y)))
+
+module Zero where
+  module Q = E.Slice 0
+  t : ∀ {u v} → u L.≅ v → Q.T u L.≅ P.co₁ v
+  t {u} {v} d = P.pass-pres {u = L.add L.zero L.suc u} {v = L.up L.zero v} (L.upʳ {r = L.zero} (C.left-unit L.suc d))
+  kid : ∀ n x → Q.kid n x L.≅ Older.kid 0 n x
+  kid zero x = L.upˡ (L.upʳ (L.≅-refl⁰ x))
+  kid (suc n) x = Fix.pres (t (kid n x))
+  match : ∀ n x → Q.gain n x L.≅ Older.gain 0 n x
+  match n x = L.ψ⁰-≅ (t (kid n x))
+  monotone : ∀ n {x y} → x ≼ y → Q.gain n x ≼ Q.gain n y
+  monotone n {x} {y} d = ≼-trans (≅→≼ (match n x)) (≼-trans (Reverse.At.monotone 0 n {x} {y} d) (≅→≼ (L.≅-sym (match n y))))
+
+positive : ℕ → A.Src₂
+positive zero = Y.a
+positive (suc m) = Y.a S.+ positive m
+aligned : ∀ m → A.Aligned (positive m) (R.left (suc m))
+aligned zero = A.omega2
+aligned (suc m) = A.plus A.omega2 (aligned m)
+monotone : ∀ m n {x y} → x ≼ y → E.Slice.gain m n x ≼ E.Slice.gain m n y
+monotone zero n = Zero.monotone n
+monotone (suc m) n = Model.monotone (R.reg (suc m)) (positive m) (aligned m) n
+limit : ∀ m n f → E.Slice.gain m n (L.lim f) ≡ L.lim (λ j → E.Slice.gain m n (f j))
+limit m = Regular.limit (R.left m) (R.reg m)

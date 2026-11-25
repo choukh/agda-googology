@@ -1,0 +1,33 @@
+[
+  {
+    "module": "YiCWTable",
+    "exit": 0,
+    "graph_nodes": 142,
+    "local_modules": [
+      "OCF.Lean.YiCWTable",
+      "OCF.Lean.YiMTTab",
+      "OCF.Lean.YiRWBlock",
+      "OCF.Lean.YiRWFold",
+      "OCF.Lean.YiRWOps",
+      "OCF.Lean.YiRWPath",
+      "OCF.Lean.YiTBRow"
+    ],
+    "same_as_importclosure": true
+  },
+  {
+    "module": "YiCWActual",
+    "exit": 0,
+    "graph_nodes": 143,
+    "local_modules": [
+      "OCF.Lean.YiCWActual",
+      "OCF.Lean.YiCWTable",
+      "OCF.Lean.YiMTTab",
+      "OCF.Lean.YiRWBlock",
+      "OCF.Lean.YiRWFold",
+      "OCF.Lean.YiRWOps",
+      "OCF.Lean.YiRWPath",
+      "OCF.Lean.YiTBRow"
+    ],
+    "same_as_importclosure": true
+  }
+]

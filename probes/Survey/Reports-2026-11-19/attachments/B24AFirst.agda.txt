@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24AFirst where
+open import Data.Nat.Base using (zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WVTwo using (◃→≼)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl2)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼)
+import B12ActualSlots as Cov
+import B12Terminal as Tm
+import B12Omega3Ref as Ref
+import B12Omega3Cuts as U
+import B13Orbit as Orb
+import B13SeedOuter as Seed
+import B13Target as P
+import B22RowRule as Rule
+import B22RowLive as V
+import B22RowPrefix as B
+import B22RowWhole as Live
+import B23ABlocks as Bl
+import B23AFinite as Fin
+import B24RKernel as K
+import B24ROrbit as O
+import B24AFeedback as F
+
+lower : ∀ y → K.H y ≼ L.ψ⁰ (L.zero L.+ K.q y)
+lower y = ≅→≼ (L.ψ⁰-≅ (L.≅-sym (U.left-unit Ref.idσ (K.regular (L.≅-refl⁰ y)))))
+
+opaque
+  inside : ∀ (Q : Op {lvl2} nil) (law : Rule.Rule Q Ω₂ᴸ) (R : Base lvl2) (h : V.Present B.empty R)
+    (c : Tr⁺ lvl2) → Cov._⊴_ (proj₁ (Ωt lvl2)) (proj₁ c) → ∀ t b → L.ψ⁰ (B.q B.empty) ≼ read (proj₁ b) →
+    O.D ≼ read (proj₁ (run (Orb.block c Q) R zero t b))
+  inside Q law R h c cp t b hb = ≼-trans (≅→≼ O.shape)
+    (F.Site.Run.Chain.At.to-block Q Ω₂ᴸ law {p = L.zero} B.empty R h K.H lower t b hb c cp)
+
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  open Seed.At r using (c⁺; st1; w2; v₁; G; outer)
+  Q₁ = Orb.block c⁺ (Orb.Jc c⁺)
+  Q₂ = Orb.block c⁺ Q₁
+  opaque
+    law : Rule.Rule Q₁ Ω₂ᴸ
+    law = Bl.Site.once r cv
+    input : V.Present B.empty st1
+    input = Live.At.initial r cv
+    seed : L.ψ⁰ (B.q B.empty) ≼ read (proj₁ v₁)
+    seed = Live.At.run-bound r cv 0
+  at-two : O.D ≼ read (proj₁ (run Q₂ st1 zero w2 v₁))
+  at-two = inside Q₁ law st1 input c⁺ (Bl.Site.cp r cv) w2 v₁ seed
+  physical : O.D ≼ read (Tm.value r)
+  physical = ≼-trans at-two (≼-trans (◃→≼ (Fin.At.inside r cv 2 st1 zero w2 v₁)) (outer 0))

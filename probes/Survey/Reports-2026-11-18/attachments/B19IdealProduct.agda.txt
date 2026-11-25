@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19IdealProduct where
+
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Nat.Base using (ℕ; zero; suc)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼l; l≼; s≼s; z≼; +-mono)
+open import WVOne using (T₀; 𝟏)
+open import B18Product using (_·_; powers; mono)
+
+id : ∀ (x : T₀) → x ≈ᵛ x
+id x = ≼-refl x , ≼-refl x
+
+flip : ∀ {x y : T₀} → x ≈ᵛ y → y ≈ᵛ x
+flip (a , b) = b , a
+
+infixr 3 _∙_
+_∙_ : ∀ {x y z : T₀} → x ≈ᵛ y → y ≈ᵛ z → x ≈ᵛ z
+(p , q) ∙ (d , e) = ≼-trans p d , ≼-trans e q
+
+add : ∀ {x y a b : T₀} → x ≈ᵛ y → a ≈ᵛ b → (x L.+ a) ≈ᵛ (y L.+ b)
+add (p , q) (d , e) = +-mono p d , +-mono q e
+
+mul : ∀ {x y a b : T₀} → x ≈ᵛ y → a ≈ᵛ b → (x · a) ≈ᵛ (y · b)
+mul (p , q) (d , e) = mono p d , mono q e
+
+lim : ∀ {f g : ℕ → T₀} → (∀ n → f n ≈ᵛ g n) → L.lim f ≈ᵛ L.lim g
+lim h = l≼ (λ n → ≼l n (proj₁ (h n))) , l≼ (λ n → ≼l n (proj₂ (h n)))
+
+plus-id : ∀ x → (L.zero L.+ x) ≈ᵛ x
+plus-id L.zero = id _
+plus-id (L.suc x) = s≼s (proj₁ (plus-id x)) , s≼s (proj₂ (plus-id x))
+plus-id (L.lim f) = lim (λ n → plus-id (f n))
+
+one : ∀ x → (x · 𝟏) ≈ᵛ x
+one = plus-id
+
+left-one : ∀ x → (𝟏 · x) ≈ᵛ x
+left-one L.zero = id _
+left-one (L.suc x) = s≼s (proj₁ (left-one x)) , s≼s (proj₂ (left-one x))
+left-one (L.lim f) = lim (λ n → left-one (f n))
+
+assoc+ : ∀ (x y z : T₀) → ((x L.+ y) L.+ z) ≈ᵛ (x L.+ (y L.+ z))
+assoc+ x y L.zero = id _
+assoc+ x y (L.suc z) = s≼s (proj₁ (assoc+ x y z)) , s≼s (proj₂ (assoc+ x y z))
+assoc+ x y (L.lim f) = lim (λ n → assoc+ x y (f n))
+
+distrib : ∀ (x y z : T₀) → (x · (y L.+ z)) ≈ᵛ ((x · y) L.+ (x · z))
+distrib x y L.zero = id _
+distrib x y (L.suc z) = add (distrib x y z) (id x) ∙ assoc+ (x · y) (x · z) x
+distrib x y (L.lim f) = lim (λ n → distrib x y (f n))
+
+assoc : ∀ (x y z : T₀) → ((x · y) · z) ≈ᵛ (x · (y · z))
+assoc x y L.zero = id _
+assoc x y (L.suc z) = add (assoc x y z) (id (x · y)) ∙ flip (distrib x (y · z) y)
+assoc x y (L.lim f) = lim (λ n → assoc x y (f n))
+
+power : T₀ → T₀ → T₀
+power x L.zero = 𝟏
+power x (L.suc y) = power x y · x
+power x (L.lim f) = L.lim (λ n → power x (f n))
+
+power-sum : ∀ x y z → power x (y L.+ z) ≈ᵛ (power x y · power x z)
+power-sum x y L.zero = flip (one (power x y))
+power-sum x y (L.suc z) = mul (power-sum x y z) (id x) ∙ assoc (power x y) (power x z) x
+power-sum x y (L.lim f) = lim (λ n → power-sum x y (f n))
+

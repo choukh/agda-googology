@@ -1,0 +1,115 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B7A: 第 3 层闭项 Ψ₃ 计算里的形状 (都是 refl, 编译定理). 说明 B6A 的关系 (只带第 0 层的链底) 到这里不够的机制:
+-- (1) Ψ₃ 的链点是 ex Ω₂ Ω₂ (suc z), 第 2 层; (2) 第 2 层 Ω 树作右边的 op 在目标 0 走链, 链底是状态在第 1 层的分量;
+-- (3) 同一个 op 在目标 1 把这个分量更新成第 1 层的新树 (状态在第 1 层增长); (4) 第 1 层子树的 Ω₁ 结点在目标 1 保留, 在目标 0 走链.
+module WKShape where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+
+open import WVOne using (lvl1; p₁)
+open import WVTwo using (lvl2; p₂; g₂)
+
+lvl3 : L
+lvl3 = nd sS (λ _ → lvl2)
+
+ok₃ : Ok lvl3
+ok₃ = tt , λ _ → tt , λ _ → tt , λ _ → tt
+
+p₃ : Pos lvl3
+p₃ = inj₂ (tt , inj₁ tt)
+
+g₃ : Tr lvl2 → Tr lvl3
+g₃ z = up zero tt (suc z) (z◃ z ◃s)
+
+Ω₂t : Tr lvl2
+Ω₂t = proj₁ (Ωt lvl2)
+
+-- (1) Ψ₃ 的链: 第 2 层的自身行.
+s₃ : Tr lvl2 → Tr lvl2
+s₃ z = fromBr lvl3 p₃ (proj₁ (ψ lvl3 ok₃ (B₀ lvl3) (at lvl3 p₃) (posW lvl3 p₃) (B₀ lvl3 (at lvl3 p₃) (posW lvl3 p₃)) (g₃ z)))
+
+s₃-shape : (z : Tr lvl2) → s₃ z ≡ ex Ω₂t Ω₂t (proj₂ (Ωt lvl2)) (suc z) tt
+s₃-shape z = refl
+
+Ψ₃ : Tr zero
+Ψ₃ = proj₁ (ψ₀ lvl3 ok₃ (proj₁ (Ωt lvl3)))
+
+module _ (o : Ok lvl2) (S : St {lvl2} nil) where
+
+  c₁ : Tr lvl1
+  c₁ = proj₁ (S lvl1 (inc tt self))
+
+  n₁ : lvl1 ⊢ zero ◃ c₁
+  n₁ = proj₂ (S lvl1 (inc tt self))
+
+  F : Op {lvl2} nil
+  F = opB lvl2 o Ω₂t (proj₂ (Ωt lvl2))
+
+  -- (2) 目标 0: 链点 ex c₁ c₁ (suc z), c₁ 是状态在第 1 层的分量 (WKGen.Main.s-shape 的特例).
+  chain₀ : (z : Tr lvl1) → fromBr lvl2 p₂ (proj₁ (ψ lvl2 o S lvl1 (inc tt self) (S lvl1 (inc tt self)) (g₂ z)))
+                          ≡ ex c₁ c₁ n₁ (suc z) tt
+  chain₀ z = refl
+
+  -- (3) 目标 1: 一步迭代把第 1 层的状态换成 Ω₂ 以 c₁ 为底折到第 1 层, 即链 z ↦ ex c₁ c₁ (suc z) 的累加极限.
+  zc : ℕ → Tr lvl1
+  zc = iter (λ z → ex c₁ c₁ n₁ (suc z) tt) zero
+
+  step₁ : proj₁ (stepS F S lvl1 (inc tt self)) ≡ lim (cum (λ n → ex c₁ c₁ n₁ (suc (zc n)) tt)) _
+  step₁ = refl
+
+  -- (4) 第 1 层子树 (第 2 层结点的孩子框架) 的 Ω₁ 结点: 目标 1 保留, 输出仍是 Ω₁ 结点.
+  keep₁ : kp lvl2 o (inj₂ (tt , inj₂ p₁)) (inc tt self) ≡ just (p₁ , (λ z → z) , refl)
+  keep₁ = refl
+
+  Tc : TD {lvl2} (cons (down stop tt) nil) lvl1
+  Tc = chTD tdNil tt
+
+  tc : ⟦ cons (down stop tt) nil ⟧ lvl1
+  tc = inj₂ (inc tt self) , inc tt self
+
+  E-keep : (g : Tr zero → Tr lvl1) (F′ : Op (cons (down stop tt) nil)) (S′ : St (cons (down stop tt) nil)) (v : Tr⁺ lvl1)
+         → proj₁ (E o Tc (Ω p₁ g) F′ S′ lvl1 tc v) ≡ Ω p₁ (λ z → proj₁ (E o Tc (g z) F′ S′ lvl1 tc v))
+  E-keep g F′ S′ v = refl
+
+-- 目标 0 上的 Keep 一律是 nothing (Pos zero = ⊥): 走链. 这是 B6A 只需一个链底的原因.
+keep₀ : ∀ {X : Set} {x₀ : X} (m : Keep zero X x₀) → m ≡ nothing
+keep₀ nothing          = refl
+keep₀ (just (() , _))
+
+-- 第 3 层的保留表 (定义上): 分支层 m 的位置, 目标层 i; 保留当且仅当 m < i, 否则走链 (链在第 m 层).
+open import Data.Bool using (Bool; true; false)
+open import Data.List using (List; _∷_; [])
+
+isJ : ∀ {A : Set} → Maybe A → Bool
+isJ (just _) = true
+isJ nothing  = false
+
+q2 q1 q0 : Pos lvl3
+q2 = inj₂ (tt , inj₁ tt)                              -- 分支 Tr lvl2
+q1 = inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))           -- 分支 Tr lvl1
+q0 = inj₂ (tt , inj₂ (inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))))  -- 分支 Tr zero
+
+t2 : lvl2 ≤ lvl3
+t2 = inc tt self
+t1 : lvl1 ≤ lvl3
+t1 = inc tt (inc tt self)
+t0 : zero ≤ lvl3
+t0 = inc tt (inc tt (inc tt self))
+
+kp-table : isJ (kp lvl3 ok₃ q2 t2) ∷ isJ (kp lvl3 ok₃ q2 t1) ∷ isJ (kp lvl3 ok₃ q2 t0)
+         ∷ isJ (kp lvl3 ok₃ q1 t2) ∷ isJ (kp lvl3 ok₃ q1 t1) ∷ isJ (kp lvl3 ok₃ q1 t0)
+         ∷ isJ (kp lvl3 ok₃ q0 t2) ∷ isJ (kp lvl3 ok₃ q0 t1) ∷ isJ (kp lvl3 ok₃ q0 t0) ∷ []
+         ≡ false ∷ false ∷ false
+         ∷ true  ∷ false ∷ false
+         ∷ true  ∷ true  ∷ false ∷ []
+kp-table = refl

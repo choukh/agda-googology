@@ -1,0 +1,127 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W6 形状事实 (全是 refl). 塔第 n+1 项 N 的规范 Ω 树 (= dg zero (c ↦ Ωt (h c))) 朝 "孩子 c′ 里的层 j" 折: 结果是 node⁺,
+-- 保留判定是原层号上的 kp N top (inc c′ v), 第 d 支逐字是孩子 c′ + d 里沿 v ∙ tw-mono n c′ d 的折叠. 在原层号 N 上, 不是 N′.
+-- 不说明: 值; 读回层号 (证书为 nothing) 上的情形.
+module W6Shape where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W6Block
+open import W6Ops
+open import W6Path
+open import W6Fold
+
+module Steer (n : ℕ) (c′ : Tr (tw n)) where
+  N : L
+  N = tw (suc n)
+  oN : Ok N
+  oN = Ok-tw (suc n)
+  top : Pos N
+  top = inj₁ (inj₁ tt)
+
+  -- 规范 Ω 树 (左项为零).
+  steer-node : (S : Base N) {j : L} (v : j ≤ hN n c′) (β : Tr⁺ j)
+    → ψ N oN S j (inc c′ v) β (proj₁ (Ωt N))
+    ≡ node⁺ (kp N oN top (inc c′ v))
+        (λ d → ψ (hN n (c′ + d)) (proj₂ oN (c′ + d)) (λ i u → S i (inc (c′ + d) u)) j (v ∙ tw-mono n c′ d) β (proj₁ (Ωt (hN n (c′ + d)))))
+        (λ d → proj₁ (ψ (hN n (c′ + d)) (proj₂ oN (c′ + d)) (λ i u → S i (inc (c′ + d) u)) (tw n)
+                        (self ∙ lift (tw n) (↑ (tw n) (c′ + d))) (S (tw n) (ink self)) (proj₁ (Ωt (hN n (c′ + d))))))
+  steer-node S v β = refl
+
+  -- 左项 x 非零: "x 右边接上规范 Ω 树". 底是 x 朝目标的折叠, 状态是 x 经孩子 c′ + d 朝各层的折叠.
+  steer-left : (S : Base N) {j : L} (v : j ≤ hN n c′) (β : Tr⁺ j) (x : Tr N)
+    → ψ N oN S j (inc c′ v) β (x + proj₁ (Ωt N))
+    ≡ node⁺ (kp N oN top (inc c′ v))
+        (λ d → ψ (hN n (c′ + d)) (proj₂ oN (c′ + d)) (λ i u → ψ N oN S i (inc (c′ + d) u) (S i (inc (c′ + d) u)) x) j
+                 (v ∙ tw-mono n c′ d) (ψ N oN S j (inc c′ v) β x) (proj₁ (Ωt (hN n (c′ + d)))))
+        (λ d → proj₁ (ψ (hN n (c′ + d)) (proj₂ oN (c′ + d)) (λ i u → ψ N oN S i (inc (c′ + d) u) (S i (inc (c′ + d) u)) x) (tw n)
+                        (self ∙ lift (tw n) (↑ (tw n) (c′ + d))) (ψ N oN S (tw n) (ink self) (S (tw n) (ink self)) x) (proj₁ (Ωt (hN n (c′ + d))))))
+  steer-left S v β x = refl
+
+  -- 第 0 支就是孩子 c′ 本身 (c′ + zero = c′), 路径是原路径接上 tw-mono n c′ zero.
+  branch-zero : (S : Base N) {j : L} (v : j ≤ hN n c′) (β : Tr⁺ j)
+    → ψ (hN n (c′ + zero)) (proj₂ oN (c′ + zero)) (λ i u → S i (inc (c′ + zero) u)) j (v ∙ tw-mono n c′ zero) β (proj₁ (Ωt (hN n (c′ + zero))))
+    ≡ ψ (hN n c′) (proj₂ oN c′) (λ i u → S i (inc c′ u)) j (v ∙ tw-mono n c′ zero) β (proj₁ (Ωt (hN n c′)))
+  branch-zero S v β = refl
+
+------------------------------------------------------------------------
+-- (i) 塔第 1 项. t 是 ω 的树; 目标是孩子 t 的层号本身 (第 ω 层, 无穷的私有层).
+sn : ℕ → Tr zero
+sn zero    = zero
+sn (suc m) = suc (sn m)
+
+t : Tr zero
+t = lim sn (λ m → ◃s)
+
+h₁ : Tr zero → L
+h₁ = hN 0
+
+module T1 = Steer 0 t
+
+inst₁ : (S : Base (tw 1)) (β : Tr⁺ (h₁ t))
+  → ψ (tw 1) (Ok-tw 1) S (h₁ t) (inc t self) β (proj₁ (Ωt (tw 1)))
+  ≡ node⁺ (kp (tw 1) (Ok-tw 1) (inj₁ (inj₁ tt)) (inc t self))
+      (λ d → ψ (h₁ (t + d)) (proj₂ (Ok-tw 1) (t + d)) (λ i u → S i (inc (t + d) u)) (h₁ t) (self ∙ tw-mono 0 t d) β (proj₁ (Ωt (h₁ (t + d)))))
+      (λ d → proj₁ (ψ (h₁ (t + d)) (proj₂ (Ok-tw 1) (t + d)) (λ i u → S i (inc (t + d) u)) zero
+                      (self ∙ lift zero (↑ zero (t + d))) (S zero (ink self)) (proj₁ (Ωt (h₁ (t + d))))))
+inst₁ S β = T1.steer-node S self β
+
+-- 分支下标 1 (孩子 t + 1, 第 ω+1 层): 字面路径就是 inc tt self.
+path₁ : self ∙ tw-mono 0 t (suc zero) ≡ inc tt self
+path₁ = refl
+
+------------------------------------------------------------------------
+-- (ii) 塔第 2 项. c′ 取 Ωt (tw 1) 的树 (孩子下标含 Ω 共尾元); 目标是孩子 c′ 的层号本身.
+cΩ : Tr (tw 1)
+cΩ = proj₁ (Ωt (tw 1))
+
+module T2 = Steer 1 cΩ
+
+inst₂ : (S : Base (tw 2)) (β : Tr⁺ (hN 1 cΩ))
+  → ψ (tw 2) (Ok-tw 2) S (hN 1 cΩ) (inc cΩ self) β (proj₁ (Ωt (tw 2)))
+  ≡ node⁺ (kp (tw 2) (Ok-tw 2) (inj₁ (inj₁ tt)) (inc cΩ self))
+      (λ d → ψ (hN 1 (cΩ + d)) (proj₂ (Ok-tw 2) (cΩ + d)) (λ i u → S i (inc (cΩ + d) u)) (hN 1 cΩ) (self ∙ tw-mono 1 cΩ d) β (proj₁ (Ωt (hN 1 (cΩ + d)))))
+      (λ d → proj₁ (ψ (hN 1 (cΩ + d)) (proj₂ (Ok-tw 2) (cΩ + d)) (λ i u → S i (inc (cΩ + d) u)) (tw 1)
+                      (self ∙ lift (tw 1) (↑ (tw 1) (cΩ + d))) (S (tw 1) (ink self)) (proj₁ (Ωt (hN 1 (cΩ + d))))))
+inst₂ S β = T2.steer-node S self β
+
+------------------------------------------------------------------------
+-- (iii) 左项非零: Ω + Ω (x = Ωt (tw 1) 的树, 右边接上规范 Ω 树) 朝第 ω 层 (孩子 t 的层号).
+-- 分支下标 1 处: 在孩子 t + 1 (第 ω+1 层) 里沿 inc tt self 把 Ω_{ω+1} 朝第 ω 层折, 底是 x 朝第 ω 层的折叠 (它本身又是换参数的结点),
+-- 不是 W5 回退时的 "x 的折叠 ⊞ 第 0 层的尾巴".
+x₁ : Tr (tw 1)
+x₁ = proj₁ (Ωt (tw 1))
+
+inst₃ : (S : Base (tw 1)) (β : Tr⁺ (h₁ t))
+  → ψ (tw 1) (Ok-tw 1) S (h₁ t) (inc t self) β (x₁ + proj₁ (Ωt (tw 1)))
+  ≡ node⁺ (kp (tw 1) (Ok-tw 1) (inj₁ (inj₁ tt)) (inc t self))
+      (λ d → ψ (h₁ (t + d)) (proj₂ (Ok-tw 1) (t + d)) (λ i u → ψ (tw 1) (Ok-tw 1) S i (inc (t + d) u) (S i (inc (t + d) u)) x₁) (h₁ t)
+               (self ∙ tw-mono 0 t d) (ψ (tw 1) (Ok-tw 1) S (h₁ t) (inc t self) β x₁) (proj₁ (Ωt (h₁ (t + d)))))
+      (λ d → proj₁ (ψ (h₁ (t + d)) (proj₂ (Ok-tw 1) (t + d)) (λ i u → ψ (tw 1) (Ok-tw 1) S i (inc (t + d) u) (S i (inc (t + d) u)) x₁) zero
+                      (self ∙ lift zero (↑ zero (t + d))) (ψ (tw 1) (Ok-tw 1) S zero (ink self) (S zero (ink self)) x₁) (proj₁ (Ωt (h₁ (t + d))))))
+inst₃ S β = T1.steer-left S self β x₁
+
+-- 分支 1 的显式形状.
+branch₃-1 : (S : Base (tw 1)) (β : Tr⁺ (h₁ t))
+  → ψ (h₁ (t + suc zero)) (proj₂ (Ok-tw 1) (t + suc zero)) (λ i u → ψ (tw 1) (Ok-tw 1) S i (inc (t + suc zero) u) (S i (inc (t + suc zero) u)) x₁) (h₁ t)
+      (self ∙ tw-mono 0 t (suc zero)) (ψ (tw 1) (Ok-tw 1) S (h₁ t) (inc t self) β x₁) (proj₁ (Ωt (h₁ (t + suc zero))))
+  ≡ ψ (h₁ (suc t)) (proj₂ (Ok-tw 1) (suc t)) (λ i u → ψ (tw 1) (Ok-tw 1) S i (inc (suc t) u) (S i (inc (suc t) u)) x₁) (h₁ t)
+      (inc tt self) (ψ (tw 1) (Ok-tw 1) S (h₁ t) (inc t self) β x₁) (proj₁ (Ωt (h₁ (suc t))))
+branch₃-1 S β = refl
+
+-- 第 ω+1 层就是第 ω 层上的后继层.
+lev-ω+1 : h₁ (suc t) ≡ nd sS (λ _ → h₁ t)
+lev-ω+1 = refl
+
+-- 底 (x 朝第 ω 层的折叠) 本身也是换参数的结点.
+base₃ : (S : Base (tw 1)) (β : Tr⁺ (h₁ t))
+  → ψ (tw 1) (Ok-tw 1) S (h₁ t) (inc t self) β x₁
+  ≡ node⁺ (kp (tw 1) (Ok-tw 1) (inj₁ (inj₁ tt)) (inc t self))
+      (λ d → ψ (h₁ (t + d)) (proj₂ (Ok-tw 1) (t + d)) (λ i u → S i (inc (t + d) u)) (h₁ t) (self ∙ tw-mono 0 t d) β (proj₁ (Ωt (h₁ (t + d)))))
+      (λ d → proj₁ (ψ (h₁ (t + d)) (proj₂ (Ok-tw 1) (t + d)) (λ i u → S i (inc (t + d) u)) zero
+                      (self ∙ lift zero (↑ zero (t + d))) (S zero (ink self)) (proj₁ (Ωt (h₁ (t + d))))))
+base₃ S β = inst₁ S β

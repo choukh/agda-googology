@@ -1,0 +1,74 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第一座正塔整段的实际零返回是自然极限下各次单位重置因子的有限乘积之上确界。
+module B29CLimitValue where
+
+open import Data.Nat.Base using (ℕ; suc; zero)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+import W4Block as W
+import W4Ops as O
+import W4Path as K
+import W4Fold as F
+import WVOne as V
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≼-refl; ≼l; l≼)
+import B12Terminal as T
+import B14PathHeight as Ht
+import B18Product as M
+import B18Scale as Scale
+import B19IdealProduct as A
+import B19PathValue as H
+import B28BHead as Head
+import B28BCut as Cut
+import B29CLimit as Shape
+
+module Chain (h : ℕ → W.L) (r : T.Run (W.nd W.sL h)) (unit : V.read (proj₁ (T.Run.β r)) ≡ V.𝟏) where
+  site = T.limRun h r
+  actual = λ n → V.read (T.value (site n))
+  module C (n : ℕ) = H.At (h n) (T.Run.ok (site n)) (T.Run.bs (site n)) (proj₁ (O.Ωt (h n)))
+  factor = C.coefficient
+  lower : ∀ v → factor v ≼ V.read (T.value r)
+  lower v = ≼-trans {b = actual v} (Scale.At.lower (h v) (T.Run.ok s) (T.Run.bs s) (K.z≤ _) (proj₁ (O.Ωt _))
+    (T.Run.β s) (T.Run.oneβ s)) (T.lim-child h r v)
+    where s = site v
+  product : ℕ → V.T₀
+  product zero = V.𝟏
+  product (suc n) = product n M.· factor n
+  previous : ∀ n → V.read (proj₁ (T.Run.β (site (suc n)))) ≡ actual n
+  previous zero = refl
+  previous (suc n) = refl
+  partial : ∀ n → actual n ≈ᵛ product (suc n)
+  partial zero = A._∙_ (C.scale 0 (Ht.standard _) (T.Run.β (site 0)))
+    (A.mul (subst (V.read (proj₁ (T.Run.β r)) ≈ᵛ_) unit (A.id _)) (A.id _))
+  partial (suc n) = A._∙_ (C.scale (suc n) (Ht.standard _) (T.Run.β (site (suc n))))
+    (A.mul (subst (_≈ᵛ product (suc n)) (sym (previous n)) (partial n)) (A.id _))
+  shape : V.read (T.value r) ≈ᵛ L.lim actual
+  shape = l≼ (λ { zero → ≼l 0 (≼-refl _) ; (suc n) → ≼l (suc n) (≼-refl _) }) ,
+          l≼ (T.lim-child h r)
+  exact : V.read (T.value r) ≈ᵛ L.lim (λ n → product (suc n))
+  exact = A._∙_ shape (A.lim partial)
+  power : ∀ q → (∀ n → factor n ≼ q) → ∀ n → product n ≼ M.powers q n
+  power q h zero = ≼-refl V.𝟏
+  power q h (suc n) = M.mono (power q h n) (h n)
+  bound : ∀ q → (∀ n → factor n ≼ q) → V.read (T.value r) ≼ L.lim (M.powers q)
+  bound q d = ≼-trans {b = L.lim (λ n → product (suc n))} (proj₁ exact)
+    (l≼ λ n → ≼l (suc n) (power q d (suc n)))
+
+site : (x : W.Tr Shape.k) → Shape.Limit x → ℕ → V.T₀
+site ._ (Shape.hit f d) n = Chain.factor (λ v → Shape.k W.⊕ W.↑ Shape.k (f v)) (Shape.H.restart (W.lim f d)) refl n
+estimate : ∀ x (p : Shape.Limit x) q → (∀ n → site x p n ≼ q) → Shape.H.free x ≼ L.lim (M.powers q)
+estimate ._ (Shape.hit f d) q small = Chain.bound (λ v → Shape.k W.⊕ W.↑ Shape.k (f v)) (Shape.H.restart (W.lim f d)) refl q small
+
+inside : ∀ x (p : Shape.Limit x) n → site x p n ≼ Shape.H.free x
+inside ._ (Shape.hit f d) n = Chain.lower (λ v → Shape.k W.⊕ W.↑ Shape.k (f v)) (Shape.H.restart (W.lim f d)) refl n
+
+module Real (j u : ℕ) where
+  factor = site (Shape.At.x j u) (Shape.At.actual j u)
+  cap = estimate (Shape.At.x j u) (Shape.At.actual j u)
+  into = inside (Shape.At.x j u) (Shape.At.actual j u)
+
+genuine : ∀ j u q → (∀ t → Real.factor j u t ≼ q) → Cut.Physical.inner 0 j u ≼ L.lim (M.powers q)
+genuine j u = Real.cap j u
+
+outer : ∀ j q → (∀ u t → Real.factor j u t ≼ q) → Cut.Physical.f 0 j ≼ (L.lim (M.powers q) M.· L.ωᶜ)
+outer j q d = Cut.Physical.cap 0 j (L.lim (M.powers q)) (λ u → genuine j u q (d u))

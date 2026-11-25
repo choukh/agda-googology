@@ -1,0 +1,30 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- ψ⁰(Ω₃) 的 [1,1,0,1,0,0] 整棵子树同时归入标准 Ψ₃ 和实际 Λ。
+module B15OrbitExit where
+open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst)
+open import W4Block using (iter)
+import OCF.Align.Level as L
+import B15OrbitAction as A
+import B15RefRaise as Q
+open import WVOne using (read)
+open import WKShape using (lvl3; Ψ₃; ok₃)
+open import W4Fold using (EBOᶜ)
+open import OCF.Align.Value using (_≼_; ≼-trans)
+import B12Terminal as T
+import B12ActualSlots as C
+import B15OrbitEx as E
+import B15RefChildren as R
+
+same : ∀ n → iter A.raise A.base n ≡ Q.actions n
+same zero = refl
+same (suc n) = cong A.raise (same n)
+
+bound : ∀ r → C.Covered r → R.parent ≼ read (T.value r)
+bound r cv = R.collect (λ n → subst (λ a → L.ψ⁰ (A.f a L.zero) ≼ read (T.value r)) (same n) (E.At.branch r cv n))
+
+standard : R.parent ≼ read Ψ₃
+standard = bound (T.initial lvl3 ok₃) (C.initial lvl3 ok₃)
+
+terminal : R.parent ≼ read EBOᶜ
+terminal = ≼-trans (bound (T.finiteRun 2) (C.all-finite 2)) (T.finite-ge 2)

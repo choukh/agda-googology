@@ -1,0 +1,132 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 任取真实零槽的值下界，从其后继反复作零系数折叠。将整条链再送入下个真实零槽，可在 Λ 上闭合此操作的所有有限次。
+module B14OrbitRise where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; T₀)
+open import WVTwo using (◃→≼; p₂; g₂)
+open import WKGen using (Ω₁t; node-ge)
+open import WKShape using (lvl3; ok₃; Ψ₃)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+open import B9InnerOuter using (w2)
+open import B8PairW4 using (Real-up; SumR-up)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; s≼s; ≼l; l≼)
+import B11OuterCore as C
+import B12Orbit as B
+import B12Hierarchy as H
+import B12Update as S
+import B13Countable as T
+import B13OrbitFeed as O
+import B13LiveRow as LR
+import B13Feedback as F
+import B13Target as P
+import B13Orbit as V
+import B13Update as Step
+import B13Seeds as Seeds
+import B13SeedOuter as Start
+import B12Terminal as Term
+import B12ActualSlots as Cover
+import B14OrbitNode as N
+open H.Prefix using (val; exp; rows)
+
+φ : T₀ → T₀
+φ x = L.ψ⁰ (P.co₀ x)
+
+tower : T₀ → ℕ → T₀
+tower x zero = L.suc x
+tower x (suc n) = L.suc (φ (tower x n))
+
+jump : T₀ → T₀
+jump x = L.lim (λ n → φ (tower x n))
+
+module At (J : Op {lvl2} nil) (single : ∀ w → T.In.Models idM w J H.add)
+          (R : Base lvl2) (v : Tr⁺ zero) (I : S.Seeds (val H.first) (exp H.first) R v)
+          (w : zero ≤ lvl2) where
+  module Core = N.At J single R v I
+  open Core using (module Row; module Run; module Old)
+  open Run using (S₁; S₀; down-target; step₁; step₂)
+  open Old using (idx)
+  open Row using (K₁; K₀)
+  t = σ O.m₁ w
+
+  inner≤ : read (proj₁ (E ok₂ O.D₁ Ω₁t K₁ S₁ zero t v)) ≼ read (proj₁ (run (B.block J) R zero w v))
+  inner≤ = ≼-trans (◃→≼ (Emono ok₂ tdNil J R zero w v
+    {x = up zero tt Ω₁t (proj₂ (Ωt lvl1))} {y = g₂ (step₂ zero)}
+    (◃c zero tt (◃t (C.st (S.structure I)) (◃t (Einf ok₂ tdNil (g₂ zero) J R lvl1 C.slot (R lvl1 C.slot)) ◃s)))))
+    (node-ge (kp lvl2 ok₂ p₂ w) (λ y → E ok₂ tdNil (g₂ y) J R zero w v) step₂ 1)
+
+  module In = Core.Inside t v I
+
+  first : F.first-node ≼ read (proj₁ (run (B.block J) R zero w v))
+  first = ≼-trans In.old-whole inner≤
+
+  module Higher (x : T₀) (bound : x ≼ read (proj₁ (R zero C.zpath))) where
+    track : ∀ n → tower x n ≼ read (suc (idx (suc n)))
+    track zero = s≼s (≼-trans bound (◃→≼ (Einf ok₂ O.D₁ (O.g₁ zero) K₁ S₁ zero down-target (S₁ zero down-target))))
+    track (suc n) = s≼s (≼-trans (LR.coefficient _ _ (track n)) (Old.incoming (suc n)))
+
+    child : ∀ n → φ (tower x n) ≼ read (proj₁ (E ok₂ O.D₁ (O.g₁ (idx (suc n))) K₁ S₁ zero t v))
+    child n = ≼-trans (LR.coefficient _ _ (track n)) (S.value-bound
+      (T.In.eval-zero O.m (σ O.m₂ t) O.D₀ (suc (idx (suc n))) K₀ H.add In.sim H.first S₀ v I))
+
+    advance : jump x ≼ read (proj₁ (run (B.block J) R zero w v))
+    advance = ≼-trans (l≼ (λ n → ≼-trans (child n)
+      (node-ge (kpT (fr O.D₁) ok₂ p₁ (tv O.D₁ t))
+          (λ z → E ok₂ O.D₁ (O.g₁ z) K₁ S₁ zero t v) step₁ (suc n)))) inner≤
+
+module Compare (r : Term.Run lvl3) (cv : Cover.Covered r) where
+  open Start.At r hiding (w2)
+  module I = Seeds.Seeds r cv
+  cp = cv lvl2 (inc tt self)
+  J = V.Jc c⁺
+  one : ∀ w → T.In.Models idM w J H.add
+  one w x = Step.advanceJc c⁺ cp w (val x) (exp x) (rows x)
+
+  inG : (R : Base lvl2) (w : zero ≤ lvl2) (v : Tr⁺ zero) →
+        read (proj₁ (run (B.block J) R zero w v)) ≼ read (proj₁ (run G R zero w v))
+  inG R w v = ≼-trans (move c⁺ cp) (≼l 0 (≼-refl _))
+    where
+    move : (d : Tr⁺ lvl2) → Cover._⊴_ (proj₁ (Ωt lvl2)) (proj₁ d) →
+      read (proj₁ (run (B.block J) R zero w v)) ≼ read (proj₁ (run (V.block d J) R zero w v))
+    move d (inj₁ eq) = subst (λ z → read (proj₁ (run (B.block J) R zero w v)) ≼ read (proj₁ (E ok₂ tdNil z J R zero w v))) eq (≼-refl _)
+    move d (inj₂ p) = ◃→≼ (Emono ok₂ tdNil J R zero w v p)
+
+  state = λ n → itS G n st1
+  value = λ n → itV G n st1 zero w2 v₁
+  seeds : ∀ n → S.Seeds (val H.first) (exp H.first) (state n) (value n)
+  seeds zero = S.seeds I.base I.coord I.structure
+  seeds (suc n) = S.seeds (≼-trans (S.value-bound prior) (◃→≼ (inf G (state n) zero w2 (value n))))
+    (≼-trans (S.slot-bound prior) (◃→≼ (inf G (state n) zero C.zpath (state n zero C.zpath))))
+    (C.str (Real-up rise (C.rP h)) (Real-up rise (C.rΩ h)) (SumR-up rise (C.sN h)) (◃t (C.st h) rise))
+    where
+    prior = seeds n
+    h = S.structure prior
+    rise = inf G (state n) lvl1 C.slot (state n lvl1 C.slot)
+
+  module Slot (n : ℕ) = At J one (state n) (state n zero C.zpath)
+    (S.seeds (S.slot-bound (seeds n)) (S.slot-bound (seeds n)) (S.structure (seeds n))) C.zpath
+  module Value (n : ℕ) = At J one (state n) (value n) (seeds n) w2
+
+  slots : ∀ n → iter jump F.first-node n ≼ read (proj₁ (state (suc n) zero C.zpath))
+  slots zero = ≼-trans (Slot.first 0) (inG st1 C.zpath (st1 zero C.zpath))
+  slots (suc n) = ≼-trans (Slot.Higher.advance (suc n) _ (slots n)) (inG (state (suc n)) C.zpath (state (suc n) zero C.zpath))
+
+  lower : ∀ n → iter jump F.first-node (suc n) ≼ read (Term.value r)
+  lower n = ≼-trans (Value.Higher.advance (suc n) _ (slots n)) (≼-trans (inG (state (suc n)) w2 (value (suc n))) (outer (suc n)))
+
+frontier : T₀
+frontier = L.lim (λ n → iter jump F.first-node (suc n))
+
+standard : frontier ≼ read Ψ₃
+standard = l≼ (Compare.lower (Term.initial lvl3 ok₃) (Cover.initial lvl3 ok₃))
+
+terminal : frontier ≼ read EBOᶜ
+terminal = ≼-trans (l≼ (Compare.lower (Term.finiteRun 2) (Cover.all-finite 2))) (Term.finite-ge 2)

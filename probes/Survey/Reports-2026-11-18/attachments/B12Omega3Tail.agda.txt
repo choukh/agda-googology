@@ -1,0 +1,77 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第 4 层：Ω₃ 基本列第二项内，有限系数的极限再取一次 ω 倍。
+module B12Omega3Tail where
+open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≅→≼; ≼-trans; ≼l; ≼-refl)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import WVOne using (T₀; read)
+open import WKShape using (Ψ₃)
+import YiLAB10Src as T
+import B12LimitSrc as A
+import B12Arithmetic as H
+import B12Omega3Ref as R
+import B12Omega3Cuts as C
+open R using (at; finitePower; power; idσ)
+
+omegaD : A.Lev₂
+omegaD = L.lim finitePower
+
+tail : T₀
+tail = at (at (at (at (at (at R.inner-next 1) 0) 1) 2) 2) 1
+
+actualD : ℕ → A.Lev₂
+actualD n = R.coefficient (R.transports (S.iter (L.suc L.zero L.+_) L.zero n))
+
+tail-shape : tail ≡ L.ψ⁰ (power (L.lim actualD))
+tail-shape = refl
+
+coordinate : ∀ n → actualD n L.≅ finitePower n
+coordinate n rewrite R.index n | R.strip n | R.coeff-nat n = C.regD n
+
+power-resp : ∀ {a b : A.Lev₂} → a L.≅ b → power a L.≅ power b
+power-resp {a} {b} e = L.l≅ (L.iter-R L._≅_ {G = a L.+_} {G′ = b L.+_} (L.add-≅ {σ = idσ} {σ′ = idσ} e) L.z≅)
+
+tail-agrees : tail L.≅ L.ψ⁰ (power omegaD)
+tail-agrees = L.ψ⁰-≅ (power-resp (L.l≅ coordinate))
+
+allS : A.Src₂ → A.Src₂
+allS x = S.lim (λ k → H.hS k x)
+allL : A.Lev₂ → A.Lev₂
+allL x = L.lim (λ k → H.hL k x)
+
+regω : omegaD L.≅ omegaD
+regω = L.l≅ C.regD
+
+all-arithmetic : ∀ {x y} → x L.≅ y → allL x L.≅ (y L.+ omegaD)
+all-arithmetic e = L.l≅ (λ n → C.arithmetic n e)
+
+start-zero : L.lim (S.iter allL L.zero) L.≅ power omegaD
+start-zero = L.l≅ (λ n → L.≅-trans (C.Sum.Prefix.along omegaD regω allL all-arithmetic L.z≅ n)
+                                    (C.left-unit idσ (C.Sum.reg omegaD regω n)))
+
+all-down : ∀ {p s} → D.Dn p s → D.Dn (allL p) (allS s)
+all-down e = D.Rll (λ n → D.Rlr n (C.down n e))
+
+-- 主线对角的列从 h₁ 起。丢掉的 h₀ 项在 h₁ 的第 1 支。
+all-up : ∀ {s p} → U.Mh s p → U.Mh (allS s) (H.dL p)
+all-up e = U.Mll λ where
+  zero → U.Mlr 0 (U.Mlr 1 (C.up 0 e))
+  (suc k) → U.Mlr k (C.up (suc k) e)
+
+tail-to-main : tail ≼ L.ψ⁰ H.reference
+tail-to-main = ≼-trans (≅→≼ (L.≅-trans tail-agrees (L.ψ⁰-≅ (L.≅-sym start-zero))))
+  (C.sandwich {s = S.lim (S.iter allS S.zero)} (D.Rll (λ n → D.Rlr n (L.iter-R D.Dn {G = allL} {G′ = allS} all-down D.Rz n)))
+    (U.Mll (λ n → U.Mlr n (L.iter-R U.Mh {G = allS} {G′ = H.dL} all-up (U.Mz (U.NZ-Ω _)) n)))
+    (L.≅-trans start-zero (L.≅-sym start-zero)) (A.Aligned.regular (A.Closure.sup H.dS H.dL H.dr A.omega2)))
+
+tail-actual : tail ≼ read Ψ₃
+tail-actual = ≼-trans tail-to-main H.level
+
+tail-inside-second : tail ≼ R.at (L.ψ⁰ R.Ω₃) 1
+tail-inside-second = ≼l 0 (≼l 1 (≼l 1 (≼l 0 (≼l 1 (≼l 2 (≼l 2 (≼l 1 (≼-refl _))))))))

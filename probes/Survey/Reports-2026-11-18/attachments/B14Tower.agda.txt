@@ -1,0 +1,113 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 塔第 1 项的零层输出和链槽用不同路径。显式保留这两条路径；下一个下标本身携带已校准的值。
+module B14Tower where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; read; 𝟏; h₁; gt; p₀)
+open import WKGen using (node-ge)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼)
+import OCF.Align.NoCumsum as N
+import B12Terminal as T
+import B12ActualSlots as A
+import B12EboRows as Rows
+import B13Feedback as F
+import B13LiveRow as V
+open T.Run
+
+valueAt : ∀ {j} (r : T.Run j) (w : zero ≤ j) → T₀
+valueAt {j} r w = read (proj₁ (ψ j (ok r) (bs r) zero w (β r) (proj₁ (Ωt j))))
+
+-- 修改的只有被迭代的零层基。
+reset : ∀ {j} (r : T.Run j) (v : Tr⁺ zero) → 𝟏 ≼ read (proj₁ v) → T.Run j
+reset r v d = T.makeRun (ok r) (bs r) v (oneB r) (omegaB r) d
+
+module At (r : T.Run (tw 1)) where
+  idx = T.index1 r
+  next = T.step1 r
+  slot = bs r zero (ink self)
+
+  chain : (z : Tr zero) → T.Run (h₁ z)
+  chain z = reset (T.enterRun (sΩ zero) h₁ r z zero) slot (oneB r (ink self))
+
+  path : (z : Tr zero) → zero ≤ h₁ z
+  path z = self ∙ proj₂ (proj₁ (ok r)) z
+
+  actual : ∀ z → read (next z) ≡ valueAt (chain z) (path z)
+  actual z = refl
+
+  point : (n : ℕ) → T.Run (h₁ (idx n))
+  point = T.tower-child r
+
+  out : ∀ n → valueAt (point n) (z≤ _) ≼ read (T.value r)
+  out = T.tower-ge r
+
+  start : 𝟏 ≼ read (idx 1)
+  start = ≼-trans (oneB r (ink self)) (T.inflate0 (h₁ zero) (ok (chain zero)) (bs (chain zero)) (path zero) slot (proj₁ (Ωt (h₁ zero))))
+
+  -- γ 0 = 1。比较两种真实运行，各次一个链值推进 γ，一次输出把它放入终点。
+  module Diagonal
+    (advance : (n : ℕ) → N.γ n ≼ read (idx (suc n)) →
+       N.γ (suc n) ≼ valueAt (chain (idx (suc n))) (path (idx (suc n))))
+    (emit : (n : ℕ) → N.γ n ≼ read (idx (suc n)) →
+       N.γ (suc n) ≼ read (T.value (point (suc n)))) where
+    indices : (n : ℕ) → N.γ n ≼ read (idx (suc n))
+    indices zero = start
+    indices (suc n) = advance n (indices n)
+    btbo : N.BTBOᴵ ≼ read (T.value r)
+    btbo = l≼ (λ n → ≼-trans (emit n (indices n)) (out (suc n)))
+
+module Actual = At T.tower1
+module Standard = At (T.initial (tw 1) (Ok-tw 1))
+
+-- 不对路径作外延相等。沿一次可数分支，将输出所用的路径带到孩子。
+module Lim (g : ℕ → W4Block.L) (r : T.Run (nd sL g))
+           (ws : (n : ℕ) → zero ≤ g n) where
+  v : (n : ℕ) → Tr⁺ zero
+  v n = ψ (nd sL g) (ok r) (bs r) zero (inu ws) (β r) (T.prefix g n)
+  sub : (n : ℕ) → T.Run (g n)
+  sub n = reset (T.limRun g r n) (v n) (≼-trans (oneβ r)
+    (T.inflate0 (nd sL g) (ok r) (bs r) (inu ws) (β r) (T.prefix g n)))
+  part : (n : ℕ) → valueAt (sub n) (ws n) ≼ valueAt r (inu ws)
+  part zero = ≼l 0 (≼-refl _)
+  part (suc n) = ≼l (suc n) (≼-refl _)
+  covered : A.Covered r → (n : ℕ) → A.Covered (sub n)
+  covered h n = A.enter sL g r n (T.prefix g n) h
+
+import WKTower as W
+import B12TerminalSrc as S
+
+chain-covered : (r : T.Run (tw 1)) → A.Covered r → (z : Tr zero) → A.Covered (At.chain r z)
+chain-covered r h z = A.enter (sΩ zero) h₁ r z zero h
+
+cA = Actual.chain (Actual.idx 1)
+pA = Actual.path (Actual.idx 1)
+
+parts : ∀ {g} → zero ≤ nd sL g → (n : ℕ) → zero ≤ g n
+parts (inu ws) = ws
+parts {g} _ n = z≤ (g n)
+
+module Outer = Lim _ cA (parts pA)
+module Inner = Lim W.gL (Outer.sub 0) (parts (parts pA 0))
+hA : A.Covered cA
+hA = chain-covered T.tower1 (A.enter sL tw T.terminal 1 (T.prefix tw 1) (A.initial Λ Ok-Λ)) (Actual.idx 1)
+
+actual-second : F.first-node ≼ read (Actual.idx 2)
+actual-second = ≼-trans (V.Compare.at-run (Inner.sub 2) (Inner.covered (Outer.covered hA 0) 2))
+                        (≼-trans (Inner.part 2) (Outer.part 0))
+
+cS = Standard.chain (Standard.idx 1)
+module Ordinary = Lim W.gL cS (parts (Standard.path (Standard.idx 1)))
+
+standard-second : F.first-node ≼ read (Standard.idx 2)
+standard-second = ≼-trans (V.Compare.at-run (Ordinary.sub 2) (Ordinary.covered
+  (chain-covered S.standard (A.initial (tw 1) (Ok-tw 1)) (Standard.idx 1)) 2))
+  (Ordinary.part 2)

@@ -1,0 +1,91 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 过去独立算出的任意标准塔，均严格落入足够高的每个单位起点系数。只用那些层的零槽下界。
+module B20StandardInside where
+open import Data.Nat.Base as N using (ℕ; zero; suc; s≤s; z≤n)
+import Data.Nat.Properties as Nat
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; T₀; 𝟏; h₁)
+open import WVTwo using (◃→≼)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼; s≼s)
+import B12Terminal as T
+import B12ActualSlots as A
+import B12Strict as Strict
+import B14Tower as W
+import B15ReadPaths as R
+import B15FixedWitness as H
+import B16ReadIndex as I
+import B18TowerEmb as E
+import B19RowSecondParent as Parent
+import B20Towers as J
+import B20Room as U
+import WSLevel
+import B20SlotTail as Tail
+open T.Run
+
+std : ℕ → T₀
+std n = read (proj₁ (E.standard n))
+
+covered : ∀ l k j w → A._⊴_ (proj₁ (Ωt j)) (proj₁ (J.slots l k j w))
+covered l zero j w = inj₁ refl
+covered l (suc n) j w = A.extend (covered l n j w) (+-mono _ (ι-mono j (proj₂ (E.standard n))))
+
+append : ∀ l n m → m N.< n → ∀ (w : zero ≤ l) → std m ≼ read (proj₁ (J.slots l n zero w))
+append l (suc n) m d w with Nat.m≤n⇒m<n∨m≡n (Nat.≤-pred d)
+... | inj₂ refl = Parent.append (J.slots l n zero w) (E.standard n)
+... | inj₁ lo = ≼-trans (append l n m lo w) (◃→≼ (+-mono _ (ι-mono zero (proj₂ (E.standard n)))))
+
+tower : ∀ n → R.Reach (tw 1) (tw (suc n))
+tower zero = R.here
+tower (suc n) = R.via (tower n) R.omega
+
+tower-ok : ∀ n → H.pull (tower n) (Ok-tw (suc n)) ≡ Ok-tw 1
+tower-ok zero = refl
+tower-ok (suc n) = tower-ok n
+
+root-ok : ∀ k b o (p : OkO k b) → H.pull (R.base k b) (Ok⊕ k b o p) ≡ o
+root-ok k zero o p = refl
+root-ok k (nd sS h) o p = root-ok k (h tt) o (proj₂ p tt)
+root-ok k (nd sL h) o p = root-ok k (h 0) o (proj₂ p 0)
+root-ok k (nd (sΩ j) h) o p = root-ok k (h zero) o (proj₂ p zero)
+
+module Capture (r : T.Run (tw 1)) (cv : A.Covered r) (q : T₀) (high : U.Room r q) where
+  module X = W.At r
+  start : L.suc q ≼ read (X.idx 1)
+  start = ≼-trans (s≼s (high (ink self))) (Strict.strict (◃l zero))
+  result : L.suc q ≼ read (T.value r)
+  result = ≼-trans start (I.FirstTower.indices r cv 1)
+
+module At (n : ℕ) (z : Tr (tw (suc n))) where
+  k = tw (suc n)
+  module K = J.At (suc n)
+  basepath = R.base k (↑ k z)
+  path = R.via (tower n) basepath
+  b = J.slots (K.ℓ z) (suc (suc n))
+  from-Ω : ∀ {x} → A._⊴_ (proj₁ (Ωt zero)) x → 𝟏 ≼ read x
+  from-Ω (inj₁ refl) = ≼-refl _
+  from-Ω (inj₂ e) = ◃→≼ e
+  big : ∀ w → 𝟏 ≼ read (proj₁ (b zero w))
+  big w = from-Ω (covered (K.ℓ z) (suc (suc n)) zero w)
+  r = T.makeRun (K.ok z) b (Ωt zero) big (covered (K.ℓ z) (suc (suc n)) _) (≼-refl _)
+  cr : A.Covered r
+  cr = covered (K.ℓ z) (suc (suc n))
+  sub = U.sub path r
+  cs = U.cover path r cr
+  eq : ok sub ≡ Ok-tw 1
+  eq = trans (U.cert path r) (trans (cong (H.pull (tower n)) (root-ok k (↑ k z) (Ok-tw (suc n)) _)) (tower-ok n))
+
+  value = read (T.value r)
+  high : ∀ m → m N.≤ suc n → U.Room sub (std m)
+  high m d = U.room path r (append (K.ℓ z) (suc (suc n)) m (s≤s d))
+  canonical : ∀ m → m N.≤ suc n → L.suc (std m) ≼ value
+  canonical m d = ≼-trans (Capture.result sub cs (std m) (high m d)) (U.below path r cr)
+  advance : ∀ p m → m N.≤ suc n → L.ψ⁰ p ≼ std m → L.ψ⁰ (p L.+ L.up L.zero WSLevel.Ω₁ᴸ) ≼ value
+  advance p m d low = ≼-trans (Tail.apply p sub eq cs (λ w → ≼-trans low (high m d w))) (U.below path r cr)

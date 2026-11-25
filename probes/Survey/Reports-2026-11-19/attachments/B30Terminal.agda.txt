@@ -1,0 +1,30 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 首塔、真实启动枝和真实孙返回三个原行预算共同裁定严格上界；只用实际选中的子程序。
+module B30Terminal where
+open import Data.Nat.Base using (ℕ; _≤_)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼-suc; s≼s)
+import B26Names as A
+import B26PActual as Y
+import B27Threshold as T
+import B29CBudget as G
+import B29CEpsilon as I
+import B29Channels as C
+import B29End as E
+import B30MStart as H
+
+
+import B29Three as Three
+import B26Depth as Depth
+
+strict-start : H.leaves ≼ Y.Y
+strict-start = ≼-trans {a = H.leaves} {b = C.starts} {c = Y.Y} H.lower E.starts-in
+strict-leaf : G.Actual.Γ ≼ Y.Y
+strict-leaf = ≼-trans {a = G.Actual.Γ} {b = C.total} {c = Y.Y} G.Actual.lower E.total-in
+
+close : ∀ k → 2 ≤ k → L.suc C.first ≼ T.row k → L.suc H.leaves ≼ T.row k → L.suc G.Actual.Γ ≼ T.row k → Y.Y ≼ T.row k
+close k two fs js gs = E.close k two fs (proj₁ (H.Fixed.same-cut k two) js) (proj₁ (I.fixed k two) gs)
+
+module Actual = Three.Three A.E T.row E.Common.row-for (λ k → A.strict (Depth.tower k))
+  C.first H.leaves G.Actual.Γ Y.Y E.first-in strict-start strict-leaf close

@@ -1,0 +1,63 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiCNMin where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit using (tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.List using ([])
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiGIRel as GR
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiKVRel as K
+import OCF.Lean.YiMTTab as MT
+import OCF.Lean.YiGIEnd as GE
+import OCF.Lean.YiMXEnd as MX
+import OCF.Lean.YiLLLeafNeg as N
+open import OCF.Lean.YiGICheck using (lift-start)
+open import OCF.Lean.YiGIInst using (gradedᵍ; domsᵍ; keelᴱ; exitᵍ; startᴿ)
+open import OCF.Lean.YiExSuff using (module ExSuff)
+import OCF.Align.EboLeanDef as E
+import OCF.Align.EboLeanTree as ET
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼)
+open import OCF.Lean.YiMonoExit using (toL)
+open ExSuff gradedᵍ domsᵍ using (Keel⁻; Exit₀)
+open Keel⁻ keelᴱ
+
+Leafᵏ Liftᵏ LowKeepᴱᵏ : Set
+Leafᵏ = ∀ n → GR.Rd (tw n) (kt n) → GR.R (tw n) (E.Ωt (kt n)) (proj₁ (O.Ωt (tw n)))
+Liftᵏ = ∀ n → GR.R (tw n) (E.Ωt (kt n)) (proj₁ (O.Ωt (tw n))) → GR.Rd (B.↑ (tw n) (proj₁ (O.Ωt (tw n)))) (E.Ωt (kt n))
+LowKeepᴱᵏ = ∀ n → GR.R (tw n) (E.Ωt (kt n)) (proj₁ (O.Ωt (tw n))) → Σ (GR.R B.zero (row n) (twc n)) H.Exᴴ
+
+module Assembly (lf : Leafᵏ) (li : Liftᵏ) (lk : LowKeepᴱᵏ) where
+  keel : ∀ n → GR.Rd (tw n) (kt n)
+  keel zero = rd-tw0
+  keel (suc n) = tw-step n (li n (lf n (keel n)))
+  folded : ∀ n → Σ (GR.R B.zero (row n) (twc n)) H.Exᴴ
+  folded n = lk n (lf n (keel n))
+  Kᴱ : ∀ n (h : _) → _
+  Kᴱ n h = Exit₀.exit exitᵍ (proj₁ (folded n)) (proj₂ (folded n)) h
+  eboᶜ : toL ET.EBO-tree′ ≼ K.readRW MT.EBOᶻ
+  eboᶜ = ≼-trans GE.reference (l≼ (λ n → ≼-trans (Kᴱ n (GE.hs n)) (GE.upperᴱ n)))
+
+leaf0 : GR.Rd (tw 0) (kt 0) → GR.R (tw 0) (E.Ωt (kt 0)) (proj₁ (O.Ωt (tw 0)))
+leaf0 _ = startᴿ
+lift0 : GR.R (tw 0) (E.Ωt (kt 0)) (proj₁ (O.Ωt (tw 0))) → GR.Rd (B.↑ (tw 0) (proj₁ (O.Ωt (tw 0)))) (E.Ωt (kt 0))
+lift0 = lift-start
+low0 : GR.R (tw 0) (E.Ωt (kt 0)) (proj₁ (O.Ωt (tw 0))) → Σ (GR.R B.zero (row 0) (twc 0)) H.Exᴴ
+low0 _ = MX.low-zeroᴱ (b₀ 0) (β₀ 0) [] (K.m1 {t = E.natT 1} refl K.mz) (K.m1 {t = E.natT 1} refl K.mz)
+
+not-tw : ∀ n → N.ℓ ≡ B.tw n → ⊥
+not-tw zero ()
+not-tw (suc zero) e = bad (cong child e)
+  where
+  child : B.L → B.L
+  child B.zero = B.zero
+  child (B.nd B.sS h) = B.zero
+  child (B.nd B.sL h) = B.zero
+  child (B.nd (B.sΩ B.zero) h) = h N.c2
+  child (B.nd (B.sΩ (B.nd s h′)) h) = B.zero
+  bad : B.zero ≡ B.nd B.sS (λ _ → B.nd B.sS (λ _ → B.zero)) → ⊥
+  bad ()
+not-tw (suc (suc n)) ()

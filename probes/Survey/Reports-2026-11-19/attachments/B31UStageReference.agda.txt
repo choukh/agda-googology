@@ -1,0 +1,26 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原参照 ψ₀(Ω₃) 的 (2,0) 子项严格低于原 BTBO。
+module B31UStageReference where
+open import Data.Nat.Base using (ℕ)
+open import WVOne using (T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; s≼s; ≼l)
+import B23NDomain as G
+import B12Omega3Ref as R
+import B12BtboCut as B
+import B12XRef as X
+import B17Calibration as Old
+
+two-down : (x : T₀) (i j : ℕ) → R.at (R.at x i) j ≼ x
+two-down x i j = ≼-trans {a = R.at (R.at x i) j} {b = R.at x i} {c = x} (R.at-below (R.at x i) j) (R.at-below x i)
+three : G.child ≼ L.ψ⁰ R.Ω₃
+three = two-down (L.ψ⁰ R.Ω₃) 2 0
+finite : ∀ k → B.finite k ≼ B.omega-cut
+finite k = ≼l {a = B.finite k} {f = B.finite} k (≼-refl (B.finite k))
+
+module Include (a b c d : T₀) (p : a ≼ b) (q : b ≼ c) (r : L.suc c ≼ d) where
+  all : (x : T₀) → x ≼ a → L.suc x ≼ d
+  all x h = ≼-trans {a = L.suc x} {b = L.suc c} {c = d} (s≼s {a = x} {b = c}
+    (≼-trans {a = x} {b = a} {c = c} h (≼-trans {a = a} {b = b} {c = c} p q))) r
+module Original = Include G.child (L.ψ⁰ R.Ω₃) B.omega-cut (X.row 2) three (finite 3) Old.finite-cut
+

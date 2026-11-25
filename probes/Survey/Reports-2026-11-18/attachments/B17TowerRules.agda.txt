@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W4 任意高度 Ω 塔的折叠：沿两个规范塔位置，保留时逐个原下标取孩子；走链时下一下标确为折至分支层的实际值。
+module B17TowerRules where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Maybe using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong; subst; sym)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold using (Base; ψ; node⁺; Keep)
+open import WVOne using (read)
+open import OCF.Align.Value using (_≼_; ≼l; ≼-trans)
+import B17TowerSlots as S
+open S using (Floor; pos; path; put; Verdict; retain; walk)
+
+variable-slot : ∀ {i k} (p : Floor i k) (f : (j : L) → j ≤ tw k → Tr j) →
+  fromBr (tw k) (pos p) (f _ (posW (tw k) (pos p))) ≡ put p (f _ (path p))
+variable-slot S.top f = refl
+variable-slot (S.upF p) f = variable-slot p (λ j w → f j (ink w))
+
+node-form : ∀ {i j k} (p : Floor i k) (q : Floor j k) (o : Ok (tw k)) (B : Base (tw k)) (β : Tr⁺ (tw j)) (g : Br (tw k) (pos p) → Tr (tw k)) →
+  ψ (tw k) o B (tw j) (path q) β (Ω (pos p) g) ≡ node⁺ (S.decision p q o)
+    (λ z → ψ (tw k) o B (tw j) (path q) β (g z))
+    (λ z → fromBr (tw k) (pos p) (proj₁ (ψ (tw k) o B (at (tw k) (pos p)) (posW (tw k) (pos p))
+                                    (B _ (posW (tw k) (pos p))) (g z))))
+node-form p S.top o B β g = refl
+node-form p (S.upF q) o B β g = refl
+
+module At {i j k} (p : Floor i k) (q : Floor j k) (o : Ok (tw k)) (B : Base (tw k))
+          (β : Tr⁺ (tw j)) (g : Br (tw k) (pos p) → Tr (tw k)) where
+  ℓ = tw k
+  out = ψ ℓ o B (tw j) (path q) β (Ω (pos p) g)
+  G = λ z → ψ ℓ o B (tw j) (path q) β (g z)
+  state = λ j w z → proj₁ (ψ ℓ o B j w (B j w) (g z))
+  raw = λ z → fromBr ℓ (pos p) (state _ (posW ℓ (pos p)) z)
+  next = λ x → state (tw i) (path p) (put p x)
+  indices = iter next zero
+
+  index : ∀ n → iter raw (fromBr ℓ (pos p) zero) n ≡ put p (indices n)
+  index zero = variable-slot p (λ _ _ → zero)
+  index (suc n) = trans (cong raw (index n)) (variable-slot p (λ j w → state j w (put p (indices n))))
+
+  shape : out ≡ node⁺ (S.decision p q o) G raw
+  shape = node-form p q o B β g
+
+  Kept = Σ (Floor i j) λ r → Σ (Br (tw j) (pos r) → Tr⁺ (tw j)) λ f →
+    (out ≡ Ω⁺ (pos r) f) × ((x : Tr (tw i)) → f (put r x) ≡ G (put p x))
+  Diagonal = Σ (ℕ → Tr⁺ (tw j)) λ f → (out ≡ limc⁺ f) × (∀ n → f n ≡ G (put p (indices n)))
+
+  keep : Floor i j → Kept
+  keep d = proof (S.decision p q o) (S.actual p q o) shape where
+    proof : ∀ v → Verdict p v → out ≡ node⁺ v G raw → Kept
+    proof .nothing (walk no) e = ⊥-elim (no d)
+    proof .(just _) (retain r {cv} pass) e = r , (λ z → G (cv z)) , e , λ x → cong G (pass x)
+
+  chain : (Floor i j → ⊥) → Diagonal
+  chain d = proof (S.decision p q o) (S.actual p q o) shape where
+    proof : ∀ v → Verdict p v → out ≡ node⁺ v G raw → Diagonal
+    proof .nothing (walk no) e = (λ n → G (iter raw _ n)) , e , λ n → cong G (index n)
+    proof .(just _) (retain r h) e = ⊥-elim (d r)

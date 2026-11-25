@@ -1,0 +1,125 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 探针 P3: 两种读法的参照系统 refᴱᵈ (验收型, 读记号).
+-- ψᵈ: EBO 基本列里规则 5Ω (μ+1 ≤ u, 共尾度穿透) 的位置一律按规则 6 走局部 γ-链, 共尾度视作 ω.
+-- refᴱᵈ: Cω 取 ψᵈ 的读法, CΩ 取原读法, 同一个项可以两者兼是 (overlap); 结点规则用原读法, ℕ 极限规则用 ψᵈ 读法.
+-- "低于目标保留, 或以局部 γ-链对角" 就是 refᴱᵈ 上逐字的 LowKeep; 终点另要地板 Floorᵈ (记号一侧的命题, 未证).
+-- 有限测试: ψ₀(ψ₁(Ω₁)) 上 ψᵈ 的第 k 项低于原基本列的第 1 项 (k = 2, 5).
+module P3PsiD where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using (List; []; _∷_; _++_; replicate)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
+
+import OCF.Align.EboLeanDef as E
+import OCF.Align.EboLeanTree as ET
+open import OCF.Lean.YiMonoExit using (toL)
+open import OCF.Lean.YiAbsSimInst using (𝕍; conv; toL-tree)
+import OCF.Lean.YiAbsSimInst as SI
+open import OCF.Lean.YiAbsFrame
+open import OCF.Lean.YiAbsSim
+open import OCF.Lean.YiAbsGIface
+open import OCF.Lean.YiAbsGSuff
+
+------------------------------------------------------------------------
+-- ψᵈ 的共尾度与 ω-基本列 (逐行对照 EboLeanDef.fsn; 只改规则 5Ω 一处)
+
+cofᵈ  : E.T → E.Cof
+cofPᵈ : E.PT → E.Cof
+
+cofᵈ [] = E.c0
+cofᵈ (x ∷ []) = cofPᵈ x
+cofᵈ (x ∷ xs@(_ ∷ _)) = cofᵈ xs
+
+cofPᵈ (E.ψ u (y ∷ ys))  = E.cω                       -- 规则 4, 5ω, 5Ω, 6 一律 ω
+cofPᵈ (E.ψ (w ∷ ws) []) = E.cofψ0 (w ∷ ws) (cofᵈ (w ∷ ws))
+cofPᵈ E.𝟏 = E.c1
+
+fsnᵈ  : E.T → ℕ → E.T
+fsn0ᵈ : E.T → E.Cof → ℕ → E.T
+fsn₊ᵈ : E.T → E.T → E.Cof → ℕ → E.T
+
+fsnᵈ []                     n = []
+fsnᵈ (x ∷ xs@(_ ∷ _))       n = x ∷ fsnᵈ xs n
+fsnᵈ (E.ψ u b@(_ ∷ _) ∷ []) n = fsn₊ᵈ u b (cofᵈ b) n
+fsnᵈ (E.ψ u@(_ ∷ _) [] ∷ []) n = fsn0ᵈ u (cofᵈ u) n
+fsnᵈ (E.𝟏 ∷ [])             n = []
+
+fsn0ᵈ u E.c0     n = []
+fsn0ᵈ u E.c1     n = E.natT n
+fsn0ᵈ u E.cω     n = E.ψ (fsnᵈ u n) [] ∷ []
+fsn0ᵈ u (E.cΩ ν) n = E.ψ (E.fsT u (E.natT n)) [] ∷ []
+
+fsn₊ᵈ u b E.c0     n = []
+fsn₊ᵈ u b E.c1     n = replicate n (E.ψ u (E.pred b))
+fsn₊ᵈ u b E.cω     n = E.ψ u (fsnᵈ b n) ∷ []
+fsn₊ᵈ u b (E.cΩ ν) n = E.ψ u (E.fsT b (E.γT b ν n)) ∷ []   -- 规则 6, 不论 ν+1 与 u 的大小
+
+------------------------------------------------------------------------
+-- 两种读法的参照系统
+
+refᴱᵈ : Ref
+refᴱᵈ = record
+  { T = E.T ; C0 = λ t → cofᵈ t ≡ E.c0 ; C1 = λ t → cofᵈ t ≡ E.c1 ; Cω = λ t → cofᵈ t ≡ E.cω
+  ; CΩ = λ t κ → E.cof t ≡ E.cΩ κ ; pred = E.pred ; fsn = fsnᵈ ; fsT = E.fsT ; _⊕_ = _++_ ; Ωr = E.Ωt }
+
+module Dg = Exit 𝕍 {T = E.T} (λ t → cofᵈ t ≡ E.c0) (λ t → cofᵈ t ≡ E.c1) (λ t → cofᵈ t ≡ E.cω) E.pred fsnᵈ
+
+-- 同一个项两种读法: ψ₁(Ω₁) 原读法共尾度 Ω₁ (规则 5Ω, 保留), ψᵈ 读法共尾度 ω
+t₀ : E.T
+t₀ = E.ψ (E.natT 1) (E.Ωt (E.natT 1)) ∷ []
+
+two-reads : (E.cof t₀ ≡ E.cΩ []) × (cofᵈ t₀ ≡ E.cω)
+two-reads = refl , refl
+
+-- 有限测试: t₁ = ψ₀(ψ₁(Ω₁)). ψᵈ 在 ψ₁ 处用局部上下文对角, 链点停在 ψ₀ⁿ(1) 一族;
+-- 原基本列在 ψ₀ 处用整个参数对角, 第 1 项已经是 ψ₀(ψ₁(ψ₀(ψ₁(1)))).
+t₁ : E.T
+t₁ = E.ψ [] t₀ ∷ []
+
+test2 : E.cmpᵀ (fsnᵈ t₁ 2) (E.fsn t₁ 2) ≡ E.lt
+test2 = refl
+
+test5 : E.cmpᵀ (fsnᵈ t₁ 5) (E.fsn t₁ 1) ≡ E.lt
+test5 = refl
+
+------------------------------------------------------------------------
+-- 地板 (记号一侧): 原读法的第 n 行, 被 ψᵈ 读法的某一行盖过
+
+Floorᵈ : Set
+Floorᵈ = ∀ n (h : SI.E.HC (E.EBOψ (suc n))) → Σ ℕ λ m → Σ (Dg.HC (E.EBOψ (suc m))) λ h′
+       → Val._≼_ 𝕍 (SI.E.tree h) (Dg.tree h′)
+
+------------------------------------------------------------------------
+-- 出口: refᴱᵈ 上的 Leaf, Lift, LowKeep, Base 与塔, 加 Floorᵈ, 终点不低于 EBO 的参照树
+
+module EboD {𝔹 : Block} {𝔽 : Fold 𝔹} {ℜ : Rows 𝔹 𝔽} (𝔾 : Graded 𝔹 𝔽 ℜ refᴱᵈ 𝕍) (𝔻 : Doms 𝔹 𝔽) where
+  open Laws 𝔾 𝔻
+  open Suff 𝔾 𝔻
+
+  module _ (lf : Leaf) (li : Lift) (lk : LowKeep) {𝔟 : Base} (𝔨 : Keel 𝔟)
+           (e0 : Keel.κ₀ 𝔨 ≡ E.natT 1)
+           (eK : ∀ n a → app (Keel.K₀ 𝔨 n) a ≡ E.ψ [] a ∷ []) where
+    open Keel 𝔨
+
+    kt≡ : ∀ n → kt n ≡ E.ΩTower n
+    kt≡ zero    = e0
+    kt≡ (suc n) = cong E.Ωt (kt≡ n)
+
+    row≡ : ∀ n → row n ≡ E.EBOψ (suc n)
+    row≡ n = trans (eK n (Ωr (kt n))) (cong (λ a → E.ψ [] (E.Ωt a) ∷ []) (kt≡ n))
+
+    Kᵈ : ∀ n {t} → row n ≡ t → (h : Dg.HC t) → Dg.tree h ≼ v (twc n)
+    Kᵈ n refl h = Tower.K lf li 𝔨 lk n h
+
+    ebo-endᵈ : Floorᵈ → (Y : V) → toL (ET.tree (ET.hc-tower zero)) ≼ Y → (∀ n → v (twc n) ≼ Y)
+             → toL ET.EBO-tree′ ≼ Y
+    ebo-endᵈ F Y y0 up = l≼ go
+      where
+      go : ∀ k → toL (ET.tree (ET.hc-tower k)) ≼ Y
+      go zero    = y0
+      go (suc n) =
+        let r  = F n (conv (ET.hc-tower (suc n)))
+            m  = proj₁ r
+        in ≼-trans (toL-tree (ET.hc-tower (suc n)))
+             (≼-trans (proj₂ (proj₂ r)) (≼-trans (Kᵈ m (row≡ m) (proj₁ (proj₂ r))) (up m)))

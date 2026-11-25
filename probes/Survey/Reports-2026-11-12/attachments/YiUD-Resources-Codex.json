@@ -1,0 +1,132 @@
+[
+  {
+    "log": "YiUDMin.log",
+    "exit_code": 0,
+    "max_residency_bytes": 1408507448,
+    "elapsed_seconds": 16.957,
+    "description": "首次规范对象与冻结目标",
+    "checking_lines": [
+      "Checking YiUDMin (<实验目录>/YiUDMin.agda)."
+    ]
+  },
+  {
+    "log": "YiUDDirectFrame.log",
+    "exit_code": 42,
+    "max_residency_bytes": 1540006120,
+    "elapsed_seconds": 16.697,
+    "description": "路径省写造成 UnequalTerms",
+    "checking_lines": [
+      "Checking YiUDDirectFrame (<实验目录>/YiUDDirectFrame.agda)."
+    ]
+  },
+  {
+    "log": "YiUDDirectFrame-v2.log",
+    "exit_code": 251,
+    "max_residency_bytes": 8431210288,
+    "elapsed_seconds": 158.804,
+    "description": "修正路径后的具体同编号接线",
+    "checking_lines": [
+      "Checking YiUDDirectFrame (<实验目录>/YiUDDirectFrame.agda)."
+    ]
+  },
+  {
+    "log": "YiUDShapeFloor.log",
+    "exit_code": 0,
+    "max_residency_bytes": 1405194696,
+    "elapsed_seconds": 17.07,
+    "description": "删除上界接线的二分",
+    "checking_lines": [
+      "Checking YiUDShapeFloor (<实验目录>/YiUDShapeFloor.agda)."
+    ]
+  },
+  {
+    "log": "YiUDAtVariables.log",
+    "exit_code": 42,
+    "max_residency_bytes": 1659658984,
+    "elapsed_seconds": 17.884,
+    "description": "变量化，自适应 Match 留一个设计洞",
+    "checking_lines": [
+      "Checking YiUDAtVariables (<实验目录>/YiUDAtVariables.agda)."
+    ]
+  },
+  {
+    "log": "YiUDRefStart.log",
+    "exit_code": 0,
+    "max_residency_bytes": 983121344,
+    "elapsed_seconds": 11.781,
+    "description": "参照第0项的语法等式",
+    "checking_lines": [
+      "Checking YiUDRefStart (<实验目录>/YiUDRefStart.agda)."
+    ]
+  },
+  {
+    "log": "YiUDAlignNeg.log",
+    "exit_code": 0,
+    "max_residency_bytes": 1592640056,
+    "elapsed_seconds": 17.013,
+    "description": "同编号接线否定的私有试稿",
+    "checking_lines": [
+      "Checking YiUDAlignNeg (<实验目录>/YiUDAlignNeg.agda)."
+    ]
+  },
+  {
+    "log": "YiUDQ0Align-first.log",
+    "exit_code": 0,
+    "max_residency_bytes": 1583573736,
+    "elapsed_seconds": 17.459,
+    "description": "仓库文件首次编译",
+    "checking_lines": [
+      "Checking OCF.Lean.YiUDQ0Align (<仓库>/probes/OCF/Lean/YiUDQ0Align.lagda.md)."
+    ]
+  },
+  {
+    "log": "YiUDQ0Align-cold.log",
+    "exit_code": 0,
+    "max_residency_bytes": 1583573736,
+    "elapsed_seconds": 17.442,
+    "description": "只删除自身接口的最终冷编",
+    "checking_lines": [
+      "Checking OCF.Lean.YiUDQ0Align (<仓库>/probes/OCF/Lean/YiUDQ0Align.lagda.md)."
+    ]
+  },
+  {
+    "log": "YiUDUpdate.log",
+    "exit_code": 0,
+    "max_residency_bytes": 1393946288,
+    "elapsed_seconds": 14.637,
+    "description": "原 β3 与 q0 限制底的原生更新展开",
+    "checking_lines": [
+      "Checking YiUDUpdate (<实验目录>/YiUDUpdate.agda)."
+    ]
+  },
+  {
+    "log": "YiUDUpdate-v2.log",
+    "exit_code": 0,
+    "max_residency_bytes": 1579104368,
+    "elapsed_seconds": 21.314,
+    "description": "原 q0 两次原生折叠的私有检查",
+    "checking_lines": [
+      "Checking YiUDUpdate (<实验目录>/YiUDUpdate.agda)."
+    ]
+  },
+  {
+    "log": "YiUDQ0Update-first.log",
+    "exit_code": 0,
+    "max_residency_bytes": 1577919376,
+    "elapsed_seconds": 21.007,
+    "description": "原生更新仓库文件首次编译",
+    "checking_lines": [
+      "Checking OCF.Lean.YiUDQ0Update (<仓库>/probes/OCF/Lean/YiUDQ0Update.lagda.md)."
+    ]
+  },
+  {
+    "log": "YiUDQ0Update-cold.log",
+    "exit_code": 0,
+    "max_residency_bytes": 1577919376,
+    "elapsed_seconds": 20.987,
+    "description": "原生更新文件只删除自身接口的最终冷编",
+    "checking_lines": [
+      "Checking OCF.Lean.YiUDQ0Update (<仓库>/probes/OCF/Lean/YiUDQ0Update.lagda.md)."
+    ]
+  }
+]

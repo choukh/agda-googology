@@ -1,0 +1,143 @@
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+-- 临时试验 (第六次独立审查), 不是成果.
+-- top-branch→lpo 的探针换成严格递增的序列: 目标层 lim (n+1 或 ω+n+2), 结点层 ω.
+-- 记录 TopBranch 原样导入. 结论同样是 LPO. 说明那条定理不依赖常值式的极限.
+module R6Strict where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Bool.Base using (Bool; true; false)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Product.Base using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+open import OCF.Align.RR5IrrCore
+open import OCF.Align.RR5IrrCheck
+open import OCF.Align.YiIrrIf
+open import OCF.Align.YiLvIf
+open import OCF.Align.YiIrrNegWide using (Found; seen; seen-found; seen-hit; seen-mono)
+open import OCF.Align.YiLvNegCompare using (At)
+open import OCF.Align.YiLvNegKeep using (LPO; kept-node; kept-at)
+open import OCF.Align.YiRawNegOmega using (K₂ω; br; Link)
+open import OCF.Align.YiOmNegBranch using (TopBranch)
+
+natR : ℕ → R
+natR zero = G.zero
+natR (suc n) = G.suc (natR n)
+
+natR-lgl : ∀ n → Lgl zero (natR n)
+natR-lgl zero = tt
+natR-lgl (suc n) = natR-lgl n
+
+ωR : R
+ωR = G.lim natR
+
+ωR-lgl : Lgl zero ωR
+ωR-lgl = (λ n → inj₂ (inj₁ refl)) , natR-lgl
+
+X : R
+X = G.suc (G.suc ωR)
+
+sucs : ℕ → R → R
+sucs zero a = a
+sucs (suc n) a = G.suc (sucs n a)
+
+-- 严格递增的两段: 没见到时 n+1, 见到后 ω+n+2.
+sw : Bool → ℕ → R
+sw false n = natR (suc n)
+sw true n = sucs n X
+
+nat≤X : ∀ m n → Cp zero (natR m) (sucs n X)
+nat≤X m zero = inj₂ (inj₂ (inj₂ (m , inj₁ refl)))
+nat≤X m (suc n) = inj₂ (nat≤X m n)
+
+false≢true : false ≡ true → ⊥
+false≢true ()
+
+sw-step : ∀ b c n → (b ≡ true → c ≡ true) → Cp zero (sw b n) (sw c (suc n))
+sw-step false false n h = inj₂ (inj₁ refl)
+sw-step true true n h = inj₂ (inj₁ refl)
+sw-step false true n h = nat≤X (suc n) (suc n)
+sw-step true false n h = ⊥-elim (false≢true (h refl))
+
+sw-lgl : ∀ b n → Lgl zero (sw b n)
+sw-lgl false n = natR-lgl n
+sw-lgl true zero = ωR-lgl
+sw-lgl true (suc n) = sw-lgl true n
+
+one≤nat : ∀ n → Cp zero one (natR (suc n))
+one≤nat zero = inj₁ refl
+one≤nat (suc n) = inj₂ (one≤nat n)
+
+one≤sw : ∀ b n → Cp zero one (sw b n)
+one≤sw false n = one≤nat n
+one≤sw true n = nat≤X 1 n
+
+seq : (ℕ → Bool) → ℕ → R
+seq α n = sw (seen α n) n
+
+coordˢ : (ℕ → Bool) → R
+coordˢ α = G.suc (G.lim (seq α))
+
+guardˢ : ∀ α → Gd zero raw1 (coordˢ α)
+guardˢ α =
+  inj₂ (inj₂ (zero , one≤sw (seen α zero) zero)) ,
+  ((λ n → sw-step (seen α n) (seen α (suc n)) n (seen-mono α n)) ,
+   (λ n → sw-lgl (seen α n) n)) ,
+  raw0-Nested (coordˢ α)
+
+qˢ : (ℕ → Bool) → Pre K₂ω
+qˢ α = br (coordˢ α) (guardˢ α) (inj₁ tt)
+
+-- 固定的一支: 坐标 ω+1, 根上的结点层号是 ω.
+eω : Gd zero raw1 (G.suc ωR)
+eω = inj₂ (inj₂ (1 , inj₁ refl)) , ωR-lgl , raw0-Nested (G.suc ωR)
+
+ω≤sw : ∀ n → Cp zero (G.suc ωR) (sucs n X)
+ω≤sw zero = inj₂ (inj₁ refl)
+ω≤sw (suc n) = inj₂ (ω≤sw n)
+
+at-sw : ∀ n → At (read0 (sucs n X)) (read0 ωR)
+at-sw zero = inj₂ (inj₁ tt) , refl
+at-sw (suc n) = inj₂ (proj₁ (at-sw n)) , proj₂ (at-sw n)
+
+link-b : ∀ b n → b ≡ true → Cp zero (G.suc ωR) (sw b n)
+link-b .true n refl = ω≤sw n
+
+at-b : ∀ b n → b ≡ true → At (read0 (sw b n)) (read0 ωR)
+at-b .true n refl = at-sw n
+
+found→link : ∀ α → Found α → Link (br (G.suc ωR) eω (inj₁ tt)) (qˢ α)
+found→link α (n , p) = inj₁ (inj₂ (inj₂ (n , link-b (seen α n) n (seen-hit α n p))))
+
+found→at : ∀ α → Found α → At (lev K₂ω (qˢ α)) (read0 ωR)
+found→at α (n , p) =
+  (n , proj₁ (at-b (seen α n) n (seen-hit α n p))) ,
+  proj₂ (at-b (seen α n) n (seen-hit α n p))
+
+-- 有限数的读回里没有层号为极限的位置.
+nat-lev : ∀ m (r : Pre (read0 (natR m))) {f : ℕ → LF} → lev (read0 (natR m)) r ≡ lim f → ⊥
+nat-lev (suc zero) (inj₁ _) ()
+nat-lev (suc (suc m)) (inj₁ _) ()
+nat-lev (suc m) (inj₂ r) e = nat-lev m r e
+
+slot-test : ∀ b n (r : Pre (read0 (sw b n))) →
+  (b ≡ true) ⊎ (lev (read0 (sw b n)) r ≡ read0 ωR → ⊥)
+slot-test true n r = inj₁ refl
+slot-test false n r = inj₂ (nat-lev (suc n) r)
+
+decide : ∀ α (y : Raw (lev K₂ω (qˢ α))) →
+  (Found α → Kept (lev K₂ω (qˢ α)) (read0 ωR) y) → Found α ⊎ (Found α → ⊥)
+decide α (G.lc (n , r) c t g) kl with slot-test (seen α n) n r
+... | inj₁ p = inj₁ (seen-found α n p)
+... | inj₂ no = inj₂ (λ s → no (kept-at (lev K₂ω (qˢ α)) (read0 ωR) (n , r) c t g (kl s)))
+decide α G.zero kl = inj₂ (λ s → kept-node _ _ G.zero (kl s))
+decide α (G.suc y) kl = inj₂ (λ s → kept-node _ _ (G.suc y) (kl s))
+decide α (G.lim f) kl = inj₂ (λ s → kept-node _ _ (G.lim f) (kl s))
+decide α (G.em i T) kl = inj₂ (λ s → kept-node _ _ (G.em i T) (kl s))
+decide α G.top kl = inj₂ (λ s → kept-node _ _ G.top (kl s))
+
+top-branch→lpo-strict : TopBranch → LPO
+top-branch→lpo-strict F α = decide α (branch (qˢ α) (G.suc ωR) eω)
+  (λ s → branch-keep (qˢ α) ωR eω (found→link α s) (found→at α s))
+  where open TopBranch F

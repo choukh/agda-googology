@@ -1,0 +1,71 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24RFixed where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; ≼-refl; ≼-trans; s≼s; ≼l; l≼; ≅→≼; 1≼ψ⁰)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import WVOne using (T₀; 𝟏)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import B12Omega3Ref as R
+import B13Target as P
+import B23NFirst as N
+import B23NDomain as Dom
+import B23RShare as First
+import B24RExit as X
+import B24ROrbit as O
+import B24RCompare as C
+
+-- 自反馈节点由单调核和初始不等式决定。保可数极限用在定点一步。
+module Iteration (F : T₀ → T₀) (mono : ∀ {x y} → x ≼ y → F x ≼ F y)
+                 (continuous : ∀ f → F (L.lim f) ≡ L.lim (λ j → F (f j)))
+                 (start : 𝟏 ≼ F 𝟏) (d : T₀)
+                 (shape : d L.≅ L.lim (λ n → R.S.iter F 𝟏 (suc n))) where
+  orbit = R.S.iter F 𝟏
+  seq = λ j → orbit (suc j)
+  rises : ∀ j → orbit j ≼ orbit (suc j)
+  rises zero = start
+  rises (suc j) = mono {orbit j} {orbit (suc j)} (rises j)
+  base : 𝟏 ≼ d
+  base = ≼-trans (≼l 0 start) (≅→≼ (L.≅-sym shape))
+  fixed : F d ≈ᵛ d
+  fixed = ≼-trans (mono {d} {L.lim seq} (≅→≼ shape)) (≼-trans upper (≅→≼ (L.≅-sym shape))) ,
+          ≼-trans (≅→≼ shape) (≼-trans lower (mono {L.lim seq} {d} (≅→≼ (L.≅-sym shape))))
+    where
+    upper : F (L.lim seq) ≼ L.lim seq
+    upper rewrite continuous seq = l≼ λ j → ≼l (suc j) (≼-refl _)
+    lower : L.lim seq ≼ F (L.lim seq)
+    lower rewrite continuous seq = l≼ λ j → ≼l j (rises (suc j))
+  least : ∀ {v} → 𝟏 ≼ v → F v ≼ v → d ≼ v
+  least {v} seed step = ≼-trans (≅→≼ shape) (l≼ λ n → bound (suc n)) where
+    bound : ∀ n → orbit n ≼ v
+    bound zero = seed
+    bound (suc n) = ≼-trans (mono {orbit n} {v} (bound n)) step
+
+module At (m n : ℕ) = Iteration (X.Slice.gain m n) (C.monotone m n) (C.limit m n)
+   (1≼ψ⁰ (X.Slice.kernel m n 𝟏)) (X.Slice.node m n) (X.Slice.shape m n)
+
+lower : L.suc (L.ψ⁰ Ω₂ᴸ) ≼ tr₀ X.closed
+lower = ≼-trans (s≼s (≼l 0 (≼l 0 (≼l 1 (≼-refl (L.ψ⁰ Ω₂ᴸ)))))) (≼-trans (B24RKernel.grow L.zero)
+        (≼-trans (≼l 0 (≼-refl (O.orbit 1))) (≼-trans (≅→≼ (L.≅-sym O.shape)) (proj₂ X.both))))
+  where import B24RKernel
+strict-first : L.suc (tr₀ X.closed) ≼ First.oneStep
+strict-first = ≼-trans (s≼s (≼-trans (proj₁ X.both) (R.at-below O.two 0))) (≼-trans N.gain
+  (≼-trans N.three (≼l 3 (≅→≼ (L.ψ⁰-≅ (P.pass-pres (L.≅-sym (R.split 1))))))))
+upper : L.suc (tr₀ X.closed) ≼ L.ψ⁰ R.Ω₃
+upper = ≼-trans strict-first (≼-trans (Dom.in-child 0) (≼-trans (R.at-below (R.at (L.ψ⁰ R.Ω₃) 2) 0) (R.at-below (L.ψ⁰ R.Ω₃) 2)))
+
+open import Data.Product using (Σ; _×_)
+Bounds : T₀ → Set
+Bounds t = First.parts 0 ≼ t ×
+  ((m n : ℕ) → Σ T₀ (λ b → 𝟏 ≼ b × X.Slice.gain m n b ≼ b × b ≼ t))
+enough : ∀ {t} → Bounds t → First.oneStep ≼ t
+enough (start , hs) = X.sufficient (start , answers) where
+  answers : ∀ m n j → X.Slice.gain m n (X.Slice.iterate m n j) ≼ _
+  answers m n j with hs m n
+  ... | b , seed , closed , below = ≼-trans (≼l j (≼-refl (X.Slice.iterate m n (suc j))))
+    (≼-trans (≅→≼ (L.≅-sym (X.Slice.shape m n))) (≼-trans (At.least m n seed closed) below))
+already : ∀ {t} → First.oneStep ≼ t → Bounds t
+already h = proj₁ (X.necessary h) , λ m n → X.Slice.node m n , At.base m n , proj₁ (At.fixed m n) ,
+   ≼-trans (≅→≼ (X.Slice.shape m n)) (l≼ (proj₂ (X.necessary h) m n))

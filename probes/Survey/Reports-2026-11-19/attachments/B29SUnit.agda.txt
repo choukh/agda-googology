@@ -1,0 +1,43 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 同一零路径也在真实首塔的单位重置运行里保留，故相邻单位严格增加。
+module B29SUnit where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; sym; subst₂)
+import W4Block as W
+import W4Ops as O
+import W4Path as P
+import W4Fold as Fold
+import WVOne as V
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_)
+import B12Strict as Q
+import B18TowerSlots as Slot
+import B19Canonical as K
+import B27UArbitrary as U
+import B29SFirst as F
+open import B29SPath using (Tree; Path; one; down; join; climb)
+
+physical : ∀ {a b} → Path a b → W.zero W.⊢ a ◃ b
+physical one = W.◃s
+physical down = W.◃l zero
+physical (join p q) = W.◃t (physical p) (physical q)
+
+output : O.Tr⁺ W.zero → Tree → Tree
+output β z = proj₁ (Fold.ψ (V.h₁ z) (proj₂ (P.Ok-tw 1) z) (Slot.slots (V.h₁ z) 1)
+  W.zero (P.z≤ (V.h₁ z)) β (proj₁ (O.Ωt (V.h₁ z))))
+
+keep : ∀ β {a b} → Path a b → Path (output β a) (output β b)
+keep β one = down
+keep β down = down
+keep β (join p q) = join (keep β p) (keep β q)
+
+β₀ = O.Ωt W.zero
+real : ∀ j → V.read (output β₀ (U.index j)) ≡ F.f j
+real j = refl
+
+unit : ∀ j → L.suc (F.f j) ≼ F.f (suc j)
+unit j = subst₂ (λ a b → L.suc a ≼ b)
+  (cong (λ z → V.read (output β₀ z)) (sym (F.link j)))
+  (cong (λ z → V.read (output β₀ z)) (sym (F.link (suc j))))
+  (Q.strict (physical (keep β₀ (climb j))))

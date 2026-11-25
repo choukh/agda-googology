@@ -1,0 +1,12 @@
+353c353
+<     ψ (nd (sΩ k) h) o B j (inc c′ v) β x ⊞ ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y
+---
+>     ψ (nd (sΩ k) h) o B j (inc c′ v) β x ⊞ ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y
+406c406
+<     +-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) y)))
+---
+>     +-mono _ (ι-mono j (proj₂ (ψ (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) y)))
+421c421
+<     +-mono _ (ι-mono j (mono (h c) (proj₂ o c) (B₀ (h c)) zero (z≤ (h c)) (Ωt zero) r))
+---
+>     +-mono _ (ι-mono j (mono (h c) (proj₂ o c) (λ i u → ψ (nd (sΩ k) h) o B i (inc c u) (B i (inc c u)) x) zero (z≤ (h c)) (ψ (nd (sΩ k) h) o B zero (z≤ (nd (sΩ k) h)) (B zero (z≤ (nd (sΩ k) h))) x) r))

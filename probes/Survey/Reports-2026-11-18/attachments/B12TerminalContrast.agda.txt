@@ -1,0 +1,30 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- Λ 的实际槽位和对角点不等于标准塔相同位置。这里比较原始树的相等。
+module B12TerminalContrast where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (zt)
+open import B12Terminal
+open Run
+
+slot-shape : proj₁ (bs tower1 zero (ink self)) ≡ proj₁ (next⁺ (Ωt zero))
+slot-shape = refl
+
+slot-changed : proj₁ (bs tower1 zero (ink self)) ≡ proj₁ (B₀ (tw 1) zero (ink self)) → ⊥
+slot-changed ()
+
+first : Tr zero → Tr zero
+first (lim f _) = f 0
+first x = x
+
+first-changed : first (index1 tower1 1) ≡ first (zt 1) → ⊥
+first-changed ()
+
+no-same-orbit : ((n : ℕ) → index1 tower1 n ≡ zt n) → ⊥
+no-same-orbit q = first-changed (cong first (q 1))

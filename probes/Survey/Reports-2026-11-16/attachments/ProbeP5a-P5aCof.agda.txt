@@ -1,0 +1,208 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 探针 P5a 的形状件 (玩具, 不导入仓库): 坍缩引理 "低于目标保留" 一支能否靠滞后 (≪ 抬高) 补回.
+-- 结论 (编译): 分支族严格单调、下标域有 ω 上确界、链的每一项不高于某个分支 (部分和被吸收) 时,
+-- 链 (ℕ 极限) 严格低于同一分支族的保留结点, 所以保留结点不 ≼ 链. 对角一支 (链支配单步对角) 平凡成立.
+module P5aCof where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Relation.Nullary using (¬_)
+
+-- 下标域: 可数树
+data O₀ : Set where
+  z₀ : O₀
+  s₀ : O₀ → O₀
+  l₀ : (ℕ → O₀) → O₀
+
+mutual
+  _≼₀_ : O₀ → O₀ → Set
+  z₀   ≼₀ y = ⊤
+  s₀ x ≼₀ y = x ≺₀ y
+  l₀ f ≼₀ y = ∀ n → f n ≼₀ y
+
+  _≺₀_ : O₀ → O₀ → Set
+  x ≺₀ z₀   = ⊥
+  x ≺₀ s₀ y = x ≼₀ y
+  x ≺₀ l₀ f = Σ ℕ λ n → x ≺₀ f n
+
+cocone₀ : ∀ x {f : ℕ → O₀} n → x ≼₀ f n → x ≼₀ l₀ f
+cocone₀ z₀     n p = tt
+cocone₀ (s₀ x) n p = n , p
+cocone₀ (l₀ g) n p = λ m → cocone₀ (g m) n (p m)
+
+refl₀ : ∀ x → x ≼₀ x
+refl₀ z₀     = tt
+refl₀ (s₀ x) = refl₀ x
+refl₀ (l₀ f) = λ n → cocone₀ (f n) n (refl₀ (f n))
+
+-- 下标域的 ω 上确界: 任一序列都严格低于 s₀ (l₀ σ)
+below₀ : (σ : ℕ → O₀) (n : ℕ) → σ n ≺₀ s₀ (l₀ σ)
+below₀ σ n = cocone₀ (σ n) n (refl₀ (σ n))
+
+-- 高一层: 有 ℕ 极限与按下标域分支的 Ω 结点
+data O₁ : Set where
+  z : O₁
+  s : O₁ → O₁
+  l : (ℕ → O₁) → O₁
+  w : (O₀ → O₁) → O₁
+
+infix 4 _≼_ _≺_
+mutual
+  _≼_ : O₁ → O₁ → Set
+  z   ≼ y = ⊤
+  s x ≼ y = x ≺ y
+  l f ≼ y = ∀ n → f n ≼ y
+  w g ≼ y = ∀ c → g c ≼ y
+
+  _≺_ : O₁ → O₁ → Set
+  x ≺ z   = ⊥
+  x ≺ s y = x ≼ y
+  x ≺ l f = Σ ℕ λ n → x ≺ f n
+  x ≺ w g = Σ O₀ λ c → x ≺ g c
+
+cocone-l : ∀ x {f : ℕ → O₁} n → x ≼ f n → x ≼ l f
+cocone-l z     n p = tt
+cocone-l (s x) n p = n , p
+cocone-l (l h) n p = λ m → cocone-l (h m) n (p m)
+cocone-l (w h) n p = λ c → cocone-l (h c) n (p c)
+
+cocone-w : ∀ x {g : O₀ → O₁} c → x ≼ g c → x ≼ w g
+cocone-w z     c p = tt
+cocone-w (s x) c p = c , p
+cocone-w (l h) c p = λ m → cocone-w (h m) c (p m)
+cocone-w (w h) c p = λ d → cocone-w (h d) c (p d)
+
+refl≼ : ∀ x → x ≼ x
+refl≼ z     = tt
+refl≼ (s x) = refl≼ x
+refl≼ (l f) = λ n → cocone-l (f n) n (refl≼ (f n))
+refl≼ (w g) = λ c → cocone-w (g c) c (refl≼ (g c))
+
+mutual
+  ≼≼ : ∀ x y t → x ≼ y → y ≼ t → x ≼ t
+  ≼≼ z     y t p q = tt
+  ≼≼ (s x) y t p q = ≺≼ x y t p q
+  ≼≼ (l f) y t p q = λ n → ≼≼ (f n) y t (p n) q
+  ≼≼ (w g) y t p q = λ c → ≼≼ (g c) y t (p c) q
+
+  ≺≼ : ∀ x y t → x ≺ y → y ≼ t → x ≺ t
+  ≺≼ x z     t () q
+  ≺≼ x (s y) t p       q = ≼≺ x y t p q
+  ≺≼ x (l f) t (n , p) q = ≺≼ x (f n) t p (q n)
+  ≺≼ x (w g) t (c , p) q = ≺≼ x (g c) t p (q c)
+
+  ≼≺ : ∀ x y t → x ≼ y → y ≺ t → x ≺ t
+  ≼≺ x y z     p ()
+  ≼≺ x y (s t) p q       = ≼≼ x y t p q
+  ≼≺ x y (l f) p (n , q) = n , ≼≺ x y (f n) p q
+  ≼≺ x y (w g) p (c , q) = c , ≼≺ x y (g c) p q
+
+mutual
+  ≼-s : ∀ x y → x ≼ y → x ≼ s y
+  ≼-s z     y p = tt
+  ≼-s (s x) y p = ≺→≼ x y p
+  ≼-s (l f) y p = λ n → ≼-s (f n) y (p n)
+  ≼-s (w g) y p = λ c → ≼-s (g c) y (p c)
+
+  ≺→≼ : ∀ x y → x ≺ y → x ≼ y
+  ≺→≼ x z     ()
+  ≺→≼ x (s y) p       = ≼-s x y p
+  ≺→≼ x (l f) (n , p) = cocone-l x n (≺→≼ x (f n) p)
+  ≺→≼ x (w g) (c , p) = cocone-w x c (≺→≼ x (g c) p)
+
+irrefl : ∀ x → ¬ (x ≺ x)
+irrefl z     ()
+irrefl (s x) p       = irrefl x p
+irrefl (l f) (n , p) = irrefl (f n) (≼≺ (f n) (l f) (f n) (cocone-l (f n) n (refl≼ (f n))) p)
+irrefl (w g) (c , p) = irrefl (g c) (≼≺ (g c) (w g) (g c) (cocone-w (g c) c (refl≼ (g c))) p)
+
+-- 一个结点: 分支族 G (对应 node⁺ 的 G ∘ cv). 保留输出是 w G, 走链输出是某个 ℕ 极限 l S.
+module Node (G : O₀ → O₁) (mono : ∀ c c′ → c ≺₀ c′ → G c ≺ G c′) where
+
+  -- 链的每一项不高于某个分支 (例如部分和被分支吸收) ⇒ 链严格低于保留结点
+  chain< : (S : ℕ → O₁) (σ : ℕ → O₀) → (∀ n → S n ≼ G (σ n)) → l S ≺ w G
+  chain< S σ h = s₀ c* , ≼≺ (l S) (G c*) (G (s₀ c*)) bound (mono c* (s₀ c*) (refl₀ c*))
+    where
+    c* : O₀
+    c* = s₀ (l₀ σ)
+    bound : l S ≼ G c*
+    bound n = ≺→≼ (S n) (G c*) (≼≺ (S n) (G (σ n)) (G c*) (h n) (mono (σ n) c* (below₀ σ n)))
+
+  -- 坍缩引理 "低于目标保留" 的滞后形 (理想保留结点 ≼ 实际的链) 不成立
+  keep-lost : (S : ℕ → O₁) (σ : ℕ → O₀) → (∀ n → S n ≼ G (σ n)) → ¬ (w G ≼ l S)
+  keep-lost S σ h le = irrefl (l S) (≺≼ (l S) (w G) (l S) (chain< S σ h) le)
+
+  -- 对角一支: 链的第 k 项支配 "回灌 k 步的单步对角" (平凡)
+  diag-ok : (σ : ℕ → O₀) (k : ℕ) → G (σ k) ≼ l (λ n → G (σ n))
+  diag-ok σ k = cocone-l (G (σ k)) k (refl≼ (G (σ k)))
+
+-- 前提可满足的实例: 嵌入 O₀ → O₁ 严格单调; 链取分支本身
+emb : O₀ → O₁
+emb z₀     = z
+emb (s₀ x) = s (emb x)
+emb (l₀ f) = l (λ n → emb (f n))
+
+mutual
+  emb≼ : ∀ x y → x ≼₀ y → emb x ≼ emb y
+  emb≼ z₀     y p = tt
+  emb≼ (s₀ x) y p = emb≺ x y p
+  emb≼ (l₀ f) y p = λ n → emb≼ (f n) y (p n)
+
+  emb≺ : ∀ x y → x ≺₀ y → emb x ≺ emb y
+  emb≺ x z₀     ()
+  emb≺ x (s₀ y) p       = emb≼ x y p
+  emb≺ x (l₀ f) (n , p) = n , emb≺ x (f n) p
+
+inst-lost : (σ : ℕ → O₀) → ¬ (w emb ≼ l (λ n → emb (σ n)))
+inst-lost σ = Node.keep-lost emb emb≺ (λ n → emb (σ n)) σ (λ n → refl≼ (emb (σ n)))
+
+-- 吸收这一前提不能去掉: 底不低于分支域时 (分支 = 底 + 下标), 两个分支的和已经支配保留结点
+infixl 6 _+_
+_+_ : O₁ → O₁ → O₁
+x + z   = x
+x + s y = s (x + y)
+x + l f = l (λ n → x + f n)
+x + w g = w (λ c → x + g c)
+
+≼+ : ∀ x y → x ≼ x + y
+≼+ x z     = refl≼ x
+≼+ x (s y) = ≼-s x (x + y) (≼+ x y)
+≼+ x (l f) = cocone-l x zero (≼+ x (f zero))
+≼+ x (w g) = cocone-w x z₀ (≼+ x (g z₀))
+
+mutual
+  +R≼ : ∀ x y y′ → y ≼ y′ → x + y ≼ x + y′
+  +R≼ x z     y′ p = ≼+ x y′
+  +R≼ x (s y) y′ p = +R≺ x y y′ p
+  +R≼ x (l f) y′ p = λ n → +R≼ x (f n) y′ (p n)
+  +R≼ x (w g) y′ p = λ c → +R≼ x (g c) y′ (p c)
+
+  +R≺ : ∀ x y y′ → y ≺ y′ → x + y ≺ x + y′
+  +R≺ x y z      ()
+  +R≺ x y (s y′) p       = +R≼ x y y′ p
+  +R≺ x y (l f)  (n , p) = n , +R≺ x y (f n) p
+  +R≺ x y (w g)  (c , p) = c , +R≺ x y (g c) p
+
++L≼ : ∀ x x′ y → x ≼ x′ → x + y ≼ x′ + y
++L≼ x x′ z     p = p
++L≼ x x′ (s y) p = +L≼ x x′ y p
++L≼ x x′ (l f) p = λ n → cocone-l (x + f n) n (+L≼ x x′ (f n) p)
++L≼ x x′ (w g) p = λ c → cocone-w (x + g c) c (+L≼ x x′ (g c) p)
+
+module BigBase where
+  B : O₁
+  B = w emb
+
+  G : O₀ → O₁
+  G c = B + emb c
+
+  emb≼B : ∀ c → emb c ≼ B
+  emb≼B c = cocone-w (emb c) c (refl≼ (emb c))
+
+  -- 保留结点 w G ≼ 只由两个分支之和组成的 ℕ 极限 (滞后补回)
+  lag-wins : (a b : O₀) → w G ≼ l (λ _ → G a + G b)
+  lag-wins a b c = cocone-l (G c) zero
+    (≼≼ (G c) (B + B) (G a + G b) (+R≼ B (emb c) B (emb≼B c))
+      (≼≼ (B + B) (G a + B) (G a + G b) (+L≼ B (G a) B (≼+ B (emb a))) (+R≼ (G a) B (G b) (≼+ B (emb b)))))

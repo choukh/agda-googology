@@ -1,0 +1,43 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 对任意带证书的旧层号，后继站的整棵输出可由裸反馈项检验。首个正下标只用当前层的标准 Ω 树。
+module B21OldSuccessor where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiFreshFold as O
+import OCF.Lean.YiFreshValRead as V
+import OCF.Lean.YiUpFold as F
+import OCF.Lean.YiPhiBlock as P
+open import OCF.Lean.YiUpVal using (⊴→≼)
+open import OCF.Lean.YiUpSimFold using (ψ⊥-⊵)
+open import WVOne using (read; T₀; 𝟏)
+open import W4Fold using (EBOᶜ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; ≼-suc; ≅→≼; +-mono)
+import B12EboRows as B
+import B20IdealTower as T
+
+module At (a : Y.L) (o : P.Ev a) where
+  old = V.read (F.ψ₀ a o (O.Ωt a))
+  top = V.read (F.ψ₀ (Y.suc a) o (O.Ωt (Y.suc a)))
+  op = λ z → O.next (F.ψs a o (P.B₀ a) a P.self (O.Ωt a) z)
+  index = O.iter op Y.zero
+  tree = λ j → F.ψ₀ a o (index j)
+  raw = λ j → V.read (tree j)
+  module Packet = T.Packet tree
+  series : top ≡ Packet.whole
+  series = refl
+  positive : ∀ j → 𝟏 ≼ raw j
+  positive j = ⊴→≼ (ψ⊥-⊵ a o (P.B₀ a) (index j))
+  necessary : top ≼ read EBOᶜ → ∀ j → B.InChild (raw j)
+  necessary = Packet.necessary positive
+  sufficient : (∀ j → B.InChild (raw j)) → top ≼ read EBOᶜ
+  sufficient = Packet.sufficient
+  first-index : index 1 ≡ O.next (O.Ωt a)
+  first-index = refl
+  enters : old ≼ raw 1
+  enters = ≼l 0 (≼-refl old)
+  margin : ∀ j → L.suc (raw j) ≼ top
+  margin j = V.limcum≽ Packet.term j (≼l 1 (≼-trans (+-mono {a = raw j} (≼-refl _) (positive j))
+    (≅→≼ (L.≅-sym (V.read-+ (tree j) (tree j))))))

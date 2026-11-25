@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B19RowProgram where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; l≼; ≼l; ≅→≼)
+open import WVOne using (T₀; 𝟏; read)
+open import WVTwo using (T₁)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B13Target as P
+import B14RefAllRows as F
+import B14RefFixed as K
+import B17RefAllSource as Src
+open import OCF.Align.BTBOValBase using (tr₀)
+open import B19RowWorld
+import B19RowPair as Q
+
+low : ∀ W u → Reg u → fit W (Low.one W u (z W)) (L.up L.zero u)
+low W u ru = conv W (Low.using-one W u ru L.z≅ (rz W)) (L.upʳ (U.left-unit L.suc ru))
+
+op : (m : ℕ) (W : World) → T₁ → C W
+op zero W y = Low.one (Higher.end W) y (z (Higher.end W)) (z W)
+op (suc m) W y = op m (Higher.end W) y (z W)
+calibrate : ∀ m W y → Reg y → fit W (op m W y) (F.norm m y)
+calibrate zero W y ry = Higher.apply W (L.upˡ (L.upʳ ry)) (low (Higher.end W) y ry)
+calibrate (suc m) W y ry = Higher.apply W (F.pres m ry) (calibrate m (Higher.end W) y ry)
+
+input : ℕ → ℕ → T₀ → T₁
+input m zero x = L.up L.zero x
+input m (suc n) x = proj₂ (op m Q.W (input m n x))
+
+same : ∀ m n {x y} → x L.≅ y → input m n x L.≅ F.kid m n y
+same m zero d = L.upˡ (L.upʳ d)
+same m (suc n) {x} d = L.≅-trans (proj₂ (calibrate m Q.W _ (P.refl-left ih))) (K.pres (F.pres m ih))
+  where ih = same m n {x} d
+
+step : ℕ → ℕ → T₀ → T₀
+step m n x = proj₁ (op m Q.W (input m n x))
+correct : ∀ m n {x y} → x L.≅ y → step m n x L.≅ F.gain m n y
+correct m n {x} d = L.≅-trans (proj₁ (calibrate m Q.W _ (P.refl-left ih))) (L.ψ⁰-≅ (F.pres m ih))
+  where ih = same m n {x} d
+
+track : ℕ → ℕ → ℕ → T₀
+track m n = O.iter (step m n) 𝟏
+tracks : ∀ m n j → track m n j L.≅ F.chain m n j
+tracks m n = L.iter-R L._≅_ {G = step m n} {G′ = F.gain m n} (correct m n) (L.s≅ L.z≅)
+branch : ℕ → ℕ → T₀
+branch m n = L.lim (λ j → track m n (suc j))
+actual : ∀ m n → branch m n L.≅ F.node m n
+actual m n = L.≅-trans (L.l≅ (λ j → tracks m n (suc j))) (L.≅-sym (F.as-chain m n))
+
+outer : ℕ → T₀
+outer m = L.lim (branch m)
+positive : ∀ m → outer m L.≅ Src.branches (suc m)
+positive m = L.≅-trans (L.l≅ (actual m)) (L.≅-sym (Src.positive m))
+
+source : ∀ m → tr₀ (Src.outer (suc m)) ≈ᵛ outer m
+source m = ≼-trans (proj₁ (Src.all-outer (suc m))) (≅→≼ (L.≅-sym (positive m))) ,
+           ≼-trans (≅→≼ (positive m)) (proj₂ (Src.all-outer (suc m)))

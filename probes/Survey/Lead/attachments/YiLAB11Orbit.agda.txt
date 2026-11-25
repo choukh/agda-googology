@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiLAB11Orbit where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import YiLAB7Orbit using (lvl2; ok₂; F)
+
+-- 第三层自身行的第一个非零原始项，用作第二项的内指数。
+Ω₂t = proj₁ (Ωt lvl2)
+t₁ : Tr lvl2
+t₁ = ex Ω₂t Ω₂t (proj₂ (Ωt lvl2)) (suc zero) tt
+G : Op {lvl2} nil
+G = op (E ok₂ tdNil t₁ F) (Einf ok₂ tdNil t₁ F)
+
+m : Mor {lvl2} nil (cons (down stop tt) nil)
+m = chMT tdNil tt
+pull : St (cons (down stop tt) nil) → Base lvl2
+pull T i t = T i (σ m t)
+push : Base lvl2 → St (cons (down stop tt) nil)
+push S i t = S i (proj₂ t)
+
+project-state : (n : ℕ) (S : Base lvl2) → pull (itS (enterO m F) n (push S)) ≡ itS F n S
+project-state zero S = refl
+project-state (suc n) S = cong (stepS F) (project-state n S)
+
+project-value : (n : ℕ) (S : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i)
+  → itV (enterO m F) n (push S) i (σ m t) v ≡ itV F n S i t v
+project-value zero S i t v = refl
+project-value (suc n) S i t v rewrite project-state n S | project-value n S i t v = refl
+
+-- 这棵真实极限的第 n 支等于 F 的第 n+1 次运行；直接使用归纳的投影等式。
+child : (S : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i) → Tr⁺ i
+child S i t v = E ok₂ tdNil (up zero tt (suc zero) ◃s) F S i t v
+
+kid : (n : ℕ) (S : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i) → Tr⁺ i
+kid n S i t v = itV (enterO m F) (suc n) (push S) i (σ m t) v
+
+in-child : (n : ℕ) (S : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i)
+   → i ⊢ proj₁ (kid n S i t v) ◃ proj₁ (child S i t v)
+in-child n S i t v = ◃l n
+
+child-in-G : (S : Base lvl2) (i : L) (t : i ≤ lvl2) (v : Tr⁺ i)
+   → i ⊢ proj₁ (child S i t v) ◃ proj₁ (run G S i t v)
+child-in-G S i t v = Emono ok₂ tdNil F S i t v {x = up zero tt (suc zero) ◃s} {y = t₁} (◃t {y = Ω₂t} ◃w ◃e)

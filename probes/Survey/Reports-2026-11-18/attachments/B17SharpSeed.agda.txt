@@ -1,0 +1,59 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B17SharpSeed where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Path as P
+import W4Fold as F
+open import WVOne using (read)
+open import WVTwo using (lvl2; ◃→≼; p₂; g₂)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack
+open import B14SharpBound
+open import B14SharpTwo using (r₂; o₂; p₂i; g₂i)
+open import B15SharpAction
+import B14SharpNext as N
+import B14SharpLive as X
+import B12Terminal as T
+import B16SharpTerminal as End
+
+module Seed (lem : LEM) where
+  open I.Sharp lem
+  open T.Run
+  open Action lem
+
+  act : V.Tr⁺ R.zero → V.Tr⁺ R.zero
+  act a = ψ♯ r₂ o₂ B♯ R.zero tt a (proj₁ (V.Ωt r₂))
+
+  gain : ∀ a → R.zero R.⊢ proj₁ a ◃ proj₁ (act a)
+  gain a = mono♯ r₂ o₂ B♯ R.zero tt a (proj₂ (V.Ωt r₂))
+
+  module Run (r : T.Run lvl2) (a : V.Tr⁺ R.zero) (ha : data≤ (proj₁ a) (proj₁ (β r))) where
+    open X.Live.Actual lem r using (output; op; b; S; S₁; v₁; step)
+    open X.Live lem using (item)
+    iz = V.iter (N.Next.step lem) R.zero
+    terms : ℕ → R.Tr R.zero
+    terms n = proj₁ (ψ♯ r₂ o₂ B♯ R.zero tt a (g₂i (iz n)))
+
+    each : ∀ n → data≤ (terms n) (proj₁ (output n))
+    each zero = next≤ a b ha
+    each (suc n) = next≤ _ _ (lim-out B♯ a id _ _
+      (λ k → ≼l k (power (End.Terminal.Run.every lem r n) k B♯ a id S₁ (path base) v₁
+        (≼-trans ha (◃→≼ (F.inf op S B.zero (path base) b)))
+        (≼-trans (oneB r (B.inc tt (path slot))) (◃→≼ (F.inf op S B.zero (path slot) (S B.zero (path slot))))))))
+
+    bound : readRW (proj₁ (act a)) ≼ read (T.value r)
+    bound rewrite empty-slot (kp♯ r₂ o₂ p₂i R.zero tt) = l≼ (λ n → ≼-trans (sum≤ terms (λ i → proj₁ (output i)) each n)
+      (X.cumulative (F.kp lvl2 (ok r) p₂ (P.z≤ lvl2)) (λ z → F.ψ lvl2 (ok r) (bs r) B.zero (P.z≤ lvl2) b (g₂ z)) step n))
+

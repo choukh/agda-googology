@@ -1,0 +1,195 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- KQ B2, 现行块 (W4, 折叠未改). 编译定理, 无前提. 判决: 折叠输出在 "链的单个累加项" 上字面单调, 累加 (node⁺ nothing 的 limc⁺) 之后不再字面单调.
+-- (a) 朝第 0 层 (WVOne.st): st c ◃ st (c+1) 的第 1 个累加项; c = 0 与 ℕ 极限的第 0 个成员整体成立; 其余成员是累加或换底, 形状见 st-suc, st-lim.
+-- (b) 朝私有层 (R15Steer 的分支形状, 状态 Ωt, 底 Ωt j): G 0 读回 ⊑ G 1 的第 1 个累加项读回; G (d+1) ◃ G (d+2) 的第 1 个累加项. G 1 本身见 KQOutNeg.
+module KQOut where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (st)
+open import KQRead using (FB; fself; fdn; FB-trans; FB→⊑; Eh-first; FBAL; memL; h₁)
+
+-- tw 1 的孩子 c 上的数据, 逐字取自 st 的展开.
+Ωc : (c : Tr zero) → Tr (h₁ c)
+Ωc c = proj₁ (Ωt (h₁ c))
+
+oc : (c : Tr zero) → Ok (h₁ c)
+oc c = proj₂ (Ok-tw 1) c
+
+Bs : (c : Tr zero) → Base (h₁ c)
+Bs c i u = ψ (tw 1) (Ok-tw 1) (B₀ (tw 1)) i (inc c u) (B₀ (tw 1) i (inc c u)) zero
+
+ws : (c : Tr zero) → zero ≤ h₁ c
+ws c = self ∙ proj₂ (proj₁ (Ok-tw 1)) c
+
+β₀ : Tr⁺ zero
+β₀ = Ωt zero
+
+st-def : (c : Tr zero) → st c ≡ proj₁ (ψ (h₁ c) (oc c) (Bs c) zero (ws c) β₀ (Ωc c))
+st-def c = refl
+
+memT : Tr zero → ℕ → Tr zero
+memT zero          n = zero
+memT (suc x)       n = suc x
+memT (lim f a)     n = f n
+memT (Ω () _)      n
+memT (up _ () _ _) n
+memT (ex _ _ _ _ ()) n
+
+------------------------------------------------------------------------
+-- B2(a). st (c+1) 是累加: 第 n 个成员 = cum (链上各项) n.
+gS : (c : Tr zero) → Tr (h₁ c) → Tr (h₁ (suc c))
+gS c z = proj₁ (upz {s = sS} {h = λ _ → h₁ c} tt (suc z , z◃ z ◃s))
+
+Gs : (c : Tr zero) → Tr (h₁ c) → Tr⁺ zero
+Gs c z = ψ (h₁ (suc c)) (oc (suc c)) (Bs (suc c)) zero (ws (suc c)) β₀ (gS c z)
+
+Ss : (c : Tr zero) → Tr (h₁ c) → Tr (h₁ c)
+Ss c z = proj₁ (ψ (h₁ (suc c)) (oc (suc c)) (Bs (suc c)) (h₁ c) (inc tt self) (Bs (suc c) (h₁ c) (inc tt self)) (gS c z))
+
+zS : (c : Tr zero) → ℕ → Tr (h₁ c)
+zS c = iter (Ss c) zero
+
+st-suc : (c : Tr zero) (n : ℕ) → memT (st (suc c)) n ≡ cum (λ m → proj₁ (Gs c (zS c m))) n
+st-suc c n = refl
+
+-- 正面: 对一切 c, st c 字面地低于 st (c+1) 的第 1 个累加项 (累加之前).
+st-sum : (c : Tr zero) → zero ⊢ st c ◃ proj₁ (Gs c (zS c 1))
+st-sum c = mono (h₁ c) (oc c) (Bs c) zero (ws c) β₀
+  (◃t (mono (h₁ c) (oc c) (Bs c) (h₁ c) self (Ωt (h₁ c)) {zero} {suc zero} ◃s) ◃s)
+
+-- c = 0: 第 0 个累加项逐字就是 st 0.
+st-0 : zero ⊢ st zero ◃ st (suc zero)
+st-0 = ◃l 0
+
+-- ℕ 极限的第 0 个成员 (Nest1.first-st 的推论).
+st-lim₀ : (f : ℕ → Tr zero) (a : (n : ℕ) → zero ⊢ f n ◃ f (suc n)) → zero ⊢ st (f 0) ◃ st (lim f a)
+st-lim₀ f a = ◃l 0
+
+-- ℕ 极限的第 n+1 个成员: 底是第 n 个成员, 状态按前缀平移; st (f (n+1)) 的底是 Ωt zero, 状态是 Bs.
+Fseg : (f : ℕ → Tr zero) (a : (n : ℕ) → zero ⊢ f n ◃ f (suc n)) → ℕ → Tr (h₁ (lim f a))
+Fseg f a m = proj₁ (upz {s = sL} {h = λ m → h₁ (f m)} m (Ωt (h₁ (f m))))
+
+st-lim : (f : ℕ → Tr zero) (a : (n : ℕ) → zero ⊢ f n ◃ f (suc n)) (n : ℕ)
+  → memT (st (lim f a)) (suc n)
+  ≡ proj₁ (ψ (h₁ (f (suc n))) (oc (f (suc n)))
+             (λ i u → ψ (h₁ (lim f a)) (oc (lim f a)) (Bs (lim f a)) i (inc (suc n) u) (Bs (lim f a) i (inc (suc n) u)) (cum (Fseg f a) n))
+             zero (ws (f (suc n)))
+             (ψ (h₁ (lim f a)) (oc (lim f a)) (Bs (lim f a)) zero (ws (lim f a)) β₀ (cum (Fseg f a) n))
+             (Ωc (f (suc n))))
+st-lim f a n = refl
+
+------------------------------------------------------------------------
+-- B2(b). R15 的换参数: 在孩子 c′ + d 里沿字面路径朝 j = h₁ c′ 折规范 Ω 树. 状态固定为 Ωt, 底固定为 Ωt j.
+↑⊑+ : (k : L) (x y : Tr k) → ↑ k x ⊑ ↑ k (x + y)
+↑⊑+ k        x zero            = self
+↑⊑+ k        x (suc y)         = inc tt (↑⊑+ k x y)
+↑⊑+ k        x (lim f a)       = inc 0 (↑⊑+ k x (f 0))
+↑⊑+ k        x (Ω p g)         = inu (λ c → ↑⊑+ k x (g (fromBr k p c)))
+↑⊑+ (nd s h) x (up y c w e)    = ↑⊑+ (nd s h) x y ∙ lift (↑ (nd s h) (x + y)) (↑ (h c) w)
+↑⊑+ (nd s h) x (ex a b nb y ε) = ↑⊑+ (nd s h) x a ∙ proj₂ (Eh AL tt y (opR (↑ (nd s h) b))) (↑ (nd s h) (x + a))
+
+steer : (c′ d : Tr zero) → h₁ c′ ≤ h₁ (c′ + d)
+steer c′ d = self ∙ wk (⊕⊑ zero (↑⊑+ zero c′ d))
+
+σ₀ : ∀ {ℓ} → Base ℓ
+σ₀ i u = Ωt i
+
+G : (c′ d : Tr zero) → Tr⁺ (h₁ c′)
+G c′ d = ψ (h₁ (c′ + d)) (oc (c′ + d)) σ₀ (h₁ c′) (steer c′ d) (Ωt (h₁ c′)) (Ωc (c′ + d))
+
+-- 自身行的一项 (目标就是本层): 链点与 G 1 的累加项都是它.
+Sb : (c′ : Tr zero) → Tr (h₁ c′) → Tr⁺ (h₁ c′)
+Sb c′ z = ψ (h₁ c′) (oc c′) σ₀ (h₁ c′) self (Ωt (h₁ c′)) (suc z)
+
+zz : (c′ : Tr zero) → ℕ → Tr (h₁ c′)
+zz c′ = iter (λ z → proj₁ (Sb c′ z)) zero
+
+Lβ : (c′ : Tr zero) → L
+Lβ c′ = ↑ (h₁ c′) (Ωc c′)
+
+memG : ∀ {k} → Tr k → ℕ → Tr k
+memG zero            n = zero
+memG (suc x)         n = suc x
+memG (lim f a)       n = f n
+memG (Ω p g)         n = Ω p g
+memG (up x c y e)    n = up x c y e
+memG (ex a b nb x ε) n = ex a b nb x ε
+
+NZ : Tr zero → Set
+NZ zero          = ⊥
+NZ (suc _)       = ⊤
+NZ (lim _ _)     = ⊤
+NZ (Ω () _)
+NZ (up _ () _ _)
+NZ (ex _ _ _ _ ())
+
+-- 形状: G 1 是自身行各项的累加 (对一切 c′).
+G1-mem : (c′ : Tr zero) (m : ℕ) → memG (proj₁ (G c′ (suc zero))) m ≡ cum (λ n → proj₁ (Sb c′ (zz c′ n))) m
+G1-mem c′ m = refl
+
+-- 读回形状 (j 非零层): G 0 是从 Lβ 起迭代; G 1 的第 0 个成员只迭代 ω 次; 第 m+1 个成员从 ↑ (前缀 + Ωt j) 起迭代, 不从 Lβ 起.
+G0-read : (c′ : Tr zero) → NZ c′ → ↑ (h₁ c′) (proj₁ (G c′ zero)) ≡ proj₁ (Eh AL tt (Ωc c′) (opR (Lβ c′))) (Lβ c′)
+G0-read (suc c)   _ = refl
+G0-read (lim f a) _ = refl
+
+G1-read₀ : (c′ : Tr zero) → NZ c′ → memL (↑ (h₁ c′) (proj₁ (G c′ (suc zero)))) 0 ≡ proj₁ (Eh AL {h₁ c′} tt (suc zero) (opR (Lβ c′))) (Lβ c′)
+G1-read₀ (suc c)   _ = refl
+G1-read₀ (lim f a) _ = refl
+
+G1-read : (c′ : Tr zero) → NZ c′ → (m : ℕ)
+  → memL (↑ (h₁ c′) (proj₁ (G c′ (suc zero)))) (suc m)
+  ≡ proj₁ (Eh AL tt (suc (zz c′ (suc m))) (opR (Lβ c′))) (↑ (h₁ c′) (cum (λ n → proj₁ (Sb c′ (zz c′ n))) m + Ωc c′))
+G1-read (suc c)   _ m = refl
+G1-read (lim f a) _ m = refl
+
+-- 正面 (d = 0 → 1): G 0 的读回在 G 1 的第 1 个累加项 (累加之前) 的读回的首枝上.
+sum01 : (c′ : Tr zero) → NZ c′ → ↑ (h₁ c′) (proj₁ (G c′ zero)) ⊑ ↑ (h₁ c′) (proj₁ (Sb c′ (zz c′ 1)))
+sum01 (suc c) _ = FB→⊑ (FB-trans (Eh-first AL FBAL {h₁ (suc c)} tt (Ωc (suc c)) (Eh AL {h₁ (suc c)} tt (Ωc (suc c)) (opR (Lβ (suc c)))) (Lβ (suc c))) (fdn (fdn fself)))
+sum01 (lim f a) _ = FB→⊑ (FB-trans (Eh-first AL FBAL {h₁ (lim f a)} tt (Ωc (lim f a)) (Eh AL {h₁ (lim f a)} tt (Ωc (lim f a)) (opR (Lβ (lim f a)))) (Lβ (lim f a))) (fdn (fdn fself)))
+
+-- d+2 的累加项: 在孩子 c′ + (d+2) 里, 以 c′ + (d+1) 层的链点为树.
+Tm : (c′ d : Tr zero) → ℕ → Tr⁺ (h₁ c′)
+Tm c′ d m = ψ (h₁ (c′ + suc (suc d))) (oc (c′ + suc (suc d))) σ₀ (h₁ c′) (steer c′ (suc (suc d))) (Ωt (h₁ c′))
+              (gS (c′ + suc d) (zz (c′ + suc d) m))
+
+G2-mem : (c′ d : Tr zero) (m : ℕ) → memG (proj₁ (G c′ (suc (suc d)))) m ≡ cum (λ n → proj₁ (Tm c′ d n)) m
+G2-mem c′ d m = refl
+
+-- 正面 (d+1 → d+2, 对一切 c′, d): G (d+1) 字面地低于 G (d+2) 的第 1 个累加项 (它是迭代子 E 的起点).
+sumD : (c′ d : Tr zero) → h₁ c′ ⊢ proj₁ (G c′ (suc d)) ◃ proj₁ (Tm c′ d 1)
+sumD c′ d = ◃t (Einf (oc (c′ + suc d)) tdNil (suc zero)
+                  (opB (h₁ (c′ + suc d)) (oc (c′ + suc d)) (Ωc (c′ + suc d)) (proj₂ (Ωt (h₁ (c′ + suc d)))))
+                  (λ i u → ψ (h₁ (c′ + suc d)) (oc (c′ + suc d)) σ₀ i u (σ₀ i u) (Ωc (c′ + suc d)))
+                  (h₁ c′) (steer c′ (suc d)) (G c′ (suc d)))
+               (◃l 0)
+
+sumD-read : (c′ d : Tr zero) → ↑ (h₁ c′) (proj₁ (G c′ (suc d))) ⊑ ↑ (h₁ c′) (proj₁ (Tm c′ d 1))
+sumD-read c′ d = ◃→⊑ (h₁ c′) (sumD c′ d)
+
+------------------------------------------------------------------------
+-- 闭实例 c′ = 1, 2, ω; d = 0, 1 (e = 1). 这些是上面定理的代入, 不是另外的计算.
+sn : ℕ → Tr zero
+sn zero    = zero
+sn (suc m) = suc (sn m)
+
+ω : Tr zero
+ω = lim sn (λ m → ◃s)
+
+i01-1 = sum01 (suc zero) tt
+i01-2 = sum01 (suc (suc zero)) tt
+i01-ω = sum01 ω tt
+i12-1 = sumD (suc zero) zero
+i12-2 = sumD (suc (suc zero)) zero
+i12-ω = sumD ω zero
+i23-1 = sumD (suc zero) (suc zero)
+i23-ω = sumD ω (suc zero)

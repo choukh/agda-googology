@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 塔每一步增强所产生的可数尾均有纯 src 参照。起点可取任一有限层已经校准的下界。
+module B15SourceTower where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-refl; ≼-trans)
+import OCF.Align.Level as LV
+open import WVOne using (T₀; read; 𝟏; Mv-mono)
+open import W4Block using (iter)
+open import W4Fold using (EBOᶜ)
+open import B13FiniteSrc using (Src; out)
+import B12TerminalSrc
+import B13FiniteTower as F
+import B12TerminalTail as W
+import B14Floor as V
+import B15TowerIteration as I
+import B15TowerSeed as A
+
+Op = Src → Src
+Times : Op → Op
+Times g a = S.lim (S.iter g a)
+ht = iter Times
+st : Op → Src → ℕ → Src
+st g a zero = a
+st g a (suc n) = ht g (suc n) (st g a n)
+next : Op → Op
+next g a = S.lim (λ n → ht g (suc n) a)
+constant : Op → Src → Src
+constant g a = S.lim (λ n → st g a (suc n))
+Fit : Op → (T₀ → T₀) → Set
+Fit g f = ∀ a x → out a ≼ x → out (g a) ≼ f x
+height : ∀ g f → Fit g f → ∀ n → Fit (ht g n) (F.height f n)
+height g f v zero = v
+height g f v (suc n) a x d = l≼ (λ k → ≼l k (run k))
+  where
+  run : ∀ k → out (S.iter (ht g n) a k) ≼ iter (F.height f n) x k
+  run zero = d
+  run (suc k) = height g f v n _ _ (run k)
+stages : ∀ g f → Fit g f → ∀ n a x → out a ≼ x → out (st g a n) ≼ F.constant f x n
+stages g f v zero a x p = p
+stages g f v (suc n) a x p = height g f v (suc n) _ _ (stages g f v n a x p)
+ops = iter next S.suc
+levels : Src → ℕ → Src
+levels a zero = a
+levels a (suc n) = constant (ops n) (levels a n)
+match : ∀ n → Fit (ops n) (iter I.jump W.mulω n)
+match zero a x e = ≼-trans (B12TerminalSrc.src-step a) (Mv-mono e (≼-refl 𝟏))
+match (suc n) a x e = l≼ (λ i → ≼l i (height _ _ (match n) (suc i) a x e))
+
+module From (m : ℕ) (a : Src) (q : V.Finite (suc m) (out a)) where
+  module Z = A.Amplify m (out a) q
+  floors : ∀ n → out (levels a n) ≼ Z.All.floor n
+  floors zero = ≼-refl _
+  floors (suc n) = l≼ (λ i → ≼l i (stages _ _ (match n) (suc i) _ _ (floors n)))
+  source : Src
+  source = S.lim (levels a)
+  terminal : out source ≼ read EBOᶜ
+  terminal = ≼-trans (l≼ (λ n → ≼l n (floors n))) Z.terminal

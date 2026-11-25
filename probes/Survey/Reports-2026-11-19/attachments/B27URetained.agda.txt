@@ -1,0 +1,70 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在任意固定层和初值下，给已有语法树右接提升的零树，当前实际折叠便把先前结果右乘一个普通 ω 幂。
+module B27URetained where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+import Data.Nat.Properties
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+open import WVOne using (read; T₀)
+import W4Block as W
+import W4Fold as F
+import W4Ops as O
+import W4Path as Path
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; ≼-refl; ≼-trans; ≼l)
+open import B18Product using (_·_; mono)
+open import B19IdealProduct using (id; _∙_; flip; one; assoc; mul; lim)
+import B19IdealPowers as Pow
+import B19IdealArithmetic as Ar
+import B26CScalar as Scalar
+import B18TowerSlots as S
+import B20StandardInside as St
+import B25Return as Up
+import B18TowerEmb as Emb
+import B27UEpsilon as Eps
+
+eval : ∀ k → Path.Ok k → F.Base k → O.Tr⁺ W.zero → W.Tr k → T₀
+eval k o B β t = read (proj₁ (F.ψ k o B W.zero (Path.z≤ k) β t))
+
+rise : ∀ k o B β x → eval k o B β (W.suc x) ≈ᵛ (eval k o B β x · L.ωᶜ)
+rise W.zero o B β x = Scalar.repeat (F.ψ W.zero o B W.zero W.self β x)
+rise k@(W.nd s h) o B β x = Scalar.repeat (F.ψ k o B W.zero (Path.z≤ k) β x)
+
+continuity : ∀ k o B β f p → eval k o B β (W.lim f p) ≈ᵛ L.lim (λ n → eval k o B β (f n))
+continuity W.zero o B β f p = id _
+continuity (W.nd s h) o B β f p = id _
+
+module At (k : W.L) (o : Path.Ok k) (B : F.Base k) (β : O.Tr⁺ W.zero) (a : W.Tr k) where
+  b = eval k o B β a
+  extension : ∀ x → eval k o B β (a O.+ O.ι k x) ≈ᵛ (b · Ar.norm (read x))
+  extension W.zero = flip (one b)
+  extension (W.suc x) = rise k o B β (a O.+ O.ι k x) ∙ mul (extension x) (id L.ωᶜ) ∙ assoc b (Ar.norm (read x)) L.ωᶜ
+  extension (W.lim f p) = continuity k o B β _ _ ∙ lim (λ n → extension (f n))
+  extension (W.Ω () _)
+  extension (W.up _ () _ _)
+  extension (W.ex _ _ _ _ ())
+
+value : ∀ m → O.Tr⁺ (W.tw m) → T₀
+value m x = eval (W.tw m) (Path.Ok-tw m) (F.B₀ (W.tw m)) (O.Ωt W.zero) (proj₁ x)
+
+module Slot (l : W.L) (m : ℕ) (w : W.tw m W.≤ l) where
+  val : ℕ → T₀
+  val n = value m (S.slots l n (W.tw m) w)
+
+  append : ∀ n → val (suc n) ≈ᵛ (val n · Ar.norm (St.std n))
+  append n = At.extension (W.tw m) (Path.Ok-tw m) (F.B₀ (W.tw m)) (O.Ωt W.zero)
+    (proj₁ (S.slots l n (W.tw m) w)) (proj₁ (Emb.standard n))
+
+  lower : ∀ n → St.std m ≼ val n
+  lower zero = ≼-refl _
+  lower (suc n) = ≼-trans {b = val n} (lower n) (≼-trans {b = val n · Ar.norm (St.std n)}
+    (≼-trans {b = val n · WVOne.𝟏} (proj₂ (one (val n))) (mono (≼-refl (val n)) (Pow.positive Pow.omega-pos (St.std n))))
+    (proj₂ (append n)))
+
+  module Limit (N : ℕ) (port : m Data.Nat.Base.≤ N) where
+    module A = Eps.At (St.std N)
+    within : ∀ n → n Data.Nat.Base.≤ suc N → A.In (val n)
+    within zero _ = A.down (Up.up {m} {N} port) A.seed
+    within (suc n) (Data.Nat.Base.s≤s p) = A.down (proj₁ (append n))
+      (A.mulC (within n (Data.Nat.Properties.m≤n⇒m≤1+n p)) (A.expC (A.down (Up.up {n} {N} p) A.seed)))

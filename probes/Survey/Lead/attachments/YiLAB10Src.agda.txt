@@ -1,0 +1,62 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiLAB10Src where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; _,_)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module S = Ord-Ord
+module B = BoundedTrich
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-trans; ≅→≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import WKShape using (Ψ₃)
+open import WVOne using (read)
+import B10Join as J
+
+two : B.Ordᴰ
+two = B.suc (B.suc B.zero)
+w : B.zero B.< two
+w = B.z<nz tt
+a : S.Ord two
+a = S.Ω two
+
+-- 从一份 Ω₂ 起，后继再在右端加一份。保留括号和正数起点。
+ss : ℕ → S.Ord two
+ss zero = a
+ss (suc n) = ss n S.+ a
+
+ll : ℕ → L.Ordᶜ (D.τ two)
+ll zero = Ω₂ᴸ
+ll (suc n) = ll n L.+ Ω₂ᴸ
+
+up-rel : (n : ℕ) → U.Mh (ss n) (ll n)
+up-rel zero = U.M-Ω {a = two} tt (L.≅ᴵ-refl _)
+up-rel (suc n) = U.M-add {σ = λ q → q} (up-rel n) (up-rel zero)
+
+dn-rel : (n : ℕ) → D.Dn (ll n) (ss n)
+dn-rel zero = D.Dn-Ω {a = two} (L.≅ᴵ-refl _)
+dn-rel (suc n) = D.Dn-add {σ = λ q → q} (dn-rel n) (dn-rel zero)
+
+regular : (n : ℕ) → ll n L.≅ ll n
+regular zero = L.Ω-refl _
+regular (suc n) = L.add-≅ {σ = λ q → q} {σ′ = λ q → q} (regular n) (regular zero)
+
+at-fold : ∀ {x : S.Ord two} {y : L.Ordᶜ (D.τ two)} → U.Mh x y → D.Dn y x → y L.≅ y → tr₀ (S.ψ₀ x) ≈ᵛ L.ψ⁰ y
+at-fold {x} {y} up dn yy =
+  ≼-trans (U.Mh→≼ (U.M-ψ L.z≅ (D.τ-< w) (λ q → q) w up)) (≅→≼ (L.≅-sym eq)) ,
+  ≼-trans (≅→≼ eq) (D.Dn→≼ (D.Dn-ψ L.z≅ (D.τ-< w) (λ q → q) w dn))
+  where
+  eq = L.ψ⁰≅ψ {p = D.τ-< w} {σ = λ q → q} yy
+
+multiple : (n : ℕ) → tr₀ (S.ψ₀ (ss n)) ≈ᵛ L.ψ⁰ (ll n)
+multiple n = at-fold (up-rel n) (dn-rel n) (regular n)
+
+omega : tr₀ (S.ψ₀ (S.lim ss)) ≈ᵛ L.ψ⁰ (L.lim ll)
+omega = at-fold (U.Mll (λ n → U.Mlr n (up-rel n))) (D.Rll (λ n → D.Rlr n (dn-rel n))) (L.l≅ regular)
+
+src-double : tr₀ (S.ψ₀ (a S.+ a)) ≼ read Ψ₃
+src-double = ≼-trans (proj₁ (multiple 1)) J.double

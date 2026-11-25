@@ -1,0 +1,13 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiVFFieldCheck where
+
+open import Level using (Level)
+open import OCF.Lean.YiLPIface using (Iface)
+open import YiVFSkel using (ψ⊥ᵀ)
+
+TypeOf : ∀ {a : Level} {A : Set a} → A → Set a
+TypeOf {A = A} _ = A
+
+-- 原接口首字段的精确类型；不复制或弱化它。
+check-ψ⊥ : (I : Iface) → TypeOf (Iface.ψ⊥ I)
+check-ψ⊥ I = ψ⊥ᵀ

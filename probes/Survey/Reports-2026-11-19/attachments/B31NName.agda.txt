@@ -1,0 +1,49 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 直接给真实 x(1) 写出可数标准形 ψ₀(2)，将 ε 预算反例落在这个给定原名上。
+module B31NName where
+
+open import Data.List.Base using ([])
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Align.EboLeanDef using (HC; h1; h0; natT)
+open import OCF.Align.EboLeanBase using (Ctbl; c[]; c∷)
+open import OCF.Lean.YiRefTw2 using (Rt)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; ≼-refl)
+import B18Product as M
+import B19IdealArithmetic as Ar
+open import B19IdealProduct using (_∙_; flip; id; mul; left-one)
+import B26PSuffix as S
+import B26CJump as J
+import B26CLift as C
+import B26Names as A
+import B29SFirst as F
+import B31NInside as In
+import B31NReal as Real
+
+opaque
+  certificate : HC (S.φ (natT 2))
+  certificate = J.finite-code 2
+
+a : A.Name
+a = A.named (S.φ (natT 2)) (J.output-nat 2) (c∷ c[]) certificate
+
+h₂ : HC (natT 2)
+h₂ = h1 refl (h1 refl (h0 refl))
+
+abstract
+  expand : A.value a ≈ᵛ (𝟏 M.· Ar.norm (L.natᶜ 2))
+  expand = S.Low.val [] (h1 refl (h0 refl)) (natT 2) h₂ (A.hcN a)
+
+  original : A.value a ≈ᵛ Real.square
+  original = _∙_ {A.value a} {𝟏 M.· Ar.norm (L.natᶜ 2)} {Real.square} expand
+    (_∙_ {𝟏 M.· Ar.norm (L.natᶜ 2)} {Ar.norm (L.natᶜ 2)} {Real.square}
+      (left-one (Ar.norm (L.natᶜ 2))) (mul {𝟏 M.· L.ωᶜ} {L.ωᶜ} {L.ωᶜ} {L.ωᶜ} (left-one L.ωᶜ) (id L.ωᶜ)))
+
+  actual : A.value a ≈ᵛ F.x 1
+  actual = _∙_ {A.value a} {Real.square} {F.x 1} original (flip {F.x 1} {Real.square} Real.input)
+
+  result : (y : T₀) → y ≼ In.hull (A.value a) → F.f 1 ≼ y → ⊥
+  result = Real.impossible a actual

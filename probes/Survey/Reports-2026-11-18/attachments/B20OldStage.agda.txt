@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 后继层的零出口按所问路径进入同一实际子运行。显式零起点和后续所有要消费的槽位可以逐项同时估计。
+module B20OldStage where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (read; T₀)
+open import WVTwo using (◃→≼)
+open import WKGen using (node-ge)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l)
+import B12Terminal as T
+import B12ActualSlots as A
+import B13FiniteLift as U
+import B15FixedWitness as H
+open T.Run
+
+module At (s : Sh) (h : Ch s → W4Block.L) (r : T.Run (U.sc (nd s h))) (cr : A.Covered r) where
+  j = nd s h
+  module Lo = H.Lift s h r cr
+  open Lo.V public using (r₀; K; S; cover; c; body; step; pos; sub-covered)
+  o = ok r₀
+  top = cr j (inc tt self)
+  eval = λ b w v x → ψ j o b zero w v x
+  weaken : ∀ b w v → read (proj₁ (eval b w v (proj₁ (Ωt j)))) ≼ read (proj₁ (eval b w v c))
+  weaken b w v with top
+  ... | inj₁ e = subst (λ x → _ ≼ read (proj₁ (eval b w v x))) e (≼-refl _)
+  ... | inj₂ d = ◃→≼ (mono j o b zero w v d)
+  first = λ w a → run K (bs r₀) zero w a
+  v = λ w a n → itV K n (S 0) zero w (first w a)
+  valid : ∀ w a → WVOne.𝟏 ≼ read (proj₁ a) → ∀ n → WVOne.𝟏 ≼ read (proj₁ (v w a n))
+  valid w a q zero = ≼-trans q (◃→≼ (inf K (bs r₀) zero w a))
+  valid w a q (suc n) = ≼-trans (valid w a q n) (◃→≼ (inf K (S n) zero w (v w a n)))
+  setup = λ w a q n → T.makeRun o (S n) (v w a n) (Lo.V.lowS n) (cover n _) (valid w a q n)
+  inner : ∀ w a n → read (proj₁ (v w a (suc n))) ≼ read (proj₁ (eval (bs r₀) w a (suc (step zero))))
+  inner (inc z q) a n = ≼l 0 (≼l n (≼-refl _))
+  inner (ink q) a n = ≼l 0 (≼l n (≼-refl _))
+  inner (inu ws) a n = ≼l 0 (≼l n (≼-refl _))
+
+  data Route (q : zero ≤ j) : zero ≤ U.sc j → Set where
+    select : Route q (inc tt q)
+    every : ∀ {ws : Ch sS → zero ≤ j} → q Relation.Binary.PropositionalEquality.≡ ws tt → Route q (inu ws)
+  send : ∀ {w q} → Route q w → (a : Tr⁺ zero) → ∀ n →
+    read (proj₁ (v q a (suc n))) ≼ read (proj₁ (ψ (U.sc j) (ok r) (bs r) zero w a (proj₁ (Ωt (U.sc j)))))
+  send {q = q} select a n = ≼-trans (inner q a n)
+    (node-ge (kp (U.sc j) (ok r) pos (inc tt q)) (λ z → ψ (U.sc j) (ok r) (bs r) zero (inc tt q) a (body z)) step 1)
+  send {w = inu ws} (every refl) a n = ≼-trans (inner (ws tt) a n)
+    (node-ge (kp (U.sc j) (ok r) pos (inu ws)) (λ z → ψ (U.sc j) (ok r) (bs r) zero (inu ws) a (body z)) step 1)

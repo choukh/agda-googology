@@ -1,0 +1,77 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20IdealRetained where
+open import Data.Nat.Base using (ℕ)
+open import Data.Product using (_×_; _,_; proj₁)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+import OCF.Lean.YiFreshBlock as Y
+import OCF.Lean.YiFreshFold as O
+import OCF.Lean.YiFreshValRead as V
+import OCF.Lean.YiUpBlock as U
+import OCF.Lean.YiUpFold as F
+import OCF.Lean.YiPhiBlock as P
+import OCF.Lean.YiNMSharp as I
+import OCF.Lean.YiRWOps as V′
+open import OCF.Lean.YiUpCheck using (one; two)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans)
+import B12Omega3Ref as Ref
+open import WVOne using (lvl1)
+open import WKShape using (lvl3)
+import W4Fold as W
+import W4Block
+import B18SharpMacro
+import B12Terminal as T
+import B12ActualSlots as C
+import B13SeedOuter as Real
+import B17SharpFeed as Feed
+import B17SharpUpdate as Update
+import B18SharpEffect as Effect
+import B18SharpHead as Head
+import B18SharpClosed as Known
+open import B13SharpOne using (r₁)
+open import B14SharpStack using (oR)
+open import B14SharpTwo using (r₂)
+open import B20IdealRel using (H; Ω¹; Ω²; nj)
+import B20IdealTwo as Two
+import B20IdealThree as A
+import B20IdealPhysical as X
+
+path : one P.≤ two
+path = P.ins P.self
+branch : Y.Tr one → Y.Tr two
+branch u = O.next (U.Up one (U.down {j = two} U.stop tt) (O.Ωt two) u)
+step : Y.Tr one → Y.Tr one
+step u = F.ψs two tt A.model one path (O.Ωt one) (branch u)
+track = O.iter step Y.zero
+out = λ n → F.ψ⊥ two tt A.model (branch (track n))
+ret = Ref.at (Ref.at (X.raw 2) 0) 0
+-- Here the old self-fold really retains every legal one-level argument.
+actual-shape : ret ≡ V.read (Y.lim (O.cum out))
+actual-shape = refl
+below : ∀ n → V.read (out n) ≼ X.raw 2
+below n = ≼-trans (V.limcum≽ out n (≼-refl _))
+  (≼-trans (Ref.at-below (Ref.at (X.raw 2) 0) 0) (Ref.at-below (X.raw 2) 0))
+first : V.read (out 0) ≡ X.raw 1
+first = refl
+
+module Link (lem : LEM) where
+  open I.Sharp lem
+  open Two.At lem using (mid₂; mid)
+  open Update.Update lem using (w₁)
+  open Effect.Effects lem using (module Models)
+  u = proj₁ (V′.next⁺ (V′.Ωt r₂))
+  index₁ = proj₁ (mid B♯ (V′.Ωt r₁) u)
+  old-index : H (track 1) index₁
+  old-index = mid₂ B♯ A.model Ω¹ (V′.Ωt r₁) Ω¹ (nj _ Ω²)
+
+  module Physical (r : T.Run lvl3) (hr : C.Covered r) where
+    module M = Real.At r
+    module E = Head.Head.At lem M.c⁺ (hr _ (W4Block.inc tt W4Block.self))
+    actual = proj₁ (W.stepS M.G M.st1 lvl1 w₁)
+    linked : Feed.Feed.Linked lem actual index₁
+    linked = B18SharpMacro.Macro.State.one (Models.change (E.in-G 0) B♯ M.st1 (Known.Closed.Run.start lem r hr))
+
+    both : H (track 1) index₁ × Feed.Feed.Linked lem actual index₁
+    both = old-index , linked

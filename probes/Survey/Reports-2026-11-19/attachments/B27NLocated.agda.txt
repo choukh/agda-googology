@@ -1,0 +1,64 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实 χ 输入恢复的森林可取得任意深的原首下标，同时其 W4 层号编译使用的塔号也随之无界。
+module B27NLocated where
+
+open import Data.Nat.Base using (ℕ; zero; suc; _≤_; s≤s; z≤n)
+open import Data.Nat.Properties using (≤-refl; ≤-pred; ≤-trans; m≤m⊔n)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import OCF.Align.EboLeanBase using (c[]; c∷)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-suc; ≼-refl; ≼-trans)
+import B17Cofinal as C
+import B25DTrack as R
+import B26CForest as F
+import B26CLift as U
+import B26CMeaning as M
+import B26Depth as D
+import B26Names as N
+import B27NHead as H
+import B27NOrbit as O
+import B27NMeaning as G
+import B27NPlaces as P
+import B27NReceipts as Run
+
+grade : ∀ {t} (p : F.Pure t) → C.depth t ≤ P.floor (P.encode p)
+grade F.empty = z≤n
+grade (F.node u F.empty) = s≤s (grade u)
+grade (F.node u r@(F.node _ _)) = s≤s (≤-trans (grade u) (m≤m⊔n (P.floor (P.encode u)) (P.floor (P.encode r))))
+
+towers : ∀ n → P.floor (P.encode (U.pure-tower n)) ≡ suc n
+towers zero = refl
+towers (suc n) = cong suc (towers n)
+
+record Seen (v : N.T₀) : Set where
+  constructor seen
+  field
+    site : P.Place
+    original : N.Name
+    exact : v ≡ N.value original
+    counted : D.height original ≤ suc (P.floor site)
+open Seen
+
+measure : ∀ b {v} (w : Seen v) → L.suc (N.value (H.child (H.child b))) ≼ v → suc (D.height b) ≤ P.floor (site w)
+measure b w d = ≤-pred (subst (_≤ suc (P.floor (site w))) (cong suc (H.exact-height b))
+   (subst (_≤ suc (P.floor (site w))) (H.exact-height (H.child b))
+    (≤-trans (D.ordered a (original w) raw) (counted w))))
+  where
+  a = H.child (H.child b)
+  raw = subst (N.value a ≼_) (exact w)
+    (≼-trans {a = N.value a} {b = L.suc (N.value a)} (≼-suc (≼-refl (N.value a))) d)
+
+module Classical (lem : LEM) where
+  module S = G.Classical lem
+  opaque
+    unfolding G.Classical.response
+    decode : ∀ n → Seen (S.response n)
+    decode n = seen (P.encode X.pure) (N.named X.out X.out-normal (c∷ c[]) X.out-tree) refl (s≤s (grade X.pure))
+      where module X = M.Classical.At lem (R.χ n) (O.point n)
+
+  allocate : ∀ b → Σ ℕ (λ n → (suc (D.height b) ≤ P.floor (site (decode n))) ×
+             (L.suc (N.value (H.child (H.child b))) ≼ S.response n))
+  allocate b = let n , d = S.lifted (H.child b) in n , measure b (decode n) d , d
+

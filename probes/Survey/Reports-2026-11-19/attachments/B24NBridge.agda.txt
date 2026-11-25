@@ -1,0 +1,51 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24NBridge where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; 𝟏; read)
+open import WKShape using (lvl3; Ψ₃; ok₃)
+open import WKGen using (node-ge)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; p₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼-suc; ≼-refl; ≼-trans; ≅→≼)
+import B11OuterCore as C
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B12Omega3Ref as Ref
+import B12Omega3Cuts as U
+import B12Update as Seed
+import B13OrbitFeed as O
+import B13SeedOuter as Outer
+import B13Target as P
+import B15OrbitAction as A
+import B15OrbitModel as M
+import B17OrbitModel as Model
+import B17OrbitTower as T
+import B18RefDepth as H
+import B18OrbitRows as Old
+import B18OrbitWorld as W
+import B22RowPrefix as B
+import B22RowLive as V
+import B22RowVariable as Var
+import B22RowWhole as Init
+import B21RowDynamics as Dy
+import B21RowTheta as Th
+open import WVTwo using (T₁)
+
+module At (G : Op M.X₁) (base : Model.Both Old.m G A.base) (S : St M.X₁) (init : V.Present B.empty (M.pull S))
+          (inner : 𝟏 ≼ read (proj₁ (S zero Old.Out.ip)))
+          (tree : Tr⁺ lvl1) (y : T₁) (ry : y L.≅ y) (v : Th.Vec) (fit : Th.Fits v y) (index : Dy.Index tree v) where
+  oper = op (E ok₂ O.D₁ (proj₁ tree) G) (Einf ok₂ O.D₁ (proj₁ tree) G)
+  open Var.Append {p = L.zero} B.empty y ry v fit using (a; scalar)
+  opaque
+    models : Model.Both Old.m oper a
+    models = index 0 Old.m (λ _ → refl) 0 idM (λ _ → refl) G A.base base
+    in-pack : ∀ u → 𝟏 ≼ read (proj₁ u) → Old.Out.Pack L.zero (B.e B.empty) S u
+    in-pack u hu = Old.Out.packed (Seed.seeds hu (V.lower init C.zpath) (V.struct init)) inner
+    part : ∀ t u → 𝟏 ≼ read (proj₁ u) → L.ψ⁰ (P.co₁ y) ≼ read (proj₁ (run oper S zero t u))
+    part t u hu = ≼-trans (≅→≼ (L.ψ⁰-≅ (L.≅-sym (L.≅-trans scalar (U.left-unit Ref.idσ (P.co-pres ry))))))
+      (Seed.value-bound (Old.Out.seed (proj₁ models t L.zero (B.e B.empty) (B.rows B.empty) L.z≅ S u (in-pack u hu))))

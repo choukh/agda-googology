@@ -1,0 +1,88 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实第二塔的零号反馈孩子先携带整行 [1]，随后在一次真实反馈中到达任意有限层，全部零槽和显式底一起保住。
+module B20OldRoom where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst; sym)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; read; h₁)
+open import WVTwo using (◃→≼)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; s≼s; z≼)
+import B12Terminal as T
+import B12ActualSlots as A
+import B14PathHeight as P
+import B14Tower as W
+import B14Floor as F
+import B15TowerSeed as Initial
+import B17CellPrefix as Cell
+import B18TowerEmb
+import B18TowerSlots as Slots
+import B18CellState as C
+import B19RowSecond as Row
+import B19RowSecondParent as Old
+import B19OldFinite as E
+import B19OldSlots as G
+import B12EboRows as Out
+open T.Run
+
+High : ∀ {j} → T₀ → G.Frame j → Set
+High a f = ∀ w → a ≼ read (proj₁ (bs (G.state f) zero w))
+
+module Limit (a : T₀) (h : ℕ → W4Block.L) (r : T.Run (nd sL h)) (ws : ∀ n → zero ≤ h n) (ps : ∀ n → P.All (ws n)) (cr : A.Covered r) where
+  module Pick = G.Limit h r ws ps cr
+  slots : High a Pick.root → ∀ n → High a (proj₁ (Pick.child n))
+  slots b n w = ≼-trans (b (inc n w)) (T.inflate0 _ (ok r) (bs r) (inc n w) (bs r zero _) (T.prefix h n))
+
+module Step (a : T₀) (s : Sh) (h : Ch s → W4Block.L) (r : T.Run (nd sS (λ _ → nd s h)))
+    (ws : Ch sS → zero ≤ nd s h) (ps : ∀ k → P.All (ws k)) (cr : A.Covered r) where
+  module D = G.Positive s h r ws ps cr
+  open D.F.K using (K; S; r₀)
+  slots : High a D.root → ∀ n → High a (proj₁ (D.child n))
+  slots b zero w = ≼-trans (b (inc tt w)) (◃→≼ (inf K (bs r₀) zero w (bs r₀ zero w)))
+  slots b (suc n) w = ≼-trans (slots b n w) (◃→≼ (inf K (S n) zero w (S n zero w)))
+
+successor : ∀ a z (f : G.Frame (h₁ (suc z))) → High a f → ∀ n → High a (proj₁ (G.successor z f n))
+successor a zero (G.frame r .(inu _) (P.each ps) cr) b n w = b (inc tt w)
+successor a (suc z) (G.frame r .(inu _) (P.each {ws = ws} ps) cr) = Step.slots a sS (λ _ → h₁ z) r ws ps cr
+successor a (lim h d) (G.frame r .(inu _) (P.each {ws = ws} ps) cr) = Step.slots a sL (λ j → h₁ (h j)) r ws ps cr
+
+seek : ∀ a n z (h : L.natᶜ n ≼ read z) (f : G.Frame (h₁ z)) (clock : ℕ → ℕ) → High a f → High a (proj₁ (E.seek n z h f clock))
+seek a zero zero h f t hi = hi
+seek a zero (suc z) h f t hi = seek a 0 z z≼ (proj₁ (G.successor z f (t 0))) (λ j → t (suc j)) (successor a z f hi (t 0))
+seek a zero (lim g d) h (G.frame r .(inu _) (P.each {ws = ws} ps) cr) t hi = seek a 0 (g 0) z≼ (proj₁ (G.Limit.child _ r ws ps cr 0)) (λ j → t (suc j)) (Limit.slots a _ r ws ps cr hi 0)
+seek a (suc n) zero ()
+seek a (suc n) (suc z) (s≼s h) f t hi with F.split n z h
+... | inj₁ refl = hi
+... | inj₂ e = seek a (suc n) z e (proj₁ (G.successor z f (t 0))) (λ j → t (suc j)) (successor a z f hi (t 0))
+seek a (suc n) (lim g d) (≼l j h) (G.frame r .(inu _) (P.each {ws = ws} ps) cr) t hi = seek a (suc n) (g j) h (proj₁ (G.Limit.child _ r ws ps cr j)) (λ k → t (suc k)) (Limit.slots a _ r ws ps cr hi j)
+
+r = Old.r
+base : ∀ w → Row.previous ≼ read (proj₁ (bs r zero w))
+base w = subst (λ b → Row.previous ≼ read (proj₁ (b zero w))) (sym (Slots.At.all 1 zero)) (≼-trans Old.hb (Old.append (Slots.slots (tw 1) 1 zero w) (B18TowerEmb.standard 1)))
+inner = T.tower-child r 1
+z = T.index1 r 1
+cov = A.enter (sΩ zero) h₁ r z zero Old.cr
+top = G.frame inner (z≤ _) (P.standard _) cov
+into : G.value top ≼ Out.child 2
+into = ≼-trans (T.tower-ge r 1) (Cell.At.S.lift-value 1 0)
+
+module At (n : ℕ) (clock : ℕ → ℕ) where
+  lower = Initial.First.finite r Old.cr n
+  located = E.seek n z lower top clock
+  found = proj₁ located
+  actual = G.state found
+  covered : A.Covered actual
+  covered = G.cover found
+  all : ∀ w → Row.previous ≼ read (proj₁ (bs actual zero w))
+  all = seek Row.previous n z lower top clock (λ w → base (inc z w))
+  input : Row.previous ≼ read (proj₁ (β actual))
+  input = ≼-trans Old.hv (G.start (proj₂ located))
+  value : read (T.value actual) ≼ Out.child 2
+  value = subst (λ p → W.valueAt actual p ≼ Out.child 2) (F.normal n (G.all found)) (≼-trans (G.bound (proj₂ located)) into)
+module Three = At 3 (λ _ → 0)

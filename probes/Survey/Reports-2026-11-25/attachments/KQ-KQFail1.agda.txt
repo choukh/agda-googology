@@ -1,0 +1,12 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- KQ 预期失败 (现行块): 后继一步的自然路径. 只为取首个错误原文.
+module KQFail1 where
+
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁)
+open import W4Block
+open import W4Ops
+open import KQRead
+
+lev-step : (c : Tr zero) → lev c ⊑ lev (suc c)
+lev-step c = inc (proj₁ (Ωt (h₁ c))) (inc tt self)

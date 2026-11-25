@@ -1,0 +1,75 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B20RowPrefix where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import YiLAB7Replay using (Ω₂ᴸ)
+open import WSShadow using (lC; zC)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≅→≼; ≼-refl; ≼-trans)
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+import B13Target as P
+import B12LimitRef as D
+import B14RefFixed as K
+import B14RefDescribed as B
+import B15OrbitAction as A
+import B15RefRaise as Ar
+import B17OrbitTower as T
+import B17RefTower as Fit
+import B17RefVector as V
+import B18RefDelta as Z
+import B19RowPair as Pair
+import B19RowWorld as W
+import B19RowSecond as S
+import B20RowIndex as I
+
+v : ℕ → V.Vector
+v zero = T.semK
+v (suc k) = I.node 0 k
+fits : ∀ n → V.Fits (v n) (I.u n)
+fits zero = Fit.sem
+fits (suc k) = I.fits 0 k
+reg : ∀ n → I.u n L.≅ I.u n
+reg n = P.refl-left (I.shape n)
+
+a = λ n → T.run (v n 0) A.base
+stage : ℕ → Lev₂
+stage = λ n → A.f (a n) L.zero
+e = λ n → A.s (a n) zC
+
+stage-co : ∀ n → stage n L.≅ P.co₁ (I.u n)
+stage-co n = L.≅-trans (fits n 0 A.base L.zero L.z≅ (Ar.arithmetic 0) L.z≅)
+  (U.left-unit R.idσ (P.co-pres (U.left-unit (λ t → t) (reg n))))
+
+input : ∀ n → P.feed (P.family 1) n L.≅ I.u n
+input zero = L.Ω-refl _
+input (suc n) = Z.at-zero (L.tr⁻-≅ (L.≅ᴵ-refl _) (input n))
+source-stage : ∀ n → stage n L.≅ P.asked 1 n
+source-stage n = L.≅-trans (stage-co n) (P.co-pres (L.≅-sym (L.tr⁻-≅ (L.≅ᴵ-refl _) (input n))))
+
+q : Lev₂
+q = L.lim stage
+shadow = lC e
+rows : D.Described q shadow
+rows = D.limit stage e (λ n → A.rows (a n) B.zero-row)
+rp = P.pass-pres (L.Ω-refl (L.suc (L.suc L.zero)))
+rq : q L.≅ q
+rq = L.l≅ (λ n → P.refl-left (stage-co n))
+sig : Pair.Pair
+sig = L.ψ⁰ q , K.collapse q
+same : Pair.PairFit sig S.p
+same = L.l≅ (λ n → L.ψ⁰-≅ (source-stage n)) , L.l≅ (λ n → K.pres (source-stage n))
+self : Pair.PairFit sig q
+self = L.ψ⁰-≅ rq , K.pres rq
+next = W.Higher.Start Pair.W sig
+left : Pair.PairFit next (S.p L.+ Ω₂ᴸ)
+left = W.Higher.start Pair.W {a = sig} {p = S.p} rp same
+right : Pair.PairFit next (q L.+ Ω₂ᴸ)
+right = W.Higher.start Pair.W {a = sig} {p = q} rq self
+scalar : L.ψ⁰ (S.p L.+ Ω₂ᴸ) L.≅ L.ψ⁰ (q L.+ Ω₂ᴸ)
+scalar = L.≅-trans (L.≅-sym (proj₁ left)) (proj₁ right)
+upper : K.collapse (S.p L.+ Ω₂ᴸ) L.≅ K.collapse (q L.+ Ω₂ᴸ)
+upper = L.≅-trans (L.≅-sym (proj₂ left)) (proj₂ right)
+
+

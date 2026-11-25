@@ -1,0 +1,39 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 在任意不可数节点的真实链上，每个孩子的值进入父节点，有覆盖的槽也传到孩子。
+module B15Spine where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; cong)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; z≼)
+open import WKGen using (node-ge)
+open import WVOne using (read; T₀)
+open import WVTwo using (◃→≼)
+import B12Terminal as T
+import B12ActualSlots as A
+open T.Run
+
+module Cardinal (k : W4Block.L) (h : Tr k → W4Block.L) (r : T.Run (nd (sΩ k) h)) where
+  p : Pos (nd (sΩ k) h)
+  p = inj₁ (inj₁ tt)
+  b : Tr k → Tr (nd (sΩ k) h)
+  b z = proj₁ (upz {h = h} z (Ωt (h z)))
+  step : Tr k → Tr k
+  step z = proj₁ (ψ _ (ok r) (bs r) k (ink self) (bs r k (ink self)) (b z))
+  ix = iter step zero
+  child : ∀ n → T.Run (h (ix n))
+  child n = T.enterRun (sΩ k) h r (ix n) zero
+  lift-value : ∀ n → read (T.value (child n)) ≼ read (T.value r)
+  lift-value n = node-ge (kp _ (ok r) p (z≤ _)) (λ z → ψ _ (ok r) (bs r) zero (z≤ _) (β r) (b z)) step n
+  cover : A.Covered r → ∀ n → A.Covered (child n)
+  cover hr n = A.enter (sΩ k) h r (ix n) zero hr
+
+branch : (k : W4Block.L) (c : Tr k) → W4Block.L
+branch k c = k ⊕ ↑ k c

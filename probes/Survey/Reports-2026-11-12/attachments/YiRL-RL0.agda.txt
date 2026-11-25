@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module RL0 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Bool using (true)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_; _++_; replicate)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym; trans; cong)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRBSib
+open import OCF.Lean.YiRBCrit
+open import OCF.Lean.YiKVRel using (M⁰; mL)
+open import OCF.Lean.YiKVInst using (Ωω; fsnΩω)
+import OCF.Align.EboLeanDef as E
+open E using (cof; cω; cΩ; fsn; natT)
+open import OCF.Lean.YiMENote using (cofψω; fsnψω)
+open import OCF.Lean.YiANFam using (ψᴺ; Ωᴺ)
+open import OCF.Lean.YiCLFam using (nat; fn; M)
+open import OCF.Lean.YiCLPhi using (ωᵀ; rep1)
+open import OCF.Lean.YiCLCrit using (ωᶜ; ωᶜ-M)
+
+-- 判据的陈述: c = ω 那棵规范树, η = ω
+Critω : (Tr zero → Tr⁺ two) → Tr zero → Set
+Critω g c = M 2 (ψᴺ 2 (E.Ωt ωᵀ)) (proj₁ (g c))
+
+stˢ stᵗ : Set
+stˢ = Critω gˢ ωᶜ
+stᵗ = Critω gᵗ ωᶜ
+
+pre-okω : M⁰ ωᵀ ωᶜ
+pre-okω = ωᶜ-M
+
+-- 参照的余尾与基本列
+cofω : cof (ψᴺ 2 (E.Ωt ωᵀ)) ≡ cω
+cofω = refl
+
+fsnω : ∀ k → fsn (ψᴺ 2 (E.Ωt ωᵀ)) k ≡ ψᴺ 2 (Ωᴺ k)
+fsnω k = trans (fsnψω (natT 2) (E.Ωt ωᵀ) k (Ωω ωᵀ refl))
+               (cong (ψᴺ 2) (trans (fsnΩω ωᵀ k refl) (cong E.Ωt (rep1 k))))
+
+of-fsn : ∀ {x} → (∀ k → M 2 (ψᴺ 2 (Ωᴺ k)) x) → M 2 (ψᴺ 2 (E.Ωt ωᵀ)) x
+of-fsn {x} h = mL cofω (λ k → subst (λ t → M 2 t x) (sym (fsnω k)) (h k))
+
+-- 基本列前三项的余尾
+cof0 : cof (ψᴺ 2 (Ωᴺ 0)) ≡ cω
+cof0 = refl
+cof1 : cof (ψᴺ 2 (Ωᴺ 1)) ≡ cΩ []
+cof1 = refl
+cof2 : cof (ψᴺ 2 (Ωᴺ 2)) ≡ cΩ (natT 1)
+cof2 = refl
+cof3 : cof (ψᴺ 2 (Ωᴺ 3)) ≡ cω
+cof3 = refl
+
+-- c = ω 处折的层与路径
+lvω : h₁ (nat 2 + ωᶜ) ≡ nd sL (λ n → h₁ (nat 2 + nat n))
+lvω = refl
+pthω : wˢ ωᶜ ≡ inc zero self
+pthω = refl
+lvωᵗ : two ⊕ ↑ zero ωᶜ ≡ nd sL (λ n → two ⊕ ↑ zero (nat n))
+lvωᵗ = refl
+pthωᵗ : lift {true} two (↑ zero ωᶜ) ≡ inu (λ n → lift two (↑ zero (nat n)))
+pthωᵗ = refl

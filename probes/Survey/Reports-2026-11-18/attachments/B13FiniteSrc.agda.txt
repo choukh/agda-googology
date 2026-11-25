@@ -1,0 +1,59 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- src 二层记号上的统一有限升阶。各阶段的尾分别右加 ω、ω²、……，汇到 P+ω^ω。
+module B13FiniteSrc where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Relation.Binary.PropositionalEquality using (_≡_)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼l; l≼)
+open import WVOne using (T₀; 𝟏; read; Mv-mono)
+import OCF.Align.Level as LV
+open import W4Block
+open import W4Fold using (EBOᶜ)
+open import B12TerminalTail using (mulω)
+open import B12TerminalSrc using (two; src-step)
+import B12Terminal as T
+import WKTower as W
+open import B13FiniteLift
+open import B13FiniteTower
+
+Src = S.Ord two
+out : Src → T₀
+out a = tr₀ (S.ψ₀ a)
+
+opS : ℕ → Src → Src
+opS zero a = S.suc a
+opS (suc n) a = S.lim (S.iter (opS n) a)
+
+match : (n : ℕ) (a : Src) (x : T₀) → out a ≼ x → out (opS n a) ≼ height mulω n x
+match zero a x e = ≼-trans (src-step a) (Mv-mono e (≼-refl 𝟏))
+match (suc n) a x e = l≼ (λ k → ≼l k (along k))
+  where
+  along : (k : ℕ) → out (S.iter (opS n) a k) ≼ iter (height mulω n) x k
+  along zero = e
+  along (suc k) = match n _ _ (along k)
+
+stages : Src → ℕ → Src
+stages a zero = a
+stages a (suc n) = opS (suc n) (stages a n)
+
+omegaω : Src → Src
+omegaω a = S.lim (stages a)
+
+source-at : (a : Src) (n : ℕ) → out (stages a n) ≼ constant mulω (out a) n
+source-at a zero = ≼-refl _
+source-at a (suc n) = match (suc n) _ _ (source-at a n)
+
+module Calibrated (j : L) (start : ℕ) (p : W.gL start ≡ sc j) (a : Src) (seed : Bound (sc j) (out a)) where
+  module B = Actual j start p mulω (out a) (timesω (sc j)) seed
+
+  finite : (n : ℕ) → out (stages a n) ≼ read (T.value (T.finiteRun (iter suc start n)))
+  finite n = ≼-trans (source-at a n) (B.lower n)
+
+  omega-level : Bound W.Lω (out (omegaω a))
+  omega-level r hr = ≼-trans (l≼ (λ n → ≼l n (source-at a n))) (B.at-omega r hr)
+
+  terminal : out (omegaω a) ≼ read EBOᶜ
+  terminal = l≼ (λ n → ≼-trans (finite n) (T.finite-ge (iter suc start n)))

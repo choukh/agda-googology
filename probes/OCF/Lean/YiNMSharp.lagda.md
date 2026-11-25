@@ -1,0 +1,161 @@
+# 按值比较的折叠 ψ♯ (验收侧, 重写进仓库)
+
+> 判决: 验收侧定义, 条件 (排中律作模块参数), 不进成品. 内容是留档 `RedefS1` 的 ψ♯ 重写: 槽位按值选 (`slot♯`), 换型 `τ`, 保留判定 `kp♯`, 折叠 `ψ♯` 与第一位置单调 `mono♯`; 值序与经典二分取自 `YiRVLevel`.
+> 不否定什么, 也没有值定理. 项模型在 `YiNMTerm`, 命名关系在 `YiNMName`.
+
+```agda
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+module OCF.Lean.YiNMSharp where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst)
+open import Induction.WellFounded using (Acc; acc)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Keep; node⁺; nodeLe)
+open import OCF.Lean.YiRVLevel
+```
+
+## 值序良基, 路径与槽位在值序之下
+
+```agda
+acc-≼ : ∀ {a b} → a ≼ᴸ b → Acc _≺ᴸ_ b → Acc _≺ᴸ_ a
+acc-≼ {a} {b} d (acc r) = acc (λ {y} lt → r (≺≼ a b lt d))
+
+wfL : ∀ a → Acc _≺ᴸ_ a
+wfL zero     = acc (λ ())
+wfL (nd s h) = acc (λ { (c , d) → acc-≼ d (wfL (h c)) })
+
+path→≼ : ∀ {b j} (ℓ : L) → Ok ℓ → Pth b j ℓ → j ≼ᴸ ℓ
+path→≼ ℓ o self = ≼ᴸ-refl ℓ
+path→≼ (nd s h) o (inc c v) = up≼ c (path→≼ (h c) (proj₂ o c) v)
+path→≼ (nd s h) o (inu vs) = up≼ (c₀ s) (path→≼ (h (c₀ s)) (proj₂ o (c₀ s)) (vs (c₀ s)))
+path→≼ (nd (sΩ k) h) o (ink v) =
+  up≼ zero (≼ᴸ-trans (path→≼ k (proj₁ (proj₁ o)) v) (path→≼ (h zero) (proj₂ o zero) (proj₂ (proj₁ o) zero)))
+
+mutual
+  posLt : (ℓ : L) → Ok ℓ → (p : Pos ℓ) → at ℓ p ≺ᴸ ℓ
+  posLt (nd s h) o (inj₂ (c , t)) = c , pos≼⁼ (h c) (proj₂ o c) t
+  posLt (nd (sΩ k) h) o (inj₁ t) =
+    zero , ≼ᴸ-trans (pos≼⁼ k (proj₁ (proj₁ o)) t) (path→≼ (h zero) (proj₂ o zero) (proj₂ (proj₁ o) zero))
+
+  pos≼⁼ : (a : L) → Ok a → (t : Pos⁼ a) → proj₁ (sl⁼ a t) ≼ᴸ a
+  pos≼⁼ a o (inj₁ _) = ≼ᴸ-refl a
+  pos≼⁼ a o (inj₂ p) = ≺→≼ a (posLt a o p)
+
+mutual
+  toTr : (ℓ : L) (p : Pos ℓ) → Br ℓ p → Tr (at ℓ p)
+  toTr (nd s h) (inj₂ (c , t)) = toTr⁼ (h c) t
+  toTr (nd (sΩ k) h) (inj₁ t) = toTr⁼ k t
+
+  toTr⁼ : (a : L) (t : Pos⁼ a) → Br⁼ a t → Tr (proj₁ (sl⁼ a t))
+  toTr⁼ a (inj₁ _) x = x
+  toTr⁼ a (inj₂ p) x = toTr a p x
+
+mutual
+  to-from : (ℓ : L) (p : Pos ℓ) (x : Tr (at ℓ p)) → toTr ℓ p (fromBr ℓ p x) ≡ x
+  to-from (nd s h) (inj₂ (c , t)) x = to-from⁼ (h c) t x
+  to-from (nd (sΩ k) h) (inj₁ t) x = to-from⁼ k t x
+
+  to-from⁼ : (a : L) (t : Pos⁼ a) (x : Tr (proj₁ (sl⁼ a t))) → toTr⁼ a t (proj₂ (sl⁼ a t) x) ≡ x
+  to-from⁼ a (inj₁ _) x = refl
+  to-from⁼ a (inj₂ p) x = to-from a p x
+```
+
+## 槽位选取, 换型, 保留判定, 折叠
+
+`τ` 把值不高的层号的树搬进值不低的层号 (对源层号的 `Acc` 递归). `ψ♯` 五行: 目标层 j 任意, 底族对一切层号给值; 结点按值判保留或走链; 嵌入行进孩子层, 底族取左项朝一切层的折叠.
+
+```agda
+module Sharp (lem : LEM) where
+  open Cl lem public
+
+  slot♯ : (ℓ v : L) → v ≺ᴸ ℓ → Σ (Pos ℓ) λ p → (at ℓ p ≼ᴸ v) × (v ≼ᴸ at ℓ p)
+  slot♯ zero v ()
+  slot♯ (nd s h) v (c , d) with Dk (h c) v
+  ... | inj₁ e  = inj₂ (c , inj₁ tt) , e , d
+  ... | inj₂ lt with slot♯ (h c) v lt
+  ...   | p , e , e′ = inj₂ (c , inj₂ p) , e , e′
+
+  sp : (a′ a : L) → Ok a′ → (p′ : Pos a′) → a′ ≼ᴸ a → Pos a
+  sp a′ a o′ p′ le = proj₁ (slot♯ a (at a′ p′) (≺≼ a′ a (posLt a′ o′ p′) le))
+
+  se : (a′ a : L) (o′ : Ok a′) (p′ : Pos a′) (le : a′ ≼ᴸ a) → at a (sp a′ a o′ p′ le) ≼ᴸ at a′ p′
+  se a′ a o′ p′ le = proj₁ (proj₂ (slot♯ a (at a′ p′) (≺≼ a′ a (posLt a′ o′ p′) le)))
+
+  mutual
+    τ : (a′ a : L) → Ok a′ → Ok a → Acc _≺ᴸ_ a′ → a′ ≼ᴸ a → Tr a′ → Tr a
+    τ a′ a o′ o ac le zero = zero
+    τ a′ a o′ o ac le (suc x) = suc (τ a′ a o′ o ac le x)
+    τ a′ a o′ o ac le (lim f m) = lim (λ n → τ a′ a o′ o ac le (f n)) (λ n → τm a′ a o′ o ac le (m n))
+    τ a′ a o′ o (acc r) le (Ω p′ g) = Ω (sp a′ a o′ p′ le) (λ z → τ a′ a o′ o (acc r) le
+      (g (fromBr a′ p′ (τ (at a (sp a′ a o′ p′ le)) (at a′ p′) (Ok-at a o (sp a′ a o′ p′ le)) (Ok-at a′ o′ p′)
+         (r (≼≺ a′ (se a′ a o′ p′ le) (posLt a′ o′ p′))) (se a′ a o′ p′ le) (toTr a (sp a′ a o′ p′ le) z)))))
+    τ (nd s′ h′) zero o′ o ac (n≼ f) (up x c y e) = ⊥-elim (f c)
+    τ (nd s′ h′) (nd s h) o′ o (acc r) (n≼ f) (up x c y e) =
+      up (τ (nd s′ h′) (nd s h) o′ o (acc r) (n≼ f) x) (proj₁ (f c))
+         (τ (h′ c) (h (proj₁ (f c))) (proj₂ o′ c) (proj₂ o (proj₁ (f c))) (r (c , ≼ᴸ-refl (h′ c))) (proj₂ (f c)) y)
+         (τm (h′ c) (h (proj₁ (f c))) (proj₂ o′ c) (proj₂ o (proj₁ (f c))) (r (c , ≼ᴸ-refl (h′ c))) (proj₂ (f c)) e)
+
+    τm : (a′ a : L) (o′ : Ok a′) (o : Ok a) (ac : Acc _≺ᴸ_ a′) (le : a′ ≼ᴸ a) {x y : Tr a′}
+       → a′ ⊢ x ◃ y → a ⊢ τ a′ a o′ o ac le x ◃ τ a′ a o′ o ac le y
+    τm a′ a o′ o ac le ◃s = ◃s
+    τm a′ a o′ o ac le (◃l n) = ◃l n
+    τm a′ a o′ o (acc r) le (◃w {p = p′} {g = g}) =
+      subst (λ t → a ⊢ τ a′ a o′ o (acc r) le (g (fromBr a′ p′ (τ (at a (sp a′ a o′ p′ le)) (at a′ p′)
+                 (Ok-at a o (sp a′ a o′ p′ le)) (Ok-at a′ o′ p′) (r (≼≺ a′ (se a′ a o′ p′ le) (posLt a′ o′ p′)))
+                 (se a′ a o′ p′ le) t)))
+               ◃ τ a′ a o′ o (acc r) le (Ω p′ g))
+            (to-from a (sp a′ a o′ p′ le) zero) ◃w
+    τm (nd s′ h′) zero o′ o ac (n≼ f) (◃u x c y e) = ⊥-elim (f c)
+    τm (nd s′ h′) (nd s h) o′ o (acc r) (n≼ f) (◃u x c y e) = ◃u _ _ _ _
+    τm (nd s′ h′) zero o′ o ac (n≼ f) (◃c x c d) = ⊥-elim (f c)
+    τm (nd s′ h′) (nd s h) o′ o (acc r) (n≼ f) (◃c x c d) =
+      ◃c _ _ (τm (h′ c) (h (proj₁ (f c))) (proj₂ o′ c) (proj₂ o (proj₁ (f c))) (r (c , ≼ᴸ-refl (h′ c))) (proj₂ (f c)) d)
+    τm a′ a o′ o ac le (◃t d d′) = ◃t (τm a′ a o′ o ac le d) (τm a′ a o′ o ac le d′)
+
+  pickK : (ℓ : L) (o : Ok ℓ) (p : Pos ℓ) (j : L) (oj : Ok j)
+        → (j ≼ᴸ at ℓ p) ⊎ (at ℓ p ≺ᴸ j) → Keep j (Br ℓ p) (fromBr ℓ p zero)
+  pickK ℓ o p j oj (inj₁ _)  = nothing
+  pickK ℓ o p j oj (inj₂ lt) with slot♯ j (at ℓ p) lt
+  ... | q , e , _ = just (q ,
+      (λ z → fromBr ℓ p (τ (at j q) (at ℓ p) (Ok-at j oj q) (Ok-at ℓ o p) (wfL (at j q)) e (toTr j q z))) ,
+      cong (λ t → fromBr ℓ p (τ (at j q) (at ℓ p) (Ok-at j oj q) (Ok-at ℓ o p) (wfL (at j q)) e t)) (to-from j q zero))
+
+  kp♯ : (ℓ : L) (o : Ok ℓ) (p : Pos ℓ) (j : L) (oj : Ok j) → Keep j (Br ℓ p) (fromBr ℓ p zero)
+  kp♯ ℓ o p j oj = pickK ℓ o p j oj (Dk j (at ℓ p))
+
+  Base♯ : Set
+  Base♯ = (i : L) → Ok i → Tr⁺ i
+
+  B♯ : Base♯
+  B♯ i _ = Ωt i
+
+  mutual
+    ψ♯ : (ℓ : L) → Ok ℓ → Base♯ → (j : L) → Ok j → Tr⁺ j → Tr ℓ → Tr⁺ j
+    ψ♯ ℓ o B j oj β zero      = β
+    ψ♯ ℓ o B j oj β (suc x)   = next⁺ (ψ♯ ℓ o B j oj β x)
+    ψ♯ ℓ o B j oj β (lim f a) = lim⁺ (λ n → ψ♯ ℓ o B j oj β (f n)) (λ n → mono♯ ℓ o B j oj β (a n))
+    ψ♯ ℓ o B j oj β (Ω p g)   = node⁺ (kp♯ ℓ o p j oj) (λ z → ψ♯ ℓ o B j oj β (g z))
+      (λ z → fromBr ℓ p (proj₁ (ψ♯ ℓ o B (at ℓ p) (Ok-at ℓ o p) (B (at ℓ p) (Ok-at ℓ o p)) (g z))))
+    ψ♯ (nd s h) o B j oj β (up x c y e) =
+      ψ♯ (h c) (proj₂ o c) (λ i oi → ψ♯ (nd s h) o B i oi (B i oi) x) j oj (ψ♯ (nd s h) o B j oj β x) y
+
+    mono♯ : (ℓ : L) (o : Ok ℓ) (B : Base♯) (j : L) (oj : Ok j) (β : Tr⁺ j) {x y : Tr ℓ}
+          → ℓ ⊢ x ◃ y → j ⊢ proj₁ (ψ♯ ℓ o B j oj β x) ◃ proj₁ (ψ♯ ℓ o B j oj β y)
+    mono♯ ℓ o B j oj β ◃s = ◃l zero
+    mono♯ ℓ o B j oj β (◃l n) = ◃l n
+    mono♯ ℓ o B j oj β (◃w {p = p}) = nodeLe (kp♯ ℓ o p j oj) _ _
+    mono♯ (nd s h) o B j oj β (◃u x c y e) =
+      mono♯ (h c) (proj₂ o c) (λ i oi → ψ♯ (nd s h) o B i oi (B i oi) x) j oj (ψ♯ (nd s h) o B j oj β x) e
+    mono♯ (nd s h) o B j oj β (◃c x c d) =
+      mono♯ (h c) (proj₂ o c) (λ i oi → ψ♯ (nd s h) o B i oi (B i oi) x) j oj (ψ♯ (nd s h) o B j oj β x) d
+    mono♯ ℓ o B j oj β (◃t d d′) = ◃t (mono♯ ℓ o B j oj β d) (mono♯ ℓ o B j oj β d′)
+```

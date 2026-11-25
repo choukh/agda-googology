@@ -1,0 +1,35 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 字面嵌入沿 ≅ᴵ 的搬运: a 字面嵌入 b, b ≅ᴵ b′, 则 a 有一个 ≅ᴵ 的代表元字面嵌入 b′.
+module KEmbTr where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+
+import OCF.Align.Level as I
+open I using (Ordᴵ; Simᴵ; _<ᴵ_; _≅ᴵ_; _≺ᴵ_; _⊑ᴵ_; via; z≅; s≅; l≅; z⊑; s⊑; l⊑)
+
+-- ≅ᴵ 推出 ⊑ᴵ.
+≅→⊑ : ∀ {a b} → a ≅ᴵ b → a ⊑ᴵ b
+≅→⊑ {a = I.zero}    z≅     = z⊑
+≅→⊑ {a = I.suc a}   (s≅ e) = s⊑ e I.zero
+≅→⊑ {a = I.lim f s} (l≅ h) = l⊑ (λ n → I.⊑ᴵ-trans (≅→⊑ (h n)) (I.Sim→⊑ᴵ (λ q → I.lim n q)))
+
+SimTr : Ordᴵ → Ordᴵ → Set
+SimTr a b′ = Σ Ordᴵ (λ a′ → (a′ ≅ᴵ a) × Simᴵ a′ b′)
+
+simTr : ∀ a {b b′} → Simᴵ a b → b ≅ᴵ b′ → SimTr a b′
+simTr I.zero      σ e = I.zero , z≅ , λ ()
+simTr (I.suc a)   σ e with I.<-≅ (σ I.zero) e
+... | via {a′ = c} e′ q = I.suc c , s≅ (I.≅ᴵ-sym e′) , λ { I.zero → q ; (I.suc p) → I.<ᴵ-trans p q }
+simTr (I.lim f s) {b′ = b′} σ e = I.lim f′ s′ , l≅ eq , λ { (I.lim n p) → sm n p }
+  where
+  rec : ∀ n → SimTr (f n) b′
+  rec n = simTr (f n) (λ q → σ (I.lim n q)) e
+  f′ : ℕ → Ordᴵ
+  f′ n = proj₁ (rec n)
+  eq : ∀ n → f′ n ≅ᴵ f n
+  eq n = proj₁ (proj₂ (rec n))
+  sm : ∀ n → Simᴵ (f′ n) b′
+  sm n = proj₂ (proj₂ (rec n))
+  s′ : ∀ n → f′ n ⊑ᴵ f′ (suc n)
+  s′ n = I.⊑ᴵ-trans (≅→⊑ (eq n)) (I.⊑ᴵ-trans (s n) (≅→⊑ (I.≅ᴵ-sym (eq (suc n)))))

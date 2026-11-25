@@ -1,0 +1,88 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B15SharpAction where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+import Data.Sum
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; cong; subst)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW)
+import W4Block as B
+import W4Ops as W
+import W4Fold as F
+open import WVOne using (read; lvl1)
+open import WVTwo using (◃→≼)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; l≼; z≼; s≼s)
+open import B13SharpOne using (r₁; empty-slot)
+open import B14SharpStack
+open import B14SharpBound
+
+data Pref : Set where
+  id : Pref
+  addL : Pref → R.Tr r₁ → Pref
+
+plug : Pref → R.Tr r₁ → R.Tr r₁
+plug id y = y
+plug (addL A x) y = plug A (x V.+ y)
+
+block-plug : ∀ A x → plug A (block x) ≡ block (plug A x)
+block-plug id x = refl
+block-plug (addL A y) x = block-plug A (y V.+ x)
+
+module Action (lem : LEM) where
+  open I.Sharp lem
+  open Sim lem using (fold; after; append)
+
+  res : Base♯ → V.Tr⁺ R.zero → Pref → R.Tr r₁ → R.Tr R.zero
+  res D a A x = proj₁ (fold D a (plug A x))
+
+  Model : ∀ {X : F.Cx lvl1} → F.⟦ X ⟧ B.zero → R.Tr r₁ → F.Op X → Set
+  Model {X} ch x G = (D : Base♯) (a : V.Tr⁺ R.zero) (A : Pref) (S : F.St X)
+    (t : F.⟦ X ⟧ B.zero) (v : W.Tr⁺ B.zero) →
+    data≤ (res D a A R.zero) (proj₁ v) →
+    data≤ (res D (D R.zero tt) A R.zero) (proj₁ (S B.zero ch)) →
+    data≤ (res D a A x) (proj₁ (F.run G S B.zero t v))
+
+  lim-out : ∀ D a A f d {y} → (∀ n → data≤ (res D a A (f n)) y) → data≤ (res D a A (R.lim f d)) y
+  lim-out D a id f d h = l≼ h
+  lim-out D a (addL A x) f d h = lim-out D a A (λ n → x V.+ f n) (λ n → V.+-mono x (d n)) h
+
+  power : ∀ {X ch x G} → Model {X} ch x G → ∀ n D a A S t v →
+    data≤ (res D a A R.zero) (proj₁ v) →
+    data≤ (res D (D R.zero tt) A R.zero) (proj₁ (S B.zero ch)) →
+    data≤ (res D a A (V.iter (x V.+_) x n)) (proj₁ (F.itV G (suc n) S B.zero t v))
+  power {G = G} h zero D a A S t v hv hc = h D a A S t v hv hc
+  power {X} {ch} {x} {G} h (suc n) D a A S t v hv hc =
+    subst (λ u → data≤ (res D a (addL A x) (V.iter (x V.+_) x n)) (proj₁ u)) (shift (suc n) S t v)
+      (power h n D a (addL A x) (F.stepS G S) t (F.run G S B.zero t v)
+        (h D a A S t v hv hc) (h D (D R.zero tt) A S ch (S B.zero ch) hc hc))
+    where
+    ss : ∀ n S → F.itS G n (F.stepS G S) ≡ F.itS G (suc n) S
+    ss zero S = refl
+    ss (suc n) S = cong (F.stepS G) (ss n S)
+    shift : ∀ n S t v → F.itV G n (F.stepS G S) B.zero t (F.run G S B.zero t v) ≡ F.itV G (suc n) S B.zero t v
+    shift zero S t v = refl
+    shift (suc n) S t v rewrite ss n S | shift n S t v = refl
+
+  eop : ∀ {X mu} (T : F.TD {lvl1} X mu) → B.Tr mu → F.Op X → F.Op X
+  eop T y G = F.op (F.E oB T y G) (F.Einf oB T y G)
+
+  weak : ∀ {X ch x G H} → Model {X} ch x G → F.Rl G H → Model ch x H
+  weak h d D a A S t v hv hc = ≼-trans (h D a A S t v hv hc) (◃→≼ (d S B.zero t v))
+
+  count : ∀ {X ch} (T : F.TD {lvl1} X B.zero) (D′ : Base♯) (a′ : V.Tr⁺ r₁) (u : R.Tr R.zero) (y : B.Tr B.zero) (G : F.Op X) →
+    Model ch (proj₁ a′) G → data≤ u y → Model ch (proj₁ (ψ♯ R.zero tt D′ r₁ oR a′ u)) (eop T y G)
+  count T D′ a′ R.zero y G h e with W.zl y
+  ... | Data.Sum.inj₁ refl = h
+  ... | Data.Sum.inj₂ d = weak {G = G} {H = eop T y G} h (λ S i t v → F.Emono oB T G S i t v d)
+  count T D′ a′ (R.suc u) (B.suc y) G h (s≼s e) D a A S t v hv hc =
+    lim-out D a A _ _ (λ n → ≼l n (power (count T D′ a′ u y G h e) n D a A S t v hv hc))
+  count T D′ a′ (R.suc u) (B.lim f d) G h (≼l n e) D a A S t v hv hc =
+    ≼l n (count T D′ a′ (R.suc u) (f n) G h e D a A S t v hv hc)
+  count T D′ a′ (R.lim f d) y G h e D a A S t v hv hc =
+    lim-out D a A _ _ (λ n → count T D′ a′ (f n) y G h (≼-trans (≼l n (≼-refl _)) e) D a A S t v hv hc)
+

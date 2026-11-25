@@ -1,0 +1,285 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- review14 试验 E1: 空白页的块 (YiFreshBlock 不改) 上, 自身行改为 "沿孩子摊平并以 next 为后继" (liftT).
+-- 其余各行与 YiFreshFold 逐字相同. 交: J2 (refl), 单调, 保持合法, 闭项合法.
+module R14Up where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+
+open import OCF.Lean.YiFreshBlock
+open import OCF.Lean.YiFreshFold using (_+_; iter; next; cum; Ωt; ι; _≤_; self; ins; inl; ink; inb; posW; posW⁼; eqℕ; eqℕ-refl; kp; kp⁼; Base; base; b⊥; bs; B₀)
+open import OCF.Lean.YiFreshLegal using (_⊢_◃_; ◃s; ◃l; ◃w; ◃u; ◃c; ◃t; Leg; LegBr; LegBr⁼; LegCh; legFrom; +-mono; +-leg; ι-mono; ι-leg; zl; z◃s; Ωt-nz; Ωt-leg; Good; kp-ind; LN; LegB; LegB₀; iterInv; nextLN; cumLN)
+
+-- 摊平: 把 j 层的树 y 接到 ℓ 层的 X 上, 后继取 next. bd 在 j 的槽位上造 ℓ 层的结点.
+Build : L → L → Set
+Build ℓ j = (q : Pos j) → (Br j q → Tr ℓ) → Tr ℓ
+
+liftT : (ℓ j : L) → Build ℓ j → Tr ℓ → Tr j → Tr ℓ
+liftT ℓ j bd X zero    = X
+liftT ℓ j bd X (suc y) = next (liftT ℓ j bd X y)
+liftT ℓ j bd X (lim f) = lim (λ n → liftT ℓ j bd X (f n))
+liftT ℓ j bd X (Ω q g) = bd q (λ z → liftT ℓ j bd X (g z))
+liftT ℓ (suc a)  bd X (up y _ w) = liftT ℓ a (λ q → bd (inj₂ q)) (liftT ℓ (suc a) bd X y) w
+liftT ℓ (lim g)  bd X (up y n w) = liftT ℓ (g n) (λ q → bd (n , inj₂ q)) (liftT ℓ (lim g) bd X y) w
+liftT ℓ (Ωₗ k h) bd X (up y c w) = liftT ℓ (h c) (λ q → bd (inj₂ (c , inj₂ q))) (liftT ℓ (Ωₗ k h) bd X y) w
+liftT ℓ zero     bd X (up y () w)
+
+mutual
+  ψ⊥ : (ℓ : L) → Base ℓ → Tr ℓ → Tr zero
+  ψ⊥ ℓ B zero    = b⊥ B
+  ψ⊥ ℓ B (suc x) = next (ψ⊥ ℓ B x)
+  ψ⊥ ℓ B (lim f) = lim (λ n → ψ⊥ ℓ B (f n))
+  ψ⊥ ℓ B (Ω p g) = lim (cum (λ n → ψ⊥ ℓ B (g (iter step (fromBr ℓ p zero) n))))
+    where
+    step : Br ℓ p → Br ℓ p
+    step z = fromBr ℓ p (ψs ℓ B (at ℓ p) (posW ℓ p) (g z))
+  ψ⊥ (suc a)  B (up x _ y) =
+    ψ⊥ a (base (ψ⊥ (suc a) B x) (λ j w → ψs (suc a) B j (ins w) x)) y
+  ψ⊥ (lim g)  B (up x n y) =
+    ψ⊥ (g n) (base (ψ⊥ (lim g) B x) (λ j w → ψs (lim g) B j (inl n w) x)) y
+  ψ⊥ (Ωₗ k h) B (up x c y) =
+    ψ⊥ (h c) (base (ψ⊥ (Ωₗ k h) B x) (λ j w → ψs (Ωₗ k h) B j (inb c w) x)) y
+  ψ⊥ zero     B (up x () y)
+
+  ψs : (ℓ : L) → Base ℓ → (j : L) → j ≤ ℓ → Tr ℓ → Tr j
+  ψs ℓ B j w zero    = bs B j w
+  ψs ℓ B j w (suc x) = next (ψs ℓ B j w x)
+  ψs ℓ B j w (lim f) = lim (λ n → ψs ℓ B j w (f n))
+  ψs ℓ B j w (Ω p g) =
+    kp ℓ p w (λ q cv → Ω q (λ z → ψs ℓ B j w (g (cv z))))
+             (lim (cum (λ n → ψs ℓ B j w (g (iter step (fromBr ℓ p zero) n)))))
+    where
+    step : Br ℓ p → Br ℓ p
+    step z = fromBr ℓ p (ψs ℓ B (at ℓ p) (posW ℓ p) (g z))
+  -- 新的自身行 (上折)
+  ψs (suc a)  B _ self (up x _ y) =
+    liftT (suc a) a (λ q → Ω (inj₂ q)) (ψs (suc a) B (suc a) self x) y
+  ψs (lim g)  B _ self (up x n y) =
+    liftT (lim g) (g n) (λ q → Ω (n , inj₂ q)) (ψs (lim g) B (lim g) self x) y
+  ψs (Ωₗ k h) B _ self (up x c y) =
+    liftT (Ωₗ k h) (h c) (λ q → Ω (inj₂ (c , inj₂ q))) (ψs (Ωₗ k h) B (Ωₗ k h) self x) y
+  ψs zero     B _ self (up x () y)
+  ψs (suc a) B j (ins w) (up x _ y) =
+    ψs a (base (ψ⊥ (suc a) B x) (λ j′ w′ → ψs (suc a) B j′ (ins w′) x)) j w y
+  ψs (lim g) B j (inl n w) (up x m y) with eqℕ m n
+  ... | just refl =
+    ψs (g m) (base (ψ⊥ (lim g) B x) (λ j′ w′ → ψs (lim g) B j′ (inl m w′) x)) j w y
+  ... | nothing   = ψs (lim g) B j (inl n w) x + ι j (ψ⊥ (g m) (B₀ (g m)) y)
+  ψs (Ωₗ k h) B j (ink w)    (up x c y) = ψs (Ωₗ k h) B j (ink w) x    + ι j (ψ⊥ (h c) (B₀ (h c)) y)
+  ψs (Ωₗ k h) B j (inb c′ w) (up x c y) = ψs (Ωₗ k h) B j (inb c′ w) x + ι j (ψ⊥ (h c) (B₀ (h c)) y)
+
+ψ₀ : (ℓ : L) → Tr ℓ → Tr zero
+ψ₀ ℓ = ψ⊥ ℓ (B₀ ℓ)
+
+-- J2 各律不变 (与 YiFreshCheck 同陈述)
+J2-suc : (a : L) (B : Base (suc a)) (j : L) (w : j ≤ a) (x : Tr (suc a)) (y : Tr a)
+  → ψs (suc a) B j (ins w) (up x tt y)
+  ≡ ψs a (base (ψ⊥ (suc a) B x) (λ j′ w′ → ψs (suc a) B j′ (ins w′) x)) j w y
+J2-suc a B j w x y = refl
+
+J2-lim : (g : ℕ → L) (B : Base (lim g)) (n : ℕ) (j : L) (w : j ≤ g n)
+         (x : Tr (lim g)) (y : Tr (g n))
+  → ψs (lim g) B j (inl n w) (up x n y)
+  ≡ ψs (g n) (base (ψ⊥ (lim g) B x) (λ j′ w′ → ψs (lim g) B j′ (inl n w′) x)) j w y
+J2-lim g B n j w x y rewrite eqℕ-refl n = refl
+
+J2⊥ : (ℓ : L) (B : Base ℓ) (x : Tr ℓ) (c : Ch ℓ) (y : ChT ℓ c)
+  → Σ (Base (chL ℓ c)) λ B′ → (b⊥ B′ ≡ ψ⊥ ℓ B x) × (ψ⊥ ℓ B (up x c y) ≡ ψ⊥ (chL ℓ c) B′ (chT ℓ c y))
+J2⊥ (suc a)  B x c y = _ , refl , refl
+J2⊥ (lim g)  B x n y = _ , refl , refl
+J2⊥ (Ωₗ k h) B x c y = _ , refl , refl
+
+-- 摊平的单调与合法
+BW : (ℓ j : L) → Build ℓ j → Set
+BW ℓ j bd = (q : Pos j) (g : Br j q → Tr ℓ) → ℓ ⊢ g (fromBr j q zero) ◃ bd q g
+
+BL : (ℓ j : L) → Build ℓ j → Set
+BL ℓ j bd = (q : Pos j) (g : Br j q → Tr ℓ) → ((z : Br j q) → LegBr j q z → Leg ℓ (g z)) → Leg ℓ (bd q g)
+
+lift-mono : (ℓ j : L) (bd : Build ℓ j) → BW ℓ j bd → (X : Tr ℓ) {y′ y : Tr j}
+  → j ⊢ y′ ◃ y → ℓ ⊢ liftT ℓ j bd X y′ ◃ liftT ℓ j bd X y
+lift-mono ℓ j bd bw X ◃s     = ◃l zero
+lift-mono ℓ j bd bw X (◃l n) = ◃l n
+lift-mono ℓ j bd bw X (◃w {p = p}) = bw p _
+lift-mono ℓ (suc a)  bd bw X (◃u {x = y₁} zy) =
+  lift-mono ℓ a (λ q → bd (inj₂ q)) (λ q → bw (inj₂ q)) (liftT ℓ (suc a) bd X y₁) zy
+lift-mono ℓ (lim g)  bd bw X (◃u {x = y₁} {c = n} zy) =
+  lift-mono ℓ (g n) (λ q → bd (n , inj₂ q)) (λ q → bw (n , inj₂ q)) (liftT ℓ (lim g) bd X y₁) zy
+lift-mono ℓ (Ωₗ k h) bd bw X (◃u {x = y₁} {c = c} zy) =
+  lift-mono ℓ (h c) (λ q → bd (inj₂ (c , inj₂ q))) (λ q → bw (inj₂ (c , inj₂ q))) (liftT ℓ (Ωₗ k h) bd X y₁) zy
+lift-mono ℓ (suc a)  bd bw X (◃c {x = y₁} d) =
+  lift-mono ℓ a (λ q → bd (inj₂ q)) (λ q → bw (inj₂ q)) (liftT ℓ (suc a) bd X y₁) d
+lift-mono ℓ (lim g)  bd bw X (◃c {x = y₁} {c = n} d) =
+  lift-mono ℓ (g n) (λ q → bd (n , inj₂ q)) (λ q → bw (n , inj₂ q)) (liftT ℓ (lim g) bd X y₁) d
+lift-mono ℓ (Ωₗ k h) bd bw X (◃c {x = y₁} {c = c} d) =
+  lift-mono ℓ (h c) (λ q → bd (inj₂ (c , inj₂ q))) (λ q → bw (inj₂ (c , inj₂ q))) (liftT ℓ (Ωₗ k h) bd X y₁) d
+lift-mono ℓ j bd bw X (◃t d e) = ◃t (lift-mono ℓ j bd bw X d) (lift-mono ℓ j bd bw X e)
+
+lift-nz : (ℓ j : L) (bd : Build ℓ j) → BW ℓ j bd → (X : Tr ℓ) → ℓ ⊢ zero ◃ X
+  → (y : Tr j) → Leg j y → ℓ ⊢ zero ◃ liftT ℓ j bd X y
+lift-nz ℓ j bd bw X zx y hy with zl y hy
+... | inj₁ refl = zx
+... | inj₂ d    = ◃t zx (lift-mono ℓ j bd bw X d)
+
+lift-LN : (ℓ j : L) (bd : Build ℓ j) → BW ℓ j bd → BL ℓ j bd → (X : Tr ℓ) → LN ℓ X
+  → (y : Tr j) → Leg j y → LN ℓ (liftT ℓ j bd X y)
+lift-LN ℓ j bd bw bl X hX zero    hy = hX
+lift-LN ℓ j bd bw bl X hX (suc y) hy = nextLN _ (lift-LN ℓ j bd bw bl X hX y hy)
+lift-LN ℓ j bd bw bl X hX (lim f) (hf , adj) =
+  ((λ n → proj₁ (lift-LN ℓ j bd bw bl X hX (f n) (hf n))) , (λ n → lift-mono ℓ j bd bw X (adj n)))
+  , lift-nz ℓ j bd bw X (proj₂ hX) (lim f) (hf , adj)
+lift-LN ℓ j bd bw bl X hX (Ω q g) h =
+  bl q _ (λ z hz → proj₁ (lift-LN ℓ j bd bw bl X hX (g z) (h z hz)))
+  , lift-nz ℓ j bd bw X (proj₂ hX) (Ω q g) h
+lift-LN ℓ (suc a)  bd bw bl X hX (up y _ w) (hy , hw , zw) =
+  lift-LN ℓ a (λ q → bd (inj₂ q)) (λ q → bw (inj₂ q)) (λ q → bl (inj₂ q))
+    (liftT ℓ (suc a) bd X y) (lift-LN ℓ (suc a) bd bw bl X hX y hy) w hw
+lift-LN ℓ (lim g)  bd bw bl X hX (up y n w) (hy , hw , zw) =
+  lift-LN ℓ (g n) (λ q → bd (n , inj₂ q)) (λ q → bw (n , inj₂ q)) (λ q → bl (n , inj₂ q))
+    (liftT ℓ (lim g) bd X y) (lift-LN ℓ (lim g) bd bw bl X hX y hy) w hw
+lift-LN ℓ (Ωₗ k h) bd bw bl X hX (up y c w) (hy , hw , zw) =
+  lift-LN ℓ (h c) (λ q → bd (inj₂ (c , inj₂ q))) (λ q → bw (inj₂ (c , inj₂ q))) (λ q → bl (inj₂ (c , inj₂ q)))
+    (liftT ℓ (Ωₗ k h) bd X y) (lift-LN ℓ (Ωₗ k h) bd bw bl X hX y hy) w hw
+
+-- 折叠单调 (无前提); 除自身行外与 YiFreshLegal 逐字相同
+dS : (a : L) → Base (suc a) → Tr (suc a) → Base a
+dS a B x = base (ψ⊥ (suc a) B x) (λ j w → ψs (suc a) B j (ins w) x)
+
+dL : (g : ℕ → L) → Base (lim g) → (n : ℕ) → Tr (lim g) → Base (g n)
+dL g B n x = base (ψ⊥ (lim g) B x) (λ j w → ψs (lim g) B j (inl n w) x)
+
+dW : (k : L) (h : Tr k → L) → Base (Ωₗ k h) → (c : Tr k) → Tr (Ωₗ k h) → Base (h c)
+dW k h B c x = base (ψ⊥ (Ωₗ k h) B x) (λ j w → ψs (Ωₗ k h) B j (inb c w) x)
+
+mutual
+  fb : ∀ {j} (b : Tr j) (ℓ′ : L) {y : Tr ℓ′} → ℓ′ ⊢ zero ◃ y
+     → j ⊢ b ◃ b + ι j (ψ⊥ ℓ′ (B₀ ℓ′) y)
+  fb {j} b ℓ′ zy = +-mono b (ι-mono j (◃t ◃s (mono⊥ ℓ′ (B₀ ℓ′) zy)))
+
+  mono⊥ : (ℓ : L) (B : Base ℓ) {x y : Tr ℓ} → ℓ ⊢ x ◃ y → zero ⊢ ψ⊥ ℓ B x ◃ ψ⊥ ℓ B y
+  mono⊥ ℓ B ◃s     = ◃l zero
+  mono⊥ ℓ B (◃l n) = ◃l n
+  mono⊥ ℓ B ◃w     = ◃l zero
+  mono⊥ (suc a)  B (◃u {x = x} zy)     = mono⊥ a (dS a B x) zy
+  mono⊥ (lim g)  B (◃u {x = x} {c = n} zy) = mono⊥ (g n) (dL g B n x) zy
+  mono⊥ (Ωₗ k h) B (◃u {x = x} {c = c} zy) = mono⊥ (h c) (dW k h B c x) zy
+  mono⊥ (suc a)  B (◃c {x = x} d)     = mono⊥ a (dS a B x) d
+  mono⊥ (lim g)  B (◃c {x = x} {c = n} d) = mono⊥ (g n) (dL g B n x) d
+  mono⊥ (Ωₗ k h) B (◃c {x = x} {c = c} d) = mono⊥ (h c) (dW k h B c x) d
+  mono⊥ ℓ B (◃t d e) = ◃t (mono⊥ ℓ B d) (mono⊥ ℓ B e)
+
+  monos : (ℓ : L) (B : Base ℓ) (j : L) (v : j ≤ ℓ) {x y : Tr ℓ}
+        → ℓ ⊢ x ◃ y → j ⊢ ψs ℓ B j v x ◃ ψs ℓ B j v y
+  monos ℓ B j v ◃s     = ◃l zero
+  monos ℓ B j v (◃l n) = ◃l n
+  monos ℓ B j v (◃w {p = p} {g = g}) =
+    kp-ind ℓ p v (λ X → j ⊢ ψs ℓ B j v (g (fromBr ℓ p zero)) ◃ X)
+      (λ q cv (e , _) → subst (λ t → j ⊢ ψs ℓ B j v (g t) ◃ Ω q (λ z → ψs ℓ B j v (g (cv z)))) e ◃w)
+      (◃l zero)
+  monos (suc a)  B _ self (◃u {x = x} zy) =
+    lift-mono (suc a) a (λ q → Ω (inj₂ q)) (λ q g → ◃w) (ψs (suc a) B (suc a) self x) zy
+  monos (lim g)  B _ self (◃u {x = x} {c = n} zy) =
+    lift-mono (lim g) (g n) (λ q → Ω (n , inj₂ q)) (λ q g′ → ◃w) (ψs (lim g) B (lim g) self x) zy
+  monos (Ωₗ k h) B _ self (◃u {x = x} {c = c} zy) =
+    lift-mono (Ωₗ k h) (h c) (λ q → Ω (inj₂ (c , inj₂ q))) (λ q g → ◃w) (ψs (Ωₗ k h) B (Ωₗ k h) self x) zy
+  monos (suc a)  B j (ins v)   (◃u {x = x} zy) = monos a (dS a B x) j v zy
+  monos (lim g)  B j (inl n v) (◃u {x = x} {c = m} zy) with eqℕ m n
+  ... | just refl = monos (g m) (dL g B m x) j v zy
+  ... | nothing   = fb (ψs (lim g) B j (inl n v) x) (g m) zy
+  monos (Ωₗ k h) B j (ink v)    (◃u {x = x} {c = c} zy) = fb (ψs (Ωₗ k h) B j (ink v) x) (h c) zy
+  monos (Ωₗ k h) B j (inb c′ v) (◃u {x = x} {c = c} zy) = fb (ψs (Ωₗ k h) B j (inb c′ v) x) (h c) zy
+  monos (suc a)  B _ self (◃c {x = x} d) =
+    lift-mono (suc a) a (λ q → Ω (inj₂ q)) (λ q g → ◃w) (ψs (suc a) B (suc a) self x) d
+  monos (lim g)  B _ self (◃c {x = x} {c = n} d) =
+    lift-mono (lim g) (g n) (λ q → Ω (n , inj₂ q)) (λ q g′ → ◃w) (ψs (lim g) B (lim g) self x) d
+  monos (Ωₗ k h) B _ self (◃c {x = x} {c = c} d) =
+    lift-mono (Ωₗ k h) (h c) (λ q → Ω (inj₂ (c , inj₂ q))) (λ q g → ◃w) (ψs (Ωₗ k h) B (Ωₗ k h) self x) d
+  monos (suc a)  B j (ins v)   (◃c {x = x} d) = monos a (dS a B x) j v d
+  monos (lim g)  B j (inl n v) (◃c {x = x} {c = m} d) with eqℕ m n
+  ... | just refl = monos (g m) (dL g B m x) j v d
+  ... | nothing   = +-mono (ψs (lim g) B j (inl n v) x) (ι-mono j (mono⊥ (g m) (B₀ (g m)) d))
+  monos (Ωₗ k h) B j (ink v)    (◃c {x = x} {c = c} d) =
+    +-mono (ψs (Ωₗ k h) B j (ink v) x) (ι-mono j (mono⊥ (h c) (B₀ (h c)) d))
+  monos (Ωₗ k h) B j (inb c′ v) (◃c {x = x} {c = c} d) =
+    +-mono (ψs (Ωₗ k h) B j (inb c′ v) x) (ι-mono j (mono⊥ (h c) (B₀ (h c)) d))
+  monos ℓ B j v (◃t d e) = ◃t (monos ℓ B j v d) (monos ℓ B j v e)
+
+-- 折叠保持合法
+mutual
+  fbLN : ∀ {j} (b : Tr j) → LN j b → (ℓ′ : L) (y : Tr ℓ′) → Leg ℓ′ y → ℓ′ ⊢ zero ◃ y
+       → LN j (b + ι j (ψ⊥ ℓ′ (B₀ ℓ′) y))
+  fbLN {j} b (hb , zb) ℓ′ y hy zy =
+    +-leg b _ hb (ι-leg j _ (proj₁ (pres⊥ ℓ′ (B₀ ℓ′) (LegB₀ ℓ′) y hy))) , ◃t zb (fb b ℓ′ zy)
+
+  pres⊥ : (ℓ : L) (B : Base ℓ) → LegB ℓ B → (x : Tr ℓ) → Leg ℓ x → LN zero (ψ⊥ ℓ B x)
+  pres⊥ ℓ B hB zero    h = proj₁ hB
+  pres⊥ ℓ B hB (suc x) h = nextLN _ (pres⊥ ℓ B hB x h)
+  pres⊥ ℓ B hB (lim f) (hf , adj) =
+    ((λ n → proj₁ (pres⊥ ℓ B hB (f n) (hf n))) , (λ n → mono⊥ ℓ B (adj n)))
+    , ◃t (proj₂ (pres⊥ ℓ B hB (f zero) (hf zero))) (◃l zero)
+  pres⊥ ℓ B hB (Ω p g) h =
+    cumLN _ (λ n → pres⊥ ℓ B hB (g _) (h _ (iterInv (LegBr ℓ p) _ _ (legFrom ℓ p zero tt)
+      (λ z hz → legFrom ℓ p _ (proj₁ (press ℓ B hB (at ℓ p) (posW ℓ p) (g z) (h z hz)))) n)))
+  pres⊥ (suc a)  B hB (up x _ y) (hx , hy , zy) =
+    pres⊥ a (dS a B x) (pres⊥ (suc a) B hB x hx , λ j w → press (suc a) B hB j (ins w) x hx) y hy
+  pres⊥ (lim g)  B hB (up x n y) (hx , hy , zy) =
+    pres⊥ (g n) (dL g B n x) (pres⊥ (lim g) B hB x hx , λ j w → press (lim g) B hB j (inl n w) x hx) y hy
+  pres⊥ (Ωₗ k h) B hB (up x c y) (hx , hy , zy) =
+    pres⊥ (h c) (dW k h B c x) (pres⊥ (Ωₗ k h) B hB x hx , λ j w → press (Ωₗ k h) B hB j (inb c w) x hx) y hy
+
+  press : (ℓ : L) (B : Base ℓ) → LegB ℓ B → (j : L) (v : j ≤ ℓ) (x : Tr ℓ) → Leg ℓ x
+        → LN j (ψs ℓ B j v x)
+  press ℓ B hB j v zero    h = proj₂ hB j v
+  press ℓ B hB j v (suc x) h = nextLN _ (press ℓ B hB j v x h)
+  press ℓ B hB j v (lim f) (hf , adj) =
+    ((λ n → proj₁ (press ℓ B hB j v (f n) (hf n))) , (λ n → monos ℓ B j v (adj n)))
+    , ◃t (proj₂ (press ℓ B hB j v (f zero) (hf zero))) (◃l zero)
+  press ℓ B hB j v (Ω p g) h =
+    kp-ind ℓ p v (LN j)
+      (λ q cv (e , lc) →
+        (λ z hz → proj₁ (press ℓ B hB j v (g (cv z)) (h (cv z) (lc z hz))))
+        , ◃t (proj₂ (press ℓ B hB j v (g (cv (fromBr j q zero)))
+                      (h _ (lc _ (legFrom j q zero tt))))) ◃w)
+      (cumLN _ (λ n → press ℓ B hB j v (g _) (h _ (iterInv (LegBr ℓ p) _ _ (legFrom ℓ p zero tt)
+        (λ z hz → legFrom ℓ p _ (proj₁ (press ℓ B hB (at ℓ p) (posW ℓ p) (g z) (h z hz)))) n))))
+  press (suc a)  B hB _ self (up x _ y) (hx , hy , zy) =
+    lift-LN (suc a) a (λ q → Ω (inj₂ q)) (λ q g → ◃w) (λ q g hg → hg)
+      (ψs (suc a) B (suc a) self x) (press (suc a) B hB (suc a) self x hx) y hy
+  press (lim g)  B hB _ self (up x n y) (hx , hy , zy) =
+    lift-LN (lim g) (g n) (λ q → Ω (n , inj₂ q)) (λ q g′ → ◃w) (λ q g′ hg → hg)
+      (ψs (lim g) B (lim g) self x) (press (lim g) B hB (lim g) self x hx) y hy
+  press (Ωₗ k h) B hB _ self (up x c y) (hx , hy , zy) =
+    lift-LN (Ωₗ k h) (h c) (λ q → Ω (inj₂ (c , inj₂ q))) (λ q g → ◃w) (λ q g hg → hg)
+      (ψs (Ωₗ k h) B (Ωₗ k h) self x) (press (Ωₗ k h) B hB (Ωₗ k h) self x hx) y hy
+  press (suc a) B hB j (ins v) (up x _ y) (hx , hy , zy) =
+    press a (dS a B x) (pres⊥ (suc a) B hB x hx , λ j′ w′ → press (suc a) B hB j′ (ins w′) x hx) j v y hy
+  press (lim g) B hB j (inl n v) (up x m y) (hx , hy , zy) with eqℕ m n
+  ... | just refl =
+    press (g m) (dL g B m x) (pres⊥ (lim g) B hB x hx , λ j′ w′ → press (lim g) B hB j′ (inl m w′) x hx) j v y hy
+  ... | nothing = fbLN _ (press (lim g) B hB j (inl n v) x hx) (g m) y hy zy
+  press (Ωₗ k h) B hB j (ink v)    (up x c y) (hx , hy , zy) =
+    fbLN _ (press (Ωₗ k h) B hB j (ink v) x hx) (h c) y hy zy
+  press (Ωₗ k h) B hB j (inb c′ v) (up x c y) (hx , hy , zy) =
+    fbLN _ (press (Ωₗ k h) B hB j (inb c′ v) x hx) (h c) y hy zy
+
+ψ₀-leg : (ℓ : L) (x : Tr ℓ) → Leg ℓ x → Leg zero (ψ₀ ℓ x)
+ψ₀-leg ℓ x h = proj₁ (pres⊥ ℓ (B₀ ℓ) (LegB₀ ℓ) x h)
+
+EBOᶜ : Tr zero
+EBOᶜ = ψ₀ Λ (Ωt Λ)
+
+EBOᶜ-leg : Leg zero EBOᶜ
+EBOᶜ-leg = ψ₀-leg Λ (Ωt Λ) (Ωt-leg Λ)
+
+-- 形状: ψ_1(Ω_1) 的第 c 支是 next (…) (参照的 Ω₁·ω^{c+1}); 旧自身行是 up (Ωt one) tt (suc c).
+one : L
+one = suc zero
+
+self-Ω-new : (B : Base one) →
+  ψs one B one self (Ωt one)
+  ≡ Ω (inj₁ tt) (λ c → next (liftT one zero (λ q → Ω (inj₂ q)) (bs B one self) c))
+self-Ω-new B = refl

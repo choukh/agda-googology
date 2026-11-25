@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 若旧折叠在 W4 第三实际下标上的输出进入第四实际下标，一次就给整项 γ₂ 与全部有限 Ω 层。
+module B18OldBridge where
+open import Data.Nat.Base using (ℕ; suc)
+open import WVOne using (read; T₀)
+open import W4Block using (tw)
+open import W4Fold using (EBOᶜ)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l)
+import OCF.Align.NoCumsum as N
+import OCF.Lean.YiLSRead as V
+import OCF.Lean.YiLSTw1 as P
+import B12Terminal as T
+import B12BtboCut as C
+import B14Btbo as B
+import B14Tower as W
+import B16GammaRows as G
+import B17Legacy as O
+
+import B16IndexBase
+
+module Orbit (n m : ℕ) (seed : N.γ n ≼ read (W.Actual.idx m)) where
+  z = W.Actual.idx (suc m)
+  upper = W.Actual.idx (suc (suc m))
+  old : T₀
+  old = V.read (P.K (O.copy z))
+  mapped : T₀
+  mapped = B.α (B16IndexBase.κ z)
+  physical : T₀
+  physical = read upper
+  entry : N.γ (suc n) ≼ mapped
+  entry = G.Actual.ordinal n m seed
+  old-lower : mapped ≼ old
+  old-lower = O.named z
+  exit₄ : physical ≼ read EBOᶜ
+  exit₄ = ≼-trans {a = physical} {b = read (T.value T.tower1)} {c = read EBOᶜ} (G.Recover.indices (suc (suc m))) (T.lim-child tw T.terminal 1)
+  via : mapped ≼ physical → N.γ (suc n) ≼ read EBOᶜ
+  via h = ≼-trans {a = N.γ (suc n)} {b = mapped} {c = read EBOᶜ} entry (≼-trans {a = mapped} {b = physical} {c = read EBOᶜ} h exit₄)
+  via-old : old ≼ physical → N.γ (suc n) ≼ read EBOᶜ
+  via-old h = via (≼-trans {a = mapped} {b = old} {c = physical} old-lower h)
+
+finite-from : ∀ (v : T₀) → N.γ 2 ≼ v → ∀ n → C.finite n ≼ v
+finite-from v d n = ≼-trans {a = C.finite n} {b = C.omega-cut} {c = v}
+  (≼l {a = C.finite n} {f = C.finite} n (≼-refl (C.finite n)))
+  (≼-trans {a = C.omega-cut} {b = N.γ 2} {c = v} C.cut-below-first-missing d)
+
+module First = Orbit 1 2 B.first-in
+open First public
+
+module FiniteAt (m : ℕ) (seed : N.γ 1 ≼ read (W.Actual.idx m)) where
+  module Local = Orbit 1 m seed
+  finite : Local.old ≼ Local.physical → ∀ n → C.finite n ≼ read EBOᶜ
+  finite h = finite-from (read EBOᶜ) (Local.via-old h)
+module FirstFinite = FiniteAt 2 B.first-in
+open FirstFinite public using (finite)

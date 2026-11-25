@@ -1,0 +1,27 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 整个 [1,1] 的精确塔作用模型。“实现”条件允许物理上界覆盖每个回灌序号。
+module B17RefVectorRow where
+open import Data.Nat using (ℕ; suc)
+open import Data.Product using (_,_; _×_)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≅→≼; ≼-trans; l≼; ≼l; ≼-refl)
+open import WVOne using (T₀)
+import B14RefFixed as K
+import B14RefRow as W
+import B17RefVector as V
+
+gain : T₀ → T₀
+gain x = L.ψ⁰ (V.actual x)
+chain = S.iter gain K.one
+match : ∀ j → K.chain 1 j L.≅ chain j
+match = L.iter-R L._≅_ {G = K.gain 1} {G′ = gain}
+  (λ {x} {y} h → L.≅-trans (L.ψ⁰-≅ (K.kernel-pres 1 h)) (V.gain y)) (L.s≅ L.z≅)
+
+row : W.node 1 L.≅ L.lim (λ j → chain (suc j))
+row = L.≅-trans (K.as-chain 1) (L.l≅ (λ j → match (suc j)))
+
+criterion : ∀ (t : T₀) → ((∀ j → chain (suc j) ≼ t) → W.node 1 ≼ t) × (W.node 1 ≼ t → ∀ j → chain (suc j) ≼ t)
+criterion t = (λ h → ≼-trans (≅→≼ row) (l≼ h)) ,
+  (λ h j → ≼-trans (≼l j (≼-refl _)) (≼-trans (≅→≼ (L.≅-sym row)) h))

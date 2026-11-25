@@ -1,0 +1,83 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 实际一级指数在所有阶统一表示一个可变系数。其标准 F 累加孩子把该系数转成一次全塔 Γ 更新。
+module B17OrbitVector where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block hiding (R; D)
+open import W4Ops
+open import W4Fold
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import WKGen using (Ω₁t)
+open import OCF.BTBO using (module Ord-Ord)
+module Ord = Ord-Ord
+import B13OrbitFeed as O
+import B15OrbitModel as M
+import B16OrbitNode as N
+import B17OrbitModel as B
+import B17OrbitOmega as Z
+import B17OrbitAll as A
+import B17OrbitNatural as R
+import B17OrbitTower as T
+import B17RefVector as V
+open R using (R; closed; enterR)
+open V using (Vector)
+
+oper : ∀ {X : Cx lvl2} (D : TD X lvl1) (b : Tr⁺ lvl1) n → Ca (suc n) X
+oper D b zero = Kb ok₂ D (proj₁ b) (proj₂ b)
+oper D b (suc n) = Kₑ n ok₂ D (proj₁ b) (proj₂ b)
+Index : Tr⁺ lvl1 → Vector → Set
+Index b v = ∀ {X : Cx lvl2} (m : Mor M.X₁ X) → N.Left m → ∀ n → R (suc n) m (oper (trTD m O.D₁) b n) (v n)
+
+initial : ∀ b → lvl1 ⊢ Ω₁t ◃ proj₁ b → Index b T.semK
+initial b cv m rm zero = Z.Frame.keep m rm (proj₁ b) (proj₂ b) cv
+initial b cv m rm (suc n) u ru K F rk v rv G a rg = closed n dm (It n ok₂ D Ω₁t K′ G) (It n ok₂ D (proj₁ b) K′ G)
+    (Itmono n ok₂ D K′ G cv) _ (A.At.For.omega n dm dr K′ F (enterR (suc n) (u ⊙ m) v rv K F rk) G a rg)
+  where
+  dm = v ⊙ u ⊙ m
+  dr = B.good (u ⊙ m) v (B.good m u rm ru) rv
+  D = trTD dm O.D₁
+  K′ = enter (suc n) v K
+
+module Step (b c : Tr⁺ lvl1) (cover : lvl1 ⊢ Ω₁t ◃ proj₁ b) (v : Vector) (given : Index b v) where
+  z = iter (λ q → ex (proj₁ b) (proj₁ b) (proj₂ b) (suc q) tt) zero
+  branch = cum (λ j → z (suc j))
+  front = λ k → branch k + proj₁ b
+  pos : ∀ k → lvl1 ⊢ zero ◃ front k
+  pos k = z◃ (branch k) (+-mono (branch k) (proj₂ b))
+  vec = Ord.iter (V.push v) T.semK
+  module In {X : Cx lvl2} (m : Mor M.X₁ X) (rm : N.Left m) where
+    D = trTD m O.D₁
+    K = oper D b
+    extend : ∀ n → R (suc n) m (Itᴺ n ok₂ D (proj₁ b) (K n)) (v n)
+    extend n u ru G a rg = closed n (u ⊙ m) (proj₁ (K n) u G) (It n ok₂ (trTD u D) (proj₁ b) (enter (suc n) u (K n)) G)
+                (Itmono n ok₂ (trTD u D) (enter (suc n) u (K n)) G (proj₂ b)) _ (given m rm n u ru G a rg)
+    nested : ∀ n j G a → R n m G a → R n m (It n ok₂ D (suc (z (suc j))) (K n) G) (T.run (vec (suc j) n) a)
+    nested n zero G a rg = closed n m (It n ok₂ D Ω₁t (K n) G) _ (Itmono n ok₂ D (K n) G {x = Ω₁t} {y = suc (z 1)} (◃t cover (◃t ◃e ◃s))) _
+       (A.At.For.omega n m rm (K n) (v n) (given m rm n) G a rg)
+    nested n (suc j) G a rg = closed n m (It n ok₂ D (z (suc (suc j))) (K n) G) _ (Itmono n ok₂ D (K n) G {x = z (suc (suc j))} {y = suc (z (suc (suc j)))} ◃s) _
+       (nested (suc n) j (Itᴺ n ok₂ D (proj₁ b) (K n)) (v n) (extend n) idM (λ _ → refl) G a rg)
+
+  module Gather (hit : ∀ j → lvl1 ⊢ branch (suc j) ◃ proj₁ c) where
+    term : ∀ {X : Cx lvl2} (m : Mor M.X₁ X) (rm : N.Left m) n j → R (suc n) m (oper (trTD m O.D₁) c n) (vec (suc j) n)
+    term m rm zero j u ru G a rg = closed 0 dm (op (E ok₂ D (branch (suc j)) G) (Einf ok₂ D (branch (suc j)) G)) _ (λ S i t w → Emono ok₂ D G S i t w (hit j)) _
+        (In.nested dm dr 0 j G′ a (closed 0 dm G G′ (λ S i t w → Emono ok₂ D G S i t w (pos j)) a rg))
+      where
+      dm = u ⊙ m
+      dr = B.good m u rm ru
+      D = trTD dm O.D₁
+      G′ = op (E ok₂ D (front j) G) (Einf ok₂ D (front j) G)
+    term m rm (suc n) j u ru K F rk w rw G a rg = closed n dm (It n ok₂ D (branch (suc j)) K′ G) (It n ok₂ D (proj₁ c) K′ G) (Itmono n ok₂ D K′ G (hit j)) _
+       (In.nested dm dr (suc n) j frontK F liftK idM (λ _ → refl) G a rg)
+      where
+      dm = w ⊙ u ⊙ m
+      dr = B.good (u ⊙ m) w (B.good m u rm ru) rw
+      D = trTD dm O.D₁
+      K′ = enter (suc n) w K
+      frontK = Itᴺ n ok₂ D (front j) K′
+      raise : Rn (suc n) K′ frontK
+      raise s H = Itmono n ok₂ (trTD s D) (enter (suc n) s K′) H (pos j)
+      liftK = closed (suc n) dm K′ frontK raise F (enterR (suc n) (u ⊙ m) w rw K F rk)
+    complete : Index c (V.step v)
+    complete m rm n = R.sup (suc n) m (oper (trTD m O.D₁) c n) (λ j → vec (suc j) n) (term m rm n)

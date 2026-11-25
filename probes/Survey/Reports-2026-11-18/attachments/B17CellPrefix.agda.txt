@@ -1,0 +1,84 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 原 EBO 行的每个后继进入某座正塔内的有限实际反馈前缀。若该塔的各个反馈孩子都有同一个界，则整塔至多取其 ω 倍。
+module B17CellPrefix where
+open import Data.Nat.Base as Nat using (ℕ; zero; suc)
+import Data.Nat.Properties as NatP
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Maybe using (just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WVOne using (T₀; read; Mv; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-suc; ≼-refl; ≼-trans; ≅→≼) renaming (+-mono to add-mono)
+open import B8FreezeMain using (read-+′)
+import B12Terminal as T
+import B12TerminalTail as Tail
+import B12Omega3Ref as Add
+import B12EboRows as B
+import B12XRef as Ref
+import B14Goal as G
+import B15OriginalTail as O
+import B15Spine as P
+import B17Cofinal as C
+
+lookup : ∀ {X : Set} {x : X} (keep : Keep zero X x) (g : X → Tr⁺ zero) (s : X → X) →
+         read (proj₁ (node⁺ keep g s)) ≡ L.lim (λ n → read (cum (λ j → proj₁ (g (iter s x j))) n))
+lookup nothing g s = refl
+lookup (just (() , _)) g s
+
+module At (k : ℕ) where
+  ℓ = tw k
+  h = P.branch ℓ
+  r = T.limRun tw T.terminal (suc k)
+  module S = P.Cardinal ℓ h r
+  tree = λ n → T.value (S.child n)
+  cell₀ = λ n → read (tree n)
+  pre = λ n → read (cum tree n)
+  shape : B.child (suc k) ≡ L.lim pre
+  shape = lookup (kp _ (T.Run.ok r) S.p (z≤ _)) (λ z → ψ _ (T.Run.ok r) (T.Run.bs r) zero (z≤ _) (T.Run.β r) (S.b z)) S.step
+  below : ∀ n → pre n ≼ B.child (suc k)
+  below n = subst (λ y → pre n ≼ y) (sym shape) (≼l n (≼-refl _))
+  invert : ∀ {x : T₀} → L.suc x ≼ B.child (suc k) → Σ ℕ (λ n → L.suc x ≼ pre n)
+  invert {x} d = pick (subst (λ y → L.suc x ≼ y) shape d)
+    where
+    pick : L.suc x ≼ L.lim pre → Σ ℕ (λ n → L.suc x ≼ pre n)
+    pick (≼l n e) = n , e
+
+cell : ℕ → ℕ → T₀
+cell = At.cell₀
+prefix : ℕ → ℕ → T₀
+prefix = At.pre
+InPrefix : T₀ → Set
+InPrefix x = Σ ℕ (λ k → Σ ℕ (λ n → x ≼ prefix k n))
+promote : ∀ k → B.child k ≼ B.child (suc k)
+promote k = ≼-trans (Tail.prior tw T.terminal k) (T.inflate0 (tw (suc k)) (T.Run.ok r) (T.Run.bs r) (z≤ _) (T.Run.β r) (proj₁ (Ωt (tw (suc k)))))
+  where r = T.limRun tw T.terminal (suc k)
+extract : ∀ {x} → L.suc x ≼ read EBOᶜ → InPrefix (L.suc x)
+extract h with C.witness h
+... | k , d = k , At.invert k (≼-trans d (promote k))
+into : ∀ {x} → InPrefix x → x ≼ read EBOᶜ
+into (k , n , d) = ≼-trans d (≼-trans (At.below k n) (T.lim-child tw T.terminal (suc k)))
+
+located : ∀ K → (G.Goal → ∀ m → InPrefix (L.suc (Ref.row (O.shift K m)))) ×
+                ((∀ m → InPrefix (L.suc (Ref.row (O.shift K m)))) → G.Goal)
+located K = (λ g m → extract (≼-trans (C.strict-row _) (≼-trans (G.row-in _) g))) ,
+            (λ h → proj₁ (O.cofinal K) (λ m → ≼-trans (≼-suc (≼-refl _)) (into (h m))))
+
+module Bound (Q : T₀) where
+  scale = iter (Q L.+_) Q
+  rotate : ∀ n → (scale n L.+ Q) ≼ scale (suc n)
+  rotate zero = ≼-refl _
+  rotate (suc n) = ≼-trans (≅→≼ (Add.assoc {A = Q} {B = scale n} {C = scale (suc n)} (λ q → q) (λ q → q) (L.≅-refl⁰ _) (L.≅-refl⁰ Q)))
+                          (add-mono (≼-refl Q) (rotate n))
+  through : ∀ k n → (∀ j → j Nat.≤ n → cell k j ≼ Q) → prefix k n ≼ scale n
+  through k zero h = h zero NatP.≤-refl
+  through k (suc n) h = ≼-trans (read-+′ (cum (At.tree k) n) (At.tree k (suc n)))
+    (≼-trans (add-mono (through k n (λ j p → h j (NatP.m≤n⇒m≤1+n p))) (h (suc n) NatP.≤-refl)) (rotate n))
+  each : ∀ k → (∀ n → cell k n ≼ Q) → ∀ n → prefix k n ≼ scale n
+  each k h n = through k n (λ j _ → h j)
+
+bounded-tower : ∀ k Q → (∀ n → cell k n ≼ Q) → B.child (suc k) ≼ Tail.mulω Q
+bounded-tower k Q h = subst (λ y → y ≼ Tail.mulω Q) (sym (At.shape k)) (l≼ λ n → ≼l n (Bound.each Q k h n))

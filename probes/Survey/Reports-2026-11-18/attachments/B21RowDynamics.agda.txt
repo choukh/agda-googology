@@ -1,0 +1,96 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B21RowDynamics where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst)
+open import W4Block hiding (b₀)
+open import W4Ops
+open import W4Fold
+open import WVOne using (T₀; read)
+open import WVTwo using (g₂; p₂)
+open import WKShape using (lvl3)
+open import WKGen using (Ω₁t)
+open import YiLAB7Orbit using (lvl1; lvl2; p₁; F; ok₂)
+open import YiLAB11Orbit using (push)
+open import OCF.Align.Value using (_≼_)
+import B11OuterCore as C
+import B12Orbit as Std
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B13Orbit
+import B13OrbitFeed as O
+import B18OrbitWorld as W
+import B18OrbitLevels as All
+import B18OrbitRows as Old
+import B18RefDepth as H
+import B21RowCopy as Cpy
+import B21RowWorldCopy as Cp
+import B21RowPool as P
+import B21RowTheta as Th
+import B15OrbitModel as Mod
+
+Index : Tr⁺ lvl1 → Th.Vec → Set
+Index b v = ∀ d → W.Index (All.world d) b (v d)
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) (R : Base lvl2) (v : Th.Vec)
+          (cover : lvl1 ⊢ Ω₁t ◃ proj₁ (R lvl1 C.slot)) (start : Index (R lvl1 C.slot) v) where
+  module StdPool = P.At r cv
+  module Orig = Old.At r cv
+  open Orig.I using (module E₀; J; K₁)
+  open StdPool.V.A using (c⁺; K; G)
+  module Sem = Th.Program v
+  S₁ = push R
+  S₀ : St Mod.X₀
+  S₀ i u = S₁ i (proj₂ u)
+  b₀ = R lvl1 C.slot
+  curve : ℕ → Tr zero → Tr⁺ lvl1
+  curve zero z = E ok₂ O.D₁ (O.g₁ z) K₁ S₁ lvl1 Old.Out.slot b₀
+  curve (suc k) z = E ok₂ O.D₁ (proj₁ (curve k z)) K₁ S₁ lvl1 Old.Out.slot b₀
+  idx : ∀ d k y z → y ≼ read (suc z) → W.Index (All.world d) (curve k z) (Sem.eval d k y)
+  idx d zero y z low = Law.Deep.eval (suc z) low Orig.OldRow.K₀ (Law.Sem.enter₀ Old.m O.m₂ (λ _ → refl) K₁ (H.grad d) Law.model)
+      S₀ (v d) cover (start d) b₀ (start d)
+    where module Law = Orig.Laws d
+  idx d (suc k) y z low = idx (suc d) k y z low Old.m (λ _ → refl) 0 idM (λ _ → refl) K₁ (H.grad d) (Orig.Laws.model d)
+      S₁ (v d) cover (start d) b₀ (start d)
+  tree = λ k → Ω⁺ p₁ (curve k)
+  seq = iter (λ z → proj₁ (E ok₂ tdNil (g₂ z) J R lvl1 C.slot b₀)) zero
+  safe : lvl1 ⊢ Ω₁t ◃ seq 1
+  safe = ◃t cover (Einf ok₂ tdNil (g₂ zero) J R lvl1 C.slot b₀)
+  stored : ∀ k → lvl1 ⊢ proj₁ (tree k) ◃ seq (suc (suc k))
+  stored zero = Emono ok₂ O.D₁ K₁ S₁ lvl1 Old.Out.slot b₀ {x = Ω₁t} {y = suc (seq 1)} (◃t safe ◃s)
+  stored (suc k) = Emono ok₂ O.D₁ K₁ S₁ lvl1 Old.Out.slot b₀ {x = proj₁ (tree k)} {y = suc (seq (suc (suc k)))} (◃t (stored k) ◃s)
+  j : ℕ → ℕ
+  j zero = 1
+  j (suc n) = suc n
+  clock : ℕ → Tr⁺ lvl1
+  clock n = seq (suc (j n)) , ◃t (proj₂ b₀) (Einf ok₂ tdNil (g₂ (seq (j n))) J R lvl1 C.slot b₀)
+  current : ∀ d n → W.Index (All.world d) (clock n) (Sem.term d n)
+  current d zero = W.start (All.world d) (clock 0) (◃t cover (Einf ok₂ tdNil (g₂ (seq 1)) J R lvl1 C.slot b₀))
+  current d (suc k) = W.rise (All.world d) (tree k) (clock (suc k)) (stored k) _
+    (W.retain (All.world d) (curve k) (proj₂ (tree k)) (Sem.eval d k) (Sem.rel d k) (Sem.eqv d k) (idx d k))
+  Q = λ n → op (E ok₂ O.D₁ (proj₁ (clock n)) K₁) (Einf ok₂ O.D₁ (proj₁ (clock n)) K₁)
+  st = λ n → Mod.pull (stepS (Q n) S₁)
+  b = λ n → st n lvl1 C.slot
+  each : ∀ d n → W.Index (All.world d) (b n) (Sem.read d n)
+  each d n = current (suc d) n Old.m (λ _ → refl) 0 idM (λ _ → refl) K₁ (H.grad d) (Orig.Laws.model d)
+    S₁ (v d) cover (start d) b₀ (start d)
+  fp = λ i → E ok₂ tdNil (g₂ (seq i)) J R lvl1 C.slot b₀
+  front : ∀ n → lvl1 ⊢ Cpy.copy (b n) ◃ proj₁ (run K (st n) lvl1 C.slot (b n))
+  front n = B13Orbit.push-path {y = proj₁ (run F (st n) lvl1 C.slot (b n))} (Cpy.inside (st n))
+    (B13Orbit.standard≤K c⁺ E₀.cp (st n) lvl1 C.slot (b n))
+  branch : ∀ n → lvl1 ⊢ Cpy.copy (b n) ◃ proj₁ (fp (suc (j n)))
+  branch n = ◃t (front n) (◃t (Emono ok₂ tdNil K (st n) lvl1 C.slot (b n) (proj₂ c⁺))
+    (◃t (Emono ok₂ O.D₁ K₁ (stepS (Q n) S₁) lvl1 Old.Out.slot (b n) (proj₂ (clock n))) (◃l 1)))
+  mid = run (Std.block J) R lvl1 C.slot b₀
+  pool : Index mid Sem.build
+  pool d = W.gather (All.world d) mid (Sem.read d) gather where
+    gather : ∀ n → W.Index (All.world d) mid (Sem.read d n)
+    gather n = W.rise (All.world d) (Cp.shell p (b n)) mid (◃t (+-mono p (branch n)) (◃l (suc (j n)))) _ (Cp.copy d p (b n) _ (each d n))
+      where p = cum (λ i → proj₁ (fp i)) (j n)
+  larger = λ b → run (B13Orbit.block b J) R lvl1 C.slot b₀
+  move : ∀ d b → Cov._⊴_ (proj₁ (Ωt lvl2)) (proj₁ b) → W.Index (All.world d) (larger b) (Sem.build d)
+  move d b (inj₁ e) = subst (λ x → W.Index (All.world d) (E ok₂ tdNil x J R lvl1 C.slot b₀) (Sem.build d)) e (pool d)
+  move d b (inj₂ p) = W.rise (All.world d) mid (larger b) (Emono ok₂ tdNil J R lvl1 C.slot b₀ p) _ (pool d)
+  next : Index (run G R lvl1 C.slot b₀) Sem.build
+  next d = W.rise (All.world d) (larger c⁺) (run G R lvl1 C.slot b₀) (◃l 0) _ (move d c⁺ E₀.cp)
+

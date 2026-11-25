@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiSSMin where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Nat.Properties using (≤-refl)
+open import Data.Product using (proj₁; proj₂)
+open import Data.List using ([]; _++_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀)
+open import OCF.Lean.YiTBRow hiding (nat; fn; h₁)
+open import OCF.Lean.YiRBCrit using (h₁)
+open import OCF.Lean.YiHCRel using (M⁰; m1; mz)
+open import OCF.Lean.YiCLCrit using (ωᶜ)
+open import OCF.Lean.YiCLPhi using (ωᵀ)
+open import OCF.Lean.YiANFam using (ψᴺ; Ωᴺ)
+open import OCF.Lean.YiHCCheck using (ωᴴ)
+import OCF.Align.EboLeanDef as E
+import OCF.Lean.YiLTLift as LT
+open import OCF.Lean.YiKVRel using (⊴r)
+
+η : E.T
+η = E.sucT ωᵀ
+η-cof : E.cof η ≡ E.c1
+η-cof = refl
+η-pred : E.pred η ≡ ωᵀ
+η-pred = refl
+premise-M : M⁰ (E.pred η) ωᶜ
+premise-M = ωᴴ
+premise-Q : LT.Q (ψᴺ 0 (E.Ωt (E.pred η))) (h₁ ωᶜ)
+premise-Q = LT.Qlim _ _
+Goal : Set
+Goal = LT.Q (ψᴺ 0 (E.Ωt η)) (h₁ (suc ωᶜ))
+
+SelfKeep : Set
+SelfKeep = (o : Ok LT.Wω.Lω) (r : Rb LT.Wω.Lω) (B : Base LT.Wω.Lω) (β : Tr⁺ LT.Wω.Lω)
+  → ∀ {P₀} → LT.Wω.Mω (LT.Hω.ψω P₀) (proj₁ β)
+  → ∀ {a x} → LT.Wω.Mω a x
+  → LT.Wω.Mω (LT.Hω.ψω (P₀ ++ a)) (proj₁ (ψ LT.Wω.Lω o r B LT.Wω.Lω self β x))
+
+ZeroKeep : Set
+ZeroKeep = (o : Ok LT.Wω.Lω) (r : Rb LT.Wω.Lω) (B : Base LT.Wω.Lω) (t₀ : E.T)
+  → LT.Wω.GBω B t₀ → (v : zero ≤ LT.Wω.Lω) → LT.ZP LT.Wω.Lω v
+  → (β : Tr⁺ zero) → M⁰ (ψᴺ 0 t₀) (proj₁ β)
+  → ∀ {a x} → LT.Wω.Mω a x
+  → M⁰ (ψᴺ 0 (t₀ ++ a)) (proj₁ (ψ LT.Wω.Lω o r B zero v β x))
+
+self-β : LT.Wω.Mω (LT.Hω.ψω []) (proj₁ (Ωt LT.Wω.Lω))
+self-β = LT.Hω.leafω (λ k → ≤-refl)
+self-x : LT.Wω.Mω (E.Ωt ωᵀ) (proj₁ (Ωt LT.Wω.Lω))
+self-x = self-β
+zero-β : M⁰ (ψᴺ 0 []) (proj₁ (Ωt zero))
+zero-β = m1 refl mz
+zero-B : LT.Wω.GBω (B₀ LT.Wω.Lω) []
+zero-B = LT.Dir.gbOK (rb-no _) (B₀ _) (λ _ _ → ⊴r)

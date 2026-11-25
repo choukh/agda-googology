@@ -1,0 +1,197 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module R10Fold where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit.Base using (⊤; tt)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Product.Base using (_,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; subst)
+open import Relation.Nullary using (¬_)
+open import OCF.Lean.YiLeanCore
+open import OCF.Lean.YiLeanFold
+open import OCF.Lean.YiLeanTw3 using (R; ⌜_⌝; lv; F)
+open import OCF.Lean.YiLeanAccFin using (read; one≼)
+open import R10Rel
+open import R10Add
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; ≼l; l≼; ≼i; i≼; ≼u; u≼)
+open import OCF.BTBO using (module Ord-Ord; injᵃ; injᵇ; injᶜ)
+open Ord-Ord using () renaming (iter to iterᴸ)
+open L using (_≅ᴵ_; _<ᴵ_; _≺ᴵ_)
+nodeAt-br : ∀ {M} m (s : Pre m) (B : Bld M m) → Compat M m B → (gm : Raw (lev m s) → Raw M) →
+  ∀ {ι} {z : L.Ordᶜ ι} → RelF M z (gm G.top) → RelF M z (nodeAt m s B gm)
+nodeAt-br (suc k) (inj₁ _) B C gm d = Compat.cb C (inj₁ tt) gm d
+nodeAt-br (suc k) (inj₂ p) B C gm d = nodeAt-br k p _ (Compat-s C) gm d
+nodeAt-br (lim f) (n , p) B C gm d = nodeAt-br (f n) p _ (Compat-l C n) gm d
+nodeAt-br (lc j g) (η , l , p) B C gm d = nodeAt-br (g η) p _ (Compat-c C η l) gm d
+
+nodeAt-nd : ∀ {M} m (s : Pre m) (B : Bld M m) → Compat M m B → (gm : Raw (lev m s) → Raw M) →
+  ∀ {j K′} {q : j <ᴵ K′} {f : L.U j (L.<→◃ q) → L.Ordᶜ K′} → Corr j (lev m s) →
+  (∀ (y : L.Ordᶜ j) a → RelF (lev m s) y a → RelF M (f (L.into (L.<→◃ q) y)) (gm a)) →
+  RelF M (L.limᵢ q f) (nodeAt m s B gm)
+nodeAt-nd (suc k) (inj₁ _) B C gm c h = Compat.cn C (inj₁ tt) gm c h
+nodeAt-nd (suc k) (inj₂ p) B C gm c h = nodeAt-nd k p _ (Compat-s C) gm c h
+nodeAt-nd (lim f) (n , p) B C gm c h = nodeAt-nd (f n) p _ (Compat-l C n) gm c h
+nodeAt-nd (lc j g) (η , l , p) B C gm c h = nodeAt-nd (g η) p _ (Compat-c C η l) gm c h
+
+nodeAt-dg : ∀ {M} m (s : Pre m) (B : Bld M m) → Compat M m B → (gm : Raw (lev m s) → Raw M) →
+  ∀ {j} {F : ℕ → L.Ordᶜ j} (θ : Raw (lev m s)) → Corr L.zero (lev m s) →
+  (∀ n a → Le (layer (lev m s)) θ a → RelF M (F n) (gm a)) → RelF M (L.lim F) (nodeAt m s B gm)
+nodeAt-dg (suc k) (inj₁ _) B C gm θ c h = Compat.cd C (inj₁ tt) gm θ c h
+nodeAt-dg (suc k) (inj₂ p) B C gm θ c h = nodeAt-dg k p _ (Compat-s C) gm θ c h
+nodeAt-dg (lim f) (n , p) B C gm θ c h = nodeAt-dg (f n) p _ (Compat-l C n) gm θ c h
+nodeAt-dg (lc j g) (η , l , p) B C gm θ c h = nodeAt-dg (g η) p _ (Compat-c C η l) gm θ c h
+
+-- 对角规则的结点: 目标在层号 0 之上, 派发必保留 (Agree), 所以没有折叠的情形.
+DGn : ∀ {m i} → L.zero ≺ᴵ i → ∀ J → Corr L.zero J → (w : Way m J) → AgW w i →
+  (gm : Raw J → Raw m) (gk : Raw J → Raw J) → ∀ {j} {F : ℕ → L.Ordᶜ j} (θ : Raw J) →
+  (∀ n a → Le (layer J) θ a → RelF m (F n) (gm a)) → RelF m (L.lim F) (Ψn m J w gm gk)
+DGn {m} Z .(lev m s) c (keep s refl) ag gm gk θ h = nodeAt-dg m s G.lc (Compat-lc m) gm θ c h
+DGn Z J c fold ag gm gk θ h = ⊥-elim (ag c Z)
+
+DGN : ∀ {m i} → L.zero ≺ᴵ i → ∀ K (r : Pre K) → Corr L.zero (lev K r) → (w : Way m (lev K r)) → AgW w i →
+  (gm : Lay.A (Lo K r) → Raw m) (gk : Lay.A (Lo K r) → Raw (lev K r)) → ∀ {j} {F : ℕ → L.Ordᶜ j}
+  (θ : Lay.A (Lo K r)) → (∀ n a → Le (Lo K r) θ a → RelF m (F n) (gm a)) → RelF m (L.lim F) (ΨN m K r w gm gk)
+DGN Z (suc k) (inj₁ _) = DGn Z k
+DGN Z (suc k) (inj₂ r) = DGN Z k r
+DGN Z (lim f) (n , r) = DGN Z (f n) r
+DGN Z (lc k g) (η , _ , r) = DGN Z (g η) r
+
+FIRSTn : ∀ m J (w : Way m J) gm gk {ι} {z : L.Ordᶜ ι} → RelF m z (gm G.top) → RelF m z (Ψn m J w gm gk)
+FIRSTn m .(lev m s) (keep s refl) gm gk d = nodeAt-br m s G.lc (Compat-lc m) gm d
+FIRSTn m J fold gm gk d = lr-any m 0 d
+
+FIRSTN : ∀ m K (r : Pre K) (w : Way m (lev K r)) gm gk {ι} {z : L.Ordᶜ ι} →
+  RelF m z (gm (Lay.tp (Lo K r))) → RelF m z (ΨN m K r w gm gk)
+FIRSTN m (suc k) (inj₁ _) = FIRSTn m k
+FIRSTN m (suc k) (inj₂ r) = FIRSTN m k r
+FIRSTN m (lim f) (n , r) = FIRSTN m (f n) r
+FIRSTN m (lc j g) (η , _ , r) = FIRSTN m (g η) r
+
+OMEGA : ∀ {K} (V : Lv K) m (x : Ext m K) {i} → Corr i m → ∀ ξ → RelF m (L.Ω i) (Ψ m V x ξ)
+OMEGA V m x c G.zero = START m c
+OMEGA V m x c (G.suc a) = lr-any m 0 (OMEGA V m x c a)
+OMEGA V m x c (G.lim F) = lr-any m 0 (OMEGA V m x c (F 0))
+OMEGA {K} V m x c (G.lc r g) = FIRSTN m K r (x r) _ _ (OMEGA V m x c (g (Lay.tp (Lo K r))))
+OMEGA (vs V) m x c (G.em _ a) = OMEGA V m _ c a
+OMEGA (vl V st) m x c (G.em n a) = OMEGA (V n) m _ c a
+OMEGA v0 m x c G.top = lr-any m 0 (START m c)
+OMEGA {suc k} (vs V) m x c G.top = FIRSTn m k (x (inj₁ tt)) _ _ (OMEGA V m _ c G.top)
+OMEGA (vl V st) m x c G.top = lr-any m 0 (OMEGA (V 0) m _ c G.top)
+module Chain {j K′} (q : j <ᴵ K′) (f : L.U j (L.<→◃ q) → L.Ordᶜ K′) where
+  δ : ℕ → L.Ordᶜ j
+  δ = iterᴸ (λ x → L.ψ q (λ r → r) (f (L.into (L.<→◃ q) x))) (L.Ω j)
+
+  CHAIN : ∀ J → Pl J → Corr j J → (gk : Raw J → Raw J) →
+    (∀ y a → RelF J y a → RelF J (L.ψ q (λ r → r) (f (L.into (L.<→◃ q) y))) (gk a)) →
+    ∀ n → RelF J (δ n) (chain J gk n)
+  CHAIN J PJ c gk hk zero = START J c
+  CHAIN J PJ c gk hk (suc n) = ABSORB PJ (chain J gk n) (hk _ _ (CHAIN J PJ c gk hk n))
+
+module Node {m} (Pm : Pl m) {i ℓ} (p : i <ᴵ ℓ) (ci : Corr i m) (Z : L.zero ≺ᴵ i)
+  {j K′} (q : j <ᴵ K′) (f : L.U j (L.<→◃ q) → L.Ordᶜ K′) (σ : L.Simᴵ K′ ℓ) where
+  open Chain q f
+
+  KEEPc : ∀ J → Corr j J → (w : Way m J) → AgW w i → (gm : Raw J → Raw m) (gk : Raw J → Raw J) →
+    (∀ y a → RelF J y a → RelF m (L.ψ p σ (f (L.into (L.<→◃ q) y))) (gm a)) →
+    ∀ {j″} (e : j ≅ᴵ j″) (r : j″ <ᴵ i) →
+    RelF m (L.limᵢ r (λ y → L.ψ p σ (f (L.into (L.<→◃ q) (L.tr⁻ e (L.out (L.<→◃ r) y))))))
+      (Ψn m J w gm gk)
+  KEEPc .(lev m s) c (keep s refl) ag gm gk hm e r =
+    nodeAt-nd m s G.lc (Compat-lc m) gm (Corr-≅ (L.≅ᴵ-sym e) c) (λ z a pz →
+      subst (λ w → RelF m (L.ψ p σ (f (L.into (L.<→◃ q) (L.tr⁻ e w)))) (gm a))
+        (sym (L.out-into (L.<→◃ r) z)) (hm (L.tr⁻ e z) a (TRC.tr⁻ᴿ (TRC-all (lev m s)) e pz)))
+  KEEPc J c fold ag gm gk hm e r = ⊥-elim (ag c (L.via e r))
+
+  FOLDc : ∀ J → Pl J → Corr j J → (w : Way m J) → AgW w i → ¬ (j ≺ᴵ i) → L.zero ≺ᴵ j →
+    (gm : Raw J → Raw m) (gk : Raw J → Raw J) →
+    (∀ y a → RelF J y a → RelF m (L.ψ p σ (f (L.into (L.<→◃ q) y))) (gm a)) →
+    (L.zero ≺ᴵ j → ∀ y a → RelF J y a → RelF J (L.ψ q (λ r → r) (f (L.into (L.<→◃ q) y))) (gk a)) →
+    RelF m (L.lim (λ n → L.ψ p σ (f (L.into (L.<→◃ q) (δ n))))) (Ψn m J w gm gk)
+  FOLDc J PJ c (keep s e₀) ag nlt Zj gm gk hm hk = ⊥-elim (nlt (ag c))
+  FOLDc J PJ c fold ag nlt Zj gm gk hm hk =
+    llr-any m (λ n → lr-any m n (hm _ _ (CHAIN J PJ c gk (hk Zj) n)))
+
+  NODEn : ∀ J → Pl J → Corr j J → (w : Way m J) → AgW w i → (gm : Raw J → Raw m) (gk : Raw J → Raw J) →
+    (∀ y a → RelF J y a → RelF m (L.ψ p σ (f (L.into (L.<→◃ q) y))) (gm a)) →
+    (L.zero ≺ᴵ j → ∀ y a → RelF J y a → RelF J (L.ψ q (λ r → r) (f (L.into (L.<→◃ q) y))) (gk a)) →
+    RelF m (L.ψ p σ (L.limᵢ q f)) (Ψn m J w gm gk)
+  NODEn J PJ c w ag gm gk hm hk with L.<ᴵ-dec (σ q) p
+  ... | injᵃ (L.via e r) = KEEPc J c w ag gm gk hm e r
+  ... | injᵇ ir = FOLDc J PJ c w ag (λ lt → L.≺ᴵ-irrefl (L.≺ᴵ-trans lt ir)) (L.≺ᴵ-trans Z ir) gm gk hm hk
+  ... | injᶜ e = FOLDc J PJ c w ag (λ lt → L.≺ᴵ-irrefl (L.≺ᴵ-respʳ lt (L.≅ᴵ-sym e))) (L.≺ᴵ-respʳ Z (L.≅ᴵ-sym e)) gm gk hm hk
+
+  NODEN : ∀ K → Pl K → (r : Pre K) → Corr j (lev K r) → (w : Way m (lev K r)) → AgW w i →
+    (gm : Lay.A (Lo K r) → Raw m) (gk : Lay.A (Lo K r) → Raw (lev K r)) →
+    (∀ y a → RelP K r y a → RelF m (L.ψ p σ (f (L.into (L.<→◃ q) y))) (gm a)) →
+    (L.zero ≺ᴵ j → ∀ y a → RelP K r y a → RelF (lev K r) (L.ψ q (λ r → r) (f (L.into (L.<→◃ q) y))) (gk a)) →
+    RelF m (L.ψ p σ (L.limᵢ q f)) (ΨN m K r w gm gk)
+  NODEN (suc k) (ps P) (inj₁ _) = NODEn k P
+  NODEN (suc k) (ps P) (inj₂ r) = NODEN k P r
+  NODEN (lim f) (pl P) (n , r) = NODEN (f n) (P n) r
+FOLDZ : ∀ m → Pl m → (x : Ext m zero) → ∀ {i ℓ} (p : i <ᴵ ℓ) → Corr i m → (σ : L.Simᴵ L.zero ℓ) →
+  ∀ {y b : L.Ordᶜ L.zero} → y ≼ b → ∀ a → b ≡ read a → RelF m (L.ψ p σ y) (Ψ m v0 x a)
+FOLDZ m Pm x p c σ z≼ a e = OMEGA v0 m x c a
+FOLDZ m Pm x p c σ (s≼s d) (G.suc a) refl = SUCC Pm (FOLDZ m Pm x p c σ d a refl)
+FOLDZ m Pm x p c σ (s≼s d) G.top refl = SUCC Pm (FOLDZ m Pm x p c σ d G.zero refl)
+FOLDZ m Pm x p c σ (≼l n d) (G.lim F) refl = lr-any m n (FOLDZ m Pm x p c σ d (F n) refl)
+FOLDZ m Pm x p c σ (l≼ h) a e = llr-any m (λ n → FOLDZ m Pm x p c σ (h n) a e)
+FOLDZ m Pm x p c σ (≼i {p = ()} z ez d) a e
+FOLDZ m Pm x p c σ (i≼ {p = ()} h) a e
+FOLDZ m Pm x p c σ (≼u {r = ()} d) a e
+FOLDZ m Pm x p c σ (u≼ {r = ()} d) a e
+
+FOLD : ∀ {K} (V : Lv K) m → Pl m → (x : Ext m K) → ∀ {i ℓ} (p : i <ᴵ ℓ) → Corr i m → Agree x i → L.zero ≺ᴵ i →
+  ∀ {κ} (σ : L.Simᴵ κ ℓ) {y : L.Ordᶜ κ} {ξ} → RelF K y ξ → RelF m (L.ψ p σ y) (Ψ m V x ξ)
+FOLDs : ∀ {k} (V : Lv k) m → Pl m → (x : Ext m (suc k)) → ∀ {i ℓ} (p : i <ᴵ ℓ) → Corr i m → Agree x i → L.zero ≺ᴵ i →
+  ∀ {κ} (σ : L.Simᴵ κ ℓ) {y : L.Ordᶜ κ} {ξ} → RelF (suc k) y ξ → RelF m (L.ψ p σ y) (Ψ m (vs V) x ξ)
+FOLDl : ∀ {f} (V : ∀ n → Lv (f n)) (st : ∀ n → Shift (f n) (f (suc n))) m → Pl m → (x : Ext m (lim f)) →
+  ∀ {i ℓ} (p : i <ᴵ ℓ) → Corr i m → Agree x i → L.zero ≺ᴵ i →
+  ∀ {κ} (σ : L.Simᴵ κ ℓ) {y : L.Ordᶜ κ} {ξ} → RelF (lim f) y ξ → RelF m (L.ψ p σ y) (Ψ m (vl V st) x ξ)
+
+FOLD v0 m Pm x p c ag Z {L.zero} σ {ξ = ξ} d = FOLDZ m Pm x p c σ d ξ refl
+FOLD v0 m Pm x p c ag Z {L.suc _} σ ()
+FOLD v0 m Pm x p c ag Z {L.lim _ _} σ ()
+FOLD (vs V) = FOLDs V
+FOLD (vl V st) = FOLDl V st
+
+FOLDs V m Pm x p c ag Z σ zr = OMEGA (vs V) m x c _
+FOLDs V m Pm x p c ag Z σ (ssr d) = SUCC Pm (FOLDs V m Pm x p c ag Z σ d)
+FOLDs V m Pm x p c ag Z σ (sr d) = lr-any m 0 (FOLDs V m Pm x p c ag Z σ d)
+FOLDs V m Pm x p c ag Z σ (lr n d) = lr-any m n (FOLDs V m Pm x p c ag Z σ d)
+FOLDs V m Pm x p c ag Z σ (llr h) = llr-any m (λ n → FOLDs V m Pm x p c ag Z σ (h n))
+FOLDs {k} V m Pm x p c ag Z σ (br {r = r} d) = FIRSTN m (suc k) r (x r) _ _ (FOLDs V m Pm x p c ag Z σ d)
+FOLDs {k} V m Pm x p c ag Z σ (ndr {r = r} {g = g} {q = q} {f = f} cj h) =
+  Node.NODEN Pm p c Z q f σ (suc k) (ps (Lv→Pl V)) r cj (x r) (ag r) _ _
+    (λ y a pz → FOLDs V m Pm x p c ag Z σ (h y a pz))
+    (λ Zj y a pz → FOLDs V (lev (suc k) r) (Pl-lev (ps (Lv→Pl V)) r) (cmp (vs V) r) q cj
+      (λ r′ → CMP (vs V) r r′ cj) Zj (λ z → z) (h y a pz))
+FOLDs V m Pm x p c ag Z σ (emr d) = FOLD V m Pm (λ r → x (inj₂ r)) p c (λ r → ag (inj₂ r)) Z σ d
+FOLDs {k} V m Pm x p c ag Z σ (tnr tt d) = FOLDs V m Pm x p c ag Z σ {ξ = topS k} d
+FOLDs V m Pm x p c ag Z σ (tlr i () d)
+FOLDs V m Pm x p c ag Z σ (ur d) = FOLDs V m Pm x p c ag Z (λ q → σ (L.suc q)) d
+FOLDs V m Pm x p c ag Z σ (us {n = n} d) = FOLDs V m Pm x p c ag Z (λ q → σ (L.lim n q)) d
+FOLDs {k} V m Pm x p c ag Z σ (dgr {r = r} θ cz′ h) =
+  DGN Z (suc k) r cz′ (x r) (ag r) _ _ θ (λ n a le → FOLDs V m Pm x p c ag Z σ (h n a le))
+
+FOLDl V st m Pm x p c ag Z σ zr = OMEGA (vl V st) m x c _
+FOLDl V st m Pm x p c ag Z σ (ssr d) = SUCC Pm (FOLDl V st m Pm x p c ag Z σ d)
+FOLDl V st m Pm x p c ag Z σ (sr d) = lr-any m 0 (FOLDl V st m Pm x p c ag Z σ d)
+FOLDl V st m Pm x p c ag Z σ (lr n d) = lr-any m n (FOLDl V st m Pm x p c ag Z σ d)
+FOLDl V st m Pm x p c ag Z σ (llr h) = llr-any m (λ n → FOLDl V st m Pm x p c ag Z σ (h n))
+FOLDl {f} V st m Pm x p c ag Z σ (br {r = r} d) = FIRSTN m (lim f) r (x r) _ _ (FOLDl V st m Pm x p c ag Z σ d)
+FOLDl {f} V st m Pm x p c ag Z σ (ndr {r = r} {g = g} {q = q} {f = h₀} cj h) =
+  Node.NODEN Pm p c Z q h₀ σ (lim f) (pl (λ n → Lv→Pl (V n))) r cj (x r) (ag r) _ _
+    (λ y a pz → FOLDl V st m Pm x p c ag Z σ (h y a pz))
+    (λ Zj y a pz → FOLDl V st (lev (lim f) r) (Pl-lev (pl (λ n → Lv→Pl (V n))) r) (cmp (vl V st) r) q cj
+      (λ r′ → CMP (vl V st) r r′ cj) Zj (λ z → z) (h y a pz))
+FOLDl V st m Pm x p c ag Z σ (emr {i = n} d) = FOLD (V n) m Pm (λ r → x (n , r)) p c (λ r → ag (n , r)) Z σ d
+FOLDl V st m Pm x p c ag Z σ (tnr () d)
+FOLDl V st m Pm x p c ag Z σ (tlr n tt d) =
+  lr-any m n (PSUM Pm (λ n → Ψ m (V n) (λ r → x (n , r)) G.top) n
+    (FOLD (V n) m Pm (λ r → x (n , r)) p c (λ r → ag (n , r)) Z σ d))
+FOLDl V st m Pm x p c ag Z σ (ur d) = FOLDl V st m Pm x p c ag Z (λ q → σ (L.suc q)) d
+FOLDl V st m Pm x p c ag Z σ (us {n = n} d) = FOLDl V st m Pm x p c ag Z (λ q → σ (L.lim n q)) d
+FOLDl {f} V st m Pm x p c ag Z σ (dgr {r = r} θ cz′ h) =
+  DGN Z (lim f) r cz′ (x r) (ag r) _ _ θ (λ n a le → FOLDl V st m Pm x p c ag Z σ (h n a le))

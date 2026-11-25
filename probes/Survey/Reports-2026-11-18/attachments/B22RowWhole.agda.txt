@@ -1,0 +1,67 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22RowWhole where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block
+open import W4Fold
+open import W4Ops
+open import WVOne using (T₀; read)
+open import WVTwo using (◃→≼)
+open import WKShape using (lvl3; Ψ₃; ok₃)
+open import YiLAB7Orbit using (lvl1; lvl2)
+open import YiLAB7Replay using (o₁)
+open import B9InnerReal using (module RX)
+open RX o₁ using (Real-pos)
+open import WSShadow using (zC)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼; ≅→≼)
+import B11OuterCore as C
+import B12Update as U
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B18OrbitWorld as Ix
+import B18OrbitLevels as All
+import B19RowSecond as Old
+import B21RowPool as Pool
+import B21RowPass as Pass
+import B22RowPrefix as P
+import B22RowLive as M
+open Tm.Run
+
+iterated : ∀ n → P.Label (Pass.prefix n)
+iterated zero = P.empty
+iterated (suc n) = P.Step.next (iterated n)
+
+total : T₀
+total = L.lim (λ n → L.ψ⁰ (Pass.prefix n))
+
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  module Site = Pool.At r cv
+  open Site.V.R.I using (module E₀)
+  open Site.V.A using (K; G; S₀; st1; w2; v₁; outer)
+  initial : M.Present P.empty st1
+  initial = M.present (λ w → ≼-trans (oneB r (inc tt w)) (◃→≼ (inf K S₀ zero w (S₀ zero w))))
+    (C.str (Real-pos _ (proj₂ (st1 lvl1 C.slot))) (C.rΩ h) (C.sN h) (C.st h))
+    (λ d → Ix.start (All.world d) (st1 lvl1 C.slot) (C.st h))
+    where h = U.structure (E₀.seeds 0)
+  state = E₀.state
+  track : ∀ n → M.Present (iterated n) (state n)
+  track zero = initial
+  track (suc n) = M.Update.next r cv (iterated n) (state n) (track n)
+  run-bound : ∀ n → L.ψ⁰ (P.q (iterated n)) ≼ read (proj₁ (E₀.value n))
+  run-bound zero = ≼-trans (oneβ r) (◃→≼ (inf K S₀ zero w2 (β r)))
+  run-bound (suc n) = M.Update.Emit.all r cv (iterated n) (state n) (track n) w2 (E₀.value n) (run-bound n)
+  each : ∀ n → L.ψ⁰ (Pass.prefix n) ≼ read (Tm.value r)
+  each zero = one-value
+    where
+    one-value = ≼-trans (run-bound 0) (≼-trans (◃→≼ (inf G st1 zero w2 v₁)) (outer 0))
+  each (suc n) = ≼-trans (≅→≼ (L.≅-sym (proj₁ (P.link (iterated (suc n)))))) (≼-trans (run-bound (suc n)) (outer n))
+  full : total ≼ read (Tm.value r)
+  full = l≼ each
+
+standard : total ≼ read Ψ₃
+standard = At.full (Tm.initial lvl3 ok₃) (Cov.initial lvl3 ok₃)
+terminal : total ≼ read EBOᶜ
+terminal = ≼-trans (At.full (Tm.finiteRun 2) (Cov.all-finite 2)) (Tm.finite-ge 2)
+

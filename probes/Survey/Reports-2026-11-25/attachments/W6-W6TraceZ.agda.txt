@@ -1,0 +1,106 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W6 真实运行追踪之二 (塔第 2 项, 全是 refl): W6 仍回退的一处. tw 2 的孩子 z₁ (读回层号, 证书两个可选字段都是 nothing) 里,
+-- 孩子 zero 上的 up (前缀第 1 段的嵌入) 朝孩子 1 的层号折, 回退. 不说明: 这是运行里 "第一处" (判断); 这个目标在运行里被查询 (判断); 值.
+module W6TraceZ where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W6Block
+open import W6Ops
+open import W6Path
+open import W6Fold
+open import W6Loc using (loc)
+open import W6Shape using (t; h₁; module Steer)
+
+open import W6Trace
+-- 二. W6 仍回退的一处. z₁ 是顶层链的第 1 个链点 (同 W5Trace), 孩子 z₁ 的层号是读回层号 (Ω 形, 证书的两个可选字段都是 nothing).
+β′ β₁ : Tr⁺ (tw 1)
+β′ = ψ Λ Ok-Λ (B₀ Λ) (tw 1) (inc 2 (ink self)) b (seg 0)
+β₁ = B₂ (tw 1) (ink self)
+z₁ : Tr (tw 1)
+z₁ = ex (proj₁ β₁) (proj₁ β₁) (proj₂ β₁) (proj₁ b) tt
+
+step₂ : Tr (tw 1) → Tr (tw 1)
+step₂ z = proj₁ (ψ (h₂ z) (proj₂ o₂ z) (λ i u → B₂ i (inc z u)) (tw 1) (self ∙ lift (tw 1) (↑ (tw 1) z)) (B₂ (tw 1) (ink self)) (proj₁ (Ωt (h₂ z))))
+z₁-is : step₂ zero ≡ z₁
+z₁-is = refl
+
+Lβ₁ : L
+Lβ₁ = ↑ (tw 1) (proj₁ β₁)
+K₂ : Tr zero → L
+K₂ c = proj₁ (Eh AL tt (proj₁ (Ωt (h₁ c))) (opR Lβ₁)) Lβ₁
+kidZ : Tr zero → L
+kidZ c = tw 1 ⊕ K₂ c
+z₁-level : h₂ z₁ ≡ nd (sΩ zero) kidZ
+z₁-level = refl
+
+c1 : Tr zero
+c1 = suc zero
+
+-- 孩子 z₁ 的证书: 右加法字段与孩子 1 上的 "孩子 zero 到孩子 c" 字段都是 nothing.
+cert-none : proj₂ (proj₂ (proj₁ (proj₂ o₂ z₁))) ≡ nothing
+cert-none = refl
+cert-none′ : proj₂ (proj₁ (proj₂ (proj₁ (proj₂ o₂ z₁))) c1) ≡ nothing
+cert-none′ = refl
+
+-- 目标: 孩子 z₁ 的孩子 1 的层号本身 (无穷, 对孩子 z₁ 是私有的).
+jZ : L
+jZ = kidZ c1
+pathZ : jZ ≤ tw 2
+pathZ = inc z₁ (inc c1 self)
+loc-miss : loc jZ (kidZ zero) ≡ nothing
+loc-miss = refl
+
+-- 机制 (树, 底, 状态都是变量): 孩子 z₁ 里, 孩子 zero 上的 up 朝孩子 1 的层号折. 证书为 nothing, 定位器找不到, 回退.
+mech-Z : (B : Base (h₂ z₁)) (β : Tr⁺ jZ) (Y : Tr (kidZ zero)) (e : kidZ zero ⊢ zero ◃ Y)
+  → ψ (h₂ z₁) (proj₂ (Ok-tw 2) z₁) B jZ (inc c1 self) β (up zero zero Y e)
+  ≡ β ⊞ ψ (kidZ zero) (proj₂ (proj₂ (Ok-tw 2) z₁) zero) (λ i u → B i (inc zero u)) zero (z≤ (kidZ zero)) (B zero (z≤ (h₂ z₁))) Y
+mech-Z B β Y e = refl
+
+-- 把真实条目接到机制上. 每一步都是对变量成立的 refl, 再按逐字相同的项实例化
+-- (直接对闭项写 refl, 检查器会把两边的大闭项都算开, 堆耗尽).
+stepΛ : (B : Base Λ) (j : L) (v : j ≤ tw 2) (β : Tr⁺ j) (x : Tr Λ) (y : Tr (tw 1)) (e : tw 1 ⊢ zero ◃ y)
+  → ψ Λ Ok-Λ B j (inc 2 v) β (up x 1 y e)
+  ≡ ψ (tw 2) (Ok-tw 2) (λ i u′ → ψ Λ Ok-Λ B i (inc 2 u′) (B i (inc 2 u′)) x) j v (ψ Λ Ok-Λ B j (inc 2 v) β x) (up zero zero y e)
+stepΛ B j v β x y e = refl
+
+stepZ₁ : (B : Base (tw 2)) (j : L) (v : j ≤ h₂ z₁) (β : Tr⁺ j) (y : Tr (tw 1)) (e : tw 1 ⊢ zero ◃ y)
+  → ψ (tw 2) (Ok-tw 2) B j (inc z₁ v) β (up zero zero y e)
+  ≡ ψ (h₂ z₁) (proj₂ (Ok-tw 2) z₁) (λ i u → B i (inc z₁ u)) j v β
+      (proj₁ (emb (h₂ z₁) (proj₂ (Ok-tw 2) z₁) (lift (tw 1) (↑ (tw 1) z₁)) (y , e)))
+stepZ₁ B j v β y e = refl
+
+embZ : (y : Tr (tw 1)) (e : tw 1 ⊢ zero ◃ y)
+  → proj₁ (emb (h₂ z₁) (proj₂ (Ok-tw 2) z₁) (lift (tw 1) (↑ (tw 1) z₁)) (y , e))
+  ≡ up zero zero (proj₁ (emb (kidZ zero) (proj₂ (proj₂ (Ok-tw 2) z₁) zero) (lift (tw 1) (K₂ zero)) (y , e)))
+                 (proj₂ (emb (kidZ zero) (proj₂ (proj₂ (Ok-tw 2) z₁) zero) (lift (tw 1) (K₂ zero)) (y , e)))
+embZ y e = refl
+
+-- 运行中前缀的左项是 cum seg 0 + zero (定义上等于 seg 0), 第 1 段是 Ωt (tw 1).
+X : Tr Λ
+X = cum seg 0 + zero
+Yt : Tr (tw 1)
+Yt = proj₁ (Ωt (tw 1))
+Et : tw 1 ⊢ zero ◃ Yt
+Et = proj₂ (Ωt (tw 1))
+
+pre₂-is : pre₂ ≡ up X 1 Yt Et
+pre₂-is = refl
+
+open import Relation.Binary.PropositionalEquality using (trans; cong)
+
+-- 真实条目 (W6): 状态 B₂ 在 "孩子 z₁ 的孩子 1 的层号" 处的值. 前缀第 1 段经塔证书嵌进孩子 z₁, 落在孩子 zero 上 (up zero zero Y₁),
+-- 朝孩子 1 里的目标折: 回退成 "底 ⊞ 孩子 zero 里从第 0 层起的尾巴". 底是前缀左项朝目标的折叠.
+fallback-Z : B₂ jZ (inc z₁ (inc c1 self))
+  ≡ (ψ Λ Ok-Λ (B₀ Λ) jZ (inc 2 (inc z₁ (inc c1 self))) (B₀ Λ jZ (inc 2 (inc z₁ (inc c1 self)))) X) ⊞ ψ (kidZ zero) (proj₂ (proj₂ (Ok-tw 2) z₁) zero) (λ i u → ψ Λ Ok-Λ (B₀ Λ) i (inc 2 (inc z₁ (inc zero u))) (B₀ Λ i (inc 2 (inc z₁ (inc zero u)))) X) zero (z≤ (kidZ zero))
+           (ψ Λ Ok-Λ (B₀ Λ) zero (inc 2 (inc z₁ (z≤ (h₂ z₁)))) (B₀ Λ zero (inc 2 (inc z₁ (z≤ (h₂ z₁))))) X) (proj₁ (emb (kidZ zero) (proj₂ (proj₂ (Ok-tw 2) z₁) zero) (lift (tw 1) (K₂ zero)) (Yt , Et)))
+fallback-Z =
+  trans (cong (ψ Λ Ok-Λ (B₀ Λ) jZ (inc 2 (inc z₁ (inc c1 self))) (B₀ Λ jZ (inc 2 (inc z₁ (inc c1 self))))) {x = pre₂} {y = up X 1 Yt Et} pre₂-is)
+  (trans (stepΛ (B₀ Λ) jZ (inc z₁ (inc c1 self)) (B₀ Λ jZ (inc 2 (inc z₁ (inc c1 self)))) X Yt Et)
+  (trans (stepZ₁ (λ i u′ → ψ Λ Ok-Λ (B₀ Λ) i (inc 2 u′) (B₀ Λ i (inc 2 u′)) X) jZ (inc c1 self) (ψ Λ Ok-Λ (B₀ Λ) jZ (inc 2 (inc z₁ (inc c1 self))) (B₀ Λ jZ (inc 2 (inc z₁ (inc c1 self)))) X) Yt Et)
+  (trans (cong (ψ (h₂ z₁) (proj₂ (Ok-tw 2) z₁) (λ i u → ψ Λ Ok-Λ (B₀ Λ) i (inc 2 (inc z₁ u)) (B₀ Λ i (inc 2 (inc z₁ u))) X) jZ (inc c1 self) (ψ Λ Ok-Λ (B₀ Λ) jZ (inc 2 (inc z₁ (inc c1 self))) (B₀ Λ jZ (inc 2 (inc z₁ (inc c1 self)))) X)) {x = proj₁ (emb (h₂ z₁) (proj₂ (Ok-tw 2) z₁) (lift (tw 1) (↑ (tw 1) z₁)) (Yt , Et))} {y = up zero zero (proj₁ (emb (kidZ zero) (proj₂ (proj₂ (Ok-tw 2) z₁) zero) (lift (tw 1) (K₂ zero)) (Yt , Et))) (proj₂ (emb (kidZ zero) (proj₂ (proj₂ (Ok-tw 2) z₁) zero) (lift (tw 1) (K₂ zero)) (Yt , Et)))} (embZ Yt Et))
+         (mech-Z (λ i u → ψ Λ Ok-Λ (B₀ Λ) i (inc 2 (inc z₁ u)) (B₀ Λ i (inc 2 (inc z₁ u))) X) (ψ Λ Ok-Λ (B₀ Λ) jZ (inc 2 (inc z₁ (inc c1 self))) (B₀ Λ jZ (inc 2 (inc z₁ (inc c1 self)))) X) (proj₁ (emb (kidZ zero) (proj₂ (proj₂ (Ok-tw 2) z₁) zero) (lift (tw 1) (K₂ zero)) (Yt , Et))) (proj₂ (emb (kidZ zero) (proj₂ (proj₂ (Ok-tw 2) z₁) zero) (lift (tw 1) (K₂ zero)) (Yt , Et)))))))

@@ -1,0 +1,10 @@
+{
+  "runner_exit": 130,
+  "agda_exit": "not captured: runner interrupted by Ctrl-C",
+  "start_from_log_birthtime_utc": "2026-11-15T08:52:48.150662+00:00",
+  "end_from_log_mtime_utc": "2026-11-15T08:55:14.856998+00:00",
+  "file_timestamp_span_seconds": 146.70633602142334,
+  "excluded_from_valid_measurement": true,
+  "maximum_residency_bytes": 8431821200.0,
+  "rts_elapsed_seconds": 146.629
+}

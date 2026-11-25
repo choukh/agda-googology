@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23AFinite where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (read; 𝟏)
+open import WVTwo using (◃→≼)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl2; ok₂)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; l≼; ≅→≼)
+import B12Terminal as Tm
+import B12ActualSlots as Cov
+import B12Omega3Ref as Ref
+import B12Omega3Cuts as U
+import B13Target as P
+import B13Orbit as O
+import B13SeedOuter as Seed
+import B14RefAllRows as Rows
+import B22RowRule as Rule
+import B22RowPrefix as B
+import B22RowWhole as Live
+import B23ABlocks as Blk
+module At (r : Tm.Run lvl3) (cv : Cov.Covered r) where
+  module S = Seed.At r
+  module Start = Blk.Site r cv
+  Q = iter (O.block S.c⁺) Start.J
+  sum = Ref.S.iter (Ω₂ᴸ L.+_) L.zero
+  reg : ∀ n → sum n L.≅ sum n
+  reg zero = L.z≅
+  reg (suc n) = L.add-≅ {σ = Ref.idσ} {σ′ = Ref.idσ} (L.Ω-refl _) (reg n)
+  inside : ∀ n → Rl (Q n) S.G
+  inside zero R i t b = Itinf 0 ok₂ tdNil (suc zero) (Kb ok₂ tdNil S.c S.nc) Start.J R i t b
+  inside (suc n) R i t b = ◃l n
+  scalar = λ n → L.ψ⁰ (P.pass (sum n))
+  out = λ n → read (proj₁ (run (Q n) S.st1 zero S.w2 S.v₁))
+  covered : ∀ n → Rule.Rule (Q n) (sum n) → scalar n ≼ out n
+  covered n h = ≼-trans (≅→≼ (L.≅-sym (L.≅-trans (proj₁ (B.link next)) (L.ψ⁰-≅ (U.left-unit Ref.idσ (P.pass-pres (reg n)))))))
+    (Rule.value h B.empty S.st1 (Live.At.initial r cv) S.w2 S.v₁ (Live.At.run-bound r cv 0))
+    where next = Rule.advance h B.empty
+  first-zero : scalar 0 ≼ out 0
+  first-zero = covered 0 Start.base
+  first-one : scalar 1 ≼ out 1
+  first-one = covered 1 Start.once
+  -- Only scalar domination is needed at the two-and-later finite sums.
+  first-step : (∀ n → scalar (suc (suc n)) ≼ out (suc (suc n))) →
+    Rows.gain 1 0 𝟏 ≼ read (Tm.value r)
+  first-step tail = ≼-trans (l≼ (λ n → ≼-trans (choose n) (◃→≼ (inside n S.st1 zero S.w2 S.v₁)))) (S.outer 0)
+    where
+    choose : ∀ n → scalar n ≼ out n
+    choose zero = first-zero
+    choose (suc zero) = first-one
+    choose (suc (suc n)) = tail n

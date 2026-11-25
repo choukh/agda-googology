@@ -1,0 +1,165 @@
+B6A 纸面: W4 迭代子 E / It n 对一切阶的值理论 (目标层取 0, 树层取 lvl1 = 1)
+========================================================================
+
+记号. T₀ = Level 第 0 层树 (值的比较一律用 Value 的 ≼). read : Tr zero → T₀.
+lvl1 = nd sS (λ _ → zero). 只讨论把第 1 层的树折到第 0 层, 这时 kp 恒给 nothing
+(第 1 层只有一个槽位 p₁, 两种路径 inu / inc tt 都落到 kp⁼ zero (inj₁ tt) = nothing),
+所以一切 Ω 行都是 ℕ 极限链, 没有保留行.
+
+0. 三方的分工
+-------------
+三方: Level (参照, 树) / 影子 (第 0 层上的函数, 无语境) / W4 (折叠的 op).
+  * Level ↔ 影子 只在第 0 阶 (ψ⁰ 的值) 相遇, 外加一条 "层号移位" 的关系引理;
+  * 影子 ↔ W4 是一切阶 n 的逻辑关系 R n, 写成 "下界闭包" 形状, 不要影子单调;
+  * 一切 "放宽" (链值不同, 参数不同) 都放在 W4 一侧用 W4 自己的律 (inf, Itinf,
+    Emono, Itmono) 吸收, 或在影子一侧用 "无条件的逐点膨胀" 吸收.
+这样影子不需要单调性理论 (这是纸面上找到的主要简化, 见 §5 C4).
+
+1. 影子
+-------
+Sh 0 = T₀ → T₀ → T₀        (a 是底, c 是链底 = 状态在链目标上的分量)
+Sh (n+1) = Sh n → Sh n
+limS, nodeS 逐阶下放到第 0 阶:
+  limS 0 F a c = lim_j F j a c
+  nodeS 0 h a c = lim_k h (x_k) a c,  x_0 = 1, x_{k+1} = h x_k c c   (链从 1 起, 同 Level)
+  limS / nodeS (n+1) 逐点.
+指数影子 (一切阶一起给): e = (e.E : Sh 0 → Sh 0 ;  e.It n : Sh (n+1) → Sh n → Sh n).
+组合子 (每个对应 W4 的一行):
+  zC        E f = f ;              It n k g = k g                       (zero 行: K idM G)
+  sC e      E f = λ a c → lim_j π₁ (pr(e.E f))^{j+1}(a,c),  pr f (a,c) = (f a c, f c c)
+                                                                      (E 的 suc 行: itV/itS 同步迭代)
+            It n k g = limS n (j ↦ (e.It n k)^{j+1} g)                 (It 的 suc 行)
+  lC h      逐项 lim                                                   (lim 行)
+  nC h      E f = nodeS 0 (y ↦ (h y).E f) ; It n k g = nodeS n (y ↦ (h y).It n k g)   (Ω 行)
+  lv y      第 0 层指数 y : T₀ 的影子 = 按 y 的构造用 zC / sC / lC 拼出
+  Ω̂ = nC lv                                                           (Level 的 Ω₁ 作指数)
+  sh e      E f = e.It 0 (λ g → Ω̂.E g) f
+            It n k g = e.It (n+1) (λ k₁ g′ → Ω̂.It n k₁ g′) (λ g′ → k g′) g
+                                                    ("a + Ω₁·ω^x" 的 ex 行, a 取 0)
+  a ⨾ b     E f = b.E (a.E f) ;  It n k g = b.It n (λ g′ → a.It n k g′) g     (指数相加)
+逐点序 Le n (第 0 阶逐点 ≼, 高阶逐点), LeE 两部分都逐点. 无条件的逐点膨胀
+  f ⊑ e.E f ,  k g ⊑ e.It n k g
+对一切由 Lᵉ 推出的 e 成立 (对 Lᵉ 归纳; Ei 用分支在 1 处).
+
+2. 影子 ↔ W4 (一切阶): 逻辑关系与每一行的不等式
+-----------------------------------------------
+语境 X, 链点 ch : ⟦X⟧ zero (树 T = td stop tv mk 时 ch = mk (inc tt self)).
+  R 0 X ch F f  :=  ∀ S t v a c. a ≼ read v → c ≼ read (S zero ch) → 1 ≼ read (S zero ch)
+                     → f a c ≼ read (run F S zero t v)
+  R (n+1) X ch K k := ∀ Y (m : Mor X Y). Good m ch → ∀ G g. R n Y (σ m ch) G g
+                     → R n Y (σ m ch) (K m G) (k g)
+  Good m ch := π m (σ m ch) ≡ ch.  W4 定义里出现的延伸 (idM, chM/chMT, liftM, ⊙) 都满足.
+闭包 (都不要影子单调):
+  (cl-W)  R n G g, Rn n G G′ → R n G′ g        (沿 W4 自己的序放大 op)
+  (cl-S)  R n G g, Le n g′ g → R n G g′         (缩小影子)
+  (sup)   ∀j R n G (h j) → R n G (limS n h)
+每一行的不等式 (左边 W4, 右边影子; 都在 R 的意义下):
+  limC        R n (F j) (h j) ∀j            ⟹  R n (limC n F) (limS n h)
+  nodeC/Ω     ∀ y z. y ≼ read z → R n (G z) (h y),  jd ≡ nothing,  node 链点 = ch
+                                            ⟹  R n (nodeC n p₁ jd ch G) (nodeS n h)
+              第 0 阶的证明: 影子链 x_k 对 W4 链 z_{k+1} 下界 (差一步: W4 链从 0 起,
+              影子从 1 起; x_0 = 1 ≼ z_1 用 inf 与 1 ≼ 链底); 值逐项进 cum.
+  upC (只取 R 部分)  R n (cons w X) (ι ch , ch) R′ r  ⟹  R n X ch (upC n w ι A R′) r
+              第 0 阶: run (upC A R′) = R′ (A v) 用旧状态; R′ 的底 A v ≽ v (inf A).
+              高阶: 子语境链点 (ι (π m (σ m ch)), σ m ch) 与 liftM 的像 (ι ch, σ m ch)
+              经 Good m 相等 (subst).
+  enter       Good m ch, R n X ch G g ⟹ R n Y (σ m ch) (enter n m G) g
+  Kb b        Real-E(b, e_b) ⟹ R 1 X ch (Kb b) (λ g → e_b.E g)
+  Kₑ n b      Real-It(b, e_b) ⟹ R (n+2) X ch (Kₑ n b) (λ k₁ g → e_b.It n k₁ g)
+  Itᴺ n a K   Real-It(a, e_a), R (n+1) K k ⟹ R (n+1) (Itᴺ n a K) (λ g → e_a.It n k g)
+  第 0 层指数 (E 的 zero/suc/lim, It n 的 zero/suc/lim), 带放宽 y′ ≼ read y:
+              R (n+1) K k, R n G g, y′ ≼ read y ⟹ R n (It n y K G) ((lv y′).It n k g)
+              对 W4 树 y 与 ≼ 推导同时归纳: z≼ 用 Itmono (zero ◃ y); s≼s 是结构的迭代;
+              ≼l n 用 Itmono (◃l n); l≼ 用 (sup). E 一侧同 (itV/itS 两轨同步, B5D 的 J).
+指数的实现  Real(x, e) := E 部分 (对一切 X, tv, mk, F, f) 与 It 部分 (对一切 n 与上同).
+  Real(zero, zC)                                             (zero 行)
+  W1:  Real(Ω₁, Ω̂),   Ω₁ = Ωt lvl1 = Ω p₁ (z ↦ up zero tt (suc z))
+       E 一侧: E 的 Ω 行 = node, 分支 = E 的 up 行 = 子语境里第 0 层指数 suc z 作用在
+       enterO (E zero F) = F 上; 放宽 y ≼ read z ≼ read (suc z).
+       It 一侧: It 的 Ω 行 = nodeC, 分支 = It 的 up 行 = upC; 只取 R 部分:
+       It (chTD) (suc z) (enter (Itᴺ zero K)) (enter (K idM G)); 其中 Itᴺ zero K 实现 k
+       (= K (idM ⊙ m)), enter (K idM G) 实现 g (cl-W 用 K 的膨胀 Rn G (K idM G)).
+  W2:  Real(x, e) ⟹ Real(ex Ω₁ Ω₁ (suc x), sh e)
+       E 行:  E (ex a b x′) F = It 0 x′ (Kb b) (E a F);  E a F ≽ F (Emono zero◃Ω₁) 实现 f;
+              x ◃ suc x (Itmono) 把 It 0 (suc x) 压到 It 0 x 上.
+       It 行: It n (ex a b x′) K G = It (n+1) x′ (Kₑ n b) (Itᴺ n a K) idM G;
+              Itᴺ n Ω₁ K ≽ (Itmono zero◃Ω₁) Itᴺ n zero K, 实现 λ g → k g; 同样 x ◃ suc x.
+  W4 的 ψ₀(Ω₂) 闭项的链点 z_{n+1} = s₂ z_n 定义上就是 ex Ω₁ Ω₁ (suc z_n) (refl),
+  所以 Real(z_{n+1}, ε_n),  ε_0 = sh zC, ε_{n+1} = sh ε_n.     [对 n 归纳, 每步 W2]
+折叠: 第 1 层树 Ω₁ 以底 β、底族 B 折到 0: R 0 nil (inc tt self) (opB Ω₁) Nx
+  (Nx a c = lim_k Mv a (iterate (Mv c) 1 k), B5D 的 L1g, 这里对任意路径重写);
+  ψ 的 ex 行 = E o tdNil x (opB b) (S = 以 B 折 a) …,  故
+  read (折 z_{n+2}) ≽ ε_n.E Nx 1 1.
+归纳的结构: 对 W4 树没有一般的归纳, 只对 n 归纳 (每步一条 W2); "一切阶" 体现在
+  Real 的 It 部分对一切 n 成立, 而 W2 的 It 部分在第 n 阶用 Real(x) 的第 n+1 阶.
+  W4 的 E / It 是同一个定义对一切阶, 所以这里的证明对 n 一致, 不按阶定制.
+
+3. Level ↔ 影子 (只在第 0 阶)
+-----------------------------
+ψ₁ = LV.ψ {1}{1}{2} zero suc,   γ_0 = Ω₁, γ_{n+1} = ψ₁ γ_n,   ψ⁰(Ω₂) = lim_n ψ⁰ γ_n.
+3.1 被加项的关系 Lᵈ D d (Level 第 1 层树 D 被 d : Sh 0 控制), 构造子:
+  Lz (zero, λ a c → a); Ls (suc, d ↦ d·ω); Ll (lim); Li (limᵢ zero g, nodeS 0 h,
+  分支条件关系式: ∀ y ≼ y′ → Lᵈ (g y) (h y′)); Lu (up zero y, Mv a y′, y ≼ y′); Lw (逐点放大).
+  语义:  Lᵈ D d, 1 ≼ a, 1 ≼ c ⟹ ψ⁰ D ≼ d a c.
+    Li 行: Level 链 x_{k+1} = ψz (g x_k) 对影子链 x′_{k+1} = h x′_k c c 下界, 用
+    ψz T ≼ ψ⁰ T (对一切第 1 层树); 链都从 1 起, 不差步.
+  加法 (不在 ψ⁰ 层面证结合律): Lᵈ A dA, Lᵈ B dB ⟹ Lᵈ (A + B) (λ a c → dB (dA a c) (dA c c)),
+    对 Lᵈ B 归纳, 下标逐构造子可换算 (Li 行两边的链式相同); Lu 行把 A + up zero y
+    摊成 add A suc y, 对 y 归纳.
+3.2 指数的关系 Lᵉ T e, 构造子 Ez Es El Ei Eu Ew 同形 (Eu: up zero y ↦ lv y′, y ≼ y′;
+    Ew: LeE e₀ e, 无条件逐点).
+  指数加法: Lᵉ A eA, Lᵉ B eB ⟹ Lᵉ (A + B) (eA ⨾ eB). Eu 行对 ≼ 推导归纳:
+    z≼ 用无条件膨胀 eA ⊑ eA ⨾ lv y′; s≼s 结构; ≼l n 用 lv (f n) ⊑ lv (lim f);
+    l≼ 用 "常值族的 lim ⊑ 该值". 都不要单调.
+  第 0 阶移位:  Lᵉ T e ⟹ Lᵈ (ψ₁ T) (e.E Nx).
+    ψ₁ zero = Ω₁ ⊴ Nx; ψ₁(suc a) = lim (iter (ψ₁ a +_) 0) 用 3.1 的加法, 得到
+    同步迭代 (与 sC 只差 iter 的换序, ≡ 后用 Lw); ψ₁(limᵢ g) = limᵢ (ψ₁ ∘ g ∘ tr⁻),
+    用 tr⁻ y ≼ y 与分支条件; ψ₁(up zero y) = 第 0 层的 ψ₁⁰ y, 对 ≼ 推导归纳 (同上).
+  层号移位 (一切阶的关键):  Lᵉ T e ⟹ Lᵉ (ψ₁ T) (sh e).
+    Es 行: ψ₁(suc a) 作指数 = ψ₁ a 的 j 个拷贝之和, 下标 τ_{j+1} = X̂ ⨾ τ_j,
+    τ_j.It n k g ≡ (e.It (n+1) kₑ)^j k g, 对 sh (sC e) 逐项 ⊑ (差一步, 用
+    k ⊑ kₑ k ⊑ e.It (n+1) kₑ k, 都是无条件膨胀). El / Ei 下标可换算.
+    Eu 行: 对 ≼ 推导归纳, z≼ 行 Lᵉ Ω₁ (sh zC) 再无条件放大.
+  所以 Lᵉ γ_n ε_n (n 归纳), 进而 ψ⁰ γ_{n+1} ≼ ε_n.E Nx 1 1.
+3.3 合起来: ψ⁰ γ_0 ≼ Nx 1 1 ≼ read (折 z_1); ψ⁰ γ_{n+1} ≼ ε_n.E Nx 1 1 ≼ read (折 z_{n+2});
+  Ψ₂ = lim (cum F₂), F₂ k = next⁺ (折 z_k), 故 ψ⁰(Ω₂) ≼ read Ψ₂, 经 ψ₀≈ 2 到 src.
+
+4. 参照一侧需要的镜像树
+-----------------------
+不需要对 W4 的树做镜像. Level 一侧只用 Level 自己的 γ_n (ψ₁ 的迭代), 两个关系 Lᵈ / Lᵉ;
+W4 一侧的 ex (挂起乘幂) 对着影子的 sh, Level 的 ψ₁ 也对着 sh (层号移位引理).
+"在 Level 树上实现 T + B·ω^X" (B5D 的预期) 由 Lᵉ 的加法与 sh 代替, 不造新树.
+
+5. 挑战自己: 哪一步可能不成立, 最小反例候选
+-------------------------------------------
+C1 (任意延伸). R (n+1) 若对一切 Mor 量化, upC 高阶行的两个子语境链点
+   (ι (π m (σ m ch)), σ m ch) 与 (ι ch, σ m ch) 可以不同: 取 σ 把链点送到别处,
+   π 不送回的 mor. 修法: 只对 Good m (π∘σ 在链点上为恒等) 量化; W4 实际出现的延伸都 Good.
+C2 (upC 不更新状态). W4 的 upC 是 R′(A v) 而状态仍是旧的; 若影子取 "带状态更新的复合"
+   (Level 的 + 的形状), W4 一侧不成立 (链底差 A 一步). 修法: 只取 R 部分;
+   R 本身从 A 起迭代, 下界不损失. 反例候选: x + y 中 y 的 Ω 链用到更新后的状态.
+C3 (ψ⁰ 不保值). Level 的结合律 ψ⁰(P+(D₁+D₂)) ≼ ψ⁰((P+D₁)+D₂) 对一般 D₂ 证不出
+   (limᵢ 分支的链值只值等, 分支函数任意; 无函数外延). 修法: 加法只在关系层面做 (3.1).
+C4 (放宽). Ω₁ 分支 up zero y 要对着影子在 y′ ≽ y 处的分支. 若用 "影子对指数单调" 吸收,
+   需要一切阶的单调性理论 (参数也要单调、膨胀). 修法: 对 ≼ 推导归纳, 每一步只用
+   无条件逐点膨胀 (z≼), 结构 (s≼s), 首位置 (≼l), 常值 lim (l≼). 反例候选: 若影子
+   E f 允许不膨胀 (如常值), z≼ 一行就断.
+C5 (tr⁻ 拷贝). ψ₁ 的 limᵢ 行把分支参数换成 tr⁻ z≅ y, 与 y 只值等. 修法: 分支条件写成
+   关系式 (∀ y ≼ y′), 用 tr⁻ y ≼ y.
+C6 (保留行). 本文只到目标层 0 与树层 1, kp 恒 nothing. 一切有限层号 (到 ψ₀(Ω_ω)) 时
+   目标非零会出保留行, 链点不再唯一, 本文的 R 需要按槽位扩张 (未做).
+C7 (链差一步). W4 的链从 0 起, Level / 影子从 1 起; 用 W4 的 inf 与 1 ≼ 链底对齐;
+   若链底可以是 0 (B 给 0), 第一步断. ψ₀(Ω₂) 的底族都是 Ωt, 链底 1.
+结论 (纸面): 对一切阶 n 的归纳在这一层级 (第 1 层折到第 0 层) 站得住; 唯一用到的
+  W4 律是 inf / Itinf / Emono / Itmono / Rn 的传递, 与 W4 定义对 n 的一致性.
+
+6. 纸面与编译的对照 (编译后补; 全部 6G 冷编退出 0, 无前提)
+-------------------------------------------------------------
+§1 影子与组合子                      WSShadow (Sh, limS, nodeS, ES, zC sC lC nC lv Ω̂ sh _⨾_, Le, InflE)
+§2 R n 与逐行不等式                  WSW4 (𝓡, Good, R-cl, R-sh, R-sup, R-limC, R-node, R-up, R-enter, L0I, L0E)
+§2 指数的实现 (具体树)               WSW4.Lem (Real-zero, W1 = Real Ω₁ Ω̂, W2)
+§2 指数的实现 (第 1 层一切指数树)    WSReal (Re 逐行关系 ⟹ Gen.real : Real x e); 纸面原只写了具体树, 这是推广
+§3 Level 一侧                        WSLevel (Ld, Ld-sem, Ld-sum, Lx, Lx-sum, shift0, shiftH, Lx-γ, lvl-γS)
+§3.3 合起来                          WSMain (FΩ, W4-low, Ψ₂-Ω₂, srcΩ₂)
+与纸面不同之处: R-up 只取 R 部分 (§5 C2 的修法) 在 W1 / W2 用的是 W4 一侧的放大 (cl-W),
+所以 W1 的分支影子是 lv y; WSReal 的一般 up 行对同一分支给 uC zC (suc y). 两者的大小关系没有编译, 主定理只用 W1 / W2.

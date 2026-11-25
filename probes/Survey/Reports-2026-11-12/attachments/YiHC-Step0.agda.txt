@@ -1,0 +1,119 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module Step0 where
+
+open import Data.Nat using (ℕ; zero; suc; z≤n; s≤s) renaming (_≤_ to _≤ⁿ_)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.List using ([]; _∷_; _++_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym; trans; cong)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRBSib
+open import OCF.Lean.YiRBCrit using (sh)
+open import OCF.Lean.YiKVRel using (_⊴_; ⊴r; ⊴◃; ¬◃z)
+import OCF.Align.EboLeanDef as E
+open E using (cof; c1; cω; cΩ; pred; fsn; fsT; γT; natT; sucT; 𝟏)
+open import OCF.Align.EboLeanBase using (_≤ᵀ_)
+open import OCF.Lean.YiANFam using (ψᴺ; Ωᴺ; cofΩ; fsTΩ)
+open import OCF.Lean.YiCLFam using (nat; fn; lev; levP; Nw)
+open import OCF.Lean.YiCLPhi using (ωᵀ; rep1)
+open import OCF.Lean.YiLRBridge using (Sᶜ; NwB)
+open import OCF.Lean.YiLRLow using (Gᶜ; eᶜ)
+open import OCF.Lean.YiDCRel using (Ω≤)
+
+data Mᴴ (S : Sg) (Low : (p : P S) → E.T → B S p → Set) (Chd : (c : C S) → E.T → D S c → Set)
+        (Nu : P S → E.T → Set) : E.T → T S → Set where
+  mz : ∀ {x} → Mᴴ S Low Chd Nu [] x
+  m1 : ∀ {t x} → cof t ≡ c1 → Mᴴ S Low Chd Nu (pred t) x → Mᴴ S Low Chd Nu t (suc x)
+  mL : ∀ {t x} → cof t ≡ cω → (∀ n → Mᴴ S Low Chd Nu (fsn t n) x) → Mᴴ S Low Chd Nu t x
+  mΩ : ∀ {t ν p g} → cof t ≡ cΩ ν → Nu p ν
+     → (∀ η c → Low p η c → Mᴴ S Low Chd Nu (fsT t η) (g c)) → Mᴴ S Low Chd Nu t (Ω p g)
+  mU : ∀ {t s x c y e} → Mᴴ S Low Chd Nu t x → Chd c s y → Mᴴ S Low Chd Nu (t ++ s) (up x c y e)
+  mw : ∀ {t x x′} → Mᴴ S Low Chd Nu t x → Lt S x x′ → Mᴴ S Low Chd Nu t x′
+  mc : ∀ {s t x} → s ≤ᵀ t → Mᴴ S Low Chd Nu t x → Mᴴ S Low Chd Nu s x
+
+M⁰ : E.T → Tr zero → Set
+M⁰ = Mᴴ (Sig zero) (λ ()) (λ ()) (λ ())
+
+mutual
+  M : (n : ℕ) → E.T → Tr (fn n) → Set
+  M zero    = M⁰
+  M (suc n) = Mᴴ (Sig (fn (suc n))) (LwP (suc n)) (λ _ → M n) (Nw n)
+
+  Lw⁼ : (n : ℕ) (t : Pos⁼ (fn n)) → E.T → Br⁼ (fn n) t → Set
+  Lw⁼ n (inj₁ tt) = M n
+  Lw⁼ n (inj₂ p)  = LwP n p
+
+  LwP : (n : ℕ) (p : Pos (fn n)) → E.T → Br (fn n) p → Set
+  LwP (suc n) (inj₂ (tt , t)) = Lw⁼ n t
+
+mwN : ∀ n {s x x′} → M n s x → fn n ⊢ x ◃ x′ → M n s x′
+mwN zero    = mw
+mwN (suc n) = mw
+
+Mβ : ∀ n → M (suc n) (Ωᴺ (suc n)) (proj₁ (Ωt (fn (suc n))))
+Mβ n = mΩ (cofΩ n) refl
+  (λ η c l → subst (λ s → M (suc n) s (up zero tt (suc c) (z◃ c ◃s))) (sym (fsTΩ n η)) (mU mz (mwN n l ◃s)))
+
+MB : ∀ {N} (ℓ : L) → ℓ ≡ fn N → E.T → Tr ℓ → Set
+MB {N} _ refl = M N
+
+LwB : ∀ {N} (ℓ : L) → ℓ ≡ fn N → (t : Pos⁼ ℓ) → E.T → Br⁼ ℓ t → Set
+LwB {N} _ refl = Lw⁼ N
+
+MβB : ∀ {N} (ℓ : L) (e : ℓ ≡ fn (suc N)) → MB ℓ e (Ωᴺ (suc N)) (proj₁ (Ωt ℓ))
+MβB {N} _ refl = Mβ N
+
+Lω : L
+Lω = nd sL Gᶜ
+
+eS : ∀ n → Gᶜ n ≡ fn (suc (suc n))
+eS zero    = refl
+eS (suc n) = cong Sᶜ (eS n)
+
+Lowω : (p : Pos Lω) → E.T → Br Lω p → Set
+Lowω (inj₁ ())
+Lowω (inj₂ (m , t)) = LwB (Gᶜ m) (eS m) t
+
+Nuω : Pos Lω → E.T → Set
+Nuω (inj₁ ())
+Nuω (inj₂ (m , t)) = NwB (Gᶜ m) (eS m) t
+
+Mω : E.T → Tr Lω → Set
+Mω = Mᴴ (Sig Lω) Lowω (λ m → MB (Gᶜ m) (eS m)) Nuω
+
+cumᶜ : ∀ n → Mω (Ωᴺ (suc (suc n))) (cum (λ k → proj₁ (upz {sL} {Gᶜ} k (Ωt (Gᶜ k)))) n)
+cumᶜ zero    = mU mz (MβB (Gᶜ zero) (eS zero))
+cumᶜ (suc n) = mU mz (MβB (Gᶜ (suc n)) (eS (suc n)))
+
+le2 : ∀ k → k ≤ⁿ suc (suc k)
+le2 zero    = z≤n
+le2 (suc k) = s≤s (le2 k)
+
+-- 回灌链第 0 步: Ω_ω 对着 next⁺ (ω 层的 Ω 树)
+chain0 : Mω (E.Ωt ωᵀ) (proj₁ (next⁺ (Ωt Lω)))
+chain0 = mL refl (λ k → mc (subst (λ t → E.Ωt t ≤ᵀ Ωᴺ (suc (suc k))) (sym (rep1 k)) (Ω≤ (le2 k)))
+                          (mw (mw (cumᶜ k) (◃l k)) (◃l zero)))
+
+ℓ₊ : L
+ℓ₊ = Sᶜ Lω
+
+Low₊ : (p : Pos ℓ₊) → E.T → Br ℓ₊ p → Set
+Low₊ (inj₁ ())
+Low₊ (inj₂ (tt , inj₁ tt)) = Mω
+Low₊ (inj₂ (tt , inj₂ p))  = Lowω p
+
+Nu₊ : Pos ℓ₊ → E.T → Set
+Nu₊ (inj₁ ())
+Nu₊ (inj₂ (tt , inj₁ tt)) ν = ν ≡ ωᵀ
+Nu₊ (inj₂ (tt , inj₂ p))  = Nuω p
+
+M₊ : E.T → Tr ℓ₊ → Set
+M₊ = Mᴴ (Sig ℓ₊) Low₊ (λ _ → Mω) Nu₊
+
+Mβ₊ : M₊ (E.Ωt (sucT ωᵀ)) (proj₁ (Ωt ℓ₊))
+Mβ₊ = mΩ refl refl (λ η c l → mU mz (mw l ◃s))

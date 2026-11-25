@@ -1,0 +1,49 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- q 左乘的不动上界在每个 x 和 x+e 之间。e 取任一个正的不动上界；用排中律在后继处决定是否需要另接 e。
+module B29PPad where
+
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Data.Sum.Base using (inj₁; inj₂)
+open import Data.Nat.Base using (suc; zero)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; +-mono; l≼; ≼l; z≼; s≼s)
+open import WVOne using (T₀; 𝟏)
+open import OCF.Lean.YiRVLevel using (LEM)
+import B17ValueDich as D
+import B18Product as M
+import B19IdealProduct as Ar
+import B19IdealArithmetic as A
+import B19IdealPowers as Pow
+import B22MovingIndex as E
+import B27SOriginal as Rise
+
+prefix : ∀ q n → q ≼ E.steps q n
+prefix q zero = ≼-suc (≼-refl q)
+prefix q (suc n) = ≼-trans {b = E.steps q n} (prefix q n) (A.up (E.steps q n))
+hold : ∀ q → (q M.· E.above q) ≼ E.above q
+hold q = l≼ λ n → ≼l (suc (suc (suc n))) (≼-trans {b = u n M.· u n}
+  (M.mono (prefix q n) (≼-refl (u n))) (≼-trans {b = A.product (u n)} (A.mulBound (u n))
+    (Pow.expo Pow.omega-pos (Pow.expo Pow.omega-pos (Rise.more q n)))))
+  where u = E.steps q
+
+module Round (lem : LEM) (q e : T₀) (one : 𝟏 ≼ e) (holdₑ : (q M.· e) ≼ e) where
+  Fixed = λ z → (q M.· z) ≼ z
+  Interval = λ x → Σ T₀ (λ d → x ≼ d × Fixed d × d ≼ (x L.+ e))
+  bound : ∀ x → Interval x
+  bound L.zero = e , z≼ , holdₑ , proj₂ (Ar.plus-id e)
+  bound (L.suc x) with bound x
+  ... | d , lo , closed , hi with D.Classical.compare lem d x
+  ...   | inj₂ le = d , le , closed , ≼-trans {b = x L.+ e} hi (+-mono (≼-suc (≼-refl x)) (≼-refl e))
+  ...   | inj₁ le = d L.+ e , +-mono lo one ,
+    ≼-trans {b = (q M.· d) L.+ (q M.· e)} (proj₁ (Ar.distrib q d e)) (+-mono closed holdₑ) ,
+    +-mono (≼-suc le) (≼-refl e)
+  bound (L.lim f) = L.lim g , l≼ (λ n → ≼l n (proj₁ (proj₂ (part n)))) ,
+    l≼ (λ n → ≼l n (proj₁ (proj₂ (proj₂ (part n))))) ,
+    l≼ (λ n → ≼-trans {b = f n L.+ e} (proj₂ (proj₂ (proj₂ (part n)))) (+-mono (≼l n (≼-refl _)) (≼-refl e)))
+    where
+    part = λ n → bound (f n)
+    g = λ n → proj₁ (part n)
+
+  apply : ∀ x → (q M.· x) ≼ (x L.+ e)
+  apply x with bound x
+  ... | d , lo , closed , hi = ≼-trans {b = q M.· d} (M.mono (≼-refl q) lo) (≼-trans {b = d} closed hi)

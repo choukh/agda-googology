@@ -1,0 +1,44 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 在真实首塔 (0,1) 状态，完整 ex δ δ Ω₁ 零观察由原 ψ₀(Ω₃) 的 (2,0) 孩子封顶。
+module B31UStageBridge where
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+import W4Block as W
+import W4Fold as F
+import W4Path as Path
+import W4Ops as O
+open import WVOne using (lvl1; T₀; 𝟏; read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-refl; ≼l; s≼s)
+import B23NDomain as G
+import B12XRef as X
+import B22MovingIndex as E
+import B30UOrbit as Init
+import B31UStageOp as Op
+import B31UStageHull as H
+import Data.Unit.Base
+open import Relation.Binary.PropositionalEquality using (_≡_)
+
+scope : ∀ o (bs : F.Base lvl1) t β → H.In (read (proj₁ β)) → H.In (read (proj₁ (bs W.zero Op.port))) →
+  Op.Run.output o bs t β ≼ G.child
+scope o bs t β ha hc = ≼-trans {b = WSShadow.sE B9UpperRel.Ω̂U Op.f (Op.f a c) (Op.f c c)}
+  (Op.Run.full o bs t β a c (≼-refl a) (≼-refl c)) (H.Outer.ceiling (Op.f a c) (Op.f c c)
+    (H.operation a c ha hc) (H.operation c c hc hc))
+  where
+    a = read (proj₁ β)
+    c = read (proj₁ (bs W.zero Op.port))
+    import WSShadow
+    import B9UpperRel
+
+epsilon : H.In (X.row 1)
+epsilon = H.down (X.row 1) (E.above 𝟏)
+  (≼-trans {b = Init.Actual.term} (proj₂ Init.report) (Init.Budget.all Init.Actual.β₀ Init.one-small)) (H.reserve 0)
+
+module Slot (o : Path.Ok lvl1) (bs : F.Base lvl1) (c : W.Tr lvl1) (eq : c ≡ Op.subject)
+    (valid : H.In (read (proj₁ (bs W.zero (W.inc Data.Unit.Base.tt W.self))))) where
+  val = λ z → read (proj₁ (F.ψ lvl1 o bs W.zero (Path.z≤ lvl1) (O.Ωt W.zero) z))
+  actual : val c ≼ G.child
+  actual = subst (λ z → val z ≼ G.child) (sym eq)
+    (scope o bs (Path.z≤ lvl1) (O.Ωt W.zero) (H.point 0) valid)
+
+

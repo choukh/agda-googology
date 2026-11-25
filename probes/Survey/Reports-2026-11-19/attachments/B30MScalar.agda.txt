@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 首塔实得的标量律，以及有同样起点、严格增长、实际已付第二项地板的比较族。
+module B30MScalar where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; s≼s; ≼l; l≼; z≼)
+import OCF.Align.Level as L
+open import WVOne using (T₀; 𝟏)
+import B18Product as M
+import B19IdealProduct as P
+import B19IdealPowers as Pow
+import B19IdealArithmetic as A
+import B22MovingIndex as E
+import B19IdealRow as R
+import B18ResetCellGoal as Init
+import B29SFirst as F
+import B29SUnit as U
+import B19FirstTower as First
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+
+record Laws (f x : ℕ → T₀) : Set where
+  field
+    start : f 0 ≈ᵛ L.ωᶜ
+    origin : x 0 ≈ᵛ (L.zero {L.zero})
+    factor : ∀ j → x (suc j) ≈ᵛ (L.ωᶜ M.· f j)
+    twice : ∀ j → A.norm (A.norm (x j)) ≼ f j
+    strict : ∀ j → L.suc (f j) ≼ f (suc j)
+    floor : L.suc R.row ≼ x 2
+  next : ∀ j → f j ≼ x (suc j)
+  next j = ≼-trans {b = L.ωᶜ M.· f j} (M.pad Pow.omega-pos (f j)) (proj₂ (factor j))
+  raised : ∀ j → A.norm (x j) ≼ f j
+  raised j = ≼-trans {b = A.norm (A.norm (x j))} (A.up (A.norm (x j))) (twice j)
+  step : ∀ j → A.norm (f j) ≼ f (suc j)
+  step j = ≼-trans {b = A.norm (x (suc j))} (Pow.expo Pow.omega-pos (next j)) (raised (suc j))
+  fixed : A.norm (L.lim f) ≈ᵛ L.lim f
+  fixed = l≼ (λ j → ≼l {f = f} (suc j) (step j)) , A.up (L.lim f)
+  same : L.lim x ≈ᵛ L.lim f
+  same = l≼ (λ j → ≼l {f = f} j (≼-trans {b = A.norm (x j)} (A.up (x j)) (raised j))) ,
+         l≼ (λ j → ≼l {f = x} (suc j) (next j))
+
+actual : Laws F.f F.x
+Laws.start actual = Init.First.omega
+Laws.origin actual = P.id _
+Laws.factor actual = F.factor
+Laws.twice actual = F.twice
+Laws.strict actual = U.unit
+Laws.floor actual = subst (λ z → L.suc R.row ≼ WVOne.read z) (sym (F.link 2)) First.first-positive
+
+branch : T₀ → T₀ → ℕ → T₀
+branch a b zero = a
+branch a b (suc _) = b
+pair : T₀ → T₀ → T₀
+pair a b = L.lim (branch a b)
+left : ∀ a b → a ≼ pair a b
+left a b = ≼l {f = branch a b} 0 (≼-refl a)
+right : ∀ a b → b ≼ pair a b
+right a b = ≼l {f = branch a b} 1 (≼-refl b)
+bound : ∀ (a b c : T₀) → a ≼ c → b ≼ c → pair a b ≼ c
+bound a b c p q = l≼ {f = branch a b} λ { zero → p ; (suc _) → q }
+
+grow : T₀ → T₀
+grow a = A.norm (A.norm (L.ωᶜ M.· a))
+
+module Build (s : ℕ → T₀) (base : L.suc R.row ≼ s 0) where
+  f : ℕ → T₀
+  f zero = L.ωᶜ
+  f (suc j) = pair (s j) (pair (L.suc (f j)) (grow (f j)))
+  x : ℕ → T₀
+  x zero = L.zero
+  x (suc j) = L.ωᶜ M.· f j
+  paid : ∀ j → s j ≼ f (suc j)
+  paid j = left (s j) _
+  model : Laws f x
+  Laws.start model = P.id _
+  Laws.origin model = P.id _
+  Laws.factor model j = P.id _
+  Laws.twice model zero = proj₁ (P.left-one L.ωᶜ)
+  Laws.twice model (suc j) = ≼-trans {b = pair (L.suc (f j)) (grow (f j))}
+    (right (L.suc (f j)) (grow (f j))) (right (s j) _)
+  Laws.strict model j = ≼-trans {b = pair (L.suc (f j)) (grow (f j))}
+    (left (L.suc (f j)) (grow (f j))) (right (s j) _)
+  Laws.floor model = ≼-trans {b = s 0} base (≼-trans {b = f 1} (paid 0) (M.pad Pow.omega-pos (f 1)))

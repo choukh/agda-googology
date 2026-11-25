@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 试验四的形状: 目标是孩子里的有限层时, "左项加别的孩子里的树" 在那棵树自己的孩子里就地折, 不回退.
+module Exp4Shape where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Maybe using (just; nothing)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Loc using (loc)
+open import W4Fold
+open import WVOne using (lvl1; h₁)
+
+K : L
+K = tw 1
+oK : Ok K
+oK = Ok-tw 1
+
+c₁ c₂ c₃ : Tr zero
+c₁ = suc zero
+c₂ = suc c₁
+c₃ = suc c₂
+
+-- 第 1 层在孩子 2, 3 的层号里都找得到.
+loc-2 : loc lvl1 (h₁ c₂) ≡ just (inc tt self)
+loc-2 = refl
+loc-3 : loc lvl1 (h₁ c₃) ≡ just (inc tt (inc tt self))
+loc-3 = refl
+
+-- "右边接上 Ω_Ω" 朝孩子 1 里的第 1 层: 结点在下标 z = 2 处的分支, 逐字是 "在孩子 2 里把 Ω₂ 朝第 1 层折", 状态是 S 的孩子 2 条目, 底是 v.
+branch-2 : (S : Base K) (v : Tr⁺ lvl1)
+  → ψ K oK S lvl1 (inc c₁ self) v (proj₁ (upz {s = sΩ zero} {h = h₁} c₂ (Ωt (h₁ c₂))))
+  ≡ ψ (h₁ c₂) (proj₂ oK c₂) (λ i u → S i (inc c₂ u)) lvl1 (inc tt self) v (proj₁ (Ωt (h₁ c₂)))
+branch-2 S v = refl
+
+-- 下标 z = 3 处同理 (目标孩子仍是孩子 1: 两个孩子不同, 不需要比较).
+branch-3 : (S : Base K) (v : Tr⁺ lvl1)
+  → ψ K oK S lvl1 (inc c₁ self) v (proj₁ (upz {s = sΩ zero} {h = h₁} c₃ (Ωt (h₁ c₃))))
+  ≡ ψ (h₁ c₃) (proj₂ oK c₃) (λ i u → S i (inc c₃ u)) lvl1 (inc tt (inc tt self)) v (proj₁ (Ωt (h₁ c₃)))
+branch-3 S v = refl
+
+-- 下标 z = 1 处: 目标层就是孩子 1 的层号本身, 折出来是挂起的乘幂 (自身行).
+branch-1 : (S : Base K) (v : Tr⁺ lvl1)
+  → proj₁ (ψ K oK S lvl1 (inc c₁ self) v (proj₁ (upz {s = sΩ zero} {h = h₁} c₁ (Ωt (h₁ c₁)))))
+  ≡ ex (proj₁ v) (proj₁ v) (proj₂ v) (proj₁ (Ωt (h₁ c₁))) tt
+branch-1 S v = refl
+
+-- 第 1 层在 tw 1 自己的层号里也找得到 (在孩子 1 里).
+loc-K : loc lvl1 K ≡ just (inc c₁ self)
+loc-K = refl

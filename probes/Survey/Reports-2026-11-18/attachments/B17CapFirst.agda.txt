@@ -1,0 +1,69 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module B17CapFirst where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Relation.Binary.PropositionalEquality using (_≡_; sym; trans; subst)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; s≼s; l≼)
+open import OCF.Align.EboLeanDef using (T; Ωt; ΩTower; EBOψ; _<ᵀ_; fsn; hd<; lv<; ar<)
+open import OCF.Align.EboLeanBase using (c∷; c[])
+open import OCF.Align.EboLeanTree using (nf-tower; pos-tower)
+open import OCF.Align.EboLeanClosure using (cl-fsn-NF; Ctbl-fsn; trian-fsn)
+open import OCF.Align.EboLeanTrian using (t<)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiRefTw2 using (Rt; hω-inv)
+open import B15OriginalTail using (powers; seed; child; chain; advance; zero-child; cof-row)
+open import B12XRef using (row; H)
+open import B17CapRows using (Shape; sum; count; word; cert; eval; normal; left; right; left-fit; right-fit; at-eq)
+open import W4Block using (iter)
+open import WVOne using (T₀; Mv; 𝟏)
+
+power-mono : ∀ k {s t} → s <ᵀ t → powers k s <ᵀ powers k t
+power-mono zero e = e
+power-mono (suc k) e = hd< (lv< (power-mono k e))
+
+first-index : ∀ k → chain k 1 ≡ EBOψ k
+first-index k = trans (advance k 0) (trans (sym (child k 0)) (zero-child k))
+
+first-rise : ∀ k → ΩTower k <ᵀ powers k (chain k 1)
+first-rise k = subst (λ u → u <ᵀ powers k (chain k 1)) (seed k)
+  (power-mono k (subst (Ωt [] <ᵀ_) (sym (first-index k)) (hd< (ar< (pos-tower k)))))
+
+first-word : ∀ k n → word k (suc n) <ᵀ fsn (EBOψ (suc k)) 1
+first-word k n = subst (word k (suc n) <ᵀ_) (sym (child k 1)) (hd< (ar< (first-rise k)))
+
+first = λ k → Rt (hω-inv (H (suc k)) (cof-row k) 1)
+
+finite-first : ∀ k a → L.suc (sum (row k) a) ≼ first k
+finite-first k a = ≼-trans (s≼s (eval k a h))
+  (mono<ⁿ (normal k (suc (count a))) (cl-fsn-NF (nf-tower (suc k)) (cof-row k) 1)
+    (Ctbl-fsn (c∷ c[]) (cof-row k) 1) h (hω-inv (H (suc k)) (cof-row k) 1) (first-word k (count a)))
+  where h = cert k (suc (count a))
+
+strict-first : ∀ k → L.suc (first k) ≼ row (suc k)
+strict-first k = mono<ⁿ (cl-fsn-NF nt e 1) nt (c∷ c[])
+   (hω-inv (H (suc k)) e 1) (H (suc k)) (t< (trian-fsn nt e 1))
+  where nt = nf-tower (suc k); e = cof-row k
+
+sum-first : ∀ k a → sum (row k) a ≼ first k
+sum-first k a = ≼-trans (≼-suc (≼-refl _)) (finite-first k a)
+
+limit-first : ∀ k (f : ℕ → Shape) → L.lim (λ n → sum (row k) (f n)) ≼ first k
+limit-first k f = l≼ (λ n → sum-first k (f n))
+
+strict-limit : ∀ k (f : ℕ → Shape) → L.suc (L.lim (λ n → sum (row k) (f n))) ≼ row (suc k)
+strict-limit k f = ≼-trans (s≼s (limit-first k f)) (strict-first k)
+
+mul-first : ∀ k → Mv (row k) 𝟏 ≼ first k
+mul-first k = l≼ (λ n → ≼-trans (at-eq (left-fit (row k) n)) (sum-first k (left n)))
+
+mul-strict : ∀ k → L.suc (Mv (row k) 𝟏) ≼ row (suc k)
+mul-strict k = ≼-trans (s≼s (mul-first k)) (strict-first k)
+
+right-first : ∀ k → L.lim (iter (L._+ row k) (row k)) ≼ first k
+right-first k = l≼ (λ n → ≼-trans (at-eq (right-fit (row k) n)) (sum-first k (right n)))
+
+right-strict : ∀ k → L.suc (L.lim (iter (L._+ row k) (row k))) ≼ row (suc k)
+right-strict k = ≼-trans (s≼s (right-first k)) (strict-first k)
+

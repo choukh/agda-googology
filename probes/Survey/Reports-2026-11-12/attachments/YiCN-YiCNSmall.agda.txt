@@ -1,0 +1,45 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiCNSmall where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Unit using (tt)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Data.List using ([])
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Lean.YiRWBlock
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiGIRel as GR
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiLLCheck as LL
+import OCF.Lean.YiLLLeafNeg as N
+import OCF.Align.EboLeanDef as E
+open import OCF.Align.EboLean3Base using (Ωt-mono)
+
+data Cn : L → Set where
+  cz : Cn zero
+  cs : ∀ {h} → Cn (h tt) → Cn (nd sS h)
+  cl : ∀ {h} → (∀ n → Cn (h n)) → (∀ n → h n P.≤ h (suc n)) → Cn (nd sL h)
+  cw : ∀ {k} → Cn k → Cn (nd (sΩ k) (λ c → k ⊕ ↑ k c))
+
+cn-tw : ∀ n → Cn (tw n)
+cn-tw zero = cz
+cn-tw (suc n) = cw (cn-tw n)
+
+cn-mono : ∀ {k h} → Cn (nd (sΩ k) h) → ∀ {x y} → k ⊢ x ◃ y → h x P.⊑ h y
+cn-mono (cw {k} q) d = P.⊕⊑ k (P.◃→⊑ k d)
+
+no-bad : Cn N.ℓ → ⊥
+no-bad q = bad (cn-mono q {x = suc zero} ◃s)
+  where
+  bad : nd sS (λ _ → zero) P.⊑ zero → ⊥
+  bad ()
+
+leaf1 : GR.Rd (tw 1) (E.natT 1) → GR.R (tw 1) (E.Ωt (E.natT 1)) (proj₁ (O.Ωt (tw 1)))
+leaf1 _ = LL.rdown (tw 1) (Ωt-mono (inj₁ (E.hd< (E.lv< E.[]<)))) LL.leafΩ
+
+lift1 : GR.R (tw 1) (E.Ωt (E.natT 1)) (proj₁ (O.Ωt (tw 1))) → GR.Rd (↑ (tw 1) (proj₁ (O.Ωt (tw 1)))) (E.Ωt (E.natT 1))
+lift1 _ = GR.rd-child (sΩ zero) _ (suc zero)
+  (GR.rd-add zero _ (GR.ca (inj₂ ([] , refl , GR.c0 refl , λ η c r →
+    GR.rd-add zero _ (GR.rd-child sS _ tt (LL.read0 r))))))

@@ -1,0 +1,224 @@
+{
+  "source_hashes": {
+    "probes/OCF/Lean/YiE4Base.lagda.md": "db27b766a7b489b786d547b88c4365c9ed802f8971635065940c5ceba2eabf43",
+    "probes/OCF/Lean/YiE4Cut19.lagda.md": "79229540e6fd8ff1edf4396565986802068087b94e3e044d509339d224d785b0",
+    "probes/OCF/Lean/YiE4Cut20.lagda.md": "c415a23da35870cb9ed910a5132e3b94ab9d3a89c6bbdf1b5916d05756a21262",
+    "probes/OCF/Lean/YiE4Default.lagda.md": "4779b8ecd520480c4b7574ba66ebde294eefac65a946cc9f24bc46ccfbdd8269",
+    "probes/OCF/Lean/YiE4Frame.lagda.md": "8b7e820324cd44ce031ab20cbaca12bcbf373dede3b2ae42106e4bbb95b8b576",
+    "probes/OCF/Lean/YiE4Inner.lagda.md": "22193be0205dfdbe43721f8c3024074a10b712fef341d14c236f95b02fba0585",
+    "probes/OCF/Lean/YiE4Instances.lagda.md": "26b6cd4fa5b6eadd4099a76869103a933c201e687fc7838c2dd9d71964dae66f",
+    "probes/OCF/Lean/YiE4Objects.lagda.md": "40375d78e78141ae8895a427ff40d0c34b989645661c58aa207448da9c775331",
+    "probes/OCF/Lean/YiE4Param.lagda.md": "f55b3c62201933de84834194c66f5da60fa1fbbb1764d3fdc2577c40263bbce4",
+    "probes/OCF/Lean/YiE4ParamFrame.lagda.md": "4a8f0e82520adc09919020ea26d14edcc788323b71288c521ae4ca2ba19b3b47",
+    "probes/OCF/Lean/YiE4ParamInner.lagda.md": "685141f7321262cbd3a33b0246857dd2350900900aeeb3ed6ce486a1a8263813",
+    "probes/OCF/Lean/YiE4Use.lagda.md": "f87b9e4567af018ac9a79e79a2b02cdbb82ad3dbaf60b2ef3e155b957045862c"
+  },
+  "counts": [
+    {
+      "module": "YiE4Base",
+      "code_nonblank_noncomment": 35,
+      "code_physical": 37,
+      "sha256": "db27b766a7b489b786d547b88c4365c9ed802f8971635065940c5ceba2eabf43"
+    },
+    {
+      "module": "YiE4Cut19",
+      "code_nonblank_noncomment": 86,
+      "code_physical": 93,
+      "sha256": "79229540e6fd8ff1edf4396565986802068087b94e3e044d509339d224d785b0"
+    },
+    {
+      "module": "YiE4Cut20",
+      "code_nonblank_noncomment": 28,
+      "code_physical": 31,
+      "sha256": "c415a23da35870cb9ed910a5132e3b94ab9d3a89c6bbdf1b5916d05756a21262"
+    },
+    {
+      "module": "YiE4Objects",
+      "code_nonblank_noncomment": 44,
+      "code_physical": 48,
+      "sha256": "40375d78e78141ae8895a427ff40d0c34b989645661c58aa207448da9c775331"
+    },
+    {
+      "module": "YiE4Frame",
+      "code_nonblank_noncomment": 34,
+      "code_physical": 37,
+      "sha256": "8b7e820324cd44ce031ab20cbaca12bcbf373dede3b2ae42106e4bbb95b8b576"
+    },
+    {
+      "module": "YiE4Param",
+      "code_nonblank_noncomment": 90,
+      "code_physical": 95,
+      "sha256": "f55b3c62201933de84834194c66f5da60fa1fbbb1764d3fdc2577c40263bbce4"
+    },
+    {
+      "module": "YiE4ParamFrame",
+      "code_nonblank_noncomment": 52,
+      "code_physical": 56,
+      "sha256": "4a8f0e82520adc09919020ea26d14edcc788323b71288c521ae4ca2ba19b3b47"
+    },
+    {
+      "module": "YiE4Default",
+      "code_nonblank_noncomment": 67,
+      "code_physical": 72,
+      "sha256": "4779b8ecd520480c4b7574ba66ebde294eefac65a946cc9f24bc46ccfbdd8269"
+    },
+    {
+      "module": "YiE4Inner",
+      "code_nonblank_noncomment": 42,
+      "code_physical": 45,
+      "sha256": "22193be0205dfdbe43721f8c3024074a10b712fef341d14c236f95b02fba0585"
+    },
+    {
+      "module": "YiE4Instances",
+      "code_nonblank_noncomment": 26,
+      "code_physical": 26,
+      "sha256": "26b6cd4fa5b6eadd4099a76869103a933c201e687fc7838c2dd9d71964dae66f"
+    },
+    {
+      "module": "YiE4ParamInner",
+      "code_nonblank_noncomment": 53,
+      "code_physical": 57,
+      "sha256": "685141f7321262cbd3a33b0246857dd2350900900aeeb3ed6ce486a1a8263813"
+    },
+    {
+      "module": "YiE4Use",
+      "code_nonblank_noncomment": 37,
+      "code_physical": 41,
+      "sha256": "f87b9e4567af018ac9a79e79a2b02cdbb82ad3dbaf60b2ef3e155b957045862c"
+    }
+  ],
+  "cold": [
+    {
+      "module": "YiE4Base",
+      "exit": 0,
+      "seconds": 16.8,
+      "checking": [
+        "OCF.Lean.YiE4Base"
+      ],
+      "residency": 1558757480,
+      "sha256": "db27b766a7b489b786d547b88c4365c9ed802f8971635065940c5ceba2eabf43",
+      "unchanged": true
+    },
+    {
+      "module": "YiE4Cut19",
+      "exit": 0,
+      "seconds": 15.74,
+      "checking": [
+        "OCF.Lean.YiE4Cut19"
+      ],
+      "residency": 1486417224,
+      "sha256": "79229540e6fd8ff1edf4396565986802068087b94e3e044d509339d224d785b0",
+      "unchanged": true
+    },
+    {
+      "module": "YiE4Cut20",
+      "exit": 0,
+      "seconds": 17.16,
+      "checking": [
+        "OCF.Lean.YiE4Cut20"
+      ],
+      "residency": 1596914144,
+      "sha256": "c415a23da35870cb9ed910a5132e3b94ab9d3a89c6bbdf1b5916d05756a21262",
+      "unchanged": true
+    },
+    {
+      "module": "YiE4Objects",
+      "exit": 0,
+      "seconds": 17.79,
+      "checking": [
+        "OCF.Lean.YiE4Objects"
+      ],
+      "residency": 1541961728,
+      "sha256": "40375d78e78141ae8895a427ff40d0c34b989645661c58aa207448da9c775331",
+      "unchanged": true
+    },
+    {
+      "module": "YiE4Frame",
+      "exit": 0,
+      "seconds": 17.93,
+      "checking": [
+        "OCF.Lean.YiE4Frame"
+      ],
+      "residency": 1596925904,
+      "sha256": "8b7e820324cd44ce031ab20cbaca12bcbf373dede3b2ae42106e4bbb95b8b576",
+      "unchanged": true
+    },
+    {
+      "module": "YiE4Param",
+      "exit": 0,
+      "seconds": 17.15,
+      "checking": [
+        "OCF.Lean.YiE4Param"
+      ],
+      "residency": 1657665696,
+      "sha256": "f55b3c62201933de84834194c66f5da60fa1fbbb1764d3fdc2577c40263bbce4",
+      "unchanged": true
+    },
+    {
+      "module": "YiE4ParamFrame",
+      "exit": 0,
+      "seconds": 16.82,
+      "checking": [
+        "OCF.Lean.YiE4ParamFrame"
+      ],
+      "residency": 1597020120,
+      "sha256": "4a8f0e82520adc09919020ea26d14edcc788323b71288c521ae4ca2ba19b3b47",
+      "unchanged": true
+    },
+    {
+      "module": "YiE4Default",
+      "exit": 0,
+      "seconds": 16.58,
+      "checking": [
+        "OCF.Lean.YiE4Default"
+      ],
+      "residency": 1487273536,
+      "sha256": "4779b8ecd520480c4b7574ba66ebde294eefac65a946cc9f24bc46ccfbdd8269",
+      "unchanged": true
+    },
+    {
+      "module": "YiE4Inner",
+      "exit": 0,
+      "seconds": 16.71,
+      "checking": [
+        "OCF.Lean.YiE4Inner"
+      ],
+      "residency": 1728991120,
+      "sha256": "22193be0205dfdbe43721f8c3024074a10b712fef341d14c236f95b02fba0585",
+      "unchanged": true
+    },
+    {
+      "module": "YiE4Instances",
+      "exit": 0,
+      "seconds": 16.51,
+      "checking": [
+        "OCF.Lean.YiE4Instances"
+      ],
+      "residency": 1579013824,
+      "sha256": "26b6cd4fa5b6eadd4099a76869103a933c201e687fc7838c2dd9d71964dae66f",
+      "unchanged": true
+    },
+    {
+      "module": "YiE4ParamInner",
+      "exit": 0,
+      "seconds": 16.54,
+      "checking": [
+        "OCF.Lean.YiE4ParamInner"
+      ],
+      "residency": 1579092736,
+      "sha256": "685141f7321262cbd3a33b0246857dd2350900900aeeb3ed6ce486a1a8263813",
+      "unchanged": true
+    },
+    {
+      "module": "YiE4Use",
+      "exit": 0,
+      "seconds": 16.58,
+      "checking": [
+        "OCF.Lean.YiE4Use"
+      ],
+      "residency": 1473981992,
+      "sha256": "f87b9e4567af018ac9a79e79a2b02cdbb82ad3dbaf60b2ef3e155b957045862c",
+      "unchanged": true
+    }
+  ]
+}

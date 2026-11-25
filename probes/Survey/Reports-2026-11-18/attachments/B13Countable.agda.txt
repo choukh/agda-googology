@@ -1,0 +1,103 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- E 在可数指数上的三条真实计算规则，在任意树框架中实现同一族前缀作用。
+module B13Countable where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as L
+open import OCF.Align.Value using (l≼; ≼l; ≼-trans)
+open import WVOne using (read)
+import WSShadow
+import WVThree
+open import WVTwo using (◃→≼)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂; c₁)
+open import YiLAB7Replay using (o₁)
+open import B8PairW4 using (Real-lim; Real-up; SumR-up)
+import B11OuterCore as C
+import B12Hierarchy as H
+import B12Update as U
+open H.Prefix using (val; exp)
+open import WSW4 using (module Lem)
+import WKSum
+open Lem o₁
+open WKSum.Sum o₁ using (SumR)
+
+pull : ∀ {X : Cx lvl2} → Mor nil X → St X → Base lvl2
+pull m S i t = S i (σ m t)
+
+Fx = H.Prefix → H.Prefix
+
+effect : Tr zero → Fx → Fx
+effect zero f = f
+effect (suc z) f x = H.sup (λ n → iter (effect z f) x (suc n))
+effect (lim g _) f x = H.sup (λ n → effect (g n) f x)
+
+module In {X : Cx lvl2} (m : Mor nil X) (t : ⟦ X ⟧ zero) where
+  Models : Op X → Fx → Set
+  Models K f = (x : H.Prefix) (S : St X) (v : Tr⁺ zero) → U.Seeds (val x) (exp x) (pull m S) v
+    → U.Seeds (val (f x)) (exp (f x)) (pull m (stepS K S)) (run K S zero t v)
+
+  lim-law : (Q : ℕ → Op X) (a : ∀ n → Rl (Q n) (Q (suc n))) (f : ℕ → Fx)
+          → (∀ n → Models (Q n) (f n)) → Models (limO Q a) (λ x → H.sup (λ n → f n x))
+  lim-law Q a f p x S v I = U.seeds
+    (l≼ (λ n → ≼l n (U.value-bound (h n)))) (l≼ (λ n → ≼l n (U.slot-bound (h n))))
+    (C.str (Real-lim (λ n → C.rP (U.structure (h n))))
+           (Real-up rise (C.rΩ str)) (SumR-up rise (C.sN str)) (◃t (C.st str) rise))
+    where
+    h = λ n → p n x S v I
+    str = U.structure I
+    rise = inf (limO Q a) S lvl1 (σ m C.slot) (S lvl1 (σ m C.slot))
+
+  module Power (K : Op X) (f : Fx) (p : Models K f) where
+    actual : (n : ℕ) (x : H.Prefix) (S : St X) (v : Tr⁺ zero) → U.Seeds (val x) (exp x) (pull m S) v
+      → U.Seeds (val (iter f x n)) (exp (iter f x n)) (pull m (itS K n S)) (itV K n S zero t v)
+    actual zero x S v I = I
+    actual (suc n) x S v I = p (iter f x n) (itS K n S) (itV K n S zero t v) (actual n x S v I)
+
+    powers : ℕ → Op X
+    run (powers n) = itV K (suc n)
+    inf (powers zero) S i u v = inf K S i u v
+    inf (powers (suc n)) S i u v = ◃t (inf (powers n) S i u v) (inf K (itS K (suc n) S) i u (itV K (suc n) S i u v))
+
+    steps : ∀ n → Rl (powers n) (powers (suc n))
+    steps n S i u v = inf K (itS K (suc n) S) i u (itV K (suc n) S i u v)
+
+    self-v : (n : ℕ) (S : St X) (i : W4Block.L) (u : ⟦ X ⟧ i) → itV K n S i u (S i u) ≡ itS K n S i u
+    self-v zero S i u = refl
+    self-v (suc n) S i u = cong (run K (itS K n S) i u) (self-v n S i u)
+
+    each : ∀ n → Models (powers n) (λ x → iter f x (suc n))
+    each n x S v I = U.seeds (U.value-bound h) (subst (λ z → L.ψ⁰ (val y) OCF.Align.Value.≼ read z) eq0 (U.slot-bound h))
+      (C.str (subst (λ z → Real z (exp y)) eq1 (C.rP s)) (subst (λ z → Real z WSShadow.Ω̂) eq1 (C.rΩ s))
+             (subst (λ z → SumR z WVThree.Nx) eq1 (C.sN s)) (subst (λ z → lvl1 ⊢ Ω₁t ◃ z) eq1 (C.st s)))
+      where
+      y = iter f x (suc n)
+      h = actual (suc n) x S v I
+      s = U.structure h
+      eq0 = cong proj₁ (sym (self-v (suc n) S zero (σ m C.zpath)))
+      eq1 = cong proj₁ (sym (self-v (suc n) S lvl1 (σ m C.slot)))
+
+  eval : ∀ {mu} (D : TD X mu) (z : Tr zero) (K : Op X) (f : Fx) → Models K f
+       → Models (op (E ok₂ D (ι mu z) K) (Einf ok₂ D (ι mu z) K)) (effect z f)
+  eval D zero K f p = p
+  eval {mu} D (suc z) K f p = lim-law P.powers P.steps (λ n x → iter (effect z f) x (suc n)) P.each
+    where module P = Power (op (E ok₂ D (ι mu z) K) (Einf ok₂ D (ι mu z) K)) (effect z f) (eval D z K f p)
+  eval {mu} D (lim g a) K f p = lim-law
+    (λ n → op (E ok₂ D (ι mu (g n)) K) (Einf ok₂ D (ι mu (g n)) K))
+    (λ n S i u v → Emono ok₂ D K S i u v (ι-mono mu (a n)))
+    (λ n → effect (g n) f) (λ n → eval D (g n) K f p)
+
+  -- 框架已经走到零层时，直接按原树递归，保留原极限的步进证明。
+  eval-zero : (D : TD X zero) (z : Tr zero) (K : Op X) (f : Fx) → Models K f
+            → Models (op (E ok₂ D z K) (Einf ok₂ D z K)) (effect z f)
+  eval-zero D zero K f p = p
+  eval-zero D (suc z) K f p = lim-law P.powers P.steps (λ n x → iter (effect z f) x (suc n)) P.each
+    where module P = Power (op (E ok₂ D z K) (Einf ok₂ D z K)) (effect z f) (eval-zero D z K f p)
+  eval-zero D (lim g a) K f p = lim-law
+    (λ n → op (E ok₂ D (g n) K) (Einf ok₂ D (g n) K))
+    (λ n S i u v → Emono ok₂ D K S i u v (a n)) (λ n → effect (g n) f) (λ n → eval-zero D (g n) K f p)

@@ -1,0 +1,33 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B24AClosed where
+open import Data.Nat.Base using (zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import W4Block using (tw; sL)
+open import W4Path using (Ok-Λ)
+open import W4Fold using (EBOᶜ)
+open import WKShape using (Ψ₃; lvl3; ok₃)
+open import WVOne using (read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans)
+open import OCF.Align.BTBOValBase using (tr₀)
+import B12ActualSlots as C
+import B12Terminal as T
+import B12EboRows as End
+import B15TowerSeed as Seed
+import B23RShare as First
+import B23RExit as Old
+import B24AFirst as Actual
+import B24RExit as X
+import B24RFixed as Fixed
+
+standard : tr₀ X.closed ≼ read Ψ₃
+standard = ≼-trans (proj₁ X.both) (Actual.At.physical (T.initial lvl3 ok₃) (C.initial lvl3 ok₃))
+first-tower : tr₀ X.closed ≼ End.child 1
+first-tower = ≼-trans (proj₁ X.both) (Seed.initial-bound 2 Actual.At.physical T.tower1
+  (C.enter sL tw T.terminal 1 (T.prefix tw 1) (C.initial _ Ok-Λ)))
+terminal : tr₀ X.closed ≼ read EBOᶜ
+terminal = End.into (1 , first-tower)
+strict-prev : L.suc (tr₀ Old.source) ≼ tr₀ X.closed
+strict-prev = X.strict
+strict-next : L.suc (tr₀ X.closed) ≼ First.oneStep
+strict-next = Fixed.strict-first

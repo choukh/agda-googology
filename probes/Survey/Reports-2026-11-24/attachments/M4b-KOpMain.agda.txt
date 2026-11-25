@@ -1,0 +1,414 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 接口第二版上的 (Op): 出口 op 是 KIface.OpStmt 原文, 无额外前提. M4: 迭代子保持. 对指数推导 Dom mu A x 归纳, 一切语境 Cx 与树数据 TD, 一切阶 (E 与 It n 互递归):
+-- "接上" 实现增量 W ⟹ E x 实现 W·ω^A; K 实现 κ, G 实现 g ⟹ It n x K G 实现 ℙ n A κ g.
+module KOpMain where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; subst₂; cong; sym; trans)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as I
+open I using (Ordᴵ; Ordᶜ; Simᴵ; _<ᴵ_; _≅ᴵ_; _≺ᴵ_; _⊑ᴵ_; via; _≅_; add; U; into; out; out-into; <→◃; limᵢ;
+              tr⁻; tr⁻-≅; ≅-sym; ≅-trans; add-≅; ψ-≅)
+open import OCF.BTBO using (module Ord-Ord; injᵃ; injᵇ; injᶜ)
+open Ord-Ord using () renaming (iter to iterᴸ)
+open import KPow using (pwb; pwb-≅; pwb-add; add-assoc; add-zeroˡ; reflˡ; reflʳ)
+open import KMir using (IsN; IsS; code; Ag; IsS-dn; IsS→IsN; IsN-at; IsS-path; Ok-path; KT)
+open import KRel
+open import KIface using (ψ̂; RealS; CovS; Pre; RealOp; OpStmt)
+open import KOpBase
+open import KEmb
+open import KOpPow using (Eqv; Eqv-reflˡ; Eqv-trans; limS; nodeS; ℙ; limS-≈; ℙ-≅; ℙ-add; ℙ-pwb; pwb-ℙ0) renaming (Sh to ShL)
+
+module Main {ℓ : L} (st : IsS ℓ) (o : Ok ℓ) where
+
+  pathX : {X : Cx ℓ} {i : L} → ⟦ X ⟧ i → i ≤ ℓ
+  pathX {X = nil}      u       = u
+  pathX {X = cons _ X} (_ , t) = pathX {X = X} t
+
+  ----------------------------------------------------------------------
+  -- 第 0 阶的关系: 状态实现前缀 (对语境里一切目标), op 实现增量.
+  RealSX : (X : Cx ℓ) {kP : Ordᴵ} → Ordᶜ kP → St X → Set
+  RealSX X {kP} P S = ∀ {i} (t : ⟦ X ⟧ i) {ic} (r : ic <ᴵ I.suc kP) → Mirror ic i → Dom i (ψ̂ r P) (proj₁ (S i t))
+
+  CovSX : (X : Cx ℓ) → St X → Set
+  CovSX X S = ∀ {i} (t : ⟦ X ⟧ i) {ic} → Mirror ic i → Dom i (I.Ω ic) (proj₁ (S i t))
+
+  Rr : (X : Cx ℓ) → (St X → (i : L) → ⟦ X ⟧ i → Tr⁺ i → Tr⁺ i) → {k : Ordᴵ} → Ordᶜ k → Set
+  Rr X rn {k} W = (S : St X) {i : L} (t : ⟦ X ⟧ i) (β : Tr⁺ i) {kP ic : Ordᴵ} (P : Ordᶜ kP) (ς : Simᴵ k kP) (r : ic <ᴵ I.suc kP)
+    → Mirror ic i → P ≅ P → RealSX X P S → CovSX X S → Dom i (ψ̂ r P) (proj₁ β) → Dom i (ψ̂ r (add P ς W)) (proj₁ (rn S i t β))
+
+  R0 : (X : Cx ℓ) → Op X → {k : Ordᴵ} → Ordᶜ k → Set
+  R0 X F W = (W ≅ W) × Rr X (run F) W
+
+  R0-cl : {X : Cx ℓ} {F G : Op X} {k : Ordᴵ} {W : Ordᶜ k} → R0 X F W → Rl F G → R0 X G W
+  R0-cl (eW , h) q = eW , λ S t β P ς r mi eP rS cS b → r◃ (h S t β P ς r mi eP rS cS b) (q S _ t β)
+
+  R0-≅ : {X : Cx ℓ} {F : Op X} {k : Ordᴵ} {W W′ : Ordᶜ k} → R0 X F W′ → W ≅ W′ → R0 X F W
+  R0-≅ (eW′ , h) e = reflˡ e , λ S t β P ς r mi eP rS cS b → r≅ (I.≅ᴵ-refl _) (ψ-≅ (I.≅ᴵ-refl _) (add-≅ eP e)) (h S t β P ς r mi eP rS cS b)
+
+  enterR : {X Y : Cx ℓ} {F : Op X} {k : Ordᴵ} {W : Ordᶜ k} → R0 X F W → (m : Mor X Y) → R0 Y (enterO m F) W
+  enterR (eW , h) m = eW , λ S t β P ς r mi eP rS cS b →
+    h (λ i′ x → S i′ (σ m x)) (π m t) β P ς r mi eP (λ t′ → rS (σ m t′)) (λ t′ → cS (σ m t′)) b
+
+  ----------------------------------------------------------------------
+  -- suc 行: 带状态更新的 ω 次迭代; 两边的状态逐步保持 RealSX/CovSX; Level 一侧用结合律把 n 份并进前缀.
+  module Suc {X : Cx ℓ} (G : Op X) {k : Ordᴵ} {Q : Ordᶜ k} (eQ : Q ≅ Q) (hG : Rr X (run G) Q) where
+    Qn : ℕ → Ordᶜ k
+    Qn = iterᴸ (Q I.+_) I.zero
+
+    Qr : ∀ n → Qn n ≅ Qn n
+    Qr = I.iter-R _≅_ (λ e → add-≅ eQ e) I.z≅
+
+    comm : ∀ n → add Q (λ q → q) (Qn n) ≅ add (Qn n) (λ q → q) Q
+    comm zero    = ≅-sym (add-zeroˡ (λ q → q) Q eQ)
+    comm (suc n) = ≅-trans (add-≅ eQ (comm n)) (add-assoc Q (λ q → q) (Qn n) (λ q → q) Q eQ (Qr n) eQ)
+
+    EQ : {kP : Ordᴵ} (P : Ordᶜ kP) (ς : Simᴵ k kP) → P ≅ P → ∀ n → add P ς (Qn (suc n)) ≅ add (add P ς (Qn n)) ς Q
+    EQ P ς eP n = ≅-trans (add-≅ eP (comm n)) (add-assoc P ς (Qn n) (λ q → q) Q eP (Qr n) eQ)
+
+    module _ (S : St X) {i : L} (t : ⟦ X ⟧ i) (β : Tr⁺ i) {kP ic : Ordᴵ} (P : Ordᶜ kP) (ς : Simᴵ k kP) (r : ic <ᴵ I.suc kP)
+             (mi : Mirror ic i) (eP : P ≅ P) (rS : RealSX X P S) (cS : CovSX X S) (b : Dom i (ψ̂ r P) (proj₁ β)) where
+      Tri : ℕ → Set
+      Tri n = RealSX X (add P ς (Qn n)) (itS G n S) × CovSX X (itS G n S)
+            × Dom i (ψ̂ r (add P ς (Qn n))) (proj₁ (itV G n S i t β))
+
+      nxt : ∀ n → Tri n → Tri (suc n)
+      nxt n (rS₀ , cS₀ , bS₀) =
+          (λ {i = i′} t′ r′ mi′ → r≅ (I.≅ᴵ-refl _) (ψ-≅ (I.≅ᴵ-refl _) (EQ P ς eP n))
+                                     (hG (itS G n S) t′ (itS G n S i′ t′) (add P ς (Qn n)) ς r′ mi′ (add-≅ eP (Qr n)) rS₀ cS₀ (rS₀ t′ r′ mi′)))
+        , (λ {i = i′} t′ mi′ → r◃ (cS₀ t′ mi′) (inf G (itS G n S) i′ t′ (itS G n S i′ t′)))
+        , r≅ (I.≅ᴵ-refl _) (ψ-≅ (I.≅ᴵ-refl _) (EQ P ς eP n))
+             (hG (itS G n S) t (itV G n S i t β) (add P ς (Qn n)) ς r mi (add-≅ eP (Qr n)) rS₀ cS₀ bS₀)
+
+      J : ∀ n → Tri n
+      J zero    = rS , cS , b
+      J (suc n) = nxt n (J n)
+
+      sucOut : (a : (n : ℕ) → i ⊢ proj₁ (itV G (suc n) S i t β) ◃ proj₁ (itV G (suc (suc n)) S i t β))
+             → Dom i (ψ̂ r (add P ς (I.lim Qn))) (lim (λ n → proj₁ (itV G (suc n) S i t β)) a)
+      sucOut a = rl (λ n → r◃ (proj₂ (proj₂ (J n))) (◃t (inf G (itS G n S) i t (itV G n S i t β)) (◃l n)))
+
+  ----------------------------------------------------------------------
+  -- Ω 行 (第 0 阶的结点): 判定由引理 K 两边同判; 保留时逐点 (经 tr⁻ 换代表元);
+  -- 走链时 Level 的链从 Ω j 起, W4 从零起, 对齐差一步; 输出逐项进 W4 的累加和 (左加膨胀).
+  module NodeRow {X : Cx ℓ} {mu : L} (p : Pos mu) (S : St X) {kP : Ordᴵ} (P : Ordᶜ kP)
+    (rS : RealSX X P S) (cS : CovSX X S)
+    {j₁ : Ordᴵ} (q₀ : j₁ <ᴵ kP) (Φ : U j₁ (<→◃ q₀) → Ordᶜ kP) (Φr : limᵢ q₀ Φ ≅ limᵢ q₀ Φ) (mj : Mirror j₁ (at mu p))
+    (ia : IsN (at mu p)) (oa : Ok (at mu p))
+    (jd : ∀ {i} → ⟦ X ⟧ i → Keep i (Br mu p) (fromBr mu p zero))
+    (jdA : ∀ {i} (t : ⟦ X ⟧ i) → Ag (at mu p) i (jd t))
+    (jdK : ∀ {i} (t : ⟦ X ⟧ i) → KO i (at mu p) (SubD mu p) (jd t))
+    (ch : ⟦ X ⟧ (at mu p))
+    (G : Br mu p → (i : L) → ⟦ X ⟧ i → Tr⁺ i → Tr⁺ i)
+    (Ginf : ∀ z (i : L) (t : ⟦ X ⟧ i) (β : Tr⁺ i) → i ⊢ proj₁ β ◃ proj₁ (G z i t β))
+    (H : ∀ (Y : Ordᶜ j₁) (z : Br mu p) → SubD mu p Y z → ∀ {i} (t : ⟦ X ⟧ i) (β : Tr⁺ i) {ic : Ordᴵ} (r : ic <ᴵ I.suc kP)
+         → Mirror ic i → Dom i (ψ̂ r P) (proj₁ β) → Dom i (ψ̂ r (Φ (into (<→◃ q₀) Y))) (proj₁ (G z i t β))) where
+
+    βc : Tr⁺ (at mu p)
+    βc = S (at mu p) ch
+
+    sN : Br mu p → Br mu p
+    sN z = fromBr mu p (proj₁ (G z (at mu p) ch βc))
+
+    zs : ℕ → Br mu p
+    zs = iter sN (fromBr mu p zero)
+
+    γ : ℕ → Ordᶜ j₁
+    γ = iterᴸ (λ x → I.ψ q₀ (λ r → r) (Φ (into (<→◃ q₀) x))) (I.Ω j₁)
+
+    γr : ∀ n → γ n ≅ γ n
+    γr zero    = I.Ω-refl j₁
+    γr (suc n) = ψ-≅ (I.≅ᴵ-refl j₁) (brR Φr (γr n))
+
+    chn : ∀ n → SubD mu p (γ n) (zs (suc n))
+    chn zero    = Sub-fromBr mu p (r◃ (cS ch mj) (Ginf (zs zero) (at mu p) ch βc))
+    chn (suc n) = Sub-fromBr mu p (r≅ (I.≅ᴵ-refl _) (ψ-≅ (I.≅ᴵ-refl j₁) (brR Φr (γr n)))
+                                     (H (γ n) (zs (suc n)) (chn n) ch βc (I.suc q₀) mj (rS ch (I.suc q₀) mj)))
+
+    chainOut : ∀ {i} (t : ⟦ X ⟧ i) (β : Tr⁺ i) {ic} (r : ic <ᴵ I.suc kP) → Mirror ic i → Dom i (ψ̂ r P) (proj₁ β)
+             → Dom i (I.lim (λ n → ψ̂ r (Φ (into (<→◃ q₀) (γ n))))) (proj₁ (limc⁺ (λ n → G (zs n) i t β)))
+    chainOut {i} t β r mi b =
+      rl (λ n → r◃ (D-addL (H (γ n) (zs (suc n)) (chn n) t β r mi b) (cum (λ n → proj₁ (G (zs n) i t β)) n)) (◃l (suc n)))
+
+    cases : ∀ {i} (t : ⟦ X ⟧ i) (β : Tr⁺ i) {ic} (r : ic <ᴵ I.suc kP) → Mirror ic i → Dom i (ψ̂ r P) (proj₁ β)
+          → (dd : (j₁ ≺ᴵ ic) ⊎ (ic ≺ᴵ j₁) ⊎ (j₁ ≅ᴵ ic)) (kk : Keep i (Br mu p) (fromBr mu p zero))
+          → AgL j₁ ic kk → KO i (at mu p) (SubD mu p) kk → ψL r q₀ Φ dd ≅ ψL r q₀ Φ dd
+          → Dom i (ψL r q₀ Φ dd) (proj₁ (node⁺ kk (λ z → G z i t β) sN))
+    cases {i} t β r mi b (injᵃ (via e r₀)) (just (q , cv , _)) ag (eat , sub) RF =
+      rΩ mi (subst (Mirror _) (sym eat) (λ ia′ oa′ → I.≅ᴵ-trans (I.≅ᴵ-sym e) (mj ia′ oa′))) RF
+         (λ Y z s → subst (λ w → Dom i (ψ̂ r (Φ (into (<→◃ q₀) (tr⁻ e w)))) (proj₁ (G (cv z) i t β)))
+                          (sym (out-into (<→◃ r₀) Y))
+                          (H (tr⁻ e Y) (cv z) (Sub-≅ mu p (I.≅ᴵ-sym e) (tr⁻-≅ e (Sub-refl mu p (sub Y z s))) (sub Y z s)) t β r mi b))
+    cases t β r mi b (injᵃ (via e r₀)) nothing (inj₁ c) _ _ = ⊥-elim (I.≺ᴵ-irrefl (I.≺ᴵ-respʳ (via e r₀) c))
+    cases t β r mi b (injᵃ (via e r₀)) nothing (inj₂ w) _ _ = ⊥-elim (I.≺ᴵ-irrefl (I.≺ᴵ-trans (via e r₀) w))
+    cases t β r mi b (injᵇ w) (just _) ag _ _ = ⊥-elim (I.≺ᴵ-irrefl (I.≺ᴵ-trans ag w))
+    cases t β r mi b (injᶜ c) (just _) ag _ _ = ⊥-elim (I.≺ᴵ-irrefl (I.≺ᴵ-respʳ ag (I.≅ᴵ-sym c)))
+    cases t β r mi b (injᵇ _) nothing _ _ _ = chainOut t β r mi b
+    cases t β r mi b (injᶜ _) nothing _ _ _ = chainOut t β r mi b
+
+    agl : ∀ {i} (t : ⟦ X ⟧ i) {ic} → Mirror ic i → AgL j₁ ic (jd t)
+    agl {i} t mi = toAgL (jd t) (jdA t) mj mi ia oa (IsS→IsN i (IsS-path (pathX t) st)) (Ok-path (pathX t) o)
+
+    mainR : ∀ {i} (t : ⟦ X ⟧ i) (β : Tr⁺ i) {ic} (r : ic <ᴵ I.suc kP) → Mirror ic i → Dom i (ψ̂ r P) (proj₁ β)
+          → Dom i (ψ̂ r (limᵢ q₀ Φ)) (proj₁ (node⁺ (jd t) (λ z → G z i t β) sN))
+    mainR {i} t β r mi b =
+      subst (λ A → Dom i A (proj₁ (node⁺ (jd t) (λ z → G z i t β) sN))) (sym (ψ-unf r q₀ Φ))
+        (cases t β r mi b (I.<ᴵ-dec (I.suc q₀) r) (jd t) (agl t mi) (jdK t)
+               (subst₂ (λ a c → a ≅ c) (ψ-unf r q₀ Φ) (ψ-unf r q₀ Φ)
+                       (ψ-≅ {p = r} {σ = λ q → I.suc q} {p′ = r} {σ′ = λ q → I.suc q} (I.≅ᴵ-refl _) Φr)))
+
+  ----------------------------------------------------------------------
+  -- 一切阶的关系 (第 0 阶是 R0; 高阶对一切延伸逐点), 与闭包.
+  𝓡 : (n : ℕ) (X : Cx ℓ) {k : Ordᴵ} → Ca n X → ShL k n → Set
+  𝓡 zero    X F W = R0 X F W
+  𝓡 (suc n) X {k} K κ = Eqv k (suc n) κ κ
+                      × (∀ {Y : Cx ℓ} (m : Mor X Y) (G : Ca n Y) (g : ShL k n) → 𝓡 n Y G g → 𝓡 n Y (proj₁ K m G) (κ g))
+
+  𝓡-refl : ∀ n {X : Cx ℓ} {k : Ordᴵ} {G : Ca n X} {g : ShL k n} → 𝓡 n X G g → Eqv k n g g
+  𝓡-refl zero    r = proj₁ r
+  𝓡-refl (suc n) r = proj₁ r
+
+  𝓡-cl : ∀ n {X : Cx ℓ} {k : Ordᴵ} {G G′ : Ca n X} {g : ShL k n} → 𝓡 n X G g → Rn n G G′ → 𝓡 n X G′ g
+  𝓡-cl zero {G = G} {G′ = G′} r q = R0-cl {F = G} {G = G′} r q
+  𝓡-cl (suc n) (e , r) q = e , λ m G g rg → 𝓡-cl n (r m G g rg) (q m G)
+
+  𝓡-≈ : ∀ n {X : Cx ℓ} {k : Ordᴵ} {G : Ca n X} {g g′ : ShL k n} → 𝓡 n X G g → Eqv k n g′ g → 𝓡 n X G g′
+  𝓡-≈ zero {G = G} r e = R0-≅ {F = G} r e
+  𝓡-≈ (suc n) {k = k} (eκ , r) e = Eqv-reflˡ k (suc n) e , λ m G g rg → 𝓡-≈ n (r m G g rg) (e (𝓡-refl n rg))
+
+  𝓡-sup : ∀ n {X : Cx ℓ} {k : Ordᴵ} {G : Ca n X} (h : ℕ → ShL k n) → (∀ j → 𝓡 n X G (h j)) → 𝓡 n X G (limS k n h)
+  𝓡-sup zero    h r = I.l≅ (λ j → proj₁ (r j)) , λ S t β P ς r′ mi eP rS cS b → rl (λ j → proj₂ (r j) S t β P ς r′ mi eP rS cS b)
+  𝓡-sup (suc n) {k = k} h r = limS-≈ k (suc n) (λ j → proj₁ (r j)) , λ m G g rg → 𝓡-sup n (λ j → h j g) (λ j → proj₂ (r j) m G g rg)
+
+  𝓡-enter : ∀ n {X Y : Cx ℓ} {k : Ordᴵ} (m : Mor X Y) {G : Ca n X} {g : ShL k n} → 𝓡 n X G g → 𝓡 n Y (enter n m G) g
+  𝓡-enter zero    m {G = G} r = enterR {F = G} r m
+  𝓡-enter (suc n) m (e , r) = e , λ m′ G g rg → r (m′ ⊙ m) G g rg
+
+  -- up 行: 只取孩子语境里的部分 (从 A 的输出起跑), 第 0 阶用 A 的膨胀.
+  𝓡-up : ∀ n {X : Cx ℓ} {mw : L} (w : Dn ℓ mw) (ι : ∀ {i} → ⟦ X ⟧ i → Tg w i) (A : Ca n X) (R′ : Ca n (cons w X))
+       {k : Ordᴵ} {r : ShL k n} → 𝓡 n (cons w X) R′ r → 𝓡 n X (upC n w ι A R′) r
+  𝓡-up zero w ι A R′ (er , hr) = er , λ S t β P ς r mi eP rS cS b →
+    hr (λ i′ y → S i′ (proj₂ y)) (ι t , t) (run A S _ t β) P ς r mi eP (λ t′ → rS (proj₂ t′)) (λ t′ → cS (proj₂ t′))
+       (r◃ b (inf A S _ t β))
+  𝓡-up (suc n) w ι A R′ (er , hr) = er , λ m G g rg →
+    𝓡-up n w (λ y → ι (π m y)) (proj₁ A m G) (proj₁ R′ (liftM w m) (enter n (chM w (λ y → ι (π m y))) G))
+         (hr (liftM w m) (enter n (chM w (λ y → ι (π m y))) G) g (𝓡-enter n (chM w (λ y → ι (π m y))) rg))
+
+  -- 结点 (一切阶): 高阶逐点下放, 第 0 阶用 NodeRow.
+  𝓡-node : ∀ n {X : Cx ℓ} {mu : L} (p : Pos mu)
+           (jd : ∀ {i} → ⟦ X ⟧ i → Keep i (Br mu p) (fromBr mu p zero))
+           (jdA : ∀ {i} (t : ⟦ X ⟧ i) → Ag (at mu p) i (jd t))
+           (jdK : ∀ {i} (t : ⟦ X ⟧ i) → KO i (at mu p) (SubD mu p) (jd t))
+           (ia : IsN (at mu p)) (oa : Ok (at mu p)) (ch : ⟦ X ⟧ (at mu p)) (G : Br mu p → Ca n X)
+           {k j′ : Ordᴵ} (q′ : j′ <ᴵ k) (Fn : U j′ (<→◃ q′) → ShL k n) → Mirror j′ (at mu p)
+         → Eqv k n (nodeS k n q′ Fn) (nodeS k n q′ Fn)
+         → (∀ (Y : Ordᶜ j′) (z : Br mu p) → SubD mu p Y z → 𝓡 n X (G z) (Fn (into (<→◃ q′) Y)))
+         → 𝓡 n X (nodeC n p jd ch G) (nodeS k n q′ Fn)
+  𝓡-node zero {X} {mu} p jd jdA jdK ia oa ch G q′ Fn mj eN hyp =
+    eN , λ S t β P ς r mi eP rS cS b →
+      NodeRow.mainR p S P rS cS (ς q′) (λ y → add P ς (Fn (I.coe (<→◃ (ς q′)) (<→◃ q′) y))) (add-≅ {σ = ς} {σ′ = ς} eP eN) mj ia oa jd jdA jdK ch
+        (λ z → run (G z) S) (λ z → inf (G z) S)
+        (λ Y z s {i = i′} t′ β′ r′ mi′ b′ →
+           subst (λ w → Dom i′ (ψ̂ r′ (add P ς (Fn w))) (proj₁ (run (G z) S i′ t′ β′)))
+                 (sym (cong (into (<→◃ q′)) (out-into (<→◃ (ς q′)) Y)))
+                 (proj₂ (hyp Y z s) S t′ β′ P ς r′ mi′ eP rS cS b′))
+        t β r mi b
+  𝓡-node (suc n) p jd jdA jdK ia oa ch G q′ Fn mj eN hyp =
+    eN , λ m G′ g rg →
+      𝓡-node n p (λ t → jd (π m t)) (λ t → jdA (π m t)) (λ t → jdK (π m t)) ia oa (σ m ch) (λ z → proj₁ (G z) m G′)
+             q′ (λ y → Fn y g) mj (eN (𝓡-refl n rg)) (λ Y z s → proj₂ (hyp Y z s) m G′ g rg)
+
+  ----------------------------------------------------------------------
+  -- 指数为零 (rz): W4 的指数任意, 用单调把它压到零.
+  rzE : ∀ {mu} {X : Cx ℓ} (T : TD X mu) (t : Tr mu) (F : Op X) {k : Ordᴵ} {W : Ordᶜ k} → R0 X F W
+      → R0 X (op (E o T t F) (Einf o T t F)) W
+  rzE T t F hF with zl t
+  ... | inj₁ refl = hF
+  ... | inj₂ l    = R0-cl {F = F} {G = op (E o T t F) (Einf o T t F)} hF (λ S i u v → Emono o T F S i u v l)
+
+  rzI : ∀ n {mu} {X : Cx ℓ} (T : TD X mu) (t : Tr mu) (K : Ca (suc n) X) (G : Ca n X) {k : Ordᴵ} {g : ShL k n}
+      → 𝓡 n X (proj₁ K idM G) g → 𝓡 n X (It n o T t K G) g
+  rzI n T t K G h with zl t
+  ... | inj₁ refl = h
+  ... | inj₂ l    = 𝓡-cl n h (Itmono n o T K G l)
+
+  pwr : {k kX : Ordᴵ} {W : Ordᶜ k} (ρ : SimW kX k) {A : Ordᶜ kX} → W ≅ W → A ≅ A
+      → pwb W (λ q → q) (embW ρ A) ≅ pwb W (λ q → q) (embW ρ A)
+  pwr ρ eW eA = pwb-≅ eW (embW-refl ρ eA)
+
+  ----------------------------------------------------------------------
+  -- 主定理 (互递归): (Op) 一阶 E, (It) 一切阶 It n, 以及 Itᴺ 作为高一阶的自然 op.
+  mutual
+    OpE : ∀ {mu} {X : Cx ℓ} (T : TD X mu) {kX : Ordᴵ} {A : Ordᶜ kX} {x : Tr mu} (d : Dom mu A x)
+        → ∀ {k : Ordᴵ} (ρ : SimW kX k) {W : Ordᶜ k} (F : Op X) → R0 X F W
+        → R0 X (op (E o T x F) (Einf o T x F)) (pwb W (λ q → q) (embW ρ A))
+    OpE T (rz {t = t} _) ρ F hF = rzE T t F hF
+    OpE T (rs {t = t} d) ρ F hF =
+      pwr ρ (proj₁ hF) (D-refl (rs d)) ,
+      λ S t′ β P ς r mi eP rS cS b →
+        Suc.sucOut (op (E o T t F) (Einf o T t F)) (proj₁ (OpE T d ρ F hF)) (proj₂ (OpE T d ρ F hF))
+                   S t′ β P ς r mi eP rS cS b _
+    OpE T (rl {t = t} h) ρ F hF =
+      pwr ρ (proj₁ hF) (D-refl (rl h)) ,
+      λ S t′ β P ς r mi eP rS cS b → rl (λ n → proj₂ (OpE T (h n) ρ F hF) S t′ β P ς r mi eP rS cS b)
+    OpE {mu} {X} T (rΩ {q = q} {F = Φ₀} {p = p} {g = gg} _ mj eΦ h) ρ {W} F hF =
+      𝓡-node zero p (λ t → kpT (fr T) o p (tv T t)) (λ t → KT (fr T) st o p (tv T t)) (λ t → KOT st o (fr T) p (tv T t))
+             (IsN-at mu (IsS→IsN mu (IsS-dn (fr T) st)) p) (Ok-at mu (okD (fr T) o) p)
+             (mk T (hereT (fr T) (posW mu p))) (λ z → op (E o T (gg z) F) (Einf o T (gg z) F))
+             r₁ (λ y → pwb W (λ q → q) (embW ρ (Φ₀ (into (<→◃ q) (tr⁻ e₁ (out (<→◃ r₁) (I.coe (<→◃ r₁) (<→◃ r₁) y)))))))
+             (λ ia oa → I.≅ᴵ-trans (I.≅ᴵ-sym e₁) (mj ia oa))
+             (pwr ρ (proj₁ hF) eΦ)
+             br
+      where
+      e₁ = ≺e (ρ q)
+      r₁ = ≺l (ρ q)
+      br : ∀ (Y : Ordᶜ (≺r (ρ q))) (z : Br mu p) → SubD mu p Y z
+         → R0 X (op (E o T (gg z) F) (Einf o T (gg z) F))
+                (pwb W (λ q → q) (embW ρ (Φ₀ (into (<→◃ q) (tr⁻ e₁ (out (<→◃ r₁) (I.coe (<→◃ r₁) (<→◃ r₁) (into (<→◃ r₁) Y))))))))
+      br Y z s =
+        subst (λ w → R0 X (op (E o T (gg z) F) (Einf o T (gg z) F)) (pwb W (λ q → q) (embW ρ (Φ₀ (into (<→◃ q) (tr⁻ e₁ w))))))
+              (sym (trans (out-into (<→◃ r₁) _) (out-into (<→◃ r₁) Y)))
+              (OpE T (h (tr⁻ e₁ Y) z (Sub-≅ mu p (I.≅ᴵ-sym e₁) (tr⁻-≅ e₁ (Sub-refl mu p s)) s)) ρ F hF)
+    OpE {mu = zero} T (ru {c = ()} _ _ _ _) ρ F hF
+    OpE {mu = nd s ch} {X} T {A = A} (ru {A₀ = A₀} {Y = Y} {t₀ = t₀} {c = c} {y = y} d₀ kid ς′ eq) ρ {W} F hF =
+      pwr ρ (proj₁ hF) (reflˡ eq) ,
+      λ S t β P ς r mi eP rS cS b →
+        r≅ (I.≅ᴵ-refl _) (ψ-≅ (I.≅ᴵ-refl _) (add-≅ eP EQu))
+           (proj₂ IH₁ (λ i′ y′ → S i′ (proj₂ y′)) (inj₂ (tv T t) , t) β P ς r mi eP (λ t′ → rS (proj₂ t′)) (λ t′ → cS (proj₂ t′)) b)
+      where
+      IH₀ = OpE T d₀ ρ F hF
+      IH₁ = OpE (chTD T c) kid (λ q → ρ (ς′ q)) (enterO (chMT T c) (op (E o T t₀ F) (Einf o T t₀ F))) (enterR IH₀ (chMT T c))
+      eA₀ = D-refl d₀
+      eY = D-refl kid
+      E1 : embW ρ A ≅ add (embW ρ A₀) (λ q → q) (embW (λ q → ρ (ς′ q)) Y)
+      E1 = ≅-trans (embW-≅ ρ eq) (≅-sym (add-≅ (embW-≅ ρ eA₀) (embW-≅ (λ q → ρ (ς′ q)) eY)))
+      EQu : pwb W (λ q → q) (embW ρ A) ≅ pwb (pwb W (λ q → q) (embW ρ A₀)) (λ q → q) (embW (λ q → ρ (ς′ q)) Y)
+      EQu = ≅-trans (pwb-≅ (proj₁ hF) E1)
+                    (pwb-add W (λ q → q) (embW ρ A₀) (λ q → q) (embW (λ q → ρ (ς′ q)) Y) (proj₁ hF)
+                             (embW-refl ρ eA₀) (embW-refl (λ q → ρ (ς′ q)) eY))
+    OpE {X = X} T {A = A} (re {A₀ = A₀} {V = V} {X = X′} {u = a} {v = b} {x = x′} {nb = nb} d₀ dv dx eq) {k} ρ {W} F hF =
+      R0-≅ {F = It zero o T x′ (Kb o T b nb) (op (E o T a F) (Einf o T a F))} h3 E3
+      where
+      hE₀ = OpE T d₀ ρ F hF
+      W₀ = pwb W (λ q → q) (embW ρ A₀)
+      eV = embW-refl ρ (D-refl dv)
+      eX = embW-refl ρ (D-refl dx)
+      eZ₀ = embW-refl ρ (D-refl d₀)
+      κb : Ordᶜ k → Ordᶜ k
+      κb U = pwb U (λ q → q) (embW ρ V)
+      hKb : 𝓡 (suc zero) X (Kb o T b nb) κb
+      hKb = (λ e → pwb-≅ e eV) , (λ m G U rG → OpE (trTD m T) dv ρ G rG)
+      h3 = OpIt zero T dx ρ (Kb o T b nb) κb (op (E o T a F) (Einf o T a F)) W₀ hKb hE₀
+      E2 : embW ρ A ≅ add (embW ρ A₀) (λ q → q) (pwb (embW ρ V) (λ q → q) (embW ρ X′))
+      E2 = ≅-trans (embW-≅ ρ eq) (≅-sym (add-≅ (embW-≅ ρ (D-refl d₀)) (pwb-≅ (embW-≅ ρ (D-refl dv)) (embW-≅ ρ (D-refl dx)))))
+      E3 : pwb W (λ q → q) (embW ρ A) ≅ ℙ k zero (λ q → q) (embW ρ X′) κb W₀
+      E3 = ≅-trans (pwb-≅ (proj₁ hF) E2)
+           (≅-trans (pwb-add W (λ q → q) (embW ρ A₀) (λ q → q) (pwb (embW ρ V) (λ q → q) (embW ρ X′)) (proj₁ hF) eZ₀ (pwb-≅ eV eX))
+                    (pwb-ℙ0 k W₀ (λ q → q) (embW ρ V) (λ q → q) (embW ρ X′) (proj₁ hE₀) eV eX))
+    OpE T (r≅ {t = t} le e d) ρ F hF =
+      R0-≅ {F = op (E o T t F) (Einf o T t F)} (OpE T d (∘W ρ (≅W le)) F hF)
+           (pwb-≅ (proj₁ hF) (≅-trans (embW-≅ ρ e) (≅-sym (embW-≅ (∘W ρ (≅W le)) (reflʳ e)))))
+    OpE T (r◃ {t = t} {t′ = t′} d l) ρ F hF = R0-cl {F = op (E o T t F) (Einf o T t F)} {G = op (E o T t′ F) (Einf o T t′ F)} (OpE T d ρ F hF) (λ S i t v → Emono o T F S i t v l)
+
+    OpIt : ∀ n {mu} {X : Cx ℓ} (T : TD X mu) {kX : Ordᴵ} {A : Ordᶜ kX} {x : Tr mu} (d : Dom mu A x)
+         → ∀ {k : Ordᴵ} (ρ : SimW kX k) (K : Ca (suc n) X) (κ : ShL k (suc n)) (G : Ca n X) (g : ShL k n)
+         → 𝓡 (suc n) X K κ → 𝓡 n X G g → 𝓡 n X (It n o T x K G) (ℙ k n (λ q → q) (embW ρ A) κ g)
+    OpIt n T (rz {t = t} _) ρ K κ G g hK hG = rzI n T t K G (proj₂ hK idM G g hG)
+    OpIt n {X = X} T (rs {A = A₀} {t = t} d) {k} ρ K κ G g hK hG =
+      𝓡-sup n (λ j → iterᴸ (ℙ k n (λ q → q) (embW ρ A₀) κ) g j)
+        (λ j → 𝓡-cl n (itR j) (trC n (Itinf n o T t K (iter (It n o T t K) G j))
+                                    (limCUB n (λ j′ → iter (It n o T t K) G (suc j′))
+                                              (λ j′ → Itinf n o T t K (iter (It n o T t K) G (suc j′))) j)))
+      where
+      itR : ∀ j → 𝓡 n X (iter (It n o T t K) G j) (iterᴸ (ℙ k n (λ q → q) (embW ρ A₀) κ) g j)
+      itR zero    = hG
+      itR (suc j) = OpIt n T d ρ K κ _ _ hK (itR j)
+    OpIt n T (rl h) {k} ρ K κ G g hK hG = 𝓡-sup n _ (λ j → OpIt n T (h j) ρ K κ G g hK hG)
+    OpIt n {mu} {X} T (rΩ {q = q} {F = Φ₀} {p = p} {g = gg} _ mj eΦ h) {k} ρ K κ G g hK hG =
+      𝓡-node n p (λ t → kpT (fr T) o p (tv T t)) (λ t → KT (fr T) st o p (tv T t)) (λ t → KOT st o (fr T) p (tv T t))
+             (IsN-at mu (IsS→IsN mu (IsS-dn (fr T) st)) p) (Ok-at mu (okD (fr T) o) p)
+             (mk T (hereT (fr T) (posW mu p))) (λ z → It n o T (gg z) K G)
+             r₁ (λ y → ℙ k n (λ q → q) (embW ρ (Φ₀ (into (<→◃ q) (tr⁻ e₁ (out (<→◃ r₁) (I.coe (<→◃ r₁) (<→◃ r₁) y)))))) κ g)
+             (λ ia oa → I.≅ᴵ-trans (I.≅ᴵ-sym e₁) (mj ia oa))
+             (ℙ-≅ k n {σ = λ q → q} {σ′ = λ q → q} (embW-refl ρ eΦ) (proj₁ hK) (𝓡-refl n hG))
+             br
+      where
+      e₁ = ≺e (ρ q)
+      r₁ = ≺l (ρ q)
+      br : ∀ (Y : Ordᶜ (≺r (ρ q))) (z : Br mu p) → SubD mu p Y z
+         → 𝓡 n X (It n o T (gg z) K G)
+                 (ℙ k n (λ q → q) (embW ρ (Φ₀ (into (<→◃ q) (tr⁻ e₁ (out (<→◃ r₁) (I.coe (<→◃ r₁) (<→◃ r₁) (into (<→◃ r₁) Y))))))) κ g)
+      br Y z s =
+        subst (λ w → 𝓡 n X (It n o T (gg z) K G) (ℙ k n (λ q → q) (embW ρ (Φ₀ (into (<→◃ q) (tr⁻ e₁ w)))) κ g))
+              (sym (trans (out-into (<→◃ r₁) _) (out-into (<→◃ r₁) Y)))
+              (OpIt n T (h (tr⁻ e₁ Y) z (Sub-≅ mu p (I.≅ᴵ-sym e₁) (tr⁻-≅ e₁ (Sub-refl mu p s)) s)) ρ K κ G g hK hG)
+    OpIt n {mu = zero} T (ru {c = ()} _ _ _ _) ρ K κ G g hK hG
+    OpIt n {mu = nd s ch} {X} T {A = A} (ru {A₀ = A₀} {Y = Y} {t₀ = t₀} {c = c} {y = y} d₀ kid ς′ eq) {k} ρ K κ G g hK hG =
+      𝓡-≈ n (𝓡-up n (down (fr T) c) (λ t → inj₂ (tv T t)) (It n o T t₀ K G) _ h1) EQ
+      where
+      Z₀ = embW ρ A₀
+      Y″ = embW (λ q → ρ (ς′ q)) Y
+      hN = ItN n T d₀ ρ K κ hK
+      h1 = OpIt n (chTD T c) kid (λ q → ρ (ς′ q)) (enter (suc n) (chMT T c) (Itᴺ n o T t₀ K)) (ℙ k n (λ q → q) Z₀ κ)
+                (enter n (chMT T c) (It n o T t₀ K G)) g (𝓡-enter (suc n) (chMT T c) hN)
+                (𝓡-enter n (chMT T c) (𝓡-cl n hG (Itinf n o T t₀ K G)))
+      E1 : embW ρ A ≅ add Z₀ (λ q → q) Y″
+      E1 = ≅-trans (embW-≅ ρ eq) (≅-sym (add-≅ (embW-≅ ρ (D-refl d₀)) (embW-≅ (λ q → ρ (ς′ q)) (D-refl kid))))
+      eκ = proj₁ hK
+      eg = 𝓡-refl n hG
+      EQ : Eqv k n (ℙ k n (λ q → q) (embW ρ A) κ g) (ℙ k n (λ q → q) Y″ (ℙ k n (λ q → q) Z₀ κ) g)
+      EQ = Eqv-trans k n (ℙ-≅ k n E1 eκ eg)
+                         (ℙ-add k n (λ q → q) Z₀ (λ q → q) Y″ (embW-refl ρ (D-refl d₀)) (embW-refl (λ q → ρ (ς′ q)) (D-refl kid)) eκ eg)
+    OpIt n {X = X} T {A = A} (re {A₀ = A₀} {V = V} {X = X′} {u = a} {v = b} {x = x′} {nb = nb} d₀ dv dx eq) {k} ρ K κ G g hK hG =
+      𝓡-≈ n (proj₂ h2 idM G g hG) EQ
+      where
+      Z₀ = embW ρ A₀
+      V″ = embW ρ V
+      X″ = embW ρ X′
+      eZ₀ = embW-refl ρ (D-refl d₀)
+      eV = embW-refl ρ (D-refl dv)
+      eX = embW-refl ρ (D-refl dx)
+      hN = ItN n T d₀ ρ K κ hK
+      hKₑ : 𝓡 (suc (suc n)) X (Kₑ n o T b nb) (ℙ k n (λ q → q) V″)
+      hKₑ = (λ e → ℙ-≅ k n eV e) , (λ m K₁ κ₁ hK₁ → ItN n (trTD m T) dv ρ K₁ κ₁ hK₁)
+      h2 = OpIt (suc n) T dx ρ (Kₑ n o T b nb) (ℙ k n (λ q → q) V″) (Itᴺ n o T a K) (ℙ k n (λ q → q) Z₀ κ) hKₑ hN
+      E2 : embW ρ A ≅ add Z₀ (λ q → q) (pwb V″ (λ q → q) X″)
+      E2 = ≅-trans (embW-≅ ρ eq) (≅-sym (add-≅ (embW-≅ ρ (D-refl d₀)) (pwb-≅ (embW-≅ ρ (D-refl dv)) (embW-≅ ρ (D-refl dx)))))
+      eκ = proj₁ hK
+      eg = 𝓡-refl n hG
+      EQ : Eqv k n (ℙ k n (λ q → q) (embW ρ A) κ g) (ℙ k (suc n) (λ q → q) X″ (ℙ k n (λ q → q) V″) (ℙ k n (λ q → q) Z₀ κ) g)
+      EQ = Eqv-trans k n (ℙ-≅ k n E2 eκ eg)
+             (Eqv-trans k n (ℙ-add k n (λ q → q) Z₀ (λ q → q) (pwb V″ (λ q → q) X″) eZ₀ (pwb-≅ eV eX) eκ eg)
+                            (ℙ-pwb k n (λ q → q) V″ (λ q → q) X″ eV eX (ℙ-≅ k n eZ₀ eκ) eg))
+    OpIt n T (r≅ le e d) {k} ρ K κ G g hK hG =
+      𝓡-≈ n (OpIt n T d (∘W ρ (≅W le)) K κ G g hK hG)
+            (ℙ-≅ k n (≅-trans (embW-≅ ρ e) (≅-sym (embW-≅ (∘W ρ (≅W le)) (reflʳ e)))) (proj₁ hK) (𝓡-refl n hG))
+    OpIt n T (r◃ d l) ρ K κ G g hK hG = 𝓡-cl n (OpIt n T d ρ K κ G g hK hG) (Itmono n o T K G l)
+
+    ItN : ∀ n {mu} {X : Cx ℓ} (T : TD X mu) {kX : Ordᴵ} {A : Ordᶜ kX} {x : Tr mu} (d : Dom mu A x)
+        → ∀ {k : Ordᴵ} (ρ : SimW kX k) (K : Ca (suc n) X) (κ : ShL k (suc n))
+        → 𝓡 (suc n) X K κ → 𝓡 (suc n) X (Itᴺ n o T x K) (ℙ k n (λ q → q) (embW ρ A) κ)
+    ItN n T d {k} ρ K κ hK =
+        (λ e → ℙ-≅ k n (embW-refl ρ (D-refl d)) (proj₁ hK) e)
+      , (λ m G g rg → OpIt n (trTD m T) d ρ (enter (suc n) m K) κ G g (𝓡-enter (suc n) m hK) rg)
+
+------------------------------------------------------------------------
+-- 出口: KIface.OpStmt 原文 (第二版), 无额外前提. (名字 op 与 W4Fold 的构造子撞名, 在 KOpOp 里以 op 导出.)
+opThm : (m : L) → OpStmt m
+opThm m st o {v} {x} {nb} {k} {V} {X} _ eV RO d S w β P ς r pr =
+  r≅ (I.≅ᴵ-refl _) (ψ-≅ (I.≅ᴵ-refl _) (add-≅ (Pre.reP pr) (pwb-≅ eV (≅-sym (embW-≅ (litW (λ q → q)) (D-refl d))))))
+     (proj₂ (Main.OpE st o tdNil d (litW (λ q → q)) (opB m o v nb) hF)
+            S w β P ς r (Pre.mj pr) (Pre.reP pr) (Pre.real pr) (Pre.cov pr) (Pre.base pr))
+  where
+  hF : Main.R0 st o nil (opB m o v nb) V
+  hF = eV , λ S′ t′ β′ P′ ς′ r′ mi′ eP′ rS′ cS′ b′ →
+    RO S′ t′ β′ P′ ς′ r′ (record { mj = mi′ ; reP = eP′ ; real = rS′ ; cov = cS′ ; base = b′ })

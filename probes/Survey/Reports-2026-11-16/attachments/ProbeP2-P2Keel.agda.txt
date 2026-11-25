@@ -1,0 +1,152 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 探针 P2 (临时试验, 不进仓库).
+-- (1) 换基候选 (YiBSFold) 的独立塔上的龙骨下降 keelᴮ: 结构形 "每多一项塔, 外层多一层 Ω 下标".
+--     陈述与证明照 YiMTKeel.keelᶻ, 折叠换成 YiBSFold, 证据沿第一孩子路继承 (rb¹).
+-- (2) 两个候选共用的保留缺陷 (kp 的 k6 一格) 在塔第 1 项上的最小实例: 槽位就是目标层自己的槽位, 路径经同一个孩子, 仍不保留.
+-- (3) 回灌底那一格 (塔第 1 项, 目标第 1 层经孩子 2): 主线走回退, 换基候选走 seen 重建. 都是 refl.
+module P2Keel where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀; kp; node⁺)
+open import OCF.Lean.YiBSBase using (Rb; rb-tw; Schema; schema; seen; downOk)
+import OCF.Lean.YiBSFold as BS
+open BS using (ψ; mono; ψ₀; closed)
+import OCF.Lean.YiTBRow as TB
+import OCF.Lean.YiMTTab as MT
+open import OCF.Lean.YiBRValue using (readRW)
+open import OCF.Lean.YiKSDesc using (◃≼ᴿ; plusᴿ; row1; _⊑¹_; r¹; n¹; ok¹; σ; kl; klP; okσ; okl)
+open import OCF.Align.Value using (_≼_; ≼l; ≼-refl; ≼-trans)
+
+------------------------------------------------------------------------
+-- (1) 换基候选的龙骨下降
+
+F₀ᴮ : (ℓ : L) → Ok ℓ → Rb ℓ → Tr zero
+F₀ᴮ ℓ o r = proj₁ (ψ₀ ℓ o r (proj₁ (Ωt ℓ)))
+
+twᴮ : ℕ → Tr zero
+twᴮ n = proj₁ (closed n)
+
+rb¹ : ∀ {j ℓ} → j ⊑¹ ℓ → Rb ℓ → Rb j
+rb¹ r¹             r = r
+rb¹ (n¹ {s = s} p) r = rb¹ p (proj₂ r (c₀ s))
+
+step¹ᴮ : (s : Sh) (h : Ch s → L) (o : Ok (nd s h)) (r : Rb (nd s h))
+  → readRW (F₀ᴮ (h (c₀ s)) (proj₂ o (c₀ s)) (proj₂ r (c₀ s))) ≼ readRW (F₀ᴮ (nd s h) o r)
+step¹ᴮ sS h o r = ≼l 1 (plusᴿ _ _ (◃≼ᴿ (◃t (◃l zero) (◃l zero))))
+step¹ᴮ sL g o r = ◃≼ᴿ (◃l zero)
+step¹ᴮ (sΩ k) h o r =
+  ◃≼ᴿ (mono (nd (sΩ k) h) o r (B₀ (nd (sΩ k) h)) zero (z≤ (nd (sΩ k) h)) (Ωt zero) (◃w {p = inj₁ (inj₁ tt)}))
+
+descᴮ : ∀ {j ℓ} (p : j ⊑¹ ℓ) (o : Ok ℓ) (r : Rb ℓ) → readRW (F₀ᴮ j (ok¹ p o) (rb¹ p r)) ≼ readRW (F₀ᴮ ℓ o r)
+descᴮ {j} r¹ o r = ≼-refl (readRW (F₀ᴮ j o r))
+descᴮ (n¹ {s} {h} p) o r = ≼-trans (descᴮ p (proj₂ o (c₀ s)) (proj₂ r (c₀ s))) (step¹ᴮ s h o r)
+
+-- 第一个链点: 三个折叠里是同一棵树 (自身行不经换基那一行)
+σᴮ : (n : ℕ) → Tr (tw n)
+σᴮ n = proj₁ (ψ (tw n) (Ok-tw n) (rb-tw n) (B₀ (tw n)) (tw n) self (Ωt (tw n)) (proj₁ (Ωt (tw n))))
+
+σ-sameᴮ : (n : ℕ) → σᴮ n ≡ σ n
+σ-sameᴮ zero    = refl
+σ-sameᴮ (suc n) = refl
+
+rbσ : (n : ℕ) → Rb (tw n ⊕ ↑ (tw n) (σ n))
+rbσ n = proj₂ (rb-tw (suc n)) (σ n)
+
+rowσᴮ : (n : ℕ) → readRW (F₀ᴮ (tw n ⊕ ↑ (tw n) (σ n)) (okσ n) (rbσ n)) ≼ readRW (twᴮ (suc n))
+rowσᴮ zero = row1 (kp (tw 1) (Ok-tw 1) (inj₁ (inj₁ tt)) (z≤ (tw 1)))
+  (λ z → ψ (tw 1) (Ok-tw 1) (rb-tw 1) (B₀ (tw 1)) zero (z≤ (tw 1)) (Ωt zero) (proj₁ (upz {s = sΩ zero} {h = λ c → zero ⊕ ↑ zero c} z (Ωt (zero ⊕ ↑ zero z)))))
+  (λ z → proj₁ (ψ (tw 1) (Ok-tw 1) (rb-tw 1) (B₀ (tw 1)) zero (ink self) (Ωt zero) (proj₁ (upz {s = sΩ zero} {h = λ c → zero ⊕ ↑ zero c} z (Ωt (zero ⊕ ↑ zero z))))))
+  (≼-refl (readRW (F₀ᴮ (zero ⊕ ↑ zero (σ 0)) (okσ 0) (rbσ 0))))
+rowσᴮ (suc n) = row1 (kp ℓ o (inj₁ (inj₁ tt)) (z≤ ℓ))
+  (λ z → ψ ℓ o r (B₀ ℓ) zero (z≤ ℓ) (Ωt zero) (g z))
+  (λ z → proj₁ (ψ ℓ o r (B₀ ℓ) (tw (suc n)) (ink self) (Ωt (tw (suc n))) (g z)))
+  (≼-refl (readRW (F₀ᴮ (tw (suc n) ⊕ ↑ (tw (suc n)) (σ (suc n))) (okσ (suc n)) (rbσ (suc n)))))
+  where
+  ℓ : L
+  ℓ = tw (suc (suc n))
+  o : Ok ℓ
+  o = Ok-tw (suc (suc n))
+  r : Rb ℓ
+  r = rb-tw (suc (suc n))
+  g : Tr (tw (suc n)) → Tr ℓ
+  g z = proj₁ (upz {s = sΩ (tw (suc n))} {h = λ c → tw (suc n) ⊕ ↑ (tw (suc n)) c} z (Ωt (tw (suc n) ⊕ ↑ (tw (suc n)) z)))
+
+rbkl : (n : ℕ) → Rb (kl n)
+rbkl n = rb¹ (klP n) (rbσ n)
+
+keelᴮ : (n : ℕ) → readRW (F₀ᴮ (kl n) (okl n) (rbkl n)) ≼ readRW (twᴮ (suc n))
+keelᴮ n = ≼-trans (descᴮ (klP n) (okσ n) (rbσ n)) (rowσᴮ n)
+
+------------------------------------------------------------------------
+-- (2) 共用的保留缺陷 (kp 来自 YiRWFold, 主线与换基候选都导入它)
+
+nat : ℕ → Tr zero
+nat zero    = zero
+nat (suc n) = suc (nat n)
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+one : L
+one = nd sS (λ _ → zero)
+
+one-is-child : h₁ (nat 1) ≡ one
+one-is-child = refl
+
+-- 塔第 1 项上, 孩子 nat 1 (就是层 1) 里的第 0 层槽位
+q₁ : Pos (tw 1)
+q₁ = inj₂ (nat 1 , inj₂ (inj₂ (tt , inj₁ tt)))
+
+slot-layer : at (tw 1) q₁ ≡ zero
+slot-layer = refl
+
+-- 目标层 1, 路径经孩子 nat 1: 不保留
+k6-tw1 : kp (tw 1) (Ok-tw 1) q₁ (inc (nat 1) self) ≡ nothing
+k6-tw1 = refl
+
+-- 同一个槽位在层 1 自己上 (路径 self): 保留
+keep-one : kp one (proj₂ (Ok-tw 1) (nat 1)) (inj₂ (tt , inj₁ tt)) self ≡ just (inj₂ (tt , inj₁ tt) , (λ z → z) , refl)
+keep-one = refl
+
+-- 换基候选的结点行在这一格逐字走链 (一般的 Ω 形状层号, 孩子侧槽位, 经指定孩子的路径)
+k6ᴮ : ∀ k h (o : Ok (nd (sΩ k) h)) (r : Rb (nd (sΩ k) h)) (B : Base (nd (sΩ k) h)) j c (v : j ≤ h c) (β : Tr⁺ j)
+        (q : Σ (Tr k) λ c′ → Pos⁼ (h c′)) (g : Br (nd (sΩ k) h) (inj₂ q) → Tr (nd (sΩ k) h))
+  → ψ (nd (sΩ k) h) o r B j (inc c v) β (Ω (inj₂ q) g)
+  ≡ node⁺ nothing (λ z → ψ (nd (sΩ k) h) o r B j (inc c v) β (g z))
+      (λ z → fromBr (nd (sΩ k) h) (inj₂ q)
+        (proj₁ (ψ (nd (sΩ k) h) o r B (at (nd (sΩ k) h) (inj₂ q)) (posW (nd (sΩ k) h) (inj₂ q))
+                  (B (at (nd (sΩ k) h) (inj₂ q)) (posW (nd (sΩ k) h) (inj₂ q))) (g z))))
+k6ᴮ k h o r B j c v β q g = refl
+
+------------------------------------------------------------------------
+-- (3) 回灌底那一格: 塔第 1 项, 目标第 1 层经孩子 nat 2 (再经 tt), 嵌入在孩子 c
+
+v₂ : one ≤ h₁ (nat 2)
+v₂ = inc tt self
+
+S₁ : Schema zero h₁
+S₁ = schema zero (↑ zero) tt self (OkO↑ zero zero tt self) (λ c → refl)
+
+-- 换基候选: 嵌入那一行重建层 1 ⊕ ↑ c 的 Ω 树并朝层 1 折 (seen), 再加孩子树折到第 0 层
+seen-row : (B : Base (tw 1)) (β : Tr⁺ one) (x : Tr (tw 1)) (c : Tr zero) (y : Tr (h₁ c)) (e : h₁ c ⊢ zero ◃ y)
+  → ψ (tw 1) (Ok-tw 1) (rb-tw 1) B one (inc (nat 2) v₂) β (up x c y e)
+  ≡ (seen S₁ one (downOk (h₁ (nat 2)) (proj₂ (Ok-tw 1) (nat 2)) one v₂) (lift zero one)
+       (ψ (tw 1) (Ok-tw 1) (rb-tw 1) B one (inc (nat 2) v₂) β x) c
+     ⊞ ψ (h₁ c) (proj₂ (Ok-tw 1) c) (proj₂ (rb-tw 1) c) (B₀ (h₁ c)) zero (z≤ (h₁ c)) (Ωt zero) y)
+seen-row B β x c y e = refl
+
+-- 主线: 同一格 (嵌入在后继孩子) 表里没有条目, 逐字回退成 "左项的折叠 ⊞ 孩子树折到第 0 层"
+fallback-row : (B : Base (tw 1)) (β : Tr⁺ one) (x : Tr (tw 1)) (c : Tr zero) (y : Tr (h₁ (suc c))) (e : h₁ (suc c) ⊢ zero ◃ y)
+  → TB.ψ (tw 1) (Ok-tw 1) (MT.rbᶻ (tw 1)) B one (inc (nat 2) v₂) β (up x (suc c) y e)
+  ≡ (TB.ψ (tw 1) (Ok-tw 1) (MT.rbᶻ (tw 1)) B one (inc (nat 2) v₂) β x
+     ⊞ TB.ψ (h₁ (suc c)) (proj₂ (Ok-tw 1) (suc c)) (MT.rbᶻ (h₁ (suc c))) (B₀ (h₁ (suc c))) zero (z≤ (h₁ (suc c))) (Ωt zero) y)
+fallback-row B β x c y e = refl

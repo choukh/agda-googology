@@ -1,0 +1,71 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W4 零层输出的实际步进是一条字面前驱。将同一输出抄到 src，并取得原 BTBO 嵌入定理所需的可数层号。
+module B16IndexBase where
+
+open import Data.Nat using (ℕ; suc; zero)
+open import Data.Product using (proj₁)
+open import W4Block
+open import W4Ops
+open import WVOne using (read; T₀)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼)
+open import OCF.Align.BTBOFullV3 using (≺→⊑₀)
+open import WVTwo using (◃→≼)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Lean.YiBtboV2 using (Mono; mz; ms; ml)
+
+pred : ∀ {x y : Tr zero} → zero ⊢ x ◃ y → read x L.≺ read y
+pred ◃s = L.≺z (L.≅-refl⁰ _)
+pred (◃l {a = a} n) = L.≺l (suc n) (pred (a n))
+pred (◃w {p = ()})
+pred (◃u x () y d)
+pred (◃c x () d)
+pred (◃e {ε = ()})
+pred (◃x {ε = ()} d)
+pred (◃t d e) = ≺→⊑₀ (pred e) (pred d)
+
+hs : ∀ (x : Tr zero) → L.HS (read x)
+hs zero = L.hz
+hs (suc x) = L.hs (hs x)
+hs (lim f a) = L.hl (λ n → hs (f n)) (λ n → ≺→⊑₀ (pred (a n)))
+hs (Ω () _)
+hs (up _ () _ _)
+hs (ex _ _ _ _ ())
+
+κ : Tr zero → L.Ordᴵ
+κ z = L.toLevel (read z) (hs z)
+
+cp : Tr zero → S.Ord₀
+cp zero = S.zero
+cp (suc x) = S.suc (cp x)
+cp (lim f d) = S.lim (λ n → cp (f n))
+cp (Ω () _)
+cp (up _ () _ _)
+cp (ex _ _ _ _ ())
+
+same : ∀ z → tr₀ (cp z) L.≅ read z
+same zero = L.z≅
+same (suc z) = L.s≅ (same z)
+same (lim f d) = L.l≅ (λ n → same (f n))
+same (Ω () _)
+same (up _ () _ _)
+same (ex _ _ _ _ ())
+
+increasing : ∀ z → Mono (tr₀ (cp z))
+increasing zero = mz
+increasing (suc z) = ms (increasing z)
+increasing (lim f d) = ml (λ n → increasing (f n))
+  (λ n → ≼-trans (≅→≼ (same (f n))) (≼-trans (◃→≼ (d n)) (≅→≼ (L.≅-sym (same (f (suc n)))))))
+increasing (Ω () _)
+increasing (up _ () _ _)
+increasing (ex _ _ _ _ ())
+
+plus : ∀ (a b : Tr zero) → read a L.+ read b L.≅ read (a + b)
+plus a zero = L.≅-refl⁰ _
+plus a (suc b) = L.s≅ (plus a b)
+plus a (lim f d) = L.l≅ (λ n → plus a (f n))
+plus a (Ω () _)
+plus a (up _ () _ _)
+plus a (ex _ _ _ _ ())

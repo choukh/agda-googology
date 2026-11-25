@@ -1,0 +1,3161 @@
+[
+  {
+    "file": "probes/OCF/Lean/YiXVCanTau.lagda.md",
+    "sha256": "7df1141f1da217ac7e023554a661ba22efc6245e08889054fb3e52c8bf10ba36",
+    "code_nonblank": 61,
+    "code_physical": 70,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 535832952,
+    "elapsed_seconds": 5.467,
+    "checking": [
+      "OCF.Lean.YiXVCanTau"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCanTauPair.lagda.md",
+    "sha256": "1fcb13ec38fc08a3f1291436707cb21f15d647a52ff3f6a5a19e951d7be01067",
+    "code_nonblank": 18,
+    "code_physical": 19,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 478031384,
+    "elapsed_seconds": 5.806,
+    "checking": [
+      "OCF.Lean.YiXVCanTauPair"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableBase.lagda.md",
+    "sha256": "f731fa30540fcb5df176597798bc6998b7dfa09b7fd647c42850a237d011b5fe",
+    "code_nonblank": 167,
+    "code_physical": 177,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 201859928,
+    "elapsed_seconds": 2.421,
+    "checking": [
+      "OCF.Lean.YiXVCountableBase"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableGroundValue.lagda.md",
+    "sha256": "676e26f89c2946ab6a8239e13e2648da500fc72a5eb73900ff905e504fd6be2d",
+    "code_nonblank": 46,
+    "code_physical": 46,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 557209080,
+    "elapsed_seconds": 6.205,
+    "checking": [
+      "OCF.Lean.YiXVCountableGroundValue"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableMapInput.lagda.md",
+    "sha256": "9221e1ba24c6b845bd048cdef3f8be1e6045b72513d1b59c0217ed8bd7c59ace",
+    "code_nonblank": 60,
+    "code_physical": 64,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 181822328,
+    "elapsed_seconds": 2.048,
+    "checking": [
+      "OCF.Lean.YiXVCountableMapInput"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableNormalize.lagda.md",
+    "sha256": "b9698861317a079f000f83663633d6ab678f95d4c7b385073842bd4419cf652a",
+    "code_nonblank": 25,
+    "code_physical": 27,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 235412920,
+    "elapsed_seconds": 2.174,
+    "checking": [
+      "OCF.Lean.YiXVCountableNormalize"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableOmega.lagda.md",
+    "sha256": "60b5daa319935a6446c5a0739b8d79e0ab46ce9a1d32b26f11a36a56d7e9dc26",
+    "code_nonblank": 3,
+    "code_physical": 3,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 176263568,
+    "elapsed_seconds": 1.962,
+    "checking": [
+      "OCF.Lean.YiXVCountableOmega"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableChainInput.lagda.md",
+    "sha256": "75d38de2eadb6711cc74d0b6d11770327d140ce5f425599c6d42d1c313219ffb",
+    "code_nonblank": 13,
+    "code_physical": 13,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 175799024,
+    "elapsed_seconds": 2.004,
+    "checking": [
+      "OCF.Lean.YiXVCountableChainInput"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableChain.lagda.md",
+    "sha256": "893627a489e439f0e0bb3301b0366f92bd73cc57be84cfff88688a3208f7b912",
+    "code_nonblank": 45,
+    "code_physical": 48,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 200832912,
+    "elapsed_seconds": 2.006,
+    "checking": [
+      "OCF.Lean.YiXVCountableChain"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableFloor.lagda.md",
+    "sha256": "37b08ccc1eaf11336626530480c950b9e756a92708e22e295a65d204e41de176",
+    "code_nonblank": 33,
+    "code_physical": 35,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 177355888,
+    "elapsed_seconds": 2.102,
+    "checking": [
+      "OCF.Lean.YiXVCountableFloor"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableMapNode.lagda.md",
+    "sha256": "9aaac15485bf0f577045c0f2cfb9057a6a46fa6fac5e4df587156e0c0b3cf3c5",
+    "code_nonblank": 66,
+    "code_physical": 68,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 185345800,
+    "elapsed_seconds": 2.244,
+    "checking": [
+      "OCF.Lean.YiXVCountableMapNode"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableMapCompare.lagda.md",
+    "sha256": "18d6923b87eadec319fd1939821c74f380d98a460e032013ef9c10ad31370ab9",
+    "code_nonblank": 38,
+    "code_physical": 42,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 191470464,
+    "elapsed_seconds": 2.303,
+    "checking": [
+      "OCF.Lean.YiXVCountableMapCompare"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableMap.lagda.md",
+    "sha256": "b2f2c87ea3edb5ce2dee60427abcf3b6b5369cd2a4e87b6f7a7dfb5263c9de95",
+    "code_nonblank": 89,
+    "code_physical": 94,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 253521864,
+    "elapsed_seconds": 2.577,
+    "checking": [
+      "OCF.Lean.YiXVCountableMap"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableAdd.lagda.md",
+    "sha256": "87c95c6a33a64853c91fc13d52ba12010a634f109decde967a89b1c05285e1f4",
+    "code_nonblank": 46,
+    "code_physical": 52,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 213971464,
+    "elapsed_seconds": 2.396,
+    "checking": [
+      "OCF.Lean.YiXVCountableAdd"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableAddFrame.lagda.md",
+    "sha256": "022898d5cb0ca5be16494f075eb63a419fda54c9564732acbfef6f94ae288da4",
+    "code_nonblank": 35,
+    "code_physical": 39,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 190673552,
+    "elapsed_seconds": 2.318,
+    "checking": [
+      "OCF.Lean.YiXVCountableAddFrame"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableIter.lagda.md",
+    "sha256": "292beb913bb44f959b1b7bd3db4cd2c72e8e6fe3c316337e91e2514b5731eec1",
+    "code_nonblank": 34,
+    "code_physical": 36,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 200779456,
+    "elapsed_seconds": 2.271,
+    "checking": [
+      "OCF.Lean.YiXVCountableIter"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableTransportInput.lagda.md",
+    "sha256": "300acabc181f2cbc6637adc74021b6ce517ab2229217c2bad7638afefa018fd5",
+    "code_nonblank": 11,
+    "code_physical": 12,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 169340248,
+    "elapsed_seconds": 1.986,
+    "checking": [
+      "OCF.Lean.YiXVCountableTransportInput"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableTransportModels.lagda.md",
+    "sha256": "81a4b4bb53c832ac35b5d6c4e15ba38c3d4ef4323e291c8085d3ce23d1d3da7f",
+    "code_nonblank": 101,
+    "code_physical": 106,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 218968240,
+    "elapsed_seconds": 2.302,
+    "checking": [
+      "OCF.Lean.YiXVCountableTransportModels"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVLiteralSim.lagda.md",
+    "sha256": "81823a81a33a6c8265f70226c6a1b32d5b28eb9c3441624914dc0bdf4089826b",
+    "code_nonblank": 51,
+    "code_physical": 54,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 181845688,
+    "elapsed_seconds": 2.047,
+    "checking": [
+      "OCF.Lean.YiXVLiteralSim"
+    ],
+    "theme": "实际层号的字面界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableRep.lagda.md",
+    "sha256": "5907b0f03b43f694969fc17480140c0c3ca4d080609154658cd119178068f5af",
+    "code_nonblank": 31,
+    "code_physical": 32,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 190448176,
+    "elapsed_seconds": 2.286,
+    "checking": [
+      "OCF.Lean.YiXVCountableRep"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountablePull.lagda.md",
+    "sha256": "ec522064184f974280aee2a7060c9d2fc4b5bc9953e2a33ed112e5922cc77651",
+    "code_nonblank": 38,
+    "code_physical": 41,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 189010824,
+    "elapsed_seconds": 2.367,
+    "checking": [
+      "OCF.Lean.YiXVCountablePull"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableTransport.lagda.md",
+    "sha256": "07a2a6ae39502ca339d2c6a27b9c6cc540e031e62aadfeab2b382a60cbcc3380",
+    "code_nonblank": 83,
+    "code_physical": 93,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 261736632,
+    "elapsed_seconds": 3.102,
+    "checking": [
+      "OCF.Lean.YiXVCountableTransport"
+    ],
+    "theme": "参照合法性、比较接口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableRetain.lagda.md",
+    "sha256": "741da11bc4dce9a378957f32f01a2dcc079c1e8a7ac7056ed17b5bd1ee7b264f",
+    "code_nonblank": 18,
+    "code_physical": 18,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 258933416,
+    "elapsed_seconds": 2.318,
+    "checking": [
+      "OCF.Lean.YiXVCountableRetain"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVLvlBelow.lagda.md",
+    "sha256": "f22dec65300b004fdb9333a8763f3978092b039a550b64ba054dd077d12b4bf0",
+    "code_nonblank": 21,
+    "code_physical": 22,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 813642352,
+    "elapsed_seconds": 8.175,
+    "checking": [
+      "OCF.Lean.YiXVLvlBelow"
+    ],
+    "theme": "实际层号的字面界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVLvlLiteral.lagda.md",
+    "sha256": "d5356faa8f2235e6fecd6d3a959ab0e4615d61df04926e9dc1c3f8ec130df337",
+    "code_nonblank": 38,
+    "code_physical": 44,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 774751224,
+    "elapsed_seconds": 8.35,
+    "checking": [
+      "OCF.Lean.YiXVLvlLiteral"
+    ],
+    "theme": "实际层号的字面界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVLvlSteps.lagda.md",
+    "sha256": "a1ac5b9a11dce63631b6ff45bc2c3e2d24f38d6f865ecf3f223dc20ad5d6fc92",
+    "code_nonblank": 37,
+    "code_physical": 39,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 779167240,
+    "elapsed_seconds": 8.291,
+    "checking": [
+      "OCF.Lean.YiXVLvlSteps"
+    ],
+    "theme": "实际层号的字面界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableFoldInput.lagda.md",
+    "sha256": "4a280259a0b5d262a28bc0de8fe613419b59fef3549bc0058622de02d789f386",
+    "code_nonblank": 12,
+    "code_physical": 12,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 733400640,
+    "elapsed_seconds": 8.196,
+    "checking": [
+      "OCF.Lean.YiXVCountableFoldInput"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableGroundFold.lagda.md",
+    "sha256": "3548ffc86be4fc3c9fc89843ca530b77c4255cb2183735c584d6226f83746afe",
+    "code_nonblank": 53,
+    "code_physical": 57,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 734412120,
+    "elapsed_seconds": 8.605,
+    "checking": [
+      "OCF.Lean.YiXVCountableGroundFold"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableFoldBody.lagda.md",
+    "sha256": "c90601c04d1f0ab7d31bdf56382472817809a0e99a9f5aad9c4159754720f53a",
+    "code_nonblank": 21,
+    "code_physical": 21,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 733511688,
+    "elapsed_seconds": 8.335,
+    "checking": [
+      "OCF.Lean.YiXVCountableFoldBody"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableFoldBound.lagda.md",
+    "sha256": "6d35fd0c087554587c8c236f5690b8da8011f54f2673cfc3d05354a89e768ea2",
+    "code_nonblank": 13,
+    "code_physical": 13,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 733425224,
+    "elapsed_seconds": 8.525,
+    "checking": [
+      "OCF.Lean.YiXVCountableFoldBound"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableFoldCross.lagda.md",
+    "sha256": "d8562794de20641586108f712a8f1b33ab7794ced97b669dd6831ea839734cb2",
+    "code_nonblank": 15,
+    "code_physical": 15,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 736939624,
+    "elapsed_seconds": 8.094,
+    "checking": [
+      "OCF.Lean.YiXVCountableFoldCross"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVLiteralTri.lagda.md",
+    "sha256": "a73f8128ed1824d9f167574d0f09b4aee08a7a8a2f437a2db18ec512b4ef611d",
+    "code_nonblank": 56,
+    "code_physical": 60,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 752489272,
+    "elapsed_seconds": 8.106,
+    "checking": [
+      "OCF.Lean.YiXVLiteralTri"
+    ],
+    "theme": "实际层号的字面界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableFoldNodeGood.lagda.md",
+    "sha256": "2992599e8e2a75be83695ca0d14fa5c7bc929a610ce2abacc920b82fbad8efbf",
+    "code_nonblank": 85,
+    "code_physical": 90,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 720297128,
+    "elapsed_seconds": 8.194,
+    "checking": [
+      "OCF.Lean.YiXVCountableFoldNodeGood"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableFoldNodeAA.lagda.md",
+    "sha256": "1a8f01997afacd526e3a432d57c1da8b6cc8be4fb6716ceb1ab6b3eecd2170e0",
+    "code_nonblank": 44,
+    "code_physical": 45,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 909748248,
+    "elapsed_seconds": 8.585,
+    "checking": [
+      "OCF.Lean.YiXVCountableFoldNodeAA"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableFoldNodeMono.lagda.md",
+    "sha256": "13f9c984334d842d654c4043df884f92b439e9d62150a55d3963b43c84ea628d",
+    "code_nonblank": 54,
+    "code_physical": 56,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 835034504,
+    "elapsed_seconds": 8.915,
+    "checking": [
+      "OCF.Lean.YiXVCountableFoldNodeMono"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableLevels.lagda.md",
+    "sha256": "71a1fbfbf232ee95f7f5744ad6af1c8b8599112ed34de834ccec900fd35272bb",
+    "code_nonblank": 24,
+    "code_physical": 25,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 726556592,
+    "elapsed_seconds": 7.974,
+    "checking": [
+      "OCF.Lean.YiXVCountableLevels"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableFoldStage.lagda.md",
+    "sha256": "4cb651838a453e94cbb2fd4e5860d483374eb879b0f8bccee08530bc5933fe7a",
+    "code_nonblank": 89,
+    "code_physical": 96,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 782714600,
+    "elapsed_seconds": 8.748,
+    "checking": [
+      "OCF.Lean.YiXVCountableFoldStage"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableFold.lagda.md",
+    "sha256": "607aea23e4eb437d8350317a99bcfc43619135d827114959c583da7ddb3724f3",
+    "code_nonblank": 30,
+    "code_physical": 31,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 798233184,
+    "elapsed_seconds": 8.129,
+    "checking": [
+      "OCF.Lean.YiXVCountableFold"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableFoldOmega.lagda.md",
+    "sha256": "419ab3b23dce14fbbc7fb303df17fbae601b08f0261ea116a8e438cc229dfa90",
+    "code_nonblank": 22,
+    "code_physical": 22,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 719291976,
+    "elapsed_seconds": 8.163,
+    "checking": [
+      "OCF.Lean.YiXVCountableFoldOmega"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableGamma.lagda.md",
+    "sha256": "34f00dc31f0c4c5449f674355dd191adf385d84023808208d70d22ce237ff2e2",
+    "code_nonblank": 45,
+    "code_physical": 45,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 732680424,
+    "elapsed_seconds": 8.213,
+    "checking": [
+      "OCF.Lean.YiXVCountableGamma"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVNeutral.lagda.md",
+    "sha256": "47282742963d4bdb59beb952fc461d351aff0fa09b1250f959ac38d25fd73329",
+    "code_nonblank": 18,
+    "code_physical": 18,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 177680896,
+    "elapsed_seconds": 1.992,
+    "checking": [
+      "OCF.Lean.YiXVNeutral"
+    ],
+    "theme": "cap辅助上界与ψ⁰出口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVNode.lagda.md",
+    "sha256": "5361e8456473ff227b89a248b45c91f325d28f728dcb18265decb959d0008c24",
+    "code_nonblank": 42,
+    "code_physical": 53,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 845285600,
+    "elapsed_seconds": 8.493,
+    "checking": [
+      "OCF.Lean.YiXVNode"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVNum.lagda.md",
+    "sha256": "d904486e7b3182570fad21c037206bbdf3e269d7dfb7cb0ac06a1b1a8a105731",
+    "code_nonblank": 61,
+    "code_physical": 64,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 608993328,
+    "elapsed_seconds": 6.309,
+    "checking": [
+      "OCF.Lean.YiXVNum"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadAssoc.lagda.md",
+    "sha256": "6f944234166720ebd7d203e476d8c35cd7e3905d884f93ebe69082afc21e5731",
+    "code_nonblank": 46,
+    "code_physical": 49,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 209918144,
+    "elapsed_seconds": 2.353,
+    "checking": [
+      "OCF.Lean.YiXVReadAssoc"
+    ],
+    "theme": "加法、基本输出与坐标"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadEnv.lagda.md",
+    "sha256": "df14e23bd5c09a4e85b77fdc01731a2a0de1a818a90d8bd4712af26ef4594ce3",
+    "code_nonblank": 14,
+    "code_physical": 14,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 760448216,
+    "elapsed_seconds": 7.746,
+    "checking": [
+      "OCF.Lean.YiXVReadEnv"
+    ],
+    "theme": "cap辅助上界与ψ⁰出口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadIndex.lagda.md",
+    "sha256": "435af401e49310a7f30fe6592aacbac15d4252fec3e3d287c9779bf4e2affc44",
+    "code_nonblank": 83,
+    "code_physical": 84,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 701747864,
+    "elapsed_seconds": 7.766,
+    "checking": [
+      "OCF.Lean.YiXVReadIndex"
+    ],
+    "theme": "实际读回家族与Ω证书"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadFamily.lagda.md",
+    "sha256": "a4ab9d8476179f4f205600aa5285447b90d9ff770e0326b5ed4942f6bc031193",
+    "code_nonblank": 42,
+    "code_physical": 43,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 740799784,
+    "elapsed_seconds": 7.836,
+    "checking": [
+      "OCF.Lean.YiXVReadFamily"
+    ],
+    "theme": "实际读回家族与Ω证书"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadBasics.lagda.md",
+    "sha256": "90644b55f7df163b7c4d463f05310a9dbb9ee5f16f4fe981d560546fd706a222",
+    "code_nonblank": 61,
+    "code_physical": 62,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 727742384,
+    "elapsed_seconds": 7.976,
+    "checking": [
+      "OCF.Lean.YiXVReadBasics"
+    ],
+    "theme": "实际读回家族与Ω证书"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadGrowthInput.lagda.md",
+    "sha256": "07eea21cd7591ff334fde33d2cbe7898136117c901b911e3a26dd03423a0fd8d",
+    "code_nonblank": 88,
+    "code_physical": 89,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 723188976,
+    "elapsed_seconds": 8.271,
+    "checking": [
+      "OCF.Lean.YiXVReadGrowthInput"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadKeepAtModels.lagda.md",
+    "sha256": "6cc4110f0231d02e5c8a39ca3bc8c819ac3846e55d01e75193d92a5503709d3c",
+    "code_nonblank": 16,
+    "code_physical": 16,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 196029992,
+    "elapsed_seconds": 2.094,
+    "checking": [
+      "OCF.Lean.YiXVReadKeepAtModels"
+    ],
+    "theme": "原Up仿射保持"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadKeepAt.lagda.md",
+    "sha256": "3dccb980cb3f181a6720866d16a040135a38663d61b982177775d0687b3e72b0",
+    "code_nonblank": 51,
+    "code_physical": 53,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 786014656,
+    "elapsed_seconds": 8.255,
+    "checking": [
+      "OCF.Lean.YiXVReadKeepAt"
+    ],
+    "theme": "原Up仿射保持"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadOmegaInput.lagda.md",
+    "sha256": "96e7e2b6da9dcfe7a26706621e9cf3dd90911f4b4ce8c65a5a0176beb32bce9a",
+    "code_nonblank": 33,
+    "code_physical": 33,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 754643832,
+    "elapsed_seconds": 8.002,
+    "checking": [
+      "OCF.Lean.YiXVReadOmegaInput"
+    ],
+    "theme": "实际读回家族与Ω证书"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadFinitePathInput.lagda.md",
+    "sha256": "42068b6e0ec49cd494c3dee6dcabe1f4bea6b4a528cafc337a5753a10b5c321e",
+    "code_nonblank": 17,
+    "code_physical": 17,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 782537408,
+    "elapsed_seconds": 7.999,
+    "checking": [
+      "OCF.Lean.YiXVReadFinitePathInput"
+    ],
+    "theme": "原比较路径闭包"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadFinitePath.lagda.md",
+    "sha256": "6d28d0b9467f33b474ffeca98aed451539dc33d21ca4acbb0c1c176210896f3b",
+    "code_nonblank": 24,
+    "code_physical": 26,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 694354896,
+    "elapsed_seconds": 8.121,
+    "checking": [
+      "OCF.Lean.YiXVReadFinitePath"
+    ],
+    "theme": "原比较路径闭包"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadOmegaLimit.lagda.md",
+    "sha256": "60626b5877caa8736954b386da42787aac34a19ee7d6a38541c9159fec3d278c",
+    "code_nonblank": 41,
+    "code_physical": 42,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 754698080,
+    "elapsed_seconds": 8.027,
+    "checking": [
+      "OCF.Lean.YiXVReadOmegaLimit"
+    ],
+    "theme": "实际读回家族与Ω证书"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadOmega.lagda.md",
+    "sha256": "6205d6b62087c0c60b4cd7842c75a937a8ed2098446e56894a8dc9ce4db9dced",
+    "code_nonblank": 41,
+    "code_physical": 41,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 776518192,
+    "elapsed_seconds": 7.974,
+    "checking": [
+      "OCF.Lean.YiXVReadOmega"
+    ],
+    "theme": "实际读回家族与Ω证书"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadPaths.lagda.md",
+    "sha256": "02810ec74e2805d6e210f147d3243b174a529572ee20e81a27b05d7b592f58f9",
+    "code_nonblank": 37,
+    "code_physical": 37,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 136302504,
+    "elapsed_seconds": 1.457,
+    "checking": [
+      "OCF.Lean.YiXVReadPaths"
+    ],
+    "theme": "实际世界初始化"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadPlus.lagda.md",
+    "sha256": "7490615205df617bf6abcbfd30d957d577de8d85c8463cf5f01eb87e54cd5856",
+    "code_nonblank": 49,
+    "code_physical": 52,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 758752472,
+    "elapsed_seconds": 8.059,
+    "checking": [
+      "OCF.Lean.YiXVReadPlus"
+    ],
+    "theme": "加法、基本输出与坐标"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadNext.lagda.md",
+    "sha256": "ad8322537a1d4ce6051b6a9d129b56ec8490397e543dfd44bd05fc20f1dba456",
+    "code_nonblank": 33,
+    "code_physical": 37,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 754680808,
+    "elapsed_seconds": 8.058,
+    "checking": [
+      "OCF.Lean.YiXVReadNext"
+    ],
+    "theme": "加法、基本输出与坐标"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteInput.lagda.md",
+    "sha256": "e42789faeb8dc70547b2e6e346cb187c1ab2bc6728606a8a8a7732fb1ef7d1a5",
+    "code_nonblank": 25,
+    "code_physical": 27,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 783465944,
+    "elapsed_seconds": 7.984,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteInput"
+    ],
+    "theme": "Route接口与后继行输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadEmbedInput.lagda.md",
+    "sha256": "ee7894ce7756f3ac54aa08c9138fc544e41eb73b5d0c18f71c2320db768253b4",
+    "code_nonblank": 31,
+    "code_physical": 33,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 752110920,
+    "elapsed_seconds": 7.951,
+    "checking": [
+      "OCF.Lean.YiXVReadEmbedInput"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRoute.lagda.md",
+    "sha256": "e8f9cfae76b1d250a3e4c319ba4ceb1f55feb75bfda758d1d6618d2864263371",
+    "code_nonblank": 27,
+    "code_physical": 30,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 710271024,
+    "elapsed_seconds": 8.025,
+    "checking": [
+      "OCF.Lean.YiXVReadRoute"
+    ],
+    "theme": "Route接口与后继行输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteFeed.lagda.md",
+    "sha256": "1d76cc4503a314053fb69e04ba3aae6f0f4a6d820faca92b6fe3167fa15889c2",
+    "code_nonblank": 41,
+    "code_physical": 43,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 784887936,
+    "elapsed_seconds": 7.991,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteFeed"
+    ],
+    "theme": "原比较路径闭包"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteStep.lagda.md",
+    "sha256": "4daa7e7d003fa599710000d48ae6fd1b0bc0574b9186f9265ad90d521ebca410",
+    "code_nonblank": 38,
+    "code_physical": 40,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 710365744,
+    "elapsed_seconds": 8.031,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteStep"
+    ],
+    "theme": "原比较路径闭包"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteWay.lagda.md",
+    "sha256": "63fe09993e9c29803a4c9c38ccb869168ee10bfe4098dfb9f625e6c653260acd",
+    "code_nonblank": 36,
+    "code_physical": 39,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 781582712,
+    "elapsed_seconds": 8.044,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteWay"
+    ],
+    "theme": "原比较路径闭包"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadSlots.lagda.md",
+    "sha256": "cb52c7378320adfaec2d9145b0508859c84d53a616c3bf2da90d0c258499e8f0",
+    "code_nonblank": 29,
+    "code_physical": 29,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 796995808,
+    "elapsed_seconds": 7.962,
+    "checking": [
+      "OCF.Lean.YiXVReadSlots"
+    ],
+    "theme": "原Up仿射保持"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadThin.lagda.md",
+    "sha256": "b70674404f690c5490a8898ed00452dcb0b7511f2ddfcee9ee9cb8ca5dadcc1f",
+    "code_nonblank": 49,
+    "code_physical": 53,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 696676136,
+    "elapsed_seconds": 8.054,
+    "checking": [
+      "OCF.Lean.YiXVReadThin"
+    ],
+    "theme": "加法、基本输出与坐标"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadCoordinates.lagda.md",
+    "sha256": "ee60af0507ac00b15d5dc8346749d4e3b27c15141c3796165d0b9fef64be19f2",
+    "code_nonblank": 69,
+    "code_physical": 74,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 693730504,
+    "elapsed_seconds": 8.052,
+    "checking": [
+      "OCF.Lean.YiXVReadCoordinates"
+    ],
+    "theme": "加法、基本输出与坐标"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadDown.lagda.md",
+    "sha256": "64671225a360d1bd901321627913c6dc249fb866d611f60bcbe131a7ccb8e306",
+    "code_nonblank": 48,
+    "code_physical": 50,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 748692008,
+    "elapsed_seconds": 7.998,
+    "checking": [
+      "OCF.Lean.YiXVReadDown"
+    ],
+    "theme": "原Up仿射保持"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadEmbed.lagda.md",
+    "sha256": "15f605be2ffdb33e12ea6d7e41206d696ad66f5b0f36c6a1174f3e6f11b76f80",
+    "code_nonblank": 37,
+    "code_physical": 41,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 799732728,
+    "elapsed_seconds": 8.911,
+    "checking": [
+      "OCF.Lean.YiXVReadEmbed"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadWholeInput.lagda.md",
+    "sha256": "fc949cbecdfa27c2faa6861a15e26cc1d0b35f673fb1e363706efb6ec10f0ebb",
+    "code_nonblank": 24,
+    "code_physical": 24,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 779936784,
+    "elapsed_seconds": 8.014,
+    "checking": [
+      "OCF.Lean.YiXVReadWholeInput"
+    ],
+    "theme": "原比较路径闭包"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadKeepLinkInput.lagda.md",
+    "sha256": "9880b2b469558bbcfb386091bca73aa0bce2f1f035b7a473461151562bb71efc",
+    "code_nonblank": 21,
+    "code_physical": 23,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 742287536,
+    "elapsed_seconds": 7.907,
+    "checking": [
+      "OCF.Lean.YiXVReadKeepLinkInput"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadKeepLink.lagda.md",
+    "sha256": "5dab682393525132adb1552b469fb814754d8b7190d28f46816bec6698ea7444",
+    "code_nonblank": 37,
+    "code_physical": 39,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 742164648,
+    "elapsed_seconds": 7.985,
+    "checking": [
+      "OCF.Lean.YiXVReadKeepLink"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRoutePush.lagda.md",
+    "sha256": "e39700806a472fd9e04466bc10b57b01c9bba6122ecee591561cfc7066e76252",
+    "code_nonblank": 56,
+    "code_physical": 59,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 760487968,
+    "elapsed_seconds": 8.415,
+    "checking": [
+      "OCF.Lean.YiXVReadRoutePush"
+    ],
+    "theme": "原比较路径闭包"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteKeep.lagda.md",
+    "sha256": "49f056e822bd22de51e156d2ae98656debb9cc4f88c4bdc7590658c314ac8378",
+    "code_nonblank": 52,
+    "code_physical": 53,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 827526712,
+    "elapsed_seconds": 8.229,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteKeep"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVRef.lagda.md",
+    "sha256": "04eb9270494bde8fb9a2e3b34216b22d5a381f6b6f03a046573eacc4db1a61aa",
+    "code_nonblank": 20,
+    "code_physical": 23,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 709951696,
+    "elapsed_seconds": 7.833,
+    "checking": [
+      "OCF.Lean.YiXVRef"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVRefLift.lagda.md",
+    "sha256": "13509594eaecfa80595f060eb8899387d8cdec94bff3fb36c251e784f20c8b36",
+    "code_nonblank": 44,
+    "code_physical": 44,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 217603352,
+    "elapsed_seconds": 2.222,
+    "checking": [
+      "OCF.Lean.YiXVRefLift"
+    ],
+    "theme": "cap辅助上界与ψ⁰出口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFlatInput.lagda.md",
+    "sha256": "938210ed43ba5b86cc5b5f3848f4042a46d77f59d061f7e50669dcca34862dfa",
+    "code_nonblank": 25,
+    "code_physical": 26,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 706888064,
+    "elapsed_seconds": 8.146,
+    "checking": [
+      "OCF.Lean.YiXVFlatInput"
+    ],
+    "theme": "cap辅助上界与ψ⁰出口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFlatShape.lagda.md",
+    "sha256": "319cda1e0715df2e9ae9ec07f2d3b1a6368457817d5b06a4981e56239689325f",
+    "code_nonblank": 38,
+    "code_physical": 38,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 727976184,
+    "elapsed_seconds": 8.218,
+    "checking": [
+      "OCF.Lean.YiXVFlatShape"
+    ],
+    "theme": "cap辅助上界与ψ⁰出口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVRefAlgebra.lagda.md",
+    "sha256": "a30f935de69cffed65ad334675197465671ddd4d0e17ced66ada9f0efb2736a4",
+    "code_nonblank": 45,
+    "code_physical": 46,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 218959248,
+    "elapsed_seconds": 2.224,
+    "checking": [
+      "OCF.Lean.YiXVRefAlgebra"
+    ],
+    "theme": "cap辅助上界与ψ⁰出口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFlatGround.lagda.md",
+    "sha256": "24db6d1e811b5731247528356a403a7ce5b418cb6474090a4f1cf5d17047a484",
+    "code_nonblank": 23,
+    "code_physical": 23,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 834269408,
+    "elapsed_seconds": 8.26,
+    "checking": [
+      "OCF.Lean.YiXVFlatGround"
+    ],
+    "theme": "cap辅助上界与ψ⁰出口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFlatStage.lagda.md",
+    "sha256": "45fea601c237d1961779e5f5b5dfb178ba33373a02240396399880012664325f",
+    "code_nonblank": 44,
+    "code_physical": 44,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 840621888,
+    "elapsed_seconds": 8.389,
+    "checking": [
+      "OCF.Lean.YiXVFlatStage"
+    ],
+    "theme": "cap辅助上界与ψ⁰出口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFlat.lagda.md",
+    "sha256": "a763444d4d5a61e67045631f6aff223c0c3cc2aef4348b02fdf399254f2e8226",
+    "code_nonblank": 19,
+    "code_physical": 19,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 803755032,
+    "elapsed_seconds": 8.305,
+    "checking": [
+      "OCF.Lean.YiXVFlat"
+    ],
+    "theme": "cap辅助上界与ψ⁰出口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadCapBound.lagda.md",
+    "sha256": "58a0911dd49c24fc00528c9bbd9afd4927da888b6cbcae157af1a3adf07dcbad",
+    "code_nonblank": 67,
+    "code_physical": 70,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 772953032,
+    "elapsed_seconds": 8.371,
+    "checking": [
+      "OCF.Lean.YiXVReadCapBound"
+    ],
+    "theme": "cap辅助上界与ψ⁰出口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadGrowth.lagda.md",
+    "sha256": "d4abe534272fdca3648f12a008335ad23a82a19cd387704e056e336117a765f8",
+    "code_nonblank": 90,
+    "code_physical": 94,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 778928280,
+    "elapsed_seconds": 8.598,
+    "checking": [
+      "OCF.Lean.YiXVReadGrowth"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadWorldInput.lagda.md",
+    "sha256": "f0a218849497dfc52ddc2135d3267aa649714e30a85b9d2d20b30a03afc757d1",
+    "code_nonblank": 62,
+    "code_physical": 64,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 798567776,
+    "elapsed_seconds": 8.29,
+    "checking": [
+      "OCF.Lean.YiXVReadWorldInput"
+    ],
+    "theme": "实际世界初始化"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadPhiPaths.lagda.md",
+    "sha256": "d433444fef80ea8ba77ea34e6b583ba621909eb710cdf552611ce4cbcaa2d9dc",
+    "code_nonblank": 11,
+    "code_physical": 11,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 783344496,
+    "elapsed_seconds": 8.225,
+    "checking": [
+      "OCF.Lean.YiXVReadPhiPaths"
+    ],
+    "theme": "Route接口与后继行输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadWorldStart.lagda.md",
+    "sha256": "477d8ac171852b384ea4478bf4aee34cc7804526611b5ed834660836b9d1d762",
+    "code_nonblank": 45,
+    "code_physical": 46,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 719997704,
+    "elapsed_seconds": 8.308,
+    "checking": [
+      "OCF.Lean.YiXVReadWorldStart"
+    ],
+    "theme": "实际世界初始化"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVRefVar.lagda.md",
+    "sha256": "8a59afb8b6f4ef6a619cfe5d94e0c02a1b5023d90b41d5788ef39d780c9ddfdf",
+    "code_nonblank": 60,
+    "code_physical": 70,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 616376640,
+    "elapsed_seconds": 5.941,
+    "checking": [
+      "OCF.Lean.YiXVRefVar"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVRef2.lagda.md",
+    "sha256": "d9fb947d0c46e401ba575622758781e9bb69245da58ed66f94803add8876242a",
+    "code_nonblank": 122,
+    "code_physical": 136,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 578015912,
+    "elapsed_seconds": 5.629,
+    "checking": [
+      "OCF.Lean.YiXVRef2"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Core.lagda.md",
+    "sha256": "5f7e2f2de5c84f1844cc1509161a4d9fd2e5f7f240b4d52ddbca5b8203ea6d6f",
+    "code_nonblank": 89,
+    "code_physical": 99,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 554365776,
+    "elapsed_seconds": 5.528,
+    "checking": [
+      "OCF.Lean.YiXVCan2Core"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2One.lagda.md",
+    "sha256": "61d26da20a821df6acad7c094bd36256ace08d72b566856933dbcb64c988e8a4",
+    "code_nonblank": 84,
+    "code_physical": 90,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 511271392,
+    "elapsed_seconds": 5.648,
+    "checking": [
+      "OCF.Lean.YiXVCan2One"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Zero.lagda.md",
+    "sha256": "26791635cdf8ac578dc455ac792402f7a6db6bcc7a0ca20b831fec7abf00f2cd",
+    "code_nonblank": 74,
+    "code_physical": 77,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 544126776,
+    "elapsed_seconds": 5.683,
+    "checking": [
+      "OCF.Lean.YiXVCan2Zero"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteIndex.lagda.md",
+    "sha256": "6d6654b19bf66410852a8f16ae0dfdb61f779a96150d5ff8238399e38dd499d1",
+    "code_nonblank": 126,
+    "code_physical": 142,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 540114568,
+    "elapsed_seconds": 5.705,
+    "checking": [
+      "OCF.Lean.YiXVFiniteIndex"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteCoerce.lagda.md",
+    "sha256": "f4e05c62844f9542bf2673d64545199c09cca945505de185dad67e208826e9de",
+    "code_nonblank": 42,
+    "code_physical": 47,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 497880608,
+    "elapsed_seconds": 5.586,
+    "checking": [
+      "OCF.Lean.YiXVFiniteCoerce"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteFamily.lagda.md",
+    "sha256": "8acf8e71bd02c22c72c3e472dd773f8586ddb73158b3873b969f3ddae9e1fc8a",
+    "code_nonblank": 127,
+    "code_physical": 136,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 555573048,
+    "elapsed_seconds": 5.695,
+    "checking": [
+      "OCF.Lean.YiXVFiniteFamily"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteBasics.lagda.md",
+    "sha256": "bab05aff12d3e28d2acae47985f1f709565574a7c73e7832094b35932595a57e",
+    "code_nonblank": 99,
+    "code_physical": 105,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 521292144,
+    "elapsed_seconds": 5.732,
+    "checking": [
+      "OCF.Lean.YiXVFiniteBasics"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteBridge.lagda.md",
+    "sha256": "db014dcecf727ad63dc13b72294ff389808d1e77cdb2edc8865e09101137c6c2",
+    "code_nonblank": 59,
+    "code_physical": 65,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 545775232,
+    "elapsed_seconds": 5.719,
+    "checking": [
+      "OCF.Lean.YiXVFiniteBridge"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteCanonicalInputs.lagda.md",
+    "sha256": "e27c19d4638be1d388e2cb2496741aecb1523ce5142e96b90e5d9338cc39846a",
+    "code_nonblank": 30,
+    "code_physical": 32,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 556013624,
+    "elapsed_seconds": 5.581,
+    "checking": [
+      "OCF.Lean.YiXVFiniteCanonicalInputs"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteGroundAdd.lagda.md",
+    "sha256": "826123b226ee6267eb3399d1d7a2ec94911273afab4b2f18d402ab2912d575c1",
+    "code_nonblank": 39,
+    "code_physical": 43,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 520983720,
+    "elapsed_seconds": 5.891,
+    "checking": [
+      "OCF.Lean.YiXVFiniteGroundAdd"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteInputs.lagda.md",
+    "sha256": "88f4fb0793c3a164eb9e556148d28b90359ba29fdf65f0c12908f0584e346a09",
+    "code_nonblank": 41,
+    "code_physical": 45,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 553030408,
+    "elapsed_seconds": 5.731,
+    "checking": [
+      "OCF.Lean.YiXVFiniteInputs"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteAddStage.lagda.md",
+    "sha256": "8fda218a1fd57d92f5939df375d524a62282304597579375b0835f92af926f9e",
+    "code_nonblank": 96,
+    "code_physical": 104,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 617213288,
+    "elapsed_seconds": 6.116,
+    "checking": [
+      "OCF.Lean.YiXVFiniteAddStage"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteAdd.lagda.md",
+    "sha256": "be46323035fa81734e34f1c329635e6632082e3ff7a34b63e48ccaf3f1ecc3d5",
+    "code_nonblank": 30,
+    "code_physical": 34,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 588908280,
+    "elapsed_seconds": 5.715,
+    "checking": [
+      "OCF.Lean.YiXVFiniteAdd"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteFloor.lagda.md",
+    "sha256": "bcd9d26056fcd15e49745bd12c0a14a9a6a70f010ce498694739e65849ef71b6",
+    "code_nonblank": 50,
+    "code_physical": 52,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 561988128,
+    "elapsed_seconds": 5.941,
+    "checking": [
+      "OCF.Lean.YiXVFiniteFloor"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteChain.lagda.md",
+    "sha256": "c1b1f093a247c7cfb54283f4a553d2d1e702d98f5556044b353e4b64f125cb51",
+    "code_nonblank": 67,
+    "code_physical": 71,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 545805448,
+    "elapsed_seconds": 5.709,
+    "checking": [
+      "OCF.Lean.YiXVFiniteChain"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteGroundCompose.lagda.md",
+    "sha256": "ba961203b576089372b8362de2bae9b5ca8cb337ba181df3e8b4fa8b4cac8147",
+    "code_nonblank": 28,
+    "code_physical": 29,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 588955128,
+    "elapsed_seconds": 5.661,
+    "checking": [
+      "OCF.Lean.YiXVFiniteGroundCompose"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteComposeStage.lagda.md",
+    "sha256": "ea1bab41accc33205ef6801176cfd9ffa82709502d501386865296e7ccf4dfb4",
+    "code_nonblank": 49,
+    "code_physical": 52,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 589145480,
+    "elapsed_seconds": 5.804,
+    "checking": [
+      "OCF.Lean.YiXVFiniteComposeStage"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteCompose.lagda.md",
+    "sha256": "abc25b20fe529c7c3e6e7c2140fd38583ee38189213c9c4261ba832acc76d09b",
+    "code_nonblank": 21,
+    "code_physical": 23,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 588847592,
+    "elapsed_seconds": 5.698,
+    "checking": [
+      "OCF.Lean.YiXVFiniteCompose"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteIter.lagda.md",
+    "sha256": "e4b79a12dfd4443ae44433501ad50d678224071a88ba89b299e01de428d79969",
+    "code_nonblank": 32,
+    "code_physical": 35,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 564509336,
+    "elapsed_seconds": 5.667,
+    "checking": [
+      "OCF.Lean.YiXVFiniteIter"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteGroundFold.lagda.md",
+    "sha256": "19261fbb8774895a7b2d5a8afab1f182ec97c3d61daa3cef2f92bc48cea2d9f6",
+    "code_nonblank": 34,
+    "code_physical": 37,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 559162000,
+    "elapsed_seconds": 6.008,
+    "checking": [
+      "OCF.Lean.YiXVFiniteGroundFold"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteFoldInterface.lagda.md",
+    "sha256": "995647bd9091646e6cf2b7e6b904bdb3d517b952af582750e252059c26cd9040",
+    "code_nonblank": 26,
+    "code_physical": 28,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 588900392,
+    "elapsed_seconds": 5.715,
+    "checking": [
+      "OCF.Lean.YiXVFiniteFoldInterface"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteRight.lagda.md",
+    "sha256": "8a738bd20f3ade5dd30dc945a67c9c3bb83dc4024071735c6bd9ab384fe8b0aa",
+    "code_nonblank": 16,
+    "code_physical": 17,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 556299720,
+    "elapsed_seconds": 5.642,
+    "checking": [
+      "OCF.Lean.YiXVFiniteRight"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteTransportShape.lagda.md",
+    "sha256": "4000bfd767f7766e4c2c54e567c441799c0a1d428374318ec799a2b0c2d38635",
+    "code_nonblank": 54,
+    "code_physical": 58,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 497926456,
+    "elapsed_seconds": 5.598,
+    "checking": [
+      "OCF.Lean.YiXVFiniteTransportShape"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteTransportInputs.lagda.md",
+    "sha256": "3b7f47882e2febe7eb5d2a7ea8732ad48b6c416faf2510bf899a58ddcfb57aa4",
+    "code_nonblank": 68,
+    "code_physical": 72,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 555246480,
+    "elapsed_seconds": 5.702,
+    "checking": [
+      "OCF.Lean.YiXVFiniteTransportInputs"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteTransportNorm.lagda.md",
+    "sha256": "770b1422119383b24cb9c33c56e1d34cbb0c438a2e797315a15b12a08bf02260",
+    "code_nonblank": 37,
+    "code_physical": 38,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 497891272,
+    "elapsed_seconds": 5.702,
+    "checking": [
+      "OCF.Lean.YiXVFiniteTransportNorm"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteTransportTop.lagda.md",
+    "sha256": "e977f5b0d15ae4dce24d09228672629bc1c61ae2d7ec3067521bbe181975b998",
+    "code_nonblank": 89,
+    "code_physical": 94,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 564420112,
+    "elapsed_seconds": 6.35,
+    "checking": [
+      "OCF.Lean.YiXVFiniteTransportTop"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteTransport.lagda.md",
+    "sha256": "c28f0d83dd308855486f02f02b387e5dd28f1dc64a88c9838d92dc6198acf233",
+    "code_nonblank": 16,
+    "code_physical": 18,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 516046032,
+    "elapsed_seconds": 5.68,
+    "checking": [
+      "OCF.Lean.YiXVFiniteTransport"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteRetainedInputs.lagda.md",
+    "sha256": "4605b57598451f4844bdbc6dab8f49392667ff3cca31bab1df42badbacdcd22c",
+    "code_nonblank": 45,
+    "code_physical": 47,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 589065144,
+    "elapsed_seconds": 5.761,
+    "checking": [
+      "OCF.Lean.YiXVFiniteRetainedInputs"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteUp.lagda.md",
+    "sha256": "000e8ba00a7b6b22e5c4cccf85bef72c6f5f03791d93b4838b911aa91bbfa092",
+    "code_nonblank": 41,
+    "code_physical": 43,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 589016424,
+    "elapsed_seconds": 5.703,
+    "checking": [
+      "OCF.Lean.YiXVFiniteUp"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteUpAdd.lagda.md",
+    "sha256": "2ed668f6854d5c8ba8a73c56d8191144bebf28d37d463c38ba8ef2107055e5c4",
+    "code_nonblank": 75,
+    "code_physical": 79,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 590154840,
+    "elapsed_seconds": 5.793,
+    "checking": [
+      "OCF.Lean.YiXVFiniteUpAdd"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteVia.lagda.md",
+    "sha256": "3bafcc6cf7cac68257bfffdbd2239aef70ad66de786859538248ebdf921f12f8",
+    "code_nonblank": 17,
+    "code_physical": 20,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 517837960,
+    "elapsed_seconds": 5.537,
+    "checking": [
+      "OCF.Lean.YiXVFiniteVia"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteFoldNodeGood.lagda.md",
+    "sha256": "1b93141df7c87717167f9f0f2b36ccbd30ce64962f7da8d1acd7ad3783a43439",
+    "code_nonblank": 90,
+    "code_physical": 95,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 523806832,
+    "elapsed_seconds": 6.082,
+    "checking": [
+      "OCF.Lean.YiXVFiniteFoldNodeGood"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteFoldNodeAA.lagda.md",
+    "sha256": "27986e427b47181ea0fd4a22a42299d8c0e268e26af5a92da3fdc576b7880454",
+    "code_nonblank": 66,
+    "code_physical": 68,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 554013416,
+    "elapsed_seconds": 6.231,
+    "checking": [
+      "OCF.Lean.YiXVFiniteFoldNodeAA"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteFoldNodeMono.lagda.md",
+    "sha256": "09b00f89620b34ea169b0a3aba404d08e49d1e0122f93d8a4275880504c86b78",
+    "code_nonblank": 45,
+    "code_physical": 47,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 556346616,
+    "elapsed_seconds": 6.142,
+    "checking": [
+      "OCF.Lean.YiXVFiniteFoldNodeMono"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteFoldNodeOp.lagda.md",
+    "sha256": "a6438c45b549f8b8972b78afdee02bf3755a6010a087cbd88f8788ac58b5ed2f",
+    "code_nonblank": 87,
+    "code_physical": 92,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 557949432,
+    "elapsed_seconds": 6.418,
+    "checking": [
+      "OCF.Lean.YiXVFiniteFoldNodeOp"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteFoldStage.lagda.md",
+    "sha256": "473b4cdcb994c08cc3800aebce89944aabbc443d61b81e9f625b7e93b34951ba",
+    "code_nonblank": 145,
+    "code_physical": 157,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 632039344,
+    "elapsed_seconds": 7.039,
+    "checking": [
+      "OCF.Lean.YiXVFiniteFoldStage"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteFold.lagda.md",
+    "sha256": "1a7dda00fe38c92f8f34ead3ce10568de7362b5df6ad602c5d628402eac2307f",
+    "code_nonblank": 17,
+    "code_physical": 19,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 604972632,
+    "elapsed_seconds": 5.953,
+    "checking": [
+      "OCF.Lean.YiXVFiniteFold"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteFoldOmega.lagda.md",
+    "sha256": "2ee30a57b7304a91a7f2a088c5bb10a449ee86731cc9012d7f90103cd0c62f32",
+    "code_nonblank": 67,
+    "code_physical": 72,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 560455432,
+    "elapsed_seconds": 6.065,
+    "checking": [
+      "OCF.Lean.YiXVFiniteFoldOmega"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVFiniteGamma.lagda.md",
+    "sha256": "af5a9ee4b3e4e97416b5b3556e7e6221e43b96af153c5423705cf97e74a64019",
+    "code_nonblank": 47,
+    "code_physical": 49,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 623374520,
+    "elapsed_seconds": 6.657,
+    "checking": [
+      "OCF.Lean.YiXVFiniteGamma"
+    ],
+    "theme": "有限参照层封闭与搬运"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVRef2Add.lagda.md",
+    "sha256": "4ab4ed5d9522b24b6235e9768a9a064b3786949f40de36c3c4733d90938122d3",
+    "code_nonblank": 83,
+    "code_physical": 92,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 630783392,
+    "elapsed_seconds": 6.316,
+    "checking": [
+      "OCF.Lean.YiXVRef2Add"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVAffRef.lagda.md",
+    "sha256": "76454776f65e64f91fc1da7ad4310924c23cf9f53a2139c12fdc33b2bae18275",
+    "code_nonblank": 26,
+    "code_physical": 28,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 625261648,
+    "elapsed_seconds": 6.418,
+    "checking": [
+      "OCF.Lean.YiXVAffRef"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Mix.lagda.md",
+    "sha256": "7c229ced5f457f411a2de999a1d19e8fd75f01593683aed1ecb1696cd41ac873",
+    "code_nonblank": 86,
+    "code_physical": 97,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 636594784,
+    "elapsed_seconds": 6.609,
+    "checking": [
+      "OCF.Lean.YiXVCan2Mix"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Add.lagda.md",
+    "sha256": "83eab682be5ee2577672f4e1b730563929d6438376746a4425f70b10901a5986",
+    "code_nonblank": 86,
+    "code_physical": 92,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 577982704,
+    "elapsed_seconds": 6.022,
+    "checking": [
+      "OCF.Lean.YiXVCan2Add"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2AffRef.lagda.md",
+    "sha256": "7863c117153c60f2c34d6f8d9daab456910d367a50a6e1638ed82331621fe470",
+    "code_nonblank": 43,
+    "code_physical": 47,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 588630360,
+    "elapsed_seconds": 6.563,
+    "checking": [
+      "OCF.Lean.YiXVCan2AffRef"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Assoc.lagda.md",
+    "sha256": "1ecfe22b01bc0798f63f33e3159b112680a4edac8c3a1e09b84e3ea75217c905",
+    "code_nonblank": 43,
+    "code_physical": 47,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 564732160,
+    "elapsed_seconds": 5.598,
+    "checking": [
+      "OCF.Lean.YiXVCan2Assoc"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Embed.lagda.md",
+    "sha256": "e4bbb4062d4e3d0cb89eefe258d82965006a12f9f373610f0b55387361a33563",
+    "code_nonblank": 50,
+    "code_physical": 56,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 505161440,
+    "elapsed_seconds": 5.588,
+    "checking": [
+      "OCF.Lean.YiXVCan2Embed"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Psi.lagda.md",
+    "sha256": "0b6ce95a3c861d13706be5237c0961c218550f22a54fd16a9001c8f881f824ef",
+    "code_nonblank": 163,
+    "code_physical": 179,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 722752792,
+    "elapsed_seconds": 6.947,
+    "checking": [
+      "OCF.Lean.YiXVCan2Psi"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Gamma.lagda.md",
+    "sha256": "3803fd62c22b98ddcb64ec482de7cc3552ee60d4c245801588ede8d481b49100",
+    "code_nonblank": 38,
+    "code_physical": 46,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 638431200,
+    "elapsed_seconds": 6.345,
+    "checking": [
+      "OCF.Lean.YiXVCan2Gamma"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSim.lagda.md",
+    "sha256": "010f0ee368873f086b851f5e7aee383c50ee2dc1b808cff08f95314145008245",
+    "code_nonblank": 70,
+    "code_physical": 78,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 810940096,
+    "elapsed_seconds": 8.591,
+    "checking": [
+      "OCF.Lean.YiXVSim"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVPlus.lagda.md",
+    "sha256": "a748247d5d2bb563d03f82520f30fe5b06c9f9523503c661ba139515b797a4cc",
+    "code_nonblank": 41,
+    "code_physical": 46,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 847636456,
+    "elapsed_seconds": 8.61,
+    "checking": [
+      "OCF.Lean.YiXVPlus"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceIndex.lagda.md",
+    "sha256": "9b2c40057d8fa4a56d9b0a8903c188171b61bf5749aca3aae53065af1b2f0657",
+    "code_nonblank": 48,
+    "code_physical": 49,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 604042824,
+    "elapsed_seconds": 5.627,
+    "checking": [
+      "OCF.Lean.YiXVSourceIndex"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceFamily.lagda.md",
+    "sha256": "f7a445e3fe1cacc41452a1aa5ea8f7442139e97a451f80c949834019093f493f",
+    "code_nonblank": 47,
+    "code_physical": 50,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 619508960,
+    "elapsed_seconds": 6.515,
+    "checking": [
+      "OCF.Lean.YiXVSourceFamily"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceBasics.lagda.md",
+    "sha256": "451b2d92c3e381df8b227bd33ee8b53bbd8c26a206951406fe3291e1f437e1af",
+    "code_nonblank": 40,
+    "code_physical": 42,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 656327128,
+    "elapsed_seconds": 6.532,
+    "checking": [
+      "OCF.Lean.YiXVSourceBasics"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourcePath.lagda.md",
+    "sha256": "c7b3dcc6ffd6d7acb8a1e80a75c5fbc9b9c67b1fde97121d36d59b5728f274cd",
+    "code_nonblank": 43,
+    "code_physical": 45,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 569538400,
+    "elapsed_seconds": 5.683,
+    "checking": [
+      "OCF.Lean.YiXVSourcePath"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourcePathInputs.lagda.md",
+    "sha256": "4593bd984fdaac2c21922d126da8ced427bf77686495cbf24c7a689ec8cf3538",
+    "code_nonblank": 68,
+    "code_physical": 71,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 660045448,
+    "elapsed_seconds": 6.797,
+    "checking": [
+      "OCF.Lean.YiXVSourcePathInputs"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceAffineRef.lagda.md",
+    "sha256": "27039d7524654e63d325f95b7f07ea331d0d9bbbe1aa42e4157158a79ca8e2bf",
+    "code_nonblank": 56,
+    "code_physical": 58,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 639845552,
+    "elapsed_seconds": 6.735,
+    "checking": [
+      "OCF.Lean.YiXVSourceAffineRef"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceGuard.lagda.md",
+    "sha256": "1e7cd6633fbf6633827c0388130cd4f44b968550892781d762f36db7bbf1d23d",
+    "code_nonblank": 44,
+    "code_physical": 46,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 659807592,
+    "elapsed_seconds": 6.96,
+    "checking": [
+      "OCF.Lean.YiXVSourceGuard"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceNodeRef.lagda.md",
+    "sha256": "f997ce5ad5fad9e26010c641e6a2c9c1da5813c7e0b6eb6978458a51ba35b62a",
+    "code_nonblank": 37,
+    "code_physical": 39,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 693490128,
+    "elapsed_seconds": 7.77,
+    "checking": [
+      "OCF.Lean.YiXVSourceNodeRef"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourcePlus.lagda.md",
+    "sha256": "959347659368dea165590e06222186f2f99d3a1e2ebf1defa625af6d5864877f",
+    "code_nonblank": 43,
+    "code_physical": 45,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 614012760,
+    "elapsed_seconds": 6.777,
+    "checking": [
+      "OCF.Lean.YiXVSourcePlus"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceNext.lagda.md",
+    "sha256": "34ab22bc1e7ccd2a4743afcd845e6e8baacfff9a76685dba184a6c0fb812be71",
+    "code_nonblank": 27,
+    "code_physical": 29,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 675113848,
+    "elapsed_seconds": 6.817,
+    "checking": [
+      "OCF.Lean.YiXVSourceNext"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceAffineGround.lagda.md",
+    "sha256": "f5dc782179e1fa022e834825cdf3ea1b09f252c1110161c7f1a6f6765ae61f41",
+    "code_nonblank": 48,
+    "code_physical": 50,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 619556936,
+    "elapsed_seconds": 6.995,
+    "checking": [
+      "OCF.Lean.YiXVSourceAffineGround"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceAffineNode.lagda.md",
+    "sha256": "cace97da8ca39f354e714468d5a87988c1ecea7270869995c5cf77f139553498",
+    "code_nonblank": 91,
+    "code_physical": 93,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 658003888,
+    "elapsed_seconds": 7.328,
+    "checking": [
+      "OCF.Lean.YiXVSourceAffineNode"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceAffineLift.lagda.md",
+    "sha256": "2718a95b53f7c33e10464c2a9fffa8906c39112daf29117d55946bdc7df70514",
+    "code_nonblank": 74,
+    "code_physical": 77,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 649405248,
+    "elapsed_seconds": 8.103,
+    "checking": [
+      "OCF.Lean.YiXVSourceAffineLift"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceAffineSeed.lagda.md",
+    "sha256": "433e53f6343cf6e3646f691e2454611d257a0b86552c832dee74d75528889021",
+    "code_nonblank": 23,
+    "code_physical": 24,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 649404912,
+    "elapsed_seconds": 7.122,
+    "checking": [
+      "OCF.Lean.YiXVSourceAffineSeed"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceGroundLift.lagda.md",
+    "sha256": "fe0f6dfb18961662e5d0b161aeb1b30f7a4b48334d95f7d50f84f1c56272be20",
+    "code_nonblank": 41,
+    "code_physical": 44,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 726760728,
+    "elapsed_seconds": 7.753,
+    "checking": [
+      "OCF.Lean.YiXVSourceGroundLift"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceNodeLift.lagda.md",
+    "sha256": "80f910c4235875fa6a10a345cfdfe49dc3c624653938697c695bfd7d0355fbc1",
+    "code_nonblank": 87,
+    "code_physical": 90,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 761281456,
+    "elapsed_seconds": 7.951,
+    "checking": [
+      "OCF.Lean.YiXVSourceNodeLift"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceLift.lagda.md",
+    "sha256": "f9c298d20b83d0068e3697556dda6090419a52c5f6c610566baf529d8eebd0f9",
+    "code_nonblank": 71,
+    "code_physical": 75,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 746811112,
+    "elapsed_seconds": 7.877,
+    "checking": [
+      "OCF.Lean.YiXVSourceLift"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceSelfInput.lagda.md",
+    "sha256": "ee715234ac79c2c6d4a616f5e59562ad0f323bd5a3c24ac17eb3b65c299534da",
+    "code_nonblank": 32,
+    "code_physical": 33,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 675668456,
+    "elapsed_seconds": 7.502,
+    "checking": [
+      "OCF.Lean.YiXVSourceSelfInput"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceAffineSelf.lagda.md",
+    "sha256": "05dab630e8b29cf53e9b10ea5e40f49ffa7d5cd8d2e049295713ce25ca4357ca",
+    "code_nonblank": 70,
+    "code_physical": 72,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 690706472,
+    "elapsed_seconds": 8.015,
+    "checking": [
+      "OCF.Lean.YiXVSourceAffineSelf"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceSelf.lagda.md",
+    "sha256": "c6e24e54f338b53e6438838a5f4bcd477c27f6c1af1ddf9effe6e1123d960f10",
+    "code_nonblank": 65,
+    "code_physical": 68,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 677982336,
+    "elapsed_seconds": 7.82,
+    "checking": [
+      "OCF.Lean.YiXVSourceSelf"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceSlots.lagda.md",
+    "sha256": "851d1cee79210f1e59c9547eae547fd01033ce59c38a241a2b24ab86e8a6d28d",
+    "code_nonblank": 47,
+    "code_physical": 51,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1298395768,
+    "elapsed_seconds": 13.654,
+    "checking": [
+      "OCF.Lean.YiXVSourceSlots"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceEmbed.lagda.md",
+    "sha256": "e3de629688e96e9705e6b775a003c94c62121a90bfced47094678328c453342f",
+    "code_nonblank": 86,
+    "code_physical": 91,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1198687152,
+    "elapsed_seconds": 13.833,
+    "checking": [
+      "OCF.Lean.YiXVSourceEmbed"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceWorldInput.lagda.md",
+    "sha256": "ac1ff47aba594785237e4b21d4b6aee2f9a13b0dcbc35bdadee48512bc3026e0",
+    "code_nonblank": 58,
+    "code_physical": 62,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1296871640,
+    "elapsed_seconds": 13.701,
+    "checking": [
+      "OCF.Lean.YiXVSourceWorldInput"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceRefPath.lagda.md",
+    "sha256": "87267485eb6b72193d3131856cfd0111b13d566c2acb95614509a7af549e7f57",
+    "code_nonblank": 46,
+    "code_physical": 48,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1199141160,
+    "elapsed_seconds": 13.774,
+    "checking": [
+      "OCF.Lean.YiXVSourceRefPath"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVStart.lagda.md",
+    "sha256": "c88a0a023ee6c58cbaa247e7455e3736d4b4517f3bf20ef887c6b0f630b2f5f7",
+    "code_nonblank": 62,
+    "code_physical": 83,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1210851416,
+    "elapsed_seconds": 12.555,
+    "checking": [
+      "OCF.Lean.YiXVStart"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVLocal.lagda.md",
+    "sha256": "db939e608f9b08713d82d0b499923d9d10f0f2deeda403ebda9039a724ba76b4",
+    "code_nonblank": 32,
+    "code_physical": 39,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1187380488,
+    "elapsed_seconds": 12.301,
+    "checking": [
+      "OCF.Lean.YiXVLocal"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCarry.lagda.md",
+    "sha256": "56a164ed422d79ddf5977532b8e5efab594e5cd0aafc8181ac52fa67db278fa1",
+    "code_nonblank": 49,
+    "code_physical": 58,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1187544080,
+    "elapsed_seconds": 12.385,
+    "checking": [
+      "OCF.Lean.YiXVCarry"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVAnchor.lagda.md",
+    "sha256": "71bdaaf8977965908adfe45af8b94aa81f59d105ec0b288eb0a60ca5ba48429b",
+    "code_nonblank": 54,
+    "code_physical": 63,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1187601888,
+    "elapsed_seconds": 13.561,
+    "checking": [
+      "OCF.Lean.YiXVAnchor"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVAffine.lagda.md",
+    "sha256": "02a08ba4e8cb8aa109b111e6b00c068ac56efccafdbe0a89f0faca6fde2e63f2",
+    "code_nonblank": 78,
+    "code_physical": 81,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1098846312,
+    "elapsed_seconds": 12.542,
+    "checking": [
+      "OCF.Lean.YiXVAffine"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Affine.lagda.md",
+    "sha256": "70477fd7f3e900db20b23254fbdf78b09897eaff9c167f22e0dd9490dc98dbcf",
+    "code_nonblank": 77,
+    "code_physical": 79,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1098840248,
+    "elapsed_seconds": 12.612,
+    "checking": [
+      "OCF.Lean.YiXVCan2Affine"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2NodeOne.lagda.md",
+    "sha256": "7a8c9b0032e461f1a90754362faaf755ba161ed7d1871404fa509fd5b336793e",
+    "code_nonblank": 109,
+    "code_physical": 113,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1115457000,
+    "elapsed_seconds": 12.527,
+    "checking": [
+      "OCF.Lean.YiXVCan2NodeOne"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Rel.lagda.md",
+    "sha256": "596ec7f908f10cdbf6478541f192c9d3f9ce12444bd84345d2d92edd141aaac5",
+    "code_nonblank": 33,
+    "code_physical": 34,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1250517512,
+    "elapsed_seconds": 12.271,
+    "checking": [
+      "OCF.Lean.YiXVCan2Rel"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Plus.lagda.md",
+    "sha256": "2f34577c2c79aa348d545cdaa9f2b0c56a5145d39c396c5d31a2b0175323c6d4",
+    "code_nonblank": 36,
+    "code_physical": 39,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1164815960,
+    "elapsed_seconds": 12.518,
+    "checking": [
+      "OCF.Lean.YiXVCan2Plus"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Lift.lagda.md",
+    "sha256": "96d0af264142d87e39283a71e2456bbc9cf37bddafb5e79b2bf41ce5ada61515",
+    "code_nonblank": 51,
+    "code_physical": 54,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1391570512,
+    "elapsed_seconds": 12.686,
+    "checking": [
+      "OCF.Lean.YiXVCan2Lift"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Self.lagda.md",
+    "sha256": "8be22fb993af83a7488649767bb5bfedf6c8c38692537f6aee0e1d710b03e274",
+    "code_nonblank": 45,
+    "code_physical": 47,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1377496608,
+    "elapsed_seconds": 12.76,
+    "checking": [
+      "OCF.Lean.YiXVCan2Self"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2SlotOne.lagda.md",
+    "sha256": "f6fce8d46cb9fb2c9c3ea8dca56b6fd3ba4dcce766c7544783a8cc7bae8dca32",
+    "code_nonblank": 83,
+    "code_physical": 90,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1164655256,
+    "elapsed_seconds": 12.699,
+    "checking": [
+      "OCF.Lean.YiXVCan2SlotOne"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Sem.lagda.md",
+    "sha256": "a158ebcfbacb43a665e3e8c3b2ead325f3dd968cdaf809f8d00537cb4e0dc3ba",
+    "code_nonblank": 120,
+    "code_physical": 124,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1113049688,
+    "elapsed_seconds": 13.898,
+    "checking": [
+      "OCF.Lean.YiXVCan2Sem"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSelf.lagda.md",
+    "sha256": "9d2703ce90c02c7068cd134307e4dfbf250fae9d284135b777c99477c51092f4",
+    "code_nonblank": 60,
+    "code_physical": 67,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1165094520,
+    "elapsed_seconds": 12.519,
+    "checking": [
+      "OCF.Lean.YiXVSelf"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVChain2.lagda.md",
+    "sha256": "f5e88bb313d1f8245d5fe62803fdcab4e91deecb9701d1b8fd268909a0ce5512",
+    "code_nonblank": 71,
+    "code_physical": 87,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1205482320,
+    "elapsed_seconds": 13.324,
+    "checking": [
+      "OCF.Lean.YiXVChain2"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceCast.lagda.md",
+    "sha256": "8ac78748c40744bbe0d35f31c5f44d69591fb54f346f873820ac3c4a11170681",
+    "code_nonblank": 44,
+    "code_physical": 47,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1282102752,
+    "elapsed_seconds": 13.809,
+    "checking": [
+      "OCF.Lean.YiXVSourceCast"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceFinitePath.lagda.md",
+    "sha256": "4ef3372501664e9fba24330433e3533e91a51dffebbc28c450a5aed6144a9f28",
+    "code_nonblank": 72,
+    "code_physical": 77,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1354683088,
+    "elapsed_seconds": 15.019,
+    "checking": [
+      "OCF.Lean.YiXVSourceFinitePath"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceCoordinates.lagda.md",
+    "sha256": "a80f660969a57cf62e350f18b93174338c021f10cdbfe1edc814151a87159cd9",
+    "code_nonblank": 53,
+    "code_physical": 55,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1361975144,
+    "elapsed_seconds": 15.387,
+    "checking": [
+      "OCF.Lean.YiXVSourceCoordinates"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVThird.lagda.md",
+    "sha256": "6b54ede5a8362b95e21506c50636d8d406189a65c337e02a33a3b50224f5ad93",
+    "code_nonblank": 39,
+    "code_physical": 50,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1216772136,
+    "elapsed_seconds": 15.144,
+    "checking": [
+      "OCF.Lean.YiXVThird"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVTwo.lagda.md",
+    "sha256": "0ae4a13dc306189a3b244687dd5e4945d98fad268cc1f3cdde366a5eac78529c",
+    "code_nonblank": 19,
+    "code_physical": 22,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1292618992,
+    "elapsed_seconds": 283.337,
+    "checking": [
+      "OCF.Lean.YiXVTwo"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSlot2.lagda.md",
+    "sha256": "30c6f274ebc50f707244d175ab9e8b19a1df30402845dc002946db4257f2efaa",
+    "code_nonblank": 52,
+    "code_physical": 63,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1252050688,
+    "elapsed_seconds": 15.148,
+    "checking": [
+      "OCF.Lean.YiXVSlot2"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSlotSrc.lagda.md",
+    "sha256": "105eb85bcb2a1b19c492d03afa95d6cc73afe4faa2cf0f052aa8bc262cc1b1f3",
+    "code_nonblank": 124,
+    "code_physical": 140,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1292583552,
+    "elapsed_seconds": 16.531,
+    "checking": [
+      "OCF.Lean.YiXVSlotSrc"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVThirdZero.lagda.md",
+    "sha256": "649e7e1b289abb0c0deecdcd4b018efb61b89d5518b80caaa6dcd707fcbe2040",
+    "code_nonblank": 86,
+    "code_physical": 90,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1528777544,
+    "elapsed_seconds": 18.833,
+    "checking": [
+      "OCF.Lean.YiXVThirdZero"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVWorld3.lagda.md",
+    "sha256": "856835b60c1752538ddf8416c8c487c94ae3feabe8510515ad8427cfd25e5ced",
+    "code_nonblank": 36,
+    "code_physical": 42,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1296247048,
+    "elapsed_seconds": 13.4,
+    "checking": [
+      "OCF.Lean.YiXVWorld3"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Domain.lagda.md",
+    "sha256": "5aeec6e002c05a4c165004b34fd30546af9cf70a2982798f836f29387736ec0d",
+    "code_nonblank": 76,
+    "code_physical": 92,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1347782256,
+    "elapsed_seconds": 13.681,
+    "checking": [
+      "OCF.Lean.YiXVCan2Domain"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2Ceiling.lagda.md",
+    "sha256": "4a815da80bb546844e21695c79ee90099ea39cede84bb36c2afc7bf222656950",
+    "code_nonblank": 70,
+    "code_physical": 75,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1333147744,
+    "elapsed_seconds": 13.673,
+    "checking": [
+      "OCF.Lean.YiXVCan2Ceiling"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCan2World.lagda.md",
+    "sha256": "69a2c40fb0b1ecff7f22e8e1e59d22e82dce1fc7871d2dd9fcb079a728bd525d",
+    "code_nonblank": 39,
+    "code_physical": 41,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1169446176,
+    "elapsed_seconds": 13.066,
+    "checking": [
+      "OCF.Lean.YiXVCan2World"
+    ],
+    "theme": "早期闭实例与一般化试探"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVZeroRead.lagda.md",
+    "sha256": "bb9b89a33a190f0258438c1c999c155c3639654b69b33119b7c6ac6d00fa1e46",
+    "code_nonblank": 31,
+    "code_physical": 32,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 558399792,
+    "elapsed_seconds": 6.122,
+    "checking": [
+      "OCF.Lean.YiXVZeroRead"
+    ],
+    "theme": "零层值出口与Need1"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVCountableZeroRead.lagda.md",
+    "sha256": "677cf391a7e949a4d2b729b37a0b9aacb2c16d1ba48a36b796af1098c82ffe00",
+    "code_nonblank": 16,
+    "code_physical": 16,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 838681728,
+    "elapsed_seconds": 8.911,
+    "checking": [
+      "OCF.Lean.YiXVCountableZeroRead"
+    ],
+    "theme": "参照折叠封闭"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadCapValue.lagda.md",
+    "sha256": "6c7480ccdbab1de3d01605ca8f1283ae237d883964cb8b1b40d335caf1a418cb",
+    "code_nonblank": 16,
+    "code_physical": 16,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 797060032,
+    "elapsed_seconds": 9.221,
+    "checking": [
+      "OCF.Lean.YiXVReadCapValue"
+    ],
+    "theme": "cap辅助上界与ψ⁰出口"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadOutInput.lagda.md",
+    "sha256": "8e760945a48777149eeb7b23d3a7ec258177dc7582646233893764e05b5b2fcb",
+    "code_nonblank": 44,
+    "code_physical": 44,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 796535048,
+    "elapsed_seconds": 9.536,
+    "checking": [
+      "OCF.Lean.YiXVReadOutInput"
+    ],
+    "theme": "加法、基本输出与坐标"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadGround.lagda.md",
+    "sha256": "6970b3b59858e0035e1256547a540b7f7fe99d709b09346886815b7c12b6f94a",
+    "code_nonblank": 57,
+    "code_physical": 58,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1256557456,
+    "elapsed_seconds": 14.563,
+    "checking": [
+      "OCF.Lean.YiXVReadGround"
+    ],
+    "theme": "加法、基本输出与坐标"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteWorldInput.lagda.md",
+    "sha256": "3b95a5f074d302d70f56ba7e73115893f46cb29fc0d571dbd2770e7cbfe8d89f",
+    "code_nonblank": 49,
+    "code_physical": 51,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 805094664,
+    "elapsed_seconds": 10.279,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteWorldInput"
+    ],
+    "theme": "Route接口与后继行输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteChild.lagda.md",
+    "sha256": "f46ccb4e4b1144a1b9d2031d5a1adc0f5cc32fb8b3a07186b8895df7d6d6e0de",
+    "code_nonblank": 28,
+    "code_physical": 28,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 831812464,
+    "elapsed_seconds": 9.487,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteChild"
+    ],
+    "theme": "Route接口与后继行输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteGround.lagda.md",
+    "sha256": "4aec2063e2063a232a08f6cf43cad64a18226257c734217be8b38798bfda1d01",
+    "code_nonblank": 24,
+    "code_physical": 24,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1294602104,
+    "elapsed_seconds": 13.419,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteGround"
+    ],
+    "theme": "Route接口与后继行输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRules.lagda.md",
+    "sha256": "ad415b28794f7485e10461dc631482049228873ff8bda2526a38469131d79633",
+    "code_nonblank": 63,
+    "code_physical": 69,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 777357416,
+    "elapsed_seconds": 9.088,
+    "checking": [
+      "OCF.Lean.YiXVReadRules"
+    ],
+    "theme": "加法、基本输出与坐标"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadPhi.lagda.md",
+    "sha256": "c9787663996313498785cbefdf215dc2ccb83b93a94d893f4814d3e9e959c815",
+    "code_nonblank": 19,
+    "code_physical": 19,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 899560184,
+    "elapsed_seconds": 9.005,
+    "checking": [
+      "OCF.Lean.YiXVReadPhi"
+    ],
+    "theme": "原Up仿射保持"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadAffineGround.lagda.md",
+    "sha256": "01f0de862fbbedf7cfb18719051c1c15a2923c5dec45510387facaa87b837c52",
+    "code_nonblank": 61,
+    "code_physical": 64,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 780883040,
+    "elapsed_seconds": 9.067,
+    "checking": [
+      "OCF.Lean.YiXVReadAffineGround"
+    ],
+    "theme": "原Up仿射保持"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadAffineLiftInput.lagda.md",
+    "sha256": "18dcb1ec359a4b4732328eda3e75b3e60063b9a824b191b81907807d198c479d",
+    "code_nonblank": 50,
+    "code_physical": 51,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 914118472,
+    "elapsed_seconds": 9.207,
+    "checking": [
+      "OCF.Lean.YiXVReadAffineLiftInput"
+    ],
+    "theme": "原Up仿射保持"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadAffineNodeModels.lagda.md",
+    "sha256": "8bd02f78fa2c61406f30c850584347272f4b69c47ea678caaf9f0fb47f9be2a7",
+    "code_nonblank": 51,
+    "code_physical": 51,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 858186304,
+    "elapsed_seconds": 10.319,
+    "checking": [
+      "OCF.Lean.YiXVReadAffineNodeModels"
+    ],
+    "theme": "原Up仿射保持"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadAffineNode.lagda.md",
+    "sha256": "45daa23305f776982496a8a929e29994e68796dd9e5174db51b240493ddb70ff",
+    "code_nonblank": 89,
+    "code_physical": 91,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 907068840,
+    "elapsed_seconds": 9.926,
+    "checking": [
+      "OCF.Lean.YiXVReadAffineNode"
+    ],
+    "theme": "原Up仿射保持"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadAffineLiftStage.lagda.md",
+    "sha256": "3377a99a9853efb3acb009dd7082e100c56146043958da7bdeef312e95ff1cab",
+    "code_nonblank": 54,
+    "code_physical": 56,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 909119232,
+    "elapsed_seconds": 9.375,
+    "checking": [
+      "OCF.Lean.YiXVReadAffineLiftStage"
+    ],
+    "theme": "原Up仿射保持"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadAffineLift.lagda.md",
+    "sha256": "f39e76603788e7e6eb63846c56cf8a53dbd740f2cb100d3c4862fd9cfd4ba2ee",
+    "code_nonblank": 72,
+    "code_physical": 75,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 880403240,
+    "elapsed_seconds": 9.241,
+    "checking": [
+      "OCF.Lean.YiXVReadAffineLift"
+    ],
+    "theme": "原Up仿射保持"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadEmbedLiftInput.lagda.md",
+    "sha256": "de71ad65fd267934e83f9e22654b18671569afa6192355e90e5e2f5afb603e17",
+    "code_nonblank": 52,
+    "code_physical": 55,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 824173960,
+    "elapsed_seconds": 9.321,
+    "checking": [
+      "OCF.Lean.YiXVReadEmbedLiftInput"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadEmbedLift.lagda.md",
+    "sha256": "b33a829b7573901c24d85b022be4e9d8595e8cee36e7b5dac1dddf68dc398b29",
+    "code_nonblank": 45,
+    "code_physical": 46,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 875941448,
+    "elapsed_seconds": 9.564,
+    "checking": [
+      "OCF.Lean.YiXVReadEmbedLift"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadNodeEnvelope.lagda.md",
+    "sha256": "e17dd8d3256e632ad46609faa780a713fec3043ec8f864c2be4562475e77d2aa",
+    "code_nonblank": 44,
+    "code_physical": 46,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 846675544,
+    "elapsed_seconds": 9.783,
+    "checking": [
+      "OCF.Lean.YiXVReadNodeEnvelope"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadNodeGrowthInput.lagda.md",
+    "sha256": "3cdb44c800862e90e714e47c06f0e9f90ce87e614f411669c3cc945d82986bd9",
+    "code_nonblank": 16,
+    "code_physical": 16,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 843381128,
+    "elapsed_seconds": 9.265,
+    "checking": [
+      "OCF.Lean.YiXVReadNodeGrowthInput"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadNodeGrowth.lagda.md",
+    "sha256": "a052995b63f567809dd02d9fb48c2a2332741037615184907c9ddaf268569490",
+    "code_nonblank": 65,
+    "code_physical": 67,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 866305320,
+    "elapsed_seconds": 9.81,
+    "checking": [
+      "OCF.Lean.YiXVReadNodeGrowth"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadNodeOrbit.lagda.md",
+    "sha256": "f9bf9c33c02424084c0237211be94ac34a605bbffce7180cb29b801fbe30d77b",
+    "code_nonblank": 58,
+    "code_physical": 59,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 918345728,
+    "elapsed_seconds": 9.958,
+    "checking": [
+      "OCF.Lean.YiXVReadNodeOrbit"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteRules.lagda.md",
+    "sha256": "86474b0e4ed1d4c05e6ddea7f9fbd0fde059fb1416737771bd1224c49d0d0ed1",
+    "code_nonblank": 55,
+    "code_physical": 57,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 900638832,
+    "elapsed_seconds": 9.375,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteRules"
+    ],
+    "theme": "Route接口与后继行输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteUpModels.lagda.md",
+    "sha256": "4e4a7ff1800a9200f3869a07b5c882bd72846a34b21b58c0cbbeb13f985dd546",
+    "code_nonblank": 40,
+    "code_physical": 40,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1354467096,
+    "elapsed_seconds": 13.914,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteUpModels"
+    ],
+    "theme": "Route接口与后继行输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadSelfModels.lagda.md",
+    "sha256": "737f38262748b54083706b622a302bc99ddd6cdc0e8afb7141067ded04c63908",
+    "code_nonblank": 19,
+    "code_physical": 19,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 851505912,
+    "elapsed_seconds": 9.406,
+    "checking": [
+      "OCF.Lean.YiXVReadSelfModels"
+    ],
+    "theme": "Route接口与后继行输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadSelf.lagda.md",
+    "sha256": "64e40903c33a6482c4d268d9982297ad8b1eacefa696266cfed6037270af3c93",
+    "code_nonblank": 52,
+    "code_physical": 54,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 901102024,
+    "elapsed_seconds": 9.559,
+    "checking": [
+      "OCF.Lean.YiXVReadSelf"
+    ],
+    "theme": "Route接口与后继行输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteOwn.lagda.md",
+    "sha256": "f0056410edfe74f56a93ae6e0748cae84c92c11c22ac7e46385ab11b4e7dc364",
+    "code_nonblank": 29,
+    "code_physical": 29,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 904504016,
+    "elapsed_seconds": 9.435,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteOwn"
+    ],
+    "theme": "Route接口与后继行输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteUpSuc.lagda.md",
+    "sha256": "ea1bfdbc2719cec71229a62482612bda235798927be09827d64515987ed141e8",
+    "code_nonblank": 60,
+    "code_physical": 62,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1370555392,
+    "elapsed_seconds": 14.146,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteUpSuc"
+    ],
+    "theme": "Route接口与后继行输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteNodeModels.lagda.md",
+    "sha256": "dfe3df09f3c49e0908dc45b47d3a6f6d7d33591fba390d338d5c544fbbad6c47",
+    "code_nonblank": 42,
+    "code_physical": 42,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1347777088,
+    "elapsed_seconds": 14.201,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteNodeModels"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteNodeKeep.lagda.md",
+    "sha256": "a305b1866e2ea1ce63aa6de7cf027c61821ad7263ec1228adf93e82b9cec13d0",
+    "code_nonblank": 85,
+    "code_physical": 87,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1317524632,
+    "elapsed_seconds": 14.813,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteNodeKeep"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteNodeDiag.lagda.md",
+    "sha256": "1c3389765320877af9b729c9f1d335b0fcf98ac18724b56476b04be3c158e5ad",
+    "code_nonblank": 103,
+    "code_physical": 104,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1331091952,
+    "elapsed_seconds": 15.265,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteNodeDiag"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadRouteWorldNode.lagda.md",
+    "sha256": "4f5a1a7c8e9e8e8fc97f42a1c1b450c51ec094f7bf1dad635113567b460b8881",
+    "code_nonblank": 42,
+    "code_physical": 44,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1283906056,
+    "elapsed_seconds": 14.842,
+    "checking": [
+      "OCF.Lean.YiXVReadRouteWorldNode"
+    ],
+    "theme": "嵌入、SC链与Ω节点完整输出"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVReadWorldChild.lagda.md",
+    "sha256": "0a37b6e868e034eba7068320fbd4ef76cc34da0d305af7e16ac85e615332ace4",
+    "code_nonblank": 46,
+    "code_physical": 49,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 910045000,
+    "elapsed_seconds": 9.361,
+    "checking": [
+      "OCF.Lean.YiXVReadWorldChild"
+    ],
+    "theme": "加法、基本输出与坐标"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceNodeEnvelope.lagda.md",
+    "sha256": "604159d403093d1a1170f70c71387484aa069c8fc55a4161bc87426627c1acbf",
+    "code_nonblank": 82,
+    "code_physical": 87,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 655387008,
+    "elapsed_seconds": 7.414,
+    "checking": [
+      "OCF.Lean.YiXVSourceNodeEnvelope"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceWorldGround.lagda.md",
+    "sha256": "7627e49252a44b3bcb0cfef1afe78435a346457bb77d7885bbd0d0c54b049a48",
+    "code_nonblank": 38,
+    "code_physical": 40,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1124515120,
+    "elapsed_seconds": 13.641,
+    "checking": [
+      "OCF.Lean.YiXVSourceWorldGround"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceGrowthInput.lagda.md",
+    "sha256": "6e8d437364a18fabefdd8964307e4b84f0b8ffc9e1faa38dca60b1f1542ceed6",
+    "code_nonblank": 89,
+    "code_physical": 93,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1262850048,
+    "elapsed_seconds": 13.689,
+    "checking": [
+      "OCF.Lean.YiXVSourceGrowthInput"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceGrowth.lagda.md",
+    "sha256": "625f4626ade6d8e4aa914384097951ed6b79ef6ecd6437629d2003dc8ac93db2",
+    "code_nonblank": 108,
+    "code_physical": 114,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1466465104,
+    "elapsed_seconds": 13.299,
+    "checking": [
+      "OCF.Lean.YiXVSourceGrowth"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceNodeGrowth.lagda.md",
+    "sha256": "7a1e7be6ae229b2eca6339427210108bff7b4a3a394900c6f0a8d6066543819d",
+    "code_nonblank": 95,
+    "code_physical": 98,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1147022960,
+    "elapsed_seconds": 13.364,
+    "checking": [
+      "OCF.Lean.YiXVSourceNodeGrowth"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceOrbit.lagda.md",
+    "sha256": "303b013b73461d63e80f230cbfc6d52ce7e904656012ec70512c1a15dd8a4d2a",
+    "code_nonblank": 43,
+    "code_physical": 44,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1277781160,
+    "elapsed_seconds": 14.108,
+    "checking": [
+      "OCF.Lean.YiXVSourceOrbit"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceWorldRules.lagda.md",
+    "sha256": "231f721096f1cf59f8fb6deeb0158f43d87927d164a0cf5a7393962a6d7c65ce",
+    "code_nonblank": 73,
+    "code_physical": 79,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1242402512,
+    "elapsed_seconds": 13.852,
+    "checking": [
+      "OCF.Lean.YiXVSourceWorldRules"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceWorldSelf.lagda.md",
+    "sha256": "d70943401a5d1fc7199ec664afb6a0271ba776b4a960166d827a2572b1a3f8c3",
+    "code_nonblank": 44,
+    "code_physical": 46,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1419246328,
+    "elapsed_seconds": 15.189,
+    "checking": [
+      "OCF.Lean.YiXVSourceWorldSelf"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceWorldUp.lagda.md",
+    "sha256": "e70b3723d08bc44c1b8436644e21ee166ef391a5962feb43c803cf2cc736a1eb",
+    "code_nonblank": 72,
+    "code_physical": 74,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1319742648,
+    "elapsed_seconds": 14.582,
+    "checking": [
+      "OCF.Lean.YiXVSourceWorldUp"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceNodeBody.lagda.md",
+    "sha256": "f7d69b6187d8b063a5aa0bc00c3886415e16874e3cdb9b04509c372790347dc0",
+    "code_nonblank": 60,
+    "code_physical": 62,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1264688640,
+    "elapsed_seconds": 14.775,
+    "checking": [
+      "OCF.Lean.YiXVSourceNodeBody"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceNodeDiag.lagda.md",
+    "sha256": "73810ec64522c196b005e1c998ed850048064e235d0696f4afb77cd18bf9a9a4",
+    "code_nonblank": 96,
+    "code_physical": 101,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1310615384,
+    "elapsed_seconds": 15.242,
+    "checking": [
+      "OCF.Lean.YiXVSourceNodeDiag"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceColumnNode.lagda.md",
+    "sha256": "bb9667bca73cd5e809095e5596a5e418b38f9342951b2ac0987c6b8fb728f527",
+    "code_nonblank": 99,
+    "code_physical": 103,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1364406872,
+    "elapsed_seconds": 15.419,
+    "checking": [
+      "OCF.Lean.YiXVSourceColumnNode"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceNodeKeep.lagda.md",
+    "sha256": "68e3c601062ad9d9378c9192cd5d781f863867aca9e2dbf0f0337d8085f65e02",
+    "code_nonblank": 54,
+    "code_physical": 56,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1312405776,
+    "elapsed_seconds": 14.445,
+    "checking": [
+      "OCF.Lean.YiXVSourceNodeKeep"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceWorldNode.lagda.md",
+    "sha256": "51d2b00ed07ffd49f08a449acb57e4819cdadc62dd6af8bc9e073002fdae042a",
+    "code_nonblank": 46,
+    "code_physical": 48,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1395964304,
+    "elapsed_seconds": 14.913,
+    "checking": [
+      "OCF.Lean.YiXVSourceWorldNode"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceSem.lagda.md",
+    "sha256": "5d90f57c3982581608a3877512816d33d0285ad8c0651652b33f27cdf2e8c616",
+    "code_nonblank": 53,
+    "code_physical": 57,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1317787568,
+    "elapsed_seconds": 14.467,
+    "checking": [
+      "OCF.Lean.YiXVSourceSem"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceColumn.lagda.md",
+    "sha256": "797aa4c5970ebe086d23ee7e7f2c85713573c189aab8c08c647117007f89698b",
+    "code_nonblank": 101,
+    "code_physical": 107,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1447844488,
+    "elapsed_seconds": 14.924,
+    "checking": [
+      "OCF.Lean.YiXVSourceColumn"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourceGlobal.lagda.md",
+    "sha256": "ba7256d0edb5fcea19602b4b59154b2eb32cc406e80be755129970ffab74ee06",
+    "code_nonblank": 127,
+    "code_physical": 133,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1385785976,
+    "elapsed_seconds": 14.858,
+    "checking": [
+      "OCF.Lean.YiXVSourceGlobal"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVSourcePrefixes.lagda.md",
+    "sha256": "d2017fca619ae81949cb149dc168070b71ada815fe0e8a7c460eb77caa99c0b2",
+    "code_nonblank": 78,
+    "code_physical": 81,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1443167784,
+    "elapsed_seconds": 14.744,
+    "checking": [
+      "OCF.Lean.YiXVSourcePrefixes"
+    ],
+    "theme": "有限源层语义、原pre全部上界"
+  },
+  {
+    "file": "probes/OCF/Lean/YiXVNeedOne.lagda.md",
+    "sha256": "2f77bf15f3fe28e7566864441ec6e54c340aa44b96fe3497fe1418151b2a74ce",
+    "code_nonblank": 39,
+    "code_physical": 40,
+    "cold_exit": 0,
+    "maximum_residency_bytes": 1280820880,
+    "elapsed_seconds": 15.009,
+    "checking": [
+      "OCF.Lean.YiXVNeedOne"
+    ],
+    "theme": "零层值出口与Need1"
+  }
+]

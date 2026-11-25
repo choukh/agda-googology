@@ -1,0 +1,74 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第十五批的固定 src 塔下界及其整族 floor，严格小于 Ω₃ 参照的六位真实兄弟 [1,1,0,1,0,1]。
+module B16RefLimit where
+open import Data.Nat.Base using (ℕ)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Empty using (⊥)
+open import Data.Product using (proj₂)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼l; l≼; s≼s; ≼-refl; ≼-trans; ≅→≼)
+open import OCF.Align.BTBOFull using (BTBO≈)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.Stage2 using (Lab-uniq)
+open import OCF.Align.Label using (BTBO-label)
+open import OCF.Lean.YiEXRow using (labR)
+open import OCF.Align.EboLeanTree using (EBO-tree′)
+open import OCF.Lean.YiMonoExit using (toL)
+open import WVOne using (T₀)
+open import B8FreezeMain using (irr)
+open import B13FiniteSrc using (out)
+import B12Omega3Ref as R
+import B12XRef as E
+import B12BtboCut as Cut
+import B14RefGain as G
+import B14Goal as Goal
+import B15Join as J
+import B16RefTails as T
+import B16RefGuard as Guard
+import B16RefFive as Five
+
+source = out J.Boost.source
+sibling = R.at Five.five 1
+
+strict : L.suc source ≼ sibling
+strict = ≼-trans Guard.into-two Five.under-second
+
+-- 量化任意不超过此种子的初值，结论约束指定值运算本身。
+floor : ∀ q → q ≼ L.ψ⁰ Guard.P → L.suc (L.lim (Guard.Bound.floors q)) ≼ sibling
+floor q h = ≼-trans (s≼s (Guard.Bound.upper q h)) (≼-trans Guard.block
+  (≼-trans (≼l 0 (≼-refl (L.ψ⁰ (B14RefSuffix.extend Guard.P))))
+   (≼-trans (G.path-bound Guard.path (Five.Π (L.suc WVOne.𝟏))) Five.under-second)))
+  where import B14RefSuffix; import WVOne
+
+omega3 : L.suc source ≼ L.ψ⁰ R.Ω₃
+omega3 = ≼-trans strict (G.path-bound (1 ∷ 1 ∷ 0 ∷ 1 ∷ 0 ∷ 1 ∷ []) (L.ψ⁰ R.Ω₃))
+
+diagonal : L.suc source ≼ Cut.branch 0
+diagonal = ≼-trans omega3 (≼-trans (≼l 3 (≼-refl (L.ψ⁰ R.Ω₃))) (≅→≼ Cut.cut≈first-branch))
+
+bt : L.suc source ≼ N.BTBOᴵ
+bt = ≼-trans diagonal (≼-trans (≼l 0 (≼-refl (Cut.branch 0))) (≼l 1 (≼-refl (N.γ 2))))
+
+src-BTBO : L.suc source ≼ tr₀ S.BTBO
+src-BTBO = ≼-trans bt (proj₂ BTBO≈)
+
+original-two : L.suc source ≼ E.row 2
+original-two = ≼-trans bt (≅→≼ (L.≅-sym (Lab-uniq (labR (E.H 2)) BTBO-label)))
+
+original : L.suc source ≼ toL EBO-tree′
+original = ≼-trans original-two (Goal.row-in 2)
+
+no-upper : ∀ {x : T₀} → L.suc source ≼ x → x ≼ source → ⊥
+no-upper h k = irr source (≼-trans h k)
+
+no-sibling : sibling ≼ source → ⊥
+no-sibling = no-upper strict
+no-omega3 : L.ψ⁰ R.Ω₃ ≼ source → ⊥
+no-omega3 = no-upper omega3
+no-BTBO : tr₀ S.BTBO ≼ source → ⊥
+no-BTBO = no-upper src-BTBO
+no-EBO : toL EBO-tree′ ≼ source → ⊥
+no-EBO = no-upper original

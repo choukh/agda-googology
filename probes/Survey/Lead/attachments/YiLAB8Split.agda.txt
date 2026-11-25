@@ -1,0 +1,53 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiLAB8Split where
+
+open import Data.Nat using (ℕ; suc)
+open import Data.Unit using (tt)
+open import Data.Empty using (⊥)
+open import Data.Product using (proj₁; _,_; _×_)
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; s≼s; ≼l; ≼-trans; ≼-refl; 1≼ψ⁰) renaming (+-mono to +ᵛ-mono)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import YiLAB7Orbit using (lvl1)
+open import YiLAB7Replay using (Y; chainW; Match; consume; o₁)
+open import B8PairLevel using (X₀)
+open import B8PairMain using (first₀; first₀-up; Match-up)
+open import B8FreezeMain using (Pε; fold-up; irr)
+open import WVOne using (T₀; read)
+import WSLevel as L
+import YiLAB9Orbit as O
+
+-- 同一个真实消费者；输入索引只取 W4 的更新次数。
+out : ℕ → T₀
+out n = read (proj₁ (ψ lvl1 o₁ (B₀ lvl1) zero (inc tt self) (Ωt zero) (chainW n)))
+
+refute-at : ∀ {X n} (H : T₀) → out n ≼ H → LV.suc H ≼ LV.ψ⁰ X → Match X (chainW n) → ⊥
+refute-at H upper lower m = irr H (≼-trans lower (≼-trans (consume m) upper))
+
+X₀-low : LV.suc Pε ≼ LV.ψ⁰ X₀
+X₀-low = ≼l 0 (≼l 0 (≼l 2 (≼l 0 (≼l 2 (+ᵛ-mono (≼-refl Pε) (1≼ψ⁰ L.Ω₁ᴸ))))))
+
+no-X₀-at-zero : Match X₀ (chainW 0) → ⊥
+no-X₀-at-zero = refute-at {X = X₀} {n = 0} Pε fold-up X₀-low
+
+split-X₀ : Match X₀ (chainW 1) × (Match X₀ (chainW 0) → ⊥)
+split-X₀ = first₀ , no-X₀-at-zero
+
+gain : (n : ℕ) → LV.suc (out 0) ≼ out (suc n)
+gain n = ≼-trans (s≼s fold-up) (≼-trans X₀-low (consume (first₀-up n)))
+
+to-second : ∀ {X k} → Match X (O.U k) → Match X (chainW 2)
+to-second {k = k} = Match-up (O.part k)
+
+inner-seed : Match X₀ (O.U 0)
+inner-seed = Match-up O.first-part first₀
+
+-- 第九批的同点问题。Second 的见证属于值验收。
+AtPart : ℕ → Set
+AtPart k = Match (Y 1) (O.U k)
+
+Second : Set
+Second = Match (Y 1) (chainW 2)

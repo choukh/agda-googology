@@ -1,0 +1,59 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 任意合法自然源层，第 n 个孩子的整个真实槽算子是子层 n 上的一个有限复合；保留所有正目标、座位与显式起点。
+module B31PPrefix where
+open import Data.Nat.Base as N using (ℕ; zero; suc)
+import Data.Nat.Properties as NP
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Data.Sum.Base using (inj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; trans; sym)
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import B12Terminal as T
+import B18TowerEmb as Embed
+
+Action : L → Set
+Action l = (j : L) → j ≤ l → Tr⁺ j → Tr⁺ j
+identity : ∀ {l} → Action l
+identity j w b = b
+apply : ∀ {l} → Base l → Action l → Base l
+apply b a j w = a j w (b j w)
+
+module At (g : ℕ → L) (r : T.Run (nd sL g)) where
+  root = nd sL g
+  o = T.Run.ok r
+  b = T.Run.bs r
+  ok = proj₂ o
+  rest : ∀ n → Base (g n)
+  rest n j w = b j (inc n w)
+  fix : ∀ n → ℕ → Action (g n)
+  fix n m j w z = ψ root o b j (inc n w) z (T.prefix g m)
+  next : ∀ n → Tr (g n) → Action (g n) → Action (g n)
+  next n x a j w z = ψ (g n) (ok n) (apply (rest n) a) j w (a j w z) x
+  picked : ∀ m n → m N.< n → g m ≤ g n
+  picked m n d = proj₁ (Embed.choose g (proj₁ o) m n d)
+  cast : ∀ m n → m N.< n → Tr (g n)
+  cast m n d = proj₁ (emb (g n) (ok n) (picked m n d) (Ωt (g m)))
+  segment : ∀ m → T.prefix g (suc m) ≡ up (T.prefix g m) m (proj₁ (Ωt (g m))) (proj₂ (Ωt (g m)))
+  segment zero = refl
+  segment (suc m) = refl
+
+  step : ∀ m n (d : m N.< n) → fix n (suc m) ≡ next n (cast m n d) (fix n m)
+  step m n d = trans (cong (λ x j w z → ψ root o b j (inc n w) z x) (segment m)) choose
+    where
+    choose : (λ j w z → ψ root o b j (inc n w) z (up (T.prefix g m) m (proj₁ (Ωt (g m))) (proj₂ (Ωt (g m))))) ≡
+      next n (cast m n d) (fix n m)
+    choose rewrite proj₁ (proj₂ (Embed.choose g (proj₁ o) m n d)) = refl
+
+  scan : ∀ n m → m N.≤ n → Action (g n)
+  scan n zero d = identity
+  scan n (suc m) d = next n (cast m n d) (scan n m (NP.<⇒≤ d))
+  accurate : ∀ n m (d : m N.≤ n) → scan n m d ≡ fix n m
+  accurate n zero d = refl
+  accurate n (suc m) d = trans (cong (next n (cast m n d)) (accurate n m (NP.<⇒≤ d))) (sym (step m n d))
+
+  slots : ∀ n → Base (g n)
+  slots n = apply (rest n) (scan n n NP.≤-refl)
+  environment : ∀ n → slots n ≡ T.Run.bs (T.limRun g r n)
+  environment n = cong (apply (rest n)) (accurate n n NP.≤-refl)

@@ -1,0 +1,69 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- P4 探针: 最小亏损格上现折叠与 ψ★ 的形状对照, 以及 "整体换底 (a ⊕ ·) 不绕开那一格".
+-- 最小亏损格 (MathE.lossy-cell, MathO2 §3.1): tw 1 上, 槽位是孩子 2 里的第 0 层,
+-- 目标是孩子 2 里的第 1 层, 路径 inc 2 (inc tt self).
+module P4Cell where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+import OCF.Lean.YiRWFold as F
+open import OCF.Lean.YiTBRow using (nat)
+open import P4Star
+
+one : L
+one = nd sS (λ _ → zero)
+
+-- 槽位: 孩子 2 → 第 1 层 → 第 0 层本身 (Ω₁ 型结点, 由上折从第 1 层的树搬来)
+slot : Pos (tw 1)
+slot = inj₂ (nat 2 , inj₂ (inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))))
+
+slot-at : at (tw 1) slot ≡ zero
+slot-at = refl
+
+-- 目标: 孩子 2 里的第 1 层
+w : one ≤ tw 1
+w = inc (nat 2) (inc tt self)
+
+-- (1) 现折叠: 走链 (MathO2.k6 的实例)
+old-kp : F.kp (tw 1) (Ok-tw 1) slot w ≡ nothing
+old-kp = refl
+
+-- (2) ψ★ (演示比较 cmpN): 保留
+new-kp : Σ _ λ x → Star.kp★ cmpN (tw 1) (Ok-tw 1) slot w ≡ just x
+new-kp = _ , refl
+
+-- (3) 输出的形状: 同一棵输入树 (这一格上的结点), 现折叠给 ℕ 极限, ψ★ 给 Ω 结点.
+--     余尾从 Ω₁ 掉到 ω: 任何 "∀n∃m" 的下标位移都不改变这一点 (纸面, 见 report.md §3).
+old-shape : ∀ (B : F.Base (tw 1)) (β : Tr⁺ one) (g : Br (tw 1) slot → Tr (tw 1))
+  → Σ (ℕ → Tr one) λ G → Σ _ λ a → proj₁ (F.ψ (tw 1) (Ok-tw 1) B one w β (Ω slot g)) ≡ lim G a
+old-shape B β g = _ , _ , refl
+
+new-shape : ∀ (B : F.Base (tw 1)) (β : Tr⁺ one) (g : Br (tw 1) slot → Tr (tw 1))
+  → Σ (Pos one) λ q → Σ (Br one q → Tr one) λ G → proj₁ (Star.ψ★ cmpN (tw 1) (Ok-tw 1) B one w β (Ω slot g)) ≡ Ω q G
+new-shape B β g = _ , _ , refl
+
+-- (4) 空比较 cmp₀ 下新行逐字回到原行
+kp-cmp₀ : ∀ k h (o : Ok (nd (sΩ k) h)) c t {j} c′ (v : j ≤ h c′)
+  → Star.kp★ cmp₀ (nd (sΩ k) h) o (inj₂ (c , t)) (inc c′ v) ≡ nothing
+kp-cmp₀ k h o c t c′ v = refl
+
+-- (5) 整体换底不绕开: 在任何底 a 上加 Ω 形状层号, 仍是 Ω 形状, 孩子侧槽位的回灌路径仍经指定孩子,
+--     现折叠在那一行仍是 nothing. 所以 "把计算整体抬高一层 (a ⊕ ·)" 这种输入位移不消除亏损格.
+shift-shape : ∀ a k h → a ⊕ nd (sΩ k) h ≡ nd (sΩ k) (λ c → a ⊕ h c)
+shift-shape a k h = refl
+
+shift-posW : ∀ a k h c (t : Pos⁼ (a ⊕ h c))
+  → posW (a ⊕ nd (sΩ k) h) (inj₂ (c , t)) ≡ inc c (posW⁼ (a ⊕ h c) t)
+shift-posW a k h c t = refl
+
+shift-kp : ∀ a k h (o : Ok (a ⊕ nd (sΩ k) h)) c (t : Pos⁼ (a ⊕ h c)) {j} c′ (v : j ≤ a ⊕ h c′)
+  → F.kp (a ⊕ nd (sΩ k) h) o (inj₂ (c , t)) (inc c′ v) ≡ nothing
+shift-kp a k h o c t c′ v = refl

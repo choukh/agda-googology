@@ -1,0 +1,170 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- D1: 与 E2Path 相同 (只改模块名). E2: N2Path 的改写. Pth 一族移到 D1Block. 读回层号的 Ok: ex 行由结果代数的不变式 EP 给出
+-- (PSL a: 谓词 OkO a, ℕ 极限形状要相邻路径, Ω 形状要下标层的路径 posW ∙ v 与 Ok).
+module D1Path where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Bool using (Bool; true; false)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import D1Block
+open import D1Ops
+
+wk : ∀ {b j ℓ} → Pth b j ℓ → j ≤ ℓ
+wk self      = self
+wk (inc c v) = inc c (wk v)
+wk (inu vs)  = inu (λ c → wk (vs c))
+wk (ink v)   = ink v
+
+⊕⊑ : (a : L) {u u′ : L} → u ⊑ u′ → a ⊕ u ⊑ a ⊕ u′
+⊕⊑ a self      = self
+⊕⊑ a (inc c v) = inc c (⊕⊑ a v)
+⊕⊑ a (inu vs)  = inu (λ c → ⊕⊑ a (vs c))
+
+z≤ : (ℓ : L) → zero ≤ ℓ
+z≤ zero     = self
+z≤ (nd s h) = inu (λ c → z≤ (h c))
+bz⁼ : (a : L) (t : Pos⁼ a) → Br⁼ a t
+bz⁼ a t = proj₂ (sl⁼ a t) zero
+
+mutual
+  posW : (ℓ : L) (p : Pos ℓ) → at ℓ p ≤ ℓ
+  posW (nd s h)      (inj₂ (c , t)) = inc c (posW⁼ (h c) t)
+  posW (nd (sΩ k) h) (inj₁ t)       = ink (posW⁼ k t)
+
+  posW⁼ : (a : L) (t : Pos⁼ a) → proj₁ (sl⁼ a t) ≤ a
+  posW⁼ a (inj₁ _) = self
+  posW⁼ a (inj₂ p) = posW a p
+
+psh : ∀ {k a} → k ≤ a → Pos⁼ k → Pos⁼ a
+psh self                 t = t
+psh (inc c v)            t = inj₂ (inj₂ (c , psh v t))
+psh {a = nd s h} (inu vs) t = inj₂ (inj₂ (c₀ s , psh (vs (c₀ s)) t))
+psh (ink v)              t = inj₂ (inj₁ (psh v t))
+
+pshBr : ∀ {k a} (v : k ≤ a) (t : Pos⁼ k) → Br⁼ a (psh v t) → Br⁼ k t
+pshBr self                 t z = z
+pshBr (inc c v)            t z = pshBr v t z
+pshBr {a = nd s h} (inu vs) t z = pshBr (vs (c₀ s)) t z
+pshBr (ink v)              t z = pshBr v t z
+
+pshFirst : ∀ {k a} (v : k ≤ a) (t : Pos⁼ k) → pshBr v t (bz⁼ a (psh v t)) ≡ bz⁼ k t
+pshFirst self                 t = refl
+pshFirst (inc c v)            t = pshFirst v t
+pshFirst {a = nd s h} (inu vs) t = pshFirst (vs (c₀ s)) t
+pshFirst (ink v)              t = pshFirst v t
+mutual
+  Ok : L → Set
+  Ok zero     = ⊤
+  Ok (nd s h) = OkS s h × ((c : Ch s) → Ok (h c))
+
+  OkS : (s : Sh) → (Ch s → L) → Set
+  OkS sS     h = ⊤
+  OkS sL     g = (n : ℕ) → g n ≤ g (suc n)
+  OkS (sΩ k) h = Ok k × ((c : Tr k) → k ≤ h c)
+
+mutual
+  Ok-at : (ℓ : L) → Ok ℓ → (p : Pos ℓ) → Ok (at ℓ p)
+  Ok-at (nd s h)      (_ , oc)      (inj₂ (c , t)) = Ok-at⁼ (h c) (oc c) t
+  Ok-at (nd (sΩ k) h) ((ok , _) , _) (inj₁ t)      = Ok-at⁼ k ok t
+
+  Ok-at⁼ : (a : L) → Ok a → (t : Pos⁼ a) → Ok (proj₁ (sl⁼ a t))
+  Ok-at⁼ a o (inj₁ _) = o
+  Ok-at⁼ a o (inj₂ p) = Ok-at a o p
+
+OkOS : L → (s : Sh) → (Ch s → L) → Set
+OkOS a sS     h = ⊤
+OkOS a sL     g = (n : ℕ) → g n ⊑ g (suc n)
+OkOS a (sΩ k) h = (k ≤ a) × Ok k
+
+OkO : L → L → Set
+OkO a zero     = ⊤
+OkO a (nd s h) = OkOS a s h × ((c : Ch s) → OkO a (h c))
+
+OkS⊕ : (a : L) (s : Sh) (h : Ch s → L) → OkOS a s h → OkS s (λ c → a ⊕ h c)
+OkS⊕ a sS     h _        = tt
+OkS⊕ a sL     g r        = λ n → wk (⊕⊑ a (r n))
+OkS⊕ a (sΩ k) h (v , ok) = ok , λ c → v ∙ lift a (h c)
+
+Ok⊕ : (a b : L) → Ok a → OkO a b → Ok (a ⊕ b)
+Ok⊕ a zero     oa _         = oa
+Ok⊕ a (nd s h) oa (os , ob) = OkS⊕ a s h os , λ c → Ok⊕ a (h c) oa (ob c)
+
+OkO⊕ : (a b₁ b₂ : L) → OkO a b₁ → OkO a b₂ → OkO a (b₁ ⊕ b₂)
+OkO⊕ a b₁ zero          e₁ _         = e₁
+OkO⊕ a b₁ (nd sS h)     e₁ (_ , e₂)  = tt , λ c → OkO⊕ a b₁ (h c) e₁ (e₂ c)
+OkO⊕ a b₁ (nd sL g)     e₁ (r , e₂)  = (λ n → ⊕⊑ b₁ (r n)) , λ n → OkO⊕ a b₁ (g n) e₁ (e₂ n)
+OkO⊕ a b₁ (nd (sΩ k) h) e₁ (o , e₂)  = o , λ c → OkO⊕ a b₁ (h c) e₁ (e₂ c)
+-- 读回层号的不变式: 谓词 OkO a; 语境守卫 "树层号 ≤ a 且合法".
+PSL : (a : L) → PS AL
+Pr (PSL a) = OkO a
+Gd (PSL a) {m} _ = (m ≤ a) × Ok m
+Gd-dn (PSL a) c (v , ok) = inc c self ∙ v , proj₂ ok c
+limP (PSL a) F r Q = r , Q
+nodeP (PSL a) {m} _ p G (v , ok) Q = (posW m p ∙ v , Ok-at m ok p) , λ c → Q (fromBr m p c)
+
+◃→⊑ : (k : L) {x y : Tr k} → k ⊢ x ◃ y → ↑ k x ⊑ ↑ k y
+◃→⊑ k        ◃s           = inc tt self
+◃→⊑ k        (◃l n)       = inc n self
+◃→⊑ k        ◃w           = inc zero self
+◃→⊑ (nd s h) (◃u x c y e) = lift (↑ (nd s h) x) (↑ (h c) y)
+◃→⊑ (nd s h) (◃c x c d)   = ⊕⊑ (↑ (nd s h) x) (◃→⊑ (h c) d)
+◃→⊑ k        (◃e {a} {b} {_} {x}) = proj₂ (Eh AL tt x (opR (↑ k b))) (↑ k a)
+◃→⊑ k        (◃x {a} {b} d) = Emh AL tt (opR (↑ k b)) (↑ k a) d
+◃→⊑ k        (◃t d e)     = ◃→⊑ k d ∙ ◃→⊑ k e
+
+OkO↑ : (a k : L) → Ok k → k ≤ a → (t : Tr k) → OkO a (↑ k t)
+OkO↑ a k        ok v zero         = tt
+OkO↑ a k        ok v (suc x)      = tt , λ _ → OkO↑ a k ok v x
+OkO↑ a k        ok v (lim f r)    = (λ n → ◃→⊑ k (r n)) , λ n → OkO↑ a k ok v (f n)
+OkO↑ a k        ok v (Ω p g)      = (posW k p ∙ v , Ok-at k ok p) , λ c → OkO↑ a k ok v (g (fromBr k p c))
+OkO↑ a (nd s h) ok v (up x c y _) =
+  OkO⊕ a (↑ (nd s h) x) (↑ (h c) y) (OkO↑ a (nd s h) ok v x) (OkO↑ a (h c) (proj₂ ok c) (inc c self ∙ v) y)
+OkO↑ a k        ok v (ex a′ b′ _ x _) =
+  EP AL (PSL a) tt (v , ok) x (opR (↑ k b′)) (λ u q → OkO⊕ a u (↑ k b′) q (OkO↑ a k ok v b′)) (↑ k a′) (OkO↑ a k ok v a′)
+
+Ok-tw : (n : ℕ) → Ok (tw n)
+Ok-tw zero    = tt
+Ok-tw (suc n) = (Ok-tw n , λ c → lift (tw n) (↑ (tw n) c)) , λ c →
+  Ok⊕ (tw n) (↑ (tw n) c) (Ok-tw n) (OkO↑ (tw n) (tw n) (Ok-tw n) self c)
+
+Ok-Λ : Ok Λ
+Ok-Λ = (λ n → ink self) , Ok-tw
+from0 : (g : ℕ → L) → ((n : ℕ) → g n ≤ g (suc n)) → (n : ℕ) → g zero ≤ g n
+from0 g r zero    = self
+from0 g r (suc n) = from0 g r n ∙ r n
+
+way : (g : ℕ → L) → ((n : ℕ) → g n ≤ g (suc n)) → (m n : ℕ) → (g m ≤ g n) ⊎ (g n ≤ g m)
+way g r m       zero    = inj₂ (from0 g r m)
+way g r zero    (suc n) = inj₁ (from0 g r (suc n))
+way g r (suc m) (suc n) = way (λ i → g (suc i)) (λ i → r (suc i)) m n
+
+cW : ∀ {A B X : Set} → A ⊎ B → (A → X) → (B → X) → X
+cW (inj₁ a) F G = F a
+cW (inj₂ b) F G = G b
+
+cW-ind : ∀ {A B X : Set} (Q : X → Set) (W : A ⊎ B) {F : A → X} {G : B → X}
+       → ((a : A) → Q (F a)) → ((b : B) → Q (G b)) → Q (cW W F G)
+cW-ind Q (inj₁ a) hF hG = hF a
+cW-ind Q (inj₂ b) hF hG = hG b
+
+cW-ind₂ : ∀ {A B X : Set} (Q : X → X → Set) (W : A ⊎ B) {F F′ : A → X} {G G′ : B → X}
+        → ((a : A) → Q (F a) (F′ a)) → ((b : B) → Q (G b) (G′ b)) → Q (cW W F G) (cW W F′ G′)
+cW-ind₂ Q (inj₁ a) hF hG = hF a
+cW-ind₂ Q (inj₂ b) hF hG = hG b
+
+emb : (ℓ : L) → Ok ℓ → ∀ {k} → k ≤ ℓ → Tr⁺ k → Tr⁺ ℓ
+emb ℓ             o self      y = y
+emb (nd s h)      o (inc c v) y = upz c (emb (h c) (proj₂ o c) v y)
+emb (nd s h)      o (inu vs)  y = upz (c₀ s) (emb (h (c₀ s)) (proj₂ o (c₀ s)) (vs (c₀ s)) y)
+emb (nd (sΩ k) h) o (ink v)   y = upz zero (emb (h zero) (proj₂ o zero) (v ∙ proj₂ (proj₁ o) zero) y)
+
+emb-mono : (ℓ : L) (o : Ok ℓ) {k : L} (v : k ≤ ℓ) {y′ y : Tr⁺ k}
+         → k ⊢ proj₁ y′ ◃ proj₁ y → ℓ ⊢ proj₁ (emb ℓ o v y′) ◃ proj₁ (emb ℓ o v y)
+emb-mono ℓ             o self      d = d
+emb-mono (nd s h)      o (inc c v) d = ◃c zero c (emb-mono (h c) (proj₂ o c) v d)
+emb-mono (nd s h)      o (inu vs)  d = ◃c zero (c₀ s) (emb-mono (h (c₀ s)) (proj₂ o (c₀ s)) (vs (c₀ s)) d)
+emb-mono (nd (sΩ k) h) o (ink v)   d = ◃c zero zero (emb-mono (h zero) (proj₂ o zero) (v ∙ proj₂ (proj₁ o) zero) d)

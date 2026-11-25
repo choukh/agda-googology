@@ -1,0 +1,49 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module R17fe where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Empty using (⊥)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiKDPath
+open import OCF.Lean.YiKDFold
+open import OCF.Lean.YiKDKeel
+open import OCF.Lean.YiCertFold using (Base; B₀; Keep; node⁺)
+
+-- 一般引理: Ω 形状层号上, 下标侧槽位朝目标不保留时, 该层 Ω 树的折叠是链的部分和极限;
+-- 链在 Tr k 里回灌, 回灌是朝下标层 k (经下标层侧) 的折叠, 底是 B k.
+module _ {k : L} {h : Tr k → L} (o : Ok (nd (sΩ k) h)) (B : Base (nd (sΩ k) h))
+         {j : L} (w : j ≤ nd (sΩ k) h) (β : Tr⁺ j) where
+  eC : Tr k → Tr (nd (sΩ k) h)
+  eC c = up zero c (proj₁ (Ωt (h c))) (proj₂ (Ωt (h c)))
+
+  GC : Tr k → Tr⁺ j
+  GC c = ψ (nd (sΩ k) h) o B j w β (eC c)
+
+  sC : Tr k → Tr k
+  sC c = proj₁ (ψ (nd (sΩ k) h) o B k (ink self) (B k (ink self)) (eC c))
+
+  chainL : kp (nd (sΩ k) h) o (inj₁ (inj₁ tt)) w ≡ nothing
+         → ψ (nd (sΩ k) h) o B j w β (proj₁ (Ωt (nd (sΩ k) h))) ≡ limc⁺ (λ m → GC (iter sC zero m))
+  chainL e = cong (λ K → node⁺ K GC sC) e
+
+n1 n2 n3 : Tr zero
+n1 = suc zero
+n2 = suc n1
+n3 = suc n2
+
+o13 : Ok (θ 1 n3)
+o13 = proj₂ (Ok-κ 1) n3
+
+w3 : zero ≤ θ 1 n3
+w3 = self ∙ kh (Ok-κ 1) n3
+
+-- Fc (Ok-κ 1) 3: 链在 Tr (θ 0 2) 里回灌
+fc3 : Fc (Ok-κ 1) n3 ≡ limc⁺ (λ m → GC o13 (λ i u → Ωt i) w3 (Ωt zero) (iter (sC o13 (λ i u → Ωt i) w3 (Ωt zero)) zero m))
+fc3 = chainL o13 (λ i u → Ωt i) w3 (Ωt zero) refl

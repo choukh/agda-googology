@@ -1,0 +1,94 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 只要求在无界多次询问上找到一次内返回，每次允许自由选孩子。此条件与原 EBO 进入真实内返回的上确界构造性等价。
+module B28Sparse where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_; s≤s)
+import Data.Nat.Base as Nat
+import Data.Nat.Properties as N
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl; subst; sym)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; s≼s; ≼l; l≼; ≼lim⁻; ≼-refl; ≼-suc; ≼-trans)
+open import OCF.Lean.YiRefTw2 using (tree-≼)
+import B12XRef as Ref
+import B14Goal as Goal
+import B26Names as A
+import B27UEnvelope as Env
+import B28BCut as P
+import B28Branches as B
+import B28OneChild as O
+import B28Acceptance as A₀
+import B28Orbit as R
+import B26PActual as End
+import B28Joint as J
+import B28PReference as Ref₂
+import B20StandardInside as St
+
+module Family (E : A.T₀) (p : ℕ → A.T₀) (b : ℕ → ℕ → A.T₀)
+  (up : ∀ n → p n ≼ p (suc n)) (low : ∀ n c → p n ≼ b n c)
+  (small : ∀ n c → L.suc (b n c) ≼ E)
+  (cofinal : ∀ (y : A.T₀) → (∀ n → p n ≼ y) → E ≼ y)
+  (inner : ℕ → ℕ → ℕ → A.T₀) where
+  row : ℕ → ℕ → A.T₀
+  row = λ m j → L.lim (inner m j)
+  tower : ℕ → A.T₀
+  tower = λ m → L.lim (row m)
+  I : A.T₀
+  I = L.lim tower
+  place : ∀ m j u → inner m j u ≼ I
+  place m j u = ≼l {f = tower} m (≼l {f = row m} j (≼l {f = inner m j} u (≼-refl _)))
+  At : ℕ → ℕ → Set
+  At = λ k c → Σ ℕ (λ m → Σ ℕ (λ j → Σ ℕ (λ u → b k c ≼ inner m j u)))
+  Sparse : Set
+  Sparse = ∀ n → Σ ℕ (λ k → n ≤ k × Σ ℕ (At k))
+  take : E ≼ I → ∀ k c → At k c
+  take h k c with ≼lim⁻ {a = b k c} {f = tower} (≼-trans {a = L.suc (b k c)} {b = E} {c = I} (small k c) h)
+  ... | m , at-m with ≼lim⁻ {a = b k c} {f = row m} at-m
+  ... | j , at-j with ≼lim⁻ {a = b k c} {f = inner m j} at-j
+  ... | u , at-u = m , j , u , ≼-trans {a = b k c} {b = L.suc (b k c)} {c = inner m j u} (≼-suc (≼-refl _)) at-u
+
+  necessary : E ≼ I → Sparse
+  necessary h n = n , N.≤-refl , 0 , take h n 0
+  move : ∀ {n k} → n Nat.≤′ k → p n ≼ p k
+  move {n} Nat.≤′-refl = ≼-refl (p n)
+  move {n} {suc k} (Nat.≤′-step d) = ≼-trans {a = p n} {b = p k} {c = p (suc k)} (move d) (up k)
+  sufficient : Sparse → E ≼ I
+  sufficient hit = cofinal I each where
+    each : ∀ n → p n ≼ I
+    each n with hit n
+    ... | k , ge , c , m , j , u , h =
+      ≼-trans {a = p n} {b = p k} {c = I} (move (N.≤⇒≤′ ge))
+      (≼-trans {a = p k} {b = b k c} {c = I} (low k c)
+       (≼-trans {a = b k c} {b = inner m j u} {c = I} h (place m j u)))
+
+  upper : ∀ (y : A.T₀) → (∀ m j u → inner m j u ≼ y) → I ≼ y
+  upper y h = l≼ {f = tower} λ m → l≼ {f = row m} λ j → l≼ {f = inner m j} (h m j)
+
+point : ℕ → ℕ → A.T₀
+point = B.At.Head.point
+low : ∀ n c → R.value n ≼ point n c
+low n c = ≼-trans {a = R.value n} {b = L.suc (R.value n)} {c = point n c}
+  (≼-suc (≼-refl _)) (O.At.strict n c)
+rise : ∀ n → R.value n ≼ R.value (suc n)
+rise n = ≼-trans {a = R.value n} {b = point n 0} {c = R.value (suc n)} (low n 0)
+  (≼-trans {a = point n 0} {b = L.suc (point n 0)} {c = R.value (suc n)} (≼-suc (≼-refl _)) (O.At.before n 0))
+module Actual = Family A.E R.value point rise low (λ n c → A.strict (O.At.b n c)) A₀.whole P.Physical.inner
+into : Actual.I ≼ Env.U
+into = Actual.upper Env.U λ m j u → ≼-trans {a = P.Physical.inner m j u} {b = P.Physical.f m j} {c = Env.U}
+  (P.Physical.into m j u) (Env.component (suc m) (suc (suc j)))
+terminal : Actual.Sparse → Goal.Goal
+terminal h = ≼-trans {a = A.E} {b = Actual.I} {c = End.Y} (Actual.sufficient h) (≼-trans {a = Actual.I} {b = Env.U} {c = End.Y} into Env.into)
+
+first : point 0 0 ≈ᵛ Ref.row 1
+first = tree-≼ refl (B.At.Head.at 0 0) (Ref.H 1) , tree-≼ refl (Ref.H 1) (B.At.Head.at 0 0)
+second : point 1 0 ≈ᵛ Ref.row 3
+second = tree-≼ refl (B.At.Head.at 1 0) (Ref.H 3) , tree-≼ refl (Ref.H 3) (B.At.Head.at 1 0)
+
+-- 参照返回族实现一般接口；实际返回族已有第零次询问的第二个孩子。
+module Reference = Family A.E R.value point rise low (λ n c → A.strict (O.At.b n c)) A₀.whole (λ m j u → point m j)
+instance-ref : Reference.Sparse
+instance-ref n = n , N.≤-refl , 0 , n , 0 , 0 , ≼-refl (point n 0)
+
+initial : ∀ m j u → L.suc (point 0 1) ≼ P.Physical.inner m j u
+initial m j u = ≼-trans {a = L.suc (point 0 1)} {b = L.suc (St.std 1)} {c = P.Physical.inner m j u}
+  (s≼s (Ref₂.two (B.At.Head.at 0 1))) (J.At.standard m j u 1 (s≤s Nat.z≤n))

@@ -1,0 +1,50 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- BTBO 塔比较的实际调用携带覆盖与逐孩子的路径见证。由有限地板填入一、二层，只在更高后继调用上留下参数。
+module B14FloorBtbo where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import W4Block
+open import W4Path
+open import W4Fold using (EBOᶜ)
+open import WVOne using (h₁; read)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; s≼s)
+open import OCF.BTBO using (module Ord-Ord)
+open import OCF.Align.BTBOValBase using (tr₀)
+import B12ActualSlots as A
+import B14Tower as W
+import B14PathHeight as P
+import B14Btbo as D
+import B14FloorRows as F
+
+children : ∀ {s : Sh} {h : Ch s → W4Block.L} {ws : (c : Ch s) → zero ≤ h c} →
+  P.All (inu ws) → (c : Ch s) → P.All (ws c)
+children (P.each ps) = ps
+
+inputs : ∀ {i z r w} → D.Ask i z r w → A.Covered r × P.All w
+inputs (D.incoming n) = W.chain-covered D.endpoint D.hR _ , P.through (↑ zero (W.Actual.idx (suc (suc n))))
+inputs (D.outgoing n) = D.pc _ , P.standard _
+inputs (D.ref-child a n) = inputs a
+inputs (D.run-child {f = f} {r = r} {ws} a n) =
+  W.Lim.covered (λ k → h₁ (f k)) r ws (proj₁ (inputs a)) n , children (proj₂ (inputs a)) n
+
+-- i 是比较的前驱层号。已解决的是 i=0 和 i=1。
+data Later : L.Ordᴵ → Set where
+  two-up : ∀ i → Later (L.suc (L.suc i))
+  at-lim : ∀ {f m} → Later (L.lim f m)
+  after-lim : ∀ {f m} → Later (L.suc (L.lim f m))
+
+Remaining : Set
+Remaining = ∀ {i z r w} → Later i → D.Ask (L.suc i) (suc z) r w →
+  L.forget i ≼ read z → D.α (L.suc i) ≼ W.valueAt r w
+
+fill : Remaining → D.Successors
+fill h {L.zero} {z} {r} a d = F.one (suc z) (s≼s d) (proj₂ (inputs a)) r (proj₁ (inputs a))
+fill h {L.suc L.zero} {z} {r} a d = F.two (suc z) (s≼s d) (proj₂ (inputs a)) r (proj₁ (inputs a))
+fill h {L.suc (L.suc i)} a d = h (two-up i) a d
+fill h {L.suc (L.lim f m)} a d = h after-lim a d
+fill h {L.lim f m} a d = h at-lim a d
+
+btbo : Remaining → tr₀ Ord-Ord.BTBO ≼ read EBOᶜ
+btbo h = D.From.src-btbo (fill h)

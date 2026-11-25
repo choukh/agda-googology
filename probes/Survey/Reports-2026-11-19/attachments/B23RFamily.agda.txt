@@ -1,0 +1,75 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B23RFamily where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using (List; []; _∷_)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong; subst; sym)
+open import WVOne using (T₀; 𝟏; Mv; Mv-mono; read)
+open import W4Fold using (EBOᶜ)
+import W4Block as W
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼l; l≼; z≼; +-mono; ≅→≼)
+open import OCF.Align.BTBOValBase using (tr₀)
+import B12TerminalTail as Tail
+import B12Terminal as T
+import B12LimitSrc as Sync
+import B12EboRows as End
+import B12Omega3Ref as R
+import B14RefGain as Path
+import B22RowCountable as C
+import B22RowSource as Src
+import B23RShare as First
+
+base = Path.along First.two-at First.oneStep
+common = 2 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 0 ∷ 1 ∷ 1 ∷ 1 ∷ 0 ∷ 0 ∷ 1 ∷ 0 ∷ 0 ∷ []
+point = Path.along common base
+val = λ n → L.ψ⁰ (C.append First.q (R.numeral n))
+zero-embed : ∀ n → L.add First.q (λ v → L.suc (L.suc v)) (R.numeral n) ≡ C.append First.q (R.numeral n)
+zero-embed zero = refl
+zero-embed (suc n) = cong L.suc (zero-embed n)
+shape : ∀ n → R.at point n ≡ val n
+shape n rewrite R.index n = cong L.ψ⁰ (zero-embed n)
+full : point L.≅ L.lim val
+full = L.l≅ (λ n → subst (λ e → R.at point n L.≅ e) (shape n) (L.≅-refl⁰ (R.at point n)))
+
+product : ∀ x n → R.S.iter (x L.+_) L.zero n ≼ W.iter (x L.+_) x n
+product x zero = z≼
+product x (suc n) = +-mono (≼-refl x) (product x n)
+progress : ∀ n → val (suc n) ≼ Tail.mulω (val n)
+progress n = l≼ λ j → ≼l j (product (val n) j)
+upper : ∀ n → val n ≼ W.iter Tail.mulω First.old n
+upper zero = ≼-refl _
+upper (suc n) = ≼-trans (progress n) (Mv-mono (upper n) (≼-refl 𝟏))
+terminal : point ≼ read EBOᶜ
+terminal = ≼-trans (≅→≼ full) (≼-trans (l≼ λ n → ≼l n (upper n)) (Tail.close-tail W.tw T.terminal 1 First.old-in))
+addressed : point ≼ First.oneStep
+addressed = ≼-trans (Path.path-bound common base) (Path.path-bound First.two-at First.oneStep)
+
+open import OCF.Align.Value using (ψ⁰-suc-≈; 1≼ψ⁰; s≼s)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+
+module Native where
+  start = Src.S.lim Src.src
+  inputs = Src.S.iter Src.S.suc start
+  reps : ℕ → Sync.Lev₂
+  reps = R.S.iter L.suc (L.lim Src.lev)
+  source = Src.S.ψ₀ (Src.S.lim inputs)
+  sync : ∀ n → Sync.Aligned (inputs n) (reps n)
+  sync zero = First.Native.base
+  sync (suc n) = Sync.aligned (U.Ms (Sync.Aligned.up (sync n))) (D.Rs (Sync.Aligned.dn (sync n))) (L.s≅ (Sync.Aligned.regular (sync n)))
+  each : ∀ n → L.ψ⁰ (reps n) ≈ᵛ val n
+  each zero = First.Native.before
+  each (suc n) = ψ⁰-suc-≈ {a = reps n} {b = C.append First.q (R.numeral n)} (each n)
+  raw = Sync.fold (Sync.lim inputs reps sync)
+  both : tr₀ source ≈ᵛ point
+  both = ≼-trans (proj₁ raw) (≼-trans (l≼ λ n → ≼l n (proj₁ (each n))) (≅→≼ (L.≅-sym full))) ,
+         ≼-trans (≅→≼ full) (≼-trans (l≼ λ n → ≼l n (proj₂ (each n))) (proj₂ raw))
+  above : L.suc (tr₀ First.Native.source) ≼ tr₀ source
+  above = ≼-trans (s≼s (proj₁ First.Native.both)) (≼-trans gain
+            (≼-trans (≼l 2 (≼-refl (val 2))) (≼-trans (≅→≼ (L.≅-sym full)) (proj₂ both))))
+    where gain : L.suc (val 1) ≼ val 2
+          gain = ≼l 2 (+-mono (≼-refl (val 1)) (1≼ψ⁰ (L.suc First.q)))
+  actual : tr₀ source ≼ read EBOᶜ
+  actual = ≼-trans (proj₁ both) terminal

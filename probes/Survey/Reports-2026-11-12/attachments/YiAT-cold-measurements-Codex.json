@@ -1,0 +1,78 @@
+[
+  {
+    "name": "YiATStart",
+    "source": "probes/OCF/Lean/YiATStart.lagda.md",
+    "exit_code": 0,
+    "external_wall_seconds": 16.404820792,
+    "rts_maximum_residency_bytes": 1574069768,
+    "rts_elapsed_seconds": 16.315,
+    "checking_lines": [
+      "Checking OCF.Lean.YiATStart (<repository>/probes/OCF/Lean/YiATStart.lagda.md)."
+    ],
+    "command": [
+      "agda",
+      "+RTS",
+      "-M8G",
+      "-s",
+      "-RTS",
+      "--library-file=<experiment>/libraries",
+      "-i",
+      "src",
+      "-i",
+      "probes",
+      "probes/OCF/Lean/YiATStart.lagda.md"
+    ]
+  },
+  {
+    "name": "YiATWire",
+    "source": "probes/OCF/Lean/YiATWire.lagda.md",
+    "exit_code": 0,
+    "external_wall_seconds": 17.435767082999998,
+    "rts_maximum_residency_bytes": 1721793544,
+    "rts_elapsed_seconds": 17.345,
+    "checking_lines": [
+      "Checking OCF.Lean.YiATWire (<repository>/probes/OCF/Lean/YiATWire.lagda.md)."
+    ],
+    "command": [
+      "agda",
+      "+RTS",
+      "-M8G",
+      "-s",
+      "-RTS",
+      "--library-file=<experiment>/libraries",
+      "-i",
+      "src",
+      "-i",
+      "probes",
+      "probes/OCF/Lean/YiATWire.lagda.md"
+    ]
+  },
+  {
+    "name": "YiATSource",
+    "source": "<experiment>/YiATSource.agda",
+    "exit_code": 0,
+    "external_wall_seconds": 16.407433540999996,
+    "rts_maximum_residency_bytes": 1471735568,
+    "rts_elapsed_seconds": 16.318,
+    "checking_lines": [
+      "Checking YiATSource (<experiment>/YiATSource.agda)."
+    ],
+    "command": [
+      "agda",
+      "+RTS",
+      "-M8G",
+      "-s",
+      "-RTS",
+      "--library-file=<experiment>/libraries",
+      "-i",
+      "src",
+      "-i",
+      "probes",
+      "-l",
+      "standard-library",
+      "-i",
+      "<experiment>",
+      "<experiment>/YiATSource.agda"
+    ]
+  }
+]

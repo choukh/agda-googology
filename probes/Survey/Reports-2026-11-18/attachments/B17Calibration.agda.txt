@@ -1,0 +1,65 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- BTBO 原对角的每一个正项，首项参数的下标深度都是 2；整族确有 BTBO 的值。全部有限 Ω 层则被 BTBO 严格支配。
+module B17Calibration where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; subst; sym)
+open import OCF.Align.EboLeanDef using (T; fsn; EBOψ; HC; ΩTower)
+open import OCF.Align.EboLeanBase using (NF; Ctbl; c∷; c[])
+open import OCF.Align.EboLeanTree using (nf-tower; EBO-tree′)
+open import OCF.Align.EboLeanClosure using (cl-fsn-NF; trian-fsn)
+open import OCF.Align.EboLeanTrian using (t<)
+open import OCF.Lean.YiCFMono using (mono<ⁿ)
+open import OCF.Lean.YiEXRow using (fsn≡; labR)
+open import OCF.Align.Correspond using (γᴱ; diag-fs)
+open import OCF.Align.Label using (γ-label; BTBO-label)
+open import OCF.Align.Stage2 using (Lab-uniq)
+open import OCF.Lean.YiRefTw2 using (Rt; hω-inv)
+open import OCF.Lean.YiMonoExit using (toL)
+import OCF.Align.Level as L
+import OCF.Align.NoCumsum as N
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; l≼; ≼l; s≼s; ≅→≼)
+import B8FreezeMain as Ir
+import B12XRef as R
+import B12BtboCut as K
+import B14Goal as G
+import B17Cofinal as C
+import B17Depth as D
+
+term = λ n → fsn (EBOψ 2) n
+label-term : ∀ n → term n ≡ γᴱ (suc n)
+label-term n = trans (fsn≡ (EBOψ 2) n) (diag-fs n)
+normal : ∀ n → NF (term n)
+normal = cl-fsn-NF (nf-tower 2) refl
+countable : ∀ n → Ctbl (term n)
+countable n = subst Ctbl (sym (label-term n)) (c∷ c[])
+h : ∀ n → HC (term n)
+h = hω-inv (R.H 2) refl
+same : ∀ n → N.γ (suc n) L.≅ Rt (h n)
+same n = Lab-uniq (γ-label n) (subst (OCF.Align.Correspond.Lab (Rt (h n))) (label-term n) (labR (h n)))
+
+depth-of : ∀ n (c : Ctbl (γᴱ (suc n))) → C.cap c ≡ 2
+depth-of zero (c∷ _) = refl
+depth-of (suc n) (c∷ _) = refl
+value-depth : ∀ n → C.cap (countable n) ≡ 2
+value-depth n = convert (label-term n) (countable n) where
+  convert : ∀ {t} → t ≡ γᴱ (suc n) → (c : Ctbl t) → C.cap c ≡ 2
+  convert refl c = depth-of n c
+
+family : L.Ordᶜ L.zero
+family = L.lim (λ n → Rt (h n))
+exact : N.BTBOᴵ L.≅ family
+exact = L.l≅ same
+strict-child : ∀ n → L.suc (N.γ (suc n)) ≼ R.row 2
+strict-child n = ≼-trans (s≼s (≅→≼ (same n))) (mono<ⁿ (normal n) (nf-tower 2) (c∷ c[])
+  (h n) (R.H 2) (t< (trian-fsn (nf-tower 2) refl n)))
+
+finite-cut : L.suc K.omega-cut ≼ R.row 2
+finite-cut = ≼-trans (s≼s K.cut-below-first-missing) (strict-child 1)
+no-BTBO-at-cut : R.row 2 ≼ K.omega-cut → ⊥
+no-BTBO-at-cut h = Ir.irr _ (≼-trans finite-cut h)
+no-EBO-here : toL EBO-tree′ ≼ family → ⊥
+no-EBO-here d = Ir.irr (R.row 2) (≼-trans (C.strict-row 2)
+  (≼-trans (G.row-in 3) (≼-trans d (≅→≼ (L.≅-trans (L.≅-sym exact) (Lab-uniq BTBO-label (labR (R.H 2))))))))

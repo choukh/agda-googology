@@ -1,0 +1,23 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18OrbitLevels where
+open import Data.Nat using (ℕ; zero; suc)
+import B18OrbitWorld as W
+import B18OrbitLift as L
+import B18RefDepth as D
+
+world : ℕ → W.World
+W.space (world d) = D.S d
+W.initial (world d) = D.initial d
+W.grad (world d) = D.grad d
+W.Index (world zero) = W.Index W.old
+W.Index (world (suc d)) = L.For.Index (world d)
+W.start (world zero) = W.start W.old
+W.start (world (suc d)) = L.For.initial (world d)
+W.rise (world zero) = W.rise W.old
+W.rise (world (suc d)) = L.For.mono (world d)
+W.gather (world zero) = W.gather W.old
+W.gather (world (suc d)) = L.For.combine (world d)
+W.retain (world zero) = W.retain W.old
+W.retain (world (suc d)) = L.For.keep (world d)
+W.advance (world zero) = W.advance W.old
+W.advance (world (suc d)) = L.For.advance (world d)

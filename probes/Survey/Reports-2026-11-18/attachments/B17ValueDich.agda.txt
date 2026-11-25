@@ -1,0 +1,33 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 第四层的经典参数仅用于从实际有限累加中取出单个反馈孩子。
+module B17ValueDich where
+open import Data.Nat.Base using (ℕ)
+open import Data.Empty using (⊥-elim)
+open import Data.Product using (Σ; _,_)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; z≼; s≼s; s≼s⁻; ≼l; l≼)
+open import WVOne using (T₀)
+
+module Classical (lem : LEM) where
+  compare : (x y : T₀) → (x ≼ y) ⊎ (L.suc y ≼ x)
+  compare L.zero y = inj₁ z≼
+  compare (L.suc x) L.zero = inj₂ (s≼s z≼)
+  compare (L.suc x) (L.suc y) with compare x y
+  ... | inj₁ e = inj₁ (s≼s e)
+  ... | inj₂ e = inj₂ (s≼s e)
+  compare (L.suc x) (L.lim f) with lem (Σ ℕ (λ n → L.suc x ≼ f n))
+  ... | inj₁ (n , h) = inj₁ (≼l n h)
+  ... | inj₂ no = inj₂ (s≼s (l≼ upper)) where
+    upper : ∀ n → f n ≼ x
+    upper n with compare (L.suc x) (f n)
+    ... | inj₁ h = ⊥-elim (no (n , h))
+    ... | inj₂ h = s≼s⁻ h
+  compare (L.lim f) y with lem (Σ ℕ (λ n → L.suc y ≼ f n))
+  ... | inj₁ (n , h) = inj₂ (≼l n h)
+  ... | inj₂ no = inj₁ (l≼ upper) where
+    upper : ∀ n → f n ≼ y
+    upper n with compare (f n) y
+    ... | inj₁ h = h
+    ... | inj₂ h = ⊥-elim (no (n , h))

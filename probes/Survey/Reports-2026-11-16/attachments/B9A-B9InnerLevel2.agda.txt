@@ -1,0 +1,55 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B9A: Level 一侧, 被加项关系 Ld 的第二种语义. Ld D d 且 a, c 都不低于 ψ⁰(Ω₂) 时, ψ⁰(Ω₂ + D) = ψ⁰ (body D) ≼ d a c.
+-- (WSLevel.Ld-sem 是 a, c ≥ 1 时 ψ⁰ D ≼ d a c.) 证法与 Ld-sem 同形: Ω₁ 结点的链在 Level 一侧是 ψ (Ω₂ + g y) 折到第 0 层,
+-- 由 ψ≼ψ⁰ 压到 ψ⁰. 编译定理, 无前提. 只用于第 4 层的值验收.
+module B9InnerLevel2 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord; injᵃ; injᵇ; injᶜ)
+module S = Ord-Ord
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-refl; ≼-trans; iter-≼)
+open import WVOne using (T₀; 𝟏; Mv; Mv-mono; iterS)
+open import WVTwo using (T₁)
+open import WSShadow using (Sh; nodeS; chS)
+open import WSLevel using (Ld; Lz; Ls; Ll; Li; Lu; Lw)
+open import YiLAB7Replay using (Ω₂ᴸ; body; Y)
+open import B8PairLevel using (dY1; Ld-Y1)
+
+-- 折到第 0 层的 ψ 不高于 ψ⁰ (任意层的树). 穿透一支要求输出层低于 0, 不可能.
+ψ≼ψ⁰ : ∀ {k ℓ} {p : LV.zero LV.<ᴵ ℓ} {σ : LV.Simᴵ k ℓ} (x : LV.Ordᶜ k) → LV.ψ p σ x ≼ LV.ψ⁰ x
+ψ≼ψ⁰ LV.zero = ≼-refl _
+ψ≼ψ⁰ {p = p} {σ} (LV.suc x) = l≼ (λ n → ≼l n (iter-≼ (ψ≼ψ⁰ {p = p} {σ} x) n))
+ψ≼ψ⁰ {p = p} {σ} (LV.lim f) = l≼ (λ n → ≼l n (ψ≼ψ⁰ {p = p} {σ} (f n)))
+ψ≼ψ⁰ {p = p} {σ} (LV.limᵢ q f) with LV.<ᴵ-dec (σ q) p
+... | injᵃ (LV.via e ())
+... | injᵇ _ = l≼ (λ n → ≼l n (ψ≼ψ⁰ {p = p} {σ} _))
+... | injᶜ _ = l≼ (λ n → ≼l n (ψ≼ψ⁰ {p = p} {σ} _))
+ψ≼ψ⁰ {p = p} {σ} (LV.up LV.zero x) = ψ≼ψ⁰ {p = p} {λ q → σ (LV.suc q)} x
+ψ≼ψ⁰ {p = p} {σ} (LV.up (LV.self n) x) = ψ≼ψ⁰ {p = p} {λ q → σ (LV.lim n q)} x
+
+-- 第 0 层尾巴: ψ⁰(Ω₂ + y) ≼ Mv a y.
+L2u : ∀ {σ : LV.Simᴵ LV.zero (LV.suc (LV.suc LV.zero))} (a : T₀) → LV.ψ⁰ Ω₂ᴸ ≼ a → (y : T₀) → LV.ψ⁰ (LV.add Ω₂ᴸ σ y) ≼ Mv a y
+L2u a ha LV.zero = ha
+L2u {σ} a ha (LV.suc y) = l≼ (λ n → ≼l n (iterS (L2u {σ} a ha y) n))
+L2u {σ} a ha (LV.lim f) = l≼ (λ n → ≼l n (L2u {σ} a ha (f n)))
+L2u a ha (LV.limᵢ () f)
+L2u a ha (LV.up () x)
+
+mutual
+  L2-sem : ∀ {D d} → Ld D d → (a c : T₀) → LV.ψ⁰ Ω₂ᴸ ≼ a → LV.ψ⁰ Ω₂ᴸ ≼ c → LV.ψ⁰ (body D) ≼ d a c
+  L2-sem Lz a c ha hc = ha
+  L2-sem (Ls r) a c ha hc = l≼ (λ n → ≼l n (iterS (L2-sem r a c ha hc) n))
+  L2-sem (Ll h) a c ha hc = l≼ (λ k → ≼l k (L2-sem (h k) a c ha hc))
+  L2-sem (Li {g = g} {h = h} hh) a c ha hc = l≼ (λ k → ≼l k (L2-sem (hh _ _ (ch2 g h hh c hc k)) a c ha hc))
+  L2-sem (Lu y y′ d) a c ha hc = ≼-trans (L2u a ha y) (Mv-mono (≼-refl a) d)
+  L2-sem (Lw r p) a c ha hc = ≼-trans (L2-sem r a c ha hc) (p a c)
+
+  ch2 : (g : T₀ → T₁) (h : T₀ → Sh 0) → (∀ y y′ → y ≼ y′ → Ld (g y) (h y′)) → (c : T₀) → LV.ψ⁰ Ω₂ᴸ ≼ c
+      → (k : ℕ) → S.iter (λ x → LV.ψ (LV.suc LV.zero) (λ r → r) (body (g x))) 𝟏 k ≼ chS h c k
+  ch2 g h hh c hc zero    = ≼-refl 𝟏
+  ch2 g h hh c hc (suc k) = ≼-trans (ψ≼ψ⁰ (body (g _))) (L2-sem (hh _ _ (ch2 g h hh c hc k)) c c hc hc)
+
+-- 实例: Y 1 的规范被加项描述 dY1 在 ψ⁰(Ω₂) 以上的点上控制 ψ⁰(Ω₂ + Y 1).
+body-Y1 : (a c : T₀) → LV.ψ⁰ Ω₂ᴸ ≼ a → LV.ψ⁰ Ω₂ᴸ ≼ c → LV.ψ⁰ (body (Y 1)) ≼ dY1 a c
+body-Y1 = L2-sem Ld-Y1

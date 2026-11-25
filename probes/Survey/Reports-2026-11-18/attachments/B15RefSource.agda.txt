@@ -1,0 +1,109 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 纯 src 的 Ω₂ 系数与同一闭回灌串；对值相关的不同输入，分别比较三次折叠，迭代中可换用前一步的值。
+module B15RefSource where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import OCF.BTBO using (module BoundedTrich; module Ord-Ord)
+module B = BoundedTrich
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.BTBOValBase using (tr₀)
+import OCF.Align.BTBOValUp as U
+import OCF.Align.BTBOValDn as D
+open import OCF.Align.Value using (_≈ᵛ_; _≼_; z≼; s≼s; l≼; ≼l; ≼i; i≼; ≼u; u≼; ≼-trans; ≅→≼; ≼-refl)
+open import WVOne using (T₀)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Src as T
+open import B12LimitSrc using (Src₂; Lev₂)
+import B12Omega3Ref as R
+import B13Target as P
+import B14RefFixed as K
+import B14RefRow as W
+
+pow : Src₂ → Src₂
+pow b = S.lim (S.iter (b S.+_) b)
+
+coeff : S.Ord₀ → Src₂
+coeff S.zero = T.a
+coeff (S.suc x) = pow (coeff x)
+coeff (S.lim f) = S.lim (λ n → coeff (f n))
+
+power-up : ∀ {a b} → U.Mh a b → U.Mh (pow a) (R.power b)
+power-up {a} {b} r = U.Mll (λ n → U.Mlr (suc n) (parts n)) where
+  parts : ∀ n → U.Mh (S.iter (a S.+_) a n) (S.iter (b L.+_) L.zero (suc n))
+  parts zero = r
+  parts (suc n) = U.M-add {σ = R.idσ} r (parts n)
+
+power-down : ∀ {a b} → D.Dn b a → D.Dn (R.power b) (pow a)
+power-down {a} {b} r = D.Rll (λ where zero → D.Rz ; (suc n) → D.Rlr n (parts n)) where
+  parts : ∀ n → D.Dn (S.iter (b L.+_) L.zero (suc n)) (S.iter (a S.+_) a n)
+  parts zero = r
+  parts (suc n) = D.Dn-add {σ = R.idσ} r (parts n)
+
+small-up : ∀ y → U.Mh T.a (P.co₀ y)
+small-up L.zero = T.up-rel 0
+small-up (L.suc y) = U.Mlr 1 (small-up y)
+small-up (L.lim f) = U.Mlr 0 (small-up (f 0))
+
+small-down : ∀ s → D.Dn Ω₂ᴸ (coeff s)
+small-down S.zero = T.dn-rel 0
+small-down (S.suc s) = D.Rlr 0 (small-down s)
+small-down (S.lim f) = D.Rlr 0 (small-down (f 0))
+
+toward : ∀ s y → tr₀ s ≼ y → U.Mh (coeff s) (P.co₀ y)
+toward (S.limᵢ () f) y d
+toward S.zero y z≼ = small-up y
+toward (S.suc s) (L.suc y) (s≼s d) = power-up (toward s y d)
+toward s (L.lim g) (≼l n d) = U.Mlr n (toward s (g n) d)
+toward (S.lim f) y (l≼ h) = U.Mll (λ n → toward (f n) y (h n))
+toward s _ (≼i {p = ()} _ _ _)
+toward s _ (≼u {r = ()} _)
+
+backward : ∀ x s → x ≼ tr₀ s → D.Dn (P.co₀ x) (coeff s)
+backward x (S.limᵢ () f) d
+backward L.zero s z≼ = small-down s
+backward (L.suc x) (S.suc s) (s≼s d) = power-down (backward x s d)
+backward (L.lim f) s (l≼ h) = D.Rll (λ n → backward (f n) s (h n))
+backward x (S.lim f) (≼l n d) = D.Rlr n (backward x (f n) d)
+backward _ s (i≼ {p = ()} _)
+backward _ s (u≼ {r = ()} _)
+
+-- 嵌入与折叠均来自 src，输入与前一步输出都是 Ord₀。
+one : B.Ordᴰ
+one = B.suc B.zero
+lift-coeff : Src₂ → Src₂
+lift-coeff p = S.ψ< {i = T.two} {ℓ = B.suc T.two} B.zero (S.↑ {ℓ₁ = one} (B.suc B.zero) (S.ψ< B.zero p))
+
+kernel : S.Ord₀ → Src₂
+kernel x = lift-coeff (coeff x)
+
+gain : S.Ord₀ → S.Ord₀
+gain x = S.ψ₀ (kernel x)
+
+up : ∀ x y → tr₀ x ≼ y → tr₀ (gain x) ≼ K.gain 1 y
+up x y xy = ≼-trans (U.Mh→≼ (U.M-ψ L.z≅ (D.τ-< T.w) R.idσ T.w h))
+  (≅→≼ (L.≅-sym (L.ψ⁰≅ψ {p = D.τ-< T.w} {σ = R.idσ} (K.kernel-pres 1 (L.≅-refl⁰ y))))) where
+  h : U.Mh (kernel x) (K.kernel 1 y)
+  h = U.M-ψ {i = T.two} (L.≅ᴵ-refl _) L.zero (λ q → L.suc (L.suc q)) B.zero
+    (U.M-↑ (B.suc B.zero) (U.M-ψ {i = one} (L.≅ᴵ-refl _) L.zero R.idσ B.zero (toward x y xy)))
+
+down : ∀ x s → x ≼ tr₀ s → K.gain 1 x ≼ tr₀ (gain s)
+down x s xs = ≼-trans (≅→≼ (L.ψ⁰≅ψ {p = D.τ-< T.w} {σ = R.idσ} (K.kernel-pres 1 (L.≅-refl⁰ x))))
+  (D.Dn→≼ (D.Dn-ψ L.z≅ (D.τ-< T.w) R.idσ T.w h)) where
+  h : D.Dn (K.kernel 1 x) (kernel s)
+  h = D.Dn-ψ {i = T.two} (L.≅ᴵ-refl _) L.zero (λ q → L.suc (L.suc q)) B.zero
+    (D.Dn-↑ (B.suc B.zero) (D.Dn-ψ {i = one} (L.≅ᴵ-refl _) L.zero R.idσ B.zero (backward x s xs)))
+
+chain : ℕ → S.Ord₀
+chain = S.iter gain (S.suc S.zero)
+
+each : ∀ j → tr₀ (chain j) ≈ᵛ K.chain 1 j
+each zero = ≼-refl _ , ≼-refl _
+each (suc j) = up (chain j) (K.chain 1 j) (proj₁ (each j)) , down (K.chain 1 j) (chain j) (proj₂ (each j))
+
+closed : S.Ord₀
+closed = S.lim (λ j → chain (suc j))
+
+whole : tr₀ closed ≈ᵛ W.node 1
+whole = ≼-trans (l≼ (λ j → ≼l j (proj₁ (each (suc j))))) (≅→≼ (L.≅-sym (K.as-chain 1))) ,
+        ≼-trans (≅→≼ (K.as-chain 1)) (l≼ (λ j → ≼l j (proj₂ (each (suc j)))))

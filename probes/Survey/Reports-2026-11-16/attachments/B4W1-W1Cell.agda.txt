@@ -1,0 +1,227 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W1 检查件 (1): 跨孩子格上两边的判定 (只是形状, 不是值). 排中律只作 ψ♯ 一侧的模块参数.
+-- 格: tw 1 上, 左项 b = Ωt (tw 1) 朝 "孩子 e 里的第 i 层" 折 (底族通道). b 的顶结点保留, 分支变量 c 被约束;
+-- ψ♯ 进孩子 c, 对 Ωt (h₁ c) 的结点按值判: 同一个绑定子之下既有保留 (c 小) 也有走链 (c 大).
+-- 构造性折叠 (YiRWFold, 与 D1Fold 的 kp 和嵌入行逐字相同) 在这一格: 嵌入行回退, 裸 K6 恒为 nothing.
+module W1Cell where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import Induction.WellFounded using (Acc; acc)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Keep; Base; B₀; kp; node⁺; ψ)
+open import S1Sharp
+
+IsJust : ∀ {A : Set} → Maybe A → Set
+IsJust (just _) = ⊤
+IsJust nothing  = ⊥
+
+-- tw 1 的孩子层 (定义上 tw 1 = nd (sΩ zero) h₁).
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+tw1-shape : tw 1 ≡ nd (sΩ zero) h₁
+tw1-shape = refl
+
+n1 n2 n3 : Tr zero
+n1 = suc zero
+n2 = suc n1
+n3 = suc n2
+
+lvl1 lvl2 lvl3 : L
+lvl1 = h₁ n1
+lvl2 = h₁ n2
+lvl3 = h₁ n3
+
+o₁ : Ok (tw 1)
+o₁ = Ok-tw 1
+
+ok1 : Ok lvl1
+ok1 = proj₂ o₁ n1
+
+ok2 : Ok lvl2
+ok2 = proj₂ o₁ n2
+
+b⁺ : Tr⁺ (tw 1)
+b⁺ = Ωt (tw 1)
+
+b : Tr (tw 1)
+b = proj₁ b⁺
+
+top : Pos (tw 1)                     -- b 的顶槽位 (下标侧, 层 zero)
+top = inj₁ (inj₁ tt)
+
+pS : ∀ {a} → Pos (nd sS λ _ → a)     -- 后继层号的 Ω 树的顶槽位 (层 a)
+pS = inj₂ (tt , inj₁ tt)
+
+-- 孩子 c 的 Ω 树的顶槽位所在层: 孩子 suc c 里是 h₁ c.
+at-suc : (c : Tr zero) → at (h₁ (suc c)) pS ≡ h₁ c
+at-suc c = refl
+
+-- N1Forced 的两条引理 (照抄, 免得导入读记号的模块): 判定只由值序证据决定.
+≺-irr′ : ∀ {a} → Acc _≺ᴸ_ a → a ≺ᴸ a → ⊥
+≺-irr′ (acc r) lt = ≺-irr′ (r lt) lt
+
+≺-irr : ∀ a → a ≺ᴸ a → ⊥
+≺-irr a = ≺-irr′ (wfL a)
+
+module Cell (lem : LEM) where
+  open Sharp lem
+
+  pick-just : ∀ ℓ o p j oj (lt : at ℓ p ≺ᴸ j) → Σ _ λ K → pickK ℓ o p j oj (inj₂ lt) ≡ just K
+  pick-just ℓ o p j oj lt with slot♯ j (at ℓ p) lt
+  ... | q , e , _ = _ , refl
+
+  keep-forced : ∀ ℓ o p j oj → at ℓ p ≺ᴸ j → Σ _ λ K → kp♯ ℓ o p j oj ≡ just K
+  keep-forced ℓ o p j oj lt with Dk j (at ℓ p)
+  ... | inj₁ le  = ⊥-elim (≺-irr (at ℓ p) (≺≼ j (at ℓ p) lt le))
+  ... | inj₂ lt′ = pick-just ℓ o p j oj lt′
+
+  chain-forced : ∀ ℓ o p j oj → j ≼ᴸ at ℓ p → kp♯ ℓ o p j oj ≡ nothing
+  chain-forced ℓ o p j oj le with Dk j (at ℓ p)
+  ... | inj₁ _  = refl
+  ... | inj₂ lt = ⊥-elim (≺-irr (at ℓ p) (≺≼ j (at ℓ p) lt le))
+
+  -- (S1) ψ♯ 朝非零层 i 折 b: 顶结点 (槽位层 zero) 保留; 每个分支是 "进孩子 c′, 目标仍是 i" 的折叠.
+  --      i 取 lvl1 与 lvl2 两个实例 (对一切 nd sS 形状的 i 同理, Dk (nd _ _) zero 不问排中律).
+  module _ (i : L) (oi : Ok i) (β : Tr⁺ i) where
+    body♯ : Tr zero → Tr⁺ i          -- 分支 c′ 上的值: Ωt (h₁ c′) 朝 i 折, 底族与底值照嵌入行
+    body♯ c′ = ψ♯ (h₁ c′) (proj₂ o₁ c′) (λ i′ oi′ → ψ♯ (tw 1) o₁ B♯ i′ oi′ (B♯ i′ oi′) zero) i oi
+                  (ψ♯ (tw 1) o₁ B♯ i oi β zero) (proj₁ (Ωt (h₁ c′)))
+
+  b-keeps₁ : (β : Tr⁺ lvl1) → Σ (Pos lvl1) λ q → Σ (Br lvl1 q → Tr zero) λ cv
+    → ψ♯ (tw 1) o₁ B♯ lvl1 ok1 β b ≡ Ω⁺ q (λ z → body♯ lvl1 ok1 β (cv z))
+  b-keeps₁ β = _ , _ , refl
+
+  b-keeps₂ : (β : Tr⁺ lvl2) → Σ (Pos lvl2) λ q → Σ (Br lvl2 q → Tr zero) λ cv
+    → ψ♯ (tw 1) o₁ B♯ lvl2 ok2 β b ≡ Ω⁺ q (λ z → body♯ lvl2 ok2 β (cv z))
+  b-keeps₂ β = _ , _ , refl
+
+  -- (S2) 分支里的结点格: 槽位在孩子 c′ 里 (Ωt (h₁ c′) 的顶结点), 目标 i 来自另一个孩子.
+  --      目标 lvl1: c′ = 1 保留 (槽位层 0 < 1), c′ = 2 走链 (槽位层 1 ≮ 1).
+  x1-keep : IsJust (kp♯ (h₁ n1) (proj₂ o₁ n1) pS lvl1 ok1)
+  x1-keep = tt
+
+  x1-chain : kp♯ (h₁ n2) (proj₂ o₁ n2) pS lvl1 ok1 ≡ nothing
+  x1-chain = chain-forced (h₁ n2) (proj₂ o₁ n2) pS lvl1 ok1 (≼-refl lvl1)
+
+  --      目标 lvl2 (两边都不在地板 zero 上): c′ = 2 保留 (槽位层 1 < 2), c′ = 3 走链 (槽位层 2 ≮ 2).
+  x2-keep : Σ _ λ K → kp♯ (h₁ n2) (proj₂ o₁ n2) pS lvl2 ok2 ≡ just K
+  x2-keep = keep-forced (h₁ n2) (proj₂ o₁ n2) pS lvl2 ok2 (tt , ≼-refl lvl1)
+
+  x2-chain : kp♯ (h₁ n3) (proj₂ o₁ n3) pS lvl2 ok2 ≡ nothing
+  x2-chain = chain-forced (h₁ n3) (proj₂ o₁ n3) pS lvl2 ok2 (≼-refl lvl2)
+
+  -- 一般形式: 同一个绑定子之下, 孩子 suc c 的顶结点对目标 i 保留当且仅当 h₁ c ≺ᴸ i.
+  x-keep : ∀ c i oi → h₁ c ≺ᴸ i → Σ _ λ K → kp♯ (h₁ (suc c)) (proj₂ o₁ (suc c)) pS i oi ≡ just K
+  x-keep c i oi lt = keep-forced (h₁ (suc c)) (proj₂ o₁ (suc c)) pS i oi lt
+
+  x-chain : ∀ c i oi → i ≼ᴸ h₁ c → kp♯ (h₁ (suc c)) (proj₂ o₁ (suc c)) pS i oi ≡ nothing
+  x-chain c i oi le = chain-forced (h₁ (suc c)) (proj₂ o₁ (suc c)) pS i oi le
+
+-- 构造性一侧 (仓库 YiRWFold; D1Fold 的这两行逐字相同, 见 W1CellD1).
+-- (C1) 嵌入行: Ω 形状层号, 目标经指定孩子 e, 嵌入在孩子 c: 不进孩子 c, 逐字回退 (对一切 e, c, 目标, 底).
+emb-fallback : ∀ (B : Base (tw 1)) {j} (e : Tr zero) (v : j ≤ h₁ e) (β : Tr⁺ j) x c y ε
+  → ψ (tw 1) o₁ B j (inc e v) β (up x c y ε)
+  ≡ ψ (tw 1) o₁ B j (inc e v) β x ⊞ ψ (h₁ c) (proj₂ o₁ c) (B₀ (h₁ c)) zero (z≤ (h₁ c)) (Ωt zero) y
+emb-fallback B e v β x c y ε = refl
+
+-- (C2) 结点行 (K6): 孩子侧槽位 (c , t), 目标经指定孩子 e: 恒为 nothing, 不看 c 与 e.
+k6-bare : ∀ {j} (c e : Tr zero) (t : Pos⁼ (h₁ c)) (v : j ≤ h₁ e) → kp (tw 1) o₁ (inj₂ (c , t)) (inc e v) ≡ nothing
+k6-bare c e t v = refl
+
+-- (C3) 同一格上 b 的顶结点 (下标侧) 构造性地也保留 (目标取孩子 2 里的第 1 层).
+b-top-keep : IsJust (kp (tw 1) o₁ top {lvl1} (inc n2 (inc tt self)))
+b-top-keep = tt
+
+-- (C4) 同一格的整体形状 (仓库 YiRWFold): b 朝 "孩子 e 里的层 j" 折, 顶结点保留后, 每个分支逐字是 β ⊞ ψ₀(Ωt (h₁ c′)).
+--      实例: e = 2, j = lvl1. (ψ♯ 一侧的分支是 body♯: 进孩子 c′ 再朝 j 折.)
+b-fallback : (B : Base (tw 1)) (β : Tr⁺ lvl1) → Σ (Pos lvl1) λ q → Σ (Br lvl1 q → Tr zero) λ cv
+  → ψ (tw 1) o₁ B lvl1 (inc n2 (inc tt self)) β b
+  ≡ Ω⁺ q (λ z → β ⊞ ψ (h₁ (cv z)) (proj₂ o₁ (cv z)) (B₀ (h₁ (cv z))) zero (z≤ (h₁ (cv z))) (Ωt zero) (proj₁ (Ωt (h₁ (cv z)))))
+b-fallback B β = _ , _ , refl
+
+-- 结点型的跨孩子格 (读回层号的下标层落在被约束的孩子里).
+-- L₃ = h₂ b = tw 1 ⊕ ↑ (tw 1) b 是 Ω 形状 (下标层 zero), 孩子 c 是 "Ω + Ω_c" 层:
+--   hc₃ c = tw 1 ⊕ (zero ⊕ ↑ (h₁ c) (Ωt (h₁ c))); c = suc c″ 时它是 Ω 形状, 下标层是 h₁ c″ (经 tw 1 的孩子 suc c″).
+L₃ : L
+L₃ = tw 1 ⊕ ↑ (tw 1) b
+
+oL₃ : Ok L₃
+oL₃ = proj₂ (Ok-tw 2) b
+
+hc₃ : Tr zero → L
+hc₃ c = tw 1 ⊕ (zero ⊕ ↑ (h₁ c) (proj₁ (Ωt (h₁ c))))
+
+L₃-shape : L₃ ≡ nd (sΩ zero) hc₃
+L₃-shape = refl
+
+top′ : ∀ {k} {h : Tr k → L} → Pos (nd (sΩ k) h)
+top′ = inj₁ (inj₁ tt)
+
+idx-suc : (c : Tr zero) → at (hc₃ (suc c)) top′ ≡ h₁ c      -- 孩子 suc c 的下标层
+idx-suc c = refl
+
+-- 目标 j 在 tw 1 的孩子 e 里 (v : j ≤ h₁ e), 提到 hc₃ c 上是一致路径.
+tgt₃ : ∀ {j} (c e : Tr zero) → j ≤ h₁ e → j ≤ hc₃ c
+tgt₃ c e v = inc e v ∙ lift (tw 1) (zero ⊕ ↑ (h₁ c) (proj₁ (Ωt (h₁ c))))
+
+-- (C5) 构造性判定: 对一切孩子 suc c, 一切 e 与目标, 顶结点 (下标侧槽位) 经 K9 推成 tw 1 的孩子侧槽位, 落进裸 K6, 走链.
+n-bare : ∀ {j} (c e : Tr zero) (v : j ≤ h₁ e) → kp (hc₃ (suc c)) (proj₂ oL₃ (suc c)) top′ (tgt₃ (suc c) e v) ≡ nothing
+n-bare c e v = refl
+
+module CellN (lem : LEM) where
+  open Sharp lem
+  open Cell lem
+
+  -- (S3) ψ♯ 朝非零层 lvl1 折 Ωt L₃ (底族通道里的 "ψ_i(Ω_{Ω+Ω_Ω})"): 顶结点保留, 分支是进孩子 c′ (一致路径, 不是嵌入行的难处).
+  l3-keeps : (β : Tr⁺ lvl1) → Σ (Pos lvl1) λ q → Σ (Br lvl1 q → Tr zero) λ cv
+    → ψ♯ L₃ oL₃ B♯ lvl1 ok1 β (proj₁ (Ωt L₃))
+    ≡ Ω⁺ q (λ z → ψ♯ (hc₃ (cv z)) (proj₂ oL₃ (cv z)) (λ i oi → ψ♯ L₃ oL₃ B♯ i oi (B♯ i oi) zero) lvl1 ok1
+                     (ψ♯ L₃ oL₃ B♯ lvl1 ok1 β zero) (proj₁ (Ωt (hc₃ (cv z)))))
+  l3-keeps β = _ , _ , refl
+
+  l3-keeps₂ : (β : Tr⁺ lvl2) → Σ (Pos lvl2) λ q → Σ (Br lvl2 q → Tr zero) λ cv
+    → ψ♯ L₃ oL₃ B♯ lvl2 ok2 β (proj₁ (Ωt L₃))
+    ≡ Ω⁺ q (λ z → ψ♯ (hc₃ (cv z)) (proj₂ oL₃ (cv z)) (λ i oi → ψ♯ L₃ oL₃ B♯ i oi (B♯ i oi) zero) lvl2 ok2
+                     (ψ♯ L₃ oL₃ B♯ lvl2 ok2 β zero) (proj₁ (Ωt (hc₃ (cv z)))))
+  l3-keeps₂ β = _ , _ , refl
+
+  -- (S4) 分支里顶结点的判定: 槽位层是 h₁ c (在被约束的孩子 suc c 里), 目标来自别处. 同一个绑定子之下两种答案都有.
+  n-keep : ∀ c i oi → h₁ c ≺ᴸ i → Σ _ λ K → kp♯ (hc₃ (suc c)) (proj₂ oL₃ (suc c)) top′ i oi ≡ just K
+  n-keep c i oi lt = keep-forced (hc₃ (suc c)) (proj₂ oL₃ (suc c)) top′ i oi lt
+
+  n-chain : ∀ c i oi → i ≼ᴸ h₁ c → kp♯ (hc₃ (suc c)) (proj₂ oL₃ (suc c)) top′ i oi ≡ nothing
+  n-chain c i oi le = chain-forced (hc₃ (suc c)) (proj₂ oL₃ (suc c)) top′ i oi le
+
+  n2-keep : Σ _ λ K → kp♯ (hc₃ n2) (proj₂ oL₃ n2) top′ lvl2 ok2 ≡ just K      -- 槽位层 1 < 目标 2: ψ♯ 保留
+  n2-keep = n-keep n1 lvl2 ok2 (tt , ≼-refl lvl1)
+
+  n3-chain : kp♯ (hc₃ n3) (proj₂ oL₃ n3) top′ lvl2 ok2 ≡ nothing              -- 槽位层 2 ≮ 目标 2: ψ♯ 走链
+  n3-chain = n-chain n2 lvl2 ok2 (≼-refl lvl2)
+
+-- 重编号之后的字面路径: 目标是第 r 层时, 把分支变量 c 换成 r + c, 目标层到孩子 r + c 有字面路径 (对 c 递归).
+reb : (r c : Tr zero) → h₁ r ⊑ h₁ (r + c)
+reb r zero      = self
+reb r (suc c)   = inc tt (reb r c)
+reb r (lim f a) = inc zero (reb r (f zero))
+
+-- 重编号后的孩子 r + suc c 里, 顶结点 (槽位层 h₁ (r + c)) 对目标 h₁ r (字面路径 reb) 两边都走链, 对一切 c (样本: 只核了顶结点).
+reb-kp : (r c : Tr zero) → kp (h₁ (r + suc c)) (proj₂ o₁ (r + suc c)) pS (wk (reb r (suc c))) ≡ nothing
+reb-kp r c = refl
+
+module Reb (lem : LEM) where
+  open Sharp lem
+  open Cell lem
+
+  reb-kp♯ : (r c : Tr zero) → kp♯ (h₁ (r + suc c)) (proj₂ o₁ (r + suc c)) pS (h₁ r) (proj₂ o₁ r) ≡ nothing
+  reb-kp♯ r c = chain-forced (h₁ (r + suc c)) (proj₂ o₁ (r + suc c)) pS (h₁ r) (proj₂ o₁ r)
+                  (path→≼ (h₁ (r + c)) (proj₂ o₁ (r + c)) (reb r c))

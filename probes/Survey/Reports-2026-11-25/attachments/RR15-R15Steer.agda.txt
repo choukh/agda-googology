@@ -1,0 +1,107 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- R15 (第十五次独立审查的实验文件). "保留结点的分支下标是变量" 这一类 (台账 V611 的第二类), 在塔型层号的规范 Ω 树上不需要比较孩子:
+-- 把约束变量 d 换成 c′ + d (c′ 是目标所在的孩子), 目标层 j 对一切 d 都字面地在孩子 c′ + d 里 (R15Mono.steerPath),
+-- 于是朝 j 折 "尾段层号 N′ = nd (sΩ (tw n)) (d ↦ h (c′ + d))" 的规范 Ω 树, 走的是现行 W4 折叠里带证据的一致路径行.
+-- 对一切塔高 n, 一切目标孩子 c′, 一切目标层 j (有限或无穷), 一切分支下标 d. 折叠就是 W4Fold.ψ, 没有改.
+-- 不说明: 值; 任意树 (非规范 Ω 树) 的情形; 读回层号里的 Ω 形结点 (那里没有证 h c ≤ h (c + d)).
+module R15Steer where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import W5Loc using (loc)
+open import R15Mono
+
+module Steer (n : ℕ) (c′ : Tr (tw n)) where
+  -- 塔第 n+1 项与它的证书.
+  N : L
+  N = tw (suc n)
+  oN : Ok N
+  oN = Ok-tw (suc n)
+
+  -- 尾段: 孩子族换成 d ↦ h (c′ + d). 证书的每个分量都取自塔的证书.
+  h′ : Tr (tw n) → L
+  h′ d = hN n (c′ + d)
+  N′ : L
+  N′ = nd (sΩ (tw n)) h′
+  oN′ : Ok N′
+  oN′ = (Ok-tw n , λ d → lift (tw n) (↑ (tw n) (c′ + d))) , λ d → proj₂ oN (c′ + d)
+
+  top : Pos N′
+  top = inj₁ (inj₁ tt)
+
+  -- 孩子 c′ 里的层 j 一致地低于 N′ 的一切孩子.
+  ws : ∀ {j} → j ≤ hN n c′ → (d : Tr (tw n)) → j ≤ h′ d
+  ws v d = steerPath n c′ v d
+
+  -- 第 0 个孩子上就是原来的路径.
+  ws-zero : ∀ {j} (v : j ≤ hN n c′) → ws v zero ≡ v
+  ws-zero v = refl
+
+  -- 保留判定与原层号上 "下标侧槽位, 目标经指定孩子 c′" 那一行 (带证据的一行) 逐字相同.
+  steer-kp : ∀ {j} (v : j ≤ hN n c′)
+           → kp N′ oN′ top (inu (ws v)) ≡ kp N oN (inj₁ (inj₁ tt)) (inc c′ v)
+  steer-kp v = refl
+
+  -- 每个分支 d: 逐字是 "在孩子 c′ + d 里, 沿字面路径, 把它的 Ω 树朝 j 折". 不回退, 不定位, 不比较.
+  steer-branch : (S : Base N′) {j : L} (v : j ≤ hN n c′) (β : Tr⁺ j) (d : Tr (tw n))
+    → ψ N′ oN′ S j (inu (ws v)) β (proj₁ (upz {s = sΩ (tw n)} {h = h′} d (Ωt (h′ d))))
+    ≡ ψ (h′ d) (proj₂ oN (c′ + d)) (λ i u → S i (inc d u)) j (steerPath n c′ v d) β (proj₁ (Ωt (h′ d)))
+  steer-branch S v β d = refl
+
+  -- 整个结点: 判定用原层号上的那一行, 分支与回灌都是孩子里的折叠.
+  steer-node : (S : Base N′) {j : L} (v : j ≤ hN n c′) (β : Tr⁺ j)
+    → ψ N′ oN′ S j (inu (ws v)) β (proj₁ (Ωt N′))
+    ≡ node⁺ (kp N oN (inj₁ (inj₁ tt)) (inc c′ v))
+        (λ d → ψ (h′ d) (proj₂ oN (c′ + d)) (λ i u → S i (inc d u)) j (steerPath n c′ v d) β (proj₁ (Ωt (h′ d))))
+        (λ d → proj₁ (ψ (h′ d) (proj₂ oN (c′ + d)) (λ i u → S i (inc d u)) (tw n)
+                        (self ∙ lift (tw n) (↑ (tw n) (c′ + d))) (S (tw n) (ink self)) (proj₁ (Ωt (h′ d)))))
+  steer-node S v β = refl
+
+------------------------------------------------------------------------
+-- 实例一 (塔第 1 项, 无穷的私有层). t 是 ω 的树; 目标是孩子 t 的层号本身 (第 ω 层), 分支下标 1 对应孩子 t + 1.
+sn : ℕ → Tr zero
+sn zero    = zero
+sn (suc m) = suc (sn m)
+
+t : Tr zero
+t = lim sn (λ m → ◃s)
+
+h₁ : Tr zero → L
+h₁ = hN 0
+
+-- 候选的定位器在孩子 t + 1 里找不到第 ω 层 (它只认有限层), 所以候选在这里回退.
+w5-miss : loc (h₁ t) (h₁ (suc t)) ≡ nothing
+w5-miss = refl
+
+-- 换参数给出的字面路径.
+steer-hit : steerPath 0 t self (suc zero) ≡ inc tt self
+steer-hit = refl
+
+module T1 = Steer 0 t
+
+-- 朝第 ω 层, 分支 1: 在孩子 t + 1 (第 ω+1 层) 里把 Ω_{ω+1} 朝第 ω 层折.
+inst₁ : (S : Base T1.N′) (β : Tr⁺ (h₁ t))
+  → ψ T1.N′ T1.oN′ S (h₁ t) (inu (T1.ws self)) β (proj₁ (upz {s = sΩ zero} {h = T1.h′} (suc zero) (Ωt (h₁ (suc t)))))
+  ≡ ψ (h₁ (suc t)) (proj₂ T1.oN (suc t)) (λ i u → S i (inc (suc zero) u)) (h₁ t) (inc tt self) β (proj₁ (Ωt (h₁ (suc t))))
+inst₁ S β = refl
+
+------------------------------------------------------------------------
+-- 实例二 (塔第 2 项, 孩子下标含 Ω 共尾元). c′ = Ω_Ω 的树; 目标是孩子 c′ 的层号本身; 分支下标取 c′.
+cΩ : Tr (tw 1)
+cΩ = proj₁ (Ωt (tw 1))
+
+module T2 = Steer 1 cΩ
+
+inst₂ : (S : Base T2.N′) (β : Tr⁺ (hN 1 cΩ))
+  → ψ T2.N′ T2.oN′ S (hN 1 cΩ) (inu (T2.ws self)) β (proj₁ (upz {s = sΩ (tw 1)} {h = T2.h′} cΩ (Ωt (T2.h′ cΩ))))
+  ≡ ψ (T2.h′ cΩ) (proj₂ T2.oN (cΩ + cΩ)) (λ i u → S i (inc cΩ u)) (hN 1 cΩ) (steerPath 1 cΩ self cΩ) β (proj₁ (Ωt (T2.h′ cΩ)))
+inst₂ S β = T2.steer-branch S self β cΩ

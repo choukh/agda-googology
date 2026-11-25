@@ -1,0 +1,58 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module YiPFCheck where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import OCF.Lean.YiRWBlock hiding (D)
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (Base; B₀)
+open import OCF.Lean.YiTBRow using (Rb; ψ)
+open import OCF.Lean.YiMTTab using (rbᶻ)
+import OCF.Lean.YiPCDom as PC
+
+feedᴰ : ∀ ℓ (o : Ok ℓ) (r : Rb ℓ) (B : Base ℓ) (p : Pos ℓ)
+  → (Br ℓ p → Tr ℓ) → Br ℓ p → Br ℓ p
+feedᴰ ℓ o r B p g c = fromBr ℓ p
+  (proj₁ (ψ ℓ o r B (at ℓ p) (posW ℓ p) (B (at ℓ p) (posW ℓ p)) (g c)))
+
+data D : (ℓ : L) → Tr ℓ → Set where
+  root : ∀ ℓ → D ℓ (proj₁ (Ωt ℓ))
+  below : ∀ {ℓ x y} → D ℓ y → ℓ ⊢ x ◃ y → D ℓ x
+  branch : ∀ {ℓ p g} → D ℓ (Ω p g) → ∀ c → D ℓ (g c)
+  child : ∀ {s h x c y e} → D (nd s h) (up x c y e) → D (h c) y
+  feed-out : ∀ ℓ (o : Ok ℓ) (r : Rb ℓ) (B : Base ℓ) (p : Pos ℓ) (g : Br ℓ p → Tr ℓ)
+    → D ℓ (Ω p g) → ∀ c → D (at ℓ p)
+        (proj₁ (ψ ℓ o r B (at ℓ p) (posW ℓ p) (B (at ℓ p) (posW ℓ p)) (g c)))
+
+zero-in : ∀ ℓ → D ℓ zero
+zero-in ℓ = below (root ℓ) (proj₂ (Ωt ℓ))
+
+idx-in : ∀ n → D zero (PC.idx n)
+idx-in zero = zero-in zero
+idx-in (suc n) = feed-out (tw 1) (Ok-tw 1) (rbᶻ (tw 1)) (B₀ (tw 1))
+  (inj₁ (inj₁ tt)) PC.G (root (tw 1)) (PC.idx n)
+
+pre-in : ∀ {x} → PC.Pre x → D zero x
+pre-in (n , PC.⊴r) = idx-in n
+pre-in (n , PC.⊴◃ d) = below (idx-in n) d
+
+p₂ : Pos (tw 2)
+p₂ = inj₁ (inj₁ tt)
+
+G₂ : Br (tw 2) p₂ → Tr (tw 2)
+G₂ c = proj₁ (upz c (Ωt (tw 1 ⊕ ↑ (tw 1) c)))
+
+idx₂ : ℕ → Tr (tw 1)
+idx₂ = iter (feedᴰ (tw 2) (Ok-tw 2) (rbᶻ (tw 2)) (B₀ (tw 2)) p₂ G₂) zero
+
+idx₂-in : ∀ n → D (tw 1) (idx₂ n)
+idx₂-in zero = zero-in (tw 1)
+idx₂-in (suc n) = feed-out (tw 2) (Ok-tw 2) (rbᶻ (tw 2)) (B₀ (tw 2)) p₂ G₂
+  (root (tw 2)) (idx₂ n)
+
+all-in : ∀ ℓ (x : Tr ℓ) → D ℓ x
+all-in ℓ x = below
+  (child {s = sS} {h = λ _ → ℓ} {x = zero} {c = tt} {y = suc x}
+    {e = z◃ x ◃s} (branch (root (nd sS (λ _ → ℓ))) x)) ◃s

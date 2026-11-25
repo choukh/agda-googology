@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B17RefTransform where
+open import Data.Nat using (ℕ; zero; suc)
+open import W4Block using (iter)
+open import WVOne using (T₀)
+open import WVTwo using (T₁)
+import WSLevel as W
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≅→≼)
+import B12Omega3Ref as R
+import B12Omega3Cuts as U
+open import B12LimitSrc using (Lev₂)
+import B13Target as P
+import B15RefRaise as Q
+import B15RefAlgebra as A
+import B15OrbitAction as B
+import B16RefRaise as Old
+import B16OrbitTransform as O
+import B16OrbitAction as Prev
+import B17OrbitOperator as T
+import B17RefExp as E
+import B17RefGamma as G
+
+open Old using (Carry)
+Fits : T.Trans → T₁ → Set
+Fits h = Carry (T.app h)
+
+module One (F : O.Act → O.Act) (d : T₁) (rd : d L.≅ d) (old : Carry F d) where
+  height : ∀ y → Carry (O.height y F) (A.E₀ d y)
+  height L.zero = old
+  height (L.suc y) a u ru v {p} {q} pq = L.l≅ (λ n → L.≅-trans (one n pq)
+    (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (P.refl-left (L.≅-sym pq)) (P.co-pres (M.fit n)))) where
+    module M = Old.Sum (A.E₀ d y) (E.small rd (L.≅-refl⁰ y)) u ru
+    one : ∀ n → Q.Fit (iter (O.height y F) a n) (M.terms n)
+    one zero = v
+    one (suc n) = height y _ _ (M.regular n) (one n)
+  height (L.lim f) a u ru v pq = L.l≅ (λ n → height (f n) a u ru v pq)
+
+phi : ∀ F d → d L.≅ d → Fits F d → Fits (T.phi F) (A.E d W.Ω₁ᴸ)
+phi F d rd old a u ru v {p} {q} pq = L.lᵢ≅ L.z≅ λ x y r → L.≅-trans (M.height x a u ru v pq)
+  (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (P.refl-left (L.≅-sym pq)) (P.co-pres
+    (L.add-≅ {σ = λ t → t} {σ′ = λ t → t} ru (E.small rd (L.≅-trans r (L.≅-sym (L.tr⁻-≅ L.z≅ (L.≅-refl⁰ y))))))))
+  where module M = One (T.app F) d rd old
+
+convert : ∀ {F d d′} → Fits F d → d L.≅ d′ → Fits F d′
+convert {F = F} h e a u ru q d = L.≅-trans (h a u ru q d)
+  (L.add-≅ {σ = R.idσ} {σ′ = R.idσ} (P.refl-left (L.≅-sym d)) (P.co-pres
+    (L.add-≅ {σ = λ t → t} {σ′ = λ t → t} ru e)))
+
+rank : ∀ y F d → d L.≅ d → Fits F d → Fits (T.height₁ y T.phi F) (A.E d (G.kid 0 y))
+rank L.zero F d rd h = phi F d rd h
+rank (L.suc y) F d rd h a u ru v pq = L.l≅ (λ n → one n a u ru v pq) where
+  g = G.kid 0 y
+  rg = G.regular 0 (L.≅-refl⁰ y)
+  module M = Old.Sum g rg L.zero L.z≅
+  one : ∀ n → Fits (iter (T.height₁ y T.phi) F n) (A.E d (M.left n))
+  one zero = h
+  one (suc n) = convert {F = iter (T.height₁ y T.phi) F (suc n)} (rank y _ _ rd′ (one n))
+    (L.≅-trans (E.Shift.compose d (M.left n) _ rd′ rg) (E.wide rd (M.rotate n))) where
+    rd′ = E.wide rd (M.reg n)
+rank (L.lim f) F d rd h a u ru v pq = L.l≅ (λ n → rank (f n) F d rd h a u ru v pq)
+
+-- 固定级别的 Φ 只在右端加 Ω₁ 的 E 指数。
+left : ℕ → T₁
+left = iter (λ d → A.E d W.Ω₁ᴸ) W.Ω₁ᴸ
+reg-left : ∀ n → left n L.≅ left n
+reg-left zero = L.Ω-refl _
+reg-left (suc n) = E.wide (reg-left n) (L.Ω-refl _)
+
+static : ∀ n → Fits (iter T.phi T.raiseT n) (left n)
+static zero = Q.raise
+static (suc n) = phi _ _ (reg-left n) (static n)
+
+-- 第二个原孩子要求在变换空间按 y 迭代 Φ，再在零层槽上形成对角线。
+branch : T₀ → Lev₂
+branch y = O.f (T.app (T.height₁ y T.phi T.raiseT) O.base) L.zero
+branch-fit : ∀ {x y} → x L.≅ y → branch x L.≅ G.F 1 y
+branch-fit {x} d = L.≅-trans (rank x T.raiseT W.Ω₁ᴸ (L.Ω-refl _) Q.raise O.base L.zero L.z≅ (Q.arithmetic 0) L.z≅)
+  (U.left-unit R.idσ (P.co-pres (U.left-unit (λ t → t) (G.regular 1 d))))
+
+second : G.node 1 L.≅ L.ψ⁰ (L.limᵢ (L.suc L.zero) branch)
+second = L.ψ⁰-≅ (L.≅-trans (G.raw 1) (L.lᵢ≅ L.z≅ (λ x y d → L.≅-sym (branch-fit (L.≅-sym d)))))

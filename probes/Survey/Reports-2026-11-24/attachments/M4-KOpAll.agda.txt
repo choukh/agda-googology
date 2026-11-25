@@ -1,0 +1,8 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 入口: M4 迭代子保持 (OpStmt 加前提 Good). 判决与清单见 KOpMain 文首.
+module KOpAll where
+open import KOpBase
+open import KOpPow
+open import KOpMain
+open import KOpGood
+open import KOpMainW

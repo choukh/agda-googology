@@ -1,0 +1,50 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第二塔所收的含 Ω₁ 右尾的整族，在原 src 中有逐项及极限的双向值比较。
+module B20OldSource where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.BTBO using (module Ord-Ord; module BoundedTrich)
+module S = Ord-Ord
+module B = BoundedTrich
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼l; ≼-refl; ≼-trans; s≼s; +-mono; 1≼ψ⁰)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import WVOne using (read)
+open import W4Fold using (EBOᶜ)
+open import W4Block using (iter)
+import B12LimitSrc as A
+import B12EboRows as T
+open import B15RefSource using (one)
+import B18TowerEmb as E
+import B19RowSecond as Prev
+import B19RowSecondParent as Branch
+import B19OldSource as Seed
+import B20OldTail as Tail
+import B20OldSecond as End
+
+source-step : A.Src₂ → A.Src₂
+source-step p = p S.+ S.↑ B.zero (S.Ω one)
+module Src (a : A.Src₂) (p : A.Lev₂) (aligned : A.Aligned a p) where
+  term = iter source-step a
+  prefix = iter Tail.next p
+  terms : ∀ n → A.Aligned (term n) (prefix n)
+  terms zero = aligned
+  terms (suc n) = A.plus (terms n) Seed.omega-one
+  closed = S.ψ₀ (S.lim term)
+  exact : tr₀ closed ≈ᵛ L.ψ⁰ (Tail.block p)
+  exact = A.fold (A.lim term prefix terms)
+  strict-step : ∀ q → L.suc (L.ψ⁰ q) ≼ L.ψ⁰ (Tail.next q)
+  strict-step q = ≼l 0 (≼l 2 (+-mono (≼-refl _) (1≼ψ⁰ q)))
+  strict : ∀ n → L.suc (L.ψ⁰ (prefix n)) ≼ L.ψ⁰ (Tail.block p)
+  strict n = ≼l (suc n) (strict-step (prefix n))
+module Actual = Src Seed.src-prefix Prev.p Seed.prefix
+
+father : L.suc Branch.piece ≼ tr₀ Actual.closed
+father = ≼-trans (Actual.strict 1) (proj₂ Actual.exact)
+standard : tr₀ Actual.closed ≼ read (proj₁ (E.standard 2))
+standard = ≼-trans (proj₁ Actual.exact) End.standard
+tower : tr₀ Actual.closed ≼ T.child 2
+tower = ≼-trans (proj₁ Actual.exact) End.actual
+terminal : tr₀ Actual.closed ≼ read EBOᶜ
+terminal = ≼-trans (proj₁ Actual.exact) End.terminal

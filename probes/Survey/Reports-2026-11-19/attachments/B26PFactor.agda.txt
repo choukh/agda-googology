@@ -1,0 +1,84 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 真实终点等于独立标准塔极限，当且仅当每个固定 n 的单位反馈轨道有单塔界。
+module B26PFactor where
+
+open import Data.Nat.Base as N using (ℕ; zero; suc; _⊔_)
+open import Data.Nat.Properties using (m≤m⊔n; m≤n⊔m)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Data.Sum.Base using (_⊎_; inj₁; inj₂)
+open import Data.Empty using (⊥; ⊥-elim)
+open import WVOne using (T₀; 𝟏)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; s≼s; ≼l; l≼; ≼lim⁻; ≅→≼; +-mono)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRVLevel using (LEM)
+import B17ValueDich as Dich
+import B18Product as P
+import B18Reset as F
+import B18ResetCell as Cell
+import B19Coefficient as Product
+import B19IdealArithmetic as Ar
+import B20StandardInside as St
+import B21StandardShape as Shape
+import B22MovingIndex as E
+import B22TowerCut as Cut
+import B25DFirst as Small
+import B25Return as Mon
+import B26PActual as Run
+open Run using (Y; K)
+open import B26PSums using (child-in)
+
+import B12EboRows as Row
+open import B26PPart public using (inside; omega; omega-in; closed)
+open import B26PBounds public using (BoundAt; Bound; necessary; unit; all-units)
+
+sufficient : Bound → Y ≼ K
+sufficient h = ≼-trans {a = Y} {b = L.lim (λ n → F.product (suc n))} {c = K} (proj₁ Product.terminal)
+  (l≼ (λ n → ≼-trans {a = F.product (suc n)} {b = L.suc (F.product (suc n))} {c = K} (≼-suc (≼-refl _)) (all (suc n))))
+  where
+  all : ∀ n → L.suc (F.product n) ≼ K
+  all zero = ≼-trans (s≼s (≼l 1 (≼-refl 𝟏))) omega-in
+  all (suc n) = closed {F.product n} {F.fresh n} (all n) (all-units h n)
+
+exact : (Y ≈ᵛ K → Bound) × (Bound → Y ≈ᵛ K)
+exact = (λ eq → necessary (proj₁ eq)) , (λ h → sufficient h , Cut.terminal)
+
+Orbit : Set
+Orbit = Σ ℕ (λ n → ∀ m → Σ ℕ (λ j → L.suc (St.std m) ≼ Cell.At.fresh n j))
+
+orbit-strict : Orbit → L.suc K ≼ Y
+orbit-strict (n , h) = ≼-trans {a = L.suc K} {b = L.suc (F.fresh (suc n))} {c = Y} (s≼s (l≼ below))
+  (≼-trans {a = L.suc (F.fresh (suc n))} {b = L.suc (Row.child (suc n))} {c = Y} (s≼s (F.lower (suc n))) (child-in (suc n)))
+  where
+  below : ∀ m → St.std m ≼ F.fresh (suc n)
+  below m with h m
+  ... | j , d = ≼-trans {a = St.std m} {b = L.suc (St.std m)} {c = F.fresh (suc n)} (≼-suc (≼-refl _))
+    (≼-trans {a = L.suc (St.std m)} {b = Cell.At.fresh n j} {c = F.fresh (suc n)} d (Cell.At.into n j))
+
+gap : Orbit → K P.· K ≼ Y
+gap h = Run.bound {K} (orbit-strict h)
+
+module Classical (lem : LEM) where
+  open Dich.Classical lem using (compare)
+  local : ∀ n → (BoundAt n → ⊥) → ∀ m → Σ ℕ (λ j → L.suc (St.std m) ≼ Cell.At.fresh n j)
+  local n no m with lem (Σ ℕ (λ j → L.suc (St.std m) ≼ Cell.At.fresh n j))
+  ... | inj₁ h = h
+  ... | inj₂ bad = ⊥-elim (no (m , cap)) where
+    cap : ∀ j → Cell.At.fresh n j ≼ St.std m
+    cap j with compare (Cell.At.fresh n j) (St.std m)
+    ... | inj₁ g = g
+    ... | inj₂ g = ⊥-elim (bad (j , g))
+
+  alternative : (Y ≈ᵛ K) ⊎ Orbit
+  alternative with lem Orbit
+  ... | inj₁ h = inj₂ h
+  ... | inj₂ bad = inj₁ (proj₂ exact cap) where
+    cap : Bound
+    cap n with lem (BoundAt n)
+    ... | inj₁ g = g
+    ... | inj₂ no = ⊥-elim (bad (n , local n no))
+
+  strict-orbit : L.suc K ≼ Y → Orbit
+  strict-orbit p with alternative
+  ... | inj₁ (q , _) = ⊥-elim (s≼-irrefl K (≼-trans p q))
+  ... | inj₂ h = h

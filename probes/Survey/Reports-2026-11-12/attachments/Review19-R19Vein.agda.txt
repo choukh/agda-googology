@@ -1,0 +1,73 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- R19 scratch (有限测试): 限制到有限后继层号 (BTBO 覆盖的范围) 时各行的形状, 主线 ψ 与 YiFG 的 Φ.
+module R19Vein where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Bool using (Bool; true; false)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (ψ; B₀)
+open import OCF.Lean.YiFGFold using (Φ)
+
+l1 l2 l3 : L
+l1 = nd sS (λ _ → zero)
+l2 = nd sS (λ _ → l1)
+l3 = nd sS (λ _ → l2)
+
+ok3 : Ok l3
+ok3 = tt , λ _ → tt , λ _ → tt , λ _ → tt
+
+el : ∀ {ℓ} → Tr ℓ → ℕ → Tr ℓ
+el (lim f a) n = f n
+el x         n = x
+
+slot : ∀ {ℓ} → Tr ℓ → Maybe (Pos ℓ)
+slot (Ω p g) = just p
+slot _       = nothing
+
+isLim : ∀ {ℓ} → Tr ℓ → Bool
+isLim (lim f a) = true
+isLim _         = false
+
+w2 : l2 ≤ l3
+w2 = inc tt self
+w1 : l1 ≤ l3
+w1 = inc tt (inc tt self)
+
+-- 第 3 层里, 槽位在第 1 层的结点
+p1 : Pos l3
+p1 = inj₂ (tt , inj₂ (inj₂ (tt , inj₁ tt)))
+x1 : Tr l3
+x1 = Ω p1 (λ c → zero)
+
+β2 = Ωt l2
+β1 = Ωt l1
+
+-- 主线
+m-zero : ψ l3 ok3 (B₀ l3) l2 w2 β2 zero ≡ β2
+m-zero = refl
+m-suc1 : el (proj₁ (ψ l3 ok3 (B₀ l3) l2 w2 β2 (suc zero))) 1 ≡ proj₁ β2 + proj₁ β2
+m-suc1 = refl
+m-low : slot (proj₁ (ψ l3 ok3 (B₀ l3) l2 w2 β2 x1)) ≡ just (inj₂ (tt , inj₁ tt))
+m-low = refl
+m-same : isLim (proj₁ (ψ l3 ok3 (B₀ l3) l2 w2 β2 (proj₁ (Ωt l3)))) ≡ true
+m-same = refl
+m-high : isLim (proj₁ (ψ l3 ok3 (B₀ l3) l1 w1 β1 (proj₁ (Ωt l3)))) ≡ true
+m-high = refl
+
+-- YiFG
+f-zero : proj₁ (Φ l3 ok3 (B₀ l3) l2 w2 β2 zero) ≡ suc (proj₁ β2)
+f-zero = refl
+f-low : slot (proj₁ (Φ l3 ok3 (B₀ l3) l2 w2 β2 x1)) ≡ just (inj₂ (tt , inj₁ tt))
+f-low = refl
+f-same : isLim (proj₁ (Φ l3 ok3 (B₀ l3) l2 w2 β2 (proj₁ (Ωt l3)))) ≡ true
+f-same = refl
+f-high : isLim (proj₁ (Φ l3 ok3 (B₀ l3) l1 w1 β1 (proj₁ (Ωt l3)))) ≡ true
+f-high = refl

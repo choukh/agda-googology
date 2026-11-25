@@ -1,0 +1,54 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 四位原节点的每一孩子都是保留一个零层槽的回灌链。外层编号每增加一次，固定 Ω₁ 为 E 的左参数。
+module B17RefGamma where
+open import Data.Nat using (ℕ; zero; suc)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≅→≼; ≼l; l≼)
+open import WVOne using (T₀; 𝟏)
+open import WVTwo using (T₁)
+import WSLevel as W
+open import B12LimitSrc using (Lev₂)
+import B12Omega3Ref as R
+import B13Target as P
+import B14RefAllRows as N
+import B14RefGain as G
+import B15RefAlgebra as A
+import B16RefFive as Old
+import B17RefExp as E
+
+kid : ℕ → T₀ → T₁
+kid zero = A.E₀ W.Ω₁ᴸ
+kid (suc m) x = A.E W.Ω₁ᴸ (kid m x)
+
+regular : ∀ n {x y} → x L.≅ y → kid n x L.≅ kid n y
+regular zero d = Old.regular d
+regular (suc n) d = E.wide (L.Ω-refl _) (regular n d)
+
+gamma : ∀ m → W.γ (suc m) L.≅ L.limᵢ L.zero (kid m)
+gamma zero = L.lᵢ≅ L.z≅ λ x y d → Old.small (L.tr⁻-≅ L.z≅ d)
+gamma (suc m) = E.psi (gamma m)
+
+F : ℕ → T₀ → Lev₂
+F n x = P.co₁ (kid n x)
+fold : ℕ → T₀ → T₀
+fold n x = L.ψ⁰ (F n x)
+chain = λ n → S.iter (fold n) 𝟏
+
+raw : ∀ n → P.co₁ (P.back (W.γ (suc n))) L.≅ L.limᵢ (L.suc L.zero) (F n)
+raw n = L.≅-trans (P.co-pres (L.tr⁻-≅ (L.≅ᴵ-refl _) (gamma n))) (N.lifted 0 (kid n) (regular n))
+
+node = λ n → R.at G.inner n
+full : ∀ n → node n L.≅ L.lim (λ j → chain n (suc j))
+full n = L.≅-trans (L.ψ⁰-≅ (raw n)) (L.l≅ (λ j → L.ψ⁰-≅ (P.co-pres (regular n (at j))))) where
+  row = λ x → L.ψ (L.suc L.zero) R.idσ (F n x)
+  at : ∀ j → S.iter row 𝟏 j L.≅ chain n j
+  at = L.iter-R L._≅_ {G = row} {G′ = fold n} (λ d → L.≅-sym (L.ψ⁰≅ψ {p = L.suc L.zero} {σ = R.idσ}
+    (L.≅-sym (P.co-pres (regular n d))))) (L.s≅ L.z≅)
+
+four : ∀ {v : T₀} → (∀ n j → chain n (suc j) ≼ v) → G.inner ≼ v
+four h = l≼ λ n → ≼-trans (≅→≼ (full n)) (l≼ (h n))
+
+necessary : ∀ {v : T₀} → G.inner ≼ v → ∀ n j → chain n (suc j) ≼ v
+necessary h n j = ≼-trans (≼l j (≼-refl _)) (≼-trans (≅→≼ (L.≅-sym (full n))) (≼-trans (R.at-below G.inner n) h))

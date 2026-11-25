@@ -1,0 +1,90 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 旧轨道中实际的标准 Ω₂ 节点，每个正反馈同时给出变动的一级系数和严格零层下界。
+module B19OldFeedback where
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (Σ; proj₁; proj₂; _,_; _×_)
+open import Data.Unit using (tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (p₂; g₂)
+open import WKGen using (Ω₁t)
+open import YiLAB7Orbit using (lvl1; lvl2)
+open import WKShape using (lvl3)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans)
+import OCF.Align.NoCumsum as N
+open import WSLevel using (Ω₁ᴸ; γ; lvl-γS)
+import WKGen as G
+import B12Terminal as T
+import B12ActualSlots as A
+import B14Floor as F
+import B14PathHeight as P
+import B14Tower as W
+import B14Btbo as Bt
+import B17OrbitTower as Sem
+import B17OrbitVector as V
+import B17RefVector as Vec
+import B17RefTower as Rt
+import B17SlotLevel as C
+import B19OldTerms as Term
+import B19OldSlots as Q
+import B19OldNodes as Node
+import B19OldFinite as Exact
+open T.Run
+
+strict : ∀ {a} {x y z : Tr a} → A._⊴_ x y → a ⊢ y ◃ z → a ⊢ x ◃ z
+strict (inj₁ refl) q = q
+strict (inj₂ p) q = ◃t p q
+
+record Site (f : Q.Frame lvl3) : Set where
+  constructor site
+  field
+    fr : Q.Frame lvl2
+    room : Q.Inside f fr
+    hard : lvl1 ⊢ Ω₁t ◃ proj₁ (bs (Q.state fr) lvl1 (inc tt self))
+open Site public
+
+seek : (f : Q.Frame lvl3) → ℕ → Site f
+seek (Q.frame r .(inu _) (P.each {ws = ws} ps) cv) n = site (D.run-at n) (proj₂ (D.child n)) (proof n)
+  where
+  module D = Q.Positive sS (λ _ → lvl1) r ws ps cv
+  open D.F using (module K)
+  proof : ∀ n → lvl1 ⊢ Ω₁t ◃ proj₁ (K.S n lvl1 (inc tt self))
+  proof zero = strict (K.sub-covered lvl1 (inc tt self)) (inf K.K (bs K.r₀) lvl1 (inc tt self) _)
+  proof (suc n) = strict (K.cover n lvl1 (inc tt self)) (inf K.K (K.S n) lvl1 (inc tt self) _)
+
+module At (r : Q.Frame lvl2) (bound : lvl1 ⊢ Ω₁t ◃ proj₁ (bs (Q.state r) lvl1 (inc tt self))) where
+  open T.Run (Q.state r) renaming (ok to o; bs to basis; β to v; oneβ to is-one; oneB to begins; omegaB to base-bound)
+  c = basis lvl1 (inc tt self)
+  module AtNode = Node.At (C.real (F.num 2)) o basis p₂ g₂
+  module Actual = Term.Terms c bound Sem.semK (V.initial c bound)
+  module Coeff = Vec.Generate Ω₁ᴸ (L.Ω-refl _) Sem.semK Rt.sem
+  module Lower = G.Main o basis (Q.path r) v (inj₂ bound) is-one (begins _)
+  slot = λ j → AtNode.F (AtNode.point (AtNode.index j))
+  child = λ j → read (proj₁ (AtNode.child (Q.path r) v (AtNode.point (AtNode.index j))))
+  indexed : ∀ j → V.Index (slot j) (Actual.Canon.vec j)
+  indexed zero = V.initial (slot 0) (◃t bound ◃e)
+  indexed (suc j) = Actual.term j
+  fitted : ∀ j → Vec.Fits (Actual.Canon.vec j) (Coeff.terms j)
+  fitted = Coeff.fit-term
+  below : ∀ j → L.suc (child j) ≼ Q.value r
+  below = AtNode.outline (Q.all r) v
+  -- 原 ψ₀(Ω₂) 的第 j 项位于同一索引序列的第 j+1 个零观测。
+  scalar : ∀ j → L.ψ⁰ (γ j) ≼ child (suc j)
+  scalar zero = ≼-trans Lower.lvl0-low (Lower.G-ge (Q.path r) (Lower.zs 1))
+  scalar (suc j) = ≼-trans (lvl-γS j) (≼-trans (Lower.W4-low j) (Lower.G-ge (Q.path r) (Lower.zs (suc (suc j)))))
+
+module Orbit (k m : ℕ) (seed : N.γ k ≼ read (W.Actual.idx m)) (floor : ∀ n → L.natᶜ n ≼ L.forget (N.L k))
+             (clock : ℕ → ℕ) (n : ℕ) where
+  module Point = Exact.Orbit k m seed floor 3 clock
+  s = seek Point.Here.slot n
+  module Here = At (fr s) (hard s)
+  result : ∀ j → L.suc (Here.child j) ≼ read (W.Actual.idx (suc (suc m)))
+  result j = ≼-trans {a = L.suc (Here.child j)} {b = Q.value (fr s)} {c = read (W.Actual.idx (suc (suc m)))}
+    (Here.below j) (≼-trans {a = Q.value (fr s)} {b = Q.value Point.Here.slot} {c = read (W.Actual.idx (suc (suc m)))} (Q.bound (room s)) Point.at-four)
+
+module First = Orbit 1 2 Bt.first-in Exact.low

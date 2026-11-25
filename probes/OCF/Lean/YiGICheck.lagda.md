@@ -1,0 +1,103 @@
+# 主线实例的生成律与规范前提检查
+
+> 验收文件（读记号）。编译定理：六条生成律；任意有限读回层的 `rd-fin`、`leaf-fin`；零层的 `lift-start`、`low-zero` 与首个折叠推导的出口证书。
+> 来源：`leaf-fin` 照 `YiHCFam.Mβ` 改槽位余尾；`low-zero` 直接调用 `YiLTFold.Qu`；出口例调用 `YiHCCheck.of⁰`、`ex-of⁰`。
+> 这些是全称有限层定理及指定规范实例，不是三条全域保持律或全塔出口条件的可满足性证明。
+```agda
+{-# OPTIONS --safe --without-K --lossy-unification #-}
+module OCF.Lean.YiGICheck where
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (_×_; _,_; proj₁)
+open import Data.List using ([]; _∷_; _++_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+import OCF.Lean.YiRWBlock as B
+import OCF.Lean.YiRWOps as O
+import OCF.Lean.YiRWPath as P
+import OCF.Lean.YiRWFold as F
+import OCF.Lean.YiHCRel as H
+import OCF.Lean.YiKVRel as K
+import OCF.Lean.YiLTFold as HF
+import OCF.Lean.YiTBFam as TF
+open import OCF.Lean.YiAbsGIface using (module Laws)
+open import OCF.Align.EboLeanView using (cof0; ne)
+open import OCF.Lean.YiHCCheck using (of⁰; ex-of⁰)
+open import OCF.Lean.YiANFam using (cof-nat; pred-nat; cofΩ; fsTΩ)
+open import OCF.Lean.YiCLFam using (fn)
+import OCF.Align.EboLeanDef as E
+open import OCF.Lean.YiGIBlock
+open import OCF.Lean.YiGIInst
+import OCF.Lean.YiGIRel as GR
+open B hiding (R)
+
+rw-weak : ∀ ℓ {t x y} → GR.R ℓ t x → ℓ ⊢ x ◃ y → GR.R ℓ t y
+rw-weak zero = H.mw
+rw-weak (nd s h) = H.mw
+
+rd-fin : ∀ n → GR.Rd (fn n) (E.natT n)
+rd-fin zero = GR.c0 refl
+rd-fin (suc n) = GR.ca (inj₂ (cof-nat n , subst (GR.Rd (fn n)) (sym (pred-nat n)) (rd-fin n)))
+
+leaf-fin : ∀ n → GR.R (fn n) (E.Ωt (E.natT n)) (proj₁ (O.Ωt (fn n)))
+leaf-fin zero = startᴿ
+leaf-fin (suc n) = H.mΩ (cofΩ n) (rd-fin n)
+  (λ η c l → subst (λ s → GR.R (fn (suc n)) s (up zero tt (suc c) (O.z◃ c ◃s))) (sym (fsTΩ n η)) (H.mU H.mz (rw-weak (fn n) l ◃s)))
+
+lift-start : GR.R zero (E.natT 1) (proj₁ (O.Ωt zero))
+  → GR.Rd (↑ zero (proj₁ (O.Ωt zero))) (E.natT 1)
+lift-start _ = rd-fin 1
+
+low-zero : (b : Bsᵍ zero) (β : O.Tr⁺ zero) (t₀ : E.T) → Bdᵍ b P.self β t₀
+  → ∀ {a x} → GR.R zero a x
+  → GR.R zero (E.ψ [] (t₀ ++ a) ∷ []) (proj₁ (ψᵍ zero b zero P.self β x))
+low-zero (o , r , b) β t₀ (mb , _) m = HF.Qu o r b P.self β mb m
+
+raw-start : K.M⁰ (E.EBOψ 0) (proj₁ (ψᵍ zero (tt , tt , F.B₀ zero) zero P.self (O.Ωt zero) (proj₁ (O.Ωt zero))))
+raw-start = TF.Qu {t = []} tt tt (F.B₀ zero) P.self (O.Ωt zero) (K.m1 {t = E.natT 1} refl K.mz) {s = E.natT 1} (K.m1 {t = E.natT 1} refl K.mz)
+
+fold-start : GR.R zero (E.EBOψ 0) (proj₁ (ψᵍ zero (tt , tt , F.B₀ zero) zero P.self (O.Ωt zero) (proj₁ (O.Ωt zero))))
+fold-start = of⁰ raw-start
+
+fold-start-ex : H.Exᴴ fold-start
+fold-start-ex = ex-of⁰ raw-start
+
+open Laws gradedᵍ domsᵍ using (Zero; Succ; Lim; Weak; Node; Emb)
+
+mzᵍ : ∀ ℓ {x} → GR.R ℓ [] x
+mzᵍ zero = H.mz
+mzᵍ (nd s h) = H.mz
+
+zeroᵍ : Zero
+zeroᵍ {ℓ} {t = []} e = mzᵍ ℓ
+zeroᵍ {t = t ∷ ts} e = ⊥-elim (cof0 (t ∷ ts) ne e)
+
+succᵍ : Succ
+succᵍ {ℓ = zero} e r = H.m1 e r
+succᵍ {ℓ = nd s h} e r = H.m1 e r
+
+limᵍ : Lim
+limᵍ {ℓ = zero} e h = H.mL e h
+limᵍ {ℓ = nd s h} e r = H.mL e r
+
+weakᵍ : Weak
+weakᵍ {ℓ} = rw-weak ℓ
+
+mutual
+  low-to : ∀ ℓ p {η c} → GR.Low ℓ p η c → GR.R (at ℓ p) η (slTᵍ ℓ p c)
+  low-to (nd s h) (inj₂ (c , t)) m = low-to⁼ (h c) t m
+  low-to (nd (sΩ k) h) (inj₁ t) m = low-to⁼ k t m
+
+  low-to⁼ : ∀ a t {η c} → GR.Low⁼ a t η c → GR.R (proj₁ (sl⁼ a t)) η (slT⁼ᵍ a t c)
+  low-to⁼ a (inj₁ _) m = m
+  low-to⁼ a (inj₂ p) m = low-to a p m
+
+nodeᵍ : Node
+nodeᵍ {ℓ = zero} ()
+nodeᵍ {ℓ = nd s h} p g e nu r = H.mΩ e nu (λ η c l → r η c (low-to (nd s h) p l))
+
+embᵍ : Emb
+embᵍ {ℓ = zero} ()
+embᵍ {ℓ = nd s h} c (y , e) m ch = H.mU m ch
+```

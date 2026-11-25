@@ -1,0 +1,60 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B18SharpGain where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Unit using (tt)
+import OCF.Lean.YiRWBlock as R
+import OCF.Lean.YiRWOps as V
+import OCF.Lean.YiNMSharp as I
+open import OCF.Lean.YiRVLevel using (LEM)
+open import OCF.Lean.YiKVRel using (readRW) renaming (◃→≼ to rw≤)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; l≼; ≼l; s≼s; ≼-trans; ≼-refl; ≅→≼; +-mono)
+open import B14SharpTwo using (r₂; o₂; i-add)
+import B17SharpThree as Original
+import B18SharpMacro
+import B18SharpEffect
+import B18SharpHead
+import B18SharpClosed
+
+_≤z_ : R.Tr R.zero → R.Tr R.zero → Set
+a ≤z b = readRW a ≼ readRW b
+
+add : ∀ {x x′ y y′} → x ≤z x′ → y ≤z y′ → (x V.+ y) ≤z (x′ V.+ y′)
+add {x} {x′} {y} {y′} e d = ≼-trans (≅→≼ (i-add x y)) (≼-trans (+-mono e d) (≅→≼ (L.≅-sym (i-add x′ y′))))
+
+next : (a b : V.Tr⁺ R.zero) → proj₁ a ≤z proj₁ b → proj₁ (V.next⁺ a) ≤z proj₁ (V.next⁺ b)
+next a b e = l≼ (λ n → ≼l n (each n))
+  where
+  each : ∀ n → V.iter (proj₁ a V.+_) (proj₁ a) n ≤z V.iter (proj₁ b V.+_) (proj₁ b) n
+  each zero = e
+  each (suc n) = add e (each n)
+
+module Gain (lem : LEM) where
+  open I.Sharp lem
+  open B18SharpMacro.Macro lem using (u)
+  open B18SharpEffect.Effects lem
+  open B18SharpHead.Head lem using (seed; diagonal)
+  open B18SharpClosed.Closed lem using (form)
+  open Original.Three lem using (item)
+  open B18SharpClosed using (strict)
+
+  carries : ∀ D (a : V.Tr⁺ R.zero) → R.zero R.⊢ proj₁ (V.next⁺ a) ◃ proj₁ (Action.run seed D R.zero tt a)
+  carries D a = R.◃t (mono♯ r₂ o₂ D R.zero tt a R.◃w) (mono♯ r₂ o₂ D R.zero tt a (R.◃l zero))
+
+  module At (a : V.Tr⁺ R.zero) where
+    module S = Orbit seed
+    y = S.vals B♯ R.zero tt a
+    old = V.cum (item a) 1
+
+    group : old ≤z proj₁ (V.next⁺ (V.next⁺ (y 1)))
+    group = ≼l 1 (add {x = proj₁ (V.next⁺ a)} {x′ = proj₁ (V.next⁺ (y 1))} {y = proj₁ (V.next⁺ (y 1))} {y′ = proj₁ (V.next⁺ (y 1))} (next a (y 1) (rw≤ (Action.gain seed B♯ R.zero tt a))) (≼-refl _))
+
+    ahead : L.suc (readRW old) ≼ readRW (proj₁ (y 3))
+    ahead = ≼-trans (s≼s (≼-trans group (next (V.next⁺ (y 1)) (y 2) (rw≤ (carries (S.states B♯ 1) (y 1))))))
+      (strict (carries (S.states B♯ 2) (y 2)))
+
+    strict-prefix : L.suc (readRW old) ≼ readRW (proj₁ (form B♯ a))
+    strict-prefix = ≼-trans ahead (≼l 0 (≼l 1 (≼l 2 (≼-refl _))))
+

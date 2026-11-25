@@ -1,0 +1,48 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 同一一级 Ω 按任意保留环境的读取路径抬升作用；其足够大的真实指数也可使用这条律。
+module B16OrbitEnv where
+open import Data.Nat using (zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Data.Unit using (tt)
+open import W4Block hiding (Sh; D)
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import WKGen using (Ω₁t)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl)
+import B13OrbitFeed as O
+import B15OrbitModel as M
+import B15OrbitAction as A
+import B16OrbitNode as N
+
+count : A.Act → WVOne.T₀ → A.Act
+count a y = A.action (A.hp a y) (A.he a y) (A.mixed a (≼-refl y)) (A.ih a y) (A.congr a (L.≅-refl⁰ y))
+
+module Frame {X : Cx lvl2} (m : Mor M.X₁ X) (ret : N.Left m) where
+  module Node = N.Frame m ret
+  module Outer = M.At m
+  D = Node.D
+  φ = chMT D tt
+  module Inner = M.At (φ ⊙ m)
+
+  enter-law : ∀ K a → Outer.Models K a → Inner.Models (enterO φ K) a
+  enter-law K a law t p e d rr S v i = Inner.packed (Outer.seed out) (Outer.inner out)
+    where out = law (π φ t) p e d rr (λ j u → S j (σ φ u)) v (Outer.packed (Inner.seed i) (Inner.inner i))
+
+  module Rule (K : Op X) (a : A.Act) (law : Outer.Models K a) where
+    module Ev = Inner.Frame (chTD D tt) a
+    Q = λ z → op (E ok₂ D (O.g₁ z) K) (Einf ok₂ D (O.g₁ z) K)
+    branch : ∀ y z → y ≼ read (suc z) → Outer.Models (Q z) (count a y)
+    branch y z h t p e d rr S v i = Outer.packed (Inner.seed out) (Inner.inner out)
+      where
+      S₀ : St (cons (down (fr D) tt) X)
+      S₀ j u = S j (proj₂ u)
+      out = Ev.eval (suc z) h (enterO φ K) (enter-law K a law) (σ φ t) p e d rr S₀ v (Inner.packed (Outer.seed i) (Outer.inner i))
+    module Pack = Node.Rule Q (count a) branch
+    Fold = λ u → op (E ok₂ D u K) (Einf ok₂ D u K)
+    exact : Outer.Models (Fold Ω₁t) (A.raise a)
+    exact = Pack.aggregate
+    covers : ∀ b → lvl1 ⊢ Ω₁t ◃ b → Outer.Models (Fold b) (A.raise a)
+    covers b h = Outer.lift-law {Q = Fold Ω₁t} {Q′ = Fold b} (λ S i t v → Emono ok₂ D K S i t v h) exact

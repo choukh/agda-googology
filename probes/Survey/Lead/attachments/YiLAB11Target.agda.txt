@@ -1,0 +1,90 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module YiLAB11Target where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Product using (_,_; proj₁)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼l; l≼; ≼-refl; ≼-trans)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import WVOne using (T₀; read)
+open import WVTwo using (T₁)
+open import WSShadow using (ES; Ω̂; _⨾_; sh; lC; sE; LeE-refl)
+open import WVThree using (Nx)
+import WSLevel as W
+open import B8PairLevel using (eΩ₂; eY; Ld-Y; Lx-Y)
+open import B9InnerLevel2 using (L2-sem)
+open import W4Block hiding (Sh)
+open import W4Ops
+open import W4Path
+open import W4Fold
+open import WKGen using (node-ge)
+open import WKShape using (Ψ₃; lvl3; ok₃; p₃; g₃; s₃)
+open import YiLAB7Orbit using (lvl2)
+open import B9InnerOuter using (st1; v₁; w2)
+import YiLAB10Src as T
+import YiLAB11Orbit as O
+
+body : ℕ → T₁ → L.Ordᶜ (L.suc (L.suc L.zero))
+body m x = T.ll m L.+ L.up L.zero x
+q : ℕ → T₁ → T₁
+q m x = L.ψ L.zero (λ r → r) (body m x)
+y : ℕ → ℕ → T₁
+y m = S.iter (q m) W.Ω₁ᴸ
+
+track : ES → ℕ → ES
+track e zero = Ω̂
+track e (suc n) = sh (e ⨾ track e n)
+prefix : ℕ → ES
+prefix zero = eΩ₂
+prefix (suc m) = lC (λ n → prefix m ⨾ track (prefix m) n)
+
+next-shape : (m : ℕ) → L.ψ⁰ (T.ll (suc m)) ≡ L.lim (λ n → L.ψ⁰ (body m (y m n)))
+next-shape m = refl
+q-shape : (m : ℕ) → q (suc m) L.zero ≡ L.lim (λ n → q m (y m n))
+q-shape m = refl
+
+record Stage (m : ℕ) : Set where
+  field
+    lower : (n : ℕ) → W.Ld (y m (suc n)) (sE (prefix m ⨾ track (prefix m) n) Nx)
+    sem : ∀ {D d} → W.Ld D d → (a c : T₀) → L.ψ⁰ (T.ll m) ≼ a → L.ψ⁰ (T.ll m) ≼ c → L.ψ⁰ (body m D) ≼ d a c
+
+-- 首站实例。已经有工作的两条归纳在这里接上。
+track0 : (n : ℕ) → track eΩ₂ n ≡ eY n
+track0 zero = refl
+track0 (suc n) = cong (λ e → sh (eΩ₂ ⨾ e)) (track0 n)
+
+stage0 : Stage 0
+Stage.lower stage0 n rewrite track0 n = Ld-Y n
+Stage.sem stage0 = L2-sem
+
+-- 每次改换前缀时，取上一步整条链的描述。首个新前缀给无前提实例。
+base-d : (m : ℕ) → Stage m → W.Ld (q (suc m) L.zero) (sE (prefix (suc m)) Nx)
+base-d m R = W.Ll (Stage.lower R)
+
+base-x : (m : ℕ) → ((n : ℕ) → W.Lx (y m (suc n)) (track (prefix m) (suc n))) →
+         W.Lx (q (suc m) L.zero) (sh (prefix (suc m)))
+base-x m h = W.Ew (W.El h) (LeE-refl _)
+
+first-new-x : W.Lx (q 1 L.zero) (sh (prefix 1))
+first-new-x = base-x 0 h
+  where
+  h : (n : ℕ) → W.Lx (y 0 (suc n)) (track eΩ₂ (suc n))
+  h n rewrite track0 n = Lx-Y (suc n)
+
+state : ℕ → Base lvl2
+state m = itS O.G m st1
+value : ℕ → Tr⁺ zero
+value m = itV O.G m st1 zero w2 v₁
+
+outer : (m : ℕ) → read (proj₁ (value (suc m))) ≼ read Ψ₃
+outer m = ≼-trans (≼l 0 (≼l m (≼-refl _)))
+            (node-ge (kp lvl3 ok₃ p₃ (z≤ lvl3)) (λ z → ψ lvl3 ok₃ (B₀ lvl3) zero (z≤ lvl3) (Ωt zero) (g₃ z)) s₃ 2)
+
+Goal = L.ψ⁰ (L.lim T.ll) ≼ read Ψ₃
+collect : ((m : ℕ) → L.ψ⁰ (T.ll m) ≼ read Ψ₃) → Goal
+collect = l≼
+src-exit : Goal → tr₀ (S.ψ₀ (S.lim T.ss)) ≼ read Ψ₃
+src-exit = ≼-trans (proj₁ T.omega)

@@ -1,0 +1,83 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B22RowVariable where
+open import Data.Nat.Base using (zero; suc)
+open import Data.Product using (proj₁; proj₂; _,_)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import W4Block
+open import W4Ops
+open import W4Fold
+open import WVOne using (read)
+open import WVTwo using (T₁)
+open import WKShape using (lvl3)
+open import YiLAB7Orbit using (lvl1; lvl2; ok₂)
+open import YiLAB11Orbit using (push)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_)
+import B11OuterCore as C
+import B12LimitSrc as Src
+import B12Omega3Ref as Ref
+import B12Omega3Cuts as U
+import B12ActualSlots as Cov
+import B12Terminal as Tm
+import B12Update as S
+import B13Target as P
+import B13OrbitFeed as O
+import B14RefFixed as K
+import B15OrbitAction as A
+import B15OrbitModel as M
+import B15RefRaise as A0
+import B17OrbitTower as T
+import B17OrbitModel as Model
+import B18RefDelta as D
+import B18RefDepth as H
+import B18RefModel as Cal
+import B18RefRows as Rows
+import B18OrbitRows as Old
+import B19RowPair as Pair
+import B21RowTheta as Th
+import B21RowDynamics as Ix
+import B22RowPrefix as B
+import B22RowLive as Live
+open B.Label
+
+module Append {p : Src.Lev₂} (l : B.Label p) (x : T₁) (rx : x L.≅ x) (w : Th.Vec) (fw : Th.Fits w x) where
+  a = T.run (w 0 0) A.base
+  q′ = A.f a (q l)
+  scalar : q′ L.≅ (q l L.+ P.co₁ x)
+  scalar = L.≅-trans (fw 0 0 A.base L.zero L.z≅ (A0.arithmetic 0) (rq l))
+    (L.add-≅ {σ = Ref.idσ} {σ′ = Ref.idσ} (rq l) (P.co-pres (U.left-unit (λ t → t) rx)))
+  link′ : Pair.PairFit (B.project q′) (p L.+ P.co₁ x)
+  link′ = L.≅-trans (L.ψ⁰-≅ scalar) (proj₁ (B.Step.same l x rx)) ,
+          L.≅-trans (K.pres scalar) (proj₂ (B.Step.same l x rx))
+  upper : K.collapse q′ L.≅ D.δ x (K.collapse (q l))
+  upper = L.≅-trans (K.pres scalar) (D.increment (rq l) rx (K.pres (rq l)))
+  v′ = λ d → T.run (T.run (w (suc d) 0) (H.grad d)) (v l d)
+  module Mean = Th.Program.Meaning (v l) (K.collapse (q l)) (K.pres (rq l)) (fits l)
+  fit′ : Th.Fits v′ (K.collapse q′)
+  fit′ d = Cal.conv (Rows.meaning d) (Mean.project d (w (suc d)) x rx (fw (suc d))) (L.≅-sym upper)
+  next : B.Label (p L.+ P.co₁ x)
+  next = B.label (L.add-≅ {σ = Ref.idσ} {σ′ = Ref.idσ} (rp l) (P.co-pres rx)) q′ (P.refl-left scalar)
+    link′ (A.s a (e l)) (A.rows a (rows l)) v′ fit′
+
+  module At (r : Tm.Run lvl3) (cv : Cov.Covered r) (R : Base lvl2) (h : Live.Present l R)
+            (clock : Tr⁺ lvl1) (clock-index : Ix.Index clock w) where
+    module Run = Old.At r cv
+    open Run.I using (K₁)
+    s₁ = push R
+    Q = op (E ok₂ O.D₁ (proj₁ clock) K₁) (Einf ok₂ O.D₁ (proj₁ clock) K₁)
+    state = M.pull (stepS Q s₁)
+    law : Model.Both Old.m Q a
+    law = clock-index 0 Old.m (λ _ → refl) 0 idM (λ _ → refl) K₁ A.base Run.OldRow.K₁-law
+    pack : ∀ b → L.ψ⁰ (q l) ≼ read (proj₁ b) → Old.Out.Pack (q l) (e l) s₁ b
+    pack b hb = Old.Out.packed (S.seeds hb (Live.lower h C.zpath) (Live.struct h)) (Live.lower h (proj₂ Old.Out.ip))
+    module Emit (t : zero ≤ lvl2) (b : Tr⁺ zero) (hb : L.ψ⁰ (q l) ≼ read (proj₁ b)) where
+      result = proj₁ law (σ O.m₁ t) (q l) (e l) (rows l) (rq l) s₁ b (pack b hb)
+      lower = S.value-bound (Old.Out.seed result)
+    index : Ix.Index (state lvl1 C.slot) v′
+    index d = clock-index (suc d) Old.m (λ _ → refl) 0 idM (λ _ → refl) K₁ (H.grad d) (Run.Laws.model d)
+      s₁ (v l d) cov (Live.index h d) (R lvl1 C.slot) (Live.index h d)
+      where cov = C.st (Live.struct h)
+    present : Live.Present next state
+    present = Live.present (λ t → Emit.lower t (R zero t) (Live.lower h t))
+      (S.structure (Old.Out.seed (Emit.result C.zpath (R zero C.zpath) (Live.lower h C.zpath)))) index
+

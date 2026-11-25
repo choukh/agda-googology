@@ -1,0 +1,75 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+module B25FFirst where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Product using (proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_)
+open import W4Block
+open import W4Fold using (ψ)
+open import W4Path using (Ok-tw)
+open import W4Ops using (Ωt; next⁺)
+open import WVOne using (read; T₀; h₁)
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-trans; ≅→≼)
+open import OCF.Align.BTBOFullEmb using (PEmb; Ψ-emb)
+open import OCF.Align.BTBOFullV1 using (V1; PW₁; PW₂; PW₃)
+open import OCF.Align.BTBOFullV3 using (bkᴵ)
+open import OCF.Align.BTBOFullLv using (SV; SV-L)
+open import OCF.Align.BTBOFull using (St-bk; tr₀-bk)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.YiMonoEmb using (PEmb-∘)
+open import OCF.Lean.YiBtboV2 using (V2′)
+import OCF.Align.NoCumsum as N
+import B12Terminal as T
+import B12ActualSlots as A
+import B14Btbo as B
+import B14Tower as W
+import B14PathHeight as P
+import B16IndexBase as I
+import B16IndexEmbed as E
+open import B16IndexBlocks using (module WT)
+import B20StandardInside as St
+import B22MovingIndex as Moving
+import B22ResetBridge as Reset
+import B22SourceSlots as Src
+import B22TowerDiagonal as D
+open T.Run
+
+pack : ∀ (z : Tr zero) {y : T₀} (hy : L.HS y) → WT.Eb (I.S.ordᴰ (I.cp z)) y →
+  ∀ a → SV a → L.forget a ≼ read z → PEmb a (L.toLevel y hy)
+pack z hy e a va low = PEmb-∘ (PW₃ (V1 va)) (PEmb-∘
+  (PW₁ (V2′ (bkᴵ a) (I.cp z) (St-bk va) (I.increasing z)
+    (≼-trans {a = tr₀ (bkᴵ a)} {b = L.forget a} {c = tr₀ (I.cp z)} (≅→≼ (tr₀-bk a))
+      (≼-trans {a = L.forget a} {b = read z} {c = tr₀ (I.cp z)} low (≅→≼ (L.≅-sym (I.same z)))))))
+  (PW₂ hy e))
+
+out : ∀ z → (r : T.Run (h₁ z)) → zero ≤ h₁ z → Tr zero
+out z r w = proj₁ (ψ (h₁ z) (ok r) (bs r) zero w (β r) (proj₁ (Ωt (h₁ z))))
+
+head : ∀ (f : ℕ → Tr zero) d (r : T.Run (h₁ (lim f d))) {w} → A.Covered r → P.All w →
+  ∀ a → SV a → L.forget a ≼ read (f 0) → PEmb a (I.κ (out (lim f d) r w) L.[ 0 ]ᴵ)
+head f d r hr (P.each {ws = ws} normals) a va low =
+  pack (f 0) (I.hs (M.X 0))
+    (proj₁ (E.embed (f 0) (M.Child.sub 0) (M.Child.covered hr 0) (normals 0))) a va low
+  where module M = E.Limit f r ws
+
+module First (r : T.Run (tw 1)) (eq : ok r ≡ Ok-tw 1) (cv : A.Covered r) where
+  module At = W.At r
+  module Idx = Moving.First r eq cv
+  emb : ∀ a → SV a → L.forget a ≼ read (proj₁ At.slot) → PEmb a (I.κ (At.idx 2) L.[ 0 ]ᴵ)
+  emb = head _ _ (At.chain (At.idx 1)) (W.chain-covered r cv (At.idx 1)) (Idx.checked (At.idx 1))
+
+module Selected (m : ℕ) where
+  module X = Reset.Level.Standard m
+  module Ph = First X.first X.checked X.cv
+  target = B.α (I.κ (Src.Level.Std.z m) L.[ 0 ]ᴵ)
+  opaque
+    named : ∀ a → SV a → L.forget a ≼ St.std (suc m) → B.α a ≼ target
+    named a va h = Ψ-emb (Ph.emb a va
+      (≼-trans {a = L.forget a} {b = St.std (suc m)} {c = read (proj₁ Ph.At.slot)} h (X.high (ink self))))
+    diag : ∀ k → N.γ k ≼ St.std (suc m) → N.γ (suc k) ≼ target
+    diag k h = named (N.L k) (SV-L k)
+      (≼-trans {a = L.forget (N.L k)} {b = N.γ k} {c = St.std (suc m)} (≅→≼ (L.forget-toLevel (N.γ k) (N.cert k))) h)
+
+initial : N.γ 2 ≼ Selected.target 0
+initial = Selected.diag 0 1 D.first

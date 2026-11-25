@@ -1,0 +1,141 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- M5 第 3, 4 段: tw 1 上的运行 (状态覆盖, 底不低于 1) 的链与装配. 唯一的模块参数是 LOWERᵂ.
+-- 链上只带值序 γ n ≼ read (c m); 每步: PW₃ V1 → PW₁ V2′ → PW₂ V3w → 层号码 ≅ᴵ, 再 Ψ-emb 与 LOWERᵂ.
+-- 结论: N.BTBOᴵ ≼ read EBOᶜ, 经 BTBO≈ 得已发表的 BTBO ≼ read EBOᶜ. 条件定理 (条件: LOWERᵂ).
+open import KLowIface using (LOWERᵂ)
+module KAsTw (lower : LOWERᵂ) where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≅→≼; ≼l; l≼)
+open import OCF.BTBO using (module Ord-Ord)
+open import OCF.Align.BTBOValBase using (tr₀)
+open import OCF.Align.BTBOFullV3 using (bkᴵ)
+open import OCF.Align.BTBOFullV1 using (V1; PW₁; PW₂; PW₃)
+open import OCF.Align.BTBOFullLv using (SV-L)
+open import OCF.Align.BTBOFull using (St-bk; bk≅γ; BTBO≈)
+open import OCF.Align.BTBOFullEmb using (PEmb; Ψ-emb)
+open import OCF.Align.YiMonoEmb using (PEmb-∘)
+import OCF.Align.NoCumsum as NC
+open import OCF.Lean.YiBtboV2 using (V2′)
+open import KLowIface using (Cov)
+open import KMir using (IsS→IsN; code; IsS-tw1)
+open import WVOne using (read; 𝟏; h₁; cumL)
+open import WVTwo using (◃→≼)
+open import KAsBase
+open import KAsV3 using (V3w)
+
+o₁ : Ok (tw 1)
+o₁ = Ok-tw 1
+
+-- tw 1 上一个运行: 状态 S 覆盖, 底 β 不低于 1, 路径 z≤ (tw 1).
+module Run (S : Base (tw 1)) (cv : Cov S) (β : Tr⁺ zero) (h1 : 𝟏 ≼ read (proj₁ β)) where
+
+  kh : (z : Tr zero) → zero ≤ h₁ z
+  kh z = proj₂ (proj₁ o₁) z
+
+  Sz : (z : Tr zero) → Base (h₁ z)
+  Sz z i u = S i (inc z u)
+
+  cvz : (z : Tr zero) → Cov (Sz z)
+  cvz z j u = cv j (inc z u)
+
+  β′ : Tr⁺ zero
+  β′ = S zero (ink self)
+
+  h1′ : 𝟏 ≼ read (proj₁ β′)
+  h1′ = one≼ β′ (cv zero (ink self))
+
+  -- 链的一步: 在层号 h₁ z 上, 以状态的第 0 层条目为底折 Ωt.
+  stepRun : Tr zero → Tr⁺ zero
+  stepRun z = ψ (h₁ z) (proj₂ o₁ z) (Sz z) zero (self ∙ kh z) β′ (proj₁ (Ωt (h₁ z)))
+
+  sN : Tr zero → Tr zero
+  sN z = proj₁ (stepRun z)
+
+  c : ℕ → Tr zero
+  c = iter sN zero
+
+  -- 输出的第 n 个累加项: 在层号 h₁ (c n) 上, 以 β 为底折 Ωt.
+  Grun : Tr zero → Tr⁺ zero
+  Grun z = ψ (h₁ z) (proj₂ o₁ z) (Sz z) zero (z≤ (h₁ z)) β (proj₁ (Ωt (h₁ z)))
+
+  out : Tr⁺ zero
+  out = ψ (tw 1) o₁ S zero (z≤ (tw 1)) β (proj₁ (Ωt (tw 1)))
+
+  out-cum : ∀ n → read (proj₁ (Grun (c n))) ≼ read (proj₁ out)
+  out-cum n = cumL (λ k → proj₁ (Grun (c k))) _ n
+
+  κ : Tr zero → LV.Ordᴵ
+  κ z = code (h₁ z) (IsS→IsN (h₁ z) (IsS-tw1 z)) (proj₂ o₁ z)
+
+  lowStep : ∀ z → LV.ψ⁰ (LV.Ω (κ z)) ≼ read (sN z)
+  lowStep z = lower (h₁ z) (IsS-tw1 z) (proj₂ o₁ z) (Sz z) (cvz z) β′ h1′ (self ∙ kh z)
+
+  lowG : ∀ z → LV.ψ⁰ (LV.Ω (κ z)) ≼ read (proj₁ (Grun z))
+  lowG z = lower (h₁ z) (IsS-tw1 z) (proj₂ o₁ z) (Sz z) (cvz z) β h1 (z≤ (h₁ z))
+
+  -- 一步的前驱嵌入: 参照层号 L n 嵌进下一个链点的层号码.
+  embL : ∀ n m → NC.γ n ≼ read (c m) → PEmb (NC.L n) (κ (c (suc m)))
+  embL n m w =
+    PEmb-≅
+      (PEmb-∘ (PW₃ (V1 (SV-L n)))
+      (PEmb-∘ (PW₁ (V2′ (bkᴵ (NC.L n)) (cp η) (St-bk (SV-L n)) (Mono-cp η) w′))
+              (PW₂ (HS-read (c (suc m)))
+                   (proj₁ (V3w η (proj₂ o₁ η) (Sz η) (cvz η) β′ (self ∙ kh η) (Ulift (↑ zero η)))))))
+      (LV.≅ᴵ-sym (code-read (c (suc m)) (IsS→IsN (h₁ (c (suc m))) (IsS-tw1 (c (suc m)))) (proj₂ o₁ (c (suc m))) (HS-read (c (suc m)))))
+    where
+    η : Tr zero
+    η = c m
+    w′ : tr₀ (bkᴵ (NC.L n)) ≼ tr₀ (cp η)
+    w′ = ≼-trans (≅→≼ (bk≅γ n)) (≼-trans w (≅→≼ (LV.≅-sym (cp≅ η))))
+
+  chainV : ∀ n → Σ ℕ (λ m → NC.γ n ≼ read (c m))
+  chainV zero    = 1 , ≼-trans h1′ (◃→≼ (baseLt (h₁ zero) (proj₂ o₁ zero) (Sz zero) zero (self ∙ kh zero) β′))
+  chainV (suc n) = suc (suc m) , ≼-trans (Ψ-emb (embL n m w)) (lowStep (c (suc m)))
+    where
+    m = proj₁ (chainV n)
+    w = proj₂ (chainV n)
+
+  btboRun : NC.BTBOᴵ ≼ read (proj₁ out)
+  btboRun = l≼ (λ n → ≼-trans (Ψ-emb (embL n (proj₁ (chainV n)) (proj₂ (chainV n))))
+                       (≼-trans (lowG (c (suc (proj₁ (chainV n))))) (out-cum (suc (proj₁ (chainV n))))))
+
+------------------------------------------------------------------------
+-- EBOᶜ: Λ 的第 1 个累加项就是 tw 1 上的一个这样的运行.
+x₀Λ : Tr Λ
+x₀Λ = proj₁ (upz {s = sL} {h = tw} 0 (Ωt (tw 0)))
+
+SΛ : Base (tw 1)
+SΛ i u = ψ Λ Ok-Λ (B₀ Λ) i (inc 1 u) (Ωt i) x₀Λ
+
+βΛ : Tr⁺ zero
+βΛ = ψ Λ Ok-Λ (B₀ Λ) zero (z≤ Λ) (Ωt zero) x₀Λ
+
+z◃x₀ : Λ ⊢ zero ◃ x₀Λ
+z◃x₀ = ◃u zero 0 (proj₁ (Ωt (tw 0))) (proj₂ (Ωt (tw 0)))
+
+cvΛ : Cov SΛ
+cvΛ j u = inj₂ (mono Λ Ok-Λ (B₀ Λ) j (inc 1 u) (Ωt j) z◃x₀)
+
+h1Λ : 𝟏 ≼ read (proj₁ βΛ)
+h1Λ = ◃→≼ (mono Λ Ok-Λ (B₀ Λ) zero (z≤ Λ) (Ωt zero) z◃x₀)
+
+EBO-low : NC.BTBOᴵ ≼ read EBOᶜ
+EBO-low = ≼-trans (Run.btboRun SΛ cvΛ βΛ h1Λ) (≼l 1 (≼-refl (read (proj₁ (Run.out SΛ cvΛ βΛ h1Λ)))))
+
+src-EBO-low : tr₀ Ord-Ord.BTBO ≼ read EBOᶜ
+src-EBO-low = ≼-trans (proj₁ BTBO≈) EBO-low
+
+-- 塔第 1 项本身 (状态 B₀, 底 Ωt zero) 也是这样的运行.
+tw1-low : NC.BTBOᴵ ≼ read (twᶜ 1)
+tw1-low = Run.btboRun (B₀ (tw 1)) (λ j u → inj₁ refl) (Ωt zero) (≼-refl 𝟏)

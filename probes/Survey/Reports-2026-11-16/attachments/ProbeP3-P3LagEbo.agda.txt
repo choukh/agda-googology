@@ -1,0 +1,46 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 探针 P3: 滞后充分性在 EBO 参照上的出口 (验收型, 读记号; 仿 YiAbsGEbo.ebo-end).
+-- 记号只在这里出现: 参照系统取 refᴱ, 值前序取 YiAbsSimInst.𝕍.
+-- 结论: LagKeep 加地板 Floor 加 ψ₀(1) 那一行, 终点不低于 EBO 的参照树.
+module P3LagEbo where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.List.Base using ([]; _∷_; _++_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; trans; cong)
+
+import OCF.Align.EboLeanDef as E
+import OCF.Align.EboLeanTree as ET
+open import OCF.Lean.YiMonoExit using (toL)
+open import OCF.Lean.YiAbsSimInst using (𝕍; conv; toL-tree)
+open import OCF.Lean.YiAbsFrame
+open import OCF.Lean.YiAbsSim
+open import OCF.Lean.YiAbsGIface
+open import OCF.Lean.YiAbsGEbo using (refᴱ)
+open import P3LagSuff
+
+module EboLag {𝔹 : Block} {𝔽 : Fold 𝔹} {ℜ : Rows 𝔹 𝔽} (𝔾 : Graded 𝔹 𝔽 ℜ refᴱ 𝕍) (𝔻 : Doms 𝔹 𝔽)
+              (Lg : E.T → E.T → Set) where
+  open Laws 𝔾 𝔻
+  open Lag 𝔾 𝔻
+  open A Lg
+
+  module _ (lf : Leaf) (li : Lift) {𝔟 : Base} (𝔨 : Keel 𝔟)
+           (e0 : Keel.κ₀ 𝔨 ≡ E.natT 1)
+           (eK : ∀ n a → app (Keel.K₀ 𝔨 n) a ≡ E.ψ [] a ∷ []) where
+    open Keel 𝔨
+    open Tower♭ lf li 𝔨
+
+    kt≡ : ∀ n → kt n ≡ E.ΩTower n
+    kt≡ zero    = e0
+    kt≡ (suc n) = cong E.Ωt (kt≡ n)
+
+    row≡ : ∀ n → row n ≡ E.EBOψ (suc n)
+    row≡ n = trans (eK n (Ωr (kt n))) (cong (λ a → E.ψ [] (E.Ωt a) ∷ []) (kt≡ n))
+
+    ebo-end♭ : LagKeep → Floor → (Y : V) → toL (ET.tree (ET.hc-tower zero)) ≼ Y → (∀ n → v (twc n) ≼ Y)
+             → toL ET.EBO-tree′ ≼ Y
+    ebo-end♭ L F Y y0 up = l≼ go
+      where
+      go : ∀ k → toL (ET.tree (ET.hc-tower k)) ≼ Y
+      go zero    = y0
+      go (suc n) = ≼-trans (toL-tree (ET.hc-tower (suc n))) (row♭ L F Y up n (row≡ n) (conv (ET.hc-tower (suc n))))

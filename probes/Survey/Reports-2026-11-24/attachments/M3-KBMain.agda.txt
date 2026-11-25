@@ -1,0 +1,108 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- (B) 折叠保持: 对 Dom 的推导归纳, 逐规则一行. 模块参数: OpStmt (另一路), 以及三行没证出的确切陈述
+-- (AddR≅: 加法相容的 r≅ 行; BR≅: (B) 的 r≅ 行; BRu: (B) 的 ru 行, 路径不是 self 时). 其余各行与自身行都编译.
+module KBMain where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Product using (_,_; proj₁; proj₂)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as I
+open I using (Ordᴵ; Ordᶜ; Simᴵ; _<ᴵ_; _≅_; add; add-≅)
+open import KPow
+open import KMir
+open import KRel
+open import KIface
+open import KBBase
+open import KBAdd
+open import KBRows
+
+-- (B) 的 r≅ 行 (确切陈述). A′ 的层 k′ 与 A 的层 k 没有字面联系: 归纳假设要 Simᴵ k′ kP 与 Mirror k′ m.
+BR≅ : Set
+BR≅ = ∀ {m k k′} {A : Ordᶜ k} {A′ : Ordᶜ k′} {t : Tr m} → A ≅ A′ → Dom m A′ t → BFor m A′ t → BFor m A t
+
+-- 有 Sim 与镜像时这一行成立; 同层时即 br≅-same.
+br≅-sim : ∀ {m k k′} {A : Ordᶜ k} {A′ : Ordᶜ k′} {t : Tr m} → Simᴵ k′ k → (Mirror k m → Mirror k′ m)
+        → A ≅ A′ → BFor m A′ t → BFor m A t
+br≅-sim s mt e ih st o S w β P σ r mir pre =
+  r≅ (I.ψ-≅ (I.≅ᴵ-refl _) (add-≅ (reP pre) e)) (ih st o S w β P (λ q → σ (s q)) r (mt mir) pre)
+
+br≅-same : ∀ {m k} {A A′ : Ordᶜ k} {t : Tr m} → A ≅ A′ → BFor m A′ t → BFor m A t
+br≅-same = br≅-sim (λ q → q) (λ x → x)
+
+-- (B) 的 ru 行, 路径不是 self (确切陈述). 孩子的归纳假设要 Mirror k′ (h c), 规则 ru 不给.
+BRu : Set
+BRu = ∀ {s h k k′} {A A₀ : Ordᶜ k} {Y : Ordᶜ k′} {t₀ : Tr (nd s h)} {c : Ch s} {y : Tr (h c)}
+        {e : RCh (nd s h) c (chZ (nd s h) c) y}
+    → Dom (nd s h) A₀ t₀ → BFor (nd s h) A₀ t₀ → Dom (h c) Y y → BFor (h c) Y y
+    → (σ : Simᴵ k′ k) → A ≅ add A₀ σ Y → BForNS (nd s h) A (up t₀ c y e)
+
+-- 按路径分: self 走自身行, 其余走各行.
+splitB : ∀ {s h k} {A : Ordᶜ k} {t : Tr (nd s h)}
+       → ((st : IsS (nd s h)) (o : Ok (nd s h)) (S : Base (nd s h)) (β : Tr⁺ (nd s h)) {kP jc : Ordᴵ}
+          (P : Ordᶜ kP) (σ : Simᴵ k kP) (r : jc <ᴵ I.suc kP)
+          → Mirror k (nd s h) → Pre S β P r → Dom (nd s h) (ψ̂ r (add P σ A)) (proj₁ (ψ (nd s h) o S (nd s h) self β t)))
+       → BForNS (nd s h) A t → BFor (nd s h) A t
+splitB hs hn st o S self          β P σ r mir pre = hs st o S β P σ r mir pre
+splitB hs hn st o S w@(inc _ _)   β P σ r mir pre = hn st o S w tt β P σ r mir pre
+splitB hs hn st o S w@(inu _)     β P σ r mir pre = hn st o S w tt β P σ r mir pre
+splitB hs hn st o S w@(ink _)     β P σ r mir pre = hn st o S w tt β P σ r mir pre
+
+-- 路径不是 self 时折叠展开成各行的形式.
+convS : ∀ {s h j} (w : j ≤ nd s h) → NS w → ∀ {o S β t₀ k} {D : Ordᶜ k}
+      → Dom j D (proj₁ (next⁺ (ψ (nd s h) o S j w β t₀))) → Dom j D (proj₁ (ψ (nd s h) o S j w β (suc t₀)))
+convS (inc _ _) _ d = d
+convS (inu _)   _ d = d
+convS (ink _)   _ d = d
+
+convΩ : ∀ {s h j} (w : j ≤ nd s h) → NS w → ∀ {o S β p g k} {D : Ordᶜ k}
+      → Dom j D (proj₁ (node⁺ (kp (nd s h) o p w) (λ z → ψ (nd s h) o S j w β (g z))
+                   (λ z → fromBr (nd s h) p (proj₁ (ψ (nd s h) o S (at (nd s h) p) (posW (nd s h) p) (S (at (nd s h) p) (posW (nd s h) p)) (g z))))))
+      → Dom j D (proj₁ (ψ (nd s h) o S j w β (Ω p g)))
+convΩ (inc _ _) _ d = d
+convΩ (inu _)   _ d = d
+convΩ (ink _)   _ d = d
+
+convE : ∀ {s h j} (w : j ≤ nd s h) → NS w → ∀ {o S β a v nb x ε k} {D : Ordᶜ k}
+      → Dom j D (proj₁ (E o tdNil x (opB (nd s h) o v nb) (λ i u → ψ (nd s h) o S i u (S i u) a) j w (ψ (nd s h) o S j w β a)))
+      → Dom j D (proj₁ (ψ (nd s h) o S j w β (ex a v nb x ε)))
+convE (inc _ _) _ d = d
+convE (inu _)   _ d = d
+convE (ink _)   _ d = d
+
+module Main (opS : (m : L) → OpStmt m) (ar≅ : AddR≅) (br≅ : BR≅) (bru : BRu) where
+  open AddM ar≅
+
+  bInd : (m : L) → ∀ {k} {A : Ordᶜ k} {t : Tr m} → Dom m A t → BFor m A t
+  bInd m rz st o S w β P σ r mir pre = infl m o S _ w β _ (base pre)
+  bInd m (rl h) st o S w β P σ r mir pre = rl (λ n → bInd m (h n) st o S w β P σ r mir pre)
+  bInd m (r◃ d lt) st o S w β P σ r mir pre = r◃ (bInd m d st o S w β P σ r mir pre) (mono m o S _ w β lt)
+  bInd m (r≅ e d) = br≅ e d (bInd m d)
+  bInd zero (rs d₀) st o S self β P σ r mir pre =
+    rowS zero o S zero self β _ _ addC (bInd zero d₀ st o S self β P σ r mir pre)
+  bInd (nd s h) d@(rs d₀) = splitB
+    (λ st o S β P σ r mir pre → selfRow st o S β P σ r mir pre d)
+    (λ st o S w ns β P σ r mir pre → convS w ns (rowS (nd s h) o S _ w β _ _ addC (bInd (nd s h) d₀ st o S w β P σ r mir pre)))
+  bInd zero (rΩ {p = ()} _ _ _)
+  bInd (nd s h) d@(rΩ mr e hb) = splitB
+    (λ st o S β P σ r mir pre → selfRow st o S β P σ r mir pre d)
+    (λ st o S w ns β P σ r mir pre → convΩ w ns
+       (rowΩ (nd s h) st o S w β P σ r mir pre mr e (I.ψ-≅ (I.≅ᴵ-refl _) (add-≅ (reP pre) e))
+             (λ Y z sb → bInd (nd s h) (hb Y z sb))))
+  bInd zero (ru {c = ()} _ _ _ _)
+  bInd (nd s h) d@(ru {c = c} d₀ kd σr eA) = splitB
+    (λ st o S β P σ r mir pre → selfRow st o S β P σ r mir pre d)
+    (bru d₀ (bInd (nd s h) d₀) kd (bInd (h c) kd) σr eA)
+  bInd zero (re {ε = ()} _ _ _ _)
+  bInd (nd s h) d@(re d₀ dv dx eA) = splitB
+    (λ st o S β P σ r mir pre → selfRow st o S β P σ r mir pre d)
+    (λ st o S w ns β P σ r mir pre → convE w ns
+       (rowE opS (nd s h) st o S w β P σ r mir pre d₀ (bInd (nd s h) d₀) dv (bInd (nd s h) dv) dx eA))
+
+  -- 主定理 (以上述参数为条件).
+  bStmt : (m : L) → BStmt m
+  bStmt m st o S w β t P σ A r mir pre d = bInd m d st o S w β P σ r mir pre

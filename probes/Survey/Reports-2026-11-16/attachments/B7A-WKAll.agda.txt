@@ -1,0 +1,8 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+module WKAll where
+import WKGen
+import WKTower
+import WKShape
+import WKSum
+import WKStep
+import WKAmb

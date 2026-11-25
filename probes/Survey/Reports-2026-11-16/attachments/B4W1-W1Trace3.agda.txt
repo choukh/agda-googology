@@ -1,0 +1,137 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W1 检查件 (6): 否定定理的目标层确实被问到 (来源追踪, 全是 refl 或通用引理的实例).
+-- 闭调用 ψ₀♯ (tw 1) (b + b) 的第二个链点里: La 的孩子 1 (第 β·2 层) → 它的孩子 0 (第 β+ω 层) → 它的孩子 1 (第 β+2 层, 后继形状),
+-- 其中 β = ψ₀♯(b) 的树 (ℕ 极限). 第 β+2 层的 Ω 树顶结点 (槽位层 J = 第 β+1 层) 走链, 回灌起点最里面的底值是
+-- E_J = b 朝 J 的折叠. 于是 W1Neg.Neg 取 r = β 时, 它的那一列格就在塔的计算里.
+module W1Trace3 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst)
+
+open import OCF.Lean.YiRWBlock
+open import OCF.Lean.YiRWOps
+open import OCF.Lean.YiRWPath
+open import OCF.Lean.YiRWFold using (node⁺)
+open import S1Sharp
+open import W1Cell using (h₁; o₁; b⁺; b; pS; IsJust)
+open import W1Trace
+open import W1Trace2 using (module Gen)
+open import W1Neg
+
+module GenS (lem : LEM) where
+  open Sharp lem
+
+  -- 后继形状的层: Ω 树的顶结点 (槽位层 a) 朝第 0 层走链; 回灌的目标是 a, 起点是底族在 a 的值.
+  top-chain-S : ∀ (a : L) (o : Ok (nd sS λ _ → a)) (B : Base♯) (β : Tr⁺ zero)
+    → ψ♯ (nd sS λ _ → a) o B zero tt β (proj₁ (Ωt (nd sS λ _ → a)))
+    ≡ node⁺ {X = Tr a} {x₀ = zero} nothing
+        (λ z → next⁺ (ψ♯ a (proj₂ o tt) B zero tt β z))
+        (λ z → proj₁ (next⁺ (ψ♯ a (proj₂ o tt) B a (proj₂ o tt) (B a (proj₂ o tt)) z)))
+  top-chain-S a o B β = refl
+
+module T3 (lem : LEM) where
+  open Sharp lem
+  open T1 lem
+  open T0 lem using (chL)
+  open Gen lem
+  open GenS lem
+
+  -- β = ψ₀♯(b) 的树是 ℕ 极限 (字面).
+  β-lim : Σ (ℕ → Tr zero) λ g → Σ ((n : ℕ) → zero ⊢ g n ◃ g (suc n)) λ a → proj₁ β₀ ≡ lim g a
+  β-lim = _ , _ , refl
+
+  module N = Neg (proj₁ β-lim) (proj₁ (proj₂ β-lim))
+
+  r-is-β : N.r ≡ proj₁ β₀
+  r-is-β = refl
+
+  J : L                                   -- 目标: 第 β+1 层
+  J = N.J
+
+  -- La 的孩子 1, 它的孩子 0, 再它的孩子 1 (后继形状, 孩子是 J).
+  shA : La ≡ nd sL (chL La)
+  shA = refl
+
+  oaˢ : Ok (nd sL (chL La))
+  oaˢ = subst Ok shA oa
+
+  N₁ N₂ N₃ : L
+  N₁ = chL La 1
+  N₂ = chL N₁ 0
+  N₃ = chL N₂ 1
+
+  sh₁ : N₁ ≡ nd sL (chL N₁)
+  sh₁ = refl
+
+  oN₁ˢ : Ok (nd sL (chL N₁))
+  oN₁ˢ = subst Ok sh₁ (proj₂ oaˢ 1)
+
+  sh₂ : N₂ ≡ nd sL (chL N₂)
+  sh₂ = refl
+
+  oN₂ˢ : Ok (nd sL (chL N₂))
+  oN₂ˢ = subst Ok sh₂ (proj₂ oN₁ˢ 0)
+
+  sh₃ : N₃ ≡ nd sS (λ _ → J)
+  sh₃ = refl
+
+  oN₃ˢ : Ok (nd sS λ _ → J)
+  oN₃ˢ = subst Ok sh₃ (proj₂ oN₂ˢ 1)
+
+  -- 各步 (类型由通用引理实例化得到; 两端逐字相接, 写法同 W1Trace2).
+  -- (1) sbb e₁ 的调用 ψ♯ La oa Bb zero tt β₀ (Ωt La) 搬到 nd sL (chL La) 上.
+  s-1 : _
+  s-1 = tr shA oa Bb zero tt β₀
+
+  -- (2) 第 1 项: 进孩子 1 (N₁), 底族 B₁ = 左项朝各层的折叠.
+  s-2 : _
+  s-2 = step1 (chL La) oaˢ Bb zero tt β₀
+
+  -- (3)(4) N₁ 的第 0 项: 进孩子 0 (N₂), 底族原样 (对一切底族).
+  s-3 : (B : Base♯) (β : Tr⁺ zero) → _
+  s-3 B β = tr sh₁ (proj₂ oaˢ 1) B zero tt β
+
+  s-4 : (B : Base♯) (β : Tr⁺ zero) → _
+  s-4 B β = step0 (chL N₁) oN₁ˢ B zero tt β
+
+  -- (5)(6) N₂ 的第 1 项: 进孩子 1 (N₃), 底族是 N₂ 的左项朝各层的折叠.
+  s-5 : (B : Base♯) (β : Tr⁺ zero) → _
+  s-5 B β = tr sh₂ (proj₂ oN₁ˢ 0) B zero tt β
+
+  s-6 : (B : Base♯) (β : Tr⁺ zero) → _
+  s-6 B β = step1 (chL N₂) oN₂ˢ B zero tt β
+
+  -- (7)(8) N₃ = 第 β+2 层: Ω 树顶结点 (槽位层 J) 走链, 回灌目标 J, 起点 B J _.
+  s-7 : (B : Base♯) (β : Tr⁺ zero) → _
+  s-7 B β = tr sh₃ (proj₂ oN₂ˢ 1) B zero tt β
+
+  s-8 : (B : Base♯) (β : Tr⁺ zero) → _
+  s-8 B β = top-chain-S J oN₃ˢ B β
+
+  -- (9) 起点里的底值: 两层左项的底族逐层剥开 (left-base), 最里面是 Bb J ok = b 朝 J 的折叠.
+  s-9a : (B : Base♯) (ok : Ok J) → _
+  s-9a B ok = left-base (chL N₂) oN₂ˢ B J ok (B J ok)
+
+  s-9b : (ok : Ok J) → _
+  s-9b ok = left-base (chL La) oaˢ Bb J ok (Bb J ok)
+
+  E-J : (ok : Ok J) → Bb J ok ≡ ψ♯ (tw 1) o₁ B♯ J ok (Ωt J) b
+  E-J ok = refl
+
+  -- 那一格: b 朝 J 折, 顶结点保留 (J 是后继形状, 不问排中律), 分支是进被约束的孩子 c′.
+  open W1Cell.Cell lem using (body♯)
+
+  bJ-keeps : (ok : Ok J) (β : Tr⁺ J) → Σ (Pos J) λ q → Σ (Br J q → Tr zero) λ cv
+    → ψ♯ (tw 1) o₁ B♯ J ok β b ≡ Ω⁺ q (λ z → body♯ J ok β (cv z))
+  bJ-keeps ok β = _ , _ , refl
+
+  -- 结论: 在这一列格 (孩子 suc c 的顶结点, 目标 J) 上, 任何与 "槽位层的值低于目标" 等价的保留判定都推出 WLPO.
+  col-J→wlpo : {X : Tr zero → Set} (kpc : (c : Tr zero) → Maybe (X c))
+    → (∀ c → IsJust (kpc c) → at (h₁ (suc c)) pS ≺ᴸ J)
+    → (∀ c → at (h₁ (suc c)) pS ≺ᴸ J → IsJust (kpc c))
+    → WLPO
+  col-J→wlpo = N.lawK→wlpo

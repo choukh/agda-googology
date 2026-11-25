@@ -1,0 +1,56 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第 j 步的种子并入第 j 原行，所得比较族逐行给出上界，因此原 EBO 不超过该族的上确界。
+module B30MSeparate where
+open import Data.Nat.Base using (ℕ; zero; suc)
+import Data.Nat.Properties as N
+open import Data.Product using (_,_; proj₁; proj₂)
+open import Data.Empty using (⊥)
+open import Relation.Binary.PropositionalEquality using (refl)
+open import OCF.Align.Value using (_≼_; _≈ᵛ_; ≼-refl; ≼-trans; ≼-suc; s≼s; ≼l; l≼; z≼)
+open import OCF.Align.TightValBase using (s≼-irrefl)
+open import OCF.Lean.YiRefTw2 using (tree-≼; endpoint)
+import OCF.Align.EboLeanDef
+open import OCF.Align.EboLeanTree using (hc-tower)
+import OCF.Align.Level as L
+open import WVOne using (T₀; 𝟏)
+import B18Product as M
+import B19IdealArithmetic as Ar
+import B22MovingIndex as Eps
+import B12Omega3Ref as Three
+import B19IdealRow as Old
+import B12BtboCut as Fin
+import B17Calibration as Orig
+import B12XRef as Ref
+import B26Names as A
+import B26Depth as D
+import B27Threshold as T
+import B27CutArithmetic as Row
+import B27EpsilonCut as ER
+import B27UEpsilon as Env
+import B27Endpoint as End
+import B29LimitCut as Lim
+open import B30MScalar
+
+open import B30MSeed using (q; r; base; rq; small-q)
+
+open import B30MLow using (module Low; low; floor-cut)
+open import B30MBudget using (module Budget)
+opaque
+  rows : ℕ → T₀
+  rows = T.row
+  cofinal-rows : ∀ (y : T₀) → (∀ j → rows j ≼ y) → A.E ≼ y
+  cofinal-rows = endpoint
+  named-rows : ∀ j → L.suc (rows j) ≼ A.E
+  named-rows j = A.strict (D.tower j)
+module With (b : T₀) (floor : L.suc r ≼ b) (v : ℕ → T₀) where
+  seed = λ j → pair b (v j)
+  high-floor : L.suc r ≼ seed 0
+  high-floor = ≼-trans {a = L.suc r} {b = b} {c = seed 0} floor (left b (v 0))
+  module High = Build seed high-floor
+  collects : ∀ j → v j ≼ L.lim High.f
+  collects j = ≼l {f = High.f} (suc j) (≼-trans {a = v j} {b = seed j} {c = High.f (suc j)} (right b (v j)) (High.paid j))
+module Big = With (L.suc q) floor-cut rows
+open Big public using (module High; seed; high-floor)
+abstract
+  cofinal : A.E ≼ L.lim High.f
+  cofinal = cofinal-rows (L.lim High.f) Big.collects

@@ -1,0 +1,170 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- (B) 的 ru 行在多一个前提 Mirror k′ (h c) (孩子的 Level 树在孩子层的镜像层) 时成立 (ruRow′, 编译).
+-- sL 行 way 的 emb 一支: 对层号归纳 (embFold), 沿 emb 的 up 链逐层走, 链上的自身行用 selfRowBd, 到底用孩子的归纳假设.
+module KBRu where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥; ⊥-elim)
+open import Data.Unit using (⊤; tt)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂; _×_)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; sym; trans; cong; subst)
+
+open import W4Block
+open import W4Ops
+open import W4Path
+open import W4Fold
+import OCF.Align.Level as I
+open I using (Ordᴵ; Ordᶜ; Simᴵ; _<ᴵ_; _≅_; _≅ᴵ_; _≺ᴵ_; add; ≅-trans; ≅-sym; add-≅)
+open import KPow
+open import KMir
+open import KRel
+open import KIface
+open import KBBase
+
+------------------------------------------------------------------------
+-- 自身行, 前提只要 "A 的层的结点都 ≺ 目标层" (不要镜像).
+selfRowBd : ∀ {s h k} {A : Ordᶜ k} {t : Tr (nd s h)} (S : Base (nd s h)) (β : Tr⁺ (nd s h))
+            {kP jc : Ordᴵ} (P : Ordᶜ kP) (σ : Simᴵ k kP) (r : jc <ᴵ I.suc kP)
+          → (∀ {c} → c <ᴵ k → c ≺ᴵ jc) → Pre S β P r → Dom (nd s h) A t
+          → Dom (nd s h) (ψ̂ r (add P σ A)) (ex (proj₁ β) (proj₁ β) (proj₂ β) t tt)
+selfRowBd {s} {h} {k} {A} {t} S β {kP} {jc} P σ r bd pre d = r≅ Lz (re {A₀ = I.zero} rz dV dX eZ)
+  where
+  τr : Simᴵ jc (I.suc kP)
+  τr q = I.<ᴵ-trans q r
+  τs : Simᴵ k (I.suc kP)
+  τs q = I.suc (σ q)
+  VK XK W Z : Ordᶜ (I.suc kP)
+  VK = add I.zero τr (ψ̂ r P)
+  XK = add I.zero τs A
+  W  = pwb VK (λ q → q) XK
+  Z  = add I.zero (λ q → q) W
+  eVK : VK ≅ ψ̂ r P
+  eVK = add-zeroˡ τr (ψ̂ r P) (I.ψ-≅ (I.≅ᴵ-refl jc) (reP pre))
+  eXK : XK ≅ A
+  eXK = add-zeroˡ τs A (Dom→refl d)
+  dV : Dom (nd s h) VK (proj₁ β)
+  dV = r≅ eVK (base pre)
+  dX : Dom (nd s h) XK t
+  dX = r≅ eXK d
+  eZW : Z ≅ W
+  eZW = add-zeroˡ (λ q → q) W (pwb-≅ (reflˡ eVK) (reflˡ eXK))
+  eZ : Z ≅ Z
+  eZ = reflˡ eZW
+  Lz : ψ̂ r (add P σ A) ≅ Z
+  Lz = ≅-trans (ψaddG bd (≅-sym eVK) (≅-sym eXK)) (≅-sym eZW)
+
+------------------------------------------------------------------------
+-- emb 的性质 (严格层号上: 没有 sΩ, emb 不读 Ok).
+emb-irr : (L₁ : L) → IsS L₁ → (o o′ : Ok L₁) {L₀ : L} (v : L₀ ≤ L₁) (y : Tr⁺ L₀) → emb L₁ o v y ≡ emb L₁ o′ v y
+emb-irr L₁        st o o′ self      y = refl
+emb-irr (nd s h)  st o o′ (inc c v) y = cong (upz c) (emb-irr (h c) (IsS-ch (nd s h) st c) (proj₂ o c) (proj₂ o′ c) v y)
+emb-irr (nd s h)  st o o′ (inu vs)  y = cong (upz (c₀ s)) (emb-irr (h (c₀ s)) (IsS-ch (nd s h) st (c₀ s)) (proj₂ o (c₀ s)) (proj₂ o′ (c₀ s)) (vs (c₀ s)) y)
+emb-irr (nd (sΩ _) h) () o o′ (ink v) y
+
+emb-∙ : (L₂ : L) → IsS L₂ → (o : Ok L₂) {L₁ L₀ : L} (u : L₁ ≤ L₂) (v : L₀ ≤ L₁) (o₁ : Ok L₁) (y : Tr⁺ L₀)
+      → emb L₂ o (v ∙ u) y ≡ emb L₂ o u (emb L₁ o₁ v y)
+emb-∙ L₂       st o self      v o₁ y = emb-irr L₂ st o o₁ v y
+emb-∙ (nd s h) st o (inc c u) v o₁ y = cong (upz c) (emb-∙ (h c) (IsS-ch (nd s h) st c) (proj₂ o c) u v o₁ y)
+emb-∙ (nd s h) st o (inu us)  v o₁ y = cong (upz (c₀ s)) (emb-∙ (h (c₀ s)) (IsS-ch (nd s h) st (c₀ s)) (proj₂ o (c₀ s)) (us (c₀ s)) v o₁ y)
+emb-∙ (nd (sΩ _) h) () o (ink u) v o₁ y
+
+-- emb 的树: 沿路径加 up, 左项为零.
+embDom : (L₁ : L) {L₀ : L} (p : L₀ ≤ L₁) (o : Ok L₁) {k′ : Ordᴵ} {Y : Ordᶜ k′} {y₀ : Tr L₀} {e₀ : L₀ ⊢ zero ◃ y₀}
+       → Dom L₀ Y y₀ → Dom L₁ Y (proj₁ (emb L₁ o p (y₀ , e₀)))
+embDom L₁ self o d = d
+embDom (nd s h) (inc c v) o {Y = Y} d =
+  ru rz (embDom (h c) v (proj₂ o c) d) (λ q → q) (≅-sym (add-zeroˡ (λ q → q) Y (Dom→refl d)))
+embDom (nd s h) (inu vs) o {Y = Y} d =
+  ru rz (embDom (h (c₀ s)) (vs (c₀ s)) (proj₂ o (c₀ s)) d) (λ q → q) (≅-sym (add-zeroˡ (λ q → q) Y (Dom→refl d)))
+embDom (nd (sΩ k) h) (ink v) o {Y = Y} d =
+  ru rz (embDom (h zero) (v ∙ proj₂ (proj₁ o) zero) (proj₂ o zero) d) (λ q → q) (≅-sym (add-zeroˡ (λ q → q) Y (Dom→refl d)))
+
+-- 状态限制到孩子 (左项为零时 up 行只把状态限制下去).
+preI : ∀ {s h} {SL : Base (nd s h)} {j : L} {βL : Tr⁺ j} {kP jc : Ordᴵ} {P : Ordᶜ kP} {r : jc <ᴵ I.suc kP}
+     → (c₂ : Ch s) → Pre SL βL P r → Pre (λ i u → SL i (inc c₂ u)) βL P r
+preI c₂ pre = record { mj = mj pre ; reP = reP pre ; real = λ u r′ mi → real pre (inc c₂ u) r′ mi
+                     ; cov = λ u mi → cov pre (inc c₂ u) mi ; base = base pre }
+
+-- 镜像层 + 路径 给出 "结点都 ≺ 目标层".
+bdPath : ∀ {k′ jc : Ordᴵ} {L₀ L₁ : L} (p : L₀ ≤ L₁) → IsS L₁ → Ok L₁ → Mirror k′ L₀ → Mirror jc L₁
+       → ∀ {c} → c <ᴵ k′ → c ≺ᴵ jc
+bdPath {L₀ = L₀} {L₁} p st o km mj₁ q with pathle L₀ L₁ p st (IsN-path p i₁) (Ok-path p o) i₁ o
+  where i₁ = IsS→IsN L₁ st
+... | inj₁ e  = I.≺ᴵ-respʳ (I.≺ᴵ-respʳ (I.<-≅ q (km _ _)) e) (I.≅ᴵ-sym (mj₁ _ o))
+... | inj₂ r′ = I.≺ᴵ-respʳ (I.≺ᴵ-trans (I.<-≅ q (km _ _)) r′) (I.≅ᴵ-sym (mj₁ _ o))
+
+module EmbF {k′ kP jc : Ordᴵ} {Y : Ordᶜ k′} (P′ : Ordᶜ kP) (σ′ : Simᴵ k′ kP) (r : jc <ᴵ I.suc kP) where
+  mutual
+    embFold : (L₁ : L) {L₀ : L} (p : L₀ ≤ L₁) (oL : Ok L₁) (stL : IsS L₁) {y₀ : Tr L₀} {e₀ : L₀ ⊢ zero ◃ y₀}
+            → Dom L₀ Y y₀ → BFor L₀ Y y₀ → Mirror k′ L₀
+            → (SL : Base L₁) {j : L} (vL : j ≤ L₁) (βL : Tr⁺ j) → Pre SL βL P′ r
+            → Dom j (ψ̂ r (add P′ σ′ Y)) (proj₁ (ψ L₁ oL SL j vL βL (proj₁ (emb L₁ oL p (y₀ , e₀)))))
+    embFold zero     self oL stL dY ihY km SL vL βL pre = ihY stL oL SL vL βL P′ σ′ r km pre
+    embFold (nd s h) self oL stL dY ihY km SL vL βL pre = ihY stL oL SL vL βL P′ σ′ r km pre
+    embFold (nd s h) (inc c₂ v₂) oL stL dY ihY km SL vL βL pre = embUp s h c₂ v₂ oL stL dY ihY km SL vL βL pre
+    embFold (nd s h) (inu vs)    oL stL dY ihY km SL vL βL pre = embUp s h (c₀ s) (vs (c₀ s)) oL stL dY ihY km SL vL βL pre
+    embFold (nd (sΩ _) h) (ink v) oL () dY ihY km SL vL βL pre
+
+    embUp : (s : Sh) (h : Ch s → L) (c₂ : Ch s) {L₀ : L} (v₂ : L₀ ≤ h c₂) (oL : Ok (nd s h)) (stL : IsS (nd s h))
+            {y₀ : Tr L₀} {e₀ : L₀ ⊢ zero ◃ y₀}
+          → Dom L₀ Y y₀ → BFor L₀ Y y₀ → Mirror k′ L₀
+          → (SL : Base (nd s h)) {j : L} (vL : j ≤ nd s h) (βL : Tr⁺ j) → Pre SL βL P′ r
+          → Dom j (ψ̂ r (add P′ σ′ Y)) (proj₁ (ψ (nd s h) oL SL j vL βL
+                (up zero c₂ (proj₁ (emb (h c₂) (proj₂ oL c₂) v₂ (y₀ , e₀))) (proj₂ (emb (h c₂) (proj₂ oL c₂) v₂ (y₀ , e₀))))))
+    embUp s h c₂ v₂ oL stL dY ihY km SL self βL pre =
+      selfRowBd SL βL P′ σ′ r (bdPath (inc c₂ v₂) stL oL km (mj pre)) pre
+        (ru rz (embDom (h c₂) v₂ (proj₂ oL c₂) dY) (λ q → q) (≅-sym (add-zeroˡ (λ q → q) Y (Dom→refl dY))))
+    embUp s h c₂ v₂ oL stL dY ihY km SL (inu ws) βL pre =
+      embFold (h c₂) v₂ (proj₂ oL c₂) (IsS-ch (nd s h) stL c₂) dY ihY km (λ i u → SL i (inc c₂ u)) (ws c₂) βL (preI c₂ pre)
+    embUp sS h c₂ v₂ oL stL dY ihY km SL (inc c₃ v₃) βL pre =
+      embFold (h c₂) v₂ (proj₂ oL c₂) stL dY ihY km (λ i u → SL i (inc c₂ u)) v₃ βL (preI c₂ pre)
+    embUp sL g c₂ v₂ oL stL {y₀} {e₀} dY ihY km SL {j} (inc n₃ v₃) βL pre =
+      cW-ind (λ Z → Dom j (ψ̂ r (add P′ σ′ Y)) (proj₁ Z)) (way g (proj₁ oL) c₂ n₃)
+        (λ u′ → subst (λ T → Dom j (ψ̂ r (add P′ σ′ Y)) (proj₁ (ψ (g n₃) (proj₂ oL n₃) (λ i u″ → SL i (inc n₃ u″)) j v₃ βL T)))
+                      (cong proj₁ (emb-∙ (g n₃) (proj₁ stL n₃) (proj₂ oL n₃) u′ v₂ (proj₂ oL c₂) (y₀ , e₀)))
+                      (embFold (g n₃) (v₂ ∙ u′) (proj₂ oL n₃) (proj₁ stL n₃) dY ihY km (λ i u″ → SL i (inc n₃ u″)) v₃ βL (preI n₃ pre)))
+        (λ u′ → embFold (g c₂) v₂ (proj₂ oL c₂) (proj₁ stL c₂) dY ihY km (λ i u″ → SL i (inc c₂ u″)) (v₃ ∙ u′) βL (preI c₂ pre))
+    embUp (sΩ _) h c₂ v₂ oL () dY ihY km SL vL βL pre
+
+------------------------------------------------------------------------
+-- ru 行 (多一个孩子镜像的前提).
+module RuCtx {s : Sh} {h : Ch s → L} {k k′ : Ordᴵ} {A A₀ : Ordᶜ k} {Y : Ordᶜ k′} {t₀ : Tr (nd s h)}
+             (d₀ : Dom (nd s h) A₀ t₀) (ih₀ : BFor (nd s h) A₀ t₀) (σr : Simᴵ k′ k) (eA : A ≅ add A₀ σr Y) (eY : Y ≅ Y)
+             (st : IsS (nd s h)) (o : Ok (nd s h)) (S : Base (nd s h)) {j : L} (w : j ≤ nd s h) (β : Tr⁺ j)
+             {kP jc : Ordᴵ} (P : Ordᶜ kP) (σ : Simᴵ k kP) (r : jc <ᴵ I.suc kP) (mir : Mirror k (nd s h)) (pre : Pre S β P r) where
+  P′ : Ordᶜ kP
+  P′ = add P σ A₀
+  σ′ : Simᴵ k′ kP
+  σ′ q = σ (σr q)
+  eL : ψ̂ r (add P σ A) ≅ ψ̂ r (add P′ σ′ Y)
+  eL = I.ψ-≅ (I.≅ᴵ-refl _) (≅-trans (add-≅ (reP pre) eA) (add-assoc P σ A₀ σr Y (reP pre) (Dom→refl d₀) eY))
+  S′ : (c₁ : Ch s) → Base (h c₁)
+  S′ c₁ i u = ψ (nd s h) o S i (inc c₁ u) (S i (inc c₁ u)) t₀
+  preC : (c₁ : Ch s) → Pre (S′ c₁) (ψ (nd s h) o S j w β t₀) P′ r
+  preC c₁ = record
+    { mj   = mj pre
+    ; reP  = add-≅ (reP pre) (Dom→refl d₀)
+    ; real = λ u r′ mi → ih₀ st o S (inc c₁ u) (S _ (inc c₁ u)) P σ r′ mir
+                (record { mj = mi ; reP = reP pre ; real = real pre ; cov = cov pre ; base = real pre (inc c₁ u) r′ mi })
+    ; cov  = λ u mi → infl (nd s h) o S _ (inc c₁ u) (S _ (inc c₁ u)) t₀ (cov pre (inc c₁ u) mi)
+    ; base = ih₀ st o S w β P σ r mir pre
+    }
+
+ruRow′ : ∀ {s h k k′} {A A₀ : Ordᶜ k} {Y : Ordᶜ k′} {t₀ : Tr (nd s h)} {c : Ch s} {y : Tr (h c)}
+           {e : RCh (nd s h) c (chZ (nd s h) c) y}
+       → Mirror k′ (h c)
+       → Dom (nd s h) A₀ t₀ → BFor (nd s h) A₀ t₀ → Dom (h c) Y y → BFor (h c) Y y
+       → (σr : Simᴵ k′ k) → A ≅ add A₀ σr Y → BForNS (nd s h) A (up t₀ c y e)
+ruRow′ {s} {h} {c = c} km d₀ ih₀ dY ihY σr eA st o S (inu ws) _ β P σ r mir pre =
+  r≅ (C.eL) (ihY (IsS-ch (nd s h) st c) (proj₂ o c) (C.S′ c) (ws c) _ C.P′ C.σ′ r km (C.preC c))
+  where module C = RuCtx d₀ ih₀ σr eA (Dom→refl dY) st o S (inu ws) β P σ r mir pre
+ruRow′ {s = sS} {h} {c = c} km d₀ ih₀ dY ihY σr eA st o S w@(inc _ v) _ β P σ r mir pre =
+  r≅ (C.eL) (ihY st (proj₂ o c) (C.S′ c) v _ C.P′ C.σ′ r km (C.preC c))
+  where module C = RuCtx d₀ ih₀ σr eA (Dom→refl dY) st o S w β P σ r mir pre
+ruRow′ {s = sL} {h = g} {c = c} {y = y} {e = e} km d₀ ih₀ dY ihY σr eA st o S {j} w@(inc n v) _ β P σ r mir pre =
+  r≅ (C.eL) (cW-ind (λ Z → Dom j (ψ̂ r (add C.P′ C.σ′ _)) (proj₁ Z)) (way g (proj₁ o) c n)
+    (λ u → EmbF.embFold C.P′ C.σ′ r (g n) u (proj₂ o n) (proj₁ st n) dY ihY km (C.S′ n) v _ (C.preC n))
+    (λ u → ihY (proj₁ st c) (proj₂ o c) (C.S′ c) (v ∙ u) _ C.P′ C.σ′ r km (C.preC c)))
+  where module C = RuCtx d₀ ih₀ σr eA (Dom→refl dY) st o S w β P σ r mir pre
+ruRow′ {s = sΩ _} km d₀ ih₀ dY ihY σr eA () o S w _ β P σ r mir pre

@@ -1,0 +1,177 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 探针 P3: 带滞后的律与一次性的充分性 (抽象, 不读记号).
+-- A: 存在式滞后律 LagKeep 加地板 Floor 推出终点 (endpoint♭); LowKeep 是 Lg = ≡ 的特例.
+-- N: 配对否定: 滞后若保持余尾 Ω, 不保留的点上 LagKeep 不成立 (unkept→¬lag).
+-- B: 确定式滞后 δ 的整体接口: KeepLaw, FallLaw 不变, 出口 Out♭ 换成对 δ 的出口, 推出每个状态上的 δ-保持 (keepAll♭).
+module P3LagSuff where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; subst; sym)
+
+open import OCF.Lean.YiAbsFrame
+open import OCF.Lean.YiAbsSim
+open import OCF.Lean.YiAbsGIface
+open import OCF.Lean.YiAbsGSuff
+open import OCF.Lean.YiAbsGRow
+open import OCF.Lean.YiAbsGNeg
+open import OCF.Lean.YiFIIface
+
+module Lag {𝔹 : Block} {𝔽 : Fold 𝔹} {ℜ : Rows 𝔹 𝔽} {𝕋 : Ref} {𝕍 : Val}
+           (𝔾 : Graded 𝔹 𝔽 ℜ 𝕋 𝕍) (𝔻 : Doms 𝔹 𝔽) where
+  open Laws 𝔾 𝔻
+  open Suff 𝔾 𝔻 using (base-lower; module Tower)
+  open Row 𝔾 𝔻 using (Gen; Rules; wk⊴)
+  open Neg 𝔾 𝔻 using (module Inv)
+
+  ------------------------------------------------------------------------
+  -- A. 存在式滞后律与一次性的充分性
+
+  module A (Lg : T → T → Set) where
+
+    -- 折到低层: 输出不低于参照上下文作用结果的某个滞后版本
+    LagKeep : Set
+    LagKeep = ∀ {ℓ j} (b : Bs ℓ) (w : j ⊑ ℓ) (β : Bt j) (K : Cx ℓ j) → Gb ℓ b → Wl w → Bd b w β K
+            → ∀ {a x} → Gx ℓ x → R ℓ a x → Σ T λ a′ → Lg a′ (app K a) × R j a′ (ψ ℓ b j w β x)
+
+    low→lag : (∀ {a} → Lg a a) → LowKeep → LagKeep
+    low→lag rf L b w β K gb wl bd gx r = _ , rf , L b w β K gb wl bd gx r
+
+    module Tower♭ (lf : Leaf) (li : Lift) {𝔟 : Base} (𝔨 : Keel 𝔟) where
+      open Keel 𝔨
+      open Tower lf li 𝔨 using (keel; keelᴿ)
+
+      -- 塔第 n 项: 闭项的值不低于第 n 行的某个滞后版本
+      K♭ : LagKeep → ∀ n → Σ T λ a′ → Lg a′ (row n) × ((h : HC a′) → tree h ≼ v (twc n))
+      K♭ L n =
+        let r = L (b₀ n) (w₀ n) (β₀ n) (K₀ n) (gb n) (wl n) (bd n) (gx n) (keelᴿ n)
+        in proj₁ r , proj₁ (proj₂ r) , λ h → base-lower 𝔟 (proj₂ (proj₂ r)) (g₀ n) h
+
+      -- 地板 (参照一侧): 对每一行 n, 有一行 m, 其一切滞后版本都遗传可达且不低于第 n 行
+      Floor : Set
+      Floor = ∀ n (h : HC (row n)) → Σ ℕ λ m → ∀ a′ → Lg a′ (row m) → Σ (HC a′) λ h′ → tree h ≼ tree h′
+
+      row♭ : LagKeep → Floor → (Y : V) → (∀ n → v (twc n) ≼ Y) → ∀ n {t} → row n ≡ t → (h : HC t) → tree h ≼ Y
+      row♭ L F Y up n refl h =
+        let m  = proj₁ (F n h)
+            al = proj₂ (F n h)
+            k  = K♭ L m
+            h′ = al (proj₁ k) (proj₁ (proj₂ k))
+        in ≼-trans (proj₂ h′) (≼-trans (proj₂ (proj₂ k) (proj₁ h′)) (up m))
+
+      endpoint♭ : LagKeep → Floor → (Y : V) → (∀ n → v (twc n) ≼ Y) → (hs : ∀ n → HC (row n))
+                → vl (λ n → tree (hs n)) ≼ Y
+      endpoint♭ L F Y up hs = l≼ (λ n → row♭ L F Y up n refl (hs n))
+
+  -- 精确的律是 Lg = ≡ 的特例, 那时地板取 m = n
+  module Exact where
+    open A _≡_
+
+    floor≡ : (lf : Leaf) (li : Lift) {𝔟 : Base} (𝔨 : Keel 𝔟) → Tower♭.Floor lf li 𝔨
+    floor≡ lf li 𝔨 n h = n , λ { _ refl → h , ≼-refl }
+
+    endpoint≡ : (lf : Leaf) (li : Lift) {𝔟 : Base} (𝔨 : Keel 𝔟) → LowKeep → (Y : V)
+              → (∀ n → v (Keel.twc 𝔨 n) ≼ Y) → (hs : ∀ n → HC (Keel.row 𝔨 n)) → vl (λ n → tree (hs n)) ≼ Y
+    endpoint≡ lf li 𝔨 L = Tower♭.endpoint♭ lf li 𝔨 (low→lag refl L) (floor≡ lf li 𝔨)
+
+  ------------------------------------------------------------------------
+  -- N. 配对否定: 保持余尾 Ω 的滞后救不了不保留的点
+
+  module N (Lg : T → T → Set) {j : Lv} (G : Gen j) (κ : T) (H : Tr j → Set)
+      (d0 : ∀ {s} → C0 s → CΩ s κ → ⊥)
+      (d1 : ∀ {s} → C1 s → CΩ s κ → ⊥)
+      (dω : ∀ {s} → Cω s → CΩ s κ → ⊥)
+      (hΩ : (p : Sl j) (g : SlT j p → Tr j) → H (nd p g))
+      (hw : ∀ {x x′} → H x → x ◃ x′ → H x′)
+      (hU : (c : Ch j) {t s : T} {x : Tr j} (y : ChT j c) → CΩ (t ⊕ s) κ → (CΩ t κ → H x)
+          → R (chL j c) s (chT j c y) → H (up x c y))
+      (pres : ∀ {a′ a} → Lg a′ a → CΩ a κ → CΩ a′ κ) where
+    open A Lg
+
+    unkept→¬lag : ∀ {ℓ} (b : Bs ℓ) (w : j ⊑ ℓ) (β : Bt j) (K : Cx ℓ j) → Gb ℓ b → Wl w → Bd b w β K
+      → ∀ {a x} → Gx ℓ x → R ℓ a x → CΩ (app K a) κ → (H (ψ ℓ b j w β x) → ⊥) → LagKeep → ⊥
+    unkept→¬lag b w β K gb wl bd gx r e no L =
+      let q = L b w β K gb wl bd gx r
+      in no (Inv.inv G κ H d0 d1 dω hΩ hw hU (proj₂ (proj₂ q)) (pres (proj₁ (proj₂ q)) e))
+
+  ------------------------------------------------------------------------
+  -- B. 确定式滞后 δ: 整体接口的充分性 (仿 YiFIIface.FI.Suff)
+
+  open FI 𝔾 𝔻 using (Sys; WfL; wf; Gen⁺; module Sys)
+
+  module B {j : Lv} (𝒮 : Sys j) (δ : T → T) where
+    open Sys 𝒮
+
+    Q♭ : ∀ {a} → St a → Cxt → T → Tr a → Set
+    Q♭ s K t x = R j (δ (ap K t)) (Φ s x)
+
+    -- 出口 (参照一侧). 与 FI.Out 的差别: 每处的参照先过 δ; 嵌入与保留结点处
+    -- 只要求一个把 R j 搬到 δ-参照上的映射 (可以是相等, 也可以是向下封闭的一步).
+    record Out♭ (Le : T → T → Set) (𝓀 : KeepLaw) (𝒻 : FallLaw) : Set where
+      open KeepLaw 𝓀
+      open FallLaw 𝒻
+      field
+        zeroE : ∀ {a} (s : St a) K → Bdˢ s K → ∀ {t x} → C0 t → Q♭ s K t x
+        succE : ∀ {a} (s : St a) K → Bdˢ s K → ∀ {t x} → C1 t → R a (pred t) x → Q♭ s K (pred t) x → Q♭ s K t (sc x)
+        limE  : ∀ {a} (s : St a) K → Bdˢ s K → ∀ {t} → Cω t
+              → Cω (δ (ap K t)) × (∀ n → fsn (δ (ap K t)) n ≡ δ (ap K (fsn t n)))
+        upE   : ∀ {a} (s : St a) K → Bdˢ s K → (c : Ch a) → ∀ {t x} → R a t x → Q♭ s K t x
+              → Σ Cxt λ K′ → Bdˢ (step s c x) K′ × (∀ u {o} → R j (δ (ap K′ u)) o → R j (δ (ap K (t ⊕ u))) o)
+        leE   : ∀ {a} (s : St a) K → Bdˢ s K → ∀ {u t o} → Le u t → R j (δ (ap K t)) o → R j (δ (ap K u)) o
+        nodeE : ∀ {a} (s : St a) K → Bdˢ s K → (p : Sl a) → ∀ {t κ} (g : SlT a p → Tr a) → CΩ t κ → Nu a p κ
+              → (∀ η c → R (slL a p) η (slT a p c) → R a (fsT t η) (g c))
+              → (Σ (Ev s p) λ e → Σ T λ tk → CΩ tk κ × (∀ η → fsT tk η ≡ δ (ap K (fsT t η)))
+                   × (∀ {o} → R j tk o → R j (δ (ap K t)) o)
+                   × Nu j (slot s p e) κ
+                   × (∀ η c → R (slL j (slot s p e)) η (slT j (slot s p e) c) → R (slL a p) η (slT a p (mvc s p e c))))
+              ⊎ (Σ (ℕ → T) λ γ → Σ (ℕ → SlT a p) λ z → Cω (δ (ap K t))
+                   × (∀ k → fsn (δ (ap K t)) k ≡ δ (ap K (fsT t (γ k))))
+                   × (∀ k → R (slL a p) (γ k) (slT a p (z k))) × (∀ k → Φ s (g (z k)) ⊴ Φ s (nd p g)))
+
+    module Suff♭ (Le : T → T → Set) (wk : Weak) (lm : Lim) (nod : Node) (mono : Monoˢ)
+                 (𝓀 : KeepLaw) (𝒻 : FallLaw) (ex : Out♭ Le 𝓀 𝒻) (gen : ∀ a → Gen⁺ Le a) where
+      open KeepLaw 𝓀
+      open FallLaw 𝒻
+      open Out♭ ex
+
+      rules♭ : ∀ {a} → (∀ c (s′ : St (chL a c)) K′ → Bdˢ s′ K′ → ∀ {t x} → R (chL a c) t x → Q♭ s′ K′ t x)
+             → (s : St a) (K : Cxt) → Bdˢ s K → Rules a (Q♭ s K)
+      rules♭ {a} child s K bd = record
+        { qz = zeroE s K bd
+        ; q1 = succE s K bd
+        ; qL = λ {t} {x} e _ h → lm (proj₁ (limE s K bd e))
+                 (λ n → subst (λ u → R j u (Φ s x)) (sym (proj₂ (limE s K bd e) n)) (h n))
+        ; qΩ = node
+        ; qU = emb
+        ; qw = λ _ q d → wk q (mono s d) }
+        where
+        node : (p : Sl a) {t κ : T} (g : SlT a p → Tr a) → CΩ t κ → Nu a p κ
+             → (∀ η c → R (slL a p) η (slT a p c) → R a (fsT t η) (g c))
+             → (∀ η c → R (slL a p) η (slT a p c) → Q♭ s K (fsT t η) (g c)) → Q♭ s K t (nd p g)
+        node p g e nu hR hQ with nodeE s K bd p g e nu hR
+        ... | inj₁ (ev , tk , cΩ , fs , down , nu′ , tr) = down (wk⊴ wk
+          (nod (slot s p ev) (λ c → Φ s (g (mvc s p ev c))) cΩ nu′
+            (λ η c l → subst (λ o → R j o (Φ s (g (mvc s p ev c)))) (sym (fs η)) (hQ η (mvc s p ev c) (tr η c l))))
+          (keep s p ev g))
+        ... | inj₂ (γ , z , cω , fs , ch , tr) =
+          lm cω (λ k → subst (λ o → R j o (Φ s (nd p g))) (sym (fs k)) (wk⊴ wk (hQ (γ k) (z k) (ch k)) (tr k)))
+
+        emb : (c : Ch a) {t u : T} {x : Tr a} (y : ChT a c) → R a t x → Q♭ s K t x → R (chL a c) u (chT a c y)
+            → Q♭ s K (t ⊕ u) (up x c y)
+        emb c {t} {u} {x} y r q ry =
+          let e = upE s K bd c r q
+          in proj₂ (proj₂ e) u (wk⊴ wk (child c (step s c x) (proj₁ e) (proj₁ (proj₂ e)) ry) (fall s c x y))
+
+      keepAll♭ : ∀ {a} → WfL a → (s : St a) (K : Cxt) → Bdˢ s K → ∀ {t x} → R a t x → Q♭ s K t x
+      keepAll♭ {a} (wf f) s K bd =
+        gen a (Q♭ s K) (rules♭ (λ c s′ K′ bd′ → keepAll♭ (f c) s′ K′ bd′) s K bd) (λ le _ q → leE s K bd le q)
+
+      -- 状态对上折叠时: 输出不低于 δ 作用后的参照, 即 Lg a′ a := (a′ ≡ δ a) 的 LagKeep 在这一点上的结论
+      sys→lag : ∀ {ℓ} → WfL ℓ → (s : St ℓ) (K : Cxt) → Bdˢ s K → (b : Bs ℓ) (w : j ⊑ ℓ) (β : Bt j) (Kc : Cx ℓ j)
+        → (∀ x → Φ s x ≡ ψ ℓ b j w β x) → (∀ t → ap K t ≡ app Kc t)
+        → ∀ {a x} → R ℓ a x → Σ T λ a′ → (a′ ≡ δ (app Kc a)) × R j a′ (ψ ℓ b j w β x)
+      sys→lag W s K bd b w β Kc eΦ ec {a} {x} r =
+        δ (app Kc a) , refl ,
+        subst (λ o → R j (δ (app Kc a)) o) (eΦ x) (subst (λ u → R j (δ u) (Φ s x)) (ec a) (keepAll♭ W s K bd r))

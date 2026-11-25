@@ -1,0 +1,82 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 终点恰要求任意高原行各有一座实际单位反馈轨道在其下共尾；从轨道到原 EBO 不用排中律。
+module B27Endpoint where
+
+open import Data.Nat.Base using (ℕ; suc; _≤_; s≤s; z≤n)
+import Data.Nat.Properties as N
+open import Data.Product using (Σ; _,_)
+open import Relation.Binary.PropositionalEquality using (subst; sym)
+open import OCF.Align.Value using (_≼_; ≼-trans; ≼-suc; ≼-refl; ≼lim⁻; s≼s)
+open import OCF.Lean.YiRefTw2 using (endpoint)
+open import OCF.Lean.YiRVLevel using (LEM)
+import OCF.Align.Level as L
+import B14Goal as G
+import B26PActual as W
+import B26Names as A
+import B26Depth as D
+import B27Threshold as T
+import B27RunCut as H
+
+two : ∀ k → 2 ≤ suc (suc k)
+two k = s≤s (s≤s z≤n)
+
+module Index (k : ℕ) (d : 2 ≤ k) where
+  module I = H.At k d
+  Run = Σ ℕ I.Cofinal
+  hit : Run → L.suc (T.row k) ≼ W.Y
+  hit (n , co) = I.reverse n co
+  bounded : I.Capped → W.Y ≼ T.row k
+  bounded = I.sufficient
+  capture : W.Y ≼ T.row k → I.Capped
+  capture = I.necessary
+  pick : LEM → G.Goal → Run
+  pick lem g = I.Classical.witness lem (≼-trans {a = L.suc (T.row k)} {b = A.E} {c = W.Y}
+    (A.strict (D.tower k)) g)
+
+Runs : Set
+Runs = ∀ k d → Index.Run k d
+
+room : ∀ k → L.suc (T.row k) ≼ T.row (suc (suc k))
+room k = T.below (suc (suc k)) (D.tower k)
+  (subst (_≤ suc (suc k)) (sym (D.calibrate k)) (N.n≤1+n (suc k)))
+
+from-rows : ∀ (y : A.T₀) → (∀ k → L.suc (T.row (suc (suc k))) ≼ y) → A.E ≼ y
+from-rows y co = endpoint y each where
+  each : ∀ k → T.row k ≼ y
+  each k = ≼-trans {a = T.row k} {b = L.suc (T.row k)} {c = y} (≼-suc (≼-refl (T.row k)))
+    (≼-trans {a = L.suc (T.row k)} {b = L.suc (T.row (suc (suc k)))} {c = y}
+       (≼-suc (room k)) (co k))
+
+module Lift (y : A.T₀) (candidate : (k : ℕ) → 2 ≤ k → Set)
+    (hit : ∀ k d → candidate k d → L.suc (T.row k) ≼ y) where
+  all : (∀ k d → candidate k d) → A.E ≼ y
+  all r = from-rows y (λ k → hit (suc (suc k)) (two k) (r (suc (suc k)) (two k)))
+
+from-runs : Runs → G.Goal
+from-runs = Lift.all W.Y Index.Run Index.hit
+
+to-runs : LEM → G.Goal → Runs
+to-runs lem g k d = Index.pick k d lem g
+
+index-in-limit : (f g : ℕ → A.T₀) → (∀ k → L.suc (f k) ≼ g k) →
+  (y : A.T₀) → L.suc y ≼ L.lim f → Σ ℕ (λ k → y ≼ g k)
+index-in-limit f g room′ y h with ≼lim⁻ {a = y} {f = f} h
+... | k , p = k , ≼-trans {a = y} {b = L.suc y} {c = g k} (≼-suc (≼-refl y))
+  (≼-trans {a = L.suc y} {b = L.suc (f k)} {c = g k} (≼-suc p) (room′ k))
+
+small-index : (y : A.T₀) → L.suc y ≼ A.E → Σ ℕ (λ k → y ≼ T.row (suc (suc k)))
+small-index = index-in-limit T.row (λ k → T.row (suc (suc k))) room
+
+module Bounds (y : A.T₀) (cap : (k : ℕ) → 2 ≤ k → Set)
+    (lower : ∀ k d → cap k d → y ≼ T.row k)
+    (capture : ∀ k d → y ≼ T.row k → cap k d) where
+  Bounded = Σ ℕ (λ k → Σ (2 ≤ k) (cap k))
+  sufficient : Bounded → L.suc y ≼ A.E
+  sufficient (k , d , c) = ≼-trans {b = L.suc (T.row k)} (s≼s (lower k d c)) (A.strict (D.tower k))
+  necessary : L.suc y ≼ A.E → Bounded
+  necessary h = found (small-index y h) where
+    found : Σ ℕ (λ k → y ≼ T.row (suc (suc k))) → Bounded
+    found (k , p) = suc (suc k) , two k , capture (suc (suc k)) (two k) p
+
+open Bounds W.Y H.At.Capped Index.bounded Index.capture public
+  renaming (sufficient to from-bound; necessary to to-bound)

@@ -1,0 +1,95 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- 对照 (全是 refl, 在 W5 上): W6Trace 的同一条状态条目在 W5 上也是 "在 tw 1 里朝孩子 suc t 里的第 ω 层折规范 Ω 树",
+-- 而 W5 的 Ω top 结点在含目标的孩子 suc t 这一支上回退成 "底 ⊞ 尾巴" (定位器只认有限层). W6TraceZ 那一处 W5 同样回退.
+module W6VsW5 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (inj₁; inj₂)
+open import Data.Product using (Σ; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+open import W4Block
+open import W4Ops
+open import W5Path
+open import W5Fold
+open import W5Loc using (loc)
+
+sn : ℕ → Tr zero
+sn zero    = zero
+sn (suc m) = suc (sn m)
+t : Tr zero
+t = lim sn (λ m → ◃s)
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+seg : ℕ → Tr Λ
+seg n = proj₁ (upz {s = sL} {h = tw} n (Ωt (tw n)))
+pre₂ : Tr Λ
+pre₂ = cum seg 1
+B₂ : Base (tw 2)
+B₂ i u = ψ Λ Ok-Λ (B₀ Λ) i (inc 2 u) (B₀ Λ i (inc 2 u)) pre₂
+
+pathω : h₁ t ≤ tw 2
+pathω = inc zero (inc (suc t) (inc tt self))
+x₀ : Tr Λ
+x₀ = cum seg 0 + zero
+B₁ : Base (tw 2)
+B₁ i u = ψ Λ Ok-Λ (B₀ Λ) i (inc 2 u) (B₀ Λ i (inc 2 u)) x₀
+βω : Tr⁺ (h₁ t)
+βω = ψ Λ Ok-Λ (B₀ Λ) (h₁ t) (inc 2 pathω) (B₀ Λ (h₁ t) (inc 2 pathω)) x₀
+
+-- 同一条目, W5 上的归约 (与 W6Trace.query-ω 同形).
+query-ω₅ : B₂ (h₁ t) pathω ≡ ψ (tw 1) (Ok-tw 1) (λ i u → B₁ i (inc zero u)) (h₁ t) (inc (suc t) (inc tt self)) βω (proj₁ (Ωt (tw 1)))
+query-ω₅ = refl
+
+-- W5 的规范 Ω 树是 Ω top (d ↦ up zero d (Ωt (h₁ d))); 结点的保留判定同 W6 (原层号上的 kp top (inc (suc t) …)).
+node-ω₅ : (S : Base (tw 1)) (β : Tr⁺ (h₁ t))
+  → ψ (tw 1) (Ok-tw 1) S (h₁ t) (inc (suc t) (inc tt self)) β (proj₁ (Ωt (tw 1)))
+  ≡ node⁺ (kp (tw 1) (Ok-tw 1) (inj₁ (inj₁ tt)) (inc (suc t) (inc tt self)))
+      (λ d → ψ (tw 1) (Ok-tw 1) S (h₁ t) (inc (suc t) (inc tt self)) β (proj₁ (upz {s = sΩ zero} {h = h₁} d (Ωt (h₁ d)))))
+      (λ d → proj₁ (ψ (tw 1) (Ok-tw 1) S zero (ink self) (S zero (ink self)) (proj₁ (upz {s = sΩ zero} {h = h₁} d (Ωt (h₁ d))))))
+node-ω₅ S β = refl
+
+-- 含目标的孩子 suc t 这一支: 定位器找不到第 ω 层, 回退成 "底 ⊞ 孩子 suc t 里从第 0 层起的尾巴".
+miss-ω₅ : loc (h₁ t) (h₁ (suc t)) ≡ nothing
+miss-ω₅ = refl
+
+fallback-ω₅ : (S : Base (tw 1)) (β : Tr⁺ (h₁ t))
+  → ψ (tw 1) (Ok-tw 1) S (h₁ t) (inc (suc t) (inc tt self)) β (proj₁ (upz {s = sΩ zero} {h = h₁} (suc t) (Ωt (h₁ (suc t)))))
+  ≡ β ⊞ ψ (h₁ (suc t)) (proj₂ (Ok-tw 1) (suc t)) (λ i u → S i (inc (suc t) u)) zero (z≤ (h₁ (suc t))) (S zero (z≤ (tw 1)))
+          (proj₁ (Ωt (h₁ (suc t))))
+fallback-ω₅ S β = refl
+
+-- 别的非零孩子 d (例: d = 1) 同样回退.
+fallback-ω₅-1 : (S : Base (tw 1)) (β : Tr⁺ (h₁ t))
+  → ψ (tw 1) (Ok-tw 1) S (h₁ t) (inc (suc t) (inc tt self)) β (proj₁ (upz {s = sΩ zero} {h = h₁} (suc zero) (Ωt (h₁ (suc zero)))))
+  ≡ β ⊞ ψ (h₁ (suc zero)) (proj₂ (Ok-tw 1) (suc zero)) (λ i u → S i (inc (suc zero) u)) zero (z≤ (h₁ (suc zero))) (S zero (z≤ (tw 1)))
+          (proj₁ (Ωt (h₁ (suc zero))))
+fallback-ω₅-1 S β = refl
+
+------------------------------------------------------------------------
+-- W6TraceZ 那一处在 W5 上: 同一机制 (孩子 z₁ 里孩子 zero 上的 up 朝孩子 1 的层号折, 回退).
+-- (定义逐字同 W5Trace, 不导入它, 免得在基目录写接口文件.)
+h₂ : Tr (tw 1) → L
+h₂ c = tw 1 ⊕ ↑ (tw 1) c
+b : Tr⁺ (tw 1)
+b = Ωt (tw 1)
+β₁ : Tr⁺ (tw 1)
+β₁ = B₂ (tw 1) (ink self)
+z₁ : Tr (tw 1)
+z₁ = ex (proj₁ β₁) (proj₁ β₁) (proj₂ β₁) (proj₁ b) tt
+Lβ₁ : L
+Lβ₁ = ↑ (tw 1) (proj₁ β₁)
+K₂ : Tr zero → L
+K₂ c = proj₁ (Eh AL tt (proj₁ (Ωt (h₁ c))) (opR Lβ₁)) Lβ₁
+kidZ : Tr zero → L
+kidZ c = tw 1 ⊕ K₂ c
+jZ : L
+jZ = kidZ (suc zero)
+z₁-level₅ : h₂ z₁ ≡ nd (sΩ zero) kidZ
+z₁-level₅ = refl
+mech-Z₅ : (B : Base (h₂ z₁)) (β : Tr⁺ jZ) (Y : Tr (kidZ zero)) (e : kidZ zero ⊢ zero ◃ Y)
+  → ψ (h₂ z₁) (proj₂ (Ok-tw 2) z₁) B jZ (inc (suc zero) self) β (up zero zero Y e)
+  ≡ β ⊞ ψ (kidZ zero) (proj₂ (proj₂ (Ok-tw 2) z₁) zero) (λ i u → B i (inc zero u)) zero (z≤ (kidZ zero)) (B zero (z≤ (h₂ z₁))) Y
+mech-Z₅ B β Y e = refl

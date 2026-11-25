@@ -1,0 +1,53 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- W1 检查件 (3): D1 的新折叠 (D1Fold, 带 ex 与框架) 在同一类格上的形状. 全是 refl, 无排中律.
+-- 嵌入行与裸 K6 行同仓库 YiRWFold; 框架里的结点对外层的裸目标 (inc e v) 交给外层 kp, 落进 K6.
+module W1CellD1 where
+
+open import Data.Nat using (ℕ; zero; suc)
+open import Data.Unit using (⊤; tt)
+open import Data.Maybe using (Maybe; just; nothing)
+open import Data.Sum using (_⊎_; inj₁; inj₂)
+open import Data.Product using (Σ; _×_; _,_; proj₁; proj₂)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl)
+
+open import D1Block
+open import D1Ops
+open import D1Path
+open import D1Fold
+
+h₁ : Tr zero → L
+h₁ c = zero ⊕ ↑ zero c
+
+n1 n2 : Tr zero
+n1 = suc zero
+n2 = suc n1
+
+lvl1 : L
+lvl1 = h₁ n1
+
+o₁ : Ok (tw 1)
+o₁ = Ok-tw 1
+
+b : Tr (tw 1)
+b = proj₁ (Ωt (tw 1))
+
+-- 嵌入行: 目标经指定孩子 e, 嵌入在孩子 c: 逐字回退 (对一切底族, e, c).
+emb-fallbackᴰ : ∀ (B : Base (tw 1)) {j} (e : Tr zero) (v : j ≤ h₁ e) (β : Tr⁺ j) x c y ε
+  → ψ (tw 1) o₁ B j (inc e v) β (up x c y ε)
+  ≡ ψ (tw 1) o₁ B j (inc e v) β x ⊞ ψ (h₁ c) (proj₂ o₁ c) (B₀ (h₁ c)) zero (z≤ (h₁ c)) (Ωt zero) y
+emb-fallbackᴰ B e v β x c y ε = refl
+
+-- 框架 (孩子 c) 里的结点对外层的裸目标: 恒为 nothing, 不看 c 与 e.
+frame-bareᴰ : ∀ {j} (c e : Tr zero) (p : Pos (h₁ c)) (v : j ≤ h₁ e) → kpT (down stop c) o₁ p (inj₂ (inc e v)) ≡ nothing
+frame-bareᴰ c e p v = refl
+
+-- "右边接上 b" 的 op 在裸目标上就是 b 朝该目标的折叠, 底族取当前状态 S.
+opB-run : ∀ (S : St {tw 1} stop) {i} (u : i ≤ tw 1) (v : Tr⁺ i)
+  → run (opB (tw 1) o₁ b (proj₂ (Ωt (tw 1)))) S i u v ≡ ψ (tw 1) o₁ S i u v b
+opB-run S u v = refl
+
+-- b 朝 "孩子 2 里的第 1 层" 折 (对一切底族): 顶结点保留, 每个分支逐字是 β ⊞ ψ₀(Ωt (h₁ c′)).
+b-fallbackᴰ : (B : Base (tw 1)) (β : Tr⁺ lvl1) → Σ (Pos lvl1) λ q → Σ (Br lvl1 q → Tr zero) λ cv
+  → ψ (tw 1) o₁ B lvl1 (inc n2 (inc tt self)) β b
+  ≡ Ω⁺ q (λ z → β ⊞ ψ (h₁ (cv z)) (proj₂ o₁ (cv z)) (B₀ (h₁ (cv z))) zero (z≤ (h₁ (cv z))) (Ωt zero) (proj₁ (Ωt (h₁ (cv z)))))
+b-fallbackᴰ B β = _ , _ , refl

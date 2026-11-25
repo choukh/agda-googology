@@ -1,0 +1,20 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns #-}
+-- B10B 入口. 无前提: 单项出口 exit-add/exit-match/exit-row, 零号 term0, 首个非零项 term1.
+-- 条件定理: assemble (整族 Row 作前提; 统一实例待 A 路的 rows), assemble-add (更弱的被加项族).
+-- 反查: frozen-add (无前提), no-frozen-state-if (条件), lost-β/lost-c (无前提). 不依赖 B9UpperMain (Gap′).
+module B10ExitMain where
+
+open import Data.Nat using (ℕ)
+import OCF.Align.Level as LV
+open import OCF.Align.Value using (_≼_)
+open import WVOne using (read)
+open import WKShape using (Ψ₃)
+open import YiLAB7Replay using (Ω₂ᴸ)
+import YiLAB10Rows as R
+open import B10ExitCore public
+open import B10ExitNeg public
+
+-- 协调者实接的形式 (A 路的 rows 作模块参数).
+module Join (rows : (n : ℕ) → R.Row n) where
+  double : LV.ψ⁰ (Ω₂ᴸ LV.+ Ω₂ᴸ) ≼ read Ψ₃
+  double = assemble rows

@@ -1,0 +1,101 @@
+{-# OPTIONS --safe --without-K --lossy-unification --cubical-compatible --guardedness --hidden-argument-puns -W noUnsupportedIndexedMatch #-}
+-- 第一正外行的各个系数核从任意真实零槽下界起步，整条正迭代在同一运行内取界。
+module B23RControl where
+
+open import Data.Nat.Base using (ℕ; zero; suc)
+open import Data.Unit using (tt)
+open import Data.Product using (Σ; proj₁; proj₂; _,_)
+open import W4Block hiding (D; R)
+open import W4Fold
+open import W4Ops
+open import WVOne using (read; T₀)
+open import WVTwo using (◃→≼)
+open import WKShape using (lvl3)
+open import WKGen using (node-ge)
+open import YiLAB7Orbit using (p₁; ok₂)
+open import OCF.BTBO using (module Ord-Ord)
+module S = Ord-Ord
+import OCF.Align.Level as L
+open import OCF.Align.Value using (_≼_; ≼-refl; ≼-trans; ≼-suc; ≼l; l≼; s≼s; ≅→≼)
+import B12Terminal as T
+import B12ActualSlots as Cover
+import B12Update as U
+import B12EboRows as End
+import B13Target as P
+import B13SeedOuter as Seed
+import B13OrbitFeed as O
+import B14OrbitRise as Rise
+import B14RefFixed as F
+import B14RefAllRows as A
+import B18OrbitRows as Rows
+import B20Room as Room
+import B20StandardInside as Std
+import B21StandardShape as Shape
+import B22TowerCut as Cut
+import B23LRoom as Site
+import B23RKernel as K
+
+same : ∀ n x → A.kernel 0 n x L.≅ F.kernel n x
+same zero x = P.regular₀ x
+same (suc n) x = P.co-pres (F.pres (same n x))
+
+seq : ℕ → T₀ → ℕ → T₀
+seq n = S.iter (A.gain 0 n)
+
+hull : ℕ → T₀ → T₀
+hull n x = L.lim (λ j → seq n x (suc j))
+
+module Local (r : T.Run lvl3) (cv : Cover.Covered r) (x : T₀) (room : Room.Room r x) where
+  module R = Rows.At r cv
+  module D = Seed.At r
+  module I = R.I
+  module Prev = I.Previous
+  open Prev.Proof.Core.Run using (S₁)
+  module Out = Rows.Out
+  open Rise.Compare r cv using (module Value; inG)
+  slot : ∀ w → x ≼ read (proj₁ (D.st1 zero w))
+  slot w = ≼-trans (room (inc tt w)) (◃→≼ (inf D.K D.S₀ zero w (D.S₀ zero w)))
+
+  module Positive (k : ℕ) where
+    module H = R.RowAt k
+    run-point = R.point k
+    module B = K.At 0 (suc k)
+    native : ∀ y z → y ≼ read (suc z) → ∀ t v → L.ψ⁰ L.zero ≼ read (proj₁ v)
+              → B.F y ≼ read (proj₁ (run (run-point z) S₁ zero t v))
+    native y z q t v lo = ≼-trans (≅→≼ (L.ψ⁰-≅ (same (suc k) y))) (H.part y z q t v lo)
+
+    track : ∀ j → seq (suc k) x j ≼ read (suc (H.index (suc j)))
+    track zero = ≼-suc (≼-trans (slot (proj₂ Out.ip)) (◃→≼ (inf (run-point zero) S₁ zero Out.ip (S₁ zero Out.ip))))
+    track (suc j) = ≼-suc (native (seq (suc k) x j) (H.index (suc j)) (track j)
+                        Out.ip (S₁ zero Out.ip) (Out.inner I.initial))
+    child : ∀ j → seq (suc k) x (suc j) ≼ read (T.value r)
+    child j = ≼-trans (native (seq (suc k) x j) (H.index (suc j)) (track j) Prev.t D.v₁ (U.value-bound (Out.seed I.initial)))
+       (≼-trans (node-ge (kpT (fr O.D₁) ok₂ p₁ (tv O.D₁ Prev.t)) (λ z → run (run-point z) S₁ zero Prev.t D.v₁) H.step (suc j)) H.upper)
+
+  module Base where
+    dwarf : ∀ j → seq 0 x j ≼ Rise.tower x j
+    dwarf zero = ≼-suc (≼-refl x)
+    dwarf (suc j) = ≼-suc (K.At.monotone 0 0 {seq 0 x j} {Rise.tower x j} (dwarf j))
+    result : Rise.jump x ≼ read (T.value r)
+    result = ≼-trans (Value.Higher.advance 0 x (slot _)) (≼-trans (inG D.st1 D.w2 D.v₁) (D.outer 0))
+    child : ∀ j → seq 0 x (suc j) ≼ read (T.value r)
+    child j = ≼-trans (K.At.monotone 0 0 {seq 0 x j} {Rise.tower x j} (dwarf j))
+                 (≼-trans (≼l j (≼-refl (Rise.φ (Rise.tower x j)))) result)
+
+  whole : ∀ n → hull n x ≼ read (T.value r)
+  whole zero = l≼ Base.child
+  whole (suc k) = l≼ (Positive.child k)
+
+-- 同一塔号和同一 Λ 孩子号都可先选，随后使用任意行内编号及任意有限迭代。
+standard : ∀ {x} → L.suc x ≼ Cut.cut → Σ ℕ (λ j → ∀ n → L.suc (hull n x) ≼ Std.std j)
+standard {x} margin with Site.From.standard {x} 2 margin
+... | j , sub = suc j , λ n → ≼-trans (s≼s (≼-trans (Local.whole (Site.Site.run sub) (Site.Site.covered sub) x (Site.Site.slots sub) n)
+                                       (Site.Site.below sub))) (Shape.rise j)
+
+actual : ∀ {x} → L.suc x ≼ Cut.cut → Σ ℕ (λ j → ∀ n → hull n x ≼ End.child j)
+actual {x} margin with Site.From.actual {x} 2 margin
+... | j , sub = j , λ n → ≼-trans (Local.whole (Site.Site.run sub) (Site.Site.covered sub) x (Site.Site.slots sub) n) (Site.Site.below sub)
+
+closed : ∀ n {x} → L.suc x ≼ Cut.cut → L.suc (A.gain 0 n x) ≼ Cut.cut
+closed n {x} d with standard d
+... | j , b = ≼l j (≼-trans (s≼s (≼l 0 (≼-refl (A.gain 0 n x)))) (b n))
