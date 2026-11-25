@@ -12753,7 +12753,7 @@ KQ 回来后，负责人按 "累加" 检索台账，才对上旧条目。
 **移到 `archive/probes/OCF/Align/`（内容与移前逐字节相同，没有模块导入它们，没有链接指到它们）。** 都是文首自称草案或未编译草稿、实测 6G 冷编退出 251 的模块：`CrossNestedBuildNecessary`、`LambdaTarget`、`BoundedCompletionStageWf`、`BoundedCompletionStageWfLabel`（子智能体移的）；`CrossNestedIf`（它原来只被 `CrossNestedBuildNecessary` 导入，后者移走后研究负责人实测退出 251，按同一条办法移走）。
 
 **没有移的。**
-- 导入已归档 Mahlo 的三个模块 `WfScoutPull`、`WfScoutTau`、`WfTauNF`。作者选项里 "编译不了的 3 个模块" 这个说法是负责人写错的：它们是 `WfFsn` 一族的底，往上有 12 个模块传递导入它们（`WfFsn`、`EboLeanCmp`、`LambdaCountableTarget`、`EndLow`、`EndLowAccept`、`HtValAcceptE`、`BoundedCompletionStageWfOpaque`、`…Ebo`、`…Bridge` 等）；`WfFsn` 文首写着编译时要把归档里的 Mahlo 拷贝加进 `-i`，`EndLow` 写了做法。移走会断掉这一族。是否仍移，负责人用选项请作者定。
+- 导入已归档 Mahlo 的三个模块 `WfScoutPull`、`WfScoutTau`、`WfTauNF`。作者选项里 "编译不了的 3 个模块" 这个说法是负责人写错的：它们是 `WfFsn` 一族的底，往上有 12 个模块传递导入它们（`WfFsn`、`EboLeanCmp`、`LambdaCountableTarget`、`EndLow`、`EndLowAccept`、`HtValAcceptE`、`BoundedCompletionStageWfOpaque`、`…Ebo`、`…Bridge` 等）；`WfFsn` 文首写着编译时要把归档里的 Mahlo 拷贝加进 `-i`，`EndLow` 写了做法。移走会断掉这一族。负责人用选项请作者定，作者选 “不移，保持现状”。
 - 自称草案但编译通过的（`ColimWNegDraft`、`YiLglAllReport`）；自称草案但被别的模块导入的（`AdmWNegDraft`、`TopDown`、`TreeLevelsO1Chain`、`LadderLabZTopDown`、`ScafLadderZTopDown`）。
 
 回报里一条观察：`OCF.Align.ScafLadderQRel` 在 6G 冷编时四次堆耗尽，它是 `WfFsn` 一族的依赖。没有深究。
