@@ -2,7 +2,7 @@
 
 # 无记号主线 (六): 证书 `Goodᴺ` 与 `forceᴺ`
 
-> **`Goodᴺ`, `forceᴺ`, `forceᴺ-HS`, `forceᴺ-≅`, `Goodᴺ-tr`.** `gc` 行的链 `ys` 是树, 没有 `T`. 这是证书的全部. 原文件里 `ofL` (把带标签的证书化成它) 留在 [Lab/NotFree](Lab/NotFree.lagda.md), 主线不需要.
+> **`Goodᴺ`, `forceᴺ`, `forceᴺ-HS`, `forceᴺ-≅`, `Goodᴺ-tr`.** `gc` 行的链 `ys` 是树, 没有 `T`. 这是证书的全部. 原文件里 `ofL` (把带标签的证书化成它) 留在 [Lab/NotFree](../Free/Lab/NotFree.lagda.md), 主线不需要.
 > 脚本从 [NotFree](../Align/NotFree.lagda.md)、[UniformNF3NBase](../Align/UniformNF3NBase.lagda.md) 切出 (定义级切片), 代码行逐字, 讲解见原文件. 本文件的导入闭包不含记号或标签模块 (`probes/Survey/scripts/importclosure.py`).
 >
 > 全文 `--safe --without-K --lossy-unification`, 无公设、无洞、无停机或正性编译指示. 不引用记号.

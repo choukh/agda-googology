@@ -105,8 +105,8 @@ LvKtTower.FullK.ΛB       : … → HB KΛc                                     
 |---|---|---|
 | `Tkt∞` | $\psi_0(\Omega_{\Omega_\omega})$ | 前三站输出与 `LvTopInst.Tr` 定义相等 (`t-Hs0..2`, 测试); 各站层号 `finK s` (`B-finK`, 定理); 同 `LvTop` 的 `Ttr∞` 读法 |
 | `Tkt` | $\psi_0(\Omega_{\Omega_{\omega+1}})$ 量级 (粗界) | 极限站是 `FΩ` 在 ω 码上的折叠; 与 `LvTop` 的 `Ttr` 不同, 极限站的世界是全 $0$ (没有 W1 的部分和槽); 没有比较两者的定理 |
-| `FullK.TΛ∞` (`FA` 是每站一切码上的真折叠) | 上界 $\psi_0(\Omega_\Lambda)=\psi_0(\Lambda)$; 前提由真正的折叠给出且读回的新种类结点随坐标增长时, 读 $\psi_0(\Lambda)$. **不是 ψ₀Λ 已写出** | 上界: 层号 $B_s$ 在 `HB (Kc s)`, $|B_s|<\lambda_s$, 各站输出读 $\Omega_{|B_s|}$ 量级 (R1), 对角读 $\le\Lambda$, 由 (R2). 下界: `B (s+1) = emb (B s) ⊞ injL (B s) (rts s)` (`B-suc`, 定理), 读回 `rts s` 在第 $B_s$ 级, 若它含第 $B_s$ 级的新种类结点且分支沿坐标增长, 则 $|B_{s+1}|\ge\Omega_{|B_s|}$, $|B_s|$ 是 $s$ 层的 Ω-塔, 上确界 $\Lambda$. 测到的: $s=0$, $b_0=1$ 时第 0 站的读回里有新种类结点, 原样进了第 1 站层号 (`t-new`, 测试); 分支是否增长没有测. 这条下界依赖 `FA` (`foldTrivK` 给 $0$) |
-| `FullK.TΛ∞ω` | 比 `TΛ∞` 多极限站 (层号 `ΛB`), 上界 $\psi_0(\Omega_{\Lambda+1})$ 量级 | 同上; 极限站的级顶读 $\Omega_{|ΛB|+O(1)}$ |
+| `FullK.TΛ∞` (`FA` 是每站一切码上的真折叠) | 上界 $\psi_0(\Omega_\Lambda)=\psi_0(\Lambda)$; 前提由真正的折叠给出且读回的新种类结点随坐标增长时, 读 $\psi_0(\Lambda)$. **不是 ψ₀Λ 已写出** | 上界: 层号 $B_s$ 在 `HB (Kc s)`, $\vert B_s\vert <\lambda_s$, 各站输出读 $\Omega_{\vert B_s\vert }$ 量级 (R1), 对角读 $\le\Lambda$, 由 (R2). 下界: `B (s+1) = emb (B s) ⊞ injL (B s) (rts s)` (`B-suc`, 定理), 读回 `rts s` 在第 $B_s$ 级, 若它含第 $B_s$ 级的新种类结点且分支沿坐标增长, 则 $\vert B_{s+1}\vert \ge\Omega_{\vert B_s\vert }$, $\vert B_s\vert $ 是 $s$ 层的 Ω-塔, 上确界 $\Lambda$. 测到的: $s=0$, $b_0=1$ 时第 0 站的读回里有新种类结点, 原样进了第 1 站层号 (`t-new`, 测试); 分支是否增长没有测. 这条下界依赖 `FA` (`foldTrivK` 给 $0$) |
+| `FullK.TΛ∞ω` | 比 `TΛ∞` 多极限站 (层号 `ΛB`), 上界 $\psi_0(\Omega_{\Lambda+1})$ 量级 | 同上; 极限站的级顶读 $\Omega_{\vert ΛB\vert +O(1)}$ |
 
 与 `LvTop` 的对照 (判断): `LvTop` 的全塔版层号在 `HB S₀` 里, 上界 $\psi_0(\Omega_{\Omega_2})$; 这里层号的类型逐站换, 上界升到 $\psi_0(\Lambda)$. 换类型只抬高了上界; 下界仍完全由前提给出.
 

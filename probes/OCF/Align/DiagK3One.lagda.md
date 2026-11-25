@@ -146,3 +146,4 @@ up-noNew (hΩ κ g) = λ c → up-noNew (g c)
 -- 坐标 hs (hs hz) 处新种类的步进在 Lev (up (hs hz)) = step S₀ 里, 增量是 embL (hs hz) h
 noNew-emb : ∀ h → NoNew {S₀} (embL {step S₀} (hs hz) h)
 noNew-emb h = up-noNew h
+```

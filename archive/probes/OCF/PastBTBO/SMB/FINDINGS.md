@@ -1,6 +1,6 @@
 # Phase 7 SMB-Trees 探针 — 实测报告
 
-> 工作文件: [Core.lagda.md](Core.lagda.md), [Naive.lagda.md](Naive.lagda.md), [Mahlo.lagda.md](Mahlo.lagda.md). 计划: [/Users/alsg/.claude/plans/mahlo-hase-cheerful-frog.md](file:///Users/alsg/.claude/plans/mahlo-hase-cheerful-frog.md).
+> 工作文件: [Core.lagda.md](Core.lagda.md), [Naive.lagda.md](Naive.lagda.md), [Mahlo.lagda.md](Mahlo.lagda.md). 计划: [<主目录>/.claude/plans/mahlo-hase-cheerful-frog.md](file://<主目录>/.claude/plans/mahlo-hase-cheerful-frog.md).
 >
 > **TL;DR**: Eremondi 2023 SMB-trees 论文 ([arxiv:2312.06962](https://arxiv.org/abs/2312.06962)) 的方法**不能**绕过 BTBO 框架的 BoundedTrich 障碍. 落地 Phase A (Tree + indMax) 编译通过; Phase B-1 (Naive) 与 B-2 (Mahlo) 都验证为**结构性不可解**. 强度增益 = 0. 但收获明确的负面诊断 — 论文的算律工具不解 BTBO 的决策性问题.
 

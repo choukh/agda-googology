@@ -71,9 +71,9 @@ KcFoldTower.FT₀     : FoldTower  -- foldTower dn₀ ; FL₀ : FoldLimK
 
 | 对象 | 读法 (判断) | 依据, 测到哪里 |
 |---|---|---|
-| 层号塔 `KU.B s` | $|B_1|\approx\Omega_2$, $|B_{s+1}|\approx\Omega_{|B_s|}$, 上确界 $\Lambda$ | 形状定理 `B1-shape`, `rts-suc`, `B-new`, `coord-new` (第 $s+2$ 站层号的头的坐标是第 $X_s$ 级的一切高度) + (R1). 只证了形状, 没有值定理 |
+| 层号塔 `KU.B s` | $\vert B_1\vert \approx\Omega_2$, $\vert B_{s+1}\vert \approx\Omega_{\vert B_s\vert }$, 上确界 $\Lambda$ | 形状定理 `B1-shape`, `rts-suc`, `B-new`, `coord-new` (第 $s+2$ 站层号的头的坐标是第 $X_s$ 级的一切高度) + (R1). 只证了形状, 没有值定理 |
 | `Tkc∞`, `Tkc` | 与 `LvKtInst.Tkt∞`, `Tkt` 同: $\psi_0(\Omega_{\Omega_\omega})$, $\psi_0(\Omega_{\Omega_{\omega+1}})$ 量级 (粗界). **不读 ψ₀Λ** | 各站输出与截断版定义相等 (`Hs-trunc`, `Hω-trunc`, 定理); 闭项本身没有比较定理 (逐点相等推到 `hl` 要外延) |
-| `KD dn dnL . TΛ∞` | `dn` 是忠实的下降 (第 $c$ 级级顶降到 `Ht` 后按 (R2) 读 $\Omega_{|c|}$ 量级) 时读 $\psi_0(\Lambda)$; 上界 $\psi_0(\Lambda)$; `TΛ∞ω` 上界 $\psi_0(\Omega_{\Lambda+1})$ | 层号塔的读法 + `Hs-def`. 依赖 `dn`; `dn₀` 给截断版 |
+| `KD dn dnL . TΛ∞` | `dn` 是忠实的下降 (第 $c$ 级级顶降到 `Ht` 后按 (R2) 读 $\Omega_{\vert c\vert }$ 量级) 时读 $\psi_0(\Lambda)$; 上界 $\psi_0(\Lambda)$; `TΛ∞ω` 上界 $\psi_0(\Omega_{\Lambda+1})$ | 层号塔的读法 + `Hs-def`. 依赖 `dn`; `dn₀` 给截断版 |
 
 ## 第一个障碍
 

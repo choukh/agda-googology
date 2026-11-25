@@ -108,8 +108,8 @@ LvTopInst.FullΛ.Lg-TΛ∞ω, FullΛ.fghΛ∞ω                                -
 |---|---|---|
 | `Ttr∞` | $\psi_0(\Omega_{\Omega_\omega})$ | 第 0 站就是 `Hn 0` (`tr-H0`); 第 $m+1$ 站与 `Hn (m+1)` 同一个折叠, 只差世界写成 `raise v₀ (kfin (m+1)) 0` (在具体的码上计算与 `v₀` 相同, 作为函数不定义相等); 与 `LvRdFold.T∞F` 的读法同. 没有比较两者的定理 |
 | `Ttr` | $\psi_0(\Omega_{\Omega_{\omega+1}})$ 量级 (粗界) | 极限站是 `LvRdFold.FΩ` 在码 `kω` 上的折叠, 槽是各站读回的部分和 (同 `V∞` 的写法, 多一个第 0 项 `ι 0 0`); 与 `T∞ω1` 的读法同 |
-| `FullΛ.TΛ∞` ($F$ 是一切码上的真折叠) | $<\psi_0(\Omega_{\Omega_2})$; **不是 ψ₀Λ** | 层号 $B_s$ 是 `HB S₀` 的树 (类型 `Tower.B : ℕ → HB S₀`; 码的界也是 `HB S₀`), $|B_s|<\Omega_2$, 可数个的上确界仍 $<\Omega_2$; 由 (R1) 各站输出读 $\Omega_{|B_s|+1}$, 对角读 $\Omega_{\sup|B_s|}$, 由 (R2) 闭项 $<\psi_0(\Omega_{\Omega_2})$. 这条上界与 `F`, `σ-of` 的选择无关. 下界依赖 `F` 与 `σ` (`foldTriv` 给 $0$); 用 `σ₀` 且 $b_0=0$ 时, 第 1 站的增量在测到的支上是 $0$ (`LvTopTest`) |
-| `FullΛ.TΛ∞ω` | 比 `TΛ∞` 多一个 $\Omega_{\sup|B_s|+1}$, 仍 $<\psi_0(\Omega_{\Omega_2})$ | 同上 |
+| `FullΛ.TΛ∞` ($F$ 是一切码上的真折叠) | $<\psi_0(\Omega_{\Omega_2})$; **不是 ψ₀Λ** | 层号 $B_s$ 是 `HB S₀` 的树 (类型 `Tower.B : ℕ → HB S₀`; 码的界也是 `HB S₀`), $\vert B_s\vert <\Omega_2$, 可数个的上确界仍 $<\Omega_2$; 由 (R1) 各站输出读 $\Omega_{\vert B_s\vert +1}$, 对角读 $\Omega_{\sup\vert B_s\vert }$, 由 (R2) 闭项 $<\psi_0(\Omega_{\Omega_2})$. 这条上界与 `F`, `σ-of` 的选择无关. 下界依赖 `F` 与 `σ` (`foldTriv` 给 $0$); 用 `σ₀` 且 $b_0=0$ 时, 第 1 站的增量在测到的支上是 $0$ (`LvTopTest`) |
+| `FullΛ.TΛ∞ω` | 比 `TΛ∞` 多一个 $\Omega_{\sup\vert B_s\vert +1}$, 仍 $<\psi_0(\Omega_{\Omega_2})$ | 同上 |
 
 **ψ₀Λ 要什么 (判断).** $\Lambda=\sup\{\Omega_1,\Omega_{\Omega_1},\dots\}$ 要层号本身越过 $\Omega_2,\Omega_{\Omega_2},\dots$; 层号若是 `HB S₀` 的树就做不到 (R1). 树侧的写法是层号逐站换类型: 第 $s+1$ 站的层号取第 $s$ 站那一级的高度, `Kt (s+1) = Lev (Ωtop (Kt s))` (第 1 站 `Kt 1 = Lev (Ωtop S₀)` 就是以 `HB S₀` 的一切层号为下标的各级之并, 本路的整座塔都在它的分量里, `Kt1`), `KΛ = sup ℕ Kt`. 读法 (判断): `HB (Kt s)` 的级读到 $\Omega_{\Omega_{\cdots}}$ ($s$ 层), `KΛ` 的级数读 $\Lambda$. `Kt`, `KΛ` 已编译, 没有在它们上面折叠.
 
